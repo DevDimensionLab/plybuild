@@ -1,70 +1,21 @@
+// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
-import (
-	"io"
-	"log"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
-)
-
-var springBootDownloadUrl = "https://repo.spring.io/release/org/springframework/boot/spring-boot-cli/[RELEASE]/spring-boot-cli-[RELEASE]-bin.zip"
+import "spring-boot-co-pilot/cmd"
 
 func main() {
-	targetDir := "./target"
-	argsWithoutProg := os.Args[1:]
-	if 0 == len(argsWithoutProg) {
-		os.RemoveAll(targetDir)
-		os.MkdirAll(targetDir, os.ModePerm)
-		springBootCliZip := "./target/spring-boot-cli.zip"
-		Wget(springBootDownloadUrl, springBootCliZip)
-		Unzip( springBootCliZip, targetDir )
-	}
-
-	springExec, err := FindFile("bin/spring", targetDir)
-	SpringBootCLI(springExec)
-
-	if err != nil {
-		log.Println(err)
-	}
-
-}
-
-
-func SpringBootCLI(springExec string ) error {
-	cmd := exec.Command(springExec)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
-}
-
-func FindFile(fileSuffix string, dir string) (result string, err error) {
-	err = filepath.Walk(dir,
-		func(path string, fi os.FileInfo, errIn error) error {
-			if strings.HasSuffix( path, fileSuffix) {
-				result = path
-				return io.EOF
-			}
-			return nil
-		})
-
-	if err == io.EOF {
-		err = nil
-	}
-	return
-}
-
-func Wget(url, filepath string) error {
-	cmd := exec.Command("wget", url, "-O", filepath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
-}
-
-func Unzip(file string, outputDir string ) error {
-	cmd := exec.Command("Unzip", file,"-d", outputDir )
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	cmd.Execute()
 }
