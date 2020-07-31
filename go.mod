@@ -1,4 +1,4 @@
-module spring-boot-project-starter
+module spring-boot-co-pilot
 
 go 1.14
 

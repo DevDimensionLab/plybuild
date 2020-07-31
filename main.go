@@ -14,7 +14,7 @@
 
 package main
 
-import "spring-boot-project-starter/cmd"
+import "spring-boot-co-pilot/cmd"
 
 func main() {
 	cmd.Execute()

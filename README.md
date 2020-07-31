@@ -1,4 +1,4 @@
-# Spring-boot-project-starter
+# Spring-boot-co-pilot
 
 
 ## Compilation
@@ -10,20 +10,20 @@ go build
 
 ### Help
 ```shell script
-./spring-boot-project-starter
+./spring-boot-co-pilot
 ```
 
 ### Download spring-cli
 ```shell script
-./spring-boot-project-starter download cli
+./spring-boot-co-pilot download cli
 ```
 
 ### Init default webservice
 ```shell script
-./spring-boot-project-starter spring init
+./spring-boot-co-pilot spring init
 ```
 
 ### Init webservice from json file
 ```shell script
-./spring-boot-project-starter spring init --config-file example.init.config.json
+./spring-boot-co-pilot spring init --config-file example.init.config.json
 ```

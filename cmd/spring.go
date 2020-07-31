@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
-	"spring-boot-project-starter/pkg/spring"
-	"spring-boot-project-starter/pkg/util"
+	"spring-boot-co-pilot/pkg/spring"
+	"spring-boot-co-pilot/pkg/util"
 )
 
 var springCmd = &cobra.Command{
