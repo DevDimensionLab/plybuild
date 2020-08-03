@@ -3,5 +3,6 @@
   "artifactId": "json-webservice",
   "package": "com.example.from.json",
   "name": "webservice",
-  "description": "Example webservice from json file"
+  "description": "Example webservice from json file",
+  "dependencies": ["webflux", "ugyldig"]
 }

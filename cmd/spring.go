@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"encoding/json"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"spring-boot-co-pilot/pkg/file"
 	"spring-boot-co-pilot/pkg/spring"
-	"spring-boot-co-pilot/pkg/util"
 )
 
 var springCmd = &cobra.Command{
@@ -27,16 +28,21 @@ var springInitCmd = &cobra.Command{
 		_ = os.RemoveAll("webservice")
 
 		if jsonConfigFile != "" {
-			err := util.ReadJson(jsonConfigFile, &config)
+			err := file.Read(jsonConfigFile, &config)
 			if err != nil {
 				log.Println(err)
-				config = spring.DefaultConfiguration()
+				os.Exit(1)
+			}
+			err = spring.Validate(config)
+			if err != nil {
+				log.Println(err)
+				os.Exit(1)
 			}
 		} else {
 			config = spring.DefaultConfiguration()
 		}
 
-		springExec, err := util.FindFile("bin/spring", "./target")
+		springExec, err := file.Find("bin/spring", "./target")
 		err = spring.SpringBootCLI(springExec, spring.InitFrom(config)...)
 
 		if err != nil {
@@ -45,9 +51,53 @@ var springInitCmd = &cobra.Command{
 	},
 }
 
+var springRootCmd = &cobra.Command{
+	Use:   "root",
+	Short: "Spring root",
+	Long:  `Spring root`,
+	Run: func(cmd *cobra.Command, args []string) {
+		root, err := spring.GetRoot()
+		if err != nil {
+			log.Println(err)
+		}
+		json, _ := json.MarshalIndent(root, "", "    ")
+		println(string(json))
+	},
+}
+
+var springInfoCmd = &cobra.Command{
+	Use:   "info",
+	Short: "Spring metadata info",
+	Long:  `Spring metadata info`,
+	Run: func(cmd *cobra.Command, args []string) {
+		root, err := spring.GetInfo()
+		if err != nil {
+			log.Println(err)
+		}
+		json, _ := json.MarshalIndent(root, "", "    ")
+		println(string(json))
+	},
+}
+
+var springDependenciesCmd = &cobra.Command{
+	Use:   "dependencies",
+	Short: "Spring dependencies",
+	Long:  `Spring dependencies`,
+	Run: func(cmd *cobra.Command, args []string) {
+		deps, err := spring.GetDependencies()
+		if err != nil {
+			log.Println(err)
+		}
+		json, _ := json.MarshalIndent(deps, "", "    ")
+		println(string(json))
+	},
+}
 
 func init() {
 	RootCmd.AddCommand(springCmd)
 	springCmd.AddCommand(springInitCmd)
+	springCmd.AddCommand(springRootCmd)
+	springCmd.AddCommand(springInfoCmd)
+	springCmd.AddCommand(springDependenciesCmd)
 	springInitCmd.Flags().String("config-file", "", "Optional config file")
 }

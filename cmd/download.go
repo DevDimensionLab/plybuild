@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"os"
-	"spring-boot-co-pilot/pkg/util"
+	"spring-boot-co-pilot/pkg/shell"
 )
 
 var springBootDownloadUrl = "https://repo.spring.io/release/org/springframework/boot/spring-boot-cli/[RELEASE]/spring-boot-cli-[RELEASE]-bin.zip"
@@ -35,6 +35,6 @@ func download() {
 	_ = os.RemoveAll(targetDir)
 	_ = os.MkdirAll(targetDir, os.ModePerm)
 	springBootCliZip := "./target/spring-boot-cli.zip"
-	_ = util.Wget(springBootDownloadUrl, springBootCliZip)
-	_ = util.Unzip(springBootCliZip, targetDir)
+	_ = shell.Wget(springBootDownloadUrl, springBootCliZip)
+	_ = shell.Unzip(springBootCliZip, targetDir)
 }
