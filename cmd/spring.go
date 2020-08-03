@@ -5,8 +5,8 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"spring-boot-co-pilot/pkg/file"
 	"spring-boot-co-pilot/pkg/spring"
-	"spring-boot-co-pilot/pkg/util"
 )
 
 var springCmd = &cobra.Command{
@@ -28,16 +28,21 @@ var springInitCmd = &cobra.Command{
 		_ = os.RemoveAll("webservice")
 
 		if jsonConfigFile != "" {
-			err := util.ReadJson(jsonConfigFile, &config)
+			err := file.Read(jsonConfigFile, &config)
 			if err != nil {
 				log.Println(err)
-				config = spring.DefaultConfiguration()
+				os.Exit(1)
+			}
+			err = spring.Validate(config)
+			if err != nil {
+				log.Println(err)
+				os.Exit(1)
 			}
 		} else {
 			config = spring.DefaultConfiguration()
 		}
 
-		springExec, err := util.FindFile("bin/spring", "./target")
+		springExec, err := file.Find("bin/spring", "./target")
 		err = spring.SpringBootCLI(springExec, spring.InitFrom(config)...)
 
 		if err != nil {
