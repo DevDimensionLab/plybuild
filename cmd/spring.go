@@ -74,7 +74,6 @@ var springInfoCmd = &cobra.Command{
 	},
 }
 
-
 var springDependenciesCmd = &cobra.Command{
 	Use:   "dependencies",
 	Short: "Spring dependencies",

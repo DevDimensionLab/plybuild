@@ -29,7 +29,7 @@ var cfgFile string
 var RootCmd = &cobra.Command{
 	Use:   "spring-boot-co-pilot",
 	Short: "Spring-boot-co-pilot er et støtteverktøy i utvikling der kjente oppgaver er automatisert",
-	Long: ``,
+	Long:  ``,
 }
 
 func Execute() {
@@ -39,7 +39,7 @@ func Execute() {
 	}
 }
 
-func init() { 
+func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.spring-boot-co-pilot.yaml)")
