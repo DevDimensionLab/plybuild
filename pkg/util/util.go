@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,7 +14,7 @@ import (
 func FindFile(fileSuffix string, dir string) (result string, err error) {
 	err = filepath.Walk(dir,
 		func(path string, fi os.FileInfo, errIn error) error {
-			if strings.HasSuffix( path, fileSuffix) {
+			if strings.HasSuffix(path, fileSuffix) {
 				result = path
 				return io.EOF
 			}
@@ -25,7 +26,6 @@ func FindFile(fileSuffix string, dir string) (result string, err error) {
 	}
 	return
 }
-
 
 func Wget(url, filepath string) error {
 	cmd := exec.Command("wget", url, "-O", filepath)
@@ -40,7 +40,6 @@ func Unzip(file string, outputDir string) error {
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
-
 
 func ReadJson(file string, parsed interface{}) error {
 	jsonFile, err := os.Open(file)
@@ -59,5 +58,22 @@ func ReadJson(file string, parsed interface{}) error {
 	}
 	defer jsonFile.Close()
 
+	return nil
+}
+
+func GetUrl(url string, parsed interface{}) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(body, &parsed)
+	if err != nil {
+		return err
+	}
 	return nil
 }
