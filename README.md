@@ -6,22 +6,20 @@
 go build
 ```
 
-## Execution
-
-### Help
+## Help
 ```shell script
 ./spring-boot-co-pilot
 ```
 
 ```
 Available Commands:
-  download    Downloads ...
+  download    Downloads options
   help        Help about any command
-  spring      Spring ...
-
+  spring      Spring boot tools
+  upgrade     Upgrade options
 ```
 
-### Download
+## Download
 Download functionality 
 ```
 Available Commands:
@@ -29,45 +27,56 @@ Available Commands:
 
 ```
 
-#### CLI
+### CLI
+Downloads the spring cli to a target folder in the current directory
 ```shell script
 ./spring-boot-co-pilot download cli
 ```
 
-### Spring
+## Spring
 Spring functionality
 ```
 Available Commands:
-  dependencies Spring dependencies
-  info         Spring metadata info
-  init         Spring init
-  root         Spring root
-```
-#### Dependencies
-Lists dependencies from start.spring.io
-```shell script
-./spring-boot-co-pilot spring dependencies
+  init        Spring init
+  status      Spring status
 ```
 
-#### Info
-Info metadata from start.spring.io, lists versions etc
-```shell script
-./spring-boot-co-pilot spring info
-```
+### Init 
+Creates a simple webservice using start.spring.io
 
-#### Init 
 * Default webservice
 ```shell script
 ./spring-boot-co-pilot spring init
 ```
 
-* custom webservice from json file
+* Custom webservice from json file
 ```shell script
 ./spring-boot-co-pilot spring init --config-file example.init.config.json
 ```
 
-#### Root
-Root metadata info from start.spring.io
+### Status
+Status gets last default version from start.spring.io
 ```shell script
-./spring-boot-co-pilot spring root
+./spring-boot-co-pilot spring status
+```
+
+
+## Upgrade
+Upgrade functionality
+```
+Available Commands:
+  spring-boot  upgrade spring-boot to the latest version
+```
+
+### Spring Boot
+Upgrades the pom.xml file found in directory to newest version of spring boot
+
+* Current directory
+```shell script
+./spring-boot-co-pilot upgrade spring-boot
+```
+
+* Custom target
+```shell script
+./spring-boot-co-pilot upgrade spring-boot --target /path/to/folder
 ```

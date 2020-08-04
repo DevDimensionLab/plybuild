@@ -43,13 +43,13 @@ type LinksResponse struct {
 }
 
 type ValueResponse struct {
-	Id           string                   `json:"id,omitempty"`
-	Name         string                   `json:"name"`
-	Description  string                   `json:"description,omitempty"`
-	VersionRange string                   `json:"versionRange,omitempty"`
-	Action       string                   `json:"action,omitempty"`
-	Links        map[string]LinksResponse `json:"_links,omitempty"`
-	Tags         map[string]string        `json:"tags,omitempty"`
+	Id           string `json:"id,omitempty"`
+	Name         string `json:"name"`
+	Description  string `json:"description,omitempty"`
+	VersionRange string `json:"versionRange,omitempty"`
+	Action       string `json:"action,omitempty"`
+	//Links        map[string]LinksResponse `json:"_links,omitempty"`
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 type IoRootResponse struct {
