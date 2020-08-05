@@ -14,7 +14,7 @@ var upgradeCmd = &cobra.Command{
 	},
 }
 
-var upgradeStatusCmd = &cobra.Command{
+var upgradeSpringBootCmd = &cobra.Command{
 	Use:   "spring-boot",
 	Short: "upgrade spring-boot to the latest version",
 	Long:  `upgrade spring-boot to the latest version`,
@@ -23,7 +23,23 @@ var upgradeStatusCmd = &cobra.Command{
 		if err != nil {
 			log.Println(err)
 		}
-		err = spring.Upgrade(targetDirectory)
+		err = spring.UpgradeSpringBoot(targetDirectory)
+		if err != nil {
+			log.Println(err)
+		}
+	},
+}
+
+var upgradeDependenciesCmd = &cobra.Command{
+	Use:   "dependencies",
+	Short: "upgrade dependencies to project",
+	Long:  `upgrade dependencies to project`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Println(err)
+		}
+		err = spring.UpgradeSpringDependencies(targetDirectory)
 		if err != nil {
 			log.Println(err)
 		}
@@ -32,6 +48,8 @@ var upgradeStatusCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(upgradeCmd)
-	upgradeCmd.AddCommand(upgradeStatusCmd)
-	upgradeStatusCmd.Flags().String("target", ".", "Optional target directory")
+	upgradeCmd.AddCommand(upgradeSpringBootCmd)
+	upgradeCmd.AddCommand(upgradeDependenciesCmd)
+	upgradeSpringBootCmd.Flags().String("target", ".", "Optional target directory")
+	upgradeDependenciesCmd.Flags().String("target", ".", "Optional target directory")
 }

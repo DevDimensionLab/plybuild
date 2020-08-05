@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Upgrade(directory string) error {
+func UpgradeSpringBoot(directory string) error {
 	pomFile := directory + "/pom.xml"
 	model, err := mvn_crud.GetPomModel(pomFile)
 	if err != nil {
@@ -46,6 +46,27 @@ func Upgrade(directory string) error {
 	}
 
 	return nil
+}
+
+func UpgradeSpringDependencies(directory string) error {
+	pomFile := directory + "/pom.xml"
+	project, err := mvn_crud.GetPomModel(pomFile)
+	if err != nil {
+		return err
+	}
+
+	springBootDependencies, err := GetDependencies()
+	if err != nil {
+		return err
+	}
+
+	deps := getSpringBootDependenciesFromProject(project, springBootDependencies.Dependencies)
+
+	for _, dep := range deps {
+		fmt.Printf("Found spring-boot dependecy: %s:%s, on version: [%s] \n", dep.GroupId, dep.ArtifactId, dep.Version)
+	}
+
+	return errors.New("[NOT IMPLEMENTED] could not update any spring boot dependencies")
 }
 
 func getSpringBootVersion(model *pom.Model) (string, error) {
@@ -101,6 +122,23 @@ func updateSpringBootVersion(model *pom.Model, newestVersion string) error {
 	}
 
 	return errors.New("could not update spring boot version to " + newestVersion)
+}
+
+func getSpringBootDependenciesFromProject(project *pom.Model, springBootDependencies map[string]Dependency) []pom.Dependency {
+
+	var foundDependencies []pom.Dependency
+
+	if project.Dependencies != nil {
+		for _, projectDep := range project.Dependencies.Dependency {
+			for _, bootDep := range springBootDependencies {
+				if projectDep.ArtifactId == bootDep.ArtifactId {
+					foundDependencies = append(foundDependencies, projectDep)
+				}
+			}
+		}
+	}
+
+	return foundDependencies
 }
 
 func writePomModel(model *pom.Model, outputFile string) error {
