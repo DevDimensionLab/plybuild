@@ -10,8 +10,8 @@ type InitConfiguration struct {
 }
 
 type Dependency struct {
-	GroupID    string `json:"groupId"`
-	ArtifactID string `json:"artifactId"`
+	GroupId    string `json:"groupId"`
+	ArtifactId string `json:"artifactId"`
 	Scope      string `json:"scope"`
 	Version    string `json:"version,omitempty"`
 	Bom        string `json:"bom,omitempty"`
