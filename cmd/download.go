@@ -10,8 +10,8 @@ var springBootDownloadUrl = "https://repo.spring.io/release/org/springframework/
 
 var downloadCmd = &cobra.Command{
 	Use:   "download [OPTIONS]",
-	Short: "Downloads ...",
-	Long:  `Downloads ...`,
+	Short: "Downloads options",
+	Long:  `Downloads options`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 	},
 }
