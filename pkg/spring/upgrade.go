@@ -19,17 +19,15 @@ func UpgradeSpringBoot(directory string) error {
 		return err
 	}
 
-	projectVersion, err := getSpringBootVersion(model)
+	modelVersion, err := getSpringBootVersion(model)
 	if err != nil {
 		return err
 	}
 
 	newestVersion := springRootInfo.BootVersion.Default
 
-	if projectVersion != newestVersion {
-		fmt.Printf("=> Upgrade needed !!! \n")
-		fmt.Printf("Project uses spring boot version: %s\n", projectVersion)
-		fmt.Printf("Latest version of spring boot: %s\n", newestVersion)
+	if modelVersion != newestVersion {
+		fmt.Printf("[OUTDATED]: [%s => %s]\n", modelVersion, newestVersion)
 		err = updateSpringBootVersion(model, newestVersion)
 		if err != nil {
 			return err
@@ -40,7 +38,7 @@ func UpgradeSpringBoot(directory string) error {
 			return err
 		}
 	} else {
-		fmt.Printf("No update needed, project version is the newest of spring boot [%s]\n", newestVersion)
+		fmt.Printf("No update needed, model version is the newest of spring boot [%s]\n", newestVersion)
 	}
 
 	return nil
@@ -48,26 +46,27 @@ func UpgradeSpringBoot(directory string) error {
 
 func UpgradeDependencies(directory string) error {
 	pomFile := directory + "/pom.xml"
-	project, err := pom.GetModelFrom(pomFile)
+	model, err := pom.GetModelFrom(pomFile)
 	if err != nil {
 		return err
 	}
 
-	deps := getDependenciesFromProject(project)
+	deps := getDependenciesFromProject(model)
 
 	for _, dep := range deps {
 		if dep.Version != "" {
-			currentVersion, err := project.GetVersion(dep)
+			currentVersion, err := model.GetVersion(dep)
 			metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
 			if err == nil {
-				fmt.Printf("[INFO] Found: %s:%s with version: [%s], latest version is: [%s] \n", dep.GroupId, dep.ArtifactId, currentVersion, metaData.Versioning.Latest)
+				fmt.Printf("[OUTDATED] %s:%s [%s => %s] \n", dep.GroupId, dep.ArtifactId, currentVersion, metaData.Versioning.Latest)
+				_ = model.SetVersion(dep, metaData.Versioning.Latest)
 			} else {
 				fmt.Printf("[ERROR] %v\n", err)
 			}
 		}
 	}
 
-	return errors.New("[NOT IMPLEMENTED] could not update any dependencies")
+	return model.WriteToFile(pomFile + ".new")
 }
 
 func getSpringBootVersion(model *pom.Model) (string, error) {
@@ -114,8 +113,8 @@ func getDependenciesFromProject(model *pom.Model) []pom.Dependency {
 	var foundDependencies []pom.Dependency
 
 	if model.Dependencies != nil {
-		for _, projectDep := range model.Dependencies.Dependency {
-			foundDependencies = append(foundDependencies, projectDep)
+		for _, modelDep := range model.Dependencies.Dependency {
+			foundDependencies = append(foundDependencies, modelDep)
 		}
 	}
 
