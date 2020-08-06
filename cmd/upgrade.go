@@ -39,7 +39,7 @@ var upgradeDependenciesCmd = &cobra.Command{
 		if err != nil {
 			log.Println(err)
 		}
-		err = spring.UpgradeSpringDependencies(targetDirectory)
+		err = spring.UpgradeDependencies(targetDirectory)
 		if err != nil {
 			log.Println(err)
 		}

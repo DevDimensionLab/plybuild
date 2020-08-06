@@ -65,7 +65,21 @@ Status gets last default version from start.spring.io
 Upgrade functionality
 ```
 Available Commands:
+  dependencies upgrade dependencies to project
   spring-boot  upgrade spring-boot to the latest version
+```
+
+
+### Dependencies
+Upgrades the dependencies of the current project
+* Current directory
+```shell script
+./spring-boot-co-pilot upgrade dependencies
+```
+
+* Custom target
+```shell script
+./spring-boot-co-pilot upgrade dependencies --target /path/to/folder
 ```
 
 ### Spring Boot

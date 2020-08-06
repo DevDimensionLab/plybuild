@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"spring-boot-co-pilot/pkg/maven"
 )
 
 func UpgradeSpringBoot(directory string) error {
-	pomFile := directory + "/pom.alt2.xml"
+	pomFile := directory + "/pom.xml"
 	model, err := pom.GetModelFrom(pomFile)
 	if err != nil {
 		return err
@@ -45,25 +46,28 @@ func UpgradeSpringBoot(directory string) error {
 	return nil
 }
 
-func UpgradeSpringDependencies(directory string) error {
+func UpgradeDependencies(directory string) error {
 	pomFile := directory + "/pom.xml"
 	project, err := pom.GetModelFrom(pomFile)
 	if err != nil {
 		return err
 	}
 
-	springBootDependencies, err := GetDependencies()
-	if err != nil {
-		return err
-	}
-
-	deps := getSpringBootDependenciesFromProject(project, springBootDependencies.Dependencies)
+	deps := getDependenciesFromProject(project)
 
 	for _, dep := range deps {
-		fmt.Printf("Found spring-boot dependecy: %s:%s, on version: [%s] \n", dep.GroupId, dep.ArtifactId, dep.Version)
+		if dep.Version != "" {
+			currentVersion, err := project.GetVersion(dep)
+			metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
+			if err == nil {
+				fmt.Printf("[INFO] Found: %s:%s with version: [%s], latest version is: [%s] \n", dep.GroupId, dep.ArtifactId, currentVersion, metaData.Versioning.Latest)
+			} else {
+				fmt.Printf("[ERROR] %v\n", err)
+			}
+		}
 	}
 
-	return errors.New("[NOT IMPLEMENTED] could not update any spring boot dependencies")
+	return errors.New("[NOT IMPLEMENTED] could not update any dependencies")
 }
 
 func getSpringBootVersion(model *pom.Model) (string, error) {
@@ -78,7 +82,7 @@ func getSpringBootVersion(model *pom.Model) (string, error) {
 		if err != nil {
 			return "", nil
 		} else {
-			return dep.GetVersion(model)
+			return model.GetVersion(dep)
 		}
 	}
 
@@ -98,24 +102,20 @@ func updateSpringBootVersion(model *pom.Model, newestVersion string) error {
 		if err != nil {
 			return err
 		} else {
-			return dep.SetVersion(model, newestVersion)
+			return model.SetVersion(dep, newestVersion)
 		}
 	}
 
 	return errors.New("could not update spring boot version to " + newestVersion)
 }
 
-func getSpringBootDependenciesFromProject(project *pom.Model, springBootDependencies map[string]Dependency) []pom.Dependency {
+func getDependenciesFromProject(model *pom.Model) []pom.Dependency {
 
 	var foundDependencies []pom.Dependency
 
-	if project.Dependencies != nil {
-		for _, projectDep := range project.Dependencies.Dependency {
-			for _, bootDep := range springBootDependencies {
-				if projectDep.ArtifactId == bootDep.ArtifactId {
-					foundDependencies = append(foundDependencies, projectDep)
-				}
-			}
+	if model.Dependencies != nil {
+		for _, projectDep := range model.Dependencies.Dependency {
+			foundDependencies = append(foundDependencies, projectDep)
 		}
 	}
 
