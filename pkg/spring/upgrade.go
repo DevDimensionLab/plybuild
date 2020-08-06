@@ -27,16 +27,13 @@ func UpgradeSpringBoot(directory string) error {
 	newestVersion := springRootInfo.BootVersion.Default
 
 	if modelVersion != newestVersion {
-		fmt.Printf("[OUTDATED]: [%s => %s]\n", modelVersion, newestVersion)
 		err = updateSpringBootVersion(model, newestVersion)
 		if err != nil {
 			return err
 		}
 
-		err = model.WriteToFile(pomFile + ".new")
-		if err != nil {
-			return err
-		}
+		fmt.Printf("[OUTDATED]: [%s => %s]\n", modelVersion, newestVersion)
+		return model.WriteToFile(pomFile + ".new")
 	} else {
 		fmt.Printf("No update needed, model version is the newest of spring boot [%s]\n", newestVersion)
 	}
