@@ -3,15 +3,12 @@ package spring
 import (
 	"errors"
 	"fmt"
-	"github.com/perottobc/mvn-pom-mutator/pkg/mvn_crud"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	"io/ioutil"
-	"strings"
 )
 
 func UpgradeSpringBoot(directory string) error {
-	pomFile := directory + "/pom.xml"
-	model, err := mvn_crud.GetPomModel(pomFile)
+	pomFile := directory + "/pom.alt2.xml"
+	model, err := pom.GetModelFrom(pomFile)
 	if err != nil {
 		return err
 	}
@@ -37,7 +34,7 @@ func UpgradeSpringBoot(directory string) error {
 			return err
 		}
 
-		err = writePomModel(model, pomFile+".new")
+		err = model.WriteToFile(pomFile + ".new")
 		if err != nil {
 			return err
 		}
@@ -50,7 +47,7 @@ func UpgradeSpringBoot(directory string) error {
 
 func UpgradeSpringDependencies(directory string) error {
 	pomFile := directory + "/pom.xml"
-	project, err := mvn_crud.GetPomModel(pomFile)
+	project, err := pom.GetModelFrom(pomFile)
 	if err != nil {
 		return err
 	}
@@ -77,18 +74,11 @@ func getSpringBootVersion(model *pom.Model) (string, error) {
 
 	// check dependencyManagement
 	if model.DependencyManagement != nil {
-		for _, dep := range model.DependencyManagement.Dependencies.Dependency {
-			if dep.ArtifactId == "spring-boot-dependencies" {
-				if strings.HasPrefix(dep.Version, "${") {
-					for _, a := range model.Properties.AnyElements {
-						if a.XMLName.Local == strings.Trim(dep.Version, "${}") {
-							return a.Value, nil
-						}
-					}
-				} else {
-					return dep.Version, nil
-				}
-			}
+		dep, err := model.DependencyManagement.Dependencies.FindArtifact("spring-boot-dependencies")
+		if err != nil {
+			return "", nil
+		} else {
+			return dep.GetVersion(model)
 		}
 	}
 
@@ -104,20 +94,11 @@ func updateSpringBootVersion(model *pom.Model, newestVersion string) error {
 
 	// check dependencyManagement
 	if model.DependencyManagement != nil {
-		for _, dep := range model.DependencyManagement.Dependencies.Dependency {
-			if dep.ArtifactId == "spring-boot-dependencies" {
-				if strings.HasPrefix(dep.Version, "${") {
-					for i, a := range model.Properties.AnyElements {
-						if a.XMLName.Local == strings.Trim(dep.Version, "${}") {
-							model.Properties.AnyElements[i].Value = newestVersion
-							return nil
-						}
-					}
-				} else {
-					dep.Version = newestVersion
-					return nil
-				}
-			}
+		dep, err := model.DependencyManagement.Dependencies.FindArtifact("spring-boot-dependencies")
+		if err != nil {
+			return err
+		} else {
+			return dep.SetVersion(model, newestVersion)
 		}
 	}
 
@@ -139,18 +120,4 @@ func getSpringBootDependenciesFromProject(project *pom.Model, springBootDependen
 	}
 
 	return foundDependencies
-}
-
-func writePomModel(model *pom.Model, outputFile string) error {
-	bytes, err := mvn_crud.Marshall(model)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(outputFile, bytes, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
