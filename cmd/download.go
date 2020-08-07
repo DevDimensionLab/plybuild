@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"co-pilot/pkg/shell"
 	"github.com/spf13/cobra"
 	"os"
-	"co-pilot/pkg/shell"
 )
 
 var springBootDownloadUrl = "https://repo.spring.io/release/org/springframework/boot/spring-boot-cli/[RELEASE]/spring-boot-cli-[RELEASE]-bin.zip"

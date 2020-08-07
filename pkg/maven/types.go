@@ -65,9 +65,9 @@ type Settings struct {
 			ID       string `xml:"id"`
 		} `xml:"mirror"`
 	} `xml:"mirrors"`
-	Profiles []struct {
+	Profiles struct {
 		Text    string `xml:",chardata"`
-		Profile struct {
+		Profile []struct {
 			Text       string `xml:",chardata"`
 			Activation struct {
 				Text            string `xml:",chardata"`
@@ -92,13 +92,13 @@ type Settings struct {
 				} `xml:"file"`
 			} `xml:"activation"`
 			Properties   string `xml:"properties"`
-			Repositories []struct {
+			Repositories struct {
 				Text       string `xml:",chardata"`
-				Repository struct {
+				Repository []struct {
 					Text     string `xml:",chardata"`
 					Releases struct {
 						Text           string `xml:",chardata"`
-						Enabled        string `xml:"enabled"`
+						Enabled        bool   `xml:"enabled"`
 						UpdatePolicy   string `xml:"updatePolicy"`
 						ChecksumPolicy string `xml:"checksumPolicy"`
 					} `xml:"releases"`

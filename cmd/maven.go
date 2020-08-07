@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"co-pilot/pkg/maven"
 	"fmt"
 	"github.com/spf13/cobra"
-	"co-pilot/pkg/maven"
 )
 
 var mavenCmd = &cobra.Command{

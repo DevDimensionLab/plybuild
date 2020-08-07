@@ -1,10 +1,10 @@
 package spring
 
 import (
+	"co-pilot/pkg/maven"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	"co-pilot/pkg/maven"
 )
 
 func UpgradeSpringBoot(directory string) error {

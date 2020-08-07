@@ -1,9 +1,9 @@
 package maven
 
 import (
+	"co-pilot/pkg/http"
 	"errors"
 	"fmt"
-	"co-pilot/pkg/http"
 	"strings"
 )
 

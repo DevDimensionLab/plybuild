@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"co-pilot/pkg/spring"
 	"github.com/spf13/cobra"
 	"log"
-	"co-pilot/pkg/spring"
 )
 
 var upgradeCmd = &cobra.Command{

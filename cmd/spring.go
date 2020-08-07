@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"co-pilot/pkg/file"
+	"co-pilot/pkg/spring"
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
-	"co-pilot/pkg/file"
-	"co-pilot/pkg/spring"
 )
 
 var springCmd = &cobra.Command{

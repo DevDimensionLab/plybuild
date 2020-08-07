@@ -1,10 +1,10 @@
 package maven
 
 import (
+	"co-pilot/pkg/file"
 	"errors"
 	"fmt"
 	"os/user"
-	"co-pilot/pkg/file"
 )
 
 func GetRepositories() ([]string, error) {
@@ -18,9 +18,11 @@ func GetRepositories() ([]string, error) {
 		if err != nil {
 			return repos, err
 		}
-		for _, profile := range settings.Profiles {
-			for _, repo := range profile.Profile.Repositories {
-				repos = append(repos, repo.Repository.URL)
+		for _, profile := range settings.Profiles.Profile {
+			for _, repo := range profile.Repositories.Repository {
+				if repo.Releases.Enabled {
+					repos = append(repos, repo.URL)
+				}
 			}
 		}
 	} else {
