@@ -3,7 +3,7 @@ package maven
 import (
 	"errors"
 	"fmt"
-	"spring-boot-co-pilot/pkg/http"
+	"co-pilot/pkg/http"
 	"strings"
 )
 

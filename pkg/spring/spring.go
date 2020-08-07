@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"spring-boot-co-pilot/pkg/http"
+	"co-pilot/pkg/http"
 	"strings"
 )
 

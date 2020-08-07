@@ -1,4 +1,4 @@
-module spring-boot-co-pilot
+module co-pilot
 
 go 1.14
 

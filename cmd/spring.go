@@ -5,8 +5,8 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
-	"spring-boot-co-pilot/pkg/file"
-	"spring-boot-co-pilot/pkg/spring"
+	"co-pilot/pkg/file"
+	"co-pilot/pkg/spring"
 )
 
 var springCmd = &cobra.Command{

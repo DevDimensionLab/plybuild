@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os/user"
-	"spring-boot-co-pilot/pkg/file"
+	"co-pilot/pkg/file"
 )
 
 func GetRepositories() ([]string, error) {
