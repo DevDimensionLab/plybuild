@@ -1,4 +1,4 @@
-# Spring-boot-co-pilot
+# Co-pilot
 
 
 ## Compilation
@@ -8,7 +8,7 @@ go build
 
 ## Help
 ```shell script
-spring-boot-co-pilot
+co-pilot
 ```
 
 ```
@@ -31,7 +31,7 @@ Available Commands:
 ### CLI
 Downloads the spring cli to a target folder in the current directory
 ```shell script
-spring-boot-co-pilot download cli
+co-pilot download cli
 ```
 
 ## Maven
@@ -44,7 +44,7 @@ Available Commands:
 ### Repositories
 List the repositories found in settings.xml or default
 ```shell script
-spring-boot-co-pilot maven repositories
+co-pilot maven repositories
 ```
 
 ## Spring
@@ -60,18 +60,18 @@ Creates a simple webservice using start.spring.io
 
 * Default webservice
 ```shell script
-spring-boot-co-pilot spring init
+co-pilot spring init
 ```
 
 * Custom webservice from json file
 ```shell script
-spring-boot-co-pilot spring init --config-file example.init.config.json
+co-pilot spring init --config-file example.init.config.json
 ```
 
 ### Status
 Status gets last default version from start.spring.io
 ```shell script
-spring-boot-co-pilot spring status
+co-pilot spring status
 ```
 
 
@@ -88,12 +88,12 @@ Available Commands:
 Upgrades the dependencies of the current project
 * Current directory
 ```shell script
-spring-boot-co-pilot upgrade dependencies
+co-pilot upgrade dependencies
 ```
 
 * Custom target
 ```shell script
-spring-boot-co-pilot upgrade dependencies --target /path/to/folder
+co-pilot upgrade dependencies --target /path/to/folder
 ```
 
 ### Spring Boot
@@ -101,10 +101,10 @@ Upgrades the pom.xml file found in directory to newest version of spring boot
 
 * Current directory
 ```shell script
-spring-boot-co-pilot upgrade spring-boot
+co-pilot upgrade spring-boot
 ```
 
 * Custom target
 ```shell script
-spring-boot-co-pilot upgrade spring-boot --target /path/to/folder
+co-pilot upgrade spring-boot --target /path/to/folder
 ```

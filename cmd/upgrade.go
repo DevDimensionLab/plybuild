@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"log"
-	"spring-boot-co-pilot/pkg/spring"
+	"co-pilot/pkg/spring"
 )
 
 var upgradeCmd = &cobra.Command{

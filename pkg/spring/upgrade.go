@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	"spring-boot-co-pilot/pkg/maven"
+	"co-pilot/pkg/maven"
 )
 
 func UpgradeSpringBoot(directory string) error {

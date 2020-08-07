@@ -27,8 +27,8 @@ var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "spring-boot-co-pilot",
-	Short: "Spring-boot-co-pilot er et støtteverktøy i utvikling der kjente oppgaver er automatisert",
+	Use:   "co-pilot",
+	Short: "Co-pilot er et støtteverktøy i utvikling der kjente oppgaver er automatisert",
 	Long:  ``,
 }
 
@@ -42,7 +42,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.spring-boot-co-pilot.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.co-pilot.yaml)")
 	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
@@ -57,7 +57,7 @@ func initConfig() {
 		}
 
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".spring-boot-co-pilot")
+		viper.SetConfigName(".co-pilot")
 	}
 
 	viper.AutomaticEnv()

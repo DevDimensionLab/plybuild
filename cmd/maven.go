@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"spring-boot-co-pilot/pkg/maven"
+	"co-pilot/pkg/maven"
 )
 
 var mavenCmd = &cobra.Command{
