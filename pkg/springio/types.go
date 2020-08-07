@@ -1,4 +1,4 @@
-package spring
+package springio
 
 type InitConfiguration struct {
 	GroupId      string   `json:"groupId"`

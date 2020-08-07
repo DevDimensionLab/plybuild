@@ -1,4 +1,4 @@
-package spring
+package springio
 
 import (
 	"co-pilot/pkg/http"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func SpringBootCLI(springExec string, arg ...string) error {
+func CLI(springExec string, arg ...string) error {
 	cmd := exec.Command(springExec, arg...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -1,20 +1,20 @@
-package spring
+package upgrade
 
 import (
-	"co-pilot/pkg/maven"
+	"co-pilot/pkg/springio"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-func UpgradeSpringBoot(directory string) error {
+func SpringBoot(directory string) error {
 	pomFile := directory + "/pom.xml"
 	model, err := pom.GetModelFrom(pomFile)
 	if err != nil {
 		return err
 	}
 
-	springRootInfo, err := GetRoot()
+	springRootInfo, err := springio.GetRoot()
 	if err != nil {
 		return err
 	}
@@ -39,31 +39,6 @@ func UpgradeSpringBoot(directory string) error {
 	}
 
 	return nil
-}
-
-func UpgradeDependencies(directory string) error {
-	pomFile := directory + "/pom.xml"
-	model, err := pom.GetModelFrom(pomFile)
-	if err != nil {
-		return err
-	}
-
-	deps := getDependenciesFromProject(model)
-
-	for _, dep := range deps {
-		if dep.Version != "" {
-			currentVersion, err := model.GetVersion(dep)
-			metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
-			if err == nil {
-				fmt.Printf("[OUTDATED] %s:%s [%s => %s] \n", dep.GroupId, dep.ArtifactId, currentVersion, metaData.Versioning.Latest)
-				_ = model.SetVersion(dep, metaData.Versioning.Latest)
-			} else {
-				fmt.Printf("[ERROR] %v\n", err)
-			}
-		}
-	}
-
-	return model.WriteToFile(pomFile + ".new")
 }
 
 func getSpringBootVersion(model *pom.Model) (string, error) {
@@ -103,17 +78,4 @@ func updateSpringBootVersion(model *pom.Model, newestVersion string) error {
 	}
 
 	return errors.New("could not update spring boot version to " + newestVersion)
-}
-
-func getDependenciesFromProject(model *pom.Model) []pom.Dependency {
-
-	var foundDependencies []pom.Dependency
-
-	if model.Dependencies != nil {
-		for _, modelDep := range model.Dependencies.Dependency {
-			foundDependencies = append(foundDependencies, modelDep)
-		}
-	}
-
-	return foundDependencies
 }

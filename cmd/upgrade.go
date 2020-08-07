@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"co-pilot/pkg/spring"
+	"co-pilot/pkg/upgrade"
 	"github.com/spf13/cobra"
 	"log"
 )
@@ -23,7 +23,7 @@ var upgradeSpringBootCmd = &cobra.Command{
 		if err != nil {
 			log.Println(err)
 		}
-		err = spring.UpgradeSpringBoot(targetDirectory)
+		err = upgrade.SpringBoot(targetDirectory)
 		if err != nil {
 			log.Println(err)
 		}
@@ -39,7 +39,7 @@ var upgradeDependenciesCmd = &cobra.Command{
 		if err != nil {
 			log.Println(err)
 		}
-		err = spring.UpgradeDependencies(targetDirectory)
+		err = upgrade.Dependencies(targetDirectory)
 		if err != nil {
 			log.Println(err)
 		}

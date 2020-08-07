@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"co-pilot/pkg/file"
-	"co-pilot/pkg/spring"
+	"co-pilot/pkg/springio"
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
@@ -23,7 +23,7 @@ var springInitCmd = &cobra.Command{
 	Long:  `Spring init`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
-		var config = spring.InitConfiguration{}
+		var config = springio.InitConfiguration{}
 
 		_ = os.RemoveAll("webservice")
 
@@ -33,17 +33,17 @@ var springInitCmd = &cobra.Command{
 				log.Println(err)
 				os.Exit(1)
 			}
-			err = spring.Validate(config)
+			err = springio.Validate(config)
 			if err != nil {
 				log.Println(err)
 				os.Exit(1)
 			}
 		} else {
-			config = spring.DefaultConfiguration()
+			config = springio.DefaultConfiguration()
 		}
 
 		springExec, err := file.Find("bin/spring", "./target")
-		err = spring.SpringBootCLI(springExec, spring.InitFrom(config)...)
+		err = springio.CLI(springExec, springio.InitFrom(config)...)
 
 		if err != nil {
 			log.Println(err)
@@ -56,7 +56,7 @@ var springStatusCmd = &cobra.Command{
 	Short: "Spring status",
 	Long:  `Spring status`,
 	Run: func(cmd *cobra.Command, args []string) {
-		root, err := spring.GetRoot()
+		root, err := springio.GetRoot()
 		if err != nil {
 			log.Println(err)
 		}
