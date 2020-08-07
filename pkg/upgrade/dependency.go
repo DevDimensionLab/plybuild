@@ -4,6 +4,7 @@ import (
 	"co-pilot/pkg/maven"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"sort"
 )
 
 func Dependencies(directory string) error {
@@ -30,6 +31,7 @@ func Dependencies(directory string) error {
 		}
 	}
 
+	sort.Sort(DependencySort(model.Dependencies.Dependency))
 	return model.WriteToFile(pomFile + ".new")
 }
 
