@@ -28,7 +28,7 @@ var springInitCmd = &cobra.Command{
 		_ = os.RemoveAll("webservice")
 
 		if jsonConfigFile != "" {
-			err := file.Read(jsonConfigFile, &config)
+			err := file.ReadJson(jsonConfigFile, &config)
 			if err != nil {
 				log.Println(err)
 				os.Exit(1)

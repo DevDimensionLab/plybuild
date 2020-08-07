@@ -2,6 +2,7 @@ package file
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"io"
 	"io/ioutil"
 	"os"
@@ -25,13 +26,8 @@ func Find(fileSuffix string, dir string) (result string, err error) {
 	return
 }
 
-func Read(file string, parsed interface{}) error {
-	jsonFile, err := os.Open(file)
-	if err != nil {
-		return err
-	}
-
-	byteValue, err := ioutil.ReadAll(jsonFile)
+func ReadJson(file string, parsed interface{}) error {
+	byteValue, err := Open(file)
 	if err != nil {
 		return err
 	}
@@ -40,7 +36,44 @@ func Read(file string, parsed interface{}) error {
 	if err != nil {
 		return err
 	}
-	defer jsonFile.Close()
 
 	return nil
+}
+
+func ReadXml(file string, parsed interface{}) error {
+	byteValue, err := Open(file)
+	if err != nil {
+		return err
+	}
+
+	err = xml.Unmarshal(byteValue, &parsed)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Exists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+func Open(filePath string) ([]byte, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	byteValue, err := ioutil.ReadAll(file)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	defer file.Close()
+
+	return byteValue, nil
 }

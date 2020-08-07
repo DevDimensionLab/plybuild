@@ -1,37 +1,29 @@
 package maven
 
 import (
-	"encoding/xml"
+	"errors"
 	"fmt"
 	"spring-boot-co-pilot/pkg/http"
 	"strings"
 )
 
-type Metadata struct {
-	XMLName      xml.Name `xml:"metadata"`
-	Text         string   `xml:",chardata"`
-	ModelVersion string   `xml:"modelVersion,attr"`
-	GroupId      string   `xml:"groupId"`
-	ArtifactId   string   `xml:"artifactId"`
-	Versioning   struct {
-		Text     string `xml:",chardata"`
-		Latest   string `xml:"latest"`
-		Release  string `xml:"release"`
-		Versions struct {
-			Text    string   `xml:",chardata"`
-			Version []string `xml:"version"`
-		} `xml:"versions"`
-		LastUpdated string `xml:"lastUpdated"`
-	} `xml:"versioning"`
-}
-
 func GetMetaData(groupID string, artifactId string) (Metadata, error) {
 	var metaData Metadata
-	// uses hardcoded url for now...
-	url := fmt.Sprintf("https://repo1.maven.org/maven2/%s/%s/maven-metadata.xml",
+	repos, err := GetRepositories()
+	if err != nil {
+		return metaData, err
+	}
+
+	defaultRepo := repos[0]
+	if defaultRepo == "" {
+		return metaData, errors.New("could not find a maven repo")
+	}
+
+	url := fmt.Sprintf("%s/%s/%s/maven-metadata.xml",
+		defaultRepo,
 		strings.ReplaceAll(groupID, ".", "/"),
 		strings.ReplaceAll(artifactId, ".", "/"))
-	err := http.GetXml(url, &metaData)
+	err = http.GetXml(url, &metaData)
 	if err != nil {
 		return metaData, err
 	}
