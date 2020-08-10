@@ -14,9 +14,7 @@ func Dependencies(directory string) error {
 		return err
 	}
 
-	deps := getDependenciesFromProject(model)
-
-	for _, dep := range deps {
+	for _, dep := range getDependenciesFromProject(model) {
 		if dep.Version != "" {
 			currentVersion, err := model.GetVersion(dep)
 			metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
