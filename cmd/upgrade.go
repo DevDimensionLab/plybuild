@@ -46,10 +46,28 @@ var upgradeDependenciesCmd = &cobra.Command{
 	},
 }
 
+var upgradeKotlinCmd = &cobra.Command{
+	Use:   "kotlin",
+	Short: "upgrade kotlin version in project",
+	Long:  `upgrade kotlin version in project`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Println(err)
+		}
+		err = upgrade.Kotlin(targetDirectory)
+		if err != nil {
+			log.Println(err)
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(upgradeCmd)
 	upgradeCmd.AddCommand(upgradeSpringBootCmd)
 	upgradeCmd.AddCommand(upgradeDependenciesCmd)
+	upgradeCmd.AddCommand(upgradeKotlinCmd)
 	upgradeSpringBootCmd.Flags().String("target", ".", "Optional target directory")
 	upgradeDependenciesCmd.Flags().String("target", ".", "Optional target directory")
+	upgradeKotlinCmd.Flags().String("target", ".", "Optional target directory")
 }

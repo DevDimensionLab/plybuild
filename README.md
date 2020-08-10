@@ -76,10 +76,11 @@ co-pilot spring status
 
 
 ## Upgrade
-Upgrade functionality
+Upgrade functionalities. Every available command writes the output to a new `pom.xml.new` file instead of overwriting the original pom.xml file.
 ```
 Available Commands:
   dependencies upgrade dependencies to project
+  kotlin       upgrade kotlin version in project
   spring-boot  upgrade spring-boot to the latest version
 ```
 
@@ -94,6 +95,17 @@ co-pilot upgrade dependencies
 * Custom target
 ```shell script
 co-pilot upgrade dependencies --target /path/to/folder
+```
+
+### Kotlin
+Upgrades the version information found under `<properties><kotlin.version>...</properties>` to the latest kotlin version found for kotlin-stdlib-jdk8 on maven.org
+```shell script
+co-pilot upgrade kotlin
+```
+
+* Custom target
+```shell script
+co-pilot upgrade kotlin --target /path/to/folder
 ```
 
 ### Spring Boot
