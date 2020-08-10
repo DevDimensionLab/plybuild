@@ -15,6 +15,7 @@ co-pilot
 Available Commands:
   download    Downloads options
   help        Help about any command
+  init        initializes a project
   maven       maven options
   spring      Spring boot tools
   upgrade     Upgrade options
@@ -33,6 +34,17 @@ Downloads the spring cli to a target folder in the current directory
 ```shell script
 co-pilot download cli
 ```
+
+## Init
+Initializes a projects and writes the output to a pom.xml.new file. This does not upgrade or touch the contents of the file in any way, only rearranges the file according to the co-pilot standard.
+```shell script
+co-pilot init
+```
+* Custom target
+```shell script
+co-pilot init --target /path/to/folder
+```
+
 
 ## Maven
 Maven helper funcionality

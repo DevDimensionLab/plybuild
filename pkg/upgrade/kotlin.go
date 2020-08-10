@@ -16,7 +16,7 @@ func Kotlin(directory string) error {
 	}
 
 	currentVersion, err := model.Properties.FindKey("kotlin.version")
-	latestKotlinJdk8, err := maven.GetMetaData("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
+	latestKotlinJdk8, err := maven.GetMetaData("org.jetbrains.kotlin", "kotlin-maven-plugin")
 	if err != nil {
 		return err
 	}
