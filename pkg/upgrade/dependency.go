@@ -14,7 +14,7 @@ func Dependencies(directory string) error {
 		return err
 	}
 
-	for _, dep := range getDependenciesFromProject(model) {
+	for _, dep := range model.Dependencies.Dependency {
 		if dep.Version != "" {
 			currentVersion, err := model.GetVersion(dep)
 			metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
@@ -31,17 +31,4 @@ func Dependencies(directory string) error {
 
 	sort.Sort(DependencySort(model.Dependencies.Dependency))
 	return model.WriteToFile(pomFile + ".new")
-}
-
-func getDependenciesFromProject(model *pom.Model) []pom.Dependency {
-
-	var foundDependencies []pom.Dependency
-
-	if model.Dependencies != nil {
-		for _, modelDep := range model.Dependencies.Dependency {
-			foundDependencies = append(foundDependencies, modelDep)
-		}
-	}
-
-	return foundDependencies
 }
