@@ -33,7 +33,7 @@ func SpringBoot(directory string) error {
 		}
 
 		fmt.Printf("[OUTDATED]: [%s => %s]\n", modelVersion, newestVersion)
-		return model.WriteToFile(pomFile + ".new")
+		return model.WriteToFile(pomFile)
 	} else {
 		fmt.Printf("No update needed, model version is the newest of spring boot [%s]\n", newestVersion)
 	}

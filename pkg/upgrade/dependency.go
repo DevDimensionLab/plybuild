@@ -30,5 +30,5 @@ func Dependencies(directory string) error {
 	}
 
 	sort.Sort(DependencySort(model.Dependencies.Dependency))
-	return model.WriteToFile(pomFile + ".new")
+	return model.WriteToFile(pomFile)
 }

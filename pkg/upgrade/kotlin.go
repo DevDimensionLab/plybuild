@@ -29,7 +29,7 @@ func Kotlin(directory string) error {
 		fmt.Printf("[OUTDATED] kotlin version [%s => %s] \n", currentVersion, latestKotlinJdk8.Versioning.Latest)
 
 		sort.Sort(DependencySort(model.Dependencies.Dependency))
-		return model.WriteToFile(pomFile + ".new")
+		return model.WriteToFile(pomFile)
 	} else {
 		fmt.Printf("[INFO] No update needed, kotlin is the the latest version [%s]\n", currentVersion)
 		return nil

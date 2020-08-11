@@ -15,5 +15,5 @@ func Init(directory string) error {
 
 	fmt.Printf("[INFO] Initializes project and writes to: %s.new\n", pomFile)
 	sort.Sort(DependencySort(model.Dependencies.Dependency))
-	return model.WriteToFile(pomFile + ".new")
+	return model.WriteToFile(pomFile)
 }
