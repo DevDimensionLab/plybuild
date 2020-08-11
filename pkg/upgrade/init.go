@@ -7,7 +7,7 @@ import (
 )
 
 func Init(directory string) error {
-	pomFile := directory + "pom.xml"
+	pomFile := directory + "/pom.xml"
 	model, err := pom.GetModelFrom(pomFile)
 	if err != nil {
 		return err
