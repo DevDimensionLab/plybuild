@@ -24,6 +24,7 @@ func GetMetaData(groupID string, artifactId string) (Metadata, error) {
 		strings.ReplaceAll(groupID, ".", "/"),
 		strings.ReplaceAll(artifactId, ".", "/"))
 	err = http.GetXml(url, &metaData)
+
 	if err != nil {
 		return metaData, err
 	}

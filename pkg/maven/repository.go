@@ -18,13 +18,21 @@ func GetRepositories() ([]string, error) {
 		if err != nil {
 			return repos, err
 		}
+
 		for _, profile := range settings.Profiles.Profile {
 			for _, repo := range profile.Repositories.Repository {
-				if repo.Releases.Enabled {
+				if repo.Releases.Enabled && repo.URL != "" {
 					repos = append(repos, repo.URL)
 				}
 			}
 		}
+
+		for _, mirror := range settings.Mirrors {
+			if mirror.Mirror.URL != "" {
+				repos = append(repos, mirror.Mirror.URL)
+			}
+		}
+
 	} else {
 		// could not find settings.xml, adding defaultMavenRepo
 		repos = append(repos, defaultMavenRepo)
