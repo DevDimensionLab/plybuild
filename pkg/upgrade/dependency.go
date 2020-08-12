@@ -40,9 +40,9 @@ func Upgrade(model *pom.Model, dep pom.Dependency) error {
 	currentVersion, err := model.GetVersion(dep)
 	metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
 	if err == nil {
-		if currentVersion != metaData.Versioning.Latest {
-			fmt.Printf("[OUTDATED] %s:%s [%s => %s] \n", dep.GroupId, dep.ArtifactId, currentVersion, metaData.Versioning.Latest)
-			_ = model.SetVersion(dep, metaData.Versioning.Latest)
+		if currentVersion != metaData.Versioning.Release {
+			fmt.Printf("[OUTDATED] %s:%s [%s => %s] \n", dep.GroupId, dep.ArtifactId, currentVersion, metaData.Versioning.Release)
+			_ = model.SetVersion(dep, metaData.Versioning.Release)
 		}
 		return nil
 	} else {

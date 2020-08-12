@@ -21,12 +21,12 @@ func Kotlin(directory string) error {
 		return err
 	}
 
-	if currentVersion != latestKotlinJdk8.Versioning.Latest {
-		err = model.Properties.SetKey("kotlin.version", latestKotlinJdk8.Versioning.Latest)
+	if currentVersion != latestKotlinJdk8.Versioning.Release {
+		err = model.Properties.SetKey("kotlin.version", latestKotlinJdk8.Versioning.Release)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("[OUTDATED] kotlin version [%s => %s] \n", currentVersion, latestKotlinJdk8.Versioning.Latest)
+		fmt.Printf("[OUTDATED] kotlin version [%s => %s] \n", currentVersion, latestKotlinJdk8.Versioning.Release)
 
 		sort.Sort(DependencySort(model.Dependencies.Dependency))
 		return model.WriteToFile(pomFile)
