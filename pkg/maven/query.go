@@ -18,6 +18,8 @@ func GetMetaData(groupID string, artifactId string) (Metadata, error) {
 		return metaData, err
 	}
 
+	fmt.Printf("[INFO] url for metadata: %s\n", repo)
+
 	url := fmt.Sprintf("%s/%s/%s/maven-metadata.xml",
 		repo,
 		strings.ReplaceAll(groupID, ".", "/"),
