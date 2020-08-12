@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-func GetMetaData(groupID string, artifactId string, isLocal bool) (Metadata, error) {
+func GetMetaData(groupID string, artifactId string) (Metadata, error) {
 	var metaData Metadata
 	repos, err := GetRepositories()
 	if err != nil {
 		return metaData, err
 	}
-	repo, err := GetRepo(repos, isLocal)
+	repo, err := GetRepo(repos)
 	if err != nil {
 		return metaData, err
 	}
@@ -31,11 +31,9 @@ func GetMetaData(groupID string, artifactId string, isLocal bool) (Metadata, err
 	return metaData, nil
 }
 
-func GetRepo(repos Repositories, isLocal bool) (string, error) {
+func GetRepo(repos Repositories) (string, error) {
 	var repo = ""
-	if isLocal && len(repos.Profile) > 0 {
-		repo = repos.Profile[0]
-	} else if len(repos.Mirror) > 0 {
+	if len(repos.Mirror) > 0 {
 		repo = repos.Mirror[0]
 	} else {
 		repo = repos.Fallback

@@ -103,10 +103,29 @@ Upgrades the dependencies of the current project
 ```shell script
 co-pilot upgrade deps
 ```
-
-* Custom target
 ```shell script
-co-pilot upgrade deps --target /path/to/folder
+Available Commands:
+  2party      upgrade 2party dependencies to project
+  3party      upgrade 3party dependencies to project
+  all         upgrade all dependencies to project
+```
+
+#### 2party
+upgrade 2party dependencies to project
+```shell script
+co-pilot upgrade deps 2party
+```
+
+#### 3party
+upgrade 3party dependencies to project
+```shell script
+co-pilot upgrade deps 3party
+```
+
+#### all
+upgrade all dependencies to project
+```shell script
+co-pilot upgrade deps all
 ```
 
 ### Kotlin
