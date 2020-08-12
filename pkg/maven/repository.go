@@ -7,9 +7,16 @@ import (
 	"os/user"
 )
 
-func GetRepositories() ([]string, error) {
-	var repos []string
-	defaultMavenRepo := "https://repo1.maven.org/maven2"
+type Repositories struct {
+	Fallback string
+	Profile  []string
+	Mirror   []string
+}
+
+func GetRepositories() (Repositories, error) {
+	repos := Repositories{
+		Fallback: "https://repo1.maven.org/maven2",
+	}
 	settingsFile, err := GetSettingsFile()
 
 	if err == nil {
@@ -22,20 +29,16 @@ func GetRepositories() ([]string, error) {
 		for _, profile := range settings.Profiles.Profile {
 			for _, repo := range profile.Repositories.Repository {
 				if repo.Releases.Enabled && repo.URL != "" {
-					repos = append(repos, repo.URL)
+					repos.Profile = append(repos.Profile, repo.URL)
 				}
 			}
 		}
 
 		for _, mirror := range settings.Mirrors {
 			if mirror.Mirror.URL != "" {
-				repos = append(repos, mirror.Mirror.URL)
+				repos.Mirror = append(repos.Mirror, mirror.Mirror.URL)
 			}
 		}
-
-	} else {
-		// could not find settings.xml, adding defaultMavenRepo
-		repos = append(repos, defaultMavenRepo)
 	}
 
 	return repos, nil

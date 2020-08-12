@@ -7,20 +7,19 @@ import (
 	"strings"
 )
 
-func GetMetaData(groupID string, artifactId string) (Metadata, error) {
+func GetMetaData(groupID string, artifactId string, isLocal bool) (Metadata, error) {
 	var metaData Metadata
 	repos, err := GetRepositories()
 	if err != nil {
 		return metaData, err
 	}
-
-	defaultRepo := repos[0]
-	if defaultRepo == "" {
-		return metaData, errors.New("could not find a maven repo")
+	repo, err := GetRepo(repos, isLocal)
+	if err != nil {
+		return metaData, err
 	}
 
 	url := fmt.Sprintf("%s/%s/%s/maven-metadata.xml",
-		defaultRepo,
+		repo,
 		strings.ReplaceAll(groupID, ".", "/"),
 		strings.ReplaceAll(artifactId, ".", "/"))
 	err = http.GetXml(url, &metaData)
@@ -30,4 +29,21 @@ func GetMetaData(groupID string, artifactId string) (Metadata, error) {
 	}
 
 	return metaData, nil
+}
+
+func GetRepo(repos Repositories, isLocal bool) (string, error) {
+	var repo = ""
+	if isLocal && len(repos.Profile) > 0 {
+		repo = repos.Profile[0]
+	} else if len(repos.Mirror) > 0 {
+		repo = repos.Mirror[0]
+	} else {
+		repo = repos.Fallback
+	}
+
+	if repo == "" {
+		return "", errors.New("could not find a valid maven repo in repos struct")
+	} else {
+		return repo, nil
+	}
 }

@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"co-pilot/pkg/analyze"
 	"co-pilot/pkg/maven"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
@@ -14,10 +15,16 @@ func Dependencies(directory string) error {
 		return err
 	}
 
+	localGroupId, err := analyze.GetLocalGroupId(model)
+	if err != nil {
+		return err
+	}
+
 	for _, dep := range model.Dependencies.Dependency {
 		if dep.Version != "" {
 			currentVersion, err := model.GetVersion(dep)
-			metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
+			isLocal, err := analyze.IsLocalGroupId(dep.GroupId, localGroupId)
+			metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId, isLocal)
 			if err == nil {
 				if currentVersion != metaData.Versioning.Latest {
 					fmt.Printf("[OUTDATED] %s:%s [%s => %s] \n", dep.GroupId, dep.ArtifactId, currentVersion, metaData.Versioning.Latest)

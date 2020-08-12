@@ -31,7 +31,7 @@ var upgradeSpringBootCmd = &cobra.Command{
 }
 
 var upgradeDependenciesCmd = &cobra.Command{
-	Use:   "dependencies",
+	Use:   "deps",
 	Short: "upgrade dependencies to project",
 	Long:  `upgrade dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
