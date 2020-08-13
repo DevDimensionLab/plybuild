@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"co-pilot/pkg/upgrade"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var upgradeCmd = &cobra.Command{
@@ -21,28 +21,11 @@ var upgradeSpringBootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
-			log.Println(err)
+			log.Fatalln(err)
 		}
-		err = upgrade.SpringBoot(targetDirectory)
+		err = upgrade.SpringBoot(targetDirectory, false)
 		if err != nil {
-			log.Println(err)
-		}
-	},
-}
-
-var upgradeAllDependenciesCmd = &cobra.Command{
-	Use:   "all",
-	Short: "upgrade all dependencies to project",
-	Long:  `upgrade all dependencies to project`,
-	Run: func(cmd *cobra.Command, args []string) {
-		targetDirectory, err := cmd.Flags().GetString("target")
-		if err != nil {
-			log.Println(err)
-		}
-		err = upgrade.Dependencies(targetDirectory, true)
-		err = upgrade.Dependencies(targetDirectory, false)
-		if err != nil {
-			log.Println(err)
+			log.Fatalln(err)
 		}
 	},
 }
@@ -54,11 +37,11 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
-			log.Println(err)
+			log.Fatalln(err)
 		}
-		err = upgrade.Dependencies(targetDirectory, true)
+		err = upgrade.Dependencies(targetDirectory, true, false)
 		if err != nil {
-			log.Println(err)
+			log.Fatalln(err)
 		}
 	},
 }
@@ -70,11 +53,11 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
-			log.Println(err)
+			log.Fatalln(err)
 		}
-		err = upgrade.Dependencies(targetDirectory, false)
+		err = upgrade.Dependencies(targetDirectory, false, false)
 		if err != nil {
-			log.Println(err)
+			log.Fatalln(err)
 		}
 	},
 }
@@ -86,28 +69,60 @@ var upgradeKotlinCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
-			log.Println(err)
+			log.Fatalln(err)
 		}
-		err = upgrade.Kotlin(targetDirectory)
+		err = upgrade.Kotlin(targetDirectory, false)
 		if err != nil {
-			log.Println(err)
+			log.Fatalln(err)
+		}
+	},
+}
+
+var upgradePluginsCmd = &cobra.Command{
+	Use:   "plugins",
+	Short: "upgrade plugins found in project",
+	Long:  `upgrade plugins found in project`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		err = upgrade.Plugin(targetDirectory, false)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	},
+}
+
+
+var upgradeAllDependenciesCmd = &cobra.Command{
+	Use:   "all",
+	Short: "upgrade all dependencies to project",
+	Long:  `upgrade all dependencies to project`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		err = upgrade.Dependencies(targetDirectory, true, false)
+		err = upgrade.Dependencies(targetDirectory, false, false)
+		err = upgrade.Kotlin(targetDirectory, false)
+		err = upgrade.SpringBoot(targetDirectory, false)
+		err = upgrade.Plugin(targetDirectory, false)
+		if err != nil {
+			log.Fatalln(err)
 		}
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(upgradeCmd)
-
-	upgradeCmd.AddCommand(upgradeSpringBootCmd)
-	upgradeSpringBootCmd.Flags().String("target", ".", "Optional target directory")
-
 	upgradeCmd.AddCommand(upgradeAllDependenciesCmd)
-	upgradeAllDependenciesCmd.Flags().String("target", ".", "Optional target directory")
 	upgradeCmd.AddCommand(upgrade2partyDependenciesCmd)
-	upgrade2partyDependenciesCmd.Flags().String("target", ".", "Optional target directory")
 	upgradeCmd.AddCommand(upgrade3partyDependenciesCmd)
-	upgrade3partyDependenciesCmd.Flags().String("target", ".", "Optional target directory")
-
+	upgradeCmd.AddCommand(upgradeSpringBootCmd)
 	upgradeCmd.AddCommand(upgradeKotlinCmd)
-	upgradeKotlinCmd.Flags().String("target", ".", "Optional target directory")
+	upgradeCmd.AddCommand(upgradePluginsCmd)
+
+	upgradeCmd.PersistentFlags().String("target", ".", "Optional target directory")
 }

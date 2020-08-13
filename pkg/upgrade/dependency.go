@@ -3,12 +3,12 @@ package upgrade
 import (
 	"co-pilot/pkg/analyze"
 	"co-pilot/pkg/maven"
-	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	log "github.com/sirupsen/logrus"
 	"sort"
 )
 
-func Dependencies(directory string, local bool) error {
+func Dependencies(directory string, local bool, dryRun bool) error {
 	pomFile := directory + "/pom.xml"
 	model, err := pom.GetModelFrom(pomFile)
 	if err != nil {
@@ -24,25 +24,30 @@ func Dependencies(directory string, local bool) error {
 		if dep.Version != "" {
 			isLocal, err := analyze.IsLocalGroupId(dep.GroupId, localGroupId)
 			if err == nil && isLocal == local {
-				err = Upgrade(model, dep)
+				err = DependencyUpgrade(model, dep)
 				if err != nil {
-					fmt.Printf("%s\n", err)
+					log.Errorf("%v", err)
 				}
 			}
 		}
 	}
 
-	sort.Sort(DependencySort(model.Dependencies.Dependency))
-	return model.WriteToFile(pomFile)
+	if !dryRun {
+		sort.Sort(DependencySort(model.Dependencies.Dependency))
+		return model.WriteToFile(pomFile)
+	} else {
+		return nil
+	}
 }
 
-func Upgrade(model *pom.Model, dep pom.Dependency) error {
-	currentVersion, err := model.GetVersion(dep)
+func DependencyUpgrade(model *pom.Model, dep pom.Dependency) error {
+	currentVersion, err := model.GetDependencyVersion(dep)
 	metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
 	if err == nil {
 		if currentVersion != metaData.Versioning.Release {
-			fmt.Printf("[OUTDATED] %s:%s [%s => %s] \n", dep.GroupId, dep.ArtifactId, currentVersion, metaData.Versioning.Release)
-			_ = model.SetVersion(dep, metaData.Versioning.Release)
+
+			log.Warnf("outdated dependency %s:%s [%s => %s] \n", dep.GroupId, dep.ArtifactId, currentVersion, metaData.Versioning.Release)
+			_ = model.SetDependencyVersion(dep, metaData.Versioning.Release)
 		}
 		return nil
 	} else {

@@ -14,7 +14,9 @@
 
 package main
 
-import "co-pilot/cmd"
+import (
+	"co-pilot/cmd"
+)
 
 func main() {
 	cmd.Execute()

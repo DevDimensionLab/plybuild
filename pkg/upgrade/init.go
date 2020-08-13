@@ -1,8 +1,8 @@
 package upgrade
 
 import (
-	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	log "github.com/sirupsen/logrus"
 	"sort"
 )
 
@@ -13,7 +13,7 @@ func Init(directory string) error {
 		return err
 	}
 
-	fmt.Printf("[INFO] Initializes project and writes to: %s\n", pomFile)
+	log.Infof("Initializes project and writes to: %s", pomFile)
 	sort.Sort(DependencySort(model.Dependencies.Dependency))
 	return model.WriteToFile(pomFile)
 }

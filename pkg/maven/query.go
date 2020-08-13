@@ -4,6 +4,7 @@ import (
 	"co-pilot/pkg/http"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -18,13 +19,12 @@ func GetMetaData(groupID string, artifactId string) (Metadata, error) {
 		return metaData, err
 	}
 
-
 	url := fmt.Sprintf("%s/%s/%s/maven-metadata.xml",
 		repo,
 		strings.ReplaceAll(groupID, ".", "/"),
 		strings.ReplaceAll(artifactId, ".", "/"))
+	log.Debugf("Using url for metadata: %s", url)
 
-	fmt.Printf("[INFO] url for metadata: %s\n", url)
 	err = http.GetXml(url, &metaData)
 
 	if err != nil {

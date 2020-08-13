@@ -2,15 +2,15 @@ package cmd
 
 import (
 	"co-pilot/pkg/analyze"
-	"fmt"
+	"co-pilot/pkg/upgrade"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var analyzeCmd = &cobra.Command{
-	Use:   "analyze",
-	Short: "analyzes a project",
-	Long:  `analyzes a project`,
+	Use:   "status",
+	Short: "prints project status",
+	Long:  `prints project status`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
@@ -22,13 +22,27 @@ var analyzeCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		localGroupId, err := analyze.GetLocalGroupId(model)
-		if err != nil {
+		if localGroupId, err := analyze.GetLocalGroupId(model); err != nil {
 			log.Fatalln(err)
+		} else {
+			log.Info("Local groupId domain is: " + localGroupId)
 		}
 
-		fmt.Printf("Local groupId domain is: %s\n", localGroupId)
-
+		if err = upgrade.Dependencies(targetDirectory, true, true); err != nil {
+			log.Fatalln(err)
+		}
+		if err = upgrade.Dependencies(targetDirectory, false, true); err != nil {
+			log.Fatalln(err)
+		}
+		if err = upgrade.Kotlin(targetDirectory, true); err != nil {
+			log.Fatalln(err)
+		}
+		if err = upgrade.SpringBoot(targetDirectory, true); err != nil {
+			log.Fatalln(err)
+		}
+		if err = upgrade.Plugin(targetDirectory, true); err != nil {
+			log.Fatalln(err)
+		}
 	},
 }
 

@@ -2,12 +2,12 @@ package upgrade
 
 import (
 	"co-pilot/pkg/maven"
-	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	log "github.com/sirupsen/logrus"
 	"sort"
 )
 
-func Kotlin(directory string) error {
+func Kotlin(directory string, dryRun bool) error {
 	pomFile := directory + "/pom.xml"
 	model, err := pom.GetModelFrom(pomFile)
 
@@ -26,12 +26,16 @@ func Kotlin(directory string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("[OUTDATED] kotlin version [%s => %s] \n", currentVersion, latestKotlinJdk8.Versioning.Release)
+		log.Warnf("outdated kotlin version [%s => %s]", currentVersion, latestKotlinJdk8.Versioning.Release)
 
-		sort.Sort(DependencySort(model.Dependencies.Dependency))
-		return model.WriteToFile(pomFile)
+		if !dryRun {
+			sort.Sort(DependencySort(model.Dependencies.Dependency))
+			return model.WriteToFile(pomFile)
+		} else {
+			return nil
+		}
 	} else {
-		fmt.Printf("[INFO] No update needed, kotlin is the the latest version [%s]\n", currentVersion)
+		log.Infof("No update needed, kotlin is the the latest version [%s]", currentVersion)
 		return nil
 	}
 }

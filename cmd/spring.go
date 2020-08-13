@@ -3,9 +3,8 @@ package cmd
 import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/springio"
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 )
 
@@ -17,10 +16,10 @@ var springCmd = &cobra.Command{
 	},
 }
 
-var springInitCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Spring init",
-	Long:  `Spring init`,
+var springInstallCmd = &cobra.Command{
+	Use:   "install",
+	Short: "downloads and installs spring boot with default or provided settings",
+	Long:  `downloads and installs spring boot with default or provided settings`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
 		var config = springio.InitConfiguration{}
@@ -58,15 +57,15 @@ var springStatusCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		root, err := springio.GetRoot()
 		if err != nil {
-			log.Println(err)
+			log.Fatalln(err)
 		}
-		fmt.Printf("Latest version of spring boot are: %s\n", root.BootVersion.Default)
+		log.Infof("Latest version of spring boot are: %s\n", root.BootVersion.Default)
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(springCmd)
-	springCmd.AddCommand(springInitCmd)
+	springCmd.AddCommand(springInstallCmd)
 	springCmd.AddCommand(springStatusCmd)
-	springInitCmd.Flags().String("config-file", "", "Optional config file")
+	springInstallCmd.Flags().String("config-file", "", "Optional config file")
 }

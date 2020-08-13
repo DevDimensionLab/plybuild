@@ -3,11 +3,12 @@ package upgrade
 import (
 	"co-pilot/pkg/springio"
 	"errors"
-	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	log "github.com/sirupsen/logrus"
+	"sort"
 )
 
-func SpringBoot(directory string) error {
+func SpringBoot(directory string, dryRun bool) error {
 	pomFile := directory + "/pom.xml"
 	model, err := pom.GetModelFrom(pomFile)
 	if err != nil {
@@ -32,10 +33,15 @@ func SpringBoot(directory string) error {
 			return err
 		}
 
-		fmt.Printf("[OUTDATED]: [%s => %s]\n", modelVersion, newestVersion)
-		return model.WriteToFile(pomFile)
+		log.Warnf("outdated spring-boot version [%s => %s]", modelVersion, newestVersion)
+		if !dryRun {
+			sort.Sort(DependencySort(model.Dependencies.Dependency))
+			return model.WriteToFile(pomFile)
+		} else {
+			return nil
+		}
 	} else {
-		fmt.Printf("No update needed, model version is the newest of spring boot [%s]\n", newestVersion)
+		log.Infof("Spring boot is the latest version [%s]", newestVersion)
 	}
 
 	return nil
@@ -53,7 +59,7 @@ func getSpringBootVersion(model *pom.Model) (string, error) {
 		if err != nil {
 			return "", nil
 		} else {
-			return model.GetVersion(dep)
+			return model.GetDependencyVersion(dep)
 		}
 	}
 
@@ -73,7 +79,7 @@ func updateSpringBootVersion(model *pom.Model, newestVersion string) error {
 		if err != nil {
 			return err
 		} else {
-			return model.SetVersion(dep, newestVersion)
+			return model.SetDependencyVersion(dep, newestVersion)
 		}
 	}
 
