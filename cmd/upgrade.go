@@ -94,6 +94,21 @@ var upgradePluginsCmd = &cobra.Command{
 	},
 }
 
+var upgradeCleanCmd = &cobra.Command{
+	Use:   "clean",
+	Short: "cleans versions set in project that are redundant or unnecessary",
+	Long:  `cleans versions set in project that are redundant or unnecessary`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		err = upgrade.Clean(targetDirectory, false)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	},
+}
 
 var upgradeAllDependenciesCmd = &cobra.Command{
 	Use:   "all",
@@ -104,12 +119,23 @@ var upgradeAllDependenciesCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		err = upgrade.Dependencies(targetDirectory, true, false)
-		err = upgrade.Dependencies(targetDirectory, false, false)
-		err = upgrade.Kotlin(targetDirectory, false)
-		err = upgrade.SpringBoot(targetDirectory, false)
-		err = upgrade.Plugin(targetDirectory, false)
-		if err != nil {
+
+		if err = upgrade.Dependencies(targetDirectory, true, false); err != nil {
+			log.Fatalln(err)
+		}
+		if err = upgrade.Dependencies(targetDirectory, false, false); err != nil {
+			log.Fatalln(err)
+		}
+		if err = upgrade.Kotlin(targetDirectory, false); err != nil {
+			log.Fatalln(err)
+		}
+		if err = upgrade.SpringBoot(targetDirectory, false); err != nil {
+			log.Fatalln(err)
+		}
+		if err = upgrade.Plugin(targetDirectory, false); err != nil {
+			log.Fatalln(err)
+		}
+		if err = upgrade.Clean(targetDirectory, false); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -123,6 +149,7 @@ func init() {
 	upgradeCmd.AddCommand(upgradeSpringBootCmd)
 	upgradeCmd.AddCommand(upgradeKotlinCmd)
 	upgradeCmd.AddCommand(upgradePluginsCmd)
+	upgradeCmd.AddCommand(upgradeCleanCmd)
 
 	upgradeCmd.PersistentFlags().String("target", ".", "Optional target directory")
 }

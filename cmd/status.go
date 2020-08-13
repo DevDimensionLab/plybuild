@@ -43,6 +43,9 @@ var analyzeCmd = &cobra.Command{
 		if err = upgrade.Plugin(targetDirectory, true); err != nil {
 			log.Fatalln(err)
 		}
+		if err = upgrade.Clean(targetDirectory, true); err != nil {
+			log.Fatalln(err)
+		}
 	},
 }
 

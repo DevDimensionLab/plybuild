@@ -45,6 +45,5 @@ func Execute() {
 
 func init() {
 	log.SetOutput(os.Stdout)
-	RootCmd.PersistentFlags().Bool("debug",false, "turn on debug output")
+	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
 }
-
