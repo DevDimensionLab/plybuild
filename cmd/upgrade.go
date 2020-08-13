@@ -30,14 +30,6 @@ var upgradeSpringBootCmd = &cobra.Command{
 	},
 }
 
-var upgradeDependenciesCmd = &cobra.Command{
-	Use:   "deps",
-	Short: "upgrade dependencies to project",
-	Long:  `upgrade dependencies to project`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-	},
-}
-
 var upgradeAllDependenciesCmd = &cobra.Command{
 	Use:   "all",
 	Short: "upgrade all dependencies to project",
@@ -109,12 +101,11 @@ func init() {
 	upgradeCmd.AddCommand(upgradeSpringBootCmd)
 	upgradeSpringBootCmd.Flags().String("target", ".", "Optional target directory")
 
-	upgradeCmd.AddCommand(upgradeDependenciesCmd)
-	upgradeDependenciesCmd.AddCommand(upgradeAllDependenciesCmd)
+	upgradeCmd.AddCommand(upgradeAllDependenciesCmd)
 	upgradeAllDependenciesCmd.Flags().String("target", ".", "Optional target directory")
-	upgradeDependenciesCmd.AddCommand(upgrade2partyDependenciesCmd)
+	upgradeCmd.AddCommand(upgrade2partyDependenciesCmd)
 	upgrade2partyDependenciesCmd.Flags().String("target", ".", "Optional target directory")
-	upgradeDependenciesCmd.AddCommand(upgrade3partyDependenciesCmd)
+	upgradeCmd.AddCommand(upgrade3partyDependenciesCmd)
 	upgrade3partyDependenciesCmd.Flags().String("target", ".", "Optional target directory")
 
 	upgradeCmd.AddCommand(upgradeKotlinCmd)

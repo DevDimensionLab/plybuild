@@ -10,7 +10,7 @@ func TestGetRepo(t *testing.T) {
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	localRepo, err := GetRepo(repos, true)
+	localRepo, err := GetRepo(repos)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
