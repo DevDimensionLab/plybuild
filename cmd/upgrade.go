@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"co-pilot/pkg/upgrade"
+	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -23,8 +24,18 @@ var upgradeSpringBootCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		err = upgrade.SpringBoot(targetDirectory, false)
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.SpringBoot(model); err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -39,8 +50,19 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		err = upgrade.Dependencies(targetDirectory, true, false)
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
+			log.Fatalln(err)
+		}
+
+		err = upgrade.Dependencies(model, true)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -55,8 +77,18 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		err = upgrade.Dependencies(targetDirectory, false, false)
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.Dependencies(model, false); err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -71,8 +103,18 @@ var upgradeKotlinCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		err = upgrade.Kotlin(targetDirectory, false)
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.Kotlin(model); err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -87,8 +129,18 @@ var upgradePluginsCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		err = upgrade.Plugin(targetDirectory, false)
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.Plugin(model); err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -103,8 +155,18 @@ var upgradeCleanCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		err = upgrade.Clean(targetDirectory, false)
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.Clean(model); err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -112,30 +174,39 @@ var upgradeCleanCmd = &cobra.Command{
 
 var upgradeAllDependenciesCmd = &cobra.Command{
 	Use:   "all",
-	Short: "upgrade all dependencies to project",
-	Long:  `upgrade all dependencies to project`,
+	Short: "upgrade everything in project",
+	Long:  `upgrade everything in project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
 			log.Fatalln(err)
 		}
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
-		if err = upgrade.Dependencies(targetDirectory, true, false); err != nil {
+		if err = upgrade.Dependencies(model, true); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.Dependencies(targetDirectory, false, false); err != nil {
+		if err = upgrade.Dependencies(model, false); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.Kotlin(targetDirectory, false); err != nil {
+		if err = upgrade.Kotlin(model); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.SpringBoot(targetDirectory, false); err != nil {
+		if err = upgrade.SpringBoot(model); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.Plugin(targetDirectory, false); err != nil {
+		if err = upgrade.Plugin(model); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.Clean(targetDirectory, false); err != nil {
+		if err = upgrade.Clean(model); err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
 			log.Fatalln(err)
 		}
 	},

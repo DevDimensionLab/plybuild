@@ -5,16 +5,9 @@ import (
 	"co-pilot/pkg/maven"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
-	"sort"
 )
 
-func Dependencies(directory string, local bool, dryRun bool) error {
-	pomFile := directory + "/pom.xml"
-	model, err := pom.GetModelFrom(pomFile)
-	if err != nil {
-		return err
-	}
-
+func Dependencies(model *pom.Model, local bool) error {
 	localGroupId, err := analyze.GetLocalGroupId(model)
 	if err != nil {
 		return err
@@ -32,12 +25,7 @@ func Dependencies(directory string, local bool, dryRun bool) error {
 		}
 	}
 
-	if !dryRun {
-		sort.Sort(DependencySort(model.Dependencies.Dependency))
-		return model.WriteToFile(pomFile)
-	} else {
-		return nil
-	}
+	return nil
 }
 
 func DependencyUpgrade(model *pom.Model, dep pom.Dependency) error {

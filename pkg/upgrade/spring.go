@@ -5,16 +5,9 @@ import (
 	"errors"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
-	"sort"
 )
 
-func SpringBoot(directory string, dryRun bool) error {
-	pomFile := directory + "/pom.xml"
-	model, err := pom.GetModelFrom(pomFile)
-	if err != nil {
-		return err
-	}
-
+func SpringBoot(model *pom.Model) error {
 	springRootInfo, err := springio.GetRoot()
 	if err != nil {
 		return err
@@ -25,23 +18,16 @@ func SpringBoot(directory string, dryRun bool) error {
 		return err
 	}
 
-	newestVersion := springRootInfo.BootVersion.Default
+	latestVersion := springRootInfo.BootVersion.Default
 
-	if modelVersion != newestVersion {
-		err = updateSpringBootVersion(model, newestVersion)
+	if modelVersion != latestVersion {
+		log.Warnf("outdated spring-boot version [%s => %s]", modelVersion, latestVersion)
+		err = updateSpringBootVersion(model, latestVersion)
 		if err != nil {
 			return err
 		}
-
-		log.Warnf("outdated spring-boot version [%s => %s]", modelVersion, newestVersion)
-		if !dryRun {
-			sort.Sort(DependencySort(model.Dependencies.Dependency))
-			return model.WriteToFile(pomFile)
-		} else {
-			return nil
-		}
 	} else {
-		log.Infof("Spring boot is the latest version [%s]", newestVersion)
+		log.Infof("Spring boot is the latest version [%s]", latestVersion)
 	}
 
 	return nil

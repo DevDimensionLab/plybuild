@@ -3,7 +3,6 @@ package upgrade
 import (
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
-	"sort"
 )
 
 func Init(directory string) error {
@@ -14,6 +13,5 @@ func Init(directory string) error {
 	}
 
 	log.Infof("Initializes project and writes to: %s", pomFile)
-	sort.Sort(DependencySort(model.Dependencies.Dependency))
-	return model.WriteToFile(pomFile)
+	return SortAndWrite(model, pomFile)
 }

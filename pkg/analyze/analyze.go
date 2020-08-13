@@ -13,11 +13,6 @@ func GetLocalGroupId(model *pom.Model) (string, error) {
 	return "", errors.New("could not extract local groupId")
 }
 
-func GetModel(directory string) (*pom.Model, error) {
-	pomFile := directory + "/pom.xml"
-	return pom.GetModelFrom(pomFile)
-}
-
 func GetFirstTwoPartsOfGroupId(groupId string) (string, error) {
 	parts := strings.Split(groupId, ".")
 

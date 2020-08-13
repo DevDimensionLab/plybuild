@@ -4,15 +4,9 @@ import (
 	"co-pilot/pkg/springio"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
-	"sort"
 )
 
-func Clean(targetDirectory string, dryRun bool) error {
-	pomFile := targetDirectory + "/pom.xml"
-	model, err := pom.GetModelFrom(pomFile)
-	if err != nil {
-		return err
-	}
+func Clean(model *pom.Model) error {
 
 	springBootDependencies, err := springio.GetDependencies()
 	if err != nil {
@@ -28,13 +22,7 @@ func Clean(targetDirectory string, dryRun bool) error {
 			}
 		}
 	}
-
-	if !dryRun {
-		sort.Sort(DependencySort(model.Dependencies.Dependency))
-		return model.WriteToFile(pomFile)
-	} else {
-		return nil
-	}
+	return nil
 }
 
 func inMap(dep pom.Dependency, springBootDeps map[string]springio.Dependency) bool {

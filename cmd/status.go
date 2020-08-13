@@ -3,6 +3,7 @@ package cmd
 import (
 	"co-pilot/pkg/analyze"
 	"co-pilot/pkg/upgrade"
+	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +18,8 @@ var analyzeCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		model, err := analyze.GetModel(targetDirectory)
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -28,22 +30,22 @@ var analyzeCmd = &cobra.Command{
 			log.Info("Local groupId domain is: " + localGroupId)
 		}
 
-		if err = upgrade.Dependencies(targetDirectory, true, true); err != nil {
+		if err = upgrade.Dependencies(model, true); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.Dependencies(targetDirectory, false, true); err != nil {
+		if err = upgrade.Dependencies(model, false); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.Kotlin(targetDirectory, true); err != nil {
+		if err = upgrade.Kotlin(model); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.SpringBoot(targetDirectory, true); err != nil {
+		if err = upgrade.SpringBoot(model); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.Plugin(targetDirectory, true); err != nil {
+		if err = upgrade.Plugin(model); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.Clean(targetDirectory, true); err != nil {
+		if err = upgrade.Clean(model); err != nil {
 			log.Fatalln(err)
 		}
 	},
