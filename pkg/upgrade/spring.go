@@ -44,7 +44,7 @@ func SpringBoot(model *pom.Model) error {
 
 func getSpringBootVersion(model *pom.Model) (JavaVersion, error) {
 	// check parent
-	if model.Parent.ArtifactId == "spring-boot-starter-parent" {
+	if model.Parent != nil && model.Parent.ArtifactId == "spring-boot-starter-parent" {
 		return ParseVersion(model.Parent.Version)
 	}
 
@@ -52,11 +52,11 @@ func getSpringBootVersion(model *pom.Model) (JavaVersion, error) {
 	if model.DependencyManagement != nil {
 		dep, err := model.DependencyManagement.Dependencies.FindArtifact("spring-boot-dependencies")
 		if err != nil {
-			return JavaVersion{}, nil
+			return JavaVersion{}, err
 		}
 		version, err := model.GetDependencyVersion(dep)
 		if err != nil {
-			return JavaVersion{}, nil
+			return JavaVersion{}, err
 		}
 		return ParseVersion(version)
 	}
@@ -66,7 +66,7 @@ func getSpringBootVersion(model *pom.Model) (JavaVersion, error) {
 
 func updateSpringBootVersion(model *pom.Model, newVersion JavaVersion) error {
 	// check parent
-	if model.Parent.ArtifactId == "spring-boot-starter-parent" {
+	if model.Parent != nil && model.Parent.ArtifactId == "spring-boot-starter-parent" {
 		model.Parent.Version = newVersion.ToString()
 		return nil
 	}

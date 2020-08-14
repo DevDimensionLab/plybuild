@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/springio"
 	log "github.com/sirupsen/logrus"
@@ -22,27 +23,27 @@ var springInstallCmd = &cobra.Command{
 	Long:  `downloads and installs spring boot with default or provided settings`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
-		var config = springio.InitConfiguration{}
+		var initConfig = config.InitConfiguration{}
 
 		_ = os.RemoveAll("webservice")
 
 		if jsonConfigFile != "" {
-			err := file.ReadJson(jsonConfigFile, &config)
+			err := file.ReadJson(jsonConfigFile, &initConfig)
 			if err != nil {
 				log.Println(err)
 				os.Exit(1)
 			}
-			err = springio.Validate(config)
+			err = springio.Validate(initConfig)
 			if err != nil {
 				log.Println(err)
 				os.Exit(1)
 			}
 		} else {
-			config = springio.DefaultConfiguration()
+			initConfig = config.DefaultConfiguration()
 		}
 
 		springExec, err := file.Find("bin/spring", "./target")
-		err = springio.CLI(springExec, springio.InitFrom(config)...)
+		err = springio.CLI(springExec, springio.InitFrom(initConfig)...)
 
 		if err != nil {
 			log.Println(err)

@@ -24,6 +24,10 @@ var upgradeSpringBootCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
+		overwrite, err := cmd.Flags().GetBool("overwrite")
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		pomFile := targetDirectory + "/pom.xml"
 		model, err := pom.GetModelFrom(pomFile)
@@ -35,7 +39,11 @@ var upgradeSpringBootCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
+		var writeToFile = pomFile
+		if !overwrite {
+			writeToFile = targetDirectory + "/pom.xml.new"
+		}
+		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -47,6 +55,10 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 	Long:  `upgrade 2party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		overwrite, err := cmd.Flags().GetBool("overwrite")
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -62,7 +74,11 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
+		var writeToFile = pomFile
+		if !overwrite {
+			writeToFile = targetDirectory + "/pom.xml.new"
+		}
+		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -77,6 +93,10 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
+		overwrite, err := cmd.Flags().GetBool("overwrite")
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		pomFile := targetDirectory + "/pom.xml"
 		model, err := pom.GetModelFrom(pomFile)
@@ -88,7 +108,11 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
+		var writeToFile = pomFile
+		if !overwrite {
+			writeToFile = targetDirectory + "/pom.xml.new"
+		}
+		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -103,6 +127,10 @@ var upgradeKotlinCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
+		overwrite, err := cmd.Flags().GetBool("overwrite")
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		pomFile := targetDirectory + "/pom.xml"
 		model, err := pom.GetModelFrom(pomFile)
@@ -114,7 +142,11 @@ var upgradeKotlinCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
+		var writeToFile = pomFile
+		if !overwrite {
+			writeToFile = targetDirectory + "/pom.xml.new"
+		}
+		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -129,6 +161,10 @@ var upgradePluginsCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
+		overwrite, err := cmd.Flags().GetBool("overwrite")
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		pomFile := targetDirectory + "/pom.xml"
 		model, err := pom.GetModelFrom(pomFile)
@@ -140,7 +176,11 @@ var upgradePluginsCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
+		var writeToFile = pomFile
+		if !overwrite {
+			writeToFile = targetDirectory + "/pom.xml.new"
+		}
+		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -155,6 +195,10 @@ var upgradeCleanCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
+		overwrite, err := cmd.Flags().GetBool("overwrite")
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		pomFile := targetDirectory + "/pom.xml"
 		model, err := pom.GetModelFrom(pomFile)
@@ -166,7 +210,11 @@ var upgradeCleanCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
+		var writeToFile = pomFile
+		if !overwrite {
+			writeToFile = targetDirectory + "/pom.xml.new"
+		}
+		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -181,6 +229,11 @@ var upgradeAllDependenciesCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
+		overwrite, err := cmd.Flags().GetBool("overwrite")
+		if err != nil {
+			log.Fatalln(err)
+		}
+
 		pomFile := targetDirectory + "/pom.xml"
 		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
@@ -188,28 +241,29 @@ var upgradeAllDependenciesCmd = &cobra.Command{
 		}
 
 		if err = upgrade.Kotlin(model); err != nil {
-			log.Infof("%v", err)
+			log.Warn(err)
 		}
-
 		if err = upgrade.SpringBoot(model); err != nil {
-			log.Infof("%v", err)
+			log.Warn(err)
 		}
-
 		if err = upgrade.Dependencies(model, true); err != nil {
-			log.Fatalln(err)
+			log.Warn(err)
 		}
 		if err = upgrade.Dependencies(model, false); err != nil {
-			log.Fatalln(err)
+			log.Warn(err)
 		}
-
 		if err = upgrade.Plugin(model); err != nil {
-			log.Fatalln(err)
+			log.Warn(err)
 		}
 		if err = upgrade.Clean(model); err != nil {
-			log.Fatalln(err)
+			log.Warn(err)
 		}
 
-		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
+		var writeToFile = pomFile
+		if !overwrite {
+			writeToFile = targetDirectory + "/pom.xml.new"
+		}
+		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -226,4 +280,5 @@ func init() {
 	upgradeCmd.AddCommand(upgradeCleanCmd)
 
 	upgradeCmd.PersistentFlags().String("target", ".", "Optional target directory")
+	upgradeCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
 }

@@ -27,25 +27,25 @@ var analyzeCmd = &cobra.Command{
 		if secondPartyGroupId, err := analyze.GetSecondPartyGroupId(model); err != nil {
 			log.Fatalln(err)
 		} else {
-			log.Info("2party groupId is: " + secondPartyGroupId)
+			log.Info("2party groupId = " + secondPartyGroupId)
 		}
 		if err = upgrade.Kotlin(model); err != nil {
-			log.Infof("%v", err)
+			log.Warnf("%v", err)
 		}
 		if err = upgrade.SpringBoot(model); err != nil {
-			log.Infof("%v", err)
+			log.Warnf("%v", err)
 		}
 		if err = upgrade.Dependencies(model, true); err != nil {
-			log.Fatalln(err)
+			log.Warnf("%v", err)
 		}
 		if err = upgrade.Dependencies(model, false); err != nil {
-			log.Fatalln(err)
+			log.Warnf("%v", err)
 		}
 		if err = upgrade.Plugin(model); err != nil {
-			log.Fatalln(err)
+			log.Warnf("%v", err)
 		}
 		if err = upgrade.Clean(model); err != nil {
-			log.Fatalln(err)
+			log.Warnf("%v", err)
 		}
 	},
 }

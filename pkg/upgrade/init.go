@@ -5,13 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Init(directory string) error {
-	pomFile := directory + "/pom.xml"
-	model, err := pom.GetModelFrom(pomFile)
-	if err != nil {
-		return err
-	}
-
+func Init(model *pom.Model, pomFile string) error {
 	log.Infof("Initializes project and writes to: %s", pomFile)
 	return SortAndWrite(model, pomFile)
 }

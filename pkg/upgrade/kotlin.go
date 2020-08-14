@@ -2,12 +2,17 @@ package upgrade
 
 import (
 	"co-pilot/pkg/maven"
+	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
 )
 
 func Kotlin(model *pom.Model) error {
+	if model.Properties == nil {
+		return errors.New("could not kotlin version because pom does not contain any properties")
+	}
+
 	version, err := model.Properties.FindKey("kotlin.version")
 	if err != nil {
 		return err

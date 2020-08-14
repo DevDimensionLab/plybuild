@@ -1,6 +1,7 @@
 package springio
 
 import (
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/http"
 	"errors"
 	"fmt"
@@ -16,7 +17,7 @@ func CLI(springExec string, arg ...string) error {
 	return cmd.Run()
 }
 
-func InitFrom(config InitConfiguration) []string {
+func InitFrom(config config.InitConfiguration) []string {
 	var output []string
 
 	output = append(output, "init")
@@ -31,16 +32,6 @@ func InitFrom(config InitConfiguration) []string {
 	output = append(output, "webservice") // outputdir
 
 	return output
-}
-
-func DefaultConfiguration() InitConfiguration {
-	return InitConfiguration{
-		GroupId:     "com.example.demo",
-		ArtifactId:  "demo-webservice",
-		Package:     "com.example.demo",
-		Name:        "webservice",
-		Description: "demo webservice",
-	}
 }
 
 func GetRoot() (IoRootResponse, error) {
@@ -61,7 +52,7 @@ func GetDependencies() (IoDependenciesResponse, error) {
 	return deps, err
 }
 
-func Validate(config InitConfiguration) error {
+func Validate(config config.InitConfiguration) error {
 	var invalidDependencies []string
 	validDependencies, err := GetDependencies()
 	if err != nil {
