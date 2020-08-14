@@ -148,8 +148,8 @@ var upgradePluginsCmd = &cobra.Command{
 
 var upgradeCleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "cleans versions set in project that are redundant or unnecessary",
-	Long:  `cleans versions set in project that are redundant or unnecessary`,
+	Short: "removes manual versions that are set by spring-boot",
+	Long:  `removes manual versions that are set by spring-boot`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
@@ -187,18 +187,21 @@ var upgradeAllDependenciesCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		if err = upgrade.Kotlin(model); err != nil {
+			log.Infof("%v", err)
+		}
+
+		if err = upgrade.SpringBoot(model); err != nil {
+			log.Infof("%v", err)
+		}
+
 		if err = upgrade.Dependencies(model, true); err != nil {
 			log.Fatalln(err)
 		}
 		if err = upgrade.Dependencies(model, false); err != nil {
 			log.Fatalln(err)
 		}
-		if err = upgrade.Kotlin(model); err != nil {
-			log.Fatalln(err)
-		}
-		if err = upgrade.SpringBoot(model); err != nil {
-			log.Fatalln(err)
-		}
+
 		if err = upgrade.Plugin(model); err != nil {
 			log.Fatalln(err)
 		}

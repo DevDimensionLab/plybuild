@@ -24,22 +24,21 @@ var analyzeCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if localGroupId, err := analyze.GetLocalGroupId(model); err != nil {
+		if secondPartyGroupId, err := analyze.GetSecondPartyGroupId(model); err != nil {
 			log.Fatalln(err)
 		} else {
-			log.Info("Local groupId domain is: " + localGroupId)
+			log.Info("2party groupId is: " + secondPartyGroupId)
 		}
-
+		if err = upgrade.Kotlin(model); err != nil {
+			log.Infof("%v", err)
+		}
+		if err = upgrade.SpringBoot(model); err != nil {
+			log.Infof("%v", err)
+		}
 		if err = upgrade.Dependencies(model, true); err != nil {
 			log.Fatalln(err)
 		}
 		if err = upgrade.Dependencies(model, false); err != nil {
-			log.Fatalln(err)
-		}
-		if err = upgrade.Kotlin(model); err != nil {
-			log.Fatalln(err)
-		}
-		if err = upgrade.SpringBoot(model); err != nil {
 			log.Fatalln(err)
 		}
 		if err = upgrade.Plugin(model); err != nil {

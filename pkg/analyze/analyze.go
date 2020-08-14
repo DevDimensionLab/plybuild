@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-func GetLocalGroupId(model *pom.Model) (string, error) {
+func GetSecondPartyGroupId(model *pom.Model) (string, error) {
 	if model.GroupId != "" {
 		return GetFirstTwoPartsOfGroupId(model.GroupId)
 	}
-	return "", errors.New("could not extract local groupId")
+	return "", errors.New("could not extract 2party groupId")
 }
 
 func GetFirstTwoPartsOfGroupId(groupId string) (string, error) {
@@ -23,15 +23,15 @@ func GetFirstTwoPartsOfGroupId(groupId string) (string, error) {
 	}
 }
 
-func IsLocalGroupId(groupId string, localGroupId string) (bool, error) {
+func IsSecondPartyGroupId(groupId string, secondPartyGroupId string) (bool, error) {
 	groupIdParts := strings.Split(groupId, ".")
-	localGroupIdParts := strings.Split(localGroupId, ".")
+	secondPartyGroupIdParts := strings.Split(secondPartyGroupId, ".")
 
 	if len(groupIdParts) <= 1 {
 		return false, errors.New("groupId must at least contain two punctuations")
 	} else {
-		for i := range localGroupIdParts[:2] {
-			if groupIdParts[i] != localGroupIdParts[i] {
+		for i := range secondPartyGroupIdParts[:2] {
+			if groupIdParts[i] != secondPartyGroupIdParts[i] {
 				return false, nil
 			}
 		}

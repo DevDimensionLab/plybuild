@@ -18,21 +18,21 @@ func TestGetFirstTwoPartsOfGroupId(t *testing.T) {
 	}
 }
 
-func TestIsLocalGroupId(t *testing.T) {
-	result1, err := IsLocalGroupId("com.example.backend", "com.example")
+func TestIsSecondPartyGroupIdId(t *testing.T) {
+	result1, err := IsSecondPartyGroupId("com.example.backend", "com.example")
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 	if result1 != true {
-		t.Errorf("com.example.backend and com.example.frontend should return true for localGroupId")
+		t.Errorf("com.example.backend and com.example.frontend should return true for secondPartyGroupId")
 	}
 
-	result2, err := IsLocalGroupId("com.example2.backend", "com.example")
+	result2, err := IsSecondPartyGroupId("com.example2.backend", "com.example")
 	if err != nil {
 		t.Errorf("%v", err)
 	}
 	if result2 {
-		t.Errorf("com.example2.backend is not a local com.example groupId, and should not be true")
+		t.Errorf("com.example2.backend is not a secondParty com.example groupId, and should not be true")
 	}
 
 }

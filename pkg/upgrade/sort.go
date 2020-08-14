@@ -7,27 +7,27 @@ import (
 )
 
 type DependencySort struct {
-	deps         []pom.Dependency
-	localGroupId string
+	deps               []pom.Dependency
+	secondPartyGroupId string
 }
 
 func (a DependencySort) Len() int      { return len(a.deps) }
 func (a DependencySort) Swap(i, j int) { a.deps[i], a.deps[j] = a.deps[j], a.deps[i] }
 func (a DependencySort) Less(i, j int) bool {
-	return dependencySort(a.deps[i], a.deps[j], a.localGroupId)
+	return dependencySort(a.deps[i], a.deps[j], a.secondPartyGroupId)
 }
 
-func dependencySort(a pom.Dependency, b pom.Dependency, localGroupId string) bool {
-	return concat(a, localGroupId) < concat(b, localGroupId)
+func dependencySort(a pom.Dependency, b pom.Dependency, secondPartyGroupId string) bool {
+	return concat(a, secondPartyGroupId) < concat(b, secondPartyGroupId)
 }
 
-func concat(dep pom.Dependency, localGroupId string) string {
-	return fmt.Sprintf("%d:%s:%s", scopeWeight(dep.Scope), groupIdWeight(dep.GroupId, localGroupId), dep.ArtifactId)
+func concat(dep pom.Dependency, secondPartyGroupId string) string {
+	return fmt.Sprintf("%d:%s:%s", scopeWeight(dep.Scope), groupIdWeight(dep.GroupId, secondPartyGroupId), dep.ArtifactId)
 }
 
-func groupIdWeight(groupId string, localGroupId string) string {
+func groupIdWeight(groupId string, secondPartyGroupId string) string {
 	// implement custom groupId prefixing. example:
-	if strings.Contains(groupId, localGroupId) {
+	if strings.Contains(groupId, secondPartyGroupId) {
 		return fmt.Sprintf("%d-%s", 1, groupId)
 	}
 

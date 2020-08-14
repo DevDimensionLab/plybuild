@@ -7,13 +7,13 @@ import (
 )
 
 func SortAndWrite(model *pom.Model, file string) error {
-	localGroupId, err := analyze.GetLocalGroupId(model)
+	secondPartyGroupId, err := analyze.GetSecondPartyGroupId(model)
 	if err != nil {
 		return err
 	}
 	sort.Sort(DependencySort{
-		deps:         model.Dependencies.Dependency,
-		localGroupId: localGroupId})
+		deps:               model.Dependencies.Dependency,
+		secondPartyGroupId: secondPartyGroupId})
 
 	return model.WriteToFile(file)
 }
