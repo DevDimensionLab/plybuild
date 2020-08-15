@@ -106,3 +106,48 @@ func TestIsMajorUpgrade(t *testing.T) {
 		t.Errorf("%s should be a major upgrade from %s", newMajorVersion.ToString(), mainVersion.ToString())
 	}
 }
+
+func TestJustOneDigitVersionAsPatchVersion(t *testing.T) {
+	version := "1"
+	parsedVersion, err := ParseVersion(version)
+
+	if err != nil {
+		t.Errorf("should accept version=%s, got: %s", version, err.Error() )
+	}
+
+	if parsedVersion.Major != 0 {
+		t.Errorf("expected major to be 0 for one digit version, not %d", parsedVersion.Major )
+	}
+
+	if parsedVersion.Minor != 0 {
+		t.Errorf("expected minor to be 0 for one digit version, not %d", parsedVersion.Minor )
+	}
+
+	if parsedVersion.Patch != 1 {
+		t.Errorf("expected patch to be %s for one digit version, not %d", version, parsedVersion.Major )
+	}
+
+}
+
+func TestJustTwoDigitVersionAsPatchVersion(t *testing.T) {
+	version := "4.2"
+	parsedVersion, err := ParseVersion(version)
+
+	if err != nil {
+		t.Errorf("should accept version=%s, got: %s", version, err.Error() )
+	}
+
+	if parsedVersion.Major != 0 {
+		t.Errorf("expected major to be 0 for two digit version, not %d", parsedVersion.Major )
+	}
+
+	if parsedVersion.Minor != 4 {
+		t.Errorf("expected minor to be 4 for two digit version, not %d", parsedVersion.Minor )
+	}
+
+	if parsedVersion.Patch != 2 {
+		t.Errorf("expected patch to be 2 for one digit version, not %d",  parsedVersion.Patch )
+	}
+}
+
+

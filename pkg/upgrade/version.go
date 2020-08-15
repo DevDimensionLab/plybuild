@@ -1,7 +1,6 @@
 package upgrade
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,14 +9,25 @@ import (
 func ParseVersion(version string) (JavaVersion, error) {
 
 	parts := strings.Split(version, ".")
-	if len(parts) < 2 || len(parts) > 4 {
-		return JavaVersion{}, errors.New("could not parse version: " + version)
+
+	patchIndex := 2
+	minorIndex := 1
+	majorIndex := 0
+	switch len(parts) {
+		case 1:
+			majorIndex = -1
+			minorIndex = -1
+			patchIndex = 0
+		case 2:
+			majorIndex = -1
+			minorIndex = 0
+			patchIndex = 1
 	}
 
-	var patchPart = parts[2]
+	var patchPart = parts[patchIndex]
 	var suffixSeparator = ""
 	var suffix = ""
-	if suffixParts := strings.Split(parts[2], "-"); len(suffixParts) > 1 {
+	if suffixParts := strings.Split(parts[patchIndex], "-"); len(suffixParts) > 1 {
 		patchPart = suffixParts[0]
 		suffix = suffixParts[1]
 		suffixSeparator = "-"
@@ -26,15 +36,25 @@ func ParseVersion(version string) (JavaVersion, error) {
 		suffix = parts[3]
 	}
 
-	major, err := strconv.Atoi(parts[0])
-	if err != nil {
-		return JavaVersion{}, err
+	var err error
+	var major = 0
+	var minor = 0
+	var patch = 0
+
+	if -1 < majorIndex {
+		major, err = strconv.Atoi(parts[majorIndex])
+		if err != nil {
+			return JavaVersion{}, err
+		}
 	}
-	minor, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return JavaVersion{}, err
+
+	if -1 < minorIndex {
+		minor, err = strconv.Atoi(parts[minorIndex])
+		if err != nil {
+			return JavaVersion{}, err
+		}
 	}
-	patch, err := strconv.Atoi(patchPart)
+	patch, err = strconv.Atoi(patchPart)
 	if err != nil {
 		return JavaVersion{}, err
 	}
