@@ -16,10 +16,14 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"os"
 )
+
+var cfgFile string
 
 var RootCmd = &cobra.Command{
 	Use:   "co-pilot",
@@ -44,6 +48,34 @@ func Execute() {
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
+	
 	log.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
+}
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Find home directory.
+		home, err := homedir.Dir()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		// Search config in home directory with name ".co-pilot" (without extension).
+		viper.AddConfigPath(home)
+		viper.SetConfigName(".co-pilot")
+	}
+
+	viper.AutomaticEnv() // read in environment variables that match
+
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
 }
