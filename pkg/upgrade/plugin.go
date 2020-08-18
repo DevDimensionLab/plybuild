@@ -7,6 +7,10 @@ import (
 )
 
 func Plugin(model *pom.Model) error {
+	if model.Build == nil || model.Build.Plugins == nil {
+		return nil
+	}
+
 	for _, plugin := range model.Build.Plugins.Plugin {
 		if plugin.Version != "" {
 			err := PluginUpgrade(model, plugin)

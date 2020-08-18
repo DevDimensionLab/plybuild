@@ -44,6 +44,11 @@ func TestIsReleaseVersion(t *testing.T) {
 		t.Errorf("1.2.3-rc is not a release version")
 	}
 
+	notRelease2, _ := ParseVersion("1.2.3-m3")
+	if notRelease2.IsReleaseVersion() {
+		t.Errorf("1.2.3-m3 is not a release version")
+	}
+
 	release1, _ := ParseVersion("1.2.3")
 	if !release1.IsReleaseVersion() {
 		t.Errorf("1.2.3 is a release version")
