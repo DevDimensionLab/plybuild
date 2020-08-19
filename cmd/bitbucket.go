@@ -37,7 +37,7 @@ bitbucket_personal_access_token: <bitbucket_personal_access_token>
 		personalAccessToken := viper.GetString("bitbucket_personal_access_token")
 
 		if("" ==  bitbucketHost) || ("" == personalAccessToken) {
-			log.Fatalln( "Command requires $HOME/.co-pilot.yaml with bitbucketHost: <bitbucketHost> and personalAccessToken: <personalAccessToken>" )
+			log.Fatalln( "Command requires $HOME/.co-pilot.yaml with bitbucket_host: <bitbucketHost> and bitbucket_personal_access_token: <personalAccessToken>" )
 			os.Exit(1)
 		}
 
