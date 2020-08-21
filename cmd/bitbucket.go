@@ -41,7 +41,7 @@ bitbucket_personal_access_token: <bitbucket_personal_access_token>
 			os.Exit(1)
 		}
 
-		projects, err := bitbucket.GetProjects(bitbucketHost, personalAccessToken )
+		projects, err := bitbucket.QueryProjects(bitbucketHost, personalAccessToken )
 		if err != nil {
 			log.Fatalln(err)
 			os.Exit(1)
@@ -51,7 +51,7 @@ bitbucket_personal_access_token: <bitbucket_personal_access_token>
 			projectKey := strings.ToLower(bitBucketProject.Key)
 			log.Infoln( "project: " + projectKey )
 
-			bitBucketProjectReposResponse , err := bitbucket.GetProjectRepos(bitbucketHost, personalAccessToken, projectKey)
+			bitBucketProjectReposResponse , err := bitbucket.Repos(bitbucketHost, personalAccessToken, projectKey)
 			if err != nil {
 				log.Warnln(err)
 				continue
