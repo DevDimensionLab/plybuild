@@ -3,7 +3,6 @@ package upgrade
 import (
 	"co-pilot/pkg/analyze"
 	"co-pilot/pkg/maven"
-	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
@@ -15,11 +14,19 @@ func Dependencies(model *pom.Model, secondParty bool) error {
 		return err
 	}
 
-	if model.Dependencies == nil {
-		return errors.New("could not find any dependencies")
+	if model.Dependencies != nil {
+		DependenciesUpgrade(model.Dependencies.Dependency, secondPartyGroupId, secondParty, model)
 	}
 
-	for _, dep := range model.Dependencies.Dependency {
+	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
+		DependenciesUpgrade(model.DependencyManagement.Dependencies.Dependency, secondPartyGroupId, secondParty, model)
+	}
+
+	return nil
+}
+
+func DependenciesUpgrade(dependencies []pom.Dependency, secondPartyGroupId string, secondParty bool, model *pom.Model) {
+	for _, dep := range dependencies {
 		if dep.Version != "" {
 			isSecondParty, err := analyze.IsSecondPartyGroupId(dep.GroupId, secondPartyGroupId)
 			if err == nil && isSecondParty == secondParty {
@@ -30,11 +37,13 @@ func Dependencies(model *pom.Model, secondParty bool) error {
 			}
 		}
 	}
-
-	return nil
 }
 
 func DependencyUpgrade(model *pom.Model, dep pom.Dependency) error {
+	if dep.Version == "${project.version}" {
+		return nil
+	}
+
 	depVersion, err := model.GetDependencyVersion(dep)
 	if err != nil {
 		return err
