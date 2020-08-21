@@ -1,9 +1,7 @@
 package bitbucket
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
+	"co-pilot/pkg/http"
 )
 
 type Links struct {
@@ -70,46 +68,14 @@ type ProjectRepos struct {
 	Start         int    `json:"start"`
 }
 
-func QueryProjects(host string, personalAccessToken string) (*ProjectList, error) {
-	client := &http.Client{
-	}
-	req, err := http.NewRequest("GET", host+"/rest/api/1.0/projects?limit=500", nil)
-	req.Header.Add("Authorization", `Bearer `+personalAccessToken)
-	req.Header.Add("Content-Type", `application/json`)
-	resp, err := client.Do(req)
-	if nil != err {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	bitBucketProjectsResponse := ProjectList{}
-	err = json.Unmarshal(body, &bitBucketProjectsResponse)
-	if nil != err {
-		return nil, err
-	}
-	return &bitBucketProjectsResponse, nil
+func QueryProjects(host string, accessToken string) (*ProjectList, error) {
+	response := ProjectList{}
+	err := http.GetJsonWithAccessToken(host, "/rest/api/1.0/projects?limit=500", accessToken, &response)
+	return &response, err
 }
 
-func Repos(host string, personalAccessToken string, projectKey string) (*ProjectRepos, error) {
-	client := &http.Client{
-	}
-
-	req, err := http.NewRequest("GET", host+"/rest/api/1.0/projects/"+projectKey+"/repos?limit=1000", nil)
-	req.Header.Add("Authorization", `Bearer `+personalAccessToken)
-	req.Header.Add("Content-Type", `application/json`)
-	resp, err := client.Do(req)
-	if nil != err {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	bitBucketProjectReposResponse := ProjectRepos{}
-	err = json.Unmarshal(body, &bitBucketProjectReposResponse)
-	if nil != err {
-		return nil, err
-	}
-
-	return &bitBucketProjectReposResponse, nil
+func QueryRepos(host string, projectKey string, accessToken string) (*ProjectRepos, error) {
+	response := ProjectRepos{}
+	err := http.GetJsonWithAccessToken(host, "/rest/api/1.0/projects/"+projectKey+"/repos?limit=1000", accessToken, &response)
+	return &response, err
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 )
@@ -55,4 +56,30 @@ func get(url string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	return body, nil
+}
+
+func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {
+	req, err := http.NewRequest("GET", host+path, nil)
+	req.Header.Add("Authorization", `Bearer `+accessToken)
+	req.Header.Add("Content-Type", `application/json`)
+
+	client := &http.Client{
+	}
+	resp, err := client.Do(req)
+
+	if nil != err {
+		log.Debugln(req.Method, host+path, resp.StatusCode, err)
+		return err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	log.Debugln(req.Method, host+path, resp.StatusCode, len(body))
+
+	err = json.Unmarshal(body, &response)
+	if nil != err {
+		return err
+	}
+
+	return nil
 }
