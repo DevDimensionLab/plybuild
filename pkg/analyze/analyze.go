@@ -10,6 +10,11 @@ func GetSecondPartyGroupId(model *pom.Model) (string, error) {
 	if model.GroupId != "" {
 		return GetFirstTwoPartsOfGroupId(model.GroupId)
 	}
+
+	if model.Parent != nil {
+		return GetFirstTwoPartsOfGroupId(model.Parent.GroupId)
+	}  
+
 	return "", errors.New("could not extract 2party groupId")
 }
 
