@@ -24,17 +24,29 @@ func Plugin(model *pom.Model) error {
 }
 
 func PluginUpgrade(model *pom.Model, plugin pom.Plugin) error {
-	currentVersion, err := model.GetPluginVersion(plugin)
+	currentVersionString, err := model.GetPluginVersion(plugin)
+	if err != nil {
+		return err
+	}
+
+	currentVersion, err := maven.ParseVersion(currentVersionString)
+	if err != nil {
+		return err
+	}
+
 	metaData, err := maven.GetMetaData(plugin.GroupId, plugin.ArtifactId)
 	if err != nil {
 		return err
 	}
 
-	latestRelease := metaData.Versioning.Release
-	if currentVersion != "" && currentVersion != latestRelease {
+	latestRelease, err := metaData.LatestRelease()
+	if err != nil {
+		return err
+	}
 
+	if currentVersion != latestRelease {
 		log.Warnf("outdated plugin %s:%s [%s => %s] \n", plugin.GroupId, plugin.ArtifactId, currentVersion, latestRelease)
-		_ = model.SetPluginVersion(plugin, latestRelease)
+		_ = model.SetPluginVersion(plugin, latestRelease.ToString())
 	}
 	return nil
 }

@@ -63,8 +63,7 @@ func GetJsonWithAccessToken(host string, path string, accessToken string, respon
 	req.Header.Add("Authorization", `Bearer `+accessToken)
 	req.Header.Add("Content-Type", `application/json`)
 
-	client := &http.Client{
-	}
+	client := &http.Client{}
 	resp, err := client.Do(req)
 
 	if nil != err {

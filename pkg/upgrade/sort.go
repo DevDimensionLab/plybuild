@@ -26,7 +26,6 @@ func concat(dep pom.Dependency, secondPartyGroupId string) string {
 }
 
 func groupIdWeight(groupId string, secondPartyGroupId string) string {
-	// implement custom groupId prefixing. example:
 	if strings.Contains(groupId, secondPartyGroupId) {
 		return fmt.Sprintf("%d-%s", 1, groupId)
 	}

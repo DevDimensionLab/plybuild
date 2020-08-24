@@ -1,4 +1,4 @@
-package upgrade
+package maven
 
 import (
 	"fmt"
@@ -14,14 +14,14 @@ func ParseVersion(version string) (JavaVersion, error) {
 	minorIndex := 1
 	majorIndex := 0
 	switch len(parts) {
-		case 1:
-			majorIndex = -1
-			minorIndex = -1
-			patchIndex = 0
-		case 2:
-			majorIndex = -1
-			minorIndex = 0
-			patchIndex = 1
+	case 1:
+		majorIndex = -1
+		minorIndex = -1
+		patchIndex = 0
+	case 2:
+		majorIndex = -1
+		minorIndex = 0
+		patchIndex = 1
 	}
 
 	var patchPart = parts[patchIndex]
@@ -72,11 +72,12 @@ func (a JavaVersion) IsReleaseVersion() bool {
 	if a.Suffix == "" {
 		return true
 	}
-
-	if a.Suffix == "RELEASE" {
+	if strings.ToUpper(a.Suffix) == "RELEASE" {
 		return true
 	}
-
+	if strings.ToUpper(a.Suffix) == "FINAL" {
+		return true
+	}
 	return false
 }
 
@@ -104,6 +105,12 @@ func (a JavaVersion) IsDifferentFrom(b JavaVersion) bool {
 	return false
 }
 
+func (a JavaVersion) IsLessThan(b JavaVersion) bool {
+	aString := fmt.Sprintf("%09d%09d%09d%s", a.Major, a.Minor, a.Patch, a.Suffix)
+	bString := fmt.Sprintf("%09d%09d%09d%s", b.Major, b.Minor, b.Patch, b.Suffix)
+	return aString < bString
+}
+
 func (a JavaVersion) ToString() string {
 	firstPart := fmt.Sprintf("%d.%d.%d", a.Major, a.Minor, a.Patch)
 
@@ -112,4 +119,12 @@ func (a JavaVersion) ToString() string {
 	} else {
 		return firstPart
 	}
+}
+
+type VersionSort []JavaVersion
+
+func (a VersionSort) Len() int      { return len(a) }
+func (a VersionSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a VersionSort) Less(i, j int) bool {
+	return a[i].IsLessThan(a[j])
 }

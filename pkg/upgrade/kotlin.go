@@ -18,7 +18,7 @@ func Kotlin(model *pom.Model) error {
 		return err
 	}
 
-	currentVersion, err := ParseVersion(version)
+	currentVersion, err := maven.ParseVersion(version)
 	if err != nil {
 		return err
 	}
@@ -28,14 +28,14 @@ func Kotlin(model *pom.Model) error {
 		return err
 	}
 
-	latestVersion, err := ParseVersion(latestKotlinJdk8.Versioning.Release)
+	latestVersion, err := latestKotlinJdk8.LatestRelease()
 	if err != nil {
 		return err
 	}
 
 	if currentVersion.IsDifferentFrom(latestVersion) {
 		msg := fmt.Sprintf("outdated kotlin version [%s => %s]", currentVersion.ToString(), latestVersion.ToString())
-		if IsMajorUpgrade(currentVersion, latestVersion) {
+		if maven.IsMajorUpgrade(currentVersion, latestVersion) {
 			log.Warnf("major %s", msg)
 		} else if !latestVersion.IsReleaseVersion() {
 			log.Warnf("%s | not release", msg)

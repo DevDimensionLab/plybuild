@@ -49,29 +49,30 @@ func DependencyUpgrade(model *pom.Model, dep pom.Dependency) error {
 		return err
 	}
 
-	currentVersion, err := ParseVersion(depVersion)
+	currentVersion, err := maven.ParseVersion(depVersion)
 	if err != nil {
 		return err
 	}
 
 	metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
 	if err == nil {
-		latestVersion, err := ParseVersion(metaData.Versioning.Release)
+		latestVersion, err := metaData.LatestRelease()
 		if err != nil {
 			return nil
 		}
 
 		if currentVersion.IsDifferentFrom(latestVersion) {
-			msg := fmt.Sprintf("outdated dependency %s:%s [%s => %s] \n", dep.GroupId, dep.ArtifactId, currentVersion.ToString(), latestVersion.ToString())
-			if IsMajorUpgrade(currentVersion, latestVersion) {
+			msg := fmt.Sprintf("outdated dependency %s:%s [%s => %s]", dep.GroupId, dep.ArtifactId, currentVersion.ToString(), latestVersion.ToString())
+			if maven.IsMajorUpgrade(currentVersion, latestVersion) {
 				log.Warnf("major %s", msg)
-			} else if !latestVersion.IsReleaseVersion() {
+			}
+			if !latestVersion.IsReleaseVersion() {
 				log.Warnf("%s | not release", msg)
 			} else {
 				log.Info(msg)
 			}
 
-			_ = model.SetDependencyVersion(dep, metaData.Versioning.Release)
+			_ = model.SetDependencyVersion(dep, latestVersion.ToString())
 		}
 		return nil
 	} else {

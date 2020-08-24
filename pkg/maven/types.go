@@ -148,3 +148,11 @@ type Settings struct {
 		PluginGroup string `xml:"pluginGroup"`
 	} `xml:"pluginGroups"`
 }
+
+type JavaVersion struct {
+	Major           int
+	Minor           int
+	Patch           int
+	Suffix          string
+	SuffixSeparator string
+}

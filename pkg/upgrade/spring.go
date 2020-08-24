@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"co-pilot/pkg/maven"
 	"co-pilot/pkg/springio"
 	"errors"
 	"fmt"
@@ -19,14 +20,14 @@ func SpringBoot(model *pom.Model) error {
 		return err
 	}
 
-	latestVersion, err := ParseVersion(springRootInfo.BootVersion.Default)
+	latestVersion, err := maven.ParseVersion(springRootInfo.BootVersion.Default)
 	if err != nil {
 		return err
 	}
 
 	if currentVersion.IsDifferentFrom(latestVersion) {
 		msg := fmt.Sprintf("outdated spring-boot version [%s => %s]", currentVersion.ToString(), latestVersion.ToString())
-		if IsMajorUpgrade(currentVersion, latestVersion) {
+		if maven.IsMajorUpgrade(currentVersion, latestVersion) {
 			log.Warnf("major %s", msg)
 		} else if !latestVersion.IsReleaseVersion() {
 			log.Warnf("%s | not release", msg)
@@ -42,29 +43,29 @@ func SpringBoot(model *pom.Model) error {
 	return nil
 }
 
-func getSpringBootVersion(model *pom.Model) (JavaVersion, error) {
+func getSpringBootVersion(model *pom.Model) (maven.JavaVersion, error) {
 	// check parent
 	if model.Parent != nil && model.Parent.ArtifactId == "spring-boot-starter-parent" {
-		return ParseVersion(model.Parent.Version)
+		return maven.ParseVersion(model.Parent.Version)
 	}
 
 	// check dependencyManagement
 	if model.DependencyManagement != nil {
 		dep, err := model.DependencyManagement.Dependencies.FindArtifact("spring-boot-dependencies")
 		if err != nil {
-			return JavaVersion{}, err
+			return maven.JavaVersion{}, err
 		}
 		version, err := model.GetDependencyVersion(dep)
 		if err != nil {
-			return JavaVersion{}, err
+			return maven.JavaVersion{}, err
 		}
-		return ParseVersion(version)
+		return maven.ParseVersion(version)
 	}
 
-	return JavaVersion{}, errors.New("could not extract spring boot version information")
+	return maven.JavaVersion{}, errors.New("could not extract spring boot version information")
 }
 
-func updateSpringBootVersion(model *pom.Model, newVersion JavaVersion) error {
+func updateSpringBootVersion(model *pom.Model, newVersion maven.JavaVersion) error {
 	// check parent
 	if model.Parent != nil && model.Parent.ArtifactId == "spring-boot-starter-parent" {
 		model.Parent.Version = newVersion.ToString()
