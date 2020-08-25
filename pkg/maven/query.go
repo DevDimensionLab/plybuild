@@ -4,6 +4,7 @@ import (
 	"co-pilot/pkg/http"
 	"errors"
 	"fmt"
+	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
@@ -47,4 +48,14 @@ func GetRepo(repos Repositories) (string, error) {
 	} else {
 		return repo, nil
 	}
+}
+
+func GetBannedModel(url string) (*pom.Model, error) {
+	var bannedModel pom.Model
+	err := http.GetXml(url, &bannedModel)
+	if err != nil {
+		return &bannedModel, err
+	}
+
+	return &bannedModel, nil
 }

@@ -37,7 +37,7 @@ func SpringBoot(model *pom.Model) error {
 
 		return updateSpringBootVersion(model, latestVersion)
 	} else {
-		log.Infof("Spring boot is the latest version [%s]", latestVersion.ToString())
+		log.Infof("spring boot is the latest version [%s]", latestVersion.ToString())
 	}
 
 	return nil
