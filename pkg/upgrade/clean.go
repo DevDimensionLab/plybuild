@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
+	"strings"
 )
 
 func Clean(model *pom.Model) error {
@@ -18,11 +19,19 @@ func Clean(model *pom.Model) error {
 	}
 
 	for _, dep := range model.Dependencies.Dependency {
-		if dep.Version != "" && inMap(dep, springBootDependencies.Dependencies) {
-			log.Warnf("found version on spring-boot dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
-			err = model.SetDependencyVersion(dep, "")
-			if err != nil {
-				return err
+		if dep.Version != "" {
+			if inMap(dep, springBootDependencies.Dependencies) {
+				log.Warnf("found hardcoded version on spring-boot dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
+				err = model.SetDependencyVersion(dep, "")
+				if err != nil {
+					return err
+				}
+			} else if !strings.HasPrefix(dep.Version, "${") {
+				log.Warnf("found hardcoded version on dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
+				err = model.ReplaceVersionTagWithProperty(dep)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
