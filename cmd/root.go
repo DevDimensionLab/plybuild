@@ -49,7 +49,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	
+
 	log.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
 }

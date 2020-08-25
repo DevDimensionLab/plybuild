@@ -1,6 +1,9 @@
-package upgrade
+package maven
 
-import "testing"
+import (
+	"sort"
+	"testing"
+)
 
 func TestParseVersion(t *testing.T) {
 
@@ -117,19 +120,19 @@ func TestJustOneDigitVersionAsPatchVersion(t *testing.T) {
 	parsedVersion, err := ParseVersion(version)
 
 	if err != nil {
-		t.Errorf("should accept version=%s, got: %s", version, err.Error() )
+		t.Errorf("should accept version=%s, got: %s", version, err.Error())
 	}
 
 	if parsedVersion.Major != 0 {
-		t.Errorf("expected major to be 0 for one digit version, not %d", parsedVersion.Major )
+		t.Errorf("expected major to be 0 for one digit version, not %d", parsedVersion.Major)
 	}
 
 	if parsedVersion.Minor != 0 {
-		t.Errorf("expected minor to be 0 for one digit version, not %d", parsedVersion.Minor )
+		t.Errorf("expected minor to be 0 for one digit version, not %d", parsedVersion.Minor)
 	}
 
 	if parsedVersion.Patch != 1 {
-		t.Errorf("expected patch to be %s for one digit version, not %d", version, parsedVersion.Major )
+		t.Errorf("expected patch to be %s for one digit version, not %d", version, parsedVersion.Major)
 	}
 
 }
@@ -139,20 +142,53 @@ func TestJustTwoDigitVersionAsPatchVersion(t *testing.T) {
 	parsedVersion, err := ParseVersion(version)
 
 	if err != nil {
-		t.Errorf("should accept version=%s, got: %s", version, err.Error() )
+		t.Errorf("should accept version=%s, got: %s", version, err.Error())
 	}
 
 	if parsedVersion.Major != 0 {
-		t.Errorf("expected major to be 0 for two digit version, not %d", parsedVersion.Major )
+		t.Errorf("expected major to be 0 for two digit version, not %d", parsedVersion.Major)
 	}
 
 	if parsedVersion.Minor != 4 {
-		t.Errorf("expected minor to be 4 for two digit version, not %d", parsedVersion.Minor )
+		t.Errorf("expected minor to be 4 for two digit version, not %d", parsedVersion.Minor)
 	}
 
 	if parsedVersion.Patch != 2 {
-		t.Errorf("expected patch to be 2 for one digit version, not %d",  parsedVersion.Patch )
+		t.Errorf("expected patch to be 2 for one digit version, not %d", parsedVersion.Patch)
 	}
 }
 
+func TestJavaVersion_IsLessThan(t *testing.T) {
+	version1, _ := ParseVersion("4.3.5.Final")
+	version2, _ := ParseVersion("5.4.20.Final")
+	version3, _ := ParseVersion("6.0.0.Alpha2")
 
+	if !version1.IsLessThan(version3) {
+		t.Errorf("%s should be less than %s", version1.ToString(), version2.ToString())
+	}
+
+	if !version2.IsLessThan(version3) {
+		t.Errorf("%s should be less than %s", version1.ToString(), version2.ToString())
+	}
+}
+
+func TestVersionSort(t *testing.T) {
+	version1, _ := ParseVersion("4.3.5.Final")
+	version2, _ := ParseVersion("6.0.0.Alpha2")
+	version3, _ := ParseVersion("5.4.20.Final")
+
+	var versions []JavaVersion
+	versions = append(versions, version1)
+	versions = append(versions, version2)
+	versions = append(versions, version3)
+
+	sort.Sort(VersionSort(versions))
+
+	var lastVersion = version1
+	for _, version := range versions[1:] {
+		if !lastVersion.IsLessThan(version) {
+			t.Errorf("%s should be less than %s", lastVersion.ToString(), version.ToString())
+		}
+		lastVersion = version
+	}
+}

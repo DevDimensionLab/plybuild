@@ -22,12 +22,12 @@ bitbucket_personal_access_token: <bitbucket_personal_access_token>
 		bitbucketHost := viper.GetString("bitbucket_host")
 		personalAccessToken := viper.GetString("bitbucket_personal_access_token")
 
-		if("" ==  bitbucketHost) || ("" == personalAccessToken) {
-			log.Fatalln( "Command requires $HOME/.co-pilot.yaml with bitbucket_host: <bitbucketHost> and bitbucket_personal_access_token: <personalAccessToken>" )
+		if ("" == bitbucketHost) || ("" == personalAccessToken) {
+			log.Fatalln("Command requires $HOME/.co-pilot.yaml with bitbucket_host: <bitbucketHost> and bitbucket_personal_access_token: <personalAccessToken>")
 			os.Exit(1)
 		}
 
-		projects, err := bitbucket.QueryProjects(bitbucketHost, personalAccessToken )
+		projects, err := bitbucket.QueryProjects(bitbucketHost, personalAccessToken)
 		if err != nil {
 			log.Fatalln(err)
 			os.Exit(1)
@@ -35,18 +35,18 @@ bitbucket_personal_access_token: <bitbucket_personal_access_token>
 
 		for _, bitBucketProject := range projects.Values {
 			projectKey := strings.ToLower(bitBucketProject.Key)
-			log.Infoln( "project: " + projectKey )
+			log.Infoln("project: " + projectKey)
 
-			bitBucketProjectReposResponse , err := bitbucket.QueryRepos(bitbucketHost, projectKey, personalAccessToken)
+			bitBucketProjectReposResponse, err := bitbucket.QueryRepos(bitbucketHost, projectKey, personalAccessToken)
 			if err != nil {
 				log.Warnln(err)
 				continue
 			}
 
 			for _, bitBucketRepo := range bitBucketProjectReposResponse.BitBucketRepo {
-				log.Infoln(  "  " + bitBucketRepo.Name )
+				log.Infoln("  " + bitBucketRepo.Name)
 
-				err := git.PullRepo(bitbucketHost, ".", "/" + projectKey + "/" + bitBucketRepo.Name)
+				err := git.PullRepo(bitbucketHost, ".", "/"+projectKey+"/"+bitBucketRepo.Name)
 				if err != nil {
 					log.Warnln(err)
 					continue
