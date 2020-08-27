@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func ManualVersion(model *pom.Model) error {
+func SpringManualVersion(model *pom.Model) error {
 	if model.Dependencies == nil {
 		return errors.New("could not find any dependencies")
 	}
@@ -21,19 +21,29 @@ func ManualVersion(model *pom.Model) error {
 	}
 
 	for _, dep := range model.Dependencies.Dependency {
-		if dep.Version != "" {
-			if inMap(dep, springBootDependencies.Dependencies) {
-				log.Warnf("found hardcoded version on spring-boot dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
-				err := model.SetDependencyVersion(dep, "")
-				if err != nil {
-					return err
-				}
-			} else if !strings.HasPrefix(dep.Version, "${") {
-				log.Warnf("found hardcoded version on dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
-				err := model.ReplaceVersionTagWithProperty(dep)
-				if err != nil {
-					return err
-				}
+		if dep.Version != "" && inMap(dep, springBootDependencies.Dependencies) {
+			log.Warnf("found hardcoded version on spring-boot dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
+			err := model.SetDependencyVersion(dep, "")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func VersionToPropertyTags(model *pom.Model) error {
+	if model.Dependencies == nil {
+		return errors.New("could not find any dependencies")
+	}
+
+	for _, dep := range model.Dependencies.Dependency {
+		if dep.Version != "" && !strings.HasPrefix(dep.Version, "${") {
+			log.Warnf("found hardcoded version on dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
+			err := model.ReplaceVersionTagWithProperty(dep)
+			if err != nil {
+				return err
 			}
 		}
 	}

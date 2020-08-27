@@ -16,10 +16,10 @@ var cleanCmd = &cobra.Command{
 	},
 }
 
-var cleanManualVersion = &cobra.Command{
-	Use:   "manual-version",
-	Short: "removes manual versions from dependencies",
-	Long:  `removes manual versions from dependencies`,
+var cleanSpringManualVersion = &cobra.Command{
+	Use:   "spring-manual-version",
+	Short: "removes manual versions from spring dependencies",
+	Long:  `removes manual versions from spring dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
@@ -36,7 +36,41 @@ var cleanManualVersion = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = clean.ManualVersion(model); err != nil {
+		if err = clean.SpringManualVersion(model); err != nil {
+			log.Fatalln(err)
+		}
+
+		var writeToFile = pomFile
+		if !overwrite {
+			writeToFile = targetDirectory + "/pom.xml.new"
+		}
+		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
+			log.Fatalln(err)
+		}
+	},
+}
+
+var cleanVersionProps = &cobra.Command{
+	Use:   "version-properties",
+	Short: "removes version tags and replaces them with property tags",
+	Long:  `removes version tags and replaces them with property tags`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		overwrite, err := cmd.Flags().GetBool("overwrite")
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = clean.VersionToPropertyTags(model); err != nil {
 			log.Fatalln(err)
 		}
 
@@ -86,8 +120,9 @@ var cleanBlacklist = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(cleanCmd)
-	cleanCmd.AddCommand(cleanManualVersion)
-	cleanCmd.AddCommand(cleanBlacklist)
+	cleanCmd.AddCommand(cleanSpringManualVersion)
+	cleanCmd.AddCommand(cleanVersionProps)
+	//cleanCmd.AddCommand(cleanBlacklist)
 	cleanCmd.PersistentFlags().String("target", ".", "Optional target directory")
 	cleanCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
 }

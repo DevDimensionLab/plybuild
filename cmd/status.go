@@ -45,10 +45,10 @@ var analyzeCmd = &cobra.Command{
 		if err = upgrade.Plugin(model); err != nil {
 			log.Warnf("%v", err)
 		}
-		if err = clean.ManualVersion(model); err != nil {
+		if err = clean.SpringManualVersion(model); err != nil {
 			log.Warnf("%v", err)
 		}
-		if err = clean.BlacklistedDependencies(model); err != nil {
+		if err = clean.VersionToPropertyTags(model); err != nil {
 			log.Warnf("%v", err)
 		}
 	},
