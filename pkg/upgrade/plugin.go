@@ -45,7 +45,7 @@ func PluginUpgrade(model *pom.Model, plugin pom.Plugin) error {
 	}
 
 	if currentVersion != latestRelease {
-		log.Warnf("outdated plugin %s:%s [%s => %s] \n", plugin.GroupId, plugin.ArtifactId, currentVersion, latestRelease)
+		log.Warnf("outdated plugin %s:%s [%s => %s] \n", plugin.GroupId, plugin.ArtifactId, currentVersion.ToString(), latestRelease.ToString())
 		_ = model.SetPluginVersion(plugin, latestRelease.ToString())
 	}
 	return nil
