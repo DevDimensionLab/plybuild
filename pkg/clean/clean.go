@@ -49,29 +49,26 @@ func springManualVersion(dependencies []pom.Dependency, springBootDependencies s
 
 func VersionToPropertyTags(model *pom.Model) error {
 	if model.Dependencies != nil {
-		err := versionToPropertyTags(model.Dependencies.Dependency, model)
-		if err != nil {
-			return err
+		for _, dep := range model.Dependencies.Dependency {
+			if dep.Version != "" && !strings.HasPrefix(dep.Version, "${") {
+				log.Warnf("found hardcoded version on dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
+				err := model.ReplaceVersionTagForDependency(dep)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
-		err := versionToPropertyTags(model.DependencyManagement.Dependencies.Dependency, model)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func versionToPropertyTags(dependencies []pom.Dependency, model *pom.Model) error {
-	for _, dep := range dependencies {
-		if dep.Version != "" && !strings.HasPrefix(dep.Version, "${") {
-			log.Warnf("found hardcoded version on dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
-			err := model.ReplaceVersionTagWithProperty(dep, dependencies)
-			if err != nil {
-				return err
+		for _, managementDep := range model.DependencyManagement.Dependencies.Dependency {
+			if managementDep.Version != "" && !strings.HasPrefix(managementDep.Version, "${") {
+				log.Warnf("found hardcoded version on dependencyManagement dependency %s:%s [%s]",
+					managementDep.GroupId, managementDep.ArtifactId, managementDep.Version)
+				err := model.ReplaceVersionTagForDependencyManagement(managementDep)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
