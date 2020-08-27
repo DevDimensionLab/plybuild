@@ -11,16 +11,30 @@ import (
 )
 
 func SpringManualVersion(model *pom.Model) error {
-	if model.Dependencies == nil {
-		return errors.New("could not find any dependencies")
-	}
-
 	springBootDependencies, err := springio.GetDependencies()
 	if err != nil {
 		return err
 	}
 
-	for _, dep := range model.Dependencies.Dependency {
+	if model.Dependencies != nil {
+		err = springManualVersion(model.Dependencies.Dependency, springBootDependencies, model)
+		if err != nil {
+			return err
+		}
+	}
+
+	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
+		err = springManualVersion(model.DependencyManagement.Dependencies.Dependency, springBootDependencies, model)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func springManualVersion(dependencies []pom.Dependency, springBootDependencies springio.IoDependenciesResponse, model *pom.Model) error {
+	for _, dep := range dependencies {
 		if dep.Version != "" && inMap(dep, springBootDependencies.Dependencies) {
 			log.Warnf("found hardcoded version on spring-boot dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
 			err := model.SetDependencyVersion(dep, "")
@@ -34,11 +48,25 @@ func SpringManualVersion(model *pom.Model) error {
 }
 
 func VersionToPropertyTags(model *pom.Model) error {
-	if model.Dependencies == nil {
-		return errors.New("could not find any dependencies")
+	if model.Dependencies != nil {
+		err := versionToPropertyTags(model.Dependencies.Dependency, model)
+		if err != nil {
+			return err
+		}
 	}
 
-	for _, dep := range model.Dependencies.Dependency {
+	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
+		err := versionToPropertyTags(model.DependencyManagement.Dependencies.Dependency, model)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func versionToPropertyTags(dependencies []pom.Dependency, model *pom.Model) error {
+	for _, dep := range dependencies {
 		if dep.Version != "" && !strings.HasPrefix(dep.Version, "${") {
 			log.Warnf("found hardcoded version on dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
 			err := model.ReplaceVersionTagWithProperty(dep)
