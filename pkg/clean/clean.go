@@ -1,4 +1,4 @@
-package upgrade
+package clean
 
 import (
 	"co-pilot/pkg/maven"
@@ -10,25 +10,11 @@ import (
 	"strings"
 )
 
-func Clean(model *pom.Model) error {
+func ManualVersion(model *pom.Model) error {
 	if model.Dependencies == nil {
 		return errors.New("could not find any dependencies")
 	}
 
-	err := checkManualVersion(model)
-	if err != nil {
-		return err
-	}
-
-	err = checkBannedDependencies(model)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func checkManualVersion(model *pom.Model) error {
 	springBootDependencies, err := springio.GetDependencies()
 	if err != nil {
 		return err
@@ -55,7 +41,11 @@ func checkManualVersion(model *pom.Model) error {
 	return nil
 }
 
-func checkBannedDependencies(model *pom.Model) error {
+func BlacklistedDependencies(model *pom.Model) error {
+	if model.Dependencies == nil {
+		return errors.New("could not find any dependencies")
+	}
+
 	bannedPomUrl := viper.GetString("banned_pom_url")
 	if bannedPomUrl == "" {
 		return errors.New("could not extract key `banned_pom_url` from config file ~/.co-pilot.yaml")
@@ -68,7 +58,7 @@ func checkBannedDependencies(model *pom.Model) error {
 	for _, dep := range model.Dependencies.Dependency {
 		for _, bannedDep := range bannedModel.Dependencies.Dependency {
 			if bannedDep.GroupId == dep.GroupId && bannedDep.ArtifactId == dep.ArtifactId {
-				log.Warnf("found banned dependency %s:%s", dep.GroupId, dep.ArtifactId)
+				log.Warnf("found blacklisted dependency %s:%s", dep.GroupId, dep.ArtifactId)
 				//err := model.RemoveDependency(dep)
 				//if err != nil {
 				//	return err

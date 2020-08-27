@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"co-pilot/pkg/analyze"
+	"co-pilot/pkg/clean"
 	"co-pilot/pkg/upgrade"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
@@ -44,7 +45,10 @@ var analyzeCmd = &cobra.Command{
 		if err = upgrade.Plugin(model); err != nil {
 			log.Warnf("%v", err)
 		}
-		if err = upgrade.Clean(model); err != nil {
+		if err = clean.ManualVersion(model); err != nil {
+			log.Warnf("%v", err)
+		}
+		if err = clean.BlacklistedDependencies(model); err != nil {
 			log.Warnf("%v", err)
 		}
 	},
