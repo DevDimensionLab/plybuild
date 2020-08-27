@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"co-pilot/pkg/config"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
@@ -56,6 +57,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	configFileName := ".co-pilot"
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -69,13 +71,21 @@ func initConfig() {
 
 		// Search config in home directory with name ".co-pilot" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".co-pilot")
+		viper.SetConfigName(configFileName)
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		log.Infof("using config file: %s", viper.ConfigFileUsed())
+	} else {
+		home, _ := homedir.Dir()
+		configFilePath := fmt.Sprintf("%s/%s.yaml", home, configFileName)
+		log.Infof("creating standard config file: %s", configFilePath)
+		err = config.TouchConfigFile(configFilePath)
+		if err != nil {
+			log.Error(err)
+		}
 	}
 }

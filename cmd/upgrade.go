@@ -186,40 +186,6 @@ var upgradePluginsCmd = &cobra.Command{
 	},
 }
 
-var upgradeCleanCmd = &cobra.Command{
-	Use:   "clean",
-	Short: "removes manual versions that are set by spring-boot",
-	Long:  `removes manual versions that are set by spring-boot`,
-	Run: func(cmd *cobra.Command, args []string) {
-		targetDirectory, err := cmd.Flags().GetString("target")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		overwrite, err := cmd.Flags().GetBool("overwrite")
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		pomFile := targetDirectory + "/pom.xml"
-		model, err := pom.GetModelFrom(pomFile)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		if err = upgrade.Clean(model); err != nil {
-			log.Fatalln(err)
-		}
-
-		var writeToFile = pomFile
-		if !overwrite {
-			writeToFile = targetDirectory + "/pom.xml.new"
-		}
-		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
-			log.Fatalln(err)
-		}
-	},
-}
-
 var upgradeAllDependenciesCmd = &cobra.Command{
 	Use:   "all",
 	Short: "upgrade everything in project",
@@ -255,9 +221,6 @@ var upgradeAllDependenciesCmd = &cobra.Command{
 		if err = upgrade.Plugin(model); err != nil {
 			log.Warn(err)
 		}
-		if err = upgrade.Clean(model); err != nil {
-			log.Warn(err)
-		}
 
 		var writeToFile = pomFile
 		if !overwrite {
@@ -277,7 +240,6 @@ func init() {
 	upgradeCmd.AddCommand(upgradeSpringBootCmd)
 	upgradeCmd.AddCommand(upgradeKotlinCmd)
 	upgradeCmd.AddCommand(upgradePluginsCmd)
-	upgradeCmd.AddCommand(upgradeCleanCmd)
 
 	upgradeCmd.PersistentFlags().String("target", ".", "Optional target directory")
 	upgradeCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
