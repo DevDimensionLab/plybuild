@@ -40,7 +40,7 @@ func DependenciesUpgrade(dependencies []pom.Dependency, secondPartyGroupId strin
 }
 
 func DependencyUpgrade(model *pom.Model, dep pom.Dependency) error {
-	if dep.Version == "${project.version}" {
+	if dep.Version == "${project.version}" || dep.Version == "${revision}" {
 		return nil
 	}
 

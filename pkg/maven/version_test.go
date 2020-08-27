@@ -108,6 +108,14 @@ func TestVersionToString(t *testing.T) {
 	if parsedVersionE.ToString() != versionE {
 		t.Errorf("VersionToString of parsedVersionE should be: " + versionE)
 	}
+
+	versionF := "90.1.0.12-SNAPSHOT"
+	parsedVersionF, err := ParseVersion(versionF)
+	if err != nil {
+		t.Error(err)
+	} else if parsedVersionF.ToString() != versionF {
+		t.Errorf("VersionToString of parsedVersionF should be: " + versionF)
+	}
 }
 
 func TestIsMajorUpgrade(t *testing.T) {
