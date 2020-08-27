@@ -81,23 +81,32 @@ func TestIsDifferentVersion(t *testing.T) {
 func TestVersionToString(t *testing.T) {
 	versionA := "1.2.3"
 	parsedVersionA, _ := ParseVersion(versionA)
-
 	if parsedVersionA.ToString() != versionA {
 		t.Errorf("VersionToString of parsedVersionA should be: " + versionA)
 	}
 
 	versionB := "1.2.3-rc"
 	parsedVersionB, _ := ParseVersion(versionB)
-
 	if parsedVersionB.ToString() != versionB {
 		t.Errorf("VersionToString of parsedVersionB should be: " + versionB)
 	}
 
 	versionC := "1.2.3.RELEASE"
 	parsedVersionC, _ := ParseVersion(versionC)
-
 	if parsedVersionC.ToString() != versionC {
 		t.Errorf("VersionToString of parsedVersionC should be: " + versionC)
+	}
+
+	versionD := "5.3"
+	parsedVersionD, _ := ParseVersion(versionD)
+	if parsedVersionD.ToString() != versionD {
+		t.Errorf("VersionToString of parsedVersionD should be: " + versionD)
+	}
+
+	versionE := "10"
+	parsedVersionE, _ := ParseVersion(versionE)
+	if parsedVersionE.ToString() != versionE {
+		t.Errorf("VersionToString of parsedVersionE should be: " + versionE)
 	}
 }
 

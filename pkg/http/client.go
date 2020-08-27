@@ -60,6 +60,10 @@ func get(url string) ([]byte, error) {
 
 func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {
 	req, err := http.NewRequest("GET", host+path, nil)
+	if err != nil {
+		return err
+	}
+
 	req.Header.Add("Authorization", `Bearer `+accessToken)
 	req.Header.Add("Content-Type", `application/json`)
 
