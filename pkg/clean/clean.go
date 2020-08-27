@@ -69,7 +69,7 @@ func versionToPropertyTags(dependencies []pom.Dependency, model *pom.Model) erro
 	for _, dep := range dependencies {
 		if dep.Version != "" && !strings.HasPrefix(dep.Version, "${") {
 			log.Warnf("found hardcoded version on dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
-			err := model.ReplaceVersionTagWithProperty(dep)
+			err := model.ReplaceVersionTagWithProperty(dep, dependencies)
 			if err != nil {
 				return err
 			}

@@ -198,6 +198,10 @@ github.com/perottobc/mvn-pom-mutator v0.1.24 h1:Qunr8ov0cUoCcLTZ4737ItptXw6YaRYA
 github.com/perottobc/mvn-pom-mutator v0.1.24/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
 github.com/perottobc/mvn-pom-mutator v0.1.25 h1:Udg0pKivdn7ioXX82sAUjYpAEHWY+gGoUSKNPv95FnI=
 github.com/perottobc/mvn-pom-mutator v0.1.25/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
+github.com/perottobc/mvn-pom-mutator v0.1.26 h1:Gjbpex8VvspVKd1UgLWmqARpg0i9G/98DJYl5fdY1VQ=
+github.com/perottobc/mvn-pom-mutator v0.1.26/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
+github.com/perottobc/mvn-pom-mutator v0.1.27 h1:7yzLJuu10/wtej9vtY8+XbzvYUtRo4MExCtA1rE+udQ=
+github.com/perottobc/mvn-pom-mutator v0.1.27/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
@@ -345,6 +349,8 @@ golang.org/x/sys v0.0.0-20200821140526-fda516888d29 h1:mNuhGagCf3lDDm5C0376C/sxh
 golang.org/x/sys v0.0.0-20200821140526-fda516888d29/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8 h1:AvbQYmiaaaza3cW3QXRyPo5kYgpFIzOAfeAAN7m3qQ4=
 golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6 h1:DvY3Zkh7KabQE/kfzMvYvKirSiguP9Q/veMtkYyf0o8=
+golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2 h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=
