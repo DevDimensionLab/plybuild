@@ -22,14 +22,10 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 		if strings.Contains( line, "Used undeclared dependencies found:") {
 			used  = true
 			unused = false
-
-			println( "Used undeclared")
 		}
 		if strings.Contains( line, "Unused declared dependencies found:") {
 			used = false
 			unused  = true
-
-			println( "Unused declared")
 		}
 
 		trimedLine := strings.TrimSpace(strings.Replace(line, "[WARNING]", "", 1))
