@@ -1,4 +1,6 @@
+.DS_Store
 .idea
+*.iml
 spring-boot-project-starter
 spring-boot-co-pilot
 co-pilot
