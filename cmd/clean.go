@@ -117,10 +117,41 @@ var cleanBlacklist = &cobra.Command{
 	},
 }
 
+var cleanStatus = &cobra.Command{
+	Use:   "status",
+	Short: "outputs status",
+	Long:  `outputs status, but does not write anything`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = clean.VersionToPropertyTags(model); err != nil {
+			log.Warnln(err)
+		}
+
+		if err = clean.SpringManualVersion(model); err != nil {
+			log.Warnln(err)
+		}
+
+		if err = clean.Undeclared(pomFile, model); err != nil {
+			log.Warnln(err)
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(cleanCmd)
 	cleanCmd.AddCommand(cleanSpringManualVersion)
 	cleanCmd.AddCommand(cleanVersionProps)
+	cleanCmd.AddCommand(cleanStatus)
 	//cleanCmd.AddCommand(cleanBlacklist)
 	cleanCmd.PersistentFlags().String("target", ".", "Optional target directory")
 	cleanCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")

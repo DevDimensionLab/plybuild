@@ -30,25 +30,28 @@ var analyzeCmd = &cobra.Command{
 			log.Info("2party groupId = " + secondPartyGroupId)
 		}
 		if err = upgrade.Kotlin(model); err != nil {
-			log.Warnf("%v", err)
+			log.Warnln(err)
 		}
 		if err = upgrade.SpringBoot(model); err != nil {
-			log.Warnf("%v", err)
+			log.Warnln(err)
 		}
 		if err = upgrade.Dependencies(model, true); err != nil {
-			log.Warnf("%v", err)
+			log.Warnln(err)
 		}
 		if err = upgrade.Dependencies(model, false); err != nil {
-			log.Warnf("%v", err)
+			log.Warnln(err)
 		}
 		if err = upgrade.Plugin(model); err != nil {
-			log.Warnf("%v", err)
+			log.Warnln(err)
 		}
 		if err = clean.SpringManualVersion(model); err != nil {
-			log.Warnf("%v", err)
+			log.Warnln(err)
 		}
 		if err = clean.VersionToPropertyTags(model); err != nil {
-			log.Warnf("%v", err)
+			log.Warnln(err)
+		}
+		if err = clean.Undeclared(pomFile, model); err != nil {
+			log.Warnln(err)
 		}
 	},
 }
