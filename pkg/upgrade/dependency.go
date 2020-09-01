@@ -5,7 +5,6 @@ import (
 	"co-pilot/pkg/maven"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	log "github.com/sirupsen/logrus"
 )
 
 func Dependencies(model *pom.Model, secondParty bool) error {

@@ -2,12 +2,14 @@ package maven
 
 import (
 	"co-pilot/pkg/http"
+	"co-pilot/pkg/logger"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	log "github.com/sirupsen/logrus"
 	"strings"
 )
+
+var log = logger.Context()
 
 func GetMetaData(groupID string, artifactId string) (Metadata, error) {
 	var metaData Metadata

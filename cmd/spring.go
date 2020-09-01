@@ -4,7 +4,6 @@ import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/springio"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
 )

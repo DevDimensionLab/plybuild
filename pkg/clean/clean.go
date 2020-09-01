@@ -1,14 +1,16 @@
 package clean
 
 import (
+	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/springio"
 	"errors"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"strings"
 )
+
+var log = logger.Context()
 
 func SpringManualVersion(model *pom.Model) error {
 	springBootDependencies, err := springio.GetDependencies()

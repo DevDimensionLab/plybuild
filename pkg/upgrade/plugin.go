@@ -3,7 +3,6 @@ package upgrade
 import (
 	"co-pilot/pkg/maven"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	log "github.com/sirupsen/logrus"
 )
 
 func Plugin(model *pom.Model) error {

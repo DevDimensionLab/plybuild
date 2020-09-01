@@ -11,6 +11,7 @@ type DependencyAnalyzeResult struct {
 	UsedUndeclared []pom.Dependency
 	UnusedDeclared []pom.Dependency
 }
+
 func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 	var usedUndeclared []pom.Dependency
 	var unusedDeclared []pom.Dependency
@@ -19,13 +20,13 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 	unused := false
 	for _, line := range strings.Split(rawOutput, "\n") {
 
-		if strings.Contains( line, "Used undeclared dependencies found:") {
-			used  = true
+		if strings.Contains(line, "Used undeclared dependencies found:") {
+			used = true
 			unused = false
 		}
-		if strings.Contains( line, "Unused declared dependencies found:") {
+		if strings.Contains(line, "Unused declared dependencies found:") {
 			used = false
-			unused  = true
+			unused = true
 		}
 
 		trimedLine := strings.TrimSpace(strings.Replace(line, "[WARNING]", "", 1))
@@ -63,7 +64,7 @@ func DependencyAnalyzeRaw() (string, error) {
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		println( "error: " + errOut.String())
+		println("error: " + errOut.String())
 		return out.String(), err
 	}
 

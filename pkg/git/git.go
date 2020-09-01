@@ -1,10 +1,12 @@
 package git
 
 import (
-	log "github.com/sirupsen/logrus"
+	"co-pilot/pkg/logger"
 	"os"
 	"os/exec"
 )
+
+var log = logger.Context()
 
 func PullRepo(host string, workspace string, repository string) error {
 	repoDir := workspace + repository
