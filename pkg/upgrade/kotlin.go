@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	log "github.com/sirupsen/logrus"
 )
 
 func Kotlin(model *pom.Model) error {

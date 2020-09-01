@@ -1,13 +1,15 @@
 package upgrade
 
 import (
+	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/springio"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	log "github.com/sirupsen/logrus"
 )
+
+var log = logger.Context()
 
 func SpringBoot(model *pom.Model) error {
 	springRootInfo, err := springio.GetRoot()

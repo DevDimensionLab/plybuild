@@ -16,13 +16,16 @@ package cmd
 
 import (
 	"co-pilot/pkg/config"
+	"co-pilot/pkg/logger"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
 )
+
+var log = logger.Context()
 
 var cfgFile string
 
@@ -36,7 +39,7 @@ var RootCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 		if debug {
-			log.SetLevel(log.DebugLevel)
+			logrus.SetLevel(logrus.DebugLevel)
 		}
 	},
 }
@@ -51,7 +54,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	log.SetOutput(os.Stdout)
+	logrus.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
 }
 

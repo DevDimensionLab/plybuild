@@ -3,7 +3,6 @@ package cmd
 import (
 	"co-pilot/pkg/upgrade"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
