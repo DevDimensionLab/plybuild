@@ -119,8 +119,8 @@ var cleanBlacklist = &cobra.Command{
 
 var cleanStatus = &cobra.Command{
 	Use:   "status",
-	Short: "outputs status",
-	Long:  `outputs status, but does not write anything`,
+	Short: "run all clean commands in a dry run and print status\n",
+	Long:  `run all clean commands in a dry run and print status`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
@@ -138,10 +138,6 @@ var cleanStatus = &cobra.Command{
 		}
 
 		if err = clean.SpringManualVersion(model); err != nil {
-			log.Warnln(err)
-		}
-
-		if err = clean.Undeclared(pomFile, model); err != nil {
 			log.Warnln(err)
 		}
 	},

@@ -1,12 +1,11 @@
-package clean
+package analyze
 
 import (
 	"co-pilot/pkg/plugin"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	log "github.com/sirupsen/logrus"
 )
 
-func Undeclared(pomFile string, model *pom.Model) error {
+func Undeclared(pomFile string) error {
 	analyze, err := plugin.DependencyAnalyzeRaw(pomFile)
 	if err != nil {
 		return err

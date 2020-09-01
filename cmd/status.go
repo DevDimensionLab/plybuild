@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var analyzeCmd = &cobra.Command{
+var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "prints project status",
 	Long:  `prints project status`,
@@ -50,13 +50,13 @@ var analyzeCmd = &cobra.Command{
 		if err = clean.VersionToPropertyTags(model); err != nil {
 			log.Warnln(err)
 		}
-		if err = clean.Undeclared(pomFile, model); err != nil {
+		if err = analyze.Undeclared(pomFile); err != nil {
 			log.Warnln(err)
 		}
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(analyzeCmd)
-	analyzeCmd.Flags().String("target", ".", "Optional target directory")
+	RootCmd.AddCommand(statusCmd)
+	statusCmd.Flags().String("target", ".", "Optional target directory")
 }
