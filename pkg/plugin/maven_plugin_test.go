@@ -8,7 +8,7 @@ import (
 
 func TestDependencyAnalyzeRawOutput(t *testing.T) {
 
-	output, err := DependencyAnalyzeRaw()
+	output, err := DependencyAnalyzeRaw("test/pom.xml")
 
 	if err != nil {
 		t.Errorf("%v-> %s", err, output)

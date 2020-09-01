@@ -185,7 +185,7 @@ var upgradePluginsCmd = &cobra.Command{
 	},
 }
 
-var upgradeAllDependenciesCmd = &cobra.Command{
+var upgradeAllCmd = &cobra.Command{
 	Use:   "all",
 	Short: "upgrade everything in project",
 	Long:  `upgrade everything in project`,
@@ -205,21 +205,7 @@ var upgradeAllDependenciesCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = upgrade.Kotlin(model); err != nil {
-			log.Warn(err)
-		}
-		if err = upgrade.SpringBoot(model); err != nil {
-			log.Warn(err)
-		}
-		if err = upgrade.Dependencies(model, true); err != nil {
-			log.Warn(err)
-		}
-		if err = upgrade.Dependencies(model, false); err != nil {
-			log.Warn(err)
-		}
-		if err = upgrade.Plugin(model); err != nil {
-			log.Warn(err)
-		}
+		mutateAll(model)
 
 		var writeToFile = pomFile
 		if !overwrite {
@@ -231,14 +217,53 @@ var upgradeAllDependenciesCmd = &cobra.Command{
 	},
 }
 
+var upgradeStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "upgrade status for prosject",
+	Long:  `upgrade status for prosject`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		mutateAll(model)
+	},
+}
+
+func mutateAll(model *pom.Model) {
+	if err := upgrade.Kotlin(model); err != nil {
+		log.Warn(err)
+	}
+	if err := upgrade.SpringBoot(model); err != nil {
+		log.Warn(err)
+	}
+	if err := upgrade.Dependencies(model, true); err != nil {
+		log.Warn(err)
+	}
+	if err := upgrade.Dependencies(model, false); err != nil {
+		log.Warn(err)
+	}
+	if err := upgrade.Plugin(model); err != nil {
+		log.Warn(err)
+	}
+}
+
 func init() {
 	RootCmd.AddCommand(upgradeCmd)
-	upgradeCmd.AddCommand(upgradeAllDependenciesCmd)
 	upgradeCmd.AddCommand(upgrade2partyDependenciesCmd)
 	upgradeCmd.AddCommand(upgrade3partyDependenciesCmd)
 	upgradeCmd.AddCommand(upgradeSpringBootCmd)
 	upgradeCmd.AddCommand(upgradeKotlinCmd)
 	upgradeCmd.AddCommand(upgradePluginsCmd)
+	upgradeCmd.AddCommand(upgradeAllCmd)
+	upgradeCmd.AddCommand(upgradeStatusCmd)
 
 	upgradeCmd.PersistentFlags().String("target", ".", "Optional target directory")
 	upgradeCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")

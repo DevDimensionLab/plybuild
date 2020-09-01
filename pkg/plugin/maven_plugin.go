@@ -29,8 +29,8 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 			unused = true
 		}
 
-		trimedLine := strings.TrimSpace(strings.Replace(line, "[WARNING]", "", 1))
-		artifactParts := strings.Split(trimedLine, ":")
+		trimmedLine := strings.TrimSpace(strings.Replace(line, "[WARNING]", "", 1))
+		artifactParts := strings.Split(trimmedLine, ":")
 
 		if strings.HasPrefix(line, "[WARNING]    ") && len(artifactParts) == 5 {
 			dependency := pom.Dependency{
@@ -56,8 +56,8 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 	}
 }
 
-func DependencyAnalyzeRaw() (string, error) {
-	cmd := exec.Command("mvn", "-f", "test/pom.xml", "dependency:analyze")
+func DependencyAnalyzeRaw(pomFile string) (string, error) {
+	cmd := exec.Command("mvn", "-f", pomFile, "dependency:analyze")
 	var out bytes.Buffer
 	var errOut bytes.Buffer
 	cmd.Stdout = &out
