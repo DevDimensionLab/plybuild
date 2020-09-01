@@ -1,9 +1,11 @@
 package analyze
 
 import (
+	"co-pilot/pkg/logger"
 	"co-pilot/pkg/plugin"
-	log "github.com/sirupsen/logrus"
 )
+
+var log = logger.Context()
 
 func Undeclared(pomFile string) error {
 	analyze, err := plugin.DependencyAnalyzeRaw(pomFile)
