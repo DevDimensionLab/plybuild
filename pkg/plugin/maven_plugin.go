@@ -29,23 +29,25 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 			unused = true
 		}
 
-		trimmedLine := strings.TrimSpace(strings.Replace(line, "[WARNING]", "", 1))
-		artifactParts := strings.Split(trimmedLine, ":")
+		messageParts := strings.Split( line, "]")
+		if len(messageParts) == 2 {
+			artifactParts := strings.Split(strings.TrimSpace(messageParts[1]), ":")
 
-		if strings.HasPrefix(line, "[WARNING]    ") && len(artifactParts) == 5 {
-			dependency := pom.Dependency{
-				GroupId:    artifactParts[0],
-				ArtifactId: artifactParts[1],
-				Type_:      artifactParts[2],
-				Version:    artifactParts[3],
-				Scope:      artifactParts[4],
-			}
+			if len(artifactParts) == 5 {
+				dependency := pom.Dependency{
+					GroupId:    artifactParts[0],
+					ArtifactId: artifactParts[1],
+					Type_:      artifactParts[2],
+					Version:    artifactParts[3],
+					Scope:      artifactParts[4],
+				}
 
-			if used {
-				usedUndeclared = append(usedUndeclared, dependency)
-			}
-			if unused {
-				unusedDeclared = append(unusedDeclared, dependency)
+				if used {
+					usedUndeclared = append(usedUndeclared, dependency)
+				}
+				if unused {
+					unusedDeclared = append(unusedDeclared, dependency)
+				}
 			}
 		}
 	}
