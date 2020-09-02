@@ -1,71 +1,37 @@
 package bitbucket
 
 import (
+	"co-pilot/pkg/git"
 	"co-pilot/pkg/http"
+	"co-pilot/pkg/logger"
+	"os"
 )
 
-type Links struct {
-	Clone []struct {
-		Href string `json:"href"`
-		Name string `json:"name"`
-	} `json:"clone"`
-	Self []struct {
-		Href string `json:"href"`
-	} `json:"self"`
+var log = logger.Context()
+
+func Pull(host string, workspace string, repository string) error {
+	repoDir := workspace + repository
+
+	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
+		return clone(host, workspace, repository)
+	} else {
+		return pull(workspace, repository)
+	}
 }
 
-type Project struct {
-	Key         string `json:"key"`
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Public      bool   `json:"public"`
-	Type        string `json:"type"`
-	Links       Links  `json:"links"`
+func clone(host string, workspace string, repository string) error {
+	gitUrl := host + "/scm" + repository + ".git"
+	toDir := workspace + repository
+
+	log.Debugln("clone [" + gitUrl + "] -> [" + toDir + "]")
+	return git.Clone(gitUrl, toDir)
 }
 
-type ProjectList struct {
-	Size          int       `json:"size"`
-	Limit         int       `json:"limit"`
-	IsLastPage    bool      `json:"isLastPage"`
-	Values        []Project `json:"values"`
-	Start         int       `json:"start"`
-	NextPageStart int       `json:"nextPageStart"`
-}
+func pull(workspace string, repository string) error {
+	repoDir := workspace + "/" + repository
 
-type Origin struct {
-	Slug          string  `json:"slug"`
-	ID            int     `json:"id"`
-	Name          string  `json:"name"`
-	ScmID         string  `json:"scmId"`
-	State         string  `json:"state"`
-	StatusMessage string  `json:"statusMessage"`
-	Forkable      bool    `json:"forkable"`
-	Project       Project `json:"project"`
-	Public        bool    `json:"public"`
-	Links         Links   `json:"links"`
-}
-
-type Repo struct {
-	Slug          string  `json:"slug"`
-	ID            int     `json:"id"`
-	Name          string  `json:"name"`
-	ScmID         string  `json:"scmId"`
-	State         string  `json:"state"`
-	StatusMessage string  `json:"statusMessage"`
-	Forkable      bool    `json:"forkable"`
-	Project       Project `json:"project"`
-	Public        bool    `json:"public"`
-	Links         Links   `json:"links"`
-	Origin        Origin  `json:"origin,omitempty"`
-}
-
-type ProjectRepos struct {
-	Size          int    `json:"size"`
-	Limit         int    `json:"limit"`
-	IsLastPage    bool   `json:"isLastPage"`
-	BitBucketRepo []Repo `json:"values"`
-	Start         int    `json:"start"`
+	log.Debugln(" pull [" + repoDir + "]")
+	return git.Pull(repoDir)
 }
 
 func QueryProjects(host string, accessToken string) (*ProjectList, error) {

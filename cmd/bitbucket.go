@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"co-pilot/pkg/bitbucket"
-	"co-pilot/pkg/git"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
@@ -11,8 +10,8 @@ import (
 
 var bitbucketCmd = &cobra.Command{
 	Use:   "bitbucket",
-	Short: "Clone projects from bitbucket",
-	Long: `Clone projects from bitbucket, requires a $HOME/.co-pilot.yaml with:
+	Short: "clone projects from bitbucket",
+	Long: `clone projects from bitbucket, requires a $HOME/.co-pilot.yaml with:
 
 bitbucket_host: <bitbucket_host>
 bitbucket_personal_access_token: <bitbucket_personal_access_token> 
@@ -45,7 +44,7 @@ bitbucket_personal_access_token: <bitbucket_personal_access_token>
 			for _, bitBucketRepo := range bitBucketProjectReposResponse.BitBucketRepo {
 				log.Infoln("  " + bitBucketRepo.Name)
 
-				err := git.PullRepo(bitbucketHost, ".", "/"+projectKey+"/"+bitBucketRepo.Name)
+				err := bitbucket.Pull(bitbucketHost, ".", "/"+projectKey+"/"+bitBucketRepo.Name)
 				if err != nil {
 					log.Warnln(err)
 					continue

@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/springio"
+	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -22,7 +22,7 @@ var springInstallCmd = &cobra.Command{
 	Long:  `downloads and installs spring boot with default or provided settings`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
-		var initConfig = config.InitConfiguration{}
+		var initConfig = springio.InitConfiguration{}
 
 		_ = os.RemoveAll("webservice")
 
@@ -38,7 +38,7 @@ var springInstallCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		} else {
-			initConfig = config.DefaultConfiguration()
+			initConfig = springio.DefaultConfiguration()
 		}
 
 		springExec, err := file.Find("bin/spring", "./target")
@@ -46,6 +46,23 @@ var springInstallCmd = &cobra.Command{
 
 		if err != nil {
 			log.Println(err)
+		}
+	},
+}
+
+var springManagedCmd = &cobra.Command{
+	Use:   "managed",
+	Short: "prints spring-boot managed dependencies",
+	Long:  `prints spring-boot managed dependencies`,
+	Run: func(cmd *cobra.Command, args []string) {
+		deps, err := springio.GetDependencies()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		log.Infof("Spring Boot Managed Dependencies:")
+		for _, dep := range deps.Dependencies {
+			fmt.Printf("\t%s:%s [%s]\n", dep.GroupId, dep.ArtifactId, dep.Version)
 		}
 	},
 }
@@ -67,5 +84,6 @@ func init() {
 	RootCmd.AddCommand(springCmd)
 	springCmd.AddCommand(springInstallCmd)
 	springCmd.AddCommand(springStatusCmd)
+	springCmd.AddCommand(springManagedCmd)
 	springInstallCmd.Flags().String("config-file", "", "Optional config file")
 }

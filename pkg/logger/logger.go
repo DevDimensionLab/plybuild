@@ -6,14 +6,14 @@ import (
 )
 
 func Context() *logrus.Entry {
-	pc, _, line, ok := runtime.Caller(1)
+	pc, _, _, ok := runtime.Caller(1)
 
 	var fields logrus.Fields
 
 	if ok {
 		fields = logrus.Fields{
 			//"caller": file,
-			"line": line,
+			//"line": line,
 			"func": runtime.FuncForPC(pc).Name(),
 		}
 	}

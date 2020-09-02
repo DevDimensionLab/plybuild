@@ -1,16 +1,29 @@
 package config
 
-type InitConfiguration struct {
-	GroupId      string   `json:"groupId"`
-	ArtifactId   string   `json:"artifactId"`
-	Package      string   `json:"package"`
-	Name         string   `json:"name"`
-	Description  string   `json:"description"`
-	Dependencies []string `json:"dependencies"`
+type GlobalConfiguration struct {
+	CloudConfig    CloudConfig    `yaml:"cloudConfig"`
+	SourceProvider SourceProvider `yaml:"sourceProvider"`
 }
 
-type GlobalConfiguration struct {
-	BannedPomUrl         string `yaml:"banned_pom_url"`
-	BitBucketHost        string `yaml:"bitbucket_host"`
-	BitBucketAccessToken string `yaml:"bitbucket_personal_access_token"`
+type CloudConfig struct {
+	Git Git `yaml:"git"`
+}
+
+type Git struct {
+	Url string `yaml:"url"`
+}
+
+type SourceProvider struct {
+	Host        string `yaml:"host"`
+	AccessToken string `yaml:"access_token"`
+}
+
+type CloudDeprecated struct {
+	Type string `json:"type"`
+	Data struct {
+		Dependencies []struct {
+			GroupId    string `json:"groupId"`
+			ArtifactId string `json:"artifactId"`
+		} `json:"dependencies"`
+	} `json:"data"`
 }
