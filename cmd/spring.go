@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"co-pilot/pkg/clean"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/springio"
+	"co-pilot/pkg/upgrade"
 	"fmt"
+	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -18,8 +21,8 @@ var springCmd = &cobra.Command{
 
 var springInstallCmd = &cobra.Command{
 	Use:   "install",
-	Short: "downloads and installs spring boot with default or provided settings",
-	Long:  `downloads and installs spring boot with default or provided settings`,
+	Short: "Downloads and installs spring boot with default or provided settings",
+	Long:  `Downloads and installs spring boot with default or provided settings`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
 		var initConfig = springio.InitConfiguration{}
@@ -52,8 +55,8 @@ var springInstallCmd = &cobra.Command{
 
 var springManagedCmd = &cobra.Command{
 	Use:   "managed",
-	Short: "prints spring-boot managed dependencies",
-	Long:  `prints spring-boot managed dependencies`,
+	Short: "Prints spring-boot managed dependencies",
+	Long:  `Prints spring-boot managed dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
 		deps, err := springio.GetDependencies()
 		if err != nil {
@@ -63,6 +66,40 @@ var springManagedCmd = &cobra.Command{
 		log.Infof("Spring Boot Managed Dependencies:")
 		for _, dep := range deps.Dependencies {
 			fmt.Printf("\t%s:%s [%s]\n", dep.GroupId, dep.ArtifactId, dep.Version)
+		}
+	},
+}
+
+var springInheritVersion = &cobra.Command{
+	Use:   "inherit",
+	Short: "Removes manual versions from spring dependencies",
+	Long:  `Removes manual versions from spring dependencies`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		overwrite, err := cmd.Flags().GetBool("overwrite")
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		pomFile := targetDirectory + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = clean.SpringManualVersion(model); err != nil {
+			log.Fatalln(err)
+		}
+
+		var writeToFile = pomFile
+		if !overwrite {
+			writeToFile = targetDirectory + "/pom.xml.new"
+		}
+		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
+			log.Fatalln(err)
 		}
 	},
 }
@@ -85,5 +122,8 @@ func init() {
 	springCmd.AddCommand(springInstallCmd)
 	springCmd.AddCommand(springStatusCmd)
 	springCmd.AddCommand(springManagedCmd)
+	springCmd.AddCommand(springInheritVersion)
+	springCmd.PersistentFlags().String("target", ".", "Optional target directory")
+	springCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
 	springInstallCmd.Flags().String("config-file", "", "Optional config file")
 }

@@ -10,8 +10,8 @@ import (
 
 var analyzeCmd = &cobra.Command{
 	Use:   "status",
-	Short: "prints project status",
-	Long:  `prints project status`,
+	Short: "Prints project status",
+	Long:  `Prints project status`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {

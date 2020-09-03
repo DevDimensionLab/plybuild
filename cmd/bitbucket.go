@@ -2,58 +2,42 @@ package cmd
 
 import (
 	"co-pilot/pkg/bitbucket"
+	config2 "co-pilot/pkg/config"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"os"
-	"strings"
 )
 
 var bitbucketCmd = &cobra.Command{
 	Use:   "bitbucket",
-	Short: "clone projects from bitbucket",
-	Long: `clone projects from bitbucket, requires a $HOME/.co-pilot.yaml with:
+	Short: "Bitbucket functionality",
+	Long:  `Bitbucket functionality`,
+}
 
-bitbucket_host: <bitbucket_host>
-bitbucket_personal_access_token: <bitbucket_personal_access_token> 
-`,
+var bitbucketSyncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Synchronizes projects from bitbucket",
+	Long:  `Synchronizes projects from bitbucket`,
+
 	Run: func(cmd *cobra.Command, args []string) {
-		bitbucketHost := viper.GetString("bitbucket_host")
-		personalAccessToken := viper.GetString("bitbucket_personal_access_token")
-
-		if ("" == bitbucketHost) || ("" == personalAccessToken) {
-			log.Fatalln("Command requires $HOME/.co-pilot.yaml with bitbucket_host: <bitbucketHost> and bitbucket_personal_access_token: <personalAccessToken>")
-			os.Exit(1)
-		}
-
-		projects, err := bitbucket.QueryProjects(bitbucketHost, personalAccessToken)
+		config, err := config2.GetLocalConfig()
 		if err != nil {
 			log.Fatalln(err)
-			os.Exit(1)
 		}
 
-		for _, bitBucketProject := range projects.Values {
-			projectKey := strings.ToLower(bitBucketProject.Key)
-			log.Infoln("project: " + projectKey)
+		bitbucketHost := config.SourceProvider.Host
+		personalAccessToken := config.SourceProvider.AccessToken
 
-			bitBucketProjectReposResponse, err := bitbucket.QueryRepos(bitbucketHost, projectKey, personalAccessToken)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
+		if ("" == bitbucketHost) || ("" == personalAccessToken) {
+			log.Fatalln("Command requires host and access-token in config-file")
+		}
 
-			for _, bitBucketRepo := range bitBucketProjectReposResponse.BitBucketRepo {
-				log.Infoln("  " + bitBucketRepo.Name)
-
-				err := bitbucket.Pull(bitbucketHost, ".", "/"+projectKey+"/"+bitBucketRepo.Name)
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-			}
+		err = bitbucket.Synchronize(bitbucketHost, personalAccessToken)
+		if err != nil {
+			log.Fatalln(err)
 		}
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(bitbucketCmd)
+	bitbucketCmd.AddCommand(bitbucketSyncCmd)
 }
