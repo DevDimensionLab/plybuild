@@ -25,7 +25,17 @@ var deprecatedShowCmd = &cobra.Command{
 		}
 
 		for _, dep := range deprecated.Data.Dependencies {
-			log.Infof("deprecated dependency %s:%s", dep.GroupId, dep.ArtifactId)
+			log.Infof("<= deprecated dependency %s:%s", dep.GroupId, dep.ArtifactId)
+			if dep.Associated.Dependencies != nil {
+				for _, assoc := range dep.Associated.Dependencies {
+					log.Infof("\t <= associated deprecated dependency %s:%s", assoc.GroupId, assoc.ArtifactId)
+				}
+			}
+			if dep.Replacements.Dependencies != nil {
+				for _, replacement := range dep.Replacements.Dependencies {
+					log.Infof("\t => replacement dependency %s:%s", replacement.GroupId, replacement.ArtifactId)
+				}
+			}
 		}
 	},
 }

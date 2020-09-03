@@ -21,9 +21,20 @@ type SourceProvider struct {
 type CloudDeprecated struct {
 	Type string `json:"type"`
 	Data struct {
-		Dependencies []struct {
-			GroupId    string `json:"groupId"`
-			ArtifactId string `json:"artifactId"`
-		} `json:"dependencies"`
+		Dependencies []CloudDeprecatedDependency `json:"dependencies"`
 	} `json:"data"`
+}
+
+type CloudDeprecatedDependency struct {
+	GroupId    string   `json:"groupId"`
+	ArtifactId string   `json:"artifactId"`
+	Files      []string `json:"files"`
+	Associated struct {
+		Files        []string                    `json:"files"`
+		Dependencies []CloudDeprecatedDependency `json:"dependencies"`
+	} `json:"associated"`
+	Replacements struct {
+		Files        []string                    `json:"files"`
+		Dependencies []CloudDeprecatedDependency `json:"dependencies"`
+	} `json:"replacements"`
 }

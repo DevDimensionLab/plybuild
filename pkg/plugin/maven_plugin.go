@@ -29,7 +29,7 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 			unused = true
 		}
 
-		messageParts := strings.Split( line, "]")
+		messageParts := strings.Split(line, "]")
 		if len(messageParts) == 2 {
 			artifactParts := strings.Split(strings.TrimSpace(messageParts[1]), ":")
 
