@@ -1,37 +1,11 @@
 package git
 
-import (
-	"co-pilot/pkg/logger"
-	"os"
-	"os/exec"
-)
+import "os/exec"
 
-var log = logger.Context()
-
-func PullRepo(host string, workspace string, repository string) error {
-	repoDir := workspace + repository
-
-	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
-		return GitClone(host, workspace, repository)
-	} else {
-		return GitPull(workspace, repository)
-	}
+func Clone(url string, target string) error {
+	return exec.Command("git", "clone", url, target).Run()
 }
 
-func GitClone(host string, workspace string, repository string) error {
-	gitUrl := host + "/scm" + repository + ".git"
-	toDir := workspace + repository
-
-	log.Debugln("GitClone [" + gitUrl + "] -> [" + toDir + "]")
-
-	err := exec.Command("git", "clone", gitUrl, toDir).Run()
-	return err
-}
-
-func GitPull(workspace string, repository string) error {
-	repoDir := workspace + "/" + repository
-	log.Debugln(" GitPull [" + repoDir + "]")
-
-	err := exec.Command("git", "-C", repoDir, "pull", "origin").Run()
-	return err
+func Pull(target string) error {
+	return exec.Command("git", "-C", target, "pull", "origin").Run()
 }

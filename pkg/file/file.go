@@ -55,11 +55,11 @@ func ReadXml(file string, parsed interface{}) error {
 }
 
 func Exists(filename string) bool {
-	info, err := os.Stat(filename)
+	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
 	}
-	return !info.IsDir()
+	return true
 }
 
 func Open(filePath string) ([]byte, error) {

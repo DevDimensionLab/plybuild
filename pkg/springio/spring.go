@@ -1,7 +1,6 @@
 package springio
 
 import (
-	"co-pilot/pkg/config"
 	"co-pilot/pkg/http"
 	"errors"
 	"fmt"
@@ -17,7 +16,7 @@ func CLI(springExec string, arg ...string) error {
 	return cmd.Run()
 }
 
-func InitFrom(config config.InitConfiguration) []string {
+func InitFrom(config InitConfiguration) []string {
 	var output []string
 
 	output = append(output, "init")
@@ -52,7 +51,7 @@ func GetDependencies() (IoDependenciesResponse, error) {
 	return deps, err
 }
 
-func Validate(config config.InitConfiguration) error {
+func Validate(config InitConfiguration) error {
 	var invalidDependencies []string
 	validDependencies, err := GetDependencies()
 	if err != nil {

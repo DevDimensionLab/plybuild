@@ -16,8 +16,8 @@ var upgradeCmd = &cobra.Command{
 
 var upgradeSpringBootCmd = &cobra.Command{
 	Use:   "spring-boot",
-	Short: "upgrade spring-boot to the latest version",
-	Long:  `upgrade spring-boot to the latest version`,
+	Short: "Upgrade spring-boot to the latest version",
+	Long:  `Upgrade spring-boot to the latest version`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
@@ -50,8 +50,8 @@ var upgradeSpringBootCmd = &cobra.Command{
 
 var upgrade2partyDependenciesCmd = &cobra.Command{
 	Use:   "2party",
-	Short: "upgrade 2party dependencies to project",
-	Long:  `upgrade 2party dependencies to project`,
+	Short: "Upgrade 2party dependencies to project",
+	Long:  `Upgrade 2party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
@@ -85,8 +85,8 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 
 var upgrade3partyDependenciesCmd = &cobra.Command{
 	Use:   "3party",
-	Short: "upgrade 3party dependencies to project",
-	Long:  `upgrade 3party dependencies to project`,
+	Short: "Upgrade 3party dependencies to project",
+	Long:  `Upgrade 3party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
@@ -119,8 +119,8 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 
 var upgradeKotlinCmd = &cobra.Command{
 	Use:   "kotlin",
-	Short: "upgrade kotlin version in project",
-	Long:  `upgrade kotlin version in project`,
+	Short: "Upgrade kotlin version in project",
+	Long:  `Upgrade kotlin version in project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
@@ -153,8 +153,8 @@ var upgradeKotlinCmd = &cobra.Command{
 
 var upgradePluginsCmd = &cobra.Command{
 	Use:   "plugins",
-	Short: "upgrade plugins found in project",
-	Long:  `upgrade plugins found in project`,
+	Short: "Upgrade plugins found in project",
+	Long:  `Upgrade plugins found in project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
@@ -187,8 +187,8 @@ var upgradePluginsCmd = &cobra.Command{
 
 var upgradeAllCmd = &cobra.Command{
 	Use:   "all",
-	Short: "upgrade everything in project",
-	Long:  `upgrade everything in project`,
+	Short: "Upgrade everything in project",
+	Long:  `Upgrade everything in project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {

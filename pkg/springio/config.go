@@ -1,4 +1,4 @@
-package config
+package springio
 
 import (
 	"encoding/json"
