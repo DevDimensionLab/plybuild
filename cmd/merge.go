@@ -6,7 +6,6 @@ import (
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
-	"strings"
 )
 
 var mergeCmd = &cobra.Command{
@@ -33,7 +32,7 @@ var mergePomCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		if fromPomFile == "" || !strings.Contains(fromPomFile, "pom.xml") {
+		if fromPomFile == "" {
 			log.Errorln("missing valid --file flag for pom.xml to merge from")
 			os.Exit(-1)
 		}
