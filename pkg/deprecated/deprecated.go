@@ -8,7 +8,7 @@ import (
 
 var log = logger.Context()
 
-func FindDeprecated(model *pom.Model, deprecated config.CloudDeprecated) error {
+func UpgradeDeprecated(model *pom.Model, deprecated config.CloudDeprecated) error {
 
 	for _, dep := range model.Dependencies.Dependency {
 		for _, depr := range deprecated.Data.Dependencies {

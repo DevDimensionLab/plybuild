@@ -15,8 +15,8 @@ var formatCmd = &cobra.Command{
 
 var formatInitCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initializes a project",
-	Long:  `Initializes a project`,
+	Short: "Formats pom.xml and sorts dependencies",
+	Long:  `Formats pom.xml and sorts dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetDirectory, err := cmd.Flags().GetString("target")
 		if err != nil {
