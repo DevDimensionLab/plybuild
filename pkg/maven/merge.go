@@ -23,10 +23,11 @@ func Merge(from *pom.Model, to *pom.Model) error {
 
 func mergeDependencies(from *pom.Model, to *pom.Model) error {
 	if from.Dependencies == nil {
-		return errors.New("dependencies is nil")
+		return errors.New("from dependencies is nil")
 	}
 
 	if to.Dependencies == nil {
+		log.Infof("inserting dependencies block into project")
 		to.Dependencies = from.Dependencies
 		return nil
 	}
@@ -49,10 +50,11 @@ func mergeDependencies(from *pom.Model, to *pom.Model) error {
 
 func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
 	if from.DependencyManagement == nil {
-		return errors.New("dependencyManagement is nil")
+		return errors.New("from dependencyManagement is nil")
 	}
 
 	if to.DependencyManagement == nil {
+		log.Infof("inserting dependency management block into project")
 		from.DependencyManagement = to.DependencyManagement
 		return nil
 	}
@@ -75,16 +77,18 @@ func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
 
 func mergePlugins(from *pom.Model, to *pom.Model) error {
 	if from.Build == nil || from.Build.Plugins == nil {
-		return errors.New("build.plugin is nil")
+		return errors.New("from build of build.plugin is nil")
 	}
 
 	if to.Build == nil {
 		to.Build = from.Build
+		log.Infof("inserting build block into project")
 		return nil
 	}
 
 	if to.Build.Plugins == nil {
 		to.Build.Plugins = from.Build.Plugins
+		log.Infof("inserting build.plugins block into project")
 		return nil
 	}
 
