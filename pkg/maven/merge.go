@@ -22,8 +22,13 @@ func Merge(from *pom.Model, to *pom.Model) error {
 }
 
 func mergeDependencies(from *pom.Model, to *pom.Model) error {
-	if from.Dependencies == nil || to.Dependencies == nil {
+	if from.Dependencies == nil {
 		return errors.New("dependencies is nil")
+	}
+
+	if to.Dependencies == nil {
+		to.Dependencies = from.Dependencies
+		return nil
 	}
 
 	for _, fromDep := range from.Dependencies.Dependency {
@@ -43,8 +48,13 @@ func mergeDependencies(from *pom.Model, to *pom.Model) error {
 }
 
 func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
-	if from.DependencyManagement == nil || to.DependencyManagement == nil {
+	if from.DependencyManagement == nil {
 		return errors.New("dependencyManagement is nil")
+	}
+
+	if to.DependencyManagement == nil {
+		from.DependencyManagement = to.DependencyManagement
+		return nil
 	}
 
 	for _, fromDepMan := range from.DependencyManagement.Dependencies.Dependency {
@@ -64,8 +74,18 @@ func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
 }
 
 func mergePlugins(from *pom.Model, to *pom.Model) error {
-	if from.DependencyManagement == nil || to.DependencyManagement == nil {
+	if from.Build == nil || from.Build.Plugins == nil {
 		return errors.New("build.plugin is nil")
+	}
+
+	if to.Build == nil {
+		to.Build = from.Build
+		return nil
+	}
+
+	if to.Build.Plugins == nil {
+		to.Build.Plugins = from.Build.Plugins
+		return nil
 	}
 
 	for _, fromPlugin := range from.Build.Plugins.Plugin {
