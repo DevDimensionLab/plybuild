@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"co-pilot/pkg/config"
+	"co-pilot/pkg/file"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/merge"
 	"co-pilot/pkg/upgrade"
+	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
@@ -92,12 +95,48 @@ var mergeTextCmd = &cobra.Command{
 	},
 }
 
+var mergeTemplateCmd = &cobra.Command{
+	Use:   "template",
+	Short: "Merges a template from co-pilot-config",
+	Long:  `Merges a template from co-pilot-config`,
+	Run: func(cmd *cobra.Command, args []string) {
+		targetDirectory, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		templateName, err := cmd.Flags().GetString("name")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		if templateName == "" {
+			log.Fatalln("Missing template --name")
+		}
+
+		cloudConfigDir, err := config.GlobalConfigDir()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		templatePath := fmt.Sprintf("%s/templates/%s", cloudConfigDir, templateName)
+		if !file.Exists(templatePath) {
+			log.Fatalf("no such directory %s", templateName)
+		}
+
+		if err = merge.Directory(templatePath, targetDirectory); err != nil {
+			log.Fatalln(err)
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(mergeCmd)
 	mergeCmd.AddCommand(mergePomCmd)
 	mergeCmd.AddCommand(mergeTextCmd)
+	mergeCmd.AddCommand(mergeTemplateCmd)
 	mergeCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
 	mergeCmd.PersistentFlags().String("from", "", "file to merge")
 	mergePomCmd.PersistentFlags().String("target", ".", "Optional target directory")
 	mergeTextCmd.PersistentFlags().String("to", "", "target file to merge to")
+	mergeTemplateCmd.Flags().String("name", "", "template to merge")
+	mergeTemplateCmd.Flags().String("target", ".", "Optional target directory")
 }
