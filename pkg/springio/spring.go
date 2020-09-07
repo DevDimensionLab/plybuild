@@ -1,6 +1,7 @@
 package springio
 
 import (
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/http"
 	"errors"
 	"fmt"
@@ -16,7 +17,7 @@ func CLI(springExec string, arg ...string) error {
 	return cmd.Run()
 }
 
-func InitFrom(config InitConfiguration) []string {
+func InitFrom(config config.ProjectConfiguration, targetDir string) []string {
 	var output []string
 
 	output = append(output, "init")
@@ -28,7 +29,7 @@ func InitFrom(config InitConfiguration) []string {
 	output = append(output, "--language=kotlin")
 	output = append(output, "--description="+config.Description)
 	output = append(output, "--name="+config.Name)
-	output = append(output, "webservice") // outputdir
+	output = append(output, targetDir) //output directory
 
 	return output
 }
@@ -51,7 +52,7 @@ func GetDependencies() (IoDependenciesResponse, error) {
 	return deps, err
 }
 
-func Validate(config InitConfiguration) error {
+func Validate(config config.ProjectConfiguration) error {
 	var invalidDependencies []string
 	validDependencies, err := GetDependencies()
 	if err != nil {

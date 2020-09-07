@@ -88,7 +88,7 @@ func Overwrite(lines []string, filePath string) error {
 
 func Copy(sourceFile string, destinationFile string) error {
 	if Exists(destinationFile) {
-		log.Warnf("%s already exists", destinationFile)
+		log.Infof("ignoring %s, it already exists", destinationFile)
 		return nil
 	}
 
@@ -106,7 +106,7 @@ func Copy(sourceFile string, destinationFile string) error {
 		}
 	}
 
-	log.Infof("copying %s", sourceFile)
+	log.Infof("copying \n\tFROM => %s\n\tTO => %s", sourceFile, destinationFile)
 	err = ioutil.WriteFile(destinationFile, input, 0644)
 	if err != nil {
 		return err
@@ -147,4 +147,14 @@ func CreateDirectory(path string) error {
 	}
 
 	return nil
+}
+
+func SearchReplace(filePath string, from string, to string) error {
+	b, err := Open(filePath)
+	if err != nil {
+		return err
+	}
+
+	replaced := strings.ReplaceAll(string(b), from, to)
+	return Overwrite(strings.Split(replaced, "\n"), filePath)
 }

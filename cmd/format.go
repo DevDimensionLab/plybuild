@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"co-pilot/pkg/clean"
+	"co-pilot/pkg/config"
+	"co-pilot/pkg/file"
 	"co-pilot/pkg/upgrade"
+	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 )
@@ -34,16 +37,18 @@ var formatInitCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		//initConfig, err := config.GenerateConfig(model)
-		//if err != nil {
-		//	log.Fatalln(err)
-		//}
+		configFile := fmt.Sprintf("%s/co-pilot.json", targetDirectory)
+		if !file.Exists(configFile) {
+			initConfig, err := config.GenerateConfig(model)
+			if err != nil {
+				log.Fatalln(err)
+			}
 
-		//configFile := fmt.Sprintf("%s/co-pilot.json", targetDirectory)
-		//log.Infof("writes co-pilot.json config file to %s", configFile)
-		//if err = config.WriteConfig(initConfig, configFile); err != nil {
-		//	log.Fatalln(err)
-		//}
+			log.Infof("writes co-pilot.json config file to %s", configFile)
+			if err = config.WriteConfig(initConfig, configFile); err != nil {
+				log.Fatalln(err)
+			}
+		}
 	},
 }
 

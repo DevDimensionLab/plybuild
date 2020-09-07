@@ -6,7 +6,7 @@ import (
 )
 
 func Context() *logrus.Entry {
-	pc, _, _, ok := runtime.Caller(1)
+	_, _, _, ok := runtime.Caller(1)
 
 	var fields logrus.Fields
 
@@ -14,7 +14,7 @@ func Context() *logrus.Entry {
 		fields = logrus.Fields{
 			//"caller": file,
 			//"line": line,
-			"func": runtime.FuncForPC(pc).Name(),
+			//"func": runtime.FuncForPC(pc).Name(),
 		}
 	}
 	return logrus.WithFields(fields)

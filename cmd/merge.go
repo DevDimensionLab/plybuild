@@ -122,7 +122,7 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalf("no such directory %s", templateName)
 		}
 
-		if err = merge.Directory(templatePath, targetDirectory); err != nil {
+		if err = merge.Template(templatePath, targetDirectory); err != nil {
 			log.Fatalln(err)
 		}
 	},

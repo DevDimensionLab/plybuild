@@ -1,6 +1,7 @@
 package merge
 
 import (
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"fmt"
@@ -43,15 +44,15 @@ func TextFiles(fromFile string, toFile string) error {
 	return file.Overwrite(toLines, toFile)
 }
 
-func Directory(source string, target string) error {
+func Template(source string, target string) error {
 	var files []string
 
 	err := filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
-		for _, nay := range DoNotCopyFilesContains() {
-			if strings.Contains(info.Name(), nay) {
+		for _, nayName := range DoNotCopyFileName() {
+			if strings.Contains(info.Name(), nayName) {
 				return nil
 			}
 		}
@@ -62,15 +63,35 @@ func Directory(source string, target string) error {
 		return err
 	}
 
+	_, err = config.FromProject(source)
+	if err != nil {
+		return err
+	}
+
+	sourceConfig, err := config.FromProject(source)
+	if err != nil {
+		return err
+	}
+
+	targetConfig, err := config.FromProject(target)
+	if err != nil {
+		return err
+	}
+
 	for _, f := range files {
-		relPath, err := file.RelPath(source, f)
+		sourceRelPath, err := file.RelPath(source, f)
 		if err != nil {
 			return err
 		}
 
-		targetPath := fmt.Sprintf("%s/%s", target, relPath)
-		err = file.Copy(f, targetPath)
-		if err != nil {
+		sourceRelPath = replacePathForSource(sourceRelPath, sourceConfig, targetConfig)
+
+		targetPath := fmt.Sprintf("%s/%s", target, sourceRelPath)
+		if err = file.Copy(f, targetPath); err != nil {
+			return err
+		}
+
+		if err = file.SearchReplace(targetPath, sourceConfig.Package, targetConfig.Package); err != nil {
 			return err
 		}
 	}
@@ -78,6 +99,17 @@ func Directory(source string, target string) error {
 	return nil
 }
 
-func DoNotCopyFilesContains() []string {
+func DoNotCopyFileName() []string {
 	return []string{"Application"}
+}
+
+func replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfiguration, targetConfig config.ProjectConfiguration) string {
+	var output = sourceRelPath
+
+	if strings.Contains(output, ".kt") || strings.Contains(output, ".java") {
+		output = strings.Replace(sourceRelPath, sourceConfig.ProjectMainRoot(), targetConfig.ProjectMainRoot(), 1)
+		output = strings.Replace(sourceRelPath, sourceConfig.ProjectTestRoot(), targetConfig.ProjectTestRoot(), 1)
+	}
+
+	return output
 }
