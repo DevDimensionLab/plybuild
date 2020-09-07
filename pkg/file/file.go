@@ -86,10 +86,14 @@ func Overwrite(lines []string, filePath string) error {
 	return ioutil.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
 }
 
-func Copy(sourceFile string, destinationFile string) error {
-	if Exists(destinationFile) {
-		log.Infof("ignoring %s, it already exists", destinationFile)
+func CopyOrMerge(sourceFile string, destinationFile string) error {
+	if strings.Contains(sourceFile, "pom.xml") {
 		return nil
+	}
+
+	if Exists(destinationFile) {
+		log.Infof("merging %s with %s", sourceFile, destinationFile)
+		return MergeFiles(sourceFile, destinationFile)
 	}
 
 	input, err := ioutil.ReadFile(sourceFile)
@@ -157,4 +161,36 @@ func SearchReplace(filePath string, from string, to string) error {
 
 	replaced := strings.ReplaceAll(string(b), from, to)
 	return Overwrite(strings.Split(replaced, "\n"), filePath)
+}
+
+func MergeFiles(fromFile string, toFile string) error {
+	fromBytes, err := Open(fromFile)
+	if err != nil {
+		return err
+	}
+	fromLines := strings.Split(string(fromBytes), "\n")
+
+	toBytes, err := Open(toFile)
+	if err != nil {
+		return err
+	}
+	toLines := strings.Split(string(toBytes), "\n")
+
+	var newLines []string
+	for _, fromLine := range fromLines {
+		var hasLine = false
+		for _, toLine := range toLines {
+			if fromLine == toLine {
+				hasLine = true
+			}
+		}
+		if !hasLine {
+			newLines = append(newLines, fromLine)
+			log.Infof("appending line: %s", fromLine)
+		}
+	}
+
+	toLines = append(toLines, newLines...)
+
+	return Overwrite(toLines, toFile)
 }

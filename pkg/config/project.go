@@ -51,13 +51,9 @@ func WriteConfig(configuration ProjectConfiguration, targetFile string) error {
 }
 
 func (config ProjectConfiguration) ProjectMainRoot() string {
-	return fmt.Sprintf("src/main/%s/%s",
-		config.Language,
-		strings.Join(strings.Split(config.Package, "."), "/"))
+	return fmt.Sprintf("%s", strings.Join(strings.Split(config.Package, "."), "/"))
 }
 
 func (config ProjectConfiguration) ProjectTestRoot() string {
-	return fmt.Sprintf("src/test/%s/%s",
-		config.Language,
-		strings.Join(strings.Split(config.Package, "."), "/"))
+	return fmt.Sprintf("%s", strings.Join(strings.Split(config.Package, "."), "/"))
 }
