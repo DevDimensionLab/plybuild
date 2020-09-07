@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"co-pilot/pkg/clean"
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/springio"
 	"co-pilot/pkg/upgrade"
@@ -19,15 +20,16 @@ var springCmd = &cobra.Command{
 	},
 }
 
-var springInstallCmd = &cobra.Command{
-	Use:   "install",
+var springInitCmd = &cobra.Command{
+	Use:   "init",
 	Short: "Downloads and installs spring boot with default or provided settings",
 	Long:  `Downloads and installs spring boot with default or provided settings`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
-		var initConfig = springio.InitConfiguration{}
+		var initConfig = config.ProjectConfiguration{}
 
-		_ = os.RemoveAll("webservice")
+		targetDir := "webservice"
+		_ = os.RemoveAll(targetDir)
 
 		if jsonConfigFile != "" {
 			err := file.ReadJson(jsonConfigFile, &initConfig)
@@ -41,14 +43,19 @@ var springInstallCmd = &cobra.Command{
 				os.Exit(1)
 			}
 		} else {
-			initConfig = springio.DefaultConfiguration()
+			initConfig = config.DefaultConfiguration()
 		}
 
 		springExec, err := file.Find("bin/spring", "./target")
-		err = springio.CLI(springExec, springio.InitFrom(initConfig)...)
-
+		err = springio.CLI(springExec, springio.InitFrom(initConfig, targetDir)...)
 		if err != nil {
 			log.Println(err)
+		}
+
+		configFile := fmt.Sprintf("%s/co-pilot.json", targetDir)
+		log.Infof("writes co-pilot.json config file to %s", configFile)
+		if err = config.WriteConfig(initConfig, configFile); err != nil {
+			log.Fatalln(err)
 		}
 	},
 }
@@ -119,11 +126,11 @@ var springStatusCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(springCmd)
-	springCmd.AddCommand(springInstallCmd)
+	springCmd.AddCommand(springInitCmd)
 	springCmd.AddCommand(springStatusCmd)
 	springCmd.AddCommand(springManagedCmd)
 	springCmd.AddCommand(springInheritVersion)
 	springCmd.PersistentFlags().String("target", ".", "Optional target directory")
 	springCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
-	springInstallCmd.Flags().String("config-file", "", "Optional config file")
+	springInitCmd.Flags().String("config-file", "", "Optional config file")
 }

@@ -7,15 +7,15 @@ import (
 
 func Merge(from *pom.Model, to *pom.Model) error {
 	if err := mergeDependencies(from, to); err != nil {
-		log.Errorln(err)
+		log.Warnln(err)
 	}
 
 	if err := mergeManagementDependencies(from, to); err != nil {
-		log.Errorln(err)
+		log.Warnln(err)
 	}
 
 	if err := mergePlugins(from, to); err != nil {
-		log.Errorln(err)
+		log.Warnln(err)
 	}
 
 	return nil
