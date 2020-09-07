@@ -77,3 +77,7 @@ func Open(filePath string) ([]byte, error) {
 
 	return byteValue, nil
 }
+
+func Overwrite(lines []string, filePath string) error {
+	return ioutil.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
+}
