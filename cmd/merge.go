@@ -89,7 +89,7 @@ var mergeTextCmd = &cobra.Command{
 			os.Exit(-1)
 		}
 
-		if err := merge.TextFiles(fromFile, toFile); err != nil {
+		if err := file.MergeFiles(fromFile, toFile); err != nil {
 			log.Fatalln(err)
 		}
 	},

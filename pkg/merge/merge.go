@@ -3,46 +3,14 @@ package merge
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
-	"co-pilot/pkg/logger"
+	"co-pilot/pkg/maven"
+	"co-pilot/pkg/upgrade"
 	"fmt"
+	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"os"
 	"path/filepath"
 	"strings"
 )
-
-var log = logger.Context()
-
-func TextFiles(fromFile string, toFile string) error {
-	fromBytes, err := file.Open(fromFile)
-	if err != nil {
-		return err
-	}
-	fromLines := strings.Split(string(fromBytes), "\n")
-
-	toBytes, err := file.Open(toFile)
-	if err != nil {
-		return err
-	}
-	toLines := strings.Split(string(toBytes), "\n")
-
-	var newLines []string
-	for _, fromLine := range fromLines {
-		var hasLine = false
-		for _, toLine := range toLines {
-			if fromLine == toLine {
-				hasLine = true
-			}
-		}
-		if !hasLine {
-			newLines = append(newLines, fromLine)
-			log.Infof("appending line: %s", fromLine)
-		}
-	}
-
-	toLines = append(toLines, newLines...)
-
-	return file.Overwrite(toLines, toFile)
-}
 
 func Template(source string, target string) error {
 	var files []string
@@ -87,7 +55,7 @@ func Template(source string, target string) error {
 		sourceRelPath = replacePathForSource(sourceRelPath, sourceConfig, targetConfig)
 
 		targetPath := fmt.Sprintf("%s/%s", target, sourceRelPath)
-		if err = file.Copy(f, targetPath); err != nil {
+		if err = file.CopyOrMerge(f, targetPath); err != nil {
 			return err
 		}
 
@@ -96,7 +64,7 @@ func Template(source string, target string) error {
 		}
 	}
 
-	return nil
+	return mergeAndWritePomFiles(source, target)
 }
 
 func DoNotCopyFileName() []string {
@@ -112,4 +80,24 @@ func replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfi
 	}
 
 	return output
+}
+
+func mergeAndWritePomFiles(source string, target string) error {
+	fromPomFile := source + "/pom.xml"
+	importModel, err := pom.GetModelFrom(fromPomFile)
+	if err != nil {
+		return err
+	}
+
+	toPomFile := target + "/pom.xml"
+	projectModel, err := pom.GetModelFrom(toPomFile)
+	if err != nil {
+		return err
+	}
+
+	if err = maven.Merge(importModel, projectModel); err != nil {
+		return err
+	}
+
+	return upgrade.SortAndWrite(projectModel, toPomFile)
 }
