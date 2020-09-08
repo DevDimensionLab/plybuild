@@ -8,10 +8,12 @@ import (
 	"co-pilot/pkg/merge"
 	"co-pilot/pkg/springio"
 	"co-pilot/pkg/upgrade"
+	"encoding/xml"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 )
 
 var springCmd = &cobra.Command{
@@ -24,8 +26,8 @@ var springCmd = &cobra.Command{
 
 var springInitCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Downloads and installs spring boot with default or provided settings",
-	Long:  `Downloads and installs spring boot with default or provided settings`,
+	Short: "Downloads and installs spring boot, and co-pilot templates, with default or provided settings",
+	Long:  `Downloads and installs spring boot, and co-pilot templates, with default or provided settings`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
 		var initConfig = config.ProjectConfiguration{}
@@ -111,23 +113,6 @@ var springInitCmd = &cobra.Command{
 	},
 }
 
-var springManagedCmd = &cobra.Command{
-	Use:   "managed",
-	Short: "Prints spring-boot managed dependencies",
-	Long:  `Prints spring-boot managed dependencies`,
-	Run: func(cmd *cobra.Command, args []string) {
-		deps, err := springio.GetDependencies()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		log.Infof("Spring Boot Managed Dependencies:")
-		for _, dep := range deps.Dependencies {
-			fmt.Printf("\t%s:%s [%s]\n", dep.GroupId, dep.ArtifactId, dep.Version)
-		}
-	},
-}
-
 var springInheritVersion = &cobra.Command{
 	Use:   "inherit",
 	Short: "Removes manual versions from spring dependencies",
@@ -175,8 +160,8 @@ var springDownloadCli = &cobra.Command{
 
 var springInfoCmd = &cobra.Command{
 	Use:   "info",
-	Short: "Info on spring boot and dependencies",
-	Long:  `Info on spring boot and dependencies`,
+	Short: "Prints info on spring boot and available dependencies",
+	Long:  `Prints info on spring boot and available dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
 		root, err := springio.GetRoot()
 		if err != nil {
@@ -194,6 +179,40 @@ var springInfoCmd = &cobra.Command{
 			fmt.Printf("\n")
 		}
 
+	},
+}
+
+var springManagedCmd = &cobra.Command{
+	Use:   "managed",
+	Short: "Prints info on spring-boot managed dependencies",
+	Long:  `Prints info on spring-boot managed dependencies`,
+	Run: func(cmd *cobra.Command, args []string) {
+		deps, err := springio.GetDependencies()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		log.Infof(logger.Info(fmt.Sprintf("Spring Boot Managed Dependencies:")))
+		var organized = make(map[string][]pom.Dependency)
+		for _, dep := range deps.Dependencies {
+			mvnDep := pom.Dependency{
+				GroupId:    dep.GroupId,
+				ArtifactId: dep.ArtifactId,
+			}
+			organized[dep.GroupId] = append(organized[dep.GroupId], mvnDep)
+		}
+
+		for k, v := range organized {
+			fmt.Println(logger.Info(fmt.Sprintf("%s", k)))
+			fmt.Printf("================================\n")
+			for _, mvnDep := range v {
+				b, _ := xml.MarshalIndent(mvnDep, "", "    ")
+				for _, line := range strings.Split(string(b), "\n") {
+					fmt.Println(line)
+				}
+				println("")
+			}
+		}
 	},
 }
 
