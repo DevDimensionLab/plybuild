@@ -5,17 +5,8 @@ import (
 	"co-pilot/pkg/http"
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 )
-
-func CLI(springExec string, arg ...string) error {
-	cmd := exec.Command(springExec, arg...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
-}
 
 func InitFrom(config config.ProjectConfiguration, targetDir string) []string {
 	var output []string

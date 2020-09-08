@@ -40,11 +40,12 @@ type CloudDeprecatedDependency struct {
 }
 
 type ProjectConfiguration struct {
-	Language     string   `json:"language"`
-	GroupId      string   `json:"groupId"`
-	ArtifactId   string   `json:"artifactId"`
-	Package      string   `json:"package"`
-	Name         string   `json:"name"`
-	Description  string   `json:"description"`
-	Dependencies []string `json:"dependencies"`
+	Language          string   `json:"language"`
+	GroupId           string   `json:"groupId"`
+	ArtifactId        string   `json:"artifactId"`
+	Package           string   `json:"package"`
+	Name              string   `json:"name"`
+	Description       string   `json:"description"`
+	Dependencies      []string `json:"dependencies"`
+	LocalDependencies []string `json:"co-pilot-dependencies"`
 }

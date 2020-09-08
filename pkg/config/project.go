@@ -11,12 +11,14 @@ import (
 
 func DefaultConfiguration() ProjectConfiguration {
 	return ProjectConfiguration{
-		Language:    "kotlin",
-		GroupId:     "com.example.demo",
-		ArtifactId:  "demo-webservice",
-		Package:     "com.example.demo",
-		Name:        "webservice",
-		Description: "demo webservice",
+		Language:          "kotlin",
+		GroupId:           "com.example.demo",
+		ArtifactId:        "demo-webservice",
+		Package:           "com.example.demo",
+		Name:              "webservice",
+		Description:       "demo webservice",
+		Dependencies:      []string{},
+		LocalDependencies: []string{},
 	}
 }
 
@@ -33,12 +35,14 @@ func FromProject(target string) (ProjectConfiguration, error) {
 func GenerateConfig(model *pom.Model) (ProjectConfiguration, error) {
 	// needs to be implemented correctly...
 	return ProjectConfiguration{
-		Language:    "kotlin",
-		GroupId:     model.GroupId,
-		ArtifactId:  model.ArtifactId,
-		Package:     model.GroupId,
-		Name:        model.Name,
-		Description: model.Description,
+		Language:          "kotlin",
+		GroupId:           model.GroupId,
+		ArtifactId:        model.ArtifactId,
+		Package:           model.GroupId,
+		Name:              model.Name,
+		Description:       model.Description,
+		Dependencies:      []string{},
+		LocalDependencies: []string{},
 	}, nil
 }
 

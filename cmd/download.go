@@ -1,12 +1,9 @@
 package cmd
 
 import (
-	"co-pilot/pkg/shell"
+	"co-pilot/pkg/springio"
 	"github.com/spf13/cobra"
-	"os"
 )
-
-var springBootDownloadUrl = "https://repo.spring.io/release/org/springframework/boot/spring-boot-cli/[RELEASE]/spring-boot-cli-[RELEASE]-bin.zip"
 
 var downloadCmd = &cobra.Command{
 	Use:   "download [OPTIONS]",
@@ -21,20 +18,13 @@ var downloadCliCmd = &cobra.Command{
 	Short: "Downloads spring-cli",
 	Long:  `Downloads spring-cli`,
 	Run: func(cmd *cobra.Command, args []string) {
-		download()
+		if err := springio.DownloadCli(); err != nil {
+			log.Fatalln(err)
+		}
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(downloadCmd)
 	downloadCmd.AddCommand(downloadCliCmd)
-}
-
-func download() {
-	targetDir := "./target"
-	_ = os.RemoveAll(targetDir)
-	_ = os.MkdirAll(targetDir, os.ModePerm)
-	springBootCliZip := "./target/spring-boot-cli.zip"
-	_ = shell.Wget(springBootDownloadUrl, springBootCliZip)
-	_ = shell.Unzip(springBootCliZip, targetDir)
 }

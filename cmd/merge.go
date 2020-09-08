@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/merge"
 	"co-pilot/pkg/upgrade"
-	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
@@ -112,17 +110,7 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalln("Missing template --name")
 		}
 
-		cloudConfigDir, err := config.GlobalConfigDir()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		templatePath := fmt.Sprintf("%s/templates/%s", cloudConfigDir, templateName)
-		if !file.Exists(templatePath) {
-			log.Fatalf("no such directory %s", templateName)
-		}
-
-		if err = merge.Template(templatePath, targetDirectory); err != nil {
+		if err := merge.TemplateName(templateName, targetDirectory); err != nil {
 			log.Fatalln(err)
 		}
 	},

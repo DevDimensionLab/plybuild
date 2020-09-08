@@ -4,6 +4,7 @@ import (
 	"co-pilot/pkg/clean"
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
+	"co-pilot/pkg/merge"
 	"co-pilot/pkg/springio"
 	"co-pilot/pkg/upgrade"
 	"fmt"
@@ -28,35 +29,56 @@ var springInitCmd = &cobra.Command{
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
 		var initConfig = config.ProjectConfiguration{}
 
-		targetDir := "webservice"
+		targetDir, err := cmd.Flags().GetString("target")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		if targetDir == "" {
+			targetDir = "webservice"
+		}
+
 		_ = os.RemoveAll(targetDir)
 
+		// fetch config
 		if jsonConfigFile != "" {
 			err := file.ReadJson(jsonConfigFile, &initConfig)
 			if err != nil {
-				log.Println(err)
-				os.Exit(1)
+				log.Fatalln(err)
 			}
 			err = springio.Validate(initConfig)
 			if err != nil {
-				log.Println(err)
-				os.Exit(1)
+				log.Fatalln(err)
 			}
 		} else {
 			initConfig = config.DefaultConfiguration()
 		}
 
-		springExec, err := file.Find("bin/spring", "./target")
-		err = springio.CLI(springExec, springio.InitFrom(initConfig, targetDir)...)
-		if err != nil {
-			log.Println(err)
-		}
-
-		configFile := fmt.Sprintf("%s/co-pilot.json", targetDir)
-		log.Infof("writes co-pilot.json config file to %s", configFile)
-		if err = config.WriteConfig(initConfig, configFile); err != nil {
+		// download cli
+		if err := springio.DownloadCli(); err != nil {
 			log.Fatalln(err)
 		}
+
+		// execute cli with config
+		if err := springio.RunCli(springio.InitFrom(initConfig, targetDir)...); err != nil {
+			log.Fatalln(err)
+		}
+
+		// write co-pilot.json to target directory
+		configFile := fmt.Sprintf("%s/co-pilot.json", targetDir)
+		log.Infof("writes co-pilot.json config file to %s", configFile)
+		if err := config.WriteConfig(initConfig, configFile); err != nil {
+			log.Fatalln(err)
+		}
+
+		// merge templates
+		if initConfig.LocalDependencies != nil {
+			for _, d := range initConfig.LocalDependencies {
+				if err := merge.TemplateName(d, targetDir); err != nil {
+					log.Errorln(err)
+				}
+			}
+		}
+
 	},
 }
 

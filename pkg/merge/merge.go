@@ -5,12 +5,31 @@ import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/upgrade"
+	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+func TemplateName(templateName string, targetDirectory string) error {
+	cloudConfigDir, err := config.GlobalConfigDir()
+	if err != nil {
+		return err
+	}
+
+	templatePath := fmt.Sprintf("%s/templates/%s", cloudConfigDir, templateName)
+	if !file.Exists(templatePath) {
+		return errors.New(fmt.Sprintf("no such template-directory: %s", templateName))
+	}
+
+	if err = Template(templatePath, targetDirectory); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func Template(source string, target string) error {
 	var files []string

@@ -88,8 +88,10 @@ func Overwrite(lines []string, filePath string) error {
 }
 
 func CopyOrMerge(sourceFile string, destinationFile string) error {
-	if strings.Contains(sourceFile, "pom.xml") || strings.Contains(sourceFile, "co-pilot.json") {
-		return nil
+	for _, f := range FilesToIgnore() {
+		if strings.Contains(sourceFile, f) {
+			return nil
+		}
 	}
 
 	if Exists(destinationFile) {
@@ -118,6 +120,10 @@ func CopyOrMerge(sourceFile string, destinationFile string) error {
 	}
 
 	return nil
+}
+
+func FilesToIgnore() []string {
+	return []string{"pom.xml", "co-pilot.json"}
 }
 
 func RelPath(sourceDirectory string, filePath string) (string, error) {
