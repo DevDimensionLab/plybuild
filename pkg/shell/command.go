@@ -1,20 +1,34 @@
 package shell
 
 import (
-	"os"
+	"bytes"
 	"os/exec"
 )
 
-func Wget(url, filepath string) error {
+func Wget(url, filepath string) (string, error) {
 	cmd := exec.Command("wget", url, "-O", filepath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	var stdOut bytes.Buffer
+	var stdErr bytes.Buffer
+	cmd.Stdout = &stdOut
+	cmd.Stderr = &stdErr
+
+	if err := cmd.Run(); err != nil {
+		return stdErr.String(), err
+	}
+
+	return stdOut.String(), nil
 }
 
-func Unzip(file string, outputDir string) error {
+func Unzip(file string, outputDir string) (string, error) {
 	cmd := exec.Command("unzip", file, "-d", outputDir)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	var stdOut bytes.Buffer
+	var stdErr bytes.Buffer
+	cmd.Stdout = &stdOut
+	cmd.Stderr = &stdErr
+
+	if err := cmd.Run(); err != nil {
+		return stdErr.String(), err
+	}
+
+	return stdOut.String(), nil
 }

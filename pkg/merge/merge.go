@@ -3,6 +3,7 @@ package merge
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
+	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/upgrade"
 	"errors"
@@ -12,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+var log = logger.Context()
 
 func TemplateName(templateName string, targetDirectory string) error {
 	cloudConfigDir, err := config.GlobalConfigDir()
@@ -24,6 +27,8 @@ func TemplateName(templateName string, targetDirectory string) error {
 		return errors.New(fmt.Sprintf("no such template-directory: %s", templateName))
 	}
 
+	msg := logger.Info(fmt.Sprintf("merging template %s into %s", templateName, targetDirectory))
+	log.Info(msg)
 	if err = Template(templatePath, targetDirectory); err != nil {
 		return err
 	}

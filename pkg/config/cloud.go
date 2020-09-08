@@ -3,6 +3,7 @@ package config
 import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/git"
+	"co-pilot/pkg/logger"
 	"errors"
 	"fmt"
 	"github.com/mitchellh/go-homedir"
@@ -31,16 +32,18 @@ func Clone() error {
 	}
 
 	if file.Exists(fmt.Sprintf("%s/.git", target)) {
-		log.Infof("pulling cloud config on %s", target)
-		err = git.Pull(target)
+		msg := logger.Info(fmt.Sprintf("pulling cloud config on %s", target))
+		log.Info(msg)
+		out, err := git.Pull(target)
 		if err != nil {
-			return err
+			return errors.New(fmt.Sprintf("pulling cloud config failed:\n%s, %v", out, err))
 		}
 	} else {
-		log.Infof("cloning %s to %s", c.CloudConfig.Git.Url, target)
-		err = git.Clone(c.CloudConfig.Git.Url, target)
+		msg := logger.Info(fmt.Sprintf("cloning %s to %s", c.CloudConfig.Git.Url, target))
+		log.Info(msg)
+		out, err := git.Clone(c.CloudConfig.Git.Url, target)
 		if err != nil {
-			return err
+			return errors.New(fmt.Sprintf("ploning cloud config failed:\n%s, %v", out, err))
 		}
 	}
 

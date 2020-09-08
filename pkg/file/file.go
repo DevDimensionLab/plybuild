@@ -90,6 +90,7 @@ func Overwrite(lines []string, filePath string) error {
 func CopyOrMerge(sourceFile string, destinationFile string) error {
 	for _, f := range FilesToIgnore() {
 		if strings.Contains(sourceFile, f) {
+			log.Infof("ignoring copying %s", sourceFile)
 			return nil
 		}
 	}

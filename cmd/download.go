@@ -18,7 +18,7 @@ var downloadCliCmd = &cobra.Command{
 	Short: "Downloads spring-cli",
 	Long:  `Downloads spring-cli`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := springio.DownloadCli(); err != nil {
+		if err := springio.CheckCli(); err != nil {
 			log.Fatalln(err)
 		}
 	},

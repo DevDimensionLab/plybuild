@@ -4,6 +4,7 @@ import (
 	"co-pilot/pkg/clean"
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
+	"co-pilot/pkg/logger"
 	"co-pilot/pkg/merge"
 	"co-pilot/pkg/springio"
 	"co-pilot/pkg/upgrade"
@@ -39,7 +40,12 @@ var springInitCmd = &cobra.Command{
 
 		_ = os.RemoveAll(targetDir)
 
-		// fetch config
+		// sync cloud config
+		if err := config.Clone(); err != nil {
+			log.Fatalln(err)
+		}
+
+		// fetch user input config
 		if jsonConfigFile != "" {
 			err := file.ReadJson(jsonConfigFile, &initConfig)
 			if err != nil {
@@ -54,18 +60,20 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// download cli
-		if err := springio.DownloadCli(); err != nil {
+		if err := springio.CheckCli(); err != nil {
 			log.Fatalln(err)
 		}
 
 		// execute cli with config
-		if err := springio.RunCli(springio.InitFrom(initConfig, targetDir)...); err != nil {
+		_, err = springio.RunCli(springio.InitFrom(initConfig, targetDir)...)
+		if err != nil {
 			log.Fatalln(err)
 		}
 
 		// write co-pilot.json to target directory
 		configFile := fmt.Sprintf("%s/co-pilot.json", targetDir)
-		log.Infof("writes co-pilot.json config file to %s", configFile)
+		msg := logger.Info(fmt.Sprintf("writes co-pilot.json config file to %s", configFile))
+		log.Info(msg)
 		if err := config.WriteConfig(initConfig, configFile); err != nil {
 			log.Fatalln(err)
 		}
