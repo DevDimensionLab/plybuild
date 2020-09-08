@@ -26,11 +26,9 @@ import (
 
 var log = logger.Context()
 
-var cfgFile string
-
 var RootCmd = &cobra.Command{
 	Use:   "co-pilot",
-	Short: "Co-pilot er et støtteverktøy i utvikling der kjente oppgaver er automatisert",
+	Short: "Co-pilot is a developer tool for automating common tasks on a spring boot project",
 	Long:  ``,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		debug, err := cmd.Flags().GetBool("debug")
@@ -51,6 +49,17 @@ func Execute() {
 }
 
 func init() {
+	fmt.Print(`
+   _____                  _ _       _
+  / ____|                (_) |     | |
+ | |     ___ ______ _ __  _| | ___ | |_
+ | |    / _ \______| '_ \| | |/ _ \| __|
+ | |___| (_) |     | |_) | | | (_) | |_
+  \_____\___/      | .__/|_|_|\___/ \__|
+                   | |
+                   |_|
+`)
+	fmt.Printf("== Version: %s, built: %s==\n\n", Version, BuildDate)
 	cobra.OnInitialize(initConfig)
 
 	logrus.SetOutput(os.Stdout)

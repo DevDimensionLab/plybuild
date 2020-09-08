@@ -23,7 +23,7 @@ Requirement: https://golang.org/doc/install
 
 ## Install
 ```shell script
-go install
+make
 ```
 
 ## Help
