@@ -124,7 +124,7 @@ func CopyOrMerge(sourceFile string, destinationFile string) error {
 }
 
 func FilesToIgnore() []string {
-	return []string{"pom.xml", "co-pilot.json"}
+	return []string{"pom.xml", "co-pilot.json", "/.mvn/wrapper/", "Application"}
 }
 
 func RelPath(sourceDirectory string, filePath string) (string, error) {
