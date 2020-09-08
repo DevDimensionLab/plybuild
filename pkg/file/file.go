@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -33,12 +34,12 @@ func Find(fileSuffix string, dir string) (result string, err error) {
 func ReadJson(file string, parsed interface{}) error {
 	byteValue, err := Open(file)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("Unable to read %s, %v", file, err))
 	}
 
 	err = json.Unmarshal(byteValue, &parsed)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("Unable to unmarshal %s, %v", file, err))
 	}
 
 	return nil
@@ -47,12 +48,12 @@ func ReadJson(file string, parsed interface{}) error {
 func ReadXml(file string, parsed interface{}) error {
 	byteValue, err := Open(file)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("Unable to open %s, %v", file, err))
 	}
 
 	err = xml.Unmarshal(byteValue, &parsed)
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("Unable to unmarshal %s, %v", file, err))
 	}
 
 	return nil
@@ -87,7 +88,7 @@ func Overwrite(lines []string, filePath string) error {
 }
 
 func CopyOrMerge(sourceFile string, destinationFile string) error {
-	if strings.Contains(sourceFile, "pom.xml") {
+	if strings.Contains(sourceFile, "pom.xml") || strings.Contains(sourceFile, "co-pilot.json") {
 		return nil
 	}
 
