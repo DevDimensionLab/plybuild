@@ -205,7 +205,7 @@ var upgradeAllCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		mutateAll(model)
+		upgrade.All(model)
 
 		var writeToFile = pomFile
 		if !overwrite {
@@ -233,26 +233,8 @@ var upgradeStatusCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		mutateAll(model)
+		upgrade.All(model)
 	},
-}
-
-func mutateAll(model *pom.Model) {
-	if err := upgrade.Kotlin(model); err != nil {
-		log.Warn(err)
-	}
-	if err := upgrade.SpringBoot(model); err != nil {
-		log.Warn(err)
-	}
-	if err := upgrade.Dependencies(model, true); err != nil {
-		log.Warn(err)
-	}
-	if err := upgrade.Dependencies(model, false); err != nil {
-		log.Warn(err)
-	}
-	if err := upgrade.Plugin(model); err != nil {
-		log.Warn(err)
-	}
 }
 
 func init() {

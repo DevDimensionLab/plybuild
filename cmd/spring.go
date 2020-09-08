@@ -87,6 +87,27 @@ var springInitCmd = &cobra.Command{
 			}
 		}
 
+		// format version
+		pomFile := targetDir + "/pom.xml"
+		model, err := pom.GetModelFrom(pomFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		log.Info(logger.Info(fmt.Sprintf("formatting %s", pomFile)))
+		if err = clean.VersionToPropertyTags(model); err != nil {
+			log.Fatalln(err)
+		}
+
+		// upgrade all
+		log.Info(logger.Info(fmt.Sprintf("upgrading %s", pomFile)))
+		upgrade.All(model)
+
+		// sorting and writing
+		log.Info(logger.Info(fmt.Sprintf("Sorting and rewriting %s", pomFile)))
+		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
+			log.Fatalln(err)
+		}
 	},
 }
 
