@@ -162,25 +162,48 @@ var springInheritVersion = &cobra.Command{
 	},
 }
 
-var springStatusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Spring status",
-	Long:  `Spring status`,
+var springDownloadCli = &cobra.Command{
+	Use:   "download-cli",
+	Short: "Downloads spring-cli",
+	Long:  `Downloads spring-cli`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := springio.CheckCli(); err != nil {
+			log.Fatalln(err)
+		}
+	},
+}
+
+var springInfoCmd = &cobra.Command{
+	Use:   "info",
+	Short: "Info on spring boot and dependencies",
+	Long:  `Info on spring boot and dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
 		root, err := springio.GetRoot()
 		if err != nil {
 			log.Fatalln(err)
 		}
 		log.Infof("Latest version of spring boot are: %s\n", root.BootVersion.Default)
+
+		log.Infof(logger.Info(fmt.Sprintf("Valid dependencies: ")))
+		for _, category := range root.Dependencies.Values {
+			fmt.Println(logger.Info(fmt.Sprintf("%s", category.Name)))
+			fmt.Printf("================================\n")
+			for _, dep := range category.Values {
+				fmt.Printf("[%s]\n    %s, (%s)\n", logger.Magenta(dep.Id), dep.Name, dep.Description)
+			}
+			fmt.Printf("\n")
+		}
+
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(springCmd)
 	springCmd.AddCommand(springInitCmd)
-	springCmd.AddCommand(springStatusCmd)
+	springCmd.AddCommand(springInfoCmd)
 	springCmd.AddCommand(springManagedCmd)
 	springCmd.AddCommand(springInheritVersion)
+	springCmd.AddCommand(springDownloadCli)
 	springCmd.PersistentFlags().String("target", ".", "Optional target directory")
 	springCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
 	springInitCmd.Flags().String("config-file", "", "Optional config file")
