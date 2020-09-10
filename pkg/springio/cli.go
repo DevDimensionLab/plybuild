@@ -31,7 +31,7 @@ func RunCli(arg ...string) (string, error) {
 		return "", err
 	}
 
-	springExec, err := file.Find("bin/spring", targetDir)
+	springExec, err := file.FindFirst("bin/spring", targetDir)
 	if err != nil {
 		return "", err
 	}
@@ -54,7 +54,7 @@ func CheckCli() error {
 		return err
 	}
 
-	springExec, err := file.Find("bin/spring", targetDir)
+	springExec, err := file.FindFirst("bin/spring", targetDir)
 	if err != nil {
 		return err
 	}

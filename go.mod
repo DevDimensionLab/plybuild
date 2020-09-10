@@ -9,7 +9,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
-	github.com/perottobc/mvn-pom-mutator v0.1.29
+	github.com/perottobc/mvn-pom-mutator v0.1.30
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/afero v1.3.5 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
@@ -17,7 +17,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1
-	golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a // indirect
-	gopkg.in/ini.v1 v1.60.2 // indirect
+	golang.org/x/sys v0.0.0-20200909081042-eff7692f9009 // indirect
+	gopkg.in/ini.v1 v1.61.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )

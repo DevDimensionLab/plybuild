@@ -36,6 +36,7 @@ var RootCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 		if debug {
+			fmt.Println("== debug mode enabled ==")
 			logrus.SetLevel(logrus.DebugLevel)
 		}
 	},
@@ -59,7 +60,7 @@ func init() {
                    | |
                    |_|
 `)
-	fmt.Printf("== Version: %s, built: %s==\n\n", Version, BuildDate)
+	fmt.Printf("== bersion: %s, built: %s ==\n", Version, BuildDate)
 	cobra.OnInitialize(initConfig)
 
 	logrus.SetOutput(os.Stdout)
@@ -80,6 +81,6 @@ func initConfig() {
 		if err != nil {
 			log.Error(err)
 		}
-		log.Infof("using config file %s", f)
+		fmt.Printf("== using config file %s ==\n", f)
 	}
 }

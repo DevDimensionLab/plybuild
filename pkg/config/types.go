@@ -33,10 +33,7 @@ type CloudDeprecatedDependency struct {
 		Files        []string                    `json:"files"`
 		Dependencies []CloudDeprecatedDependency `json:"dependencies"`
 	} `json:"associated"`
-	Replacements struct {
-		Files        []string                    `json:"files"`
-		Dependencies []CloudDeprecatedDependency `json:"dependencies"`
-	} `json:"replacements"`
+	ReplacementTemplates []string `json:"replacement_templates"`
 }
 
 type ProjectConfiguration struct {

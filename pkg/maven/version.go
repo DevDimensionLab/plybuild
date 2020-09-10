@@ -1,6 +1,7 @@
 package maven
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -44,19 +45,19 @@ func ParseVersion(version string) (JavaVersion, error) {
 	if -1 < majorIndex {
 		major, err = strconv.Atoi(parts[majorIndex])
 		if err != nil {
-			return JavaVersion{}, err
+			return JavaVersion{}, errors.New(fmt.Sprintf("unable to parse version:%s due to %v", version, err))
 		}
 	}
 
 	if -1 < minorIndex {
 		minor, err = strconv.Atoi(parts[minorIndex])
 		if err != nil {
-			return JavaVersion{}, err
+			return JavaVersion{}, errors.New(fmt.Sprintf("unable to parse version:%s due to %v", version, err))
 		}
 	}
 	patch, err = strconv.Atoi(patchPart)
 	if err != nil {
-		return JavaVersion{}, err
+		return JavaVersion{}, errors.New(fmt.Sprintf("unable to parse version:%s due to %v", version, err))
 	}
 
 	return JavaVersion{

@@ -15,12 +15,27 @@ import (
 
 var log = logger.Context()
 
-func Find(fileSuffix string, dir string) (result string, err error) {
+func FindFirst(fileSuffix string, dir string) (result string, err error) {
 	err = filepath.Walk(dir,
 		func(path string, fi os.FileInfo, errIn error) error {
 			if strings.HasSuffix(path, fileSuffix) {
 				result = path
 				return io.EOF
+			}
+			return nil
+		})
+
+	if err == io.EOF {
+		err = nil
+	}
+	return
+}
+
+func FindAll(fileSuffix string, dir string) (result []string, err error) {
+	err = filepath.Walk(dir,
+		func(path string, fi os.FileInfo, errIn error) error {
+			if strings.HasSuffix(path, fileSuffix) {
+				result = append(result, path)
 			}
 			return nil
 		})

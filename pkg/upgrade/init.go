@@ -5,6 +5,6 @@ import (
 )
 
 func Init(model *pom.Model, pomFile string) error {
-	log.Infof("Initializes project and writes to: %s", pomFile)
+	log.Infof("initializes project and writes to: %s", pomFile)
 	return SortAndWrite(model, pomFile)
 }

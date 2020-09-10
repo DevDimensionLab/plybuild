@@ -34,11 +34,15 @@ func FromProject(target string) (ProjectConfiguration, error) {
 
 func GenerateConfig(model *pom.Model) (ProjectConfiguration, error) {
 	// needs to be implemented correctly...
+	groupId := model.GroupId
+	if groupId == "" {
+		groupId = model.Parent.GroupId
+	}
 	return ProjectConfiguration{
 		Language:          "kotlin",
-		GroupId:           model.GroupId,
+		GroupId:           groupId,
 		ArtifactId:        model.ArtifactId,
-		Package:           model.GroupId,
+		Package:           groupId,
 		Name:              model.Name,
 		Description:       model.Description,
 		Dependencies:      []string{},
