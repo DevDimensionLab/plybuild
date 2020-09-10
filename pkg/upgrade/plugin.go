@@ -12,13 +12,11 @@ func Plugin(model *pom.Model) error {
 
 	for _, plugin := range model.Build.Plugins.Plugin {
 		if plugin.Version != "" {
-			err := PluginUpgrade(model, plugin)
-			if err != nil {
-				log.Errorf("%v", err)
+			if err := PluginUpgrade(model, plugin); err != nil {
+				log.Warnf("%v", err)
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -45,7 +43,9 @@ func PluginUpgrade(model *pom.Model, plugin pom.Plugin) error {
 
 	if currentVersion != latestRelease {
 		log.Warnf("outdated plugin %s:%s [%s => %s] \n", plugin.GroupId, plugin.ArtifactId, currentVersion.ToString(), latestRelease.ToString())
-		_ = model.SetPluginVersion(plugin, latestRelease.ToString())
+		if err := model.SetPluginVersion(plugin, latestRelease.ToString()); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -36,8 +36,13 @@ func pomFileToTargetDirectory(pomFile string) string {
 }
 
 func populatePomFiles() {
+	excludes := []string{
+		"flattened-pom.xml",
+		"/target/",
+	}
+
 	if cArgs.Recursive {
-		if cArgs.PomFiles, cArgs.Err = file.FindAll("pom.xml", []string{"flattened-pom.xml"}, cArgs.TargetDirectory); cArgs.Err != nil {
+		if cArgs.PomFiles, cArgs.Err = file.FindAll("pom.xml", excludes, cArgs.TargetDirectory); cArgs.Err != nil {
 			log.Fatalln(cArgs.Err)
 		}
 	} else {

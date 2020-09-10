@@ -31,7 +31,7 @@ func DependenciesUpgrade(dependencies []pom.Dependency, secondPartyGroupId strin
 			if err == nil && isSecondParty == secondParty {
 				err = DependencyUpgrade(model, dep)
 				if err != nil {
-					log.Errorf("%v", err)
+					log.Warnf("%v", err)
 				}
 			}
 		}

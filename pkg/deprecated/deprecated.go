@@ -36,7 +36,7 @@ func UpgradeDeprecated(model *pom.Model, deprecated config.CloudDeprecated, targ
 		if commitTemplates {
 			log.Infof("applying template %s", k)
 			if err := merge.TemplateName(k, targetDirectory); err != nil {
-				log.Errorf("%v", err)
+				log.Warnf("%v", err)
 			}
 		} else {
 			log.Infof("template %s is ready for applying", k)

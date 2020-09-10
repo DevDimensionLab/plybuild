@@ -48,7 +48,7 @@ func FindAll(suffix string, excludes []string, dir string) (result []string, err
 
 func SuffixIn(keyword string, list []string) bool {
 	for _, w := range list {
-		if strings.HasSuffix(keyword, w) {
+		if strings.Contains(keyword, w) {
 			return true
 		}
 	}
