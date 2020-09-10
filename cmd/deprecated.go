@@ -106,7 +106,10 @@ var deprecatedUpgradeCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalln(err)
 			}
-			write(pomFile, model)
+
+			if err := write(pomFile, model); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }

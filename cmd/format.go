@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"co-pilot/pkg/clean"
-	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
-	"co-pilot/pkg/upgrade"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
@@ -35,32 +33,31 @@ var formatCmd = &cobra.Command{
 	},
 }
 
-var formatInitCmd = &cobra.Command{
-	Use:   "init",
+var formatPomCmd = &cobra.Command{
+	Use:   "pom",
 	Short: "Formats pom.xml and sorts dependencies",
 	Long:  `Formats pom.xml and sorts dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pomFile := range cArgs.PomFiles {
-			log.Info(logger.White(fmt.Sprintf("initializes pom file %s", pomFile)))
+			log.Info(logger.White(fmt.Sprintf("formating pom file %s", pomFile)))
 			model, err := pom.GetModelFrom(pomFile)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
-			err = upgrade.Init(model, pomFile)
-			if err != nil {
+			if err := write(pomFile, model); err != nil {
 				log.Fatalln(err)
 			}
-			configFile := fmt.Sprintf("%s/co-pilot.json", pomFileToTargetDirectory(pomFile))
-			initConfig, err := config.GenerateConfig(model)
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			log.Infof("writes co-pilot.json config file to %s", configFile)
-			if err = config.WriteConfig(initConfig, configFile); err != nil {
-				log.Fatalln(err)
-			}
+			//configFile := fmt.Sprintf("%sco-pilot.json", pomFileToTargetDirectory(pomFile))
+			//initConfig, err := config.GenerateConfig(model)
+			//if err != nil {
+			//	log.Fatalln(err)
+			//}
+			//
+			//log.Infof("writes co-pilot.json config file to %s", configFile)
+			//if err = config.WriteConfig(initConfig, configFile); err != nil {
+			//	log.Fatalln(err)
+			//}
 		}
 	},
 }
@@ -80,14 +77,17 @@ var formatVersionCmd = &cobra.Command{
 			if err = clean.VersionToPropertyTags(model); err != nil {
 				log.Fatalln(err)
 			}
-			write(pomFile, model)
+
+			if err := write(pomFile, model); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(formatCmd)
-	formatCmd.AddCommand(formatInitCmd)
+	formatCmd.AddCommand(formatPomCmd)
 	formatCmd.AddCommand(formatVersionCmd)
 
 	formatCmd.PersistentFlags().Bool("recursive", false, "turn on recursive mode")

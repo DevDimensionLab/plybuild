@@ -60,7 +60,7 @@ func init() {
                    | |
                    |_|
 `)
-	fmt.Printf("== bersion: %s, built: %s ==\n", Version, BuildDate)
+	fmt.Printf("== version: %s, built: %s ==\n", Version, BuildDate)
 	cobra.OnInitialize(initConfig)
 
 	logrus.SetOutput(os.Stdout)
@@ -81,6 +81,6 @@ func initConfig() {
 		if err != nil {
 			log.Error(err)
 		}
-		fmt.Printf("== using config file %s ==\n", f)
+		fmt.Printf("== using local config file %s ==\n", f)
 	}
 }

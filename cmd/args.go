@@ -16,15 +16,17 @@ type CommonArgs struct {
 
 var cArgs CommonArgs
 
-func write(filename string, model *pom.Model) {
+func write(filename string, model *pom.Model) error {
 	var writeToFile = filename
 	if !cArgs.Overwrite {
 		writeToFile = filename + ".new"
 	}
 	log.Infof("sorting and writing to pom file %s", filename)
 	if err := upgrade.SortAndWrite(model, writeToFile); err != nil {
-		log.Fatalln(err)
+		return err
 	}
+
+	return nil
 }
 
 func pomFileToTargetDirectory(pomFile string) string {

@@ -48,7 +48,10 @@ var upgradeSpringBootCmd = &cobra.Command{
 			if err = upgrade.SpringBoot(model); err != nil {
 				log.Fatalln(err)
 			}
-			write(pomFile, model)
+
+			if err = write(pomFile, model); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }
@@ -67,7 +70,10 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 			if err = upgrade.Dependencies(model, true); err != nil {
 				log.Fatalln(err)
 			}
-			write(pomFile, model)
+
+			if err = write(pomFile, model); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }
@@ -87,7 +93,10 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 			if err = upgrade.Dependencies(model, false); err != nil {
 				log.Fatalln(err)
 			}
-			write(pomFile, model)
+
+			if err = write(pomFile, model); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }
@@ -107,7 +116,10 @@ var upgradeKotlinCmd = &cobra.Command{
 			if err = upgrade.Kotlin(model); err != nil {
 				log.Fatalln(err)
 			}
-			write(pomFile, model)
+
+			if err = write(pomFile, model); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }
@@ -126,7 +138,10 @@ var upgradePluginsCmd = &cobra.Command{
 			if err = upgrade.Plugin(model); err != nil {
 				log.Fatalln(err)
 			}
-			write(pomFile, model)
+
+			if err = write(pomFile, model); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }
@@ -143,7 +158,10 @@ var upgradeAllCmd = &cobra.Command{
 				log.Fatalln(err)
 			}
 			upgrade.All(model)
-			write(pomFile, model)
+
+			if err := write(pomFile, model); err != nil {
+				log.Fatalln(err)
+			}
 		}
 	},
 }
