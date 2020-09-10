@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"co-pilot/pkg/clean"
-	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
@@ -14,22 +13,7 @@ var formatCmd = &cobra.Command{
 	Short: "Format functionality for a project",
 	Long:  `Format functionality for a project`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if cArgs.Recursive, cArgs.Err = cmd.Flags().GetBool("recursive"); cArgs.Err != nil {
-			log.Fatalln(cArgs.Err)
-		}
-		if cArgs.TargetDirectory, cArgs.Err = cmd.Flags().GetString("target"); cArgs.Err != nil {
-			log.Fatalln(cArgs)
-		}
-		if cArgs.Overwrite, cArgs.Err = cmd.Flags().GetBool("overwrite"); cArgs.Err != nil {
-			log.Fatalln(cArgs.Err)
-		}
-		if cArgs.Recursive {
-			if cArgs.PomFiles, cArgs.Err = file.FindAll("pom.xml", cArgs.TargetDirectory); cArgs.Err != nil {
-				log.Fatalln(cArgs.Err)
-			}
-		} else {
-			cArgs.PomFiles = append(cArgs.PomFiles, cArgs.TargetDirectory+"/pom.xml")
-		}
+		populatePomFiles()
 	},
 }
 
@@ -42,22 +26,15 @@ var formatPomCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("formating pom file %s", pomFile)))
 			model, err := pom.GetModelFrom(pomFile)
 			if err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
-			if err := write(pomFile, model); err != nil {
-				log.Fatalln(err)
+			if !cArgs.DryRun {
+				if err := write(pomFile, model); err != nil {
+					log.Warnln(err)
+				}
 			}
-			//configFile := fmt.Sprintf("%sco-pilot.json", pomFileToTargetDirectory(pomFile))
-			//initConfig, err := config.GenerateConfig(model)
-			//if err != nil {
-			//	log.Fatalln(err)
-			//}
-			//
-			//log.Infof("writes co-pilot.json config file to %s", configFile)
-			//if err = config.WriteConfig(initConfig, configFile); err != nil {
-			//	log.Fatalln(err)
-			//}
 		}
 	},
 }
@@ -71,15 +48,19 @@ var formatVersionCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("removes version tags for pom file %s", pomFile)))
 			model, err := pom.GetModelFrom(pomFile)
 			if err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
 			if err = clean.VersionToPropertyTags(model); err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
-			if err := write(pomFile, model); err != nil {
-				log.Fatalln(err)
+			if !cArgs.DryRun {
+				if err := write(pomFile, model); err != nil {
+					log.Warnln(err)
+				}
 			}
 		}
 	},
@@ -90,7 +71,8 @@ func init() {
 	formatCmd.AddCommand(formatPomCmd)
 	formatCmd.AddCommand(formatVersionCmd)
 
-	formatCmd.PersistentFlags().Bool("recursive", false, "turn on recursive mode")
-	formatCmd.PersistentFlags().String("target", ".", "Optional target directory")
-	formatCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
+	formatCmd.PersistentFlags().BoolVarP(&cArgs.Recursive, "recursive", "r", false, "turn on recursive mode")
+	formatCmd.PersistentFlags().StringVar(&cArgs.TargetDirectory, "target", ".", "Optional target directory")
+	formatCmd.PersistentFlags().BoolVar(&cArgs.Overwrite, "overwrite", true, "Overwrite pom.xml file")
+	formatCmd.PersistentFlags().BoolVar(&cArgs.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func SortAndWrite(model *pom.Model, file string) error {
-	log.Infof("sorting and writing to %s", file)
+	log.Infof("sorting and writing to pom file: %s", file)
 	secondPartyGroupId, err := analyze.GetSecondPartyGroupId(model)
 	if err != nil {
 		return err

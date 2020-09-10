@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"co-pilot/pkg/file"
 	"co-pilot/pkg/upgrade"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
@@ -9,6 +10,7 @@ import (
 type CommonArgs struct {
 	Recursive       bool
 	Overwrite       bool
+	DryRun          bool
 	TargetDirectory string
 	PomFiles        []string
 	Err             error
@@ -21,7 +23,6 @@ func write(filename string, model *pom.Model) error {
 	if !cArgs.Overwrite {
 		writeToFile = filename + ".new"
 	}
-	log.Infof("sorting and writing to pom file %s", filename)
 	if err := upgrade.SortAndWrite(model, writeToFile); err != nil {
 		return err
 	}
@@ -32,4 +33,14 @@ func write(filename string, model *pom.Model) error {
 func pomFileToTargetDirectory(pomFile string) string {
 	pomFilePathParts := strings.Split(pomFile, "/")
 	return strings.Join(pomFilePathParts[:len(pomFilePathParts)-1], "/")
+}
+
+func populatePomFiles() {
+	if cArgs.Recursive {
+		if cArgs.PomFiles, cArgs.Err = file.FindAll("pom.xml", []string{"flattened-pom.xml"}, cArgs.TargetDirectory); cArgs.Err != nil {
+			log.Fatalln(cArgs.Err)
+		}
+	} else {
+		cArgs.PomFiles = append(cArgs.PomFiles, cArgs.TargetDirectory+"/pom.xml")
+	}
 }

@@ -31,10 +31,10 @@ func FindFirst(fileSuffix string, dir string) (result string, err error) {
 	return
 }
 
-func FindAll(fileSuffix string, dir string) (result []string, err error) {
+func FindAll(suffix string, excludes []string, dir string) (result []string, err error) {
 	err = filepath.Walk(dir,
 		func(path string, fi os.FileInfo, errIn error) error {
-			if strings.HasSuffix(path, fileSuffix) {
+			if strings.HasSuffix(path, suffix) && !SuffixIn(path, excludes) {
 				result = append(result, path)
 			}
 			return nil
@@ -44,6 +44,15 @@ func FindAll(fileSuffix string, dir string) (result []string, err error) {
 		err = nil
 	}
 	return
+}
+
+func SuffixIn(keyword string, list []string) bool {
+	for _, w := range list {
+		if strings.HasSuffix(keyword, w) {
+			return true
+		}
+	}
+	return false
 }
 
 func ReadJson(file string, parsed interface{}) error {

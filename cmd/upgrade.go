@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/upgrade"
 	"fmt"
@@ -14,22 +13,7 @@ var upgradeCmd = &cobra.Command{
 	Short: "Upgrade options",
 	Long:  `Perform upgrade on existing projects`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if cArgs.Recursive, cArgs.Err = cmd.Flags().GetBool("recursive"); cArgs.Err != nil {
-			log.Fatalln(cArgs.Err)
-		}
-		if cArgs.TargetDirectory, cArgs.Err = cmd.Flags().GetString("target"); cArgs.Err != nil {
-			log.Fatalln(cArgs)
-		}
-		if cArgs.Overwrite, cArgs.Err = cmd.Flags().GetBool("overwrite"); cArgs.Err != nil {
-			log.Fatalln(cArgs.Err)
-		}
-		if cArgs.Recursive {
-			if cArgs.PomFiles, cArgs.Err = file.FindAll("pom.xml", cArgs.TargetDirectory); cArgs.Err != nil {
-				log.Fatalln(cArgs.Err)
-			}
-		} else {
-			cArgs.PomFiles = append(cArgs.PomFiles, cArgs.TargetDirectory+"/pom.xml")
-		}
+		populatePomFiles()
 	},
 }
 
@@ -42,15 +26,19 @@ var upgradeSpringBootCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("upgrading spring-boot for pom file %s", pomFile)))
 			model, err := pom.GetModelFrom(pomFile)
 			if err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
 			if err = upgrade.SpringBoot(model); err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
-			if err = write(pomFile, model); err != nil {
-				log.Fatalln(err)
+			if !cArgs.DryRun {
+				if err = write(pomFile, model); err != nil {
+					log.Warnln(err)
+				}
 			}
 		}
 	},
@@ -65,14 +53,18 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("upgrading 2party for pom file %s", pomFile)))
 			model, err := pom.GetModelFrom(pomFile)
 			if err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 			if err = upgrade.Dependencies(model, true); err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
-			if err = write(pomFile, model); err != nil {
-				log.Fatalln(err)
+			if !cArgs.DryRun {
+				if err = write(pomFile, model); err != nil {
+					log.Warnln(err)
+				}
 			}
 		}
 	},
@@ -87,15 +79,19 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("upgrading 3party for pom file %s", pomFile)))
 			model, err := pom.GetModelFrom(pomFile)
 			if err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
 			if err = upgrade.Dependencies(model, false); err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
-			if err = write(pomFile, model); err != nil {
-				log.Fatalln(err)
+			if !cArgs.DryRun {
+				if err = write(pomFile, model); err != nil {
+					log.Warnln(err)
+				}
 			}
 		}
 	},
@@ -110,15 +106,19 @@ var upgradeKotlinCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("upgrading kotlin for pom file %s", pomFile)))
 			model, err := pom.GetModelFrom(pomFile)
 			if err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
 			if err = upgrade.Kotlin(model); err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
-			if err = write(pomFile, model); err != nil {
-				log.Fatalln(err)
+			if !cArgs.DryRun {
+				if err = write(pomFile, model); err != nil {
+					log.Warnln(err)
+				}
 			}
 		}
 	},
@@ -133,14 +133,18 @@ var upgradePluginsCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("upgrading plugins for pom file %s", pomFile)))
 			model, err := pom.GetModelFrom(pomFile)
 			if err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 			if err = upgrade.Plugin(model); err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 
-			if err = write(pomFile, model); err != nil {
-				log.Fatalln(err)
+			if !cArgs.DryRun {
+				if err = write(pomFile, model); err != nil {
+					log.Warnln(err)
+				}
 			}
 		}
 	},
@@ -155,29 +159,16 @@ var upgradeAllCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("upgrading all for pom file %s", pomFile)))
 			model, err := pom.GetModelFrom(pomFile)
 			if err != nil {
-				log.Fatalln(err)
+				log.Warnln(err)
+				continue
 			}
 			upgrade.All(model)
 
-			if err := write(pomFile, model); err != nil {
-				log.Fatalln(err)
+			if !cArgs.DryRun {
+				if err := write(pomFile, model); err != nil {
+					log.Warnln(err)
+				}
 			}
-		}
-	},
-}
-
-var upgradeStatusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "upgrade status for prosject",
-	Long:  `upgrade status for prosject`,
-	Run: func(cmd *cobra.Command, args []string) {
-		for _, f := range cArgs.PomFiles {
-			log.Info(logger.White(fmt.Sprintf("working on pom file %s", f)))
-			model, err := pom.GetModelFrom(f)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			upgrade.All(model)
 		}
 	},
 }
@@ -190,9 +181,9 @@ func init() {
 	upgradeCmd.AddCommand(upgradeKotlinCmd)
 	upgradeCmd.AddCommand(upgradePluginsCmd)
 	upgradeCmd.AddCommand(upgradeAllCmd)
-	upgradeCmd.AddCommand(upgradeStatusCmd)
 
-	upgradeCmd.PersistentFlags().Bool("recursive", false, "turn on recursive mode")
-	upgradeCmd.PersistentFlags().String("target", ".", "Optional target directory")
-	upgradeCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
+	upgradeCmd.PersistentFlags().BoolVarP(&cArgs.Recursive, "recursive", "r", false, "turn on recursive mode")
+	upgradeCmd.PersistentFlags().StringVar(&cArgs.TargetDirectory, "target", ".", "Optional target directory")
+	upgradeCmd.PersistentFlags().BoolVar(&cArgs.Overwrite, "overwrite", true, "Overwrite pom.xml file")
+	upgradeCmd.PersistentFlags().BoolVar(&cArgs.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 }
