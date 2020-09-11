@@ -210,6 +210,8 @@ github.com/perottobc/mvn-pom-mutator v0.1.30 h1:D7wW5wHW4HrEDbco9fNW8+CBi3Kcky6W
 github.com/perottobc/mvn-pom-mutator v0.1.30/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
 github.com/perottobc/mvn-pom-mutator v0.1.31 h1:iD+Qdeh8WcWAk6U/KaAw7aQ9kVo2UWOnt8s9mAGpYWc=
 github.com/perottobc/mvn-pom-mutator v0.1.31/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
+github.com/perottobc/mvn-pom-mutator v0.1.32 h1:SnLdxle05ndBDl+9teuyKejbUI7mYY+NDpQnkuU5dSY=
+github.com/perottobc/mvn-pom-mutator v0.1.32/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
