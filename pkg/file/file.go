@@ -226,3 +226,7 @@ func MergeFiles(fromFile string, toFile string) error {
 
 	return Overwrite(toLines, toFile)
 }
+
+func Delete(filePath string) error {
+	return os.Remove(filePath)
+}
