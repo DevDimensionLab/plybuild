@@ -82,7 +82,7 @@ var springInitCmd = &cobra.Command{
 		if initConfig.LocalDependencies != nil {
 			for _, d := range initConfig.LocalDependencies {
 				if err := merge.TemplateName(d, targetDir); err != nil {
-					log.Errorln(err)
+					log.Fatalln(err)
 				}
 			}
 		}
