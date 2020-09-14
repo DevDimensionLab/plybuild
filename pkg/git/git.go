@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"co-pilot/pkg/file"
 	"fmt"
-	"github.com/prometheus/common/log"
 	"os/exec"
 	"strings"
 )
@@ -37,10 +36,10 @@ func Pull(target string) (string, error) {
 	return stdOut.String(), nil
 }
 
-func OpenIgnore(targetDir string) (lines []string) {
+func OpenIgnore(targetDir string) (lines []string, err error) {
 	ignoreLines, err := file.OpenLines(fmt.Sprintf("%s/.gitignore", targetDir))
 	if err != nil {
-		log.Warnf("%v")
+		return lines, err
 	}
 
 	for _, line := range ignoreLines {
@@ -53,5 +52,5 @@ func OpenIgnore(targetDir string) (lines []string) {
 		}
 	}
 
-	return lines
+	return lines, nil
 }

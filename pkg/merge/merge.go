@@ -40,10 +40,13 @@ func TemplateName(templateName string, targetDirectory string) error {
 func Template(source string, target string) error {
 	var files []string
 
-	gitIgnores := git.OpenIgnore(source)
+	gitIgnores, err := git.OpenIgnore(source)
+	if err != nil {
+		log.Errorln(err)
+	}
 	gitIgnores = append(gitIgnores, "Application")
 
-	err := filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
