@@ -129,6 +129,10 @@ func CopyOrMerge(sourceFile string, destinationFile string) error {
 	}
 
 	if Exists(destinationFile) {
+		if strings.HasSuffix(sourceFile, ".java") || strings.HasSuffix(sourceFile, ".kt") {
+			log.Infof(fmt.Sprintf("ignoring merge of java or kt files: %s", sourceFile))
+			return nil
+		}
 		log.Infof("merging %s with %s", sourceFile, destinationFile)
 		return MergeFiles(sourceFile, destinationFile)
 	}
