@@ -8,6 +8,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var groupId string
+var artifactId string
+
 var upgradeCmd = &cobra.Command{
 	Use:   "upgrade [OPTIONS]",
 	Short: "Upgrade options",
@@ -34,6 +37,36 @@ var upgradeSpringBootCmd = &cobra.Command{
 			}
 
 			if err = upgrade.SpringBoot(model); err != nil {
+				log.Warnln(err)
+				continue
+			}
+
+			if !cArgs.DryRun {
+				if err = write(pomFile, model); err != nil {
+					log.Warnln(err)
+				}
+			}
+		}
+	},
+}
+
+var upgradeDependencyCmd = &cobra.Command{
+	Use:   "dependency",
+	Short: "Upgrade a specific dependency on a project",
+	Long:  `Upgrade a specific dependency on a project`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if groupId == "" || artifactId == "" {
+			log.Fatal("--groupId (-g) and --artifactId (-a) must be set")
+		}
+		for _, pomFile := range cArgs.PomFiles {
+			log.Info(logger.White(fmt.Sprintf("upgrading dependency %s:%s for pom file %s", groupId, artifactId, pomFile)))
+			model, err := pom.GetModelFrom(pomFile)
+			if err != nil {
+				log.Warnln(err)
+				continue
+			}
+
+			if err := upgrade.Dependency(model, groupId, artifactId); err != nil {
 				log.Warnln(err)
 				continue
 			}
@@ -178,12 +211,16 @@ var upgradeAllCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(upgradeCmd)
+	upgradeCmd.AddCommand(upgradeDependencyCmd)
 	upgradeCmd.AddCommand(upgrade2partyDependenciesCmd)
 	upgradeCmd.AddCommand(upgrade3partyDependenciesCmd)
 	upgradeCmd.AddCommand(upgradeSpringBootCmd)
 	upgradeCmd.AddCommand(upgradeKotlinCmd)
 	upgradeCmd.AddCommand(upgradePluginsCmd)
 	upgradeCmd.AddCommand(upgradeAllCmd)
+
+	upgradeDependencyCmd.PersistentFlags().StringVarP(&groupId, "groupId", "g", "", "GroupId for upgrade")
+	upgradeDependencyCmd.PersistentFlags().StringVarP(&artifactId, "artifactId", "a", "", "ArtifactId for upgrade")
 
 	upgradeCmd.PersistentFlags().BoolVarP(&cArgs.Recursive, "recursive", "r", false, "turn on recursive mode")
 	upgradeCmd.PersistentFlags().StringVar(&cArgs.TargetDirectory, "target", ".", "Optional target directory")

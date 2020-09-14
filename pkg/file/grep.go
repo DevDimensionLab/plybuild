@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func Recursive(targetDir string, keyword string) (files []string, err error) {
+func GrepRecursive(targetDir string, keyword string) (files []string, err error) {
 	err = filepath.Walk(targetDir,
 		func(path string, fi os.FileInfo, errIn error) error {
 			hit, err := Grep(path, keyword)

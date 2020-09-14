@@ -30,11 +30,9 @@ func FromProject(targetDir string) (config ProjectConfiguration, err error) {
 
 	if config.ApplicationName == "" {
 		// populate applicationName field from targetDir
-		appName, err := FindApplicationName(targetDir)
+		err := config.FindApplicationName(targetDir)
 		if err != nil {
 			return config, err
-		} else {
-			config.ApplicationName = appName
 		}
 	}
 	return
@@ -74,8 +72,8 @@ func (config ProjectConfiguration) ProjectTestRoot() string {
 	return fmt.Sprintf("%s", strings.Join(strings.Split(config.Package, "."), "/"))
 }
 
-func FindApplicationName(targetDir string) (applicationName string, err error) {
-	files, err := file.Recursive(targetDir, "@SpringBootApplication")
+func (config *ProjectConfiguration) FindApplicationName(targetDir string) (err error) {
+	files, err := file.GrepRecursive(targetDir, "@SpringBootApplication")
 	if err != nil {
 		return
 	}
@@ -84,7 +82,7 @@ func FindApplicationName(targetDir string) (applicationName string, err error) {
 		fileNamePath := strings.Split(files[0], "/")
 		fileName := fileNamePath[len(fileNamePath)-1]
 		fileNameParts := strings.Split(fileName, ".")
-		applicationName = fileNameParts[0]
+		config.ApplicationName = fileNameParts[0]
 	}
 
 	return

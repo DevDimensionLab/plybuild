@@ -3,9 +3,32 @@ package upgrade
 import (
 	"co-pilot/pkg/analyze"
 	"co-pilot/pkg/maven"
+	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
+
+func Dependency(model *pom.Model, groupId string, artifactId string) (err error) {
+	if model.Dependencies != nil {
+		err = SpecificDependencyUpgrade(model, model.Dependencies.Dependency, groupId, artifactId)
+	}
+
+	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
+		err = SpecificDependencyUpgrade(model, model.DependencyManagement.Dependencies.Dependency, groupId, artifactId)
+	}
+
+	return err
+}
+
+func SpecificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dependency, groupId string, artifactId string) error {
+	for _, dep := range availableDependencies {
+		if dep.Version != "" && dep.GroupId == groupId && dep.ArtifactId == artifactId {
+			return DependencyUpgrade(model, dep)
+		}
+	}
+
+	return errors.New(fmt.Sprintf("could not find %s:%s in project", groupId, artifactId))
+}
 
 func Dependencies(model *pom.Model, secondParty bool) error {
 	secondPartyGroupId, err := analyze.GetSecondPartyGroupId(model)
@@ -54,27 +77,28 @@ func DependencyUpgrade(model *pom.Model, dep pom.Dependency) error {
 	}
 
 	metaData, err := maven.GetMetaData(dep.GroupId, dep.ArtifactId)
-	if err == nil {
-		latestVersion, err := metaData.LatestRelease()
-		if err != nil {
-			return nil
-		}
-
-		if currentVersion.IsDifferentFrom(latestVersion) {
-			msg := fmt.Sprintf("outdated dependency %s:%s [%s => %s]", dep.GroupId, dep.ArtifactId, currentVersion.ToString(), latestVersion.ToString())
-			if maven.IsMajorUpgrade(currentVersion, latestVersion) {
-				log.Warnf("major %s", msg)
-			}
-			if !latestVersion.IsReleaseVersion() {
-				log.Warnf("%s | not release", msg)
-			} else {
-				log.Info(msg)
-			}
-
-			_ = model.SetDependencyVersion(dep, latestVersion.ToString())
-		}
-		return nil
-	} else {
+	if err != nil {
 		return err
 	}
+
+	latestVersion, err := metaData.LatestRelease()
+	if err != nil {
+		return nil
+	}
+
+	if currentVersion.IsDifferentFrom(latestVersion) {
+		msg := fmt.Sprintf("outdated dependency %s:%s [%s => %s]", dep.GroupId, dep.ArtifactId, currentVersion.ToString(), latestVersion.ToString())
+		if maven.IsMajorUpgrade(currentVersion, latestVersion) {
+			log.Warnf("major %s", msg)
+		}
+		if !latestVersion.IsReleaseVersion() {
+			log.Warnf("%s | not release", msg)
+		} else {
+			log.Info(msg)
+		}
+
+		err = model.SetDependencyVersion(dep, latestVersion.ToString())
+	}
+
+	return nil
 }

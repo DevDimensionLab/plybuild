@@ -71,11 +71,8 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// populate applicationName field in config
-		appName, err := config.FindApplicationName(targetDir)
-		if err != nil {
+		if err := initConfig.FindApplicationName(targetDir); err != nil {
 			log.Errorln(err)
-		} else {
-			initConfig.ApplicationName = appName
 		}
 
 		// write co-pilot.json to target directory
