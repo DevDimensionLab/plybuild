@@ -47,6 +47,7 @@ type ProjectConfiguration struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`
 	} `json:"team"`
-	Dependencies      []string `json:"dependencies"`
-	LocalDependencies []string `json:"co-pilot-dependencies"`
+	Dependencies      []string          `json:"dependencies"`
+	LocalDependencies []string          `json:"co-pilot-dependencies"`
+	Render            map[string]string `json:"render"`
 }
