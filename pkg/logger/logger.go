@@ -1,9 +1,11 @@
 package logger
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"runtime"
+	"strings"
 )
 
 var (
@@ -44,4 +46,16 @@ func Context() *logrus.Entry {
 		}
 	}
 	return logrus.WithFields(fields)
+}
+
+func ExternalError(err error, msg string) error {
+	output := fmt.Sprintf("%v\n\n##### EXTERNAL ERROR MESSAGE #####\n\n", err)
+
+	for _, line := range strings.Split(msg, "\n") {
+		output += fmt.Sprintf("  %s\n", line)
+	}
+
+	output = fmt.Sprintf("%s##### ENDS EXTERNAL ERROR MESSAGE #####\n\n", output)
+
+	return errors.New(output)
 }

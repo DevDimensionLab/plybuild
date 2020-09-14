@@ -82,8 +82,8 @@ var upgradeDependencyCmd = &cobra.Command{
 
 var upgrade2partyDependenciesCmd = &cobra.Command{
 	Use:   "2party",
-	Short: "Upgrade 2party dependencies to project",
-	Long:  `Upgrade 2party dependencies to project`,
+	Short: "Upgrade all 2party dependencies to project",
+	Long:  `Upgrade all 2party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pomFile := range cArgs.PomFiles {
 			log.Info(logger.White(fmt.Sprintf("upgrading 2party for pom file %s", pomFile)))
@@ -108,8 +108,8 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 
 var upgrade3partyDependenciesCmd = &cobra.Command{
 	Use:   "3party",
-	Short: "Upgrade 3party dependencies to project",
-	Long:  `Upgrade 3party dependencies to project`,
+	Short: "Upgrade all 3party dependencies to project",
+	Long:  `Upgrade all 3party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pomFile := range cArgs.PomFiles {
 			log.Info(logger.White(fmt.Sprintf("upgrading 3party for pom file %s", pomFile)))
@@ -162,8 +162,8 @@ var upgradeKotlinCmd = &cobra.Command{
 
 var upgradePluginsCmd = &cobra.Command{
 	Use:   "plugins",
-	Short: "Upgrade plugins found in project",
-	Long:  `Upgrade plugins found in project`,
+	Short: "Upgrade all plugins found in project",
+	Long:  `Upgrade all plugins found in project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, pomFile := range cArgs.PomFiles {
 			log.Info(logger.White(fmt.Sprintf("upgrading plugins for pom file %s", pomFile)))

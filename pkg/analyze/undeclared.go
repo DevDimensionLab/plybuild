@@ -10,7 +10,7 @@ var log = logger.Context()
 func Undeclared(pomFile string) error {
 	analyze, err := plugin.DependencyAnalyzeRaw(pomFile)
 	if err != nil {
-		return err
+		return logger.ExternalError(err, analyze)
 	}
 
 	deps := plugin.DependencyAnalyze(analyze)

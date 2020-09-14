@@ -66,7 +66,6 @@ func DependencyAnalyzeRaw(pomFile string) (string, error) {
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		println("error: " + errOut.String())
 		return out.String(), err
 	}
 
