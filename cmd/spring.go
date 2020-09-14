@@ -70,11 +70,19 @@ var springInitCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		// populate applicationName field in config
+		appName, err := config.FindApplicationName(targetDir)
+		if err != nil {
+			log.Errorln(err)
+		} else {
+			initConfig.ApplicationName = appName
+		}
+
 		// write co-pilot.json to target directory
 		configFile := fmt.Sprintf("%s/co-pilot.json", targetDir)
 		msg := logger.Info(fmt.Sprintf("writes co-pilot.json config file to %s", configFile))
 		log.Info(msg)
-		if err := config.WriteConfig(initConfig, configFile); err != nil {
+		if err := initConfig.WriteConfig(configFile); err != nil {
 			log.Fatalln(err)
 		}
 

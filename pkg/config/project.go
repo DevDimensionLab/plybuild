@@ -22,14 +22,22 @@ func DefaultConfiguration() ProjectConfiguration {
 	}
 }
 
-func FromProject(target string) (ProjectConfiguration, error) {
-	var config ProjectConfiguration
-	err := file.ReadJson(target+"/co-pilot.json", &config)
+func FromProject(targetDir string) (config ProjectConfiguration, err error) {
+	err = file.ReadJson(targetDir+"/co-pilot.json", &config)
 	if err != nil {
-		return config, err
+		return
 	}
 
-	return config, nil
+	if config.ApplicationName == "" {
+		// populate applicationName field from targetDir
+		appName, err := FindApplicationName(targetDir)
+		if err != nil {
+			return config, err
+		} else {
+			config.ApplicationName = appName
+		}
+	}
+	return
 }
 
 func GenerateConfig(model *pom.Model) (ProjectConfiguration, error) {
@@ -50,8 +58,8 @@ func GenerateConfig(model *pom.Model) (ProjectConfiguration, error) {
 	}, nil
 }
 
-func WriteConfig(configuration ProjectConfiguration, targetFile string) error {
-	data, err := json.MarshalIndent(configuration, "", " ")
+func (config ProjectConfiguration) WriteConfig(targetFile string) error {
+	data, err := json.MarshalIndent(config, "", " ")
 	if err != nil {
 		return err
 	}
@@ -64,4 +72,20 @@ func (config ProjectConfiguration) ProjectMainRoot() string {
 
 func (config ProjectConfiguration) ProjectTestRoot() string {
 	return fmt.Sprintf("%s", strings.Join(strings.Split(config.Package, "."), "/"))
+}
+
+func FindApplicationName(targetDir string) (applicationName string, err error) {
+	files, err := file.Recursive(targetDir, "@SpringBootApplication")
+	if err != nil {
+		return
+	}
+
+	if len(files) == 1 {
+		fileNamePath := strings.Split(files[0], "/")
+		fileName := fileNamePath[len(fileNamePath)-1]
+		fileNameParts := strings.Split(fileName, ".")
+		applicationName = fileNameParts[0]
+	}
+
+	return
 }

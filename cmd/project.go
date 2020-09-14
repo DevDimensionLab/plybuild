@@ -42,7 +42,7 @@ var projectInitCmd = &cobra.Command{
 				}
 
 				log.Infof("writes co-pilot.json config file to %s", configFile)
-				if err = config.WriteConfig(initConfig, configFile); err != nil {
+				if err = initConfig.WriteConfig(configFile); err != nil {
 					log.Warnln(err)
 					continue
 				}
