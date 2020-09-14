@@ -55,11 +55,6 @@ func Template(source string, target string) error {
 		return err
 	}
 
-	_, err = config.FromProject(source)
-	if err != nil {
-		return err
-	}
-
 	sourceConfig, err := config.FromProject(source)
 	if err != nil {
 		return err
@@ -86,6 +81,12 @@ func Template(source string, target string) error {
 		if err = file.SearchReplace(targetPath, sourceConfig.Package, targetConfig.Package); err != nil {
 			return err
 		}
+
+		if strings.HasSuffix(targetPath, ".render") {
+			if err := renderAndDelete(targetPath, targetConfig); err != nil {
+				return err
+			}
+		}
 	}
 
 	return mergeAndWritePomFiles(source, target)
@@ -110,13 +111,15 @@ func mergeAndWritePomFiles(source string, target string) error {
 	fromPomFile := source + "/pom.xml"
 	importModel, err := pom.GetModelFrom(fromPomFile)
 	if err != nil {
-		return err
+		log.Warnln(err)
+		return nil
 	}
 
 	toPomFile := target + "/pom.xml"
 	projectModel, err := pom.GetModelFrom(toPomFile)
 	if err != nil {
-		return err
+		log.Warnln(err)
+		return nil
 	}
 
 	if err = maven.Merge(importModel, projectModel); err != nil {
@@ -124,4 +127,15 @@ func mergeAndWritePomFiles(source string, target string) error {
 	}
 
 	return upgrade.SortAndWrite(projectModel, toPomFile)
+}
+
+func renderAndDelete(targetPath string, targetConfig interface{}) error {
+	newTarget := strings.Replace(targetPath, ".render", "", 1)
+	log.Infof("rendering %s into %s", targetPath, newTarget)
+	if err := file.Render(targetPath, newTarget, targetConfig); err != nil {
+		return err
+	}
+
+	log.Infof("deleting old render file %s", targetPath)
+	return file.Delete(targetPath)
 }
