@@ -13,6 +13,9 @@ var upgradeCmd = &cobra.Command{
 	Short: "Upgrade options",
 	Long:  `Perform upgrade on existing projects`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := EnableDebug(cmd, args); err != nil {
+			log.Fatalln(err)
+		}
 		populatePomFiles()
 	},
 }

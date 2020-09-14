@@ -3,6 +3,7 @@ package merge
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
+	"co-pilot/pkg/git"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/upgrade"
@@ -39,12 +40,16 @@ func TemplateName(templateName string, targetDirectory string) error {
 func Template(source string, target string) error {
 	var files []string
 
+	gitIgnores := git.OpenIgnore(source)
+	gitIgnores = append(gitIgnores, "Application")
+
 	err := filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
-		for _, nayName := range DoNotCopyFileName() {
-			if strings.Contains(info.Name(), nayName) {
+		for _, nayName := range gitIgnores {
+			if strings.Contains(path, nayName) {
+				log.Debugf("ignoring %s", info.Name())
 				return nil
 			}
 		}
@@ -90,10 +95,6 @@ func Template(source string, target string) error {
 	}
 
 	return mergeAndWritePomFiles(source, target)
-}
-
-func DoNotCopyFileName() []string {
-	return []string{"Application"}
 }
 
 func replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfiguration, targetConfig config.ProjectConfiguration) string {

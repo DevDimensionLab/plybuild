@@ -9,8 +9,6 @@ var mavenCmd = &cobra.Command{
 	Use:   "maven [OPTIONS]",
 	Short: "Maven options",
 	Long:  `Various maven helper commands`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-	},
 }
 
 var mavenRepositoriesCmd = &cobra.Command{

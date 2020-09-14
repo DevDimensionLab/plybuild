@@ -13,6 +13,9 @@ var projectCmd = &cobra.Command{
 	Short: "Project options",
 	Long:  `Various project helper commands`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := EnableDebug(cmd, args); err != nil {
+			log.Fatalln(err)
+		}
 		populatePomFiles()
 	},
 }

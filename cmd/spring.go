@@ -20,8 +20,6 @@ var springCmd = &cobra.Command{
 	Use:   "spring [OPTIONS]",
 	Short: "Spring boot tools",
 	Long:  `Spring boot tools`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-	},
 }
 
 var springInitCmd = &cobra.Command{

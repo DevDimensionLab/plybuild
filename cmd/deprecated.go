@@ -14,6 +14,9 @@ var deprecatedCmd = &cobra.Command{
 	Short: "Deprecated detection and patching functionalities for projects",
 	Long:  `Deprecated detection and patching functionalities for projects`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := EnableDebug(cmd, args); err != nil {
+			log.Fatalln(err)
+		}
 		populatePomFiles()
 	},
 }

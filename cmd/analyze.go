@@ -9,8 +9,6 @@ var analyzeCmd = &cobra.Command{
 	Use:   "analyze [OPTIONS]",
 	Short: "analyze options",
 	Long:  `Perform analyze on existing projects`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-	},
 }
 
 var analyzeDepsCmd = &cobra.Command{

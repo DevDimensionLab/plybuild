@@ -107,6 +107,15 @@ func Open(filePath string) ([]byte, error) {
 	return byteValue, nil
 }
 
+func OpenLines(filePath string) ([]string, error) {
+	b, err := Open(filePath)
+	if err != nil {
+		return []string{}, nil
+	}
+
+	return strings.Split(string(b), "\n"), nil
+}
+
 func Overwrite(lines []string, filePath string) error {
 	return ioutil.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
 }
@@ -196,17 +205,15 @@ func SearchReplace(filePath string, from string, to string) error {
 }
 
 func MergeFiles(fromFile string, toFile string) error {
-	fromBytes, err := Open(fromFile)
+	fromLines, err := OpenLines(fromFile)
 	if err != nil {
 		return err
 	}
-	fromLines := strings.Split(string(fromBytes), "\n")
 
-	toBytes, err := Open(toFile)
+	toLines, err := OpenLines(toFile)
 	if err != nil {
 		return err
 	}
-	toLines := strings.Split(string(toBytes), "\n")
 
 	var newLines []string
 	for _, fromLine := range fromLines {

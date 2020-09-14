@@ -3,7 +3,10 @@ package cmd
 import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/upgrade"
+	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"strings"
 )
 
@@ -48,4 +51,17 @@ func populatePomFiles() {
 	} else {
 		cArgs.PomFiles = append(cArgs.PomFiles, cArgs.TargetDirectory+"/pom.xml")
 	}
+}
+
+func EnableDebug(cmd *cobra.Command, args []string) error {
+	debug, err := cmd.Flags().GetBool("debug")
+	if err != nil {
+		return err
+	}
+	if debug {
+		fmt.Println("== debug mode enabled ==")
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+
+	return nil
 }
