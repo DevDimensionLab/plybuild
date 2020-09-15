@@ -3,7 +3,6 @@ package merge
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
-	"co-pilot/pkg/git"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/upgrade"
@@ -17,7 +16,7 @@ import (
 
 var log = logger.Context()
 
-func TemplateName(templateName string, targetDirectory string) error {
+func TemplateName(templateName string, targetDir string) error {
 	cloudConfigDir, err := config.GlobalConfigDir()
 	if err != nil {
 		return err
@@ -28,29 +27,25 @@ func TemplateName(templateName string, targetDirectory string) error {
 		return errors.New(fmt.Sprintf("no such template-directory: %s", templateName))
 	}
 
-	msg := logger.Info(fmt.Sprintf("merging template %s into %s", templateName, targetDirectory))
+	msg := logger.Info(fmt.Sprintf("merging template %s into %s", templateName, targetDir))
 	log.Info(msg)
-	if err = Template(templatePath, targetDirectory); err != nil {
+	if err = Template(templatePath, targetDir); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func Template(source string, target string) error {
+func Template(sourceDir string, targetDir string) error {
 	var files []string
 
-	gitIgnores, err := git.OpenIgnore(source)
-	if err != nil {
-		log.Errorln(err)
-	}
-	gitIgnores = append(gitIgnores, "Application")
+	ignores := GetIgnores(sourceDir)
 
-	err = filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
-		for _, nayName := range gitIgnores {
+		for _, nayName := range ignores {
 			if strings.Contains(path, nayName) {
 				log.Debugf("ignoring %s", info.Name())
 				return nil
@@ -63,25 +58,25 @@ func Template(source string, target string) error {
 		return err
 	}
 
-	sourceConfig, err := config.FromProject(source)
+	sourceConfig, err := config.FromProject(sourceDir)
 	if err != nil {
 		return err
 	}
 
-	targetConfig, err := config.FromProject(target)
+	targetConfig, err := config.FromProject(targetDir)
 	if err != nil {
 		return err
 	}
 
 	for _, f := range files {
-		sourceRelPath, err := file.RelPath(source, f)
+		sourceRelPath, err := file.RelPath(sourceDir, f)
 		if err != nil {
 			return err
 		}
 
 		sourceRelPath = replacePathForSource(sourceRelPath, sourceConfig, targetConfig)
 
-		targetPath := fmt.Sprintf("%s/%s", target, sourceRelPath)
+		targetPath := fmt.Sprintf("%s/%s", targetDir, sourceRelPath)
 		if err = file.CopyOrMerge(f, targetPath); err != nil {
 			return err
 		}
@@ -97,7 +92,25 @@ func Template(source string, target string) error {
 		}
 	}
 
-	return mergeAndWritePomFiles(source, target)
+	return mergeAndWritePomFiles(sourceDir, targetDir)
+}
+
+func GetIgnores(sourceDir string) (ignores []string) {
+	gitIgnores, err := file.OpenIgnoreFile(fmt.Sprintf("%s/.gitignore", sourceDir))
+	if err != nil {
+		log.Error(err)
+	}
+	ignores = append(ignores, gitIgnores...)
+
+	coPilotIgnores, err := file.OpenIgnoreFile(fmt.Sprintf("%s/.co-pilot.ignore", sourceDir))
+	if err != nil {
+		log.Error(err)
+	}
+
+	ignores = append(ignores, coPilotIgnores...)
+	ignores = append(ignores, "Application")
+
+	return
 }
 
 func replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfiguration, targetConfig config.ProjectConfiguration) string {

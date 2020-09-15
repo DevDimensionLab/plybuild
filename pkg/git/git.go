@@ -2,10 +2,7 @@ package git
 
 import (
 	"bytes"
-	"co-pilot/pkg/file"
-	"fmt"
 	"os/exec"
-	"strings"
 )
 
 func Clone(url string, target string) (string, error) {
@@ -34,23 +31,4 @@ func Pull(target string) (string, error) {
 	}
 
 	return stdOut.String(), nil
-}
-
-func OpenIgnore(targetDir string) (lines []string, err error) {
-	ignoreLines, err := file.OpenLines(fmt.Sprintf("%s/.gitignore", targetDir))
-	if err != nil {
-		return lines, err
-	}
-
-	for _, line := range ignoreLines {
-		if !strings.HasPrefix(line, "#") && !strings.HasPrefix(line, "!") && line != "" {
-			if strings.HasPrefix(line, "*") {
-				lines = append(lines, strings.Replace(line, "*", "", 1))
-			} else {
-				lines = append(lines, line)
-			}
-		}
-	}
-
-	return lines, nil
 }
