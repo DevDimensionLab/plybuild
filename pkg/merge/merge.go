@@ -96,6 +96,7 @@ func Template(sourceDir string, targetDir string) error {
 }
 
 func GetIgnores(sourceDir string) (ignores []string) {
+
 	gitIgnores, err := file.OpenIgnoreFile(fmt.Sprintf("%s/.gitignore", sourceDir))
 	if err != nil {
 		log.Error(err)
@@ -106,9 +107,10 @@ func GetIgnores(sourceDir string) (ignores []string) {
 	if err != nil {
 		log.Error(err)
 	}
-
 	ignores = append(ignores, coPilotIgnores...)
-	ignores = append(ignores, "Application")
+
+	otherFilesToIgnore := []string{"pom.xml", "co-pilot.json", "Application", ".co-pilot.ignore", ".gitignore"}
+	ignores = append(ignores, otherFilesToIgnore...)
 
 	return
 }

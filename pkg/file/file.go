@@ -121,22 +121,29 @@ func Overwrite(lines []string, filePath string) error {
 }
 
 func CopyOrMerge(sourceFile string, destinationFile string) error {
-	for _, f := range FilesToIgnore() {
-		if strings.Contains(sourceFile, f) {
-			log.Infof("ignoring copying %s", sourceFile)
-			return nil
-		}
-	}
-
 	if Exists(destinationFile) {
-		if strings.HasSuffix(sourceFile, ".java") || strings.HasSuffix(sourceFile, ".kt") {
-			log.Infof(fmt.Sprintf("ignoring merge of java or kt files: %s", sourceFile))
-			return nil
-		}
-		log.Infof("merging %s with %s", sourceFile, destinationFile)
-		return MergeFiles(sourceFile, destinationFile)
+		return mergeFile(sourceFile, destinationFile)
 	}
 
+	return copyFile(sourceFile, destinationFile)
+}
+
+func mergeFile(sourceFile string, destinationFile string) error {
+	if strings.HasSuffix(sourceFile, ".java") || strings.HasSuffix(sourceFile, ".kt") {
+		log.Infof(fmt.Sprintf("ignoring merge of java or kt files: %s", sourceFile))
+		return nil
+	}
+
+	if strings.HasSuffix(sourceFile, ".properties") {
+		log.Infof("merging key=val property file %s with %s", sourceFile, destinationFile)
+		return MergeKeyValFile(sourceFile, destinationFile, "=")
+	}
+
+	log.Infof("merging text file %s with %s", sourceFile, destinationFile)
+	return MergeTextFiles(sourceFile, destinationFile)
+}
+
+func copyFile(sourceFile string, destinationFile string) error {
 	input, err := ioutil.ReadFile(sourceFile)
 	if err != nil {
 		return err
@@ -158,10 +165,6 @@ func CopyOrMerge(sourceFile string, destinationFile string) error {
 	}
 
 	return nil
-}
-
-func FilesToIgnore() []string {
-	return []string{"pom.xml", "co-pilot.json", "/.mvn/wrapper/", "Application"}
 }
 
 func RelPath(sourceDirectory string, filePath string) (string, error) {
@@ -208,7 +211,50 @@ func SearchReplace(filePath string, from string, to string) error {
 	return Overwrite(strings.Split(replaced, "\n"), filePath)
 }
 
-func MergeFiles(fromFile string, toFile string) error {
+func MergeKeyValFile(fromFile string, toFile string, separator string) error {
+	fromLines, err := OpenLines(fromFile)
+	if err != nil {
+		return err
+	}
+
+	toLines, err := OpenLines(toFile)
+	if err != nil {
+		return err
+	}
+
+	var newLines []string
+	for _, fromLine := range fromLines {
+		if fromLine == "" || !strings.Contains(fromLine, separator) {
+			continue
+		}
+
+		var hasLine = false
+		fromParts := strings.Split(fromLine, separator)
+		fromKey := fromParts[0]
+
+		for _, toLine := range toLines {
+			if toLine == "" && !strings.Contains(toLine, separator) {
+				continue
+			}
+			toParts := strings.Split(toLine, separator)
+			toKey := toParts[0]
+			if fromKey == toKey {
+				log.Infof("ignoring line due to key duplicate: '%s' and '%s', to:%s", fromLine, toLine, toFile)
+				hasLine = true
+			}
+		}
+		if !hasLine {
+			newLines = append(newLines, fromLine)
+			log.Infof("appending line: '%s', to:%s", fromLine, toFile)
+		}
+	}
+
+	toLines = append(toLines, newLines...)
+
+	return Overwrite(toLines, toFile)
+}
+
+func MergeTextFiles(fromFile string, toFile string) error {
 	fromLines, err := OpenLines(fromFile)
 	if err != nil {
 		return err
@@ -229,7 +275,7 @@ func MergeFiles(fromFile string, toFile string) error {
 		}
 		if !hasLine {
 			newLines = append(newLines, fromLine)
-			log.Infof("appending line: %s", fromLine)
+			log.Infof("appending line: '%s', to:%s", fromLine, toFile)
 		}
 	}
 
