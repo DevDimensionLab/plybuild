@@ -239,7 +239,7 @@ func MergeKeyValFile(fromFile string, toFile string, separator string) error {
 			toParts := strings.Split(toLine, separator)
 			toKey := toParts[0]
 			if fromKey == toKey {
-				log.Infof("ignoring line due to key duplicate: '%s' and '%s', to:%s", fromLine, toLine, toFile)
+				log.Infof("ignoring line due to key duplicate found in source %s: '%s' and '%s' in target:%s", fromFile, fromLine, toLine, toFile)
 				hasLine = true
 			}
 		}

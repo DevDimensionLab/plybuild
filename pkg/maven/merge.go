@@ -33,6 +33,10 @@ func mergeDependencies(from *pom.Model, to *pom.Model) error {
 	}
 
 	for _, fromDep := range from.Dependencies.Dependency {
+		if fromDep.GroupId == from.GroupId {
+			log.Infof("ignoring merge of dependency %s:%s due to dependency groupId equals project groupId", fromDep.GroupId, fromDep.ArtifactId)
+			continue
+		}
 		var hasDependency = false
 		for _, toDep := range to.Dependencies.Dependency {
 			if fromDep.GroupId == toDep.GroupId && fromDep.ArtifactId == toDep.ArtifactId {
