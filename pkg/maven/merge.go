@@ -96,6 +96,11 @@ func mergePlugins(from *pom.Model, to *pom.Model) error {
 		return nil
 	}
 
+	if to.Build.FinalName == "" && from.Build.FinalName != "" {
+		to.Build.FinalName = from.Build.FinalName
+		log.Infof("inserting <finalName>%s</finalName>", from.Build.FinalName)
+	}
+
 	for _, fromPlugin := range from.Build.Plugins.Plugin {
 		var hasPlugin = false
 		for _, toPlugin := range to.Build.Plugins.Plugin {
