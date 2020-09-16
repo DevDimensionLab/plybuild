@@ -31,7 +31,7 @@ var RootCmd = &cobra.Command{
 	Short: "Co-pilot is a developer tool for automating common tasks on a spring boot project",
 	Long:  ``,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd, args); err != nil {
+		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
 	},

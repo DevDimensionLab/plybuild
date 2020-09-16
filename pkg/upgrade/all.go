@@ -2,7 +2,7 @@ package upgrade
 
 import "github.com/perottobc/mvn-pom-mutator/pkg/pom"
 
-func All(model *pom.Model) {
+func All(model *pom.Model) error {
 	if err := Kotlin(model); err != nil {
 		log.Warn(err)
 	}
@@ -18,4 +18,6 @@ func All(model *pom.Model) {
 	if err := Plugin(model); err != nil {
 		log.Warn(err)
 	}
+
+	return nil
 }

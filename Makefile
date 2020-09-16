@@ -20,5 +20,7 @@ install:
 run:
 	go run main.go
 
+test:
+	@go test -v -cover ./...
 
 all: genver build install

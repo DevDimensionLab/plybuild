@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"co-pilot/pkg/logger"
 	"co-pilot/pkg/upgrade"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
@@ -16,10 +15,10 @@ var upgradeCmd = &cobra.Command{
 	Short: "Upgrade options",
 	Long:  `Perform upgrade on existing projects`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd, args); err != nil {
+		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		populatePomFiles()
+		ctx.FindAndPopulatePomModels()
 	},
 }
 
@@ -28,25 +27,9 @@ var upgradeSpringBootCmd = &cobra.Command{
 	Short: "Upgrade spring-boot to the latest version",
 	Long:  `Upgrade spring-boot to the latest version`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, pomFile := range cArgs.PomFiles {
-			log.Info(logger.White(fmt.Sprintf("upgrading spring-boot for pom file %s", pomFile)))
-			model, err := pom.GetModelFrom(pomFile)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if err = upgrade.SpringBoot(model); err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if !cArgs.DryRun {
-				if err = write(pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+		ctx.OnEachPomProject("upgrading spring-boot", func(model *pom.Model, args ...interface{}) error {
+			return upgrade.SpringBoot(model)
+		})
 	},
 }
 
@@ -58,25 +41,10 @@ var upgradeDependencyCmd = &cobra.Command{
 		if groupId == "" || artifactId == "" {
 			log.Fatal("--groupId (-g) and --artifactId (-a) must be set")
 		}
-		for _, pomFile := range cArgs.PomFiles {
-			log.Info(logger.White(fmt.Sprintf("upgrading dependency %s:%s for pom file %s", groupId, artifactId, pomFile)))
-			model, err := pom.GetModelFrom(pomFile)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if err := upgrade.Dependency(model, groupId, artifactId); err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if !cArgs.DryRun {
-				if err = write(pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+		description := fmt.Sprintf("upgrading dependency %s:%s", groupId, artifactId)
+		ctx.OnEachPomProject(description, func(model *pom.Model, args ...interface{}) error {
+			return upgrade.Dependency(model, groupId, artifactId)
+		})
 	},
 }
 
@@ -85,24 +53,9 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 	Short: "Upgrade all 2party dependencies to project",
 	Long:  `Upgrade all 2party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, pomFile := range cArgs.PomFiles {
-			log.Info(logger.White(fmt.Sprintf("upgrading 2party for pom file %s", pomFile)))
-			model, err := pom.GetModelFrom(pomFile)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-			if err = upgrade.Dependencies(model, true); err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if !cArgs.DryRun {
-				if err = write(pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+		ctx.OnEachPomProject("upgrading 2party", func(model *pom.Model, args ...interface{}) error {
+			return upgrade.Dependencies(model, true)
+		})
 	},
 }
 
@@ -111,25 +64,9 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 	Short: "Upgrade all 3party dependencies to project",
 	Long:  `Upgrade all 3party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, pomFile := range cArgs.PomFiles {
-			log.Info(logger.White(fmt.Sprintf("upgrading 3party for pom file %s", pomFile)))
-			model, err := pom.GetModelFrom(pomFile)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if err = upgrade.Dependencies(model, false); err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if !cArgs.DryRun {
-				if err = write(pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+		ctx.OnEachPomProject("upgrading 3party", func(model *pom.Model, args ...interface{}) error {
+			return upgrade.Dependencies(model, false)
+		})
 	},
 }
 
@@ -138,25 +75,9 @@ var upgradeKotlinCmd = &cobra.Command{
 	Short: "Upgrade kotlin version in project",
 	Long:  `Upgrade kotlin version in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, pomFile := range cArgs.PomFiles {
-			log.Info(logger.White(fmt.Sprintf("upgrading kotlin for pom file %s", pomFile)))
-			model, err := pom.GetModelFrom(pomFile)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if err = upgrade.Kotlin(model); err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if !cArgs.DryRun {
-				if err = write(pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+		ctx.OnEachPomProject("upgrading kotlin", func(model *pom.Model, args ...interface{}) error {
+			return upgrade.Kotlin(model)
+		})
 	},
 }
 
@@ -165,24 +86,9 @@ var upgradePluginsCmd = &cobra.Command{
 	Short: "Upgrade all plugins found in project",
 	Long:  `Upgrade all plugins found in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, pomFile := range cArgs.PomFiles {
-			log.Info(logger.White(fmt.Sprintf("upgrading plugins for pom file %s", pomFile)))
-			model, err := pom.GetModelFrom(pomFile)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-			if err = upgrade.Plugin(model); err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if !cArgs.DryRun {
-				if err = write(pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+		ctx.OnEachPomProject("upgrading plugins", func(model *pom.Model, args ...interface{}) error {
+			return upgrade.Plugin(model)
+		})
 	},
 }
 
@@ -191,21 +97,9 @@ var upgradeAllCmd = &cobra.Command{
 	Short: "Upgrade everything in project",
 	Long:  `Upgrade everything in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, pomFile := range cArgs.PomFiles {
-			log.Info(logger.White(fmt.Sprintf("upgrading all for pom file %s", pomFile)))
-			model, err := pom.GetModelFrom(pomFile)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-			upgrade.All(model)
-
-			if !cArgs.DryRun {
-				if err := write(pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+		ctx.OnEachPomProject("upgrading everything", func(model *pom.Model, args ...interface{}) error {
+			return upgrade.All(model)
+		})
 	},
 }
 
@@ -222,8 +116,8 @@ func init() {
 	upgradeDependencyCmd.PersistentFlags().StringVarP(&groupId, "groupId", "g", "", "GroupId for upgrade")
 	upgradeDependencyCmd.PersistentFlags().StringVarP(&artifactId, "artifactId", "a", "", "ArtifactId for upgrade")
 
-	upgradeCmd.PersistentFlags().BoolVarP(&cArgs.Recursive, "recursive", "r", false, "turn on recursive mode")
-	upgradeCmd.PersistentFlags().StringVar(&cArgs.TargetDirectory, "target", ".", "Optional target directory")
-	upgradeCmd.PersistentFlags().BoolVar(&cArgs.Overwrite, "overwrite", true, "Overwrite pom.xml file")
-	upgradeCmd.PersistentFlags().BoolVar(&cArgs.DryRun, "dry-run", false, "dry run does not write to pom.xml")
+	upgradeCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
+	upgradeCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	upgradeCmd.PersistentFlags().BoolVar(&ctx.Overwrite, "overwrite", true, "Overwrite pom.xml file")
+	upgradeCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 }

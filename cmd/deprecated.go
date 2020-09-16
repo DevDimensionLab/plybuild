@@ -4,8 +4,8 @@ import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/deprecated"
 	"co-pilot/pkg/logger"
+	"co-pilot/pkg/service"
 	"fmt"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 )
 
@@ -14,10 +14,10 @@ var deprecatedCmd = &cobra.Command{
 	Short: "Deprecated detection and patching functionalities for projects",
 	Long:  `Deprecated detection and patching functionalities for projects`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd, args); err != nil {
+		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		populatePomFiles()
+		ctx.FindAndPopulatePomModels()
 	},
 }
 
@@ -57,22 +57,17 @@ var deprecatedUpgradeCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		for _, pomFile := range cArgs.PomFiles {
+		for pomFile, model := range ctx.PomModels {
 			log.Info(logger.White(fmt.Sprintf("upgrading deprecated dependencies for pom file %s", pomFile)))
-			model, err := pom.GetModelFrom(pomFile)
+
+			err = deprecated.UpgradeDeprecated(model, d, service.PomFileToTargetDirectory(pomFile), true)
 			if err != nil {
 				log.Warnln(err)
 				continue
 			}
 
-			err = deprecated.UpgradeDeprecated(model, d, pomFileToTargetDirectory(pomFile), true)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if !cArgs.DryRun {
-				if err := write(pomFile, model); err != nil {
+			if !ctx.DryRun {
+				if err := service.Write(ctx.Overwrite, pomFile, model); err != nil {
 					log.Warnln(err)
 				}
 			}
@@ -85,8 +80,8 @@ func init() {
 	deprecatedCmd.AddCommand(deprecatedShowCmd)
 	deprecatedCmd.AddCommand(deprecatedUpgradeCmd)
 
-	deprecatedCmd.PersistentFlags().BoolVarP(&cArgs.Recursive, "recursive", "r", false, "turn on recursive mode")
-	deprecatedCmd.PersistentFlags().StringVar(&cArgs.TargetDirectory, "target", ".", "Optional target directory")
-	deprecatedCmd.PersistentFlags().BoolVar(&cArgs.Overwrite, "overwrite", true, "Overwrite pom.xml file")
-	deprecatedCmd.PersistentFlags().BoolVar(&cArgs.DryRun, "dry-run", false, "dry run does not write to pom.xml")
+	deprecatedCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
+	deprecatedCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	deprecatedCmd.PersistentFlags().BoolVar(&ctx.Overwrite, "overwrite", true, "Overwrite pom.xml file")
+	deprecatedCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 }

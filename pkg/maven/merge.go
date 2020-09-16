@@ -112,11 +112,12 @@ func mergeBuildPlugins(from *pom.Model, to *pom.Model) error {
 		return nil
 	}
 
-	for _, fromPlugin := range from.Build.Plugins.Plugin {
+	for i, fromPlugin := range from.Build.Plugins.Plugin {
 		var hasPlugin = false
-		for _, toPlugin := range to.Build.Plugins.Plugin {
+		for j, toPlugin := range to.Build.Plugins.Plugin {
 			if fromPlugin.GroupId == toPlugin.GroupId && fromPlugin.ArtifactId == toPlugin.ArtifactId {
 				hasPlugin = true
+				mergeBuildPluginExecutions(&from.Build.Plugins.Plugin[i], &to.Build.Plugins.Plugin[j])
 			}
 		}
 		if !hasPlugin {
@@ -126,4 +127,31 @@ func mergeBuildPlugins(from *pom.Model, to *pom.Model) error {
 	}
 
 	return nil
+}
+
+func mergeBuildPluginExecutions(from *pom.Plugin, to *pom.Plugin) {
+	if from.Executions == nil {
+		return
+	}
+
+	if to.Executions == nil {
+		log.Infof("merging all plugin executions into plugin %s:%s", to.GroupId, to.ArtifactId)
+		to.Executions = from.Executions
+		return
+	}
+
+	for _, fromExecution := range from.Executions.Execution {
+		var hasExecution = false
+		for _, toExecution := range to.Executions.Execution {
+			if fromExecution.Id == toExecution.Id {
+				hasExecution = true
+			}
+		}
+
+		if !hasExecution {
+			log.Infof("merging execution %s into plugin %s:%s", fromExecution.Id, to.GroupId, to.ArtifactId)
+		}
+	}
+
+	return
 }

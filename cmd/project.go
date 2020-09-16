@@ -3,8 +3,8 @@ package cmd
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/logger"
+	"co-pilot/pkg/service"
 	"fmt"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 )
 
@@ -13,10 +13,10 @@ var projectCmd = &cobra.Command{
 	Short: "Project options",
 	Long:  `Various project helper commands`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd, args); err != nil {
+		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		populatePomFiles()
+		ctx.FindAndPopulatePomModels()
 	},
 }
 
@@ -25,16 +25,11 @@ var projectInitCmd = &cobra.Command{
 	Short: "Initializes a maven project with co-pilot files and formatting",
 	Long:  `Initializes a maven project with co-pilot files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, pomFile := range cArgs.PomFiles {
+		for pomFile, model := range ctx.PomModels {
 			log.Info(logger.White(fmt.Sprintf("formating pom file %s", pomFile)))
-			model, err := pom.GetModelFrom(pomFile)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
 
-			if !cArgs.DryRun {
-				configFile := fmt.Sprintf("%sco-pilot.json", pomFileToTargetDirectory(pomFile))
+			if !ctx.DryRun {
+				configFile := fmt.Sprintf("%sco-pilot.json", service.PomFileToTargetDirectory(pomFile))
 				initConfig, err := config.GenerateConfig(model)
 				if err != nil {
 					log.Warnln(err)
@@ -47,7 +42,7 @@ var projectInitCmd = &cobra.Command{
 					continue
 				}
 
-				if err := write(pomFile, model); err != nil {
+				if err := service.Write(ctx.Overwrite, pomFile, model); err != nil {
 					log.Warnln(err)
 				}
 			}
@@ -59,8 +54,8 @@ func init() {
 	RootCmd.AddCommand(projectCmd)
 	projectCmd.AddCommand(projectInitCmd)
 
-	projectCmd.PersistentFlags().BoolVarP(&cArgs.Recursive, "recursive", "r", false, "turn on recursive mode")
-	projectCmd.PersistentFlags().StringVar(&cArgs.TargetDirectory, "target", ".", "Optional target directory")
-	projectCmd.PersistentFlags().BoolVar(&cArgs.Overwrite, "overwrite", true, "Overwrite pom.xml file")
-	projectCmd.PersistentFlags().BoolVar(&cArgs.DryRun, "dry-run", false, "dry run does not write to pom.xml")
+	projectCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
+	projectCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	projectCmd.PersistentFlags().BoolVar(&ctx.Overwrite, "overwrite", true, "Overwrite pom.xml file")
+	projectCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 }

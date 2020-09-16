@@ -11,6 +11,10 @@ import (
 
 var log = logger.Context()
 
+func SpringBooot() error {
+	return nil
+}
+
 func SpringBoot(model *pom.Model) error {
 	springRootInfo, err := springio.GetRoot()
 	if err != nil {
