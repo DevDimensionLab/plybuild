@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"co-pilot/pkg/analyze"
 	"co-pilot/pkg/clean"
+	"co-pilot/pkg/maven"
 	"co-pilot/pkg/upgrade"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
@@ -24,7 +24,7 @@ var statusCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if secondPartyGroupId, err := analyze.GetSecondPartyGroupId(model); err != nil {
+		if secondPartyGroupId, err := maven.GetSecondPartyGroupId(model); err != nil {
 			log.Fatalln(err)
 		} else {
 			log.Info("2party groupId = " + secondPartyGroupId)
@@ -50,7 +50,7 @@ var statusCmd = &cobra.Command{
 		if err = clean.VersionToPropertyTags(model); err != nil {
 			log.Warnln(err)
 		}
-		if err = analyze.Undeclared(pomFile); err != nil {
+		if err = maven.Undeclared(pomFile); err != nil {
 			log.Warnln(err)
 		}
 	},

@@ -1,19 +1,16 @@
-package analyze
+package maven
 
 import (
 	"co-pilot/pkg/logger"
-	"co-pilot/pkg/plugin"
 )
 
-var log = logger.Context()
-
 func Undeclared(pomFile string) error {
-	analyze, err := plugin.DependencyAnalyzeRaw(pomFile)
+	analyze, err := DependencyAnalyzeRaw(pomFile)
 	if err != nil {
 		return logger.ExternalError(err, analyze)
 	}
 
-	deps := plugin.DependencyAnalyze(analyze)
+	deps := DependencyAnalyze(analyze)
 
 	for _, unused := range deps.UnusedDeclared {
 		log.Infof("unused declared dependencies %s:%s", unused.GroupId, unused.ArtifactId)

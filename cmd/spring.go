@@ -5,6 +5,7 @@ import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
+	"co-pilot/pkg/maven"
 	"co-pilot/pkg/merge"
 	"co-pilot/pkg/springio"
 	"co-pilot/pkg/upgrade"
@@ -110,7 +111,7 @@ var springInitCmd = &cobra.Command{
 
 		// sorting and writing
 		log.Info(logger.Info(fmt.Sprintf("Sorting and rewriting %s", pomFile)))
-		if err = upgrade.SortAndWrite(model, pomFile); err != nil {
+		if err = maven.SortAndWritePom(model, pomFile); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -144,7 +145,7 @@ var springInheritVersion = &cobra.Command{
 		if !overwrite {
 			writeToFile = targetDirectory + "/pom.xml.new"
 		}
-		if err = upgrade.SortAndWrite(model, writeToFile); err != nil {
+		if err = maven.SortAndWritePom(model, writeToFile); err != nil {
 			log.Fatalln(err)
 		}
 	},

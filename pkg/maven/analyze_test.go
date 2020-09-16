@@ -1,4 +1,4 @@
-package analyze
+package maven
 
 import "testing"
 

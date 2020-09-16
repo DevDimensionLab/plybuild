@@ -4,7 +4,6 @@ import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/merge"
-	"co-pilot/pkg/upgrade"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
@@ -58,7 +57,7 @@ var mergePomCmd = &cobra.Command{
 		if !overwrite {
 			writeToFile = targetDirectory + "/pom.xml.new"
 		}
-		if err = upgrade.SortAndWrite(projectModel, writeToFile); err != nil {
+		if err = maven.SortAndWritePom(projectModel, writeToFile); err != nil {
 			log.Fatalln(err)
 		}
 	},

@@ -3,7 +3,7 @@ package service
 import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
-	"co-pilot/pkg/upgrade"
+	"co-pilot/pkg/maven"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
@@ -25,7 +25,7 @@ func Write(overwrite bool, filename string, model *pom.Model) error {
 	if !overwrite {
 		writeToFile = filename + ".new"
 	}
-	if err := upgrade.SortAndWrite(model, writeToFile); err != nil {
+	if err := maven.SortAndWritePom(model, writeToFile); err != nil {
 		return err
 	}
 

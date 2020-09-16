@@ -1,4 +1,4 @@
-package plugin
+package maven
 
 import (
 	"bytes"

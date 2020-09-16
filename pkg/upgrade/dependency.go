@@ -1,7 +1,6 @@
 package upgrade
 
 import (
-	"co-pilot/pkg/analyze"
 	"co-pilot/pkg/maven"
 	"errors"
 	"fmt"
@@ -31,7 +30,7 @@ func SpecificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dep
 }
 
 func Dependencies(model *pom.Model, secondParty bool) error {
-	secondPartyGroupId, err := analyze.GetSecondPartyGroupId(model)
+	secondPartyGroupId, err := maven.GetSecondPartyGroupId(model)
 	if err != nil {
 		return err
 	}
@@ -50,7 +49,7 @@ func Dependencies(model *pom.Model, secondParty bool) error {
 func DependenciesUpgrade(dependencies []pom.Dependency, secondPartyGroupId string, secondParty bool, model *pom.Model) {
 	for _, dep := range dependencies {
 		if dep.Version != "" {
-			isSecondParty, err := analyze.IsSecondPartyGroupId(dep.GroupId, secondPartyGroupId)
+			isSecondParty, err := maven.IsSecondPartyGroupId(dep.GroupId, secondPartyGroupId)
 			if err == nil && isSecondParty == secondParty {
 				err = DependencyUpgrade(model, dep)
 				if err != nil {

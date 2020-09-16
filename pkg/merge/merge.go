@@ -5,10 +5,8 @@ import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
-	"co-pilot/pkg/upgrade"
 	"errors"
 	"fmt"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"os"
 	"path/filepath"
 	"strings"
@@ -92,7 +90,7 @@ func Template(sourceDir string, targetDir string) error {
 		}
 	}
 
-	return mergeAndWritePomFiles(sourceDir, targetDir)
+	return maven.MergeAndWritePomFiles(sourceDir, targetDir)
 }
 
 func GetIgnores(sourceDir string) (ignores []string) {
@@ -124,29 +122,6 @@ func replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfi
 	}
 
 	return output
-}
-
-func mergeAndWritePomFiles(source string, target string) error {
-	fromPomFile := source + "/pom.xml"
-	importModel, err := pom.GetModelFrom(fromPomFile)
-	if err != nil {
-		log.Warnln(err)
-		return nil
-	}
-
-	toPomFile := target + "/pom.xml"
-	projectModel, err := pom.GetModelFrom(toPomFile)
-	if err != nil {
-		log.Warnln(err)
-		return nil
-	}
-
-	log.Infof(logger.White(fmt.Sprintf("merging %s into %s", fromPomFile, toPomFile)))
-	if err = maven.Merge(importModel, projectModel); err != nil {
-		return err
-	}
-
-	return upgrade.SortAndWrite(projectModel, toPomFile)
 }
 
 func renderAndDelete(targetPath string, targetConfig interface{}) error {
