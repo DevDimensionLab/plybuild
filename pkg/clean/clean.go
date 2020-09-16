@@ -108,8 +108,8 @@ func BlacklistedDependencies(model *pom.Model) error {
 }
 
 func inMap(dep pom.Dependency, springBootDeps map[string]springio.Dependency) bool {
-	for _, v := range springBootDeps {
-		if v.GroupId == dep.GroupId && v.ArtifactId == dep.ArtifactId {
+	for _, springBootDep := range springBootDeps {
+		if springBootDep.GroupId == dep.GroupId && springBootDep.ArtifactId == dep.ArtifactId {
 			return true
 		}
 	}

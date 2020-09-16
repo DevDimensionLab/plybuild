@@ -21,6 +21,10 @@ run:
 	go run main.go
 
 test:
-	@go test -v -cover ./...
+	go test -v -cover ./...
+
+upgrade:
+	go get github.com/perottobc/mvn-pom-mutator
+
 
 all: genver build install

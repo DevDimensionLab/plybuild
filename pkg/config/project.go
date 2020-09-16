@@ -40,15 +40,12 @@ func FromProject(targetDir string) (config ProjectConfiguration, err error) {
 
 func GenerateConfig(model *pom.Model) (ProjectConfiguration, error) {
 	// needs to be implemented correctly...
-	groupId := model.GroupId
-	if groupId == "" {
-		groupId = model.Parent.GroupId
-	}
+
 	return ProjectConfiguration{
 		Language:          "kotlin",
-		GroupId:           groupId,
+		GroupId:           model.GetGroupId(),
 		ArtifactId:        model.ArtifactId,
-		Package:           groupId,
+		Package:           model.GetGroupId(),
 		Name:              model.Name,
 		Description:       model.Description,
 		Dependencies:      []string{},
