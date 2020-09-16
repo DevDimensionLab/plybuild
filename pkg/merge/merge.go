@@ -141,6 +141,7 @@ func mergeAndWritePomFiles(source string, target string) error {
 		return nil
 	}
 
+	log.Infof(logger.White(fmt.Sprintf("merging %s into %s", fromPomFile, toPomFile)))
 	if err = maven.Merge(importModel, projectModel); err != nil {
 		return err
 	}

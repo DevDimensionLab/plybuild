@@ -54,7 +54,7 @@ func mergeDependencies(from *pom.Model, to *pom.Model) error {
 
 func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
 	if from.DependencyManagement == nil {
-		log.Debug("source dependencyManagement is null, skipping")
+		log.Debug("from dependencyManagement is nil")
 		return nil
 	}
 
@@ -81,8 +81,8 @@ func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
 }
 
 func mergeBuild(from *pom.Model, to *pom.Model) error {
-	if from.Build == nil || from.Build.Plugins == nil {
-		log.Debug("from build of build.plugin is nil")
+	if from.Build == nil {
+		log.Debug("from build is nil")
 		return nil
 	}
 
@@ -95,6 +95,15 @@ func mergeBuild(from *pom.Model, to *pom.Model) error {
 	if to.Build.FinalName == "" && from.Build.FinalName != "" {
 		to.Build.FinalName = from.Build.FinalName
 		log.Infof("inserting <finalName>%s</finalName>", from.Build.FinalName)
+	}
+
+	return mergeBuildPlugins(from, to)
+}
+
+func mergeBuildPlugins(from *pom.Model, to *pom.Model) error {
+	if from.Build.Plugins == nil {
+		log.Debug("from build.plugin is nil")
+		return nil
 	}
 
 	if to.Build.Plugins == nil {
