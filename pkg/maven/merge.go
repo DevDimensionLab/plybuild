@@ -1,7 +1,6 @@
 package maven
 
 import (
-	"errors"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
@@ -14,7 +13,7 @@ func Merge(from *pom.Model, to *pom.Model) error {
 		log.Warnln(err)
 	}
 
-	if err := mergePlugins(from, to); err != nil {
+	if err := mergeBuild(from, to); err != nil {
 		log.Warnln(err)
 	}
 
@@ -23,7 +22,8 @@ func Merge(from *pom.Model, to *pom.Model) error {
 
 func mergeDependencies(from *pom.Model, to *pom.Model) error {
 	if from.Dependencies == nil {
-		return errors.New("from dependencies is nil")
+		log.Debug("from dependencies is nil")
+		return nil
 	}
 
 	if to.Dependencies == nil {
@@ -54,7 +54,8 @@ func mergeDependencies(from *pom.Model, to *pom.Model) error {
 
 func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
 	if from.DependencyManagement == nil {
-		return errors.New("from dependencyManagement is nil")
+		log.Debug("source dependencyManagement is null, skipping")
+		return nil
 	}
 
 	if to.DependencyManagement == nil {
@@ -79,9 +80,10 @@ func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
 	return nil
 }
 
-func mergePlugins(from *pom.Model, to *pom.Model) error {
+func mergeBuild(from *pom.Model, to *pom.Model) error {
 	if from.Build == nil || from.Build.Plugins == nil {
-		return errors.New("from build of build.plugin is nil")
+		log.Debug("from build of build.plugin is nil")
+		return nil
 	}
 
 	if to.Build == nil {
@@ -90,15 +92,15 @@ func mergePlugins(from *pom.Model, to *pom.Model) error {
 		return nil
 	}
 
+	if to.Build.FinalName == "" && from.Build.FinalName != "" {
+		to.Build.FinalName = from.Build.FinalName
+		log.Infof("inserting <finalName>%s</finalName>", from.Build.FinalName)
+	}
+
 	if to.Build.Plugins == nil {
 		to.Build.Plugins = from.Build.Plugins
 		log.Infof("inserting build.plugins block into project")
 		return nil
-	}
-
-	if to.Build.FinalName == "" && from.Build.FinalName != "" {
-		to.Build.FinalName = from.Build.FinalName
-		log.Infof("inserting <finalName>%s</finalName>", from.Build.FinalName)
 	}
 
 	for _, fromPlugin := range from.Build.Plugins.Plugin {
