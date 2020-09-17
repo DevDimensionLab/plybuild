@@ -1,9 +1,7 @@
 package maven
 
 import (
-	"bytes"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	"os/exec"
 	"strings"
 )
 
@@ -58,16 +56,47 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 	}
 }
 
-func DependencyAnalyzeRaw(pomFile string) (string, error) {
-	cmd := exec.Command("mvn", "-f", pomFile, "dependency:analyze")
-	var out bytes.Buffer
-	var errOut bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &errOut
-	err := cmd.Run()
-	if err != nil {
-		return out.String(), err
+func UpgradePlugins(model *pom.Model) error {
+	if model.Build == nil || model.Build.Plugins == nil {
+		return nil
 	}
 
-	return out.String(), err
+	for _, plugin := range model.Build.Plugins.Plugin {
+		if plugin.Version != "" {
+			if err := upgradePlugin(model, plugin); err != nil {
+				log.Warnf("%v", err)
+			}
+		}
+	}
+	return nil
+}
+
+func upgradePlugin(model *pom.Model, plugin pom.Plugin) error {
+	currentVersionString, err := model.GetPluginVersion(plugin)
+	if err != nil {
+		return err
+	}
+
+	currentVersion, err := ParseVersion(currentVersionString)
+	if err != nil {
+		return err
+	}
+
+	metaData, err := GetMetaData(plugin.GroupId, plugin.ArtifactId)
+	if err != nil {
+		return err
+	}
+
+	latestRelease, err := metaData.LatestRelease()
+	if err != nil {
+		return err
+	}
+
+	if currentVersion != latestRelease {
+		log.Warnf("outdated plugin %s:%s [%s => %s] \n", plugin.GroupId, plugin.ArtifactId, currentVersion.ToString(), latestRelease.ToString())
+		if err := model.SetPluginVersion(plugin, latestRelease.ToString()); err != nil {
+			return err
+		}
+	}
+	return nil
 }

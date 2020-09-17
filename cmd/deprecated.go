@@ -26,23 +26,8 @@ var deprecatedShowCmd = &cobra.Command{
 	Short: "Shows all deprecated dependencies for co-pilot",
 	Long:  `Shows all deprecated dependencies for co-pilot`,
 	Run: func(cmd *cobra.Command, args []string) {
-		deprecated, err := config.GetDeprecated()
-		if err != nil {
+		if err := config.ListDeprecated(); err != nil {
 			log.Fatalln(err)
-		}
-
-		for _, dep := range deprecated.Data.Dependencies {
-			log.Infof("== deprecated dependency %s:%s ==", dep.GroupId, dep.ArtifactId)
-			if dep.Associated.Dependencies != nil {
-				for _, assoc := range dep.Associated.Dependencies {
-					log.Infof("\t <= associated deprecated dependency %s:%s", assoc.GroupId, assoc.ArtifactId)
-				}
-			}
-			if dep.ReplacementTemplates != nil {
-				for _, repTemp := range dep.ReplacementTemplates {
-					log.Infof("\t <= replacement template %s", repTemp)
-				}
-			}
 		}
 	},
 }

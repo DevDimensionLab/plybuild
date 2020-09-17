@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"co-pilot/pkg/upgrade"
+	"co-pilot/pkg/maven"
+	"co-pilot/pkg/spring"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
@@ -28,7 +29,7 @@ var upgradeSpringBootCmd = &cobra.Command{
 	Long:  `Upgrade spring-boot to the latest version`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.OnEachPomProject("upgrading spring-boot", func(model *pom.Model, args ...interface{}) error {
-			return upgrade.SpringBoot(model)
+			return spring.UpgradeSpringBoot(model)
 		})
 	},
 }
@@ -43,7 +44,7 @@ var upgradeDependencyCmd = &cobra.Command{
 		}
 		description := fmt.Sprintf("upgrading dependency %s:%s", groupId, artifactId)
 		ctx.OnEachPomProject(description, func(model *pom.Model, args ...interface{}) error {
-			return upgrade.Dependency(model, groupId, artifactId)
+			return maven.UpgradeDependency(model, groupId, artifactId)
 		})
 	},
 }
@@ -54,7 +55,7 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 	Long:  `Upgrade all 2party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.OnEachPomProject("upgrading 2party", func(model *pom.Model, args ...interface{}) error {
-			return upgrade.Dependencies(model, true)
+			return maven.Upgrade2PartyDependencies(model)
 		})
 	},
 }
@@ -65,7 +66,7 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 	Long:  `Upgrade all 3party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.OnEachPomProject("upgrading 3party", func(model *pom.Model, args ...interface{}) error {
-			return upgrade.Dependencies(model, false)
+			return maven.Upgrade3PartyDependencies(model)
 		})
 	},
 }
@@ -76,7 +77,7 @@ var upgradeKotlinCmd = &cobra.Command{
 	Long:  `Upgrade kotlin version in project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.OnEachPomProject("upgrading kotlin", func(model *pom.Model, args ...interface{}) error {
-			return upgrade.Kotlin(model)
+			return maven.UpgradeKotlin(model)
 		})
 	},
 }
@@ -87,7 +88,7 @@ var upgradePluginsCmd = &cobra.Command{
 	Long:  `Upgrade all plugins found in project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.OnEachPomProject("upgrading plugins", func(model *pom.Model, args ...interface{}) error {
-			return upgrade.Plugin(model)
+			return maven.UpgradePlugins(model)
 		})
 	},
 }
@@ -97,8 +98,9 @@ var upgradeAllCmd = &cobra.Command{
 	Short: "Upgrade everything in project",
 	Long:  `Upgrade everything in project`,
 	Run: func(cmd *cobra.Command, args []string) {
+
 		ctx.OnEachPomProject("upgrading everything", func(model *pom.Model, args ...interface{}) error {
-			return upgrade.All(model)
+			return upgradeAll(model)
 		})
 	},
 }
@@ -120,4 +122,23 @@ func init() {
 	upgradeCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	upgradeCmd.PersistentFlags().BoolVar(&ctx.Overwrite, "overwrite", true, "Overwrite pom.xml file")
 	upgradeCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
+}
+
+func upgradeAll(model *pom.Model) error {
+	if err := maven.UpgradeKotlin(model); err != nil {
+		log.Warn(err)
+	}
+	if err := spring.UpgradeSpringBoot(model); err != nil {
+		log.Warn(err)
+	}
+	if err := maven.Upgrade2PartyDependencies(model); err != nil {
+		log.Warn(err)
+	}
+	if err := maven.Upgrade3PartyDependencies(model); err != nil {
+		log.Warn(err)
+	}
+	if err := maven.UpgradePlugins(model); err != nil {
+		log.Warn(err)
+	}
+	return nil
 }

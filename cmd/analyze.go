@@ -23,7 +23,7 @@ var analyzeDepsCmd = &cobra.Command{
 
 		pomFile := targetDirectory + "/pom.xml"
 
-		if err = maven.Undeclared(pomFile); err != nil {
+		if err = maven.ListUnusedAndUndeclared(pomFile); err != nil {
 			log.Warnln(err)
 		}
 	},

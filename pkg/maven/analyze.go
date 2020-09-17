@@ -1,10 +1,31 @@
 package maven
 
 import (
+	"co-pilot/pkg/logger"
+	"co-pilot/pkg/shell"
 	"errors"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
 )
+
+func ListUnusedAndUndeclared(pomFile string) error {
+	analyze, err := runAnalyze(pomFile)
+	if err != nil {
+		return logger.ExternalError(err, analyze)
+	}
+
+	deps := DependencyAnalyze(analyze)
+
+	for _, unused := range deps.UnusedDeclared {
+		log.Infof("unused declared dependencies %s:%s", unused.GroupId, unused.ArtifactId)
+	}
+
+	for _, used := range deps.UsedUndeclared {
+		log.Infof("used undeclared dependencies %s:%s", used.GroupId, used.ArtifactId)
+	}
+
+	return nil
+}
 
 func GetSecondPartyGroupId(model *pom.Model) (string, error) {
 	if model.GetGroupId() != "" {
@@ -39,4 +60,8 @@ func IsSecondPartyGroupId(groupId string, secondPartyGroupId string) (bool, erro
 	}
 
 	return true, nil
+}
+
+func runAnalyze(pomFile string) (string, error) {
+	return shell.Run("mvn", "-f", pomFile, "dependency:analyze")
 }

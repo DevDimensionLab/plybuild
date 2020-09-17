@@ -1,20 +1,16 @@
 package cmd
 
 import (
-	"co-pilot/pkg/clean"
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
-	"co-pilot/pkg/merge"
-	"co-pilot/pkg/springio"
-	"co-pilot/pkg/upgrade"
-	"encoding/xml"
+	"co-pilot/pkg/spring"
+	"co-pilot/pkg/template"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
-	"strings"
 )
 
 var springCmd = &cobra.Command{
@@ -28,31 +24,27 @@ var springInitCmd = &cobra.Command{
 	Short: "Downloads and installs spring boot, and co-pilot templates, with default or provided settings",
 	Long:  `Downloads and installs spring boot, and co-pilot templates, with default or provided settings`,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
-		var initConfig = config.ProjectConfiguration{}
-
 		targetDir, err := cmd.Flags().GetString("target")
 		if err != nil {
 			log.Fatalln(err)
-		}
-		if targetDir == "" {
-			targetDir = "webservice"
 		}
 
 		_ = os.RemoveAll(targetDir)
 
 		// sync cloud config
-		if err := config.Clone(); err != nil {
+		if err := config.Refresh(); err != nil {
 			log.Fatalln(err)
 		}
 
 		// fetch user input config
+		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
+		var initConfig = config.ProjectConfiguration{}
 		if jsonConfigFile != "" {
 			err := file.ReadJson(jsonConfigFile, &initConfig)
 			if err != nil {
 				log.Fatalln(err)
 			}
-			err = springio.Validate(initConfig)
+			err = spring.Validate(initConfig)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -61,24 +53,25 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// download cli
-		if err := springio.CheckCli(); err != nil {
+		if err := spring.CheckCli(); err != nil {
 			log.Fatalln(err)
 		}
 
 		// execute cli with config
-		_, err = springio.RunCli(springio.InitFrom(initConfig, targetDir)...)
+		msg, err := spring.RunCli(spring.InitFrom(initConfig, targetDir)...)
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatalln(logger.ExternalError(err, msg))
 		}
 
 		// populate applicationName field in config
 		if err := initConfig.FindApplicationName(targetDir); err != nil {
+			println("!!!!!")
 			log.Errorln(err)
 		}
 
 		// write co-pilot.json to target directory
 		configFile := fmt.Sprintf("%s/co-pilot.json", targetDir)
-		msg := logger.Info(fmt.Sprintf("writes co-pilot.json config file to %s", configFile))
+		msg = logger.Info(fmt.Sprintf("writes co-pilot.json config file to %s", configFile))
 		log.Info(msg)
 		if err := initConfig.WriteConfig(configFile); err != nil {
 			log.Fatalln(err)
@@ -87,7 +80,7 @@ var springInitCmd = &cobra.Command{
 		// merge templates
 		if initConfig.LocalDependencies != nil {
 			for _, d := range initConfig.LocalDependencies {
-				if err := merge.TemplateName(d, targetDir); err != nil {
+				if err := template.MergeName(d, targetDir); err != nil {
 					log.Fatalln(err)
 				}
 			}
@@ -101,13 +94,15 @@ var springInitCmd = &cobra.Command{
 		}
 
 		log.Info(logger.Info(fmt.Sprintf("formatting %s", pomFile)))
-		if err = clean.VersionToPropertyTags(model); err != nil {
+		if err = maven.ChangeVersionToPropertyTags(model); err != nil {
 			log.Fatalln(err)
 		}
 
 		// upgrade all
 		log.Info(logger.Info(fmt.Sprintf("upgrading %s", pomFile)))
-		upgrade.All(model)
+		if err = upgradeAll(model); err != nil {
+			log.Fatalln(err)
+		}
 
 		// sorting and writing
 		log.Info(logger.Info(fmt.Sprintf("Sorting and rewriting %s", pomFile)))
@@ -137,7 +132,7 @@ var springInheritVersion = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = clean.SpringManualVersion(model); err != nil {
+		if err = spring.CleanManualVersions(model); err != nil {
 			log.Fatalln(err)
 		}
 
@@ -156,7 +151,7 @@ var springDownloadCli = &cobra.Command{
 	Short: "Downloads spring-cli",
 	Long:  `Downloads spring-cli`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := springio.CheckCli(); err != nil {
+		if err := spring.CheckCli(); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -167,7 +162,7 @@ var springInfoCmd = &cobra.Command{
 	Short: "Prints info on spring boot and available dependencies",
 	Long:  `Prints info on spring boot and available dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		root, err := springio.GetRoot()
+		root, err := spring.GetRoot()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -191,12 +186,12 @@ var springManagedCmd = &cobra.Command{
 	Short: "Prints info on spring-boot managed dependencies",
 	Long:  `Prints info on spring-boot managed dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		deps, err := springio.GetDependencies()
+		deps, err := spring.GetDependencies()
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		log.Infof(logger.Info(fmt.Sprintf("Spring Boot Managed Dependencies:")))
+		log.Infof(logger.Info(fmt.Sprintf("Spring Boot Managed Upgrade2PartyDependencies:")))
 		var organized = make(map[string][]pom.Dependency)
 		for _, dep := range deps.Dependencies {
 			mvnDep := pom.Dependency{
@@ -207,14 +202,10 @@ var springManagedCmd = &cobra.Command{
 		}
 
 		for k, v := range organized {
-			fmt.Println(logger.Info(fmt.Sprintf("%s", k)))
+			fmt.Println(logger.Info(fmt.Sprintf("GroupId: %s", k)))
 			fmt.Printf("================================\n")
 			for _, mvnDep := range v {
-				b, _ := xml.MarshalIndent(mvnDep, "", "    ")
-				for _, line := range strings.Split(string(b), "\n") {
-					fmt.Println(line)
-				}
-				println("")
+				fmt.Printf("  ArtifactId: %s\n", mvnDep.ArtifactId)
 			}
 		}
 	},
@@ -227,7 +218,7 @@ func init() {
 	springCmd.AddCommand(springManagedCmd)
 	springCmd.AddCommand(springInheritVersion)
 	springCmd.AddCommand(springDownloadCli)
-	springCmd.PersistentFlags().String("target", ".", "Optional target directory")
+	springCmd.PersistentFlags().String("target", "webservice", "Optional target directory")
 	springCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
 	springInitCmd.Flags().String("config-file", "", "Optional config file")
 }

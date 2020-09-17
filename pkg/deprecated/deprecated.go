@@ -3,7 +3,7 @@ package deprecated
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/logger"
-	"co-pilot/pkg/merge"
+	"co-pilot/pkg/template"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
@@ -35,7 +35,7 @@ func UpgradeDeprecated(model *pom.Model, deprecated config.CloudDeprecated, targ
 	for k, _ := range templates {
 		if commitTemplates {
 			log.Infof("applying template %s", k)
-			if err := merge.TemplateName(k, targetDirectory); err != nil {
+			if err := template.MergeName(k, targetDirectory); err != nil {
 				log.Warnf("%v", err)
 			}
 		} else {

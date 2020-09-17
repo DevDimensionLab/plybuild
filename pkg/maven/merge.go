@@ -6,7 +6,7 @@ import (
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-func Merge(from *pom.Model, to *pom.Model) error {
+func MergePoms(from *pom.Model, to *pom.Model) error {
 	if err := mergeDependencies(from, to); err != nil {
 		log.Warnln(err)
 	}
@@ -173,7 +173,7 @@ func MergeAndWritePomFiles(source string, target string) error {
 	}
 
 	log.Infof(logger.White(fmt.Sprintf("merging %s into %s", fromPomFile, toPomFile)))
-	if err = Merge(importModel, projectModel); err != nil {
+	if err = MergePoms(importModel, projectModel); err != nil {
 		return err
 	}
 

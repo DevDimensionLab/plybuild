@@ -3,7 +3,7 @@ package cmd
 import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/maven"
-	"co-pilot/pkg/merge"
+	"co-pilot/pkg/template"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
@@ -49,7 +49,7 @@ var mergePomCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = maven.Merge(importModel, projectModel); err != nil {
+		if err = maven.MergePoms(importModel, projectModel); err != nil {
 			log.Fatalln(err)
 		}
 
@@ -109,7 +109,7 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalln("Missing template --name")
 		}
 
-		if err := merge.TemplateName(templateName, targetDirectory); err != nil {
+		if err := template.MergeName(templateName, targetDirectory); err != nil {
 			log.Fatalln(err)
 		}
 	},

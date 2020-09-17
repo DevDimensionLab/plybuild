@@ -1,9 +1,9 @@
 package bitbucket
 
 import (
-	"co-pilot/pkg/git"
 	"co-pilot/pkg/http"
 	"co-pilot/pkg/logger"
+	"co-pilot/pkg/shell"
 	"errors"
 	"fmt"
 	"os"
@@ -12,7 +12,7 @@ import (
 
 var log = logger.Context()
 
-func Synchronize(host string, accessToken string) error {
+func SynchronizeAllRepos(host string, accessToken string) error {
 	projects, err := QueryProjects(host, accessToken)
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func Synchronize(host string, accessToken string) error {
 		for _, bitBucketRepo := range bitBucketProjectReposResponse.BitBucketRepo {
 			log.Infoln("  " + bitBucketRepo.Name)
 
-			err := Pull(host, ".", "/"+projectKey+"/"+bitBucketRepo.Name)
+			err := cloneOrPull(host, ".", "/"+projectKey+"/"+bitBucketRepo.Name)
 			if err != nil {
 				log.Warnln(err)
 			}
@@ -40,7 +40,7 @@ func Synchronize(host string, accessToken string) error {
 	return nil
 }
 
-func Pull(host string, workspace string, repository string) error {
+func cloneOrPull(host string, workspace string, repository string) error {
 	repoDir := workspace + repository
 
 	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
@@ -55,7 +55,7 @@ func clone(host string, workspace string, repository string) error {
 	toDir := workspace + repository
 
 	log.Debugln("clone [" + gitUrl + "] -> [" + toDir + "]")
-	out, err := git.Clone(gitUrl, toDir)
+	out, err := shell.GitClone(gitUrl, toDir)
 	if err != nil {
 		return errors.New(fmt.Sprintf("bitbucket clone failed %s, %v", out, err))
 	}
@@ -67,7 +67,7 @@ func pull(workspace string, repository string) error {
 	repoDir := workspace + "/" + repository
 
 	log.Debugln(" pull [" + repoDir + "]")
-	out, err := git.Pull(repoDir)
+	out, err := shell.GitPull(repoDir)
 	if err != nil {
 		return errors.New(fmt.Sprintf("bitbucket pull failed %s, %v", out, err))
 	}

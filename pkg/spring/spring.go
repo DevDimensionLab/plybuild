@@ -1,22 +1,61 @@
-package upgrade
+package spring
 
 import (
-	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
-	"co-pilot/pkg/springio"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-var log = logger.Context()
+func CleanManualVersions(model *pom.Model) error {
+	springBootDependencies, err := GetDependencies()
+	if err != nil {
+		return err
+	}
 
-func SpringBooot() error {
+	if model.Dependencies != nil {
+		err = removeVersion(model.Dependencies.Dependency, springBootDependencies, model)
+		if err != nil {
+			return err
+		}
+	}
+
+	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
+		err = removeVersion(model.DependencyManagement.Dependencies.Dependency, springBootDependencies, model)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func SpringBoot(model *pom.Model) error {
-	springRootInfo, err := springio.GetRoot()
+func removeVersion(dependencies []pom.Dependency, springBootDependencies IoDependenciesResponse, model *pom.Model) error {
+	for _, dep := range dependencies {
+		if dep.Version != "" && inMap(dep, springBootDependencies.Dependencies) {
+			log.Warnf("found hardcoded version on spring-boot dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
+			err := model.SetDependencyVersion(dep, "")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func inMap(dep pom.Dependency, springBootDeps map[string]Dependency) bool {
+	for _, springBootDep := range springBootDeps {
+		if springBootDep.GroupId == dep.GroupId && springBootDep.ArtifactId == dep.ArtifactId {
+			return true
+		}
+	}
+
+	return false
+}
+
+func UpgradeSpringBoot(model *pom.Model) error {
+	springRootInfo, err := GetRoot()
 	if err != nil {
 		return err
 	}

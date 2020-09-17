@@ -1,4 +1,4 @@
-package springio
+package spring
 
 type Dependency struct {
 	GroupId    string `json:"groupId"`

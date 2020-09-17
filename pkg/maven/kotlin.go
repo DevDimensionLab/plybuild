@@ -1,13 +1,12 @@
-package upgrade
+package maven
 
 import (
-	"co-pilot/pkg/maven"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-func Kotlin(model *pom.Model) error {
+func UpgradeKotlin(model *pom.Model) error {
 	if model.Properties == nil {
 		return errors.New("could not kotlin version because pom does not contain any properties")
 	}
@@ -17,12 +16,12 @@ func Kotlin(model *pom.Model) error {
 		return err
 	}
 
-	currentVersion, err := maven.ParseVersion(version)
+	currentVersion, err := ParseVersion(version)
 	if err != nil {
 		return err
 	}
 
-	latestKotlinJdk8, err := maven.GetMetaData("org.jetbrains.kotlin", "kotlin-maven-plugin")
+	latestKotlinJdk8, err := GetMetaData("org.jetbrains.kotlin", "kotlin-maven-plugin")
 	if err != nil {
 		return err
 	}
@@ -34,7 +33,7 @@ func Kotlin(model *pom.Model) error {
 
 	if currentVersion.IsDifferentFrom(latestVersion) {
 		msg := fmt.Sprintf("outdated kotlin version [%s => %s]", currentVersion.ToString(), latestVersion.ToString())
-		if maven.IsMajorUpgrade(currentVersion, latestVersion) {
+		if IsMajorUpgrade(currentVersion, latestVersion) {
 			log.Warnf("major %s", msg)
 		} else if !latestVersion.IsReleaseVersion() {
 			log.Warnf("%s | not release", msg)

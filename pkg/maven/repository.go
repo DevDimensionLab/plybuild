@@ -44,6 +44,25 @@ func GetRepositories() (Repositories, error) {
 	return repos, nil
 }
 
+func ListRepositories() error {
+	repos, err := GetRepositories()
+	if err != nil {
+		return err
+	}
+
+	for _, profileRepo := range repos.Profile {
+		log.Infof("found profile repo: %s", profileRepo)
+	}
+
+	for _, mirrorRepo := range repos.Mirror {
+		log.Infof("found mirror repo: %s", mirrorRepo)
+	}
+
+	log.Infof("fallback repo: %s", repos.Fallback)
+
+	return nil
+}
+
 func GetSettingsFile() (string, error) {
 	usr, err := user.Current()
 	if err != nil {

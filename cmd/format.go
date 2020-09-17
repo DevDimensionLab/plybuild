@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"co-pilot/pkg/clean"
-	"co-pilot/pkg/logger"
-	"co-pilot/pkg/service"
-	"fmt"
+	"co-pilot/pkg/maven"
+	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 )
 
@@ -25,15 +23,9 @@ var formatPomCmd = &cobra.Command{
 	Short: "Formats pom.xml and sorts dependencies",
 	Long:  `Formats pom.xml and sorts dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for pomFile, model := range ctx.PomModels {
-			log.Info(logger.White(fmt.Sprintf("formating pom file %s", pomFile)))
-
-			if !ctx.DryRun {
-				if err := service.Write(ctx.Overwrite, pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+		ctx.OnEachPomProject("formatting", func(model *pom.Model, args ...interface{}) error {
+			return nil
+		})
 	},
 }
 
@@ -42,20 +34,9 @@ var formatVersionCmd = &cobra.Command{
 	Short: "Removes version tags and replaces them with property tags",
 	Long:  `Removes version tags and replaces them with property tags`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for pomFile, model := range ctx.PomModels {
-			log.Info(logger.White(fmt.Sprintf("removes version tags for pom file %s", pomFile)))
-
-			if err := clean.VersionToPropertyTags(model); err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			if !ctx.DryRun {
-				if err := service.Write(ctx.Overwrite, pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+		ctx.OnEachPomProject("removes version tags", func(model *pom.Model, args ...interface{}) error {
+			return maven.ChangeVersionToPropertyTags(model)
+		})
 	},
 }
 

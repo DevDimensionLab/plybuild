@@ -33,7 +33,7 @@ var configSyncCmd = &cobra.Command{
 	Short: "Synchronizes cloud config for co-pilot",
 	Long:  `Synchronizes cloud config for co-pilot`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := config.Clone()
+		err := config.Refresh()
 		if err != nil {
 			log.Fatalln(err)
 		}

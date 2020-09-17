@@ -25,6 +25,28 @@ type CloudDeprecated struct {
 	} `json:"data"`
 }
 
+type Links struct {
+	Href      string `json:"href"`
+	Title     string `json:"title,omitempty"`
+	Templated bool   `json:"templated"`
+}
+
+type CloudServices struct {
+	Type string         `json:"type"`
+	Data []CloudService `json:"data"`
+}
+
+type CloudService struct {
+	GroupID            string `json:"groupId"`
+	ArtifactID         string `json:"artifactId"`
+	BuildInfo          string `json:"build-info"`
+	DefaultEnvironment string `json:"defaultEnvironment"`
+	Environments       []struct {
+		Name  string           `json:"name"`
+		Links map[string]Links `json:"_links"`
+	} `json:"environments"`
+}
+
 type CloudDeprecatedDependency struct {
 	GroupId    string   `json:"groupId"`
 	ArtifactId string   `json:"artifactId"`

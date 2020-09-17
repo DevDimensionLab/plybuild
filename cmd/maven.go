@@ -16,20 +16,9 @@ var mavenRepositoriesCmd = &cobra.Command{
 	Short: "List repositories",
 	Long:  `List repositories`,
 	Run: func(cmd *cobra.Command, args []string) {
-		repos, err := maven.GetRepositories()
-		if err != nil {
+		if err := maven.ListRepositories(); err != nil {
 			log.Fatalln(err)
 		}
-
-		for _, profileRepo := range repos.Profile {
-			log.Infof("found profile repo: %s", profileRepo)
-		}
-
-		for _, mirrorRepo := range repos.Mirror {
-			log.Infof("found mirror repo: %s", mirrorRepo)
-		}
-
-		log.Infof("fallback repo: %s", repos.Fallback)
 	},
 }
 

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"co-pilot/pkg/bitbucket"
-	config2 "co-pilot/pkg/config"
+	"co-pilot/pkg/config"
 	"github.com/spf13/cobra"
 )
 
@@ -18,19 +18,19 @@ var bitbucketSyncCmd = &cobra.Command{
 	Long:  `Synchronizes projects from bitbucket`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := config2.GetLocalConfig()
+		cfg, err := config.GetLocalConfig()
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		bitbucketHost := config.SourceProvider.Host
-		personalAccessToken := config.SourceProvider.AccessToken
+		bitbucketHost := cfg.SourceProvider.Host
+		personalAccessToken := cfg.SourceProvider.AccessToken
 
 		if ("" == bitbucketHost) || ("" == personalAccessToken) {
 			log.Fatalln("Command requires host and access-token in config-file")
 		}
 
-		err = bitbucket.Synchronize(bitbucketHost, personalAccessToken)
+		err = bitbucket.SynchronizeAllRepos(bitbucketHost, personalAccessToken)
 		if err != nil {
 			log.Fatalln(err)
 		}

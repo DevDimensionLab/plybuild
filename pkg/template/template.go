@@ -1,4 +1,4 @@
-package merge
+package template
 
 import (
 	"co-pilot/pkg/config"
@@ -14,7 +14,7 @@ import (
 
 var log = logger.Context()
 
-func TemplateName(templateName string, targetDir string) error {
+func MergeName(templateName string, targetDir string) error {
 	cloudConfigDir, err := config.GlobalConfigDir()
 	if err != nil {
 		return err
@@ -27,14 +27,14 @@ func TemplateName(templateName string, targetDir string) error {
 
 	msg := logger.Info(fmt.Sprintf("merging template %s into %s", templateName, targetDir))
 	log.Info(msg)
-	if err = Template(templatePath, targetDir); err != nil {
+	if err = Merge(templatePath, targetDir); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func Template(sourceDir string, targetDir string) error {
+func Merge(sourceDir string, targetDir string) error {
 	var files []string
 
 	ignores := GetIgnores(sourceDir)
