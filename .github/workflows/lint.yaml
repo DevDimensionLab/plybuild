@@ -1,0 +1,7 @@
+- uses: actions/checkout@v2
+- name: golangci-lint
+  uses: actions-contrib/golangci-lint@v1
+  on:
+    pull_request:
+      branches:
+        - master
