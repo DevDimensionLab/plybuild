@@ -1,0 +1,6 @@
+- name: GolangCI-Linter
+  uses: Mushus/golangci-linter@v1.1.2
+  on:
+    pull_request:
+      branches:
+        - master

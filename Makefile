@@ -14,6 +14,12 @@ genver:
 build:
 	go build
 
+docker-build:
+	docker build --tag co-pilot:latest .
+
+docker-run:
+	docker run co-pilot $(ARGS)
+
 install:
 	go install
 
@@ -22,6 +28,10 @@ run:
 
 test:
 	go test -v -cover ./...
+
+lint:
+	gofmt -w pkg
+	gofmt -w cmd
 
 upgrade:
 	go get github.com/perottobc/mvn-pom-mutator
