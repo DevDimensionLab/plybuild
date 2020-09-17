@@ -1,5 +1,6 @@
-- name: GolangCI-Linter
-  uses: Mushus/golangci-linter@v1.1.2
+- uses: actions/checkout@v2
+- name: golangci-lint
+  uses: actions-contrib/golangci-lint@v1
   on:
     pull_request:
       branches:
