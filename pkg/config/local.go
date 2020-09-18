@@ -15,7 +15,24 @@ var log = logger.Context()
 var localConfigFileName = "local-config.yaml"
 var localConfigDir = ".co-pilot"
 
-func LocalConfigDir() (string, error) {
+type LocalConfig struct {
+}
+
+type LocalConfigFile interface {
+	DirPath() (string, error)
+	FilePath() (string, error)
+	CheckOrCreateConfigDir() error
+	TouchFile() error
+	Config() (LocalConfiguration, error)
+	Print() error
+	Exists() bool
+}
+
+func InitLocalConfig() (localConfig LocalConfig) {
+	return
+}
+
+func (localConfig LocalConfig) DirPath() (string, error) {
 	home, err := homedir.Dir()
 	if err != nil {
 		return "", err
@@ -24,8 +41,8 @@ func LocalConfigDir() (string, error) {
 	return fmt.Sprintf("%s/%s", home, localConfigDir), nil
 }
 
-func LocalConfigFilePath() (string, error) {
-	configDir, err := LocalConfigDir()
+func (localConfig LocalConfig) FilePath() (string, error) {
+	configDir, err := localConfig.DirPath()
 	if err != nil {
 		return "", err
 	}
@@ -33,8 +50,8 @@ func LocalConfigFilePath() (string, error) {
 	return fmt.Sprintf("%s/%s", configDir, localConfigFileName), nil
 }
 
-func CheckOrCreateConfigDir() error {
-	dir, err := LocalConfigDir()
+func (localConfig LocalConfig) CheckOrCreateConfigDir() error {
+	dir, err := localConfig.DirPath()
 	if err != nil {
 		return err
 	}
@@ -49,18 +66,18 @@ func CheckOrCreateConfigDir() error {
 	return nil
 }
 
-func TouchLocalConfigFile() error {
-	err := CheckOrCreateConfigDir()
+func (localConfig LocalConfig) TouchFile() error {
+	err := localConfig.CheckOrCreateConfigDir()
 	if err != nil {
 		return err
 	}
 
-	configFile, err := LocalConfigFilePath()
+	configFile, err := localConfig.FilePath()
 	if err != nil {
 		return err
 	}
 
-	config := GlobalConfiguration{}
+	config := LocalConfiguration{}
 	d, err := yaml.Marshal(&config)
 	if err != nil {
 		return err
@@ -81,9 +98,9 @@ func TouchLocalConfigFile() error {
 	return f.Close()
 }
 
-func GetLocalConfig() (GlobalConfiguration, error) {
-	config := GlobalConfiguration{}
-	localConfigFile, err := LocalConfigFilePath()
+func (localConfig LocalConfig) Config() (LocalConfiguration, error) {
+	config := LocalConfiguration{}
+	localConfigFile, err := localConfig.FilePath()
 	if err != nil {
 		return config, err
 	}
@@ -101,8 +118,13 @@ func GetLocalConfig() (GlobalConfiguration, error) {
 	return config, nil
 }
 
-func PrintLocalConfig(config GlobalConfiguration) error {
-	b, err := yaml.Marshal(&config)
+func (localConfig LocalConfig) Print() error {
+	c, err := localConfig.Config()
+	if err != nil {
+		return err
+	}
+
+	b, err := yaml.Marshal(&c)
 	if err != nil {
 		return err
 	}
@@ -112,8 +134,8 @@ func PrintLocalConfig(config GlobalConfiguration) error {
 	return nil
 }
 
-func LocalConfigExists() bool {
-	localConfigFile, err := LocalConfigFilePath()
+func (localConfig LocalConfig) Exists() bool {
+	localConfigFile, err := localConfig.FilePath()
 	if err != nil {
 		return false
 	}

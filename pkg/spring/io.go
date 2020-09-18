@@ -15,9 +15,9 @@ import (
 var springBootDownloadUrl = "https://repo.spring.io/release/org/springframework/boot/spring-boot-cli/[RELEASE]/spring-boot-cli-[RELEASE]-bin.zip"
 var log = logger.Context()
 
-func binDir() (string, error) {
+func binDir(localCfg config.LocalConfigFile) (string, error) {
 	binDir := "spring-cli"
-	configDir, err := config.LocalConfigDir()
+	configDir, err := localCfg.DirPath()
 	if err != nil {
 		return "", err
 	}
@@ -25,8 +25,8 @@ func binDir() (string, error) {
 	return fmt.Sprintf("%s/%s", configDir, binDir), nil
 }
 
-func RunCli(arg ...string) (string, error) {
-	targetDir, err := binDir()
+func RunCli(localCfg config.LocalConfigFile, arg ...string) (string, error) {
+	targetDir, err := binDir(localCfg)
 	if err != nil {
 		return "", err
 	}
@@ -39,9 +39,9 @@ func RunCli(arg ...string) (string, error) {
 	return shell.Run(springExec, arg...)
 }
 
-func CheckCli() error {
+func CheckCli(localCfg config.LocalConfigFile) error {
 	log.Infof("checking if Spring CLI is installed and for latest version")
-	targetDir, err := binDir()
+	targetDir, err := binDir(localCfg)
 	if err != nil {
 		return err
 	}
@@ -52,15 +52,15 @@ func CheckCli() error {
 	}
 
 	if springExec != "" {
-		return upgrade()
+		return upgrade(localCfg)
 	} else {
-		return install()
+		return install(localCfg)
 	}
 }
 
-func install() error {
+func install(localCfg config.LocalConfigFile) error {
 	log.Infof("installing Spring CLI into ~/.co-pilot directory")
-	targetDir, err := binDir()
+	targetDir, err := binDir(localCfg)
 	if err != nil {
 		return err
 	}
@@ -86,8 +86,8 @@ func install() error {
 	return nil
 }
 
-func upgrade() error {
-	versionStr, err := RunCli("version")
+func upgrade(localCfg config.LocalConfigFile) error {
+	versionStr, err := RunCli(localCfg, "version")
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func upgrade() error {
 		return nil
 	} else {
 		log.Infof("upgrading Spring CLI from %s, to the latest version %s", versionStr, response.BootVersion.Default)
-		return install()
+		return install(localCfg)
 	}
 }
 

@@ -14,20 +14,15 @@ import (
 
 var log = logger.Context()
 
-func MergeName(templateName string, targetDir string) error {
-	cloudConfigDir, err := config.GlobalConfigDir()
-	if err != nil {
-		return err
-	}
-
-	templatePath := fmt.Sprintf("%s/templates/%s", cloudConfigDir, templateName)
+func MergeName(cloudConfig config.CloudConfig, templateName string, targetDir string) error {
+	templatePath := fmt.Sprintf("%s/templates/%s", cloudConfig.Dir(), templateName)
 	if !file.Exists(templatePath) {
 		return errors.New(fmt.Sprintf("no such template-directory: %s", templateName))
 	}
 
 	msg := logger.Info(fmt.Sprintf("merging template %s into %s", templateName, targetDir))
 	log.Info(msg)
-	if err = Merge(templatePath, targetDir); err != nil {
+	if err := Merge(templatePath, targetDir); err != nil {
 		return err
 	}
 
@@ -56,12 +51,12 @@ func Merge(sourceDir string, targetDir string) error {
 		return err
 	}
 
-	sourceConfig, err := config.FromProject(sourceDir)
+	sourceConfig, err := config.InitProjectConfigurationFromDir(sourceDir)
 	if err != nil {
 		return err
 	}
 
-	targetConfig, err := config.FromProject(targetDir)
+	targetConfig, err := config.InitProjectConfigurationFromDir(targetDir)
 	if err != nil {
 		return err
 	}
@@ -107,7 +102,7 @@ func GetIgnores(sourceDir string) (ignores []string) {
 	}
 	ignores = append(ignores, coPilotIgnores...)
 
-	otherFilesToIgnore := []string{"pom.xml", "co-pilot.json", "Application", ".co-pilot.ignore", ".gitignore"}
+	otherFilesToIgnore := []string{"pom.xml", "co-pilot.json", "Application", ".co-pilot.ignore", ".gitignore", ".mvn", "mvnw", "mvnw.cmd"}
 	ignores = append(ignores, otherFilesToIgnore...)
 
 	return
@@ -117,8 +112,8 @@ func replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfi
 	var output = sourceRelPath
 
 	if strings.Contains(output, ".kt") || strings.Contains(output, ".java") {
-		output = strings.Replace(sourceRelPath, sourceConfig.ProjectMainRoot(), targetConfig.ProjectMainRoot(), 1)
-		output = strings.Replace(sourceRelPath, sourceConfig.ProjectTestRoot(), targetConfig.ProjectTestRoot(), 1)
+		output = strings.Replace(sourceRelPath, sourceConfig.SourceMainPath(), targetConfig.SourceMainPath(), 1)
+		output = strings.Replace(sourceRelPath, sourceConfig.SourceTestPath(), targetConfig.SourceTestPath(), 1)
 	}
 
 	return output

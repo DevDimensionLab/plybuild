@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"co-pilot/pkg/config"
 	"github.com/spf13/cobra"
 )
 
@@ -16,12 +15,7 @@ var configShowCmd = &cobra.Command{
 	Short: "Shows local-config for co-pilot",
 	Long:  `Shows local-config for co-pilot`,
 	Run: func(cmd *cobra.Command, args []string) {
-		c, err := config.GetLocalConfig()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		err = config.PrintLocalConfig(c)
+		err := localCfg.Print()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -33,7 +27,7 @@ var configSyncCmd = &cobra.Command{
 	Short: "Synchronizes cloud config for co-pilot",
 	Long:  `Synchronizes cloud config for co-pilot`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := config.Refresh()
+		err := cloudCfg.Refresh(localCfg)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -45,7 +39,7 @@ var configResetCmd = &cobra.Command{
 	Short: "Resets local config for co-pilot",
 	Long:  `Resets local config for co-pilot with empty values`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := config.TouchLocalConfigFile()
+		err := localCfg.TouchFile()
 		if err != nil {
 			log.Fatalln(err)
 		}

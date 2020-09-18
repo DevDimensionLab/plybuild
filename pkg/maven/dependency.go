@@ -1,7 +1,6 @@
 package maven
 
 import (
-	"co-pilot/pkg/config"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
@@ -102,11 +101,11 @@ func upgradeDependency(model *pom.Model, dep pom.Dependency) error {
 		return err
 	}
 
-	serviceInfo, err := config.GetDataFromService(dep.GroupId, dep.ArtifactId, "info")
-	if err != nil {
-		log.Infoln(err)
-	}
-	log.Debugf("%v", serviceInfo)
+	//serviceUrl, err := config.LinkFromService(config.Services(), dep.GroupId, dep.ArtifactId, "info")
+	//if err != nil {
+	//	log.Infoln(err)
+	//}
+	//log.Debugf("%v", serviceUrl)
 
 	metaData, err := GetMetaData(dep.GroupId, dep.ArtifactId)
 	if err != nil {

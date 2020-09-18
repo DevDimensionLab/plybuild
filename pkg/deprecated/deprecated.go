@@ -9,11 +9,11 @@ import (
 
 var log = logger.Context()
 
-func UpgradeDeprecated(model *pom.Model, deprecated config.CloudDeprecated, targetDirectory string, commitTemplates bool) error {
-	var templates = make(map[string]bool)
+func RemoveDeprecated(model *pom.Model, deprecated config.CloudDeprecated) (templates map[string]bool, err error) {
+	templates = make(map[string]bool)
 
 	if model.Dependencies == nil {
-		return nil
+		return templates, err
 	}
 
 	for _, modDep := range model.Dependencies.Dependency {
@@ -21,7 +21,7 @@ func UpgradeDeprecated(model *pom.Model, deprecated config.CloudDeprecated, targ
 			if modDep.GroupId == depRep.GroupId && modDep.ArtifactId == depRep.ArtifactId {
 				log.Infof("found deprecated dependency %s:%s", modDep.GroupId, modDep.ArtifactId)
 				if err := model.RemoveDependency(modDep); err != nil {
-					return err
+					return templates, err
 				}
 				if depRep.ReplacementTemplates != nil {
 					for _, t := range depRep.ReplacementTemplates {
@@ -32,16 +32,14 @@ func UpgradeDeprecated(model *pom.Model, deprecated config.CloudDeprecated, targ
 		}
 	}
 
+	return templates, err
+}
+
+func ApplyTemplates(cloudConfig config.CloudConfig, templates map[string]bool, targetDirectory string) {
 	for k, _ := range templates {
-		if commitTemplates {
-			log.Infof("applying template %s", k)
-			if err := template.MergeName(k, targetDirectory); err != nil {
-				log.Warnf("%v", err)
-			}
-		} else {
-			log.Infof("template %s is ready for applying", k)
+		log.Infof("applying template %s", k)
+		if err := template.MergeName(cloudConfig, k, targetDirectory); err != nil {
+			log.Warnf("%v", err)
 		}
 	}
-
-	return nil
 }

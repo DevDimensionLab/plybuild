@@ -109,7 +109,7 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalln("Missing template --name")
 		}
 
-		if err := template.MergeName(templateName, targetDirectory); err != nil {
+		if err := template.MergeName(cloudCfg, templateName, targetDirectory); err != nil {
 			log.Fatalln(err)
 		}
 	},

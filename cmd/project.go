@@ -29,15 +29,11 @@ var projectInitCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("formating pom file %s", pomFile)))
 
 			if !ctx.DryRun {
-				configFile := fmt.Sprintf("%sco-pilot.json", service.PomFileToTargetDirectory(pomFile))
-				initConfig, err := config.GenerateConfig(model)
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
+				projectConfigFile := fmt.Sprintf("%sco-pilot.json", service.PomFileToTargetDirectory(pomFile))
+				projectCfg := config.InitProjectConfigurationFromModel(model)
 
-				log.Infof("writes co-pilot.json config file to %s", configFile)
-				if err = initConfig.WriteConfig(configFile); err != nil {
+				log.Infof("writes co-pilot.json config file to %s", projectConfigFile)
+				if err := projectCfg.Write(projectConfigFile); err != nil {
 					log.Warnln(err)
 					continue
 				}

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"co-pilot/pkg/config"
 	"co-pilot/pkg/deprecated"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/service"
@@ -26,7 +25,7 @@ var deprecatedShowCmd = &cobra.Command{
 	Short: "Shows all deprecated dependencies for co-pilot",
 	Long:  `Shows all deprecated dependencies for co-pilot`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := config.ListDeprecated(); err != nil {
+		if err := cloudCfg.ListDeprecated(); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -37,7 +36,7 @@ var deprecatedUpgradeCmd = &cobra.Command{
 	Short: "Upgrades deprecated dependencies for a project co-pilot",
 	Long:  `Upgrades deprecated dependencies for a project co-pilot`,
 	Run: func(cmd *cobra.Command, args []string) {
-		d, err := config.GetDeprecated()
+		d, err := cloudCfg.Deprecated()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -45,11 +44,13 @@ var deprecatedUpgradeCmd = &cobra.Command{
 		for pomFile, model := range ctx.PomModels {
 			log.Info(logger.White(fmt.Sprintf("upgrading deprecated dependencies for pom file %s", pomFile)))
 
-			err = deprecated.UpgradeDeprecated(model, d, service.PomFileToTargetDirectory(pomFile), true)
+			templates, err := deprecated.RemoveDeprecated(model, d)
 			if err != nil {
 				log.Warnln(err)
 				continue
 			}
+
+			deprecated.ApplyTemplates(cloudCfg, templates, service.PomFileToTargetDirectory(pomFile))
 
 			if !ctx.DryRun {
 				if err := service.Write(ctx.Overwrite, pomFile, model); err != nil {

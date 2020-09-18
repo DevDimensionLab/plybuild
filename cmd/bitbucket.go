@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"co-pilot/pkg/bitbucket"
-	"co-pilot/pkg/config"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +17,7 @@ var bitbucketSyncCmd = &cobra.Command{
 	Long:  `Synchronizes projects from bitbucket`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg, err := config.GetLocalConfig()
+		cfg, err := localCfg.Config()
 		if err != nil {
 			log.Fatalln(err)
 		}

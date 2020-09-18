@@ -1,11 +1,11 @@
 package config
 
-type GlobalConfiguration struct {
-	CloudConfig    CloudConfig    `yaml:"cloudConfig"`
+type LocalConfiguration struct {
+	CloudConfig    GitConfig      `yaml:"cloudConfig"`
 	SourceProvider SourceProvider `yaml:"sourceProvider"`
 }
 
-type CloudConfig struct {
+type GitConfig struct {
 	Git Git `yaml:"git"`
 }
 
@@ -56,21 +56,4 @@ type CloudDeprecatedDependency struct {
 		Dependencies []CloudDeprecatedDependency `json:"dependencies"`
 	} `json:"associated"`
 	ReplacementTemplates []string `json:"replacement_templates"`
-}
-
-type ProjectConfiguration struct {
-	Language        string `json:"language"`
-	GroupId         string `json:"groupId"`
-	ArtifactId      string `json:"artifactId"`
-	Package         string `json:"package"`
-	Name            string `json:"name"`
-	Description     string `json:"description"`
-	ApplicationName string `json:"applicationName"`
-	Team            struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	} `json:"team"`
-	Dependencies      []string          `json:"dependencies"`
-	LocalDependencies []string          `json:"co-pilot-dependencies"`
-	Render            map[string]string `json:"render"`
 }

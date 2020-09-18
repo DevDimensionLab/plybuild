@@ -9,27 +9,48 @@ import (
 	"strings"
 )
 
-func DefaultConfiguration() ProjectConfiguration {
-	return ProjectConfiguration{
-		Language:          "kotlin",
-		GroupId:           "com.example.demo",
-		ArtifactId:        "demo-webservice",
-		Package:           "com.example.demo",
-		Name:              "webservice",
-		Description:       "demo webservice",
-		Dependencies:      []string{},
-		LocalDependencies: []string{},
-	}
+var projectFileName = "co-pilot.json"
+
+type ProjectConfiguration struct {
+	Language        string `json:"language"`
+	GroupId         string `json:"groupId"`
+	ArtifactId      string `json:"artifactId"`
+	Package         string `json:"package"`
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	ApplicationName string `json:"applicationName"`
+	Team            struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	} `json:"team"`
+	Dependencies      []string          `json:"dependencies"`
+	LocalDependencies []string          `json:"co-pilot-dependencies"`
+	Render            map[string]string `json:"render"`
 }
 
-func FromProject(targetDir string) (config ProjectConfiguration, err error) {
-	err = file.ReadJson(targetDir+"/co-pilot.json", &config)
-	if err != nil {
-		return
+type ProjectConfig interface {
+	Write(targetFile string) error
+	SourceMainPath() string
+	SourceTestPath() string
+	FindApplicationName(targetDir string) (err error)
+}
+
+func InitProjectConfigurationFromFile(filePath string) (config ProjectConfiguration, err error) {
+	err = file.ReadJson(filePath, &config)
+	if config.ApplicationName == "" {
+		err := config.FindApplicationName(strings.Replace(filePath, projectFileName, "", 1))
+		if err != nil {
+			return config, err
+		}
 	}
+	return
+}
+
+func InitProjectConfigurationFromDir(targetDir string) (config ProjectConfiguration, err error) {
+	filePath := fmt.Sprintf("%s/%s", targetDir, projectFileName)
+	err = file.ReadJson(filePath, &config)
 
 	if config.ApplicationName == "" {
-		// populate applicationName field from targetDir
 		err := config.FindApplicationName(targetDir)
 		if err != nil {
 			return config, err
@@ -38,22 +59,18 @@ func FromProject(targetDir string) (config ProjectConfiguration, err error) {
 	return
 }
 
-func GenerateConfig(model *pom.Model) (ProjectConfiguration, error) {
-	// needs to be implemented correctly...
+func InitProjectConfigurationFromModel(model *pom.Model) (config ProjectConfiguration) {
+	config.Language = "kotlin"
+	config.GroupId = model.GetGroupId()
+	config.ArtifactId = model.ArtifactId
+	config.Package = model.GetGroupId()
+	config.Name = model.Name
+	config.Description = model.Description
 
-	return ProjectConfiguration{
-		Language:          "kotlin",
-		GroupId:           model.GetGroupId(),
-		ArtifactId:        model.ArtifactId,
-		Package:           model.GetGroupId(),
-		Name:              model.Name,
-		Description:       model.Description,
-		Dependencies:      []string{},
-		LocalDependencies: []string{},
-	}, nil
+	return
 }
 
-func (config ProjectConfiguration) WriteConfig(targetFile string) error {
+func (config ProjectConfiguration) Write(targetFile string) error {
 	data, err := json.MarshalIndent(config, "", " ")
 	if err != nil {
 		return err
@@ -61,11 +78,11 @@ func (config ProjectConfiguration) WriteConfig(targetFile string) error {
 	return ioutil.WriteFile(targetFile, data, 0644)
 }
 
-func (config ProjectConfiguration) ProjectMainRoot() string {
+func (config ProjectConfiguration) SourceMainPath() string {
 	return fmt.Sprintf("%s", strings.Join(strings.Split(config.Package, "."), "/"))
 }
 
-func (config ProjectConfiguration) ProjectTestRoot() string {
+func (config ProjectConfiguration) SourceTestPath() string {
 	return fmt.Sprintf("%s", strings.Join(strings.Split(config.Package, "."), "/"))
 }
 

@@ -2,7 +2,6 @@ package config
 
 import (
 	"co-pilot/pkg/file"
-	"co-pilot/pkg/http"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/shell"
 	"errors"
@@ -10,28 +9,42 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-var globalConfigDir = "cloud-config"
-
-func GlobalConfigDir() (string, error) {
-	home, err := homedir.Dir()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s/%s/%s", home, localConfigDir, globalConfigDir), nil
+type GitCloudConfig struct {
+	configDirName string
 }
 
-func Refresh() error {
-	c, err := GetLocalConfig()
+type CloudConfig interface {
+	Dir() string
+	Refresh(localConfig LocalConfigFile) error
+	Services() func() (CloudServices, error)
+	LinkFromService(services func() (CloudServices, error), groupId string, artifactId string, linkKey string) (url string, err error)
+	DefaultServiceEnvironmentUrl(service CloudService, key string) (url string, err error)
+	Deprecated() (CloudDeprecated, error)
+	ListDeprecated() error
+	FilePath(fileName string) (string, error)
+}
+
+func InitGitCloudConfig(cloudConfigDirName string) (cfg GitCloudConfig, err error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return cfg, err
+	}
+
+	cfg.configDirName = fmt.Sprintf("%s/%s/%s", home, localConfigDir, cloudConfigDirName)
+	return
+}
+
+func (gitCfg GitCloudConfig) Dir() string {
+	return gitCfg.configDirName
+}
+
+func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
+	localCfg, err := localConfig.Config()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	target, err := GlobalConfigDir()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
+	target := gitCfg.Dir()
 	if file.Exists(fmt.Sprintf("%s/.git", target)) {
 		msg := logger.Info(fmt.Sprintf("pulling cloud config on %s", target))
 		log.Info(msg)
@@ -40,9 +53,9 @@ func Refresh() error {
 			return errors.New(fmt.Sprintf("pulling cloud config failed:\n%s, %v", out, err))
 		}
 	} else {
-		msg := logger.Info(fmt.Sprintf("cloning %s to %s", c.CloudConfig.Git.Url, target))
+		msg := logger.Info(fmt.Sprintf("cloning %s to %s", localCfg.CloudConfig.Git.Url, target))
 		log.Info(msg)
-		out, err := shell.GitClone(c.CloudConfig.Git.Url, target)
+		out, err := shell.GitClone(localCfg.CloudConfig.Git.Url, target)
 		if err != nil {
 			return errors.New(fmt.Sprintf("ploning cloud config failed:\n%s, %v", out, err))
 		}
@@ -51,46 +64,51 @@ func Refresh() error {
 	return nil
 }
 
-func getServices() (CloudServices, error) {
-	var deprecated CloudServices
+func (gitCfg GitCloudConfig) Services() func() (CloudServices, error) {
+	var services CloudServices
 
-	path, err := GetCloudConfigFilePath("services.json")
+	path, err := gitCfg.FilePath("services.json")
 	if err != nil {
-		return deprecated, err
+		return func() (CloudServices, error) {
+			return services, err
+		}
 	}
 
-	err = file.ReadJson(path, &deprecated)
+	err = file.ReadJson(path, &services)
 	if err != nil {
-		return deprecated, err
+		return func() (CloudServices, error) {
+			return services, err
+		}
 	}
 
-	return deprecated, nil
+	return func() (CloudServices, error) {
+		return services, nil
+	}
 }
 
-func GetDataFromService(groupId string, artifactId string, linkKey string) (data map[string]interface{}, err error) {
-	services, err := getServices()
+func (gitCfg GitCloudConfig) LinkFromService(services func() (CloudServices, error), groupId string, artifactId string, linkKey string) (url string, err error) {
+	s, err := services()
 	if err != nil {
 		return
 	}
 
-	if services.Data != nil {
-		for _, service := range services.Data {
+	if s.Data != nil {
+		for _, service := range s.Data {
 			if service.GroupID == groupId && service.ArtifactID == artifactId {
-				url, err := GetDefaultServiceEnvironmentUrl(service, linkKey)
+				url, err := gitCfg.DefaultServiceEnvironmentUrl(service, linkKey)
 				if err != nil {
-					return data, err
+					return url, err
 				}
 				log.Debugf("found service %s:%s with link-key %s, requesting %s", groupId, artifactId, linkKey, url)
-				err = http.GetJson(url, &data)
-				return data, err
+				return url, err
 			}
 		}
 	}
 
-	return data, errors.New(fmt.Sprintf("could not get cloud config service information on %s:%s", groupId, artifactId))
+	return url, errors.New(fmt.Sprintf("could not get cloud config service information on %s:%s", groupId, artifactId))
 }
 
-func GetDefaultServiceEnvironmentUrl(service CloudService, key string) (url string, err error) {
+func (gitCfg GitCloudConfig) DefaultServiceEnvironmentUrl(service CloudService, key string) (url string, err error) {
 	for _, environment := range service.Environments {
 		if environment.Name == service.DefaultEnvironment {
 			if link, ok := environment.Links[key]; ok {
@@ -103,10 +121,10 @@ func GetDefaultServiceEnvironmentUrl(service CloudService, key string) (url stri
 	return url, errors.New(fmt.Sprintf("could not find environment with link key %s", key))
 }
 
-func GetDeprecated() (CloudDeprecated, error) {
+func (gitCfg GitCloudConfig) Deprecated() (CloudDeprecated, error) {
 	var deprecated CloudDeprecated
 
-	path, err := GetCloudConfigFilePath("deprecated.json")
+	path, err := gitCfg.FilePath("deprecated.json")
 	if err != nil {
 		return deprecated, err
 	}
@@ -119,8 +137,8 @@ func GetDeprecated() (CloudDeprecated, error) {
 	return deprecated, nil
 }
 
-func ListDeprecated() error {
-	deprecated, err := GetDeprecated()
+func (gitCfg GitCloudConfig) ListDeprecated() error {
+	deprecated, err := gitCfg.Deprecated()
 	if err != nil {
 		return err
 	}
@@ -142,18 +160,8 @@ func ListDeprecated() error {
 	return nil
 }
 
-func GetCloudConfigFilePath(fileName string) (string, error) {
-	err := Refresh()
-	if err != nil {
-		return "", err
-	}
-
-	cloudConfigDir, err := GlobalConfigDir()
-	if err != nil {
-		return "", err
-	}
-
-	path := fmt.Sprintf("%s/%s", cloudConfigDir, fileName)
+func (gitCfg GitCloudConfig) FilePath(fileName string) (string, error) {
+	path := fmt.Sprintf("%s/%s", gitCfg.Dir(), fileName)
 	if !file.Exists(path) {
 		return "", errors.New(fmt.Sprintf("could not find %s in cloud config", fileName))
 	}

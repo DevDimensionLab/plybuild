@@ -1,0 +1,28 @@
+{
+  "type": "services",
+  "data": [
+    {
+      "groupId": "com.example",
+      "artifactId": "flyway-demo",
+      "defaultEnvironment": "prod",
+      "environments": [
+        {
+          "name": "prod",
+          "_links": {
+            "info": {
+              "href": "http://localhost:8080/actuator/info"
+            }
+          }
+        },
+        {
+          "name": "staging",
+          "_links": {
+            "info": {
+              "href": "http://localhost:8081/actuator/info"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

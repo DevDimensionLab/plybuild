@@ -25,6 +25,8 @@ import (
 )
 
 var log = logger.Context()
+var localCfg = config.InitLocalConfig()
+var cloudCfg, err = config.InitGitCloudConfig("cloud-config")
 
 var RootCmd = &cobra.Command{
 	Use:   "co-pilot",
@@ -65,14 +67,17 @@ func init() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	if !config.LocalConfigExists() {
-		err := config.TouchLocalConfigFile()
+	if !localCfg.Exists() {
+		err := localCfg.TouchFile()
 		if err != nil {
 			log.Error(err)
 		}
 	} else {
-		f, err := config.LocalConfigFilePath()
+		f, err := localCfg.FilePath()
 		if err != nil {
 			log.Error(err)
 		}

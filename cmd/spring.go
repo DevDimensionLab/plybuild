@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"co-pilot/pkg/config"
-	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/spring"
@@ -32,39 +31,37 @@ var springInitCmd = &cobra.Command{
 		_ = os.RemoveAll(targetDir)
 
 		// sync cloud config
-		if err := config.Refresh(); err != nil {
+		if err := cloudCfg.Refresh(localCfg); err != nil {
 			log.Fatalln(err)
 		}
 
 		// fetch user input config
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
-		var initConfig = config.ProjectConfiguration{}
-		if jsonConfigFile != "" {
-			err := file.ReadJson(jsonConfigFile, &initConfig)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			err = spring.Validate(initConfig)
-			if err != nil {
-				log.Fatalln(err)
-			}
-		} else {
-			initConfig = config.DefaultConfiguration()
+		if jsonConfigFile == "" {
+			log.Fatalln("--config-file flag is required")
+		}
+		projectConfig, err := config.InitProjectConfigurationFromFile(jsonConfigFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		err = spring.Validate(projectConfig)
+		if err != nil {
+			log.Fatalln(err)
 		}
 
 		// download cli
-		if err := spring.CheckCli(); err != nil {
+		if err := spring.CheckCli(localCfg); err != nil {
 			log.Fatalln(err)
 		}
 
 		// execute cli with config
-		msg, err := spring.RunCli(spring.InitFrom(initConfig, targetDir)...)
+		msg, err := spring.RunCli(localCfg, spring.InitFrom(projectConfig, targetDir)...)
 		if err != nil {
 			log.Fatalln(logger.ExternalError(err, msg))
 		}
 
 		// populate applicationName field in config
-		if err := initConfig.FindApplicationName(targetDir); err != nil {
+		if err := projectConfig.FindApplicationName(targetDir); err != nil {
 			println("!!!!!")
 			log.Errorln(err)
 		}
@@ -73,14 +70,14 @@ var springInitCmd = &cobra.Command{
 		configFile := fmt.Sprintf("%s/co-pilot.json", targetDir)
 		msg = logger.Info(fmt.Sprintf("writes co-pilot.json config file to %s", configFile))
 		log.Info(msg)
-		if err := initConfig.WriteConfig(configFile); err != nil {
+		if err := projectConfig.Write(configFile); err != nil {
 			log.Fatalln(err)
 		}
 
 		// merge templates
-		if initConfig.LocalDependencies != nil {
-			for _, d := range initConfig.LocalDependencies {
-				if err := template.MergeName(d, targetDir); err != nil {
+		if projectConfig.LocalDependencies != nil {
+			for _, d := range projectConfig.LocalDependencies {
+				if err := template.MergeName(cloudCfg, d, targetDir); err != nil {
 					log.Fatalln(err)
 				}
 			}
@@ -151,7 +148,7 @@ var springDownloadCli = &cobra.Command{
 	Short: "Downloads spring-cli",
 	Long:  `Downloads spring-cli`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := spring.CheckCli(); err != nil {
+		if err := spring.CheckCli(localCfg); err != nil {
 			log.Fatalln(err)
 		}
 	},
