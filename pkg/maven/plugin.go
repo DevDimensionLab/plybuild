@@ -56,7 +56,13 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 	}
 }
 
-func UpgradePlugins(model *pom.Model) error {
+func UpgradePlugins() func(pair PomPair, args ...interface{}) error {
+	return func(pair PomPair, args ...interface{}) error {
+		return UpgradeKotlinOnModel(pair.Model)
+	}
+}
+
+func UpgradePluginsOnModel(model *pom.Model) error {
 	if model.Build == nil || model.Build.Plugins == nil {
 		return nil
 	}

@@ -1,6 +1,14 @@
 package maven
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+)
+
+type PomPair struct {
+	PomFile string
+	Model   *pom.Model
+}
 
 type Metadata struct {
 	XMLName      xml.Name `xml:"metadata"`

@@ -3,7 +3,6 @@ package deprecated
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/logger"
-	"co-pilot/pkg/template"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
@@ -33,13 +32,4 @@ func RemoveDeprecated(model *pom.Model, deprecated config.CloudDeprecated) (temp
 	}
 
 	return templates, err
-}
-
-func ApplyTemplates(cloudConfig config.CloudConfig, templates map[string]bool, targetDirectory string) {
-	for k, _ := range templates {
-		log.Infof("applying template %s", k)
-		if err := template.MergeName(cloudConfig, k, targetDirectory); err != nil {
-			log.Warnf("%v", err)
-		}
-	}
 }

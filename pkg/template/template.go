@@ -108,6 +108,15 @@ func GetIgnores(sourceDir string) (ignores []string) {
 	return
 }
 
+func Apply(cloudConfig config.CloudConfig, templates map[string]bool, targetDirectory string) {
+	for k, _ := range templates {
+		log.Infof("applying template %s", k)
+		if err := MergeName(cloudConfig, k, targetDirectory); err != nil {
+			log.Warnf("%v", err)
+		}
+	}
+}
+
 func replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfiguration, targetConfig config.ProjectConfiguration) string {
 	var output = sourceRelPath
 

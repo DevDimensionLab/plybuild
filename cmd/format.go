@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"co-pilot/pkg/maven"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 )
 
@@ -23,9 +22,7 @@ var formatPomCmd = &cobra.Command{
 	Short: "Formats pom.xml and sorts dependencies",
 	Long:  `Formats pom.xml and sorts dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachPomProject("formatting", func(model *pom.Model, args ...interface{}) error {
-			return nil
-		})
+		ctx.OnEachPomProject("formatting", nil)
 	},
 }
 
@@ -34,9 +31,7 @@ var formatVersionCmd = &cobra.Command{
 	Short: "Removes version tags and replaces them with property tags",
 	Long:  `Removes version tags and replaces them with property tags`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachPomProject("removes version tags", func(model *pom.Model, args ...interface{}) error {
-			return maven.ChangeVersionToPropertyTags(model)
-		})
+		ctx.OnEachPomProject("removes version tags", maven.ChangeVersionToPropertyTags())
 	},
 }
 

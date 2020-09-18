@@ -30,31 +30,13 @@ func CleanManualVersions(model *pom.Model) error {
 	return nil
 }
 
-func removeVersion(dependencies []pom.Dependency, springBootDependencies IoDependenciesResponse, model *pom.Model) error {
-	for _, dep := range dependencies {
-		if dep.Version != "" && inMap(dep, springBootDependencies.Dependencies) {
-			log.Warnf("found hardcoded version on spring-boot dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
-			err := model.SetDependencyVersion(dep, "")
-			if err != nil {
-				return err
-			}
-		}
+func UpgradeSpringBoot() func(pair maven.PomPair, args ...interface{}) error {
+	return func(pair maven.PomPair, args ...interface{}) error {
+		return UpgradeSpringBootOnModel(pair.Model)
 	}
-
-	return nil
 }
 
-func inMap(dep pom.Dependency, springBootDeps map[string]Dependency) bool {
-	for _, springBootDep := range springBootDeps {
-		if springBootDep.GroupId == dep.GroupId && springBootDep.ArtifactId == dep.ArtifactId {
-			return true
-		}
-	}
-
-	return false
-}
-
-func UpgradeSpringBoot(model *pom.Model) error {
+func UpgradeSpringBootOnModel(model *pom.Model) error {
 	springRootInfo, err := GetRoot()
 	if err != nil {
 		return err
@@ -128,4 +110,28 @@ func updateSpringBootVersion(model *pom.Model, newVersion maven.JavaVersion) err
 	}
 
 	return errors.New("could not update spring boot version to " + newVersion.ToString())
+}
+
+func removeVersion(dependencies []pom.Dependency, springBootDependencies IoDependenciesResponse, model *pom.Model) error {
+	for _, dep := range dependencies {
+		if dep.Version != "" && inMap(dep, springBootDependencies.Dependencies) {
+			log.Warnf("found hardcoded version on spring-boot dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
+			err := model.SetDependencyVersion(dep, "")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func inMap(dep pom.Dependency, springBootDeps map[string]Dependency) bool {
+	for _, springBootDep := range springBootDeps {
+		if springBootDep.GroupId == dep.GroupId && springBootDep.ArtifactId == dep.ArtifactId {
+			return true
+		}
+	}
+
+	return false
 }

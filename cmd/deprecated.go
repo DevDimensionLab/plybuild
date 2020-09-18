@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"co-pilot/pkg/deprecated"
-	"co-pilot/pkg/logger"
+	"co-pilot/pkg/maven"
 	"co-pilot/pkg/service"
-	"fmt"
+	"co-pilot/pkg/template"
 	"github.com/spf13/cobra"
 )
 
@@ -41,23 +41,15 @@ var deprecatedUpgradeCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		for pomFile, model := range ctx.PomModels {
-			log.Info(logger.White(fmt.Sprintf("upgrading deprecated dependencies for pom file %s", pomFile)))
-
-			templates, err := deprecated.RemoveDeprecated(model, d)
+		ctx.OnEachPomProject("removes version tags", func(pair maven.PomPair, args ...interface{}) error {
+			templates, err := deprecated.RemoveDeprecated(pair.Model, d)
 			if err != nil {
 				log.Warnln(err)
-				continue
+			} else {
+				template.Apply(cloudCfg, templates, service.PomFileToTargetDirectory(pair.PomFile))
 			}
-
-			deprecated.ApplyTemplates(cloudCfg, templates, service.PomFileToTargetDirectory(pomFile))
-
-			if !ctx.DryRun {
-				if err := service.Write(ctx.Overwrite, pomFile, model); err != nil {
-					log.Warnln(err)
-				}
-			}
-		}
+			return nil
+		})
 	},
 }
 

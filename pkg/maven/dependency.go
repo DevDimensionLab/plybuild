@@ -6,7 +6,13 @@ import (
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-func UpgradeDependency(model *pom.Model, groupId string, artifactId string) (err error) {
+func UpgradeDependency(groupId string, artifactId string) func(pair PomPair, args ...interface{}) error {
+	return func(pair PomPair, args ...interface{}) error {
+		return UpgradeDependencyOnModel(pair.Model, groupId, artifactId)
+	}
+}
+
+func UpgradeDependencyOnModel(model *pom.Model, groupId string, artifactId string) (err error) {
 	if model.Dependencies != nil {
 		err = specificDependencyUpgrade(model, model.Dependencies.Dependency, groupId, artifactId)
 	}
@@ -46,7 +52,13 @@ func SecondParty(model *pom.Model, true bool) func(groupId string) bool {
 	}
 }
 
-func Upgrade3PartyDependencies(model *pom.Model) error {
+func Upgrade3PartyDependencies() func(pair PomPair, args ...interface{}) error {
+	return func(pair PomPair, args ...interface{}) error {
+		return Upgrade3PartyDependenciesOnModel(pair.Model)
+	}
+}
+
+func Upgrade3PartyDependenciesOnModel(model *pom.Model) error {
 	if model.Dependencies != nil {
 		upgradeDependencies(model, model.Dependencies.Dependency, SecondParty(model, false))
 	}
@@ -58,7 +70,13 @@ func Upgrade3PartyDependencies(model *pom.Model) error {
 	return nil
 }
 
-func Upgrade2PartyDependencies(model *pom.Model) error {
+func Upgrade2PartyDependencies() func(pair PomPair, args ...interface{}) error {
+	return func(pair PomPair, args ...interface{}) error {
+		return Upgrade2PartyDependenciesOnModel(pair.Model)
+	}
+}
+
+func Upgrade2PartyDependenciesOnModel(model *pom.Model) error {
 	if model.Dependencies != nil {
 		upgradeDependencies(model, model.Dependencies.Dependency, SecondParty(model, true))
 	}

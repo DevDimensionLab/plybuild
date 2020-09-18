@@ -7,7 +7,13 @@ import (
 	"strings"
 )
 
-func ChangeVersionToPropertyTags(model *pom.Model) error {
+func ChangeVersionToPropertyTags() func(pair PomPair, args ...interface{}) error {
+	return func(pair PomPair, args ...interface{}) error {
+		return ChangeVersionToPropertyTagsOnModel(pair.Model)
+	}
+}
+
+func ChangeVersionToPropertyTagsOnModel(model *pom.Model) error {
 	if model.Dependencies != nil {
 		for _, dep := range model.Dependencies.Dependency {
 			if dep.Version != "" && !strings.HasPrefix(dep.Version, "${") {

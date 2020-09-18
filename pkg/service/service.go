@@ -14,18 +14,18 @@ type Context struct {
 	Overwrite       bool
 	DryRun          bool
 	TargetDirectory string
-	PomModels       map[string]*pom.Model
+	PomPairs        []maven.PomPair
 	Err             error
 }
 
 var log = logger.Context()
 
-func Write(overwrite bool, filename string, model *pom.Model) error {
-	var writeToFile = filename
+func Write(overwrite bool, pair maven.PomPair) error {
+	var writeToFile = pair.PomFile
 	if !overwrite {
-		writeToFile = filename + ".new"
+		writeToFile = pair.PomFile + ".new"
 	}
-	if err := maven.SortAndWritePom(model, writeToFile); err != nil {
+	if err := maven.SortAndWritePom(pair.Model, writeToFile); err != nil {
 		return err
 	}
 
@@ -43,10 +43,6 @@ func (ctx *Context) FindAndPopulatePomModels() {
 		"/target/",
 	}
 
-	if ctx.PomModels == nil {
-		ctx.PomModels = make(map[string]*pom.Model)
-	}
-
 	if ctx.Recursive {
 		pomFiles, err := file.FindAll("pom.xml", excludes, ctx.TargetDirectory)
 		if err != nil {
@@ -58,7 +54,10 @@ func (ctx *Context) FindAndPopulatePomModels() {
 				log.Warnln(err)
 				continue
 			}
-			ctx.PomModels[pomFile] = model
+			ctx.PomPairs = append(ctx.PomPairs, maven.PomPair{
+				Model:   model,
+				PomFile: pomFile,
+			})
 		}
 	} else {
 		pomFile := fmt.Sprintf("%s/pom.xml", ctx.TargetDirectory)
@@ -67,26 +66,32 @@ func (ctx *Context) FindAndPopulatePomModels() {
 			log.Warnln(err)
 			return
 		}
-		ctx.PomModels[pomFile] = model
+		ctx.PomPairs = append(ctx.PomPairs, maven.PomPair{
+			Model:   model,
+			PomFile: pomFile,
+		})
 	}
 }
 
-func (ctx Context) OnEachPomProject(description string, do func(model *pom.Model, args ...interface{}) error) {
-	if ctx.PomModels == nil {
+func (ctx Context) OnEachPomProject(description string, do func(pair maven.PomPair, args ...interface{}) error) {
+	if ctx.PomPairs == nil {
 		log.Errorln("could not find any pom models in the context")
 		return
 	}
 
-	for pomFile, model := range ctx.PomModels {
-		log.Info(logger.White(fmt.Sprintf("%s for pom file %s", description, pomFile)))
+	for _, pair := range ctx.PomPairs {
+		log.Info(logger.White(fmt.Sprintf("%s for pom file %s", description, pair.PomFile)))
 
-		if err := do(model); err != nil {
-			log.Warnln(err)
-			continue
+		if do != nil {
+			err := do(pair)
+			if err != nil {
+				log.Warnln(err)
+				continue
+			}
 		}
 
 		if !ctx.DryRun {
-			if err := Write(ctx.Overwrite, pomFile, model); err != nil {
+			if err := Write(ctx.Overwrite, pair); err != nil {
 				log.Warnln(err)
 			}
 		}

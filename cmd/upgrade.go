@@ -28,9 +28,7 @@ var upgradeSpringBootCmd = &cobra.Command{
 	Short: "Upgrade spring-boot to the latest version",
 	Long:  `Upgrade spring-boot to the latest version`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachPomProject("upgrading spring-boot", func(model *pom.Model, args ...interface{}) error {
-			return spring.UpgradeSpringBoot(model)
-		})
+		ctx.OnEachPomProject("upgrading spring-boot", spring.UpgradeSpringBoot())
 	},
 }
 
@@ -43,9 +41,7 @@ var upgradeDependencyCmd = &cobra.Command{
 			log.Fatal("--groupId (-g) and --artifactId (-a) must be set")
 		}
 		description := fmt.Sprintf("upgrading dependency %s:%s", groupId, artifactId)
-		ctx.OnEachPomProject(description, func(model *pom.Model, args ...interface{}) error {
-			return maven.UpgradeDependency(model, groupId, artifactId)
-		})
+		ctx.OnEachPomProject(description, maven.UpgradeDependency(groupId, artifactId))
 	},
 }
 
@@ -54,9 +50,7 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 	Short: "Upgrade all 2party dependencies to project",
 	Long:  `Upgrade all 2party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachPomProject("upgrading 2party", func(model *pom.Model, args ...interface{}) error {
-			return maven.Upgrade2PartyDependencies(model)
-		})
+		ctx.OnEachPomProject("upgrading 2party", maven.Upgrade2PartyDependencies())
 	},
 }
 
@@ -65,9 +59,7 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 	Short: "Upgrade all 3party dependencies to project",
 	Long:  `Upgrade all 3party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachPomProject("upgrading 3party", func(model *pom.Model, args ...interface{}) error {
-			return maven.Upgrade3PartyDependencies(model)
-		})
+		ctx.OnEachPomProject("upgrading 3party", maven.Upgrade3PartyDependencies())
 	},
 }
 
@@ -76,9 +68,7 @@ var upgradeKotlinCmd = &cobra.Command{
 	Short: "Upgrade kotlin version in project",
 	Long:  `Upgrade kotlin version in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachPomProject("upgrading kotlin", func(model *pom.Model, args ...interface{}) error {
-			return maven.UpgradeKotlin(model)
-		})
+		ctx.OnEachPomProject("upgrading kotlin", maven.UpgradeKotlin())
 	},
 }
 
@@ -87,9 +77,7 @@ var upgradePluginsCmd = &cobra.Command{
 	Short: "Upgrade all plugins found in project",
 	Long:  `Upgrade all plugins found in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachPomProject("upgrading plugins", func(model *pom.Model, args ...interface{}) error {
-			return maven.UpgradePlugins(model)
-		})
+		ctx.OnEachPomProject("upgrading plugins", maven.UpgradePlugins())
 	},
 }
 
@@ -99,8 +87,8 @@ var upgradeAllCmd = &cobra.Command{
 	Long:  `Upgrade everything in project`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		ctx.OnEachPomProject("upgrading everything", func(model *pom.Model, args ...interface{}) error {
-			return upgradeAll(model)
+		ctx.OnEachPomProject("upgrading everything", func(pair maven.PomPair, args ...interface{}) error {
+			return upgradeAll(pair.Model)
 		})
 	},
 }
@@ -125,19 +113,19 @@ func init() {
 }
 
 func upgradeAll(model *pom.Model) error {
-	if err := maven.UpgradeKotlin(model); err != nil {
+	if err := maven.UpgradeKotlinOnModel(model); err != nil {
 		log.Warn(err)
 	}
-	if err := spring.UpgradeSpringBoot(model); err != nil {
+	if err := spring.UpgradeSpringBootOnModel(model); err != nil {
 		log.Warn(err)
 	}
-	if err := maven.Upgrade2PartyDependencies(model); err != nil {
+	if err := maven.Upgrade2PartyDependenciesOnModel(model); err != nil {
 		log.Warn(err)
 	}
-	if err := maven.Upgrade3PartyDependencies(model); err != nil {
+	if err := maven.Upgrade3PartyDependenciesOnModel(model); err != nil {
 		log.Warn(err)
 	}
-	if err := maven.UpgradePlugins(model); err != nil {
+	if err := maven.UpgradePluginsOnModel(model); err != nil {
 		log.Warn(err)
 	}
 	return nil

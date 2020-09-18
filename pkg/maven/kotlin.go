@@ -6,7 +6,13 @@ import (
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-func UpgradeKotlin(model *pom.Model) error {
+func UpgradeKotlin() func(pair PomPair, args ...interface{}) error {
+	return func(pair PomPair, args ...interface{}) error {
+		return UpgradeKotlinOnModel(pair.Model)
+	}
+}
+
+func UpgradeKotlinOnModel(model *pom.Model) error {
 	if model.Properties == nil {
 		return errors.New("could not kotlin version because pom does not contain any properties")
 	}

@@ -91,7 +91,7 @@ var springInitCmd = &cobra.Command{
 		}
 
 		log.Info(logger.Info(fmt.Sprintf("formatting %s", pomFile)))
-		if err = maven.ChangeVersionToPropertyTags(model); err != nil {
+		if err = maven.ChangeVersionToPropertyTagsOnModel(model); err != nil {
 			log.Fatalln(err)
 		}
 
@@ -188,7 +188,7 @@ var springManagedCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		log.Infof(logger.Info(fmt.Sprintf("Spring Boot Managed Upgrade2PartyDependencies:")))
+		log.Infof(logger.Info(fmt.Sprintf("Spring Boot Managed Upgrade2PartyDependenciesOnModel:")))
 		var organized = make(map[string][]pom.Dependency)
 		for _, dep := range deps.Dependencies {
 			mvnDep := pom.Dependency{
