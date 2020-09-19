@@ -33,6 +33,9 @@ lint:
 	gofmt -w pkg
 	gofmt -w cmd
 
+release:
+	goreleaser --rm-dist
+
 upgrade:
 	go get github.com/perottobc/mvn-pom-mutator
 
