@@ -3,7 +3,6 @@ package cmd
 import (
 	"co-pilot/pkg/deprecated"
 	"co-pilot/pkg/maven"
-	"co-pilot/pkg/service"
 	"co-pilot/pkg/template"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +45,7 @@ var deprecatedUpgradeCmd = &cobra.Command{
 			if err != nil {
 				log.Warnln(err)
 			} else {
-				template.Apply(cloudCfg, templates, service.PomFileToTargetDirectory(pair.PomFile))
+				template.Apply(cloudCfg, templates, maven.PomFileToTargetDirectory(pair.PomFile))
 			}
 			return nil
 		})

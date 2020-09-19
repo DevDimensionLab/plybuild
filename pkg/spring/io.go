@@ -74,7 +74,7 @@ func install(localCfg config.LocalConfigFile) error {
 		return err
 	}
 
-	_, err = shell.Wget(springBootDownloadUrl, springBootCliZip)
+	err = http.Wget(springBootDownloadUrl, springBootCliZip)
 	if err != nil {
 		return err
 	}

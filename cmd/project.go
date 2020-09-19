@@ -3,7 +3,7 @@ package cmd
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/logger"
-	"co-pilot/pkg/service"
+	"co-pilot/pkg/maven"
 	"fmt"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +29,7 @@ var projectInitCmd = &cobra.Command{
 			log.Info(logger.White(fmt.Sprintf("formating pom file %s", pair.PomFile)))
 
 			if !ctx.DryRun {
-				projectConfigFile := fmt.Sprintf("%sco-pilot.json", service.PomFileToTargetDirectory(pair.PomFile))
+				projectConfigFile := fmt.Sprintf("%sco-pilot.json", maven.PomFileToTargetDirectory(pair.PomFile))
 				projectCfg := config.InitProjectConfigurationFromModel(pair.Model)
 
 				log.Infof("writes co-pilot.json config file to %s", projectConfigFile)
@@ -38,7 +38,7 @@ var projectInitCmd = &cobra.Command{
 					continue
 				}
 
-				if err := service.Write(ctx.Overwrite, pair); err != nil {
+				if err := maven.Write(ctx.Overwrite, pair); err != nil {
 					log.Warnln(err)
 				}
 			}

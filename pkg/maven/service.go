@@ -1,9 +1,8 @@
-package service
+package maven
 
 import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
-	"co-pilot/pkg/maven"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
@@ -14,18 +13,16 @@ type Context struct {
 	Overwrite       bool
 	DryRun          bool
 	TargetDirectory string
-	PomPairs        []maven.PomPair
+	PomPairs        []PomPair
 	Err             error
 }
 
-var log = logger.Context()
-
-func Write(overwrite bool, pair maven.PomPair) error {
+func Write(overwrite bool, pair PomPair) error {
 	var writeToFile = pair.PomFile
 	if !overwrite {
 		writeToFile = pair.PomFile + ".new"
 	}
-	if err := maven.SortAndWritePom(pair.Model, writeToFile); err != nil {
+	if err := SortAndWritePom(pair.Model, writeToFile); err != nil {
 		return err
 	}
 
@@ -54,7 +51,7 @@ func (ctx *Context) FindAndPopulatePomModels() {
 				log.Warnln(err)
 				continue
 			}
-			ctx.PomPairs = append(ctx.PomPairs, maven.PomPair{
+			ctx.PomPairs = append(ctx.PomPairs, PomPair{
 				Model:   model,
 				PomFile: pomFile,
 			})
@@ -66,15 +63,15 @@ func (ctx *Context) FindAndPopulatePomModels() {
 			log.Warnln(err)
 			return
 		}
-		ctx.PomPairs = append(ctx.PomPairs, maven.PomPair{
+		ctx.PomPairs = append(ctx.PomPairs, PomPair{
 			Model:   model,
 			PomFile: pomFile,
 		})
 	}
 }
 
-func (ctx Context) OnEachPomProject(description string, do func(pair maven.PomPair, args ...interface{}) error) {
-	if ctx.PomPairs == nil {
+func (ctx Context) OnEachPomProject(description string, do func(pair PomPair, args ...interface{}) error) {
+	if ctx.PomPairs == nil || len(ctx.PomPairs) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
 	}
