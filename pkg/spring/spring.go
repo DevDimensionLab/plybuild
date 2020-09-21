@@ -30,8 +30,8 @@ func CleanManualVersions(model *pom.Model) error {
 	return nil
 }
 
-func UpgradeSpringBoot() func(pair maven.PomPair, args ...interface{}) error {
-	return func(pair maven.PomPair, args ...interface{}) error {
+func UpgradeSpringBoot() func(pair maven.PomWrapper, args ...interface{}) error {
+	return func(pair maven.PomWrapper, args ...interface{}) error {
 		return UpgradeSpringBootOnModel(pair.Model)
 	}
 }

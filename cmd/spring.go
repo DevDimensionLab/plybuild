@@ -63,7 +63,6 @@ var springInitCmd = &cobra.Command{
 
 		// populate applicationName field in config
 		if err := projectConfig.FindApplicationName(targetDir); err != nil {
-			println("!!!!!")
 			log.Errorln(err)
 		}
 
@@ -103,8 +102,11 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// sorting and writing
-		log.Info(logger.Info(fmt.Sprintf("sorting and rewriting %s", pomFile)))
-		if err = maven.SortAndWritePom(model, pomFile); err != nil {
+		if err = maven.SortAndWritePom(maven.PomWrapper{
+			PomFile:       pomFile,
+			Model:         model,
+			ProjectConfig: projectConfig,
+		}, true); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -134,11 +136,11 @@ var springInheritVersion = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		var writeToFile = pomFile
-		if !overwrite {
-			writeToFile = targetDirectory + "/pom.xml.new"
-		}
-		if err = maven.SortAndWritePom(model, writeToFile); err != nil {
+		if err = maven.SortAndWritePom(maven.PomWrapper{
+			PomFile:       pomFile,
+			Model:         model,
+			ProjectConfig: config.ProjectConfiguration{},
+		}, overwrite); err != nil {
 			log.Fatalln(err)
 		}
 	},

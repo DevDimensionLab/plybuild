@@ -23,7 +23,12 @@ type ProjectConfiguration struct {
 	} `json:"team"`
 	Dependencies []string          `json:"dependencies"`
 	Templates    []string          `json:"templates"`
+	Settings     ProjectSettings   `json:"settings"`
 	Render       map[string]string `json:"render"`
+}
+
+type ProjectSettings struct {
+	DisableDependencySort bool `json:"disableDependencySort"`
 }
 
 type ProjectConfig interface {

@@ -6,8 +6,8 @@ import (
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-func UpgradeKotlin() func(pair PomPair, args ...interface{}) error {
-	return func(pair PomPair, args ...interface{}) error {
+func UpgradeKotlin() func(pair PomWrapper, args ...interface{}) error {
+	return func(pair PomWrapper, args ...interface{}) error {
 		return UpgradeKotlinOnModel(pair.Model)
 	}
 }

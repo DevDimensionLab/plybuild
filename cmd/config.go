@@ -6,8 +6,8 @@ import (
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Config settings for co-pilot",
-	Long:  `Config settings for co-pilot`,
+	Short: "ProjectConfig settings for co-pilot",
+	Long:  `ProjectConfig settings for co-pilot`,
 }
 
 var configShowCmd = &cobra.Command{

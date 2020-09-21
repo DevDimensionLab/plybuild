@@ -87,7 +87,7 @@ var upgradeAllCmd = &cobra.Command{
 	Long:  `Upgrade everything in project`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		ctx.OnEachPomProject("upgrading everything", func(pair maven.PomPair, args ...interface{}) error {
+		ctx.OnEachPomProject("upgrading everything", func(pair maven.PomWrapper, args ...interface{}) error {
 			return upgradeAll(pair.Model)
 		})
 	},

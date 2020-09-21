@@ -56,8 +56,8 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 	}
 }
 
-func UpgradePlugins() func(pair PomPair, args ...interface{}) error {
-	return func(pair PomPair, args ...interface{}) error {
+func UpgradePlugins() func(pair PomWrapper, args ...interface{}) error {
+	return func(pair PomWrapper, args ...interface{}) error {
 		return UpgradeKotlinOnModel(pair.Model)
 	}
 }

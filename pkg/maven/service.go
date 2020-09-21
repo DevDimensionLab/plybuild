@@ -1,6 +1,7 @@
 package maven
 
 import (
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"fmt"
@@ -13,16 +14,12 @@ type Context struct {
 	Overwrite       bool
 	DryRun          bool
 	TargetDirectory string
-	PomPairs        []PomPair
+	Poms            []PomWrapper
 	Err             error
 }
 
-func Write(overwrite bool, pair PomPair) error {
-	var writeToFile = pair.PomFile
-	if !overwrite {
-		writeToFile = pair.PomFile + ".new"
-	}
-	if err := SortAndWritePom(pair.Model, writeToFile); err != nil {
+func Write(pair PomWrapper, overwrite bool) error {
+	if err := SortAndWritePom(pair, overwrite); err != nil {
 		return err
 	}
 
@@ -51,9 +48,15 @@ func (ctx *Context) FindAndPopulatePomModels() *Context {
 				log.Warnln(err)
 				continue
 			}
-			ctx.PomPairs = append(ctx.PomPairs, PomPair{
-				Model:   model,
-				PomFile: pomFile,
+			projectConfigFile := file.Path(strings.Replace(pomFile, "pom.xml", "co-pilot.json", 1))
+			projectConfig, err := config.InitProjectConfigurationFromFile(projectConfigFile)
+			if err != nil {
+				log.Warnln(err)
+			}
+			ctx.Poms = append(ctx.Poms, PomWrapper{
+				Model:         model,
+				PomFile:       pomFile,
+				ProjectConfig: projectConfig,
 			})
 		}
 	} else {
@@ -63,26 +66,32 @@ func (ctx *Context) FindAndPopulatePomModels() *Context {
 			log.Warnln(err)
 			return ctx
 		}
-		ctx.PomPairs = append(ctx.PomPairs, PomPair{
-			Model:   model,
-			PomFile: pomFile,
+		projectConfigFile := file.Path(strings.Replace(pomFile, "pom.xml", "co-pilot.json", 1))
+		projectConfig, err := config.InitProjectConfigurationFromFile(projectConfigFile)
+		if err != nil {
+			log.Warnln(err)
+		}
+		ctx.Poms = append(ctx.Poms, PomWrapper{
+			Model:         model,
+			PomFile:       pomFile,
+			ProjectConfig: projectConfig,
 		})
 	}
 
 	return ctx
 }
 
-func (ctx Context) OnEachPomProject(description string, do func(pair PomPair, args ...interface{}) error) {
-	if ctx.PomPairs == nil || len(ctx.PomPairs) == 0 {
+func (ctx Context) OnEachPomProject(description string, do func(pomWrapper PomWrapper, args ...interface{}) error) {
+	if ctx.Poms == nil || len(ctx.Poms) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
 	}
 
-	for _, pair := range ctx.PomPairs {
-		log.Info(logger.White(fmt.Sprintf("%s for pom file %s", description, pair.PomFile)))
+	for _, p := range ctx.Poms {
+		log.Info(logger.White(fmt.Sprintf("%s for pom file %s", description, p.PomFile)))
 
 		if do != nil {
-			err := do(pair)
+			err := do(p)
 			if err != nil {
 				log.Warnln(err)
 				continue
@@ -90,7 +99,7 @@ func (ctx Context) OnEachPomProject(description string, do func(pair PomPair, ar
 		}
 
 		if !ctx.DryRun {
-			if err := Write(ctx.Overwrite, pair); err != nil {
+			if err := Write(p, ctx.Overwrite); err != nil {
 				log.Warnln(err)
 			}
 		}

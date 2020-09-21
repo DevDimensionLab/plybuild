@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/template"
@@ -43,7 +44,7 @@ var mergePomCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		toPomFile := targetDirectory + "/pom.xml"
+		toPomFile := file.Path("%s/pom.xml", targetDirectory)
 		projectModel, err := pom.GetModelFrom(toPomFile)
 		if err != nil {
 			log.Fatalln(err)
@@ -53,11 +54,11 @@ var mergePomCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		var writeToFile = toPomFile
-		if !overwrite {
-			writeToFile = targetDirectory + "/pom.xml.new"
-		}
-		if err = maven.SortAndWritePom(projectModel, writeToFile); err != nil {
+		if err = maven.SortAndWritePom(maven.PomWrapper{
+			PomFile:       toPomFile,
+			Model:         projectModel,
+			ProjectConfig: config.ProjectConfiguration{},
+		}, overwrite); err != nil {
 			log.Fatalln(err)
 		}
 	},

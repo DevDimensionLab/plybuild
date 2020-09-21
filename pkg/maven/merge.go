@@ -1,6 +1,8 @@
 package maven
 
 import (
+	"co-pilot/pkg/config"
+	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
@@ -158,14 +160,14 @@ func mergeBuildPluginExecutions(from *pom.Plugin, to *pom.Plugin) {
 	return
 }
 func MergeAndWritePomFiles(source string, target string) error {
-	fromPomFile := source + "/pom.xml"
+	fromPomFile := file.Path("%s/pom.xml", source)
 	importModel, err := pom.GetModelFrom(fromPomFile)
 	if err != nil {
 		log.Warnln(err)
 		return nil
 	}
 
-	toPomFile := target + "/pom.xml"
+	toPomFile := file.Path("%s/pom.xml", target)
 	projectModel, err := pom.GetModelFrom(toPomFile)
 	if err != nil {
 		log.Warnln(err)
@@ -177,5 +179,9 @@ func MergeAndWritePomFiles(source string, target string) error {
 		return err
 	}
 
-	return SortAndWritePom(projectModel, toPomFile)
+	return SortAndWritePom(PomWrapper{
+		PomFile:       toPomFile,
+		Model:         projectModel,
+		ProjectConfig: config.ProjectConfiguration{},
+	}, true)
 }

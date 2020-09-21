@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-func ChangeVersionToPropertyTags() func(pair PomPair, args ...interface{}) error {
-	return func(pair PomPair, args ...interface{}) error {
+func ChangeVersionToPropertyTags() func(pair PomWrapper, args ...interface{}) error {
+	return func(pair PomWrapper, args ...interface{}) error {
 		return ChangeVersionToPropertyTagsOnModel(pair.Model)
 	}
 }

@@ -40,7 +40,7 @@ var deprecatedUpgradeCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		ctx.OnEachPomProject("removes version tags", func(pair maven.PomPair, args ...interface{}) error {
+		ctx.OnEachPomProject("removes version tags", func(pair maven.PomWrapper, args ...interface{}) error {
 			templates, err := deprecated.RemoveDeprecated(pair.Model, d)
 			if err != nil {
 				log.Warnln(err)

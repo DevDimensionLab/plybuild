@@ -1,13 +1,15 @@
 package maven
 
 import (
+	"co-pilot/pkg/config"
 	"encoding/xml"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-type PomPair struct {
-	PomFile string
-	Model   *pom.Model
+type PomWrapper struct {
+	PomFile       string
+	Model         *pom.Model
+	ProjectConfig config.ProjectConfiguration
 }
 
 type Metadata struct {
