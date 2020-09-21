@@ -76,8 +76,8 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// merge templates
-		if projectConfig.LocalDependencies != nil {
-			for _, d := range projectConfig.LocalDependencies {
+		if projectConfig.Templates != nil {
+			for _, d := range projectConfig.Templates {
 				if err := template.MergeTemplate(cloudCfg, d, targetDir); err != nil {
 					log.Fatalln(err)
 				}
