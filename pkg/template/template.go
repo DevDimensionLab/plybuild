@@ -5,7 +5,6 @@ import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,39 +13,24 @@ import (
 
 var log = logger.Context()
 
-func MergeName(cloudConfig config.CloudConfig, templateName string, targetDir string) error {
-	templatePath := fmt.Sprintf("%s/templates/%s", cloudConfig.Dir(), templateName)
-	if !file.Exists(templatePath) {
-		return errors.New(fmt.Sprintf("no such template-directory: %s", templateName))
+func MergeTemplate(cloudConfig config.CloudConfig, templateName string, targetDir string) error {
+	template, err := cloudConfig.Template(templateName)
+	if err != nil {
+		return err
 	}
 
 	msg := logger.Info(fmt.Sprintf("merging template %s into %s", templateName, targetDir))
 	log.Info(msg)
-	if err := Merge(templatePath, targetDir); err != nil {
+	if err := merge(template, targetDir); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func Merge(sourceDir string, targetDir string) error {
-	var files []string
-
-	ignores := GetIgnores(sourceDir)
-
-	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-		for _, nayName := range ignores {
-			if strings.Contains(path, nayName) {
-				log.Debugf("ignoring %s", info.Name())
-				return nil
-			}
-		}
-		files = append(files, path)
-		return nil
-	})
+func merge(template config.CloudTemplate, targetDir string) error {
+	sourceDir := template.Impl.Path
+	files, err := FilesToCopy(sourceDir)
 	if err != nil {
 		return err
 	}
@@ -67,7 +51,7 @@ func Merge(sourceDir string, targetDir string) error {
 			return err
 		}
 
-		sourceRelPath = replacePathForSource(sourceRelPath, sourceConfig, targetConfig)
+		sourceRelPath = ReplacePathForSource(sourceRelPath, sourceConfig, targetConfig)
 
 		targetPath := fmt.Sprintf("%s/%s", targetDir, sourceRelPath)
 		if err = file.CopyOrMerge(f, targetPath); err != nil {
@@ -86,6 +70,25 @@ func Merge(sourceDir string, targetDir string) error {
 	}
 
 	return maven.MergeAndWritePomFiles(sourceDir, targetDir)
+}
+
+func FilesToCopy(sourceDir string) (files []string, err error) {
+	ignores := GetIgnores(sourceDir)
+	err = filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		for _, nayName := range ignores {
+			if strings.Contains(path, nayName) {
+				log.Debugf("ignoring %s", info.Name())
+				return nil
+			}
+		}
+		files = append(files, path)
+		return nil
+	})
+
+	return
 }
 
 func GetIgnores(sourceDir string) (ignores []string) {
@@ -111,18 +114,21 @@ func GetIgnores(sourceDir string) (ignores []string) {
 func Apply(cloudConfig config.CloudConfig, templates map[string]bool, targetDirectory string) {
 	for k, _ := range templates {
 		log.Infof("applying template %s", k)
-		if err := MergeName(cloudConfig, k, targetDirectory); err != nil {
+		if err := MergeTemplate(cloudConfig, k, targetDirectory); err != nil {
 			log.Warnf("%v", err)
 		}
 	}
 }
 
-func replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfiguration, targetConfig config.ProjectConfiguration) string {
+func ReplacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfiguration, targetConfig config.ProjectConfiguration) string {
 	var output = sourceRelPath
 
 	if strings.Contains(output, ".kt") || strings.Contains(output, ".java") {
-		output = strings.Replace(sourceRelPath, sourceConfig.SourceMainPath(), targetConfig.SourceMainPath(), 1)
-		output = strings.Replace(sourceRelPath, sourceConfig.SourceTestPath(), targetConfig.SourceTestPath(), 1)
+		if strings.Contains(output, "src/main") {
+			output = strings.Replace(sourceRelPath, sourceConfig.SourceMainPath(), targetConfig.SourceMainPath(), 1)
+		} else if strings.Contains(output, "src/test") {
+			output = strings.Replace(sourceRelPath, sourceConfig.SourceTestPath(), targetConfig.SourceTestPath(), 1)
+		}
 	}
 
 	return output

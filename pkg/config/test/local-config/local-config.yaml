@@ -1,0 +1,6 @@
+cloudConfig:
+  git:
+    url: "git@github.com:co-pilot-cli/co-pilot-config.git"
+sourceProvider:
+  host: "test-source-provider"
+  access_token: ""

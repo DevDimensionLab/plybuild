@@ -6,36 +6,29 @@ import (
 	"co-pilot/pkg/shell"
 	"errors"
 	"fmt"
-	"github.com/mitchellh/go-homedir"
+	"io/ioutil"
 )
 
 type GitCloudConfig struct {
-	configDirName string
+	Impl DirConfig
 }
 
 type CloudConfig interface {
-	Dir() string
+	Implementation() Directory
 	Refresh(localConfig LocalConfigFile) error
 	Services() func() (CloudServices, error)
 	LinkFromService(services func() (CloudServices, error), groupId string, artifactId string, linkKey string) (url string, err error)
 	DefaultServiceEnvironmentUrl(service CloudService, key string) (url string, err error)
 	Deprecated() (CloudDeprecated, error)
 	ListDeprecated() error
-	FilePath(fileName string) (string, error)
+
+	HasTemplate(name string) bool
+	Templates() (templates []CloudTemplate, err error)
+	Template(name string) (CloudTemplate, error)
 }
 
-func InitGitCloudConfig(cloudConfigDirName string) (cfg GitCloudConfig, err error) {
-	home, err := homedir.Dir()
-	if err != nil {
-		return cfg, err
-	}
-
-	cfg.configDirName = fmt.Sprintf("%s/%s/%s", home, localConfigDir, cloudConfigDirName)
-	return
-}
-
-func (gitCfg GitCloudConfig) Dir() string {
-	return gitCfg.configDirName
+func (gitCfg GitCloudConfig) Implementation() Directory {
+	return gitCfg.Impl
 }
 
 func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
@@ -44,7 +37,7 @@ func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
 		log.Fatalln(err)
 	}
 
-	target := gitCfg.Dir()
+	target := gitCfg.Implementation().Dir()
 	if file.Exists(fmt.Sprintf("%s/.git", target)) {
 		msg := logger.Info(fmt.Sprintf("pulling cloud config on %s", target))
 		log.Info(msg)
@@ -67,7 +60,7 @@ func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
 func (gitCfg GitCloudConfig) Services() func() (CloudServices, error) {
 	var services CloudServices
 
-	path, err := gitCfg.FilePath("services.json")
+	path, err := gitCfg.Implementation().FilePath("services.json")
 	if err != nil {
 		return func() (CloudServices, error) {
 			return services, err
@@ -124,7 +117,7 @@ func (gitCfg GitCloudConfig) DefaultServiceEnvironmentUrl(service CloudService, 
 func (gitCfg GitCloudConfig) Deprecated() (CloudDeprecated, error) {
 	var deprecated CloudDeprecated
 
-	path, err := gitCfg.FilePath("deprecated.json")
+	path, err := gitCfg.Implementation().FilePath("deprecated.json")
 	if err != nil {
 		return deprecated, err
 	}
@@ -160,11 +153,48 @@ func (gitCfg GitCloudConfig) ListDeprecated() error {
 	return nil
 }
 
-func (gitCfg GitCloudConfig) FilePath(fileName string) (string, error) {
-	path := fmt.Sprintf("%s/%s", gitCfg.Dir(), fileName)
-	if !file.Exists(path) {
-		return "", errors.New(fmt.Sprintf("could not find %s in cloud config", fileName))
+func (gitCfg GitCloudConfig) HasTemplate(name string) bool {
+	templates, err := gitCfg.Templates()
+	if err != nil {
+		return false
+	}
+	for _, template := range templates {
+		if template.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (gitCfg GitCloudConfig) Template(name string) (CloudTemplate, error) {
+	templates, err := gitCfg.Templates()
+	if err != nil {
+		return CloudTemplate{}, err
 	}
 
-	return path, nil
+	for _, template := range templates {
+		if template.Name == name {
+			return template, nil
+		}
+	}
+
+	return CloudTemplate{}, errors.New(fmt.Sprintf("could not find any templates with name: %s", name))
+}
+
+func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) {
+	root := fmt.Sprintf("%s/templates", gitCfg.Implementation().Dir())
+	files, err := ioutil.ReadDir(root)
+	if err != nil {
+		return
+	}
+
+	for _, f := range files {
+		if f.IsDir() {
+			template := CloudTemplate{}
+			template.Name = f.Name()
+			template.Impl.Path = fmt.Sprintf("%s/%s", root, f.Name())
+			templates = append(templates, template)
+		}
+	}
+	return
 }

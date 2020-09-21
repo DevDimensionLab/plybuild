@@ -1,0 +1,9 @@
+{
+  "language": "java",
+  "groupId": "no.copilot.target",
+  "artifactId": "test",
+  "package": "no.copilot.template.target",
+  "name": "test-target",
+  "description": "",
+  "dependencies": []
+}

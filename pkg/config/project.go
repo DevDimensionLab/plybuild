@@ -79,11 +79,11 @@ func (config ProjectConfiguration) Write(targetFile string) error {
 }
 
 func (config ProjectConfiguration) SourceMainPath() string {
-	return fmt.Sprintf("%s", strings.Join(strings.Split(config.Package, "."), "/"))
+	return fmt.Sprintf("src/main/%s/%s", config.Language, strings.Join(strings.Split(config.Package, "."), "/"))
 }
 
 func (config ProjectConfiguration) SourceTestPath() string {
-	return fmt.Sprintf("%s", strings.Join(strings.Split(config.Package, "."), "/"))
+	return fmt.Sprintf("src/test/%s/%s", config.Language, strings.Join(strings.Split(config.Package, "."), "/"))
 }
 
 func (config *ProjectConfiguration) FindApplicationName(targetDir string) (err error) {

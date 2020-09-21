@@ -5,7 +5,7 @@ import (
 )
 
 func TestRender(t *testing.T) {
-	err := Render("test_Dockerfile.render", "test_Dockerfile", struct {
+	err := Render("test/Dockerfile.render", "test/Dockerfile", struct {
 		ArtifactId string
 		GroupId    string
 	}{

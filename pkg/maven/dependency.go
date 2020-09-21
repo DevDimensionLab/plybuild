@@ -92,7 +92,7 @@ func upgradeDependencies(model *pom.Model, dependencies []pom.Dependency, condit
 	for _, dep := range dependencies {
 		depVersion, err := model.GetDependencyVersion(dep)
 		if err != nil {
-			log.Warnln("failed to get version for %s:%s", dep.GroupId, dep.ArtifactId)
+			log.Infof("failed to get version for %s:%s", dep.GroupId, dep.ArtifactId)
 			continue
 		}
 		if depVersion != "" && condition(dep.GroupId) {

@@ -17,10 +17,7 @@ var log = logger.Context()
 
 func binDir(localCfg config.LocalConfigFile) (string, error) {
 	binDir := "spring-cli"
-	configDir, err := localCfg.DirPath()
-	if err != nil {
-		return "", err
-	}
+	configDir := localCfg.Implementation().Dir()
 
 	return fmt.Sprintf("%s/%s", configDir, binDir), nil
 }

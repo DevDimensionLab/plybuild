@@ -1,0 +1,9 @@
+{
+  "language": "kotlin",
+  "groupId": "no.copilot.template",
+  "artifactId": "test",
+  "package": "no.copilot.template.test",
+  "name": "test-template",
+  "description": "",
+  "dependencies": []
+}

@@ -1,11 +1,11 @@
 package config
 
 type LocalConfiguration struct {
-	CloudConfig    GitConfig      `yaml:"cloudConfig"`
+	CloudConfig    LocalGitConfig `yaml:"cloudConfig"`
 	SourceProvider SourceProvider `yaml:"sourceProvider"`
 }
 
-type GitConfig struct {
+type LocalGitConfig struct {
 	Git Git `yaml:"git"`
 }
 
@@ -56,4 +56,18 @@ type CloudDeprecatedDependency struct {
 		Dependencies []CloudDeprecatedDependency `json:"dependencies"`
 	} `json:"associated"`
 	ReplacementTemplates []string `json:"replacement_templates"`
+}
+
+type Directory interface {
+	Dir() string
+	FilePath(fileName string) (string, error)
+}
+
+type DirConfig struct {
+	Path string
+}
+
+type CloudTemplate struct {
+	Name string
+	Impl DirConfig
 }
