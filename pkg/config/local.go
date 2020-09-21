@@ -11,6 +11,7 @@ import (
 var log = logger.Context()
 
 var localConfigFileName = "local-config.yaml"
+var defaultCloudConfigUrl = "git@github.com:co-pilot-cli/co-pilot-config.git"
 
 type LocalConfig struct {
 	impl DirConfig
@@ -56,6 +57,7 @@ func (localCfg LocalConfig) TouchFile() error {
 	configFile := localCfg.FilePath()
 
 	config := LocalConfiguration{}
+	config.CloudConfig.Git.Url = defaultCloudConfigUrl
 	d, err := yaml.Marshal(&config)
 	if err != nil {
 		return err
