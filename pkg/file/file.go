@@ -158,8 +158,13 @@ func copyFile(sourceFile string, destinationFile string) error {
 		}
 	}
 
+	fileInfo, err := os.Stat(sourceFile)
+	if err != nil {
+		return err
+	}
+
 	log.Infof("copying \n\tFROM => %s\n\tTO => %s", sourceFile, destinationFile)
-	err = ioutil.WriteFile(destinationFile, input, 0644)
+	err = ioutil.WriteFile(destinationFile, input, fileInfo.Mode())
 	if err != nil {
 		return err
 	}
