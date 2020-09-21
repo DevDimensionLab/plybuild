@@ -131,6 +131,10 @@ func ReplacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfi
 		}
 	}
 
+	if output == sourceRelPath {
+		log.Warnf("was not able to replace path for source, source and output path is the same %s", output)
+	}
+
 	return output
 }
 

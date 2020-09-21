@@ -3,7 +3,6 @@ package config
 import (
 	"co-pilot/pkg/file"
 	"encoding/json"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"io/ioutil"
 	"strings"
 )
@@ -32,41 +31,8 @@ type ProjectConfig interface {
 	SourceMainPath() string
 	SourceTestPath() string
 	FindApplicationName(targetDir string) (err error)
-}
-
-func InitProjectConfigurationFromFile(filePath string) (config ProjectConfiguration, err error) {
-	err = file.ReadJson(filePath, &config)
-	if config.ApplicationName == "" {
-		err := config.FindApplicationName(strings.Replace(filePath, projectFileName, "", 1))
-		if err != nil {
-			return config, err
-		}
-	}
-	return
-}
-
-func InitProjectConfigurationFromDir(targetDir string) (config ProjectConfiguration, err error) {
-	filePath := file.Path("%s/%s", targetDir, projectFileName)
-	err = file.ReadJson(filePath, &config)
-
-	if config.ApplicationName == "" {
-		err := config.FindApplicationName(targetDir)
-		if err != nil {
-			return config, err
-		}
-	}
-	return
-}
-
-func InitProjectConfigurationFromModel(model *pom.Model) (config ProjectConfiguration) {
-	config.Language = "kotlin"
-	config.GroupId = model.GetGroupId()
-	config.ArtifactId = model.ArtifactId
-	config.Package = model.GetGroupId()
-	config.Name = model.Name
-	config.Description = model.Description
-
-	return
+	GetLanguage() string
+	Populate(targetDir string) error
 }
 
 func (config ProjectConfiguration) Write(targetFile string) error {
@@ -78,17 +44,17 @@ func (config ProjectConfiguration) Write(targetFile string) error {
 }
 
 func (config ProjectConfiguration) SourceMainPath() string {
-	return file.Path("src/main/%s/%s", config.Language, strings.Join(strings.Split(config.Package, "."), "/"))
+	return file.Path("src/main/%s/%s", config.GetLanguage(), strings.Join(strings.Split(config.Package, "."), "/"))
 }
 
 func (config ProjectConfiguration) SourceTestPath() string {
-	return file.Path("src/test/%s/%s", config.Language, strings.Join(strings.Split(config.Package, "."), "/"))
+	return file.Path("src/test/%s/%s", config.GetLanguage(), strings.Join(strings.Split(config.Package, "."), "/"))
 }
 
 func (config *ProjectConfiguration) FindApplicationName(targetDir string) (err error) {
 	files, err := file.GrepRecursive(targetDir, "@SpringBootApplication")
 	if err != nil {
-		return
+		log.Warnf("was not able to find application name in: %s", targetDir)
 	}
 
 	if len(files) == 1 {
@@ -99,4 +65,39 @@ func (config *ProjectConfiguration) FindApplicationName(targetDir string) (err e
 	}
 
 	return
+}
+
+func (config *ProjectConfiguration) GetLanguage() string {
+	if config.Language == "" || (config.Language != "kotlin" && config.Language != "java") {
+		log.Warnf("language not set in config for package: %s, assuming kotlin...", config.Package)
+		return "kotlin"
+	}
+	return config.Language
+}
+
+func (config *ProjectConfiguration) Populate(targetDir string) error {
+	if config.ApplicationName == "" {
+		err := config.FindApplicationName(targetDir)
+		if err != nil {
+			return err
+		}
+	}
+
+	if config.Language == "" {
+		kotlinFile, err := file.FindFirst(".kt", targetDir)
+		if err == nil && kotlinFile != "" {
+			config.Language = "kotlin"
+			return nil
+		}
+		javaFile, err := file.FindFirst(".java", targetDir)
+		if err == nil && javaFile != "" {
+			config.Language = "java"
+			return nil
+		}
+
+		// if all fails, fallback to kotlin
+		config.Language = "kotlin"
+	}
+
+	return nil
 }
