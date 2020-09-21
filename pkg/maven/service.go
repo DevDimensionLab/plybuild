@@ -34,7 +34,7 @@ func PomFileToTargetDirectory(pomFile string) string {
 	return strings.Join(pomFilePathParts[:len(pomFilePathParts)-1], "/")
 }
 
-func (ctx *Context) FindAndPopulatePomModels() {
+func (ctx *Context) FindAndPopulatePomModels() *Context {
 	excludes := []string{
 		"flattened-pom.xml",
 		"/target/",
@@ -61,13 +61,15 @@ func (ctx *Context) FindAndPopulatePomModels() {
 		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
 			log.Warnln(err)
-			return
+			return ctx
 		}
 		ctx.PomPairs = append(ctx.PomPairs, PomPair{
 			Model:   model,
 			PomFile: pomFile,
 		})
 	}
+
+	return ctx
 }
 
 func (ctx Context) OnEachPomProject(description string, do func(pair PomPair, args ...interface{}) error) {
