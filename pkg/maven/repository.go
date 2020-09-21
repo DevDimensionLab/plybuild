@@ -3,7 +3,6 @@ package maven
 import (
 	"co-pilot/pkg/file"
 	"errors"
-	"fmt"
 	"os/user"
 )
 
@@ -70,8 +69,8 @@ func GetSettingsFile() (string, error) {
 	}
 
 	home := usr.HomeDir
-	m2Settings := fmt.Sprintf("%s/.m2/settings.xml", home)
-	confSettings := fmt.Sprintf("%s/conf/settings.xml", home)
+	m2Settings := file.Path("%s/.m2/settings.xml", home)
+	confSettings := file.Path("%s/conf/settings.xml", home)
 
 	if file.Exists(m2Settings) {
 		return m2Settings, nil

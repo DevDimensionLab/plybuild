@@ -31,7 +31,7 @@ func Write(overwrite bool, pair PomPair) error {
 
 func PomFileToTargetDirectory(pomFile string) string {
 	pomFilePathParts := strings.Split(pomFile, "/")
-	return strings.Join(pomFilePathParts[:len(pomFilePathParts)-1], "/")
+	return file.Path(strings.Join(pomFilePathParts[:len(pomFilePathParts)-1], "/"))
 }
 
 func (ctx *Context) FindAndPopulatePomModels() *Context {
@@ -57,7 +57,7 @@ func (ctx *Context) FindAndPopulatePomModels() *Context {
 			})
 		}
 	} else {
-		pomFile := fmt.Sprintf("%s/pom.xml", ctx.TargetDirectory)
+		pomFile := file.Path("%s/pom.xml", ctx.TargetDirectory)
 		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
 			log.Warnln(err)

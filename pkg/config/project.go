@@ -3,7 +3,6 @@ package config
 import (
 	"co-pilot/pkg/file"
 	"encoding/json"
-	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"io/ioutil"
 	"strings"
@@ -47,7 +46,7 @@ func InitProjectConfigurationFromFile(filePath string) (config ProjectConfigurat
 }
 
 func InitProjectConfigurationFromDir(targetDir string) (config ProjectConfiguration, err error) {
-	filePath := fmt.Sprintf("%s/%s", targetDir, projectFileName)
+	filePath := file.Path("%s/%s", targetDir, projectFileName)
 	err = file.ReadJson(filePath, &config)
 
 	if config.ApplicationName == "" {
@@ -79,11 +78,11 @@ func (config ProjectConfiguration) Write(targetFile string) error {
 }
 
 func (config ProjectConfiguration) SourceMainPath() string {
-	return fmt.Sprintf("src/main/%s/%s", config.Language, strings.Join(strings.Split(config.Package, "."), "/"))
+	return file.Path("src/main/%s/%s", config.Language, strings.Join(strings.Split(config.Package, "."), "/"))
 }
 
 func (config ProjectConfiguration) SourceTestPath() string {
-	return fmt.Sprintf("src/test/%s/%s", config.Language, strings.Join(strings.Split(config.Package, "."), "/"))
+	return file.Path("src/test/%s/%s", config.Language, strings.Join(strings.Split(config.Package, "."), "/"))
 }
 
 func (config *ProjectConfiguration) FindApplicationName(targetDir string) (err error) {

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"co-pilot/pkg/file"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -11,7 +11,7 @@ func NewLocalConfig(localConfigDir string) (cfg LocalConfig, err error) {
 		return
 	}
 
-	cfg.impl.Path = fmt.Sprintf("%s/%s", home, localConfigDir)
+	cfg.impl.Path = file.Path("%s/%s", home, localConfigDir)
 	return
 }
 
@@ -21,6 +21,6 @@ func NewGitCloudConfig(localConfigDir string, cloudConfigDirName string) (cfg Gi
 		return cfg, err
 	}
 
-	cfg.Impl.Path = fmt.Sprintf("%s/%s/%s", home, localConfigDir, cloudConfigDirName)
+	cfg.Impl.Path = file.Path("%s/%s/%s", home, localConfigDir, cloudConfigDirName)
 	return
 }

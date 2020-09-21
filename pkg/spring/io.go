@@ -19,7 +19,7 @@ func binDir(localCfg config.LocalConfigFile) (string, error) {
 	binDir := "spring-cli"
 	configDir := localCfg.Implementation().Dir()
 
-	return fmt.Sprintf("%s/%s", configDir, binDir), nil
+	return file.Path("%s/%s", configDir, binDir), nil
 }
 
 func RunCli(localCfg config.LocalConfigFile, arg ...string) (string, error) {
@@ -28,7 +28,7 @@ func RunCli(localCfg config.LocalConfigFile, arg ...string) (string, error) {
 		return "", err
 	}
 
-	springExec, err := file.FindFirst("bin/spring", targetDir)
+	springExec, err := file.FindFirst(file.Path("bin/spring"), targetDir)
 	if err != nil {
 		return "", err
 	}
@@ -43,7 +43,7 @@ func CheckCli(localCfg config.LocalConfigFile) error {
 		return err
 	}
 
-	springExec, err := file.FindFirst("bin/spring", targetDir)
+	springExec, err := file.FindFirst(file.Path("bin/spring"), targetDir)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func install(localCfg config.LocalConfigFile) error {
 		return err
 	}
 
-	springBootCliZip := fmt.Sprintf("%s/spring-boot-cli.zip", targetDir)
+	springBootCliZip := file.Path("%s/spring-boot-cli.zip", targetDir)
 	if err := os.RemoveAll(targetDir); err != nil {
 		return err
 	}

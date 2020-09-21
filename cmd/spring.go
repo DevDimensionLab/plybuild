@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"co-pilot/pkg/config"
+	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/spring"
@@ -67,7 +68,7 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// write co-pilot.json to target directory
-		configFile := fmt.Sprintf("%s/co-pilot.json", targetDir)
+		configFile := file.Path("%s/co-pilot.json", targetDir)
 		msg = logger.Info(fmt.Sprintf("writes co-pilot.json config file to %s", configFile))
 		log.Info(msg)
 		if err := projectConfig.Write(configFile); err != nil {
@@ -84,7 +85,7 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// format version
-		pomFile := targetDir + "/pom.xml"
+		pomFile := file.Path("%s/pom.xml", targetDir)
 		model, err := pom.GetModelFrom(pomFile)
 		if err != nil {
 			log.Fatalln(err)
@@ -96,13 +97,13 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// upgrade all
-		log.Info(logger.Info(fmt.Sprintf("upgrading %s", pomFile)))
+		log.Info(logger.Info(fmt.Sprintf("upgrading all on %s", pomFile)))
 		if err = upgradeAll(model); err != nil {
 			log.Fatalln(err)
 		}
 
 		// sorting and writing
-		log.Info(logger.Info(fmt.Sprintf("Sorting and rewriting %s", pomFile)))
+		log.Info(logger.Info(fmt.Sprintf("sorting and rewriting %s", pomFile)))
 		if err = maven.SortAndWritePom(model, pomFile); err != nil {
 			log.Fatalln(err)
 		}

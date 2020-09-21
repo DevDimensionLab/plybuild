@@ -3,7 +3,6 @@ package config
 import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
-	"fmt"
 	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -32,7 +31,7 @@ func (localCfg LocalConfig) Implementation() DirConfig {
 }
 
 func (localCfg LocalConfig) FilePath() string {
-	return fmt.Sprintf("%s/%s", localCfg.impl.Path, localConfigFileName)
+	return file.Path("%s/%s", localCfg.impl.Path, localConfigFileName)
 }
 
 func (localCfg LocalConfig) CheckOrCreateConfigDir() error {

@@ -11,7 +11,7 @@ func (dirCfg DirConfig) Dir() string {
 }
 
 func (dirCfg DirConfig) FilePath(fileName string) (string, error) {
-	path := fmt.Sprintf("%s/%s", dirCfg.Dir(), fileName)
+	path := file.Path("%s/%s", dirCfg.Dir(), fileName)
 	if !file.Exists(path) {
 		return "", errors.New(fmt.Sprintf("could not find %s in cloud config", fileName))
 	}

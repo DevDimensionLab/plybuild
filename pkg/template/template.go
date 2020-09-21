@@ -53,7 +53,7 @@ func merge(template config.CloudTemplate, targetDir string) error {
 
 		sourceRelPath = ReplacePathForSource(sourceRelPath, sourceConfig, targetConfig)
 
-		targetPath := fmt.Sprintf("%s/%s", targetDir, sourceRelPath)
+		targetPath := file.Path("%s/%s", targetDir, sourceRelPath)
 		if err = file.CopyOrMerge(f, targetPath); err != nil {
 			return err
 		}
@@ -93,13 +93,13 @@ func FilesToCopy(sourceDir string) (files []string, err error) {
 
 func GetIgnores(sourceDir string) (ignores []string) {
 
-	gitIgnores, err := file.OpenIgnoreFile(fmt.Sprintf("%s/.gitignore", sourceDir))
+	gitIgnores, err := file.OpenIgnoreFile(file.Path("%s/.gitignore", sourceDir))
 	if err != nil {
 		log.Error(err)
 	}
 	ignores = append(ignores, gitIgnores...)
 
-	coPilotIgnores, err := file.OpenIgnoreFile(fmt.Sprintf("%s/.co-pilot.ignore", sourceDir))
+	coPilotIgnores, err := file.OpenIgnoreFile(file.Path("%s/.co-pilot.ignore", sourceDir))
 	if err != nil {
 		log.Error(err)
 	}

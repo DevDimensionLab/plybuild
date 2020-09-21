@@ -38,7 +38,7 @@ func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
 	}
 
 	target := gitCfg.Implementation().Dir()
-	if file.Exists(fmt.Sprintf("%s/.git", target)) {
+	if file.Exists(file.Path("%s/.git", target)) {
 		msg := logger.Info(fmt.Sprintf("pulling cloud config on %s", target))
 		log.Info(msg)
 		out, err := shell.GitPull(target)
@@ -182,7 +182,7 @@ func (gitCfg GitCloudConfig) Template(name string) (CloudTemplate, error) {
 }
 
 func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) {
-	root := fmt.Sprintf("%s/templates", gitCfg.Implementation().Dir())
+	root := file.Path("%s/templates", gitCfg.Implementation().Dir())
 	files, err := ioutil.ReadDir(root)
 	if err != nil {
 		return
@@ -192,7 +192,7 @@ func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) 
 		if f.IsDir() {
 			template := CloudTemplate{}
 			template.Name = f.Name()
-			template.Impl.Path = fmt.Sprintf("%s/%s", root, f.Name())
+			template.Impl.Path = file.Path("%s/%s", root, f.Name())
 			templates = append(templates, template)
 		}
 	}
