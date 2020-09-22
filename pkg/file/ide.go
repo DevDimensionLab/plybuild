@@ -48,8 +48,8 @@ func cleanIntellijFiles(targetDir string, dryRun bool) (string, error) {
 }
 
 func cleanIntellijFile(targetDir string, dryRun bool) (string, error) {
-	var imlFile = "not found"
-	var ideaDir = "not found"
+	var filesDeleted = 0
+	var dirsDeleted = 0
 
 	files, err := ioutil.ReadDir(targetDir)
 	if err != nil {
@@ -58,22 +58,22 @@ func cleanIntellijFile(targetDir string, dryRun bool) (string, error) {
 
 	for _, f := range files {
 		if strings.Contains(f.Name(), ".iml") && !f.IsDir() {
+			filesDeleted += 1
 			fileName := Path("%s/%s", targetDir, f.Name())
-			imlFile = fileName
 			if err = logAndDelete(fileName, dryRun); err != nil {
 				return "", err
 			}
 		}
 		if strings.Contains(f.Name(), ".idea") && f.IsDir() {
+			dirsDeleted += 1
 			dirName := Path("%s/%s", targetDir, f.Name())
-			ideaDir = dirName
 			if err = logAndDelete(dirName, dryRun); err != nil {
 				return "", err
 			}
 		}
 	}
 
-	return fmt.Sprintf("Iml file: %s, .idea dir: %s", imlFile, ideaDir), nil
+	return fmt.Sprintf("Iml files: %d, .idea dirs: %d", filesDeleted, dirsDeleted), nil
 }
 
 func logAndDelete(fileName string, dryRun bool) error {
@@ -81,7 +81,7 @@ func logAndDelete(fileName string, dryRun bool) error {
 		log.Infof("Found .iml file: %s", fileName)
 	} else {
 		log.Infof("Deleting .iml file: %s", fileName)
-		err := DeleteDirectory(fileName)
+		err := DeleteAll(fileName)
 		if err != nil {
 			return err
 		}

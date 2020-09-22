@@ -146,5 +146,5 @@ func renderAndDelete(targetPath string, targetConfig interface{}) error {
 	}
 
 	log.Infof("deleting old render file %s", targetPath)
-	return file.DeleteFile(targetPath)
+	return file.DeleteSingleFile(targetPath)
 }

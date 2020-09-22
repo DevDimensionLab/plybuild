@@ -7,8 +7,8 @@ import (
 
 var ideCmd = &cobra.Command{
 	Use:   "ide",
-	Short: "Ide editor functionality",
-	Long:  `Ide editor functionality`,
+	Short: "IDE (editor) functionality",
+	Long:  `IDE (editor) functionality`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
@@ -18,8 +18,8 @@ var ideCmd = &cobra.Command{
 
 var ideCleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "Removes IDE files like .idea and *.iml",
-	Long:  `Removes IDE files like .idea and *.iml`,
+	Short: "Removes IDE files and folders, e.g. .idea and *.iml",
+	Long:  `Removes IDE files and folders, e.g. .idea and *.iml`,
 	Run: func(cmd *cobra.Command, args []string) {
 		report, err := file.CleanIntellijFiles(ctx.TargetDirectory, ctx.Recursive, ctx.DryRun)
 		if err != nil {
@@ -35,5 +35,5 @@ func init() {
 
 	ideCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	ideCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
-	ideCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
+	ideCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "disables delete of files and folders")
 }
