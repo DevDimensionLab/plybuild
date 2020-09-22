@@ -1,0 +1,6 @@
+{
+  "groupId": "no.co-pilot-cli",
+  "artifactId": "co-pilot-cli-template-testing",
+  "package": "no.co_pilot_cli.template.testing",
+  "dependencies": ["web-services"]
+}

@@ -290,6 +290,29 @@ func MergeTextFiles(fromFile string, toFile string) error {
 	return Overwrite(toLines, toFile)
 }
 
+func Equal(fileA string, fileB string) (bool, error) {
+	fileALines, err := OpenLines(fileA)
+	if err != nil {
+		return false, err
+	}
+	fileBLines, err := OpenLines(fileB)
+	if err != nil {
+		return false, err
+	}
+
+	if len(fileALines) != len(fileBLines) {
+		return false, nil
+	}
+
+	for i := range fileALines {
+		if fileALines[i] != fileBLines[i] {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
 func Delete(filePath string) error {
 	return os.Remove(filePath)
 }

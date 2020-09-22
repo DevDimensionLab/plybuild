@@ -12,9 +12,18 @@ func newMockCloudConfig() (cfg config.GitCloudConfig) {
 	return
 }
 
-func TestMergeTemplate(t *testing.T) {
+func TestMergeTemplate_test_template(t *testing.T) {
 	cfg := newMockCloudConfig()
-	err := MergeTemplate(cfg, "test-template", file.Path("test/target-app"))
+	err := MergeTemplate(cfg, "test-template", file.Path("test/target-test-template"))
+
+	if err != nil {
+		t.Errorf("%v\n", err)
+	}
+}
+
+func TestMergeTemplate_simple_template(t *testing.T) {
+	cfg := newMockCloudConfig()
+	err := MergeTemplate(cfg, "simple-template", file.Path("test/target-simple-template"))
 
 	if err != nil {
 		t.Errorf("%v\n", err)
@@ -23,7 +32,7 @@ func TestMergeTemplate(t *testing.T) {
 
 func TestReplacePathForSource(t *testing.T) {
 	sourceDir := file.Path("test/cloud-config/templates/test-template")
-	targetDir := file.Path("test/target-app")
+	targetDir := file.Path("test/target-test-template")
 
 	sourceConfig, err := config.InitProjectConfigurationFromDir(sourceDir)
 	if err != nil {

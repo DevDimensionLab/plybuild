@@ -3,7 +3,7 @@
   "groupId": "no.copilot.target",
   "artifactId": "test",
   "package": "no.copilot.template.target",
-  "name": "test-target",
+  "name": "target-test-template",
   "description": "",
   "dependencies": []
 }

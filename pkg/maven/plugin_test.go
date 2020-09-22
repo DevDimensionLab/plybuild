@@ -1,14 +1,14 @@
 package maven
 
 import (
+	"co-pilot/pkg/file"
 	"encoding/json"
-	"fmt"
 	"testing"
 )
 
 func TestDependencyAnalyzeRawOutput(t *testing.T) {
 
-	output, err := runAnalyze("test/pom.xml")
+	output, err := runAnalyze(file.Path("test/analyze/pom.xml"))
 
 	if err != nil {
 		t.Errorf("%v-> %s", err, output)
@@ -16,10 +16,10 @@ func TestDependencyAnalyzeRawOutput(t *testing.T) {
 
 	analyze := DependencyAnalyze(output)
 
-	e, err := json.MarshalIndent(analyze, "", "  ")
+	_, err = json.MarshalIndent(analyze, "", "  ")
 	if err != nil {
-		fmt.Println(err)
+		t.Errorf("%v\n", err)
 		return
 	}
-	fmt.Println(string(e))
+
 }

@@ -191,7 +191,7 @@ var springManagedCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		log.Infof(logger.Info(fmt.Sprintf("Spring Boot Managed Upgrade2PartyDependenciesOnModel:")))
+		log.Infof(logger.Info(fmt.Sprintf("Spring Boot managed dependencies:")))
 		var organized = make(map[string][]pom.Dependency)
 		for _, dep := range deps.Dependencies {
 			mvnDep := pom.Dependency{
