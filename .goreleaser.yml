@@ -47,5 +47,5 @@ release:
 
   # You can change the name of the release.
   # Default is `{{.Tag}}`
-  name_template: "{{.ProjectName}}-v{{.Version}} {{.Env.USER}}"
+  name_template: "{{.ProjectName}}-v{{.Version}}"
 
