@@ -1,18 +1,11 @@
 .DEFAULT_GOAL := all
-BUILD_DATE := `date +%Y-%m-%d\ %H:%M`
-BUILD_TAG := `git describe --abbrev=0 --tags`
-VERSION_FILE := cmd/version.go
+BUILD_DATE := $(shell date +%Y-%m-%d\ %H:%M)
+BUILD_TAG := $(shell git describe --abbrev=0 --tags)
+LD_FLAGS := '-X "co-pilot/cmd.buildDate=$(BUILD_DATE)" -X "co-pilot/cmd.version=$(BUILD_TAG)"'
 
-genver:
-	@rm -f $(VERSION_FILE)
-	@echo "package cmd" > $(VERSION_FILE)
-	@echo "const (" >> $(VERSION_FILE)
-	@echo "  Version = \"$(BUILD_TAG)\"" >> $(VERSION_FILE)
-	@echo "  BuildDate = \"$(BUILD_DATE)\"" >> $(VERSION_FILE)
-	@echo ")" >> $(VERSION_FILE)
 
 build:
-	go build
+	go build -ldflags ${LD_FLAGS}
 
 docker-build:
 	docker build --tag co-pilot:latest .
@@ -24,7 +17,7 @@ docker-publish:
 	./docker-publish.sh	
 
 install:
-	go install
+	go install -ldflags ${LD_FLAGS}
 
 run:
 	go run main.go
@@ -43,4 +36,4 @@ upgrade:
 	go get github.com/perottobc/mvn-pom-mutator
 
 
-all: genver build install
+all: build install

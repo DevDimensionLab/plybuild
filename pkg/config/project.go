@@ -3,11 +3,13 @@ package config
 import (
 	"co-pilot/pkg/file"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"strings"
 )
 
-var projectFileName = "co-pilot.json"
+var projectConfigFileName = "co-pilot.json"
 
 type ProjectConfiguration struct {
 	Language        string `json:"language"`
@@ -88,20 +90,25 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 		}
 	}
 
-	if config.Language == "" {
-		kotlinFile, err := file.FindFirst(".kt", targetDir)
+	sourceTargetDir := file.Path("%s/src", targetDir)
+	if config.Language == "" && file.Exists(sourceTargetDir){
+		kotlinFile, err := file.FindFirst(".kt", sourceTargetDir)
 		if err == nil && kotlinFile != "" {
+			log.Warnf("Language not set in %s, detected kotlin source files, setting language to kotlin",
+				file.Path("%s/%s", targetDir, projectConfigFileName))
 			config.Language = "kotlin"
 			return nil
 		}
-		javaFile, err := file.FindFirst(".java", targetDir)
+		javaFile, err := file.FindFirst(".java", sourceTargetDir)
 		if err == nil && javaFile != "" {
+			log.Warnln("Language not set in %s, detected java source files, setting language to java",
+				file.Path("%s/%s", targetDir, projectConfigFileName))
 			config.Language = "java"
 			return nil
 		}
 
-		// if all fails, fallback to kotlin
-		config.Language = "kotlin"
+		return errors.New(fmt.Sprintf("%s directory detected, but language was not set in co-pilot.json",
+			file.Path("%s/src", targetDir)))
 	}
 
 	return nil

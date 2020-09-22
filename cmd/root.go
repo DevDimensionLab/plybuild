@@ -24,6 +24,8 @@ import (
 	"os"
 )
 
+var version string
+var buildDate string
 var log = logger.Context()
 var localConfigDir = ".co-pilot"
 var cloudConfigDir = "cloud-config"
@@ -59,7 +61,7 @@ func init() {
                    | |
                    |_|
 `)
-	fmt.Printf("== version: %s, built: %s ==\n", Version, BuildDate)
+	fmt.Printf("== version: %s, built: %s ==\n", version, buildDate)
 	cobra.OnInitialize(initConfig)
 
 	logrus.SetOutput(os.Stdout)

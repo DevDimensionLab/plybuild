@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+shopt -s inherit_errexit
 
 TAG=$(git describe --exact-match --tags)
 

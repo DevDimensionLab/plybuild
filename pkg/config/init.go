@@ -30,12 +30,12 @@ func NewGitCloudConfig(localConfigDir string, cloudConfigDirName string) (cfg Gi
 func InitProjectConfigurationFromFile(filePath string) (config ProjectConfiguration, err error) {
 	log.Debugf("loading projectConfig: %s", filePath)
 	err = file.ReadJson(filePath, &config)
-	err = config.Populate(strings.Replace(filePath, projectFileName, "", 1))
+	err = config.Populate(strings.Replace(filePath, projectConfigFileName, "", 1))
 	return
 }
 
 func InitProjectConfigurationFromDir(targetDir string) (config ProjectConfiguration, err error) {
-	filePath := file.Path("%s/%s", targetDir, projectFileName)
+	filePath := file.Path("%s/%s", targetDir, projectConfigFileName)
 	err = file.ReadJson(filePath, &config)
 	err = config.Populate(targetDir)
 	return
