@@ -91,7 +91,7 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 	}
 
 	sourceTargetDir := file.Path("%s/src", targetDir)
-	if config.Language == "" && file.Exists(sourceTargetDir){
+	if config.Language == "" && file.Exists(sourceTargetDir) {
 		kotlinFile, err := file.FindFirst(".kt", sourceTargetDir)
 		if err == nil && kotlinFile != "" {
 			log.Warnf("Language not set in %s, detected kotlin source files, setting language to kotlin",
@@ -101,7 +101,7 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 		}
 		javaFile, err := file.FindFirst(".java", sourceTargetDir)
 		if err == nil && javaFile != "" {
-			log.Warnln("Language not set in %s, detected java source files, setting language to java",
+			log.Warnf("Language not set in %s, detected java source files, setting language to java",
 				file.Path("%s/%s", targetDir, projectConfigFileName))
 			config.Language = "java"
 			return nil
