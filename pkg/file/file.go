@@ -313,6 +313,10 @@ func Equal(fileA string, fileB string) (bool, error) {
 	return true, nil
 }
 
-func Delete(filePath string) error {
+func DeleteFile(filePath string) error {
 	return os.Remove(filePath)
+}
+
+func DeleteDirectory(dirPath string) error {
+	return os.RemoveAll(dirPath)
 }
