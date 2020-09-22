@@ -20,6 +20,9 @@ docker-build:
 docker-run:
 	docker run co-pilot $(ARGS)
 
+docker-publish:
+	./docker-publish.sh	
+
 install:
 	go install
 
