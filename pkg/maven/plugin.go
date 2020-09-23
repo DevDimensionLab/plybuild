@@ -1,6 +1,7 @@
 package maven
 
 import (
+	"co-pilot/pkg/config"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
 )
@@ -56,9 +57,9 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 	}
 }
 
-func UpgradePlugins() func(pair PomWrapper, args ...interface{}) error {
-	return func(pair PomWrapper, args ...interface{}) error {
-		return UpgradeKotlinOnModel(pair.Model)
+func UpgradePlugins() func(project config.Project, args ...interface{}) error {
+	return func(project config.Project, args ...interface{}) error {
+		return UpgradeKotlinOnModel(project.PomModel)
 	}
 }
 

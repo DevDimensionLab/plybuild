@@ -13,7 +13,7 @@ var formatCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		ctx.FindAndPopulatePomModels()
+		ctx.FindAndPopulatePomProjects()
 	},
 }
 
@@ -22,7 +22,7 @@ var formatPomCmd = &cobra.Command{
 	Short: "Formats pom.xml and sorts dependencies",
 	Long:  `Formats pom.xml and sorts dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachPomProject("formatting", nil)
+		ctx.OnEachProject("formatting", nil)
 	},
 }
 
@@ -31,7 +31,7 @@ var formatVersionCmd = &cobra.Command{
 	Short: "Removes version tags and replaces them with property tags",
 	Long:  `Removes version tags and replaces them with property tags`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachPomProject("removes version tags", maven.ChangeVersionToPropertyTags())
+		ctx.OnEachProject("removes version tags", maven.ChangeVersionToPropertyTags())
 	},
 }
 

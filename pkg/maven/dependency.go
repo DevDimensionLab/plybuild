@@ -1,14 +1,15 @@
 package maven
 
 import (
+	"co-pilot/pkg/config"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-func UpgradeDependency(groupId string, artifactId string) func(pair PomWrapper, args ...interface{}) error {
-	return func(pair PomWrapper, args ...interface{}) error {
-		return UpgradeDependencyOnModel(pair.Model, groupId, artifactId)
+func UpgradeDependency(groupId string, artifactId string) func(project config.Project, args ...interface{}) error {
+	return func(project config.Project, args ...interface{}) error {
+		return UpgradeDependencyOnModel(project.PomModel, groupId, artifactId)
 	}
 }
 
@@ -52,9 +53,9 @@ func SecondParty(model *pom.Model, true bool) func(groupId string) bool {
 	}
 }
 
-func Upgrade3PartyDependencies() func(pair PomWrapper, args ...interface{}) error {
-	return func(pair PomWrapper, args ...interface{}) error {
-		return Upgrade3PartyDependenciesOnModel(pair.Model)
+func Upgrade3PartyDependencies() func(project config.Project, args ...interface{}) error {
+	return func(project config.Project, args ...interface{}) error {
+		return Upgrade3PartyDependenciesOnModel(project.PomModel)
 	}
 }
 
@@ -70,9 +71,9 @@ func Upgrade3PartyDependenciesOnModel(model *pom.Model) error {
 	return nil
 }
 
-func Upgrade2PartyDependencies() func(pair PomWrapper, args ...interface{}) error {
-	return func(pair PomWrapper, args ...interface{}) error {
-		return Upgrade2PartyDependenciesOnModel(pair.Model)
+func Upgrade2PartyDependencies() func(project config.Project, args ...interface{}) error {
+	return func(project config.Project, args ...interface{}) error {
+		return Upgrade2PartyDependenciesOnModel(project.PomModel)
 	}
 }
 

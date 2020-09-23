@@ -5,8 +5,6 @@ import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"fmt"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
-	"strings"
 )
 
 type Context struct {
@@ -14,24 +12,19 @@ type Context struct {
 	Overwrite       bool
 	DryRun          bool
 	TargetDirectory string
-	Poms            []PomWrapper
+	Projects        []config.Project
 	Err             error
 }
 
-func Write(pair PomWrapper, overwrite bool) error {
-	if err := SortAndWritePom(pair, overwrite); err != nil {
+func Write(project config.Project, overwrite bool) error {
+	if err := SortAndWritePom(project, overwrite); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func PomFileToTargetDirectory(pomFile string) string {
-	pomFilePathParts := strings.Split(pomFile, "/")
-	return file.Path(strings.Join(pomFilePathParts[:len(pomFilePathParts)-1], "/"))
-}
-
-func (ctx *Context) FindAndPopulatePomModels() *Context {
+func (ctx *Context) FindAndPopulatePomProjects() *Context {
 	excludes := []string{
 		"flattened-pom.xml",
 		"/target/",
@@ -43,52 +36,35 @@ func (ctx *Context) FindAndPopulatePomModels() *Context {
 			log.Fatalln(err)
 		}
 		for _, pomFile := range pomFiles {
-			model, err := pom.GetModelFrom(pomFile)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-			projectConfigFile := file.Path(strings.Replace(pomFile, "pom.xml", "co-pilot.json", 1))
-			projectConfig, err := config.InitProjectConfigurationFromFile(projectConfigFile)
+			project, err := config.InitProjectFromPomFile(pomFile)
 			if err != nil {
 				log.Warnln(err)
 			}
-			ctx.Poms = append(ctx.Poms, PomWrapper{
-				Model:         model,
-				PomFile:       pomFile,
-				ProjectConfig: projectConfig,
-			})
+			ctx.Projects = append(ctx.Projects, project)
 		}
 	} else {
-		pomFile := file.Path("%s/pom.xml", ctx.TargetDirectory)
-		model, err := pom.GetModelFrom(pomFile)
+		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
-			log.Warnln(err)
-			return ctx
+			log.Fatalln(err)
 		}
-		projectConfigFile := file.Path(strings.Replace(pomFile, "pom.xml", "co-pilot.json", 1))
-		projectConfig, err := config.InitProjectConfigurationFromFile(projectConfigFile)
-		if err != nil {
-			log.Warnln(err)
-		}
-		ctx.Poms = append(ctx.Poms, PomWrapper{
-			Model:         model,
-			PomFile:       pomFile,
-			ProjectConfig: projectConfig,
-		})
+		ctx.Projects = append(ctx.Projects, project)
 	}
 
 	return ctx
 }
 
-func (ctx Context) OnEachPomProject(description string, do func(pomWrapper PomWrapper, args ...interface{}) error) {
-	if ctx.Poms == nil || len(ctx.Poms) == 0 {
+func (ctx Context) OnEachProject(description string, do func(project config.Project, args ...interface{}) error) {
+	if ctx.Projects == nil || len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
 	}
 
-	for _, p := range ctx.Poms {
+	for _, p := range ctx.Projects {
 		log.Info(logger.White(fmt.Sprintf("%s for pom file %s", description, p.PomFile)))
+
+		if p.IsDirtyGitRepo() {
+			log.Warnf("operating on a dirty git repo")
+		}
 
 		if do != nil {
 			err := do(p)

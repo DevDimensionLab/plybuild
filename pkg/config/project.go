@@ -2,14 +2,25 @@ package config
 
 import (
 	"co-pilot/pkg/file"
+	"co-pilot/pkg/shell"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"io/ioutil"
 	"strings"
 )
 
 var projectConfigFileName = "co-pilot.json"
+
+type Project struct {
+	Path       string
+	GitInfo    GitInfo
+	PomFile    string
+	PomModel   *pom.Model
+	ConfigFile string
+	Config     ProjectConfiguration
+}
 
 type ProjectConfiguration struct {
 	Language        string `json:"language"`
@@ -34,7 +45,7 @@ type ProjectSettings struct {
 }
 
 type ProjectConfig interface {
-	Write(targetFile string) error
+	WriteTo(targetFile string) error
 	SourceMainPath() string
 	SourceTestPath() string
 	FindApplicationName(targetDir string) (err error)
@@ -42,7 +53,8 @@ type ProjectConfig interface {
 	Populate(targetDir string) error
 }
 
-func (config ProjectConfiguration) Write(targetFile string) error {
+func (config ProjectConfiguration) WriteTo(targetFile string) error {
+	log.Infof("writes project config file to %s", targetFile)
 	data, err := json.MarshalIndent(config, "", " ")
 	if err != nil {
 		return err
@@ -95,21 +107,52 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 		kotlinFile, err := file.FindFirst(".kt", sourceTargetDir)
 		if err == nil && kotlinFile != "" {
 			log.Warnf("Language not set in %s, detected kotlin source files, setting language to kotlin",
-				file.Path("%s/%s", targetDir, projectConfigFileName))
+				ProjectConfigPath(targetDir))
 			config.Language = "kotlin"
 			return nil
 		}
 		javaFile, err := file.FindFirst(".java", sourceTargetDir)
 		if err == nil && javaFile != "" {
 			log.Warnf("Language not set in %s, detected java source files, setting language to java",
-				file.Path("%s/%s", targetDir, projectConfigFileName))
+				ProjectConfigPath(targetDir))
 			config.Language = "java"
 			return nil
 		}
 
-		return errors.New(fmt.Sprintf("%s directory detected, but language was not set in co-pilot.json",
-			file.Path("%s/src", targetDir)))
+		return errors.New(fmt.Sprintf("%s directory detected, but language was not set in %s",
+			file.Path("%s/src", targetDir), projectConfigFileName))
 	}
 
 	return nil
+}
+
+func (project Project) IsMavenProject() bool {
+	return project.PomFile != "" && project.PomModel != nil
+}
+
+func (project Project) IsGitRepo() bool {
+	return project.GitInfo.IsRepo
+}
+
+func (project Project) IsDirtyGitRepo() bool {
+	return project.GitInfo.IsRepo && project.GitInfo.IsDirty
+}
+
+func ProjectConfigPath(targetDir string) string {
+	return file.Path("%s/%s", targetDir, projectConfigFileName)
+}
+
+func GetGitInfoFromPath(targetDir string) (gitInfo GitInfo, err error) {
+	isRepo, err := shell.GitIsRepo(targetDir)
+	if err != nil {
+		return
+	}
+	gitInfo.IsRepo = isRepo
+
+	dirty, err := shell.GitDirty(targetDir)
+	if err != nil {
+		return
+	}
+	gitInfo.IsDirty = dirty
+	return
 }

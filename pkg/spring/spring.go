@@ -1,6 +1,7 @@
 package spring
 
 import (
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/maven"
 	"errors"
 	"fmt"
@@ -30,9 +31,9 @@ func CleanManualVersions(model *pom.Model) error {
 	return nil
 }
 
-func UpgradeSpringBoot() func(pair maven.PomWrapper, args ...interface{}) error {
-	return func(pair maven.PomWrapper, args ...interface{}) error {
-		return UpgradeSpringBootOnModel(pair.Model)
+func UpgradeSpringBoot() func(project config.Project, args ...interface{}) error {
+	return func(project config.Project, args ...interface{}) error {
+		return UpgradeSpringBootOnModel(project.PomModel)
 	}
 }
 

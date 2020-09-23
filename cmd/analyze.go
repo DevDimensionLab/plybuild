@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"co-pilot/pkg/file"
 	"co-pilot/pkg/maven"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +22,7 @@ var analyzeDepsCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		pomFile := targetDirectory + "/pom.xml"
+		pomFile := file.Path("%s/pom.xml", targetDirectory)
 
 		if err = maven.ListUnusedAndUndeclared(pomFile); err != nil {
 			log.Warnln(err)
