@@ -49,13 +49,12 @@ release:
   # Default is `{{.Tag}}`
   name_template: "{{.ProjectName}}-v{{.Version}}"
 
-# .goreleaser.yml
+## .goreleaser.yml
 #snapcrafts:
 #  -
 #    # ID of the snapcraft config, must be unique.
 #    # Defaults to "default".
 #    id: co-pilot-cli
-#
 #
 #    # You can change the name of the package.
 #    # Default: `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}`
@@ -80,7 +79,7 @@ release:
 #    # Defaults to false.
 #    publish: true
 #
-#    summary: Co-pilot is a developer tool for automating common tasks on a spring boot project
+#    summary: Co-pilot is a developer tool for automating common tasks
 #    description: Co-pilot is a developer tool for automating common tasks on a spring boot project
 #
 #    # A guardrail to prevent you from releasing a snap to all your users before

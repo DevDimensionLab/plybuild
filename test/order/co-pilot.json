@@ -1,0 +1,14 @@
+{
+  "language": "kotlin",
+  "groupId": "com.example",
+  "artifactId": "app",
+  "package": "com.example.app",
+  "name": "Example app",
+  "team": {
+	"name": "demo-name",
+	"email": "demo-email@example.com"
+  },
+  "description": "Demo of new app, generated with spring-boot",
+  "dependencies": [""],
+  "templates" : [""]
+}
