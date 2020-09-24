@@ -9,6 +9,6 @@
 	"email": "demo-email@example.com"
   },
   "description": "Demo of new app, generated with spring-boot",
-  "dependencies": [""],
-  "templates" : [""]
+  "dependencies": [],
+  "templates" : []
 }

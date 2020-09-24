@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -28,7 +29,12 @@ func RunCli(localCfg config.LocalConfigFile, arg ...string) (string, error) {
 		return "", err
 	}
 
-	springExec, err := file.FindFirst(file.Path("bin/spring"), targetDir)
+	var cmd = "bin/spring"
+	if runtime.GOOS == "windows" {
+		cmd = "bin/spring.bat"
+	}
+
+	springExec, err := file.FindFirst(file.Path(cmd), targetDir)
 	if err != nil {
 		return "", err
 	}
@@ -140,6 +146,10 @@ func GetDependencies() (IoDependenciesResponse, error) {
 }
 
 func Validate(config config.ProjectConfiguration) error {
+	if config.Dependencies == nil || len(config.Dependencies) == 0 {
+		return nil
+	}
+
 	var invalidDependencies []string
 	validDependencies, err := GetDependencies()
 	if err != nil {
