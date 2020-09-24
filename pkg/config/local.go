@@ -11,7 +11,7 @@ import (
 var log = logger.Context()
 
 var localConfigFileName = "local-config.yaml"
-var defaultCloudConfigUrl = "git@github.com:co-pilot-cli/co-pilot-config.git"
+var defaultCloudConfigUrl = "https://github.com/co-pilot-cli/co-pilot-config.git"
 
 type LocalConfig struct {
 	impl DirConfig

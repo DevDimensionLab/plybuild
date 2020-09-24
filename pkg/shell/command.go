@@ -16,13 +16,14 @@ func Run(name string, args ...string) (string, error) {
 }
 
 func run(cmd *exec.Cmd) (string, error) {
+	log.Debugf("running: %s", cmd.String())
 	var stdOut bytes.Buffer
 	var stdErr bytes.Buffer
 	cmd.Stdout = &stdOut
 	cmd.Stderr = &stdErr
 
 	if err := cmd.Run(); err != nil {
-		return stdErr.String(), err
+		return fmt.Sprintf("STDOUT:\n%s\nSTDERR:\n%s", stdOut.String(), stdErr.String()), err
 	}
 
 	return stdOut.String(), nil

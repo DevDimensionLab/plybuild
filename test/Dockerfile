@@ -1,17 +1,5 @@
-FROM golang:alpine as build
+FROM copilotcli/co-pilot-cli:latest
 
-ENV GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+WORKDIR /order
 
-WORKDIR /build/
-COPY go.mod .
-COPY go.sum .
-COPY cmd cmd
-COPY pkg pkg
-COPY main.go .
-
-RUN go mod download
-RUN go build -o co-pilot
-
-FROM scratch
-COPY --from=build /build/co-pilot /bin/co-pilot
-ENTRYPOINT ["/bin/co-pilot"]
+CMD ["/bin/co-pilot", "spring", "init", "--config-file", "co-pilot.json"]
