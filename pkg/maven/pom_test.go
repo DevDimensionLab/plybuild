@@ -3,23 +3,15 @@ package maven
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"testing"
 )
 
 func TestSortAndWritePom_sort_enabled_by_default(t *testing.T) {
-	original := file.Path("test/sorting/pom.xml.orig")
-	pomFile := file.Path("test/sorting/pom.xml.sorted")
-	model, err := pom.GetModelFrom(pomFile)
-	if err != nil {
-		t.Errorf("%v\n", err)
-	}
+	original := file.Path("test/sorting/pom.xml")
+	pomFile := file.Path("test/sorting/sorted/pom.xml")
 
-	err = SortAndWritePom(PomWrapper{
-		PomFile:       pomFile,
-		Model:         model,
-		ProjectConfig: config.ProjectConfiguration{},
-	}, true)
+	project, _ := config.InitProjectFromPomFile(pomFile)
+	err := SortAndWritePom(project, true)
 
 	equal, err := file.Equal(original, pomFile)
 	if err != nil {
@@ -32,12 +24,8 @@ func TestSortAndWritePom_sort_enabled_by_default(t *testing.T) {
 }
 
 func TestSortAndWritePom_sort_enabled(t *testing.T) {
-	original := file.Path("test/sorting/pom.xml.orig")
-	pomFile := file.Path("test/sorting/pom.xml.sorted")
-	model, err := pom.GetModelFrom(pomFile)
-	if err != nil {
-		t.Errorf("%v\n", err)
-	}
+	original := file.Path("test/sorting/pom.xml")
+	pomFile := file.Path("test/sorting/sorted/pom.xml")
 
 	projectConfig := config.ProjectConfiguration{
 		Settings: config.ProjectSettings{
@@ -45,11 +33,9 @@ func TestSortAndWritePom_sort_enabled(t *testing.T) {
 		},
 	}
 
-	err = SortAndWritePom(PomWrapper{
-		PomFile:       pomFile,
-		Model:         model,
-		ProjectConfig: projectConfig,
-	}, true)
+	project, _ := config.InitProjectFromPomFile(pomFile)
+	project.Config = projectConfig
+	err := SortAndWritePom(project, true)
 
 	equal, err := file.Equal(original, pomFile)
 	if err != nil {
@@ -62,12 +48,8 @@ func TestSortAndWritePom_sort_enabled(t *testing.T) {
 }
 
 func TestSortAndWritePom_sort_disabled(t *testing.T) {
-	original := file.Path("test/sorting/pom.xml.orig")
-	pomFile := file.Path("test/sorting/pom.xml.unsorted")
-	model, err := pom.GetModelFrom(pomFile)
-	if err != nil {
-		t.Errorf("%v\n", err)
-	}
+	original := file.Path("test/sorting/pom.xml")
+	pomFile := file.Path("test/sorting/unsorted/pom.xml")
 
 	projectConfig := config.ProjectConfiguration{
 		Settings: config.ProjectSettings{
@@ -75,11 +57,9 @@ func TestSortAndWritePom_sort_disabled(t *testing.T) {
 		},
 	}
 
-	err = SortAndWritePom(PomWrapper{
-		PomFile:       pomFile,
-		Model:         model,
-		ProjectConfig: projectConfig,
-	}, true)
+	project, _ := config.InitProjectFromPomFile(pomFile)
+	project.Config = projectConfig
+	err := SortAndWritePom(project, true)
 
 	equal, err := file.Equal(original, pomFile)
 	if err != nil {

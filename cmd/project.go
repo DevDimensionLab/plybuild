@@ -16,7 +16,7 @@ var projectCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		ctx.FindAndPopulatePomModels()
+		ctx.FindAndPopulatePomProjects()
 	},
 }
 
@@ -25,20 +25,18 @@ var projectInitCmd = &cobra.Command{
 	Short: "Initializes a maven project with co-pilot files and formatting",
 	Long:  `Initializes a maven project with co-pilot files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for _, pom := range ctx.Poms {
-			log.Info(logger.White(fmt.Sprintf("formating pom file %s", pom.PomFile)))
+		for _, project := range ctx.Projects {
+			log.Info(logger.White(fmt.Sprintf("formating pom file %s", project.PomFile)))
 
 			if !ctx.DryRun {
-				projectConfigFile := fmt.Sprintf("%sco-pilot.json", maven.PomFileToTargetDirectory(pom.PomFile))
-				projectCfg := config.InitProjectConfigurationFromModel(pom.Model)
+				projectCfg := config.InitProjectConfigurationFromModel(project.PomModel)
 
-				log.Infof("writes co-pilot.json config file to %s", projectConfigFile)
-				if err := projectCfg.Write(projectConfigFile); err != nil {
+				if err := projectCfg.WriteTo(project.ConfigFile); err != nil {
 					log.Warnln(err)
 					continue
 				}
 
-				if err := maven.Write(pom, ctx.Overwrite); err != nil {
+				if err := maven.Write(project, ctx.Overwrite); err != nil {
 					log.Warnln(err)
 				}
 			}

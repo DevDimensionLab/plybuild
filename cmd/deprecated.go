@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/deprecated"
-	"co-pilot/pkg/maven"
 	"co-pilot/pkg/template"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var deprecatedCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		ctx.FindAndPopulatePomModels()
+		ctx.FindAndPopulatePomProjects()
 	},
 }
 
@@ -40,12 +40,12 @@ var deprecatedUpgradeCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		ctx.OnEachPomProject("removes version tags", func(pair maven.PomWrapper, args ...interface{}) error {
-			templates, err := deprecated.RemoveDeprecated(pair.Model, d)
+		ctx.OnEachProject("removes version tags", func(project config.Project, args ...interface{}) error {
+			templates, err := deprecated.RemoveDeprecated(project.PomModel, d)
 			if err != nil {
 				log.Warnln(err)
 			} else {
-				template.Apply(cloudCfg, templates, maven.PomFileToTargetDirectory(pair.PomFile))
+				template.Apply(cloudCfg, templates, project)
 			}
 			return nil
 		})

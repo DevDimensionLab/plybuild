@@ -13,6 +13,11 @@ type Git struct {
 	Url string `yaml:"url"`
 }
 
+type GitInfo struct {
+	IsRepo  bool
+	IsDirty bool
+}
+
 type SourceProvider struct {
 	Host        string `yaml:"host"`
 	AccessToken string `yaml:"access_token"`

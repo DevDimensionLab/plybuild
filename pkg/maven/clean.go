@@ -1,15 +1,16 @@
 package maven
 
 import (
+	"co-pilot/pkg/config"
 	"errors"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/viper"
 	"strings"
 )
 
-func ChangeVersionToPropertyTags() func(pair PomWrapper, args ...interface{}) error {
-	return func(pair PomWrapper, args ...interface{}) error {
-		return ChangeVersionToPropertyTagsOnModel(pair.Model)
+func ChangeVersionToPropertyTags() func(project config.Project, args ...interface{}) error {
+	return func(project config.Project, args ...interface{}) error {
+		return ChangeVersionToPropertyTagsOnModel(project.PomModel)
 	}
 }
 

@@ -1,29 +1,30 @@
 package maven
 
 import (
+	"co-pilot/pkg/config"
 	"sort"
 )
 
-func SortAndWritePom(wrapper PomWrapper, overwrite bool) error {
-	var disableDepSort = wrapper.ProjectConfig.Settings.DisableDependencySort
+func SortAndWritePom(project config.Project, overwrite bool) error {
+	var disableDepSort = project.Config.Settings.DisableDependencySort
 
-	secondPartyGroupId, err := GetSecondPartyGroupId(wrapper.Model)
+	secondPartyGroupId, err := GetSecondPartyGroupId(project.PomModel)
 	if err != nil {
 		return err
 	}
 
-	if wrapper.Model.Dependencies != nil && !disableDepSort {
+	if project.PomModel.Dependencies != nil && !disableDepSort {
 		log.Infof("sorting pom file with default dependencySort")
 		sort.Sort(DependencySort{
-			deps:               wrapper.Model.Dependencies.Dependency,
+			deps:               project.PomModel.Dependencies.Dependency,
 			secondPartyGroupId: secondPartyGroupId})
 	}
 
-	var writeToFile = wrapper.PomFile
+	var writeToFile = project.PomFile
 	if !overwrite {
 		writeToFile = writeToFile + ".new"
 	}
 
 	log.Infof("writing model to pom file: %s", writeToFile)
-	return wrapper.Model.WriteToFile(writeToFile)
+	return project.PomModel.WriteToFile(writeToFile)
 }

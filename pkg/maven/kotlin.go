@@ -1,14 +1,15 @@
 package maven
 
 import (
+	"co-pilot/pkg/config"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-func UpgradeKotlin() func(pair PomWrapper, args ...interface{}) error {
-	return func(pair PomWrapper, args ...interface{}) error {
-		return UpgradeKotlinOnModel(pair.Model)
+func UpgradeKotlin() func(project config.Project, args ...interface{}) error {
+	return func(project config.Project, args ...interface{}) error {
+		return UpgradeKotlinOnModel(project.PomModel)
 	}
 }
 

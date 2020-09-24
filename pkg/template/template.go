@@ -12,35 +12,45 @@ import (
 )
 
 var log = logger.Context()
+var defaultIgnores = []string{
+	"pom.xml",
+	"co-pilot.json",
+	"Application",
+	".co-pilot.ignore",
+	".gitignore",
+	".mvn",
+	"mvnw",
+	"mvnw.cmd",
+	".idea",
+	".iml",
+}
 
-func MergeTemplate(cloudConfig config.CloudConfig, templateName string, targetDir string) error {
+func MergeTemplate(cloudConfig config.CloudConfig, templateName string, target config.Project) error {
 	template, err := cloudConfig.Template(templateName)
 	if err != nil {
 		return err
 	}
 
-	msg := logger.Info(fmt.Sprintf("merging template %s into %s", templateName, targetDir))
-	log.Info(msg)
-	if err := merge(template, targetDir); err != nil {
+	if target.IsDirtyGitRepo() {
+		log.Warn(logger.White(fmt.Sprintf("merging template %s into a dirty git repository %s", templateName, target.Path)))
+	} else {
+		log.Info(logger.White(fmt.Sprintf("merging template %s into %s", templateName, target.Path)))
+	}
+	if err := merge(template, target); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func merge(template config.CloudTemplate, targetDir string) error {
+func merge(template config.CloudTemplate, targetProject config.Project) error {
 	sourceDir := template.Impl.Path
 	files, err := FilesToCopy(sourceDir)
 	if err != nil {
 		return err
 	}
 
-	sourceConfig, err := config.InitProjectConfigurationFromDir(sourceDir)
-	if err != nil {
-		return err
-	}
-
-	targetConfig, err := config.InitProjectConfigurationFromDir(targetDir)
+	sourceProject, err := config.InitProjectFromDirectory(sourceDir)
 	if err != nil {
 		return err
 	}
@@ -51,25 +61,28 @@ func merge(template config.CloudTemplate, targetDir string) error {
 			return err
 		}
 
-		sourceRelPath = ReplacePathForSource(sourceRelPath, sourceConfig, targetConfig)
+		sourceRelPath = ReplacePathForSource(sourceRelPath, sourceProject.Config, targetProject.Config)
 
-		targetPath := file.Path("%s/%s", targetDir, sourceRelPath)
+		targetPath := file.Path("%s/%s", targetProject.Path, sourceRelPath)
 		if err = file.CopyOrMerge(f, targetPath); err != nil {
 			return err
 		}
 
-		if err = file.SearchReplace(targetPath, sourceConfig.Package, targetConfig.Package); err != nil {
+		if err = file.SearchReplace(targetPath, sourceProject.Config.Package, targetProject.Config.Package); err != nil {
 			return err
 		}
 
 		if strings.HasSuffix(targetPath, ".render") {
-			if err := renderAndDelete(targetPath, targetConfig); err != nil {
+			if err := renderAndDelete(targetPath, targetProject.Config); err != nil {
 				return err
 			}
 		}
 	}
 
-	return maven.MergeAndWritePomFiles(sourceDir, targetDir)
+	if sourceProject.IsMavenProject() && targetProject.IsMavenProject() {
+		return maven.MergeAndWritePomFiles(sourceProject, targetProject)
+	}
+	return nil
 }
 
 func FilesToCopy(sourceDir string) (files []string, err error) {
@@ -105,16 +118,15 @@ func GetIgnores(sourceDir string) (ignores []string) {
 	}
 	ignores = append(ignores, coPilotIgnores...)
 
-	otherFilesToIgnore := []string{"pom.xml", "co-pilot.json", "Application", ".co-pilot.ignore", ".gitignore", ".mvn", "mvnw", "mvnw.cmd"}
-	ignores = append(ignores, otherFilesToIgnore...)
+	ignores = append(ignores, defaultIgnores...)
 
 	return
 }
 
-func Apply(cloudConfig config.CloudConfig, templates map[string]bool, targetDirectory string) {
+func Apply(cloudConfig config.CloudConfig, templates map[string]bool, target config.Project) {
 	for k, _ := range templates {
 		log.Infof("applying template %s", k)
-		if err := MergeTemplate(cloudConfig, k, targetDirectory); err != nil {
+		if err := MergeTemplate(cloudConfig, k, target); err != nil {
 			log.Warnf("%v", err)
 		}
 	}
@@ -129,10 +141,10 @@ func ReplacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfi
 		} else if strings.Contains(output, "src/test") {
 			output = strings.Replace(sourceRelPath, sourceConfig.SourceTestPath(), targetConfig.SourceTestPath(), 1)
 		}
-	}
 
-	if output == sourceRelPath {
-		log.Warnf("was not able to replace path for source, source and output path is the same %s", output)
+		if output == sourceRelPath {
+			log.Warnf("was not able to replace path for source file (.kt, .java), input and output path is the same %s", output)
+		}
 	}
 
 	return output

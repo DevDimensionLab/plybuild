@@ -51,3 +51,37 @@ func InitProjectConfigurationFromModel(model *pom.Model) (config ProjectConfigur
 
 	return
 }
+
+func InitProjectFromPomFile(pomFile string) (project Project, err error) {
+	targetDir := file.Path(strings.Replace(pomFile, "pom.xml", "", 1))
+	return InitProjectFromDirectory(targetDir)
+}
+
+func InitProjectFromDirectory(targetDir string) (project Project, err error) {
+	gitInfo, err := GetGitInfoFromPath(targetDir)
+	if err != nil {
+		log.Debugln(err)
+	} else {
+		project.GitInfo = gitInfo
+	}
+
+	config, err := InitProjectConfigurationFromDir(targetDir)
+	if err != nil {
+		return
+	}
+
+	pomFile := file.Path("%s/pom.xml", targetDir)
+	if file.Exists(pomFile) {
+		pomModel, err := pom.GetModelFrom(pomFile)
+		if err != nil {
+			log.Warnln(err)
+		}
+		project.PomFile = pomFile
+		project.PomModel = pomModel
+	}
+
+	project.ConfigFile = file.Path("%s/%s", targetDir, projectConfigFileName)
+	project.Path = targetDir
+	project.Config = config
+	return
+}

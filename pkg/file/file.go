@@ -245,13 +245,13 @@ func MergeKeyValFile(fromFile string, toFile string, separator string) error {
 			toParts := strings.Split(toLine, separator)
 			toKey := toParts[0]
 			if fromKey == toKey {
-				log.Infof("ignoring line due to key duplicate found in source %s: '%s' and '%s' in target:%s", fromFile, fromLine, toLine, toFile)
+				log.Debugf("ignoring line due to key duplicate found in source %s: '%s' and '%s' in target:%s", fromFile, fromLine, toLine, toFile)
 				hasLine = true
 			}
 		}
 		if !hasLine {
 			newLines = append(newLines, fromLine)
-			log.Infof("appending line: '%s', to:%s", fromLine, toFile)
+			log.Debugf("appending line: '%s', to:%s", fromLine, toFile)
 		}
 	}
 
@@ -281,7 +281,7 @@ func MergeTextFiles(fromFile string, toFile string) error {
 		}
 		if !hasLine {
 			newLines = append(newLines, fromLine)
-			log.Infof("appending line: '%s', to:%s", fromLine, toFile)
+			log.Debugf("appending line: '%s', to:%s", fromLine, toFile)
 		}
 	}
 

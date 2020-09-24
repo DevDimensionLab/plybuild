@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"co-pilot/pkg/config"
-	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/spring"
@@ -41,11 +40,11 @@ var springInitCmd = &cobra.Command{
 		if jsonConfigFile == "" {
 			log.Fatalln("--config-file flag is required")
 		}
-		projectConfig, err := config.InitProjectConfigurationFromFile(jsonConfigFile)
+		orderConfig, err := config.InitProjectConfigurationFromFile(jsonConfigFile)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		err = spring.Validate(projectConfig)
+		err = spring.Validate(orderConfig)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -56,57 +55,56 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// execute cli with config
-		msg, err := spring.RunCli(localCfg, spring.InitFrom(projectConfig, targetDir)...)
+		msg, err := spring.RunCli(localCfg, spring.InitFrom(orderConfig, targetDir)...)
 		if err != nil {
 			log.Fatalln(logger.ExternalError(err, msg))
 		}
 
 		// populate applicationName field in config
-		if err := projectConfig.FindApplicationName(targetDir); err != nil {
+		if err := orderConfig.FindApplicationName(targetDir); err != nil {
 			log.Errorln(err)
 		}
 
-		// write co-pilot.json to target directory
-		configFile := file.Path("%s/co-pilot.json", targetDir)
-		msg = logger.Info(fmt.Sprintf("writes co-pilot.json config file to %s", configFile))
-		log.Info(msg)
-		if err := projectConfig.Write(configFile); err != nil {
+		// write project config to targetDir
+		projectConfigFile := config.ProjectConfigPath(targetDir)
+		if err := orderConfig.WriteTo(projectConfigFile); err != nil {
 			log.Fatalln(err)
 		}
 
-		// merge templates
-		if projectConfig.Templates != nil {
-			for _, t := range projectConfig.Templates {
-				if err := template.MergeTemplate(cloudCfg, t, targetDir); err != nil {
+		// load the newly created project
+		project, err := config.InitProjectFromDirectory(targetDir)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// merge templates into the newly created project
+		if orderConfig.Templates != nil {
+			for _, t := range orderConfig.Templates {
+				if err := template.MergeTemplate(cloudCfg, t, project); err != nil {
 					log.Fatalln(err)
 				}
 			}
 		}
 
 		// format version
-		pomFile := file.Path("%s/pom.xml", targetDir)
-		model, err := pom.GetModelFrom(pomFile)
+		model, err := pom.GetModelFrom(project.PomFile)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		log.Info(logger.Info(fmt.Sprintf("formatting %s", pomFile)))
+		log.Info(logger.Info(fmt.Sprintf("formatting %s", project.PomFile)))
 		if err = maven.ChangeVersionToPropertyTagsOnModel(model); err != nil {
 			log.Fatalln(err)
 		}
 
 		// upgrade all
-		log.Info(logger.Info(fmt.Sprintf("upgrading all on %s", pomFile)))
+		log.Info(logger.Info(fmt.Sprintf("upgrading all on %s", project.PomFile)))
 		if err = upgradeAll(model); err != nil {
 			log.Fatalln(err)
 		}
 
 		// sorting and writing
-		if err = maven.SortAndWritePom(maven.PomWrapper{
-			PomFile:       pomFile,
-			Model:         model,
-			ProjectConfig: projectConfig,
-		}, true); err != nil {
+		if err = maven.SortAndWritePom(project, true); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -126,21 +124,16 @@ var springInheritVersion = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		pomFile := targetDirectory + "/pom.xml"
-		model, err := pom.GetModelFrom(pomFile)
+		project, err := config.InitProjectFromDirectory(targetDirectory)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		if err = spring.CleanManualVersions(model); err != nil {
+		if err = spring.CleanManualVersions(project.PomModel); err != nil {
 			log.Fatalln(err)
 		}
 
-		if err = maven.SortAndWritePom(maven.PomWrapper{
-			PomFile:       pomFile,
-			Model:         model,
-			ProjectConfig: config.ProjectConfiguration{},
-		}, overwrite); err != nil {
+		if err = maven.SortAndWritePom(project, overwrite); err != nil {
 			log.Fatalln(err)
 		}
 	},
