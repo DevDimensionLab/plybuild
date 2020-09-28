@@ -15,7 +15,7 @@ var deprecatedCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		ctx.FindAndPopulatePomProjects()
+		ctx.FindAndPopulateMavenProjects()
 	},
 }
 
@@ -35,17 +35,12 @@ var deprecatedUpgradeCmd = &cobra.Command{
 	Short: "Upgrades deprecated dependencies for a project co-pilot",
 	Long:  `Upgrades deprecated dependencies for a project co-pilot`,
 	Run: func(cmd *cobra.Command, args []string) {
-		d, err := cloudCfg.Deprecated()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
 		ctx.OnEachProject("removes version tags", func(project config.Project, args ...interface{}) error {
-			templates, err := deprecated.RemoveDeprecated(project.PomModel, d)
+			templates, err := deprecated.RemoveDeprecated(cloudCfg, project.Type.Model())
 			if err != nil {
 				log.Warnln(err)
 			} else {
-				template.Apply(cloudCfg, templates, project)
+				template.MergeTemplates(templates, project)
 			}
 			return nil
 		})

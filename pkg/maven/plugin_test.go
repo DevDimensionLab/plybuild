@@ -8,15 +8,15 @@ import (
 
 func TestDependencyAnalyzeRawOutput(t *testing.T) {
 
-	output, err := runAnalyze(file.Path("test/analyze/pom.xml"))
+	output := runAnalyze(file.Path("test/analyze/pom.xml"))
 
-	if err != nil {
-		t.Errorf("%v-> %s", err, output)
+	if output.Err != nil {
+		t.Errorf("%v-> %s", output.Err, output.String())
 	}
 
-	analyze := DependencyAnalyze(output)
+	analyze := DependencyAnalyze(output.StdOut.String())
 
-	_, err = json.MarshalIndent(analyze, "", "  ")
+	_, err := json.MarshalIndent(analyze, "", "  ")
 	if err != nil {
 		t.Errorf("%v\n", err)
 		return

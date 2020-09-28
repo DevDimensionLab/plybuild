@@ -9,7 +9,7 @@ import (
 
 func UpgradeDependency(groupId string, artifactId string) func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return UpgradeDependencyOnModel(project.PomModel, groupId, artifactId)
+		return UpgradeDependencyOnModel(project.Type.Model(), groupId, artifactId)
 	}
 }
 
@@ -36,7 +36,7 @@ func specificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dep
 }
 
 func SecondParty(model *pom.Model, true bool) func(groupId string) bool {
-	secondPartyGroupId, err := GetSecondPartyGroupId(model)
+	secondPartyGroupId, err := model.GetSecondPartyGroupId()
 	if err != nil {
 		log.Warnln(err)
 	}
@@ -55,7 +55,7 @@ func SecondParty(model *pom.Model, true bool) func(groupId string) bool {
 
 func Upgrade3PartyDependencies() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return Upgrade3PartyDependenciesOnModel(project.PomModel)
+		return Upgrade3PartyDependenciesOnModel(project.Type.Model())
 	}
 }
 
@@ -73,7 +73,7 @@ func Upgrade3PartyDependenciesOnModel(model *pom.Model) error {
 
 func Upgrade2PartyDependencies() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return Upgrade2PartyDependenciesOnModel(project.PomModel)
+		return Upgrade2PartyDependenciesOnModel(project.Type.Model())
 	}
 }
 

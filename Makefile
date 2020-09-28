@@ -37,3 +37,6 @@ upgrade:
 
 
 all: build install
+
+
+.PHONY: test

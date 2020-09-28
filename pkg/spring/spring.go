@@ -33,7 +33,7 @@ func CleanManualVersions(model *pom.Model) error {
 
 func UpgradeSpringBoot() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return UpgradeSpringBootOnModel(project.PomModel)
+		return UpgradeSpringBootOnModel(project.Type.Model())
 	}
 }
 

@@ -79,8 +79,10 @@ func InitProjectFromDirectory(targetDir string) (project Project, err error) {
 		if err != nil {
 			log.Warnln(err)
 		}
-		project.PomFile = pomFile
-		project.PomModel = pomModel
+		project.Type = MavenProject{
+			PomFile:  pomFile,
+			PomModel: pomModel,
+		}
 	}
 
 	project.ConfigFile = file.Path("%s/%s", targetDir, projectConfigFileName)

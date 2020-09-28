@@ -10,7 +10,7 @@ import (
 
 func ChangeVersionToPropertyTags() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return ChangeVersionToPropertyTagsOnModel(project.PomModel)
+		return ChangeVersionToPropertyTagsOnModel(project.Type.Model())
 	}
 }
 

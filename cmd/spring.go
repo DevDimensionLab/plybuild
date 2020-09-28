@@ -23,12 +23,7 @@ var springInitCmd = &cobra.Command{
 	Short: "Downloads and installs spring boot, and co-pilot templates, with default or provided settings",
 	Long:  `Downloads and installs spring boot, and co-pilot templates, with default or provided settings`,
 	Run: func(cmd *cobra.Command, args []string) {
-		targetDir, err := cmd.Flags().GetString("target")
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		_ = os.RemoveAll(targetDir)
+		_ = os.RemoveAll(ctx.TargetDirectory)
 
 		// sync cloud config
 		if err := cloudCfg.Refresh(localCfg); err != nil {
@@ -55,57 +50,78 @@ var springInitCmd = &cobra.Command{
 		}
 
 		// execute cli with config
-		msg, err := spring.RunCli(localCfg, spring.InitFrom(orderConfig, targetDir)...)
+		msg, err := spring.RunCli(localCfg, spring.InitFrom(orderConfig, ctx.TargetDirectory)...)
 		if err != nil {
 			log.Fatalln(logger.ExternalError(err, msg))
 		}
 
 		// populate applicationName field in config
-		if err := orderConfig.FindApplicationName(targetDir); err != nil {
+		if err := orderConfig.FindApplicationName(ctx.TargetDirectory); err != nil {
 			log.Errorln(err)
 		}
 
 		// write project config to targetDir
-		projectConfigFile := config.ProjectConfigPath(targetDir)
+		projectConfigFile := config.ProjectConfigPath(ctx.TargetDirectory)
 		if err := orderConfig.WriteTo(projectConfigFile); err != nil {
 			log.Fatalln(err)
 		}
 
 		// load the newly created project
-		project, err := config.InitProjectFromDirectory(targetDir)
+		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
 			log.Fatalln(err)
+		}
+
+		// git init project
+		err = project.GitInit()
+		if err != nil {
+			log.Fatalln(logger.ExternalError(err, msg))
 		}
 
 		// merge templates into the newly created project
 		if orderConfig.Templates != nil {
-			for _, t := range orderConfig.Templates {
-				if err := template.MergeTemplate(cloudCfg, t, project); err != nil {
+			templates, err := cloudCfg.ValidTemplatesFrom(orderConfig.Templates)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			for _, t := range templates {
+				if err := template.MergeTemplate(t, project); err != nil {
 					log.Fatalln(err)
 				}
+			}
+			// git commit
+			err = project.GitCommit("Adds templates")
+			if err != nil {
+				log.Fatalln(err)
 			}
 		}
 
 		// format version
-		model, err := pom.GetModelFrom(project.PomFile)
+		model, err := pom.GetModelFrom(project.Type.FilePath())
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		log.Info(logger.Info(fmt.Sprintf("formatting %s", project.PomFile)))
+		log.Info(logger.Info(fmt.Sprintf("formatting %s", project.Type.FilePath())))
 		if err = maven.ChangeVersionToPropertyTagsOnModel(model); err != nil {
 			log.Fatalln(err)
 		}
 
 		// upgrade all
-		log.Info(logger.Info(fmt.Sprintf("upgrading all on %s", project.PomFile)))
+		log.Info(logger.Info(fmt.Sprintf("upgrading all on %s", project.Type.FilePath())))
 		if err = upgradeAll(model); err != nil {
 			log.Fatalln(err)
 		}
 
 		// sorting and writing
-		if err = maven.SortAndWritePom(project, true); err != nil {
+		if err = project.SortAndWritePom(true); err != nil {
 			log.Fatalln(err)
+		}
+
+		// git commit
+		err = project.GitCommit("Clean up and upgrades")
+		if err != nil {
+			log.Fatalln(logger.ExternalError(err, msg))
 		}
 	},
 }
@@ -115,25 +131,16 @@ var springInheritVersion = &cobra.Command{
 	Short: "Removes manual versions from spring dependencies",
 	Long:  `Removes manual versions from spring dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		targetDirectory, err := cmd.Flags().GetString("target")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		overwrite, err := cmd.Flags().GetBool("overwrite")
+		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		project, err := config.InitProjectFromDirectory(targetDirectory)
-		if err != nil {
+		if err = spring.CleanManualVersions(project.Type.Model()); err != nil {
 			log.Fatalln(err)
 		}
 
-		if err = spring.CleanManualVersions(project.PomModel); err != nil {
-			log.Fatalln(err)
-		}
-
-		if err = maven.SortAndWritePom(project, overwrite); err != nil {
+		if err = project.SortAndWritePom(ctx.Overwrite); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -211,7 +218,9 @@ func init() {
 	springCmd.AddCommand(springManagedCmd)
 	springCmd.AddCommand(springInheritVersion)
 	springCmd.AddCommand(springDownloadCli)
-	springCmd.PersistentFlags().String("target", "webservice", "Optional target directory")
-	springCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
+
+	springCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	springCmd.PersistentFlags().BoolVar(&ctx.Overwrite, "overwrite", true, "Overwrite pom.xml file")
+	springCmd.PersistentFlags().BoolVar(&ctx.Overwrite, "no-git", false, "Disables git for every step")
 	springInitCmd.Flags().String("config-file", "", "Optional config file")
 }

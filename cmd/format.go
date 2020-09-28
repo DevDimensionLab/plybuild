@@ -13,7 +13,7 @@ var formatCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		ctx.FindAndPopulatePomProjects()
+		ctx.FindAndPopulateMavenProjects()
 	},
 }
 

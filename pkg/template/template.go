@@ -25,32 +25,31 @@ var defaultIgnores = []string{
 	".iml",
 }
 
-func MergeTemplate(cloudConfig config.CloudConfig, templateName string, target config.Project) error {
-	template, err := cloudConfig.Template(templateName)
-	if err != nil {
-		return err
+func MergeTemplates(templates []config.CloudTemplate, target config.Project) {
+	for _, template := range templates {
+		log.Infof("applying template %s", template.Name)
+		if err := MergeTemplate(template, target); err != nil {
+			log.Warnf("%v", err)
+		}
 	}
+}
 
+func MergeTemplate(cloudTemplate config.CloudTemplate, target config.Project) error {
 	if target.IsDirtyGitRepo() {
-		log.Warn(logger.White(fmt.Sprintf("merging template %s into a dirty git repository %s", templateName, target.Path)))
+		log.Warn(logger.White(fmt.Sprintf("merging template %s into a dirty git repository %s", cloudTemplate.Name, target.Path)))
 	} else {
-		log.Info(logger.White(fmt.Sprintf("merging template %s into %s", templateName, target.Path)))
+		log.Info(logger.White(fmt.Sprintf("merging template %s into %s", cloudTemplate.Name, target.Path)))
 	}
-	if err := merge(template, target); err != nil {
+	if err := merge(cloudTemplate.Project, target); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func merge(template config.CloudTemplate, targetProject config.Project) error {
-	sourceDir := template.Impl.Path
+func merge(sourceProject config.Project, targetProject config.Project) error {
+	sourceDir := sourceProject.Path
 	files, err := FilesToCopy(sourceDir)
-	if err != nil {
-		return err
-	}
-
-	sourceProject, err := config.InitProjectFromDirectory(sourceDir)
 	if err != nil {
 		return err
 	}
@@ -121,15 +120,6 @@ func GetIgnores(sourceDir string) (ignores []string) {
 	ignores = append(ignores, defaultIgnores...)
 
 	return
-}
-
-func Apply(cloudConfig config.CloudConfig, templates map[string]bool, target config.Project) {
-	for k, _ := range templates {
-		log.Infof("applying template %s", k)
-		if err := MergeTemplate(cloudConfig, k, target); err != nil {
-			log.Warnf("%v", err)
-		}
-	}
 }
 
 func ReplacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfiguration, targetConfig config.ProjectConfiguration) string {

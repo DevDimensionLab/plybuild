@@ -3,11 +3,13 @@ package config
 import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/shell"
+	"co-pilot/pkg/sorting"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"io/ioutil"
+	"sort"
 	"strings"
 )
 
@@ -16,21 +18,46 @@ var projectConfigFileName = "co-pilot.json"
 type Project struct {
 	Path       string
 	GitInfo    GitInfo
-	PomFile    string
-	PomModel   *pom.Model
 	ConfigFile string
 	Config     ProjectConfiguration
+	Type       ProjectType
+}
+
+type ValidProjectType string
+
+const (
+	Maven ValidProjectType = "Maven"
+)
+
+// only maven for now...
+type ProjectType interface {
+	Type() ValidProjectType
+	FilePath() string
+	Model() *pom.Model
+}
+
+type MavenProject struct {
+	PomFile  string
+	PomModel *pom.Model
+}
+
+func (mvnProject MavenProject) FilePath() string {
+	return mvnProject.PomFile
+}
+
+func (mvnProject MavenProject) Model() *pom.Model {
+	return mvnProject.PomModel
+}
+
+func (mvnProject MavenProject) Type() ValidProjectType {
+	return Maven
 }
 
 type ProjectConfiguration struct {
-	Language        string `json:"language"`
-	GroupId         string `json:"groupId"`
-	ArtifactId      string `json:"artifactId"`
-	Package         string `json:"package"`
-	Name            string `json:"name"`
-	Description     string `json:"description"`
-	ApplicationName string `json:"applicationName"`
-	Team            struct {
+	MavenProjectConfiguration
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Team        struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`
 	} `json:"team"`
@@ -38,6 +65,14 @@ type ProjectConfiguration struct {
 	Templates    []string          `json:"templates"`
 	Settings     ProjectSettings   `json:"settings"`
 	Render       map[string]string `json:"render"`
+}
+
+type MavenProjectConfiguration struct {
+	Language        string `json:"language"`
+	GroupId         string `json:"groupId"`
+	ArtifactId      string `json:"artifactId"`
+	Package         string `json:"package"`
+	ApplicationName string `json:"applicationName"`
 }
 
 type ProjectSettings struct {
@@ -127,7 +162,7 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 }
 
 func (project Project) IsMavenProject() bool {
-	return project.PomFile != "" && project.PomModel != nil
+	return project.Type != nil && project.Type.Type() == Maven
 }
 
 func (project Project) IsGitRepo() bool {
@@ -136,6 +171,33 @@ func (project Project) IsGitRepo() bool {
 
 func (project Project) IsDirtyGitRepo() bool {
 	return project.GitInfo.IsRepo && project.GitInfo.IsDirty
+}
+
+func (project Project) GitInit() error {
+	if project.GitInfo.DisableCommit {
+		return nil
+	}
+	if !project.GitInfo.IsRepo {
+		init := shell.GitInit(project.Path)
+		if init.Err != nil {
+			return init.FormatError()
+		}
+	}
+
+	return project.GitCommit("Initial commit")
+}
+
+func (project Project) GitCommit(message string) error {
+	if project.GitInfo.DisableCommit {
+		return nil
+	}
+	cmd := shell.GitAddAndCommit(project.Path, message)
+
+	if cmd.Err != nil {
+		return cmd.FormatError()
+	}
+
+	return nil
 }
 
 func ProjectConfigPath(targetDir string) string {
@@ -155,4 +217,28 @@ func GetGitInfoFromPath(targetDir string) (gitInfo GitInfo, err error) {
 	}
 	gitInfo.IsDirty = dirty
 	return
+}
+
+func (project Project) SortAndWritePom(overwrite bool) error {
+	var disableDepSort = project.Config.Settings.DisableDependencySort
+
+	if project.Type.Model().Dependencies != nil && !disableDepSort {
+		sortKey, err := project.Type.Model().GetSecondPartyGroupId()
+		if err != nil {
+			log.Warn(err)
+		} else {
+			log.Infof("sorting pom file with default dependencySort")
+			sort.Sort(sorting.DependencySort{
+				Deps:    project.Type.Model().Dependencies.Dependency,
+				SortKey: sortKey})
+		}
+	}
+
+	var writeToFile = project.Type.FilePath()
+	if !overwrite {
+		writeToFile = writeToFile + ".new"
+	}
+
+	log.Infof("writing model to pom file: %s", writeToFile)
+	return project.Type.Model().WriteToFile(writeToFile)
 }

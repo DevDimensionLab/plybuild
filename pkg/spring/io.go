@@ -39,7 +39,12 @@ func RunCli(localCfg config.LocalConfigFile, arg ...string) (string, error) {
 		return "", err
 	}
 
-	return shell.Run(springExec, arg...)
+	run := shell.Run(springExec, arg...)
+	if run.Err != nil {
+		return run.String(), run.Err
+	}
+
+	return run.StdOut.String(), nil
 }
 
 func CheckCli(localCfg config.LocalConfigFile) error {
