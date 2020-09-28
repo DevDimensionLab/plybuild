@@ -8,11 +8,14 @@ import (
 
 var log = logger.Context()
 
-func RemoveDeprecated(model *pom.Model, deprecated config.CloudDeprecated) (templates map[string]bool, err error) {
-	templates = make(map[string]bool)
-
+func RemoveDeprecated(cloudConfig config.CloudConfig, model *pom.Model) (templates []config.CloudTemplate, err error) {
 	if model.Dependencies == nil {
-		return templates, err
+		return
+	}
+
+	deprecated, err := cloudConfig.Deprecated()
+	if err != nil {
+		return
 	}
 
 	for _, modDep := range model.Dependencies.Dependency {
@@ -23,13 +26,19 @@ func RemoveDeprecated(model *pom.Model, deprecated config.CloudDeprecated) (temp
 					return templates, err
 				}
 				if depRep.ReplacementTemplates != nil {
-					for _, t := range depRep.ReplacementTemplates {
-						templates[t] = true
+					for _, replacementTemplate := range depRep.ReplacementTemplates {
+						template, err := cloudConfig.Template(replacementTemplate)
+						if err != nil {
+							log.Warnln(err)
+							continue
+						}
+						// TODO fix that it might add duplicates
+						templates = append(templates, template)
 					}
 				}
 			}
 		}
 	}
 
-	return templates, err
+	return
 }

@@ -20,7 +20,7 @@ var upgradeCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		ctx.FindAndPopulatePomProjects()
+		ctx.FindAndPopulateMavenProjects()
 	},
 }
 
@@ -89,7 +89,7 @@ var upgradeAllCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		ctx.OnEachProject("upgrading everything", func(project config.Project, args ...interface{}) error {
-			return upgradeAll(project.PomModel)
+			return upgradeAll(project.Type.Model())
 		})
 	},
 }

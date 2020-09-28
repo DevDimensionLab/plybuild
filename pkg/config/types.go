@@ -14,8 +14,9 @@ type Git struct {
 }
 
 type GitInfo struct {
-	IsRepo  bool
-	IsDirty bool
+	IsRepo        bool
+	IsDirty       bool
+	DisableCommit bool
 }
 
 type SourceProvider struct {
@@ -73,6 +74,6 @@ type DirConfig struct {
 }
 
 type CloudTemplate struct {
-	Name string
-	Impl DirConfig
+	Name    string
+	Project Project
 }

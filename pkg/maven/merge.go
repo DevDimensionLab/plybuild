@@ -158,10 +158,10 @@ func mergeBuildPluginExecutions(from *pom.Plugin, to *pom.Plugin) {
 	return
 }
 func MergeAndWritePomFiles(source config.Project, target config.Project) error {
-	log.Infof(fmt.Sprintf("merging %s into %s", source.PomFile, target.PomFile))
-	if err := MergePoms(source.PomModel, target.PomModel); err != nil {
+	log.Infof(fmt.Sprintf("merging %s into %s", source.Type.FilePath(), target.Type.FilePath()))
+	if err := MergePoms(source.Type.Model(), target.Type.Model()); err != nil {
 		return err
 	}
 
-	return SortAndWritePom(target, true)
+	return target.SortAndWritePom(true)
 }

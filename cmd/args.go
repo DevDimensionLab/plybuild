@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"co-pilot/pkg/maven"
+	"co-pilot/pkg/config"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var ctx maven.Context
+var ctx config.Context
 
 func EnableDebug(cmd *cobra.Command) error {
 	debug, err := cmd.Flags().GetBool("debug")

@@ -1,7 +1,6 @@
-package maven
+package config
 
 import (
-	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"fmt"
@@ -12,19 +11,12 @@ type Context struct {
 	Overwrite       bool
 	DryRun          bool
 	TargetDirectory string
-	Projects        []config.Project
+	DisableGit      bool
+	Projects        []Project
 	Err             error
 }
 
-func Write(project config.Project, overwrite bool) error {
-	if err := SortAndWritePom(project, overwrite); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (ctx *Context) FindAndPopulatePomProjects() *Context {
+func (ctx *Context) FindAndPopulateMavenProjects() *Context {
 	excludes := []string{
 		"flattened-pom.xml",
 		"/target/",
@@ -36,14 +28,14 @@ func (ctx *Context) FindAndPopulatePomProjects() *Context {
 			log.Fatalln(err)
 		}
 		for _, pomFile := range pomFiles {
-			project, err := config.InitProjectFromPomFile(pomFile)
+			project, err := InitProjectFromPomFile(pomFile)
 			if err != nil {
 				log.Warnln(err)
 			}
 			ctx.Projects = append(ctx.Projects, project)
 		}
 	} else {
-		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
+		project, err := InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -53,14 +45,14 @@ func (ctx *Context) FindAndPopulatePomProjects() *Context {
 	return ctx
 }
 
-func (ctx Context) OnEachProject(description string, do func(project config.Project, args ...interface{}) error) {
+func (ctx Context) OnEachProject(description string, do func(project Project, args ...interface{}) error) {
 	if ctx.Projects == nil || len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
 	}
 
 	for _, p := range ctx.Projects {
-		log.Info(logger.White(fmt.Sprintf("%s for pom file %s", description, p.PomFile)))
+		log.Info(logger.White(fmt.Sprintf("%s for file %s", description, p.Type.FilePath())))
 
 		if p.IsDirtyGitRepo() {
 			log.Warnf("operating on a dirty git repo")
@@ -75,7 +67,7 @@ func (ctx Context) OnEachProject(description string, do func(project config.Proj
 		}
 
 		if !ctx.DryRun {
-			if err := Write(p, ctx.Overwrite); err != nil {
+			if err := p.SortAndWritePom(ctx.Overwrite); err != nil {
 				log.Warnln(err)
 			}
 		}

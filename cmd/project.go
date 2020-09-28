@@ -3,7 +3,6 @@ package cmd
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/logger"
-	"co-pilot/pkg/maven"
 	"fmt"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +15,7 @@ var projectCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		ctx.FindAndPopulatePomProjects()
+		ctx.FindAndPopulateMavenProjects()
 	},
 }
 
@@ -26,17 +25,17 @@ var projectInitCmd = &cobra.Command{
 	Long:  `Initializes a maven project with co-pilot files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, project := range ctx.Projects {
-			log.Info(logger.White(fmt.Sprintf("formating pom file %s", project.PomFile)))
+			log.Info(logger.White(fmt.Sprintf("formating pom file %s", project.Type.FilePath())))
 
 			if !ctx.DryRun {
-				projectCfg := config.InitProjectConfigurationFromModel(project.PomModel)
+				projectCfg := config.InitProjectConfigurationFromModel(project.Type.Model())
 
 				if err := projectCfg.WriteTo(project.ConfigFile); err != nil {
 					log.Warnln(err)
 					continue
 				}
 
-				if err := maven.Write(project, ctx.Overwrite); err != nil {
+				if err := project.SortAndWritePom(ctx.Overwrite); err != nil {
 					log.Warnln(err)
 				}
 			}

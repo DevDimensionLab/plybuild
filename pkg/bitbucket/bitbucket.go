@@ -4,8 +4,6 @@ import (
 	"co-pilot/pkg/http"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/shell"
-	"errors"
-	"fmt"
 	"os"
 	"strings"
 )
@@ -55,9 +53,9 @@ func clone(host string, workspace string, repository string) error {
 	toDir := workspace + repository
 
 	log.Debugln("clone [" + gitUrl + "] -> [" + toDir + "]")
-	out, err := shell.GitClone(gitUrl, toDir)
-	if err != nil {
-		return errors.New(fmt.Sprintf("bitbucket clone failed %s, %v", out, err))
+	clone := shell.GitClone(gitUrl, toDir)
+	if clone.Err != nil {
+		return clone.FormatError()
 	}
 
 	return nil
@@ -67,9 +65,9 @@ func pull(workspace string, repository string) error {
 	repoDir := workspace + "/" + repository
 
 	log.Debugln(" pull [" + repoDir + "]")
-	out, err := shell.GitPull(repoDir)
-	if err != nil {
-		return errors.New(fmt.Sprintf("bitbucket pull failed %s, %v", out, err))
+	pull := shell.GitPull(repoDir)
+	if pull.Err != nil {
+		return pull.FormatError()
 	}
 
 	return nil

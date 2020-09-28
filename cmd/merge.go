@@ -49,11 +49,11 @@ var mergePomCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = maven.MergePoms(importModel, targetProject.PomModel); err != nil {
+		if err = maven.MergePoms(importModel, targetProject.Type.Model()); err != nil {
 			log.Fatalln(err)
 		}
 
-		if err = maven.SortAndWritePom(targetProject, overwrite); err != nil {
+		if err = targetProject.SortAndWritePom(overwrite); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -105,12 +105,17 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalln("Missing template --name")
 		}
 
+		cloudTemplate, err := cloudCfg.Template(templateName)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
 		project, err := config.InitProjectFromDirectory(targetDirectory)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		if err := template.MergeTemplate(cloudCfg, templateName, project); err != nil {
+		if err := template.MergeTemplate(cloudTemplate, project); err != nil {
 			log.Fatalln(err)
 		}
 	},

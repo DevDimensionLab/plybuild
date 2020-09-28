@@ -59,7 +59,7 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 
 func UpgradePlugins() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return UpgradeKotlinOnModel(project.PomModel)
+		return UpgradeKotlinOnModel(project.Type.Model())
 	}
 }
 
