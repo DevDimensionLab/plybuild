@@ -2,6 +2,7 @@ package config
 
 import (
 	"co-pilot/pkg/file"
+	"errors"
 	"github.com/mitchellh/go-homedir"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
@@ -44,14 +45,22 @@ func InitProjectConfigurationFromDir(targetDir string) (config ProjectConfigurat
 	return
 }
 
-func InitProjectConfigurationFromModel(model *pom.Model) (config ProjectConfiguration) {
-	config.Language = "kotlin"
-	config.GroupId = model.GetGroupId()
-	config.ArtifactId = model.ArtifactId
-	config.Package = model.GetGroupId()
-	config.Name = model.Name
-	config.Description = model.Description
+func (project Project) InitProjectConfiguration() (err error) {
+	if project.Type == nil || project.Type.Model() == nil {
+		return errors.New("project type and model is nil")
+	}
 
+	if !project.Config.Empty() {
+		return
+	}
+
+	model := project.Type.Model()
+	project.Config.GroupId = model.GetGroupId()
+	project.Config.ArtifactId = model.ArtifactId
+	project.Config.Package = model.GetGroupId()
+	project.Config.Name = model.Name
+	project.Config.Description = model.Description
+	err = project.Config.Populate(project.Path)
 	return
 }
 

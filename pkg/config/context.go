@@ -52,6 +52,11 @@ func (ctx Context) OnEachProject(description string, do func(project Project, ar
 	}
 
 	for _, p := range ctx.Projects {
+		if p.Type == nil {
+			log.Warnf("no project type defined for path: %s", p.Path)
+			continue
+		}
+
 		log.Info(logger.White(fmt.Sprintf("%s for file %s", description, p.Type.FilePath())))
 
 		if p.IsDirtyGitRepo() {

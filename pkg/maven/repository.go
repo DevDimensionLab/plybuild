@@ -50,14 +50,14 @@ func ListRepositories() error {
 	}
 
 	for _, profileRepo := range repos.Profile {
-		log.Infof("found profile repo: %s", profileRepo)
+		log.Infof("found maven profile repository: %s", profileRepo)
 	}
 
 	for _, mirrorRepo := range repos.Mirror {
-		log.Infof("found mirror repo: %s", mirrorRepo)
+		log.Infof("found maven mirror repository: %s", mirrorRepo)
 	}
 
-	log.Infof("fallback repo: %s", repos.Fallback)
+	log.Infof("maven repository: %s", repos.Fallback)
 
 	return nil
 }

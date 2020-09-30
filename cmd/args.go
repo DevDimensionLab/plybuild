@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var ctx config.Context
@@ -18,6 +19,13 @@ func EnableDebug(cmd *cobra.Command) error {
 		fmt.Println("== debug mode enabled ==")
 		logrus.SetLevel(logrus.DebugLevel)
 	}
+	return nil
+}
 
+func OkHelp(cmd *cobra.Command, depend func() bool) error {
+	if !cmd.Flags().HasFlags() || !depend() {
+		_ = cmd.Help()
+		os.Exit(0)
+	}
 	return nil
 }
