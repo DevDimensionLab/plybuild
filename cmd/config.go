@@ -4,53 +4,48 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type ConfigOpts struct {
+	Sync  bool
+	Reset bool
+	Show  bool
+}
+
+func (configOpts ConfigOpts) Any() bool {
+	return configOpts.Sync || configOpts.Reset
+}
+
+var configOpts ConfigOpts
+
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "ProjectConfig settings for co-pilot",
-	Long:  `ProjectConfig settings for co-pilot`,
-}
-
-var configShowCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Shows local-config for co-pilot",
-	Long:  `Shows local-config for co-pilot`,
+	Short: "Config settings for co-pilot",
+	Long:  `Config settings for co-pilot`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := localCfg.Print()
-		if err != nil {
-			log.Fatalln(err)
-		}
-	},
-}
-
-var configSyncCmd = &cobra.Command{
-	Use:   "sync",
-	Short: "Synchronizes cloud config for co-pilot",
-	Long:  `Synchronizes cloud config for co-pilot`,
-	Run: func(cmd *cobra.Command, args []string) {
-		err := cloudCfg.Refresh(localCfg)
-		if err != nil {
-			log.Fatalln(err)
-		}
-	},
-}
-
-var configResetCmd = &cobra.Command{
-	Use:   "reset",
-	Short: "Resets local config for co-pilot",
-	Long:  `Resets local config for co-pilot with empty values`,
-	Run: func(cmd *cobra.Command, args []string) {
-		err := localCfg.TouchFile()
-		if err != nil {
-			log.Fatalln(err)
+		if !configOpts.Any() || configOpts.Show {
+			if err := localCfg.Print(); err != nil {
+				log.Fatalln(err)
+			}
 		}
 
-		log.Infoln("new config file is generated")
+		if configOpts.Sync {
+			if err := cloudCfg.Refresh(localCfg); err != nil {
+				log.Fatalln(err)
+			}
+		}
+
+		if configOpts.Reset {
+			if err := localCfg.TouchFile(); err != nil {
+				log.Fatalln(err)
+			} else {
+				log.Infoln("new config file is generated")
+			}
+		}
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(configCmd)
-	configCmd.AddCommand(configShowCmd)
-	configCmd.AddCommand(configSyncCmd)
-	configCmd.AddCommand(configResetCmd)
+	configCmd.Flags().BoolVar(&configOpts.Sync, "cloud-sync", false, "Sync with cloud config repo")
+	configCmd.Flags().BoolVar(&configOpts.Show, "show", false, "Sync local config")
+	configCmd.Flags().BoolVar(&configOpts.Reset, "reset", false, "Reset local config")
 }

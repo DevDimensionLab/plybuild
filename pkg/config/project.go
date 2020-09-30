@@ -121,6 +121,14 @@ func (config *ProjectConfiguration) FindApplicationName(targetDir string) (err e
 	return
 }
 
+func (config ProjectConfiguration) Empty() bool {
+	return config.Name == "" ||
+		config.Language == "" ||
+		config.Package == "" ||
+		config.GroupId == "" ||
+		config.ArtifactId == ""
+}
+
 func (config *ProjectConfiguration) GetLanguage() string {
 	if config.Language == "" || (config.Language != "kotlin" && config.Language != "java") {
 		log.Warnf("language not set in config for package: %s, assuming kotlin...", config.Package)

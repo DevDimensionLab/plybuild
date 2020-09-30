@@ -1,12 +1,9 @@
-package deprecated
+package maven
 
 import (
 	"co-pilot/pkg/config"
-	"co-pilot/pkg/logger"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
-
-var log = logger.Context()
 
 func RemoveDeprecated(cloudConfig config.CloudConfig, model *pom.Model) (templates []config.CloudTemplate, err error) {
 	if model.Dependencies == nil {

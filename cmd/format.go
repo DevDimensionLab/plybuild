@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"co-pilot/pkg/config"
 	"co-pilot/pkg/maven"
+	"co-pilot/pkg/spring"
 	"github.com/spf13/cobra"
 )
 
@@ -35,10 +37,31 @@ var formatVersionCmd = &cobra.Command{
 	},
 }
 
+var formatInheritVersion = &cobra.Command{
+	Use:   "inherit",
+	Short: "Removes manual versions from spring dependencies",
+	Long:  `Removes manual versions from spring dependencies`,
+	Run: func(cmd *cobra.Command, args []string) {
+		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = spring.CleanManualVersions(project.Type.Model()); err != nil {
+			log.Fatalln(err)
+		}
+
+		if err = project.SortAndWritePom(ctx.Overwrite); err != nil {
+			log.Fatalln(err)
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(formatCmd)
 	formatCmd.AddCommand(formatPomCmd)
 	formatCmd.AddCommand(formatVersionCmd)
+	formatCmd.AddCommand(formatInheritVersion)
 
 	formatCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	formatCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
