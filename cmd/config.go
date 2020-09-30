@@ -45,7 +45,7 @@ var configCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(configCmd)
-	configCmd.Flags().BoolVar(&configOpts.Sync, "cloud-sync", false, "Sync with cloud config repo")
-	configCmd.Flags().BoolVar(&configOpts.Show, "show", false, "Sync local config")
-	configCmd.Flags().BoolVar(&configOpts.Reset, "reset", false, "Reset local config")
+	configCmd.Flags().BoolVar(&configOpts.Sync, "cloud-sync", false, "sync with cloud config repo")
+	configCmd.Flags().BoolVar(&configOpts.Show, "show", false, "show local config")
+	configCmd.Flags().BoolVar(&configOpts.Reset, "reset", false, "reset local config")
 }

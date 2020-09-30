@@ -163,5 +163,5 @@ func MergeAndWritePomFiles(source config.Project, target config.Project) error {
 		return err
 	}
 
-	return target.SortAndWritePom(true)
+	return target.SortAndWritePom()
 }

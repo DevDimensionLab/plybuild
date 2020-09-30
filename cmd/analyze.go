@@ -30,6 +30,7 @@ var analyzeCmd = &cobra.Command{
 		ctx.FindAndPopulateMavenProjects()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx.DryRun = true
 		ctx.OnEachProject("Undeclared and unused dependencies", func(project config.Project, args ...interface{}) error {
 			return maven.ListUnusedAndUndeclared(project.Type.FilePath())
 		})

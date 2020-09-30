@@ -21,15 +21,6 @@ var mergePomCmd = &cobra.Command{
 	Short: "Merges a pom-file into a project",
 	Long:  `Merges a pom-file into a project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		targetDirectory, err := cmd.Flags().GetString("target")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		overwrite, err := cmd.Flags().GetBool("overwrite")
-		if err != nil {
-			log.Fatalln(err)
-		}
-
 		fromPomFile, err := cmd.Flags().GetString("from")
 		if err != nil {
 			log.Fatalln(err)
@@ -44,7 +35,7 @@ var mergePomCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		targetProject, err := config.InitProjectFromDirectory(targetDirectory)
+		targetProject, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -53,7 +44,7 @@ var mergePomCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = targetProject.SortAndWritePom(overwrite); err != nil {
+		if err = targetProject.SortAndWritePom(); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -93,10 +84,6 @@ var mergeTemplateCmd = &cobra.Command{
 	Short: "Merges a template from co-pilot-config",
 	Long:  `Merges a template from co-pilot-config`,
 	Run: func(cmd *cobra.Command, args []string) {
-		targetDirectory, err := cmd.Flags().GetString("target")
-		if err != nil {
-			log.Fatalln(err)
-		}
 		templateName, err := cmd.Flags().GetString("name")
 		if err != nil {
 			log.Fatalln(err)
@@ -110,7 +97,7 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		project, err := config.InitProjectFromDirectory(targetDirectory)
+		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -126,10 +113,9 @@ func init() {
 	mergeCmd.AddCommand(mergePomCmd)
 	mergeCmd.AddCommand(mergeTextCmd)
 	mergeCmd.AddCommand(mergeTemplateCmd)
-	mergeCmd.PersistentFlags().Bool("overwrite", true, "Overwrite pom.xml file")
 	mergeCmd.PersistentFlags().String("from", "", "file to merge")
-	mergePomCmd.PersistentFlags().String("target", ".", "Optional target directory")
+	mergePomCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	mergeTextCmd.PersistentFlags().String("to", "", "target file to merge to")
 	mergeTemplateCmd.Flags().String("name", "", "template to merge")
-	mergeTemplateCmd.Flags().String("target", ".", "Optional target directory")
+	mergeTemplateCmd.Flags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 }
