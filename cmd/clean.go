@@ -42,4 +42,8 @@ func init() {
 	RootCmd.AddCommand(cleanCmd)
 
 	cleanCmd.Flags().BoolVar(&cleanOpts.Ide, "ide", false, "removes .idea folders and *.iml files")
+
+	cleanCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
+	cleanCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	cleanCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 }

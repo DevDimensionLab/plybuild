@@ -51,7 +51,7 @@ var formatInheritVersion = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err = project.SortAndWritePom(ctx.Overwrite); err != nil {
+		if err = project.SortAndWritePom(); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -65,6 +65,5 @@ func init() {
 
 	formatCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	formatCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
-	formatCmd.PersistentFlags().BoolVar(&ctx.Overwrite, "overwrite", true, "Overwrite pom.xml file")
 	formatCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 }

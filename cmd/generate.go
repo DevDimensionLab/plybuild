@@ -105,7 +105,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		// sorting and writing
-		if err = project.SortAndWritePom(true); err != nil {
+		if err = project.SortAndWritePom(); err != nil {
 			log.Fatalln(err)
 		}
 

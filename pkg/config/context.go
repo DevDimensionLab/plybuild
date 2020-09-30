@@ -8,7 +8,6 @@ import (
 
 type Context struct {
 	Recursive       bool
-	Overwrite       bool
 	DryRun          bool
 	TargetDirectory string
 	DisableGit      bool
@@ -72,7 +71,7 @@ func (ctx Context) OnEachProject(description string, do func(project Project, ar
 		}
 
 		if !ctx.DryRun {
-			if err := p.SortAndWritePom(ctx.Overwrite); err != nil {
+			if err := p.SortAndWritePom(); err != nil {
 				log.Warnln(err)
 			}
 		}

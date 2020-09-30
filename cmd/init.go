@@ -36,7 +36,7 @@ var initCmd = &cobra.Command{
 					continue
 				}
 
-				if err := project.SortAndWritePom(ctx.Overwrite); err != nil {
+				if err := project.SortAndWritePom(); err != nil {
 					log.Warnln(err)
 				}
 			}
@@ -49,7 +49,6 @@ func init() {
 
 	initCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	initCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
-	initCmd.PersistentFlags().BoolVar(&ctx.Overwrite, "overwrite", true, "Overwrite pom.xml file")
 	initCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 
 	initCmd.Flags().String("config-file", "", "Optional config file")

@@ -227,7 +227,7 @@ func GetGitInfoFromPath(targetDir string) (gitInfo GitInfo, err error) {
 	return
 }
 
-func (project Project) SortAndWritePom(overwrite bool) error {
+func (project Project) SortAndWritePom() error {
 	var disableDepSort = project.Config.Settings.DisableDependencySort
 
 	if project.Type.Model().Dependencies != nil && !disableDepSort {
@@ -243,10 +243,6 @@ func (project Project) SortAndWritePom(overwrite bool) error {
 	}
 
 	var writeToFile = project.Type.FilePath()
-	if !overwrite {
-		writeToFile = writeToFile + ".new"
-	}
-
 	log.Infof("writing model to pom file: %s", writeToFile)
 	return project.Type.Model().WriteToFile(writeToFile)
 }
