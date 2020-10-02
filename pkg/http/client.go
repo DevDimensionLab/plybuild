@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -101,6 +102,26 @@ func Wget(url, filepath string) error {
 
 	// Create the file
 	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
+
+func Wpost(downloadUrl, filePath string, formData url.Values) error {
+	log.Debugf("downloading %s to %s with %s", downloadUrl, filePath, formData)
+	resp, err := http.PostForm(downloadUrl, formData)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Create the file
+	out, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}

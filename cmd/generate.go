@@ -40,15 +40,10 @@ var generateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		// download cli
-		if err := spring.CheckCli(localCfg); err != nil {
-			log.Fatalln(err)
-		}
-
-		// execute cli with config
-		msg, err := spring.RunCli(localCfg, spring.InitFrom(orderConfig, ctx.TargetDirectory)...)
+		// download from start.spring.io to targetDirectory
+		err = spring.DownloadInitializer(ctx.TargetDirectory, spring.UrlValuesFrom(orderConfig))
 		if err != nil {
-			log.Fatalln(logger.ExternalError(err, msg))
+			log.Fatalln(err)
 		}
 
 		// populate applicationName field in config
@@ -71,7 +66,7 @@ var generateCmd = &cobra.Command{
 		// git init project
 		err = project.GitInit()
 		if err != nil {
-			log.Fatalln(logger.ExternalError(err, msg))
+			log.Fatalln(err)
 		}
 
 		// merge templates into the newly created project
@@ -112,7 +107,7 @@ var generateCmd = &cobra.Command{
 		// git commit
 		err = project.GitCommit("Clean up and upgrades")
 		if err != nil {
-			log.Fatalln(logger.ExternalError(err, msg))
+			log.Fatalln(err)
 		}
 	},
 }

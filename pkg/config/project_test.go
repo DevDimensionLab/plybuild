@@ -32,7 +32,7 @@ func TestSortAndWritePom_sort_enabled_by_default(t *testing.T) {
 	pomFile := file.Path("test/sorting/sorted/pom.xml")
 
 	project, _ := InitProjectFromPomFile(pomFile)
-	err := project.SortAndWritePom(true)
+	err := project.SortAndWritePom()
 
 	equal, err := file.Equal(original, pomFile)
 	if err != nil {
@@ -56,7 +56,7 @@ func TestSortAndWritePom_sort_enabled(t *testing.T) {
 
 	project, _ := InitProjectFromPomFile(pomFile)
 	project.Config = projectConfig
-	err := project.SortAndWritePom(true)
+	err := project.SortAndWritePom()
 
 	equal, err := file.Equal(original, pomFile)
 	if err != nil {
@@ -80,7 +80,7 @@ func TestSortAndWritePom_sort_disabled(t *testing.T) {
 
 	project, _ := InitProjectFromPomFile(pomFile)
 	project.Config = projectConfig
-	err := project.SortAndWritePom(true)
+	err := project.SortAndWritePom()
 
 	equal, err := file.Equal(original, pomFile)
 	if err != nil {

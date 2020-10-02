@@ -16,9 +16,9 @@ RUN make build
 
 
 ## Shipping image
-FROM openjdk:13-jdk-alpine
+FROM alpine
 
-RUN apk --update add bash git less openssh maven && \
+RUN apk --update add git less openssh && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
 
