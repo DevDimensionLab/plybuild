@@ -13,7 +13,14 @@ grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: devmode # use 'strict' once you have the right plugs and slots
 
 parts:
-  my-part:
-    # See 'snapcraft plugins'
-    plugin: nil
+  co-pilot:
+    plugin: go
+    go-importpath: github.com/co-pilot-cli/co-pilot
+    source: .
+    source-type: git
+    build-packages:
+      - gcc
 
+apps:
+  co-pilot:
+    command: bin/co-pilot
