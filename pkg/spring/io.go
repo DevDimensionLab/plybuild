@@ -2,13 +2,16 @@ package spring
 
 import (
 	"co-pilot/pkg/config"
+	"co-pilot/pkg/file"
 	"co-pilot/pkg/http"
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/shell"
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
+	"time"
 )
 
 var log = logger.Context()
@@ -82,14 +85,35 @@ func Validate(config config.ProjectConfiguration) error {
 }
 
 func DownloadInitializer(targetDir string, formData url.Values) error {
-	targetFile := "/tmp/spring.zip"
-	downloadUrl := "https://start.spring.io/starter.zip"
-	log.Infof("Downloading from %s to %s", downloadUrl, targetFile)
-	err := http.Wpost(downloadUrl, targetFile, formData)
+	targetArchiveFile, err := archivePath()
 	if err != nil {
 		return err
 	}
 
-	_, err = shell.Unzip(targetFile, targetDir)
+	downloadUrl := "https://start.spring.io/starter.zip"
+	log.Infof("Downloading from %s to %s", downloadUrl, targetArchiveFile)
+	err = http.Wpost(downloadUrl, targetArchiveFile, formData)
+	if err != nil {
+		return err
+	}
+
+	_, err = shell.Unzip(targetArchiveFile, targetDir)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Deleting archive file: %s", targetArchiveFile)
+	err = file.DeleteSingleFile(targetArchiveFile)
 	return err
+}
+
+func archivePath() (path string, err error) {
+	curDir, err := os.Getwd()
+	if err != nil {
+		return
+	}
+
+	now := time.Now().Unix()
+	path = file.Path("%s/spring-%d.zip", curDir, now)
+	return
 }
