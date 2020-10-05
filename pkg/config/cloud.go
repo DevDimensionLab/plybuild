@@ -35,7 +35,7 @@ func (gitCfg GitCloudConfig) Implementation() Directory {
 func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
 	localCfg, err := localConfig.Config()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	target := gitCfg.Implementation().Dir()

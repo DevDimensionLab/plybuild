@@ -15,7 +15,7 @@ type Context struct {
 	Err             error
 }
 
-func (ctx *Context) FindAndPopulateMavenProjects() *Context {
+func (ctx *Context) FindAndPopulateMavenProjects() error {
 	excludes := []string{
 		"flattened-pom.xml",
 		"/target/",
@@ -24,7 +24,7 @@ func (ctx *Context) FindAndPopulateMavenProjects() *Context {
 	if ctx.Recursive {
 		pomFiles, err := file.FindAll("pom.xml", excludes, ctx.TargetDirectory)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		for _, pomFile := range pomFiles {
 			project, err := InitProjectFromPomFile(pomFile)
@@ -36,12 +36,12 @@ func (ctx *Context) FindAndPopulateMavenProjects() *Context {
 	} else {
 		project, err := InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		ctx.Projects = append(ctx.Projects, project)
 	}
 
-	return ctx
+	return nil
 }
 
 func (ctx Context) OnEachProject(description string, do func(project Project, args ...interface{}) error) {
