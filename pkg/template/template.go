@@ -6,12 +6,12 @@ import (
 	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-var log = logger.Context()
 var defaultIgnores = []string{
 	"pom.xml",
 	"co-pilot.json",
@@ -25,31 +25,41 @@ var defaultIgnores = []string{
 	".iml",
 }
 
-func MergeTemplates(templates []config.CloudTemplate, target config.Project) {
+type Template struct {
+	log logrus.FieldLogger
+}
+
+func With(log logrus.FieldLogger) Template {
+	return Template{
+		log: log,
+	}
+}
+
+func (tmpl Template) MergeTemplates(templates []config.CloudTemplate, target config.Project) {
 	for _, template := range templates {
-		log.Infof("applying template %s", template.Name)
-		if err := MergeTemplate(template, target); err != nil {
-			log.Warnf("%v", err)
+		tmpl.log.Infof("applying Template %s", template.Name)
+		if err := tmpl.MergeTemplate(template, target); err != nil {
+			tmpl.log.Warnf("%v", err)
 		}
 	}
 }
 
-func MergeTemplate(cloudTemplate config.CloudTemplate, target config.Project) error {
+func (tmpl Template) MergeTemplate(cloudTemplate config.CloudTemplate, target config.Project) error {
 	if target.IsDirtyGitRepo() {
-		log.Warn(logger.White(fmt.Sprintf("merging template %s into a dirty git repository %s", cloudTemplate.Name, target.Path)))
+		tmpl.log.Warn(logger.White(fmt.Sprintf("merging Template %s into a dirty git repository %s", cloudTemplate.Name, target.Path)))
 	} else {
-		log.Info(logger.White(fmt.Sprintf("merging template %s into %s", cloudTemplate.Name, target.Path)))
+		tmpl.log.Info(logger.White(fmt.Sprintf("merging Template %s into %s", cloudTemplate.Name, target.Path)))
 	}
-	if err := merge(cloudTemplate.Project, target); err != nil {
+	if err := tmpl.merge(cloudTemplate.Project, target); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func merge(sourceProject config.Project, targetProject config.Project) error {
+func (tmpl Template) merge(sourceProject config.Project, targetProject config.Project) error {
 	sourceDir := sourceProject.Path
-	files, err := FilesToCopy(sourceDir)
+	files, err := tmpl.filesToCopy(sourceDir)
 	if err != nil {
 		return err
 	}
@@ -60,7 +70,7 @@ func merge(sourceProject config.Project, targetProject config.Project) error {
 			return err
 		}
 
-		sourceRelPath = ReplacePathForSource(sourceRelPath, sourceProject.Config, targetProject.Config)
+		sourceRelPath = tmpl.replacePathForSource(sourceRelPath, sourceProject.Config, targetProject.Config)
 
 		targetPath := file.Path("%s/%s", targetProject.Path, sourceRelPath)
 		if err = file.CopyOrMerge(f, targetPath); err != nil {
@@ -72,7 +82,7 @@ func merge(sourceProject config.Project, targetProject config.Project) error {
 		}
 
 		if strings.HasSuffix(targetPath, ".render") {
-			if err := renderAndDelete(targetPath, targetProject.Config); err != nil {
+			if err := tmpl.renderAndDelete(targetPath, targetProject.Config); err != nil {
 				return err
 			}
 		}
@@ -84,15 +94,15 @@ func merge(sourceProject config.Project, targetProject config.Project) error {
 	return nil
 }
 
-func FilesToCopy(sourceDir string) (files []string, err error) {
-	ignores := GetIgnores(sourceDir)
+func (tmpl Template) filesToCopy(sourceDir string) (files []string, err error) {
+	ignores := tmpl.getIgnores(sourceDir)
 	err = filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
 		for _, nayName := range ignores {
 			if strings.Contains(path, nayName) {
-				log.Debugf("ignoring %s", info.Name())
+				tmpl.log.Debugf("ignoring %s", info.Name())
 				return nil
 			}
 		}
@@ -103,17 +113,17 @@ func FilesToCopy(sourceDir string) (files []string, err error) {
 	return
 }
 
-func GetIgnores(sourceDir string) (ignores []string) {
+func (tmpl Template) getIgnores(sourceDir string) (ignores []string) {
 
 	gitIgnores, err := file.OpenIgnoreFile(file.Path("%s/.gitignore", sourceDir))
 	if err != nil {
-		log.Error(err)
+		tmpl.log.Error(err)
 	}
 	ignores = append(ignores, gitIgnores...)
 
 	coPilotIgnores, err := file.OpenIgnoreFile(file.Path("%s/.co-pilot.ignore", sourceDir))
 	if err != nil {
-		log.Error(err)
+		tmpl.log.Error(err)
 	}
 	ignores = append(ignores, coPilotIgnores...)
 
@@ -122,7 +132,7 @@ func GetIgnores(sourceDir string) (ignores []string) {
 	return
 }
 
-func ReplacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfiguration, targetConfig config.ProjectConfiguration) string {
+func (tmpl Template) replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfiguration, targetConfig config.ProjectConfiguration) string {
 	var output = sourceRelPath
 
 	if strings.Contains(output, ".kt") || strings.Contains(output, ".java") {
@@ -133,20 +143,20 @@ func ReplacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfi
 		}
 
 		if output == sourceRelPath {
-			log.Warnf("was not able to replace path for source file (.kt, .java), input and output path is the same %s", output)
+			tmpl.log.Warnf("was not able to replace path for source file (.kt, .java), input and output path is the same %s", output)
 		}
 	}
 
 	return output
 }
 
-func renderAndDelete(targetPath string, targetConfig interface{}) error {
+func (tmpl Template) renderAndDelete(targetPath string, targetConfig interface{}) error {
 	newTarget := strings.Replace(targetPath, ".render", "", 1)
-	log.Infof("rendering %s into %s", targetPath, newTarget)
+	tmpl.log.Infof("rendering %s into %s", targetPath, newTarget)
 	if err := file.Render(targetPath, newTarget, targetConfig); err != nil {
 		return err
 	}
 
-	log.Infof("deleting old render file %s", targetPath)
+	tmpl.log.Infof("deleting old render file %s", targetPath)
 	return file.DeleteSingleFile(targetPath)
 }

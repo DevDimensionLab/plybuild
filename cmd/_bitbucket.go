@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"co-pilot/pkg/bitbucket"
+	"co-pilot/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +30,7 @@ var bitbucketSyncCmd = &cobra.Command{
 			log.Fatalln("Command requires host and access-token in config-file")
 		}
 
-		err = bitbucket.SynchronizeAllRepos(bitbucketHost, personalAccessToken)
+		err = bitbucket.With(logger.Context(), bitbucketHost, personalAccessToken).SynchronizeAllRepos()
 		if err != nil {
 			log.Fatalln(err)
 		}

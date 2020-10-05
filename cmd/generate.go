@@ -76,7 +76,7 @@ var generateCmd = &cobra.Command{
 				log.Fatalln(err)
 			}
 			for _, t := range templates {
-				if err := template.MergeTemplate(t, project); err != nil {
+				if err := template.With(logger.Context()).MergeTemplate(t, project); err != nil {
 					log.Fatalln(err)
 				}
 			}

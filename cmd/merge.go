@@ -3,6 +3,7 @@ package cmd
 import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
+	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/template"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
@@ -102,7 +103,7 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err := template.MergeTemplate(cloudTemplate, project); err != nil {
+		if err := template.With(logger.Context()).MergeTemplate(cloudTemplate, project); err != nil {
 			log.Fatalln(err)
 		}
 	},

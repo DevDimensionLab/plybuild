@@ -2,35 +2,47 @@ package bitbucket
 
 import (
 	"co-pilot/pkg/http"
-	"co-pilot/pkg/logger"
 	"co-pilot/pkg/shell"
+	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
 )
 
-var log = logger.Context()
+type Bitbucket struct {
+	host        string
+	accessToken string
+	log         logrus.FieldLogger
+}
 
-func SynchronizeAllRepos(host string, accessToken string) error {
-	projects, err := QueryProjects(host, accessToken)
+func With(logger logrus.FieldLogger, host string, accessToken string) Bitbucket {
+	return Bitbucket{
+		host:        host,
+		accessToken: accessToken,
+		log:         logger,
+	}
+}
+
+func (bitbucket Bitbucket) SynchronizeAllRepos() error {
+	projects, err := bitbucket.queryProjects()
 	if err != nil {
 		return err
 	}
 
 	for _, bitBucketProject := range projects.Values {
 		projectKey := strings.ToLower(bitBucketProject.Key)
-		log.Infoln("project: " + projectKey)
+		bitbucket.log.Infoln("project: " + projectKey)
 
-		bitBucketProjectReposResponse, err := QueryRepos(host, projectKey, accessToken)
+		bitBucketProjectReposResponse, err := QueryRepos(bitbucket.host, projectKey, bitbucket.accessToken)
 		if err != nil {
-			log.Warnln(err)
+			bitbucket.log.Warnln(err)
 		}
 
 		for _, bitBucketRepo := range bitBucketProjectReposResponse.BitBucketRepo {
-			log.Infoln("  " + bitBucketRepo.Name)
+			bitbucket.log.Infoln("  " + bitBucketRepo.Name)
 
-			err := cloneOrPull(host, ".", "/"+projectKey+"/"+bitBucketRepo.Name)
+			err := bitbucket.cloneOrPull(".", "/"+projectKey+"/"+bitBucketRepo.Name)
 			if err != nil {
-				log.Warnln(err)
+				bitbucket.log.Warnln(err)
 			}
 		}
 	}
@@ -38,21 +50,21 @@ func SynchronizeAllRepos(host string, accessToken string) error {
 	return nil
 }
 
-func cloneOrPull(host string, workspace string, repository string) error {
+func (bitbucket Bitbucket) cloneOrPull(workspace string, repository string) error {
 	repoDir := workspace + repository
 
 	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
-		return clone(host, workspace, repository)
+		return bitbucket.clone(workspace, repository)
 	} else {
-		return pull(workspace, repository)
+		return bitbucket.pull(workspace, repository)
 	}
 }
 
-func clone(host string, workspace string, repository string) error {
-	gitUrl := host + "/scm" + repository + ".git"
+func (bitbucket Bitbucket) clone(workspace string, repository string) error {
+	gitUrl := bitbucket.host + "/scm" + repository + ".git"
 	toDir := workspace + repository
 
-	log.Debugln("clone [" + gitUrl + "] -> [" + toDir + "]")
+	bitbucket.log.Debugln("clone [" + gitUrl + "] -> [" + toDir + "]")
 	clone := shell.GitClone(gitUrl, toDir)
 	if clone.Err != nil {
 		return clone.FormatError()
@@ -61,10 +73,10 @@ func clone(host string, workspace string, repository string) error {
 	return nil
 }
 
-func pull(workspace string, repository string) error {
+func (bitbucket Bitbucket) pull(workspace string, repository string) error {
 	repoDir := workspace + "/" + repository
 
-	log.Debugln(" pull [" + repoDir + "]")
+	bitbucket.log.Debugln(" pull [" + repoDir + "]")
 	pull := shell.GitPull(repoDir)
 	if pull.Err != nil {
 		return pull.FormatError()
@@ -73,9 +85,9 @@ func pull(workspace string, repository string) error {
 	return nil
 }
 
-func QueryProjects(host string, accessToken string) (*ProjectList, error) {
+func (bitbucket Bitbucket) queryProjects() (*ProjectList, error) {
 	response := ProjectList{}
-	err := http.GetJsonWithAccessToken(host, "/rest/api/1.0/projects?limit=500", accessToken, &response)
+	err := http.GetJsonWithAccessToken(bitbucket.host, "/rest/api/1.0/projects?limit=500", bitbucket.accessToken, &response)
 	return &response, err
 }
 
