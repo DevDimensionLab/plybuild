@@ -1,6 +1,7 @@
 package bitbucket
 
 import (
+	"co-pilot/pkg/file"
 	"co-pilot/pkg/http"
 	"co-pilot/pkg/shell"
 	"github.com/sirupsen/logrus"
@@ -74,7 +75,7 @@ func (bitbucket Bitbucket) clone(workspace string, repository string) error {
 }
 
 func (bitbucket Bitbucket) pull(workspace string, repository string) error {
-	repoDir := workspace + "/" + repository
+	repoDir := file.Path("%s/%s", workspace, repository)
 
 	bitbucket.log.Debugln(" pull [" + repoDir + "]")
 	pull := shell.GitPull(repoDir)

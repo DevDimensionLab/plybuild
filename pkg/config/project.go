@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
 )
@@ -98,11 +99,13 @@ func (config ProjectConfiguration) WriteTo(targetFile string) error {
 }
 
 func (config ProjectConfiguration) SourceMainPath() string {
-	return file.Path("src/main/%s/%s", config.GetLanguage(), strings.Join(strings.Split(config.Package, "."), "/"))
+	pathSeparator := string(os.PathSeparator)
+	return file.Path("src/main/%s/%s", config.GetLanguage(), strings.Join(strings.Split(config.Package, "."), pathSeparator))
 }
 
 func (config ProjectConfiguration) SourceTestPath() string {
-	return file.Path("src/test/%s/%s", config.GetLanguage(), strings.Join(strings.Split(config.Package, "."), "/"))
+	pathSeparator := string(os.PathSeparator)
+	return file.Path("src/test/%s/%s", config.GetLanguage(), strings.Join(strings.Split(config.Package, "."), pathSeparator))
 }
 
 func (config *ProjectConfiguration) FindApplicationName(targetDir string) (err error) {
@@ -111,8 +114,9 @@ func (config *ProjectConfiguration) FindApplicationName(targetDir string) (err e
 		log.Warnf("was not able to find application name in: %s", targetDir)
 	}
 
+	pathSeparator := string(os.PathSeparator)
 	if len(files) == 1 {
-		fileNamePath := strings.Split(files[0], "/")
+		fileNamePath := strings.Split(files[0], pathSeparator)
 		fileName := fileNamePath[len(fileNamePath)-1]
 		fileNameParts := strings.Split(fileName, ".")
 		config.ApplicationName = fileNameParts[0]

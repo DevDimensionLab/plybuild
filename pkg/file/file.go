@@ -149,8 +149,9 @@ func copyFile(sourceFile string, destinationFile string) error {
 		return err
 	}
 
-	destinationParts := strings.Split(destinationFile, "/")
-	destinationDir := strings.Join(destinationParts[:len(destinationParts)-1], "/")
+	pathSeparator := string(os.PathSeparator)
+	destinationParts := strings.Split(destinationFile, pathSeparator)
+	destinationDir := strings.Join(destinationParts[:len(destinationParts)-1], pathSeparator)
 	if !Exists(destinationDir) {
 		err = CreateDirectory(destinationDir)
 		if err != nil {
@@ -174,9 +175,9 @@ func copyFile(sourceFile string, destinationFile string) error {
 }
 
 func RelPath(sourceDirectory string, filePath string) (string, error) {
-
-	directoryParts := strings.Split(sourceDirectory, "/")
-	fileParts := strings.Split(filePath, "/")
+	pathSeparator := string(os.PathSeparator)
+	directoryParts := strings.Split(sourceDirectory, pathSeparator)
+	fileParts := strings.Split(filePath, pathSeparator)
 
 	if len(directoryParts) >= len(fileParts) {
 		return "", errors.New("directory cannot be deeper than filePath")
@@ -192,7 +193,7 @@ func RelPath(sourceDirectory string, filePath string) (string, error) {
 		}
 	}
 
-	return strings.Join(fileParts[cut:], "/"), nil
+	return strings.Join(fileParts[cut:], pathSeparator), nil
 }
 
 func CreateDirectory(path string) error {
