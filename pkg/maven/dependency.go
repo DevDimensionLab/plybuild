@@ -25,34 +25,6 @@ func UpgradeDependencyOnModel(model *pom.Model, groupId string, artifactId strin
 	return err
 }
 
-func specificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dependency, groupId string, artifactId string) error {
-	for _, dep := range availableDependencies {
-		if dep.Version != "" && dep.GroupId == groupId && dep.ArtifactId == artifactId {
-			return upgradeDependency(model, dep)
-		}
-	}
-
-	return errors.New(fmt.Sprintf("could not find %s:%s in project", groupId, artifactId))
-}
-
-func SecondParty(model *pom.Model, true bool) func(groupId string) bool {
-	secondPartyGroupId, err := model.GetSecondPartyGroupId()
-	if err != nil {
-		log.Warnln(err)
-	}
-	log.Debugf("secondParty groupId is: %s", secondPartyGroupId)
-
-	return func(groupId string) bool {
-		isSecondParty, err := IsSecondPartyGroupId(groupId, secondPartyGroupId)
-		log.Debugf("upgrade secondParty %t, groupId:%s isSecondParty %t", true, groupId, isSecondParty)
-		if err != nil {
-			log.Warnln(err)
-			return false
-		}
-		return isSecondParty == true
-	}
-}
-
 func Upgrade3PartyDependencies() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
 		return Upgrade3PartyDependenciesOnModel(project.Type.Model())
@@ -61,11 +33,11 @@ func Upgrade3PartyDependencies() func(project config.Project, args ...interface{
 
 func Upgrade3PartyDependenciesOnModel(model *pom.Model) error {
 	if model.Dependencies != nil {
-		upgradeDependencies(model, model.Dependencies.Dependency, SecondParty(model, false))
+		upgradeDependencies(model, model.Dependencies.Dependency, isSecondParty(model, false))
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
-		upgradeDependencies(model, model.DependencyManagement.Dependencies.Dependency, SecondParty(model, false))
+		upgradeDependencies(model, model.DependencyManagement.Dependencies.Dependency, isSecondParty(model, false))
 	}
 
 	return nil
@@ -79,14 +51,42 @@ func Upgrade2PartyDependencies() func(project config.Project, args ...interface{
 
 func Upgrade2PartyDependenciesOnModel(model *pom.Model) error {
 	if model.Dependencies != nil {
-		upgradeDependencies(model, model.Dependencies.Dependency, SecondParty(model, true))
+		upgradeDependencies(model, model.Dependencies.Dependency, isSecondParty(model, true))
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
-		upgradeDependencies(model, model.DependencyManagement.Dependencies.Dependency, SecondParty(model, true))
+		upgradeDependencies(model, model.DependencyManagement.Dependencies.Dependency, isSecondParty(model, true))
 	}
 
 	return nil
+}
+
+func specificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dependency, groupId string, artifactId string) error {
+	for _, dep := range availableDependencies {
+		if dep.Version != "" && dep.GroupId == groupId && dep.ArtifactId == artifactId {
+			return upgradeDependency(model, dep)
+		}
+	}
+
+	return errors.New(fmt.Sprintf("could not find %s:%s in project", groupId, artifactId))
+}
+
+func isSecondParty(model *pom.Model, enabled bool) func(groupId string) bool {
+	secondPartyGroupId, err := model.GetSecondPartyGroupId()
+	if err != nil {
+		log.Warnln(err)
+	}
+	log.Debugf("secondParty groupId is: %s", secondPartyGroupId)
+
+	return func(groupId string) bool {
+		isSecondParty, err := isSecondPartyGroupId(groupId, secondPartyGroupId)
+		log.Debugf("upgrade secondParty %t, groupId:%s isSecondParty %t", enabled, groupId, isSecondParty)
+		if err != nil {
+			log.Warnln(err)
+			return false
+		}
+		return isSecondParty == enabled
+	}
 }
 
 func upgradeDependencies(model *pom.Model, dependencies []pom.Dependency, condition func(groupId string) bool) {

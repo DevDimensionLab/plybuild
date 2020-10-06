@@ -33,7 +33,7 @@ func Color(colorString string) func(...interface{}) string {
 	return sprint
 }
 
-func Context() *logrus.Entry {
+func Context() logrus.FieldLogger {
 	_, _, _, ok := runtime.Caller(1)
 
 	var fields logrus.Fields

@@ -43,7 +43,7 @@ func ChangeVersionToPropertyTagsOnModel(model *pom.Model) error {
 	return nil
 }
 
-func RemoveBlacklistedDependencies(model *pom.Model) error {
+func _removeBlacklistedDependencies(model *pom.Model) error {
 	if model.Dependencies == nil {
 		return errors.New("could not find any dependencies")
 	}

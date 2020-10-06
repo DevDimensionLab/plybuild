@@ -1,7 +1,6 @@
 package file
 
 import (
-	"co-pilot/pkg/logger"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -12,8 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 )
-
-var log = logger.Context()
 
 func FindFirst(fileSuffix string, dir string) (result string, err error) {
 	err = filepath.Walk(dir,

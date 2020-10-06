@@ -1,7 +1,6 @@
 package http
 
 import (
-	"co-pilot/pkg/logger"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -12,8 +11,6 @@ import (
 	"net/url"
 	"os"
 )
-
-var log = logger.Context()
 
 func GetJson(url string, parsed interface{}) error {
 	body, err := get(url)

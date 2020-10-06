@@ -19,7 +19,7 @@ func GetRepositories() (Repositories, error) {
 	settingsFile, err := GetSettingsFile()
 
 	if err == nil {
-		var settings Settings
+		var settings M2Settings
 		err = file.ReadXml(settingsFile, &settings)
 		if err != nil {
 			return repos, err

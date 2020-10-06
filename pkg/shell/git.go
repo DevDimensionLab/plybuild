@@ -1,13 +1,10 @@
 package shell
 
 import (
-	"co-pilot/pkg/logger"
 	"fmt"
 	"os/exec"
 	"strings"
 )
-
-var log = logger.Context()
 
 func GitClone(url string, target string) Output {
 	return run(exec.Command("git", "clone", url, target))

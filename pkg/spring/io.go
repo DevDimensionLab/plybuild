@@ -4,7 +4,6 @@ import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/http"
-	"co-pilot/pkg/logger"
 	"co-pilot/pkg/shell"
 	"errors"
 	"fmt"
@@ -13,8 +12,6 @@ import (
 	"strings"
 	"time"
 )
-
-var log = logger.Context()
 
 func UrlValuesFrom(config config.ProjectConfiguration) url.Values {
 	// see https://github.com/spring-io/initializr#generating-a-project

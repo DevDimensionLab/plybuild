@@ -2,11 +2,19 @@ package config
 
 import (
 	"co-pilot/pkg/file"
+	"co-pilot/pkg/logger"
 	"errors"
 	"github.com/mitchellh/go-homedir"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"github.com/sirupsen/logrus"
 	"strings"
 )
+
+var log = logger.Context()
+
+func SetLogger(logger logrus.FieldLogger) {
+	log = logger
+}
 
 func NewLocalConfig(localConfigDir string) (cfg LocalConfig, err error) {
 	home, err := homedir.Dir()

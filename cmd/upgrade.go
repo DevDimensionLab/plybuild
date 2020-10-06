@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"co-pilot/pkg/config"
-	"co-pilot/pkg/logger"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/spring"
 	"co-pilot/pkg/template"
@@ -156,7 +155,7 @@ func upgradeDeprecated(project config.Project) error {
 	if err != nil {
 		return err
 	} else {
-		template.With(logger.Context()).MergeTemplates(templates, project)
+		template.MergeTemplates(templates, project)
 	}
 	return nil
 }

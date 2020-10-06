@@ -25,7 +25,7 @@ func ListUnusedAndUndeclared(pomFile string) error {
 	return nil
 }
 
-func IsSecondPartyGroupId(groupId string, secondPartyGroupId string) (bool, error) {
+func isSecondPartyGroupId(groupId string, secondPartyGroupId string) (bool, error) {
 	groupIdParts := strings.Split(groupId, ".")
 	secondPartyGroupIdParts := strings.Split(secondPartyGroupId, ".")
 

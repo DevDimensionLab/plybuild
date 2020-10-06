@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 )
 
-type Metadata struct {
+type RepositoryMetadata struct {
 	XMLName      xml.Name `xml:"metadata"`
 	Text         string   `xml:",chardata"`
 	ModelVersion string   `xml:"modelVersion,attr"`
@@ -22,7 +22,7 @@ type Metadata struct {
 	} `xml:"versioning"`
 }
 
-type Settings struct {
+type M2Settings struct {
 	XMLName           xml.Name `xml:"settings"`
 	Text              string   `xml:",chardata"`
 	LocalRepository   string   `xml:"localRepository"`
@@ -149,12 +149,4 @@ type Settings struct {
 		Text        string `xml:",chardata"`
 		PluginGroup string `xml:"pluginGroup"`
 	} `xml:"pluginGroups"`
-}
-
-type JavaVersion struct {
-	Major           int
-	Minor           int
-	Patch           int
-	Suffix          string
-	SuffixSeparator string
 }

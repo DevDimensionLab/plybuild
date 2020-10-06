@@ -12,6 +12,10 @@ builds:
       - linux
       - windows
       - darwin
+    # Custom ldflags templates.
+    # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
+    ldflags:
+      - -s -w -X co-pilot/cmd.buildDate={{.Date}} -X co-pilot/cmd.version={{.Version}}
 archives:
   - replacements:
       darwin: Darwin

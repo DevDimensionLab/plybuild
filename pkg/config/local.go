@@ -2,13 +2,10 @@ package config
 
 import (
 	"co-pilot/pkg/file"
-	"co-pilot/pkg/logger"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 )
-
-var log = logger.Context()
 
 var localConfigFileName = "local-config.yaml"
 var defaultCloudConfigUrl = "https://github.com/co-pilot-cli/co-pilot-config.git"
