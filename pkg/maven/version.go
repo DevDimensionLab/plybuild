@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+type JavaVersion struct {
+	Major           int
+	Minor           int
+	Patch           int
+	Suffix          string
+	SuffixSeparator string
+}
+
 func ParseVersion(version string) (JavaVersion, error) {
 
 	parts := strings.Split(version, ".")

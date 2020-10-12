@@ -5,7 +5,7 @@ import (
 	"sort"
 )
 
-func (meta Metadata) LatestRelease() (JavaVersion, error) {
+func (meta RepositoryMetadata) LatestRelease() (JavaVersion, error) {
 	version, err := ParseVersion(meta.Versioning.Release)
 	if err != nil {
 		return JavaVersion{}, err

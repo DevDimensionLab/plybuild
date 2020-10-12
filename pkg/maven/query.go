@@ -2,17 +2,14 @@ package maven
 
 import (
 	"co-pilot/pkg/http"
-	"co-pilot/pkg/logger"
 	"errors"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
 )
 
-var log = logger.Context()
-
-func GetMetaData(groupID string, artifactId string) (Metadata, error) {
-	var metaData Metadata
+func GetMetaData(groupID string, artifactId string) (RepositoryMetadata, error) {
+	var metaData RepositoryMetadata
 	repos, err := GetRepositories()
 	if err != nil {
 		return metaData, err

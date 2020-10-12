@@ -19,6 +19,9 @@ jobs:
         with:
           fetch-depth: 0
       -
+        name: Install Snapcraft
+        uses: samuelmeuli/action-snapcraft@v1
+      -
         name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -28,7 +31,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
-          args: release --rm-dist
+          args: release --rm-dist --parallelism=1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

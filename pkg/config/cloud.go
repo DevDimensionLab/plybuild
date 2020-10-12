@@ -23,6 +23,7 @@ type CloudConfig interface {
 	ListDeprecated() error
 
 	HasTemplate(name string) bool
+	ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error)
 	Templates() (templates []CloudTemplate, err error)
 	Template(name string) (CloudTemplate, error)
 }
@@ -34,23 +35,23 @@ func (gitCfg GitCloudConfig) Implementation() Directory {
 func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
 	localCfg, err := localConfig.Config()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	target := gitCfg.Implementation().Dir()
 	if file.Exists(file.Path("%s/.git", target)) {
 		msg := logger.Info(fmt.Sprintf("pulling cloud config on %s", target))
 		log.Info(msg)
-		out, err := shell.GitPull(target)
-		if err != nil {
-			return errors.New(fmt.Sprintf("pulling cloud config failed:\n%s, %v", out, err))
+		pull := shell.GitPull(target)
+		if pull.Err != nil {
+			return pull.FormatError()
 		}
 	} else {
 		msg := logger.Info(fmt.Sprintf("cloning %s to %s", localCfg.CloudConfig.Git.Url, target))
 		log.Info(msg)
-		out, err := shell.GitClone(localCfg.CloudConfig.Git.Url, target)
-		if err != nil {
-			return errors.New(fmt.Sprintf("ploning cloud config failed:\n%s, %v", out, err))
+		clone := shell.GitClone(localCfg.CloudConfig.Git.Url, target)
+		if clone.Err != nil {
+			return clone.FormatError()
 		}
 	}
 
@@ -190,10 +191,39 @@ func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) 
 
 	for _, f := range files {
 		if f.IsDir() {
-			template := CloudTemplate{}
-			template.Name = f.Name()
-			template.Impl.Path = file.Path("%s/%s", root, f.Name())
+			project, err := InitProjectFromDirectory(file.Path("%s/%s", root, f.Name()))
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			templates = append(templates, CloudTemplate{
+				Name:    f.Name(),
+				Project: project,
+			})
+		}
+	}
+	return
+}
+
+func (gitCfg GitCloudConfig) ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error) {
+	for _, t := range unique(list) {
+		template, err := gitCfg.Template(t)
+		if err != nil {
+			log.Warnln(err)
+		} else {
 			templates = append(templates, template)
+		}
+	}
+
+	return
+}
+
+func unique(input []string) (list []string) {
+	keys := make(map[string]bool)
+	for _, entry := range input {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
 		}
 	}
 	return

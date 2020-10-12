@@ -9,7 +9,7 @@ import (
 
 func UpgradeKotlin() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return UpgradeKotlinOnModel(project.PomModel)
+		return UpgradeKotlinOnModel(project.Type.Model())
 	}
 }
 

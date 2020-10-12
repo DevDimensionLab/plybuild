@@ -4,8 +4,8 @@ import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/spring"
+	"co-pilot/pkg/template"
 	"fmt"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +20,9 @@ var upgradeCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		ctx.FindAndPopulatePomProjects()
+		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
+			log.Fatalln(err)
+		}
 	},
 }
 
@@ -82,14 +84,24 @@ var upgradePluginsCmd = &cobra.Command{
 	},
 }
 
+var upgradeDeprecatedCmd = &cobra.Command{
+	Use:   "deprecated",
+	Short: "Remove and replace deprecated dependencies in a project",
+	Long:  `Remove and replace deprecated dependencies in a project`,
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx.OnEachProject("removes and replaces deprecated dependencies", func(project config.Project, args ...interface{}) error {
+			return upgradeDeprecated(project)
+		})
+	},
+}
+
 var upgradeAllCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Upgrade everything in project",
 	Long:  `Upgrade everything in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		ctx.OnEachProject("upgrading everything", func(project config.Project, args ...interface{}) error {
-			return upgradeAll(project.PomModel)
+			return UpgradeAll(project)
 		})
 	},
 }
@@ -102,6 +114,7 @@ func init() {
 	upgradeCmd.AddCommand(upgradeSpringBootCmd)
 	upgradeCmd.AddCommand(upgradeKotlinCmd)
 	upgradeCmd.AddCommand(upgradePluginsCmd)
+	upgradeCmd.AddCommand(upgradeDeprecatedCmd)
 	upgradeCmd.AddCommand(upgradeAllCmd)
 
 	upgradeDependencyCmd.PersistentFlags().StringVarP(&groupId, "groupId", "g", "", "GroupId for upgrade")
@@ -109,11 +122,11 @@ func init() {
 
 	upgradeCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	upgradeCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
-	upgradeCmd.PersistentFlags().BoolVar(&ctx.Overwrite, "overwrite", true, "Overwrite pom.xml file")
 	upgradeCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 }
 
-func upgradeAll(model *pom.Model) error {
+func UpgradeAll(project config.Project) error {
+	model := project.Type.Model()
 	if err := maven.UpgradeKotlinOnModel(model); err != nil {
 		log.Warn(err)
 	}
@@ -128,6 +141,21 @@ func upgradeAll(model *pom.Model) error {
 	}
 	if err := maven.UpgradePluginsOnModel(model); err != nil {
 		log.Warn(err)
+	}
+
+	if err := upgradeDeprecated(project); err != nil {
+		log.Warn(err)
+	}
+
+	return nil
+}
+
+func upgradeDeprecated(project config.Project) error {
+	templates, err := maven.RemoveDeprecated(cloudCfg, project.Type.Model())
+	if err != nil {
+		return err
+	} else {
+		template.MergeTemplates(templates, project)
 	}
 	return nil
 }

@@ -15,7 +15,8 @@ func newMockCloudConfig() (cfg config.GitCloudConfig) {
 func TestMergeTemplate_test_template(t *testing.T) {
 	cfg := newMockCloudConfig()
 	project, _ := config.InitProjectFromDirectory(file.Path("test/target-test-template"))
-	err := MergeTemplate(cfg, "test-template", project)
+	template, _ := cfg.Template("test-template")
+	err := MergeTemplate(template, project)
 
 	if err != nil {
 		t.Errorf("%v\n", err)
@@ -25,7 +26,8 @@ func TestMergeTemplate_test_template(t *testing.T) {
 func TestMergeTemplate_simple_template(t *testing.T) {
 	cfg := newMockCloudConfig()
 	project, _ := config.InitProjectFromDirectory(file.Path("test/target-simple-template"))
-	err := MergeTemplate(cfg, "simple-template", project)
+	template, _ := cfg.Template("simple-template")
+	err := MergeTemplate(template, project)
 
 	if err != nil {
 		t.Errorf("%v\n", err)
@@ -46,14 +48,14 @@ func TestReplacePathForSource(t *testing.T) {
 		t.Errorf("%v\n", err)
 	}
 
-	files, _ := FilesToCopy(sourceDir)
+	files, _ := filesToCopy(sourceDir)
 	for _, f := range files {
 		if strings.Contains(f, ".kt") {
 			sourceRelPath, err := file.RelPath(sourceDir, f)
 			if err != nil {
 				t.Errorf("%v\n", err)
 			}
-			sourceRelPath = ReplacePathForSource(sourceRelPath, sourceConfig, targetConfig)
+			sourceRelPath = replacePathForSource(sourceRelPath, sourceConfig, targetConfig)
 
 			expectedContains1 := "java"
 			if !strings.Contains(sourceRelPath, expectedContains1) {

@@ -3,6 +3,7 @@ package shell
 import (
 	"archive/zip"
 	"bytes"
+	"co-pilot/pkg/logger"
 	"fmt"
 	"io"
 	"os"
@@ -11,21 +12,34 @@ import (
 	"strings"
 )
 
-func Run(name string, args ...string) (string, error) {
+type Output struct {
+	StdOut bytes.Buffer
+	StdErr bytes.Buffer
+	Err    error
+}
+
+func (output Output) String() string {
+	return fmt.Sprintf("STDOUT:\n%s\nSTDERR:\n%s", output.StdOut.String(), output.StdErr.String())
+}
+
+func (output Output) FormatError() error {
+	return logger.ExternalError(output.Err, output.String())
+}
+
+func Run(name string, args ...string) Output {
 	return run(exec.Command(name, args...))
 }
 
-func run(cmd *exec.Cmd) (string, error) {
-	var stdOut bytes.Buffer
-	var stdErr bytes.Buffer
-	cmd.Stdout = &stdOut
-	cmd.Stderr = &stdErr
+func run(cmd *exec.Cmd) (output Output) {
+	log.Debugf("running: %s", cmd.String())
+	cmd.Stdout = &output.StdOut
+	cmd.Stderr = &output.StdErr
 
 	if err := cmd.Run(); err != nil {
-		return stdErr.String(), err
+		return output
 	}
 
-	return stdOut.String(), nil
+	return output
 }
 
 //func Unzip(file string, outputDir string) (string, error) {

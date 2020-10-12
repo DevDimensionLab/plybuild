@@ -4,121 +4,29 @@ import (
 	"co-pilot/pkg/config"
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/http"
-	"co-pilot/pkg/logger"
 	"co-pilot/pkg/shell"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
-var springBootDownloadUrl = "https://repo.spring.io/release/org/springframework/boot/spring-boot-cli/[RELEASE]/spring-boot-cli-[RELEASE]-bin.zip"
-var log = logger.Context()
+func UrlValuesFrom(config config.ProjectConfiguration) url.Values {
+	// see https://github.com/spring-io/initializr#generating-a-project
+	params := url.Values{}
+	params.Add("groupId", config.GroupId)
+	params.Add("artifactId", config.ArtifactId)
+	params.Add("packageName", config.Package)
+	params.Add("dependencies", strings.Join(config.Dependencies, ","))
+	params.Add("javaVersion", "11")
+	params.Add("language", "kotlin")
+	params.Add("description", config.Description)
+	params.Add("name", config.Name)
+	//params.Add("baseDir", targetDir)
 
-func binDir(localCfg config.LocalConfigFile) (string, error) {
-	binDir := "spring-cli"
-	configDir := localCfg.Implementation().Dir()
-
-	return file.Path("%s/%s", configDir, binDir), nil
-}
-
-func RunCli(localCfg config.LocalConfigFile, arg ...string) (string, error) {
-	targetDir, err := binDir(localCfg)
-	if err != nil {
-		return "", err
-	}
-
-	springExec, err := file.FindFirst(file.Path("bin/spring"), targetDir)
-	if err != nil {
-		return "", err
-	}
-
-	return shell.Run(springExec, arg...)
-}
-
-func CheckCli(localCfg config.LocalConfigFile) error {
-	log.Infof("checking if Spring CLI is installed and for latest version")
-	targetDir, err := binDir(localCfg)
-	if err != nil {
-		return err
-	}
-
-	springExec, err := file.FindFirst(file.Path("bin/spring"), targetDir)
-	if err != nil {
-		return err
-	}
-
-	if springExec != "" {
-		return upgrade(localCfg)
-	} else {
-		return install(localCfg)
-	}
-}
-
-func install(localCfg config.LocalConfigFile) error {
-	log.Infof("installing Spring CLI into ~/.co-pilot directory")
-	targetDir, err := binDir(localCfg)
-	if err != nil {
-		return err
-	}
-
-	springBootCliZip := file.Path("%s/spring-boot-cli.zip", targetDir)
-	if err := os.RemoveAll(targetDir); err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(targetDir, os.ModePerm); err != nil {
-		return err
-	}
-
-	err = http.Wget(springBootDownloadUrl, springBootCliZip)
-	if err != nil {
-		return err
-	}
-
-	_, err = shell.Unzip(springBootCliZip, targetDir)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func upgrade(localCfg config.LocalConfigFile) error {
-	versionStr, err := RunCli(localCfg, "version")
-	if err != nil {
-		return err
-	}
-	versionStr = strings.TrimSpace(versionStr)
-
-	response, err := GetRoot()
-	if err != nil {
-		return err
-	}
-
-	if strings.HasSuffix(versionStr, response.BootVersion.Default) {
-		log.Infof("spring CLI is the latest version %s", response.BootVersion.Default)
-		return nil
-	} else {
-		log.Infof("upgrading Spring CLI from %s, to the latest version %s", versionStr, response.BootVersion.Default)
-		return install(localCfg)
-	}
-}
-
-func InitFrom(config config.ProjectConfiguration, targetDir string) []string {
-	var output []string
-
-	output = append(output, "init")
-	output = append(output, "-g="+config.GroupId)
-	output = append(output, "-a="+config.ArtifactId)
-	output = append(output, "--package="+config.Package)
-	output = append(output, "--d="+strings.Join(config.Dependencies, ","))
-	output = append(output, "-j=11")
-	output = append(output, "--language=kotlin")
-	output = append(output, "--description="+config.Description)
-	output = append(output, "--name="+config.Name)
-	output = append(output, targetDir) //output directory
-
-	return output
+	return params
 }
 
 func GetRoot() (IoRootResponse, error) {
@@ -140,6 +48,10 @@ func GetDependencies() (IoDependenciesResponse, error) {
 }
 
 func Validate(config config.ProjectConfiguration) error {
+	if config.Dependencies == nil || len(config.Dependencies) == 0 {
+		return nil
+	}
+
 	var invalidDependencies []string
 	validDependencies, err := GetDependencies()
 	if err != nil {
@@ -167,4 +79,38 @@ func Validate(config config.ProjectConfiguration) error {
 	} else {
 		return nil
 	}
+}
+
+func DownloadInitializer(targetDir string, formData url.Values) error {
+	targetArchiveFile, err := archivePath()
+	if err != nil {
+		return err
+	}
+
+	downloadUrl := "https://start.spring.io/starter.zip"
+	log.Infof("Downloading from %s to %s", downloadUrl, targetArchiveFile)
+	err = http.Wpost(downloadUrl, targetArchiveFile, formData)
+	if err != nil {
+		return err
+	}
+
+	_, err = shell.Unzip(targetArchiveFile, targetDir)
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("Deleting archive file: %s", targetArchiveFile)
+	err = file.DeleteSingleFile(targetArchiveFile)
+	return err
+}
+
+func archivePath() (path string, err error) {
+	curDir, err := os.Getwd()
+	if err != nil {
+		return
+	}
+
+	now := time.Now().Unix()
+	path = file.Path("%s/spring-%d.zip", curDir, now)
+	return
 }
