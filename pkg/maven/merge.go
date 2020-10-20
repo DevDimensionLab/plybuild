@@ -4,6 +4,7 @@ import (
 	"co-pilot/pkg/config"
 	"fmt"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"strings"
 )
 
 func MergePoms(from *pom.Model, to *pom.Model) error {
@@ -48,6 +49,7 @@ func mergeDependencies(from *pom.Model, to *pom.Model) error {
 		if !hasDependency {
 			log.Infof("inserting dependency %s:%s into project", fromDep.GroupId, fromDep.ArtifactId)
 			to.Dependencies.Dependency = append(to.Dependencies.Dependency, fromDep)
+			mergePropertyKey(from, to, fromDep.Version)
 		}
 	}
 
@@ -76,6 +78,7 @@ func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
 		if !hasManagementDependency {
 			log.Infof("inserting management dependency %s:%s into project", fromDepMan.GroupId, fromDepMan.ArtifactId)
 			to.DependencyManagement.Dependencies.Dependency = append(to.DependencyManagement.Dependencies.Dependency, fromDepMan)
+			mergePropertyKey(from, to, fromDepMan.Version)
 		}
 	}
 
@@ -99,7 +102,15 @@ func mergeBuild(from *pom.Model, to *pom.Model) error {
 		log.Infof("inserting <finalName>%s</finalName>", from.Build.FinalName)
 	}
 
-	return mergeBuildPlugins(from, to)
+	if err := mergeBuildPlugins(from, to); err != nil {
+		return err
+	}
+
+	if err := mergeBuildPluginManagement(from, to); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func mergeBuildPlugins(from *pom.Model, to *pom.Model) error {
@@ -125,6 +136,45 @@ func mergeBuildPlugins(from *pom.Model, to *pom.Model) error {
 		if !hasPlugin {
 			log.Infof("inserting plugin %s:%s into project", fromPlugin.GroupId, fromPlugin.ArtifactId)
 			to.Build.Plugins.Plugin = append(to.Build.Plugins.Plugin, fromPlugin)
+			mergePropertyKey(from, to, fromPlugin.Version)
+			if fromPlugin.Dependencies != nil {
+				for _, fromPlugDep := range fromPlugin.Dependencies.Dependency {
+					mergePropertyKey(from, to, fromPlugDep.Version)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func mergeBuildPluginManagement(from *pom.Model, to *pom.Model) error {
+	if from.Build.PluginManagement == nil {
+		log.Debug("from build.pluginManagement is nil")
+		return nil
+	}
+
+	if to.Build.PluginManagement == nil {
+		to.Build.PluginManagement = from.Build.PluginManagement
+		log.Infof("inserting build.pluginManagement block into project")
+		for _, fromPluginMan := range from.Build.PluginManagement.Plugins.Plugin {
+			mergePropertyKey(from, to, fromPluginMan.Version)
+		}
+		return nil
+	}
+
+	for i, fromPluginMan := range from.Build.PluginManagement.Plugins.Plugin {
+		var hasPlugin = false
+		for j, toPluginMan := range to.Build.PluginManagement.Plugins.Plugin {
+			if fromPluginMan.GroupId == toPluginMan.GroupId && fromPluginMan.ArtifactId == toPluginMan.ArtifactId {
+				hasPlugin = true
+				mergeBuildPluginExecutions(&from.Build.PluginManagement.Plugins.Plugin[i], &to.Build.PluginManagement.Plugins.Plugin[j])
+			}
+		}
+		if !hasPlugin {
+			log.Infof("inserting plugin management %s:%s into project", fromPluginMan.GroupId, fromPluginMan.ArtifactId)
+			to.Build.PluginManagement.Plugins.Plugin = append(to.Build.PluginManagement.Plugins.Plugin, fromPluginMan)
+			mergePropertyKey(from, to, fromPluginMan.Version)
 		}
 	}
 
@@ -157,6 +207,20 @@ func mergeBuildPluginExecutions(from *pom.Plugin, to *pom.Plugin) {
 
 	return
 }
+
+func mergePropertyKey(from *pom.Model, to *pom.Model, version string) {
+	if version != "" && strings.HasPrefix(version, "${") {
+		versionKey := strings.Trim(version, "${}")
+		if from.Properties != nil {
+			for _, version := range from.Properties.AnyElements {
+				if version.XMLName.Local == versionKey {
+					to.Properties.AnyElements = append(to.Properties.AnyElements, version)
+				}
+			}
+		}
+	}
+}
+
 func MergeAndWritePomFiles(source config.Project, target config.Project) error {
 	log.Infof(fmt.Sprintf("merging %s into %s", source.Type.FilePath(), target.Type.FilePath()))
 	if err := MergePoms(source.Type.Model(), target.Type.Model()); err != nil {

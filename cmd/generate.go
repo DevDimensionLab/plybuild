@@ -93,10 +93,13 @@ var generateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		// upgrade all
-		log.Info(logger.Info(fmt.Sprintf("upgrading all on %s", project.Type.FilePath())))
-		if err = UpgradeAll(project); err != nil {
-			log.Fatalln(err)
+		// upgrade all ... maybe?
+		disableUpgrade, _ := cmd.Flags().GetBool("disable-upgrading")
+		if !disableUpgrade {
+			log.Info(logger.Info(fmt.Sprintf("upgrading all on %s", project.Type.FilePath())))
+			if err = UpgradeAll(project); err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 		// sorting and writing
@@ -115,6 +118,7 @@ var generateCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(generateCmd)
 
+	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	generateCmd.Flags().String("config-file", "", "Optional config file")
 }

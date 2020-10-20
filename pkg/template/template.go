@@ -22,6 +22,7 @@ var defaultIgnores = []string{
 	"mvnw.cmd",
 	".idea",
 	".iml",
+	".git",
 }
 
 func MergeTemplates(templates []config.CloudTemplate, target config.Project) {
