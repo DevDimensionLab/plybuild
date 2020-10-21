@@ -77,7 +77,8 @@ type MavenProjectConfiguration struct {
 }
 
 type ProjectSettings struct {
-	DisableDependencySort bool `json:"disableDependencySort"`
+	DisableDependencySort    bool     `json:"disableDependencySort"`
+	DisableDependencyUpgrade []string `json:"disableDependencyUpgrade"`
 }
 
 type ProjectConfig interface {

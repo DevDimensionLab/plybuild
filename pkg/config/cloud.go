@@ -179,7 +179,7 @@ func (gitCfg GitCloudConfig) Template(name string) (CloudTemplate, error) {
 		}
 	}
 
-	return CloudTemplate{}, errors.New(fmt.Sprintf("could not find any templates with name: %s", name))
+	return CloudTemplate{}, errors.New(fmt.Sprintf("could not find any valid templates with name: %s", name))
 }
 
 func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) {

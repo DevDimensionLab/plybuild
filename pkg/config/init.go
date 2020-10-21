@@ -4,6 +4,7 @@ import (
 	"co-pilot/pkg/file"
 	"co-pilot/pkg/logger"
 	"errors"
+	"fmt"
 	"github.com/mitchellh/go-homedir"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/sirupsen/logrus"
@@ -53,7 +54,7 @@ func InitProjectConfigurationFromDir(targetDir string) (config ProjectConfigurat
 	return
 }
 
-func (project Project) InitProjectConfiguration() (err error) {
+func (project *Project) InitProjectConfiguration() (err error) {
 	if project.Type == nil || project.Type.Model() == nil {
 		return errors.New("project type and model is nil")
 	}
@@ -62,10 +63,15 @@ func (project Project) InitProjectConfiguration() (err error) {
 		return
 	}
 
+	packageName, err := findProjectPackageName(project.Path)
+	if err != nil {
+		log.Warnf("Failed to get package name of root level source file %v", err)
+	}
+
 	model := project.Type.Model()
 	project.Config.GroupId = model.GetGroupId()
 	project.Config.ArtifactId = model.ArtifactId
-	project.Config.Package = model.GetGroupId()
+	project.Config.Package = packageName
 	project.Config.Name = model.Name
 	project.Config.Description = model.Description
 	err = project.Config.Populate(project.Path)
@@ -106,4 +112,42 @@ func InitProjectFromDirectory(targetDir string) (project Project, err error) {
 	project.Path = targetDir
 	project.Config = config
 	return
+}
+
+func findProjectPackageName(path string) (packageName string, err error) {
+	packageName, err = findRootSourceFilePackageName(".kt", path)
+	if err == nil {
+		return packageName, err
+	}
+	packageName, err = findRootSourceFilePackageName(".java", path)
+	if err == nil {
+		return packageName, err
+	}
+
+	return
+}
+
+func findRootSourceFilePackageName(suffix string, path string) (packageName string, err error) {
+	files, err := file.FindAll(suffix, []string{}, path)
+	if err != nil {
+		return
+	}
+
+	if len(files) == 0 {
+		return packageName, errors.New(fmt.Sprintf("no files with suffix: %s in %s", suffix, path))
+	}
+
+	lines, err := file.OpenLines(files[0])
+	if err != nil {
+		return packageName, err
+	}
+	for _, line := range lines {
+		if strings.HasPrefix(line, "package") {
+			packageParts := strings.Split(line, " ")
+			return packageParts[1], nil
+		}
+	}
+
+	return "",
+		errors.New(fmt.Sprintf("failed to get any files with suffix %s and a 'package' line in %s", suffix, path))
 }
