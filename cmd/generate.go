@@ -93,13 +93,22 @@ var generateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		// load project into context
+		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
+			log.Fatalln(err)
+		}
+
 		// upgrade all ... maybe?
 		disableUpgrade, _ := cmd.Flags().GetBool("disable-upgrading")
 		if !disableUpgrade {
 			log.Info(logger.Info(fmt.Sprintf("upgrading all on %s", project.Type.FilePath())))
-			if err = UpgradeAll(project); err != nil {
-				log.Fatalln(err)
-			}
+			ctx.OnEachProject("upgrading everything",
+				maven.UpgradeKotlin(),
+				spring.UpgradeSpringBoot(),
+				maven.Upgrade2PartyDependencies(),
+				maven.Upgrade3PartyDependencies(),
+				maven.UpgradePlugins(),
+			)
 		}
 
 		// sorting and writing

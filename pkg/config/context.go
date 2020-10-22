@@ -44,7 +44,7 @@ func (ctx *Context) FindAndPopulateMavenProjects() error {
 	return nil
 }
 
-func (ctx Context) OnEachProject(description string, do func(project Project, args ...interface{}) error) {
+func (ctx Context) OnEachProject(description string, do ...func(project Project, args ...interface{}) error) {
 	if ctx.Projects == nil || len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
@@ -63,10 +63,12 @@ func (ctx Context) OnEachProject(description string, do func(project Project, ar
 		}
 
 		if do != nil {
-			err := do(p)
-			if err != nil {
-				log.Warnln(err)
-				continue
+			for _, job := range do {
+				err := job(p)
+				if err != nil {
+					log.Warnln(err)
+					continue
+				}
 			}
 		}
 

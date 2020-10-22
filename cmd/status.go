@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"co-pilot/pkg/config"
+	"co-pilot/pkg/maven"
+	"co-pilot/pkg/spring"
 	"github.com/spf13/cobra"
 )
 
@@ -30,10 +31,13 @@ var statusCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if !statusOpts.Any() || statusOpts.Show {
 			ctx.DryRun = true
-			ctx.OnEachProject("Project status", func(project config.Project, args ...interface{}) error {
-				err := UpgradeAll(project)
-				return err
-			})
+			ctx.OnEachProject("Project status",
+				maven.UpgradeKotlin(),
+				spring.UpgradeSpringBoot(),
+				maven.Upgrade2PartyDependencies(),
+				maven.Upgrade3PartyDependencies(),
+				maven.UpgradePlugins(),
+			)
 		}
 	},
 }

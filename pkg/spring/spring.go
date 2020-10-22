@@ -33,11 +33,14 @@ func CleanManualVersions(model *pom.Model) error {
 
 func UpgradeSpringBoot() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return UpgradeSpringBootOnModel(project.Type.Model())
+		if project.Config.Settings.DisableSpringBootUpgrade {
+			return nil
+		}
+		return upgradeSpringBootOnModel(project.Type.Model())
 	}
 }
 
-func UpgradeSpringBootOnModel(model *pom.Model) error {
+func upgradeSpringBootOnModel(model *pom.Model) error {
 	springRootInfo, err := GetRoot()
 	if err != nil {
 		return err

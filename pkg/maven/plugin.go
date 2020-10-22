@@ -59,16 +59,21 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 
 func UpgradePlugins() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return UpgradeKotlinOnModel(project.Type.Model())
+		return upgradePluginsOnModel(&project)
 	}
 }
 
-func UpgradePluginsOnModel(model *pom.Model) error {
+func upgradePluginsOnModel(project *config.Project) error {
+	model := project.Type.Model()
+
 	if model.Build == nil || model.Build.Plugins == nil {
 		return nil
 	}
 
 	for _, plugin := range model.Build.Plugins.Plugin {
+		if project.Config.Settings.PluginIsIgnored(plugin) {
+			continue
+		}
 		if plugin.Version != "" {
 			if err := upgradePlugin(model, plugin); err != nil {
 				log.Warnf("%v", err)

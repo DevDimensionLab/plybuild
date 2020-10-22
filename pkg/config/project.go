@@ -69,16 +69,22 @@ type ProjectConfiguration struct {
 }
 
 type MavenProjectConfiguration struct {
+	Artifact
 	Language        string `json:"language"`
-	GroupId         string `json:"groupId"`
-	ArtifactId      string `json:"artifactId"`
 	Package         string `json:"package"`
 	ApplicationName string `json:"applicationName"`
 }
 
 type ProjectSettings struct {
-	DisableDependencySort    bool     `json:"disableDependencySort"`
-	DisableDependencyUpgrade []string `json:"disableDependencyUpgrade"`
+	DisableDependencySort    bool       `json:"disableDependencySort"`
+	DisableUpgradesFor       []Artifact `json:"disableUpgradesFor"`
+	DisableSpringBootUpgrade bool       `json:"disableSpringBootUpgrade"`
+	DisableKotlinUpgrade     bool       `json:"disableKotlinUpgrade"`
+}
+
+type Artifact struct {
+	GroupId    string `json:"groupId"`
+	ArtifactId string `json:"artifactId"`
 }
 
 type ProjectConfig interface {
@@ -250,4 +256,30 @@ func (project Project) SortAndWritePom() error {
 	var writeToFile = project.Type.FilePath()
 	log.Infof("writing model to pom file: %s", writeToFile)
 	return project.Type.Model().WriteToFile(writeToFile)
+}
+
+func (projectSettings ProjectSettings) DependencyIsIgnored(dep pom.Dependency) bool {
+	if projectSettings.DisableUpgradesFor == nil {
+		return false
+	}
+	return artifactIsIgnored(dep.GroupId, dep.ArtifactId, projectSettings.DisableUpgradesFor)
+}
+
+func (projectSettings ProjectSettings) PluginIsIgnored(plugin pom.Plugin) bool {
+	if projectSettings.DisableUpgradesFor == nil {
+		return false
+	}
+	return artifactIsIgnored(plugin.GroupId, plugin.ArtifactId, projectSettings.DisableUpgradesFor)
+}
+
+func artifactIsIgnored(groupId string, artifactId string, artifacts []Artifact) bool {
+	for _, artifact := range artifacts {
+		ignoredGroupId := artifact.GroupId
+		ignoredArtifactId := artifact.ArtifactId
+		if groupId == ignoredGroupId && artifactId == ignoredArtifactId {
+			return true
+		}
+	}
+
+	return false
 }

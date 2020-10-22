@@ -100,9 +100,13 @@ var upgradeAllCmd = &cobra.Command{
 	Short: "Upgrade everything in project",
 	Long:  `Upgrade everything in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("upgrading everything", func(project config.Project, args ...interface{}) error {
-			return UpgradeAll(project)
-		})
+		ctx.OnEachProject("upgrading everything",
+			maven.UpgradeKotlin(),
+			spring.UpgradeSpringBoot(),
+			maven.Upgrade2PartyDependencies(),
+			maven.Upgrade3PartyDependencies(),
+			maven.UpgradePlugins(),
+		)
 	},
 }
 
@@ -123,31 +127,6 @@ func init() {
 	upgradeCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	upgradeCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	upgradeCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
-}
-
-func UpgradeAll(project config.Project) error {
-	model := project.Type.Model()
-	if err := maven.UpgradeKotlinOnModel(model); err != nil {
-		log.Warn(err)
-	}
-	if err := spring.UpgradeSpringBootOnModel(model); err != nil {
-		log.Warn(err)
-	}
-	if err := maven.Upgrade2PartyDependenciesOnModel(model); err != nil {
-		log.Warn(err)
-	}
-	if err := maven.Upgrade3PartyDependenciesOnModel(model); err != nil {
-		log.Warn(err)
-	}
-	if err := maven.UpgradePluginsOnModel(model); err != nil {
-		log.Warn(err)
-	}
-
-	if err := upgradeDeprecated(project); err != nil {
-		log.Warn(err)
-	}
-
-	return nil
 }
 
 func upgradeDeprecated(project config.Project) error {

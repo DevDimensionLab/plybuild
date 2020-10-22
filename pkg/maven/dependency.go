@@ -27,17 +27,20 @@ func UpgradeDependencyOnModel(model *pom.Model, groupId string, artifactId strin
 
 func Upgrade3PartyDependencies() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return Upgrade3PartyDependenciesOnModel(project.Type.Model())
+		return upgrade3PartyDependenciesOnModel(&project)
 	}
 }
 
-func Upgrade3PartyDependenciesOnModel(model *pom.Model) error {
+func upgrade3PartyDependenciesOnModel(project *config.Project) error {
+	model := project.Type.Model()
 	if model.Dependencies != nil {
-		upgradeDependencies(model, model.Dependencies.Dependency, isSecondParty(model, false))
+		deps := model.Dependencies.Dependency
+		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, false))
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
-		upgradeDependencies(model, model.DependencyManagement.Dependencies.Dependency, isSecondParty(model, false))
+		deps := model.DependencyManagement.Dependencies.Dependency
+		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, false))
 	}
 
 	return nil
@@ -45,17 +48,20 @@ func Upgrade3PartyDependenciesOnModel(model *pom.Model) error {
 
 func Upgrade2PartyDependencies() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return Upgrade2PartyDependenciesOnModel(project.Type.Model())
+		return upgrade2PartyDependenciesOnModel(&project)
 	}
 }
 
-func Upgrade2PartyDependenciesOnModel(model *pom.Model) error {
+func upgrade2PartyDependenciesOnModel(project *config.Project) error {
+	model := project.Type.Model()
 	if model.Dependencies != nil {
-		upgradeDependencies(model, model.Dependencies.Dependency, isSecondParty(model, true))
+		deps := model.Dependencies.Dependency
+		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, true))
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
-		upgradeDependencies(model, model.DependencyManagement.Dependencies.Dependency, isSecondParty(model, true))
+		deps := model.DependencyManagement.Dependencies.Dependency
+		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, true))
 	}
 
 	return nil
@@ -89,8 +95,17 @@ func isSecondParty(model *pom.Model, enabled bool) func(groupId string) bool {
 	}
 }
 
-func upgradeDependencies(model *pom.Model, dependencies []pom.Dependency, condition func(groupId string) bool) {
+func upgradeDependencies(
+	model *pom.Model,
+	dependencies []pom.Dependency,
+	settings config.ProjectSettings,
+	condition func(groupId string) bool) {
+
 	for _, dep := range dependencies {
+		if settings.DependencyIsIgnored(dep) {
+			log.Debugf("ignoring dependency %s:%s", dep.GroupId, dep.ArtifactId)
+			continue
+		}
 		depVersion, err := model.GetDependencyVersion(dep)
 		if err != nil {
 			log.Infof("failed to get version for %s:%s", dep.GroupId, dep.ArtifactId)

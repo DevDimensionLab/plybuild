@@ -9,11 +9,14 @@ import (
 
 func UpgradeKotlin() func(project config.Project, args ...interface{}) error {
 	return func(project config.Project, args ...interface{}) error {
-		return UpgradeKotlinOnModel(project.Type.Model())
+		if project.Config.Settings.DisableKotlinUpgrade {
+			return nil
+		}
+		return upgradeKotlinOnModel(project.Type.Model())
 	}
 }
 
-func UpgradeKotlinOnModel(model *pom.Model) error {
+func upgradeKotlinOnModel(model *pom.Model) error {
 	if model.Properties == nil {
 		return errors.New("could not kotlin version because pom does not contain any properties")
 	}
