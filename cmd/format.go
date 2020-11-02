@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"co-pilot/pkg/config"
 	"co-pilot/pkg/maven"
 	"co-pilot/pkg/spring"
 	"github.com/spf13/cobra"
@@ -44,18 +43,7 @@ var formatInheritVersion = &cobra.Command{
 	Short: "Removes manual versions from spring dependencies",
 	Long:  `Removes manual versions from spring dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		if err = spring.CleanManualVersions(project.Type.Model()); err != nil {
-			log.Fatalln(err)
-		}
-
-		if err = project.SortAndWritePom(); err != nil {
-			log.Fatalln(err)
-		}
+		ctx.OnEachProject("removes manual version from spring dependency", spring.CleanManualVersions())
 	},
 }
 

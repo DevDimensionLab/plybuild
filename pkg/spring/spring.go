@@ -8,7 +8,13 @@ import (
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 )
 
-func CleanManualVersions(model *pom.Model) error {
+func CleanManualVersions() func(project config.Project, args ...interface{}) error {
+	return func(project config.Project, args ...interface{}) error {
+		return cleanManualVersions(project.Type.Model())
+	}
+}
+
+func cleanManualVersions(model *pom.Model) error {
 	springBootDependencies, err := GetDependencies()
 	if err != nil {
 		return err

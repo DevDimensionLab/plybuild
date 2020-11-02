@@ -37,6 +37,8 @@ var statusCmd = &cobra.Command{
 				maven.Upgrade2PartyDependencies(),
 				maven.Upgrade3PartyDependencies(),
 				maven.UpgradePlugins(),
+				maven.ChangeVersionToPropertyTags(),
+				spring.CleanManualVersions(),
 			)
 		}
 	},
