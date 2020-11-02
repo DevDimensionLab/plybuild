@@ -64,7 +64,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		// git init project
-		err = project.GitInit()
+		err = project.GitInit(fmt.Sprintf("Adds project %s", project.Config.Name))
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -81,7 +81,7 @@ var generateCmd = &cobra.Command{
 				}
 			}
 			// git commit
-			err = project.GitCommit("Adds templates")
+			err = project.GitCommit(fmt.Sprintf("Adds templates to %s", project.Config.Name))
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -117,7 +117,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		// git commit
-		err = project.GitCommit("Clean up and upgrades")
+		err = project.GitCommit(fmt.Sprintf("Cleans up and upgrades for project %s", project.Config.Name))
 		if err != nil {
 			log.Fatalln(err)
 		}

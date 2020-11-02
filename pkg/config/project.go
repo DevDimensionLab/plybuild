@@ -192,7 +192,7 @@ func (project Project) IsDirtyGitRepo() bool {
 	return project.GitInfo.IsRepo && project.GitInfo.IsDirty
 }
 
-func (project Project) GitInit() error {
+func (project Project) GitInit(msg string) error {
 	if project.GitInfo.DisableCommit {
 		return nil
 	}
@@ -203,7 +203,7 @@ func (project Project) GitInit() error {
 		}
 	}
 
-	return project.GitCommit("Initial commit")
+	return project.GitCommit(msg)
 }
 
 func (project Project) GitCommit(message string) error {
