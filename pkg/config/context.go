@@ -64,6 +64,9 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project,
 
 		if do != nil {
 			for _, job := range do {
+				if job == nil {
+					continue
+				}
 				err := job(p)
 				if err != nil {
 					log.Warnln(err)

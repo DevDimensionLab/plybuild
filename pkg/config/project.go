@@ -241,15 +241,26 @@ func GetGitInfoFromPath(targetDir string) (gitInfo GitInfo, err error) {
 func (project Project) SortAndWritePom() error {
 	var disableDepSort = project.Config.Settings.DisableDependencySort
 
-	if project.Type.Model().Dependencies != nil && !disableDepSort {
-		sortKey, err := project.Type.Model().GetSecondPartyGroupId()
-		if err != nil {
-			log.Warn(err)
-		} else {
-			log.Infof("sorting pom file with default dependencySort")
-			sort.Sort(sorting.DependencySort{
-				Deps:    project.Type.Model().Dependencies.Dependency,
-				SortKey: sortKey})
+	if project.Type.Model().Dependencies != nil {
+		duplicates := project.Type.Model().Dependencies.FindDuplicates()
+		for _, dup := range duplicates {
+			log.Infof("removing duplicate dependency %s:%s", dup.GroupId, dup.ArtifactId)
+			err := project.Type.Model().RemoveDependency(dup)
+			if err != nil {
+				log.Infof("error occured when removing duplicate dependency %s:%s = %v",
+					dup.GroupId, dup.ArtifactId, err)
+			}
+		}
+		if !disableDepSort {
+			sortKey, err := project.Type.Model().GetSecondPartyGroupId()
+			if err != nil {
+				log.Warn(err)
+			} else {
+				log.Infof("sorting pom file with default dependencySort")
+				sort.Sort(sorting.DependencySort{
+					Deps:    project.Type.Model().Dependencies.Dependency,
+					SortKey: sortKey})
+			}
 		}
 	}
 
