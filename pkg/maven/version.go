@@ -13,6 +13,7 @@ type JavaVersion struct {
 	Patch           int
 	Suffix          string
 	SuffixSeparator string
+	original        string
 }
 
 func ParseVersion(version string) (JavaVersion, error) {
@@ -74,6 +75,7 @@ func ParseVersion(version string) (JavaVersion, error) {
 		Patch:           patch,
 		Suffix:          suffix,
 		SuffixSeparator: suffixSeparator,
+		original:        version,
 	}, nil
 }
 
@@ -121,23 +123,7 @@ func (a JavaVersion) IsLessThan(b JavaVersion) bool {
 }
 
 func (a JavaVersion) ToString() string {
-	var firstPart = ""
-
-	if a.Major == 0 {
-		if a.Minor == 0 {
-			firstPart = fmt.Sprintf("%d", a.Patch)
-		} else {
-			firstPart = fmt.Sprintf("%d.%d", a.Minor, a.Patch)
-		}
-	} else {
-		firstPart = fmt.Sprintf("%d.%d.%d", a.Major, a.Minor, a.Patch)
-	}
-
-	if a.Suffix != "" {
-		return fmt.Sprintf("%s%s%s", firstPart, a.SuffixSeparator, a.Suffix)
-	} else {
-		return firstPart
-	}
+	return a.original
 }
 
 type VersionSort []JavaVersion

@@ -209,3 +209,12 @@ func TestVersionSort(t *testing.T) {
 		lastVersion = version
 	}
 }
+
+func TestVersionStartsWithZero(t *testing.T) {
+	version1 := "0.9.6"
+	version1parsed, _ := ParseVersion("0.9.6")
+
+	if version1parsed.ToString() != version1 {
+		t.Errorf("expected %s got %s", version1, version1parsed.ToString())
+	}
+}
