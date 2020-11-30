@@ -15,7 +15,7 @@
 package main
 
 import (
-	"co-pilot/cmd"
+	"github.com/co-pilot-cli/co-pilot/cmd"
 )
 
 var Version string

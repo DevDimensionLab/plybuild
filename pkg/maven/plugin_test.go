@@ -1,7 +1,7 @@
 package maven
 
 import (
-	"co-pilot/pkg/file"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"encoding/json"
 	"testing"
 )

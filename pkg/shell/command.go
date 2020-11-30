@@ -3,7 +3,7 @@ package shell
 import (
 	"archive/zip"
 	"bytes"
-	"co-pilot/pkg/logger"
+	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"fmt"
 	"io"
 	"os"

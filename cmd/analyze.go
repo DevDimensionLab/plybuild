@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"co-pilot/pkg/config"
-	"co-pilot/pkg/maven"
+	"github.com/co-pilot-cli/co-pilot/pkg/config"
+	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/spf13/cobra"
 )
 

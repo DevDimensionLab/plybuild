@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"co-pilot/pkg/config"
-	"co-pilot/pkg/maven"
-	"co-pilot/pkg/spring"
-	"co-pilot/pkg/template"
+	"github.com/co-pilot-cli/co-pilot/pkg/config"
+	"github.com/co-pilot-cli/co-pilot/pkg/maven"
+	"github.com/co-pilot-cli/co-pilot/pkg/spring"
+	"github.com/co-pilot-cli/co-pilot/pkg/template"
 	"fmt"
 	"github.com/spf13/cobra"
 )

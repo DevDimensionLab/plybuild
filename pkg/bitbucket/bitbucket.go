@@ -1,9 +1,9 @@
 package bitbucket
 
 import (
-	"co-pilot/pkg/file"
-	"co-pilot/pkg/http"
-	"co-pilot/pkg/shell"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
+	"github.com/co-pilot-cli/co-pilot/pkg/http"
+	"github.com/co-pilot-cli/co-pilot/pkg/shell"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"

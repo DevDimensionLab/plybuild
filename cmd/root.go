@@ -15,8 +15,8 @@
 package cmd
 
 import (
-	"co-pilot/pkg/config"
-	"co-pilot/pkg/logger"
+	"github.com/co-pilot-cli/co-pilot/pkg/config"
+	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
