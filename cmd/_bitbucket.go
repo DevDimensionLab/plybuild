@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"co-pilot/pkg/bitbucket"
-	"co-pilot/pkg/logger"
+	"github.com/co-pilot-cli/co-pilot/pkg/bitbucket"
+	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/spf13/cobra"
 )
 

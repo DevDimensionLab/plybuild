@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"co-pilot/pkg/logger"
 	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/spf13/cobra"
 )
 

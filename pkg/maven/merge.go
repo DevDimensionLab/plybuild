@@ -1,8 +1,8 @@
 package maven
 
 import (
-	"co-pilot/pkg/config"
 	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
 )

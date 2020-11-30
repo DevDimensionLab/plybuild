@@ -1,9 +1,9 @@
 package config
 
 import (
-	"co-pilot/pkg/file"
 	"errors"
 	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
 )
 
 func (dirCfg DirConfig) Dir() string {

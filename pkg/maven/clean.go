@@ -1,8 +1,8 @@
 package maven
 
 import (
-	"co-pilot/pkg/config"
 	"errors"
+	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/viper"
 	"strings"

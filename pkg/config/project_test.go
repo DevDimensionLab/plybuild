@@ -1,7 +1,7 @@
 package config
 
 import (
-	"co-pilot/pkg/file"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"testing"
 )
 

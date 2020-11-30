@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"co-pilot/pkg/file"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/spf13/cobra"
 )
 

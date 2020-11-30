@@ -1,4 +1,4 @@
-module co-pilot
+module github.com/co-pilot-cli/co-pilot
 
 go 1.14
 

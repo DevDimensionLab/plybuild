@@ -1,10 +1,10 @@
 package config
 
 import (
-	"co-pilot/pkg/file"
-	"co-pilot/pkg/logger"
 	"errors"
 	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
+	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/mitchellh/go-homedir"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"github.com/sirupsen/logrus"

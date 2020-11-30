@@ -1,11 +1,11 @@
 package config
 
 import (
-	"co-pilot/pkg/file"
-	"co-pilot/pkg/logger"
-	"co-pilot/pkg/shell"
 	"errors"
 	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
+	"github.com/co-pilot-cli/co-pilot/pkg/logger"
+	"github.com/co-pilot-cli/co-pilot/pkg/shell"
 	"io/ioutil"
 )
 

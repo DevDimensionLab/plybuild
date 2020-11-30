@@ -1,8 +1,8 @@
 package maven
 
 import (
-	"co-pilot/pkg/shell"
 	"errors"
+	"github.com/co-pilot-cli/co-pilot/pkg/shell"
 	"strings"
 )
 
