@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/co-pilot-cli/co-pilot/pkg/spring"
 	"github.com/co-pilot-cli/co-pilot/pkg/template"
-	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 )

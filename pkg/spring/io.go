@@ -1,12 +1,12 @@
 package spring
 
 import (
+	"errors"
+	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/http"
 	"github.com/co-pilot-cli/co-pilot/pkg/shell"
-	"errors"
-	"fmt"
 	"net/url"
 	"os"
 	"strings"

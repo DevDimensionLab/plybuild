@@ -1,9 +1,9 @@
 package maven
 
 import (
-	"github.com/co-pilot-cli/co-pilot/pkg/http"
 	"errors"
 	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/http"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
 )

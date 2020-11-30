@@ -1,11 +1,11 @@
 package template
 
 import (
+	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
