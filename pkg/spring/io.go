@@ -21,7 +21,7 @@ func UrlValuesFrom(config config.ProjectConfiguration) url.Values {
 	params.Add("packageName", config.Package)
 	params.Add("dependencies", strings.Join(config.Dependencies, ","))
 	params.Add("javaVersion", "11")
-	params.Add("language", "kotlin")
+	params.Add("language", config.Language)
 	params.Add("description", config.Description)
 	params.Add("name", config.Name)
 	//params.Add("baseDir", targetDir)
