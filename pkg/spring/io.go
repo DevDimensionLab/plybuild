@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+var baseUrl = "https://start.spring.io"
+
 func UrlValuesFrom(config config.ProjectConfiguration) url.Values {
 	// see https://github.com/spring-io/initializr#generating-a-project
 	params := url.Values{}
@@ -31,13 +33,13 @@ func UrlValuesFrom(config config.ProjectConfiguration) url.Values {
 
 func GetRoot() (IoRootResponse, error) {
 	var deps IoRootResponse
-	err := http.GetJson("https://start.spring.io", &deps)
+	err := http.GetJson(baseUrl, &deps)
 	return deps, err
 }
 
 func GetDependencies() (IoDependenciesResponse, error) {
 	var deps IoDependenciesResponse
-	err := http.GetJson("https://start.spring.io/dependencies", &deps)
+	err := http.GetJson(baseUrl+"/dependencies", &deps)
 	return deps, err
 }
 
@@ -81,9 +83,9 @@ func DownloadInitializer(targetDir string, formData url.Values) error {
 		return err
 	}
 
-	downloadUrl := "https://start.spring.io/starter.zip"
-	log.Infof("Downloading from %s to %s", downloadUrl, targetArchiveFile)
-	err = http.Wpost(downloadUrl, targetArchiveFile, formData)
+	downloadUrl := fmt.Sprintf("%s/starter.zip?%s", baseUrl, formData.Encode())
+	log.Infof("Downloading from %s to %s", baseUrl, targetArchiveFile)
+	err = http.Wget(downloadUrl, targetArchiveFile)
 	if err != nil {
 		return err
 	}

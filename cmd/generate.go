@@ -8,7 +8,6 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/spring"
 	"github.com/co-pilot-cli/co-pilot/pkg/template"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var generateCmd = &cobra.Command{
@@ -16,22 +15,23 @@ var generateCmd = &cobra.Command{
 	Short: "Initializes a maven project with co-pilot files and formatting",
 	Long:  `Initializes a maven project with co-pilot files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// remove targetDirectory
-		if err := os.RemoveAll(ctx.TargetDirectory); err != nil {
-			log.Fatalln(err)
-		}
-
 		// sync cloud config
 		if err := cloudCfg.Refresh(localCfg); err != nil {
 			log.Fatalln(err)
 		}
 
+		var orderConfig config.ProjectConfiguration
+		var err error
+
 		// fetch user input config
+		interactive, _ := cmd.Flags().GetBool("interactive")
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
-		if jsonConfigFile == "" {
-			log.Fatalln("--config-file flag is required")
+		if jsonConfigFile != "" {
+			orderConfig, err = config.InitProjectConfigurationFromFile(jsonConfigFile)
 		}
-		orderConfig, err := config.InitProjectConfigurationFromFile(jsonConfigFile)
+		if interactive {
+			err = config.BuildConfigInteractive(&orderConfig)
+		}
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -101,7 +101,6 @@ var generateCmd = &cobra.Command{
 		// upgrade all ... maybe?
 		disableUpgrade, _ := cmd.Flags().GetBool("disable-upgrading")
 		if !disableUpgrade {
-			log.Info(logger.Info(fmt.Sprintf("upgrading all on %s", project.Type.FilePath())))
 			ctx.OnEachProject("upgrading everything",
 				maven.UpgradeKotlin(),
 				spring.UpgradeSpringBoot(),
@@ -109,11 +108,11 @@ var generateCmd = &cobra.Command{
 				maven.Upgrade3PartyDependencies(),
 				maven.UpgradePlugins(),
 			)
-		}
-
-		// sorting and writing
-		if err = project.SortAndWritePom(); err != nil {
-			log.Fatalln(err)
+		} else {
+			// only apply sorting and writing
+			if err = project.SortAndWritePom(); err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 		// git commit
@@ -129,5 +128,6 @@ func init() {
 
 	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	generateCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
 	generateCmd.Flags().String("config-file", "", "Optional config file")
 }
