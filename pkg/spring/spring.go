@@ -47,17 +47,17 @@ func UpgradeSpringBoot() func(project config.Project, args ...interface{}) error
 }
 
 func upgradeSpringBootOnModel(model *pom.Model) error {
-	springRootInfo, err := GetRoot()
+	latestVersionMeta, err := maven.GetMetaData("org.springframework.boot", "spring-boot")
+	if err != nil {
+		return err
+	}
+
+	latestVersion, err := latestVersionMeta.LatestRelease()
 	if err != nil {
 		return err
 	}
 
 	currentVersion, err := getSpringBootVersion(model)
-	if err != nil {
-		return err
-	}
-
-	latestVersion, err := maven.ParseVersion(springRootInfo.BootVersion.Default)
 	if err != nil {
 		return err
 	}

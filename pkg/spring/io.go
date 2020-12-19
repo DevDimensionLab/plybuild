@@ -31,19 +31,13 @@ func UrlValuesFrom(config config.ProjectConfiguration) url.Values {
 
 func GetRoot() (IoRootResponse, error) {
 	var deps IoRootResponse
-	err := http.GetJson("http://start.spring.io", &deps)
-	return deps, err
-}
-
-func GetInfo() (IoInfoResponse, error) {
-	var deps IoInfoResponse
-	err := http.GetJson("http://start.spring.io/actuator/info", &deps)
+	err := http.GetJson("https://start.spring.io", &deps)
 	return deps, err
 }
 
 func GetDependencies() (IoDependenciesResponse, error) {
 	var deps IoDependenciesResponse
-	err := http.GetJson("http://start.spring.io/dependencies", &deps)
+	err := http.GetJson("https://start.spring.io/dependencies", &deps)
 	return deps, err
 }
 

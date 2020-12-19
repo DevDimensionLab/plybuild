@@ -44,11 +44,21 @@ var infoCmd = &cobra.Command{
 }
 
 func springInfo() {
+	latestVersionMeta, err := maven.GetMetaData("org.springframework.boot", "spring-boot")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	latestVersion, err := latestVersionMeta.LatestRelease()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	root, err := spring.GetRoot()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Infof("Latest version of spring boot are: %s\n", root.BootVersion.Default)
+	log.Infof("Latest version of spring boot are: %s\n", latestVersion)
 
 	log.Infof(logger.Info(fmt.Sprintf("Valid dependencies: ")))
 	for _, category := range root.Dependencies.Values {
