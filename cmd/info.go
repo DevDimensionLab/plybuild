@@ -97,7 +97,8 @@ func showSpringManaged() {
 }
 
 func showMavenRepositories() {
-	if err := maven.ListRepositories(); err != nil {
+	settings, _ := maven.NewSettings()
+	if err := settings.ListRepositories(); err != nil {
 		log.Fatalln(err)
 	}
 }
