@@ -35,7 +35,7 @@ func GetMetaData(groupID string, artifactId string) (RepositoryMetadata, error) 
 }
 
 func GetRepo(repos Repositories) (string, error) {
-	var repo = ""
+	var repo string
 	if len(repos.Mirror) > 0 {
 		repo = repos.Mirror[0]
 	} else {
