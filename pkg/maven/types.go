@@ -43,30 +43,8 @@ type M2Settings struct {
 			ID            string `xml:"id"`
 		} `xml:"proxy"`
 	} `xml:"proxies"`
-	Servers []struct {
-		Text   string `xml:",chardata"`
-		Server struct {
-			Text                 string `xml:",chardata"`
-			Username             string `xml:"username"`
-			Password             string `xml:"password"`
-			PrivateKey           string `xml:"privateKey"`
-			Passphrase           string `xml:"passphrase"`
-			FilePermissions      string `xml:"filePermissions"`
-			DirectoryPermissions string `xml:"directoryPermissions"`
-			Configuration        string `xml:"configuration"`
-			ID                   string `xml:"id"`
-		} `xml:"server"`
-	} `xml:"servers"`
-	Mirrors []struct {
-		Text   string `xml:",chardata"`
-		Mirror struct {
-			Text     string `xml:",chardata"`
-			MirrorOf string `xml:"mirrorOf"`
-			Name     string `xml:"name"`
-			URL      string `xml:"url"`
-			ID       string `xml:"id"`
-		} `xml:"mirror"`
-	} `xml:"mirrors"`
+	Servers  []Servers `xml:"servers"`
+	Mirrors  []Mirrors `xml:"mirrors"`
 	Profiles struct {
 		Text    string `xml:",chardata"`
 		Profile []struct {
@@ -149,4 +127,34 @@ type M2Settings struct {
 		Text        string `xml:",chardata"`
 		PluginGroup string `xml:"pluginGroup"`
 	} `xml:"pluginGroups"`
+}
+
+type Servers struct {
+	Text   string `xml:",chardata"`
+	Server Server `xml:"server"`
+}
+
+type Server struct {
+	Text                 string `xml:",chardata"`
+	Username             string `xml:"username"`
+	Password             string `xml:"password"`
+	PrivateKey           string `xml:"privateKey"`
+	Passphrase           string `xml:"passphrase"`
+	FilePermissions      string `xml:"filePermissions"`
+	DirectoryPermissions string `xml:"directoryPermissions"`
+	Configuration        string `xml:"configuration"`
+	ID                   string `xml:"id"`
+}
+
+type Mirrors struct {
+	Text   string `xml:",chardata"`
+	Mirror Mirror `xml:"mirror"`
+}
+
+type Mirror struct {
+	Text     string `xml:",chardata"`
+	MirrorOf string `xml:"mirrorOf"`
+	Name     string `xml:"name"`
+	URL      string `xml:"url"`
+	ID       string `xml:"id"`
 }
