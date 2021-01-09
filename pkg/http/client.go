@@ -60,7 +60,7 @@ func get(url string) ([]byte, error) {
 	return body, nil
 }
 
-func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {
+func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) (err error) {
 	req, err := http.NewRequest("GET", host+path, nil)
 	if err != nil {
 		return err

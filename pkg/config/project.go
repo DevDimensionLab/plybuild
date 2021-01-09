@@ -247,7 +247,7 @@ func (project Project) SortAndWritePom() error {
 			log.Infof("removing duplicate dependency %s:%s", dup.GroupId, dup.ArtifactId)
 			err := project.Type.Model().RemoveDependency(dup)
 			if err != nil {
-				log.Infof("error occured when removing duplicate dependency %s:%s = %v",
+				log.Infof("error occurred when removing duplicate dependency %s:%s = %v",
 					dup.GroupId, dup.ArtifactId, err)
 			}
 		}
