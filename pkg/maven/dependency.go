@@ -88,7 +88,7 @@ func isSecondParty(model *pom.Model, enabled bool) func(groupId string) bool {
 		isSecondParty, err := isSecondPartyGroupId(groupId, secondPartyGroupId)
 		log.Debugf("upgrade secondParty %t, groupId:%s isSecondParty %t", enabled, groupId, isSecondParty)
 		if err != nil {
-			log.Warnln(err)
+			log.Debug(err)
 			return false
 		}
 		return isSecondParty == enabled
