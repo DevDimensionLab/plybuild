@@ -180,6 +180,14 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 	return nil
 }
 
+func (config ProjectConfiguration) Validate() error {
+	if config.GroupId == "" || config.ArtifactId == "" {
+		return errors.New("groupId or artifactId cannot be empty")
+	}
+
+	return nil
+}
+
 func (project Project) IsMavenProject() bool {
 	return project.Type != nil && project.Type.Type() == Maven
 }

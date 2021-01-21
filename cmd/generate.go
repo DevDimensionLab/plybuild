@@ -35,6 +35,19 @@ var generateCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
+		if err = orderConfig.Validate(); err != nil {
+			log.Fatalln(err)
+		}
+
+		// validate templates
+		var templates []config.CloudTemplate
+		if orderConfig.Templates != nil {
+			templates, err = cloudCfg.ValidTemplatesFrom(orderConfig.Templates)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
+
 		err = spring.Validate(orderConfig)
 		if err != nil {
 			log.Fatalln(err)
@@ -70,11 +83,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		// merge templates into the newly created project
-		if orderConfig.Templates != nil {
-			templates, err := cloudCfg.ValidTemplatesFrom(orderConfig.Templates)
-			if err != nil {
-				log.Fatalln(err)
-			}
+		if templates != nil {
 			for _, t := range templates {
 				if err := template.MergeTemplate(t, project); err != nil {
 					log.Fatalln(err)
