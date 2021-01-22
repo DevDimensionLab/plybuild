@@ -209,13 +209,12 @@ func (gitCfg GitCloudConfig) ValidTemplatesFrom(list []string) (templates []Clou
 	for _, t := range unique(list) {
 		template, err := gitCfg.Template(t)
 		if err != nil {
-			log.Warnln(err)
+			return templates, err
 		} else {
 			templates = append(templates, template)
 		}
 	}
-
-	return
+	return templates, err
 }
 
 func unique(input []string) (list []string) {
