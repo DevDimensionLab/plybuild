@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/co-pilot-cli/co-pilot/pkg/spring"
 	"github.com/co-pilot-cli/co-pilot/pkg/template"
@@ -96,16 +95,13 @@ var generateCmd = &cobra.Command{
 			}
 		}
 
-		// format version
-		log.Info(logger.Info(fmt.Sprintf("formatting %s", project.Type.FilePath())))
-		if err = maven.ChangeVersionToPropertyTagsOnModel(project.Type.Model()); err != nil {
-			log.Fatalln(err)
-		}
-
 		// load project into context
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}
+
+		// format version
+		ctx.OnEachProject("removes version tags", maven.ChangeVersionToPropertyTags())
 
 		// upgrade all ... maybe?
 		disableUpgrade, _ := cmd.Flags().GetBool("disable-upgrading")
