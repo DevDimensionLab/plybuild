@@ -20,6 +20,10 @@ func MergePoms(from *pom.Model, to *pom.Model) error {
 		log.Warnln(err)
 	}
 
+	if err := mergeProfiles(from, to); err != nil {
+		log.Warnln(err)
+	}
+
 	return nil
 }
 
@@ -219,6 +223,33 @@ func mergePropertyKey(from *pom.Model, to *pom.Model, version string) {
 			}
 		}
 	}
+}
+
+func mergeProfiles(from *pom.Model, to *pom.Model) error {
+	if from.Profiles == nil {
+		log.Debug("from profiles is nil")
+		return nil
+	}
+
+	if to.Profiles == nil {
+		to.Profiles = from.Profiles
+		log.Infof("inserting profiles block into project")
+		return nil
+	}
+
+	for _, fromProfile := range from.Profiles.Profile {
+		var hasProfile = false
+		for _, toProfile := range to.Profiles.Profile {
+			if fromProfile.Id == toProfile.Id {
+				hasProfile = true
+			}
+		}
+		if !hasProfile {
+			log.Infof("inserting profile %s into project", fromProfile.Id)
+			to.Profiles.Profile = append(to.Profiles.Profile, fromProfile)
+		}
+	}
+	return nil
 }
 
 func MergeAndWritePomFiles(source config.Project, target config.Project) error {
