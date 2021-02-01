@@ -6,6 +6,8 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/co-pilot-cli/co-pilot/pkg/spring"
 	"github.com/co-pilot-cli/co-pilot/pkg/template"
+	"github.com/co-pilot-cli/co-pilot/pkg/webservice"
+	"github.com/co-pilot-cli/co-pilot/pkg/webservice/api"
 	"github.com/spf13/cobra"
 )
 
@@ -110,6 +112,16 @@ var upgradeAllCmd = &cobra.Command{
 	},
 }
 
+var upgradeInteractiveCmd = &cobra.Command{
+	Use:   "interactive",
+	Short: "Interactively upgrade the project",
+	Long:  `Interactively upgrade the project`,
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx.OnRootProject("starting interactive upgrade",
+			webservice.InitAndBlockProject(webservice.Upgrade, api.CallbackChannel))
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(upgradeCmd)
 	upgradeCmd.AddCommand(upgradeDependencyCmd)
@@ -120,6 +132,7 @@ func init() {
 	upgradeCmd.AddCommand(upgradePluginsCmd)
 	upgradeCmd.AddCommand(upgradeDeprecatedCmd)
 	upgradeCmd.AddCommand(upgradeAllCmd)
+	upgradeCmd.AddCommand(upgradeInteractiveCmd)
 
 	upgradeDependencyCmd.PersistentFlags().StringVarP(&groupId, "groupId", "g", "", "GroupId for upgrade")
 	upgradeDependencyCmd.PersistentFlags().StringVarP(&artifactId, "artifactId", "a", "", "ArtifactId for upgrade")

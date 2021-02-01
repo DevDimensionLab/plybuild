@@ -3,64 +3,29 @@ package webservice
 import (
 	"context"
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/spring"
+	"github.com/co-pilot-cli/co-pilot/pkg/webservice/api"
 	"log"
 	"net/http"
 	"os/exec"
 	"runtime"
-	"text/template"
 	"time"
 )
 
-type GenerateOptions struct {
-	ProjectConfig *config.ProjectConfiguration
-	CloudConfig   config.CloudConfig
-	IoResponse    spring.IoRootResponse
-}
+const port = 7999
 
-var CallbackChannel = make(chan bool)
-var GOptions GenerateOptions
-var server = &http.Server{Addr: ":7999"}
+var server = &http.Server{Addr: fmt.Sprintf(":%d", port)}
 
-func getHandlerGenerate(w http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("generateTemplate").Parse(generateTemplate)
-	_ = t.Execute(w, GOptions)
-}
+func StartWebServer() {
+	http.HandleFunc("/ui/generate", api.GetGenerate)
+	http.HandleFunc("/api/generate", api.PostGenerate)
 
-func postHandlerGenerate(w http.ResponseWriter, r *http.Request) {
-	_ = r.ParseForm()
-	cfg := GOptions.ProjectConfig
-	cfg.GroupId = r.PostFormValue("groupId")
-	cfg.ArtifactId = r.PostFormValue("artifactId")
-	cfg.Package = r.PostFormValue("package")
-	cfg.Name = r.PostFormValue("name")
-	cfg.Description = r.PostFormValue("description")
-	cfg.Language = r.PostFormValue("language")
+	http.HandleFunc("/ui/upgrade", api.GetUpgrade)
+	http.HandleFunc("/api/upgrade", api.PostUpgrade)
 
-	for key, values := range r.PostForm {
-		if key == "templates" {
-			for _, tmpl := range values {
-				cfg.Templates = append(cfg.Templates, tmpl)
-			}
-		}
-		if key == "dependencies" {
-			for _, dep := range values {
-				cfg.Dependencies = append(cfg.Dependencies, dep)
-			}
-		}
-	}
-	go func() { CallbackChannel <- true }()
-	_, _ = fmt.Fprintf(w, "OK")
-}
-
-func StartService() {
-	http.HandleFunc("/ui/generate", getHandlerGenerate)
-	http.HandleFunc("/api/generate", postHandlerGenerate)
 	log.Fatal(server.ListenAndServe())
 }
 
-func StopService() {
+func StopWebServer() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_ = server.Shutdown(ctx)

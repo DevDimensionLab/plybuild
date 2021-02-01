@@ -7,6 +7,7 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/spring"
 	"github.com/co-pilot-cli/co-pilot/pkg/template"
 	"github.com/co-pilot-cli/co-pilot/pkg/webservice"
+	"github.com/co-pilot-cli/co-pilot/pkg/webservice/api"
 	"github.com/spf13/cobra"
 )
 
@@ -134,15 +135,12 @@ func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	webservice.GOptions = webservice.GenerateOptions{
+	api.GOptions = api.GenerateOptions{
 		ProjectConfig: orderConfig,
 		CloudConfig:   cloudCfg,
 		IoResponse:    ioResp,
 	}
-	go webservice.StartService()
-	webservice.OpenBrowser("http://localhost:7999/ui/generate")
-	<-webservice.CallbackChannel
-	webservice.StopService()
+	webservice.InitAndBlockStandalone(webservice.Generate, api.CallbackChannel)
 }
 
 func init() {
