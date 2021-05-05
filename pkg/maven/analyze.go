@@ -2,6 +2,7 @@ package maven
 
 import (
 	"errors"
+	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/shell"
 	"strings"
 )
@@ -30,7 +31,10 @@ func isSecondPartyGroupId(groupId string, secondPartyGroupId string) (bool, erro
 	secondPartyGroupIdParts := strings.Split(secondPartyGroupId, ".")
 
 	if len(groupIdParts) <= 1 {
-		return false, errors.New("groupId must at least contain two punctuations")
+		return false, errors.New(fmt.Sprintf(
+			"secondParty groupId (%s) must at least contain two punctuations for comparison",
+			groupId,
+		))
 	} else {
 		for i := range secondPartyGroupIdParts[:2] {
 			if groupIdParts[i] != secondPartyGroupIdParts[i] {

@@ -1,52 +1,37 @@
 package maven
 
 import (
-	"errors"
 	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/http"
 	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
 	"strings"
 )
 
-func GetMetaData(groupID string, artifactId string) (RepositoryMetadata, error) {
-	var metaData RepositoryMetadata
-	repos, err := GetRepositories()
+func GetMetaData(groupID string, artifactId string) (metaData RepositoryMetadata, err error) {
+	settings, _ := NewSettings()
+	repos, err := settings.GetRepositories()
 	if err != nil {
 		return metaData, err
 	}
-	repo, err := GetRepo(repos)
-	if err != nil {
-		return metaData, err
-	}
+	repo := repos.GetDefaultRepository()
 
 	url := fmt.Sprintf("%s/%s/%s/maven-metadata.xml",
-		repo,
+		repo.Url,
 		strings.ReplaceAll(groupID, ".", "/"),
 		strings.ReplaceAll(artifactId, ".", "/"))
 	log.Debugf("Using url for metadata: %s", url)
 
-	err = http.GetXml(url, &metaData)
+	if repo.Auth != nil {
+		err = http.GetAuthXml(url, repo.Auth.Username, repo.Auth.Password, &metaData)
+	} else {
+		err = http.GetXml(url, &metaData)
+	}
 
 	if err != nil {
 		return metaData, err
 	}
 
 	return metaData, nil
-}
-
-func GetRepo(repos Repositories) (string, error) {
-	var repo = ""
-	if len(repos.Mirror) > 0 {
-		repo = repos.Mirror[0]
-	} else {
-		repo = repos.Fallback
-	}
-
-	if repo == "" {
-		return "", errors.New("could not find a valid maven repo in repos struct")
-	} else {
-		return repo, nil
-	}
 }
 
 func GetBannedModel(url string) (*pom.Model, error) {

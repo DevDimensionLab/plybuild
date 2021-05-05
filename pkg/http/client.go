@@ -60,7 +60,48 @@ func get(url string) ([]byte, error) {
 	return body, nil
 }
 
-func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {
+func GetAuthXml(url, username, password string, parsed interface{}) error {
+	body, err := getBasicAuth(url, username, password)
+	if err != nil {
+		return err
+	}
+
+	err = xml.Unmarshal(body, &parsed)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getBasicAuth(url, username, password string) ([]byte, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{}
+	req.SetBasicAuth(username, password)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode >= 400 {
+		return nil, errors.New(fmt.Sprintf("%s returned status code [%s]", url, resp.Status))
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return body, err
+	}
+
+	defer resp.Body.Close()
+
+	return body, nil
+}
+
+func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) (err error) {
 	req, err := http.NewRequest("GET", host+path, nil)
 	if err != nil {
 		return err

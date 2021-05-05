@@ -82,3 +82,39 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project,
 		}
 	}
 }
+
+func (ctx Context) OnRootProject(description string, do ...func(project Project, args ...interface{}) error) {
+	if ctx.Projects == nil || len(ctx.Projects) == 0 {
+		log.Errorln("could not find any pom models in the context")
+		return
+	}
+
+	rootProject := ctx.Projects[0]
+	if rootProject.Type == nil {
+		log.Fatalln(fmt.Sprintf("no project type defined for path: %s", rootProject.Path))
+	}
+	log.Info(logger.White(fmt.Sprintf("%s for file %s", description, rootProject.Type.FilePath())))
+
+	if rootProject.IsDirtyGitRepo() {
+		log.Warnf("operating on a dirty git repo")
+	}
+
+	if do != nil {
+		for _, job := range do {
+			if job == nil {
+				continue
+			}
+			err := job(rootProject)
+			if err != nil {
+				log.Warnln(err)
+				continue
+			}
+		}
+	}
+
+	if !ctx.DryRun {
+		if err := rootProject.SortAndWritePom(); err != nil {
+			log.Warnln(err)
+		}
+	}
+}

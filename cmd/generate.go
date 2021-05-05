@@ -6,6 +6,8 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/co-pilot-cli/co-pilot/pkg/spring"
 	"github.com/co-pilot-cli/co-pilot/pkg/template"
+	"github.com/co-pilot-cli/co-pilot/pkg/webservice"
+	"github.com/co-pilot-cli/co-pilot/pkg/webservice/api"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +31,7 @@ var generateCmd = &cobra.Command{
 			orderConfig, err = config.InitProjectConfigurationFromFile(jsonConfigFile)
 		}
 		if interactive {
-			err = config.BuildConfigInteractive(&orderConfig)
+			interactiveWebService(&orderConfig)
 		}
 		if err != nil {
 			log.Fatalln(err)
@@ -126,6 +128,19 @@ var generateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 	},
+}
+
+func interactiveWebService(orderConfig *config.ProjectConfiguration) {
+	ioResp, err := spring.GetRoot()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	api.GOptions = api.GenerateOptions{
+		ProjectConfig: orderConfig,
+		CloudConfig:   cloudCfg,
+		IoResponse:    ioResp,
+	}
+	webservice.InitAndBlockStandalone(webservice.Generate, api.CallbackChannel)
 }
 
 func init() {

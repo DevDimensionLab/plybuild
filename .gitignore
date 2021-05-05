@@ -6,4 +6,6 @@ spring-boot-co-pilot
 co-pilot
 target
 webservice*
+!pkg/webservice
 dist
+spring-*

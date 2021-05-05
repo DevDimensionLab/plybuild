@@ -9,7 +9,7 @@ func TestParseVersion(t *testing.T) {
 
 	_, err := ParseVersion("foobar")
 	if err == nil {
-		t.Errorf("foobar should not be pased correctly as a version")
+		t.Errorf("foobar should not be passed correctly as a version")
 	}
 
 	version, err := ParseVersion("1.2.3")
