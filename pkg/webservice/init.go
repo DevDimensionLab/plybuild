@@ -24,7 +24,7 @@ func InitAndBlockStandalone(endpoint Endpoint, blockingChannel chan bool) {
 	go StartWebServer()
 	OpenBrowser(endpoint.Uri())
 	<-blockingChannel
-	go StopWebServer()
+	//go StopWebServer()
 }
 
 func InitAndBlockProject(endpoint Endpoint, blockingChannel chan bool) func(project config.Project, args ...interface{}) error {

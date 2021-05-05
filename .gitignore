@@ -9,3 +9,9 @@ webservice*
 !pkg/webservice
 dist
 spring-*
+.mvn
+co-pilot.json
+mvnw
+mvnw.cmd
+pom.xml
+src

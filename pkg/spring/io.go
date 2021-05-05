@@ -90,6 +90,7 @@ func DownloadInitializer(targetDir string, formData url.Values) error {
 		return err
 	}
 
+	log.Infof("Unzipping %s to %s", targetArchiveFile, targetDir)
 	_, err = shell.Unzip(targetArchiveFile, targetDir)
 	if err != nil {
 		return err

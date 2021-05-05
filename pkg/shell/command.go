@@ -56,8 +56,9 @@ func Unzip(src string, dest string) (filenames []string, err error) {
 
 	for _, f := range r.File {
 		fpath := filepath.Join(dest, f.Name)
+		log.Debugf("Unzipping dest: %s file: %s => %s", dest, f.Name, fpath)
 
-		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
+		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) && dest != "." {
 			return filenames, fmt.Errorf("%s: illegal file path", fpath)
 		}
 
