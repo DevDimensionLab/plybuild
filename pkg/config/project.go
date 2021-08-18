@@ -7,7 +7,7 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/shell"
 	"github.com/co-pilot-cli/co-pilot/pkg/sorting"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 	"io/ioutil"
 	"os"
 	"sort"

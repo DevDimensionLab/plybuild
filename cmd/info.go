@@ -5,7 +5,7 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/co-pilot-cli/co-pilot/pkg/spring"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 )
 

@@ -2,7 +2,7 @@ package sorting
 
 import (
 	"fmt"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 	"strings"
 )
 

@@ -33,7 +33,7 @@ release:
 	goreleaser --rm-dist
 
 upgrade:
-	go get github.com/perottobc/mvn-pom-mutator
+	go get github.com/co-pilot-cli/mvn-pom-mutator
 
 
 all: build install

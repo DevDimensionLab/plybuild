@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 )
 
 func CleanManualVersions() func(project config.Project, args ...interface{}) error {

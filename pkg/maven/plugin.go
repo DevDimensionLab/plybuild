@@ -2,7 +2,7 @@ package maven
 
 import (
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/perottobc/mvn-pom-mutator/pkg/pom"
+	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 	"strings"
 )
 

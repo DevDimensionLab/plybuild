@@ -33,6 +33,8 @@ github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e h1:fY5BOSpyZCqRo5O
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
+github.com/co-pilot-cli/mvn-pom-mutator v0.1.40 h1:gqTRmJOXy3jm8A1zgha1m+lqEssX4rSWIjgKOFeJFzI=
+github.com/co-pilot-cli/mvn-pom-mutator v0.1.40/go.mod h1:9MFCMeSumgcaVExRxnbh4U7fmvZYdIHWQyvXnWagH/Q=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
@@ -165,16 +167,6 @@ github.com/pelletier/go-toml v1.2.0 h1:T5zMGML61Wp+FlcbWjRDT7yAxhJNAiPPLOFECq181
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pelletier/go-toml v1.8.0 h1:Keo9qb7iRJs2voHvunFtuuYFsbWeOBh8/P9v/kVMFtw=
 github.com/pelletier/go-toml v1.8.0/go.mod h1:D6yutnOGMveHEPV7VQOuvI/gXY61bv+9bAOTRnLElKs=
-github.com/perottobc/mvn-pom-mutator v0.1.32 h1:SnLdxle05ndBDl+9teuyKejbUI7mYY+NDpQnkuU5dSY=
-github.com/perottobc/mvn-pom-mutator v0.1.32/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
-github.com/perottobc/mvn-pom-mutator v0.1.33 h1:JvUsHuwlUERBRKelLW3GWR3mzNMyD9YPYgU4LsP4Efc=
-github.com/perottobc/mvn-pom-mutator v0.1.33/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
-github.com/perottobc/mvn-pom-mutator v0.1.36 h1:VcmUUE9H72QL8qfNS5LBKlqn9PUDA2EAaM/83YM5Y2E=
-github.com/perottobc/mvn-pom-mutator v0.1.36/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
-github.com/perottobc/mvn-pom-mutator v0.1.37 h1:Ox5LyrEvzyfl06ePRze4rUsYsUKsS/cwBtXVBo93tN4=
-github.com/perottobc/mvn-pom-mutator v0.1.37/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
-github.com/perottobc/mvn-pom-mutator v0.1.38 h1:KrHsGbq5/wVkdTbe1PGxuWZbm9zewKlNoOHtWwhn83U=
-github.com/perottobc/mvn-pom-mutator v0.1.38/go.mod h1:ZY2TNsreUeD08hekvMT8264bQC+Aut+J8WG/sH9dWe8=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/sftp v1.10.1/go.mod h1:lYOWFsE0bwd1+KfKJaKeuokY15vzFx25BLbzYYoAxZI=
