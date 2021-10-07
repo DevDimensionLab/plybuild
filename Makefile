@@ -34,6 +34,7 @@ release:
 
 upgrade:
 	go get github.com/co-pilot-cli/mvn-pom-mutator
+	go get -u ./...
 
 
 all: build install

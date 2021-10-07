@@ -135,6 +135,7 @@ func mergeBuildPlugins(from *pom.Model, to *pom.Model) error {
 			if fromPlugin.GroupId == toPlugin.GroupId && fromPlugin.ArtifactId == toPlugin.ArtifactId {
 				hasPlugin = true
 				mergeBuildPluginExecutions(&from.Build.Plugins.Plugin[i], &to.Build.Plugins.Plugin[j])
+				mergeBuildPluginConfiguration(&from.Build.Plugins.Plugin[i], &to.Build.Plugins.Plugin[j])
 			}
 		}
 		if !hasPlugin {
@@ -173,6 +174,7 @@ func mergeBuildPluginManagement(from *pom.Model, to *pom.Model) error {
 			if fromPluginMan.GroupId == toPluginMan.GroupId && fromPluginMan.ArtifactId == toPluginMan.ArtifactId {
 				hasPlugin = true
 				mergeBuildPluginExecutions(&from.Build.PluginManagement.Plugins.Plugin[i], &to.Build.PluginManagement.Plugins.Plugin[j])
+				mergeBuildPluginConfiguration(&from.Build.PluginManagement.Plugins.Plugin[i], &to.Build.PluginManagement.Plugins.Plugin[j])
 			}
 		}
 		if !hasPlugin {
@@ -206,6 +208,33 @@ func mergeBuildPluginExecutions(from *pom.Plugin, to *pom.Plugin) {
 
 		if !hasExecution {
 			log.Infof("merging execution %s into plugin %s:%s", fromExecution.Id, to.GroupId, to.ArtifactId)
+		}
+	}
+
+	return
+}
+
+func mergeBuildPluginConfiguration(from *pom.Plugin, to *pom.Plugin) {
+	if from.Configuration == nil {
+		return
+	}
+
+	if to.Configuration == nil {
+		log.Infof("merging all plugin configurations into plugin %s:%s", to.GroupId, to.ArtifactId)
+		to.Configuration = from.Configuration
+		return
+	}
+
+	for _, fromConfiguration := range from.Configuration.AnyElements {
+		var hasConfiguration = false
+		for _, toConfiguration := range to.Configuration.AnyElements {
+			if fromConfiguration.XMLName == toConfiguration.XMLName {
+				hasConfiguration = true
+			}
+		}
+
+		if !hasConfiguration {
+			log.Infof("merging configuration %s into plugin %s:%s", fromConfiguration.XMLName, to.GroupId, to.ArtifactId)
 		}
 	}
 
