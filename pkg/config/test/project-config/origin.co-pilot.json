@@ -14,10 +14,10 @@
     "templates": null,
     "settings": {
         "disableDependencySort": false,
-        "disableUpgradesFor": null,
-        "maxVersionForDependencies": null,
         "disableSpringBootUpgrade": false,
-        "disableKotlinUpgrade": false
+        "disableKotlinUpgrade": false,
+        "disableUpgradesFor": null,
+        "maxVersionForDependencies": null
     },
     "render": null
 }
