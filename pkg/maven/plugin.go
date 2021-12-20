@@ -57,8 +57,8 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 	}
 }
 
-func UpgradePlugins() func(project config.Project, args ...interface{}) error {
-	return func(project config.Project, args ...interface{}) error {
+func UpgradePlugins() func(project config.Project) error {
+	return func(project config.Project) error {
 		return upgradePluginsOnModel(&project)
 	}
 }

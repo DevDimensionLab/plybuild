@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-func ChangeVersionToPropertyTags() func(project config.Project, args ...interface{}) error {
-	return func(project config.Project, args ...interface{}) error {
+func ChangeVersionToPropertyTags() func(project config.Project) error {
+	return func(project config.Project) error {
 		return ChangeVersionToPropertyTagsOnModel(project.Type.Model())
 	}
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 )
 
-func UpgradeDependency(groupId string, artifactId string) func(project config.Project, args ...interface{}) error {
-	return func(project config.Project, args ...interface{}) error {
+func UpgradeDependency(groupId string, artifactId string) func(project config.Project) error {
+	return func(project config.Project) error {
 		return UpgradeDependencyOnModel(project.Type.Model(), groupId, artifactId)
 	}
 }
@@ -25,8 +25,8 @@ func UpgradeDependencyOnModel(model *pom.Model, groupId string, artifactId strin
 	return err
 }
 
-func Upgrade3PartyDependencies() func(project config.Project, args ...interface{}) error {
-	return func(project config.Project, args ...interface{}) error {
+func Upgrade3PartyDependencies() func(project config.Project) error {
+	return func(project config.Project) error {
 		return upgrade3PartyDependenciesOnModel(&project)
 	}
 }
@@ -46,8 +46,8 @@ func upgrade3PartyDependenciesOnModel(project *config.Project) error {
 	return nil
 }
 
-func Upgrade2PartyDependencies() func(project config.Project, args ...interface{}) error {
-	return func(project config.Project, args ...interface{}) error {
+func Upgrade2PartyDependencies() func(project config.Project) error {
+	return func(project config.Project) error {
 		return upgrade2PartyDependenciesOnModel(&project)
 	}
 }
@@ -70,7 +70,7 @@ func upgrade2PartyDependenciesOnModel(project *config.Project) error {
 func specificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dependency, groupId string, artifactId string) error {
 	for _, dep := range availableDependencies {
 		if dep.Version != "" && dep.GroupId == groupId && dep.ArtifactId == artifactId {
-			return upgradeDependency(model, dep)
+			return upgradeDependency(model, dep, nil)
 		}
 	}
 
@@ -111,8 +111,21 @@ func upgradeDependencies(
 			log.Infof("failed to get version for %s:%s", dep.GroupId, dep.ArtifactId)
 			continue
 		}
+
+		maxVersion := func() *JavaVersion {
+			if maxVersionForDependency := settings.MaxVersionFor(dep); maxVersionForDependency != "" {
+				maxVersion, err := ParseVersion(maxVersionForDependency)
+				if err != nil {
+					log.Debugf("failed to get max version for %s:%s", dep.GroupId, dep.ArtifactId)
+					return nil
+				}
+				return &maxVersion
+			}
+			return nil
+		}
+
 		if depVersion != "" && condition(dep.GroupId) {
-			err := upgradeDependency(model, dep)
+			err := upgradeDependency(model, dep, maxVersion())
 			if err != nil {
 				log.Warnf("%v", err)
 			}
@@ -120,7 +133,7 @@ func upgradeDependencies(
 	}
 }
 
-func upgradeDependency(model *pom.Model, dep pom.Dependency) error {
+func upgradeDependency(model *pom.Model, dep pom.Dependency, maxVersion *JavaVersion) error {
 	if dep.Version == "${project.version}" || dep.Version == "${revision}" {
 		return nil
 	}
@@ -150,8 +163,12 @@ func upgradeDependency(model *pom.Model, dep pom.Dependency) error {
 	if err != nil {
 		return nil
 	}
+	if maxVersion != nil {
+		log.Warnf("dependency %s:%s is held back at version [%s]", dep.GroupId, dep.ArtifactId, maxVersion.ToString())
+		latestVersion = *maxVersion
+	}
 
-	if currentVersion.IsDifferentFrom(latestVersion) {
+	if currentVersion.IsLessThan(latestVersion) {
 		msg := fmt.Sprintf("outdated dependency %s:%s [%s => %s]", dep.GroupId, dep.ArtifactId, currentVersion.ToString(), latestVersion.ToString())
 		if IsMajorUpgrade(currentVersion, latestVersion) {
 			log.Warnf("major %s", msg)

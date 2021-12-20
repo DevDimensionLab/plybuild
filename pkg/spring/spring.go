@@ -8,8 +8,8 @@ import (
 	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 )
 
-func CleanManualVersions() func(project config.Project, args ...interface{}) error {
-	return func(project config.Project, args ...interface{}) error {
+func CleanManualVersions() func(project config.Project) error {
+	return func(project config.Project) error {
 		return cleanManualVersions(project.Type.Model())
 	}
 }
@@ -37,8 +37,8 @@ func cleanManualVersions(model *pom.Model) error {
 	return nil
 }
 
-func UpgradeSpringBoot() func(project config.Project, args ...interface{}) error {
-	return func(project config.Project, args ...interface{}) error {
+func UpgradeSpringBoot() func(project config.Project) error {
+	return func(project config.Project) error {
 		if project.Config.Settings.DisableSpringBootUpgrade {
 			return nil
 		}

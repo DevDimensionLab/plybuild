@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
+	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -14,6 +15,11 @@ type LocalConfig struct {
 	impl DirConfig
 }
 
+type LocalConfiguration struct {
+	CloudConfig    LocalGitConfig `yaml:"cloudConfig"`
+	SourceProvider SourceProvider `yaml:"sourceProvider"`
+}
+
 type LocalConfigFile interface {
 	Implementation() DirConfig
 	FilePath() string
@@ -22,6 +28,16 @@ type LocalConfigFile interface {
 	Config() (LocalConfiguration, error)
 	Print() error
 	Exists() bool
+}
+
+func NewLocalConfig(localConfigDir string) (cfg LocalConfig, err error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return
+	}
+
+	cfg.impl.Path = file.Path("%s/%s", home, localConfigDir)
+	return
 }
 
 func (localCfg LocalConfig) Implementation() DirConfig {

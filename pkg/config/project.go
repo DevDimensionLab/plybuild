@@ -26,11 +26,58 @@ type Project struct {
 
 type ValidProjectType string
 
+type ProjectConfiguration struct {
+	MavenProjectConfiguration
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Team        struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	} `json:"team"`
+	Dependencies []string          `json:"dependencies"`
+	Templates    []string          `json:"templates"`
+	Settings     ProjectSettings   `json:"settings"`
+	Render       map[string]string `json:"render"`
+}
+
+type MavenProjectConfiguration struct {
+	Artifact
+	Language        string `json:"language"`
+	Package         string `json:"package"`
+	ApplicationName string `json:"applicationName"`
+}
+
+type ProjectSettings struct {
+	DisableDependencySort     bool          `json:"disableDependencySort"`
+	DisableSpringBootUpgrade  bool          `json:"disableSpringBootUpgrade"`
+	DisableKotlinUpgrade      bool          `json:"disableKotlinUpgrade"`
+	DisableUpgradesFor        []Artifact    `json:"disableUpgradesFor"`
+	MaxVersionForDependencies []MaxArtifact `json:"maxVersionForDependencies"`
+}
+
+type ProjectConfig interface {
+	WriteTo(targetFile string) error
+	SourceMainPath() string
+	SourceTestPath() string
+	FindApplicationName(targetDir string) (err error)
+	GetLanguage() string
+	Populate(targetDir string) error
+}
+
+type Artifact struct {
+	GroupId    string `json:"groupId"`
+	ArtifactId string `json:"artifactId"`
+}
+
+type MaxArtifact struct {
+	Artifact
+	MaxVersion string `json:"maxVersion"`
+}
+
 const (
 	Maven ValidProjectType = "Maven"
 )
 
-// only maven for now...
 type ProjectType interface {
 	Type() ValidProjectType
 	FilePath() string
@@ -54,51 +101,9 @@ func (mvnProject MavenProject) Type() ValidProjectType {
 	return Maven
 }
 
-type ProjectConfiguration struct {
-	MavenProjectConfiguration
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Team        struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	} `json:"team"`
-	Dependencies []string          `json:"dependencies"`
-	Templates    []string          `json:"templates"`
-	Settings     ProjectSettings   `json:"settings"`
-	Render       map[string]string `json:"render"`
-}
-
-type MavenProjectConfiguration struct {
-	Artifact
-	Language        string `json:"language"`
-	Package         string `json:"package"`
-	ApplicationName string `json:"applicationName"`
-}
-
-type ProjectSettings struct {
-	DisableDependencySort    bool       `json:"disableDependencySort"`
-	DisableUpgradesFor       []Artifact `json:"disableUpgradesFor"`
-	DisableSpringBootUpgrade bool       `json:"disableSpringBootUpgrade"`
-	DisableKotlinUpgrade     bool       `json:"disableKotlinUpgrade"`
-}
-
-type Artifact struct {
-	GroupId    string `json:"groupId"`
-	ArtifactId string `json:"artifactId"`
-}
-
-type ProjectConfig interface {
-	WriteTo(targetFile string) error
-	SourceMainPath() string
-	SourceTestPath() string
-	FindApplicationName(targetDir string) (err error)
-	GetLanguage() string
-	Populate(targetDir string) error
-}
-
 func (config ProjectConfiguration) WriteTo(targetFile string) error {
 	log.Infof("writes project config file to %s", targetFile)
-	data, err := json.MarshalIndent(config, "", " ")
+	data, err := json.MarshalIndent(config, "", "    ")
 	if err != nil {
 		return err
 	}
@@ -284,6 +289,18 @@ func (projectSettings ProjectSettings) DependencyIsIgnored(dep pom.Dependency) b
 	return artifactIsIgnored(dep.GroupId, dep.ArtifactId, projectSettings.DisableUpgradesFor)
 }
 
+func (projectSettings ProjectSettings) MaxVersionFor(dep pom.Dependency) string {
+	if projectSettings.MaxVersionForDependencies == nil {
+		return ""
+	}
+	for _, max := range projectSettings.MaxVersionForDependencies {
+		if max.GroupId == dep.GroupId && max.ArtifactId == dep.ArtifactId {
+			return max.MaxVersion
+		}
+	}
+	return ""
+}
+
 func (projectSettings ProjectSettings) PluginIsIgnored(plugin pom.Plugin) bool {
 	if projectSettings.DisableUpgradesFor == nil {
 		return false
@@ -301,4 +318,12 @@ func artifactIsIgnored(groupId string, artifactId string, artifacts []Artifact) 
 	}
 
 	return false
+}
+
+func (projectSettings *ProjectSettings) mergeProjectDefaults(defaults CloudProjectDefaults) {
+	projectSettings.DisableDependencySort = defaults.Settings.DisableDependencySort
+	projectSettings.DisableKotlinUpgrade = defaults.Settings.DisableKotlinUpgrade
+	projectSettings.DisableSpringBootUpgrade = defaults.Settings.DisableSpringBootUpgrade
+	projectSettings.DisableUpgradesFor = append(projectSettings.DisableUpgradesFor, defaults.Settings.DisableUpgradesFor...)
+	projectSettings.MaxVersionForDependencies = append(projectSettings.MaxVersionForDependencies, defaults.Settings.MaxVersionForDependencies...)
 }

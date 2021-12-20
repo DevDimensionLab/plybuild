@@ -24,6 +24,9 @@ var statusCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := SyncCloudConfig(); err != nil {
+			log.Warnln(err)
+		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}
@@ -31,7 +34,7 @@ var statusCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if !statusOpts.Any() || statusOpts.Show {
 			ctx.DryRun = true
-			ctx.OnEachProject("Project status",
+			ctx.OnEachProject("project status",
 				maven.UpgradeKotlin(),
 				spring.UpgradeSpringBoot(),
 				maven.Upgrade2PartyDependencies(),
@@ -49,5 +52,6 @@ func init() {
 	statusCmd.PersistentFlags().BoolVar(&statusOpts.Show, "show", false, "show project status")
 
 	statusCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
+	statusCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", false, "force cloud sync")
 	statusCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "optional target directory")
 }

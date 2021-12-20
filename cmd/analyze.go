@@ -33,7 +33,7 @@ var analyzeCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
-		ctx.OnEachProject("Undeclared and unused dependencies", func(project config.Project, args ...interface{}) error {
+		ctx.OnEachProject("Undeclared and unused dependencies", func(project config.Project) error {
 			return maven.ListUnusedAndUndeclared(project.Type.FilePath())
 		})
 	},

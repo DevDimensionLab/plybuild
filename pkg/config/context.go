@@ -11,7 +11,9 @@ type Context struct {
 	DryRun          bool
 	TargetDirectory string
 	DisableGit      bool
+	ForceCloudSync  bool
 	Projects        []Project
+	CloudConfig     CloudConfig
 	Err             error
 }
 
@@ -44,13 +46,20 @@ func (ctx *Context) FindAndPopulateMavenProjects() error {
 	return nil
 }
 
-func (ctx Context) OnEachProject(description string, do ...func(project Project, args ...interface{}) error) {
+func (ctx Context) OnEachProject(description string, do ...func(project Project) error) {
 	if ctx.Projects == nil || len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
 	}
 
 	for _, p := range ctx.Projects {
+		if ctx.CloudConfig != nil {
+			projectDefaults, err := ctx.CloudConfig.ProjectDefaults()
+			if err != nil {
+				log.Warnf("could not find a project-defaults.json file in cloud-config")
+			}
+			p.Config.Settings.mergeProjectDefaults(projectDefaults)
+		}
 		if p.Type == nil {
 			log.Warnf("no project type defined for path: %s", p.Path)
 			continue
@@ -83,7 +92,7 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project,
 	}
 }
 
-func (ctx Context) OnRootProject(description string, do ...func(project Project, args ...interface{}) error) {
+func (ctx Context) OnRootProject(description string, do ...func(project Project) error) {
 	if ctx.Projects == nil || len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return

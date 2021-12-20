@@ -1,0 +1,23 @@
+{
+    "groupId": "com.example",
+    "artifactId": "demo",
+    "language": "",
+    "package": "",
+    "applicationName": "",
+    "name": "demo",
+    "description": "Demo project for Spring Boot",
+    "team": {
+        "name": "",
+        "email": ""
+    },
+    "dependencies": null,
+    "templates": null,
+    "settings": {
+        "disableDependencySort": false,
+        "disableUpgradesFor": null,
+        "maxVersionForDependencies": null,
+        "disableSpringBootUpgrade": false,
+        "disableKotlinUpgrade": false
+    },
+    "render": null
+}

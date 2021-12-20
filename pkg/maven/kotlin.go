@@ -7,8 +7,8 @@ import (
 	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 )
 
-func UpgradeKotlin() func(project config.Project, args ...interface{}) error {
-	return func(project config.Project, args ...interface{}) error {
+func UpgradeKotlin() func(project config.Project) error {
+	return func(project config.Project) error {
 		if project.Config.Settings.DisableKotlinUpgrade {
 			return nil
 		}

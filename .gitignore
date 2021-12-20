@@ -10,8 +10,6 @@ webservice*
 dist
 spring-*
 .mvn
-co-pilot.json
+/co-pilot.json
 mvnw
 mvnw.cmd
-pom.xml
-src

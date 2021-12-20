@@ -91,3 +91,26 @@ func TestSortAndWritePom_sort_disabled(t *testing.T) {
 		t.Errorf("%s is not equal to %s, therefore it appears to be sorted", pomFile, original)
 	}
 }
+
+func TestCreateProjectConfig(t *testing.T) {
+	project, err := InitProjectFromDirectory("test/project-config")
+	if err != nil {
+		t.Errorf("%v\n", err)
+	}
+
+	err = project.InitProjectConfiguration()
+	if err != nil {
+		t.Errorf("%v\n", err)
+	}
+
+	if err := project.Config.WriteTo(project.ConfigFile); err != nil {
+		t.Errorf("%v\n", err)
+	}
+
+	originConfig := "test/project-config/origin.co-pilot.json"
+	newConfig := "test/project-config/co-pilot.json"
+	equal, err := file.Equal(originConfig, newConfig)
+	if !equal {
+		t.Errorf("%s is not equal to %s", originConfig, newConfig)
+	}
+}

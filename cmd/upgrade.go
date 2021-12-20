@@ -22,6 +22,9 @@ var upgradeCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := SyncCloudConfig(); err != nil {
+			log.Warnln(err)
+		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}
@@ -91,7 +94,7 @@ var upgradeDeprecatedCmd = &cobra.Command{
 	Short: "Remove and replace deprecated dependencies in a project",
 	Long:  `Remove and replace deprecated dependencies in a project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("removes and replaces deprecated dependencies", func(project config.Project, args ...interface{}) error {
+		ctx.OnEachProject("removes and replaces deprecated dependencies", func(project config.Project) error {
 			return upgradeDeprecated(project)
 		})
 	},
@@ -138,8 +141,9 @@ func init() {
 	upgradeDependencyCmd.PersistentFlags().StringVarP(&artifactId, "artifactId", "a", "", "ArtifactId for upgrade")
 
 	upgradeCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
-	upgradeCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	upgradeCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", false, "force cloud sync")
 	upgradeCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
+	upgradeCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 }
 
 func upgradeDeprecated(project config.Project) error {

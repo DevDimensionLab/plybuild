@@ -6,6 +6,7 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/co-pilot-cli/co-pilot/pkg/shell"
+	"github.com/mitchellh/go-homedir"
 	"io/ioutil"
 )
 
@@ -20,12 +21,23 @@ type CloudConfig interface {
 	LinkFromService(services func() (CloudServices, error), groupId string, artifactId string, linkKey string) (url string, err error)
 	DefaultServiceEnvironmentUrl(service CloudService, key string) (url string, err error)
 	Deprecated() (CloudDeprecated, error)
+	ProjectDefaults() (CloudProjectDefaults, error)
 	ListDeprecated() error
 
 	HasTemplate(name string) bool
 	ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error)
 	Templates() (templates []CloudTemplate, err error)
 	Template(name string) (CloudTemplate, error)
+}
+
+func NewGitCloudConfig(localConfigDir string, cloudConfigDirName string) (cfg GitCloudConfig, err error) {
+	home, err := homedir.Dir()
+	if err != nil {
+		return cfg, err
+	}
+
+	cfg.Impl.Path = file.Path("%s/%s/%s", home, localConfigDir, cloudConfigDirName)
+	return
 }
 
 func (gitCfg GitCloudConfig) Implementation() Directory {
@@ -124,11 +136,19 @@ func (gitCfg GitCloudConfig) Deprecated() (CloudDeprecated, error) {
 	}
 
 	err = file.ReadJson(path, &deprecated)
+	return deprecated, err
+}
+
+func (gitCfg GitCloudConfig) ProjectDefaults() (CloudProjectDefaults, error) {
+	var projectDefaults CloudProjectDefaults
+
+	path, err := gitCfg.Implementation().FilePath("project-defaults.json")
 	if err != nil {
-		return deprecated, err
+		return CloudProjectDefaults{}, err
 	}
 
-	return deprecated, nil
+	err = file.ReadJson(path, &projectDefaults)
+	return projectDefaults, err
 }
 
 func (gitCfg GitCloudConfig) ListDeprecated() error {

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -26,6 +27,16 @@ func OkHelp(cmd *cobra.Command, depend func() bool) error {
 	if !cmd.Flags().HasFlags() || !depend() {
 		_ = cmd.Help()
 		os.Exit(0)
+	}
+	return nil
+}
+
+func SyncCloudConfig() error {
+	ctx.CloudConfig = cloudCfg
+	if ctx.ForceCloudSync {
+		if err := ctx.CloudConfig.Refresh(localCfg); err != nil {
+			return errors.New("failed to sync cloud config: " + err.Error())
+		}
 	}
 	return nil
 }

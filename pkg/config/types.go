@@ -1,10 +1,5 @@
 package config
 
-type LocalConfiguration struct {
-	CloudConfig    LocalGitConfig `yaml:"cloudConfig"`
-	SourceProvider SourceProvider `yaml:"sourceProvider"`
-}
-
 type LocalGitConfig struct {
 	Git Git `yaml:"git"`
 }
@@ -76,4 +71,9 @@ type DirConfig struct {
 type CloudTemplate struct {
 	Name    string
 	Project Project
+}
+
+type CloudProjectDefaults struct {
+	Type     string          `json:"type"`
+	Settings ProjectSettings `json:"settings"`
 }

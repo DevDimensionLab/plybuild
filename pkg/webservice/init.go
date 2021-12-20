@@ -27,8 +27,8 @@ func InitAndBlockStandalone(endpoint Endpoint, blockingChannel chan bool) {
 	//go StopWebServer()
 }
 
-func InitAndBlockProject(endpoint Endpoint, blockingChannel chan bool) func(project config.Project, args ...interface{}) error {
-	return func(project config.Project, args ...interface{}) error {
+func InitAndBlockProject(endpoint Endpoint, blockingChannel chan bool) func(project config.Project) error {
+	return func(project config.Project) error {
 		api.CurrentProject = project
 		InitAndBlockStandalone(endpoint, blockingChannel)
 		return nil
