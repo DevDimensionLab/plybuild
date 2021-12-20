@@ -24,7 +24,7 @@ import (
 	"os"
 )
 
-var version = "v0.4.4"
+var version = "v0.4.5"
 var log = logger.Context()
 var localConfigDir = ".co-pilot"
 var cloudConfigDir = "cloud-config"

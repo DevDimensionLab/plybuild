@@ -68,7 +68,7 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project)
 		log.Info(logger.White(fmt.Sprintf("%s for file %s", description, p.Type.FilePath())))
 
 		if p.IsDirtyGitRepo() {
-			log.Warnf("operating on a dirty git repo")
+			log.Debugf("operating on a dirty git repo")
 		}
 
 		if do != nil {
