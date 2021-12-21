@@ -43,6 +43,7 @@ Available Commands:
   help        Help about any command
   info        Prints info on spring version, dependencies etc
   init        Initializes a maven project with co-pilot files and formatting
+  lint        Linting commands
   maven       Run maven (mvn) commands
   merge       Merge functionalities for files to a project
   query       Query dependencies in a project

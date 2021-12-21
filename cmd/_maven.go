@@ -21,5 +21,5 @@ var mavenRepositoriesCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(mavenCmd)
-	//mavenCmd.AddCommand(mavenRepositoriesCmd)
+	//lintCmd.AddCommand(mavenRepositoriesCmd)
 }

@@ -57,6 +57,7 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project)
 			projectDefaults, err := ctx.CloudConfig.ProjectDefaults()
 			if err != nil {
 				log.Warnf("could not find a project-defaults.json file in cloud-config")
+				log.Debugf("%v", err)
 			}
 			p.Config.Settings.mergeProjectDefaults(projectDefaults)
 		}
@@ -65,7 +66,7 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project)
 			continue
 		}
 
-		log.Info(logger.White(fmt.Sprintf("%s for file %s", description, p.Type.FilePath())))
+		log.Info(logger.White(fmt.Sprintf("%s in %s", description, p.Path)))
 
 		if p.IsDirtyGitRepo() {
 			log.Debugf("operating on a dirty git repo")
