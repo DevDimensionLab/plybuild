@@ -2,6 +2,7 @@ package shell
 
 import (
 	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"os/exec"
 	"strings"
 )
@@ -47,4 +48,21 @@ func GitAddAndCommit(targetDir string, message string) Output {
 		return add
 	}
 	return Run("git", "-C", targetDir, "commit", "-m", fmt.Sprintf("\"%s\"", message))
+}
+
+func InstallGitHooks(sourceDir string, sourceFileNames []string, targetDir string) error {
+	if sourceFileNames == nil {
+		return nil
+	}
+
+	for _, sourceFileName := range sourceFileNames {
+		hooksFile := fmt.Sprintf("%s/.git/hooks/%s", targetDir, sourceFileName)
+		sourceFilePath := fmt.Sprintf("%s/%s", sourceDir, sourceFileName)
+		log.Debugf("Copying %s into %s", sourceFilePath, hooksFile)
+		err := file.CopyFile(sourceFilePath, hooksFile)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

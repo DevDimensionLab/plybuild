@@ -27,7 +27,7 @@ Requirement: https://golang.org/doc/install
   \_____\___/      | .__/|_|_|\___/ \__|
                    | |
                    |_|
-== version: v0.4.5 ==
+== version: v0.4.6 ==
 Co-pilot is a developer tool for automating common tasks on a spring boot project
 
 Usage:

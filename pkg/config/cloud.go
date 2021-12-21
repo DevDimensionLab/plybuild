@@ -22,6 +22,7 @@ type CloudConfig interface {
 	DefaultServiceEnvironmentUrl(service CloudService, key string) (url string, err error)
 	Deprecated() (CloudDeprecated, error)
 	ProjectDefaults() (CloudProjectDefaults, error)
+	GitHookFiles(folderName string) ([]string, error)
 	ListDeprecated() error
 
 	HasTemplate(name string) bool
@@ -149,6 +150,24 @@ func (gitCfg GitCloudConfig) ProjectDefaults() (CloudProjectDefaults, error) {
 
 	err = file.ReadJson(path, &projectDefaults)
 	return projectDefaults, err
+}
+
+func (gitCfg GitCloudConfig) GitHookFiles(path string) ([]string, error) {
+	hooksPath := fmt.Sprintf("%s/%s", gitCfg.Implementation().Dir(), path)
+	root := file.Path(hooksPath)
+	files, err := ioutil.ReadDir(root)
+	if err != nil {
+		return nil, err
+	}
+
+	var filePaths []string
+	for _, f := range files {
+		if !f.IsDir() {
+			filePaths = append(filePaths, f.Name())
+		}
+	}
+
+	return filePaths, nil
 }
 
 func (gitCfg GitCloudConfig) ListDeprecated() error {

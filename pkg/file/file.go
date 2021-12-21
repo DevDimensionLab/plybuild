@@ -122,7 +122,7 @@ func CopyOrMerge(sourceFile string, destinationFile string) error {
 		return mergeFile(sourceFile, destinationFile)
 	}
 
-	return copyFile(sourceFile, destinationFile)
+	return CopyFile(sourceFile, destinationFile)
 }
 
 func mergeFile(sourceFile string, destinationFile string) error {
@@ -140,7 +140,7 @@ func mergeFile(sourceFile string, destinationFile string) error {
 	return MergeTextFiles(sourceFile, destinationFile)
 }
 
-func copyFile(sourceFile string, destinationFile string) error {
+func CopyFile(sourceFile string, destinationFile string) error {
 	input, err := ioutil.ReadFile(sourceFile)
 	if err != nil {
 		return err
@@ -161,14 +161,9 @@ func copyFile(sourceFile string, destinationFile string) error {
 		return err
 	}
 
-	log.Infof("copying FROM\t <= %s", sourceFile)
-	log.Infof("copying TO\t => %s", destinationFile)
-	err = ioutil.WriteFile(destinationFile, input, fileInfo.Mode())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	log.Debugf("copying FROM\t <= %s", sourceFile)
+	log.Debugf("copying TO\t => %s", destinationFile)
+	return ioutil.WriteFile(destinationFile, input, fileInfo.Mode())
 }
 
 func RelPath(sourceDirectory string, filePath string) (string, error) {
