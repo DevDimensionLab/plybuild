@@ -27,7 +27,7 @@ Requirement: https://golang.org/doc/install
   \_____\___/      | .__/|_|_|\___/ \__|
                    | |
                    |_|
-== version: v0.4.6 ==
+== version: v0.4.7 ==
 Co-pilot is a developer tool for automating common tasks on a spring boot project
 
 Usage:
@@ -40,6 +40,7 @@ Available Commands:
   config      Config settings for co-pilot
   format      Format functionality for a project
   generate    Initializes a maven project with co-pilot files and formatting
+  git         Git commands
   help        Help about any command
   info        Prints info on spring version, dependencies etc
   init        Initializes a maven project with co-pilot files and formatting
@@ -55,7 +56,6 @@ Flags:
   -h, --help    help for co-pilot
 
 Use "co-pilot [command] --help" for more information about a command.
-
 ```
 
 ## Install

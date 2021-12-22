@@ -9,8 +9,8 @@ import (
 
 var gitCmd = &cobra.Command{
 	Use:   "git",
-	Short: "git commands",
-	Long:  `git commands`,
+	Short: "Git commands",
+	Long:  `Git commands`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		return OkHelp(cmd, cleanOpts.Any)
 	},
