@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/spf13/cobra"
 	"os"
 )
+
+var mavenGraphExcludeScope string
 
 var mavenCmd = &cobra.Command{
 	Use:   "maven",
@@ -30,12 +34,38 @@ var mavenGraphCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachProject("creating graph for",
-			maven.RunOn(os.Stdout, "mvn",
-				"com.github.ferstl:depgraph-maven-plugin:graph",
-				"-DshowVersions",
-				"-DshowGroupIds",
-				"-DshowConflicts",
-				"-DshowDuplicates"),
+			maven.RunOn(os.Stdout, "mvn", "com.github.ferstl:depgraph-maven-plugin:graph",
+				"-DshowVersions", "-DshowGroupIds", "-DshowConflicts", "-DshowDuplicates"),
+			maven.RunOn(os.Stdout, "dot",
+				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
+		)
+	},
+}
+
+var mavenGraph2PartyCmd = &cobra.Command{
+	Use:   "2party",
+	Short: "creates a graph only for 2party dependencies in a project",
+	Long:  `creates a graph only for 2party dependencies in a project`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := EnableDebug(cmd); err != nil {
+			log.Fatalln(err)
+		}
+		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
+			log.Fatalln(err)
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx.DryRun = true
+		ctx.OnEachProject("creating 2party graph for",
+			func(project config.Project) error {
+				secondParty, err := project.Type.Model().GetSecondPartyGroupId()
+				if err != nil {
+					return err
+				}
+				return maven.RunOn(os.Stdout, "mvn", "com.github.ferstl:depgraph-maven-plugin:graph",
+					fmt.Sprintf("-Dincludes=%s*", secondParty),
+					"-DshowVersions", "-DshowGroupIds", "-DshowConflicts", "-DshowDuplicates")(project)
+			},
 			maven.RunOn(os.Stdout, "dot",
 				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
 		)
@@ -82,6 +112,26 @@ var mavenOwaspCmd = &cobra.Command{
 	},
 }
 
+var mavenSpringBootRunCmd = &cobra.Command{
+	Use:   "boot-run",
+	Short: "runs a spring boot application",
+	Long:  `runs a spring boot application`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := EnableDebug(cmd); err != nil {
+			log.Fatalln(err)
+		}
+		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
+			log.Fatalln(err)
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx.DryRun = true
+		ctx.OnEachProject("running spring-boot:run",
+			maven.RunOn(os.Stdout, "mvn", "spring-boot:run"),
+		)
+	},
+}
+
 var mavenEnforcerCmd = &cobra.Command{
 	Use:   "enforcer",
 	Short: "runs enforcer",
@@ -114,7 +164,10 @@ func init() {
 	mavenCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "optional target directory")
 
 	mavenCmd.AddCommand(mavenGraphCmd)
+	mavenGraphCmd.AddCommand(mavenGraph2PartyCmd)
+	// mavenGraphCmd.PersistentFlags().StringVar(&mavenGraphExcludeScope, "exclude-scope", "", "exclude test scope from graph")
 	mavenCmd.AddCommand(mavenCheckstyleCmd)
 	mavenCmd.AddCommand(mavenOwaspCmd)
 	mavenCmd.AddCommand(mavenEnforcerCmd)
+	mavenCmd.AddCommand(mavenSpringBootRunCmd)
 }
