@@ -15,8 +15,9 @@ type GitInfo struct {
 }
 
 type SourceProvider struct {
-	Host        string `yaml:"host"`
-	AccessToken string `yaml:"access_token"`
+	Host            string   `yaml:"host"`
+	AccessToken     string   `yaml:"access_token"`
+	ExcludeProjects []string `yaml:"exclude_projects"`
 }
 
 type CloudDeprecated struct {

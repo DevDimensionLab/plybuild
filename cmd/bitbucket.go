@@ -30,7 +30,7 @@ var bitbucketSyncCmd = &cobra.Command{
 			log.Fatalln("Command requires host and access-token in config-file")
 		}
 
-		err = bitbucket.With(logger.Context(), bitbucketHost, personalAccessToken).SynchronizeAllRepos()
+		err = bitbucket.With(logger.Context(), bitbucketHost, personalAccessToken).SynchronizeAllRepos(cfg.SourceProvider.ExcludeProjects)
 		if err != nil {
 			log.Fatalln(err)
 		}

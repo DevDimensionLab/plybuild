@@ -23,13 +23,19 @@ func With(logger logrus.FieldLogger, host string, accessToken string) Bitbucket 
 	}
 }
 
-func (bitbucket Bitbucket) SynchronizeAllRepos() error {
+func (bitbucket Bitbucket) SynchronizeAllRepos(excludeProjects []string) error {
 	projects, err := bitbucket.queryProjects()
 	if err != nil {
 		return err
 	}
 
 	for _, bitBucketProject := range projects.Values {
+		for _, exclude := range excludeProjects {
+			if bitBucketProject.Key == exclude {
+				continue
+			}
+		}
+
 		projectKey := strings.ToLower(bitBucketProject.Key)
 		bitbucket.log.Infoln("project: " + projectKey)
 
