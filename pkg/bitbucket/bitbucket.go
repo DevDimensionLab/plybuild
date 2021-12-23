@@ -31,7 +31,7 @@ func (bitbucket Bitbucket) SynchronizeAllRepos(excludeProjects []string) error {
 
 	for _, bitBucketProject := range projects.Values {
 		for _, exclude := range excludeProjects {
-			if bitBucketProject.Key == exclude {
+			if strings.ToLower(bitBucketProject.Key) == strings.ToLower(exclude) {
 				continue
 			}
 		}
