@@ -6,13 +6,13 @@ require_relative "custom_download_strategy"
 class CoPilot < Formula
   desc "Co-pilot is a developer tool for automating common tasks on a spring boot project."
   homepage "https://co-pilot-cli.github.io/"
-  version "0.4.10"
+  version "0.4.11"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.10/co-pilot_0.4.10_Darwin_x86_64.tar.gz", :using => CurlDownloadStrategy
-      sha256 "321ad5e887f34d6681e1e9a16408b92c345e54c390a188dfdbdb40849c9a017c"
+      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.11/co-pilot_0.4.11_Darwin_x86_64.tar.gz", :using => CurlDownloadStrategy
+      sha256 "8a805e1e856f46b29d7076c756306f7f65f4bff982d00d77d57dcf657b6c3afc"
 
       def install
         bin.install "co-pilot"
@@ -22,16 +22,16 @@ class CoPilot < Formula
 
   on_linux do
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.10/co-pilot_0.4.10_Linux_arm64.tar.gz", :using => CurlDownloadStrategy
-      sha256 "70be6c1c65466bd3e991bd2a718694c3a923641384066ee64bae7754f1a1a60a"
+      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.11/co-pilot_0.4.11_Linux_arm64.tar.gz", :using => CurlDownloadStrategy
+      sha256 "4a448f4da169108af821d7f94366d269429839beb44afed1c7a28c673945c3d2"
 
       def install
         bin.install "co-pilot"
       end
     end
     if Hardware::CPU.intel?
-      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.10/co-pilot_0.4.10_Linux_x86_64.tar.gz", :using => CurlDownloadStrategy
-      sha256 "b262a7634da88c67789e1d536f2db77fd362f9bd898bccc68682b980c05143f7"
+      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.11/co-pilot_0.4.11_Linux_x86_64.tar.gz", :using => CurlDownloadStrategy
+      sha256 "b55cbe54e6597ab111d07cbc8d5ec5a3bb35f3e16789561cdbc137c1a4f49f6c"
 
       def install
         bin.install "co-pilot"
