@@ -4,7 +4,6 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/http"
 	"github.com/co-pilot-cli/co-pilot/pkg/shell"
-	"github.com/google/martian/log"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
