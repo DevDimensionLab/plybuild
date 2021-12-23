@@ -6,13 +6,13 @@ require_relative "custom_download_strategy"
 class CoPilot < Formula
   desc "Co-pilot is a developer tool for automating common tasks on a spring boot project."
   homepage "https://co-pilot-cli.github.io/"
-  version "0.4.11"
+  version "0.4.12"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.11/co-pilot_0.4.11_Darwin_x86_64.tar.gz", :using => CurlDownloadStrategy
-      sha256 "8a805e1e856f46b29d7076c756306f7f65f4bff982d00d77d57dcf657b6c3afc"
+      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.12/co-pilot_0.4.12_Darwin_x86_64.tar.gz", :using => CurlDownloadStrategy
+      sha256 "6b94e3c53bbe6808c0d07e86c78ebe817a68f808789caf94385ac6ec89483184"
 
       def install
         bin.install "co-pilot"
@@ -21,17 +21,17 @@ class CoPilot < Formula
   end
 
   on_linux do
-    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.11/co-pilot_0.4.11_Linux_arm64.tar.gz", :using => CurlDownloadStrategy
-      sha256 "4a448f4da169108af821d7f94366d269429839beb44afed1c7a28c673945c3d2"
+    if Hardware::CPU.intel?
+      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.12/co-pilot_0.4.12_Linux_x86_64.tar.gz", :using => CurlDownloadStrategy
+      sha256 "3808f0661d0d9578749ace320ecade12a4905506c699629ceff8e4c758fce8f1"
 
       def install
         bin.install "co-pilot"
       end
     end
-    if Hardware::CPU.intel?
-      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.11/co-pilot_0.4.11_Linux_x86_64.tar.gz", :using => CurlDownloadStrategy
-      sha256 "b55cbe54e6597ab111d07cbc8d5ec5a3bb35f3e16789561cdbc137c1a4f49f6c"
+    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+      url "https://github.com/co-pilot-cli/co-pilot/releases/download/v0.4.12/co-pilot_0.4.12_Linux_arm64.tar.gz", :using => CurlDownloadStrategy
+      sha256 "08cf45bd869213b37238ad9f644860ce9092bfad626e45a319414ad708bdbce3"
 
       def install
         bin.install "co-pilot"
