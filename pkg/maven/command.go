@@ -9,7 +9,7 @@ import (
 
 func RunOn(stdout io.Writer, cmd string, args ...string) func(project config.Project) error {
 	return func(project config.Project) error {
-		log.Debugf("running: %s => %s %s", project.Path, cmd, strings.Join(args, " "))
+		log.Infof("running: [%s] => %s %s", project.Path, cmd, strings.Join(args, " "))
 		cmd := exec.Command(cmd, args...)
 		cmd.Dir = project.Path
 		cmd.Stdout = stdout

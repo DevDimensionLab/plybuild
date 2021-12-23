@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/spf13/cobra"
 	"os"
 )
 
-var mavenGraphExcludeScope string
+var mavenGraphExcludeTestScope bool
 
 var mavenCmd = &cobra.Command{
 	Use:   "maven",
@@ -34,8 +32,7 @@ var mavenGraphCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachProject("creating graph for",
-			maven.RunOn(os.Stdout, "mvn", "com.github.ferstl:depgraph-maven-plugin:graph",
-				"-DshowVersions", "-DshowGroupIds", "-DshowConflicts", "-DshowDuplicates"),
+			maven.Graph(false, mavenGraphExcludeTestScope),
 			maven.RunOn(os.Stdout, "dot",
 				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
 		)
@@ -57,15 +54,7 @@ var mavenGraph2PartyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachProject("creating 2party graph for",
-			func(project config.Project) error {
-				secondParty, err := project.Type.Model().GetSecondPartyGroupId()
-				if err != nil {
-					return err
-				}
-				return maven.RunOn(os.Stdout, "mvn", "com.github.ferstl:depgraph-maven-plugin:graph",
-					fmt.Sprintf("-Dincludes=%s*", secondParty),
-					"-DshowVersions", "-DshowGroupIds", "-DshowConflicts", "-DshowDuplicates")(project)
-			},
+			maven.Graph(true, mavenGraphExcludeTestScope),
 			maven.RunOn(os.Stdout, "dot",
 				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
 		)
@@ -165,7 +154,7 @@ func init() {
 
 	mavenCmd.AddCommand(mavenGraphCmd)
 	mavenGraphCmd.AddCommand(mavenGraph2PartyCmd)
-	// mavenGraphCmd.PersistentFlags().StringVar(&mavenGraphExcludeScope, "exclude-scope", "", "exclude test scope from graph")
+	mavenGraphCmd.PersistentFlags().BoolVar(&mavenGraphExcludeTestScope, "exclude-test-scope", false, "exclude test scope from graph")
 	mavenCmd.AddCommand(mavenCheckstyleCmd)
 	mavenCmd.AddCommand(mavenOwaspCmd)
 	mavenCmd.AddCommand(mavenEnforcerCmd)
