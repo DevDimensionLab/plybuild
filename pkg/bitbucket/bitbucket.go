@@ -31,11 +31,8 @@ func (bitbucket Bitbucket) SynchronizeAllRepos(excludeProjects []string) error {
 
 	for _, bitBucketProject := range projects.Values {
 		log.Debugf("Starting to synchronize: %s", bitBucketProject.Key)
-		for _, exclude := range excludeProjects {
-			log.Debugf("Checking against excluded project: %s", exclude)
-			if strings.ToLower(bitBucketProject.Key) == strings.ToLower(exclude) {
-				continue
-			}
+		if skipProject(bitBucketProject.Key, excludeProjects) {
+			continue
 		}
 
 		projectKey := strings.ToLower(bitBucketProject.Key)
@@ -57,6 +54,16 @@ func (bitbucket Bitbucket) SynchronizeAllRepos(excludeProjects []string) error {
 	}
 
 	return nil
+}
+
+func skipProject(key string, excludeProjects []string) bool {
+	for _, exclude := range excludeProjects {
+		log.Debugf("Checking against excluded project: %s", exclude)
+		if strings.ToLower(key) == strings.ToLower(exclude) {
+			return true
+		}
+	}
+	return false
 }
 
 func (bitbucket Bitbucket) cloneOrPull(workspace string, repository string) error {
