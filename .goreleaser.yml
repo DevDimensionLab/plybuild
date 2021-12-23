@@ -142,3 +142,6 @@ brews:
     # Default is false.
     skip_upload: false
 
+dockers:
+  - image_templates:
+      - copilotcli/co-pilot-cli
