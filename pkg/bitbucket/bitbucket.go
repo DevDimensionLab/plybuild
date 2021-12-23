@@ -4,6 +4,7 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/http"
 	"github.com/co-pilot-cli/co-pilot/pkg/shell"
+	"github.com/google/martian/log"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
@@ -30,7 +31,9 @@ func (bitbucket Bitbucket) SynchronizeAllRepos(excludeProjects []string) error {
 	}
 
 	for _, bitBucketProject := range projects.Values {
+		log.Debugf("Starting to synchronize: %s", bitBucketProject.Key)
 		for _, exclude := range excludeProjects {
+			log.Debugf("Checking against excluded project: %s", exclude)
 			if strings.ToLower(bitBucketProject.Key) == strings.ToLower(exclude) {
 				continue
 			}
