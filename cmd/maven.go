@@ -7,6 +7,8 @@ import (
 )
 
 var mavenGraphExcludeTestScope bool
+var mavenGraphExcludeFilters []string
+var mavenGraphIncludeFilters []string
 
 var mavenCmd = &cobra.Command{
 	Use:   "maven",
@@ -30,9 +32,15 @@ var mavenGraphCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		for _, inc := range mavenGraphIncludeFilters {
+			println(inc)
+		}
+		for _, ex := range mavenGraphExcludeFilters {
+			println(ex)
+		}
 		ctx.DryRun = true
 		ctx.OnEachProject("creating graph for",
-			maven.Graph(false, mavenGraphExcludeTestScope),
+			maven.Graph(false, mavenGraphExcludeTestScope, mavenGraphIncludeFilters, mavenGraphExcludeFilters),
 			maven.RunOn(os.Stdout, "dot",
 				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
 		)
@@ -54,7 +62,7 @@ var mavenGraph2PartyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachProject("creating 2party graph for",
-			maven.Graph(true, mavenGraphExcludeTestScope),
+			maven.Graph(true, mavenGraphExcludeTestScope, mavenGraphIncludeFilters, mavenGraphExcludeFilters),
 			maven.RunOn(os.Stdout, "dot",
 				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
 		)
@@ -155,6 +163,8 @@ func init() {
 	mavenCmd.AddCommand(mavenGraphCmd)
 	mavenGraphCmd.AddCommand(mavenGraph2PartyCmd)
 	mavenGraphCmd.PersistentFlags().BoolVar(&mavenGraphExcludeTestScope, "exclude-test-scope", false, "exclude test scope from graph")
+	mavenGraphCmd.PersistentFlags().StringArrayVar(&mavenGraphExcludeFilters, "exclude-filters", []string{}, "exclude filter rules")
+	mavenGraphCmd.PersistentFlags().StringArrayVar(&mavenGraphIncludeFilters, "include-filters", []string{}, "include filter rules")
 	mavenCmd.AddCommand(mavenCheckstyleCmd)
 	mavenCmd.AddCommand(mavenOwaspCmd)
 	mavenCmd.AddCommand(mavenEnforcerCmd)

@@ -101,7 +101,7 @@ func getBasicAuth(url, username, password string) ([]byte, error) {
 	return body, nil
 }
 
-func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) (err error) {
+func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {
 	req, err := http.NewRequest("GET", host+path, nil)
 	if err != nil {
 		return err
@@ -112,9 +112,8 @@ func GetJsonWithAccessToken(host string, path string, accessToken string, respon
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-
-	if nil != err {
-		log.Debugln(req.Method, host+path, resp.StatusCode, err)
+	if err != nil {
+		log.Debugln(req.Method, host+path, err)
 		return err
 	}
 
@@ -122,12 +121,7 @@ func GetJsonWithAccessToken(host string, path string, accessToken string, respon
 	body, err := ioutil.ReadAll(resp.Body)
 	log.Debugln(req.Method, host+path, resp.StatusCode, len(body))
 
-	err = json.Unmarshal(body, &response)
-	if nil != err {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(body, &response)
 }
 
 func Wget(url, filepath string) error {

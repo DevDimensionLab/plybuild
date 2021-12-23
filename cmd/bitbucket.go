@@ -38,6 +38,6 @@ var bitbucketSyncCmd = &cobra.Command{
 }
 
 func init() {
-	//RootCmd.AddCommand(bitbucketCmd)
-	//bitbucketCmd.AddCommand(bitbucketSyncCmd)
+	RootCmd.AddCommand(bitbucketCmd)
+	bitbucketCmd.AddCommand(bitbucketSyncCmd)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 type GraphStyles struct {
@@ -51,7 +52,7 @@ func GraphArgs() []string {
 	}
 }
 
-func Graph(onlySecondParty bool, excludeTestScope bool) func(project config.Project) error {
+func Graph(onlySecondParty bool, excludeTestScope bool, includeFilters, excludeFilters []string) func(project config.Project) error {
 	return func(project config.Project) error {
 		mvnArgs := GraphArgs()
 		defaultStyles := GraphDefaultStyles()
@@ -59,7 +60,7 @@ func Graph(onlySecondParty bool, excludeTestScope bool) func(project config.Proj
 
 		if err == nil {
 			if onlySecondParty {
-				mvnArgs = append(mvnArgs, fmt.Sprintf("-Dincludes=%s*", secondParty))
+				includeFilters = append(includeFilters, fmt.Sprintf("%s*", secondParty))
 			}
 			wildCardProjectGroupId := fmt.Sprintf("%s*", secondParty)
 			defaultStyles.NodeStyles[wildCardProjectGroupId] = GraphStyle{
@@ -68,6 +69,13 @@ func Graph(onlySecondParty bool, excludeTestScope bool) func(project config.Proj
 				FillColor: "#79B4B7",
 				Style:     "filled,rounded",
 			}
+		}
+
+		if len(includeFilters) > 0 {
+			mvnArgs = append(mvnArgs, fmt.Sprintf("-Dincludes=%s", strings.Join(includeFilters, ",")))
+		}
+		if len(excludeFilters) > 0 {
+			mvnArgs = append(mvnArgs, fmt.Sprintf("-Dexcludes=%s", strings.Join(excludeFilters, ",")))
 		}
 
 		if excludeTestScope {
