@@ -12,11 +12,24 @@ func UpgradeKotlin() func(project config.Project) error {
 		if project.Config.Settings.DisableKotlinUpgrade {
 			return nil
 		}
-		return upgradeKotlinOnModel(project.Type.Model())
+		model := project.Type.Model()
+		return upgradeKotlinOnModel(model, model.Properties.SetKey)
 	}
 }
 
-func upgradeKotlinOnModel(model *pom.Model) error {
+func UpgradeKotlinWithVersions() func(project config.Project) error {
+	return func(project config.Project) error {
+		if project.Config.Settings.DisableKotlinUpgrade {
+			return nil
+		}
+		model := project.Type.Model()
+		return upgradeKotlinOnModel(model, func(propKey, version string) error {
+			return RunOn("mvn", UpdateProperty(propKey, version)...)(project)
+		})
+	}
+}
+
+func upgradeKotlinOnModel(model *pom.Model, action func(propKey, version string) error) error {
 	if model.Properties == nil {
 		return errors.New("could not kotlin version because pom does not contain any properties")
 	}
@@ -41,7 +54,7 @@ func upgradeKotlinOnModel(model *pom.Model) error {
 		return err
 	}
 
-	if currentVersion.IsDifferentFrom(latestVersion) {
+	if currentVersion.IsLessThan(latestVersion) {
 		msg := fmt.Sprintf("outdated kotlin version [%s => %s]", currentVersion.ToString(), latestVersion.ToString())
 		if IsMajorUpgrade(currentVersion, latestVersion) {
 			log.Warnf("major %s", msg)
@@ -51,7 +64,8 @@ func upgradeKotlinOnModel(model *pom.Model) error {
 			log.Infof(msg)
 		}
 
-		err = model.Properties.SetKey("kotlin.version", latestVersion.ToString())
+		//err = model.Properties.SetKey("kotlin.version", latestVersion.ToString())
+		err = action("kotlin.version", latestVersion.ToString())
 		if err != nil {
 			return err
 		}

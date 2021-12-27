@@ -21,7 +21,7 @@ func TestUpgradeDependency(t *testing.T) {
 	deps := model.Dependencies.Dependency
 	upgradeDependencies(model, deps, project.Config.Settings, func(groupId string) bool {
 		return true
-	})
+	}, model.SetDependencyVersion)
 
 	if err := project.SortAndWritePom(); err != nil {
 		t.Errorf("%v\n", err)

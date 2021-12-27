@@ -22,7 +22,7 @@ func (endpoint Endpoint) Uri() string {
 
 func InitAndBlockStandalone(endpoint Endpoint, blockingChannel chan bool) {
 	go StartWebServer()
-	OpenBrowser(endpoint.Uri())
+	_ = OpenBrowser(endpoint.Uri())
 	<-blockingChannel
 	//go StopWebServer()
 }

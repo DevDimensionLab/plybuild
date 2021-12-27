@@ -6,7 +6,6 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"io/ioutil"
-	"os"
 	"strings"
 )
 
@@ -86,7 +85,7 @@ func Graph(onlySecondParty bool, excludeTestScope bool, includeFilters, excludeF
 			return err
 		}
 
-		return RunOn(os.Stdout, "mvn", mvnArgs...)(project)
+		return RunOn("mvn", mvnArgs...)(project)
 	}
 }
 

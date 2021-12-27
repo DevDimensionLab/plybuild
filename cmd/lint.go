@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var lintCmd = &cobra.Command{
@@ -30,7 +29,7 @@ var lintKotlinCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachProject("running ktlint",
-			maven.RunOn(os.Stdout, "ktlint", "\"src/**/*.kt\""),
+			maven.RunOn("ktlint", "\"src/**/*.kt\""),
 		)
 	},
 }

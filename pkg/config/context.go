@@ -12,6 +12,7 @@ type Context struct {
 	TargetDirectory string
 	DisableGit      bool
 	ForceCloudSync  bool
+	OpenInBrowser   bool
 	Projects        []Project
 	CloudConfig     CloudConfig
 	Err             error

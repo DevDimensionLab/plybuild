@@ -115,6 +115,19 @@ var upgradeAllCmd = &cobra.Command{
 	},
 }
 
+var upgradeWithVersionsCmd = &cobra.Command{
+	Use:   "with-versions",
+	Short: "Upgrade using mvn versions in a project",
+	Long:  `Upgrade using mvn versions in a project`,
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx.DryRun = true
+		ctx.OnEachProject("upgrading properties using maven versions",
+			maven.UpgradeKotlinWithVersions(),
+			maven.UpgradeDependenciesWithVersions(),
+		)
+	},
+}
+
 var upgradeInteractiveCmd = &cobra.Command{
 	Use:   "interactive",
 	Short: "Interactively upgrade the project",
@@ -136,6 +149,7 @@ func init() {
 	upgradeCmd.AddCommand(upgradeDeprecatedCmd)
 	upgradeCmd.AddCommand(upgradeAllCmd)
 	upgradeCmd.AddCommand(upgradeInteractiveCmd)
+	upgradeCmd.AddCommand(upgradeWithVersionsCmd)
 
 	upgradeDependencyCmd.PersistentFlags().StringVarP(&groupId, "groupId", "g", "", "GroupId for upgrade")
 	upgradeDependencyCmd.PersistentFlags().StringVarP(&artifactId, "artifactId", "a", "", "ArtifactId for upgrade")

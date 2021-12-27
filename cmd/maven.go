@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
+	"github.com/co-pilot-cli/co-pilot/pkg/webservice"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var mavenGraphExcludeTestScope bool
@@ -41,8 +43,9 @@ var mavenGraphCmd = &cobra.Command{
 		ctx.DryRun = true
 		ctx.OnEachProject("creating graph for",
 			maven.Graph(false, mavenGraphExcludeTestScope, mavenGraphIncludeFilters, mavenGraphExcludeFilters),
-			maven.RunOn(os.Stdout, "dot",
+			maven.RunOn("dot",
 				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
+			openReportInBrowser("target/dependency-graph.png"),
 		)
 	},
 }
@@ -63,8 +66,9 @@ var mavenGraph2PartyCmd = &cobra.Command{
 		ctx.DryRun = true
 		ctx.OnEachProject("creating 2party graph for",
 			maven.Graph(true, mavenGraphExcludeTestScope, mavenGraphIncludeFilters, mavenGraphExcludeFilters),
-			maven.RunOn(os.Stdout, "dot",
+			maven.RunOn("dot",
 				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
+			openReportInBrowser("target/dependency-graph.png"),
 		)
 	},
 }
@@ -84,7 +88,7 @@ var mavenCheckstyleCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachProject("running checkstyle analysis on",
-			maven.RunOn(os.Stdout, "mvn", "checkstyle:checkstyle"),
+			maven.RunOn("mvn", "checkstyle:checkstyle"),
 		)
 	},
 }
@@ -104,7 +108,8 @@ var mavenOwaspCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachProject("running wasp analysis on",
-			maven.RunOn(os.Stdout, "mvn", "org.owasp:dependency-check-maven:check"),
+			maven.RunOn("mvn", "org.owasp:dependency-check-maven:check"),
+			openReportInBrowser("target/dependency-check-report.html"),
 		)
 	},
 }
@@ -124,7 +129,7 @@ var mavenSpringBootRunCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachProject("running spring-boot:run",
-			maven.RunOn(os.Stdout, "mvn", "spring-boot:run"),
+			maven.RunOn("mvn", "spring-boot:run"),
 		)
 	},
 }
@@ -145,13 +150,21 @@ var mavenEnforcerCmd = &cobra.Command{
 		ctx.DryRun = true
 		ctx.OnEachProject("running enforcer on",
 			maven.RunOn(
-				os.Stdout,
 				"mvn",
 				"org.apache.maven.plugins:maven-enforcer-plugin:enforce",
 				"-Drules=banDuplicatePomDependencyVersions,dependencyConvergence",
 			),
 		)
 	},
+}
+
+func openReportInBrowser(reportPath string) func(project config.Project) error {
+	return func(project config.Project) error {
+		if ctx.OpenInBrowser {
+			return webservice.OpenBrowser(fmt.Sprintf("%s/%s", project.Path, reportPath))
+		}
+		return nil
+	}
 }
 
 func init() {
@@ -165,8 +178,11 @@ func init() {
 	mavenGraphCmd.PersistentFlags().BoolVar(&mavenGraphExcludeTestScope, "exclude-test-scope", false, "exclude test scope from graph")
 	mavenGraphCmd.PersistentFlags().StringArrayVar(&mavenGraphExcludeFilters, "exclude-filters", []string{}, "exclude filter rules")
 	mavenGraphCmd.PersistentFlags().StringArrayVar(&mavenGraphIncludeFilters, "include-filters", []string{}, "include filter rules")
+	mavenGraphCmd.PersistentFlags().BoolVar(&ctx.OpenInBrowser, "open", false, "open report in browser")
 	mavenCmd.AddCommand(mavenCheckstyleCmd)
+	mavenCheckstyleCmd.PersistentFlags().BoolVar(&ctx.OpenInBrowser, "open", false, "open report in browser")
 	mavenCmd.AddCommand(mavenOwaspCmd)
+	mavenOwaspCmd.PersistentFlags().BoolVar(&ctx.OpenInBrowser, "open", false, "open report in browser")
 	mavenCmd.AddCommand(mavenEnforcerCmd)
 	mavenCmd.AddCommand(mavenSpringBootRunCmd)
 }

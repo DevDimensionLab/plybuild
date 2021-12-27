@@ -1,0 +1,6 @@
+<meta:data xmlns:meta="https://example.com/modul-metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="https://example.com/modul-metadata http://git.example.com/projects/ABC/repos/metadata-schema-definition/raw/metadata-1.4.xsd">
+    <app>
+        <team-id>team1</team-id>
+    </app>
+</meta:data>

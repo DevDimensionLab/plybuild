@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
+	"strings"
 )
 
 func UpgradeDependency(groupId string, artifactId string) func(project config.Project) error {
@@ -25,52 +26,66 @@ func UpgradeDependencyOnModel(model *pom.Model, groupId string, artifactId strin
 	return err
 }
 
-func Upgrade3PartyDependencies() func(project config.Project) error {
-	return func(project config.Project) error {
-		return upgrade3PartyDependenciesOnModel(&project)
-	}
-}
-
-func upgrade3PartyDependenciesOnModel(project *config.Project) error {
-	model := project.Type.Model()
-	if model.Dependencies != nil {
-		deps := model.Dependencies.Dependency
-		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, false))
-	}
-
-	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
-		deps := model.DependencyManagement.Dependencies.Dependency
-		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, false))
-	}
-
-	return nil
-}
-
 func Upgrade2PartyDependencies() func(project config.Project) error {
 	return func(project config.Project) error {
-		return upgrade2PartyDependenciesOnModel(&project)
+		return upgradeDependenciesForProject(&project, true)
 	}
 }
 
-func upgrade2PartyDependenciesOnModel(project *config.Project) error {
+func Upgrade3PartyDependencies() func(project config.Project) error {
+	return func(project config.Project) error {
+		return upgradeDependenciesForProject(&project, false)
+	}
+}
+
+func upgradeDependenciesForProject(project *config.Project, secondParty bool) error {
 	model := project.Type.Model()
 	if model.Dependencies != nil {
 		deps := model.Dependencies.Dependency
-		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, true))
+		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, secondParty), model.SetDependencyVersion)
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
 		deps := model.DependencyManagement.Dependencies.Dependency
-		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, true))
+		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, secondParty), model.SetDependencyVersion)
 	}
 
 	return nil
+}
+
+func UpgradeDependenciesWithVersions() func(project config.Project) error {
+	return func(project config.Project) error {
+		updateProp := func(dep pom.Dependency, version string) error {
+			if strings.HasPrefix(dep.Version, "${") {
+				versionKey := strings.Trim(dep.Version, "${}")
+				args := UpdateProperty(versionKey, version)
+				return RunOn("mvn", args...)(project)
+			} else {
+				log.Debugf("Upgrading dependencies with `use-latest-version`")
+				args := UseLatestVersion(dep.GroupId, dep.ArtifactId)
+				return RunOn("mvn", args...)(project)
+			}
+		}
+		allDeps := func(groupId string) bool { return true }
+		model := project.Type.Model()
+		if model.Dependencies != nil {
+			deps := model.Dependencies.Dependency
+			upgradeDependencies(model, deps, project.Config.Settings, allDeps, updateProp)
+		}
+
+		if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
+			deps := model.DependencyManagement.Dependencies.Dependency
+			upgradeDependencies(model, deps, project.Config.Settings, allDeps, updateProp)
+		}
+
+		return nil
+	}
 }
 
 func specificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dependency, groupId string, artifactId string) error {
 	for _, dep := range availableDependencies {
 		if dep.Version != "" && dep.GroupId == groupId && dep.ArtifactId == artifactId {
-			return upgradeDependency(model, dep, nil)
+			return upgradeDependency(model, dep, nil, model.SetDependencyVersion)
 		}
 	}
 
@@ -99,7 +114,8 @@ func upgradeDependencies(
 	model *pom.Model,
 	dependencies []pom.Dependency,
 	settings config.ProjectSettings,
-	condition func(groupId string) bool) {
+	condition func(groupId string) bool,
+	action func(dep pom.Dependency, version string) error) {
 
 	for _, dep := range dependencies {
 		if settings.DependencyIsIgnored(dep) {
@@ -125,7 +141,7 @@ func upgradeDependencies(
 		}
 
 		if depVersion != "" && condition(dep.GroupId) {
-			err := upgradeDependency(model, dep, maxVersion())
+			err := upgradeDependency(model, dep, maxVersion(), action)
 			if err != nil {
 				log.Warnf("%v", err)
 			}
@@ -133,7 +149,7 @@ func upgradeDependencies(
 	}
 }
 
-func upgradeDependency(model *pom.Model, dep pom.Dependency, maxVersion *JavaVersion) error {
+func upgradeDependency(model *pom.Model, dep pom.Dependency, maxVersion *JavaVersion, action func(dep pom.Dependency, version string) error) error {
 	if dep.Version == "${project.version}" || dep.Version == "${revision}" {
 		return nil
 	}
@@ -179,7 +195,8 @@ func upgradeDependency(model *pom.Model, dep pom.Dependency, maxVersion *JavaVer
 			log.Info(msg)
 		}
 
-		err = model.SetDependencyVersion(dep, latestVersion.ToString())
+		//err = model.SetDependencyVersion(dep, latestVersion.ToString())
+		err = action(dep, latestVersion.ToString())
 	}
 
 	return nil

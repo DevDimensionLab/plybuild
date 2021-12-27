@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"os"
 	"runtime"
 	"strings"
 )
@@ -58,4 +59,11 @@ func ExternalError(err error, msg string) error {
 	output = fmt.Sprintf("%s##### ENDS EXTERNAL ERROR MESSAGE #####\n\n", output)
 
 	return errors.New(output)
+}
+
+func StdOut() *os.File {
+	if logrus.IsLevelEnabled(logrus.DebugLevel) {
+		return os.Stdout
+	}
+	return nil
 }
