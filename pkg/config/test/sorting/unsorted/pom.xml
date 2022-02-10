@@ -13,7 +13,7 @@
    <description>Demo project for Spring Boot</description>
    <properties>
       <java.version>11</java.version>
-      <org.hibernate.version>5.4.21.Final</org.hibernate.version>
+      <org.hibernate.version>5.4.24.Final</org.hibernate.version>
       <logback-classic.version>1.2.3</logback-classic.version>
       <logstash-logback.version>6.4</logstash-logback.version>
       <logback-core.version>1.2.3</logback-core.version>
