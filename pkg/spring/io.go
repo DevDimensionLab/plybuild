@@ -96,7 +96,7 @@ func DownloadInitializer(targetDir string, formData url.Values) error {
 		return err
 	}
 
-	log.Debugf("Deleting archive file: %s", targetArchiveFile)
+	log.Infof("Deleting archive file: %s", targetArchiveFile)
 	err = file.DeleteSingleFile(targetArchiveFile)
 	return err
 }
@@ -110,4 +110,25 @@ func archivePath() (path string, err error) {
 	now := time.Now().Unix()
 	path = file.Path("%s/spring-%d.zip", curDir, now)
 	return
+}
+
+func DeleteDemoFiles(targetDir string) {
+	testFile, err := file.FindFirst(".kt", fmt.Sprintf("%s/src/test/kotlin", targetDir))
+	if err != nil {
+		log.Warnf("Unable to find testfile")
+	} else {
+		log.Debugf("Deleting testfile: %s", testFile)
+		err := file.DeleteSingleFile(testFile)
+		if err != nil {
+			log.Warnf("Unable to delete testfile: %s", testFile)
+		}
+	}
+
+	for _, f := range []string{"HELP.md", "mvnw", "mvnw.cmd"} {
+		log.Debugf("Deleting demofile: %s", f)
+		err := file.DeleteSingleFile(fmt.Sprintf("%s/%s", targetDir, f))
+		if err != nil {
+			log.Warnf(err.Error())
+		}
+	}
 }

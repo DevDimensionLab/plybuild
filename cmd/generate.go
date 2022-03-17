@@ -60,6 +60,9 @@ var generateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		// cleanup unwanted files from downloaded content
+		spring.DeleteDemoFiles(ctx.TargetDirectory)
+
 		// populate applicationName field in config
 		if err := orderConfig.FindApplicationName(ctx.TargetDirectory); err != nil {
 			log.Errorln(err)
@@ -149,5 +152,5 @@ func init() {
 	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	generateCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
-	generateCmd.Flags().String("config-file", "", "Optional config file")
+	generateCmd.Flags().String("config-file", "co-pilot.json", "Optional config file")
 }
