@@ -1,14 +1,18 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
 	"github.com/co-pilot-cli/co-pilot/pkg/spring"
 	"github.com/co-pilot-cli/co-pilot/pkg/template"
 	"github.com/co-pilot-cli/co-pilot/pkg/webservice"
 	"github.com/co-pilot-cli/co-pilot/pkg/webservice/api"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var generateCmd = &cobra.Command{
@@ -133,6 +137,46 @@ var generateCmd = &cobra.Command{
 	},
 }
 
+var generateCleanCmd = &cobra.Command{
+	Use:   "clean",
+	Short: "Cleans a maven project with co-pilot files and formatting",
+	Long:  `Cleans a maven project with co-pilot files and formatting`,
+	Run: func(cmd *cobra.Command, args []string) {
+
+		validate := func(input string) error {
+			if len(input) <= 0 || (input != "yes" && input != "no") {
+				return errors.New("please enter 'yes' or 'no'")
+			}
+			return nil
+		}
+
+		templates := &promptui.PromptTemplates{
+			Prompt:  "{{ . }} ",
+			Valid:   "{{ . | green }} ",
+			Invalid: "{{ . | red }} ",
+			Success: "{{ . | bold }} ",
+		}
+
+		prompt := promptui.Prompt{
+			Label:     fmt.Sprintf("Are you sure you want to delete contents of: %s [yes/no]", ctx.TargetDirectory),
+			Templates: templates,
+			Validate:  validate,
+		}
+		result, err := prompt.Run()
+		if err != nil {
+			fmt.Printf("Prompt failed %v\n", err)
+			os.Exit(1)
+		}
+		if result == "no" {
+			return
+		}
+		log.Infof(fmt.Sprintf("Deleting all contents from: %s", ctx.TargetDirectory))
+		if err := file.ClearDir(ctx.TargetDirectory, []string{".idea", "co-pilot.json", ".iml"}); err != nil {
+			log.Fatalln(err)
+		}
+	},
+}
+
 func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 	ioResp, err := spring.GetRoot()
 	if err != nil {
@@ -148,6 +192,8 @@ func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 
 func init() {
 	RootCmd.AddCommand(generateCmd)
+
+	generateCmd.AddCommand(generateCleanCmd)
 
 	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
