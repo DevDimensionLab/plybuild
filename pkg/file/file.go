@@ -313,3 +313,29 @@ func DeleteSingleFile(filePath string) error {
 func DeleteAll(dirPath string) error {
 	return os.RemoveAll(dirPath)
 }
+
+func ClearDir(dirPath string, excludes []string) error {
+	files, err := filepath.Glob(filepath.Join(dirPath, "*"))
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		var skip = false
+		for _, exclude := range excludes {
+			if strings.Contains(file, exclude) {
+				log.Debugf("Skipping removal of: %s", file)
+				skip = true
+			}
+		}
+		if skip {
+			continue
+		}
+		log.Debugf("Removing: %s", file)
+		err = os.RemoveAll(file)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
