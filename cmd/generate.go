@@ -20,11 +20,6 @@ var generateCmd = &cobra.Command{
 	Short: "Initializes a maven project with co-pilot files and formatting",
 	Long:  `Initializes a maven project with co-pilot files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// sync cloud config
-		if err := cloudCfg.Refresh(localCfg); err != nil {
-			log.Fatalln(err)
-		}
-
 		var orderConfig config.ProjectConfiguration
 		var err error
 
@@ -34,6 +29,19 @@ var generateCmd = &cobra.Command{
 		if jsonConfigFile != "" {
 			orderConfig, err = config.InitProjectConfigurationFromFile(jsonConfigFile)
 		}
+		if orderConfig.Profile != "" {
+			profilesPath, err := config.GetProfilesPathFor(orderConfig.Profile)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			loadProfile(profilesPath)
+		}
+
+		// sync cloud config
+		if err := cloudCfg.Refresh(localCfg); err != nil {
+			log.Fatalln(err)
+		}
+
 		if interactive {
 			interactiveWebService(&orderConfig)
 		}

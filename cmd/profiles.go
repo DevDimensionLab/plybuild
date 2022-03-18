@@ -29,7 +29,7 @@ var profilesCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalln(err)
 			}
-			loadConfig()
+			loadProfile(configOpts.UseProfile)
 		}
 
 		if configOpts.Sync {
