@@ -22,14 +22,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
+	"strings"
 )
 
-var version = "v0.4.15"
+var version = "v0.5.0"
 var log = logger.Context()
-var localConfigDir = ".co-pilot"
-var cloudConfigDir = "cloud-config"
-var localCfg, localConfigErr = config.NewLocalConfig(localConfigDir)
-var cloudCfg, cloudConfigErr = config.NewGitCloudConfig(localConfigDir, cloudConfigDir)
+var localCfg config.LocalConfig
+var cloudCfg config.GitCloudConfig
 
 var RootCmd = &cobra.Command{
 	Use:   "co-pilot",
@@ -71,19 +70,30 @@ func init() {
 func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
-	if localConfigErr != nil {
-		log.Fatalln(localConfigErr)
-	}
-	if cloudConfigErr != nil {
-		log.Fatalln(cloudConfigErr)
+	_, err := config.GetActiveProfilePath()
+	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
+		if err := config.MigrateToProfiles(); err != nil {
+			log.Fatalln(err)
+		}
 	}
 
+	loadConfig()
+}
+
+func loadConfig() {
+	activeProfilePath, err := config.GetActiveProfilePath()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	localCfg = config.NewLocalConfig(activeProfilePath)
+	cloudCfg = config.OpenGitCloudConfig(activeProfilePath)
 	if !localCfg.Exists() {
 		err := localCfg.TouchFile()
 		if err != nil {
 			log.Error(err)
 		}
 	} else {
-		fmt.Printf("== using local config file %s ==\n", localCfg.FilePath())
+		log.Infof("using local config file %s", localCfg.FilePath())
 	}
 }
