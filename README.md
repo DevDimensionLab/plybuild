@@ -19,17 +19,15 @@ Heads up!
 Requirement: https://golang.org/doc/install
 
 ```shell script
-
-   _____                  _ _       _
-  / ____|                (_) |     | |
- | |     ___ ______ _ __  _| | ___ | |_
- | |    / _ \______| '_ \| | |/ _ \| __|
- | |___| (_) |     | |_) | | | (_) | |_
-  \_____\___/      | .__/|_|_|\___/ \__|
-                   | |
-                   |_|
-== version: v0.4.15 ==
-Co-pilot is a developer tool for automating common tasks on a spring boot project
+  _____                  _ _       _
+ / ____|                (_) |     | |
+| |     ___ ______ _ __  _| | ___ | |_
+| |    / _ \______| '_ \| | |/ _ \| __|
+| |___| (_) |     | |_) | | | (_) | |_
+ \_____\___/      | .__/|_|_|\___/ \__|
+                  | |
+                  |_|
+== version: v0.5.2 ==
 
 Usage:
   co-pilot [command]
@@ -45,6 +43,7 @@ Available Commands:
   help        Help about any command
   info        Prints info on spring version, dependencies etc
   init        Initializes a maven project with co-pilot files and formatting
+  install     Various install options for generating autocompletion etc
   lint        Linting commands
   maven       Run maven (mvn) commands
   merge       Merge functionalities for files to a project
@@ -56,6 +55,9 @@ Available Commands:
 Flags:
       --debug   turn on debug output
   -h, --help    help for co-pilot
+
+Additional help topics:
+  co-pilot about      About co-pilot
 
 Use "co-pilot [command] --help" for more information about a command.
 ```

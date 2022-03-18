@@ -213,6 +213,17 @@ func CreateFile(path, content string) error {
 	return ioutil.WriteFile(path, []byte(content), 0644)
 }
 
+func OpenFile(fileName string) (*os.File, error) {
+
+	if !Exists(fileName) {
+		if err := CreateFile(fileName, ""); err != nil {
+			return nil, err
+		}
+	}
+
+	return os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, 0644)
+}
+
 func SearchReplace(filePath string, from string, to string) error {
 	b, err := Open(filePath)
 	if err != nil {
