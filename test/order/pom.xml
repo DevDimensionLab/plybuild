@@ -4,7 +4,7 @@
       <!-- lookup parent from repository -->
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-parent</artifactId>
-      <version>2.6.1</version>
+      <version>2.6.4</version>
    </parent>
    <groupId>com.example</groupId>
    <artifactId>app</artifactId>
@@ -14,7 +14,7 @@
    <properties>
       <java.version>11</java.version>
       <kotlin.version>1.6.10</kotlin.version>
-      <flyway.version>8.2.3</flyway.version>
+      <flyway.version>8.5.4</flyway.version>
    </properties>
    <dependencies>
       <dependency>
@@ -33,11 +33,6 @@
       <dependency>
          <groupId>org.springframework.boot</groupId>
          <artifactId>spring-boot-starter</artifactId>
-      </dependency>
-      <dependency>
-         <groupId>org.springframework.boot</groupId>
-         <artifactId>spring-boot-starter-test</artifactId>
-         <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.springframework.boot</groupId>
