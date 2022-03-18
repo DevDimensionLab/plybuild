@@ -210,7 +210,7 @@ func CreateDirectory(path string) error {
 }
 
 func CreateFile(path, content string) error {
-	return os.WriteFile(path, []byte(content), 0644)
+	return ioutil.WriteFile(path, []byte(content), 0644)
 }
 
 func SearchReplace(filePath string, from string, to string) error {
