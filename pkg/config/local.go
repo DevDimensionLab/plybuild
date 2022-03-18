@@ -113,7 +113,8 @@ func (localCfg LocalConfig) Print() error {
 		return err
 	}
 
-	log.Infof("\n%s\n", b)
+	log.Infof("using: %s", localCfg.FilePath())
+	log.Infof("\n%s\n", string(b))
 
 	return nil
 }

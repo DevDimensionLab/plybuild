@@ -3,12 +3,15 @@ package cmd
 import (
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/spf13/cobra"
+	"os"
+	"os/exec"
 )
 
 type ConfigOpts struct {
 	Sync       bool
 	Reset      bool
 	Show       bool
+	Edit       bool
 	UseProfile string
 }
 
@@ -32,20 +35,34 @@ var profilesCmd = &cobra.Command{
 			loadProfile(configOpts.UseProfile)
 		}
 
+		if configOpts.Edit {
+			var editor = os.Getenv("EDITOR")
+			if editor == "" {
+				editor = "vim"
+			}
+			cmd := exec.Command(editor, localCfg.FilePath())
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			err := cmd.Run()
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
+
 		if configOpts.Sync {
 			if err := cloudCfg.Refresh(localCfg); err != nil {
 				log.Fatalln(err)
 			}
 		}
 
-		if configOpts.Show {
-			if err := localCfg.Print(); err != nil {
+		if configOpts.Reset {
+			if err := localCfg.TouchFile(); err != nil {
 				log.Fatalln(err)
 			}
 		}
 
-		if configOpts.Reset {
-			if err := localCfg.TouchFile(); err != nil {
+		if !configOpts.Reset || !configOpts.Sync || !configOpts.Edit {
+			if err := localCfg.Print(); err != nil {
 				log.Fatalln(err)
 			}
 		}
@@ -58,5 +75,6 @@ func init() {
 	profilesCmd.Flags().BoolVar(&configOpts.Sync, "cloud-sync", false, "sync with cloud config repo")
 	profilesCmd.Flags().StringVar(&configOpts.UseProfile, "use", "", "switch to profile")
 	profilesCmd.Flags().BoolVar(&configOpts.Show, "show", false, "show local config")
+	profilesCmd.Flags().BoolVar(&configOpts.Edit, "edit", false, "edit active profile local config")
 	profilesCmd.Flags().BoolVar(&configOpts.Reset, "reset", false, "reset local config")
 }
