@@ -26,6 +26,14 @@ func GetProfilesPath() (string, error) {
 	return fmt.Sprintf("%s/profiles", home), nil
 }
 
+func GetProfilesPathFor(profile string) (string, error) {
+	profilesPath, err := GetProfilesPath()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", profilesPath, profile), nil
+}
+
 func GetActiveProfilePath() (string, error) {
 	profilesPath, err := GetProfilesPath()
 	if err != nil {

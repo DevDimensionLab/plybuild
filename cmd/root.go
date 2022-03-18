@@ -77,17 +77,18 @@ func initConfig() {
 		}
 	}
 
-	loadConfig()
-}
-
-func loadConfig() {
 	activeProfilePath, err := config.GetActiveProfilePath()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	localCfg = config.NewLocalConfig(activeProfilePath)
-	cloudCfg = config.OpenGitCloudConfig(activeProfilePath)
+	loadProfile(activeProfilePath)
+}
+
+func loadProfile(profilePath string) {
+
+	localCfg = config.NewLocalConfig(profilePath)
+	cloudCfg = config.OpenGitCloudConfig(profilePath)
 	if !localCfg.Exists() {
 		err := localCfg.TouchFile()
 		if err != nil {

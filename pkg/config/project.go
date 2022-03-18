@@ -28,6 +28,7 @@ type ValidProjectType string
 
 type ProjectConfiguration struct {
 	MavenProjectConfiguration
+	Profile     string `json:"profile,omitempty"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Team        struct {
