@@ -25,7 +25,7 @@ import (
 	"strings"
 )
 
-var version = "v0.5.0"
+var version = "v0.5.1"
 var log = logger.Context()
 var localCfg config.LocalConfig
 var cloudCfg config.GitCloudConfig
@@ -33,7 +33,7 @@ var cloudCfg config.GitCloudConfig
 var RootCmd = &cobra.Command{
 	Use:   "co-pilot",
 	Short: "Co-pilot is a developer tool for automating common tasks on a spring boot project",
-	Long:  ``,
+	Long:  header(),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
@@ -49,19 +49,7 @@ func Execute() {
 }
 
 func init() {
-	fmt.Print(`
-   _____                  _ _       _
-  / ____|                (_) |     | |
- | |     ___ ______ _ __  _| | ___ | |_
- | |    / _ \______| '_ \| | |/ _ \| __|
- | |___| (_) |     | |_) | | | (_) | |_
-  \_____\___/      | .__/|_|_|\___/ \__|
-                   | |
-                   |_|
-`)
-	fmt.Printf("== version: %s ==\n", version)
 	cobra.OnInitialize(initConfig)
-
 	logrus.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
 }
@@ -94,7 +82,5 @@ func loadProfile(profilePath string) {
 		if err != nil {
 			log.Error(err)
 		}
-	} else {
-		log.Infof("using local config file %s", localCfg.FilePath())
 	}
 }
