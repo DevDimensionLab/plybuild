@@ -104,10 +104,19 @@ func Open(filePath string) ([]byte, error) {
 	return byteValue, nil
 }
 
-func OpenLines(filePath string) ([]string, error) {
+func OpenLinesStrict(filePath string) ([]string, error) {
 	b, err := Open(filePath)
 	if err != nil {
 		return []string{}, err
+	}
+
+	return strings.Split(string(b), "\n"), nil
+}
+
+func OpenLines(filePath string) ([]string, error) {
+	b, err := Open(filePath)
+	if err != nil {
+		return []string{}, nil
 	}
 
 	return strings.Split(string(b), "\n"), nil

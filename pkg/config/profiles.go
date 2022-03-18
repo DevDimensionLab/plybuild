@@ -32,7 +32,7 @@ func GetActiveProfilePath() (string, error) {
 		return "", err
 	}
 
-	activeProfile, err := file.OpenLines(fmt.Sprintf("%s/.active_profile", profilesPath))
+	activeProfile, err := file.OpenLinesStrict(fmt.Sprintf("%s/.active_profile", profilesPath))
 	if err != nil {
 		return "", err
 	}
