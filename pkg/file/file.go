@@ -104,6 +104,15 @@ func Open(filePath string) ([]byte, error) {
 	return byteValue, nil
 }
 
+func OpenLinesStrict(filePath string) ([]string, error) {
+	b, err := Open(filePath)
+	if err != nil {
+		return []string{}, err
+	}
+
+	return strings.Split(string(b), "\n"), nil
+}
+
 func OpenLines(filePath string) ([]string, error) {
 	b, err := Open(filePath)
 	if err != nil {
@@ -198,6 +207,10 @@ func CreateDirectory(path string) error {
 	}
 
 	return nil
+}
+
+func CreateFile(path, content string) error {
+	return ioutil.WriteFile(path, []byte(content), 0644)
 }
 
 func SearchReplace(filePath string, from string, to string) error {
@@ -338,4 +351,8 @@ func ClearDir(dirPath string, excludes []string) error {
 		}
 	}
 	return nil
+}
+
+func Move(source, destination string) error {
+	return os.Rename(source, destination)
 }

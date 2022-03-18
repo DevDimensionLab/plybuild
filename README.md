@@ -19,6 +19,7 @@ Heads up!
 Requirement: https://golang.org/doc/install
 
 ```shell script
+
    _____                  _ _       _
   / ____|                (_) |     | |
  | |     ___ ______ _ __  _| | ___ | |_
@@ -38,7 +39,6 @@ Available Commands:
   bitbucket   Bitbucket functionality
   clean       Clean files and folder in a project
   completion  Generate the autocompletion script for the specified shell
-  config      Config settings for co-pilot
   format      Format functionality for a project
   generate    Initializes a maven project with co-pilot files and formatting
   git         Git commands
@@ -48,6 +48,7 @@ Available Commands:
   lint        Linting commands
   maven       Run maven (mvn) commands
   merge       Merge functionalities for files to a project
+  profiles    Manage profiles settings for co-pilot
   query       Query dependencies in a project
   status      Status functionality for a project
   upgrade     Upgrade options

@@ -11,20 +11,6 @@ import (
 	"strings"
 )
 
-var defaultIgnores = []string{
-	"pom.xml",
-	"co-pilot.json",
-	"Application",
-	".co-pilot.ignore",
-	".gitignore",
-	".mvn",
-	"mvnw",
-	"mvnw.cmd",
-	".idea",
-	".iml",
-	".git",
-}
-
 func MergeTemplates(templates []config.CloudTemplate, target config.Project) {
 	for _, template := range templates {
 		log.Infof("applying Template %s", template.Name)
@@ -90,9 +76,9 @@ func filesToCopy(sourceDir string) (files []string, err error) {
 		if info.IsDir() {
 			return nil
 		}
-		for _, nayName := range ignores {
-			if strings.Contains(path, nayName) {
-				log.Debugf("ignoring %s", info.Name())
+		for _, ignore := range ignores {
+			if strings.Contains(path, ignore) {
+				log.Debugf("ignoring %s in %s", info.Name(), ignores)
 				return nil
 			}
 		}
@@ -116,6 +102,19 @@ func getIgnores(sourceDir string) (ignores []string) {
 	}
 	ignores = append(ignores, coPilotIgnores...)
 
+	defaultIgnores := []string{
+		"pom.xml",
+		"co-pilot.json",
+		"Application",
+		".co-pilot.ignore",
+		".gitignore",
+		".mvn",
+		"mvnw",
+		"mvnw.cmd",
+		".idea",
+		".iml",
+		".git",
+	}
 	ignores = append(ignores, defaultIgnores...)
 
 	return

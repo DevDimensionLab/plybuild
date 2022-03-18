@@ -6,7 +6,6 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/co-pilot-cli/co-pilot/pkg/shell"
-	"github.com/mitchellh/go-homedir"
 	"io/ioutil"
 )
 
@@ -31,13 +30,8 @@ type CloudConfig interface {
 	Template(name string) (CloudTemplate, error)
 }
 
-func NewGitCloudConfig(localConfigDir string, cloudConfigDirName string) (cfg GitCloudConfig, err error) {
-	home, err := homedir.Dir()
-	if err != nil {
-		return cfg, err
-	}
-
-	cfg.Impl.Path = file.Path("%s/%s/%s", home, localConfigDir, cloudConfigDirName)
+func OpenGitCloudConfig(localConfigPath string) (cfg GitCloudConfig) {
+	cfg.Impl.Path = file.Path(fmt.Sprintf("%s/cloud-config", localConfigPath))
 	return
 }
 
