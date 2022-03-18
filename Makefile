@@ -1,11 +1,7 @@
 .DEFAULT_GOAL := all
-BUILD_DATE := $(shell date +%Y-%m-%d\ %H:%M)
-BUILD_TAG := $(shell git describe --abbrev=0 --tags)
-LD_FLAGS := '-X "co-pilot/cmd.buildDate=$(BUILD_DATE)" -X "co-pilot/cmd.version=$(BUILD_TAG)"'
-
 
 build:
-	go build -ldflags ${LD_FLAGS}
+	go build
 
 docker-build:
 	docker build --tag co-pilot:latest .
@@ -17,7 +13,7 @@ docker-publish:
 	./docker-publish.sh	
 
 install:
-	go install -ldflags ${LD_FLAGS}
+	go install
 
 run:
 	go run main.go

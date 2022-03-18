@@ -56,7 +56,7 @@ func init() {
 	RootCmd.AddCommand(profilesCmd)
 
 	profilesCmd.Flags().BoolVar(&configOpts.Sync, "cloud-sync", false, "sync with cloud config repo")
-	profilesCmd.Flags().StringVar(&configOpts.UseProfile, "use-profile", "", "switch to profile")
+	profilesCmd.Flags().StringVar(&configOpts.UseProfile, "use", "", "switch to profile")
 	profilesCmd.Flags().BoolVar(&configOpts.Show, "show", false, "show local config")
 	profilesCmd.Flags().BoolVar(&configOpts.Reset, "reset", false, "reset local config")
 }
