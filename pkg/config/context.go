@@ -14,7 +14,6 @@ type Context struct {
 	ForceCloudSync  bool
 	OpenInBrowser   bool
 	Projects        []Project
-	CloudConfig     CloudConfig
 	Err             error
 }
 
@@ -54,8 +53,8 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project)
 	}
 
 	for _, p := range ctx.Projects {
-		if ctx.CloudConfig != nil {
-			projectDefaults, err := ctx.CloudConfig.ProjectDefaults()
+		if p.CloudConfig != nil {
+			projectDefaults, err := p.CloudConfig.ProjectDefaults()
 			if err != nil {
 				log.Warnf("could not find a project-defaults.json file in cloud-config")
 				log.Debugf("%v", err)

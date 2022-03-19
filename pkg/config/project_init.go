@@ -62,10 +62,22 @@ func InitProjectFromDirectory(targetDir string) (project Project, err error) {
 		project.GitInfo = gitInfo
 	}
 
-	config, err := InitProjectConfigurationFromDir(targetDir)
+	projectConfig, err := InitProjectConfigurationFromDir(targetDir)
 	if err != nil {
 		return
 	}
+
+	profilePath, err := GetActiveProfilePath()
+	if err != nil {
+		return
+	}
+	if project.Config.Profile != "" {
+		profilePath, err = GetProfilesPathFor(project.Config.Profile)
+		if err != nil {
+			return
+		}
+	}
+	project.CloudConfig = OpenGitCloudConfig(profilePath)
 
 	pomFile := file.Path("%s/pom.xml", targetDir)
 	if file.Exists(pomFile) {
@@ -81,7 +93,7 @@ func InitProjectFromDirectory(targetDir string) (project Project, err error) {
 
 	project.ConfigFile = file.Path("%s/%s", targetDir, projectConfigFileName)
 	project.Path = targetDir
-	project.Config = config
+	project.Config = projectConfig
 	return
 }
 

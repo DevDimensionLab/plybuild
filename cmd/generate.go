@@ -38,7 +38,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		// sync cloud config
-		if err := cloudCfg.Refresh(localCfg); err != nil {
+		if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
 			log.Fatalln(err)
 		}
 
@@ -55,7 +55,7 @@ var generateCmd = &cobra.Command{
 		// validate templates
 		var templates []config.CloudTemplate
 		if orderConfig.Templates != nil {
-			templates, err = cloudCfg.ValidTemplatesFrom(orderConfig.Templates)
+			templates, err = activeCloudConfig.ValidTemplatesFrom(orderConfig.Templates)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -192,7 +192,7 @@ func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 	}
 	api.GOptions = api.GenerateOptions{
 		ProjectConfig: orderConfig,
-		CloudConfig:   cloudCfg,
+		CloudConfig:   activeCloudConfig,
 		IoResponse:    ioResp,
 	}
 	webservice.InitAndBlockStandalone(webservice.Generate, api.CallbackChannel)

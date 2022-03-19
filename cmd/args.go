@@ -31,10 +31,9 @@ func OkHelp(cmd *cobra.Command, depend func() bool) error {
 	return nil
 }
 
-func SyncCloudConfig() error {
-	ctx.CloudConfig = cloudCfg
+func SyncActiveProfileCloudConfig() error {
 	if ctx.ForceCloudSync {
-		if err := ctx.CloudConfig.Refresh(localCfg); err != nil {
+		if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
 			return errors.New("failed to sync cloud config: " + err.Error())
 		}
 	}

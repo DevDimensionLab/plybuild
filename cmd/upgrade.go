@@ -22,7 +22,7 @@ var upgradeCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		if err := SyncCloudConfig(); err != nil {
+		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -161,7 +161,7 @@ func init() {
 }
 
 func upgradeDeprecated(project config.Project) error {
-	templates, err := maven.RemoveDeprecated(cloudCfg, project.Type.Model())
+	templates, err := maven.RemoveDeprecated(project.CloudConfig, project.Type.Model())
 	if err != nil {
 		return err
 	} else {

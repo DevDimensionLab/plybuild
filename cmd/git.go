@@ -24,7 +24,7 @@ var gitInstallHooksCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
-		if err := SyncCloudConfig(); err != nil {
+		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -36,11 +36,11 @@ var gitInstallHooksCmd = &cobra.Command{
 		ctx.DryRun = true
 		ctx.OnEachProject("installing git hooks",
 			func(project config.Project) error {
-				hooks, err := ctx.CloudConfig.GitHookFiles(gitHooksFolderName)
+				hooks, err := project.CloudConfig.GitHookFiles(gitHooksFolderName)
 				if err != nil {
 					return err
 				}
-				gitHookPath := fmt.Sprintf("%s/%s", ctx.CloudConfig.Implementation().Dir(), gitHooksFolderName)
+				gitHookPath := fmt.Sprintf("%s/%s", project.CloudConfig.Implementation().Dir(), gitHooksFolderName)
 				return shell.InstallGitHooks(gitHookPath, hooks, project.Path)
 			},
 		)

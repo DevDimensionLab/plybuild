@@ -92,12 +92,12 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalln("Missing template --name")
 		}
 
-		cloudTemplate, err := cloudCfg.Template(templateName)
+		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
+		cloudTemplate, err := project.CloudConfig.Template(templateName)
 		if err != nil {
 			log.Fatalln(err)
 		}
