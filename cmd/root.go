@@ -60,7 +60,7 @@ func initConfig() {
 
 	_, err := config.GetActiveProfilePath()
 	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
-		if err := config.MigrateToProfiles(); err != nil {
+		if err := config.InstallOrMigrateToProfiles(); err != nil {
 			log.Fatalln(err)
 		}
 	}

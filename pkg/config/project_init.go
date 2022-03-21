@@ -68,9 +68,16 @@ func InitProjectFromDirectory(targetDir string) (project Project, err error) {
 	}
 
 	profilePath, err := GetActiveProfilePath()
-	if err != nil {
-		return
+	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
+		if err := InstallOrMigrateToProfiles(); err != nil {
+			return project, err
+		}
+		profilePath, err = GetActiveProfilePath()
+		if err != nil {
+			return project, err
+		}
 	}
+
 	if project.Config.Profile != "" {
 		profilePath, err = GetProfilesPathFor(project.Config.Profile)
 		if err != nil {
