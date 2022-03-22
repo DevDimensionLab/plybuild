@@ -28,6 +28,9 @@ lint:
 release:
 	goreleaser --rm-dist
 
+release-dry:
+	goreleaser --rm-dist --skip-publish --skip-validate
+
 brews-publish:
 	goreleaser release --rm-dist --skip-validate -f .goreleaser.brews.yml
 
