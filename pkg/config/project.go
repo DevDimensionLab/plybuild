@@ -17,11 +17,12 @@ import (
 var projectConfigFileName = "co-pilot.json"
 
 type Project struct {
-	Path       string
-	GitInfo    GitInfo
-	ConfigFile string
-	Config     ProjectConfiguration
-	Type       ProjectType
+	Path        string
+	GitInfo     GitInfo
+	ConfigFile  string
+	Config      ProjectConfiguration
+	Type        ProjectType
+	CloudConfig CloudConfig
 }
 
 type ValidProjectType string

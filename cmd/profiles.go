@@ -40,7 +40,7 @@ var profilesCmd = &cobra.Command{
 			if editor == "" {
 				editor = "vim"
 			}
-			cmd := exec.Command(editor, localCfg.FilePath())
+			cmd := exec.Command(editor, activeLocalConfig.FilePath())
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			err := cmd.Run()
@@ -50,19 +50,19 @@ var profilesCmd = &cobra.Command{
 		}
 
 		if configOpts.Sync {
-			if err := cloudCfg.Refresh(localCfg); err != nil {
+			if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
 				log.Fatalln(err)
 			}
 		}
 
 		if configOpts.Reset {
-			if err := localCfg.TouchFile(); err != nil {
+			if err := activeLocalConfig.TouchFile(); err != nil {
 				log.Fatalln(err)
 			}
 		}
 
 		if !configOpts.Reset || !configOpts.Sync || !configOpts.Edit {
-			if err := localCfg.Print(); err != nil {
+			if err := activeLocalConfig.Print(); err != nil {
 				log.Fatalln(err)
 			}
 		}

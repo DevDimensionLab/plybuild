@@ -27,8 +27,8 @@ import (
 
 var version = "v0.5.3"
 var log = logger.Context()
-var localCfg config.LocalConfig
-var cloudCfg config.GitCloudConfig
+var activeLocalConfig config.LocalConfig
+var activeCloudConfig config.GitCloudConfig
 
 var RootCmd = &cobra.Command{
 	Use:   "co-pilot",
@@ -60,7 +60,7 @@ func initConfig() {
 
 	_, err := config.GetActiveProfilePath()
 	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
-		if err := config.MigrateToProfiles(); err != nil {
+		if err := config.InstallOrMigrateToProfiles(); err != nil {
 			log.Fatalln(err)
 		}
 	}
@@ -75,10 +75,10 @@ func initConfig() {
 
 func loadProfile(profilePath string) {
 
-	localCfg = config.NewLocalConfig(profilePath)
-	cloudCfg = config.OpenGitCloudConfig(profilePath)
-	if !localCfg.Exists() {
-		err := localCfg.TouchFile()
+	activeLocalConfig = config.NewLocalConfig(profilePath)
+	activeCloudConfig = config.OpenGitCloudConfig(profilePath)
+	if !activeLocalConfig.Exists() {
+		err := activeLocalConfig.TouchFile()
 		if err != nil {
 			log.Error(err)
 		}

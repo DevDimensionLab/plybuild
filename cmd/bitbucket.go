@@ -18,7 +18,7 @@ var bitbucketSyncCmd = &cobra.Command{
 	Long:  `Synchronizes projects from bitbucket`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg, err := localCfg.Config()
+		cfg, err := activeLocalConfig.Config()
 		if err != nil {
 			log.Fatalln(err)
 		}

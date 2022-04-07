@@ -57,7 +57,7 @@ func SwitchProfile(newProfile string) error {
 	return file.CreateFile(fmt.Sprintf("%s/.active_profile", profilesPath), newProfile)
 }
 
-func MigrateToProfiles() error {
+func InstallOrMigrateToProfiles() error {
 	profilesPath, err := GetProfilesPath()
 	if err != nil {
 		return err
