@@ -6,34 +6,35 @@ import (
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/logger"
 	"github.com/co-pilot-cli/co-pilot/pkg/maven"
+	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func MergeTemplates(templates []config.CloudTemplate, target config.Project) {
-	for _, template := range templates {
+func MergeTemplates(cloudTemplates []config.CloudTemplate, targetProject config.Project) {
+	for _, template := range cloudTemplates {
 		log.Infof("applying Template %s", template.Name)
-		if err := MergeTemplate(template, target); err != nil {
+		if err := MergeTemplate(template, targetProject, false); err != nil {
 			log.Warnf("%v", err)
 		}
 	}
 }
 
-func MergeTemplate(cloudTemplate config.CloudTemplate, target config.Project) error {
-	if target.IsDirtyGitRepo() {
-		log.Warn(logger.White(fmt.Sprintf("merging Template %s into a dirty git repository %s", cloudTemplate.Name, target.Path)))
+func MergeTemplate(cloudTemplate config.CloudTemplate, targetProject config.Project, multiModuleCheck bool) error {
+	if targetProject.IsDirtyGitRepo() {
+		log.Warn(logger.White(fmt.Sprintf("merging template %s into a dirty git repository %s", cloudTemplate.Name, targetProject.Path)))
 	} else {
-		log.Info(logger.White(fmt.Sprintf("merging Template %s into %s", cloudTemplate.Name, target.Path)))
+		log.Info(logger.White(fmt.Sprintf("merging template %s into %s", cloudTemplate.Name, targetProject.Path)))
 	}
-	if err := merge(cloudTemplate.Project, target); err != nil {
+	if err := merge(cloudTemplate.Project, targetProject, multiModuleCheck); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func merge(sourceProject config.Project, targetProject config.Project) error {
+func merge(sourceProject config.Project, targetProject config.Project, multiModuleCheck bool) error {
 	sourceDir := sourceProject.Path
 	files, err := filesToCopy(sourceDir)
 	if err != nil {
@@ -47,8 +48,8 @@ func merge(sourceProject config.Project, targetProject config.Project) error {
 		}
 
 		sourceRelPath = replacePathForSource(sourceRelPath, sourceProject.Config, targetProject.Config)
-
 		targetPath := file.Path("%s/%s", targetProject.Path, sourceRelPath)
+
 		if err = file.CopyOrMerge(f, targetPath); err != nil {
 			return err
 		}
@@ -64,10 +65,68 @@ func merge(sourceProject config.Project, targetProject config.Project) error {
 		}
 	}
 
+	// multimodule specific code -- fixes additional pom.xml files in cloud template, and cleans root src, etc
+	if sourceProject.IsMultiModule() && multiModuleCheck {
+		if err := mergeMultimodulePoms(targetProject); err != nil {
+			return err
+		}
+		if err := cleanForMultiModule(targetProject); err != nil {
+			return err
+		}
+	}
+
 	if sourceProject.IsMavenProject() && targetProject.IsMavenProject() {
 		return maven.MergeAndWritePomFiles(sourceProject, targetProject)
 	}
 	return nil
+}
+
+func mergeMultimodulePoms(targetProject config.Project) error {
+	pomFiles, err := file.FindAll("pom.xml", []string{}, targetProject.Path)
+	if err != nil {
+		return err
+	}
+	for _, pomFile := range pomFiles {
+		if pomFile == fmt.Sprintf("%s/pom.xml", targetProject.Path) {
+			continue
+		}
+		subModel, err := pom.GetModelFrom(pomFile)
+		if err != nil {
+			return err
+		}
+		subModel.Parent.GroupId = targetProject.Type.Model().GroupId
+		subModel.Parent.ArtifactId = targetProject.Type.Model().ArtifactId
+		if err := subModel.WriteToFile(pomFile); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func cleanForMultiModule(targetProject config.Project) error {
+	// dependencies
+	var dependencies []pom.Dependency
+	for _, dep := range targetProject.Type.Model().Dependencies.Dependency {
+		if dep.GroupId == "org.springframework.boot" {
+			continue
+		}
+		dependencies = append(dependencies, dep)
+	}
+	targetProject.Type.Model().Dependencies.Dependency = dependencies
+
+	// plugins
+	var plugins []pom.Plugin
+	for _, plug := range targetProject.Type.Model().Build.Plugins.Plugin {
+		if plug.GroupId == "org.springframework.boot" {
+			continue
+		}
+		plugins = append(plugins, plug)
+	}
+	targetProject.Type.Model().Build.Plugins.Plugin = plugins
+
+	// src folder in root
+	return file.DeleteAll(fmt.Sprintf("%s/src", targetProject.Path))
 }
 
 func filesToCopy(sourceDir string) (files []string, err error) {
@@ -76,16 +135,20 @@ func filesToCopy(sourceDir string) (files []string, err error) {
 		if info.IsDir() {
 			return nil
 		}
+		rootDir := sourceDir == strings.ReplaceAll(path, "/"+info.Name(), "")
 		for _, ignore := range ignores {
+			if (ignore == "pom.xml") && !rootDir {
+				continue
+			}
 			if strings.Contains(path, ignore) {
-				log.Debugf("ignoring %s in %s", info.Name(), ignores)
+				log.Debugf("ignoring %s in %s", path, ignores)
 				return nil
 			}
 		}
 		files = append(files, path)
 		return nil
 	})
-
+	log.Debugf("filesToCopy: %s", files)
 	return
 }
 

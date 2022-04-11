@@ -8,21 +8,29 @@ import (
 	"strings"
 )
 
-func InitProjectConfigurationFromFile(filePath string) (config ProjectConfiguration, err error) {
+func InitProjectConfigurationFromFile(filePath string) (ProjectConfiguration, error) {
+	config := ProjectConfiguration{}
+
 	log.Debugf("loading projectConfig: %s", filePath)
-	err = file.ReadJson(filePath, &config)
+	err := file.ReadJson(filePath, &config)
 	if err != nil {
-		return
+		return config, err
 	}
 	err = config.Populate(strings.Replace(filePath, projectConfigFileName, "", 1))
-	return
+	return config, err
 }
 
-func InitProjectConfigurationFromDir(targetDir string) (config ProjectConfiguration, err error) {
+func InitProjectConfigurationFromDir(targetDir string) (ProjectConfiguration, error) {
+	config := ProjectConfiguration{}
 	filePath := file.Path("%s/%s", targetDir, projectConfigFileName)
-	err = file.ReadJson(filePath, &config)
+
+	err := file.ReadJson(filePath, &config)
+	if err != nil {
+		return config, err
+	}
+
 	err = config.Populate(targetDir)
-	return
+	return config, err
 }
 
 func (project *Project) InitProjectConfiguration() (err error) {

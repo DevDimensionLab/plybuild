@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-var projectConfigFileName = "co-pilot.json"
+const projectConfigFileName = "co-pilot.json"
 
 type Project struct {
 	Path        string
@@ -205,6 +205,13 @@ func (project Project) IsGitRepo() bool {
 
 func (project Project) IsDirtyGitRepo() bool {
 	return project.GitInfo.IsRepo && project.GitInfo.IsDirty
+}
+
+func (project Project) IsMultiModule() bool {
+	return project.IsMavenProject() &&
+		project.Type.Model() != nil &&
+		project.Type.Model().Modules != nil &&
+		project.Type.Model().Packaging == "pom"
 }
 
 func (project Project) GitInit(msg string) error {

@@ -16,7 +16,7 @@ func TestMergeTemplate_test_template(t *testing.T) {
 	cfg := newMockCloudConfig()
 	project, _ := config.InitProjectFromDirectory(file.Path("test/target-test-template"))
 	template, _ := cfg.Template("test-template")
-	err := MergeTemplate(template, project)
+	err := MergeTemplate(template, project, false)
 
 	if err != nil {
 		t.Errorf("%v\n", err)
@@ -27,7 +27,7 @@ func TestMergeTemplate_simple_template(t *testing.T) {
 	cfg := newMockCloudConfig()
 	project, _ := config.InitProjectFromDirectory(file.Path("test/target-simple-template"))
 	template, _ := cfg.Template("simple-template")
-	err := MergeTemplate(template, project)
+	err := MergeTemplate(template, project, false)
 
 	if err != nil {
 		t.Errorf("%v\n", err)

@@ -12,7 +12,7 @@ func MergePoms(from *pom.Model, to *pom.Model) error {
 		log.Warnln(err)
 	}
 
-	if err := mergeManagementDependencies(from, to); err != nil {
+	if err := mergeDependencyManagement(from, to); err != nil {
 		log.Warnln(err)
 	}
 
@@ -21,6 +21,10 @@ func MergePoms(from *pom.Model, to *pom.Model) error {
 	}
 
 	if err := mergeProfiles(from, to); err != nil {
+		log.Warnln(err)
+	}
+
+	if err := mergeModules(from, to); err != nil {
 		log.Warnln(err)
 	}
 
@@ -33,12 +37,19 @@ func mergeDependencies(from *pom.Model, to *pom.Model) error {
 		return nil
 	}
 
+	// copy the block
 	if to.Dependencies == nil {
 		log.Infof("inserting dependencies block into project")
 		to.Dependencies = from.Dependencies
+
+		// copy properties if exists
+		for _, fromDep := range from.Dependencies.Dependency {
+			mergePropertyKey(from, to, fromDep.Version)
+		}
 		return nil
 	}
 
+	// copy individually
 	for _, fromDep := range from.Dependencies.Dependency {
 		if fromDep.GroupId == from.GetGroupId() {
 			log.Infof("ignoring merge of dependency %s:%s due to dependency groupId equals project groupId", fromDep.GroupId, fromDep.ArtifactId)
@@ -60,18 +71,31 @@ func mergeDependencies(from *pom.Model, to *pom.Model) error {
 	return nil
 }
 
-func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
+func mergeDependencyManagement(from *pom.Model, to *pom.Model) error {
 	if from.DependencyManagement == nil {
 		log.Debug("from dependencyManagement is nil")
 		return nil
 	}
 
+	// copy block
 	if to.DependencyManagement == nil {
-		log.Infof("inserting dependency management block into project")
-		from.DependencyManagement = to.DependencyManagement
+		log.Infof("inserting dependencyManagement block into project")
+		to.DependencyManagement = from.DependencyManagement
+		// copy properties if exists
+		for _, fromDep := range from.DependencyManagement.Dependencies.Dependency {
+			mergePropertyKey(from, to, fromDep.Version)
+		}
+		// change groupId for multimodule support
+		for i, toDep := range to.DependencyManagement.Dependencies.Dependency {
+			if toDep.GroupId == from.GroupId {
+				toDep.GroupId = to.GroupId
+				from.DependencyManagement.Dependencies.Dependency[i] = toDep
+			}
+		}
 		return nil
 	}
 
+	// copy individually
 	for _, fromDepMan := range from.DependencyManagement.Dependencies.Dependency {
 		var hasManagementDependency = false
 		for _, toDepMan := range to.DependencyManagement.Dependencies.Dependency {
@@ -80,7 +104,7 @@ func mergeManagementDependencies(from *pom.Model, to *pom.Model) error {
 			}
 		}
 		if !hasManagementDependency {
-			log.Infof("inserting management dependency %s:%s into project", fromDepMan.GroupId, fromDepMan.ArtifactId)
+			log.Infof("inserting dependencyManagement %s:%s into project", fromDepMan.GroupId, fromDepMan.ArtifactId)
 			to.DependencyManagement.Dependencies.Dependency = append(to.DependencyManagement.Dependencies.Dependency, fromDepMan)
 			mergePropertyKey(from, to, fromDepMan.Version)
 		}
@@ -276,6 +300,34 @@ func mergeProfiles(from *pom.Model, to *pom.Model) error {
 		if !hasProfile {
 			log.Infof("inserting profile %s into project", fromProfile.Id)
 			to.Profiles.Profile = append(to.Profiles.Profile, fromProfile)
+		}
+	}
+	return nil
+}
+
+func mergeModules(from *pom.Model, to *pom.Model) error {
+	if from.Modules == nil {
+		log.Debug("from modules is nil")
+		return nil
+	}
+
+	to.Packaging = from.Packaging
+	if to.Modules == nil {
+		to.Modules = from.Modules
+		log.Infof("inserting modules block into project")
+		return nil
+	}
+
+	for _, fromModule := range from.Modules.Module {
+		var hasModule = false
+		for _, toModule := range to.Modules.Module {
+			if fromModule == toModule {
+				hasModule = true
+			}
+		}
+		if !hasModule {
+			log.Infof("inserting profile %s into project", fromModule)
+			to.Modules.Module = append(to.Modules.Module, fromModule)
 		}
 	}
 	return nil

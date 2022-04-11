@@ -53,9 +53,9 @@ var generateCmd = &cobra.Command{
 		}
 
 		// validate templates
-		var templates []config.CloudTemplate
+		var cloudTemplates []config.CloudTemplate
 		if orderConfig.Templates != nil {
-			templates, err = activeCloudConfig.ValidTemplatesFrom(orderConfig.Templates)
+			cloudTemplates, err = activeCloudConfig.ValidTemplatesFrom(orderConfig.Templates)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -99,9 +99,9 @@ var generateCmd = &cobra.Command{
 		}
 
 		// merge templates into the newly created project
-		if templates != nil {
-			for _, t := range templates {
-				if err := template.MergeTemplate(t, project); err != nil {
+		if cloudTemplates != nil {
+			for _, cloudTemplate := range cloudTemplates {
+				if err := template.MergeTemplate(cloudTemplate, project, true); err != nil {
 					log.Fatalln(err)
 				}
 			}

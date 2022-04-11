@@ -1,0 +1,9 @@
+{
+  "language": "java",
+  "groupId": "com.example",
+  "artifactId": "demo",
+  "package": "com.example.demo",
+  "name": "demo",
+  "description": "",
+  "dependencies": []
+}

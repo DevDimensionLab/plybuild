@@ -102,7 +102,7 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if err := template.MergeTemplate(cloudTemplate, project); err != nil {
+		if err := template.MergeTemplate(cloudTemplate, project, false); err != nil {
 			log.Fatalln(err)
 		}
 	},
