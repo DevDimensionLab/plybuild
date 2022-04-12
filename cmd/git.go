@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/shell"
 	"github.com/spf13/cobra"
 )
@@ -40,7 +40,7 @@ var gitInstallHooksCmd = &cobra.Command{
 				if err != nil {
 					return err
 				}
-				gitHookPath := fmt.Sprintf("%s/%s", project.CloudConfig.Implementation().Dir(), gitHooksFolderName)
+				gitHookPath := file.Path("%s/%s", project.CloudConfig.Implementation().Dir(), gitHooksFolderName)
 				return shell.InstallGitHooks(gitHookPath, hooks, project.Path)
 			},
 		)

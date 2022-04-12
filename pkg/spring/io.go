@@ -113,7 +113,7 @@ func archivePath() (path string, err error) {
 }
 
 func DeleteDemoFiles(targetDir string) {
-	testFile, err := file.FindFirst(".kt", fmt.Sprintf("%s/src/test/kotlin", targetDir))
+	testFile, err := file.FindFirst(".kt", file.Path("%s/src/test/kotlin", targetDir))
 	if err != nil {
 		log.Warnf("Unable to find testfile")
 	} else {
@@ -126,7 +126,7 @@ func DeleteDemoFiles(targetDir string) {
 
 	for _, f := range []string{"HELP.md", "mvnw", "mvnw.cmd"} {
 		log.Debugf("Deleting demofile: %s", f)
-		err := file.DeleteSingleFile(fmt.Sprintf("%s/%s", targetDir, f))
+		err := file.DeleteSingleFile(file.Path("%s/%s", targetDir, f))
 		if err != nil {
 			log.Warnf(err.Error())
 		}

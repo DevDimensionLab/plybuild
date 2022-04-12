@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/spf13/cobra"
@@ -65,7 +64,7 @@ func configPathFor(fileName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s/%s", configPath, fileName), nil
+	return file.Path("%s/%s", configPath, fileName), nil
 }
 
 func init() {

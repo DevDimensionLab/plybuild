@@ -87,7 +87,7 @@ func mergeMultimodulePoms(targetProject config.Project) error {
 		return err
 	}
 	for _, pomFile := range pomFiles {
-		if pomFile == fmt.Sprintf("%s/pom.xml", targetProject.Path) {
+		if pomFile == file.Path("%s/pom.xml", targetProject.Path) {
 			continue
 		}
 		subModel, err := pom.GetModelFrom(pomFile)
@@ -126,7 +126,7 @@ func cleanForMultiModule(targetProject config.Project) error {
 	targetProject.Type.Model().Build.Plugins.Plugin = plugins
 
 	// src folder in root
-	return file.DeleteAll(fmt.Sprintf("%s/src", targetProject.Path))
+	return file.DeleteAll(file.Path("%s/src", targetProject.Path))
 }
 
 func filesToCopy(sourceDir string) (files []string, err error) {

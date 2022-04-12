@@ -25,7 +25,7 @@ import (
 	"strings"
 )
 
-var version = "v0.5.3"
+var version = "v0.5.5"
 var log = logger.Context()
 var activeLocalConfig config.LocalConfig
 var activeCloudConfig config.GitCloudConfig

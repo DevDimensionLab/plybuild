@@ -31,7 +31,7 @@ type CloudConfig interface {
 }
 
 func OpenGitCloudConfig(localConfigPath string) (cfg GitCloudConfig) {
-	cfg.Impl.Path = file.Path(fmt.Sprintf("%s/cloud-config", localConfigPath))
+	cfg.Impl.Path = file.Path("%s/cloud-config", localConfigPath)
 	return
 }
 
@@ -147,8 +147,7 @@ func (gitCfg GitCloudConfig) ProjectDefaults() (CloudProjectDefaults, error) {
 }
 
 func (gitCfg GitCloudConfig) GitHookFiles(path string) ([]string, error) {
-	hooksPath := fmt.Sprintf("%s/%s", gitCfg.Implementation().Dir(), path)
-	root := file.Path(hooksPath)
+	root := file.Path("%s/%s", gitCfg.Implementation().Dir(), path)
 	files, err := ioutil.ReadDir(root)
 	if err != nil {
 		return nil, err
