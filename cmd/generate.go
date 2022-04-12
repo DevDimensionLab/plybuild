@@ -166,24 +166,15 @@ var generateCleanCmd = &cobra.Command{
 	Long:  `Cleans a maven project with co-pilot files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		validate := func(input string) error {
-			if len(input) <= 0 || (input != "yes" && input != "no") {
-				return errors.New("please enter 'yes' or 'no'")
-			}
-			return nil
-		}
-
-		templates := &promptui.PromptTemplates{
-			Prompt:  "{{ . }} ",
-			Valid:   "{{ . | green }} ",
-			Invalid: "{{ . | red }} ",
-			Success: "{{ . | bold }} ",
-		}
-
 		prompt := promptui.Prompt{
 			Label:     fmt.Sprintf("Are you sure you want to delete contents of: %s [yes/no]", ctx.TargetDirectory),
 			Templates: templates,
-			Validate:  validate,
+			Validate: func(input string) error {
+				if len(input) <= 0 || (input != "yes" && input != "no") {
+					return errors.New("please enter 'yes' or 'no'")
+				}
+				return nil
+			},
 		}
 		result, err := prompt.Run()
 		if err != nil {

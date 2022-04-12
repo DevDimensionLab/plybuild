@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/config"
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
@@ -51,13 +53,36 @@ var examplesInstallCmd = &cobra.Command{
 
 		examples, err := activeCloudConfig.Examples()
 		if err != nil {
-			log.Fatalln(err)
+			log.Warnln(err)
+			return
 		}
 
 		for _, example := range examples {
 			if example == exampleName {
 				path := file.Path("%s/examples/%s/co-pilot.json", activeCloudConfig.Implementation().Dir(), example)
 				cmd.Flags().String("config-file", path, "Optional config file")
+
+				projectConfig, err := config.InitProjectConfigurationFromFile(path)
+				if err != nil {
+					log.Fatalln(err)
+				}
+
+				groupId, err = promptFor("groupId", projectConfig.GroupId)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				artifactId, err = promptFor("artifactId", projectConfig.ArtifactId)
+				if err != nil {
+					log.Fatalln(err)
+				}
+
+				if err := cmd.Flags().Set("group-id", groupId); err != nil {
+					log.Fatalln(err)
+				}
+				if err := cmd.Flags().Set("artifact-id", artifactId); err != nil {
+					log.Fatalln(err)
+				}
+
 				generateCmd.Run(cmd, args)
 				return
 			}
@@ -65,6 +90,21 @@ var examplesInstallCmd = &cobra.Command{
 
 		log.Fatalf("could not find %s in examples", exampleName)
 	},
+}
+
+func promptFor(value, defaultValue string) (string, error) {
+	prompt := promptui.Prompt{
+		Label:     fmt.Sprintf("Enter %s: [%s]", value, defaultValue),
+		Templates: templates,
+	}
+	newValue, err := prompt.Run()
+	if err != nil {
+		return "", err
+	}
+	if newValue == "" {
+		return defaultValue, err
+	}
+	return newValue, nil
 }
 
 func init() {
