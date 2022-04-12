@@ -12,6 +12,16 @@ var mavenGraphExcludeTestScope bool
 var mavenGraphExcludeFilters []string
 var mavenGraphIncludeFilters []string
 
+type AnalyzeOpts struct {
+	Deps bool
+}
+
+func (analyzeOpts AnalyzeOpts) Any() bool {
+	return analyzeOpts.Deps
+}
+
+var analyzeOpts AnalyzeOpts
+
 var mavenCmd = &cobra.Command{
 	Use:   "maven",
 	Short: "Run maven (mvn) commands",
@@ -158,6 +168,29 @@ var mavenEnforcerCmd = &cobra.Command{
 	},
 }
 
+var analyzeCmd = &cobra.Command{
+	Use:   "analyze",
+	Short: "Perform an analyze on a projects",
+	Long:  `Perform an analyze on a projects`,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		return OkHelp(cmd, analyzeOpts.Any)
+	},
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := EnableDebug(cmd); err != nil {
+			log.Fatalln(err)
+		}
+		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
+			log.Fatalln(err)
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx.DryRun = true
+		ctx.OnEachProject("Undeclared and unused dependencies", func(project config.Project) error {
+			return maven.ListUnusedAndUndeclared(project.Type.FilePath())
+		})
+	},
+}
+
 func openReportInBrowser(reportPath string) func(project config.Project) error {
 	return func(project config.Project) error {
 		if ctx.OpenInBrowser {
@@ -185,4 +218,7 @@ func init() {
 	mavenOwaspCmd.PersistentFlags().BoolVar(&ctx.OpenInBrowser, "open", false, "open report in browser")
 	mavenCmd.AddCommand(mavenEnforcerCmd)
 	mavenCmd.AddCommand(mavenSpringBootRunCmd)
+
+	mavenCmd.AddCommand(analyzeCmd)
+	analyzeCmd.Flags().BoolVar(&analyzeOpts.Deps, "deps", false, "Show dependency usage")
 }

@@ -24,8 +24,11 @@ var generateCmd = &cobra.Command{
 		var err error
 
 		// fetch user input config
+		overrideGroupId, _ := cmd.Flags().GetString("group-id")
+		overrideArtifactId, _ := cmd.Flags().GetString("artifact-id")
 		interactive, _ := cmd.Flags().GetBool("interactive")
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
+
 		if jsonConfigFile != "" {
 			orderConfig, err = config.InitProjectConfigurationFromFile(jsonConfigFile)
 		}
@@ -38,8 +41,10 @@ var generateCmd = &cobra.Command{
 		}
 
 		// sync cloud config
-		if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
-			log.Fatalln(err)
+		if ctx.ForceCloudSync {
+			if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 		if interactive {
@@ -59,6 +64,16 @@ var generateCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalln(err)
 			}
+		}
+
+		// check for override of groupId and artifactId
+		if overrideArtifactId != "" {
+			orderConfig.ArtifactId = overrideArtifactId
+			orderConfig.Package = fmt.Sprintf("%s.%s", orderConfig.GroupId, orderConfig.ArtifactId)
+		}
+		if overrideGroupId != "" {
+			orderConfig.GroupId = overrideGroupId
+			orderConfig.Package = fmt.Sprintf("%s.%s", orderConfig.GroupId, orderConfig.ArtifactId)
 		}
 
 		err = spring.Validate(orderConfig)
@@ -203,8 +218,11 @@ func init() {
 
 	generateCmd.AddCommand(generateCleanCmd)
 
-	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	generateCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", true, "Cloud sync")
+	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
 	generateCmd.Flags().String("config-file", "co-pilot.json", "Optional config file")
+	generateCmd.Flags().String("group-id", "", "Overrides groupId from config file")
+	generateCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
 }

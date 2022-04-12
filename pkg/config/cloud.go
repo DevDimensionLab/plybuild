@@ -238,6 +238,22 @@ func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) 
 	return
 }
 
+func (gitCfg GitCloudConfig) Examples() (templates []string, err error) {
+	examplesDir := file.Path("%s/examples", gitCfg.Implementation().Dir())
+	items, err := ioutil.ReadDir(examplesDir)
+	if err != nil {
+		return
+	}
+
+	for _, item := range items {
+		if item.IsDir() {
+			templates = append(templates, item.Name())
+		}
+	}
+
+	return
+}
+
 func (gitCfg GitCloudConfig) ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error) {
 	for _, t := range unique(list) {
 		template, err := gitCfg.Template(t)
