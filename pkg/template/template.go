@@ -96,6 +96,7 @@ func mergeMultimodulePoms(targetProject config.Project) error {
 		}
 		subModel.Parent.GroupId = targetProject.Type.Model().GroupId
 		subModel.Parent.ArtifactId = targetProject.Type.Model().ArtifactId
+		subModel.Parent.Version = targetProject.Type.Model().Version
 		if err := subModel.WriteToFile(pomFile); err != nil {
 			return err
 		}

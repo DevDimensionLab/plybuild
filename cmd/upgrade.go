@@ -164,8 +164,7 @@ func upgradeDeprecated(project config.Project) error {
 	templates, err := maven.RemoveDeprecated(project.CloudConfig, project.Type.Model())
 	if err != nil {
 		return err
-	} else {
-		template.MergeTemplates(templates, project)
 	}
+	template.MergeTemplates(templates, project)
 	return nil
 }

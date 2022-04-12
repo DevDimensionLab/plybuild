@@ -42,6 +42,7 @@ var statusCmd = &cobra.Command{
 				maven.UpgradePlugins(),
 				maven.ChangeVersionToPropertyTags(),
 				spring.CleanManualVersions(),
+				maven.StatusDeprecated(),
 			)
 		}
 	},
