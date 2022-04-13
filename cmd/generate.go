@@ -37,12 +37,12 @@ var generateCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalln(err)
 			}
-			loadProfile(profilesPath)
+			ctx.LoadProfile(profilesPath)
 		}
 
 		// sync cloud config
 		if ctx.ForceCloudSync {
-			if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
+			if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
 				log.Fatalln(err)
 			}
 		}
@@ -60,7 +60,7 @@ var generateCmd = &cobra.Command{
 		// validate templates
 		var cloudTemplates []config.CloudTemplate
 		if orderConfig.Templates != nil {
-			cloudTemplates, err = activeCloudConfig.ValidTemplatesFrom(orderConfig.Templates)
+			cloudTemplates, err = ctx.CloudConfig.ValidTemplatesFrom(orderConfig.Templates)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -69,11 +69,11 @@ var generateCmd = &cobra.Command{
 		// check for override of groupId and artifactId
 		if overrideArtifactId != "" {
 			orderConfig.ArtifactId = overrideArtifactId
-			orderConfig.Package = fmt.Sprintf("%s.%s", orderConfig.GroupId, orderConfig.ArtifactId)
+			//orderConfig.Package = fmt.Sprintf("%s.%s", orderConfig.GroupId, orderConfig.ArtifactId)
 		}
 		if overrideGroupId != "" {
 			orderConfig.GroupId = overrideGroupId
-			orderConfig.Package = fmt.Sprintf("%s.%s", orderConfig.GroupId, orderConfig.ArtifactId)
+			orderConfig.Package = orderConfig.GroupId
 		}
 
 		err = spring.Validate(orderConfig)
@@ -198,7 +198,7 @@ func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 	}
 	api.GOptions = api.GenerateOptions{
 		ProjectConfig: orderConfig,
-		CloudConfig:   activeCloudConfig,
+		CloudConfig:   ctx.CloudConfig,
 		IoResponse:    ioResp,
 	}
 	webservice.InitAndBlockStandalone(webservice.Generate, api.CallbackChannel)

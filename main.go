@@ -18,8 +18,6 @@ import (
 	"github.com/co-pilot-cli/co-pilot/cmd"
 )
 
-var Version string
-
 func main() {
 	cmd.Execute()
 }

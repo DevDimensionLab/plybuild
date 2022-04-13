@@ -33,7 +33,7 @@ func OkHelp(cmd *cobra.Command, depend func() bool) error {
 
 func SyncActiveProfileCloudConfig() error {
 	if ctx.ForceCloudSync {
-		if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
+		if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
 			return errors.New("failed to sync cloud config: " + err.Error())
 		}
 	}

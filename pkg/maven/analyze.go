@@ -30,9 +30,9 @@ func isSecondPartyGroupId(groupId string, secondPartyGroupId string) (bool, erro
 	groupIdParts := strings.Split(groupId, ".")
 	secondPartyGroupIdParts := strings.Split(secondPartyGroupId, ".")
 
-	if len(groupIdParts) <= 1 {
+	if len(groupIdParts) <= 1 || len(secondPartyGroupIdParts) <= 1 {
 		return false, errors.New(fmt.Sprintf(
-			"secondParty groupId (%s) must at least contain two punctuations for comparison",
+			"secondParty groupId (%s) should contain, at least, two punctuations for comparison",
 			groupId,
 		))
 	} else {

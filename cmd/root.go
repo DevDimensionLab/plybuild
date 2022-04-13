@@ -25,10 +25,9 @@ import (
 	"strings"
 )
 
-var version = "v0.5.5"
+const version = "v0.6.0"
+
 var log = logger.Context()
-var activeLocalConfig config.LocalConfig
-var activeCloudConfig config.GitCloudConfig
 
 var RootCmd = &cobra.Command{
 	Use:   "co-pilot",
@@ -49,7 +48,8 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	initConfig()
+	cobra.OnInitialize()
 	logrus.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
 }
@@ -58,6 +58,7 @@ func init() {
 func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
+	// migration step from old version without profiles
 	_, err := config.GetActiveProfilePath()
 	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
 		if err := config.InstallOrMigrateToProfiles(); err != nil {
@@ -65,22 +66,9 @@ func initConfig() {
 		}
 	}
 
-	activeProfilePath, err := config.GetActiveProfilePath()
+	ctx.ProfilesPath, err = config.GetActiveProfilePath()
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	loadProfile(activeProfilePath)
-}
-
-func loadProfile(profilePath string) {
-
-	activeLocalConfig = config.NewLocalConfig(profilePath)
-	activeCloudConfig = config.OpenGitCloudConfig(profilePath)
-	if !activeLocalConfig.Exists() {
-		err := activeLocalConfig.TouchFile()
-		if err != nil {
-			log.Error(err)
-		}
-	}
+	ctx.LoadProfile(ctx.ProfilesPath)
 }

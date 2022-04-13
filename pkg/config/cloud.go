@@ -28,6 +28,7 @@ type CloudConfig interface {
 	ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error)
 	Templates() (templates []CloudTemplate, err error)
 	Template(name string) (CloudTemplate, error)
+	Examples() (templates []string, err error)
 }
 
 func OpenGitCloudConfig(localConfigPath string) (cfg GitCloudConfig) {

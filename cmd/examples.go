@@ -19,11 +19,11 @@ var examplesCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		// sync cloud config
-		if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
+		if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
 			log.Fatalln(err)
 		}
 
-		examples, err := activeCloudConfig.Examples()
+		examples, err := ctx.CloudConfig.Examples()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -41,17 +41,19 @@ var examplesInstallCmd = &cobra.Command{
 	Long:  `install example from cloud-config`,
 	Run: func(cmd *cobra.Command, args []string) {
 		exampleName, _ := cmd.Flags().GetString("name")
+		overrideGroupId, _ := cmd.Flags().GetString("group-id")
+		overrideArtifactId, _ := cmd.Flags().GetString("artifact-id")
 
 		if exampleName == "" {
 			log.Fatalln("please enter example --name")
 		}
 
 		// sync cloud config
-		if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
+		if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
 			log.Fatalln(err)
 		}
 
-		examples, err := activeCloudConfig.Examples()
+		examples, err := ctx.CloudConfig.Examples()
 		if err != nil {
 			log.Warnln(err)
 			return
@@ -59,7 +61,7 @@ var examplesInstallCmd = &cobra.Command{
 
 		for _, example := range examples {
 			if example == exampleName {
-				path := file.Path("%s/examples/%s/co-pilot.json", activeCloudConfig.Implementation().Dir(), example)
+				path := file.Path("%s/examples/%s/co-pilot.json", ctx.CloudConfig.Implementation().Dir(), example)
 				cmd.Flags().String("config-file", path, "Optional config file")
 
 				projectConfig, err := config.InitProjectConfigurationFromFile(path)
@@ -67,20 +69,24 @@ var examplesInstallCmd = &cobra.Command{
 					log.Fatalln(err)
 				}
 
-				groupId, err = promptFor("groupId", projectConfig.GroupId)
-				if err != nil {
-					log.Fatalln(err)
-				}
-				artifactId, err = promptFor("artifactId", projectConfig.ArtifactId)
-				if err != nil {
-					log.Fatalln(err)
+				if overrideGroupId == "" {
+					groupId, err = promptFor("groupId", projectConfig.GroupId)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					if err := cmd.Flags().Set("group-id", groupId); err != nil {
+						log.Fatalln(err)
+					}
 				}
 
-				if err := cmd.Flags().Set("group-id", groupId); err != nil {
-					log.Fatalln(err)
-				}
-				if err := cmd.Flags().Set("artifact-id", artifactId); err != nil {
-					log.Fatalln(err)
+				if overrideArtifactId == "" {
+					artifactId, err = promptFor("artifactId", projectConfig.ArtifactId)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					if err := cmd.Flags().Set("artifact-id", artifactId); err != nil {
+						log.Fatalln(err)
+					}
 				}
 
 				generateCmd.Run(cmd, args)
