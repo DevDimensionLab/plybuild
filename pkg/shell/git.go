@@ -56,8 +56,8 @@ func InstallGitHooks(sourceDir string, sourceFileNames []string, targetDir strin
 	}
 
 	for _, sourceFileName := range sourceFileNames {
-		hooksFile := fmt.Sprintf("%s/.git/hooks/%s", targetDir, sourceFileName)
-		sourceFilePath := fmt.Sprintf("%s/%s", sourceDir, sourceFileName)
+		hooksFile := file.Path("%s/.git/hooks/%s", targetDir, sourceFileName)
+		sourceFilePath := file.Path("%s/%s", sourceDir, sourceFileName)
 		log.Debugf("Copying %s into %s", sourceFilePath, hooksFile)
 		err := file.CopyFile(sourceFilePath, hooksFile)
 		if err != nil {

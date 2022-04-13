@@ -39,3 +39,27 @@ func RemoveDeprecated(cloudConfig config.CloudConfig, model *pom.Model) (templat
 
 	return
 }
+
+func StatusDeprecated() func(project config.Project) error {
+	return func(project config.Project) error {
+		cloudConfig := project.CloudConfig
+		model := project.Type.Model()
+		if model == nil || model.Dependencies == nil {
+			return nil
+		}
+
+		deprecated, err := cloudConfig.Deprecated()
+		if err != nil {
+			return err
+		}
+
+		for _, modDep := range model.Dependencies.Dependency {
+			for _, depRep := range deprecated.Data.Dependencies {
+				if modDep.GroupId == depRep.GroupId && modDep.ArtifactId == depRep.ArtifactId {
+					log.Infof("found deprecated dependency %s:%s", modDep.GroupId, modDep.ArtifactId)
+				}
+			}
+		}
+		return nil
+	}
+}

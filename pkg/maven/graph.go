@@ -95,7 +95,7 @@ func WriteGraphStyles(styles GraphStyles, projectPath string) error {
 		return err
 	}
 
-	stylesFile := fmt.Sprintf("%s/target/dependency-graph-styles.json", projectPath)
+	stylesFile := file.Path("%s/target/dependency-graph-styles.json", projectPath)
 	if file.Exists(stylesFile) {
 		return nil
 	}

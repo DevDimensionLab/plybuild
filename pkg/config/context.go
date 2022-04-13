@@ -15,6 +15,9 @@ type Context struct {
 	OpenInBrowser   bool
 	Projects        []Project
 	Err             error
+	ProfilesPath    string
+	LocalConfig     LocalConfig
+	CloudConfig     CloudConfig
 }
 
 func (ctx *Context) FindAndPopulateMavenProjects() error {
@@ -125,6 +128,17 @@ func (ctx Context) OnRootProject(description string, do ...func(project Project)
 	if !ctx.DryRun {
 		if err := rootProject.SortAndWritePom(); err != nil {
 			log.Warnln(err)
+		}
+	}
+}
+
+func (ctx *Context) LoadProfile(profilePath string) {
+	ctx.LocalConfig = NewLocalConfig(profilePath)
+	ctx.CloudConfig = OpenGitCloudConfig(profilePath)
+	if !ctx.LocalConfig.Exists() {
+		err := ctx.LocalConfig.TouchFile()
+		if err != nil {
+			log.Error(err)
 		}
 	}
 }

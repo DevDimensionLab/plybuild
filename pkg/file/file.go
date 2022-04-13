@@ -225,11 +225,16 @@ func OpenFile(fileName string) (*os.File, error) {
 }
 
 func SearchReplace(filePath string, from string, to string) error {
+	if from == "" {
+		return nil
+	}
+
 	b, err := Open(filePath)
 	if err != nil {
 		return err
 	}
 
+	log.Debugf("string-replacing: %s [%s => %s]", filePath, from, to)
 	replaced := strings.ReplaceAll(string(b), from, to)
 	return Overwrite(strings.Split(replaced, "\n"), filePath)
 }

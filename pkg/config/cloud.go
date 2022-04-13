@@ -28,10 +28,11 @@ type CloudConfig interface {
 	ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error)
 	Templates() (templates []CloudTemplate, err error)
 	Template(name string) (CloudTemplate, error)
+	Examples() (templates []string, err error)
 }
 
 func OpenGitCloudConfig(localConfigPath string) (cfg GitCloudConfig) {
-	cfg.Impl.Path = file.Path(fmt.Sprintf("%s/cloud-config", localConfigPath))
+	cfg.Impl.Path = file.Path("%s/cloud-config", localConfigPath)
 	return
 }
 
@@ -147,8 +148,7 @@ func (gitCfg GitCloudConfig) ProjectDefaults() (CloudProjectDefaults, error) {
 }
 
 func (gitCfg GitCloudConfig) GitHookFiles(path string) ([]string, error) {
-	hooksPath := fmt.Sprintf("%s/%s", gitCfg.Implementation().Dir(), path)
-	root := file.Path(hooksPath)
+	root := file.Path("%s/%s", gitCfg.Implementation().Dir(), path)
 	files, err := ioutil.ReadDir(root)
 	if err != nil {
 		return nil, err
@@ -235,6 +235,22 @@ func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) 
 			})
 		}
 	}
+	return
+}
+
+func (gitCfg GitCloudConfig) Examples() (templates []string, err error) {
+	examplesDir := file.Path("%s/examples", gitCfg.Implementation().Dir())
+	items, err := ioutil.ReadDir(examplesDir)
+	if err != nil {
+		return
+	}
+
+	for _, item := range items {
+		if item.IsDir() {
+			templates = append(templates, item.Name())
+		}
+	}
+
 	return
 }
 

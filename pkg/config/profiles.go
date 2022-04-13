@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/mitchellh/go-homedir"
 )
@@ -14,7 +13,7 @@ func GetCoPilotHomePath() (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s/%s", home, coPilotHomePath), nil
+	return file.Path("%s/%s", home, coPilotHomePath), nil
 }
 
 func GetProfilesPath() (string, error) {
@@ -23,7 +22,7 @@ func GetProfilesPath() (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s/profiles", home), nil
+	return file.Path("%s/profiles", home), nil
 }
 
 func GetProfilesPathFor(profile string) (string, error) {
@@ -31,7 +30,7 @@ func GetProfilesPathFor(profile string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s/%s", profilesPath, profile), nil
+	return file.Path("%s/%s", profilesPath, profile), nil
 }
 
 func GetActiveProfilePath() (string, error) {
@@ -40,12 +39,12 @@ func GetActiveProfilePath() (string, error) {
 		return "", err
 	}
 
-	activeProfile, err := file.OpenLinesStrict(fmt.Sprintf("%s/.active_profile", profilesPath))
+	activeProfile, err := file.OpenLinesStrict(file.Path("%s/.active_profile", profilesPath))
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s/%s", profilesPath, activeProfile[0]), nil
+	return file.Path("%s/%s", profilesPath, activeProfile[0]), nil
 }
 
 func SwitchProfile(newProfile string) error {
@@ -54,7 +53,7 @@ func SwitchProfile(newProfile string) error {
 		return err
 	}
 
-	return file.CreateFile(fmt.Sprintf("%s/.active_profile", profilesPath), newProfile)
+	return file.CreateFile(file.Path("%s/.active_profile", profilesPath), newProfile)
 }
 
 func InstallOrMigrateToProfiles() error {
@@ -67,14 +66,14 @@ func InstallOrMigrateToProfiles() error {
 		return err
 	}
 
-	if err := file.CreateDirectory(fmt.Sprintf("%s/default", profilesPath)); err != nil {
+	if err := file.CreateDirectory(file.Path("%s/default", profilesPath)); err != nil {
 		return err
 	}
 	for _, f := range []string{"local-config.yaml", "cloud-config"} {
-		if err := file.Move(fmt.Sprintf("%s/%s", homePath, f), fmt.Sprintf("%s/default/%s", profilesPath, f)); err != nil {
+		if err := file.Move(file.Path("%s/%s", homePath, f), file.Path("%s/default/%s", profilesPath, f)); err != nil {
 			log.Debugf(err.Error())
 		}
 	}
 
-	return file.CreateFile(fmt.Sprintf("%s/.active_profile", profilesPath), "default")
+	return file.CreateFile(file.Path("%s/.active_profile", profilesPath), "default")
 }

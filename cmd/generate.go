@@ -24,8 +24,11 @@ var generateCmd = &cobra.Command{
 		var err error
 
 		// fetch user input config
+		overrideGroupId, _ := cmd.Flags().GetString("group-id")
+		overrideArtifactId, _ := cmd.Flags().GetString("artifact-id")
 		interactive, _ := cmd.Flags().GetBool("interactive")
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
+
 		if jsonConfigFile != "" {
 			orderConfig, err = config.InitProjectConfigurationFromFile(jsonConfigFile)
 		}
@@ -34,12 +37,14 @@ var generateCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalln(err)
 			}
-			loadProfile(profilesPath)
+			ctx.LoadProfile(profilesPath)
 		}
 
 		// sync cloud config
-		if err := activeCloudConfig.Refresh(activeLocalConfig); err != nil {
-			log.Fatalln(err)
+		if ctx.ForceCloudSync {
+			if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 		if interactive {
@@ -53,12 +58,22 @@ var generateCmd = &cobra.Command{
 		}
 
 		// validate templates
-		var templates []config.CloudTemplate
+		var cloudTemplates []config.CloudTemplate
 		if orderConfig.Templates != nil {
-			templates, err = activeCloudConfig.ValidTemplatesFrom(orderConfig.Templates)
+			cloudTemplates, err = ctx.CloudConfig.ValidTemplatesFrom(orderConfig.Templates)
 			if err != nil {
 				log.Fatalln(err)
 			}
+		}
+
+		// check for override of groupId and artifactId
+		if overrideArtifactId != "" {
+			orderConfig.ArtifactId = overrideArtifactId
+			//orderConfig.Package = fmt.Sprintf("%s.%s", orderConfig.GroupId, orderConfig.ArtifactId)
+		}
+		if overrideGroupId != "" {
+			orderConfig.GroupId = overrideGroupId
+			orderConfig.Package = orderConfig.GroupId
 		}
 
 		err = spring.Validate(orderConfig)
@@ -99,9 +114,9 @@ var generateCmd = &cobra.Command{
 		}
 
 		// merge templates into the newly created project
-		if templates != nil {
-			for _, t := range templates {
-				if err := template.MergeTemplate(t, project); err != nil {
+		if cloudTemplates != nil {
+			for _, cloudTemplate := range cloudTemplates {
+				if err := template.MergeTemplate(cloudTemplate, project, true); err != nil {
 					log.Fatalln(err)
 				}
 			}
@@ -151,24 +166,15 @@ var generateCleanCmd = &cobra.Command{
 	Long:  `Cleans a maven project with co-pilot files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		validate := func(input string) error {
-			if len(input) <= 0 || (input != "yes" && input != "no") {
-				return errors.New("please enter 'yes' or 'no'")
-			}
-			return nil
-		}
-
-		templates := &promptui.PromptTemplates{
-			Prompt:  "{{ . }} ",
-			Valid:   "{{ . | green }} ",
-			Invalid: "{{ . | red }} ",
-			Success: "{{ . | bold }} ",
-		}
-
 		prompt := promptui.Prompt{
 			Label:     fmt.Sprintf("Are you sure you want to delete contents of: %s [yes/no]", ctx.TargetDirectory),
 			Templates: templates,
-			Validate:  validate,
+			Validate: func(input string) error {
+				if len(input) <= 0 || (input != "yes" && input != "no") {
+					return errors.New("please enter 'yes' or 'no'")
+				}
+				return nil
+			},
 		}
 		result, err := prompt.Run()
 		if err != nil {
@@ -192,7 +198,7 @@ func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 	}
 	api.GOptions = api.GenerateOptions{
 		ProjectConfig: orderConfig,
-		CloudConfig:   activeCloudConfig,
+		CloudConfig:   ctx.CloudConfig,
 		IoResponse:    ioResp,
 	}
 	webservice.InitAndBlockStandalone(webservice.Generate, api.CallbackChannel)
@@ -203,8 +209,11 @@ func init() {
 
 	generateCmd.AddCommand(generateCleanCmd)
 
-	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	generateCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", true, "Cloud sync")
+	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
 	generateCmd.Flags().String("config-file", "co-pilot.json", "Optional config file")
+	generateCmd.Flags().String("group-id", "", "Overrides groupId from config file")
+	generateCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
 }

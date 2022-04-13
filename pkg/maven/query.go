@@ -1,7 +1,7 @@
 package maven
 
 import (
-	"fmt"
+	"github.com/co-pilot-cli/co-pilot/pkg/file"
 	"github.com/co-pilot-cli/co-pilot/pkg/http"
 	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
 	"strings"
@@ -15,7 +15,7 @@ func GetMetaData(groupID string, artifactId string) (metaData RepositoryMetadata
 	}
 	repo := repos.GetDefaultRepository()
 
-	url := fmt.Sprintf("%s/%s/%s/maven-metadata.xml",
+	url := file.Path("%s/%s/%s/maven-metadata.xml",
 		repo.Url,
 		strings.ReplaceAll(groupID, ".", "/"),
 		strings.ReplaceAll(artifactId, ".", "/"))
