@@ -26,7 +26,7 @@ func InitProjectConfigurationFromDir(targetDir string) (ProjectConfiguration, er
 
 	err := file.ReadJson(filePath, &config)
 	if err != nil {
-		return config, err
+		log.Debugln(err)
 	}
 
 	err = config.Populate(targetDir)
