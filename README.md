@@ -27,16 +27,17 @@ Requirement: https://golang.org/doc/install
  \_____\___/      | .__/|_|_|\___/ \__|
                   | |
                   |_|
-== version: v0.5.3 ==
+== version: v0.6.0 ==
 
 Usage:
   co-pilot [command]
 
 Available Commands:
-  analyze     Perform an analyze on a projects
   bitbucket   Bitbucket functionality
   clean       Clean files and folder in a project
   completion  Generate the autocompletion script for the specified shell
+  doc         Documentation
+  examples    examples found in cloud-config
   format      Format functionality for a project
   generate    Initializes a maven project with co-pilot files and formatting
   git         Git commands
