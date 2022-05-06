@@ -3,7 +3,7 @@ package webservice
 import (
 	"context"
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/webservice/api"
+	"github.com/devdimensionlab/co-pilot/pkg/webservice/api"
 	"log"
 	"net/http"
 	"os/exec"

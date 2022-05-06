@@ -16,8 +16,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -25,7 +25,7 @@ import (
 	"strings"
 )
 
-const version = "v0.6.0"
+const version = "v0.6.1"
 
 var log = logger.Context()
 

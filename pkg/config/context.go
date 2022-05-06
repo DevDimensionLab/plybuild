@@ -2,8 +2,8 @@ package config
 
 import (
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/file"
-	"github.com/co-pilot-cli/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
 )
 
 type Context struct {

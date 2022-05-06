@@ -3,8 +3,8 @@ package maven
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"io/ioutil"
 	"strings"
 )

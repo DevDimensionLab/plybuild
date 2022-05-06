@@ -25,7 +25,7 @@ func header() string {
 }
 
 func description() string {
-	about := `## About Co-pilot - https://co-pilot-cli.github.io/
+	about := `## About Co-pilot - https://devdimensionlab.github.io/
 - Co-pilot is a command line tool that supports developers using Spring Boot and Maven
 - co-pilot upgrade all | 2party | 3party  -> upgrades maven version of maven dependencies to latest 
 - co-pilot generate co-pilot.json -> generates a new application ready for business logic

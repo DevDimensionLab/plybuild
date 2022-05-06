@@ -2,8 +2,8 @@ package maven
 
 import (
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"os/exec"
 	"strings"
 )

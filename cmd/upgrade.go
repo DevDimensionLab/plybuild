@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/maven"
-	"github.com/co-pilot-cli/co-pilot/pkg/spring"
-	"github.com/co-pilot-cli/co-pilot/pkg/template"
-	"github.com/co-pilot-cli/co-pilot/pkg/webservice"
-	"github.com/co-pilot-cli/co-pilot/pkg/webservice/api"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/maven"
+	"github.com/devdimensionlab/co-pilot/pkg/spring"
+	"github.com/devdimensionlab/co-pilot/pkg/template"
+	"github.com/devdimensionlab/co-pilot/pkg/webservice"
+	"github.com/devdimensionlab/co-pilot/pkg/webservice/api"
 	"github.com/spf13/cobra"
 )
 

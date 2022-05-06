@@ -3,7 +3,7 @@ package maven
 import (
 	"errors"
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/shell"
+	"github.com/devdimensionlab/co-pilot/pkg/shell"
 	"strings"
 )
 

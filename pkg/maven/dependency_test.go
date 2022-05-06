@@ -1,8 +1,8 @@
 package maven
 
 import (
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"testing"
 )
 

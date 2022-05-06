@@ -2,7 +2,7 @@ package shell
 
 import (
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"os/exec"
 	"strings"
 )

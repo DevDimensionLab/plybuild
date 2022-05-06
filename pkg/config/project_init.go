@@ -3,8 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/file"
-	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"strings"
 )
 

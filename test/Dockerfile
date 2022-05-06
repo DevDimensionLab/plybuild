@@ -1,4 +1,4 @@
-FROM copilotcli/co-pilot-cli:latest
+FROM copilotcli/devdimensionlab:latest
 
 WORKDIR /order
 

@@ -15,7 +15,7 @@
 package main
 
 import (
-	"github.com/co-pilot-cli/co-pilot/cmd"
+	"github.com/devdimensionlab/co-pilot/cmd"
 )
 
 func main() {

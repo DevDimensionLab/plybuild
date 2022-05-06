@@ -4,7 +4,7 @@ brews:
   -
     # GitHub/GitLab repository to push the formula to
     tap:
-      owner: co-pilot-cli
+      owner: devdimensionlab
       name: homebrew-co-pilot
 
     # The project name and current git tag are used in the format string.
@@ -16,7 +16,7 @@ brews:
 
     # Your app's homepage.
     # Default is empty.
-    homepage: "https://co-pilot-cli.github.io/"
+    homepage: "https://devdimensionlab.github.io/"
 
     # Template of your app's description.
     # Default is empty.

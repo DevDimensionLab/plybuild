@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )

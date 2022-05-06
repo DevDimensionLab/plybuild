@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-docker pull copilotcli/co-pilot-cli:latest
+docker pull copilotcli/devdimensionlab:latest
 docker build --tag co-pilot-test:latest .
 
 docker run -it --rm \

@@ -35,7 +35,7 @@ brews-publish:
 	goreleaser release --rm-dist --skip-validate -f .goreleaser.brews.yml
 
 upgrade:
-	go get github.com/co-pilot-cli/mvn-pom-mutator
+	go get github.com/devdimensionlab/mvn-pom-mutator
 	go get -u ./...
 	go clean
 

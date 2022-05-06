@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/spf13/cobra"
 )
 

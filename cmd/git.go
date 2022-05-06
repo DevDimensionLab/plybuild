@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/file"
-	"github.com/co-pilot-cli/co-pilot/pkg/shell"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/shell"
 	"github.com/spf13/cobra"
 )
 

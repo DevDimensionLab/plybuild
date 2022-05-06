@@ -3,7 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"

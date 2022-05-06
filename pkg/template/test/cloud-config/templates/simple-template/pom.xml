@@ -6,8 +6,8 @@
       <version>2.3.3.RELEASE</version>
    </parent>
 
-   <groupId>no.co-pilot-cli</groupId>
-   <artifactId>co-pilot-cli-template-testing</artifactId>
+   <groupId>no.devdimensionlab</groupId>
+   <artifactId>devdimensionlab-template-testing</artifactId>
    <version>1.0.0-SNAPSHOT</version>
    <properties>
       <java.version>11</java.version>

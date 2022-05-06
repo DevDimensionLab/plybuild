@@ -39,7 +39,7 @@ release:
   # Default is extracted from the origin remote URL or empty if its private hosted.
   # Note: it can only be one: either github, gitlab or gitea
   github:
-    owner: co-pilot-cli
+    owner: devdimensionlab
     name: co-pilot
 
   # If set to auto, will mark the release as not ready for production
@@ -57,7 +57,7 @@ snapcrafts:
   -
     # ID of the snapcraft config, must be unique.
     # Defaults to "default".
-    id: co-pilot-cli
+    id: devdimensionlab
 
     # You can change the name of the package.
     # Default: `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}`
@@ -97,7 +97,7 @@ brews:
   -
     # GitHub/GitLab repository to push the formula to
     tap:
-      owner: co-pilot-cli
+      owner: devdimensionlab
       name: homebrew-co-pilot
 
     # The project name and current git tag are used in the format string.
@@ -109,7 +109,7 @@ brews:
 
     # Your app's homepage.
     # Default is empty.
-    homepage: "https://co-pilot-cli.github.io/"
+    homepage: "https://devdimensionlab.github.io/"
 
     # Template of your app's description.
     # Default is empty.

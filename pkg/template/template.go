@@ -2,11 +2,11 @@ package template
 
 import (
 	"fmt"
-	"github.com/co-pilot-cli/co-pilot/pkg/config"
-	"github.com/co-pilot-cli/co-pilot/pkg/file"
-	"github.com/co-pilot-cli/co-pilot/pkg/logger"
-	"github.com/co-pilot-cli/co-pilot/pkg/maven"
-	"github.com/co-pilot-cli/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/co-pilot/pkg/maven"
+	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"os"
 	"path/filepath"
 	"strings"

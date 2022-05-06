@@ -1,5 +1,5 @@
 # After registering a name on build.snapcraft.io, commit an uncommented line:
-name: co-pilot-cli
+name: devdimensionlab
 version: git
 version-script: |
   echo $(git describe --tags)
@@ -15,7 +15,7 @@ confinement: devmode # use 'strict' once you have the right plugs and slots
 parts:
   co-pilot:
     plugin: go
-    go-importpath: github.com/co-pilot-cli/co-pilot
+    go-importpath: github.com/devdimensionlab/co-pilot
     source: .
     source-type: git
     build-packages:
