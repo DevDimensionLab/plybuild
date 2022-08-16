@@ -90,7 +90,7 @@ func (settings M2Settings) FindServerWith(id string) (bool, Server) {
 func (repos Repositories) GetDefaultRepository() (Repository, error) {
 	if len(repos.Mirror) > 0 {
 		repo := repos.Mirror[0]
-		if repo.Auth.Encrypted {
+		if repo.Auth != nil && repo.Auth.Encrypted {
 			fmt.Printf("Password for [%s] seems to be encrypted, please enter password: ", repo.Id)
 			bytePassword, err := term.ReadPassword(0)
 			if err != nil {
