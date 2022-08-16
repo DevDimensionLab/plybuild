@@ -28,7 +28,7 @@ var lintKotlinCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
-		ctx.OnEachProject("running ktlint",
+		ctx.OnEachMavenProject("running ktlint",
 			maven.RunOn("ktlint", "\"src/**/*.kt\""),
 		)
 	},

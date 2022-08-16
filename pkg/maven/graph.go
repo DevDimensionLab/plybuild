@@ -51,8 +51,8 @@ func GraphArgs() []string {
 	}
 }
 
-func Graph(onlySecondParty bool, excludeTestScope bool, includeFilters, excludeFilters []string) func(project config.Project) error {
-	return func(project config.Project) error {
+func Graph(onlySecondParty bool, excludeTestScope bool, includeFilters, excludeFilters []string) func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
 		mvnArgs := GraphArgs()
 		defaultStyles := GraphDefaultStyles()
 		secondParty, err := project.Type.Model().GetSecondPartyGroupId()
@@ -85,7 +85,7 @@ func Graph(onlySecondParty bool, excludeTestScope bool, includeFilters, excludeF
 			return err
 		}
 
-		return RunOn("mvn", mvnArgs...)(project)
+		return RunOn("mvn", mvnArgs...)(repository, project)
 	}
 }
 

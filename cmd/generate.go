@@ -133,14 +133,14 @@ var generateCmd = &cobra.Command{
 		}
 
 		// format version
-		ctx.OnEachProject("removes version tags", maven.ChangeVersionToPropertyTags())
+		ctx.OnEachMavenProject("removes version tags", maven.ChangeVersionToPropertyTags())
 
 		// upgrade all ... maybe?
 		disableUpgrade, _ := cmd.Flags().GetBool("disable-upgrading")
 		if !disableUpgrade {
-			ctx.OnEachProject("upgrading everything",
+			ctx.OnEachMavenProject("upgrading everything",
 				maven.UpgradeKotlin(),
-				spring.UpgradeSpringBoot(),
+				maven.UpgradeSpringBoot(),
 				maven.Upgrade2PartyDependencies(),
 				maven.Upgrade3PartyDependencies(),
 				maven.UpgradePlugins(),

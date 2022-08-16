@@ -1,21 +1,21 @@
-package spring
+package maven
 
 import (
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/maven"
+	"github.com/devdimensionlab/co-pilot/pkg/spring"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 )
 
-func CleanManualVersions() func(project config.Project) error {
-	return func(project config.Project) error {
+func CleanManualVersions() func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
 		return cleanManualVersions(project.Type.Model())
 	}
 }
 
 func cleanManualVersions(model *pom.Model) error {
-	springBootDependencies, err := GetDependencies()
+	springBootDependencies, err := spring.GetDependencies()
 	if err != nil {
 		return err
 	}
@@ -37,17 +37,17 @@ func cleanManualVersions(model *pom.Model) error {
 	return nil
 }
 
-func UpgradeSpringBoot() func(project config.Project) error {
-	return func(project config.Project) error {
+func UpgradeSpringBoot() func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
 		if project.Config.Settings.DisableSpringBootUpgrade {
 			return nil
 		}
-		return upgradeSpringBootOnModel(project.Type.Model())
+		return repository.upgradeSpringBootOnModel(project.Type.Model())
 	}
 }
 
-func upgradeSpringBootOnModel(model *pom.Model) error {
-	latestVersionMeta, err := maven.GetMetaData("org.springframework.boot", "spring-boot")
+func (repository Repository) upgradeSpringBootOnModel(model *pom.Model) error {
+	latestVersionMeta, err := repository.GetMetaData("org.springframework.boot", "spring-boot")
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func upgradeSpringBootOnModel(model *pom.Model) error {
 
 	if currentVersion.IsDifferentFrom(latestVersion) {
 		msg := fmt.Sprintf("outdated spring-boot version [%s => %s]", currentVersion.ToString(), latestVersion.ToString())
-		if maven.IsMajorUpgrade(currentVersion, latestVersion) {
+		if IsMajorUpgrade(currentVersion, latestVersion) {
 			log.Warnf("major %s", msg)
 		} else if !latestVersion.IsReleaseVersion() {
 			log.Warnf("%s | not release", msg)
@@ -80,29 +80,29 @@ func upgradeSpringBootOnModel(model *pom.Model) error {
 	return nil
 }
 
-func getSpringBootVersion(model *pom.Model) (maven.JavaVersion, error) {
+func getSpringBootVersion(model *pom.Model) (JavaVersion, error) {
 	// check parent
 	if model.Parent != nil && model.Parent.ArtifactId == "spring-boot-starter-parent" {
-		return maven.ParseVersion(model.Parent.Version)
+		return ParseVersion(model.Parent.Version)
 	}
 
 	// check dependencyManagement
 	if model.DependencyManagement != nil {
 		dep, err := model.DependencyManagement.Dependencies.FindArtifact("spring-boot-dependencies")
 		if err != nil {
-			return maven.JavaVersion{}, err
+			return JavaVersion{}, err
 		}
 		version, err := model.GetDependencyVersion(dep)
 		if err != nil {
-			return maven.JavaVersion{}, err
+			return JavaVersion{}, err
 		}
-		return maven.ParseVersion(version)
+		return ParseVersion(version)
 	}
 
-	return maven.JavaVersion{}, errors.New("could not extract spring boot version information")
+	return JavaVersion{}, errors.New("could not extract spring boot version information")
 }
 
-func updateSpringBootVersion(model *pom.Model, newVersion maven.JavaVersion) error {
+func updateSpringBootVersion(model *pom.Model, newVersion JavaVersion) error {
 	// check parent
 	if model.Parent != nil && model.Parent.ArtifactId == "spring-boot-starter-parent" {
 		model.Parent.Version = newVersion.ToString()
@@ -122,7 +122,7 @@ func updateSpringBootVersion(model *pom.Model, newVersion maven.JavaVersion) err
 	return errors.New("could not update spring boot version to " + newVersion.ToString())
 }
 
-func removeVersion(dependencies []pom.Dependency, springBootDependencies IoDependenciesResponse, model *pom.Model) error {
+func removeVersion(dependencies []pom.Dependency, springBootDependencies spring.IoDependenciesResponse, model *pom.Model) error {
 	for _, dep := range dependencies {
 		if dep.Version != "" && inMap(dep, springBootDependencies.Dependencies) {
 			log.Warnf("found hardcoded version on spring-boot dependency %s:%s [%s]", dep.GroupId, dep.ArtifactId, dep.Version)
@@ -136,7 +136,7 @@ func removeVersion(dependencies []pom.Dependency, springBootDependencies IoDepen
 	return nil
 }
 
-func inMap(dep pom.Dependency, springBootDeps map[string]Dependency) bool {
+func inMap(dep pom.Dependency, springBootDeps map[string]spring.Dependency) bool {
 	for _, springBootDep := range springBootDeps {
 		if springBootDep.GroupId == dep.GroupId && springBootDep.ArtifactId == dep.ArtifactId {
 			return true

@@ -8,84 +8,84 @@ import (
 	"strings"
 )
 
-func UpgradeDependency(groupId string, artifactId string) func(project config.Project) error {
-	return func(project config.Project) error {
-		return UpgradeDependencyOnModel(project.Type.Model(), groupId, artifactId)
+func Upgrade2PartyDependencies() func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
+		return repository.upgradeDependenciesForProject(&project, true)
 	}
 }
 
-func UpgradeDependencyOnModel(model *pom.Model, groupId string, artifactId string) (err error) {
+func Upgrade3PartyDependencies() func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
+		return repository.upgradeDependenciesForProject(&project, false)
+	}
+}
+
+func UpgradeDependency(groupId string, artifactId string) func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
+		return repository.upgradeDependencyOnModel(project.Type.Model(), groupId, artifactId)
+	}
+}
+
+func (repository Repository) upgradeDependencyOnModel(model *pom.Model, groupId string, artifactId string) (err error) {
 	if model.Dependencies != nil {
-		err = specificDependencyUpgrade(model, model.Dependencies.Dependency, groupId, artifactId)
+		err = repository.specificDependencyUpgrade(model, model.Dependencies.Dependency, groupId, artifactId)
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
-		err = specificDependencyUpgrade(model, model.DependencyManagement.Dependencies.Dependency, groupId, artifactId)
+		err = repository.specificDependencyUpgrade(model, model.DependencyManagement.Dependencies.Dependency, groupId, artifactId)
 	}
 
 	return err
 }
 
-func Upgrade2PartyDependencies() func(project config.Project) error {
-	return func(project config.Project) error {
-		return upgradeDependenciesForProject(&project, true)
-	}
-}
-
-func Upgrade3PartyDependencies() func(project config.Project) error {
-	return func(project config.Project) error {
-		return upgradeDependenciesForProject(&project, false)
-	}
-}
-
-func upgradeDependenciesForProject(project *config.Project, secondParty bool) error {
+func (repository Repository) upgradeDependenciesForProject(project *config.Project, secondParty bool) error {
 	model := project.Type.Model()
 	if model.Dependencies != nil {
 		deps := model.Dependencies.Dependency
-		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, secondParty), model.SetDependencyVersion)
+		repository.upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, secondParty), model.SetDependencyVersion)
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
 		deps := model.DependencyManagement.Dependencies.Dependency
-		upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, secondParty), model.SetDependencyVersion)
+		repository.upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, secondParty), model.SetDependencyVersion)
 	}
 
 	return nil
 }
 
-func UpgradeDependenciesWithVersions() func(project config.Project) error {
-	return func(project config.Project) error {
+func UpgradeDependenciesWithVersions() func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
 		updateProp := func(dep pom.Dependency, version string) error {
 			if strings.HasPrefix(dep.Version, "${") {
 				versionKey := strings.Trim(dep.Version, "${}")
 				args := UpdateProperty(versionKey, version)
-				return RunOn("mvn", args...)(project)
+				return RunOn("mvn", args...)(repository, project)
 			} else {
 				log.Debugf("Upgrading dependencies with `use-latest-version`")
 				args := UseLatestVersion(dep.GroupId, dep.ArtifactId)
-				return RunOn("mvn", args...)(project)
+				return RunOn("mvn", args...)(repository, project)
 			}
 		}
 		allDeps := func(groupId string) bool { return true }
 		model := project.Type.Model()
 		if model.Dependencies != nil {
 			deps := model.Dependencies.Dependency
-			upgradeDependencies(model, deps, project.Config.Settings, allDeps, updateProp)
+			repository.upgradeDependencies(model, deps, project.Config.Settings, allDeps, updateProp)
 		}
 
 		if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
 			deps := model.DependencyManagement.Dependencies.Dependency
-			upgradeDependencies(model, deps, project.Config.Settings, allDeps, updateProp)
+			repository.upgradeDependencies(model, deps, project.Config.Settings, allDeps, updateProp)
 		}
 
 		return nil
 	}
 }
 
-func specificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dependency, groupId string, artifactId string) error {
+func (repository Repository) specificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dependency, groupId string, artifactId string) error {
 	for _, dep := range availableDependencies {
 		if dep.Version != "" && dep.GroupId == groupId && dep.ArtifactId == artifactId {
-			return upgradeDependency(model, dep, nil, model.SetDependencyVersion)
+			return repository.upgradeDependency(model, dep, nil, model.SetDependencyVersion)
 		}
 	}
 
@@ -110,7 +110,7 @@ func isSecondParty(model *pom.Model, enabled bool) func(groupId string) bool {
 	}
 }
 
-func upgradeDependencies(
+func (repository Repository) upgradeDependencies(
 	model *pom.Model,
 	dependencies []pom.Dependency,
 	settings config.ProjectSettings,
@@ -141,7 +141,7 @@ func upgradeDependencies(
 		}
 
 		if depVersion != "" && condition(dep.GroupId) {
-			err := upgradeDependency(model, dep, maxVersion(), action)
+			err := repository.upgradeDependency(model, dep, maxVersion(), action)
 			if err != nil {
 				log.Warnf("%v", err)
 			}
@@ -149,7 +149,7 @@ func upgradeDependencies(
 	}
 }
 
-func upgradeDependency(model *pom.Model, dep pom.Dependency, maxVersion *JavaVersion, action func(dep pom.Dependency, version string) error) error {
+func (repository Repository) upgradeDependency(model *pom.Model, dep pom.Dependency, maxVersion *JavaVersion, action func(dep pom.Dependency, version string) error) error {
 	if dep.Version == "${project.version}" || dep.Version == "${revision}" {
 		return nil
 	}
@@ -170,7 +170,9 @@ func upgradeDependency(model *pom.Model, dep pom.Dependency, maxVersion *JavaVer
 	//}
 	//log.Debugf("%v", serviceUrl)
 
-	metaData, err := GetMetaData(dep.GroupId, dep.ArtifactId)
+	repo := repository
+
+	metaData, err := repo.GetMetaData(dep.GroupId, dep.ArtifactId)
 	if err != nil {
 		return err
 	}

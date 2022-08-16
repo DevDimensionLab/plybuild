@@ -51,7 +51,7 @@ var mavenGraphCmd = &cobra.Command{
 			println(ex)
 		}
 		ctx.DryRun = true
-		ctx.OnEachProject("creating graph for",
+		ctx.OnEachMavenProject("creating graph for",
 			maven.Graph(false, mavenGraphExcludeTestScope, mavenGraphIncludeFilters, mavenGraphExcludeFilters),
 			maven.RunOn("dot",
 				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
@@ -74,7 +74,7 @@ var mavenGraph2PartyCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
-		ctx.OnEachProject("creating 2party graph for",
+		ctx.OnEachMavenProject("creating 2party graph for",
 			maven.Graph(true, mavenGraphExcludeTestScope, mavenGraphIncludeFilters, mavenGraphExcludeFilters),
 			maven.RunOn("dot",
 				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
@@ -97,7 +97,7 @@ var mavenCheckstyleCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
-		ctx.OnEachProject("running checkstyle analysis on",
+		ctx.OnEachMavenProject("running checkstyle analysis on",
 			maven.RunOn("mvn", "checkstyle:checkstyle"),
 		)
 	},
@@ -117,7 +117,7 @@ var mavenOwaspCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
-		ctx.OnEachProject("running wasp analysis on",
+		ctx.OnEachMavenProject("running wasp analysis on",
 			maven.RunOn("mvn", "org.owasp:dependency-check-maven:check"),
 			openReportInBrowser("target/dependency-check-report.html"),
 		)
@@ -138,7 +138,7 @@ var mavenSpringBootRunCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
-		ctx.OnEachProject("running spring-boot:run",
+		ctx.OnEachMavenProject("running spring-boot:run",
 			maven.RunOn("mvn", "spring-boot:run"),
 		)
 	},
@@ -158,7 +158,7 @@ var mavenEnforcerCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
-		ctx.OnEachProject("running enforcer on",
+		ctx.OnEachMavenProject("running enforcer on",
 			maven.RunOn(
 				"mvn",
 				"org.apache.maven.plugins:maven-enforcer-plugin:enforce",
@@ -185,14 +185,14 @@ var analyzeCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
-		ctx.OnEachProject("Undeclared and unused dependencies", func(project config.Project) error {
+		ctx.OnEachMavenProject("Undeclared and unused dependencies", func(repository maven.Repository, project config.Project) error {
 			return maven.ListUnusedAndUndeclared(project.Type.FilePath())
 		})
 	},
 }
 
-func openReportInBrowser(reportPath string) func(project config.Project) error {
-	return func(project config.Project) error {
+func openReportInBrowser(reportPath string) func(repository maven.Repository, project config.Project) error {
+	return func(repository maven.Repository, project config.Project) error {
 		if ctx.OpenInBrowser {
 			return webservice.OpenBrowser(fmt.Sprintf("%s/%s", project.Path, reportPath))
 		}

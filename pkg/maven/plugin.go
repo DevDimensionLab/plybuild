@@ -57,13 +57,13 @@ func DependencyAnalyze(rawOutput string) DependencyAnalyzeResult {
 	}
 }
 
-func UpgradePlugins() func(project config.Project) error {
-	return func(project config.Project) error {
-		return upgradePluginsOnModel(&project)
+func UpgradePlugins() func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
+		return repository.upgradePluginsOnModel(&project)
 	}
 }
 
-func upgradePluginsOnModel(project *config.Project) error {
+func (repository Repository) upgradePluginsOnModel(project *config.Project) error {
 	model := project.Type.Model()
 
 	if model.Build == nil || model.Build.Plugins == nil {
@@ -75,7 +75,7 @@ func upgradePluginsOnModel(project *config.Project) error {
 			continue
 		}
 		if plugin.Version != "" {
-			if err := upgradePlugin(model, plugin); err != nil {
+			if err := repository.upgradePlugin(model, plugin); err != nil {
 				log.Warnf("%v", err)
 			}
 		}
@@ -83,7 +83,7 @@ func upgradePluginsOnModel(project *config.Project) error {
 	return nil
 }
 
-func upgradePlugin(model *pom.Model, plugin pom.Plugin) error {
+func (repository Repository) upgradePlugin(model *pom.Model, plugin pom.Plugin) error {
 	currentVersionString, err := model.GetPluginVersion(plugin)
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func upgradePlugin(model *pom.Model, plugin pom.Plugin) error {
 		return err
 	}
 
-	metaData, err := GetMetaData(plugin.GroupId, plugin.ArtifactId)
+	metaData, err := repository.GetMetaData(plugin.GroupId, plugin.ArtifactId)
 	if err != nil {
 		return err
 	}

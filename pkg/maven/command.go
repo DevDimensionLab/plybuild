@@ -10,8 +10,8 @@ import (
 
 const versionsPlugin = "org.codehaus.mojo:versions-maven-plugin:2.8.1"
 
-func RunOn(cmd string, args ...string) func(project config.Project) error {
-	return func(project config.Project) error {
+func RunOn(cmd string, args ...string) func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
 		log.Infof("running: [%s] => %s %s", project.Path, cmd, strings.Join(args, " "))
 		cmd := exec.Command(cmd, args...)
 		cmd.Dir = project.Path

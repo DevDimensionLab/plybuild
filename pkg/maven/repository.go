@@ -2,7 +2,9 @@ package maven
 
 import (
 	"errors"
+	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"golang.org/x/term"
 	"os/user"
 )
 
@@ -18,16 +20,23 @@ type Repositories struct {
 }
 
 type Repository struct {
+	Id   string
 	Url  string
 	Auth *RepositoryAuth
 }
 
 type RepositoryAuth struct {
-	Username string
-	Password string
+	Username  string
+	Password  string
+	Encrypted bool
 }
 
 func (settings Settings) GetRepositories() (Repositories, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return Repositories{}, err
+	}
+
 	repos := Repositories{
 		Fallback: Repository{
 			Url: "https://repo1.maven.org/maven2",
@@ -47,12 +56,14 @@ func (settings Settings) GetRepositories() (Repositories, error) {
 	for _, mirrors := range settings.Settings.Mirrors {
 		if mirrors.Mirror.URL != "" {
 			mirrorRepo := Repository{
+				Id:  mirrors.Mirror.ID,
 				Url: mirrors.Mirror.URL,
 			}
 			if hasServer, server := settings.Settings.FindServerWith(mirrors.Mirror.ID); hasServer {
 				mirrorRepo.Auth = &RepositoryAuth{
-					Username: server.Username,
-					Password: server.Password,
+					Username:  server.Username,
+					Password:  server.Password,
+					Encrypted: file.Exists(file.Path("%s/.m2/settings-security.xml", usr.HomeDir)),
 				}
 			}
 			repos.Mirror = append(repos.Mirror, mirrorRepo)
@@ -76,11 +87,20 @@ func (settings M2Settings) FindServerWith(id string) (bool, Server) {
 	return false, Server{}
 }
 
-func (repos Repositories) GetDefaultRepository() Repository {
+func (repos Repositories) GetDefaultRepository() (Repository, error) {
 	if len(repos.Mirror) > 0 {
-		return repos.Mirror[0]
+		repo := repos.Mirror[0]
+		if repo.Auth.Encrypted {
+			fmt.Printf("Password for [%s] seems to be encrypted, please enter password: ", repo.Id)
+			bytePassword, err := term.ReadPassword(0)
+			if err != nil {
+				return Repository{}, err
+			}
+			repo.Auth.Password = string(bytePassword)
+		}
+		return repos.Mirror[0], nil
 	} else {
-		return repos.Fallback
+		return repos.Fallback, nil
 	}
 }
 
@@ -126,4 +146,14 @@ func NewSettings() (settings Settings, err error) {
 		return Settings{}, err
 	}
 	return
+}
+
+func DefaultRepository() (Repository, error) {
+	settings, _ := NewSettings()
+	repos, err := settings.GetRepositories()
+	if err != nil {
+		return Repository{}, err
+	}
+
+	return repos.GetDefaultRepository()
 }

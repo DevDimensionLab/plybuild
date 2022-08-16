@@ -7,29 +7,29 @@ import (
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 )
 
-func UpgradeKotlin() func(project config.Project) error {
-	return func(project config.Project) error {
+func UpgradeKotlin() func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
 		if project.Config.Settings.DisableKotlinUpgrade {
 			return nil
 		}
 		model := project.Type.Model()
-		return upgradeKotlinOnModel(model, model.Properties.SetKey)
+		return repository.upgradeKotlinOnModel(model, model.Properties.SetKey)
 	}
 }
 
-func UpgradeKotlinWithVersions() func(project config.Project) error {
-	return func(project config.Project) error {
+func UpgradeKotlinWithVersions() func(repository Repository, project config.Project) error {
+	return func(repository Repository, project config.Project) error {
 		if project.Config.Settings.DisableKotlinUpgrade {
 			return nil
 		}
 		model := project.Type.Model()
-		return upgradeKotlinOnModel(model, func(propKey, version string) error {
-			return RunOn("mvn", UpdateProperty(propKey, version)...)(project)
+		return repository.upgradeKotlinOnModel(model, func(propKey, version string) error {
+			return RunOn("mvn", UpdateProperty(propKey, version)...)(repository, project)
 		})
 	}
 }
 
-func upgradeKotlinOnModel(model *pom.Model, action func(propKey, version string) error) error {
+func (repository Repository) upgradeKotlinOnModel(model *pom.Model, action func(propKey, version string) error) error {
 	if model.Properties == nil {
 		return errors.New("could not kotlin version because pom does not contain any properties")
 	}
@@ -44,7 +44,7 @@ func upgradeKotlinOnModel(model *pom.Model, action func(propKey, version string)
 		return err
 	}
 
-	latestKotlinJdk8, err := GetMetaData("org.jetbrains.kotlin", "kotlin-maven-plugin")
+	latestKotlinJdk8, err := repository.GetMetaData("org.jetbrains.kotlin", "kotlin-maven-plugin")
 	if err != nil {
 		return err
 	}

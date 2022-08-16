@@ -7,13 +7,8 @@ import (
 	"strings"
 )
 
-func GetMetaData(groupID string, artifactId string) (metaData RepositoryMetadata, err error) {
-	settings, _ := NewSettings()
-	repos, err := settings.GetRepositories()
-	if err != nil {
-		return metaData, err
-	}
-	repo := repos.GetDefaultRepository()
+func (repository Repository) GetMetaData(groupID string, artifactId string) (metaData RepositoryMetadata, err error) {
+	repo := repository
 
 	url := file.Path("%s/%s/%s/maven-metadata.xml",
 		repo.Url,

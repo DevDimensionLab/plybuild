@@ -1,9 +1,11 @@
-package config
+package context
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/co-pilot/pkg/maven"
 )
 
 type Context struct {
@@ -13,11 +15,11 @@ type Context struct {
 	DisableGit      bool
 	ForceCloudSync  bool
 	OpenInBrowser   bool
-	Projects        []Project
+	Projects        []config.Project
 	Err             error
 	ProfilesPath    string
-	LocalConfig     LocalConfig
-	CloudConfig     CloudConfig
+	LocalConfig     config.LocalConfig
+	CloudConfig     config.CloudConfig
 }
 
 func (ctx *Context) FindAndPopulateMavenProjects() error {
@@ -32,14 +34,14 @@ func (ctx *Context) FindAndPopulateMavenProjects() error {
 			return err
 		}
 		for _, pomFile := range pomFiles {
-			project, err := InitProjectFromPomFile(pomFile)
+			project, err := config.InitProjectFromPomFile(pomFile)
 			if err != nil {
 				log.Warnln(err)
 			}
 			ctx.Projects = append(ctx.Projects, project)
 		}
 	} else {
-		project, err := InitProjectFromDirectory(ctx.TargetDirectory)
+		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
 			return err
 		}
@@ -49,10 +51,15 @@ func (ctx *Context) FindAndPopulateMavenProjects() error {
 	return nil
 }
 
-func (ctx Context) OnEachProject(description string, do ...func(project Project) error) {
+func (ctx Context) OnEachMavenProject(description string, do ...func(repository maven.Repository, project config.Project) error) {
 	if ctx.Projects == nil || len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
+	}
+
+	repo, err := maven.DefaultRepository()
+	if err != nil {
+		log.Warnln(err)
 	}
 
 	for _, p := range ctx.Projects {
@@ -62,7 +69,7 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project)
 				log.Warnf("could not find a project-defaults.json file in cloud-config")
 				log.Debugf("%v", err)
 			}
-			p.Config.Settings.mergeProjectDefaults(projectDefaults)
+			p.Config.Settings.MergeProjectDefaults(projectDefaults)
 		}
 		if p.Type == nil {
 			log.Warnf("no project type defined for path: %s", p.Path)
@@ -80,7 +87,7 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project)
 				if job == nil {
 					continue
 				}
-				err := job(p)
+				err := job(repo, p)
 				if err != nil {
 					log.Warnln(err)
 					continue
@@ -96,7 +103,7 @@ func (ctx Context) OnEachProject(description string, do ...func(project Project)
 	}
 }
 
-func (ctx Context) OnRootProject(description string, do ...func(project Project) error) {
+func (ctx Context) OnRootProject(description string, do ...func(project config.Project) error) {
 	if ctx.Projects == nil || len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
@@ -133,8 +140,8 @@ func (ctx Context) OnRootProject(description string, do ...func(project Project)
 }
 
 func (ctx *Context) LoadProfile(profilePath string) {
-	ctx.LocalConfig = NewLocalConfig(profilePath)
-	ctx.CloudConfig = OpenGitCloudConfig(profilePath)
+	ctx.LocalConfig = config.NewLocalConfig(profilePath)
+	ctx.CloudConfig = config.OpenGitCloudConfig(profilePath)
 	if !ctx.LocalConfig.Exists() {
 		err := ctx.LocalConfig.TouchFile()
 		if err != nil {

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
-	"github.com/devdimensionlab/co-pilot/pkg/spring"
 	"github.com/spf13/cobra"
 )
 
@@ -34,14 +33,14 @@ var statusCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if !statusOpts.Any() || statusOpts.Show {
 			ctx.DryRun = true
-			ctx.OnEachProject("project status",
+			ctx.OnEachMavenProject("project status",
 				maven.UpgradeKotlin(),
-				spring.UpgradeSpringBoot(),
+				maven.UpgradeSpringBoot(),
 				maven.Upgrade2PartyDependencies(),
 				maven.Upgrade3PartyDependencies(),
 				maven.UpgradePlugins(),
 				maven.ChangeVersionToPropertyTags(),
-				spring.CleanManualVersions(),
+				maven.CleanManualVersions(),
 				maven.StatusDeprecated(),
 			)
 		}

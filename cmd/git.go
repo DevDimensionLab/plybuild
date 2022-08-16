@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/maven"
 	"github.com/devdimensionlab/co-pilot/pkg/shell"
 	"github.com/spf13/cobra"
 )
@@ -34,8 +35,8 @@ var gitInstallHooksCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		gitHooksFolderName := "git-hooks"
 		ctx.DryRun = true
-		ctx.OnEachProject("installing git hooks",
-			func(project config.Project) error {
+		ctx.OnEachMavenProject("installing git hooks",
+			func(repository maven.Repository, project config.Project) error {
 				hooks, err := project.CloudConfig.GitHookFiles(gitHooksFolderName)
 				if err != nil {
 					return err

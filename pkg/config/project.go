@@ -329,7 +329,7 @@ func artifactIsIgnored(groupId string, artifactId string, artifacts []Artifact) 
 	return false
 }
 
-func (projectSettings *ProjectSettings) mergeProjectDefaults(defaults CloudProjectDefaults) {
+func (projectSettings *ProjectSettings) MergeProjectDefaults(defaults CloudProjectDefaults) {
 	projectSettings.DisableDependencySort = defaults.Settings.DisableDependencySort
 	projectSettings.DisableKotlinUpgrade = defaults.Settings.DisableKotlinUpgrade
 	projectSettings.DisableSpringBootUpgrade = defaults.Settings.DisableSpringBootUpgrade

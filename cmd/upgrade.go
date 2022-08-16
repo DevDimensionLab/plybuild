@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
-	"github.com/devdimensionlab/co-pilot/pkg/spring"
 	"github.com/devdimensionlab/co-pilot/pkg/template"
 	"github.com/devdimensionlab/co-pilot/pkg/webservice"
 	"github.com/devdimensionlab/co-pilot/pkg/webservice/api"
@@ -36,7 +35,7 @@ var upgradeSpringBootCmd = &cobra.Command{
 	Short: "Upgrade spring-boot to the latest version",
 	Long:  `Upgrade spring-boot to the latest version`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("upgrading spring-boot", spring.UpgradeSpringBoot())
+		ctx.OnEachMavenProject("upgrading spring-boot", maven.UpgradeSpringBoot())
 	},
 }
 
@@ -49,7 +48,7 @@ var upgradeDependencyCmd = &cobra.Command{
 			log.Fatal("--groupId (-g) and --artifactId (-a) must be set")
 		}
 		description := fmt.Sprintf("upgrading dependency %s:%s", groupId, artifactId)
-		ctx.OnEachProject(description, maven.UpgradeDependency(groupId, artifactId))
+		ctx.OnEachMavenProject(description, maven.UpgradeDependency(groupId, artifactId))
 	},
 }
 
@@ -58,7 +57,7 @@ var upgrade2partyDependenciesCmd = &cobra.Command{
 	Short: "Upgrade all 2party dependencies to project",
 	Long:  `Upgrade all 2party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("upgrading 2party", maven.Upgrade2PartyDependencies())
+		ctx.OnEachMavenProject("upgrading 2party", maven.Upgrade2PartyDependencies())
 	},
 }
 
@@ -67,7 +66,7 @@ var upgrade3partyDependenciesCmd = &cobra.Command{
 	Short: "Upgrade all 3party dependencies to project",
 	Long:  `Upgrade all 3party dependencies to project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("upgrading 3party", maven.Upgrade3PartyDependencies())
+		ctx.OnEachMavenProject("upgrading 3party", maven.Upgrade3PartyDependencies())
 	},
 }
 
@@ -76,7 +75,7 @@ var upgradeKotlinCmd = &cobra.Command{
 	Short: "Upgrade kotlin version in project",
 	Long:  `Upgrade kotlin version in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("upgrading kotlin", maven.UpgradeKotlin())
+		ctx.OnEachMavenProject("upgrading kotlin", maven.UpgradeKotlin())
 	},
 }
 
@@ -85,7 +84,7 @@ var upgradePluginsCmd = &cobra.Command{
 	Short: "Upgrade all plugins found in project",
 	Long:  `Upgrade all plugins found in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("upgrading plugins", maven.UpgradePlugins())
+		ctx.OnEachMavenProject("upgrading plugins", maven.UpgradePlugins())
 	},
 }
 
@@ -94,7 +93,7 @@ var upgradeDeprecatedCmd = &cobra.Command{
 	Short: "Remove and replace deprecated dependencies in a project",
 	Long:  `Remove and replace deprecated dependencies in a project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("removes and replaces deprecated dependencies", func(project config.Project) error {
+		ctx.OnEachMavenProject("removes and replaces deprecated dependencies", func(repository maven.Repository, project config.Project) error {
 			return upgradeDeprecated(project)
 		})
 	},
@@ -105,9 +104,9 @@ var upgradeAllCmd = &cobra.Command{
 	Short: "Upgrade everything in project",
 	Long:  `Upgrade everything in project`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("upgrading everything",
+		ctx.OnEachMavenProject("upgrading everything",
 			maven.UpgradeKotlin(),
-			spring.UpgradeSpringBoot(),
+			maven.UpgradeSpringBoot(),
 			maven.Upgrade2PartyDependencies(),
 			maven.Upgrade3PartyDependencies(),
 			maven.UpgradePlugins(),
@@ -121,7 +120,7 @@ var upgradeWithVersionsCmd = &cobra.Command{
 	Long:  `Upgrade using mvn versions in a project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
-		ctx.OnEachProject("upgrading properties using maven versions",
+		ctx.OnEachMavenProject("upgrading properties using maven versions",
 			maven.UpgradeKotlinWithVersions(),
 			maven.UpgradeDependenciesWithVersions(),
 		)

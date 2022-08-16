@@ -44,7 +44,12 @@ var infoCmd = &cobra.Command{
 }
 
 func springInfo() {
-	latestVersionMeta, err := maven.GetMetaData("org.springframework.boot", "spring-boot")
+	repo, err := maven.DefaultRepository()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	latestVersionMeta, err := repo.GetMetaData("org.springframework.boot", "spring-boot")
 	if err != nil {
 		log.Fatalln(err)
 	}

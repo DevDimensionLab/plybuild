@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/maven"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +37,7 @@ var queryCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		desc := fmt.Sprintf("Search for dependency %s:%s", queryOpts.groupId, queryOpts.artifactId)
-		ctx.OnEachProject(desc, func(project config.Project) error {
+		ctx.OnEachMavenProject(desc, func(repository maven.Repository, project config.Project) error {
 			dep, err := project.Type.Model().FindDependency(queryOpts.groupId, queryOpts.artifactId)
 			if err != nil {
 				return nil

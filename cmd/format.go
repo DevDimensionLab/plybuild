@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
-	"github.com/devdimensionlab/co-pilot/pkg/spring"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +24,7 @@ var formatPomCmd = &cobra.Command{
 	Short: "Formats pom.xml and sorts dependencies",
 	Long:  `Formats pom.xml and sorts dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("formatting", nil)
+		ctx.OnEachMavenProject("formatting", nil)
 	},
 }
 
@@ -34,7 +33,7 @@ var formatVersionCmd = &cobra.Command{
 	Short: "Removes version tags and replaces them with property tags",
 	Long:  `Removes version tags and replaces them with property tags`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("removes version tags", maven.ChangeVersionToPropertyTags())
+		ctx.OnEachMavenProject("removes version tags", maven.ChangeVersionToPropertyTags())
 	},
 }
 
@@ -43,7 +42,7 @@ var formatInheritVersion = &cobra.Command{
 	Short: "Removes manual versions from spring dependencies",
 	Long:  `Removes manual versions from spring dependencies`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachProject("removes manual version from spring dependency", spring.CleanManualVersions())
+		ctx.OnEachMavenProject("removes manual version from spring dependency", maven.CleanManualVersions())
 	},
 }
 

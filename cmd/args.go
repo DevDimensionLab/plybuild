@@ -3,13 +3,13 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/context"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
 )
 
-var ctx config.Context
+var ctx context.Context
 
 func EnableDebug(cmd *cobra.Command) error {
 	debug, err := cmd.Flags().GetBool("debug")
