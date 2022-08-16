@@ -11,7 +11,11 @@ func TestGetRepo(t *testing.T) {
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	localRepo := repos.GetDefaultRepository()
+	localRepo, err := repos.GetDefaultRepository()
+
+	if err != nil {
+		t.Error(err)
+	}
 
 	if !strings.Contains(localRepo.Url, "http") {
 		t.Errorf("local repo does not contain http")

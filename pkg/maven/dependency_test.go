@@ -19,7 +19,13 @@ func TestUpgradeDependency(t *testing.T) {
 
 	model := project.Type.Model()
 	deps := model.Dependencies.Dependency
-	upgradeDependencies(model, deps, project.Config.Settings, func(groupId string) bool {
+
+	repo, err := DefaultRepository()
+	if err != nil {
+		t.Error(err)
+	}
+
+	repo.upgradeDependencies(model, deps, project.Config.Settings, func(groupId string) bool {
 		return true
 	}, model.SetDependencyVersion)
 
