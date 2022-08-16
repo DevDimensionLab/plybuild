@@ -53,13 +53,15 @@ func (settings Settings) GetRepositories() (Repositories, error) {
 		}
 	}
 
-	for _, mirrors := range settings.Settings.Mirrors {
-		if mirrors.Mirror.URL != "" {
+	for _, mirror := range settings.Settings.Mirrors.Mirror {
+		if mirror.URL != "" {
+			log.Debugf("Found mirror %s in m2settings\n", mirror.ID)
 			mirrorRepo := Repository{
-				Id:  mirrors.Mirror.ID,
-				Url: mirrors.Mirror.URL,
+				Id:  mirror.ID,
+				Url: mirror.URL,
 			}
-			if hasServer, server := settings.Settings.FindServerWith(mirrors.Mirror.ID); hasServer {
+			if hasServer, server := settings.Settings.FindServerWith(mirror.ID); hasServer {
+				log.Debugf("Mirror %s has a matching server, trying to copy credentials\n", mirror.ID)
 				mirrorRepo.Auth = &RepositoryAuth{
 					Username:  server.Username,
 					Password:  server.Password,
@@ -74,13 +76,13 @@ func (settings Settings) GetRepositories() (Repositories, error) {
 }
 
 func (settings M2Settings) FindServerWith(id string) (bool, Server) {
-	if settings.Servers == nil {
+	if settings.Servers.Server == nil {
 		return false, Server{}
 	}
 
-	for _, servers := range settings.Servers {
-		if servers.Server.ID == id {
-			return true, servers.Server
+	for _, server := range settings.Servers.Server {
+		if server.ID == id {
+			return true, server
 		}
 	}
 
@@ -90,15 +92,17 @@ func (settings M2Settings) FindServerWith(id string) (bool, Server) {
 func (repos Repositories) GetDefaultRepository() (Repository, error) {
 	if len(repos.Mirror) > 0 {
 		repo := repos.Mirror[0]
+		log.Debugf("Found mirrors, using the first mirror [%s] \n", repo.Id)
 		if repo.Auth != nil && repo.Auth.Encrypted {
-			fmt.Printf("Password for [%s] seems to be encrypted, please enter password: ", repo.Id)
+			fmt.Printf("!! Password for [%s] seems to be encrypted, please enter password: ", repo.Id)
 			bytePassword, err := term.ReadPassword(0)
+			fmt.Println()
 			if err != nil {
 				return Repository{}, err
 			}
 			repo.Auth.Password = string(bytePassword)
 		}
-		return repos.Mirror[0], nil
+		return repo, nil
 	} else {
 		return repos.Fallback, nil
 	}

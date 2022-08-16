@@ -43,8 +43,8 @@ type M2Settings struct {
 			ID            string `xml:"id"`
 		} `xml:"proxy"`
 	} `xml:"proxies"`
-	Servers  []Servers `xml:"servers"`
-	Mirrors  []Mirrors `xml:"mirrors"`
+	Servers  Servers `xml:"servers"`
+	Mirrors  Mirrors `xml:"mirrors"`
 	Profiles struct {
 		Text    string `xml:",chardata"`
 		Profile []struct {
@@ -130,8 +130,8 @@ type M2Settings struct {
 }
 
 type Servers struct {
-	Text   string `xml:",chardata"`
-	Server Server `xml:"server"`
+	Text   string   `xml:",chardata"`
+	Server []Server `xml:"server"`
 }
 
 type Server struct {
@@ -147,8 +147,8 @@ type Server struct {
 }
 
 type Mirrors struct {
-	Text   string `xml:",chardata"`
-	Mirror Mirror `xml:"mirror"`
+	Text   string   `xml:",chardata"`
+	Mirror []Mirror `xml:"mirror"`
 }
 
 type Mirror struct {
