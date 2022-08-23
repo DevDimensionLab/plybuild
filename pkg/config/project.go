@@ -53,6 +53,7 @@ type ProjectSettings struct {
 	DisableDependencySort     bool          `json:"disableDependencySort"`
 	DisableSpringBootUpgrade  bool          `json:"disableSpringBootUpgrade"`
 	DisableKotlinUpgrade      bool          `json:"disableKotlinUpgrade"`
+	PomFileIndentation        string        `json:"pomFileIndentation"`
 	DisableUpgradesFor        []Artifact    `json:"disableUpgradesFor"`
 	MaxVersionForDependencies []MaxArtifact `json:"maxVersionForDependencies"`
 }
@@ -288,7 +289,11 @@ func (project Project) SortAndWritePom() error {
 
 	var writeToFile = project.Type.FilePath()
 	log.Infof("writing model to pom file: %s", writeToFile)
-	return project.Type.Model().WriteToFile(writeToFile)
+	indentation := "    "
+	if project.Config.Settings.PomFileIndentation != "" {
+		indentation = project.Config.Settings.PomFileIndentation
+	}
+	return project.Type.Model().WriteToFile(writeToFile, indentation)
 }
 
 func (projectSettings ProjectSettings) DependencyIsIgnored(dep pom.Dependency) bool {

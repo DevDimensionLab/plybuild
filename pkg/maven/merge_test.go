@@ -19,7 +19,7 @@ func TestMergeBuildPlugins(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = to.WriteToFile("test/merge/mergeBuildPluginMerged.xml")
+	err = to.WriteToFile("test/merge/mergeBuildPluginMerged.xml", "    ")
 	if err != nil {
 		t.Error(err)
 	}

@@ -16,6 +16,7 @@
         "disableDependencySort": false,
         "disableSpringBootUpgrade": false,
         "disableKotlinUpgrade": false,
+        "pomFileIndentation": "",
         "disableUpgradesFor": null,
         "maxVersionForDependencies": null
     },
