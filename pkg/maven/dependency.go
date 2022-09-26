@@ -38,16 +38,16 @@ func (repository Repository) upgradeDependencyOnModel(model *pom.Model, groupId 
 	return err
 }
 
-func (repository Repository) upgradeDependenciesForProject(project *config.Project, secondParty bool) error {
+func (repository Repository) upgradeDependenciesForProject(project *config.Project, enabledSecondParty bool) error {
 	model := project.Type.Model()
 	if model.Dependencies != nil {
 		deps := model.Dependencies.Dependency
-		repository.upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, secondParty), model.SetDependencyVersion)
+		repository.upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, enabledSecondParty), model.SetDependencyVersion)
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
 		deps := model.DependencyManagement.Dependencies.Dependency
-		repository.upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, secondParty), model.SetDependencyVersion)
+		repository.upgradeDependencies(model, deps, project.Config.Settings, isSecondParty(model, enabledSecondParty), model.SetDependencyVersion)
 	}
 
 	return nil
@@ -185,6 +185,8 @@ func (repository Repository) upgradeDependency(model *pom.Model, dep pom.Depende
 		log.Warnf("dependency %s:%s is held back at version [%s]", dep.GroupId, dep.ArtifactId, maxVersion.ToString())
 		latestVersion = *maxVersion
 	}
+
+	log.Debugf("comparing current version %s with latest version %s", currentVersion, latestVersion)
 
 	if currentVersion.IsLessThan(latestVersion) {
 		msg := fmt.Sprintf("outdated dependency %s:%s [%s => %s]", dep.GroupId, dep.ArtifactId, currentVersion.ToString(), latestVersion.ToString())
