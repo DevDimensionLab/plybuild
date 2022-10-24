@@ -186,7 +186,7 @@ func (repository Repository) upgradeDependency(model *pom.Model, dep pom.Depende
 		latestVersion = *maxVersion
 	}
 
-	log.Debugf("comparing current version %s with latest version %s", currentVersion, latestVersion)
+	log.Debugf("comparing current version %s with latest version %s", currentVersion.ToString(), latestVersion.ToString())
 
 	if currentVersion.IsLessThan(latestVersion) {
 		msg := fmt.Sprintf("outdated dependency %s:%s [%s => %s]", dep.GroupId, dep.ArtifactId, currentVersion.ToString(), latestVersion.ToString())

@@ -61,6 +61,16 @@ func TestIsReleaseVersion(t *testing.T) {
 	if !release2.IsReleaseVersion() {
 		t.Errorf("1.2.3.RELEASE is a release version")
 	}
+
+	release3, _ := ParseVersion("1.1.15-942da656")
+	if !release3.IsReleaseVersion() {
+		t.Errorf("1.1.15-942da656 is a release version")
+	}
+
+	notRelease3, _ := ParseVersion("1.1.15-942da656-SNAPSHOT")
+	if notRelease3.IsReleaseVersion() {
+		t.Errorf("1.1.15-942da656-SNAPSHOT is not a release version")
+	}
 }
 
 func TestIsDifferentVersion(t *testing.T) {

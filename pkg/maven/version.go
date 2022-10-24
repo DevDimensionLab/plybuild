@@ -39,7 +39,7 @@ func ParseVersion(version string) (JavaVersion, error) {
 	var suffix = ""
 	if suffixParts := strings.Split(parts[patchIndex], "-"); len(suffixParts) > 1 {
 		patchPart = suffixParts[0]
-		suffix = suffixParts[1]
+		suffix = strings.Join(suffixParts[1:], "-")
 		suffixSeparator = "-"
 	} else if len(parts) == 4 {
 		suffixSeparator = "."
@@ -89,6 +89,11 @@ func (a JavaVersion) IsReleaseVersion() bool {
 	if strings.ToUpper(a.Suffix) == "FINAL" {
 		return true
 	}
+	// special case for short git hash in suffix part of version number
+	if !strings.Contains(strings.ToUpper(a.Suffix), "SNAPSHOT") && len(a.Suffix) == 8 {
+		return true
+	}
+
 	return false
 }
 
