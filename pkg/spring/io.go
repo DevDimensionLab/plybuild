@@ -26,6 +26,7 @@ func UrlValuesFrom(config config.ProjectConfiguration) url.Values {
 	params.Add("language", config.Language)
 	params.Add("description", config.Description)
 	params.Add("name", config.Name)
+	params.Add("type", "maven-project")
 	//params.Add("baseDir", targetDir)
 
 	return params

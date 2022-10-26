@@ -27,7 +27,6 @@ Requirement: https://golang.org/doc/install
  \_____\___/      | .__/|_|_|\___/ \__|
                   | |
                   |_|
-== version: v0.6.1 ==
 
 Usage:
   co-pilot [command]
