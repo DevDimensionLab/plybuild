@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"os"
@@ -23,9 +22,9 @@ func MergeTemplates(cloudTemplates []config.CloudTemplate, targetProject config.
 
 func MergeTemplate(cloudTemplate config.CloudTemplate, targetProject config.Project, multiModuleCheck bool) error {
 	if targetProject.IsDirtyGitRepo() {
-		log.Warn(logger.White(fmt.Sprintf("merging template %s into a dirty git repository %s", cloudTemplate.Name, targetProject.Path)))
+		log.Warn(fmt.Sprintf("merging template %s into a dirty git repository %s", cloudTemplate.Name, targetProject.Path))
 	} else {
-		log.Info(logger.White(fmt.Sprintf("merging template %s into %s", cloudTemplate.Name, targetProject.Path)))
+		log.Info(fmt.Sprintf("merging template %s into %s", cloudTemplate.Name, targetProject.Path))
 	}
 	if err := merge(cloudTemplate.Project, targetProject, multiModuleCheck); err != nil {
 		return err

@@ -55,6 +55,7 @@ Available Commands:
 Flags:
       --debug   turn on debug output
   -h, --help    help for co-pilot
+      --json    turn on json output logging
 
 Additional help topics:
   co-pilot about      About co-pilot

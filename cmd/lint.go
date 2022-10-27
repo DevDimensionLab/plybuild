@@ -22,6 +22,9 @@ var lintKotlinCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := EnableJsonLogging(cmd); err != nil {
+			log.Fatalln(err)
+		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}

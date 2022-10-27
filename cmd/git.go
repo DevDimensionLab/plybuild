@@ -25,6 +25,9 @@ var gitInstallHooksCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := EnableJsonLogging(cmd); err != nil {
+			log.Fatalln(err)
+		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}

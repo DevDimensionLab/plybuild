@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
 )
 
@@ -76,7 +75,7 @@ func (ctx Context) OnEachMavenProject(description string, do ...func(repository 
 			continue
 		}
 
-		log.Info(logger.White(fmt.Sprintf("%s in %s", description, p.Path)))
+		log.Info(fmt.Sprintf("%s in %s", description, p.Path))
 
 		if p.IsDirtyGitRepo() {
 			log.Debugf("operating on a dirty git repo")
@@ -113,7 +112,7 @@ func (ctx Context) OnRootProject(description string, do ...func(project config.P
 	if rootProject.Type == nil {
 		log.Fatalln(fmt.Sprintf("no project type defined for path: %s", rootProject.Path))
 	}
-	log.Info(logger.White(fmt.Sprintf("%s for file %s", description, rootProject.Type.FilePath())))
+	log.Info(fmt.Sprintf("%s for file %s", description, rootProject.Type.FilePath()))
 
 	if rootProject.IsDirtyGitRepo() {
 		log.Warnf("operating on a dirty git repo")

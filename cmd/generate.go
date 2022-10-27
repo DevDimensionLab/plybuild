@@ -140,7 +140,7 @@ var generateCmd = &cobra.Command{
 		if !disableUpgrade {
 			ctx.OnEachMavenProject("upgrading everything",
 				maven.UpgradeKotlin(),
-				maven.UpgradeSpringBoot(),
+				maven.UpgradeParent(),
 				maven.Upgrade2PartyDependencies(),
 				maven.Upgrade3PartyDependencies(),
 				maven.UpgradePlugins(),

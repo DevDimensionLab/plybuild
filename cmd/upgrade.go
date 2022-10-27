@@ -21,6 +21,9 @@ var upgradeCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := EnableJsonLogging(cmd); err != nil {
+			log.Fatalln(err)
+		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
@@ -35,7 +38,7 @@ var upgradeSpringBootCmd = &cobra.Command{
 	Short: "Upgrade spring-boot to the latest version",
 	Long:  `Upgrade spring-boot to the latest version`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx.OnEachMavenProject("upgrading spring-boot", maven.UpgradeSpringBoot())
+		ctx.OnEachMavenProject("upgrading spring-boot", maven.UpgradeParent())
 	},
 }
 
@@ -106,7 +109,7 @@ var upgradeAllCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.OnEachMavenProject("upgrading everything",
 			maven.UpgradeKotlin(),
-			maven.UpgradeSpringBoot(),
+			maven.UpgradeParent(),
 			maven.Upgrade2PartyDependencies(),
 			maven.Upgrade3PartyDependencies(),
 			maven.UpgradePlugins(),

@@ -70,7 +70,7 @@ func springInfo() {
 		fmt.Println(logger.Info(fmt.Sprintf("%s", category.Name)))
 		fmt.Printf("================================\n")
 		for _, dep := range category.Values {
-			fmt.Printf("[%s]\n    %s, (%s)\n", logger.Magenta(dep.Id), dep.Name, dep.Description)
+			fmt.Printf("[%s]\n    %s, (%s)\n", dep.Id, dep.Name, dep.Description)
 		}
 		fmt.Printf("\n")
 	}

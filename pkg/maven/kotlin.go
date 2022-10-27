@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/sirupsen/logrus"
 )
 
 func UpgradeKotlin() func(repository Repository, project config.Project) error {
@@ -61,7 +62,11 @@ func (repository Repository) upgradeKotlinOnModel(model *pom.Model, action func(
 		} else if !latestVersion.IsReleaseVersion() {
 			log.Warnf("%s | not release", msg)
 		} else {
-			log.Infof(msg)
+			log.WithFields(logrus.Fields{
+				"oldVersion": currentVersion.ToString(),
+				"newVersion": latestVersion.ToString(),
+				"type":       "outdated kotlin",
+			}).Infof(msg)
 		}
 
 		//err = model.Properties.SetKey("kotlin.version", latestVersion.ToString())
@@ -70,7 +75,7 @@ func (repository Repository) upgradeKotlinOnModel(model *pom.Model, action func(
 			return err
 		}
 	} else {
-		log.Infof("No update needed, kotlin is the the latest version [%s]", currentVersion.ToString())
+		log.Debugf("No update needed, kotlin is the the latest version [%s]", currentVersion.ToString())
 	}
 	return nil
 }

@@ -25,7 +25,7 @@ import (
 	"strings"
 )
 
-const version = "v0.6.8"
+const version = "v0.6.9"
 
 var log = logger.Context()
 
@@ -52,6 +52,7 @@ func init() {
 	cobra.OnInitialize()
 	logrus.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
+	RootCmd.PersistentFlags().Bool("json", false, "turn on json output logging")
 }
 
 // initConfig reads in config file and ENV variables if set.

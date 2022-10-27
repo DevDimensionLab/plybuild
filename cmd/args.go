@@ -23,6 +23,17 @@ func EnableDebug(cmd *cobra.Command) error {
 	return nil
 }
 
+func EnableJsonLogging(cmd *cobra.Command) error {
+	json, err := cmd.Flags().GetBool("json")
+	if err != nil {
+		return err
+	}
+	if json {
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+	}
+	return nil
+}
+
 func OkHelp(cmd *cobra.Command, depend func() bool) error {
 	if !cmd.Flags().HasFlags() || !depend() {
 		_ = cmd.Help()

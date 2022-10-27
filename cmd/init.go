@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -12,6 +11,9 @@ var initCmd = &cobra.Command{
 	Long:  `Initializes a maven project with co-pilot files and formatting`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := EnableDebug(cmd); err != nil {
+			log.Fatalln(err)
+		}
+		if err := EnableJsonLogging(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -25,7 +27,7 @@ var initCmd = &cobra.Command{
 				continue
 			}
 
-			log.Info(logger.White(fmt.Sprintf("formating pom file %s", project.Type.FilePath())))
+			log.Info(fmt.Sprintf("formating pom file %s", project.Type.FilePath()))
 			if !ctx.DryRun {
 				err := project.InitProjectConfiguration()
 				if err != nil {

@@ -23,6 +23,9 @@ var statusCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := EnableJsonLogging(cmd); err != nil {
+			log.Fatalln(err)
+		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
@@ -35,7 +38,7 @@ var statusCmd = &cobra.Command{
 			ctx.DryRun = true
 			ctx.OnEachMavenProject("project status",
 				maven.UpgradeKotlin(),
-				maven.UpgradeSpringBoot(),
+				maven.UpgradeParent(),
 				maven.Upgrade2PartyDependencies(),
 				maven.Upgrade3PartyDependencies(),
 				maven.UpgradePlugins(),

@@ -39,6 +39,9 @@ var mavenGraphCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := EnableJsonLogging(cmd); err != nil {
+			log.Fatalln(err)
+		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}
@@ -68,6 +71,9 @@ var mavenGraph2PartyCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := EnableJsonLogging(cmd); err != nil {
+			log.Fatalln(err)
+		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}
@@ -91,6 +97,9 @@ var mavenCheckstyleCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := EnableJsonLogging(cmd); err != nil {
+			log.Fatalln(err)
+		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}
@@ -109,6 +118,9 @@ var mavenOwaspCmd = &cobra.Command{
 	Long:  `runs owasp`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := EnableDebug(cmd); err != nil {
+			log.Fatalln(err)
+		}
+		if err := EnableJsonLogging(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -132,6 +144,9 @@ var mavenSpringBootRunCmd = &cobra.Command{
 		if err := EnableDebug(cmd); err != nil {
 			log.Fatalln(err)
 		}
+		if err := EnableJsonLogging(cmd); err != nil {
+			log.Fatalln(err)
+		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}
@@ -150,6 +165,9 @@ var mavenEnforcerCmd = &cobra.Command{
 	Long:  `runs enforcer`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := EnableDebug(cmd); err != nil {
+			log.Fatalln(err)
+		}
+		if err := EnableJsonLogging(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -177,6 +195,9 @@ var analyzeCmd = &cobra.Command{
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := EnableDebug(cmd); err != nil {
+			log.Fatalln(err)
+		}
+		if err := EnableJsonLogging(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {

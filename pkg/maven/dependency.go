@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -196,7 +197,13 @@ func (repository Repository) upgradeDependency(model *pom.Model, dep pom.Depende
 		if !latestVersion.IsReleaseVersion() {
 			log.Warnf("%s | not release", msg)
 		} else {
-			log.Info(msg)
+			log.WithFields(logrus.Fields{
+				"artifactId": dep.ArtifactId,
+				"groupId":    dep.GroupId,
+				"oldVersion": currentVersion.ToString(),
+				"newVersion": latestVersion.ToString(),
+				"type":       "outdated dependency",
+			}).Info(msg)
 		}
 
 		//err = model.SetDependencyVersion(dep, latestVersion.ToString())
