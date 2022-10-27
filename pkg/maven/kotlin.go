@@ -56,17 +56,18 @@ func (repository Repository) upgradeKotlinOnModel(model *pom.Model, action func(
 	}
 
 	if currentVersion.IsLessThan(latestVersion) {
-		msg := fmt.Sprintf("outdated kotlin version [%s => %s]", currentVersion.ToString(), latestVersion.ToString())
+		msg := fmt.Sprintf("outdated kotlin version [%s vs %s]", currentVersion.ToString(), latestVersion.ToString())
+		metaDataLogger := log.WithFields(logrus.Fields{
+			"oldVersion": currentVersion.ToString(),
+			"newVersion": latestVersion.ToString(),
+			"type":       "outdated kotlin",
+		})
 		if IsMajorUpgrade(currentVersion, latestVersion) {
-			log.Warnf("major %s", msg)
+			metaDataLogger.Warnf("major %s", msg)
 		} else if !latestVersion.IsReleaseVersion() {
 			log.Warnf("%s | not release", msg)
 		} else {
-			log.WithFields(logrus.Fields{
-				"oldVersion": currentVersion.ToString(),
-				"newVersion": latestVersion.ToString(),
-				"type":       "outdated kotlin",
-			}).Infof(msg)
+			metaDataLogger.Infof(msg)
 		}
 
 		//err = model.Properties.SetKey("kotlin.version", latestVersion.ToString())
