@@ -37,19 +37,20 @@ func (repository Repository) upgradeParent(model *pom.Model) error {
 	}
 
 	if currentVersion.IsDifferentFrom(latestVersion) {
-		msg := fmt.Sprintf("outdated parent version [%s => %s]", currentVersion.ToString(), latestVersion.ToString())
+		msg := fmt.Sprintf("outdated parent version [%s vs %s]", currentVersion.ToString(), latestVersion.ToString())
+		metaDataLogger := log.WithFields(logrus.Fields{
+			"artifactId": parentArtifactId,
+			"groupId":    parentGroupId,
+			"oldVersion": currentVersion.ToString(),
+			"newVersion": latestVersion.ToString(),
+			"type":       "outdated parent",
+		})
 		if IsMajorUpgrade(currentVersion, latestVersion) {
-			log.Warnf("major %s", msg)
+			metaDataLogger.Warnf("major %s", msg)
 		} else if !latestVersion.IsReleaseVersion() {
 			log.Warnf("%s | not release", msg)
 		} else {
-			log.WithFields(logrus.Fields{
-				"artifactId": parentArtifactId,
-				"groupId":    parentGroupId,
-				"oldVersion": currentVersion.ToString(),
-				"newVersion": latestVersion.ToString(),
-				"type":       "outdated parent",
-			}).Info(msg)
+			metaDataLogger.Info(msg)
 		}
 		model.Parent.Version = latestVersion.ToString()
 	} else {
