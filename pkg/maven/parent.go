@@ -1,6 +1,7 @@
 package maven
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
 
@@ -19,6 +20,10 @@ func UpgradeParent() func(repository Repository, project config.Project) error {
 }
 
 func (repository Repository) upgradeParent(model *pom.Model) error {
+	if model.Parent == nil {
+		return errors.New("no parent found")
+	}
+
 	parentGroupId := model.Parent.GroupId
 	parentArtifactId := model.Parent.ArtifactId
 	latestVersionMeta, err := repository.GetMetaData(parentGroupId, parentArtifactId)
