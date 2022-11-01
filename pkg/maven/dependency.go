@@ -192,11 +192,13 @@ func (repository Repository) upgradeDependency(model *pom.Model, dep pom.Depende
 	if currentVersion.IsLessThan(latestVersion) {
 		msg := fmt.Sprintf("outdated dependency %s:%s [%s vs %s]", dep.GroupId, dep.ArtifactId, currentVersion.ToString(), latestVersion.ToString())
 		metaDataLogger := log.WithFields(logrus.Fields{
-			"artifactId": dep.ArtifactId,
-			"groupId":    dep.GroupId,
-			"oldVersion": currentVersion.ToString(),
-			"newVersion": latestVersion.ToString(),
-			"type":       "outdated dependency",
+			"artifactId":        dep.ArtifactId,
+			"groupId":           dep.GroupId,
+			"oldVersion":        currentVersion.ToString(),
+			"newVersion":        latestVersion.ToString(),
+			"versionIsProperty": strings.HasPrefix(dep.Version, "${") && strings.HasSuffix(dep.Version, "}"),
+			"versionValue":      dep.Version,
+			"type":              "outdated dependency",
 		})
 		if IsMajorUpgrade(currentVersion, latestVersion) {
 			metaDataLogger.Warnf("major %s", msg)
