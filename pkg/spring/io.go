@@ -115,15 +115,9 @@ func archivePath() (path string, err error) {
 
 func DeleteDemoFiles(targetDir string, orderConfig config.ProjectConfiguration) {
 
-	var fileSuffix string
-	switch orderConfig.Language {
-	case "kotlin":
-		fileSuffix = ".kt"
-	case "java":
+	var fileSuffix = "*.kt"
+	if orderConfig.Language == "java" {
 		fileSuffix = ".java"
-	default:
-		log.Warnf("DeleteDemoFiles: No language support for " + orderConfig.Language)
-		return
 	}
 
 	testFile, err := file.FindFirst(fileSuffix, file.Path("%s/src/test/%s", targetDir, orderConfig.Language))
