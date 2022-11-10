@@ -26,6 +26,9 @@ var generateCmd = &cobra.Command{
 		// fetch user input config
 		overrideGroupId, _ := cmd.Flags().GetString("group-id")
 		overrideArtifactId, _ := cmd.Flags().GetString("artifact-id")
+		overridePackage, _ := cmd.Flags().GetString("package")
+		overrideName, _ := cmd.Flags().GetString("name")
+		overrideApplicationName, _ := cmd.Flags().GetString("application-name")
 		interactive, _ := cmd.Flags().GetBool("interactive")
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
 
@@ -74,6 +77,15 @@ var generateCmd = &cobra.Command{
 		if overrideGroupId != "" {
 			orderConfig.GroupId = overrideGroupId
 			orderConfig.Package = orderConfig.GroupId
+		}
+		if overridePackage != "" {
+			orderConfig.Package = overridePackage
+		}
+		if overrideName != "" {
+			orderConfig.Name = overrideName
+		}
+		if overrideApplicationName != "" {
+			orderConfig.ApplicationName = overrideApplicationName
 		}
 
 		err = spring.Validate(orderConfig)
@@ -216,4 +228,7 @@ func init() {
 	generateCmd.Flags().String("config-file", "co-pilot.json", "Optional config file")
 	generateCmd.Flags().String("group-id", "", "Overrides groupId from config file")
 	generateCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
+	generateCmd.Flags().String("package", "", "Overrides package from config file")
+	generateCmd.Flags().String("name", "", "Overrides name from config file")
+	generateCmd.Flags().String("application-name", "", "Overrides applicationName from config file")
 }
