@@ -43,9 +43,11 @@ var examplesInstallCmd = &cobra.Command{
 	Short: "install example from cloud-config",
 	Long:  `install example from cloud-config`,
 	Run: func(cmd *cobra.Command, args []string) {
-		exampleName, _ := cmd.Flags().GetString("name")
+		exampleName, _ := cmd.Flags().GetString("example-name")
 		overrideGroupId, _ := cmd.Flags().GetString("group-id")
 		overrideArtifactId, _ := cmd.Flags().GetString("artifact-id")
+		overridePackage, _ := cmd.Flags().GetString("package")
+		overrideName, _ := cmd.Flags().GetString("name")
 
 		if exampleName == "" {
 			log.Fatalln("please enter example --name")
@@ -73,7 +75,7 @@ var examplesInstallCmd = &cobra.Command{
 				}
 
 				if overrideGroupId == "" {
-					groupId, err = promptFor("groupId", projectConfig.GroupId)
+					groupId, err := promptFor("groupId", projectConfig.GroupId)
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -83,11 +85,34 @@ var examplesInstallCmd = &cobra.Command{
 				}
 
 				if overrideArtifactId == "" {
-					artifactId, err = promptFor("artifactId", projectConfig.ArtifactId)
+					artifactId, err := promptFor("artifactId", projectConfig.ArtifactId)
 					if err != nil {
 						log.Fatalln(err)
 					}
 					if err := cmd.Flags().Set("artifact-id", artifactId); err != nil {
+						log.Fatalln(err)
+					}
+				}
+
+				if overridePackage == "" {
+					packageName, err := promptFor("package", projectConfig.Package)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					if err := cmd.Flags().Set("package", packageName); err != nil {
+						log.Fatalln(err)
+					}
+				}
+
+				if overrideName == "" {
+					name, err := promptFor("name", projectConfig.Name)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					if err := cmd.Flags().Set("name", name); err != nil {
+						log.Fatalln(err)
+					}
+					if err := cmd.Flags().Set("application-name", fmt.Sprintf("%sApplication", name)); err != nil {
 						log.Fatalln(err)
 					}
 				}
@@ -123,7 +148,11 @@ func init() {
 	examplesCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 
 	examplesCmd.AddCommand(examplesInstallCmd)
-	examplesInstallCmd.Flags().StringP("name", "n", "", "Example name")
+	examplesInstallCmd.Flags().StringP("example-name", "n", "", "Example name")
+
 	examplesInstallCmd.Flags().String("group-id", "", "Overrides groupId from config file")
 	examplesInstallCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
+	examplesInstallCmd.Flags().String("package", "", "Overrides package from config file")
+	examplesInstallCmd.Flags().String("name", "", "Overrides name from config file")
+	examplesInstallCmd.Flags().String("application-name", "", "Overrides application-name from config file")
 }
