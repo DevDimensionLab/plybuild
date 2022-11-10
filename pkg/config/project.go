@@ -33,8 +33,9 @@ type ProjectConfiguration struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Team        struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
+		Name         string `json:"name"`
+		Email        string `json:"email"`
+		SlackChannel string `json:"slackChannel,omitempty"`
 	} `json:"team"`
 	Dependencies []string          `json:"dependencies"`
 	Templates    []string          `json:"templates"`
