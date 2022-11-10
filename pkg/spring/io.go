@@ -113,8 +113,20 @@ func archivePath() (path string, err error) {
 	return
 }
 
-func DeleteDemoFiles(targetDir string) {
-	testFile, err := file.FindFirst(".kt", file.Path("%s/src/test/kotlin", targetDir))
+func DeleteDemoFiles(targetDir string, orderConfig config.ProjectConfiguration) {
+
+	var fileSuffix string
+	switch orderConfig.Language {
+	case "kotlin":
+		fileSuffix = ".kt"
+	case "java":
+		fileSuffix = ".java"
+	default:
+		log.Warnf("DeleteDemoFiles: No language support for " + orderConfig.Language)
+		return
+	}
+
+	testFile, err := file.FindFirst(fileSuffix, file.Path("%s/src/test/%s", targetDir, orderConfig.Language))
 	if err != nil {
 		log.Warnf("Unable to find testfile")
 	} else {

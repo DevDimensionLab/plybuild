@@ -88,7 +88,7 @@ var generateCmd = &cobra.Command{
 		}
 
 		// cleanup unwanted files from downloaded content
-		spring.DeleteDemoFiles(ctx.TargetDirectory)
+		spring.DeleteDemoFiles(ctx.TargetDirectory, orderConfig)
 
 		// populate applicationName field in config
 		if err := orderConfig.FindApplicationName(ctx.TargetDirectory); err != nil {
