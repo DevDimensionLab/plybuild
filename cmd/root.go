@@ -25,7 +25,7 @@ import (
 	"strings"
 )
 
-const version = "v0.6.13"
+const version = "v0.6.14"
 
 var log = logger.Context()
 
@@ -34,7 +34,7 @@ var RootCmd = &cobra.Command{
 	Short: "Co-pilot is a developer tool for automating common tasks on a spring boot project",
 	Long:  header(),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 	},

@@ -10,10 +10,7 @@ var initCmd = &cobra.Command{
 	Short: "Initializes a maven project with co-pilot files and formatting",
 	Long:  `Initializes a maven project with co-pilot files and formatting`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {

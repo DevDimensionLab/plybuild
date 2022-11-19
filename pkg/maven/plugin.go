@@ -2,6 +2,7 @@ package maven
 
 import (
 	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/sirupsen/logrus"
 	"strings"
@@ -106,15 +107,18 @@ func (repository Repository) upgradePlugin(model *pom.Model, plugin pom.Plugin) 
 	}
 
 	if currentVersion != latestRelease {
-		metaDataLogger := log.WithFields(logrus.Fields{
-			"artifactId":        plugin.ArtifactId,
-			"groupId":           plugin.GroupId,
-			"oldVersion":        currentVersion.ToString(),
-			"newVersion":        latestRelease.ToString(),
-			"versionIsProperty": strings.HasPrefix(plugin.Version, "${") && strings.HasSuffix(plugin.Version, "}"),
-			"versionValue":      plugin.Version,
-			"type":              "outdated dependency",
-		})
+		var metaDataLogger = log
+		if logger.IsFieldLogger() {
+			metaDataLogger = log.WithFields(logrus.Fields{
+				"artifactId":        plugin.ArtifactId,
+				"groupId":           plugin.GroupId,
+				"oldVersion":        currentVersion.ToString(),
+				"newVersion":        latestRelease.ToString(),
+				"versionIsProperty": strings.HasPrefix(plugin.Version, "${") && strings.HasSuffix(plugin.Version, "}"),
+				"versionValue":      plugin.Version,
+				"type":              "outdated plugin",
+			})
+		}
 		metaDataLogger.Warnf("outdated plugin %s:%s [%s => %s] \n", plugin.GroupId, plugin.ArtifactId, currentVersion.ToString(), latestRelease.ToString())
 		if err := model.SetPluginVersion(plugin, latestRelease.ToString()); err != nil {
 			return err

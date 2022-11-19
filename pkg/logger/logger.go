@@ -9,44 +9,33 @@ import (
 	"strings"
 )
 
-var (
-	Info = White
-	Warn = Yellow
-	Fata = Red
-)
+var fieldLogger = false
+var collector = &Collector{}
+var log = logrus.New()
 
-var (
-	Black   = Color("\033[1;30m%s\033[0m")
-	Red     = Color("\033[1;31m%s\033[0m")
-	Green   = Color("\033[1;32m%s\033[0m")
-	Yellow  = Color("\033[1;33m%s\033[0m")
-	Purple  = Color("\033[1;34m%s\033[0m")
-	Magenta = Color("\033[1;35m%s\033[0m")
-	Teal    = Color("\033[1;36m%s\033[0m")
-	White   = Color("\033[1;37m%s\033[0m")
-)
-
-func Color(colorString string) func(...interface{}) string {
-	sprint := func(args ...interface{}) string {
-		return fmt.Sprintf(colorString,
-			fmt.Sprint(args...))
-	}
-	return sprint
+func init() {
+	log.AddHook(collector)
 }
 
-func Context() logrus.FieldLogger {
-	_, _, _, ok := runtime.Caller(1)
+func DebugLogger() logrus.FieldLogger {
+	pc, file, line, ok := runtime.Caller(1)
 
 	var fields logrus.Fields
 
 	if ok {
 		fields = logrus.Fields{
-			//"caller": file,
-			//"line": line,
-			//"func": runtime.FuncForPC(pc).Name(),
+			"caller": file,
+			"line":   line,
+			"func":   runtime.FuncForPC(pc).Name(),
 		}
 	}
-	return logrus.WithFields(fields)
+
+	log.SetLevel(logrus.DebugLevel)
+	return log.WithFields(fields)
+}
+
+func Context() logrus.FieldLogger {
+	return log.WithFields(logrus.Fields{})
 }
 
 func ExternalError(err error, msg string) error {
@@ -61,9 +50,25 @@ func ExternalError(err error, msg string) error {
 	return errors.New(output)
 }
 
+func SetJsonLogging() {
+	log.SetFormatter(&logrus.JSONFormatter{})
+}
+
+func SetFieldLogger() {
+	fieldLogger = true
+}
+
+func IsFieldLogger() bool {
+	return fieldLogger
+}
+
 func StdOut() *os.File {
 	if logrus.IsLevelEnabled(logrus.DebugLevel) {
 		return os.Stdout
 	}
 	return nil
+}
+
+func LogEntries() []*logrus.Entry {
+	return collector.entries
 }

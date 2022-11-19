@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/sirupsen/logrus"
 )
@@ -57,11 +58,16 @@ func (repository Repository) upgradeKotlinOnModel(model *pom.Model, action func(
 
 	if currentVersion.IsLessThan(latestVersion) {
 		msg := fmt.Sprintf("outdated kotlin version [%s vs %s]", currentVersion.ToString(), latestVersion.ToString())
-		metaDataLogger := log.WithFields(logrus.Fields{
-			"oldVersion": currentVersion.ToString(),
-			"newVersion": latestVersion.ToString(),
-			"type":       "outdated kotlin",
-		})
+		var metaDataLogger = log
+		if logger.IsFieldLogger() {
+			metaDataLogger = log.WithFields(logrus.Fields{
+				"oldVersion":        currentVersion.ToString(),
+				"newVersion":        latestVersion.ToString(),
+				"versionIsProperty": true,
+				"versionValue":      "kotlin.version",
+				"type":              "outdated kotlin",
+			})
+		}
 		if IsMajorUpgrade(currentVersion, latestVersion) {
 			metaDataLogger.Warnf("major %s", msg)
 		} else if !latestVersion.IsReleaseVersion() {

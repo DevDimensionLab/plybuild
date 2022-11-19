@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
 	"github.com/devdimensionlab/co-pilot/pkg/spring"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
@@ -65,9 +64,9 @@ func springInfo() {
 	}
 	log.Infof("Latest version of spring boot are: %s\n", latestVersion)
 
-	log.Infof(logger.Info(fmt.Sprintf("Valid dependencies: ")))
+	log.Infof(fmt.Sprintf("Valid dependencies: "))
 	for _, category := range root.Dependencies.Values {
-		fmt.Println(logger.Info(fmt.Sprintf("%s", category.Name)))
+		fmt.Println(fmt.Sprintf("%s", category.Name))
 		fmt.Printf("================================\n")
 		for _, dep := range category.Values {
 			fmt.Printf("[%s]\n    %s, (%s)\n", dep.Id, dep.Name, dep.Description)
@@ -82,7 +81,7 @@ func showSpringManaged() {
 		log.Fatalln(err)
 	}
 
-	log.Infof(logger.Info(fmt.Sprintf("Spring Boot managed dependencies:")))
+	log.Infof(fmt.Sprintf("Spring Boot managed dependencies:"))
 	var organized = make(map[string][]pom.Dependency)
 	for _, dep := range deps.Dependencies {
 		mvnDep := pom.Dependency{
@@ -93,7 +92,7 @@ func showSpringManaged() {
 	}
 
 	for k, v := range organized {
-		fmt.Println(logger.Info(fmt.Sprintf("GroupId: %s", k)))
+		fmt.Println(fmt.Sprintf("GroupId: %s", k))
 		fmt.Printf("================================\n")
 		for _, mvnDep := range v {
 			fmt.Printf("  ArtifactId: %s\n", mvnDep.ArtifactId)

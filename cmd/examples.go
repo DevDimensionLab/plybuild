@@ -10,13 +10,10 @@ import (
 
 var examplesCmd = &cobra.Command{
 	Use:   "examples",
-	Short: "examples found in cloud-config",
-	Long:  `examples found in cloud-config`,
+	Short: "Examples found in cloud-config",
+	Long:  `Examples found in cloud-config`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 	},

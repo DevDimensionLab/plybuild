@@ -18,10 +18,7 @@ var upgradeCmd = &cobra.Command{
 	Short: "Upgrade options",
 	Long:  `Perform upgrade on existing projects`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
@@ -160,6 +157,7 @@ func init() {
 	upgradeCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", false, "force cloud sync")
 	upgradeCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")
 	upgradeCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	upgradeCmd.PersistentFlags().BoolVar(&ctx.StealthMode, "stealth", false, "use alternative pom.xml writer")
 }
 
 func upgradeDeprecated(project config.Project) error {

@@ -35,8 +35,8 @@ Available Commands:
   bitbucket   Bitbucket functionality
   clean       Clean files and folder in a project
   completion  Generate the autocompletion script for the specified shell
-  doc         Documentation
-  examples    examples found in cloud-config
+  doc         Opens documentation in default browser
+  examples    Examples found in cloud-config
   format      Format functionality for a project
   generate    Initializes a maven project with co-pilot files and formatting
   git         Git commands

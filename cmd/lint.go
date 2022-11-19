@@ -19,10 +19,7 @@ var lintKotlinCmd = &cobra.Command{
 	Short: "uses ktlint for linting kotlin code",
 	Long:  `uses ktlint for linting kotlin code`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {

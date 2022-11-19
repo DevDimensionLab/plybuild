@@ -4,7 +4,6 @@ go 1.14
 
 require (
 	cloud.google.com/go/iam v0.3.0 // indirect
-	cloud.google.com/go/storage v1.21.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cncf/udpa/go v0.0.0-20220112060539-c52dc94e7fbe // indirect
 	github.com/cncf/xds/go v0.0.0-20220314180256-7f1daf1720fc // indirect
@@ -22,9 +21,8 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cobra v1.6.1
-	github.com/spf13/viper v1.13.0
-	golang.org/x/sys v0.1.0 // indirect
-	golang.org/x/term v0.1.0
+	github.com/spf13/viper v1.14.0
+	golang.org/x/term v0.2.0
 	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0

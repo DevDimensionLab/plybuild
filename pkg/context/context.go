@@ -14,6 +14,7 @@ type Context struct {
 	DisableGit      bool
 	ForceCloudSync  bool
 	OpenInBrowser   bool
+	StealthMode     bool
 	Projects        []config.Project
 	Err             error
 	ProfilesPath    string
@@ -50,7 +51,7 @@ func (ctx *Context) FindAndPopulateMavenProjects() error {
 	return nil
 }
 
-func (ctx Context) OnEachMavenProject(description string, do ...func(repository maven.Repository, project config.Project) error) {
+func (ctx *Context) OnEachMavenProject(description string, do ...func(repository maven.Repository, project config.Project) error) {
 	if ctx.Projects == nil || len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
@@ -73,6 +74,10 @@ func (ctx Context) OnEachMavenProject(description string, do ...func(repository 
 		if p.Type == nil {
 			log.Warnf("no project type defined for path: %s", p.Path)
 			continue
+		}
+
+		if ctx.StealthMode {
+			p.Config.Settings.UseStealthMode = true
 		}
 
 		log.Info(fmt.Sprintf("%s in %s", description, p.Path))
@@ -102,7 +107,7 @@ func (ctx Context) OnEachMavenProject(description string, do ...func(repository 
 	}
 }
 
-func (ctx Context) OnRootProject(description string, do ...func(project config.Project) error) {
+func (ctx *Context) OnRootProject(description string, do ...func(project config.Project) error) {
 	if ctx.Projects == nil || len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return

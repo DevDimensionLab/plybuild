@@ -36,10 +36,7 @@ var mavenGraphCmd = &cobra.Command{
 	Short: "creates a graph for dependencies in a project",
 	Long:  `creates a graph for dependencies in a project`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -68,10 +65,7 @@ var mavenGraph2PartyCmd = &cobra.Command{
 	Short: "creates a graph only for 2party dependencies in a project",
 	Long:  `creates a graph only for 2party dependencies in a project`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -94,10 +88,7 @@ var mavenCheckstyleCmd = &cobra.Command{
 	Short: "runs checkstyle",
 	Long:  `runs checkstyle`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -117,10 +108,7 @@ var mavenOwaspCmd = &cobra.Command{
 	Short: "runs owasp",
 	Long:  `runs owasp`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -141,10 +129,7 @@ var mavenSpringBootRunCmd = &cobra.Command{
 	Short: "runs a spring boot application",
 	Long:  `runs a spring boot application`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -164,10 +149,7 @@ var mavenEnforcerCmd = &cobra.Command{
 	Short: "runs enforcer",
 	Long:  `runs enforcer`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
@@ -194,10 +176,7 @@ var analyzeCmd = &cobra.Command{
 		return OkHelp(cmd, analyzeOpts.Any)
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/devdimensionlab/co-pilot/pkg/shell"
 	"io/ioutil"
 )
@@ -48,15 +47,13 @@ func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
 
 	target := gitCfg.Implementation().Dir()
 	if file.Exists(file.Path("%s/.git", target)) {
-		msg := logger.Info(fmt.Sprintf("pulling cloud config on %s", target))
-		log.Info(msg)
+		log.Info(fmt.Sprintf("pulling cloud config on %s", target))
 		pull := shell.GitPull(target)
 		if pull.Err != nil {
 			return pull.FormatError()
 		}
 	} else {
-		msg := logger.Info(fmt.Sprintf("cloning %s to %s", localCfg.CloudConfig.Git.Url, target))
-		log.Info(msg)
+		log.Info(fmt.Sprintf("cloning %s to %s", localCfg.CloudConfig.Git.Url, target))
 		clone := shell.GitClone(localCfg.CloudConfig.Git.Url, target)
 		if clone.Err != nil {
 			return clone.FormatError()

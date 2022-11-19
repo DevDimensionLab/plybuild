@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/sirupsen/logrus"
 	"strings"
@@ -191,15 +192,18 @@ func (repository Repository) upgradeDependency(model *pom.Model, dep pom.Depende
 
 	if currentVersion.IsLessThan(latestVersion) {
 		msg := fmt.Sprintf("outdated dependency %s:%s [%s vs %s]", dep.GroupId, dep.ArtifactId, currentVersion.ToString(), latestVersion.ToString())
-		metaDataLogger := log.WithFields(logrus.Fields{
-			"artifactId":        dep.ArtifactId,
-			"groupId":           dep.GroupId,
-			"oldVersion":        currentVersion.ToString(),
-			"newVersion":        latestVersion.ToString(),
-			"versionIsProperty": strings.HasPrefix(dep.Version, "${") && strings.HasSuffix(dep.Version, "}"),
-			"versionValue":      dep.Version,
-			"type":              "outdated dependency",
-		})
+		var metaDataLogger = log
+		if logger.IsFieldLogger() {
+			metaDataLogger = log.WithFields(logrus.Fields{
+				"artifactId":        dep.ArtifactId,
+				"groupId":           dep.GroupId,
+				"oldVersion":        currentVersion.ToString(),
+				"newVersion":        latestVersion.ToString(),
+				"versionIsProperty": strings.HasPrefix(dep.Version, "${") && strings.HasSuffix(dep.Version, "}"),
+				"versionValue":      dep.Version,
+				"type":              "outdated dependency",
+			})
+		}
 		if IsMajorUpgrade(currentVersion, latestVersion) {
 			metaDataLogger.Warnf("major %s", msg)
 		}

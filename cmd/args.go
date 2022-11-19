@@ -2,35 +2,55 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
+	"github.com/devdimensionlab/co-pilot/pkg/bitbucket"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/context"
-	"github.com/sirupsen/logrus"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/http"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/co-pilot/pkg/maven"
+	"github.com/devdimensionlab/co-pilot/pkg/shell"
+	"github.com/devdimensionlab/co-pilot/pkg/spring"
+	"github.com/devdimensionlab/co-pilot/pkg/template"
 	"github.com/spf13/cobra"
 	"os"
 )
 
 var ctx context.Context
 
-func EnableDebug(cmd *cobra.Command) error {
-	debug, err := cmd.Flags().GetBool("debug")
-	if err != nil {
-		return err
-	}
-	if debug {
-		fmt.Println("== debug mode enabled ==")
-		logrus.SetLevel(logrus.DebugLevel)
-	}
-	return nil
-}
-
-func EnableJsonLogging(cmd *cobra.Command) error {
+func InitGlobals(cmd *cobra.Command) error {
 	json, err := cmd.Flags().GetBool("json")
 	if err != nil {
 		return err
 	}
 	if json {
-		logrus.SetFormatter(&logrus.JSONFormatter{})
+		logger.SetFieldLogger()
+		logger.SetJsonLogging()
 	}
+
+	debug, err := cmd.Flags().GetBool("debug")
+	if err != nil {
+		return err
+	}
+	if debug {
+		debugLogger := logger.DebugLogger()
+		log = debugLogger
+		bitbucket.SetLogger(debugLogger)
+		config.SetLogger(debugLogger)
+		context.SetLogger(debugLogger)
+		file.SetLogger(debugLogger)
+		http.SetLogger(debugLogger)
+		maven.SetLogger(debugLogger)
+		shell.SetLogger(debugLogger)
+		spring.SetLogger(debugLogger)
+		template.SetLogger(debugLogger)
+	}
+
+	stealth, _ := cmd.Flags().GetBool("stealth")
+	if stealth {
+		logger.SetFieldLogger()
+	}
+
 	return nil
 }
 

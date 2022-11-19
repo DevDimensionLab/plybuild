@@ -22,10 +22,7 @@ var gitInstallHooksCmd = &cobra.Command{
 	Short: "install git hooks from cloud config",
 	Long:  `install git hooks from cloud config`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {

@@ -20,10 +20,7 @@ var statusCmd = &cobra.Command{
 	Short: "Status functionality for a project",
 	Long:  `Status functionality for a project`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {

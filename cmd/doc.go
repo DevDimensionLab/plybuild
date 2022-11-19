@@ -7,7 +7,7 @@ import (
 
 var docCmd = &cobra.Command{
 	Use:   "doc",
-	Short: "Documentation",
+	Short: "Opens documentation in default browser",
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := webservice.OpenBrowser("https://devdimensionlab.github.io/"); err != nil {
 			log.Fatalln(err)

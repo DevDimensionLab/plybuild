@@ -3,6 +3,7 @@ package maven
 import (
 	"errors"
 	"fmt"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/sirupsen/logrus"
 
 	"github.com/devdimensionlab/co-pilot/pkg/config"
@@ -43,13 +44,16 @@ func (repository Repository) upgradeParent(model *pom.Model) error {
 
 	if currentVersion.IsDifferentFrom(latestVersion) {
 		msg := fmt.Sprintf("outdated parent version [%s vs %s]", currentVersion.ToString(), latestVersion.ToString())
-		metaDataLogger := log.WithFields(logrus.Fields{
-			"artifactId": parentArtifactId,
-			"groupId":    parentGroupId,
-			"oldVersion": currentVersion.ToString(),
-			"newVersion": latestVersion.ToString(),
-			"type":       "outdated parent",
-		})
+		var metaDataLogger = log
+		if logger.IsFieldLogger() {
+			metaDataLogger = log.WithFields(logrus.Fields{
+				"artifactId": parentArtifactId,
+				"groupId":    parentGroupId,
+				"oldVersion": currentVersion.ToString(),
+				"newVersion": latestVersion.ToString(),
+				"type":       "outdated parent",
+			})
+		}
 		if IsMajorUpgrade(currentVersion, latestVersion) {
 			metaDataLogger.Warnf("major %s", msg)
 		} else if !latestVersion.IsReleaseVersion() {

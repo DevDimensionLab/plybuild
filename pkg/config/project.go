@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/devdimensionlab/co-pilot/pkg/shell"
 	"github.com/devdimensionlab/co-pilot/pkg/sorting"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
@@ -54,6 +55,7 @@ type ProjectSettings struct {
 	DisableDependencySort     bool          `json:"disableDependencySort"`
 	DisableSpringBootUpgrade  bool          `json:"disableSpringBootUpgrade"`
 	DisableKotlinUpgrade      bool          `json:"disableKotlinUpgrade"`
+	UseStealthMode            bool          `json:"searchReplacer,omitempty"`
 	PomFileIndentation        string        `json:"pomFileIndentation"`
 	DisableUpgradesFor        []Artifact    `json:"disableUpgradesFor"`
 	MaxVersionForDependencies []MaxArtifact `json:"maxVersionForDependencies"`
@@ -105,7 +107,7 @@ func (mvnProject MavenProject) Type() ValidProjectType {
 	return Maven
 }
 
-func (config ProjectConfiguration) WriteTo(targetFile string) error {
+func (config *ProjectConfiguration) WriteTo(targetFile string) error {
 	log.Infof("writes project config file to %s", targetFile)
 	data, err := json.MarshalIndent(config, "", "    ")
 	if err != nil {
@@ -114,12 +116,12 @@ func (config ProjectConfiguration) WriteTo(targetFile string) error {
 	return ioutil.WriteFile(targetFile, data, 0644)
 }
 
-func (config ProjectConfiguration) SourceMainPath() string {
+func (config *ProjectConfiguration) SourceMainPath() string {
 	pathSeparator := string(os.PathSeparator)
 	return file.Path("src/main/%s/%s", config.GetLanguage(), strings.Join(strings.Split(config.Package, "."), pathSeparator))
 }
 
-func (config ProjectConfiguration) SourceTestPath() string {
+func (config *ProjectConfiguration) SourceTestPath() string {
 	pathSeparator := string(os.PathSeparator)
 	return file.Path("src/test/%s/%s", config.GetLanguage(), strings.Join(strings.Split(config.Package, "."), pathSeparator))
 }
@@ -141,7 +143,7 @@ func (config *ProjectConfiguration) FindApplicationName(targetDir string) (err e
 	return
 }
 
-func (config ProjectConfiguration) Empty() bool {
+func (config *ProjectConfiguration) Empty() bool {
 	return config.Name == "" ||
 		config.Language == "" ||
 		config.Package == "" ||
@@ -189,7 +191,7 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 	return nil
 }
 
-func (config ProjectConfiguration) Validate() error {
+func (config *ProjectConfiguration) Validate() error {
 	if config.GroupId == "" || config.ArtifactId == "" {
 		return errors.New("groupId or artifactId cannot be empty")
 	}
@@ -197,26 +199,26 @@ func (config ProjectConfiguration) Validate() error {
 	return nil
 }
 
-func (project Project) IsMavenProject() bool {
+func (project *Project) IsMavenProject() bool {
 	return project.Type != nil && project.Type.Type() == Maven
 }
 
-func (project Project) IsGitRepo() bool {
+func (project *Project) IsGitRepo() bool {
 	return project.GitInfo.IsRepo
 }
 
-func (project Project) IsDirtyGitRepo() bool {
+func (project *Project) IsDirtyGitRepo() bool {
 	return project.GitInfo.IsRepo && project.GitInfo.IsDirty
 }
 
-func (project Project) IsMultiModule() bool {
+func (project *Project) IsMultiModule() bool {
 	return project.IsMavenProject() &&
 		project.Type.Model() != nil &&
 		project.Type.Model().Modules != nil &&
 		project.Type.Model().Packaging == "pom"
 }
 
-func (project Project) GitInit(msg string) error {
+func (project *Project) GitInit(msg string) error {
 	if project.GitInfo.DisableCommit {
 		return nil
 	}
@@ -230,7 +232,7 @@ func (project Project) GitInit(msg string) error {
 	return project.GitCommit(msg)
 }
 
-func (project Project) GitCommit(message string) error {
+func (project *Project) GitCommit(message string) error {
 	if project.GitInfo.DisableCommit {
 		return nil
 	}
@@ -243,28 +245,19 @@ func (project Project) GitCommit(message string) error {
 	return nil
 }
 
-func ProjectConfigPath(targetDir string) string {
-	return file.Path("%s/%s", targetDir, projectConfigFileName)
-}
+func (project *Project) SortAndWritePom() error {
+	var outputFile = project.Type.FilePath()
 
-func GetGitInfoFromPath(targetDir string) (gitInfo GitInfo, err error) {
-	isRepo, err := shell.GitIsRepo(targetDir)
-	if err != nil {
-		return
+	if project.Config.Settings.UseStealthMode {
+		var entries []map[string]interface{}
+		for _, logEntry := range logger.LogEntries() {
+			entries = append(entries, logEntry.Data)
+		}
+		log.Infof("stealth-writing model to pom file: %s", outputFile)
+		return project.Config.Settings.stealthWriter(entries, outputFile)
 	}
-	gitInfo.IsRepo = isRepo
 
-	dirty, err := shell.GitDirty(targetDir)
-	if err != nil {
-		return
-	}
-	gitInfo.IsDirty = dirty
-	return
-}
-
-func (project Project) SortAndWritePom() error {
 	var disableDepSort = project.Config.Settings.DisableDependencySort
-
 	if project.Type.Model().Dependencies != nil {
 		duplicates := project.Type.Model().Dependencies.FindDuplicates()
 		for _, dup := range duplicates {
@@ -288,23 +281,22 @@ func (project Project) SortAndWritePom() error {
 		}
 	}
 
-	var writeToFile = project.Type.FilePath()
-	log.Infof("writing model to pom file: %s", writeToFile)
 	indentation := "    "
 	if project.Config.Settings.PomFileIndentation != "" {
 		indentation = project.Config.Settings.PomFileIndentation
 	}
-	return project.Type.Model().WriteToFile(writeToFile, indentation)
+	log.Infof("serializing and writing model to pom file: %s", outputFile)
+	return project.Type.Model().WriteToFile(outputFile, indentation)
 }
 
-func (projectSettings ProjectSettings) DependencyIsIgnored(dep pom.Dependency) bool {
+func (projectSettings *ProjectSettings) DependencyIsIgnored(dep pom.Dependency) bool {
 	if projectSettings.DisableUpgradesFor == nil {
 		return false
 	}
 	return artifactIsIgnored(dep.GroupId, dep.ArtifactId, projectSettings.DisableUpgradesFor)
 }
 
-func (projectSettings ProjectSettings) MaxVersionFor(dep pom.Dependency) string {
+func (projectSettings *ProjectSettings) MaxVersionFor(dep pom.Dependency) string {
 	if projectSettings.MaxVersionForDependencies == nil {
 		return ""
 	}
@@ -316,11 +308,39 @@ func (projectSettings ProjectSettings) MaxVersionFor(dep pom.Dependency) string 
 	return ""
 }
 
-func (projectSettings ProjectSettings) PluginIsIgnored(plugin pom.Plugin) bool {
+func (projectSettings *ProjectSettings) PluginIsIgnored(plugin pom.Plugin) bool {
 	if projectSettings.DisableUpgradesFor == nil {
 		return false
 	}
 	return artifactIsIgnored(plugin.GroupId, plugin.ArtifactId, projectSettings.DisableUpgradesFor)
+}
+
+func (projectSettings *ProjectSettings) MergeProjectDefaults(defaults CloudProjectDefaults) {
+	projectSettings.DisableDependencySort = defaults.Settings.DisableDependencySort
+	projectSettings.DisableKotlinUpgrade = defaults.Settings.DisableKotlinUpgrade
+	projectSettings.DisableSpringBootUpgrade = defaults.Settings.DisableSpringBootUpgrade
+	projectSettings.UseStealthMode = defaults.Settings.UseStealthMode
+	projectSettings.DisableUpgradesFor = append(projectSettings.DisableUpgradesFor, defaults.Settings.DisableUpgradesFor...)
+	projectSettings.MaxVersionForDependencies = append(projectSettings.MaxVersionForDependencies, defaults.Settings.MaxVersionForDependencies...)
+}
+
+func ProjectConfigPath(targetDir string) string {
+	return file.Path("%s/%s", targetDir, projectConfigFileName)
+}
+
+func GetGitInfoFromPath(targetDir string) (gitInfo GitInfo, err error) {
+	isRepo, err := shell.GitIsRepo(targetDir)
+	if err != nil {
+		return
+	}
+	gitInfo.IsRepo = isRepo
+
+	dirty, err := shell.GitDirty(targetDir)
+	if err != nil {
+		return
+	}
+	gitInfo.IsDirty = dirty
+	return
 }
 
 func artifactIsIgnored(groupId string, artifactId string, artifacts []Artifact) bool {
@@ -333,12 +353,4 @@ func artifactIsIgnored(groupId string, artifactId string, artifacts []Artifact) 
 	}
 
 	return false
-}
-
-func (projectSettings *ProjectSettings) MergeProjectDefaults(defaults CloudProjectDefaults) {
-	projectSettings.DisableDependencySort = defaults.Settings.DisableDependencySort
-	projectSettings.DisableKotlinUpgrade = defaults.Settings.DisableKotlinUpgrade
-	projectSettings.DisableSpringBootUpgrade = defaults.Settings.DisableSpringBootUpgrade
-	projectSettings.DisableUpgradesFor = append(projectSettings.DisableUpgradesFor, defaults.Settings.DisableUpgradesFor...)
-	projectSettings.MaxVersionForDependencies = append(projectSettings.MaxVersionForDependencies, defaults.Settings.MaxVersionForDependencies...)
 }

@@ -23,10 +23,7 @@ var cleanCmd = &cobra.Command{
 		return OkHelp(cmd, cleanOpts.Any)
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := EnableDebug(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := EnableJsonLogging(cmd); err != nil {
+		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}
 	},
