@@ -1,6 +1,3 @@
-/*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -32,7 +29,7 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 		outputPng := workspace + ".png"
 		RunWithOutput(exec.Command("dot", tempDirectory+"/structurizr-SystemContext.dot", "-Tpng"), outputPng)
 
-		fmt.Println("Created " + workspace + ".png")
+		fmt.Println("Created " + outputPng)
 		Run(exec.Command("open", outputPng))
 	},
 }
@@ -58,11 +55,6 @@ func RunWithOutput(command *exec.Cmd, outputFile string) error {
 	return nil
 }
 
-func init() {
-	RootCmd.AddCommand(structurizrCmd)
-	structurizrCmd.Flags().StringP("workspace", "w", "", "Path or URL to the workspace JSON file/DSL file(s)")
-}
-
 func StructurizrCheckIfError(err error) {
 	if err == nil {
 		return
@@ -77,4 +69,9 @@ func StructurizrGetMandatoryString(cmd *cobra.Command, flag string) (string, err
 		return "", errors.New(fmt.Sprintf("missing argument --%s", flag))
 	}
 	return val, nil
+}
+
+func init() {
+	RootCmd.AddCommand(structurizrCmd)
+	structurizrCmd.Flags().StringP("workspace", "w", "", "Path or URL to the workspace JSON file/DSL file(s)")
 }
