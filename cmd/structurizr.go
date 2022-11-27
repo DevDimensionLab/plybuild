@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 var structurizrCmd = &cobra.Command{
@@ -23,14 +25,20 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 		workspace, err := StructurizrGetMandatoryString(cmd, "workspace")
 		StructurizrCheckIfError(err)
 
-		tempDirectory := "./target"
+		tempDirectory := "target/"
 		Run(exec.Command("structurizr-cli", "export", "-w", workspace, "-format", "dot", "-output", tempDirectory))
 
-		outputPng := workspace + ".png"
-		RunWithOutput(exec.Command("dot", tempDirectory+"/structurizr-SystemContext.dot", "-Tpng"), outputPng)
+		files, err := file.FindAll("dot", []string{}, tempDirectory)
+		StructurizrCheckIfError(err)
 
-		fmt.Println("Created " + outputPng)
-		Run(exec.Command("open", outputPng))
+		for _, file := range files {
+			outputPngFile := strings.Replace(strings.Replace(file, tempDirectory, "", 1), ".dot", "", 1) + ".png"
+			println("Creating -> " + outputPngFile)
+			err = RunWithOutputToFile(exec.Command("dot", file, "-Tpng"), outputPngFile)
+			StructurizrCheckIfError(err)
+
+			Run(exec.Command("open", outputPngFile))
+		}
 	},
 }
 
@@ -42,7 +50,7 @@ func Run(command *exec.Cmd) error {
 	return nil
 }
 
-func RunWithOutput(command *exec.Cmd, outputFile string) error {
+func RunWithOutputToFile(command *exec.Cmd, outputFile string) error {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	command.Stdout = &out
