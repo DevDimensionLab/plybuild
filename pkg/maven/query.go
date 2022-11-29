@@ -14,7 +14,7 @@ func (repository Repository) GetMetaData(groupID string, artifactId string) (met
 		repo.Url,
 		strings.ReplaceAll(groupID, ".", "/"),
 		strings.ReplaceAll(artifactId, ".", "/"))
-	log.Debugf("Using url for metadata: %s", url)
+	log.Debugf("using url for metadata: %s", url)
 
 	if repo.Auth != nil {
 		err = http.GetAuthXml(url, repo.Auth.Username, repo.Auth.Password, &metaData)

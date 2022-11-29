@@ -48,8 +48,10 @@ func Execute() {
 }
 
 func init() {
-	initConfig()
-	cobra.OnInitialize()
+	cobra.OnInitialize(func() {
+		initConfig()
+	})
+
 	logrus.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
 	RootCmd.PersistentFlags().Bool("json", false, "turn on json output logging")
@@ -57,8 +59,6 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	viper.AutomaticEnv() // read in environment variables that match
-
 	// migration step from old version without profiles
 	_, err := config.GetActiveProfilePath()
 	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
@@ -72,4 +72,9 @@ func initConfig() {
 		log.Fatalln(err)
 	}
 	ctx.LoadProfile(ctx.ProfilesPath)
+
+	viper.SetEnvPrefix("COPILOT")
+	viper.SetConfigFile(ctx.LocalConfig.FilePath())
+	_ = viper.ReadInConfig()
+	viper.AutomaticEnv() // read in environment variables that match
 }
