@@ -59,7 +59,7 @@ var mavenGraphCmd = &cobra.Command{
 
 var kibanaCmd = &cobra.Command{
 	Use:   "kibana",
-	Short: "Specialized (experimental) command for executing a kibana-query based on a fetch-request and exporting the result to json",
+	Short: "Specialized (experimental) command for executing a kibana-query based on a fetch-request [arg: fetch-file] and exporting the result to a json-file [arg: output-file]",
 	Long:  `Specify the query in Kibana, then use developer tools to copy request as fetch (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fetchFile, err := getMandatoryString(cmd, "fetch-file")
