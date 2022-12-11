@@ -92,7 +92,7 @@ func (settings M2Settings) FindServerWith(id string) (bool, Server) {
 func (repos Repositories) GetDefaultRepository() (Repository, error) {
 	if len(repos.Mirror) > 0 {
 		repo := repos.Mirror[0]
-		log.Debugf("Found mirrors, using the first mirror [%s] \n", repo.Id)
+		log.Debugf("found mirrors, using the first mirror [%s] \n", repo.Id)
 		if repo.Auth != nil && repo.Auth.Encrypted {
 			fmt.Printf("!! Password for [%s] seems to be encrypted, please enter password: ", repo.Id)
 			bytePassword, err := term.ReadPassword(0)
@@ -104,6 +104,7 @@ func (repos Repositories) GetDefaultRepository() (Repository, error) {
 		}
 		return repo, nil
 	} else {
+		log.Debugf("using the fallback maven repository %s\n", repos.Fallback.Url)
 		return repos.Fallback, nil
 	}
 }
@@ -160,4 +161,19 @@ func DefaultRepository() (Repository, error) {
 	}
 
 	return repos.GetDefaultRepository()
+}
+
+func RepositoryFrom(url string, username string, password string) Repository {
+	repo := Repository{
+		Url: url,
+	}
+
+	if username != "" && password != "" {
+		repo.Auth = &RepositoryAuth{
+			Username: username,
+			Password: password,
+		}
+	}
+
+	return repo
 }

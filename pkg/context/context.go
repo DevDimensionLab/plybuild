@@ -18,7 +18,7 @@ type Context struct {
 	Projects        []config.Project
 	Err             error
 	ProfilesPath    string
-	LocalConfig     config.LocalConfig
+	LocalConfig     config.LocalConfigDir
 	CloudConfig     config.CloudConfig
 }
 
@@ -57,10 +57,7 @@ func (ctx *Context) OnEachMavenProject(description string, do ...func(repository
 		return
 	}
 
-	repo, err := maven.DefaultRepository()
-	if err != nil {
-		log.Warnln(err)
-	}
+	mavenRepository := ctx.GetMavenRepository()
 
 	for _, p := range ctx.Projects {
 		if p.CloudConfig != nil {
@@ -91,7 +88,7 @@ func (ctx *Context) OnEachMavenProject(description string, do ...func(repository
 				if job == nil {
 					continue
 				}
-				err := job(repo, p)
+				err := job(mavenRepository, p)
 				if err != nil {
 					log.Warnln(err)
 					continue
@@ -144,7 +141,7 @@ func (ctx *Context) OnRootProject(description string, do ...func(project config.
 }
 
 func (ctx *Context) LoadProfile(profilePath string) {
-	ctx.LocalConfig = config.NewLocalConfig(profilePath)
+	ctx.LocalConfig = config.OpenLocalConfig(profilePath)
 	ctx.CloudConfig = config.OpenGitCloudConfig(profilePath)
 	if !ctx.LocalConfig.Exists() {
 		err := ctx.LocalConfig.TouchFile()
@@ -152,4 +149,26 @@ func (ctx *Context) LoadProfile(profilePath string) {
 			log.Error(err)
 		}
 	}
+}
+
+func (ctx *Context) GetMavenRepository() maven.Repository {
+	cfg, err := ctx.LocalConfig.Config()
+	if err != nil {
+		log.Warnln(err)
+	}
+
+	var repository = maven.Repository{}
+
+	if cfg.Nexus.Url != "" {
+		log.Debugf("using maven repository from local config %s\n", cfg.Nexus.Url)
+		repository = maven.RepositoryFrom(cfg.Nexus.Url, cfg.Nexus.Username, cfg.Nexus.Password)
+	} else {
+		log.Debugf("search for maven repository in .m2 folder \n")
+		repository, err = maven.DefaultRepository()
+		if err != nil {
+			log.Warnln(err)
+		}
+	}
+
+	return repository
 }

@@ -2,7 +2,7 @@ package config
 
 import "testing"
 
-func newMockLocalConfig() (cfg LocalConfig) {
+func newMockLocalConfig() (cfg LocalConfigDir) {
 	cfg.impl.Path = "test/local-config"
 	return
 }

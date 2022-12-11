@@ -20,6 +20,12 @@ type SourceProvider struct {
 	ExcludeProjects []string `yaml:"exclude_projects"`
 }
 
+type Nexus struct {
+	Url      string `yaml:"url"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+}
+
 type CloudDeprecated struct {
 	Type string `json:"type"`
 	Data struct {

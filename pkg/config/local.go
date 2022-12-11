@@ -3,20 +3,20 @@ package config
 import (
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"os"
 )
 
 var localConfigFileName = "local-config.yaml"
 var defaultCloudConfigUrl = "https://github.com/devdimensionlab/co-pilot-config.git"
 
-type LocalConfig struct {
+type LocalConfigDir struct {
 	impl DirConfig
 }
 
 type LocalConfiguration struct {
 	CloudConfig    LocalGitConfig `yaml:"cloudConfig"`
 	SourceProvider SourceProvider `yaml:"sourceProvider"`
+	Nexus          Nexus          `yaml:"nexus"`
 }
 
 type LocalConfigFile interface {
@@ -29,20 +29,20 @@ type LocalConfigFile interface {
 	Exists() bool
 }
 
-func NewLocalConfig(absConfigDir string) (cfg LocalConfig) {
+func OpenLocalConfig(absConfigDir string) (cfg LocalConfigDir) {
 	cfg.impl.Path = file.Path(absConfigDir)
 	return
 }
 
-func (localCfg LocalConfig) Implementation() DirConfig {
+func (localCfg LocalConfigDir) Implementation() DirConfig {
 	return localCfg.impl
 }
 
-func (localCfg LocalConfig) FilePath() string {
+func (localCfg LocalConfigDir) FilePath() string {
 	return file.Path("%s/%s", localCfg.impl.Path, localConfigFileName)
 }
 
-func (localCfg LocalConfig) CheckOrCreateConfigDir() error {
+func (localCfg LocalConfigDir) CheckOrCreateConfigDir() error {
 	dir := localCfg.Implementation().Path
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -55,13 +55,13 @@ func (localCfg LocalConfig) CheckOrCreateConfigDir() error {
 	return nil
 }
 
-func (localCfg LocalConfig) TouchFile() error {
+func (localCfg LocalConfigDir) TouchFile() error {
 	err := localCfg.CheckOrCreateConfigDir()
 	if err != nil {
 		return err
 	}
 
-	configFile := localCfg.FilePath()
+	configFilePath := localCfg.FilePath()
 
 	config := LocalConfiguration{}
 	config.CloudConfig.Git.Url = defaultCloudConfigUrl
@@ -70,14 +70,14 @@ func (localCfg LocalConfig) TouchFile() error {
 		return err
 	}
 
-	log.Infof("creating new config file %s", configFile)
+	log.Infof("creating new config file %s", configFilePath)
 
-	f, err := os.Create(configFile)
+	f, err := os.Create(configFilePath)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(configFile, d, 0644)
+	err = os.WriteFile(configFilePath, d, 0644)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (localCfg LocalConfig) TouchFile() error {
 	return f.Close()
 }
 
-func (localCfg LocalConfig) Config() (LocalConfiguration, error) {
+func (localCfg LocalConfigDir) Config() (LocalConfiguration, error) {
 	config := LocalConfiguration{}
 	localConfigFile := localCfg.FilePath()
 
@@ -93,6 +93,8 @@ func (localCfg LocalConfig) Config() (LocalConfiguration, error) {
 	if err != nil {
 		return config, err
 	}
+
+	b = []byte(os.ExpandEnv(string(b)))
 
 	err = yaml.Unmarshal(b, &config)
 	if err != nil {
@@ -102,7 +104,7 @@ func (localCfg LocalConfig) Config() (LocalConfiguration, error) {
 	return config, nil
 }
 
-func (localCfg LocalConfig) Print() error {
+func (localCfg LocalConfigDir) Print() error {
 	c, err := localCfg.Config()
 	if err != nil {
 		return err
@@ -119,6 +121,6 @@ func (localCfg LocalConfig) Print() error {
 	return nil
 }
 
-func (localCfg LocalConfig) Exists() bool {
+func (localCfg LocalConfigDir) Exists() bool {
 	return file.Exists(localCfg.FilePath())
 }

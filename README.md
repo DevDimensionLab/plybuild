@@ -35,6 +35,7 @@ Available Commands:
   bitbucket   Bitbucket functionality
   clean       Clean files and folder in a project
   completion  Generate the autocompletion script for the specified shell
+  diagrams    Various tools for generating diagrams
   doc         Opens documentation in default browser
   examples    Examples found in cloud-config
   format      Format functionality for a project
@@ -50,6 +51,7 @@ Available Commands:
   profiles    Manage profiles settings for co-pilot
   query       Query dependencies in a project
   status      Status functionality for a project
+  structurizr Adding PNG-output support for structurizr with the help of graphviz
   upgrade     Upgrade options
 
 Flags:
@@ -58,7 +60,7 @@ Flags:
       --json    turn on json output logging
 
 Additional help topics:
-  co-pilot about      About co-pilot
+  co-pilot about       About co-pilot
 
 Use "co-pilot [command] --help" for more information about a command.
 ```

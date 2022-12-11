@@ -31,35 +31,6 @@ var mavenCmd = &cobra.Command{
 	},
 }
 
-var mavenGraphCmd = &cobra.Command{
-	Use:   "graph",
-	Short: "creates a graph for dependencies in a project",
-	Long:  `creates a graph for dependencies in a project`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		for _, inc := range mavenGraphIncludeFilters {
-			println(inc)
-		}
-		for _, ex := range mavenGraphExcludeFilters {
-			println(ex)
-		}
-		ctx.DryRun = true
-		ctx.OnEachMavenProject("creating graph for",
-			maven.Graph(false, mavenGraphExcludeTestScope, mavenGraphIncludeFilters, mavenGraphExcludeFilters),
-			maven.RunOn("dot",
-				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
-			openReportInBrowser("target/dependency-graph.png"),
-		)
-	},
-}
-
 var mavenGraph2PartyCmd = &cobra.Command{
 	Use:   "2party",
 	Short: "creates a graph only for 2party dependencies in a project",
@@ -206,14 +177,9 @@ func init() {
 	mavenCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	mavenCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "optional target directory")
 
-	mavenCmd.AddCommand(mavenGraphCmd)
-	mavenGraphCmd.AddCommand(mavenGraph2PartyCmd)
-	mavenGraphCmd.PersistentFlags().BoolVar(&mavenGraphExcludeTestScope, "exclude-test-scope", false, "exclude test scope from graph")
-	mavenGraphCmd.PersistentFlags().StringArrayVar(&mavenGraphExcludeFilters, "exclude-filters", []string{}, "exclude filter rules")
-	mavenGraphCmd.PersistentFlags().StringArrayVar(&mavenGraphIncludeFilters, "include-filters", []string{}, "include filter rules")
-	mavenGraphCmd.PersistentFlags().BoolVar(&ctx.OpenInBrowser, "open", false, "open report in browser")
 	mavenCmd.AddCommand(mavenCheckstyleCmd)
 	mavenCheckstyleCmd.PersistentFlags().BoolVar(&ctx.OpenInBrowser, "open", false, "open report in browser")
+
 	mavenCmd.AddCommand(mavenOwaspCmd)
 	mavenOwaspCmd.PersistentFlags().BoolVar(&ctx.OpenInBrowser, "open", false, "open report in browser")
 	mavenCmd.AddCommand(mavenEnforcerCmd)

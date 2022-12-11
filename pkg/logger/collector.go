@@ -7,7 +7,7 @@ type Collector struct {
 }
 
 func (collector *Collector) Levels() []logrus.Level {
-	return []logrus.Level{logrus.InfoLevel}
+	return []logrus.Level{logrus.InfoLevel, logrus.WarnLevel}
 }
 
 func (collector *Collector) Fire(entry *logrus.Entry) error {

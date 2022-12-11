@@ -25,7 +25,7 @@ func (projectSettings *ProjectSettings) stealthWriter(entries []map[string]inter
 			continue
 		}
 
-		log.Debugf("Stealth upgrading: %s:%s (%s -> %s) in %s", artifactId, groupId, oldVersion, newVersion, outputFile)
+		log.Debugf("stealth upgrading: %s:%s (%s -> %s) in %s", artifactId, groupId, oldVersion, newVersion, outputFile)
 		if versionIsProperty == "true" && versionValue != "" {
 			versionKey := strings.ReplaceAll(versionValue, "${", "")
 			versionKey = strings.ReplaceAll(versionKey, "}", "")
@@ -42,6 +42,7 @@ func (projectSettings *ProjectSettings) stealthWriter(entries []map[string]inter
 				if strings.Contains(l, oldVersion) {
 					surroundingLines := strings.Join(lines[i-2:i+2], " ")
 					// check if artifactId is in the surrounding lines, preventing writing to wrong dependency
+					log.Debugf("checking for artifactId: %s in surrounding lines: %s\n", artifactId, surroundingLines)
 					if strings.Contains(surroundingLines, artifactId) {
 						lines[i] = strings.ReplaceAll(lines[i], oldVersion, newVersion)
 					}

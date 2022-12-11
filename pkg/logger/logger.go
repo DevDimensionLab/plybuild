@@ -18,15 +18,15 @@ func init() {
 }
 
 func DebugLogger() logrus.FieldLogger {
-	pc, file, line, ok := runtime.Caller(1)
+	_, _, _, ok := runtime.Caller(1)
 
 	var fields logrus.Fields
 
 	if ok {
 		fields = logrus.Fields{
-			"caller": file,
-			"line":   line,
-			"func":   runtime.FuncForPC(pc).Name(),
+			//"caller": file,
+			//"line":   line,
+			//"func":   runtime.FuncForPC(pc).Name(),
 		}
 	}
 
