@@ -129,4 +129,5 @@ func getMandatoryString(cmd *cobra.Command, flag string) (string, error) {
 		return "", errors.New(fmt.Sprintf("missing argument --%s", flag))
 	}
 	return val, nil
+
 }
