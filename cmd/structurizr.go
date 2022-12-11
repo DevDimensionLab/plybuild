@@ -25,7 +25,7 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 		workspace, err := StructurizrGetMandatoryString(cmd, "workspace")
 		StructurizrCheckIfError(err)
 
-		tempDirectory := "target/"
+		tempDirectory := ".structurizr/"
 		file.DeleteAll(tempDirectory)
 		Run(exec.Command("structurizr-cli", "export", "-w", workspace, "-format", "dot", "-output", tempDirectory))
 
