@@ -6,8 +6,10 @@ import (
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/kibana"
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
+	"github.com/devdimensionlab/co-pilot/pkg/structurizr"
 	"github.com/spf13/cobra"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -95,6 +97,38 @@ var kibanaCmd = &cobra.Command{
 	},
 }
 
+var structurizrCmd = &cobra.Command{
+	Use:   "structurizr",
+	Short: "Adding PNG-output support for structurizr with the help of graphviz",
+	Long: `Adding PNG-output support for structurizr with the help of graphviz.
+
+Support for structurizr requires binaries from structurizr-cli and graphviz installed:
+- structurizr-cli -> https://structurizr.com/help/cli
+- dot -> https://graphviz.org
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+
+		workspace, err := getMandatoryString(cmd, "workspace")
+		checkIfError(err)
+
+		tempDirectory := ".structurizr/"
+		file.DeleteAll(tempDirectory)
+		structurizr.Run(exec.Command("structurizr-cli", "export", "-w", workspace, "-format", "dot", "-output", tempDirectory))
+
+		files, err := file.FindAll("dot", []string{}, tempDirectory)
+		checkIfError(err)
+
+		for _, file := range files {
+			outputPngFile := strings.Replace(strings.Replace(file, tempDirectory, "", 1), ".dot", "", 1) + ".png"
+			println("Creating -> " + outputPngFile)
+			err = structurizr.RunWithOutputToFile(exec.Command("dot", file, "-Tpng"), outputPngFile)
+			checkIfError(err)
+
+			structurizr.Run(exec.Command("open", outputPngFile))
+		}
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(diagramsCmd)
 
@@ -113,6 +147,10 @@ func init() {
 	kibanaCmd.Flags().StringP("extract-fields", "e", "", "List of fields to extract pr hit")
 	kibanaCmd.Flags().StringP("field-remap", "m", "", "List of fields matching list extract-fields with new names in output")
 	kibanaCmd.Flags().StringP("output-file", "o", "", "Name of output-file to write results")
+
+	diagramsCmd.AddCommand(structurizrCmd)
+	structurizrCmd.Flags().StringP("workspace", "w", "", "Path or URL to the workspace JSON file/DSL file(s)")
+
 }
 
 func checkIfError(err error) {
@@ -129,5 +167,4 @@ func getMandatoryString(cmd *cobra.Command, flag string) (string, error) {
 		return "", errors.New(fmt.Sprintf("missing argument --%s", flag))
 	}
 	return val, nil
-
 }
