@@ -6,6 +6,8 @@ import (
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/shell"
 	"io/ioutil"
+	"os"
+	"strings"
 )
 
 type GitCloudConfig struct {
@@ -28,6 +30,7 @@ type CloudConfig interface {
 	Templates() (templates []CloudTemplate, err error)
 	Template(name string) (CloudTemplate, error)
 	Examples() (templates []string, err error)
+	CheatSheets() (cheatSheets []os.DirEntry, err error)
 }
 
 func OpenGitCloudConfig(localConfigPath string) (cfg GitCloudConfig) {
@@ -245,6 +248,22 @@ func (gitCfg GitCloudConfig) Examples() (templates []string, err error) {
 	for _, item := range items {
 		if item.IsDir() {
 			templates = append(templates, item.Name())
+		}
+	}
+
+	return
+}
+
+func (gitCfg GitCloudConfig) CheatSheets() (cheatSheets []os.DirEntry, err error) {
+	examplesDir := file.Path("%s/cheat-sheets", gitCfg.Implementation().Dir())
+	items, err := os.ReadDir(examplesDir)
+	if err != nil {
+		return
+	}
+
+	for _, item := range items {
+		if !item.IsDir() && strings.HasSuffix(item.Name(), ".md") {
+			cheatSheets = append(cheatSheets, item)
 		}
 	}
 
