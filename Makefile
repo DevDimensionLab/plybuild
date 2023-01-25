@@ -31,7 +31,7 @@ release:
 release-dry:
 	goreleaser --rm-dist --skip-publish --skip-validate
 
-brews-publish:
+release-brew:
 	goreleaser release --rm-dist --skip-validate -f .goreleaser.brews.yml
 
 upgrade:

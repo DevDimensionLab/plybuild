@@ -57,7 +57,7 @@ snapcrafts:
   -
     # ID of the snapcraft config, must be unique.
     # Defaults to "default".
-    id: devdimensionlab
+    id: devdimensionlab.co-pilot
 
     # You can change the name of the package.
     # Default: `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}`
@@ -73,18 +73,15 @@ snapcrafts:
       darwin: macOS
       linux: Tux
 
-    publish: false
+    publish: true
     summary: 'Co-pilot is a developer tool for automating common tasks'
     description: |
       Co-pilot is a developer tool for automating common tasks on a spring boot project
 
     grade: stable
-    confinement: devmode
+    confinement: classic
     license: MIT
     base: core18
-    apps:
-      co-pilot:
-        command: co-pilot
 
     plugs:
       personal-files:
