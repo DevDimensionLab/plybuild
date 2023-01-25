@@ -9,7 +9,7 @@ summary: 'Co-pilot is a developer tool for automating common tasks'
 description: "Co-pilot is a developer tool for automating common tasks on a spring boot project"
 
 grade: stable # must be 'stable' to release into candidate/stable channels
-confinement: classic # use 'strict' once you have the right plugs and slots
+confinement: strict # use 'strict' once you have the right plugs and slots
 
 parts:
   co-pilot:
