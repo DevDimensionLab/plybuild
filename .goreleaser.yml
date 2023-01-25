@@ -57,7 +57,7 @@ snapcrafts:
   -
     # ID of the snapcraft config, must be unique.
     # Defaults to "default".
-    id: devdimensionlab.co-pilot
+    id: co-pilot
 
     # You can change the name of the package.
     # Default: `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}`

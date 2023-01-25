@@ -1,16 +1,15 @@
 # After registering a name on build.snapcraft.io, commit an uncommented line:
-name: devdimensionlab
+name: co-pilot
 version: git
 version-script: |
   echo $(git describe --tags)
 
 base: core18
 summary: 'Co-pilot is a developer tool for automating common tasks'
-description: |
-  Co-pilot is a developer tool for automating common tasks on a spring boot project
+description: "Co-pilot is a developer tool for automating common tasks on a spring boot project"
 
 grade: stable # must be 'stable' to release into candidate/stable channels
-confinement: devmode # use 'strict' once you have the right plugs and slots
+confinement: classic # use 'strict' once you have the right plugs and slots
 
 parts:
   co-pilot:
@@ -20,7 +19,3 @@ parts:
     source-type: git
     build-packages:
       - gcc
-
-apps:
-  co-pilot:
-    command: bin/co-pilot
