@@ -7,6 +7,7 @@ import (
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
 	"os"
+	"strconv"
 
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/spf13/cobra"
@@ -60,16 +61,53 @@ var cheatSheetsShowCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
+		cfg, err := ctx.LocalConfig.Config()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
 		name, err := getMandatoryString(cmd, "name")
 		checkIfError(err)
 
 		path := file.Path("%s/cheat-sheets/%s.md", ctx.CloudConfig.Implementation().Dir(), name)
 		source, err := os.ReadFile(path)
 		checkIfError(err)
-		result := markdown.Render(string(source), 80, 6)
+
+		width := cfg.CheatSheetConfig.Width
+		if 0 == width {
+			width = 80
+		}
+		result := markdown.Render(string(source), width, 2)
 
 		fmt.Println()
 		fmt.Println(string(result))
+	},
+}
+
+var cheatSheetsShowConfigCmd = &cobra.Command{
+	Use:   "config",
+	Short: "Config display of cheat-sheets",
+	Long:  `Config display of cheat-sheets`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := InitGlobals(cmd); err != nil {
+			log.Fatalln(err)
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+
+		cfg, err := ctx.LocalConfig.Config()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		width, err := getMandatoryString(cmd, "width")
+		checkIfError(err)
+
+		widthInt, err := strconv.Atoi(width)
+		checkIfError(err)
+
+		cfg.CheatSheetConfig.Width = widthInt
+		ctx.LocalConfig.UpdateLocalConfig(cfg)
 	},
 }
 
@@ -78,5 +116,8 @@ func init() {
 
 	cheatSheetsCmd.AddCommand(cheatSheetsListCmd)
 	cheatSheetsCmd.AddCommand(cheatSheetsShowCmd)
+	cheatSheetsCmd.AddCommand(cheatSheetsShowConfigCmd)
+
 	cheatSheetsShowCmd.Flags().StringP("name", "n", "", "Name of cheat-sheet to show")
+	cheatSheetsShowConfigCmd.Flags().StringP("width", "w", "", "Configure width of cheat-sheet when displayed")
 }
