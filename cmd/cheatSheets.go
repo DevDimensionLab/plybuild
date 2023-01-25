@@ -16,15 +16,12 @@ import (
 // cheatSheetsCmd represents the cheatSheets command
 var cheatSheetsCmd = &cobra.Command{
 	Use:   "cheatSheets",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Use a cheat sheet to learn information faster",
+	Long: `A concentrated version of everything you need to know for a topic, 
+typically internal knowhow that you can't find on the internet`,
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("cheatSheets called")
+		cheatSheetsListCmd.Run(cmd, args)
 	},
 }
 
