@@ -1,6 +1,3 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -14,15 +11,18 @@ import (
 	"strings"
 )
 
-// cheatSheetsCmd represents the cheatSheets command
 var cheatSheetsCmd = &cobra.Command{
-	Use:   "cheatSheets",
-	Short: "Use a cheat sheet to learn information faster",
+	Use:   "cheatsheets",
+	Short: "Use a cheat-sheet to learn information faster",
 	Long: `A concentrated version of everything you need to know for a topic, 
-typically internal knowhow that you can't find on the internet`,
-
+typically internal know-how that you can't find on the internet`,
+	Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		cheatSheetsListCmd.Run(cmd, args)
+		if len(args) == 0 {
+			cheatSheetsListCmd.Run(cmd, args)
+			return
+		}
+		cheatSheetsShowCmd.Run(cmd, args)
 	},
 }
 
@@ -40,7 +40,10 @@ var cheatSheetsListCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Infof("Available cheat-sheets:")
-		cheatSheets, _ := ctx.CloudConfig.CheatSheets()
+		cheatSheets, err := ctx.CloudConfig.CheatSheets()
+		if err != nil {
+			log.Fatalln(err)
+		}
 		for _, entry := range cheatSheets {
 			log.Infof("- %s", strings.Replace(entry.Name(), ".md", "", 1))
 		}
@@ -66,12 +69,19 @@ var cheatSheetsShowCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		name, err := getMandatoryString(cmd, "name")
-		checkIfError(err)
+		if len(args) == 0 {
+			log.Warnln("Missing cheat sheet argument")
+			cheatSheetsListCmd.Run(cmd, args)
+			return
+		}
+
+		name := args[0]
 
 		path := file.Path("%s/cheat-sheets/%s.md", ctx.CloudConfig.Implementation().Dir(), name)
 		source, err := os.ReadFile(path)
-		checkIfError(err)
+		if err != nil {
+			log.Fatalf("Failed to find any cheat-sheet file for [%s]: %s", name, path)
+		}
 
 		width := cfg.CheatSheetConfig.Width
 		if 0 == width {
@@ -79,8 +89,7 @@ var cheatSheetsShowCmd = &cobra.Command{
 		}
 		result := markdown.Render(string(source), width, 2)
 
-		fmt.Println()
-		fmt.Println(string(result))
+		fmt.Println("\n" + string(result))
 	},
 }
 
@@ -118,6 +127,5 @@ func init() {
 	cheatSheetsCmd.AddCommand(cheatSheetsShowCmd)
 	cheatSheetsCmd.AddCommand(cheatSheetsShowConfigCmd)
 
-	cheatSheetsShowCmd.Flags().StringP("name", "n", "", "Name of cheat-sheet to show")
 	cheatSheetsShowConfigCmd.Flags().StringP("width", "w", "", "Configure width of cheat-sheet when displayed")
 }
