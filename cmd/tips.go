@@ -3,33 +3,32 @@ package cmd
 import (
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
-	"os"
-	"strconv"
-
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/spf13/cobra"
+	"os"
+	"strconv"
 	"strings"
 )
 
-var cheatSheetsCmd = &cobra.Command{
-	Use:   "cheatsheets",
-	Short: "Use a cheat-sheet to learn information faster",
+var tipsCmd = &cobra.Command{
+	Use:   "tips",
+	Short: "Use a tips cheat-sheet to learn information faster",
 	Long: `A concentrated version of everything you need to know for a topic, 
-typically internal know-how that you can't find on the internet`,
+typically internal know-how that you can't find on the internet or via chatGPT`,
 	Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			cheatSheetsListCmd.Run(cmd, args)
+			tipsListCmd.Run(cmd, args)
 			return
 		}
-		cheatSheetsShowCmd.Run(cmd, args)
+		tipsShowCmd.Run(cmd, args)
 	},
 }
 
-var cheatSheetsListCmd = &cobra.Command{
+var tipsListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "Lists all cheat-sheets for current profile",
-	Long:  `Lists all cheat-sheets for current profile`,
+	Short: "Lists all tips (cheat-sheets) for current profile",
+	Long:  `Lists all tips (cheat-sheets) for current profile`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -39,7 +38,7 @@ var cheatSheetsListCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Infof("Available cheat-sheets:")
+		log.Infof("Available tips (cheat-sheets):")
 		cheatSheets, err := ctx.CloudConfig.CheatSheets()
 		if err != nil {
 			log.Fatalln(err)
@@ -50,10 +49,10 @@ var cheatSheetsListCmd = &cobra.Command{
 	},
 }
 
-var cheatSheetsShowCmd = &cobra.Command{
+var tipsShowCmd = &cobra.Command{
 	Use:   "show",
-	Short: "Show cheat-sheets",
-	Long:  `Show cheat-sheets`,
+	Short: "Show tips (cheat-sheets)",
+	Long:  `Show tips (cheat-sheets)`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -70,8 +69,8 @@ var cheatSheetsShowCmd = &cobra.Command{
 		}
 
 		if len(args) == 0 {
-			log.Warnln("Missing cheat sheet argument")
-			cheatSheetsListCmd.Run(cmd, args)
+			log.Warnln("Missing tips (cheat sheet argument")
+			tipsListCmd.Run(cmd, args)
 			return
 		}
 
@@ -93,10 +92,10 @@ var cheatSheetsShowCmd = &cobra.Command{
 	},
 }
 
-var cheatSheetsShowConfigCmd = &cobra.Command{
+var tipsShowConfigCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Config display of cheat-sheets",
-	Long:  `Config display of cheat-sheets`,
+	Short: "Config display of tips (cheat-sheets)",
+	Long:  `Config display of tips (cheat-sheets)`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -121,11 +120,11 @@ var cheatSheetsShowConfigCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(cheatSheetsCmd)
+	RootCmd.AddCommand(tipsCmd)
 
-	cheatSheetsCmd.AddCommand(cheatSheetsListCmd)
-	cheatSheetsCmd.AddCommand(cheatSheetsShowCmd)
-	cheatSheetsCmd.AddCommand(cheatSheetsShowConfigCmd)
+	tipsCmd.AddCommand(tipsListCmd)
+	tipsCmd.AddCommand(tipsShowCmd)
+	tipsCmd.AddCommand(tipsShowConfigCmd)
 
-	cheatSheetsShowConfigCmd.Flags().StringP("width", "w", "", "Configure width of cheat-sheet when displayed")
+	tipsShowConfigCmd.Flags().StringP("width", "w", "", "Configure width of tips (cheat-sheet) when displayed")
 }
