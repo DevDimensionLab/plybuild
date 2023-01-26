@@ -26,6 +26,10 @@ type Nexus struct {
 	Password string `yaml:"password"`
 }
 
+type CheatSheetConfig struct {
+	Width int `yaml:"width"`
+}
+
 type CloudDeprecated struct {
 	Type string `json:"type"`
 	Data struct {

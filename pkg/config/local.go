@@ -14,9 +14,10 @@ type LocalConfigDir struct {
 }
 
 type LocalConfiguration struct {
-	CloudConfig    LocalGitConfig `yaml:"cloudConfig"`
-	SourceProvider SourceProvider `yaml:"sourceProvider"`
-	Nexus          Nexus          `yaml:"nexus"`
+	CloudConfig      LocalGitConfig   `yaml:"cloudConfig"`
+	SourceProvider   SourceProvider   `yaml:"sourceProvider"`
+	Nexus            Nexus            `yaml:"nexus"`
+	CheatSheetConfig CheatSheetConfig `yaml:"cheatSheet"`
 }
 
 type LocalConfigFile interface {
@@ -71,6 +72,34 @@ func (localCfg LocalConfigDir) TouchFile() error {
 	}
 
 	log.Infof("creating new config file %s", configFilePath)
+
+	f, err := os.Create(configFilePath)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(configFilePath, d, 0644)
+	if err != nil {
+		return err
+	}
+
+	return f.Close()
+}
+
+func (localCfg LocalConfigDir) UpdateLocalConfig(config LocalConfiguration) error {
+	err := localCfg.CheckOrCreateConfigDir()
+	if err != nil {
+		return err
+	}
+
+	configFilePath := localCfg.FilePath()
+
+	d, err := yaml.Marshal(&config)
+	if err != nil {
+		return err
+	}
+
+	log.Infof("update config file %s", configFilePath)
 
 	f, err := os.Create(configFilePath)
 	if err != nil {
