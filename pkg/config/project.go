@@ -58,6 +58,7 @@ type ProjectSettings struct {
 	UseStealthMode            bool          `json:"searchReplacer,omitempty"`
 	PomFileIndentation        string        `json:"pomFileIndentation"`
 	DisableUpgradesFor        []Artifact    `json:"disableUpgradesFor"`
+	MaxSpringBootVersion      string        `json:"maxSpringBootVersion"`
 	MaxVersionForDependencies []MaxArtifact `json:"maxVersionForDependencies"`
 }
 

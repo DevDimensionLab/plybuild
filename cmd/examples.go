@@ -147,6 +147,7 @@ func init() {
 	examplesCmd.AddCommand(examplesInstallCmd)
 	examplesInstallCmd.Flags().StringP("example-name", "n", "", "Example name")
 
+	examplesInstallCmd.Flags().String("boot-version", "", "Defines spring-boot version to use")
 	examplesInstallCmd.Flags().String("group-id", "", "Overrides groupId from config file")
 	examplesInstallCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
 	examplesInstallCmd.Flags().String("package", "", "Overrides package from config file")
