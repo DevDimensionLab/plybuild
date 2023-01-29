@@ -1,5 +1,14 @@
 package config
 
+type GlobalCloudConfig struct {
+	CloudConfigSource CloudConfigSource `yaml:"cloudConfigSource"`
+}
+
+type CloudConfigSource struct {
+	RootUrl        string `yaml:"rootUrl"`
+	RelativFileUrl string `yaml:"relativFileUrl"`
+}
+
 type LocalGitConfig struct {
 	Git Git `yaml:"git"`
 }
@@ -26,7 +35,7 @@ type Nexus struct {
 	Password string `yaml:"password"`
 }
 
-type CheatSheetConfig struct {
+type TipsConfig struct {
 	Width int `yaml:"width"`
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/tips"
 	"github.com/spf13/cobra"
 	"os"
 	"strconv"
@@ -12,9 +13,9 @@ import (
 
 var tipsCmd = &cobra.Command{
 	Use:   "tips",
-	Short: "Use a tips cheat-sheet to learn information faster",
-	Long: `A concentrated version of everything you need to know for a topic, 
-typically internal know-how that you can't find on the internet or via chatGPT`,
+	Short: "Use tips to learn information faster",
+	Long: `A concentrated version of things you need to know for a topic, 
+typically internal know-how that you can't find on the internet`,
 	Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
@@ -27,8 +28,8 @@ typically internal know-how that you can't find on the internet or via chatGPT`,
 
 var tipsListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "Lists all tips (cheat-sheets) for current profile",
-	Long:  `Lists all tips (cheat-sheets) for current profile`,
+	Short: "Lists all tips for current profile",
+	Long:  `Lists all tip for current profile`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -38,12 +39,12 @@ var tipsListCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Infof("Available tips (cheat-sheets):")
-		cheatSheets, err := ctx.CloudConfig.CheatSheets()
+		log.Infof("Available tips:")
+		tips, err := tips.List(ctx.CloudConfig)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		for _, entry := range cheatSheets {
+		for _, entry := range tips {
 			log.Infof("- %s", strings.Replace(entry.Name(), ".md", "", 1))
 		}
 	},
@@ -51,8 +52,8 @@ var tipsListCmd = &cobra.Command{
 
 var tipsShowCmd = &cobra.Command{
 	Use:   "show",
-	Short: "Show tips (cheat-sheets)",
-	Long:  `Show tips (cheat-sheets)`,
+	Short: "Show tips",
+	Long:  `Show tips`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -69,33 +70,40 @@ var tipsShowCmd = &cobra.Command{
 		}
 
 		if len(args) == 0 {
-			log.Warnln("Missing tips (cheat sheet argument")
+			log.Warnln("Missing tips name argument")
 			tipsListCmd.Run(cmd, args)
 			return
 		}
 
 		name := args[0]
 
-		path := file.Path("%s/cheat-sheets/%s.md", ctx.CloudConfig.Implementation().Dir(), name)
-		source, err := os.ReadFile(path)
+		tipsPath := file.Path("%s/%s.md", tips.LocalDir(ctx.CloudConfig), name)
+		source, err := os.ReadFile(tipsPath)
 		if err != nil {
-			log.Fatalf("Failed to find any cheat-sheet file for [%s]: %s", name, path)
+			log.Fatalf("Failed to find any tips file for [%s]: %s", name, tipsPath)
 		}
 
-		width := cfg.CheatSheetConfig.Width
+		width := cfg.TipsConfig.Width
 		if 0 == width {
 			width = 80
 		}
 		result := markdown.Render(string(source), width, 2)
 
 		fmt.Println("\n" + string(result))
+
+		log.Infoln("Local source: " + tipsPath)
+		cloudSource, err := tips.CloudSource(name, ctx.CloudConfig)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Infoln("Cloud source: " + cloudSource)
 	},
 }
 
 var tipsShowConfigCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Config display of tips (cheat-sheets)",
-	Long:  `Config display of tips (cheat-sheets)`,
+	Short: "Config display of tips",
+	Long:  `Config display of tips`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -114,7 +122,7 @@ var tipsShowConfigCmd = &cobra.Command{
 		widthInt, err := strconv.Atoi(width)
 		checkIfError(err)
 
-		cfg.CheatSheetConfig.Width = widthInt
+		cfg.TipsConfig.Width = widthInt
 		ctx.LocalConfig.UpdateLocalConfig(cfg)
 	},
 }
@@ -126,5 +134,5 @@ func init() {
 	tipsCmd.AddCommand(tipsShowCmd)
 	tipsCmd.AddCommand(tipsShowConfigCmd)
 
-	tipsShowConfigCmd.Flags().StringP("width", "w", "", "Configure width of tips (cheat-sheet) when displayed")
+	tipsShowConfigCmd.Flags().StringP("width", "w", "", "Configure width of tips when rendered")
 }

@@ -14,10 +14,10 @@ type LocalConfigDir struct {
 }
 
 type LocalConfiguration struct {
-	CloudConfig      LocalGitConfig   `yaml:"cloudConfig"`
-	SourceProvider   SourceProvider   `yaml:"sourceProvider"`
-	Nexus            Nexus            `yaml:"nexus"`
-	CheatSheetConfig CheatSheetConfig `yaml:"cheatSheet"`
+	CloudConfig    LocalGitConfig `yaml:"cloudConfig"`
+	SourceProvider SourceProvider `yaml:"sourceProvider"`
+	Nexus          Nexus          `yaml:"nexus"`
+	TipsConfig     TipsConfig     `yaml:"tips"`
 }
 
 type LocalConfigFile interface {
