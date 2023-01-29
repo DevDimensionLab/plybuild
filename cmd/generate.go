@@ -24,6 +24,7 @@ var generateCmd = &cobra.Command{
 		var err error
 
 		// fetch user input config
+		var bootVersion, _ = cmd.Flags().GetString("boot-version")
 		overrideGroupId, _ := cmd.Flags().GetString("group-id")
 		overrideArtifactId, _ := cmd.Flags().GetString("artifact-id")
 		overridePackage, _ := cmd.Flags().GetString("package")
@@ -93,8 +94,12 @@ var generateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		// try to set spring-boot version manually
+		if bootVersion == "" {
+			bootVersion = orderConfig.Settings.MaxSpringBootVersion
+		}
 		// download from start.spring.io to targetDirectory
-		err = spring.DownloadInitializer(ctx.TargetDirectory, spring.UrlValuesFrom(orderConfig))
+		err = spring.DownloadInitializer(ctx.TargetDirectory, spring.UrlValuesFrom(bootVersion, orderConfig))
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -226,6 +231,7 @@ func init() {
 	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
 	generateCmd.Flags().String("config-file", "co-pilot.json", "Optional config file")
+	generateCmd.Flags().String("boot-version", "", "Defines spring-boot version to use")
 	generateCmd.Flags().String("group-id", "", "Overrides groupId from config file")
 	generateCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
 	generateCmd.Flags().String("package", "", "Overrides package from config file")

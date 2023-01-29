@@ -15,7 +15,7 @@ import (
 
 var baseUrl = "https://start.spring.io"
 
-func UrlValuesFrom(config config.ProjectConfiguration) url.Values {
+func UrlValuesFrom(bootVersion string, config config.ProjectConfiguration) url.Values {
 	// see https://github.com/spring-io/initializr#generating-a-project
 	params := url.Values{}
 	params.Add("groupId", config.GroupId)
@@ -27,6 +27,9 @@ func UrlValuesFrom(config config.ProjectConfiguration) url.Values {
 	params.Add("description", config.Description)
 	params.Add("name", config.Name)
 	params.Add("type", "maven-project")
+	if bootVersion != "" {
+		params.Add("bootVersion", bootVersion)
+	}
 	//params.Add("baseDir", targetDir)
 
 	return params

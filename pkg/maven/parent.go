@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/logger"
 	"github.com/sirupsen/logrus"
+	"strings"
 
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/spring"
@@ -16,11 +17,11 @@ func UpgradeParent() func(repository Repository, project config.Project) error {
 		if project.Config.Settings.DisableSpringBootUpgrade {
 			return nil
 		}
-		return repository.upgradeParent(project.Type.Model())
+		return repository.upgradeParent(project.Type.Model(), project)
 	}
 }
 
-func (repository Repository) upgradeParent(model *pom.Model) error {
+func (repository Repository) upgradeParent(model *pom.Model, project config.Project) error {
 	if model.Parent == nil {
 		return errors.New("no parent found")
 	}
@@ -53,6 +54,17 @@ func (repository Repository) upgradeParent(model *pom.Model) error {
 				"newVersion": latestVersion.ToString(),
 				"type":       "outdated parent",
 			})
+		}
+		if strings.Contains(parentGroupId, "org.springframework") && project.Config.Settings.MaxSpringBootVersion != "" {
+			maxBootVersion, err := ParseVersion(project.Config.Settings.MaxSpringBootVersion)
+			if err != nil {
+				log.Errorln("Found non-parsable version in settings.maxSpringBootVersion")
+				return nil
+			}
+			if maxBootVersion.IsLessThan(latestVersion) {
+				log.Infof("Keeping spring-boot version at %s - newest version is %s", maxBootVersion.ToString(), latestVersion.ToString())
+				return nil
+			}
 		}
 		if IsMajorUpgrade(currentVersion, latestVersion) {
 			metaDataLogger.Warnf("major %s", msg)
