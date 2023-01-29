@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/shell"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
-	"strings"
 )
 
 type GitCloudConfig struct {
@@ -24,13 +24,12 @@ type CloudConfig interface {
 	ProjectDefaults() (CloudProjectDefaults, error)
 	GitHookFiles(folderName string) ([]string, error)
 	ListDeprecated() error
-
 	HasTemplate(name string) bool
 	ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error)
 	Templates() (templates []CloudTemplate, err error)
 	Template(name string) (CloudTemplate, error)
 	Examples() (templates []string, err error)
-	CheatSheets() (cheatSheets []os.DirEntry, err error)
+	GlobalCloudConfig() (globalCloudConfig GlobalCloudConfig, err error)
 }
 
 func OpenGitCloudConfig(localConfigPath string) (cfg GitCloudConfig) {
@@ -254,19 +253,18 @@ func (gitCfg GitCloudConfig) Examples() (templates []string, err error) {
 	return
 }
 
-func (gitCfg GitCloudConfig) CheatSheets() (cheatSheets []os.DirEntry, err error) {
-	examplesDir := file.Path("%s/cheat-sheets", gitCfg.Implementation().Dir())
-	items, err := os.ReadDir(examplesDir)
+func (gitCfg GitCloudConfig) GlobalCloudConfig() (globalCloudConfig GlobalCloudConfig, err error) {
+
+	globalConfigFile := file.Path("%s/global-config.yaml", gitCfg.Implementation().Dir())
+
+	b, err := file.Open(globalConfigFile)
 	if err != nil {
 		return
 	}
 
-	for _, item := range items {
-		if !item.IsDir() && strings.HasSuffix(item.Name(), ".md") {
-			cheatSheets = append(cheatSheets, item)
-		}
-	}
+	b = []byte(os.ExpandEnv(string(b)))
 
+	err = yaml.Unmarshal(b, &globalCloudConfig)
 	return
 }
 

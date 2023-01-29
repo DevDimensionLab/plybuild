@@ -3,33 +3,33 @@ package cmd
 import (
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
+	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/co-pilot/pkg/tips"
+	"github.com/spf13/cobra"
 	"os"
 	"strconv"
-
-	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/spf13/cobra"
 	"strings"
 )
 
-var cheatSheetsCmd = &cobra.Command{
-	Use:   "cheatsheets",
-	Short: "Use a cheat-sheet to learn information faster",
-	Long: `A concentrated version of everything you need to know for a topic, 
+var tipsCmd = &cobra.Command{
+	Use:   "tips",
+	Short: "Use tips to learn information faster",
+	Long: `A concentrated version of things you need to know for a topic, 
 typically internal know-how that you can't find on the internet`,
 	Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			cheatSheetsListCmd.Run(cmd, args)
+			tipsListCmd.Run(cmd, args)
 			return
 		}
-		cheatSheetsShowCmd.Run(cmd, args)
+		tipsShowCmd.Run(cmd, args)
 	},
 }
 
-var cheatSheetsListCmd = &cobra.Command{
+var tipsListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "Lists all cheat-sheets for current profile",
-	Long:  `Lists all cheat-sheets for current profile`,
+	Short: "Lists all tips for current profile",
+	Long:  `Lists all tip for current profile`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -39,21 +39,21 @@ var cheatSheetsListCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Infof("Available cheat-sheets:")
-		cheatSheets, err := ctx.CloudConfig.CheatSheets()
+		log.Infof("Available tips:")
+		tips, err := tips.List(ctx.CloudConfig)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		for _, entry := range cheatSheets {
+		for _, entry := range tips {
 			log.Infof("- %s", strings.Replace(entry.Name(), ".md", "", 1))
 		}
 	},
 }
 
-var cheatSheetsShowCmd = &cobra.Command{
+var tipsShowCmd = &cobra.Command{
 	Use:   "show",
-	Short: "Show cheat-sheets",
-	Long:  `Show cheat-sheets`,
+	Short: "Show tips",
+	Long:  `Show tips`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -70,33 +70,40 @@ var cheatSheetsShowCmd = &cobra.Command{
 		}
 
 		if len(args) == 0 {
-			log.Warnln("Missing cheat sheet argument")
-			cheatSheetsListCmd.Run(cmd, args)
+			log.Warnln("Missing tips name argument")
+			tipsListCmd.Run(cmd, args)
 			return
 		}
 
 		name := args[0]
 
-		path := file.Path("%s/cheat-sheets/%s.md", ctx.CloudConfig.Implementation().Dir(), name)
-		source, err := os.ReadFile(path)
+		tipsPath := file.Path("%s/%s.md", tips.LocalDir(ctx.CloudConfig), name)
+		source, err := os.ReadFile(tipsPath)
 		if err != nil {
-			log.Fatalf("Failed to find any cheat-sheet file for [%s]: %s", name, path)
+			log.Fatalf("Failed to find any tips file for [%s]: %s", name, tipsPath)
 		}
 
-		width := cfg.CheatSheetConfig.Width
+		width := cfg.TipsConfig.Width
 		if 0 == width {
 			width = 80
 		}
 		result := markdown.Render(string(source), width, 2)
 
 		fmt.Println("\n" + string(result))
+
+		log.Infoln("Local source: " + tipsPath)
+		cloudSource, err := tips.CloudSource(name, ctx.CloudConfig)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Infoln("Cloud source: " + cloudSource)
 	},
 }
 
-var cheatSheetsShowConfigCmd = &cobra.Command{
+var tipsShowConfigCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Config display of cheat-sheets",
-	Long:  `Config display of cheat-sheets`,
+	Short: "Config display of tips",
+	Long:  `Config display of tips`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -115,17 +122,17 @@ var cheatSheetsShowConfigCmd = &cobra.Command{
 		widthInt, err := strconv.Atoi(width)
 		checkIfError(err)
 
-		cfg.CheatSheetConfig.Width = widthInt
+		cfg.TipsConfig.Width = widthInt
 		ctx.LocalConfig.UpdateLocalConfig(cfg)
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(cheatSheetsCmd)
+	RootCmd.AddCommand(tipsCmd)
 
-	cheatSheetsCmd.AddCommand(cheatSheetsListCmd)
-	cheatSheetsCmd.AddCommand(cheatSheetsShowCmd)
-	cheatSheetsCmd.AddCommand(cheatSheetsShowConfigCmd)
+	tipsCmd.AddCommand(tipsListCmd)
+	tipsCmd.AddCommand(tipsShowCmd)
+	tipsCmd.AddCommand(tipsShowConfigCmd)
 
-	cheatSheetsShowConfigCmd.Flags().StringP("width", "w", "", "Configure width of cheat-sheet when displayed")
+	tipsShowConfigCmd.Flags().StringP("width", "w", "", "Configure width of tips when rendered")
 }

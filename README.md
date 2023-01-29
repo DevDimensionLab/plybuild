@@ -51,7 +51,7 @@ Available Commands:
   profiles    Manage profiles settings for co-pilot
   query       Query dependencies in a project
   status      Status functionality for a project
-  structurizr Adding PNG-output support for structurizr with the help of graphviz
+  tips        Use tips to learn information faster
   upgrade     Upgrade options
 
 Flags:
@@ -60,7 +60,7 @@ Flags:
       --json    turn on json output logging
 
 Additional help topics:
-  co-pilot about       About co-pilot
+  co-pilot about      About co-pilot
 
 Use "co-pilot [command] --help" for more information about a command.
 ```
