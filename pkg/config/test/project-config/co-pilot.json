@@ -18,6 +18,7 @@
         "disableKotlinUpgrade": false,
         "pomFileIndentation": "",
         "disableUpgradesFor": null,
+        "maxSpringBootVersion": "",
         "maxVersionForDependencies": null
     },
     "render": null
