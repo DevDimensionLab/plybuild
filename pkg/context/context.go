@@ -144,6 +144,7 @@ func (ctx *Context) LoadProfile(profilePath string) {
 	ctx.LocalConfig = config.OpenLocalConfig(profilePath)
 	ctx.CloudConfig = config.OpenGitCloudConfig(profilePath)
 	if !ctx.LocalConfig.Exists() {
+		log.Debugf("localConfig does not exists, touching a new file")
 		err := ctx.LocalConfig.TouchFile()
 		if err != nil {
 			log.Error(err)

@@ -32,7 +32,12 @@ var profilesCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalln(err)
 			}
-			ctx.LoadProfile(configOpts.UseProfile)
+			profilePath, err := config.GetProfilesPathFor(configOpts.UseProfile)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			ctx.LoadProfile(profilePath)
+			return
 		}
 
 		if configOpts.Edit {
