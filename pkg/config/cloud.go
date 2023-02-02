@@ -8,6 +8,8 @@ import (
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 type GitCloudConfig struct {
@@ -216,24 +218,24 @@ func (gitCfg GitCloudConfig) Template(name string) (CloudTemplate, error) {
 
 func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) {
 	root := file.Path("%s/templates", gitCfg.Implementation().Dir())
-	files, err := ioutil.ReadDir(root)
-	if err != nil {
-		return
-	}
 
-	for _, f := range files {
-		if f.IsDir() {
-			project, err := InitProjectFromDirectory(file.Path("%s/%s", root, f.Name()))
+	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err == nil && info.Name() == "co-pilot.json" {
+			relPath := strings.Split(path, file.Path("/"+info.Name()))
+			name := strings.Split(relPath[0], file.Path("/templates/"))
+			project, err := InitProjectFromDirectory(relPath[0])
 			if err != nil {
 				log.Error(err)
-				continue
+				return err
 			}
 			templates = append(templates, CloudTemplate{
-				Name:    f.Name(),
+				Name:    name[1],
 				Project: project,
 			})
 		}
-	}
+		return nil
+	})
+
 	return
 }
 
