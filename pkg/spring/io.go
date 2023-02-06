@@ -118,16 +118,16 @@ func archivePath() (path string, err error) {
 
 func DeleteDemoFiles(targetDir string, orderConfig config.ProjectConfiguration) {
 
-	var fileSuffix = "*.kt"
+	var fileSuffix = ".kt"
 	if orderConfig.Language == "java" {
 		fileSuffix = ".java"
 	}
 
 	testFile, err := file.FindFirst(fileSuffix, file.Path("%s/src/test/%s", targetDir, orderConfig.Language))
 	if err != nil {
-		log.Warnf("Unable to find testfile")
+		log.Warnf("Unable to find testfile, fileSuffix=" + fileSuffix)
 	} else {
-		log.Debugf("Deleting testfile: %s", testFile)
+		log.Debugf("Deleting testfile for languge %s: %s", orderConfig.Language, testFile)
 		err := file.DeleteSingleFile(testFile)
 		if err != nil {
 			log.Warnf("Unable to delete testfile: %s", testFile)
