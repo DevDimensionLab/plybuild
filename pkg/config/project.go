@@ -220,7 +220,7 @@ func (project *Project) IsMultiModule() bool {
 }
 
 func (project *Project) GitInit(msg string) error {
-	if project.GitInfo.DisableCommit {
+	if !project.GitInfo.EnableCommit {
 		return nil
 	}
 	if !project.GitInfo.IsRepo {
@@ -234,7 +234,7 @@ func (project *Project) GitInit(msg string) error {
 }
 
 func (project *Project) GitCommit(message string) error {
-	if project.GitInfo.DisableCommit {
+	if !project.GitInfo.EnableCommit {
 		return nil
 	}
 	cmd := shell.GitAddAndCommit(project.Path, message)
