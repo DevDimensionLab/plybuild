@@ -18,9 +18,9 @@ type Git struct {
 }
 
 type GitInfo struct {
-	IsRepo        bool
-	IsDirty       bool
-	DisableCommit bool
+	IsRepo       bool
+	IsDirty      bool
+	EnableCommit bool
 }
 
 type SourceProvider struct {
