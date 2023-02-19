@@ -208,6 +208,30 @@ var generateCleanCmd = &cobra.Command{
 	},
 }
 
+var templatesCmd = &cobra.Command{
+	Use:   "templates",
+	Short: "Lists all available templates",
+	Long:  `Lists all available templates`,
+	Run: func(cmd *cobra.Command, args []string) {
+
+		dir := template.LocalDir(ctx.CloudConfig)
+		templates, _, err := template.TemplateFolders(dir)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		log.Infof(fmt.Sprintf("Available templates"))
+		printTemplates(templates, "")
+	},
+}
+
+func printTemplates(templates []template.TemplateInfo, indent string) {
+	for _, folder := range templates {
+		log.Infof("%s- %s", indent, folder.Name)
+		printTemplates(folder.SubFolders, indent+"     ")
+	}
+}
+
 func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 	ioResp, err := spring.GetRoot()
 	if err != nil {
@@ -225,6 +249,7 @@ func init() {
 	RootCmd.AddCommand(generateCmd)
 
 	generateCmd.AddCommand(generateCleanCmd)
+	generateCmd.AddCommand(templatesCmd)
 
 	generateCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	generateCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", true, "Cloud sync")
