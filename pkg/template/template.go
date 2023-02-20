@@ -11,55 +11,6 @@ import (
 	"strings"
 )
 
-const templateDir = "templates"
-
-type TemplateInfo struct {
-	Name       string
-	SubFolders []TemplateInfo
-}
-
-func LocalDir(gitCfg config.CloudConfig) string {
-	return file.Path("%s/%s", gitCfg.Implementation().Dir(), templateDir)
-}
-func TemplateFolders(path string) ([]TemplateInfo, bool, error) {
-	dir, err := os.Open(path)
-	if err != nil {
-		return nil, false, err
-	}
-	defer dir.Close()
-	dirFiles, err := dir.ReadDir(-1)
-	if err != nil {
-		return nil, false, err
-	}
-
-	templateFound := false
-	var templateFolders []TemplateInfo
-	for _, folder := range dirFiles {
-		if folder.IsDir() {
-			coPilotJson := path + "/" + folder.Name() + "/co-pilot.json"
-			if _, err := os.Stat(coPilotJson); err == nil {
-				templateFolders = append(templateFolders, TemplateInfo{
-					Name: folder.Name(),
-				})
-				templateFound = true
-			} else {
-				subFolders, subTemplateFound, err := TemplateFolders(path + "/" + folder.Name())
-				if nil != err {
-					log.Warnln(err)
-				}
-				if subTemplateFound {
-					templateFolders = append(templateFolders, TemplateInfo{
-						Name:       folder.Name(),
-						SubFolders: subFolders,
-					})
-					templateFound = true
-				}
-			}
-		}
-	}
-	return templateFolders, templateFound, nil
-}
-
 func MergeTemplates(cloudTemplates []config.CloudTemplate, targetProject config.Project) {
 	for _, template := range cloudTemplates {
 		log.Infof("applying Template %s", template.Name)

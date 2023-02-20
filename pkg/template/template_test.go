@@ -7,12 +7,6 @@ import (
 	"testing"
 )
 
-func ManuellTestList_template(t *testing.T) {
-	folders, _, _ := TemplateFolders("/Users/perottobc/.co-pilot/profiles/default/cloud-config/templates")
-
-	println(folders)
-}
-
 func newMockCloudConfig() (cfg config.GitCloudConfig) {
 	cfg.Impl.Path = file.Path("test/cloud-config")
 	return

@@ -209,27 +209,20 @@ var generateCleanCmd = &cobra.Command{
 }
 
 var templatesCmd = &cobra.Command{
-	Use:   "templates",
+	Use:   "list-templates",
 	Short: "Lists all available templates",
 	Long:  `Lists all available templates`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		dir := template.LocalDir(ctx.CloudConfig)
-		templates, _, err := template.TemplateFolders(dir)
+		templates, err := ctx.CloudConfig.Templates()
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		log.Infof(fmt.Sprintf("Available templates"))
-		printTemplates(templates, "")
+		for _, folder := range templates {
+			log.Infof("%s", folder.Name)
+		}
 	},
-}
-
-func printTemplates(templates []template.TemplateInfo, indent string) {
-	for _, folder := range templates {
-		log.Infof("%s- %s", indent, folder.Name)
-		printTemplates(folder.SubFolders, indent+"     ")
-	}
 }
 
 func interactiveWebService(orderConfig *config.ProjectConfiguration) {
