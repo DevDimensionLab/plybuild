@@ -17,7 +17,7 @@ type LocalConfiguration struct {
 	CloudConfig    LocalGitConfig `yaml:"cloudConfig"`
 	SourceProvider SourceProvider `yaml:"sourceProvider"`
 	Nexus          Nexus          `yaml:"nexus"`
-	TipsConfig     TipsConfig     `yaml:"tips"`
+	TerminalConfig TerminalConfig `yaml:"terminal"`
 }
 
 type LocalConfigFile interface {
@@ -152,4 +152,18 @@ func (localCfg LocalConfigDir) Print() error {
 
 func (localCfg LocalConfigDir) Exists() bool {
 	return file.Exists(localCfg.FilePath())
+}
+
+func GetTerminalConfig(localConfig LocalConfigDir) (TerminalConfig, error) {
+	cfg, err := localConfig.Config()
+	if err != nil {
+		return TerminalConfig{}, err
+	}
+
+	terminalConfig := cfg.TerminalConfig
+	if 0 == terminalConfig.Width {
+		terminalConfig.Width = 80
+	}
+
+	return terminalConfig, nil
 }

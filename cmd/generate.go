@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	markdown "github.com/MichaelMure/go-term-markdown"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
@@ -219,8 +220,39 @@ var templatesCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		for _, folder := range templates {
-			log.Infof("%s", folder.Name)
+		terminalConfig, err := config.GetTerminalConfig(ctx.LocalConfig)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		printMarkdown, _ := cmd.Flags().GetBool("markdown")
+		saveMarkdown, _ := cmd.Flags().GetBool("save")
+		if printMarkdown || terminalConfig.Format == "markdown" {
+			markdownDocument, err := template.TemplateListAsMarkdown(ctx.CloudConfig, templates)
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			markdownForTerminal := markdown.Render(markdownDocument, terminalConfig.Width, 2)
+			fmt.Println("\n" + string(markdownForTerminal))
+
+			if saveMarkdown {
+				fileRef, err := template.SaveTemplateListMarkdown(ctx.CloudConfig, markdownDocument)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				fmt.Println("File saved to " + fileRef)
+			}
+
+			cloudSource, err := config.CloudSource(template.TemplatesDir, "README.md", ctx.CloudConfig)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			log.Infoln("Cloud source: " + cloudSource)
+		} else {
+			for _, folder := range templates {
+				log.Infof("%s - %s (%s)", folder.Name, folder.Project.Config.Description, folder.Project.Config.Language)
+			}
 		}
 	},
 }
@@ -255,4 +287,8 @@ func init() {
 	generateCmd.Flags().String("package", "", "Overrides package from config file")
 	generateCmd.Flags().String("name", "", "Overrides name from config file")
 	generateCmd.Flags().String("application-name", "", "Overrides applicationName from config file")
+
+	templatesCmd.Flags().Bool("markdown", false, "Outputs templates as markdown in the terminal")
+	templatesCmd.Flags().Bool("save", false, "Saves the template markdown doc to cloud-config template-folder")
+
 }

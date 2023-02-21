@@ -1,15 +1,63 @@
 package template
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/cbroglie/mustache"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
+	"github.com/devdimensionlab/co-pilot/pkg/mustache_render"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+const TemplatesDir = "templates"
+
+type TemplateRoot struct {
+	Templates []config.CloudTemplate `json:"templates"`
+}
+
+func SaveTemplateListMarkdown(gitCfg config.CloudConfig, markdownDocument string) (string, error) {
+	readmePath := gitCfg.Implementation().Dir() + "/" + TemplatesDir + "/README.md"
+	err := os.WriteFile(readmePath, []byte(markdownDocument), 0644)
+	return readmePath, err
+}
+
+func TemplateListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate) (string, error) {
+	templateMustacheModel, err := TemplateListToMustacheModel(templates)
+	templateString, err := mustache_render.MarkdownMustacheTemplateString(gitCfg, "templates-markdown.mustache")
+	if err != nil {
+		return "", err
+	}
+
+	output, err := mustache.Render(templateString, templateMustacheModel)
+	if err != nil {
+		return "", err
+	}
+
+	return output, nil
+}
+func TemplateListToMustacheModel(templates []config.CloudTemplate) (map[string]interface{}, error) {
+	root := TemplateRoot{
+		Templates: templates,
+	}
+	jsonModel, err := json.MarshalIndent(root, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	//	println(string(jsonModel[:]))
+
+	var dataModel map[string]interface{}
+	err = json.Unmarshal(jsonModel, &dataModel)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataModel, err
+}
 
 func MergeTemplates(cloudTemplates []config.CloudTemplate, targetProject config.Project) {
 	for _, template := range cloudTemplates {

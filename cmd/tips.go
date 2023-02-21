@@ -3,11 +3,11 @@ package cmd
 import (
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
+	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/tips"
 	"github.com/spf13/cobra"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -64,11 +64,6 @@ var tipsShowCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		cfg, err := ctx.LocalConfig.Config()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
 		if len(args) == 0 {
 			log.Warnln("Missing tips name argument")
 			tipsListCmd.Run(cmd, args)
@@ -83,47 +78,20 @@ var tipsShowCmd = &cobra.Command{
 			log.Fatalf("Failed to find any tips file for [%s]: %s", name, tipsPath)
 		}
 
-		width := cfg.TipsConfig.Width
-		if 0 == width {
-			width = 80
+		terminalConfig, err := config.GetTerminalConfig(ctx.LocalConfig)
+		if err != nil {
+			log.Fatalln(err)
 		}
-		result := markdown.Render(string(source), width, 2)
+		result := markdown.Render(string(source), terminalConfig.Width, 2)
 
 		fmt.Println("\n" + string(result))
 
 		log.Infoln("Local source: " + tipsPath)
-		cloudSource, err := tips.CloudSource(name, ctx.CloudConfig)
+		cloudSource, err := config.CloudSource(tips.TipsDir, name+".md", ctx.CloudConfig)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		log.Infoln("Cloud source: " + cloudSource)
-	},
-}
-
-var tipsShowConfigCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Config display of tips",
-	Long:  `Config display of tips`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-
-		cfg, err := ctx.LocalConfig.Config()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		width, err := getMandatoryString(cmd, "width")
-		checkIfError(err)
-
-		widthInt, err := strconv.Atoi(width)
-		checkIfError(err)
-
-		cfg.TipsConfig.Width = widthInt
-		ctx.LocalConfig.UpdateLocalConfig(cfg)
 	},
 }
 
@@ -132,7 +100,4 @@ func init() {
 
 	tipsCmd.AddCommand(tipsListCmd)
 	tipsCmd.AddCommand(tipsShowCmd)
-	tipsCmd.AddCommand(tipsShowConfigCmd)
-
-	tipsShowConfigCmd.Flags().StringP("width", "w", "", "Configure width of tips when rendered")
 }

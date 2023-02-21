@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/MichaelMure/go-term-markdown v0.1.4
+	github.com/cbroglie/mustache v1.4.0
 	github.com/devdimensionlab/mvn-pom-mutator v0.2.3
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
@@ -12,6 +13,7 @@ require (
 	github.com/spf13/viper v1.14.0
 	golang.org/x/term v0.2.0
 	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -48,5 +50,4 @@ require (
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
