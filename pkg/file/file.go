@@ -123,7 +123,7 @@ func OpenLines(filePath string) ([]string, error) {
 }
 
 func Overwrite(lines []string, filePath string) error {
-	return ioutil.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
+	return os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
 }
 
 func CopyOrMerge(sourceFile string, destinationFile string) error {
@@ -150,7 +150,7 @@ func mergeFile(sourceFile string, destinationFile string) error {
 }
 
 func CopyFile(sourceFile string, destinationFile string) error {
-	input, err := ioutil.ReadFile(sourceFile)
+	input, err := os.ReadFile(sourceFile)
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func CopyFile(sourceFile string, destinationFile string) error {
 
 	log.Debugf("copying FROM\t <= %s", sourceFile)
 	log.Debugf("copying TO\t => %s", destinationFile)
-	return ioutil.WriteFile(destinationFile, input, fileInfo.Mode())
+	return os.WriteFile(destinationFile, input, fileInfo.Mode())
 }
 
 func RelPath(sourceDirectory string, filePath string) (string, error) {
@@ -210,7 +210,7 @@ func CreateDirectory(path string) error {
 }
 
 func CreateFile(path, content string) error {
-	return ioutil.WriteFile(path, []byte(content), 0644)
+	return os.WriteFile(path, []byte(content), 0644)
 }
 
 func OpenFile(fileName string) (*os.File, error) {

@@ -35,12 +35,12 @@ func MergeTemplate(cloudTemplate config.CloudTemplate, targetProject config.Proj
 
 func merge(sourceProject config.Project, targetProject config.Project, multiModuleCheck bool) error {
 	sourceDir := sourceProject.Path
-	files, err := filesToCopy(sourceDir)
+	filesFromTemplate, err := filteredFilesFromTemplate(sourceDir, getIgnores(sourceDir))
 	if err != nil {
 		return err
 	}
 
-	for _, f := range files {
+	for _, f := range filesFromTemplate {
 		sourceRelPath, err := file.RelPath(sourceDir, f)
 		if err != nil {
 			return err
@@ -58,7 +58,14 @@ func merge(sourceProject config.Project, targetProject config.Project, multiModu
 		}
 
 		if strings.HasSuffix(targetPath, ".render") {
-			if err := renderAndDelete(targetPath, targetProject.Config); err != nil {
+			if strings.Contains(targetPath, "pom.xml.render") {
+				log.Debugf("special case where a pom.xml.render file needs to be rendered and merged with existing pom file")
+				if err := renderAndMergePoms(targetPath, targetProject); err != nil {
+					return err
+				}
+				continue
+			}
+			if err := renderAndDeleteTextFiles(targetPath, targetProject.Config); err != nil {
 				return err
 			}
 		}
@@ -129,26 +136,25 @@ func cleanForMultiModule(targetProject config.Project) error {
 	return file.DeleteAll(file.Path("%s/src", targetProject.Path))
 }
 
-func filesToCopy(sourceDir string) (files []string, err error) {
-	ignores := getIgnores(sourceDir)
+func filteredFilesFromTemplate(sourceDir string, filter []string) (files []string, err error) {
 	err = filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
 		rootDir := sourceDir == strings.ReplaceAll(path, "/"+info.Name(), "")
-		for _, ignore := range ignores {
+		for _, ignore := range filter {
 			if (ignore == "pom.xml") && !rootDir {
 				continue
 			}
-			if strings.Contains(path, ignore) {
-				log.Debugf("ignoring %s in %s", path, ignores)
+			if strings.Contains(path, ignore) && !strings.Contains(path, ".render") {
+				log.Debugf("ignoring %s in %s", path, filter)
 				return nil
 			}
 		}
 		files = append(files, path)
+		log.Debugf("fileToCopy: %s", path)
 		return nil
 	})
-	log.Debugf("filesToCopy: %s", files)
 	return
 }
 
@@ -201,7 +207,7 @@ func replacePathForSource(sourceRelPath string, sourceConfig config.ProjectConfi
 	return output
 }
 
-func renderAndDelete(targetPath string, targetConfig interface{}) error {
+func renderAndDeleteTextFiles(targetPath string, targetConfig interface{}) error {
 	newTarget := strings.Replace(targetPath, ".render", "", 1)
 	log.Infof("rendering %s into %s", targetPath, newTarget)
 	if err := file.Render(targetPath, newTarget, targetConfig); err != nil {
@@ -210,4 +216,32 @@ func renderAndDelete(targetPath string, targetConfig interface{}) error {
 
 	log.Infof("deleting old render file %s", targetPath)
 	return file.DeleteSingleFile(targetPath)
+}
+
+func renderAndMergePoms(targetPath string, targetProject config.Project) error {
+	newPomFile := strings.Replace(targetPath, ".render", ".rendered", 1)
+
+	log.Infof("rendering pom.xml: %s into %s", targetPath, newPomFile)
+	if err := file.Render(targetPath, newPomFile, targetProject.Config); err != nil {
+		log.Debugf("Failed to render %s into %s: %s", targetPath, newPomFile, err.Error())
+		return err
+	}
+
+	renderedModel, err := pom.GetModelFrom(newPomFile)
+	if err != nil {
+		return err
+	}
+
+	if err := maven.MergePoms(renderedModel, targetProject.Type.Model()); err != nil {
+		return err
+	}
+
+	log.Infof("deleting old render files from pom.xml.render merging")
+	if err = file.DeleteSingleFile(targetPath); err != nil {
+		return err
+	}
+	if err = file.DeleteSingleFile(newPomFile); err != nil {
+		return err
+	}
+	return nil
 }

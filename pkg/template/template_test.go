@@ -48,7 +48,7 @@ func TestReplacePathForSource(t *testing.T) {
 		t.Errorf("%v\n", err)
 	}
 
-	files, _ := filesToCopy(sourceDir)
+	files, _ := filteredFilesFromTemplate(sourceDir, getIgnores(sourceDir))
 	for _, f := range files {
 		if strings.Contains(f, ".kt") {
 			sourceRelPath, err := file.RelPath(sourceDir, f)
