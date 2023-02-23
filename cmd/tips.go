@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/tips"
 	"github.com/spf13/cobra"
@@ -78,7 +77,7 @@ var tipsShowCmd = &cobra.Command{
 			log.Fatalf("Failed to find any tips file for [%s]: %s", name, tipsPath)
 		}
 
-		terminalConfig, err := config.GetTerminalConfig(ctx.LocalConfig)
+		terminalConfig, err := ctx.LocalConfig.GetTerminalConfig()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -87,11 +86,11 @@ var tipsShowCmd = &cobra.Command{
 		fmt.Println("\n" + string(result))
 
 		log.Infoln("Local source: " + tipsPath)
-		cloudSource, err := config.CloudSource(tips.TipsDir, name+".md", ctx.CloudConfig)
+		gCloudCfg, err := ctx.CloudConfig.GlobalCloudConfig()
 		if err != nil {
 			log.Fatalln(err)
 		}
-		log.Infoln("Cloud source: " + cloudSource)
+		log.Infof("Cloud source: %s\n", gCloudCfg.SourceFor(tips.TipsDir, name+".md"))
 	},
 }
 

@@ -5,8 +5,9 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
-	"strconv"
 )
+
+const DEFAULT_TERMINAL_WIDTH = 80
 
 type ConfigOpts struct {
 	Sync       bool
@@ -90,22 +91,27 @@ var configCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		width := cmd.Flag("width").Value.String()
-		if width != "" {
-			widthInt, err := strconv.Atoi(width)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			cfg.TerminalConfig.Width = widthInt
+		width, err := cmd.Flags().GetInt("width")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		format, err := cmd.Flags().GetString("format")
+		if err != nil {
+			log.Fatalln(err)
 		}
 
-		format := cmd.Flag("format").Value.String()
+		if width != DEFAULT_TERMINAL_WIDTH {
+			cfg.TerminalConfig.Width = width
+		}
+
 		if format != "" {
 			cfg.TerminalConfig.Format = format
 		}
 
-		ctx.LocalConfig.UpdateLocalConfig(cfg)
+		err = ctx.LocalConfig.UpdateLocalConfig(cfg)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	},
 }
 
@@ -120,7 +126,7 @@ func init() {
 
 	profilesCmd.AddCommand(configCmd)
 
-	configCmd.Flags().StringP("width", "w", "", "Configure width of rendering in the termina")
+	configCmd.Flags().IntP("width", "w", DEFAULT_TERMINAL_WIDTH, "Configure width of rendering in the terminal")
 	configCmd.Flags().StringP("format", "f", "", "Configure format of rendering in the terminal: markdown")
 
 }

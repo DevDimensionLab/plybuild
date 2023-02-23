@@ -35,16 +35,16 @@ func OpenLocalConfig(absConfigDir string) (cfg LocalConfigDir) {
 	return
 }
 
-func (localCfg LocalConfigDir) Implementation() DirConfig {
-	return localCfg.impl
+func (localCfgDir LocalConfigDir) Implementation() DirConfig {
+	return localCfgDir.impl
 }
 
-func (localCfg LocalConfigDir) FilePath() string {
-	return file.Path("%s/%s", localCfg.impl.Path, localConfigFileName)
+func (localCfgDir LocalConfigDir) FilePath() string {
+	return file.Path("%s/%s", localCfgDir.impl.Path, localConfigFileName)
 }
 
-func (localCfg LocalConfigDir) CheckOrCreateConfigDir() error {
-	dir := localCfg.Implementation().Path
+func (localCfgDir LocalConfigDir) CheckOrCreateConfigDir() error {
+	dir := localCfgDir.Implementation().Path
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)
@@ -56,13 +56,13 @@ func (localCfg LocalConfigDir) CheckOrCreateConfigDir() error {
 	return nil
 }
 
-func (localCfg LocalConfigDir) TouchFile() error {
-	err := localCfg.CheckOrCreateConfigDir()
+func (localCfgDir LocalConfigDir) TouchFile() error {
+	err := localCfgDir.CheckOrCreateConfigDir()
 	if err != nil {
 		return err
 	}
 
-	configFilePath := localCfg.FilePath()
+	configFilePath := localCfgDir.FilePath()
 
 	config := LocalConfiguration{}
 	config.CloudConfig.Git.Url = defaultCloudConfigUrl
@@ -86,13 +86,13 @@ func (localCfg LocalConfigDir) TouchFile() error {
 	return f.Close()
 }
 
-func (localCfg LocalConfigDir) UpdateLocalConfig(config LocalConfiguration) error {
-	err := localCfg.CheckOrCreateConfigDir()
+func (localCfgDir LocalConfigDir) UpdateLocalConfig(config LocalConfiguration) error {
+	err := localCfgDir.CheckOrCreateConfigDir()
 	if err != nil {
 		return err
 	}
 
-	configFilePath := localCfg.FilePath()
+	configFilePath := localCfgDir.FilePath()
 
 	d, err := yaml.Marshal(&config)
 	if err != nil {
@@ -114,9 +114,9 @@ func (localCfg LocalConfigDir) UpdateLocalConfig(config LocalConfiguration) erro
 	return f.Close()
 }
 
-func (localCfg LocalConfigDir) Config() (LocalConfiguration, error) {
+func (localCfgDir LocalConfigDir) Config() (LocalConfiguration, error) {
 	config := LocalConfiguration{}
-	localConfigFile := localCfg.FilePath()
+	localConfigFile := localCfgDir.FilePath()
 
 	b, err := file.Open(localConfigFile)
 	if err != nil {
@@ -133,8 +133,8 @@ func (localCfg LocalConfigDir) Config() (LocalConfiguration, error) {
 	return config, nil
 }
 
-func (localCfg LocalConfigDir) Print() error {
-	c, err := localCfg.Config()
+func (localCfgDir LocalConfigDir) Print() error {
+	c, err := localCfgDir.Config()
 	if err != nil {
 		return err
 	}
@@ -144,18 +144,18 @@ func (localCfg LocalConfigDir) Print() error {
 		return err
 	}
 
-	log.Infof("using: %s", localCfg.FilePath())
+	log.Infof("using: %s", localCfgDir.FilePath())
 	log.Infof("\n%s\n", string(b))
 
 	return nil
 }
 
-func (localCfg LocalConfigDir) Exists() bool {
-	return file.Exists(localCfg.FilePath())
+func (localCfgDir LocalConfigDir) Exists() bool {
+	return file.Exists(localCfgDir.FilePath())
 }
 
-func GetTerminalConfig(localConfig LocalConfigDir) (TerminalConfig, error) {
-	cfg, err := localConfig.Config()
+func (localCfgDir LocalConfigDir) GetTerminalConfig() (TerminalConfig, error) {
+	cfg, err := localCfgDir.Config()
 	if err != nil {
 		return TerminalConfig{}, err
 	}

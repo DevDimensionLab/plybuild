@@ -16,7 +16,7 @@ import (
 
 const TemplatesDir = "templates"
 
-type TemplateRoot struct {
+type Root struct {
 	Templates []config.CloudTemplate `json:"templates"`
 }
 
@@ -26,8 +26,8 @@ func SaveTemplateListMarkdown(gitCfg config.CloudConfig, markdownDocument string
 	return readmePath, err
 }
 
-func TemplateListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate) (string, error) {
-	templateMustacheModel, err := TemplateListToMustacheModel(templates)
+func ListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate) (string, error) {
+	templateMustacheModel, err := ListToMustacheModel(templates)
 	templateString, err := mustache_render.MarkdownMustacheTemplateString(gitCfg, "templates-markdown.mustache")
 	if err != nil {
 		return "", err
@@ -40,8 +40,8 @@ func TemplateListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudT
 
 	return output, nil
 }
-func TemplateListToMustacheModel(templates []config.CloudTemplate) (map[string]interface{}, error) {
-	root := TemplateRoot{
+func ListToMustacheModel(templates []config.CloudTemplate) (map[string]interface{}, error) {
+	root := Root{
 		Templates: templates,
 	}
 	jsonModel, err := json.MarshalIndent(root, "", "    ")

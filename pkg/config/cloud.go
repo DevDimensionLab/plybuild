@@ -34,13 +34,12 @@ type CloudConfig interface {
 	GlobalCloudConfig() (globalCloudConfig GlobalCloudConfig, err error)
 }
 
-func CloudSource(dir string, name string, cloudConfig CloudConfig) (string, error) {
-	glbConf, err := cloudConfig.GlobalCloudConfig()
-	if err != nil {
-		return "", err
-	}
-	link := glbConf.CloudConfigSource.RootUrl + glbConf.CloudConfigSource.RelativFileUrl + "/" + dir + "/" + name
-	return link, nil
+func (globalCloudConfig GlobalCloudConfig) SourceFor(dir string, name string) string {
+	return fmt.Sprintf("%s%s/%s/%s",
+		globalCloudConfig.CloudConfigSource.RootUrl,
+		globalCloudConfig.CloudConfigSource.RelativFileUrl,
+		dir,
+		name)
 }
 
 func OpenGitCloudConfig(localConfigPath string) (cfg GitCloudConfig) {

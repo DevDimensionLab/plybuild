@@ -209,26 +209,31 @@ var generateCleanCmd = &cobra.Command{
 	},
 }
 
-var templatesCmd = &cobra.Command{
+var listTemplatesCmd = &cobra.Command{
 	Use:   "list-templates",
 	Short: "Lists all available templates",
 	Long:  `Lists all available templates`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		markdownFormat, err := cmd.Flags().GetBool("markdown")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		saveOutput, err := cmd.Flags().GetBool("save")
+		if err != nil {
+			log.Fatalln(err)
+		}
 		templates, err := ctx.CloudConfig.Templates()
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		terminalConfig, err := config.GetTerminalConfig(ctx.LocalConfig)
+		terminalConfig, err := ctx.LocalConfig.GetTerminalConfig()
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		printMarkdown, _ := cmd.Flags().GetBool("markdown")
-		saveMarkdown, _ := cmd.Flags().GetBool("save")
-		if printMarkdown || terminalConfig.Format == "markdown" {
-			markdownDocument, err := template.TemplateListAsMarkdown(ctx.CloudConfig, templates)
+		if markdownFormat || terminalConfig.Format == "markdown" {
+			markdownDocument, err := template.ListAsMarkdown(ctx.CloudConfig, templates)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -236,7 +241,7 @@ var templatesCmd = &cobra.Command{
 			markdownForTerminal := markdown.Render(markdownDocument, terminalConfig.Width, 2)
 			fmt.Println("\n" + string(markdownForTerminal))
 
-			if saveMarkdown {
+			if saveOutput {
 				fileRef, err := template.SaveTemplateListMarkdown(ctx.CloudConfig, markdownDocument)
 				if err != nil {
 					log.Fatalln(err)
@@ -244,7 +249,11 @@ var templatesCmd = &cobra.Command{
 				fmt.Println("File saved to " + fileRef)
 			}
 
-			cloudSource, err := config.CloudSource(template.TemplatesDir, "README.md", ctx.CloudConfig)
+			gCloudCfg, err := ctx.CloudConfig.GlobalCloudConfig()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			cloudSource := gCloudCfg.SourceFor(template.TemplatesDir, "README.md")
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -274,7 +283,7 @@ func init() {
 	RootCmd.AddCommand(generateCmd)
 
 	generateCmd.AddCommand(generateCleanCmd)
-	generateCmd.AddCommand(templatesCmd)
+	generateCmd.AddCommand(listTemplatesCmd)
 
 	generateCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	generateCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", true, "Cloud sync")
@@ -288,7 +297,7 @@ func init() {
 	generateCmd.Flags().String("name", "", "Overrides name from config file")
 	generateCmd.Flags().String("application-name", "", "Overrides applicationName from config file")
 
-	templatesCmd.Flags().Bool("markdown", false, "Outputs templates as markdown in the terminal")
-	templatesCmd.Flags().Bool("save", false, "Saves the template markdown doc to cloud-config template-folder")
+	listTemplatesCmd.Flags().Bool("markdown", false, "Outputs templates as markdown in the terminal")
+	listTemplatesCmd.Flags().Bool("save", false, "Saves the template markdown doc to cloud-config template-folder")
 
 }
