@@ -1,17 +1,18 @@
 package template
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cbroglie/mustache"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
-	"github.com/devdimensionlab/co-pilot/pkg/mustache_render"
+	"github.com/devdimensionlab/co-pilot/pkg/resources"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 const TemplatesDir = "templates"
@@ -27,18 +28,24 @@ func SaveTemplateListMarkdown(gitCfg config.CloudConfig, markdownDocument string
 }
 
 func ListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate) (string, error) {
-	templateMustacheModel, err := ListToMustacheModel(templates)
-	templateString, err := mustache_render.MarkdownMustacheTemplateString(gitCfg, "templates-markdown.mustache")
+	templateString, err := resources.ResourceAsString(gitCfg, "templates-markdown.render")
 	if err != nil {
 		return "", err
 	}
 
-	output, err := mustache.Render(templateString, templateMustacheModel)
+	tmpl, err := template.New("list").Parse(templateString)
 	if err != nil {
 		return "", err
 	}
 
-	return output, nil
+	data := Root{
+		Templates: templates,
+	}
+
+	var tplOutput bytes.Buffer
+	err = tmpl.Execute(&tplOutput, data)
+
+	return tplOutput.String(), nil
 }
 func ListToMustacheModel(templates []config.CloudTemplate) (map[string]interface{}, error) {
 	root := Root{
