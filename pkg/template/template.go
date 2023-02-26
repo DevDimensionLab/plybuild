@@ -2,7 +2,6 @@ package template
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
@@ -46,24 +45,6 @@ func ListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate)
 	err = tmpl.Execute(&tplOutput, data)
 
 	return tplOutput.String(), nil
-}
-func ListToMustacheModel(templates []config.CloudTemplate) (map[string]interface{}, error) {
-	root := Root{
-		Templates: templates,
-	}
-	jsonModel, err := json.MarshalIndent(root, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	//	println(string(jsonModel[:]))
-
-	var dataModel map[string]interface{}
-	err = json.Unmarshal(jsonModel, &dataModel)
-	if err != nil {
-		return nil, err
-	}
-
-	return dataModel, err
 }
 
 func MergeTemplates(cloudTemplates []config.CloudTemplate, targetProject config.Project) {

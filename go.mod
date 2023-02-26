@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/MichaelMure/go-term-markdown v0.1.4
-	github.com/cbroglie/mustache v1.4.0
 	github.com/devdimensionlab/mvn-pom-mutator v0.2.3
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
