@@ -16,8 +16,14 @@ import (
 
 const TemplatesDir = "templates"
 
-type Root struct {
-	Templates []config.CloudTemplate `json:"templates"`
+type TemplateListRenderingModel struct {
+	Templates  []config.CloudTemplate
+	Categories []*TemplateCategory
+}
+
+type TemplateCategory struct {
+	Name      string
+	Templates []config.CloudTemplate
 }
 
 func SaveTemplateListMarkdown(gitCfg config.CloudConfig, markdownDocument string) (string, error) {
@@ -37,14 +43,40 @@ func ListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate)
 		return "", err
 	}
 
-	data := Root{
-		Templates: templates,
-	}
+	data := createTemplateListRenderingModel(templates)
 
 	var tplOutput bytes.Buffer
 	err = tmpl.Execute(&tplOutput, data)
 
 	return tplOutput.String(), nil
+}
+
+func createTemplateListRenderingModel(templates []config.CloudTemplate) TemplateListRenderingModel {
+
+	categories := make([]*TemplateCategory, 0)
+	for _, template := range templates {
+		templateCategories := strings.Split(template.Name, "/")
+		registered := false
+		categoryName := templateCategories[0]
+		for _, category := range categories {
+			if category.Name == categoryName {
+				category.Templates = append(category.Templates, template)
+				registered = true
+				break
+			}
+		}
+		if !registered {
+			categories = append(categories, &TemplateCategory{
+				Name:      categoryName,
+				Templates: []config.CloudTemplate{template},
+			})
+		}
+	}
+
+	return TemplateListRenderingModel{
+		Templates:  templates,
+		Categories: categories,
+	}
 }
 
 func MergeTemplates(cloudTemplates []config.CloudTemplate, targetProject config.Project) {
