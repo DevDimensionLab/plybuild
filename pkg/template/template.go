@@ -1,15 +1,51 @@
 package template
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/devdimensionlab/co-pilot/pkg/config"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/co-pilot/pkg/maven"
+	"github.com/devdimensionlab/co-pilot/pkg/resources"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
+
+const TemplatesDir = "templates"
+
+type Root struct {
+	Templates []config.CloudTemplate `json:"templates"`
+}
+
+func SaveTemplateListMarkdown(gitCfg config.CloudConfig, markdownDocument string) (string, error) {
+	readmePath := gitCfg.Implementation().Dir() + "/" + TemplatesDir + "/README.md"
+	err := os.WriteFile(readmePath, []byte(markdownDocument), 0644)
+	return readmePath, err
+}
+
+func ListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate) (string, error) {
+	templateString, err := resources.ResourceAsString(gitCfg, "templates-markdown.render")
+	if err != nil {
+		return "", err
+	}
+
+	tmpl, err := template.New("list").Parse(templateString)
+	if err != nil {
+		return "", err
+	}
+
+	data := Root{
+		Templates: templates,
+	}
+
+	var tplOutput bytes.Buffer
+	err = tmpl.Execute(&tplOutput, data)
+
+	return tplOutput.String(), nil
+}
 
 func MergeTemplates(cloudTemplates []config.CloudTemplate, targetProject config.Project) {
 	for _, template := range cloudTemplates {

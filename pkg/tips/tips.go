@@ -7,19 +7,10 @@ import (
 	"strings"
 )
 
-const tipsDir = "tips"
+const TipsDir = "tips"
 
 func LocalDir(gitCfg config.CloudConfig) string {
-	return file.Path("%s/%s", gitCfg.Implementation().Dir(), tipsDir)
-}
-
-func CloudSource(name string, cloudConfig config.CloudConfig) (string, error) {
-	glbConf, err := cloudConfig.GlobalCloudConfig()
-	if err != nil {
-		return "", err
-	}
-	link := glbConf.CloudConfigSource.RootUrl + glbConf.CloudConfigSource.RelativFileUrl + "/" + tipsDir + "/" + name + ".md"
-	return link, nil
+	return file.Path("%s/%s", gitCfg.Implementation().Dir(), TipsDir)
 }
 
 func List(gitCfg config.CloudConfig) (tips []os.DirEntry, err error) {

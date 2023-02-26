@@ -35,8 +35,9 @@ type Nexus struct {
 	Password string `yaml:"password"`
 }
 
-type TipsConfig struct {
-	Width int `yaml:"width"`
+type TerminalConfig struct {
+	Width  int    `yaml:"width"`
+	Format string `yaml:"format"`
 }
 
 type CloudDeprecated struct {

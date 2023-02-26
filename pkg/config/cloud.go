@@ -34,6 +34,14 @@ type CloudConfig interface {
 	GlobalCloudConfig() (globalCloudConfig GlobalCloudConfig, err error)
 }
 
+func (globalCloudConfig GlobalCloudConfig) SourceFor(dir string, name string) string {
+	return fmt.Sprintf("%s%s/%s/%s",
+		globalCloudConfig.CloudConfigSource.RootUrl,
+		globalCloudConfig.CloudConfigSource.RelativFileUrl,
+		dir,
+		name)
+}
+
 func OpenGitCloudConfig(localConfigPath string) (cfg GitCloudConfig) {
 	cfg.Impl.Path = file.Path("%s/cloud-config", localConfigPath)
 	return
