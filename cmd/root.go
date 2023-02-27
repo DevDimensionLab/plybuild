@@ -25,7 +25,7 @@ import (
 	"strings"
 )
 
-const version = "v0.6.23"
+const version = "v0.6.24"
 
 var log = logger.Context()
 
