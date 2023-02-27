@@ -16,8 +16,14 @@ import (
 
 const TemplatesDir = "templates"
 
-type Root struct {
-	Templates []config.CloudTemplate `json:"templates"`
+type CloudTemplateListRenderingModel struct {
+	Templates  []config.CloudTemplate
+	Categories []*CloudTemplateCategory
+}
+
+type CloudTemplateCategory struct {
+	Name      string
+	Templates []config.CloudTemplate
 }
 
 func SaveTemplateListMarkdown(gitCfg config.CloudConfig, markdownDocument string) (string, error) {
@@ -37,9 +43,7 @@ func ListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate)
 		return "", err
 	}
 
-	data := Root{
-		Templates: templates,
-	}
+	data := createTemplateListRenderingModel(templates)
 
 	var tplOutput bytes.Buffer
 	err = tmpl.Execute(&tplOutput, data)
@@ -47,10 +51,38 @@ func ListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate)
 	return tplOutput.String(), nil
 }
 
+func createTemplateListRenderingModel(templates []config.CloudTemplate) CloudTemplateListRenderingModel {
+
+	categories := make([]*CloudTemplateCategory, 0)
+	for _, cloudTemplate := range templates {
+		templateCategories := strings.Split(cloudTemplate.Name, "/")
+		registered := false
+		categoryName := templateCategories[0]
+		for _, category := range categories {
+			if category.Name == categoryName {
+				category.Templates = append(category.Templates, cloudTemplate)
+				registered = true
+				break
+			}
+		}
+		if !registered {
+			categories = append(categories, &CloudTemplateCategory{
+				Name:      categoryName,
+				Templates: []config.CloudTemplate{cloudTemplate},
+			})
+		}
+	}
+
+	return CloudTemplateListRenderingModel{
+		Templates:  templates,
+		Categories: categories,
+	}
+}
+
 func MergeTemplates(cloudTemplates []config.CloudTemplate, targetProject config.Project) {
-	for _, template := range cloudTemplates {
-		log.Infof("applying Template %s", template.Name)
-		if err := MergeTemplate(template, targetProject, false); err != nil {
+	for _, cloudTemplate := range cloudTemplates {
+		log.Infof("applying Template %s", cloudTemplate.Name)
+		if err := MergeTemplate(cloudTemplate, targetProject, false); err != nil {
 			log.Warnf("%v", err)
 		}
 	}
