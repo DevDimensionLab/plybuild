@@ -4,7 +4,7 @@
         <!-- lookup parent from repository -->
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.2</version>
+        <version>3.0.3</version>
     </parent>
     <groupId>com.example</groupId>
     <artifactId>app</artifactId>
@@ -12,10 +12,10 @@
     <name>Example app</name>
     <description>Demo of new app, generated with spring-boot</description>
     <properties>
-        <java.version>11</java.version>
-	<gson.version>2.6.0</gson.version>
-        <kotlin.version>1.7.10</kotlin.version>
-	<mapstruct.version>1.4.0.Final</mapstruct.version>
+        <java.version>17</java.version>
+	<gson.version>2.10.1</gson.version>
+        <kotlin.version>1.8.10</kotlin.version>
+	<mapstruct.version>1.5.3.Final</mapstruct.version>
     </properties>
     <dependencies>
         <dependency>
