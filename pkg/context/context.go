@@ -15,9 +15,9 @@ type Context struct {
 	ForceCloudSync  bool
 	OpenInBrowser   bool
 	StealthMode     bool
-	Projects        []config.Project
 	Err             error
 	ProfilesPath    string
+	Projects        []config.Project
 	LocalConfig     config.LocalConfigDir
 	CloudConfig     config.CloudConfig
 }

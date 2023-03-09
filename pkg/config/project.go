@@ -289,6 +289,17 @@ func (project *Project) SortAndWritePom() error {
 	return project.Type.Model().WriteToFile(outputFile, indentation)
 }
 
+func (project *Project) ConfigAsMap() (map[string]any, error) {
+	serializedBytes, err := json.Marshal(project)
+	if err != nil {
+		return nil, err
+	}
+
+	var deserialized map[string]any
+	err = json.Unmarshal(serializedBytes, &deserialized)
+	return deserialized, err
+}
+
 func (projectSettings *ProjectSettings) DependencyIsIgnored(dep pom.Dependency) bool {
 	if projectSettings.DisableUpgradesFor == nil {
 		return false

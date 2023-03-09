@@ -10,6 +10,14 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run scrips in scripts directory",
 	Long:  `Run scrips in scripts directory`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := InitGlobals(cmd); err != nil {
+			log.Fatalln(err)
+		}
+		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
+			log.Fatalln(err)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		scripts, err := ctx.CloudConfig.Scripts()
 		if err != nil {
@@ -40,8 +48,15 @@ var runCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-
 		envMap["local_config"] = localConfigMap
+
+		if len(ctx.Projects) > 0 {
+			projectConfig, err := ctx.Projects[0].ConfigAsMap()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			envMap["project_config"] = projectConfig
+		}
 
 		output, err := shell.RunWithEnvironment(envMap, script.Path, args[1:]...)
 		if err != nil {
@@ -54,5 +69,6 @@ var runCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(runCmd)
 
+	runCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	runCmd.Flags().Bool("list", false, "list available scripts")
 }
