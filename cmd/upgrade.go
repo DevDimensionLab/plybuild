@@ -94,7 +94,7 @@ var upgradeDeprecatedCmd = &cobra.Command{
 	Long:  `Remove and replace deprecated dependencies in a project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.OnEachMavenProject("removes and replaces deprecated dependencies", func(repository maven.Repository, project config.Project) error {
-			return upgradeDeprecated(project)
+			return upgradeDeprecated(ctx.CloudConfig, project)
 		})
 	},
 }
@@ -160,8 +160,8 @@ func init() {
 	upgradeCmd.PersistentFlags().BoolVar(&ctx.StealthMode, "stealth", false, "use alternative pom.xml writer")
 }
 
-func upgradeDeprecated(project config.Project) error {
-	templates, err := maven.RemoveDeprecated(project.CloudConfig, project.Type.Model())
+func upgradeDeprecated(cloudConfig config.CloudConfig, project config.Project) error {
+	templates, err := maven.RemoveDeprecated(cloudConfig, project.Type.Model())
 	if err != nil {
 		return err
 	}

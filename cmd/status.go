@@ -41,7 +41,7 @@ var statusCmd = &cobra.Command{
 				maven.UpgradePlugins(),
 				maven.ChangeVersionToPropertyTags(),
 				maven.CleanManualVersions(),
-				maven.StatusDeprecated(),
+				maven.StatusDeprecated(ctx.CloudConfig),
 			)
 		}
 	},

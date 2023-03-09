@@ -40,9 +40,8 @@ func RemoveDeprecated(cloudConfig config.CloudConfig, model *pom.Model) (templat
 	return
 }
 
-func StatusDeprecated() func(repository Repository, project config.Project) error {
+func StatusDeprecated(cloudConfig config.CloudConfig) func(repository Repository, project config.Project) error {
 	return func(repository Repository, project config.Project) error {
-		cloudConfig := project.CloudConfig
 		model := project.Type.Model()
 		if model == nil || model.Dependencies == nil {
 			return nil
