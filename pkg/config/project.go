@@ -18,12 +18,11 @@ import (
 const projectConfigFileName = "co-pilot.json"
 
 type Project struct {
-	Path        string
-	GitInfo     GitInfo
-	ConfigFile  string
-	Config      ProjectConfiguration
-	Type        ProjectType
-	CloudConfig CloudConfig
+	Path       string
+	GitInfo    GitInfo
+	ConfigFile string
+	Config     ProjectConfiguration
+	Type       ProjectType
 }
 
 type ValidProjectType string
@@ -288,6 +287,17 @@ func (project *Project) SortAndWritePom() error {
 	}
 	log.Infof("serializing and writing model to pom file: %s", outputFile)
 	return project.Type.Model().WriteToFile(outputFile, indentation)
+}
+
+func (project *Project) ConfigAsMap() (map[string]any, error) {
+	serializedBytes, err := json.Marshal(project)
+	if err != nil {
+		return nil, err
+	}
+
+	var deserialized map[string]any
+	err = json.Unmarshal(serializedBytes, &deserialized)
+	return deserialized, err
 }
 
 func (projectSettings *ProjectSettings) DependencyIsIgnored(dep pom.Dependency) bool {

@@ -30,6 +30,8 @@ type CloudConfig interface {
 	ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error)
 	Templates() (templates []CloudTemplate, err error)
 	Template(name string) (CloudTemplate, error)
+	Scripts() (scripts []CloudScript, err error)
+	Script(name string) (CloudScript, error)
 	Examples() (templates []string, err error)
 	GlobalCloudConfig() (globalCloudConfig GlobalCloudConfig, err error)
 }
@@ -245,6 +247,43 @@ func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) 
 	})
 
 	return
+}
+
+func (gitCfg GitCloudConfig) Scripts() (scripts []CloudScript, err error) {
+	root := file.Path("%s/scripts", gitCfg.Implementation().Dir())
+
+	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !strings.Contains(info.Name(), ".sh") {
+			return nil
+		}
+		scripts = append(scripts, CloudScript{
+			Name: info.Name(),
+			Path: path,
+		})
+		return nil
+	})
+
+	return
+}
+
+func (gitCfg GitCloudConfig) Script(name string) (script CloudScript, err error) {
+	scripts, err := gitCfg.Scripts()
+	if err != nil {
+		return script, err
+	}
+
+	for _, s := range scripts {
+		if s.Name == name || s.Name == name+".sh" {
+			script = s
+			return
+		}
+	}
+
+	return script, errors.New(fmt.Sprintf("could not find any scripts with name: %s", name))
 }
 
 func (gitCfg GitCloudConfig) Examples() (templates []string, err error) {

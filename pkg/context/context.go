@@ -15,9 +15,9 @@ type Context struct {
 	ForceCloudSync  bool
 	OpenInBrowser   bool
 	StealthMode     bool
-	Projects        []config.Project
 	Err             error
 	ProfilesPath    string
+	Projects        []config.Project
 	LocalConfig     config.LocalConfigDir
 	CloudConfig     config.CloudConfig
 }
@@ -60,8 +60,8 @@ func (ctx *Context) OnEachMavenProject(description string, do ...func(repository
 	mavenRepository := ctx.GetMavenRepository()
 
 	for _, p := range ctx.Projects {
-		if p.CloudConfig != nil {
-			projectDefaults, err := p.CloudConfig.ProjectDefaults()
+		if ctx.CloudConfig != nil {
+			projectDefaults, err := ctx.CloudConfig.ProjectDefaults()
 			if err != nil {
 				log.Warnf("could not find a project-defaults.json file in cloud-config")
 				log.Debugf("%v", err)

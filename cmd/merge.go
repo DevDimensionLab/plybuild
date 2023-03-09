@@ -97,7 +97,7 @@ var mergeTemplateCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		cloudTemplate, err := project.CloudConfig.Template(templateName)
+		cloudTemplate, err := ctx.CloudConfig.Template(templateName)
 		if err != nil {
 			log.Fatalln(err)
 		}

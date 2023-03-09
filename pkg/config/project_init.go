@@ -75,25 +75,6 @@ func InitProjectFromDirectory(targetDir string) (project Project, err error) {
 		return
 	}
 
-	profilePath, err := GetActiveProfilePath()
-	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
-		if err := InstallOrMigrateToProfiles(); err != nil {
-			return project, err
-		}
-		profilePath, err = GetActiveProfilePath()
-		if err != nil {
-			return project, err
-		}
-	}
-
-	if project.Config.Profile != "" {
-		profilePath, err = GetProfilesPathFor(project.Config.Profile)
-		if err != nil {
-			return
-		}
-	}
-	project.CloudConfig = OpenGitCloudConfig(profilePath)
-
 	pomFile := file.Path("%s/pom.xml", targetDir)
 	if file.Exists(pomFile) {
 		pomModel, err := pom.GetModelFrom(pomFile)

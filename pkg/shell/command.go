@@ -30,6 +30,30 @@ func Run(name string, args ...string) Output {
 	return run(exec.Command(name, args...))
 }
 
+func RunWithEnvironment(environment map[string]interface{}, name string, args ...string) ([]byte, error) {
+	cmd := exec.Command(name, args...)
+	cmd.Env = os.Environ()
+	flatMap := make(map[string]interface{})
+	flatten("CO_PILOT", environment, flatMap)
+	for k, v := range flatMap {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", strings.ToUpper(k), v))
+	}
+	return cmd.Output()
+}
+
+func flatten(rootKey string, a map[string]interface{}, output map[string]interface{}) {
+	for k, v := range a {
+		switch v.(type) {
+		case map[string]interface{}:
+			flatten(fmt.Sprintf("%s_%s", rootKey, k), v.(map[string]interface{}), output)
+		default:
+			key := strings.ToUpper(fmt.Sprintf("%s_%s", rootKey, k))
+			output[key] = v
+		}
+	}
+	return
+}
+
 func run(cmd *exec.Cmd) (output Output) {
 	log.Debugf("running: %s", cmd.String())
 	cmd.Stdout = &output.StdOut

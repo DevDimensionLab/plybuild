@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -131,6 +132,22 @@ func (localCfgDir LocalConfigDir) Config() (LocalConfiguration, error) {
 	}
 
 	return config, nil
+}
+
+func (localCfgDir LocalConfigDir) ConfigAsMap() (map[string]any, error) {
+	config, err := localCfgDir.Config()
+	if err != nil {
+		return nil, err
+	}
+
+	serializedBytes, err := json.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
+	var deserialized map[string]any
+	err = json.Unmarshal(serializedBytes, &deserialized)
+	return deserialized, err
 }
 
 func (localCfgDir LocalConfigDir) Print() error {

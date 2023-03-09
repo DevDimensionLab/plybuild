@@ -94,6 +94,11 @@ type CloudTemplate struct {
 	Project Project
 }
 
+type CloudScript struct {
+	Name string
+	Path string
+}
+
 type CloudProjectDefaults struct {
 	Type     string          `json:"type"`
 	Settings ProjectSettings `json:"settings"`
