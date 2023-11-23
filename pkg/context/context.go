@@ -2,9 +2,9 @@ package context
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/maven"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/maven"
 )
 
 type Context struct {

@@ -4,7 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/ply/pkg/logger"
 	"io"
 	"os"
 	"os/exec"

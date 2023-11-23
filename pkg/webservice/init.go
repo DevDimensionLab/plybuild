@@ -2,8 +2,8 @@ package webservice
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/webservice/api"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/webservice/api"
 )
 
 type Endpoint string

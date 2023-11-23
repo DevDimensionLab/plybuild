@@ -1,8 +1,8 @@
 package resources
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/file"
 )
 
 func LocalDir(gitCfg config.CloudConfig) string {

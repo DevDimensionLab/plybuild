@@ -2,7 +2,7 @@ package maven
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/config"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"strings"
 )

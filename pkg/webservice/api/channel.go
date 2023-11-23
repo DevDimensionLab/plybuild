@@ -1,6 +1,6 @@
 package api
 
-import "github.com/devdimensionlab/co-pilot/pkg/config"
+import "github.com/devdimensionlab/ply/pkg/config"
 
 var CallbackChannel = make(chan bool)
 

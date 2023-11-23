@@ -1,8 +1,8 @@
 {
   "language": "java",
-  "groupId": "no.copilot.target",
+  "groupId": "no.ply.target",
   "artifactId": "test",
-  "package": "no.copilot.template.target",
+  "package": "no.ply.template.target",
   "name": "test-target",
   "description": "",
   "dependencies": []

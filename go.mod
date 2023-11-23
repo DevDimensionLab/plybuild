@@ -1,4 +1,4 @@
-module github.com/devdimensionlab/co-pilot
+module github.com/devdimensionlab/ply
 
 go 1.18
 

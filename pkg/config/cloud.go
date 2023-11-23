@@ -3,8 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/shell"
+	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/shell"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
@@ -228,7 +228,7 @@ func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) 
 	root := file.Path("%s/templates", gitCfg.Implementation().Dir())
 
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err == nil && info.Name() == "co-pilot.json" {
+		if err == nil && (info.Name() == projectConfigFileName || info.Name() == legacyProjectConfigFileName) {
 			relPath := strings.Split(path, file.Path("/"+info.Name()))
 			name := strings.Split(relPath[0], file.Path("/templates/"))
 			project, err := InitProjectFromDirectory(relPath[0])

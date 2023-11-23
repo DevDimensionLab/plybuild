@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/maven"
-	"github.com/devdimensionlab/co-pilot/pkg/template"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/maven"
+	"github.com/devdimensionlab/ply/pkg/template"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
@@ -81,8 +81,8 @@ var mergeTextCmd = &cobra.Command{
 
 var mergeTemplateCmd = &cobra.Command{
 	Use:   "template",
-	Short: "Merges a template from co-pilot-config",
-	Long:  `Merges a template from co-pilot-config`,
+	Short: "Merges a template from ply-config",
+	Long:  `Merges a template from ply-config`,
 	Run: func(cmd *cobra.Command, args []string) {
 		templateName, err := cmd.Flags().GetString("name")
 		if err != nil {

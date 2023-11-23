@@ -2,7 +2,7 @@ package maven
 
 import (
 	"errors"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/config"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/viper"
 	"strings"
@@ -50,7 +50,7 @@ func _removeBlacklistedDependencies(model *pom.Model) error {
 
 	bannedPomUrl := viper.GetString("banned_pom_url")
 	if bannedPomUrl == "" {
-		return errors.New("could not extract key `banned_pom_url` from config file ~/.co-pilot.yaml")
+		return errors.New("could not extract key `banned_pom_url` from config file ~/.ply.yaml")
 	}
 	bannedModel, err := GetBannedModel(bannedPomUrl)
 	if err != nil {

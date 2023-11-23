@@ -1,4 +1,4 @@
-package no.copilot.template.test
+package no.ply.template.test
 
 enum class Queue {
     FOO, BAR

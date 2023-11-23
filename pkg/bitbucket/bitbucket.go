@@ -1,9 +1,9 @@
 package bitbucket
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/http"
-	"github.com/devdimensionlab/co-pilot/pkg/shell"
+	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/http"
+	"github.com/devdimensionlab/ply/pkg/shell"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"

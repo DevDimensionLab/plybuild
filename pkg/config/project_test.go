@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/file"
 	"testing"
 )
 
@@ -16,12 +16,12 @@ func TestProjectConfiguration_SourceMainPath(t *testing.T) {
 		t.Errorf("%v\n", err)
 	}
 
-	expectedSourceRoot := "src/main/kotlin/no/copilot/template/test"
+	expectedSourceRoot := "src/main/kotlin/no/ply/template/test"
 	if sourceConfig.SourceMainPath() != expectedSourceRoot {
 		t.Errorf("expected %s, but got instead %s", expectedSourceRoot, sourceConfig.SourceMainPath())
 	}
 
-	expectedTargetRoot := "src/main/java/no/copilot/template/target"
+	expectedTargetRoot := "src/main/java/no/ply/template/target"
 	if targetConfig.SourceMainPath() != expectedTargetRoot {
 		t.Errorf("expected %s, but got instead %s", expectedTargetRoot, targetConfig.SourceMainPath())
 	}
@@ -113,8 +113,8 @@ func TestCreateProjectConfig(t *testing.T) {
 		t.Errorf("%v\n", err)
 	}
 
-	originConfig := "test/project-config/origin.co-pilot.json"
-	newConfig := "test/project-config/co-pilot.json"
+	originConfig := "test/project-config/origin.ply.json"
+	newConfig := "test/project-config/ply.json"
 	equal, err := file.Equal(originConfig, newConfig)
 	if !equal {
 		t.Errorf("%s is not equal to %s", originConfig, newConfig)

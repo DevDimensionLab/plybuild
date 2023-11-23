@@ -16,8 +16,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -25,13 +25,13 @@ import (
 	"strings"
 )
 
-const version = "v0.6.26"
+const version = "v1.0.0"
 
 var log = logger.Context()
 
 var RootCmd = &cobra.Command{
-	Use:   "co-pilot",
-	Short: "Co-pilot is a developer tool for automating common tasks on a spring boot project",
+	Use:   "ply",
+	Short: "Ply is a developer tool for automating common tasks on a spring boot project",
 	Long:  header(),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
@@ -73,7 +73,7 @@ func initConfig() {
 	}
 	ctx.LoadProfile(ctx.ProfilesPath)
 
-	viper.SetEnvPrefix("COPILOT")
+	viper.SetEnvPrefix("PLY")
 	viper.SetConfigFile(ctx.LocalConfig.FilePath())
 	_ = viper.ReadInConfig()
 	viper.AutomaticEnv() // read in environment variables that match

@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/file"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
@@ -63,7 +63,7 @@ var examplesInstallCmd = &cobra.Command{
 
 		for _, example := range examples {
 			if example == exampleName {
-				path := file.Path("%s/examples/%s/co-pilot.json", ctx.CloudConfig.Implementation().Dir(), example)
+				path := file.Path("%s/examples/%s/ply.json", ctx.CloudConfig.Implementation().Dir(), example)
 				cmd.Flags().String("config-file", path, "Optional config file")
 
 				projectConfig, err := config.InitProjectConfigurationFromFile(path)

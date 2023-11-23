@@ -1,8 +1,8 @@
 package template
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/file"
 	"strings"
 	"testing"
 )
@@ -62,7 +62,7 @@ func TestReplacePathForSource(t *testing.T) {
 				t.Errorf("expectedContains1 %s not found in %s", expectedContains1, sourceRelPath)
 			}
 
-			expectedContains2 := "no/copilot/template/target"
+			expectedContains2 := "no/ply/template/target"
 			if !strings.Contains(sourceRelPath, expectedContains2) {
 				t.Errorf("expectedContains1 %s not found in %s", expectedContains2, sourceRelPath)
 			}

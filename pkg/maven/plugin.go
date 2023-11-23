@@ -1,8 +1,8 @@
 package maven
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/logger"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/sirupsen/logrus"
 	"strings"
