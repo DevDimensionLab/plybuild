@@ -67,12 +67,12 @@ func InitProjectFromPomFile(pomFile string) (project Project, err error) {
 }
 
 func InitProjectFromDirectory(targetDir string) (project Project, err error) {
-	gitInfo, err := GetGitInfoFromPath(targetDir)
-	if err != nil {
-		log.Debugln(err)
-	} else {
-		project.GitInfo = gitInfo
-	}
+	//gitInfo, err := GetGitInfoFromPath(targetDir)
+	//if err != nil {
+	//	log.Debugln(err)
+	//} else {
+	//	project.GitInfo = gitInfo
+	//}
 
 	projectConfig, err := InitProjectConfigurationFromDir(targetDir)
 	if err != nil {
