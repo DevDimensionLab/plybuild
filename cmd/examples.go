@@ -63,9 +63,15 @@ var examplesInstallCmd = &cobra.Command{
 
 		for _, example := range examples {
 			if example == exampleName {
-				path := file.Path("%s/examples/%s/ply.json", ctx.CloudConfig.Implementation().Dir(), example)
-				cmd.Flags().String("config-file", path, "Optional config file")
 
+				path := file.Path("%s/examples/%s/ply.json", ctx.CloudConfig.Implementation().Dir(), example)
+
+				// legacy support for older co-pilot.json files
+				if !file.Exists(path) {
+					path = file.Path("%s/examples/%s/co-pilot.json", ctx.CloudConfig.Implementation().Dir(), example)
+				}
+
+				cmd.Flags().String("config-file", path, "Optional config file")
 				projectConfig, err := config.InitProjectConfigurationFromFile(path)
 				if err != nil {
 					log.Fatalln(err)
