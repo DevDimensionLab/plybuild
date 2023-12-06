@@ -5,9 +5,9 @@ import (
 )
 
 func TestPath(t *testing.T) {
-	path1 := Path("%s/co-pilot.json", "test")
+	path1 := Path("%s/ply.json", "test")
 
-	expected := "test/co-pilot.json"
+	expected := "test/ply.json"
 
 	if path1 != expected {
 		t.Errorf("expected %s, but got: %s", expected, path1)

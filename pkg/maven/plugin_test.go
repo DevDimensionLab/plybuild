@@ -2,7 +2,7 @@ package maven
 
 import (
 	"encoding/json"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/file"
 	"testing"
 )
 

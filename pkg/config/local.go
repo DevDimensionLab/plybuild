@@ -1,13 +1,13 @@
 package config
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/file"
 	"gopkg.in/yaml.v2"
 	"os"
 )
 
 var localConfigFileName = "local-config.yaml"
-var defaultCloudConfigUrl = "https://github.com/devdimensionlab/co-pilot-config.git"
+var defaultCloudConfigUrl = "https://github.com/devdimensionlab/ply-config.git"
 
 type LocalConfigDir struct {
 	impl DirConfig

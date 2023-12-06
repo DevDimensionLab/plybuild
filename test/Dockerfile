@@ -1,5 +1,5 @@
-FROM copilotcli/devdimensionlab:latest
+FROM plycli/devdimensionlab:latest
 
 WORKDIR /order
 
-CMD ["/bin/co-pilot", "spring", "init", "--config-file", "co-pilot.json"]
+CMD ["/bin/ply", "spring", "init", "--config-file", "ply.json"]

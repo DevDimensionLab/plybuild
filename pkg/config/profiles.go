@@ -1,23 +1,30 @@
 package config
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/file"
 	"github.com/mitchellh/go-homedir"
 )
 
-const coPilotHomePath = ".co-pilot"
+const plyHomePath = ".ply"
+const legacyPlyHomePath = ".co-pilot"
 
-func GetCoPilotHomePath() (string, error) {
+func GetPlyHomePath() (string, error) {
 	home, err := homedir.Dir()
 	if err != nil {
 		return "", err
 	}
 
-	return file.Path("%s/%s", home, coPilotHomePath), nil
+	plyHomePathDir := file.Path("%s/%s", home, plyHomePath)
+	if file.Exists(plyHomePathDir) {
+		return plyHomePathDir, nil
+	} else {
+		return file.Path("%s/%s", home, legacyPlyHomePath), nil
+	}
+
 }
 
 func GetProfilesPath() (string, error) {
-	home, err := GetCoPilotHomePath()
+	home, err := GetPlyHomePath()
 	if err != nil {
 		return "", err
 	}
@@ -61,7 +68,7 @@ func InstallOrMigrateToProfiles() error {
 	if err != nil {
 		return err
 	}
-	homePath, err := GetCoPilotHomePath()
+	homePath, err := GetPlyHomePath()
 	if err != nil {
 		return err
 	}

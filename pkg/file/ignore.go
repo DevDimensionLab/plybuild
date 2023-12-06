@@ -4,8 +4,14 @@ import (
 	"strings"
 )
 
-func OpenIgnoreFile(filePath string) (lines []string, err error) {
-	ignoreLines, err := OpenLines(filePath)
+func OpenIgnoreFile(sourceDir string) (lines []string, err error) {
+	ignoreFile := Path("%s/.ply.ignore", sourceDir)
+	if !Exists(ignoreFile) {
+		// support legacy ignore file for now
+		ignoreFile = Path("%s/.co-pilot.ignore", sourceDir)
+	}
+	ignoreLines, err := OpenLines(ignoreFile)
+
 	if err != nil {
 		return lines, err
 	}

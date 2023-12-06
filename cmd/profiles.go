@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/config"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -25,8 +25,8 @@ var configOpts ConfigOpts
 
 var profilesCmd = &cobra.Command{
 	Use:   "profiles",
-	Short: "Manage profiles settings for co-pilot",
-	Long:  `Manage profiles settings for co-pilot`,
+	Short: "Manage profiles settings for ply",
+	Long:  `Manage profiles settings for ply`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if configOpts.UseProfile != "" {
 			log.Infof("switching to config: %s", configOpts.UseProfile)

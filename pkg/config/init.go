@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
+	"github.com/devdimensionlab/ply/pkg/logger"
 	"github.com/sirupsen/logrus"
 )
 

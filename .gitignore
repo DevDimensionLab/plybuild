@@ -4,6 +4,7 @@
 spring-boot-project-starter
 spring-boot-co-pilot
 co-pilot
+ply
 target
 webservice*
 !pkg/webservice

@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/maven"
-	"github.com/devdimensionlab/co-pilot/pkg/spring"
-	"github.com/devdimensionlab/co-pilot/pkg/template"
-	"github.com/devdimensionlab/co-pilot/pkg/webservice"
-	"github.com/devdimensionlab/co-pilot/pkg/webservice/api"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/maven"
+	"github.com/devdimensionlab/ply/pkg/spring"
+	"github.com/devdimensionlab/ply/pkg/template"
+	"github.com/devdimensionlab/ply/pkg/webservice"
+	"github.com/devdimensionlab/ply/pkg/webservice/api"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"os"
@@ -18,8 +18,8 @@ import (
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
-	Short: "Initializes a maven project with co-pilot files and formatting",
-	Long:  `Initializes a maven project with co-pilot files and formatting`,
+	Short: "Initializes a maven project with ply files and formatting",
+	Long:  `Initializes a maven project with ply files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var orderConfig config.ProjectConfiguration
 		var err error
@@ -180,8 +180,8 @@ var generateCmd = &cobra.Command{
 
 var generateCleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "Cleans a maven project with co-pilot files and formatting",
-	Long:  `Cleans a maven project with co-pilot files and formatting`,
+	Short: "Cleans a maven project with ply files and formatting",
+	Long:  `Cleans a maven project with ply files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		prompt := promptui.Prompt{
@@ -203,7 +203,7 @@ var generateCleanCmd = &cobra.Command{
 			return
 		}
 		log.Infof(fmt.Sprintf("Deleting all contents from: %s", ctx.TargetDirectory))
-		if err := file.ClearDir(ctx.TargetDirectory, []string{".idea", "co-pilot.json", ".iml"}); err != nil {
+		if err := file.ClearDir(ctx.TargetDirectory, []string{".idea", "ply.json", ".iml"}); err != nil {
 			log.Fatalln(err)
 		}
 	},
@@ -289,7 +289,7 @@ func init() {
 	generateCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", true, "Cloud sync")
 	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	generateCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
-	generateCmd.Flags().String("config-file", "co-pilot.json", "Optional config file")
+	generateCmd.Flags().String("config-file", "ply.json", "Optional config file")
 	generateCmd.Flags().String("boot-version", "", "Defines spring-boot version to use")
 	generateCmd.Flags().String("group-id", "", "Overrides groupId from config file")
 	generateCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")

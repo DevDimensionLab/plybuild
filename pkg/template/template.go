@@ -3,11 +3,11 @@ package template
 import (
 	"bytes"
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/maven"
-	"github.com/devdimensionlab/co-pilot/pkg/resources"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/maven"
+	"github.com/devdimensionlab/ply/pkg/resources"
 	"os"
 	"path/filepath"
 	"strings"
@@ -233,16 +233,18 @@ func getIgnores(sourceDir string) (ignores []string) {
 	}
 	ignores = append(ignores, gitIgnores...)
 
-	coPilotIgnores, err := file.OpenIgnoreFile(file.Path("%s/.co-pilot.ignore", sourceDir))
+	plyIgnores, err := file.OpenIgnoreFile(sourceDir)
 	if err != nil {
 		log.Error(err)
 	}
-	ignores = append(ignores, coPilotIgnores...)
+	ignores = append(ignores, plyIgnores...)
 
 	defaultIgnores := []string{
 		"pom.xml",
+		"ply.json",
 		"co-pilot.json",
 		"Application",
+		".ply.ignore",
 		".co-pilot.ignore",
 		".gitignore",
 		".mvn",

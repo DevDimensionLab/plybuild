@@ -4,18 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
-	"github.com/devdimensionlab/co-pilot/pkg/logger"
-	"github.com/devdimensionlab/co-pilot/pkg/shell"
-	"github.com/devdimensionlab/co-pilot/pkg/sorting"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/logger"
+	"github.com/devdimensionlab/ply/pkg/shell"
+	"github.com/devdimensionlab/ply/pkg/sorting"
 	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
 )
 
-const projectConfigFileName = "co-pilot.json"
+const projectConfigFileName = "ply.json"
+const legacyProjectConfigFileName = "co-pilot.json"
 
 type Project struct {
 	Path        string
@@ -186,7 +187,7 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 		}
 
 		return errors.New(fmt.Sprintf("%s directory detected, but language was not set in %s",
-			file.Path("%s/src", targetDir), projectConfigFileName))
+			file.Path("%s/src", targetDir), "config file (ply.json, or co-pilot.json"))
 	}
 
 	return nil

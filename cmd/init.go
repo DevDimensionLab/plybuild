@@ -7,8 +7,8 @@ import (
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initializes a maven project with co-pilot files and formatting",
-	Long:  `Initializes a maven project with co-pilot files and formatting`,
+	Short: "Initializes a maven project with ply files and formatting",
+	Long:  `Initializes a maven project with ply files and formatting`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)

@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/config"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
+	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/ply/pkg/file"
 	"github.com/spf13/cobra"
 )
 
@@ -60,7 +60,7 @@ func generateCompleteFor(relPath string, generator func(string) error) error {
 }
 
 func configPathFor(fileName string) (string, error) {
-	configPath, err := config.GetCoPilotHomePath()
+	configPath, err := config.GetPlyHomePath()
 	if err != nil {
 		return "", err
 	}

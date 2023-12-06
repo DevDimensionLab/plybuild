@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/devdimensionlab/co-pilot/pkg/maven"
+	"github.com/devdimensionlab/ply/pkg/maven"
 	"github.com/spf13/cobra"
 )
 

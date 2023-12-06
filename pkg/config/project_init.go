@@ -3,8 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/devdimensionlab/co-pilot/pkg/file"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/ply/pkg/file"
 	"strings"
 )
 
@@ -16,13 +16,17 @@ func InitProjectConfigurationFromFile(filePath string) (ProjectConfiguration, er
 	if err != nil {
 		return config, err
 	}
-	err = config.Populate(strings.Replace(filePath, projectConfigFileName, "", 1))
+
+	targetDir := strings.Replace(filePath, projectConfigFileName, "", 1)
+	targetDir = strings.Replace(filePath, legacyProjectConfigFileName, "", 1)
+
+	err = config.Populate(targetDir)
 	return config, err
 }
 
 func InitProjectConfigurationFromDir(targetDir string) (ProjectConfiguration, error) {
 	config := ProjectConfiguration{}
-	filePath := file.Path("%s/%s", targetDir, projectConfigFileName)
+	filePath := projectConfigFile(targetDir)
 
 	err := file.ReadJson(filePath, &config)
 	if err != nil {
@@ -63,12 +67,12 @@ func InitProjectFromPomFile(pomFile string) (project Project, err error) {
 }
 
 func InitProjectFromDirectory(targetDir string) (project Project, err error) {
-	gitInfo, err := GetGitInfoFromPath(targetDir)
-	if err != nil {
-		log.Debugln(err)
-	} else {
-		project.GitInfo = gitInfo
-	}
+	//gitInfo, err := GetGitInfoFromPath(targetDir)
+	//if err != nil {
+	//	log.Debugln(err)
+	//} else {
+	//	project.GitInfo = gitInfo
+	//}
 
 	projectConfig, err := InitProjectConfigurationFromDir(targetDir)
 	if err != nil {
@@ -106,7 +110,7 @@ func InitProjectFromDirectory(targetDir string) (project Project, err error) {
 		}
 	}
 
-	project.ConfigFile = file.Path("%s/%s", targetDir, projectConfigFileName)
+	project.ConfigFile = projectConfigFile(targetDir)
 	project.Path = targetDir
 	project.Config = projectConfig
 	return
@@ -148,4 +152,15 @@ func findRootSourceFilePackageName(suffix string, path string) (packageName stri
 
 	return "",
 		errors.New(fmt.Sprintf("failed to get any files with suffix %s and a 'package' line in %s", suffix, path))
+}
+
+func projectConfigFile(targetDir string) string {
+	plyFile := file.Path("%s/%s", targetDir, projectConfigFileName)
+	if file.Exists(plyFile) {
+		// return ply.json file
+		return plyFile
+	} else {
+		// return co-pilot.json file for legacy projects
+		return file.Path("%s/%s", targetDir, legacyProjectConfigFileName)
+	}
 }
