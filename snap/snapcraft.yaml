@@ -1,20 +1,20 @@
 # After registering a name on build.snapcraft.io, commit an uncommented line:
-name: co-pilot
+name: ply
 version: git
 version-script: |
   echo $(git describe --tags)
 
 base: core18
-summary: 'Co-pilot is a developer tool for automating common tasks'
-description: "Co-pilot is a developer tool for automating common tasks on a spring boot project"
+summary: 'Plybuild is a developer tool for automating common tasks'
+description: "Plybuild is a developer tool for automating common tasks on a spring boot project"
 
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict # use 'strict' once you have the right plugs and slots
 
 parts:
-  co-pilot:
+  ply:
     plugin: go
-    go-importpath: github.com/devdimensionlab/co-pilot
+    go-importpath: github.com/devdimensionlab/plybuild
     source: .
     source-type: git
     build-packages:
