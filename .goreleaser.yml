@@ -15,14 +15,14 @@ builds:
     # Custom ldflags templates.
     # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
     ldflags:
-      - -s -w -X co-pilot/cmd.buildDate={{.Date}} -X co-pilot/cmd.version={{.Version}}
-archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
+      - -s -w -X ply/cmd.buildDate={{.Date}} -X ply/cmd.version={{.Version}}
+#archives:
+#  - replacements:
+#      darwin: Darwin
+#      linux: Linux
+#      windows: Windows
+#      386: i386
+#      amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -40,7 +40,7 @@ release:
   # Note: it can only be one: either github, gitlab or gitea
   github:
     owner: devdimensionlab
-    name: co-pilot
+    name: plybuild
 
   # If set to auto, will mark the release as not ready for production
   # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
@@ -52,50 +52,12 @@ release:
   # Default is `{{.Tag}}`
   # name_template: "{{.ProjectName}}-v{{.Version}}"
 
-# .goreleaser.yml
-snapcrafts:
-  -
-    # ID of the snapcraft config, must be unique.
-    # Defaults to "default".
-    id: co-pilot
-
-    # You can change the name of the package.
-    # Default: `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}`
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-
-    # Replacements for GOOS and GOARCH in the package name.
-    # Keys should be valid GOOSs or GOARCHs.
-    # Values are the respective replacements.
-    # Default is empty.
-    replacements:
-      amd64: 64-bit
-      386: 32-bit
-      darwin: macOS
-      linux: Tux
-
-    publish: true
-    summary: 'Co-pilot is a developer tool for automating common tasks'
-    description: |
-      Co-pilot is a developer tool for automating common tasks on a spring boot project
-
-    grade: stable
-    confinement: strict
-    license: MIT
-    base: core18
-
-    plugs:
-      personal-files:
-        read:
-        - $HOME/.co-pilot
-        write:
-        - $HOME/.co-pilot
-
 brews:
   -
     # GitHub/GitLab repository to push the formula to
     tap:
       owner: devdimensionlab
-      name: homebrew-co-pilot
+      name: homebrew-ply
 
     # The project name and current git tag are used in the format string.
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
@@ -110,7 +72,7 @@ brews:
 
     # Template of your app's description.
     # Default is empty.
-    description: "Co-pilot is a developer tool for automating common tasks on a spring boot project."
+    description: "Plybuild is a developer tool for automating common tasks on a spring boot project."
 
     # SPDX identifier of your app's license.
     # Default is empty.
