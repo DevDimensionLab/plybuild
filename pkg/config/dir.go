@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/file"
 )
 
 func (dirCfg DirConfig) Dir() string {

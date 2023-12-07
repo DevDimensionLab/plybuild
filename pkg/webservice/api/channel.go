@@ -1,6 +1,6 @@
 package api
 
-import "github.com/devdimensionlab/ply/pkg/config"
+import "github.com/devdimensionlab/plybuild/pkg/config"
 
 var CallbackChannel = make(chan bool)
 

@@ -2,7 +2,7 @@ package maven
 
 import (
 	"errors"
-	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/viper"
 	"strings"

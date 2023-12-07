@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/devdimensionlab/ply/pkg/bitbucket"
-	"github.com/devdimensionlab/ply/pkg/logger"
+	"github.com/devdimensionlab/plybuild/pkg/bitbucket"
+	"github.com/devdimensionlab/plybuild/pkg/logger"
 	"github.com/spf13/cobra"
 )
 

@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
 
 build:
-	go build
+	go build -o ply
 
 docker-build:
 	docker build --tag ply:latest .
@@ -27,9 +27,6 @@ lint:
 
 release:
 	goreleaser release --clean
-
-release-dry:
-	goreleaser --clean --skip=release --skip=validate
 
 release-brew:
 	goreleaser release --clean --skip=validate -f .goreleaser.brews.yml

@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/maven"
-	"github.com/devdimensionlab/ply/pkg/spring"
+	"github.com/devdimensionlab/plybuild/pkg/maven"
+	"github.com/devdimensionlab/plybuild/pkg/spring"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 )

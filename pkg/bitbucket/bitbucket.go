@@ -1,9 +1,9 @@
 package bitbucket
 
 import (
-	"github.com/devdimensionlab/ply/pkg/file"
-	"github.com/devdimensionlab/ply/pkg/http"
-	"github.com/devdimensionlab/ply/pkg/shell"
+	"github.com/devdimensionlab/plybuild/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/http"
+	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"

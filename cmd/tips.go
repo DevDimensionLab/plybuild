@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
-	"github.com/devdimensionlab/ply/pkg/file"
-	"github.com/devdimensionlab/ply/pkg/tips"
+	"github.com/devdimensionlab/plybuild/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/tips"
 	"github.com/spf13/cobra"
 	"os"
 	"strings"

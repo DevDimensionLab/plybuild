@@ -6,7 +6,8 @@ before:
     - go generate ./...
     - go test -v -cover ./...
 builds:
-  - env:
+  - binary: ply
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -57,7 +58,7 @@ brews:
     # GitHub/GitLab repository to push the formula to
     tap:
       owner: devdimensionlab
-      name: homebrew-ply
+      name: homebrew-plybuild
 
     # The project name and current git tag are used in the format string.
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"

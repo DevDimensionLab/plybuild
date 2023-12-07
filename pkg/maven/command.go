@@ -2,8 +2,8 @@ package maven
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/config"
-	"github.com/devdimensionlab/ply/pkg/logger"
+	"github.com/devdimensionlab/plybuild/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/logger"
 	"os/exec"
 	"strings"
 )

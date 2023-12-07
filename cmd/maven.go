@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/config"
-	"github.com/devdimensionlab/ply/pkg/maven"
-	"github.com/devdimensionlab/ply/pkg/webservice"
+	"github.com/devdimensionlab/plybuild/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/maven"
+	"github.com/devdimensionlab/plybuild/pkg/webservice"
 	"github.com/spf13/cobra"
 )
 

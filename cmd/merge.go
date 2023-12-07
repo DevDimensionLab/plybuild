@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/devdimensionlab/ply/pkg/config"
-	"github.com/devdimensionlab/ply/pkg/file"
-	"github.com/devdimensionlab/ply/pkg/maven"
-	"github.com/devdimensionlab/ply/pkg/template"
+	"github.com/devdimensionlab/plybuild/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/maven"
+	"github.com/devdimensionlab/plybuild/pkg/template"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"

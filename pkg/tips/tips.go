@@ -1,8 +1,8 @@
 package tips
 
 import (
-	"github.com/devdimensionlab/ply/pkg/config"
-	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/file"
 	"os"
 	"strings"
 )

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/file"
 	"io"
 	"net/http"
 	"regexp"
