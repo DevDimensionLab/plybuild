@@ -24,7 +24,7 @@ RUN apk --update add git less openssh maven graphviz && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
 
-COPY --from=build /build/co-pilot /bin/co-pilot
+COPY --from=build /build/ply /bin/ply
 COPY --from=build /build/ktlint /bin/ktlint
 
-ENTRYPOINT ["/bin/co-pilot"]
+ENTRYPOINT ["/bin/ply"]

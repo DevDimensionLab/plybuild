@@ -4,10 +4,10 @@ build:
 	go build
 
 docker-build:
-	docker build --tag co-pilot:latest .
+	docker build --tag ply:latest .
 
 docker-run:
-	docker run co-pilot $(ARGS)
+	docker run ply $(ARGS)
 
 docker-publish:
 	./docker-publish.sh	
@@ -26,13 +26,13 @@ lint:
 	gofmt -w cmd
 
 release:
-	goreleaser --rm-dist
+	goreleaser --clean
 
 release-dry:
-	goreleaser --rm-dist --skip-publish --skip-validate
+	goreleaser --clean --skip-publish --skip-validate
 
 release-brew:
-	goreleaser release --rm-dist --skip-validate -f .goreleaser.brews.yml
+	goreleaser release --clean --skip-validate -f .goreleaser.brews.yml
 
 upgrade:
 	go get github.com/devdimensionlab/mvn-pom-mutator
