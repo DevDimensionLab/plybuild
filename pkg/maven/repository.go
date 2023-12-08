@@ -3,7 +3,7 @@ package maven
 import (
 	"errors"
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/file"
 	"golang.org/x/term"
 	"os/user"
 )

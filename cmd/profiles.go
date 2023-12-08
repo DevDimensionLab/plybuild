@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/devdimensionlab/ply/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"

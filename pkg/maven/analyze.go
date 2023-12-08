@@ -3,7 +3,7 @@ package maven
 import (
 	"errors"
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/shell"
+	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"strings"
 )
 

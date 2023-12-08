@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/devdimensionlab/ply/pkg/webservice"
+	"github.com/devdimensionlab/plybuild/pkg/webservice"
 	"github.com/spf13/cobra"
 )
 

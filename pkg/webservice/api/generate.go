@@ -2,9 +2,9 @@ package api
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/config"
-	"github.com/devdimensionlab/ply/pkg/spring"
-	"github.com/devdimensionlab/ply/pkg/webservice/templates"
+	"github.com/devdimensionlab/plybuild/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/spring"
+	"github.com/devdimensionlab/plybuild/pkg/webservice/templates"
 	"net/http"
 	"text/template"
 )

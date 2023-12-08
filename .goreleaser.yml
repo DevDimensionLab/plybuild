@@ -6,7 +6,8 @@ before:
     - go generate ./...
     - go test -v -cover ./...
 builds:
-  - env:
+  - binary: ply
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -16,13 +17,13 @@ builds:
     # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
     ldflags:
       - -s -w -X ply/cmd.buildDate={{.Date}} -X ply/cmd.version={{.Version}}
-archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
+#archives:
+#  - replacements:
+#      darwin: Darwin
+#      linux: Linux
+#      windows: Windows
+#      386: i386
+#      amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -57,7 +58,7 @@ brews:
     # GitHub/GitLab repository to push the formula to
     tap:
       owner: devdimensionlab
-      name: homebrew-ply
+      name: homebrew-plybuild
 
     # The project name and current git tag are used in the format string.
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"

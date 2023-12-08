@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/webservice/templates"
+	"github.com/devdimensionlab/plybuild/pkg/webservice/templates"
 	"html/template"
 	"net/http"
 )

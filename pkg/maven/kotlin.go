@@ -3,8 +3,8 @@ package maven
 import (
 	"errors"
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/config"
-	"github.com/devdimensionlab/ply/pkg/logger"
+	"github.com/devdimensionlab/plybuild/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/logger"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/sirupsen/logrus"
 )

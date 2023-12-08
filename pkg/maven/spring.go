@@ -1,8 +1,8 @@
 package maven
 
 import (
-	"github.com/devdimensionlab/ply/pkg/config"
-	"github.com/devdimensionlab/ply/pkg/spring"
+	"github.com/devdimensionlab/plybuild/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/spring"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 )
 

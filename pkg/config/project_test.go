@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/file"
 	"testing"
 )
 

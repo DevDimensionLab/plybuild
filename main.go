@@ -15,7 +15,7 @@
 package main
 
 import (
-	"github.com/devdimensionlab/ply/cmd"
+	"github.com/devdimensionlab/plybuild/cmd"
 )
 
 func main() {

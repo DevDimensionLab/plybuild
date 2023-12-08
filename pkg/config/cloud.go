@@ -3,8 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/file"
-	"github.com/devdimensionlab/ply/pkg/shell"
+	"github.com/devdimensionlab/plybuild/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"

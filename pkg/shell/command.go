@@ -4,7 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
-	"github.com/devdimensionlab/ply/pkg/logger"
+	"github.com/devdimensionlab/plybuild/pkg/logger"
 	"io"
 	"os"
 	"os/exec"

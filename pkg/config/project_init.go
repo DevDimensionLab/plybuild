@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
-	"github.com/devdimensionlab/ply/pkg/file"
+	"github.com/devdimensionlab/plybuild/pkg/file"
 	"strings"
 )
 

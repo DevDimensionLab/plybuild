@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
 
 build:
-	go build
+	go build -o ply
 
 docker-build:
 	docker build --tag ply:latest .
@@ -26,6 +26,7 @@ lint:
 	gofmt -w cmd
 
 release:
+<<<<<<< HEAD
 	goreleaser --clean
 
 release-dry:
@@ -33,6 +34,12 @@ release-dry:
 
 release-brew:
 	goreleaser release --clean --skip-validate -f .goreleaser.brews.yml
+=======
+	goreleaser release --clean
+
+release-brew:
+	goreleaser release --clean --skip=validate -f .goreleaser.brews.yml
+>>>>>>> ply
 
 upgrade:
 	go get github.com/devdimensionlab/mvn-pom-mutator

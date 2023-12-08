@@ -1,4 +1,4 @@
-module github.com/devdimensionlab/ply
+module github.com/devdimensionlab/plybuild
 
 go 1.18
 
