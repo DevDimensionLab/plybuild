@@ -26,20 +26,10 @@ lint:
 	gofmt -w cmd
 
 release:
-<<<<<<< HEAD
-	goreleaser --clean
-
-release-dry:
-	goreleaser --clean --skip-publish --skip-validate
-
-release-brew:
-	goreleaser release --clean --skip-validate -f .goreleaser.brews.yml
-=======
 	goreleaser release --clean
 
 release-brew:
 	goreleaser release --clean --skip=validate -f .goreleaser.brews.yml
->>>>>>> ply
 
 upgrade:
 	go get github.com/devdimensionlab/mvn-pom-mutator
