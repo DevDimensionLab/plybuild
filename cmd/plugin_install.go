@@ -68,7 +68,7 @@ func configPathFor(fileName string) (string, error) {
 }
 
 func init() {
-	RootCmd.AddCommand(installCmd)
+	pluginCmd.AddCommand(installCmd)
 
 	installCmd.Flags().BoolVar(&installOpts.AutoComplete, "autocomplete", false, "Generate autocomplete files")
 }

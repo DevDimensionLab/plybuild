@@ -28,7 +28,7 @@ func description() string {
 	about := `## About plybuild - https://devdimensionlab.github.io/
 - Plybuild is a command line tool that supports developers using Spring Boot and Maven
 - ply upgrade all | 2party | 3party  -> upgrades maven version of maven dependencies to latest 
-- ply generate ply.json -> generates a new application ready for business logic
+- ply build ply.json -> generates a new application ready for business logic
 - Authors:
   - Alexander Skjolden, Runwith AS
   - Per Otto Christensen, Codify Consulting AS

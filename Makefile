@@ -1,4 +1,10 @@
+# Define a default GOPATH if it's not already set
+GOPATH ?= $(HOME)/go
+
 .DEFAULT_GOAL := all
+
+# Export GOPATH so it's available to subcommands
+export GOPATH
 
 build:
 	go build -o ply
@@ -12,8 +18,8 @@ docker-run:
 docker-publish:
 	./docker-publish.sh	
 
-install:
-	go install
+install: build
+	cp ply ${GOPATH}/bin
 
 run:
 	go run main.go

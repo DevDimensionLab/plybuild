@@ -13,9 +13,10 @@ import (
 )
 
 var buildCmd = &cobra.Command{
-	Use:   "build",
-	Short: "Builds a maven project with ply files and formatting",
-	Long:  `Builds a maven project with ply files and formatting`,
+	Use:     "build",
+	Short:   "Builds a maven project with ply files and formatting",
+	Long:    `Builds a maven project with ply files and formatting`,
+	Aliases: []string{"generate"},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := OpenDocumentationWebsite(cmd, "commands/build"); err != nil {
 			log.Fatalln(err)

@@ -9,9 +9,10 @@ import (
 )
 
 var examplesCmd = &cobra.Command{
-	Use:   "examples",
-	Short: "Examples found in cloud-config",
-	Long:  `Examples found in cloud-config`,
+	Use:     "example",
+	Short:   "Examples found in cloud-config",
+	Long:    `Examples found in cloud-config`,
+	Aliases: []string{"examples"},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -55,6 +56,12 @@ var examplesInstallCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		// force defaults
+		force, err := cmd.Flags().GetBool("force")
+		if err != nil {
+			log.Fatalln(err)
+		}
+
 		examples, err := ctx.CloudConfig.Examples()
 		if err != nil {
 			log.Warnln(err)
@@ -78,7 +85,7 @@ var examplesInstallCmd = &cobra.Command{
 				}
 
 				if overrideGroupId == "" {
-					groupId, err := promptFor("groupId", projectConfig.GroupId)
+					groupId, err := promptFor("groupId", projectConfig.GroupId, force)
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -88,7 +95,7 @@ var examplesInstallCmd = &cobra.Command{
 				}
 
 				if overrideArtifactId == "" {
-					artifactId, err := promptFor("artifactId", projectConfig.ArtifactId)
+					artifactId, err := promptFor("artifactId", projectConfig.ArtifactId, force)
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -98,7 +105,7 @@ var examplesInstallCmd = &cobra.Command{
 				}
 
 				if overridePackage == "" {
-					packageName, err := promptFor("package", projectConfig.Package)
+					packageName, err := promptFor("package", projectConfig.Package, force)
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -108,7 +115,7 @@ var examplesInstallCmd = &cobra.Command{
 				}
 
 				if overrideName == "" {
-					name, err := promptFor("name", projectConfig.Name)
+					name, err := promptFor("name", projectConfig.Name, force)
 					if err != nil {
 						log.Fatalln(err)
 					}
@@ -129,10 +136,14 @@ var examplesInstallCmd = &cobra.Command{
 	},
 }
 
-func promptFor(value, defaultValue string) (string, error) {
+func promptFor(value, defaultValue string, force bool) (string, error) {
 	prompt := promptui.Prompt{
 		Label:     fmt.Sprintf("Enter %s: [%s]", value, defaultValue),
 		Templates: templates,
+	}
+
+	if force {
+		return defaultValue, nil
 	}
 	newValue, err := prompt.Run()
 	if err != nil {
