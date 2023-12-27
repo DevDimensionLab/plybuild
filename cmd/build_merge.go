@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/template"
-	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -109,7 +109,7 @@ var mergeTemplateCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(mergeCmd)
+	buildCmd.AddCommand(mergeCmd)
 	mergeCmd.AddCommand(mergePomCmd)
 	mergeCmd.AddCommand(mergeTextCmd)
 	mergeCmd.AddCommand(mergeTemplateCmd)

@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/spring"
-	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 )
 
@@ -108,7 +108,7 @@ func showMavenRepositories() {
 }
 
 func init() {
-	RootCmd.AddCommand(infoCmd)
+	buildCmd.AddCommand(infoCmd)
 	infoCmd.PersistentFlags().BoolVar(&infoOpts.SpringInfo, "spring-info", false, "show spring boot status")
 	infoCmd.PersistentFlags().BoolVar(&infoOpts.SpringManaged, "spring-managed", false, "show spring boot managed dependencies info")
 	infoCmd.PersistentFlags().BoolVar(&infoOpts.MavenRepositories, "maven-repositories", false, "show current maven repositories")

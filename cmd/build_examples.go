@@ -120,7 +120,7 @@ var examplesInstallCmd = &cobra.Command{
 					}
 				}
 
-				generateCmd.Run(cmd, args)
+				buildCmd.Run(cmd, args)
 				return
 			}
 		}
@@ -145,7 +145,7 @@ func promptFor(value, defaultValue string) (string, error) {
 }
 
 func init() {
-	RootCmd.AddCommand(examplesCmd)
+	buildCmd.AddCommand(examplesCmd)
 
 	examplesCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	examplesCmd.PersistentFlags().BoolVar(&ctx.DryRun, "dry-run", false, "dry run does not write to pom.xml")

@@ -49,7 +49,7 @@ var gitInstallHooksCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(gitCmd)
+	pluginCmd.AddCommand(gitCmd)
 
 	gitCmd.AddCommand(gitInstallHooksCmd)
 	gitCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", false, "force cloud sync")

@@ -35,7 +35,7 @@ var lintKotlinCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(lintCmd)
+	pluginCmd.AddCommand(lintCmd)
 
 	lintCmd.AddCommand(lintKotlinCmd)
 	lintCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")

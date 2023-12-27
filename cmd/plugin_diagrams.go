@@ -130,7 +130,7 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 }
 
 func init() {
-	RootCmd.AddCommand(diagramsCmd)
+	pluginCmd.AddCommand(diagramsCmd)
 
 	diagramsCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	diagramsCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "optional target directory")

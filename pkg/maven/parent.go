@@ -7,9 +7,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"strings"
 
+	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/spring"
-	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 )
 
 func UpgradeParent() func(repository Repository, project config.Project) error {

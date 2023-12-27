@@ -46,7 +46,7 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(initCmd)
+	buildCmd.AddCommand(initCmd)
 
 	initCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	initCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")

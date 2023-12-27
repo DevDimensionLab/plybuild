@@ -17,8 +17,8 @@ var cleanOpts CleanOpts
 
 var cleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "Clean files and folder in a project",
-	Long:  `Clean files and folder in a project`,
+	Short: "Removes intellij files and folder in a project",
+	Long:  `Removes intellij files and folder in a project`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		return OkHelp(cmd, cleanOpts.Any)
 	},
@@ -29,7 +29,7 @@ var cleanCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if cleanOpts.Ide {
-			report, err := file.CleanIntellijFiles(ctx.TargetDirectory, ctx.Recursive, ctx.DryRun)
+			report, err := file.RemoveIntellijFiles(ctx.TargetDirectory, ctx.Recursive, ctx.DryRun)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -39,7 +39,7 @@ var cleanCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(cleanCmd)
+	buildCmd.AddCommand(cleanCmd)
 
 	cleanCmd.Flags().BoolVar(&cleanOpts.Ide, "ide", false, "removes .idea folders and *.iml files")
 

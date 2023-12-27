@@ -1,25 +1,26 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
 	"github.com/devdimensionlab/plybuild/pkg/config"
-	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/spring"
 	"github.com/devdimensionlab/plybuild/pkg/template"
 	"github.com/devdimensionlab/plybuild/pkg/webservice"
 	"github.com/devdimensionlab/plybuild/pkg/webservice/api"
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"os"
 )
 
-var generateCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "Initializes a maven project with ply files and formatting",
-	Long:  `Initializes a maven project with ply files and formatting`,
+var buildCmd = &cobra.Command{
+	Use:   "build",
+	Short: "Builds a maven project with ply files and formatting",
+	Long:  `Builds a maven project with ply files and formatting`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := OpenDocumentationWebsite(cmd, "commands/build"); err != nil {
+			log.Fatalln(err)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var orderConfig config.ProjectConfiguration
 		var err error
@@ -178,37 +179,6 @@ var generateCmd = &cobra.Command{
 	},
 }
 
-var generateCleanCmd = &cobra.Command{
-	Use:   "clean",
-	Short: "Cleans a maven project with ply files and formatting",
-	Long:  `Cleans a maven project with ply files and formatting`,
-	Run: func(cmd *cobra.Command, args []string) {
-
-		prompt := promptui.Prompt{
-			Label:     fmt.Sprintf("Are you sure you want to delete contents of: %s [yes/no]", ctx.TargetDirectory),
-			Templates: templates,
-			Validate: func(input string) error {
-				if len(input) <= 0 || (input != "yes" && input != "no") {
-					return errors.New("please enter 'yes' or 'no'")
-				}
-				return nil
-			},
-		}
-		result, err := prompt.Run()
-		if err != nil {
-			fmt.Printf("Prompt failed %v\n", err)
-			os.Exit(1)
-		}
-		if result == "no" {
-			return
-		}
-		log.Infof(fmt.Sprintf("Deleting all contents from: %s", ctx.TargetDirectory))
-		if err := file.ClearDir(ctx.TargetDirectory, []string{".idea", "ply.json", ".iml"}); err != nil {
-			log.Fatalln(err)
-		}
-	},
-}
-
 var listTemplatesCmd = &cobra.Command{
 	Use:   "list-templates",
 	Short: "Lists all available templates",
@@ -280,22 +250,21 @@ func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 }
 
 func init() {
-	RootCmd.AddCommand(generateCmd)
+	RootCmd.AddCommand(buildCmd)
 
-	generateCmd.AddCommand(generateCleanCmd)
-	generateCmd.AddCommand(listTemplatesCmd)
+	buildCmd.AddCommand(listTemplatesCmd)
 
-	generateCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
-	generateCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", true, "Cloud sync")
-	generateCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
-	generateCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
-	generateCmd.Flags().String("config-file", "ply.json", "Optional config file")
-	generateCmd.Flags().String("boot-version", "", "Defines spring-boot version to use")
-	generateCmd.Flags().String("group-id", "", "Overrides groupId from config file")
-	generateCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
-	generateCmd.Flags().String("package", "", "Overrides package from config file")
-	generateCmd.Flags().String("name", "", "Overrides name from config file")
-	generateCmd.Flags().String("application-name", "", "Overrides applicationName from config file")
+	buildCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	buildCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", true, "Cloud sync")
+	buildCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
+	buildCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
+	buildCmd.Flags().String("config-file", "ply.json", "Optional config file")
+	buildCmd.Flags().String("boot-version", "", "Defines spring-boot version to use")
+	buildCmd.Flags().String("group-id", "", "Overrides groupId from config file")
+	buildCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
+	buildCmd.Flags().String("package", "", "Overrides package from config file")
+	buildCmd.Flags().String("name", "", "Overrides name from config file")
+	buildCmd.Flags().String("application-name", "", "Overrides applicationName from config file")
 
 	listTemplatesCmd.Flags().Bool("markdown", false, "Outputs templates as markdown in the terminal")
 	listTemplatesCmd.Flags().Bool("save", false, "Saves the template markdown doc to cloud-config template-folder")

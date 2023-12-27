@@ -6,15 +6,15 @@ import (
 	"strings"
 )
 
-func CleanIntellijFiles(targetDir string, recursive bool, dryRun bool) (string, error) {
+func RemoveIntellijFiles(targetDir string, recursive bool, dryRun bool) (string, error) {
 	if recursive {
-		return cleanIntellijFiles(targetDir, dryRun)
+		return removeIntellijFiles(targetDir, dryRun)
 	} else {
-		return cleanIntellijFile(targetDir, dryRun)
+		return removeIntellijFile(targetDir, dryRun)
 	}
 }
 
-func cleanIntellijFiles(targetDir string, dryRun bool) (string, error) {
+func removeIntellijFiles(targetDir string, dryRun bool) (string, error) {
 	var filesDeleted = 0
 	var dirsDeleted = 0
 
@@ -47,7 +47,7 @@ func cleanIntellijFiles(targetDir string, dryRun bool) (string, error) {
 	}
 }
 
-func cleanIntellijFile(targetDir string, dryRun bool) (string, error) {
+func removeIntellijFile(targetDir string, dryRun bool) (string, error) {
 	var filesDeleted = 0
 	var dirsDeleted = 0
 

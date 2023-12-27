@@ -172,7 +172,7 @@ func openReportInBrowser(reportPath string) func(repository maven.Repository, pr
 }
 
 func init() {
-	RootCmd.AddCommand(mavenCmd)
+	pluginCmd.AddCommand(mavenCmd)
 
 	mavenCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	mavenCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "optional target directory")
