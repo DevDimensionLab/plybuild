@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	markdown "github.com/MichaelMure/go-term-markdown"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/spring"
@@ -14,8 +13,8 @@ import (
 
 var buildCmd = &cobra.Command{
 	Use:     "build",
-	Short:   "Builds a maven project with ply files and formatting",
-	Long:    `Builds a maven project with ply files and formatting`,
+	Short:   "Builds a ply project with ply files and formatting",
+	Long:    `Builds a ply project with ply files and formatting`,
 	Aliases: []string{"generate"},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := OpenDocumentationWebsite(cmd, "commands/build"); err != nil {
@@ -180,63 +179,6 @@ var buildCmd = &cobra.Command{
 	},
 }
 
-var listTemplatesCmd = &cobra.Command{
-	Use:   "list-templates",
-	Short: "Lists all available templates",
-	Long:  `Lists all available templates`,
-	Run: func(cmd *cobra.Command, args []string) {
-
-		markdownFormat, err := cmd.Flags().GetBool("markdown")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		saveOutput, err := cmd.Flags().GetBool("save")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		templates, err := ctx.CloudConfig.Templates()
-		if err != nil {
-			log.Fatalln(err)
-		}
-		terminalConfig, err := ctx.LocalConfig.GetTerminalConfig()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		if markdownFormat || terminalConfig.Format == "markdown" {
-			markdownDocument, err := template.ListAsMarkdown(ctx.CloudConfig, templates)
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			markdownForTerminal := markdown.Render(markdownDocument, terminalConfig.Width, 2)
-			fmt.Println("\n" + string(markdownForTerminal))
-
-			if saveOutput {
-				fileRef, err := template.SaveTemplateListMarkdown(ctx.CloudConfig, markdownDocument)
-				if err != nil {
-					log.Fatalln(err)
-				}
-				fmt.Println("File saved to " + fileRef)
-			}
-
-			gCloudCfg, err := ctx.CloudConfig.GlobalCloudConfig()
-			if err != nil {
-				log.Fatalln(err)
-			}
-			cloudSource := gCloudCfg.SourceFor(template.TemplatesDir, "README.md")
-			if err != nil {
-				log.Fatalln(err)
-			}
-			log.Infoln("Cloud source: " + cloudSource)
-		} else {
-			for _, folder := range templates {
-				log.Infof("%s - %s (%s)", folder.Name, folder.Project.Config.Description, folder.Project.Config.Language)
-			}
-		}
-	},
-}
-
 func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 	ioResp, err := spring.GetRoot()
 	if err != nil {
@@ -253,11 +195,9 @@ func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 func init() {
 	RootCmd.AddCommand(buildCmd)
 
-	buildCmd.AddCommand(listTemplatesCmd)
-
 	buildCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 	buildCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", true, "Cloud sync")
-	buildCmd.PersistentFlags().Bool("disable-upgrading", false, "dont upgrade dependencies")
+	buildCmd.Flags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	buildCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
 	buildCmd.Flags().String("config-file", "ply.json", "Optional config file")
 	buildCmd.Flags().String("boot-version", "", "Defines spring-boot version to use")
@@ -266,8 +206,5 @@ func init() {
 	buildCmd.Flags().String("package", "", "Overrides package from config file")
 	buildCmd.Flags().String("name", "", "Overrides name from config file")
 	buildCmd.Flags().String("application-name", "", "Overrides applicationName from config file")
-
-	listTemplatesCmd.Flags().Bool("markdown", false, "Outputs templates as markdown in the terminal")
-	listTemplatesCmd.Flags().Bool("save", false, "Saves the template markdown doc to cloud-config template-folder")
 
 }

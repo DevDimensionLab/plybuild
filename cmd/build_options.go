@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	markdown "github.com/MichaelMure/go-term-markdown"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/spring"
+	"github.com/devdimensionlab/plybuild/pkg/template"
 	"github.com/spf13/cobra"
 )
 
@@ -12,6 +14,7 @@ type InfoOpts struct {
 	SpringManaged     bool
 	SpringInfo        bool
 	MavenRepositories bool
+	Templates         bool
 }
 
 var infoOpts InfoOpts
@@ -19,13 +22,14 @@ var infoOpts InfoOpts
 func (infoOpts InfoOpts) Any() bool {
 	return infoOpts.SpringManaged ||
 		infoOpts.SpringInfo ||
-		infoOpts.MavenRepositories
+		infoOpts.MavenRepositories ||
+		infoOpts.Templates
 }
 
-var infoCmd = &cobra.Command{
-	Use:   "info",
-	Short: "Prints info on spring version, dependencies etc",
-	Long:  `Prints info on spring version, dependencies etc`,
+var optionsCmd = &cobra.Command{
+	Use:   "options",
+	Short: "Prints options on spring version, dependencies etc",
+	Long:  `Prints options on spring version, dependencies etc`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		return OkHelp(cmd, infoOpts.Any)
 	},
@@ -38,6 +42,9 @@ var infoCmd = &cobra.Command{
 		}
 		if infoOpts.MavenRepositories {
 			showMavenRepositories()
+		}
+		if infoOpts.Templates {
+			showTemplates()
 		}
 	},
 }
@@ -107,10 +114,49 @@ func showMavenRepositories() {
 	}
 }
 
-func init() {
-	buildCmd.AddCommand(infoCmd)
-	infoCmd.PersistentFlags().BoolVar(&infoOpts.SpringInfo, "spring-info", false, "show spring boot status")
-	infoCmd.PersistentFlags().BoolVar(&infoOpts.SpringManaged, "spring-managed", false, "show spring boot managed dependencies info")
-	infoCmd.PersistentFlags().BoolVar(&infoOpts.MavenRepositories, "maven-repositories", false, "show current maven repositories")
+func showTemplates() {
+	markdownFormat := false
+	templates, err := ctx.CloudConfig.Templates()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	terminalConfig, err := ctx.LocalConfig.GetTerminalConfig()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
+	if markdownFormat || terminalConfig.Format == "markdown" {
+		markdownDocument, err := template.ListAsMarkdown(ctx.CloudConfig, templates)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		markdownForTerminal := markdown.Render(markdownDocument, terminalConfig.Width, 2)
+		fmt.Println("\n" + string(markdownForTerminal))
+
+		gCloudCfg, err := ctx.CloudConfig.GlobalCloudConfig()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		cloudSource := gCloudCfg.SourceFor(template.TemplatesDir, "README.md")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Infoln("Cloud source: " + cloudSource)
+	} else {
+		for _, folder := range templates {
+			log.Infof("%s - %s (%s)", folder.Name, folder.Project.Config.Description, folder.Project.Config.Language)
+		}
+	}
+}
+
+func init() {
+	buildCmd.AddCommand(optionsCmd)
+	optionsCmd.PersistentFlags().BoolVar(&infoOpts.SpringInfo, "spring-dependencies", false, "show spring boot status")
+	optionsCmd.PersistentFlags().BoolVar(&infoOpts.SpringManaged, "spring-managed", false, "show spring boot managed dependencies info")
+	optionsCmd.PersistentFlags().BoolVar(&infoOpts.MavenRepositories, "maven-repositories", false, "show current maven repositories")
+	optionsCmd.PersistentFlags().BoolVar(&infoOpts.Templates, "templates", false, "show plybuild templates")
+
+	//optionsCmd.Flags().Bool("markdown", false, "Outputs templates as markdown in the terminal")
+	//optionsCmd.Flags().Bool("save", false, "Saves the template markdown doc to cloud-config template-folder")
 }

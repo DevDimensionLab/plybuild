@@ -11,7 +11,7 @@ import (
 )
 
 var addCmd = &cobra.Command{
-	Use:   "Add",
+	Use:   "add",
 	Short: "Add templates and functionalities for files to a build",
 	Long:  `Add templates and functionalities for files to a build`,
 }
