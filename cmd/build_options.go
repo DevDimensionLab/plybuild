@@ -15,6 +15,7 @@ type InfoOpts struct {
 	SpringInfo        bool
 	MavenRepositories bool
 	Templates         bool
+	Examples          bool
 }
 
 var infoOpts InfoOpts
@@ -23,7 +24,8 @@ func (infoOpts InfoOpts) Any() bool {
 	return infoOpts.SpringManaged ||
 		infoOpts.SpringInfo ||
 		infoOpts.MavenRepositories ||
-		infoOpts.Templates
+		infoOpts.Templates ||
+		infoOpts.Examples
 }
 
 var optionsCmd = &cobra.Command{
@@ -31,6 +33,9 @@ var optionsCmd = &cobra.Command{
 	Short: "Prints options on spring version, dependencies etc",
 	Long:  `Prints options on spring version, dependencies etc`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if err := InitGlobals(cmd); err != nil {
+			log.Fatalln(err)
+		}
 		return OkHelp(cmd, infoOpts.Any)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -45,6 +50,9 @@ var optionsCmd = &cobra.Command{
 		}
 		if infoOpts.Templates {
 			showTemplates()
+		}
+		if infoOpts.Examples {
+			showExamples()
 		}
 	},
 }
@@ -150,12 +158,30 @@ func showTemplates() {
 	}
 }
 
+func showExamples() {
+	// sync cloud config
+	if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
+		log.Fatalln(err)
+	}
+
+	examples, err := ctx.CloudConfig.Examples()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Println("Available examples are:")
+	for _, example := range examples {
+		fmt.Printf("\t* %s\n", example)
+	}
+}
+
 func init() {
 	buildCmd.AddCommand(optionsCmd)
 	optionsCmd.PersistentFlags().BoolVar(&infoOpts.SpringInfo, "spring-dependencies", false, "show spring boot status")
 	optionsCmd.PersistentFlags().BoolVar(&infoOpts.SpringManaged, "spring-managed", false, "show spring boot managed dependencies info")
 	optionsCmd.PersistentFlags().BoolVar(&infoOpts.MavenRepositories, "maven-repositories", false, "show current maven repositories")
 	optionsCmd.PersistentFlags().BoolVar(&infoOpts.Templates, "templates", false, "show plybuild templates")
+	optionsCmd.PersistentFlags().BoolVar(&infoOpts.Examples, "examples", false, "show plybuild examples")
 
 	//optionsCmd.Flags().Bool("markdown", false, "Outputs templates as markdown in the terminal")
 	//optionsCmd.Flags().Bool("save", false, "Saves the template markdown doc to cloud-config template-folder")

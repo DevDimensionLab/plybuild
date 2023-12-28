@@ -18,22 +18,6 @@ var examplesCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 	},
-	Run: func(cmd *cobra.Command, args []string) {
-		// sync cloud config
-		if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
-			log.Fatalln(err)
-		}
-
-		examples, err := ctx.CloudConfig.Examples()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		fmt.Println("Available examples are:")
-		for _, example := range examples {
-			fmt.Printf("\t* %s\n", example)
-		}
-	},
 }
 
 var examplesInstallCmd = &cobra.Command{
