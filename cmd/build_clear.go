@@ -9,10 +9,10 @@ import (
 	"os"
 )
 
-var buildClearCmd = &cobra.Command{
-	Use:   "clear",
-	Short: "Clears a maven project with ply files and formatting",
-	Long:  `Clears a maven project with ply files and formatting`,
+var buildRemoveCmd = &cobra.Command{
+	Use:   "remove",
+	Short: "Clears a project with ply files and formatting",
+	Long:  `Clears a project with ply files and formatting`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// force defaults
@@ -44,12 +44,12 @@ var buildClearCmd = &cobra.Command{
 		}
 
 		log.Infof(fmt.Sprintf("Deleting all contents from: %s", ctx.TargetDirectory))
-		if err := file.ClearDir(ctx.TargetDirectory, []string{".idea", "ply.json", ".iml"}); err != nil {
+		if err := file.ClearDir(ctx.TargetDirectory, []string{".idea", "ply.json", ".iml", ".git"}); err != nil {
 			log.Fatalln(err)
 		}
 	},
 }
 
 func init() {
-	buildCmd.AddCommand(buildClearCmd)
+	buildCmd.AddCommand(buildRemoveCmd)
 }
