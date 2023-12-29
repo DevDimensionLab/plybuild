@@ -22,11 +22,9 @@ var buildCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		var orderConfig config.ProjectConfiguration
-		var err error
 
 		// fetch user input config
-		var bootVersion, _ = cmd.Flags().GetString("boot-version")
+		bootVersion, _ := cmd.Flags().GetString("boot-version")
 		overrideGroupId, _ := cmd.Flags().GetString("group-id")
 		overrideArtifactId, _ := cmd.Flags().GetString("artifact-id")
 		overridePackage, _ := cmd.Flags().GetString("package")
@@ -34,9 +32,15 @@ var buildCmd = &cobra.Command{
 		overrideApplicationName, _ := cmd.Flags().GetString("application-name")
 		interactive, _ := cmd.Flags().GetBool("interactive")
 		jsonConfigFile, _ := cmd.Flags().GetString("config-file")
+		disableUpgrade, _ := cmd.Flags().GetBool("disable-upgrading")
 
+		var orderConfig config.ProjectConfiguration
+		var err error
 		if jsonConfigFile != "" {
 			orderConfig, err = config.InitProjectConfigurationFromFile(jsonConfigFile)
+		}
+		if err != nil {
+			log.Fatalln(err)
 		}
 		if orderConfig.Profile != "" {
 			profilesPath, err := config.GetProfilesPathFor(orderConfig.Profile)
@@ -45,14 +49,6 @@ var buildCmd = &cobra.Command{
 			}
 			ctx.LoadProfile(profilesPath)
 		}
-
-		// sync cloud config
-		if ctx.ForceCloudSync {
-			if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
-				log.Fatalln(err)
-			}
-		}
-
 		if interactive {
 			interactiveWebService(&orderConfig)
 		}
@@ -63,11 +59,9 @@ var buildCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		// validate templates
-		var cloudTemplates []config.CloudTemplate
-		if orderConfig.Templates != nil {
-			cloudTemplates, err = ctx.CloudConfig.ValidTemplatesFrom(orderConfig.Templates)
-			if err != nil {
+		// sync cloud config
+		if ctx.ForceCloudSync {
+			if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
 				log.Fatalln(err)
 			}
 		}
@@ -91,92 +85,107 @@ var buildCmd = &cobra.Command{
 			orderConfig.ApplicationName = overrideApplicationName
 		}
 
-		err = spring.Validate(orderConfig)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// try to set spring-boot version manually
-		if bootVersion == "" {
-			bootVersion = orderConfig.Settings.MaxSpringBootVersion
-		}
-		// download from start.spring.io to targetDirectory
-		err = spring.DownloadInitializer(ctx.TargetDirectory, spring.UrlValuesFrom(bootVersion, orderConfig))
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// cleanup unwanted files from downloaded content
-		spring.DeleteDemoFiles(ctx.TargetDirectory, orderConfig)
-
-		// populate applicationName field in config
-		if err := orderConfig.FindApplicationName(ctx.TargetDirectory); err != nil {
-			log.Errorln(err)
-		}
-
-		// write project config to targetDir
-		projectConfigFile := config.ProjectConfigPath(ctx.TargetDirectory)
-		if err := orderConfig.WriteTo(projectConfigFile); err != nil {
-			log.Fatalln(err)
-		}
-
-		// load the newly created project
-		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// git init project
-		err = project.GitInit(fmt.Sprintf("Adds project %s", project.Config.Name))
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// merge templates into the newly created project
-		if cloudTemplates != nil {
-			for _, cloudTemplate := range cloudTemplates {
-				if err := template.MergeTemplate(cloudTemplate, project, true); err != nil {
-					log.Fatalln(err)
-				}
-			}
-			// git commit
-			err = project.GitCommit(fmt.Sprintf("Adds templates to %s", project.Config.Name))
-			if err != nil {
-				log.Fatalln(err)
-			}
-		}
-
-		// load project into context
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-
-		// format version
-		ctx.OnEachMavenProject("removes version tags", maven.ChangeVersionToPropertyTags())
-
-		// upgrade all ... maybe?
-		disableUpgrade, _ := cmd.Flags().GetBool("disable-upgrading")
-		if !disableUpgrade {
-			ctx.OnEachMavenProject("upgrading everything",
-				maven.UpgradeKotlin(),
-				maven.UpgradeParent(),
-				maven.Upgrade2PartyDependencies(),
-				maven.Upgrade3PartyDependencies(),
-				maven.UpgradePlugins(),
-			)
-		} else {
-			// only apply sorting and writing
-			if err = project.SortAndWritePom(); err != nil {
-				log.Fatalln(err)
-			}
-		}
-
-		// git commit
-		err = project.GitCommit(fmt.Sprintf("Cleans up and upgrades for project %s", project.Config.Name))
-		if err != nil {
-			log.Fatalln(err)
-		}
+		build(orderConfig, bootVersion, disableUpgrade)
 	},
+}
+
+func build(orderConfig config.ProjectConfiguration, bootVersion string, disableUpgrade bool) {
+
+	var err error
+
+	// validate templates
+	var cloudTemplates []config.CloudTemplate
+	if orderConfig.Templates != nil {
+		cloudTemplates, err = ctx.CloudConfig.ValidTemplatesFrom(orderConfig.Templates)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	err = spring.Validate(orderConfig)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// try to set spring-boot version manually
+	if bootVersion == "" {
+		bootVersion = orderConfig.Settings.MaxSpringBootVersion
+	}
+	// download from start.spring.io to targetDirectory
+	err = spring.DownloadInitializer(ctx.TargetDirectory, spring.UrlValuesFrom(bootVersion, orderConfig))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// cleanup unwanted files from downloaded content
+	spring.DeleteDemoFiles(ctx.TargetDirectory, orderConfig)
+
+	// populate applicationName field in config
+	if err := orderConfig.FindApplicationName(ctx.TargetDirectory); err != nil {
+		log.Errorln(err)
+	}
+
+	// write project config to targetDir
+	projectConfigFile := config.ProjectConfigPath(ctx.TargetDirectory)
+	if err := orderConfig.WriteTo(projectConfigFile); err != nil {
+		log.Fatalln(err)
+	}
+
+	// load the newly created project
+	project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// git init project
+	err = project.GitInit(fmt.Sprintf("Adds project %s", project.Config.Name))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// merge templates into the newly created project
+	if cloudTemplates != nil {
+		for _, cloudTemplate := range cloudTemplates {
+			if err := template.MergeTemplate(cloudTemplate, project, true); err != nil {
+				log.Fatalln(err)
+			}
+		}
+		// git commit
+		err = project.GitCommit(fmt.Sprintf("Adds templates to %s", project.Config.Name))
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	// load project into context
+	if err := ctx.FindAndPopulateMavenProjects(); err != nil {
+		log.Fatalln(err)
+	}
+
+	// format version
+	ctx.OnEachMavenProject("removes version tags", maven.ChangeVersionToPropertyTags())
+
+	// upgrade all ... maybe?
+	if !disableUpgrade {
+		ctx.OnEachMavenProject("upgrading everything",
+			maven.UpgradeKotlin(),
+			maven.UpgradeParent(),
+			maven.Upgrade2PartyDependencies(),
+			maven.Upgrade3PartyDependencies(),
+			maven.UpgradePlugins(),
+		)
+	} else {
+		// only apply sorting and writing
+		if err = project.SortAndWritePom(); err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	// git commit
+	err = project.GitCommit(fmt.Sprintf("Cleans up and upgrades for project %s", project.Config.Name))
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func interactiveWebService(orderConfig *config.ProjectConfiguration) {

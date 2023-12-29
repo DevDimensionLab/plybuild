@@ -40,63 +40,57 @@ var examplesCmd = &cobra.Command{
 			return
 		}
 
+		var foundExample = false
 		for _, example := range examples {
 			if example == exampleName {
-
-				path := file.Path("%s/examples/%s/ply.json", ctx.CloudConfig.Implementation().Dir(), example)
-
-				// legacy support for older co-pilot.json files
-				if !file.Exists(path) {
-					path = file.Path("%s/examples/%s/co-pilot.json", ctx.CloudConfig.Implementation().Dir(), example)
-				}
-
-				cmd.Flags().String("config-file", path, "Optional config file")
-				projectConfig, err := config.InitProjectConfigurationFromFile(path)
-				if err != nil {
-					log.Fatalln(err)
-				}
-
-				groupId, err := promptFor("groupId", projectConfig.GroupId, force)
-				if err != nil {
-					log.Fatalln(err)
-				}
-				if err := cmd.Flags().Set("group-id", groupId); err != nil {
-					log.Fatalln(err)
-				}
-
-				artifactId, err := promptFor("artifactId", projectConfig.ArtifactId, force)
-				if err != nil {
-					log.Fatalln(err)
-				}
-				if err := cmd.Flags().Set("artifact-id", artifactId); err != nil {
-					log.Fatalln(err)
-				}
-
-				packageName, err := promptFor("package", projectConfig.Package, force)
-				if err != nil {
-					log.Fatalln(err)
-				}
-				if err := cmd.Flags().Set("package", packageName); err != nil {
-					log.Fatalln(err)
-				}
-
-				name, err := promptFor("application-name", projectConfig.Name, force)
-				if err != nil {
-					log.Fatalln(err)
-				}
-				if err := cmd.Flags().Set("name", name); err != nil {
-					log.Fatalln(err)
-				}
-				if err := cmd.Flags().Set("application-name", fmt.Sprintf("%sApplication", name)); err != nil {
-					log.Fatalln(err)
-				}
-
-				buildCmd.Run(cmd, args)
-				return
+				foundExample = true
 			}
 		}
+		if !foundExample {
+			log.Fatalf("could not find %s in examples", exampleName)
+		}
 
-		log.Fatalf("could not find %s in examples", exampleName)
+		jsonConfigFile := file.Path("%s/examples/%s/ply.json", ctx.CloudConfig.Implementation().Dir(), exampleName)
+
+		// legacy support for older co-pilot.json files
+		if !file.Exists(jsonConfigFile) {
+			jsonConfigFile = file.Path("%s/examples/%s/co-pilot.json", ctx.CloudConfig.Implementation().Dir(), exampleName)
+		}
+
+		orderConfig, err := config.InitProjectConfigurationFromFile(jsonConfigFile)
+
+		cmd.Flags().String("config-file", jsonConfigFile, "Optional config file")
+		projectConfig, err := config.InitProjectConfigurationFromFile(jsonConfigFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		groupId, err := promptFor("groupId", projectConfig.GroupId, force)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		orderConfig.GroupId = groupId
+
+		artifactId, err := promptFor("artifactId", projectConfig.ArtifactId, force)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		orderConfig.ArtifactId = artifactId
+
+		packageName, err := promptFor("package", projectConfig.Package, force)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		orderConfig.Package = packageName
+
+		applicationName, err := promptFor("application-name", projectConfig.Name, force)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		orderConfig.ApplicationName = applicationName
+
+		build(orderConfig, "", false)
+		return
 	},
 }
 
