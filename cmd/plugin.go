@@ -9,7 +9,7 @@ var pluginCmd = &cobra.Command{
 	Short: "Plugin functionality for plybuild",
 	Long:  `Plugin functionality for plybuild`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return OkHelp(cmd, cleanOpts.Any)
+		return OkHelp(cmd, removeOpts.Any)
 	},
 }
 

@@ -168,3 +168,50 @@ func OpenDocumentationWebsite(cmd *cobra.Command, path string) error {
 	}
 	return nil
 }
+
+func promptForValue(value, defaultValue string, force bool) (string, error) {
+	prompt := promptui.Prompt{
+		Label:     fmt.Sprintf("Enter %s: [%s]", value, defaultValue),
+		Templates: templates,
+	}
+
+	if force {
+		return defaultValue, nil
+	}
+	newValue, err := prompt.Run()
+	if err != nil {
+		return "", err
+	}
+	if newValue == "" {
+		return defaultValue, err
+	}
+	return newValue, nil
+}
+
+func promptForContinue(question string, force bool) (bool, error) {
+	prompt := promptui.Prompt{
+		Label: fmt.Sprintf("%s, continue? [Y/n]", question),
+		//Templates: templates,
+		Validate: func(input string) error {
+			if len(input) > 0 && (input != "y" && input != "Y" && input != "n") {
+				return errors.New("please enter 'Y/y' or 'n'")
+			}
+			return nil
+		},
+	}
+
+	if force {
+		return true, nil
+	}
+
+	answer, err := prompt.Run()
+	if err != nil {
+		return false, err
+	}
+
+	if answer == "y" || answer == "Y" || answer == "" {
+		return true, nil
+	}
+
+	return false, nil
+}

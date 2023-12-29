@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
@@ -65,25 +63,25 @@ var examplesCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		groupId, err := promptFor("groupId", projectConfig.GroupId, force)
+		groupId, err := promptForValue("groupId", projectConfig.GroupId, force)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		orderConfig.GroupId = groupId
 
-		artifactId, err := promptFor("artifactId", projectConfig.ArtifactId, force)
+		artifactId, err := promptForValue("artifactId", projectConfig.ArtifactId, force)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		orderConfig.ArtifactId = artifactId
 
-		packageName, err := promptFor("package", projectConfig.Package, force)
+		packageName, err := promptForValue("package", projectConfig.Package, force)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		orderConfig.Package = packageName
 
-		applicationName, err := promptFor("application-name", projectConfig.Name, force)
+		applicationName, err := promptForValue("application-name", projectConfig.Name, force)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -92,25 +90,6 @@ var examplesCmd = &cobra.Command{
 		build(orderConfig, "", false)
 		return
 	},
-}
-
-func promptFor(value, defaultValue string, force bool) (string, error) {
-	prompt := promptui.Prompt{
-		Label:     fmt.Sprintf("Enter %s: [%s]", value, defaultValue),
-		Templates: templates,
-	}
-
-	if force {
-		return defaultValue, nil
-	}
-	newValue, err := prompt.Run()
-	if err != nil {
-		return "", err
-	}
-	if newValue == "" {
-		return defaultValue, err
-	}
-	return newValue, nil
 }
 
 func init() {

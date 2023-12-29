@@ -13,7 +13,7 @@ var gitCmd = &cobra.Command{
 	Short: "Git commands",
 	Long:  `Git commands`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return OkHelp(cmd, cleanOpts.Any)
+		return OkHelp(cmd, removeOpts.Any)
 	},
 }
 

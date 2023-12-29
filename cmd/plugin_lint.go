@@ -10,7 +10,7 @@ var lintCmd = &cobra.Command{
 	Short: "Linting commands",
 	Long:  `Linting commands`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return OkHelp(cmd, cleanOpts.Any)
+		return OkHelp(cmd, removeOpts.Any)
 	},
 }
 

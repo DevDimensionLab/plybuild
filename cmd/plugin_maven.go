@@ -27,7 +27,7 @@ var mavenCmd = &cobra.Command{
 	Short: "Run maven (mvn) commands",
 	Long:  `Run maven (mvn) commands`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return OkHelp(cmd, cleanOpts.Any)
+		return OkHelp(cmd, removeOpts.Any)
 	},
 }
 
