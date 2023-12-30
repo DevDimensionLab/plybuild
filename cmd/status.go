@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/spf13/cobra"
 )
@@ -33,9 +32,6 @@ var statusCmd = &cobra.Command{
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}
-	},
-	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("invalid argument")
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if !statusOpts.Any() || statusOpts.Show {

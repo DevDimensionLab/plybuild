@@ -19,8 +19,8 @@ var removeOpts RemoveOpts
 
 var buildRemoveCmd = &cobra.Command{
 	Use:   "remove",
-	Short: "Clears a project with ply files and formatting",
-	Long:  `Clears a project with ply files and formatting`,
+	Short: "Removes files and folders in a ply build project",
+	Long:  `Removes files and folders in a ply build project`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
