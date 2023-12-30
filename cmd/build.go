@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/config"
+	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/spring"
 	"github.com/devdimensionlab/plybuild/pkg/template"
@@ -85,11 +86,11 @@ var buildCmd = &cobra.Command{
 			orderConfig.ApplicationName = overrideApplicationName
 		}
 
-		build(orderConfig, bootVersion, disableUpgrade)
+		build(orderConfig, "", bootVersion, disableUpgrade)
 	},
 }
 
-func build(orderConfig config.ProjectConfiguration, bootVersion string, disableUpgrade bool) {
+func build(orderConfig config.ProjectConfiguration, upstream, bootVersion string, disableUpgrade bool) {
 
 	var err error
 
@@ -111,14 +112,22 @@ func build(orderConfig config.ProjectConfiguration, bootVersion string, disableU
 	if bootVersion == "" {
 		bootVersion = orderConfig.Settings.MaxSpringBootVersion
 	}
-	// download from start.spring.io to targetDirectory
-	err = spring.DownloadInitializer(ctx.TargetDirectory, spring.UrlValuesFrom(bootVersion, orderConfig))
-	if err != nil {
+
+	// create or touch targetDirectory
+	if err := file.CreateDirectory(ctx.TargetDirectory); err != nil {
 		log.Fatalln(err)
 	}
 
-	// cleanup unwanted files from downloaded content
-	spring.DeleteDemoFiles(ctx.TargetDirectory, orderConfig)
+	if upstream == "initializer" {
+		// download from start.spring.io to targetDirectory
+		err = spring.DownloadInitializer(ctx.TargetDirectory, spring.UrlValuesFrom(bootVersion, orderConfig))
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// cleanup unwanted files from downloaded content
+		spring.DeleteDemoFiles(ctx.TargetDirectory, orderConfig)
+	}
 
 	// populate applicationName field in config
 	if err := orderConfig.FindApplicationName(ctx.TargetDirectory); err != nil {
@@ -209,11 +218,11 @@ func init() {
 	buildCmd.Flags().Bool("disable-upgrading", false, "dont upgrade dependencies")
 	buildCmd.Flags().BoolP("interactive", "i", false, "Interactive mode")
 	buildCmd.Flags().String("config-file", "ply.json", "Optional config file")
+	buildCmd.Flags().String("upstream", "initializer", "Upstream to use, ex: [initializer, none]")
 	buildCmd.Flags().String("boot-version", "", "Defines spring-boot version to use")
 	buildCmd.Flags().String("group-id", "", "Overrides groupId from config file")
 	buildCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
 	buildCmd.Flags().String("package", "", "Overrides package from config file")
 	buildCmd.Flags().String("name", "", "Overrides name from config file")
 	buildCmd.Flags().String("application-name", "", "Overrides applicationName from config file")
-
 }

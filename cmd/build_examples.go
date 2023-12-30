@@ -57,37 +57,34 @@ var examplesCmd = &cobra.Command{
 
 		orderConfig, err := config.InitProjectConfigurationFromFile(jsonConfigFile)
 
-		cmd.Flags().String("config-file", jsonConfigFile, "Optional config file")
-		projectConfig, err := config.InitProjectConfigurationFromFile(jsonConfigFile)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		groupId, err := promptForValue("groupId", projectConfig.GroupId, force)
+		groupId, err := promptForValue("groupId", orderConfig.GroupId, force)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		orderConfig.GroupId = groupId
 
-		artifactId, err := promptForValue("artifactId", projectConfig.ArtifactId, force)
+		artifactId, err := promptForValue("artifactId", orderConfig.ArtifactId, force)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		orderConfig.ArtifactId = artifactId
 
-		packageName, err := promptForValue("package", projectConfig.Package, force)
+		packageName, err := promptForValue("package", orderConfig.Package, force)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		orderConfig.Package = packageName
 
-		applicationName, err := promptForValue("application-name", projectConfig.Name, force)
+		applicationName, err := promptForValue("application-name", orderConfig.Name, force)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		orderConfig.ApplicationName = applicationName
 
-		build(orderConfig, "", false)
+		bootVersion, err := cmd.Flags().GetString("boot-version")
+		upstream, err := cmd.Flags().GetString("upstream")
+
+		build(orderConfig, upstream, bootVersion, false)
 		return
 	},
 }
@@ -100,6 +97,7 @@ func init() {
 	examplesCmd.Flags().String("name", "", "Example name to use")
 
 	examplesCmd.Flags().String("boot-version", "", "Defines spring-boot version to use")
+	examplesCmd.Flags().String("upstream", "initializer", "Upstream to use, ex: [initializer, none]")
 	//examplesCmd.Flags().String("group-id", "", "Overrides groupId from config file")
 	//examplesCmd.Flags().String("artifact-id", "", "Overrides artifactId from config file")
 	//examplesCmd.Flags().String("package", "", "Overrides package from config file")
