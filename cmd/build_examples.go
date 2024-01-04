@@ -9,7 +9,7 @@ import (
 var examplesCmd = &cobra.Command{
 	Use:   "example",
 	Short: "Builds example from cloud-config",
-	Long:  `Builds example example from cloud-config`,
+	Long:  `Builds example from cloud-config`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)

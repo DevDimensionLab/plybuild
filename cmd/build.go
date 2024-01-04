@@ -26,6 +26,7 @@ var buildCmd = &cobra.Command{
 
 		// fetch user input config
 		bootVersion, _ := cmd.Flags().GetString("boot-version")
+		upstream, _ := cmd.Flags().GetString("upstream")
 		overrideGroupId, _ := cmd.Flags().GetString("group-id")
 		overrideArtifactId, _ := cmd.Flags().GetString("artifact-id")
 		overridePackage, _ := cmd.Flags().GetString("package")
@@ -86,7 +87,7 @@ var buildCmd = &cobra.Command{
 			orderConfig.ApplicationName = overrideApplicationName
 		}
 
-		build(orderConfig, "", bootVersion, disableUpgrade)
+		build(orderConfig, upstream, bootVersion, disableUpgrade)
 	},
 }
 
