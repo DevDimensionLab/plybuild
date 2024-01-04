@@ -55,7 +55,7 @@ var queryCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(queryCmd)
+	pluginCmd.AddCommand(queryCmd)
 
 	queryCmd.Flags().StringVarP(&queryOpts.groupId, "groupId", "g", "", "groupId")
 	queryCmd.Flags().StringVarP(&queryOpts.artifactId, "artifactId", "a", "", "artifactId")

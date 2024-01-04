@@ -14,10 +14,13 @@ var groupId string
 var artifactId string
 
 var upgradeCmd = &cobra.Command{
-	Use:   "upgrade [OPTIONS]",
+	Use:   "upgrade",
 	Short: "Upgrade options",
 	Long:  `Perform upgrade on existing projects`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := OpenDocumentationWebsite(cmd, "commands/upgrade"); err != nil {
+			log.Fatalln(err)
+		}
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
 		}

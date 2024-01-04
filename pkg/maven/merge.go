@@ -2,8 +2,8 @@ package maven
 
 import (
 	"fmt"
-	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/plybuild/pkg/config"
 	"strings"
 )
 

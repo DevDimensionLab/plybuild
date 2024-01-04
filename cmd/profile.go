@@ -7,7 +7,7 @@ import (
 	"os/exec"
 )
 
-const DEFAULT_TERMINAL_WIDTH = 80
+const DefaultTerminalWidth = 80
 
 type ConfigOpts struct {
 	Sync       bool
@@ -23,10 +23,11 @@ func (configOpts ConfigOpts) Any() bool {
 
 var configOpts ConfigOpts
 
-var profilesCmd = &cobra.Command{
-	Use:   "profiles",
-	Short: "Manage profiles settings for ply",
-	Long:  `Manage profiles settings for ply`,
+var profileCmd = &cobra.Command{
+	Use:     "profile",
+	Short:   "Manage profiles settings for ply",
+	Long:    `Manage profiles settings for ply`,
+	Aliases: []string{"profiles"},
 	Run: func(cmd *cobra.Command, args []string) {
 		if configOpts.UseProfile != "" {
 			log.Infof("switching to config: %s", configOpts.UseProfile)
@@ -100,7 +101,7 @@ var configCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if width != DEFAULT_TERMINAL_WIDTH {
+		if width != DefaultTerminalWidth {
 			cfg.TerminalConfig.Width = width
 		}
 
@@ -116,17 +117,17 @@ var configCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(profilesCmd)
+	RootCmd.AddCommand(profileCmd)
 
-	profilesCmd.Flags().BoolVar(&configOpts.Sync, "cloud-sync", false, "sync with cloud config repo")
-	profilesCmd.Flags().StringVar(&configOpts.UseProfile, "use", "", "switch to profile")
-	profilesCmd.Flags().BoolVar(&configOpts.Show, "show", false, "show local config")
-	profilesCmd.Flags().BoolVar(&configOpts.Edit, "edit", false, "edit active profile local config")
-	profilesCmd.Flags().BoolVar(&configOpts.Reset, "reset", false, "reset local config")
+	profileCmd.Flags().BoolVar(&configOpts.Sync, "cloud-sync", false, "sync with cloud config repo")
+	profileCmd.Flags().StringVar(&configOpts.UseProfile, "use", "", "switch to profile")
+	profileCmd.Flags().BoolVar(&configOpts.Show, "show", false, "show local config")
+	profileCmd.Flags().BoolVar(&configOpts.Edit, "edit", false, "edit active profile local config")
+	profileCmd.Flags().BoolVar(&configOpts.Reset, "reset", false, "reset local config")
 
-	profilesCmd.AddCommand(configCmd)
+	profileCmd.AddCommand(configCmd)
 
-	configCmd.Flags().IntP("width", "w", DEFAULT_TERMINAL_WIDTH, "Configure width of rendering in the terminal")
+	configCmd.Flags().IntP("width", "w", DefaultTerminalWidth, "Configure width of rendering in the terminal")
 	configCmd.Flags().StringP("format", "f", "", "Configure format of rendering in the terminal: markdown")
 
 }

@@ -1,32 +1,32 @@
 package cmd
 
 import (
+	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/template"
-	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/spf13/cobra"
 	"os"
 )
 
-var mergeCmd = &cobra.Command{
-	Use:   "merge",
-	Short: "Merge functionalities for files to a project",
-	Long:  `Merge functionalities for files to a project`,
+var addCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Add templates and functionalities for files to a build",
+	Long:  `Add templates and functionalities for files to a build`,
 }
 
-var mergePomCmd = &cobra.Command{
+var addPomCmd = &cobra.Command{
 	Use:   "pom",
-	Short: "Merges a pom-file into a project",
-	Long:  `Merges a pom-file into a project`,
+	Short: "Adds a pom-file into a project",
+	Long:  `Adds a pom-file into a project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fromPomFile, err := cmd.Flags().GetString("from")
 		if err != nil {
 			log.Fatalln(err)
 		}
 		if fromPomFile == "" {
-			log.Errorln("missing valid --from flag for pom.xml to merge from")
+			log.Errorln("missing valid --from flag for pom.xml to add from")
 			os.Exit(-1)
 		}
 
@@ -50,7 +50,7 @@ var mergePomCmd = &cobra.Command{
 	},
 }
 
-var mergeTextCmd = &cobra.Command{
+var addTextCmd = &cobra.Command{
 	Use:   "text",
 	Short: "Merges two text files",
 	Long:  `Merges two text files`,
@@ -79,10 +79,10 @@ var mergeTextCmd = &cobra.Command{
 	},
 }
 
-var mergeTemplateCmd = &cobra.Command{
+var addTemplateCmd = &cobra.Command{
 	Use:   "template",
-	Short: "Merges a template from ply-config",
-	Long:  `Merges a template from ply-config`,
+	Short: "Adds a template from ply-config",
+	Long:  `Adds a template from ply-config`,
 	Run: func(cmd *cobra.Command, args []string) {
 		templateName, err := cmd.Flags().GetString("name")
 		if err != nil {
@@ -109,13 +109,13 @@ var mergeTemplateCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(mergeCmd)
-	mergeCmd.AddCommand(mergePomCmd)
-	mergeCmd.AddCommand(mergeTextCmd)
-	mergeCmd.AddCommand(mergeTemplateCmd)
-	mergeCmd.PersistentFlags().String("from", "", "file to merge")
-	mergePomCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
-	mergeTextCmd.PersistentFlags().String("to", "", "target file to merge to")
-	mergeTemplateCmd.Flags().String("name", "", "template to merge")
-	mergeTemplateCmd.Flags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	buildCmd.AddCommand(addCmd)
+	addCmd.AddCommand(addPomCmd)
+	addCmd.AddCommand(addTextCmd)
+	addCmd.AddCommand(addTemplateCmd)
+	addCmd.PersistentFlags().String("from", "", "file to add")
+	addPomCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
+	addTextCmd.PersistentFlags().String("to", "", "target file to add to")
+	addTemplateCmd.Flags().String("name", "", "template to add")
+	addTemplateCmd.Flags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")
 }

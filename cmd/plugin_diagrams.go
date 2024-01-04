@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/kibana"
-	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/structurizr"
 	"github.com/spf13/cobra"
 	"os"
@@ -27,35 +26,6 @@ var diagramsCmd = &cobra.Command{
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			log.Fatalln(err)
 		}
-	},
-}
-
-var mavenGraphCmd = &cobra.Command{
-	Use:   "maven-graph",
-	Short: "creates a graph using maven for dependencies in a project",
-	Long:  `creates a graph using maven for dependencies in a project`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		for _, inc := range mavenGraphIncludeFilters {
-			println(inc)
-		}
-		for _, ex := range mavenGraphExcludeFilters {
-			println(ex)
-		}
-		ctx.DryRun = true
-		ctx.OnEachMavenProject("creating graph for",
-			maven.Graph(false, mavenGraphExcludeTestScope, mavenGraphIncludeFilters, mavenGraphExcludeFilters),
-			maven.RunOn("dot",
-				"-Tpng:cairo", "target/dependency-graph.dot", "-o", "target/dependency-graph.png"),
-			openReportInBrowser("target/dependency-graph.png"),
-		)
 	},
 }
 
@@ -130,17 +100,10 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 }
 
 func init() {
-	RootCmd.AddCommand(diagramsCmd)
+	pluginCmd.AddCommand(diagramsCmd)
 
 	diagramsCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	diagramsCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "optional target directory")
-
-	diagramsCmd.AddCommand(mavenGraphCmd)
-	mavenGraphCmd.AddCommand(mavenGraph2PartyCmd)
-	mavenGraphCmd.PersistentFlags().BoolVar(&mavenGraphExcludeTestScope, "exclude-test-scope", false, "exclude test scope from graph")
-	mavenGraphCmd.PersistentFlags().StringArrayVar(&mavenGraphExcludeFilters, "exclude-filters", []string{}, "exclude filter rules")
-	mavenGraphCmd.PersistentFlags().StringArrayVar(&mavenGraphIncludeFilters, "include-filters", []string{}, "include filter rules")
-	mavenGraphCmd.PersistentFlags().BoolVar(&ctx.OpenInBrowser, "open", false, "open report in browser")
 
 	diagramsCmd.AddCommand(kibanaCmd)
 	kibanaCmd.Flags().StringP("fetch-file", "f", "", "Path to kibana.fetch-request")

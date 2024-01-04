@@ -13,29 +13,39 @@ var aboutCmd = &cobra.Command{
 
 func header() string {
 	return fmt.Sprintf(`
-    ____  __      ____        _ __    __
-   / __ \/ /_  __/ __ )__  __(_) /___/ /
-  / /_/ / / / / / __  / / / / / / __  / 
- / ____/ / /_/ / /_/ / /_/ / / / /_/ /  
-/_/   /_/\__, /_____/\__,_/_/_/\__,_/   
-        /____/                          
+           __      __          _ __    __
+    ____  / /_  __/ /_  __  __(_) /___/ /
+   / __ \/ / / / / __ \/ / / / / / __  / 
+  / /_/ / / /_/ / /_/ / /_/ / / / /_/ /  
+ / .___/_/\__, /_.___/\__,_/_/_/\__,_/   
+/_/      /____/                          
 
 == version: %s ==
 `, version)
 }
 
 func description() string {
-	about := `## About Ply - https://devdimensionlab.github.io/
-- Ply is a command line tool that supports developers using Spring Boot and Maven
+	about := `## About plybuild - https://devdimensionlab.github.io/
+- Plybuild is a command line tool that supports developers using Spring Boot and Maven
 - ply upgrade all | 2party | 3party  -> upgrades maven version of maven dependencies to latest 
-- ply generate ply.json -> generates a new application ready for business logic
+- ply build ply.json -> generates a new application ready for business logic
 - Authors:
-  - Alexander Skjolden, Skjolden Frilans AS
+  - Alexander Skjolden, Runwith AS
   - Per Otto Christensen, Codify Consulting AS
 `
 	return fmt.Sprintf("%s\n%s", header(), about)
 }
 
+func completionCommand() *cobra.Command {
+	return &cobra.Command{
+		Use: "completion",
+	}
+}
+
 func init() {
 	RootCmd.AddCommand(aboutCmd)
+
+	completion := completionCommand()
+	completion.Hidden = true
+	RootCmd.AddCommand(completion)
 }

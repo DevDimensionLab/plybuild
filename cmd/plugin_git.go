@@ -13,7 +13,7 @@ var gitCmd = &cobra.Command{
 	Short: "Git commands",
 	Long:  `Git commands`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return OkHelp(cmd, cleanOpts.Any)
+		return OkHelp(cmd, removeOpts.Any)
 	},
 }
 
@@ -49,7 +49,7 @@ var gitInstallHooksCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(gitCmd)
+	pluginCmd.AddCommand(gitCmd)
 
 	gitCmd.AddCommand(gitInstallHooksCmd)
 	gitCmd.PersistentFlags().BoolVar(&ctx.ForceCloudSync, "cloud-sync", false, "force cloud sync")

@@ -1,8 +1,8 @@
 package maven
 
 import (
-	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/plybuild/pkg/config"
 )
 
 func RemoveDeprecated(cloudConfig config.CloudConfig, model *pom.Model) (templates []config.CloudTemplate, err error) {

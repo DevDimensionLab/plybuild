@@ -47,7 +47,7 @@ var formatInheritVersion = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(formatCmd)
+	buildCmd.AddCommand(formatCmd)
 	formatCmd.AddCommand(formatPomCmd)
 	formatCmd.AddCommand(formatVersionCmd)
 	formatCmd.AddCommand(formatInheritVersion)

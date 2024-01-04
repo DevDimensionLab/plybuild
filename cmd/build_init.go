@@ -7,8 +7,8 @@ import (
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initializes a maven project with ply files and formatting",
-	Long:  `Initializes a maven project with ply files and formatting`,
+	Short: "Initializes build with ply files and formatting",
+	Long:  `Initializes build project with ply files and formatting`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := InitGlobals(cmd); err != nil {
 			log.Fatalln(err)
@@ -46,7 +46,7 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(initCmd)
+	buildCmd.AddCommand(initCmd)
 
 	initCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	initCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "Optional target directory")

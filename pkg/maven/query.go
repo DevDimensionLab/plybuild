@@ -1,9 +1,9 @@
 package maven
 
 import (
+	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/http"
-	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"strings"
 )
 

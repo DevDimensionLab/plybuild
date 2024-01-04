@@ -10,7 +10,7 @@ var lintCmd = &cobra.Command{
 	Short: "Linting commands",
 	Long:  `Linting commands`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return OkHelp(cmd, cleanOpts.Any)
+		return OkHelp(cmd, removeOpts.Any)
 	},
 }
 
@@ -35,7 +35,7 @@ var lintKotlinCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(lintCmd)
+	pluginCmd.AddCommand(lintCmd)
 
 	lintCmd.AddCommand(lintKotlinCmd)
 	lintCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
