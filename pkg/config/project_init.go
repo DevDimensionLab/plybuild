@@ -157,10 +157,11 @@ func findRootSourceFilePackageName(suffix string, path string) (packageName stri
 func projectConfigFile(targetDir string) string {
 	plyFile := file.Path("%s/%s", targetDir, projectConfigFileName)
 	if file.Exists(plyFile) {
-		// return ply.json file
 		return plyFile
-	} else {
-		// return co-pilot.json file for legacy projects
-		return file.Path("%s/%s", targetDir, legacyProjectConfigFileName)
 	}
+	legacyFile := file.Path("%s/%s", targetDir, legacyProjectConfigFileName)
+	if file.Exists(legacyFile) {
+		return legacyFile
+	}
+	return plyFile
 }

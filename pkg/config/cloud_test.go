@@ -12,7 +12,7 @@ func TestGitCloudConfig_Services(t *testing.T) {
 
 	services, err := cfg.Services()()
 	if err != nil {
-		t.Errorf("%v\n", err)
+		t.Fatalf("load services fixture: %v", err)
 	}
 
 	expected := "services"
@@ -26,7 +26,7 @@ func TestGitCloudConfig_LinkFromService(t *testing.T) {
 
 	link, err := cfg.LinkFromService(cfg.Services(), "com.example", "flyway-demo", "info")
 	if err != nil {
-		t.Errorf("%v\n", err)
+		t.Fatalf("resolve service link: %v", err)
 	}
 
 	expected := "http://localhost:8080/actuator/info"
@@ -38,11 +38,14 @@ func TestGitCloudConfig_LinkFromService(t *testing.T) {
 func TestGitCloudConfig_DefaultServiceEnvironmentUrl(t *testing.T) {
 	cfg := newMockCloudConfig()
 
-	services, _ := cfg.Services()()
+	services, err := cfg.Services()()
+	if err != nil {
+		t.Fatalf("load services fixture: %v", err)
+	}
 	key := "info"
 	defaultUrl, err := cfg.DefaultServiceEnvironmentUrl(services.Data[0], key)
 	if err != nil {
-		t.Errorf("%v\n", err)
+		t.Fatalf("resolve default environment URL: %v", err)
 	}
 
 	expected := "http://localhost:8080/actuator/info"

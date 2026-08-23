@@ -1,24 +1,16 @@
 package maven
 
-import (
-	"strings"
-	"testing"
-)
+import "testing"
 
 func TestGetRepo(t *testing.T) {
-	settings, _ := NewSettings()
-	repos, err := settings.GetRepositories()
-	if err != nil {
-		t.Errorf("%v", err)
-	}
+	const fallbackURL = "https://repo.example.test/maven2"
+	repos := Repositories{Fallback: Repository{Url: fallbackURL}}
 	localRepo, err := repos.GetDefaultRepository()
-
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("get fallback repository: %v", err)
 	}
 
-	if !strings.Contains(localRepo.Url, "http") {
-		t.Errorf("local repo does not contain http")
+	if localRepo.Url != fallbackURL {
+		t.Errorf("default repository URL was %q, want %q", localRepo.Url, fallbackURL)
 	}
-
 }

@@ -12,7 +12,7 @@ func TestLocalConfig_Config(t *testing.T) {
 
 	localCfg, err := cfg.Config()
 	if err != nil {
-		t.Errorf("%v\n", err)
+		t.Fatalf("load local config fixture: %v", err)
 	}
 
 	expected := "test-source-provider"
