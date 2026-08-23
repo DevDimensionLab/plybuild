@@ -1,0 +1,266 @@
+# Quality Upgrade Plan
+
+Last measured checkpoint: 2026-08-23, commit `25689c5`.
+
+## Objective
+
+Reach an honest L2 quality level while preserving the CLI and public Go API.
+"Honest" means held baseline debt is worked down rather than accepted merely
+because the ratchet verdict says PASS.
+
+## Operating Model
+
+- Work only in `/Users/perottochristensen/github/ply/upgrade-quality` on
+  `codex/upgrade-quality`.
+- Make one focused commit per measured quality move.
+- Limit a checkpoint to three moves, then update this plan and the handover.
+- Run the relevant focused tests before the full gate.
+- Measure every checkpoint from a clean commit with the stored baseline.
+- Require zero ratchet regressions and resolve actionable review findings.
+- Do not push, merge, or remove the worktree without explicit approval.
+
+## Measured State
+
+| Signal | Baseline | Commit `25689c5` | Interpretation |
+| --- | ---: | ---: | --- |
+| L0 PASS | 2 / 8 | 7 / 8 | Q0.3 is the remaining L0 failure. |
+| Test functions | 33 | 37 | Entrypoint and repository-write controls were added. |
+| Skipped tests | 2 | 0 | Q0.6 improved. |
+| Packages with tests | 5 / 20 | 7 / 22 | Fifteen packages still have no test files. |
+| Process-exiting calls outside `main` | 127 | 127 | Formal ratchet PASS, debt unchanged. |
+| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | Q1.3 fails; all five adapter paths are absent. |
+| Declared seam swap tests | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
+| Mutation harnesses | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
+| Acceptance scripts | 0 / 4 | 0 / 4 | Q2.5 fails. |
+
+Authoritative report: `target/quality-audit/scorecard.json`.
+
+## Checkpoints
+
+### P0 - Recovery And Measurement
+
+Status: complete.
+
+- Created the feature worktree and repaired `make install`.
+- Established the pinned, fail-closed quality apparatus and baseline.
+- Moved config, Maven, and template fixtures out of the repository tree.
+- Replaced both skipped Kibana tests with deterministic transport tests.
+- Finished with one improved, six held, and zero regressed ratchets.
+
+Commits: `3822f4a`, `674e0a4`, `80b43ba`, `25689c5`.
+
+### P1 - Close L0 And Establish The Daily Gate
+
+Status: next checkpoint. Limit: three moves.
+
+1. Pin both the linter version and its checked-in configuration for the selected
+   Go toolchain. Make `make lint` read-only; move rewriting to `make format`.
+2. Give every repository shell script a negative meta-test so the underlying
+   Q0.8 value reaches zero rather than relying on a held ratchet.
+3. Add a tested `make preflight` entry point for build, uncached tests,
+   vet/lint, install-contract tests, every `scripts/test-*`, and
+   `.quality/tools/test-quality-audit.sh`. Its own meta-test must reject an
+   empty or omitted script population. Reserve `make quality` for L2.
+
+Exit: L0 is 8 of 8, scripts without meta-tests equals zero, the tree is
+unchanged by the gate, and no ratchet regresses.
+
+### P1B - Make Manual L1/L2 Evidence Reachable
+
+Status: required apparatus checkpoint before claiming L1 or L2.
+
+The vendored audit always emits UNMEASURABLE for Q1.6, Q1.7, Q1.9, Q2.4,
+Q2.8, and Q2.9. The structured layer only consumes manual evidence for Q3.9.
+Extend the structured evidence schema so commit-, tree-, inventory-, and
+instrument-bound receipts can resolve those six rows. Explicit upstream FAIL
+must always beat a receipt. Add negative meta-tests for stale, duplicate,
+empty, wrong-kind, dirty-tree, and false-PASS evidence.
+
+Changing the parser changes the baseline instrument identity. Regenerate the
+baseline from commit `5635d50`, prove every existing numeric debt value is
+preserved, record old and new instrument hashes, and do not reset ratchet debt.
+
+Exit: each manual row can become PASS from valid non-empty evidence, cannot
+override a measured failure, and baseline migration is byte-reproducible.
+
+### P2A - Characterize Compatibility
+
+Status: queued before Q1 refactoring.
+
+1. Pin an API-diff tool and record the exported Go API against tag `v1.0.1`.
+   Maintain an explicit compatibility allowlist rather than reviewing raw text.
+2. Export the Cobra command/flag tree into normalized, order-independent data;
+   add output and exit contracts for install, status, upgrade, and build.
+3. Add early acceptance skeletons that run fresh artifacts against local
+   fixture, cache, and loopback inputs. They must fail when the artifact or
+   asserted behavior is absent; full Binary+Docker coverage finishes in P6.
+`cmd.Execute()` is an explicit compatibility decision point: its exported
+symbol and signature can remain, but its process-exiting behavior conflicts
+with exit-only-main. Characterize external use first. If callers require that
+side effect, stop for an approved migration rather than hiding an exit behind
+an adapter or function variable.
+
+Exit: public API and CLI deltas are machine-readable, core surface contracts
+are executable before refactoring, and all three moves are measured.
+
+### P2B - Make Distribution Non-Publishing By Default
+
+Status: one measured move after P2A.
+
+Remove or isolate the `brews` publisher in `.goreleaser.yml`, disable or guard
+`.goreleaser.brews.yml` and `make release-brew`, and provide a snapshot command
+that cannot publish a GitHub release or package-manager metadata. Add a negative
+test that rejects active Homebrew or Snap publishers in the default release
+path.
+
+Exit: binary snapshots are local-only and inactive publishers cannot run.
+
+### P3 - Remove Process Exits, Then Introduce Seams
+
+Status: queued.
+
+First reduce Q1.2. Add an error-returning execution path and move process exit
+to the main boundary. Both `main.go` and `cmd/ply/main.go` exist and are used by
+different build paths; contract-test that both delegate to the same error/exit
+path, or explicitly retire one without changing produced artifacts. Preserve
+exported `cmd.Execute()` and `cmd.RootCmd` symbols/signatures through the P2
+compatibility decision. Only after this boundary is green, introduce thin
+adapters one at a time using `.quality/inventory`:
+
+1. `internal/adapter/process` for subprocess execution, not application exit.
+2. `internal/adapter/httpclient` for HTTP request execution.
+3. `internal/adapter/filesystem` for production filesystem mutation.
+
+For each adapter, first add a characterization or argument-swap test, then move
+one coherent flow. Defaults must be safe and recording doubles must preserve
+the complete dependency struct. Start with the declared git, Maven, and cloud
+seams because their argument order can cause destructive behavior.
+
+Exit: process exits outside `main` reach zero, migrated call sites disappear
+from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
+
+### P4 - Finish Absolute L1
+
+Status: queued.
+
+- Add `internal/adapter/clock` and `internal/adapter/server`.
+- Cover all eight declared seams with executable swap tests.
+- Reduce logic packages without tests to zero. A pure type/constant package may
+  be excluded only through an explicit, audited N/A rule.
+- Record evidence for default doubles, partial-failure content, non-empty
+  populations, and state-leak checks.
+
+Exit: untested logic packages equals zero, process exits outside `main` equals
+zero, direct effects outside adapters equals zero, direct time calls outside
+`internal/adapter/clock` equal zero, a movable fake clock proves time control,
+all eight seam swaps are covered, and every manual L1 row has valid non-empty
+evidence.
+
+### P5 - Build L2 Mutation Evidence
+
+Status: queued.
+
+Implement the eight named harnesses from `.quality/inventory`, one subject per
+measured move and no more than three moves per checkpoint. Each harness must
+declare its mutations, prove it can fail, include the methodology T1-T10
+meta-controls, and report declared versus killed mutations. Surviving mutations
+must be classified as reachability, observability, or controllability gaps and
+drive a test or seam improvement.
+
+Exit: all eight harnesses declare at least eight meaningful mutations, pass
+T1-T10, and report `declared == killed`, `survived == 0`, and `unusable == 0`.
+
+### P6 - Build L2 Acceptance Evidence
+
+Status: queued.
+
+Implement acceptance scripts for `install`, `status`, `upgrade`, and `build`.
+Host install exercises `make install` / `go install`; it is not the `ply install`
+command group. Status, upgrade, and `ply build` run through both a fresh
+GoReleaser snapshot binary and a fresh Docker image. Acceptance uses local
+fixtures, cache, and loopback services so it measures the artifact without
+public infrastructure. Real-boundary smokes are separately labeled. Homebrew
+and Snap remain outside the active distribution matrix.
+
+Add `make quality` only when it runs preflight, mutation meta/harnesses,
+acceptance scripts, and the authoritative audit scoped to
+`--only Q0.*,Q1.*,Q2.*`. The target succeeds only on audit exit 0 and rejects a
+missing criterion population. A separate full report may exit 1 for L3 debt.
+
+Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
+`--only Q0.*,Q1.*,Q2.*` audit attains L2 without held material debt.
+
+### P7 - Adopt A Maintained Go And Dependency Baseline
+
+Status: queued after honest L2.
+
+- Select and document Go 1.26 or 1.27 based on supported stable tooling at
+  execution time; update the module declaration and CI together.
+- Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
+  vet/lint, API/CLI diff, acceptance, and vulnerability scanning after each.
+- Keep dependency-only commits separate from behavior changes.
+- Migrate the exact-toolchain baseline by reproducing old and new measurements;
+  preserve every debt value and record both instrument identities.
+
+Exit: the declared toolchain matches the verified toolchain, dependency
+upgrades have no unexplained output or API drift, and vulnerability findings
+are resolved or explicitly risk-accepted.
+
+### P8 - Domain Modernization
+
+Status: queued after the core L2 flows.
+
+- Migrate cloud configuration toward `ply-config` while retaining cache-first
+  behavior and compatibility fixtures.
+- Repair and modernize Spring behavior under dedicated characterization tests.
+- Revisit inactive packaging only through a separate scope decision.
+
+## Gate For Every Checkpoint
+
+```sh
+make test
+make test-install
+go test ./... -count=1
+go test -race ./... -count=1
+go vet ./...
+bash .quality/tools/test-quality-audit.sh
+bash .quality/tools/quality-audit.sh . \
+  --baseline .quality/baseline/scorecard.json
+git status --short
+```
+
+Run the count-2 hermetic test with an empty HOME and isolated writable state:
+
+```sh
+root="$(mktemp -d /private/tmp/ply-hermetic.XXXXXX)"
+mkdir -p "$root/home" "$root/cache" "$root/tmp" "$root/config"
+modcache="$(go env GOMODCACHE)"
+HOME="$root/home" XDG_CONFIG_HOME="$root/config" \
+  GOCACHE="$root/cache" GOTMPDIR="$root/tmp" GOMODCACHE="$modcache" \
+  GOENV=off GOWORK=off go test ./... -count=2
+```
+
+The full audit exits 1 while measured project findings remain. Exit 2 means the
+audit or its evidence is broken and invalidates the checkpoint.
+
+Before treating the gate as clean, require:
+
+```sh
+test -z "$(git status --porcelain=v1 --untracked-files=all)"
+```
+
+The local `.agent-task/current.md` handoff is deliberately ignored by Git but
+is still visible to the audit's filesystem identity. Read it first, then remove
+or move it outside the worktree before a local clean-tree audit. A clean shared
+clone at the exact commit is the preferred checkpoint measurement.
+
+## Risk Register
+
+| Risk | Control |
+| --- | --- |
+| CLI or API drift during refactoring | Characterization and acceptance before moving a boundary. |
+| Real network behavior differs from doubles | Label evidence precisely and add real-boundary smokes where feasible. |
+| Docker assumptions remain untested | Require a daemon-backed build and command smoke before claiming support. |
+| Large toolchain/dependency jump obscures failures | Upgrade in isolated, dependency-only commits. |
+| Ratchet PASS hides unchanged debt | Track the underlying number in this plan and require reduction by L1/L2 exit. |
+| Tests mutate fixtures or developer state | Central safe writers, empty-HOME runs, and tree identity checks. |
