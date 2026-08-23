@@ -1,0 +1,3432 @@
+// Command go-callscan reports effect call sites using Go type information and Q0.6 structure.
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"go/ast"
+	"go/constant"
+	"go/importer"
+	"go/parser"
+	"go/token"
+	"go/types"
+	"io"
+	"os"
+	osexec "os/exec"
+	"path/filepath"
+	"sort"
+	"strings"
+	"syscall"
+)
+
+type finding struct {
+	Path   string `json:"path"`
+	Line   int    `json:"line"`
+	Column int    `json:"column"`
+	Kind   string `json:"kind"`
+}
+
+type fileManifest struct {
+	Production []string `json:"production"`
+	Tests      []string `json:"tests"`
+}
+
+var externalPackageCalls = map[string]map[string]string{
+	"archive/zip": {"OpenReader": "filesystem"},
+	"crypto/tls":  {"Dial": "server", "DialWithDialer": "server", "Listen": "server"},
+	"io": {
+		"Copy": "filesystem", "CopyBuffer": "filesystem", "CopyN": "filesystem",
+		"WriteString": "filesystem",
+	},
+	"io/ioutil": {
+		"ReadDir": "filesystem", "ReadFile": "filesystem", "TempDir": "filesystem",
+		"TempFile": "filesystem", "WriteFile": "filesystem",
+	},
+	"net": {
+		"Dial": "server", "DialIP": "server", "DialTCP": "server", "DialTimeout": "server",
+		"DialUDP": "server", "DialUnix": "server", "Listen": "server", "ListenIP": "server",
+		"ListenMulticastUDP": "server", "ListenPacket": "server", "ListenTCP": "server",
+		"ListenUDP": "server", "ListenUnix": "server", "ListenUnixgram": "server",
+		"LookupAddr": "server", "LookupCNAME": "server", "LookupHost": "server",
+		"LookupIP": "server", "LookupMX": "server", "LookupNS": "server",
+		"LookupPort": "server", "LookupSRV": "server", "LookupTXT": "server",
+	},
+	"net/http": {
+		"Get": "http", "Head": "http", "ListenAndServe": "server",
+		"ListenAndServeTLS": "server", "NewRequest": "http",
+		"NewRequestWithContext": "http", "Post": "http", "PostForm": "http",
+		"Serve": "server", "ServeTLS": "server",
+	},
+	"os": {
+		"Chdir": "filesystem", "Chmod": "filesystem", "Chown": "filesystem",
+		"Chtimes": "filesystem", "CopyFS": "filesystem", "Create": "filesystem", "CreateTemp": "filesystem",
+		"FindProcess": "process", "Getwd": "filesystem", "Lchown": "filesystem",
+		"Link": "filesystem", "Lstat": "filesystem", "Mkdir": "filesystem",
+		"MkdirAll": "filesystem", "MkdirTemp": "filesystem", "Open": "filesystem",
+		"OpenFile": "filesystem", "OpenRoot": "filesystem", "ReadDir": "filesystem", "ReadFile": "filesystem",
+		"Readlink": "filesystem", "Remove": "filesystem", "RemoveAll": "filesystem",
+		"Rename": "filesystem", "StartProcess": "process", "Stat": "filesystem",
+		"Symlink": "filesystem", "Truncate": "filesystem", "WriteFile": "filesystem",
+	},
+	"os/exec": {"Command": "process", "CommandContext": "process", "LookPath": "process"},
+	"path/filepath": {
+		"EvalSymlinks": "filesystem", "Glob": "filesystem", "Walk": "filesystem",
+		"WalkDir": "filesystem",
+	},
+	"syscall": {
+		"Accept": "server", "Bind": "server", "Connect": "server", "Listen": "server",
+		"Recvfrom": "server", "Sendto": "server", "Socket": "server", "Socketpair": "server",
+		"Chdir": "filesystem", "Chmod": "filesystem", "Chown": "filesystem",
+		"Chroot": "filesystem", "Close": "filesystem", "Creat": "filesystem",
+		"Fchdir": "filesystem", "Fchmod": "filesystem", "Fchown": "filesystem",
+		"Fstat": "filesystem", "Fsync": "filesystem", "Ftruncate": "filesystem",
+		"Getcwd": "filesystem", "Lchown": "filesystem", "Link": "filesystem",
+		"Lstat": "filesystem", "Mkdir": "filesystem", "Open": "filesystem",
+		"Openat": "filesystem", "Read": "filesystem", "Readlink": "filesystem",
+		"Rename": "filesystem", "Rmdir": "filesystem", "Stat": "filesystem",
+		"Symlink": "filesystem", "Truncate": "filesystem", "Unlink": "filesystem",
+		"Utimes": "filesystem", "Write": "filesystem",
+		"Exec": "process", "ForkExec": "process", "Kill": "process",
+		"StartProcess": "process", "Wait4": "process",
+	},
+	"time": {
+		"After": "clock", "AfterFunc": "clock", "NewTicker": "clock", "NewTimer": "clock",
+		"Now": "clock", "Since": "clock", "Sleep": "clock", "Tick": "clock", "Until": "clock",
+	},
+}
+
+var externalMethods = map[string]map[string]map[string]string{
+	"crypto/tls": {
+		"Dialer": {"Dial": "server", "DialContext": "server"},
+	},
+	"net/http": {
+		"Client": {
+			"CloseIdleConnections": "http", "Do": "http", "Get": "http", "Head": "http",
+			"Post": "http", "PostForm": "http",
+		},
+		"Server": {
+			"Close": "server", "ListenAndServe": "server", "ListenAndServeTLS": "server",
+			"Serve": "server", "ServeTLS": "server", "Shutdown": "server",
+		},
+		"Transport": {"CloseIdleConnections": "http", "RoundTrip": "http"},
+	},
+	"net": {
+		"Dialer":       {"Dial": "server", "DialContext": "server"},
+		"ListenConfig": {"Listen": "server", "ListenPacket": "server"},
+		"Resolver": {
+			"LookupAddr": "server", "LookupCNAME": "server", "LookupHost": "server",
+			"LookupIP": "server", "LookupIPAddr": "server", "LookupMX": "server", "LookupNS": "server",
+			"LookupNetIP": "server", "LookupPort": "server", "LookupSRV": "server",
+			"LookupTXT": "server",
+		},
+	},
+	"os/exec": {
+		"Cmd": {
+			"CombinedOutput": "process", "Output": "process", "Run": "process", "Start": "process",
+			"StderrPipe": "process", "StdinPipe": "process", "StdoutPipe": "process", "Wait": "process",
+		},
+	},
+	"database/sql": {
+		"DB": {
+			"Begin": "database", "BeginTx": "database", "Close": "database", "Conn": "database",
+			"Exec": "database", "ExecContext": "database", "Ping": "database", "PingContext": "database",
+			"Prepare": "database", "PrepareContext": "database", "Query": "database",
+			"QueryContext": "database", "QueryRow": "database", "QueryRowContext": "database",
+		},
+		"Conn": {
+			"BeginTx": "database", "Close": "database", "ExecContext": "database",
+			"PingContext": "database", "PrepareContext": "database", "QueryContext": "database",
+			"QueryRowContext": "database", "Raw": "database",
+		},
+		"Tx": {
+			"Commit": "database", "Exec": "database", "ExecContext": "database",
+			"Prepare": "database", "PrepareContext": "database", "Query": "database",
+			"QueryContext": "database", "QueryRow": "database", "QueryRowContext": "database",
+			"Rollback": "database", "Stmt": "database", "StmtContext": "database",
+		},
+		"Stmt": {
+			"Close": "database", "Exec": "database", "ExecContext": "database",
+			"Query": "database", "QueryContext": "database", "QueryRow": "database",
+			"QueryRowContext": "database",
+		},
+	},
+	"os": {
+		"File": {
+			"Chdir": "filesystem", "Chmod": "filesystem", "Chown": "filesystem",
+			"Close": "filesystem", "Read": "filesystem", "ReadAt": "filesystem",
+			"ReadDir": "filesystem", "Readdir": "filesystem", "Readdirnames": "filesystem",
+			"Seek": "filesystem", "Stat": "filesystem", "Sync": "filesystem",
+			"Truncate": "filesystem", "Write": "filesystem", "WriteAt": "filesystem",
+			"WriteString": "filesystem",
+		},
+		"Root": {
+			"Chmod": "filesystem", "Chown": "filesystem", "Chtimes": "filesystem",
+			"Close": "filesystem", "Create": "filesystem", "Lchown": "filesystem",
+			"Link": "filesystem", "Lstat": "filesystem", "Mkdir": "filesystem",
+			"MkdirAll": "filesystem", "Open": "filesystem", "OpenFile": "filesystem",
+			"OpenRoot": "filesystem", "ReadFile": "filesystem", "Readlink": "filesystem",
+			"Remove": "filesystem", "RemoveAll": "filesystem", "Rename": "filesystem",
+			"Stat": "filesystem", "Symlink": "filesystem", "WriteFile": "filesystem",
+		},
+	},
+}
+
+var unsafeTestPackageCalls = map[string]map[string]bool{
+	"io/ioutil": {"WriteFile": true},
+	"os": {
+		"Chmod": true, "Chown": true, "Chtimes": true, "CopyFS": true, "Create": true,
+		"Lchown": true, "Link": true,
+		"Mkdir": true, "MkdirAll": true, "OpenFile": true, "Remove": true,
+		"RemoveAll": true, "Rename": true, "Symlink": true, "Truncate": true,
+		"WriteFile": true,
+	},
+	"syscall": {
+		"Chmod": true, "Chown": true, "Creat": true, "Fchmod": true,
+		"Fchown": true, "Fsync": true, "Ftruncate": true, "Lchown": true,
+		"Link": true, "Mkdir": true, "Open": true, "Openat": true,
+		"Rename": true, "Rmdir": true, "Symlink": true, "Truncate": true,
+		"Unlink": true, "Utimes": true, "Write": true,
+	},
+}
+
+var unsafeTempPackageCalls = map[string]map[string]bool{
+	"io/ioutil": {"TempDir": true, "TempFile": true},
+	"os":        {"CreateTemp": true, "MkdirTemp": true},
+}
+
+var unsafeOSFileMethods = map[string]bool{
+	"Chmod": true, "Chown": true, "Sync": true, "Truncate": true,
+	"Write": true, "WriteAt": true, "WriteString": true,
+}
+
+var unsafeOSRootMethods = map[string]bool{
+	"Chmod": true, "Chown": true, "Chtimes": true, "Create": true,
+	"Lchown": true, "Link": true, "Mkdir": true, "MkdirAll": true,
+	"OpenFile": true, "Remove": true, "RemoveAll": true, "Rename": true,
+	"Symlink": true, "WriteFile": true,
+}
+
+type parsedFile struct {
+	relative string
+	parsed   *ast.File
+	isTest   bool
+}
+
+type packageKey struct {
+	directory string
+	name      string
+}
+
+type originKind uint8
+
+const (
+	directOrigin originKind = iota
+	callResultOrigin
+	elementOrigin
+)
+
+type originReference struct {
+	expression ast.Expr
+	kind       originKind
+	index      int
+}
+
+type fieldBindingKey struct {
+	receiver *types.Var
+	field    *types.Var
+}
+
+type originBindings struct {
+	variables                     map[*types.Var][]originReference
+	arguments                     map[*types.Var][]originReference
+	elements                      map[*types.Var][]originReference
+	parameters                    map[*types.Var]bool
+	indirectWrites                map[*types.Var]bool
+	temporaryEnvironmentMutations map[ast.Node]bool
+	temporaryMutatingFunctions    map[*types.Func]bool
+	temporaryMutatingLiterals     map[*ast.FuncLit]bool
+	scopes                        map[ast.Expr]ast.Node
+	returns                       map[*types.Func][][]originReference
+	literalReturns                map[*ast.FuncLit][][]originReference
+	fields                        map[fieldBindingKey][]originReference
+	info                          map[ast.Expr]*types.Info
+}
+
+type repositoryImporter struct {
+	standard types.Importer
+	files    *token.FileSet
+	root     string
+	module   string
+	sources  map[string][]*ast.File
+	cache    map[string]*types.Package
+	loading  map[string]bool
+	origins  originBindings
+	exports  map[string]string
+}
+
+func (value *repositoryImporter) Import(path string) (*types.Package, error) {
+	if loaded := value.cache[path]; loaded != nil {
+		return loaded, nil
+	}
+	if len(value.sources[path]) > 0 {
+		return value.importLocal(path)
+	}
+	loaded, err := value.standard.Import(path)
+	if err == nil {
+		value.cache[path] = loaded
+		return loaded, nil
+	}
+	loaded, err = value.importDependency(path)
+	if err == nil {
+		value.cache[path] = loaded
+		return loaded, nil
+	}
+	// Unrelated third-party packages do not define the standard-library boundaries
+	// measured here. A placeholder lets the checker retain type data for the rest
+	// of the package; effect-like calls that remain unresolved fail closed later.
+	placeholder := types.NewPackage(path, fallbackPackageName(path))
+	placeholder.MarkComplete()
+	value.cache[path] = placeholder
+	return placeholder, nil
+}
+
+func (value *repositoryImporter) importDependency(path string) (*types.Package, error) {
+	lookup := func(importPath string) (io.ReadCloser, error) {
+		export, err := value.exportPath(importPath)
+		if err != nil {
+			return nil, err
+		}
+		return os.Open(export)
+	}
+	return importer.ForCompiler(value.files, "gc", lookup).Import(path)
+}
+
+func (value *repositoryImporter) exportPath(path string) (string, error) {
+	if export := value.exports[path]; export != "" {
+		return export, nil
+	}
+	command := osexec.Command("go", "list", "-deps", "-export", "-json", path)
+	command.Dir = value.root
+	output, err := command.Output()
+	if err != nil {
+		return "", fmt.Errorf("go list export data for %s: %w", path, err)
+	}
+	decoder := json.NewDecoder(bytes.NewReader(output))
+	for {
+		item := struct {
+			ImportPath string
+			Export     string
+		}{}
+		if err := decoder.Decode(&item); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", fmt.Errorf("decode go list export data for %s: %w", path, err)
+		}
+		if item.ImportPath != "" && item.Export != "" {
+			value.exports[item.ImportPath] = item.Export
+		}
+	}
+	if export := value.exports[path]; export != "" {
+		return export, nil
+	}
+	return "", fmt.Errorf("go list returned no export data for %s", path)
+}
+
+func (value *repositoryImporter) importLocal(path string) (*types.Package, error) {
+	sources := value.sources[path]
+	if len(sources) == 0 {
+		return nil, fmt.Errorf("local import %s has no production Go package", path)
+	}
+	if value.loading[path] {
+		return nil, fmt.Errorf("local import cycle while loading %s", path)
+	}
+	value.loading[path] = true
+	defer delete(value.loading, path)
+	information := newTypesInfo()
+	configuration := types.Config{Importer: value, Error: func(error) {}}
+	loaded, _ := configuration.Check(path, value.files, sources, information)
+	if loaded == nil {
+		return nil, fmt.Errorf("could not type-check local import %s", path)
+	}
+	value.cache[path] = loaded
+	mergeOriginBindings(&value.origins, collectOriginBindings(sources, information))
+	return loaded, nil
+}
+
+func fallbackPackageName(path string) string {
+	base := filepath.Base(path)
+	if strings.HasPrefix(base, "v") && len(base) > 1 {
+		allDigits := true
+		for _, character := range base[1:] {
+			if character < '0' || character > '9' {
+				allDigits = false
+				break
+			}
+		}
+		if allDigits {
+			base = filepath.Base(filepath.Dir(path))
+		}
+	}
+	if dot := strings.IndexByte(base, '.'); dot >= 0 {
+		base = base[:dot]
+	}
+	var result strings.Builder
+	for index, character := range base {
+		if (character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z') ||
+			(character == '_') || (index > 0 && character >= '0' && character <= '9') {
+			result.WriteRune(character)
+		} else {
+			result.WriteByte('_')
+		}
+	}
+	if result.Len() == 0 {
+		return "dependency"
+	}
+	name := result.String()
+	if token.Lookup(name).IsKeyword() {
+		name += "pkg"
+	}
+	return name
+}
+
+func main() {
+	repository := flag.String("repo", "", "repository root")
+	mode := flag.String("mode", "external", "external, test-writes, or q06-structure")
+	manifestPath := flag.String("manifest", "", "go-list-selected file manifest")
+	flag.Parse()
+	if *repository == "" {
+		fmt.Fprintln(os.Stderr, "--repo is required")
+		os.Exit(2)
+	}
+	if *manifestPath == "" {
+		fmt.Fprintln(os.Stderr, "--manifest is required")
+		os.Exit(2)
+	}
+	if *mode != "external" && *mode != "test-writes" && *mode != "q06-structure" {
+		fmt.Fprintln(os.Stderr, "unknown --mode", *mode)
+		os.Exit(2)
+	}
+
+	root, err := filepath.Abs(*repository)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	manifest, err := readFileManifest(root, *manifestPath)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	findings := []finding{}
+	if *mode == "q06-structure" {
+		findings, err = scanQ06Structure(root, manifest)
+	} else {
+		findings, err = walkGoFiles(root, *mode, manifest)
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+
+	sort.Slice(findings, func(i, j int) bool {
+		if findings[i].Path != findings[j].Path {
+			return findings[i].Path < findings[j].Path
+		}
+		if findings[i].Line != findings[j].Line {
+			return findings[i].Line < findings[j].Line
+		}
+		if findings[i].Column != findings[j].Column {
+			return findings[i].Column < findings[j].Column
+		}
+		return findings[i].Kind < findings[j].Kind
+	})
+	unique := findings[:0]
+	for _, item := range findings {
+		if len(unique) > 0 && unique[len(unique)-1] == item {
+			continue
+		}
+		unique = append(unique, item)
+	}
+	findings = unique
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(findings); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+}
+
+func readFileManifest(root, path string) (fileManifest, error) {
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return fileManifest{}, fmt.Errorf("read build manifest: %w", err)
+	}
+	manifest := fileManifest{}
+	if err := json.Unmarshal(contents, &manifest); err != nil {
+		return fileManifest{}, fmt.Errorf("parse build manifest: %w", err)
+	}
+	seen := make(map[string]bool)
+	for _, relative := range append(append([]string{}, manifest.Production...), manifest.Tests...) {
+		if seen[relative] {
+			return fileManifest{}, fmt.Errorf("duplicate build-manifest path: %s", relative)
+		}
+		seen[relative] = true
+		if relative == "" || relative != filepath.ToSlash(filepath.Clean(relative)) ||
+			strings.HasPrefix(relative, "../") || filepath.IsAbs(relative) || !strings.HasSuffix(relative, ".go") {
+			return fileManifest{}, fmt.Errorf("invalid build-manifest path: %s", relative)
+		}
+		candidate := filepath.Join(root, filepath.FromSlash(relative))
+		resolved, err := filepath.EvalSymlinks(candidate)
+		if err != nil {
+			return fileManifest{}, fmt.Errorf("resolve build-manifest path %s: %w", relative, err)
+		}
+		inside, err := filepath.Rel(root, resolved)
+		if err != nil || inside == ".." || strings.HasPrefix(inside, ".."+string(os.PathSeparator)) {
+			return fileManifest{}, fmt.Errorf("build-manifest path leaves repository: %s", relative)
+		}
+	}
+	return manifest, nil
+}
+
+func walkGoFiles(root, mode string, manifest fileManifest) ([]finding, error) {
+	files := token.NewFileSet()
+	groups := make(map[packageKey][]parsedFile)
+	selected := append([]string{}, manifest.Production...)
+	if mode == "test-writes" {
+		selected = append(selected, manifest.Tests...)
+	}
+	for _, relative := range selected {
+		path := filepath.Join(root, filepath.FromSlash(relative))
+		isTest := strings.HasSuffix(relative, "_test.go")
+		parsed, err := parser.ParseFile(files, path, nil, 0)
+		if err != nil {
+			return nil, fmt.Errorf("parse %s: %w", relative, err)
+		}
+		key := packageKey{directory: filepath.ToSlash(filepath.Dir(relative)), name: parsed.Name.Name}
+		groups[key] = append(groups[key], parsedFile{
+			relative: relative, parsed: parsed, isTest: isTest,
+		})
+	}
+	module, err := readModulePath(root)
+	if err != nil {
+		return nil, err
+	}
+	keys := make([]packageKey, 0, len(groups))
+	for key := range groups {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		if keys[i].directory != keys[j].directory {
+			return keys[i].directory < keys[j].directory
+		}
+		return keys[i].name < keys[j].name
+	})
+	localSources := make(map[string][]*ast.File)
+	for key, sources := range groups {
+		if strings.HasSuffix(key.name, "_test") {
+			continue
+		}
+		packagePath := packagePathFor(module, key.directory)
+		for _, source := range sources {
+			if !source.isTest {
+				localSources[packagePath] = append(localSources[packagePath], source.parsed)
+			}
+		}
+	}
+	imports := &repositoryImporter{
+		standard: importer.Default(), files: files, root: root, module: module, sources: localSources,
+		cache: make(map[string]*types.Package), loading: make(map[string]bool),
+		origins: newOriginBindings(), exports: make(map[string]string),
+	}
+	findings := []finding{}
+	for _, key := range keys {
+		found, err := scanPackage(files, groups[key], key, module, mode, imports)
+		if err != nil {
+			return nil, err
+		}
+		findings = append(findings, found...)
+	}
+	return findings, nil
+}
+
+func readModulePath(root string) (string, error) {
+	contents, err := os.ReadFile(filepath.Join(root, "go.mod"))
+	if err != nil {
+		return "", fmt.Errorf("read go.mod: %w", err)
+	}
+	for _, line := range strings.Split(string(contents), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) == 2 && fields[0] == "module" {
+			return fields[1], nil
+		}
+	}
+	return "", fmt.Errorf("go.mod has no module declaration")
+}
+
+func packagePathFor(module, directory string) string {
+	if directory == "." {
+		return module
+	}
+	return module + "/" + directory
+}
+
+func scanPackage(files *token.FileSet, sources []parsedFile, key packageKey, module, mode string, loader *repositoryImporter) ([]finding, error) {
+	parsed := make([]*ast.File, 0, len(sources))
+	for _, source := range sources {
+		parsed = append(parsed, source.parsed)
+	}
+	information := newTypesInfo()
+	packagePath := packagePathFor(module, key.directory)
+	if strings.HasSuffix(key.name, "_test") {
+		packagePath += "_test"
+	}
+	configuration := types.Config{
+		Importer: loader,
+		Error:    func(error) {},
+	}
+	// Type errors from placeholder third-party packages are expected. The checker
+	// still records precise information for standard-library and local declarations.
+	_, _ = configuration.Check(packagePath, files, parsed, information)
+	bindings := newOriginBindings()
+	mergeOriginBindings(&bindings, loader.origins)
+	mergeOriginBindings(&bindings, collectOriginBindings(parsed, information))
+
+	findings := []finding{}
+	for _, source := range sources {
+		if mode == "test-writes" && !source.isTest &&
+			source.relative != "internal/testutil" &&
+			!strings.HasPrefix(source.relative, "internal/testutil/") {
+			continue
+		}
+		if mode == "external" &&
+			(source.relative == "internal/testutil" || strings.HasPrefix(source.relative, "internal/testutil/")) {
+			continue
+		}
+		fileAliases, dotImports := fileImports(source.parsed)
+		parents := parentNodes(source.parsed)
+		var scanErr error
+		ast.Inspect(source.parsed, func(node ast.Node) bool {
+			if scanErr != nil {
+				return false
+			}
+			if mode == "test-writes" && trustedSafeWriterCall(node, parents, source.relative, information) {
+				return true
+			}
+			var kind string
+			var err error
+			switch value := node.(type) {
+			case *ast.CallExpr:
+				kind, err = classifyCall(value, mode, module, fileAliases, dotImports, information, bindings)
+			case ast.Expr:
+				kind, err = classifyEscapedEffectReference(value, mode, information, bindings, parents, fileAliases)
+			default:
+				return true
+			}
+			if err != nil {
+				position := files.Position(node.Pos())
+				scanErr = fmt.Errorf("%s:%d:%d: %w", source.relative, position.Line, position.Column, err)
+				return false
+			}
+			if kind != "" {
+				position := files.Position(node.Pos())
+				findings = append(findings, finding{
+					Path: source.relative, Line: position.Line, Column: position.Column, Kind: kind,
+				})
+			}
+			return true
+		})
+		if scanErr != nil {
+			return nil, scanErr
+		}
+	}
+	return findings, nil
+}
+
+func trustedSafeWriterCall(node ast.Node, parents map[ast.Node]ast.Node, relative string, information *types.Info) bool {
+	call, ok := node.(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+	if relative == "internal/testutil/path_test.go" {
+		return trustedQ06ControlCleanup(call, parents, information)
+	}
+	if relative != "internal/testutil/path.go" || len(call.Args) == 0 {
+		return false
+	}
+	called := calledFunction(call.Fun, information)
+	if called == nil || called.Pkg() == nil || called.Pkg().Path() != "os" {
+		return false
+	}
+	for current := node; current != nil; current = parents[current] {
+		function, ok := current.(*ast.FuncDecl)
+		if !ok {
+			continue
+		}
+		expected := ""
+		switch function.Name.Name {
+		case "WriteFileOutsideWorkingTree":
+			expected = "WriteFile"
+		case "CopyFSOutsideWorkingTree":
+			if called.Name() == "MkdirAll" {
+				return guardedPathBefore(call.Args[0], node, parents, information)
+			}
+			expected = "CopyFS"
+		}
+		if called.Name() != expected || function.Type.Params == nil || len(function.Type.Params.List) == 0 ||
+			len(function.Type.Params.List[0].Names) != 1 {
+			return false
+		}
+		parameter := variableObject(function.Type.Params.List[0].Names[0], information)
+		argument := expressionVariable(call.Args[0], information)
+		return parameter != nil && parameter == argument
+	}
+	return false
+}
+
+func trustedQ06ControlCleanup(call *ast.CallExpr, parents map[ast.Node]ast.Node, information *types.Info) bool {
+	called := calledFunction(call.Fun, information)
+	if called == nil || called.Pkg() == nil || called.Pkg().Path() != "os" ||
+		(called.Name() != "Remove" && called.Name() != "RemoveAll") {
+		return false
+	}
+	var cleanup *ast.FuncLit
+	var control *ast.FuncDecl
+	for current := ast.Node(call); current != nil; current = parents[current] {
+		switch value := current.(type) {
+		case *ast.FuncLit:
+			if cleanup == nil {
+				cleanup = value
+			}
+		case *ast.FuncDecl:
+			control = value
+			current = nil
+		}
+	}
+	if cleanup == nil || control == nil || !isQ06ControlKind(q06DefinitionKind(control.Name.Name)) {
+		return false
+	}
+	parentCall, ok := parents[cleanup].(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+	cleanupMethod := calledFunction(parentCall.Fun, information)
+	if cleanupMethod == nil || cleanupMethod.Pkg() == nil || cleanupMethod.Pkg().Path() != "testing" ||
+		cleanupMethod.Name() != "Cleanup" {
+		return false
+	}
+	return true
+}
+
+func guardedPathBefore(argument ast.Expr, write ast.Node, parents map[ast.Node]ast.Node, information *types.Info) bool {
+	variable := expressionVariable(argument, information)
+	if variable == nil {
+		return false
+	}
+	var scope ast.Node
+	for current := parents[write]; current != nil; current = parents[current] {
+		if _, ok := current.(*ast.FuncLit); ok {
+			scope = current
+			break
+		}
+		if _, ok := current.(*ast.FuncDecl); ok {
+			scope = current
+			break
+		}
+	}
+	if scope == nil {
+		return false
+	}
+	guarded := false
+	ast.Inspect(scope, func(node ast.Node) bool {
+		if guarded || node == nil || node.Pos() >= write.Pos() {
+			return !guarded
+		}
+		call, ok := node.(*ast.CallExpr)
+		if !ok || len(call.Args) != 1 {
+			return true
+		}
+		function := calledFunction(call.Fun, information)
+		guarded = function != nil && function.Pkg() != nil &&
+			function.Pkg().Path() == variable.Pkg().Path() &&
+			function.Name() == "ensureOutsideWorkingTree" &&
+			expressionVariable(call.Args[0], information) == variable
+		return !guarded
+	})
+	return guarded
+}
+
+func parentNodes(root ast.Node) map[ast.Node]ast.Node {
+	parents := make(map[ast.Node]ast.Node)
+	stack := []ast.Node{}
+	ast.Inspect(root, func(node ast.Node) bool {
+		if node == nil {
+			stack = stack[:len(stack)-1]
+			return false
+		}
+		if len(stack) > 0 {
+			parents[node] = stack[len(stack)-1]
+		}
+		stack = append(stack, node)
+		return true
+	})
+	return parents
+}
+
+func classifyEscapedEffectReference(expression ast.Expr, mode string, information *types.Info, bindings originBindings, parents map[ast.Node]ast.Node, imports map[string]string) (string, error) {
+	if selector, ok := parents[expression].(*ast.SelectorExpr); ok && selector.Sel == expression {
+		return "", nil
+	}
+	if assignmentTarget(expression, parents[expression]) {
+		return "", nil
+	}
+	if selector, ok := expression.(*ast.SelectorExpr); ok && mode == "external" {
+		selection := information.Selections[selector]
+		if selection != nil && selection.Kind() == types.MethodVal &&
+			injectedParameterExpression(selector.X, information, bindings, make(map[any]bool)) {
+			return "", nil
+		}
+	}
+	outer, parent := outerExpression(expression, parents)
+	if call, ok := parent.(*ast.CallExpr); ok && call.Fun == outer {
+		return "", nil
+	}
+	boundary := genericPackageBoundary(expression, information, imports)
+	if unresolvedPackageEffectReference(expression, mode, information, imports) {
+		return "", fmt.Errorf("cannot resolve potentially effectful function reference")
+	}
+	if simpleFunctionBinding(outer, parent, mode, information) {
+		if boundary == "cgo" {
+			if mode == "external" {
+				return boundary, nil
+			}
+			return "", fmt.Errorf("cannot classify %s capability in the test-write population", boundary)
+		}
+		return "", nil
+	}
+	if boundary == "cgo" {
+		if mode == "external" {
+			return boundary, nil
+		}
+		return "", fmt.Errorf("cannot classify %s capability in the test-write population", boundary)
+	}
+	functions := resolvedCalledFunctions(expression, information, bindings, make(map[*types.Var]bool))
+	kinds := make(map[string]bool)
+	for _, function := range functions {
+		kind, err := classifyEffectReference(function, mode)
+		if err != nil {
+			return "", err
+		}
+		if kind == "unsafe_test_write" {
+			return kind, nil
+		}
+		if kind != "" {
+			kinds[kind] = true
+		}
+	}
+	ordered := make([]string, 0, len(kinds))
+	for kind := range kinds {
+		ordered = append(ordered, kind)
+	}
+	sort.Strings(ordered)
+	if len(ordered) > 0 {
+		return ordered[0], nil
+	}
+	return "", nil
+}
+
+func assignmentTarget(expression ast.Expr, parent ast.Node) bool {
+	switch value := parent.(type) {
+	case *ast.AssignStmt:
+		for _, target := range value.Lhs {
+			if target == expression {
+				return true
+			}
+		}
+	case *ast.ValueSpec:
+		for _, name := range value.Names {
+			if name == expression {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func outerExpression(expression ast.Expr, parents map[ast.Node]ast.Node) (ast.Expr, ast.Node) {
+	current := expression
+	for {
+		parent := parents[current]
+		wrapped, ok := parent.(*ast.ParenExpr)
+		if !ok || wrapped.X != current {
+			return current, parent
+		}
+		current = wrapped
+	}
+}
+
+func simpleFunctionBinding(expression ast.Expr, parent ast.Node, mode string, information *types.Info) bool {
+	boundName := func(names []ast.Expr, values []ast.Expr) bool {
+		if len(names) != len(values) {
+			return false
+		}
+		for index, value := range values {
+			if value != expression {
+				continue
+			}
+			name, ok := names[index].(*ast.Ident)
+			if !ok || name.Name == "_" {
+				return ok
+			}
+			variable := functionVariable(name, information)
+			if variable == nil {
+				return false
+			}
+			return mode != "external" || variable.Pkg() == nil ||
+				variable.Parent() != variable.Pkg().Scope() || !variable.Exported()
+		}
+		return false
+	}
+	switch value := parent.(type) {
+	case *ast.AssignStmt:
+		return boundName(value.Lhs, value.Rhs)
+	case *ast.ValueSpec:
+		names := make([]ast.Expr, len(value.Names))
+		for index, name := range value.Names {
+			names[index] = name
+		}
+		return boundName(names, value.Values)
+	}
+	return false
+}
+
+func classifyEffectReference(function *types.Func, mode string) (string, error) {
+	if function == nil || function.Pkg() == nil {
+		return "", nil
+	}
+	signature, ok := function.Type().(*types.Signature)
+	if !ok {
+		return "", nil
+	}
+	if boundary := genericBoundaryPackage(function.Pkg().Path()); boundary != "" {
+		if mode == "external" {
+			return boundary, nil
+		}
+		return "", fmt.Errorf("cannot classify %s capability in the test-write population", boundary)
+	}
+	if signature.Recv() == nil {
+		packagePath := normalizedSystemPackage(function.Pkg().Path(), function.Name())
+		if packagePath == "io" && isIOWriteFunction(function.Name()) {
+			return "", fmt.Errorf("escaped io.%s capability has no resolvable destination", function.Name())
+		}
+		if mode == "external" {
+			return externalPackageCalls[packagePath][function.Name()], nil
+		}
+		if unsafeTempPackageCalls[packagePath][function.Name()] {
+			return "", fmt.Errorf("escaped %s.%s capability has no resolvable temporary directory", packagePath, function.Name())
+		}
+		if unsafeTestPackageCalls[packagePath][function.Name()] {
+			return "unsafe_test_write", nil
+		}
+		return "", nil
+	}
+	packagePath, receiver := receiverIdentity(signature.Recv().Type())
+	if mode == "external" {
+		return externalMethods[packagePath][receiver][function.Name()], nil
+	}
+	if packagePath == "os" && receiver == "File" && unsafeOSFileMethods[function.Name()] {
+		return "unsafe_test_write", nil
+	}
+	if packagePath == "os" && receiver == "Root" && unsafeOSRootMethods[function.Name()] {
+		return "unsafe_test_write", nil
+	}
+	return "", nil
+}
+
+func fileImports(parsed *ast.File) (map[string]string, map[string]bool) {
+	imports := make(map[string]string)
+	dotImports := make(map[string]bool)
+	for _, spec := range parsed.Imports {
+		importPath := strings.Trim(spec.Path.Value, "\"")
+		alias := filepath.Base(importPath)
+		if spec.Name != nil {
+			alias = spec.Name.Name
+		}
+		if alias == "." {
+			dotImports[importPath] = true
+		} else if alias != "_" {
+			imports[alias] = importPath
+		}
+	}
+	return imports, dotImports
+}
+
+func genericBoundaryPackage(importPath string) string {
+	switch {
+	case importPath == "C":
+		return "cgo"
+	default:
+		return ""
+	}
+}
+
+func normalizedSystemPackage(importPath, name string) string {
+	if strings.HasPrefix(importPath, "golang.org/x/sys/") &&
+		(externalPackageCalls["syscall"][name] != "" || unsafeTestPackageCalls["syscall"][name]) {
+		return "syscall"
+	}
+	return importPath
+}
+
+func genericPackageBoundary(expression ast.Expr, information *types.Info, imports map[string]string) string {
+	selector, ok := expression.(*ast.SelectorExpr)
+	if !ok {
+		return ""
+	}
+	identifier, ok := selector.X.(*ast.Ident)
+	if !ok {
+		return ""
+	}
+	importPath := ""
+	if imported, ok := information.Uses[identifier].(*types.PkgName); ok {
+		importPath = imported.Imported().Path()
+	} else if information.Uses[identifier] == nil {
+		importPath = imports[identifier.Name]
+	}
+	return genericBoundaryPackage(importPath)
+}
+
+func classifyCall(call *ast.CallExpr, mode, module string, imports map[string]string, dotImports map[string]bool, information *types.Info, bindings originBindings) (string, error) {
+	if boundary := genericPackageBoundary(call.Fun, information, imports); boundary != "" {
+		if mode == "external" {
+			return boundary, nil
+		}
+		return "", fmt.Errorf("cannot classify %s call in the test-write population", boundary)
+	}
+	functions := resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool))
+	literals := resolvedFunctionLiterals(call.Fun, information, bindings, make(map[*types.Var]bool))
+	if mode == "external" && len(literals) > 0 {
+		if kind := localCallEffectArgument(call, information, bindings); kind != "" {
+			return kind, nil
+		}
+	}
+	if len(functions) == 0 {
+		if len(literals) > 0 {
+			return "", nil
+		}
+		if unresolvedEffectCandidate(call.Fun, mode, module, imports, dotImports, information) {
+			return "", fmt.Errorf("cannot resolve potentially effectful call")
+		}
+		return "", nil
+	}
+	kinds := make(map[string]bool)
+	for _, function := range functions {
+		kind, err := classifyResolvedFunction(function, call, mode, module, information, bindings)
+		if err != nil {
+			return "", err
+		}
+		if kind == "unsafe_test_write" {
+			return kind, nil
+		}
+		if kind != "" {
+			kinds[kind] = true
+		}
+	}
+	ordered := make([]string, 0, len(kinds))
+	for kind := range kinds {
+		ordered = append(ordered, kind)
+	}
+	sort.Strings(ordered)
+	if len(ordered) > 0 {
+		return ordered[0], nil
+	}
+	return "", nil
+}
+
+func classifyResolvedFunction(function *types.Func, call *ast.CallExpr, mode, module string, information *types.Info, bindings originBindings) (string, error) {
+	if function == nil || function.Pkg() == nil {
+		return "", nil
+	}
+	signature, ok := function.Type().(*types.Signature)
+	if !ok {
+		return "", nil
+	}
+	if boundary := genericBoundaryPackage(function.Pkg().Path()); boundary != "" {
+		if mode == "external" {
+			return boundary, nil
+		}
+		return "", fmt.Errorf("cannot classify %s call in the test-write population", boundary)
+	}
+	if mode == "external" &&
+		(function.Pkg().Path() == module || strings.HasPrefix(function.Pkg().Path(), module+"/")) {
+		if kind := localCallEffectArgument(call, information, bindings); kind != "" {
+			return kind, nil
+		}
+	}
+	if selector, ok := call.Fun.(*ast.SelectorExpr); ok {
+		selection := information.Selections[selector]
+		if selection != nil && isInterfaceType(selection.Recv()) && effectMethodCandidate(mode, function.Name()) {
+			kind, known := resolvedDestinationKind(selector.X, information, bindings, make(map[any]bool))
+			if !known {
+				return "", nil
+			}
+			if mode == "test-writes" && kind != "" {
+				return "unsafe_test_write", nil
+			}
+			return kind, nil
+		}
+	}
+	if signature.Recv() == nil {
+		packagePath := normalizedSystemPackage(function.Pkg().Path(), function.Name())
+		if mode == "test-writes" && function.Pkg().Path() == module+"/internal/testutil" {
+			return safeWriterKind(function.Name()), nil
+		}
+		if packagePath == "io" && isIOWriteFunction(function.Name()) {
+			if len(call.Args) == 0 {
+				return "", fmt.Errorf("io.%s has no destination argument", function.Name())
+			}
+			if mode == "external" &&
+				injectedParameterExpression(call.Args[0], information, bindings, make(map[any]bool)) {
+				return "", nil
+			}
+			if mode == "test-writes" &&
+				safeTemporaryFile(call.Args[0], information, bindings, make(map[any]bool)) {
+				return "", nil
+			}
+			kind, known := resolvedDestinationKind(call.Args[0], information, bindings, make(map[any]bool))
+			if !known {
+				return "", fmt.Errorf("cannot determine whether io.%s destination is effectful", function.Name())
+			}
+			if mode == "test-writes" && kind != "" {
+				return "unsafe_test_write", nil
+			}
+			return kind, nil
+		}
+		if packagePath == "io/fs" && isFSReadFunction(function.Name()) {
+			if len(call.Args) == 0 {
+				return "", fmt.Errorf("io/fs.%s has no filesystem argument", function.Name())
+			}
+			kind, known := resolvedDestinationKind(call.Args[0], information, bindings, make(map[any]bool))
+			if !known {
+				return "", nil
+			}
+			return kind, nil
+		}
+		if mode == "external" {
+			return externalPackageCalls[packagePath][function.Name()], nil
+		}
+		if unsafeTempPackageCalls[packagePath][function.Name()] {
+			if len(call.Args) == 0 || !safeTemporaryDirectory(call.Args[0], information, bindings) {
+				return "unsafe_test_write", nil
+			}
+			return "", nil
+		}
+		if unsafeTestPackageCalls[packagePath][function.Name()] {
+			if !testPackageCallWrites(function, call, information, bindings) {
+				return "", nil
+			}
+			return "unsafe_test_write", nil
+		}
+		return "", nil
+	}
+	packagePath, receiver := receiverIdentity(signature.Recv().Type())
+	if mode == "external" {
+		if selector, ok := call.Fun.(*ast.SelectorExpr); ok &&
+			injectedParameterExpression(selector.X, information, bindings, make(map[any]bool)) {
+			return "", nil
+		}
+		methodReceivers := resolvedMethodReceivers(call.Fun, information, bindings, make(map[*types.Var]bool))
+		if len(methodReceivers) > 0 {
+			allInjected := true
+			for _, methodReceiver := range methodReceivers {
+				if !injectedParameterExpression(methodReceiver, information, bindings, make(map[any]bool)) {
+					allInjected = false
+					break
+				}
+			}
+			if allInjected {
+				return "", nil
+			}
+		}
+		return externalMethods[packagePath][receiver][function.Name()], nil
+	}
+	if packagePath == "os" && receiver == "File" && unsafeOSFileMethods[function.Name()] {
+		if selector, ok := call.Fun.(*ast.SelectorExpr); ok &&
+			safeTemporaryFile(selector.X, information, bindings, make(map[any]bool)) {
+			return "", nil
+		}
+		return "unsafe_test_write", nil
+	}
+	if packagePath == "os" && receiver == "Root" && unsafeOSRootMethods[function.Name()] {
+		if selector, ok := call.Fun.(*ast.SelectorExpr); ok &&
+			safeTemporaryRoot(selector.X, information, bindings, make(map[any]bool)) {
+			return "", nil
+		}
+		return "unsafe_test_write", nil
+	}
+	return "", nil
+}
+
+func localCallEffectArgument(call *ast.CallExpr, information *types.Info, bindings originBindings) string {
+	kinds := make(map[string]bool)
+	for _, receiver := range resolvedMethodReceivers(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		collectLocalArgumentKinds(receiver, information, bindings, make(map[any]bool), kinds)
+	}
+	for _, argument := range call.Args {
+		collectLocalArgumentKinds(argument, information, bindings, make(map[any]bool), kinds)
+	}
+	ordered := make([]string, 0, len(kinds))
+	for kind := range kinds {
+		ordered = append(ordered, kind)
+	}
+	sort.Strings(ordered)
+	if len(ordered) > 0 {
+		return ordered[0]
+	}
+	return ""
+}
+
+func collectLocalArgumentKinds(expression ast.Expr, information *types.Info, bindings originBindings, seen map[any]bool, kinds map[string]bool) {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	if injectedParameterExpression(expression, information, bindings, make(map[any]bool)) {
+		return
+	}
+	if kind, known := resolvedDestinationKind(expression, information, bindings, make(map[any]bool)); known {
+		if kind != "" {
+			kinds[kind] = true
+		}
+		return
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		collectLocalArgumentKinds(value.X, information, bindings, seen, kinds)
+	case *ast.UnaryExpr:
+		if value.Op == token.AND {
+			collectLocalArgumentKinds(value.X, information, bindings, seen, kinds)
+		}
+	case *ast.TypeAssertExpr:
+		collectLocalArgumentKinds(value.X, information, bindings, seen, kinds)
+	case *ast.KeyValueExpr:
+		collectLocalArgumentKinds(value.Value, information, bindings, seen, kinds)
+	case *ast.CompositeLit:
+		for _, element := range value.Elts {
+			collectLocalArgumentKinds(element, information, bindings, seen, kinds)
+		}
+	case *ast.IndexExpr:
+		collectLocalArgumentKinds(value.X, information, bindings, seen, kinds)
+	case *ast.Ident:
+		variable := variableObject(value, information)
+		collectLocalVariableArgumentKinds(variable, information, bindings, seen, kinds)
+	case *ast.SelectorExpr:
+		if information.Selections[value] == nil {
+			variable, _ := information.Uses[value.Sel].(*types.Var)
+			collectLocalVariableArgumentKinds(variable, information, bindings, seen, kinds)
+		}
+	case *ast.CallExpr:
+		for _, function := range resolvedCalledFunctions(value.Fun, information, bindings, make(map[*types.Var]bool)) {
+			if seen[function] {
+				continue
+			}
+			seen[function] = true
+			results := bindings.returns[function]
+			if len(results) > 0 {
+				for _, origin := range results[0] {
+					collectLocalOriginArgumentKinds(origin, information, bindings, seen, kinds)
+				}
+			}
+			delete(seen, function)
+		}
+	}
+}
+
+func resolvedMethodReceivers(expression ast.Expr, information *types.Info, bindings originBindings, seen map[*types.Var]bool) []ast.Expr {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return resolvedMethodReceivers(value.X, information, bindings, seen)
+	case *ast.SelectorExpr:
+		selection := information.Selections[value]
+		if selection != nil && selection.Kind() == types.MethodVal {
+			return []ast.Expr{value.X}
+		}
+	case *ast.Ident:
+		variable := functionVariable(value, information)
+		if variable == nil || seen[variable] {
+			return nil
+		}
+		seen[variable] = true
+		defer delete(seen, variable)
+		result := []ast.Expr{}
+		for _, origin := range bindings.variables[variable] {
+			if origin.kind == directOrigin {
+				result = append(result, resolvedMethodReceivers(origin.expression, information, bindings, seen)...)
+			}
+		}
+		return result
+	}
+	return nil
+}
+
+func collectLocalVariableArgumentKinds(variable *types.Var, information *types.Info, bindings originBindings, seen map[any]bool, kinds map[string]bool) {
+	if variable == nil || seen[variable] {
+		return
+	}
+	seen[variable] = true
+	defer delete(seen, variable)
+	for _, origin := range bindings.variables[variable] {
+		collectLocalOriginArgumentKinds(origin, information, bindings, seen, kinds)
+	}
+}
+
+func collectLocalOriginArgumentKinds(origin originReference, information *types.Info, bindings originBindings, seen map[any]bool, kinds map[string]bool) {
+	if stored := bindings.info[origin.expression]; stored != nil {
+		information = stored
+	}
+	switch origin.kind {
+	case directOrigin:
+		collectLocalArgumentKinds(origin.expression, information, bindings, seen, kinds)
+	case callResultOrigin:
+		call, ok := origin.expression.(*ast.CallExpr)
+		if !ok {
+			return
+		}
+		for _, function := range resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+			results := bindings.returns[function]
+			if !seen[function] && origin.index < len(results) {
+				seen[function] = true
+				for _, resultOrigin := range results[origin.index] {
+					collectLocalOriginArgumentKinds(resultOrigin, information, bindings, seen, kinds)
+				}
+				delete(seen, function)
+			}
+		}
+	case elementOrigin:
+		collectLocalArgumentKinds(origin.expression, information, bindings, seen, kinds)
+	}
+}
+
+func injectedParameterExpression(expression ast.Expr, information *types.Info, bindings originBindings, seen map[any]bool) bool {
+	return injectedExpression(expression, information, bindings, nil, seen)
+}
+
+func injectedExpression(expression ast.Expr, information *types.Info, bindings originBindings, substitutions map[*types.Var]ast.Expr, seen map[any]bool) bool {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return injectedExpression(value.X, information, bindings, substitutions, seen)
+	case *ast.CallExpr:
+		if information.Types[value.Fun].IsType() && len(value.Args) == 1 {
+			return injectedExpression(value.Args[0], information, bindings, substitutions, seen)
+		}
+		return injectedCallResult(value, 0, information, bindings, substitutions, seen)
+	case *ast.SelectorExpr:
+		selection := information.Selections[value]
+		if selection == nil || selection.Kind() != types.FieldVal {
+			return false
+		}
+		field, _ := selection.Obj().(*types.Var)
+		receiver := expressionVariable(value.X, information)
+		if field != nil && receiver != nil {
+			origins := fieldMutationOrigins(receiver, field, bindings)
+			if len(origins) > 0 && !allInjectedOrigins(origins, information, bindings, substitutions, seen) {
+				return false
+			}
+		}
+		fields, known := resolvedFieldExpressions(value.X, selection.Index(), information, bindings, make(map[any]bool))
+		if known && len(fields) > 0 {
+			for _, fieldExpression := range fields {
+				if !injectedExpression(fieldExpression, information, bindings, substitutions, seen) {
+					return false
+				}
+			}
+			return true
+		}
+		return injectedExpression(value.X, information, bindings, substitutions, seen)
+	case *ast.Ident:
+		variable := variableObject(value, information)
+		if substitute := substitutions[variable]; substitute != nil {
+			return injectedExpression(substitute, information, bindings, nil, seen)
+		}
+		if variable == nil || seen[variable] || indirectlyMutated(variable, bindings) {
+			return false
+		}
+		origins := bindings.variables[variable]
+		if len(origins) == 0 {
+			return bindings.parameters[variable]
+		}
+		seen[variable] = true
+		defer delete(seen, variable)
+		for _, origin := range origins {
+			if !injectedOrigin(origin, information, bindings, substitutions, seen) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
+func injectedOrigin(origin originReference, information *types.Info, bindings originBindings, substitutions map[*types.Var]ast.Expr, seen map[any]bool) bool {
+	if stored := bindings.info[origin.expression]; stored != nil {
+		information = stored
+	}
+	switch origin.kind {
+	case directOrigin:
+		return injectedExpression(origin.expression, information, bindings, substitutions, seen)
+	case callResultOrigin:
+		call, ok := origin.expression.(*ast.CallExpr)
+		return ok && injectedCallResult(call, origin.index, information, bindings, substitutions, seen)
+	}
+	return false
+}
+
+func allInjectedOrigins(origins []originReference, information *types.Info, bindings originBindings, substitutions map[*types.Var]ast.Expr, seen map[any]bool) bool {
+	if len(origins) == 0 {
+		return false
+	}
+	for _, origin := range origins {
+		if !injectedOrigin(origin, information, bindings, substitutions, seen) {
+			return false
+		}
+	}
+	return true
+}
+
+func injectedCallResult(call *ast.CallExpr, resultIndex int, information *types.Info, bindings originBindings, substitutions map[*types.Var]ast.Expr, seen map[any]bool) bool {
+	matched := false
+	for _, function := range resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		results := bindings.returns[function]
+		if seen[function] || resultIndex >= len(results) || len(results[resultIndex]) == 0 {
+			return false
+		}
+		seen[function] = true
+		callSubstitutions := parameterSubstitutions(function.Type().(*types.Signature), call, information, bindings, substitutions)
+		safe := allInjectedOrigins(results[resultIndex], information, bindings, callSubstitutions, seen)
+		delete(seen, function)
+		if !safe {
+			return false
+		}
+		matched = true
+	}
+	for _, literal := range resolvedFunctionLiterals(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		results := bindings.literalReturns[literal]
+		if seen[literal] || resultIndex >= len(results) || len(results[resultIndex]) == 0 {
+			return false
+		}
+		seen[literal] = true
+		signature, _ := information.TypeOf(literal).Underlying().(*types.Signature)
+		callSubstitutions := parameterSubstitutions(signature, call, information, bindings, substitutions)
+		safe := allInjectedOrigins(results[resultIndex], information, bindings, callSubstitutions, seen)
+		delete(seen, literal)
+		if !safe {
+			return false
+		}
+		matched = true
+	}
+	return matched
+}
+
+func parameterSubstitutions(signature *types.Signature, call *ast.CallExpr, information *types.Info, bindings originBindings, inherited map[*types.Var]ast.Expr) map[*types.Var]ast.Expr {
+	result := make(map[*types.Var]ast.Expr, len(inherited)+1)
+	for variable, expression := range inherited {
+		result[variable] = expression
+	}
+	if signature == nil {
+		return result
+	}
+	arguments := call.Args
+	if receiver := signature.Recv(); receiver != nil {
+		receivers := resolvedMethodReceivers(call.Fun, information, bindings, make(map[*types.Var]bool))
+		if len(receivers) == 1 {
+			result[receiver] = receivers[0]
+		} else if selector, ok := call.Fun.(*ast.SelectorExpr); ok {
+			if selection := information.Selections[selector]; selection != nil && selection.Kind() == types.MethodExpr && len(arguments) > 0 {
+				result[receiver] = arguments[0]
+				arguments = arguments[1:]
+			}
+		}
+	}
+	parameters := signature.Params()
+	for index, argument := range arguments {
+		parameterIndex := index
+		if signature.Variadic() && parameterIndex >= parameters.Len()-1 {
+			parameterIndex = parameters.Len() - 1
+		}
+		if parameterIndex >= 0 && parameterIndex < parameters.Len() {
+			result[parameters.At(parameterIndex)] = argument
+		}
+	}
+	return result
+}
+
+func newTypesInfo() *types.Info {
+	return &types.Info{
+		Types:      make(map[ast.Expr]types.TypeAndValue),
+		Defs:       make(map[*ast.Ident]types.Object),
+		Uses:       make(map[*ast.Ident]types.Object),
+		Selections: make(map[*ast.SelectorExpr]*types.Selection),
+	}
+}
+
+func newOriginBindings() originBindings {
+	return originBindings{
+		variables:                     make(map[*types.Var][]originReference),
+		arguments:                     make(map[*types.Var][]originReference),
+		elements:                      make(map[*types.Var][]originReference),
+		parameters:                    make(map[*types.Var]bool),
+		indirectWrites:                make(map[*types.Var]bool),
+		temporaryEnvironmentMutations: make(map[ast.Node]bool),
+		temporaryMutatingFunctions:    make(map[*types.Func]bool),
+		temporaryMutatingLiterals:     make(map[*ast.FuncLit]bool),
+		scopes:                        make(map[ast.Expr]ast.Node),
+		returns:                       make(map[*types.Func][][]originReference),
+		literalReturns:                make(map[*ast.FuncLit][][]originReference),
+		fields:                        make(map[fieldBindingKey][]originReference),
+		info:                          make(map[ast.Expr]*types.Info),
+	}
+}
+
+func mergeOriginBindings(destination *originBindings, source originBindings) {
+	for variable, origins := range source.variables {
+		destination.variables[variable] = append(destination.variables[variable], origins...)
+	}
+	for variable, origins := range source.arguments {
+		destination.arguments[variable] = append(destination.arguments[variable], origins...)
+	}
+	for variable, origins := range source.elements {
+		destination.elements[variable] = append(destination.elements[variable], origins...)
+	}
+	for variable := range source.parameters {
+		destination.parameters[variable] = true
+	}
+	for variable := range source.indirectWrites {
+		destination.indirectWrites[variable] = true
+	}
+	for scope := range source.temporaryEnvironmentMutations {
+		destination.temporaryEnvironmentMutations[scope] = true
+	}
+	for function := range source.temporaryMutatingFunctions {
+		destination.temporaryMutatingFunctions[function] = true
+	}
+	for literal := range source.temporaryMutatingLiterals {
+		destination.temporaryMutatingLiterals[literal] = true
+	}
+	for expression, scope := range source.scopes {
+		destination.scopes[expression] = scope
+	}
+	for function, results := range source.returns {
+		destination.returns[function] = mergeResultOrigins(destination.returns[function], results)
+	}
+	for function, results := range source.literalReturns {
+		destination.literalReturns[function] = mergeResultOrigins(destination.literalReturns[function], results)
+	}
+	for field, origins := range source.fields {
+		destination.fields[field] = append(destination.fields[field], origins...)
+	}
+	for expression, information := range source.info {
+		destination.info[expression] = information
+	}
+}
+
+func mergeResultOrigins(destination, source [][]originReference) [][]originReference {
+	for len(destination) < len(source) {
+		destination = append(destination, nil)
+	}
+	for index, origins := range source {
+		destination[index] = append(destination[index], origins...)
+	}
+	return destination
+}
+
+func collectOriginBindings(files []*ast.File, information *types.Info) originBindings {
+	bindings := newOriginBindings()
+	for _, file := range files {
+		recordExpressionScopes(file, &bindings)
+	}
+	markParameters := func(fields *ast.FieldList) {
+		if fields == nil {
+			return
+		}
+		for _, field := range fields.List {
+			for _, name := range field.Names {
+				if variable := variableObject(name, information); variable != nil {
+					bindings.parameters[variable] = true
+				}
+			}
+		}
+	}
+	bindTarget := func(target ast.Expr, origin originReference) {
+		if name, ok := target.(*ast.Ident); ok {
+			if variable := variableObject(name, information); variable != nil && name.Name != "_" {
+				bindings.variables[variable] = append(bindings.variables[variable], origin)
+			}
+			return
+		}
+		if pointer, ok := target.(*ast.StarExpr); ok {
+			if variable := expressionVariable(pointer.X, information); variable != nil {
+				bindings.indirectWrites[variable] = true
+			}
+			return
+		}
+		if index, ok := target.(*ast.IndexExpr); ok {
+			if variable := expressionVariable(index.X, information); variable != nil {
+				bindings.elements[variable] = append(bindings.elements[variable], origin)
+			}
+			return
+		}
+		selector, ok := target.(*ast.SelectorExpr)
+		if !ok {
+			return
+		}
+		selection := information.Selections[selector]
+		field, _ := selectionObject(selection).(*types.Var)
+		receiver := expressionVariable(selector.X, information)
+		if field != nil && receiver != nil {
+			key := fieldBindingKey{receiver: receiver, field: field}
+			bindings.fields[key] = append(bindings.fields[key], origin)
+		}
+	}
+	bind := func(targets []ast.Expr, values []ast.Expr) {
+		if len(targets) == len(values) {
+			for index, target := range targets {
+				bindTarget(target, originReference{expression: values[index], kind: directOrigin})
+			}
+			return
+		}
+		if len(targets) == 2 && len(values) == 1 {
+			switch value := values[0].(type) {
+			case *ast.TypeAssertExpr, *ast.IndexExpr:
+				bindTarget(targets[0], originReference{expression: values[0], kind: directOrigin})
+				return
+			case *ast.UnaryExpr:
+				if value.Op == token.ARROW {
+					bindTarget(targets[0], originReference{expression: value.X, kind: elementOrigin})
+					return
+				}
+			}
+		}
+		call, ok := singleCall(values)
+		if !ok || len(targets) < 2 {
+			return
+		}
+		callType := information.TypeOf(call.Fun)
+		if callType == nil {
+			return
+		}
+		signature, _ := callType.Underlying().(*types.Signature)
+		if signature == nil || signature.Results().Len() != len(targets) {
+			return
+		}
+		for index, target := range targets {
+			bindTarget(target, originReference{expression: call, kind: callResultOrigin, index: index})
+		}
+	}
+	for _, file := range files {
+		ast.Inspect(file, func(node ast.Node) bool {
+			if expression, ok := node.(ast.Expr); ok {
+				bindings.info[expression] = information
+			}
+			switch value := node.(type) {
+			case *ast.FuncDecl:
+				markParameters(value.Recv)
+				markParameters(value.Type.Params)
+			case *ast.FuncLit:
+				markParameters(value.Type.Params)
+			case *ast.ValueSpec:
+				targets := make([]ast.Expr, len(value.Names))
+				for index, name := range value.Names {
+					targets[index] = name
+				}
+				bind(targets, value.Values)
+			case *ast.AssignStmt:
+				bind(value.Lhs, value.Rhs)
+			case *ast.RangeStmt:
+				target := value.Value
+				if target == nil {
+					if ranged := information.TypeOf(value.X); ranged != nil {
+						if _, channel := ranged.Underlying().(*types.Chan); channel {
+							target = value.Key
+						}
+					}
+				}
+				if target != nil {
+					bindTarget(target, originReference{expression: value.X, kind: elementOrigin})
+				}
+			}
+			return true
+		})
+		for _, declaration := range file.Decls {
+			functionDeclaration, ok := declaration.(*ast.FuncDecl)
+			if !ok || functionDeclaration.Body == nil {
+				continue
+			}
+			function, _ := information.Defs[functionDeclaration.Name].(*types.Func)
+			if function == nil {
+				continue
+			}
+			signature, _ := function.Type().(*types.Signature)
+			if signature == nil || signature.Results().Len() == 0 {
+				continue
+			}
+			bindings.returns[function] = collectReturnOrigins(
+				functionDeclaration.Type, functionDeclaration.Body, signature.Results().Len(), information,
+			)
+		}
+		ast.Inspect(file, func(node ast.Node) bool {
+			literal, ok := node.(*ast.FuncLit)
+			if !ok {
+				return true
+			}
+			signature, _ := information.TypeOf(literal).Underlying().(*types.Signature)
+			if signature != nil && signature.Results().Len() > 0 {
+				bindings.literalReturns[literal] = collectReturnOrigins(
+					literal.Type, literal.Body, signature.Results().Len(), information,
+				)
+			}
+			return true
+		})
+	}
+	bindCallArguments := func(signature *types.Signature, arguments []ast.Expr) {
+		if signature == nil || signature.Recv() != nil {
+			return
+		}
+		parameters := signature.Params()
+		for index, argument := range arguments {
+			parameterIndex := index
+			if signature.Variadic() && parameterIndex >= parameters.Len()-1 {
+				parameterIndex = parameters.Len() - 1
+			}
+			if parameterIndex < 0 || parameterIndex >= parameters.Len() {
+				continue
+			}
+			parameter := parameters.At(parameterIndex)
+			if bindings.parameters[parameter] {
+				bindings.arguments[parameter] = append(
+					bindings.arguments[parameter], originReference{expression: argument, kind: directOrigin},
+				)
+			}
+		}
+	}
+	for _, file := range files {
+		ast.Inspect(file, func(node ast.Node) bool {
+			call, ok := node.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+			for _, function := range resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+				signature, _ := function.Type().(*types.Signature)
+				bindCallArguments(signature, call.Args)
+			}
+			for _, literal := range resolvedFunctionLiterals(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+				signature, _ := information.TypeOf(literal).Underlying().(*types.Signature)
+				bindCallArguments(signature, call.Args)
+			}
+			for _, argument := range call.Args {
+				markEscapedAddress(argument, information, bindings, make(map[*types.Var]bool))
+			}
+			if mutatesTemporaryEnvironment(call, information, bindings) {
+				markTemporaryEnvironmentMutation(bindings.scopes[call], information, &bindings)
+			}
+			return true
+		})
+	}
+	changed := true
+	for changed {
+		changed = false
+		for _, file := range files {
+			ast.Inspect(file, func(node ast.Node) bool {
+				call, ok := node.(*ast.CallExpr)
+				if !ok || !callsTemporaryEnvironmentMutator(call, information, bindings) {
+					return true
+				}
+				scope := bindings.scopes[call]
+				if scope != nil && !bindings.temporaryEnvironmentMutations[scope] {
+					markTemporaryEnvironmentMutation(scope, information, &bindings)
+					changed = true
+				}
+				return true
+			})
+		}
+	}
+	return bindings
+}
+
+func markTemporaryEnvironmentMutation(scope ast.Node, information *types.Info, bindings *originBindings) {
+	if scope == nil {
+		return
+	}
+	bindings.temporaryEnvironmentMutations[scope] = true
+	switch function := scope.(type) {
+	case *ast.FuncDecl:
+		if object, _ := information.Defs[function.Name].(*types.Func); object != nil {
+			bindings.temporaryMutatingFunctions[object] = true
+		}
+	case *ast.FuncLit:
+		bindings.temporaryMutatingLiterals[function] = true
+	}
+}
+
+func callsTemporaryEnvironmentMutator(call *ast.CallExpr, information *types.Info, bindings originBindings) bool {
+	for _, function := range resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		if bindings.temporaryMutatingFunctions[function] {
+			return true
+		}
+	}
+	for _, literal := range resolvedFunctionLiterals(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		if bindings.temporaryMutatingLiterals[literal] {
+			return true
+		}
+	}
+	return false
+}
+
+func recordExpressionScopes(file *ast.File, bindings *originBindings) {
+	nodes := []ast.Node{}
+	scopes := []ast.Node{}
+	ast.Inspect(file, func(node ast.Node) bool {
+		if node == nil {
+			last := nodes[len(nodes)-1]
+			nodes = nodes[:len(nodes)-1]
+			switch last.(type) {
+			case *ast.FuncDecl, *ast.FuncLit:
+				scopes = scopes[:len(scopes)-1]
+			}
+			return false
+		}
+		nodes = append(nodes, node)
+		switch node.(type) {
+		case *ast.FuncDecl, *ast.FuncLit:
+			scopes = append(scopes, node)
+		}
+		if expression, ok := node.(ast.Expr); ok && len(scopes) > 0 {
+			bindings.scopes[expression] = scopes[len(scopes)-1]
+		}
+		return true
+	})
+}
+
+func temporaryEnvironmentMutated(expression ast.Expr, bindings originBindings) bool {
+	return bindings.temporaryEnvironmentMutations[bindings.scopes[expression]]
+}
+
+func markEscapedAddress(expression ast.Expr, information *types.Info, bindings originBindings, seen map[*types.Var]bool) {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		markEscapedAddress(value.X, information, bindings, seen)
+	case *ast.UnaryExpr:
+		if value.Op == token.AND {
+			if variable := expressionVariable(value.X, information); variable != nil {
+				bindings.indirectWrites[variable] = true
+			}
+		}
+	case *ast.Ident:
+		variable := variableObject(value, information)
+		if variable == nil || seen[variable] {
+			return
+		}
+		if _, pointer := variable.Type().Underlying().(*types.Pointer); !pointer {
+			return
+		}
+		seen[variable] = true
+		defer delete(seen, variable)
+		for _, origin := range bindings.variables[variable] {
+			if origin.kind == directOrigin {
+				markEscapedAddress(origin.expression, information, bindings, seen)
+			}
+		}
+	}
+}
+
+func mutatesTemporaryEnvironment(call *ast.CallExpr, information *types.Info, bindings originBindings) bool {
+	functions := resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool))
+	for _, function := range functions {
+		if function == nil || function.Pkg() == nil {
+			continue
+		}
+		packagePath, name := function.Pkg().Path(), function.Name()
+		signature, _ := function.Type().(*types.Signature)
+		systemEnvironment := packagePath == "os" || packagePath == "syscall" ||
+			strings.HasPrefix(packagePath, "golang.org/x/sys/")
+		if systemEnvironment && name == "Clearenv" {
+			return true
+		}
+		isSetter := systemEnvironment && (name == "Setenv" || name == "Unsetenv")
+		if signature != nil && signature.Recv() != nil {
+			receiverPackage, receiver := receiverIdentity(signature.Recv().Type())
+			isSetter = testingTempDirectoryReceiver(receiverPackage, receiver) && name == "Setenv"
+		}
+		if !isSetter || len(call.Args) == 0 {
+			continue
+		}
+		key := information.Types[call.Args[0]].Value
+		if key == nil || key.Kind() != constant.String {
+			return true
+		}
+		switch constant.StringVal(key) {
+		case "TMPDIR", "TMP", "TEMP":
+			return true
+		}
+	}
+	return false
+}
+
+func singleCall(values []ast.Expr) (*ast.CallExpr, bool) {
+	if len(values) != 1 {
+		return nil, false
+	}
+	call, ok := values[0].(*ast.CallExpr)
+	return call, ok
+}
+
+func selectionObject(selection *types.Selection) types.Object {
+	if selection == nil {
+		return nil
+	}
+	return selection.Obj()
+}
+
+func expressionVariable(expression ast.Expr, information *types.Info) *types.Var {
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return expressionVariable(value.X, information)
+	case *ast.Ident:
+		return variableObject(value, information)
+	case *ast.SelectorExpr:
+		if information.Selections[value] == nil {
+			variable, _ := information.Uses[value.Sel].(*types.Var)
+			return variable
+		}
+	}
+	return nil
+}
+
+func variableAliases(variable *types.Var, bindings originBindings, seen map[*types.Var]bool, result map[*types.Var]bool) {
+	if variable == nil || seen[variable] {
+		return
+	}
+	seen[variable] = true
+	result[variable] = true
+	for _, origin := range append(append([]originReference{}, bindings.variables[variable]...), bindings.arguments[variable]...) {
+		if origin.kind != directOrigin {
+			continue
+		}
+		information := bindings.info[origin.expression]
+		var aliased *types.Var
+		switch expression := origin.expression.(type) {
+		case *ast.Ident:
+			aliased = variableObject(expression, information)
+		case *ast.ParenExpr:
+			aliased = expressionVariable(expression.X, information)
+		case *ast.UnaryExpr:
+			if expression.Op == token.AND {
+				aliased = expressionVariable(expression.X, information)
+			}
+		}
+		variableAliases(aliased, bindings, seen, result)
+	}
+}
+
+func aliasSet(variable *types.Var, bindings originBindings) map[*types.Var]bool {
+	result := make(map[*types.Var]bool)
+	variableAliases(variable, bindings, make(map[*types.Var]bool), result)
+	return result
+}
+
+func aliasSetsIntersect(left, right map[*types.Var]bool) bool {
+	for variable := range left {
+		if right[variable] {
+			return true
+		}
+	}
+	return false
+}
+
+func fieldMutationOrigins(receiver, field *types.Var, bindings originBindings) []originReference {
+	aliases := aliasSet(receiver, bindings)
+	result := []originReference{}
+	for key, origins := range bindings.fields {
+		if key.field == field && aliasSetsIntersect(aliases, aliasSet(key.receiver, bindings)) {
+			result = append(result, origins...)
+		}
+	}
+	return result
+}
+
+func elementMutationOrigins(variable *types.Var, bindings originBindings) []originReference {
+	aliases := aliasSet(variable, bindings)
+	result := []originReference{}
+	for candidate, origins := range bindings.elements {
+		if aliasSetsIntersect(aliases, aliasSet(candidate, bindings)) {
+			result = append(result, origins...)
+		}
+	}
+	return result
+}
+
+func indirectlyMutated(variable *types.Var, bindings originBindings) bool {
+	aliases := aliasSet(variable, bindings)
+	for pointer := range bindings.indirectWrites {
+		if aliasSetsIntersect(aliases, aliasSet(pointer, bindings)) {
+			return true
+		}
+	}
+	return false
+}
+
+func collectReturnOrigins(functionType *ast.FuncType, body *ast.BlockStmt, resultCount int, information *types.Info) [][]originReference {
+	results := make([][]originReference, resultCount)
+	named := orderedResultNames(functionType)
+	ast.Inspect(body, func(node ast.Node) bool {
+		if _, nested := node.(*ast.FuncLit); nested {
+			return false
+		}
+		statement, ok := node.(*ast.ReturnStmt)
+		if !ok {
+			return true
+		}
+		switch {
+		case len(statement.Results) == resultCount:
+			for index, expression := range statement.Results {
+				results[index] = append(results[index], originReference{expression: expression, kind: directOrigin})
+			}
+		case len(statement.Results) == 1 && resultCount > 1:
+			if call, ok := statement.Results[0].(*ast.CallExpr); ok {
+				for index := range results {
+					results[index] = append(results[index], originReference{expression: call, kind: callResultOrigin, index: index})
+				}
+			}
+		case len(statement.Results) == 0 && len(named) == resultCount:
+			for index, name := range named {
+				if name != nil {
+					results[index] = append(results[index], originReference{expression: name, kind: directOrigin})
+				}
+			}
+		}
+		return true
+	})
+	return results
+}
+
+func orderedResultNames(functionType *ast.FuncType) []*ast.Ident {
+	if functionType.Results == nil {
+		return nil
+	}
+	result := []*ast.Ident{}
+	for _, field := range functionType.Results.List {
+		if len(field.Names) == 0 {
+			result = append(result, nil)
+			continue
+		}
+		result = append(result, field.Names...)
+	}
+	return result
+}
+
+func functionVariable(name *ast.Ident, information *types.Info) *types.Var {
+	variable := variableObject(name, information)
+	if variable == nil {
+		return nil
+	}
+	if _, ok := variable.Type().Underlying().(*types.Signature); !ok {
+		return nil
+	}
+	return variable
+}
+
+func variableObject(name *ast.Ident, information *types.Info) *types.Var {
+	object := information.Defs[name]
+	if object == nil {
+		object = information.Uses[name]
+	}
+	variable, ok := object.(*types.Var)
+	if !ok {
+		return nil
+	}
+	return variable
+}
+
+func resolvedCalledFunctions(expression ast.Expr, information *types.Info, bindings originBindings, seen map[*types.Var]bool) []*types.Func {
+	if function := calledFunction(expression, information); function != nil {
+		return []*types.Func{function}
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return resolvedCalledFunctions(value.X, information, bindings, seen)
+	case *ast.IndexExpr:
+		return resolvedCalledFunctions(value.X, information, bindings, seen)
+	case *ast.IndexListExpr:
+		return resolvedCalledFunctions(value.X, information, bindings, seen)
+	case *ast.Ident:
+		variable := functionVariable(value, information)
+		if variable == nil || seen[variable] {
+			return nil
+		}
+		seen[variable] = true
+		defer delete(seen, variable)
+		unique := make(map[*types.Func]bool)
+		result := []*types.Func{}
+		for _, origin := range bindings.variables[variable] {
+			if origin.kind != directOrigin {
+				continue
+			}
+			for _, function := range resolvedCalledFunctions(origin.expression, information, bindings, seen) {
+				if !unique[function] {
+					unique[function] = true
+					result = append(result, function)
+				}
+			}
+		}
+		return result
+	case *ast.SelectorExpr:
+		selection := information.Selections[value]
+		if selection == nil || selection.Kind() != types.FieldVal {
+			return nil
+		}
+		expressions := []ast.Expr{}
+		field, _ := selection.Obj().(*types.Var)
+		receiver := expressionVariable(value.X, information)
+		if field != nil && receiver != nil {
+			for _, origin := range fieldMutationOrigins(receiver, field, bindings) {
+				if origin.kind == directOrigin {
+					expressions = append(expressions, origin.expression)
+				}
+			}
+		}
+		if fields, known := resolvedFieldExpressions(value.X, selection.Index(), information, bindings, make(map[any]bool)); known {
+			expressions = append(expressions, fields...)
+		}
+		unique := make(map[*types.Func]bool)
+		result := []*types.Func{}
+		for _, fieldExpression := range expressions {
+			for _, function := range resolvedCalledFunctions(fieldExpression, information, bindings, seen) {
+				if !unique[function] {
+					unique[function] = true
+					result = append(result, function)
+				}
+			}
+		}
+		return result
+	}
+	return nil
+}
+
+func safeTemporaryDirectory(expression ast.Expr, information *types.Info, bindings originBindings) bool {
+	return safeTemporaryExpression(expression, information, bindings, true, make(map[any]bool))
+}
+
+func safeTemporaryPath(expression ast.Expr, information *types.Info, bindings originBindings) bool {
+	return safeTemporaryExpression(expression, information, bindings, false, make(map[any]bool))
+}
+
+func safeTemporaryExpression(expression ast.Expr, information *types.Info, bindings originBindings, allowEmpty bool, seen map[any]bool) bool {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	if value := information.Types[expression].Value; value != nil && value.Kind() == constant.String {
+		return allowEmpty && constant.StringVal(value) == "" && !temporaryEnvironmentMutated(expression, bindings)
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return safeTemporaryExpression(value.X, information, bindings, allowEmpty, seen)
+	case *ast.BinaryExpr:
+		return value.Op == token.ADD &&
+			safeTemporaryExpression(value.X, information, bindings, false, seen) &&
+			safePathSuffix(value.Y, information)
+	case *ast.SelectorExpr:
+		selection := information.Selections[value]
+		if selection == nil || selection.Kind() != types.FieldVal {
+			return false
+		}
+		field, _ := selection.Obj().(*types.Var)
+		receiver := expressionVariable(value.X, information)
+		origins := []originReference{}
+		if field != nil && receiver != nil {
+			origins = append(origins, fieldMutationOrigins(receiver, field, bindings)...)
+		}
+		fields, known := resolvedFieldExpressions(value.X, selection.Index(), information, bindings, make(map[any]bool))
+		if !known || len(fields) == 0 {
+			return false
+		}
+		for _, fieldExpression := range fields {
+			origins = append(origins, originReference{expression: fieldExpression, kind: directOrigin})
+		}
+		return allSafeTemporaryOrigins(origins, information, bindings, allowEmpty, seen)
+	case *ast.Ident:
+		variable := variableObject(value, information)
+		if variable == nil || seen[variable] || indirectlyMutated(variable, bindings) {
+			return false
+		}
+		origins := bindings.variables[variable]
+		if len(origins) == 0 {
+			return false
+		}
+		seen[variable] = true
+		defer delete(seen, variable)
+		return allSafeTemporaryOrigins(origins, information, bindings, allowEmpty, seen)
+	case *ast.CallExpr:
+		if typed := information.Types[value.Fun]; typed.IsType() {
+			return len(value.Args) == 1 &&
+				safeTemporaryExpression(value.Args[0], information, bindings, allowEmpty, seen)
+		}
+		if selector, ok := value.Fun.(*ast.SelectorExpr); ok {
+			packagePath, receiver := receiverIdentity(information.TypeOf(selector.X))
+			if testingTempDirectoryReceiver(packagePath, receiver) && selector.Sel.Name == "TempDir" {
+				return !temporaryEnvironmentMutated(expression, bindings)
+			}
+		}
+		functions := resolvedCalledFunctions(value.Fun, information, bindings, make(map[*types.Var]bool))
+		if len(functions) > 0 {
+			allTempDirectories := true
+			for _, function := range functions {
+				if !isTemporaryDirectoryFunction(function) {
+					allTempDirectories = false
+					break
+				}
+			}
+			if allTempDirectories {
+				return !temporaryEnvironmentMutated(expression, bindings)
+			}
+			allJoins := true
+			for _, function := range functions {
+				if function.Pkg() == nil || function.Pkg().Path() != "path/filepath" || function.Name() != "Join" {
+					allJoins = false
+					break
+				}
+			}
+			if allJoins {
+				if len(value.Args) < 2 || !safeTemporaryExpression(value.Args[0], information, bindings, false, seen) {
+					return false
+				}
+				for _, argument := range value.Args[1:] {
+					if !safeRelativePathFragment(argument, information) {
+						return false
+					}
+				}
+				return true
+			}
+		}
+		return safeTemporaryCallResult(value, 0, information, bindings, allowEmpty, seen)
+	}
+	return false
+}
+
+func isTemporaryDirectoryFunction(function *types.Func) bool {
+	if function == nil || function.Pkg() == nil {
+		return false
+	}
+	signature, _ := function.Type().(*types.Signature)
+	if signature == nil {
+		return false
+	}
+	if signature.Recv() == nil {
+		return function.Pkg().Path() == "os" && function.Name() == "TempDir"
+	}
+	packagePath, receiver := receiverIdentity(signature.Recv().Type())
+	return testingTempDirectoryReceiver(packagePath, receiver) && function.Name() == "TempDir"
+}
+
+func testingTempDirectoryReceiver(packagePath, receiver string) bool {
+	if packagePath != "testing" {
+		return false
+	}
+	switch receiver {
+	case "T", "B", "F", "TB":
+		return true
+	default:
+		return false
+	}
+}
+
+func safeRelativePathFragment(expression ast.Expr, information *types.Info) bool {
+	value := information.Types[expression].Value
+	if value == nil || value.Kind() != constant.String {
+		return false
+	}
+	fragment := constant.StringVal(value)
+	cleaned := filepath.Clean(fragment)
+	return !filepath.IsAbs(fragment) && cleaned != ".." &&
+		!strings.HasPrefix(cleaned, ".."+string(os.PathSeparator))
+}
+
+func safePathSuffix(expression ast.Expr, information *types.Info) bool {
+	value := information.Types[expression].Value
+	if value == nil || value.Kind() != constant.String {
+		return false
+	}
+	suffix := constant.StringVal(value)
+	separator := string(os.PathSeparator)
+	if !strings.HasPrefix(suffix, separator) || suffix == separator {
+		return false
+	}
+	return safeRelativePathFragmentValue(strings.TrimPrefix(suffix, separator))
+}
+
+func safeRelativePathFragmentValue(fragment string) bool {
+	cleaned := filepath.Clean(fragment)
+	return fragment != "" && !filepath.IsAbs(fragment) && cleaned != ".." &&
+		!strings.HasPrefix(cleaned, ".."+string(os.PathSeparator))
+}
+
+func allSafeTemporaryOrigins(origins []originReference, information *types.Info, bindings originBindings, allowEmpty bool, seen map[any]bool) bool {
+	if len(origins) == 0 {
+		return false
+	}
+	for _, origin := range origins {
+		originInformation := information
+		if stored := bindings.info[origin.expression]; stored != nil {
+			originInformation = stored
+		}
+		var safe bool
+		switch origin.kind {
+		case directOrigin:
+			safe = safeTemporaryExpression(origin.expression, originInformation, bindings, allowEmpty, seen)
+		case callResultOrigin:
+			call, ok := origin.expression.(*ast.CallExpr)
+			safe = ok && safeTemporaryCallResult(call, origin.index, originInformation, bindings, allowEmpty, seen)
+		}
+		if !safe {
+			return false
+		}
+	}
+	return true
+}
+
+func safeTemporaryCallResult(call *ast.CallExpr, resultIndex int, information *types.Info, bindings originBindings, allowEmpty bool, seen map[any]bool) bool {
+	functions := resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool))
+	if resultIndex == 0 && len(functions) > 0 {
+		allTemporaryDirectories := true
+		for _, function := range functions {
+			if function == nil || function.Pkg() == nil ||
+				!((function.Pkg().Path() == "os" && function.Name() == "MkdirTemp") ||
+					(function.Pkg().Path() == "io/ioutil" && function.Name() == "TempDir")) {
+				allTemporaryDirectories = false
+				break
+			}
+		}
+		if allTemporaryDirectories {
+			return len(call.Args) > 0 && safeTemporaryDirectory(call.Args[0], information, bindings)
+		}
+	}
+	matched := false
+	for _, function := range functions {
+		results := bindings.returns[function]
+		if seen[function] || resultIndex >= len(results) {
+			return false
+		}
+		seen[function] = true
+		safe := allSafeTemporaryOrigins(results[resultIndex], information, bindings, allowEmpty, seen)
+		delete(seen, function)
+		if !safe {
+			return false
+		}
+		matched = true
+	}
+	for _, literal := range resolvedFunctionLiterals(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		results := bindings.literalReturns[literal]
+		if seen[literal] || resultIndex >= len(results) {
+			return false
+		}
+		seen[literal] = true
+		safe := allSafeTemporaryOrigins(results[resultIndex], information, bindings, allowEmpty, seen)
+		delete(seen, literal)
+		if !safe {
+			return false
+		}
+		matched = true
+	}
+	return matched
+}
+
+func safeTemporaryFile(expression ast.Expr, information *types.Info, bindings originBindings, seen map[any]bool) bool {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return safeTemporaryFile(value.X, information, bindings, seen)
+	case *ast.Ident:
+		variable := variableObject(value, information)
+		if variable == nil || seen[variable] || indirectlyMutated(variable, bindings) ||
+			len(bindings.variables[variable]) == 0 {
+			return false
+		}
+		seen[variable] = true
+		defer delete(seen, variable)
+		for _, origin := range bindings.variables[variable] {
+			if !safeTemporaryFileOrigin(origin, information, bindings, seen) {
+				return false
+			}
+		}
+		return true
+	case *ast.CallExpr:
+		if information.Types[value.Fun].IsType() {
+			return len(value.Args) == 1 && safeTemporaryFile(value.Args[0], information, bindings, seen)
+		}
+		return safeTemporaryFileCall(value, information, bindings, seen)
+	}
+	return false
+}
+
+func safeTemporaryFileCall(call *ast.CallExpr, information *types.Info, bindings originBindings, seen map[any]bool) bool {
+	functions := resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool))
+	matched := false
+	for _, function := range functions {
+		if function == nil || function.Pkg() == nil {
+			return false
+		}
+		packagePath, name := function.Pkg().Path(), function.Name()
+		if (packagePath == "os" && name == "CreateTemp") ||
+			(packagePath == "io/ioutil" && name == "TempFile") {
+			if len(call.Args) == 0 || !safeTemporaryDirectory(call.Args[0], information, bindings) {
+				return false
+			}
+			matched = true
+			continue
+		}
+		if packagePath == "os" && (name == "Create" || name == "OpenFile") {
+			if len(call.Args) == 0 || !safeTemporaryPath(call.Args[0], information, bindings) {
+				return false
+			}
+			matched = true
+			continue
+		}
+		results := bindings.returns[function]
+		if seen[function] || len(results) == 0 || len(results[0]) == 0 {
+			return false
+		}
+		seen[function] = true
+		for _, origin := range results[0] {
+			if !safeTemporaryFileOrigin(origin, information, bindings, seen) {
+				delete(seen, function)
+				return false
+			}
+		}
+		delete(seen, function)
+		matched = true
+	}
+	return matched
+}
+
+func safeTemporaryFileOrigin(origin originReference, information *types.Info, bindings originBindings, seen map[any]bool) bool {
+	if stored := bindings.info[origin.expression]; stored != nil {
+		information = stored
+	}
+	switch origin.kind {
+	case directOrigin:
+		return safeTemporaryFile(origin.expression, information, bindings, seen)
+	case callResultOrigin:
+		call, ok := origin.expression.(*ast.CallExpr)
+		return origin.index == 0 && ok && safeTemporaryFileCall(call, information, bindings, seen)
+	default:
+		return false
+	}
+}
+
+func safeTemporaryRoot(expression ast.Expr, information *types.Info, bindings originBindings, seen map[any]bool) bool {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return safeTemporaryRoot(value.X, information, bindings, seen)
+	case *ast.Ident:
+		variable := variableObject(value, information)
+		if variable == nil || seen[variable] || indirectlyMutated(variable, bindings) ||
+			len(bindings.variables[variable]) == 0 {
+			return false
+		}
+		seen[variable] = true
+		defer delete(seen, variable)
+		for _, origin := range bindings.variables[variable] {
+			call, ok := origin.expression.(*ast.CallExpr)
+			if origin.kind != callResultOrigin || origin.index != 0 || !ok ||
+				!safeTemporaryRootCall(call, information, bindings) {
+				return false
+			}
+		}
+		return true
+	case *ast.CallExpr:
+		return safeTemporaryRootCall(value, information, bindings)
+	}
+	return false
+}
+
+func safeTemporaryRootCall(call *ast.CallExpr, information *types.Info, bindings originBindings) bool {
+	functions := resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool))
+	if len(functions) == 0 {
+		return false
+	}
+	for _, function := range functions {
+		if function == nil || function.Pkg() == nil || function.Pkg().Path() != "os" ||
+			function.Name() != "OpenRoot" || len(call.Args) == 0 ||
+			!safeTemporaryPath(call.Args[0], information, bindings) {
+			return false
+		}
+	}
+	return true
+}
+
+func testPackageCallWrites(function *types.Func, call *ast.CallExpr, information *types.Info, bindings originBindings) bool {
+	packagePath, name := normalizedSystemPackage(function.Pkg().Path(), function.Name()), function.Name()
+	if write, handled := openCallWrites(packagePath, name, call, information); handled && !write {
+		return false
+	}
+	if (packagePath == "os" || packagePath == "syscall") && name == "Symlink" {
+		return len(call.Args) < 2 || !safeTemporaryPath(call.Args[1], information, bindings)
+	}
+	indexes := writePathArgumentIndexes(packagePath, name)
+	if len(indexes) > 0 {
+		for _, index := range indexes {
+			if index >= len(call.Args) || !safeTemporaryPath(call.Args[index], information, bindings) {
+				return true
+			}
+		}
+		return false
+	}
+	return true
+}
+
+func openCallWrites(packagePath, name string, call *ast.CallExpr, information *types.Info) (bool, bool) {
+	flagIndex := -1
+	switch {
+	case packagePath == "os" && name == "OpenFile":
+		flagIndex = 1
+	case packagePath == "syscall" && name == "Open":
+		flagIndex = 1
+	case packagePath == "syscall" && name == "Openat":
+		flagIndex = 2
+	default:
+		return false, false
+	}
+	if flagIndex >= len(call.Args) {
+		return true, true
+	}
+	value := information.Types[call.Args[flagIndex]].Value
+	if value == nil || value.Kind() != constant.Int {
+		return true, true
+	}
+	flags, exact := constant.Int64Val(value)
+	if !exact {
+		return true, true
+	}
+	var mask int64
+	if packagePath == "os" {
+		mask = int64(os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREATE | os.O_TRUNC)
+	} else {
+		mask = int64(syscall.O_WRONLY | syscall.O_RDWR | syscall.O_APPEND | syscall.O_CREAT | syscall.O_TRUNC)
+	}
+	return flags&mask != 0, true
+}
+
+func writePathArgumentIndexes(packagePath, name string) []int {
+	if packagePath == "os" {
+		switch name {
+		case "Chmod", "Chown", "Chtimes", "CopyFS", "Create", "Lchown", "Mkdir", "MkdirAll",
+			"OpenFile", "Remove", "RemoveAll", "Truncate", "WriteFile":
+			return []int{0}
+		case "Link", "Rename":
+			return []int{0, 1}
+		case "Symlink":
+			return []int{0, 1}
+		}
+	}
+	if packagePath == "io/ioutil" && name == "WriteFile" {
+		return []int{0}
+	}
+	if packagePath == "syscall" {
+		switch name {
+		case "Chmod", "Chown", "Creat", "Lchown", "Mkdir", "Open", "Rmdir", "Truncate", "Unlink", "Utimes":
+			return []int{0}
+		case "Link", "Rename":
+			return []int{0, 1}
+		case "Openat":
+			return []int{1}
+		case "Symlink":
+			return []int{0, 1}
+		}
+	}
+	return nil
+}
+
+func unresolvedEffectCandidate(expression ast.Expr, mode, module string, imports map[string]string, dotImports map[string]bool, information *types.Info) bool {
+	safePackage := module + "/internal/testutil"
+	switch function := expression.(type) {
+	case *ast.SelectorExpr:
+		if identifier, ok := function.X.(*ast.Ident); ok {
+			importPath := ""
+			if imported, ok := information.Uses[identifier].(*types.PkgName); ok {
+				importPath = imported.Imported().Path()
+			} else if information.Uses[identifier] == nil {
+				importPath = imports[identifier.Name]
+			}
+			classifiedPath := normalizedSystemPackage(importPath, function.Sel.Name)
+			if mode == "external" && (externalPackageCalls[classifiedPath][function.Sel.Name] != "" ||
+				effectFunctionCandidate(mode, function.Sel.Name)) {
+				return true
+			}
+			if mode == "test-writes" && (unsafeTestPackageCalls[classifiedPath][function.Sel.Name] ||
+				unsafeTempPackageCalls[classifiedPath][function.Sel.Name] ||
+				(importPath == safePackage && safeWriterKind(function.Sel.Name) != "")) {
+				return true
+			}
+		}
+		receiverType := information.TypeOf(function.X)
+		packagePath, receiver := receiverIdentity(receiverType)
+		if mode == "external" {
+			return externalMethods[packagePath][receiver][function.Sel.Name] != "" ||
+				effectMethodCandidate(mode, function.Sel.Name)
+		}
+		return (packagePath == "os" && receiver == "File" && unsafeOSFileMethods[function.Sel.Name]) ||
+			(packagePath == "os" && receiver == "Root" && unsafeOSRootMethods[function.Sel.Name]) ||
+			effectMethodCandidate(mode, function.Sel.Name)
+	case *ast.Ident:
+		if information.Uses[function] != nil {
+			return false
+		}
+		for importPath := range dotImports {
+			if mode == "external" && externalPackageCalls[importPath][function.Name] != "" {
+				return true
+			}
+			if mode == "test-writes" && (unsafeTestPackageCalls[importPath][function.Name] ||
+				unsafeTempPackageCalls[importPath][function.Name] ||
+				(importPath == safePackage && safeWriterKind(function.Name) != "")) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func unresolvedPackageEffectReference(expression ast.Expr, mode string, information *types.Info, imports map[string]string) bool {
+	selector, ok := expression.(*ast.SelectorExpr)
+	if !ok || information.Types[expression].IsType() || calledFunction(expression, information) != nil {
+		return false
+	}
+	identifier, ok := selector.X.(*ast.Ident)
+	if !ok {
+		return false
+	}
+	importPath := ""
+	if imported, ok := information.Uses[identifier].(*types.PkgName); ok {
+		importPath = imported.Imported().Path()
+	} else if information.Uses[identifier] == nil {
+		importPath = imports[identifier.Name]
+	}
+	if importPath == "" {
+		return false
+	}
+	importPath = normalizedSystemPackage(importPath, selector.Sel.Name)
+	if mode == "external" {
+		return externalPackageCalls[importPath][selector.Sel.Name] != "" ||
+			effectFunctionCandidate(mode, selector.Sel.Name)
+	}
+	return unsafeTestPackageCalls[importPath][selector.Sel.Name] ||
+		unsafeTempPackageCalls[importPath][selector.Sel.Name] ||
+		effectFunctionCandidate(mode, selector.Sel.Name)
+}
+
+func effectFunctionCandidate(mode, name string) bool {
+	if mode == "test-writes" {
+		for _, functions := range unsafeTestPackageCalls {
+			if functions[name] {
+				return true
+			}
+		}
+		for _, functions := range unsafeTempPackageCalls {
+			if functions[name] {
+				return true
+			}
+		}
+		return false
+	}
+	for _, functions := range externalPackageCalls {
+		if functions[name] != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func effectMethodCandidate(mode, name string) bool {
+	if mode == "test-writes" {
+		return unsafeOSFileMethods[name] || unsafeOSRootMethods[name]
+	}
+	for _, receivers := range externalMethods {
+		for _, methods := range receivers {
+			if methods[name] != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func ioDestinationKind(expression ast.Expr, information *types.Info) (string, bool) {
+	if call, ok := expression.(*ast.CallExpr); ok {
+		function := calledFunction(call.Fun, information)
+		if function != nil && function.Pkg() != nil && function.Pkg().Path() == "os" && function.Name() == "DirFS" {
+			return "filesystem", true
+		}
+	}
+	if selector, ok := expression.(*ast.SelectorExpr); ok {
+		if object, ok := information.Uses[selector.Sel].(*types.Var); ok && object.Pkg() != nil {
+			switch object.Pkg().Path() + "." + object.Name() {
+			case "io.Discard":
+				return "", true
+			case "os.Stdin", "os.Stdout", "os.Stderr":
+				return "filesystem", true
+			case "net/http.DefaultClient", "net/http.DefaultTransport":
+				return "http", true
+			}
+		}
+	}
+	packagePath, name := receiverIdentity(information.TypeOf(expression))
+	switch packagePath {
+	case "os":
+		if name == "File" {
+			return "filesystem", true
+		}
+	case "bytes":
+		if name == "Buffer" {
+			return "", true
+		}
+	case "strings":
+		if name == "Builder" {
+			return "", true
+		}
+	case "net/http":
+		switch name {
+		case "Client", "ResponseWriter", "Transport":
+			return "http", true
+		case "Server":
+			return "server", true
+		}
+	case "net":
+		switch name {
+		case "TCPConn", "UDPConn", "UnixConn":
+			return "server", true
+		}
+	case "crypto/tls":
+		if name == "Conn" {
+			return "server", true
+		}
+	case "database/sql":
+		switch name {
+		case "DB", "Conn", "Tx", "Stmt":
+			return "database", true
+		}
+	case "testing/fstest":
+		if name == "MapFS" {
+			return "", true
+		}
+	}
+	return "", false
+}
+
+func resolvedDestinationKind(expression ast.Expr, information *types.Info, bindings originBindings, seen map[any]bool) (string, bool) {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	if kind, known := ioDestinationKind(expression, information); known {
+		return kind, true
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return resolvedDestinationKind(value.X, information, bindings, seen)
+	case *ast.TypeAssertExpr:
+		return resolvedDestinationKind(value.X, information, bindings, seen)
+	case *ast.IndexExpr:
+		return resolvedElementDestination(value.X, information, bindings, seen)
+	case *ast.CallExpr:
+		if typed := information.Types[value.Fun]; typed.IsType() {
+			if len(value.Args) != 1 {
+				return "", false
+			}
+			return resolvedDestinationKind(value.Args[0], information, bindings, seen)
+		}
+		return resolvedCallResultDestination(value, 0, information, bindings, seen)
+	case *ast.SelectorExpr:
+		selection := information.Selections[value]
+		if selection == nil {
+			variable, _ := information.Uses[value.Sel].(*types.Var)
+			return resolvedVariableDestination(variable, information, bindings, seen)
+		}
+		if selection.Kind() != types.FieldVal {
+			return "", false
+		}
+		field, _ := selection.Obj().(*types.Var)
+		receiver := expressionVariable(value.X, information)
+		origins := []originReference{}
+		if field != nil && receiver != nil {
+			origins = append(origins, fieldMutationOrigins(receiver, field, bindings)...)
+		}
+		fields, known := resolvedFieldExpressions(value.X, selection.Index(), information, bindings, seen)
+		for _, fieldExpression := range fields {
+			origins = append(origins, originReference{expression: fieldExpression, kind: directOrigin})
+		}
+		kind, originsKnown := resolvedOriginsDestination(origins, information, bindings, seen)
+		if kind != "" {
+			return kind, true
+		}
+		return "", known && len(fields) > 0 && originsKnown
+	case *ast.Ident:
+		variable := variableObject(value, information)
+		return resolvedVariableDestination(variable, information, bindings, seen)
+	}
+	return "", false
+}
+
+func resolvedVariableDestination(variable *types.Var, information *types.Info, bindings originBindings, seen map[any]bool) (string, bool) {
+	if variable == nil || seen[variable] {
+		return "", false
+	}
+	if len(bindings.variables[variable]) == 0 {
+		return "", bindings.parameters[variable]
+	}
+	seen[variable] = true
+	defer delete(seen, variable)
+	return resolvedOriginsDestination(bindings.variables[variable], information, bindings, seen)
+}
+
+func resolvedOriginDestination(origin originReference, information *types.Info, bindings originBindings, seen map[any]bool) (string, bool) {
+	switch origin.kind {
+	case directOrigin:
+		return resolvedDestinationKind(origin.expression, information, bindings, seen)
+	case callResultOrigin:
+		call, ok := origin.expression.(*ast.CallExpr)
+		if !ok {
+			return "", false
+		}
+		return resolvedCallResultDestination(call, origin.index, information, bindings, seen)
+	case elementOrigin:
+		return resolvedElementDestination(origin.expression, information, bindings, seen)
+	default:
+		return "", false
+	}
+}
+
+func resolvedOriginsDestination(origins []originReference, information *types.Info, bindings originBindings, seen map[any]bool) (string, bool) {
+	if len(origins) == 0 {
+		return "", false
+	}
+	allKnown := true
+	kinds := make(map[string]bool)
+	for _, origin := range origins {
+		kind, known := resolvedOriginDestination(origin, information, bindings, seen)
+		if known && kind != "" {
+			kinds[kind] = true
+		}
+		if !known {
+			allKnown = false
+		}
+	}
+	ordered := make([]string, 0, len(kinds))
+	for kind := range kinds {
+		ordered = append(ordered, kind)
+	}
+	sort.Strings(ordered)
+	if len(ordered) > 0 {
+		return ordered[0], true
+	}
+	return "", allKnown
+}
+
+func resolvedCallResultDestination(call *ast.CallExpr, resultIndex int, information *types.Info, bindings originBindings, seen map[any]bool) (string, bool) {
+	if originInformation := bindings.info[call]; originInformation != nil {
+		information = originInformation
+	}
+	allKnown := true
+	matched := false
+	kinds := make(map[string]bool)
+	for _, function := range resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		results := bindings.returns[function]
+		if seen[function] || resultIndex >= len(results) || len(results[resultIndex]) == 0 {
+			allKnown = false
+			continue
+		}
+		matched = true
+		seen[function] = true
+		kind, known := resolvedOriginsDestination(results[resultIndex], information, bindings, seen)
+		delete(seen, function)
+		if known && kind != "" {
+			kinds[kind] = true
+		}
+		if !known {
+			allKnown = false
+		}
+	}
+	for _, literal := range resolvedFunctionLiterals(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		results := bindings.literalReturns[literal]
+		if seen[literal] || resultIndex >= len(results) || len(results[resultIndex]) == 0 {
+			allKnown = false
+			continue
+		}
+		matched = true
+		seen[literal] = true
+		kind, known := resolvedOriginsDestination(results[resultIndex], information, bindings, seen)
+		delete(seen, literal)
+		if known && kind != "" {
+			kinds[kind] = true
+		}
+		if !known {
+			allKnown = false
+		}
+	}
+	ordered := make([]string, 0, len(kinds))
+	for kind := range kinds {
+		ordered = append(ordered, kind)
+	}
+	sort.Strings(ordered)
+	if len(ordered) > 0 {
+		return ordered[0], true
+	}
+	return "", matched && allKnown
+}
+
+func resolvedFunctionLiterals(expression ast.Expr, information *types.Info, bindings originBindings, seen map[*types.Var]bool) []*ast.FuncLit {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	switch value := expression.(type) {
+	case *ast.FuncLit:
+		return []*ast.FuncLit{value}
+	case *ast.ParenExpr:
+		return resolvedFunctionLiterals(value.X, information, bindings, seen)
+	case *ast.Ident:
+		variable := functionVariable(value, information)
+		if variable == nil || seen[variable] {
+			return nil
+		}
+		seen[variable] = true
+		defer delete(seen, variable)
+		unique := make(map[*ast.FuncLit]bool)
+		result := []*ast.FuncLit{}
+		for _, origin := range bindings.variables[variable] {
+			if origin.kind != directOrigin {
+				continue
+			}
+			for _, literal := range resolvedFunctionLiterals(origin.expression, information, bindings, seen) {
+				if !unique[literal] {
+					unique[literal] = true
+					result = append(result, literal)
+				}
+			}
+		}
+		return result
+	case *ast.SelectorExpr:
+		selection := information.Selections[value]
+		if selection == nil || selection.Kind() != types.FieldVal {
+			return nil
+		}
+		expressions := []ast.Expr{}
+		field, _ := selection.Obj().(*types.Var)
+		receiver := expressionVariable(value.X, information)
+		if field != nil && receiver != nil {
+			for _, origin := range fieldMutationOrigins(receiver, field, bindings) {
+				if origin.kind == directOrigin {
+					expressions = append(expressions, origin.expression)
+				}
+			}
+		}
+		if fields, known := resolvedFieldExpressions(value.X, selection.Index(), information, bindings, make(map[any]bool)); known {
+			expressions = append(expressions, fields...)
+		}
+		unique := make(map[*ast.FuncLit]bool)
+		result := []*ast.FuncLit{}
+		for _, fieldExpression := range expressions {
+			for _, literal := range resolvedFunctionLiterals(fieldExpression, information, bindings, seen) {
+				if !unique[literal] {
+					unique[literal] = true
+					result = append(result, literal)
+				}
+			}
+		}
+		return result
+	}
+	return nil
+}
+
+func resolvedElementDestination(expression ast.Expr, information *types.Info, bindings originBindings, seen map[any]bool) (string, bool) {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return resolvedElementDestination(value.X, information, bindings, seen)
+	case *ast.TypeAssertExpr:
+		return resolvedElementDestination(value.X, information, bindings, seen)
+	case *ast.CallExpr:
+		if typed := information.Types[value.Fun]; typed.IsType() && len(value.Args) == 1 {
+			return resolvedElementDestination(value.Args[0], information, bindings, seen)
+		}
+		if identifier, ok := value.Fun.(*ast.Ident); ok {
+			if builtin, _ := information.Uses[identifier].(*types.Builtin); builtin != nil &&
+				builtin.Name() == "append" && len(value.Args) > 0 {
+				origins := []originReference{{expression: value.Args[0], kind: elementOrigin}}
+				for _, argument := range value.Args[1:] {
+					origins = append(origins, originReference{expression: argument, kind: directOrigin})
+				}
+				return resolvedOriginsDestination(origins, information, bindings, seen)
+			}
+		}
+		return resolvedCallResultElementDestination(value, 0, information, bindings, seen)
+	case *ast.CompositeLit:
+		origins := make([]originReference, 0, len(value.Elts))
+		for _, element := range value.Elts {
+			if pair, keyed := element.(*ast.KeyValueExpr); keyed {
+				element = pair.Value
+			}
+			origins = append(origins, originReference{expression: element, kind: directOrigin})
+		}
+		return resolvedOriginsDestination(origins, information, bindings, seen)
+	case *ast.SelectorExpr:
+		if information.Selections[value] != nil {
+			return "", false
+		}
+		variable, _ := information.Uses[value.Sel].(*types.Var)
+		return resolvedVariableElementDestination(variable, information, bindings, seen)
+	case *ast.Ident:
+		variable := variableObject(value, information)
+		return resolvedVariableElementDestination(variable, information, bindings, seen)
+	}
+	return "", false
+}
+
+func resolvedVariableElementDestination(variable *types.Var, information *types.Info, bindings originBindings, seen map[any]bool) (string, bool) {
+	if variable == nil || seen[variable] {
+		return "", false
+	}
+	seen[variable] = true
+	defer delete(seen, variable)
+	allKnown := true
+	matched := false
+	kinds := make(map[string]bool)
+	for _, origin := range bindings.variables[variable] {
+		matched = true
+		var kind string
+		var known bool
+		switch origin.kind {
+		case directOrigin:
+			kind, known = resolvedElementDestination(origin.expression, information, bindings, seen)
+		case callResultOrigin:
+			call, ok := origin.expression.(*ast.CallExpr)
+			if ok {
+				kind, known = resolvedCallResultElementDestination(call, origin.index, information, bindings, seen)
+			}
+		default:
+			allKnown = false
+			continue
+		}
+		if known && kind != "" {
+			kinds[kind] = true
+		}
+		if !known {
+			allKnown = false
+		}
+	}
+	for _, origin := range elementMutationOrigins(variable, bindings) {
+		matched = true
+		kind, known := resolvedOriginDestination(origin, information, bindings, seen)
+		if known && kind != "" {
+			kinds[kind] = true
+		}
+		if !known {
+			allKnown = false
+		}
+	}
+	ordered := make([]string, 0, len(kinds))
+	for kind := range kinds {
+		ordered = append(ordered, kind)
+	}
+	sort.Strings(ordered)
+	if len(ordered) > 0 {
+		return ordered[0], true
+	}
+	return "", matched && allKnown
+}
+
+func resolvedCallResultElementDestination(call *ast.CallExpr, resultIndex int, information *types.Info, bindings originBindings, seen map[any]bool) (string, bool) {
+	origins := []originReference{}
+	matched := false
+	for _, function := range resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		results := bindings.returns[function]
+		if seen[function] || resultIndex >= len(results) || len(results[resultIndex]) == 0 {
+			return "", false
+		}
+		matched = true
+		seen[function] = true
+		for _, origin := range results[resultIndex] {
+			switch origin.kind {
+			case directOrigin:
+				kind, known := resolvedElementDestination(origin.expression, information, bindings, seen)
+				if kind != "" || !known {
+					delete(seen, function)
+					return kind, known
+				}
+			case callResultOrigin:
+				nested, ok := origin.expression.(*ast.CallExpr)
+				if !ok {
+					delete(seen, function)
+					return "", false
+				}
+				kind, known := resolvedCallResultElementDestination(nested, origin.index, information, bindings, seen)
+				if kind != "" || !known {
+					delete(seen, function)
+					return kind, known
+				}
+			}
+		}
+		delete(seen, function)
+	}
+	for _, literal := range resolvedFunctionLiterals(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		results := bindings.literalReturns[literal]
+		if seen[literal] || resultIndex >= len(results) || len(results[resultIndex]) == 0 {
+			return "", false
+		}
+		matched = true
+		seen[literal] = true
+		origins = append(origins, results[resultIndex]...)
+		delete(seen, literal)
+	}
+	if len(origins) > 0 {
+		converted := make([]originReference, 0, len(origins))
+		for _, origin := range origins {
+			if origin.kind == directOrigin {
+				origin.kind = elementOrigin
+			}
+			converted = append(converted, origin)
+		}
+		return resolvedOriginsDestination(converted, information, bindings, seen)
+	}
+	return "", matched
+}
+
+func resolvedFieldExpressions(expression ast.Expr, indexes []int, information *types.Info, bindings originBindings, seen map[any]bool) ([]ast.Expr, bool) {
+	if originInformation := bindings.info[expression]; originInformation != nil {
+		information = originInformation
+	}
+	if len(indexes) == 0 {
+		return []ast.Expr{expression}, true
+	}
+	switch value := expression.(type) {
+	case *ast.ParenExpr:
+		return resolvedFieldExpressions(value.X, indexes, information, bindings, seen)
+	case *ast.UnaryExpr:
+		if value.Op == token.AND {
+			return resolvedFieldExpressions(value.X, indexes, information, bindings, seen)
+		}
+	case *ast.CallExpr:
+		if typed := information.Types[value.Fun]; typed.IsType() && len(value.Args) == 1 {
+			return resolvedFieldExpressions(value.Args[0], indexes, information, bindings, seen)
+		}
+		return resolvedCallResultFieldExpressions(value, 0, indexes, information, bindings, seen)
+	case *ast.SelectorExpr:
+		if information.Selections[value] != nil {
+			return nil, false
+		}
+		variable, _ := information.Uses[value.Sel].(*types.Var)
+		return resolvedVariableFieldExpressions(variable, indexes, information, bindings, seen)
+	case *ast.Ident:
+		variable := variableObject(value, information)
+		return resolvedVariableFieldExpressions(variable, indexes, information, bindings, seen)
+	case *ast.CompositeLit:
+		index := indexes[0]
+		for elementIndex, element := range value.Elts {
+			fieldIndex := elementIndex
+			fieldValue := element
+			if pair, keyed := element.(*ast.KeyValueExpr); keyed {
+				fieldValue = pair.Value
+				identifier, ok := pair.Key.(*ast.Ident)
+				if !ok {
+					continue
+				}
+				field, _ := information.Uses[identifier].(*types.Var)
+				if field == nil {
+					field, _ = information.Defs[identifier].(*types.Var)
+				}
+				var structure *types.Struct
+				if valueType := information.TypeOf(value); valueType != nil {
+					structure, _ = valueType.Underlying().(*types.Struct)
+				}
+				fieldIndex = -1
+				if structure != nil {
+					for candidate := 0; candidate < structure.NumFields(); candidate++ {
+						if structure.Field(candidate) == field || structure.Field(candidate).Name() == identifier.Name {
+							fieldIndex = candidate
+							break
+						}
+					}
+				}
+			}
+			if fieldIndex == index {
+				return resolvedFieldExpressions(fieldValue, indexes[1:], information, bindings, seen)
+			}
+		}
+		return nil, false
+	}
+	return nil, false
+}
+
+func resolvedVariableFieldExpressions(variable *types.Var, indexes []int, information *types.Info, bindings originBindings, seen map[any]bool) ([]ast.Expr, bool) {
+	if variable == nil || seen[variable] || len(bindings.variables[variable]) == 0 {
+		return nil, false
+	}
+	seen[variable] = true
+	defer delete(seen, variable)
+	result := []ast.Expr{}
+	allKnown := true
+	for _, origin := range bindings.variables[variable] {
+		var found []ast.Expr
+		var known bool
+		switch origin.kind {
+		case directOrigin:
+			found, known = resolvedFieldExpressions(origin.expression, indexes, information, bindings, seen)
+		case callResultOrigin:
+			call, ok := origin.expression.(*ast.CallExpr)
+			if ok {
+				found, known = resolvedCallResultFieldExpressions(call, origin.index, indexes, information, bindings, seen)
+			}
+		}
+		result = append(result, found...)
+		allKnown = allKnown && known
+	}
+	return result, allKnown
+}
+
+func resolvedCallResultFieldExpressions(call *ast.CallExpr, resultIndex int, indexes []int, information *types.Info, bindings originBindings, seen map[any]bool) ([]ast.Expr, bool) {
+	result := []ast.Expr{}
+	allKnown := true
+	matched := false
+	resolve := func(key any, origins [][]originReference) {
+		if seen[key] || resultIndex >= len(origins) || len(origins[resultIndex]) == 0 {
+			allKnown = false
+			return
+		}
+		matched = true
+		seen[key] = true
+		defer delete(seen, key)
+		for _, origin := range origins[resultIndex] {
+			var found []ast.Expr
+			var known bool
+			switch origin.kind {
+			case directOrigin:
+				found, known = resolvedFieldExpressions(origin.expression, indexes, information, bindings, seen)
+			case callResultOrigin:
+				nested, ok := origin.expression.(*ast.CallExpr)
+				if ok {
+					found, known = resolvedCallResultFieldExpressions(nested, origin.index, indexes, information, bindings, seen)
+				}
+			}
+			result = append(result, found...)
+			allKnown = allKnown && known
+		}
+	}
+	for _, function := range resolvedCalledFunctions(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		resolve(function, bindings.returns[function])
+	}
+	for _, literal := range resolvedFunctionLiterals(call.Fun, information, bindings, make(map[*types.Var]bool)) {
+		resolve(literal, bindings.literalReturns[literal])
+	}
+	return result, matched && allKnown
+}
+
+func isInterfaceType(value types.Type) bool {
+	if value == nil {
+		return false
+	}
+	_, ok := value.Underlying().(*types.Interface)
+	return ok
+}
+
+func calledFunction(expression ast.Expr, information *types.Info) *types.Func {
+	var object types.Object
+	switch function := expression.(type) {
+	case *ast.ParenExpr:
+		return calledFunction(function.X, information)
+	case *ast.IndexExpr:
+		return calledFunction(function.X, information)
+	case *ast.IndexListExpr:
+		return calledFunction(function.X, information)
+	case *ast.Ident:
+		object = information.Uses[function]
+	case *ast.SelectorExpr:
+		if selection := information.Selections[function]; selection != nil {
+			object = selection.Obj()
+		} else {
+			object = information.Uses[function.Sel]
+		}
+	}
+	result, _ := object.(*types.Func)
+	return result
+}
+
+func receiverIdentity(value types.Type) (string, string) {
+	for {
+		switch current := value.(type) {
+		case *types.Pointer:
+			value = current.Elem()
+		default:
+			named, ok := value.(*types.Named)
+			if !ok || named.Obj().Pkg() == nil {
+				return "", ""
+			}
+			return named.Obj().Pkg().Path(), named.Obj().Name()
+		}
+	}
+}
+
+func isNamedType(value types.Type, packagePath, name string) bool {
+	foundPackage, foundName := receiverIdentity(value)
+	return foundPackage == packagePath && foundName == name
+}
+
+func isIOWriteFunction(name string) bool {
+	switch name {
+	case "Copy", "CopyBuffer", "CopyN", "WriteString":
+		return true
+	default:
+		return false
+	}
+}
+
+func isFSReadFunction(name string) bool {
+	switch name {
+	case "Glob", "ReadDir", "ReadFile", "Stat", "WalkDir":
+		return true
+	default:
+		return false
+	}
+}
+
+func safeWriterKind(name string) string {
+	switch name {
+	case "WriteFileOutsideWorkingTree":
+		return "safe_write"
+	case "CopyFSOutsideWorkingTree":
+		return "safe_copy"
+	default:
+		return ""
+	}
+}
+
+func scanQ06Structure(root string, manifest fileManifest) ([]finding, error) {
+	findings := []finding{}
+	selected := make(map[string]bool)
+	for _, relative := range append(append([]string{}, manifest.Production...), manifest.Tests...) {
+		selected[relative] = true
+	}
+	paths := []string{"internal/testutil/path.go", "internal/testutil/path_test.go"}
+	for _, relative := range paths {
+		if !selected[relative] {
+			continue
+		}
+		path := filepath.Join(root, filepath.FromSlash(relative))
+		files := token.NewFileSet()
+		parsed, err := parser.ParseFile(files, path, nil, 0)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, fmt.Errorf("parse %s: %w", relative, err)
+		}
+		imports, _ := fileImports(parsed)
+		for _, declaration := range parsed.Decls {
+			function, ok := declaration.(*ast.FuncDecl)
+			if !ok {
+				continue
+			}
+			kind := q06DefinitionKind(function.Name.Name)
+			if function.Recv != nil || (isQ06ControlKind(kind) && !validTestingFunction(function, imports)) {
+				kind = ""
+			}
+			if kind != "" {
+				position := files.Position(function.Pos())
+				findings = append(findings, finding{Path: relative, Line: position.Line, Column: position.Column, Kind: kind})
+			}
+			if function.Body == nil {
+				continue
+			}
+			ast.Inspect(function.Body, func(node ast.Node) bool {
+				call, ok := node.(*ast.CallExpr)
+				if !ok {
+					return true
+				}
+				identifier, ok := call.Fun.(*ast.Ident)
+				if !ok {
+					return true
+				}
+				callKind := ""
+				if function.Name.Name == "ensureOutsideWorkingTree" && identifier.Name == "WouldLeakIntoWorkingTree" {
+					callKind = "central_guard_call"
+				}
+				if identifier.Name == "ensureOutsideWorkingTree" {
+					switch function.Name.Name {
+					case "WriteFileOutsideWorkingTree":
+						callKind = "guarded_safe_write"
+					case "CopyFSOutsideWorkingTree":
+						callKind = "guarded_safe_copy"
+					}
+				}
+				if callKind != "" {
+					position := files.Position(call.Pos())
+					findings = append(findings, finding{Path: relative, Line: position.Line, Column: position.Column, Kind: callKind})
+				}
+				return true
+			})
+		}
+	}
+	return findings, nil
+}
+
+func isQ06ControlKind(kind string) bool {
+	return kind == "repository_guard_control" || kind == "repository_writer_control"
+}
+
+func validTestingFunction(function *ast.FuncDecl, imports map[string]string) bool {
+	if function.Type.TypeParams != nil || function.Type.Results != nil || function.Type.Params == nil ||
+		len(function.Type.Params.List) != 1 {
+		return false
+	}
+	parameter := function.Type.Params.List[0]
+	if len(parameter.Names) > 1 {
+		return false
+	}
+	pointer, ok := parameter.Type.(*ast.StarExpr)
+	if !ok {
+		return false
+	}
+	selector, ok := pointer.X.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "T" {
+		return false
+	}
+	identifier, ok := selector.X.(*ast.Ident)
+	return ok && imports[identifier.Name] == "testing"
+}
+
+func q06DefinitionKind(name string) string {
+	switch name {
+	case "WouldLeakIntoWorkingTree":
+		return "central_guard_definition"
+	case "WriteFileOutsideWorkingTree":
+		return "safe_write_definition"
+	case "CopyFSOutsideWorkingTree":
+		return "safe_copy_definition"
+	case "TestWouldLeakIntoRepositoryRejectsWorkingTreeAndAcceptsTempDir":
+		return "repository_guard_control"
+	case "TestSafeFixtureWritersRefuseRepositoryPaths":
+		return "repository_writer_control"
+	default:
+		return ""
+	}
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "repository": {
+    "commit": "5635d50bd161a9a5aa81fc4332cc0c9d68885d08",
+    "module": "github.com/devdimensionlab/plybuild",
+    "tree": {
+      "commit_tree": "ad3b300e55a9ff08936c09fdbeb875a35bbcf376",
+      "inventory_overlay_sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d"
+    }
+  },
+  "findings": {
+    "seam_test": [
+      {
+        "command": "go test ./pkg/config -run '^TestGitCloudConfig_' -count=1",
+        "mutation": "swapped cloud-config clone URL and target directory in a throwaway clone",
+        "measured": "3 selected tests passed with exit 0 after the swap; none exercises Refresh",
+        "unverified": "the already-failing full suite could not provide a clean whole-repository control"
+      },
+      {
+        "command": "go test ./pkg/maven -run '^TestGetRepo$' -count=1",
+        "mutation": "swapped Maven metadata username and password in a throwaway clone",
+        "measured": "1 selected test passed with exit 0 after the swap; it does not exercise authenticated metadata",
+        "unverified": "the Maven package's full test population fails earlier on a machine-specific profile path"
+      },
+      {
+        "command": "go test ./pkg/spring -count=1",
+        "mutation": "swapped Spring download URL and archive path in a throwaway clone",
+        "measured": "exit 0 with 0 test functions and '[no test files]'; this population proves nothing",
+        "unverified": "no Spring download test exists at the baseline commit"
+      }
+    ],
+    "human_output": {
+      "command": "fresh baseline build at /private/tmp/ply-baseline-human-output/ply --help",
+      "measured": "exit 0; 7 commands and 5 global flags in 33 lines (968 bytes)",
+      "unverified": "this was a fresh build, not an installed artifact, and no external service was contacted"
+    },
+    "survivors": [
+      {
+        "location": "pkg/config/cloud.go GitCloudConfig.Refresh clone branch",
+        "classification": "missing test",
+        "measured": "0 of 3 selected GitCloudConfig tests exercise Refresh; the URL/target swap survived",
+        "unverified": "real clone behavior was not run"
+      },
+      {
+        "location": "pkg/maven/query.go Repository.GetMetaData authenticated branch",
+        "classification": "missing test",
+        "measured": "0 of 1 selected Maven tests exercise authenticated metadata; the credential swap survived",
+        "unverified": "no repository endpoint was contacted"
+      },
+      {
+        "location": "pkg/spring/io.go DownloadInitializer download branch",
+        "classification": "missing test",
+        "measured": "0 test functions exist in pkg/spring; the URL/path swap survived compilation",
+        "unverified": "download, ZIP extraction, and cleanup were not run"
+      }
+    ],
+    "premise_check": {
+      "premise": "README installation is performed by the default make target",
+      "command": "git show 5635d50:README.md and git show 5635d50:Makefile",
+      "measured": "the README names 1 command, make; the default all target has 2 prerequisites, build and install, but install copies only to GOPATH/bin",
+      "held": true,
+      "unverified": "this source check does not prove the destination exists or that GOBIN is honored"
+    }
+  }
+}
