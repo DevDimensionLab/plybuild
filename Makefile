@@ -1,13 +1,11 @@
-# Define a default GOPATH if it's not already set
-GOPATH ?= $(HOME)/go
+GO ?= go
 
 .DEFAULT_GOAL := all
 
-# Export GOPATH so it's available to subcommands
-export GOPATH
+.PHONY: all build docker-build docker-run docker-publish install run test test-install lint release release-brew upgrade
 
 build:
-	go build -o ply
+	$(GO) build -o ply ./cmd/ply
 
 docker-build:
 	docker build --tag ply:latest .
@@ -16,16 +14,20 @@ docker-run:
 	docker run ply $(ARGS)
 
 docker-publish:
-	./docker-publish.sh	
+	./docker-publish.sh
 
-install: build
-	cp ply ${GOPATH}/bin
+install:
+	$(GO) install ./cmd/ply
 
 run:
-	go run main.go
+	$(GO) run ./cmd/ply
 
 test:
-	go test -v -cover ./...
+	$(GO) test -v -cover ./...
+	bash test/makefile_install_test.sh
+
+test-install:
+	bash test/makefile_install_test.sh
 
 lint:
 	gofmt -w pkg
@@ -38,11 +40,8 @@ release-brew:
 	goreleaser release --clean --skip=validate -f .goreleaser.brews.yml
 
 upgrade:
-	go get github.com/devdimensionlab/mvn-pom-mutator
-	go get -u ./...
-	go clean
+	$(GO) get github.com/devdimensionlab/mvn-pom-mutator
+	$(GO) get -u ./...
+	$(GO) clean
 
-all: build install
-
-
-.PHONY: test
+all: build

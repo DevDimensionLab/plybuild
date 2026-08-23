@@ -67,11 +67,15 @@ Use "ply [command] --help" for more information about a command.
 
 ## Install
 ```shell script
-make
+make install
+```
+
+## Build
+```shell script
+make build
 ```
 
 ## Help
 ```shell script
 ply
 ```
-
