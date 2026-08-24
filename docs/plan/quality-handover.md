@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T22:13:50+02:00
+Generated: 2026-08-24T22:45:42+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,14 +10,14 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `1b85711b139c`.
-- Restart preparation base: `1b85711b139c`.
+- Measured implementation head: `e13a0366b819`.
+- Restart preparation base: `e13a0366b819`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no product implementation changes.
 - No push, merge, release, publication, stash, revert, successor launch, or
   worktree removal was performed.
 
-P3 implementation commits remain:
+P3 implementation commits are:
 
 ```text
 5c6f2fa quality: move process exits to main
@@ -31,6 +31,7 @@ dee214c quality: move Spring discovery behind HTTP adapter
 789ae23 quality: move Bitbucket JSON behind HTTP adapter
 07ac6ce quality: move Kibana POST behind HTTP adapter
 a7eb3ef quality: move Wpost behind HTTP and filesystem adapters
+e13a036 quality: move Bitbucket selection behind filesystem adapter
 ```
 
 The separate operational continuity implementation is:
@@ -39,17 +40,17 @@ The separate operational continuity implementation is:
 1b85711 quality: supervise non-interactive agent sessions
 ```
 
-It is not P3.12 and changes no Go quality denominator.
+It changes no Go quality denominator and is separate from P3 move numbering.
 
 ## Continuity Checkpoint
 
 `codex-dev-start.sh` remains `NEXT` while P3 is active and P4-P8 remain queued
 in the machine-readable plan block. Its active archive is
-`docs/plan/agent-sessions/2026-08-24T221350+0200-migrate-bitbucket-clone-selection.md`.
-Its predecessor is answered history, and the complete reciprocal graph has
-exactly one `NEXT` tail.
+`docs/plan/agent-sessions/2026-08-24T224542+0200-migrate-file-exists.md`.
+The Bitbucket predecessor is answered history, and the reciprocal archive graph
+has exactly one `NEXT` tail.
 
-Normal launch is now a Bash 3.2-compatible, non-interactive supervisor. Each
+Normal launch is a Bash 3.2-compatible, non-interactive supervisor. Each
 generation resolves an external Codex executable and invokes exact
 `codex exec` arguments for normal service tier, workspace-write, the repository
 working directory, JSONL, an external final-message path, and the byte-exact
@@ -69,116 +70,120 @@ a changed session ID, exactly one new committed `NEXT` archive, and reciprocal
 history. A valid `COMPLETE` requires the whole authorized queue complete.
 Signals are forwarded to the active child/parser and never start a successor.
 
-`test/codex_dev_start_test.sh` now has 62 controls. They characterize exact
+`test/codex_dev_start_test.sh` has 62 controls. They characterize exact
 argv/prompt bytes, logging/progress, malicious event data, two-generation
-continuation, `COMPLETE`, all terminal/JSON/process/no-progress/dirty/handoff/
-contract failures, and signal interruption without using the real Codex
+continuation, `COMPLETE`, every terminal/JSON/process/no-progress/dirty/handoff/
+contract failure, and signal interruption without using the real Codex
 executable. Mutable header and prompt data remain inert after the stable
 execution boundary; the pinned normalized skeleton digest is
 `4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`.
 
-## P3 Move 11 Preserved
+## P3 Move 12 Preserved
 
-Exported `http.Wpost`, every caller, and all P2A API/CLI/subprocess contracts
-remain unchanged. Wpost routes its complete form POST through the HTTP adapter
-with explicit default-client selection and routes create/copy through the
-filesystem adapter while retaining request-before-create, file-before-response
-close order, ignored close errors, exact logging, and no status rejection.
-Its seven contracts remain part of the 130-test suite. No inventory entry,
-seam driver, or mutation label changed; Q1.4 remains 7 of 8 and exact Q2.1
-remains 0 of 8.
+Exported `bitbucket.With`, `bitbucket.QueryRepos`, synchronization behavior,
+and every P2A API/CLI/subprocess contract remain unchanged. Bitbucket now owns
+a private complete repository dependency containing the filesystem adapter and
+a resolvable Git interface. Production `With` selects `filesystem.System()`;
+the only-missing-means-clone rule delegates to `filesystem.Exists`, while every
+other stat result selects pull. Actual operations still delegate to unchanged
+`shell.GitClone` and `shell.GitPull` paths backed by the process adapter.
+
+The private zero value refuses clone or pull before any mutation. Six recording
+contracts prove complete paths and dependencies, clone/pull selection, exact
+operation paths and logging, error propagation, safe defaults, and non-empty
+stat and Git populations. The filesystem adapter contract, inventory, seam
+drivers, and mutation labels did not change.
 
 ## Measured Quality State
 
-The clean full audit at `1b85711b139c` reports:
+The clean full audit at `e13a0366b819` reports:
 
 - Absolute L0: 8 of 8.
-- 130 test functions, zero skipped; 16 of 25 packages have tests.
+- 136 test functions, zero skipped; 16 of 25 packages have tests.
 - Q0.6: 18 guarded safe-writer sites, 13 write and 5 copy, with zero unsafe
   direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
 - Q1.1: 9 of 25 packages have no tests.
 - Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 58 direct external sites outside declared adapters of 68 production
-  effect sites. Clock and server remain absent, so it is not comparable.
+- Q1.3: 57 direct external sites outside declared adapters of 67 production
+  effect sites. Clock and server are absent, making this ratchet
+  non-comparable.
 - Q1.4: 7 of 8 declared seams covered.
 - Exact Q2.1: 0 of 8 subjects have an executable harness.
 - Acceptance scripts: 4 of 4; Q2.5, Q2.6, Q2.7, and Q2.10 pass.
 - Full audit: expected exit 1 for 16 documented findings, never 2.
 - Comparable ratchets: five improved, two held, zero regressed; Q1.3 is the
-  single current non-comparable ratchet.
+  single non-comparable ratchet.
 - Measurement identity: clean at tree
-  `9328c0d008527fc18d9dd01dd3877b17316e5d4f`, with zero dirty paths.
+  `d331ce460526eeab779e6bf5d9c13c6706993e20`, with zero dirty paths.
 
-Reports were written under `/private/tmp/ply-supervisor-gate.WSL8yu`; no
-ignored quality or compatibility artifact entered the measured tree.
+The clean report is `/private/tmp/ply-bitbucket-full-audit.fBCZvd`. Focused and
+preflight reports were also kept under `/private/tmp`; empty generated target
+directories were removed before measurement, so no ignored quality or
+compatibility artifact entered the measured tree.
 
 ## Decisions And Learned Facts
 
-1. Supervisor success is the conjunction of process exit, structured terminal
-   stream, and committed repository evidence. Final prose is observable only.
-2. The local `codex-cli 0.149.0` event contract used for the implementation is
-   characterized by the recording executable; official documentation alone is
-   not treated as executable truth.
-3. JSONL must be parsed rather than substring-matched. Raw bytes are written
-   before decode, and event strings are never evaluated as shell content.
-4. Logs and final messages stay outside the repository so observation cannot
-   dirty or change task authority.
-5. The parent supervisor, not the agent, owns succession. It starts only after
-   the child ends and the fresh on-disk handoff passes every progression check.
-6. A function-valued effect dependency makes Q1.3 fail closed. Production
+1. `filesystem.Exists` already encodes the legacy rule needed by both flows:
+   only an `os.IsNotExist` error means absent; all other errors mean present.
+2. Bitbucket dependencies must include both the complete filesystem value and
+   a resolvable Git interface. Production still reaches package-level shell
+   functions, preserving the existing process adapter boundary.
+3. An incomplete or zero Bitbucket dependency returns
+   `filesystem.ErrNoFilesystem` before a Git operation; recording tests prove
+   that it cannot touch a developer repository.
+4. The exported `pkg/file.Exists` function has the next isolated direct
+   `os.Stat` probe. Its signature and all callers stay unchanged.
+5. A function-valued effect dependency makes Q1.3 fail closed. Production
    moves use resolvable interfaces and complete dependency values.
-7. `filesystem.Exists` preserves the relevant legacy rule: only an
-   `os.IsNotExist` error means absent. The Bitbucket boundary must additionally
-   prevent its zero value from reaching a real Git operation.
-8. The remaining Bitbucket `os.Stat` site decides clone versus pull; Git clone
-   and pull already execute through the process adapter and are outside the
-   next move.
-9. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
+6. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
    claim P5 mutation coverage.
-10. Provide `APIDIFF` and `GOLANGCI_LINT` as environment variables for
-    `make preflight`; Make command-line values propagate through `MAKEFLAGS`
-    and defeat the missing-binary mutant.
+7. Provide `APIDIFF` and `GOLANGCI_LINT` as environment variables for
+   `make preflight`; Make command-line values propagate through `MAKEFLAGS`
+   and defeat the missing-binary mutant.
+8. Use external Go cache and temporary directories under `/private/tmp` when
+   local default caches reject writes. Do not put generated reports in the
+   measured tree.
+9. Supervisor success is the conjunction of process exit, structured terminal
+   stream, and committed repository evidence. Final prose is observable only.
 
 ## Next Objective
 
-Move only Bitbucket repository-existence selection behind the existing
-filesystem adapter. Start with recording contracts in
-`pkg/bitbucket/bitbucket_contract_test.go`: require the complete repository
-path and complete dependencies, prove missing selects clone, existing and
-other stat errors select pull, propagate clone/pull failures, preserve safe
-zero-value behavior, and reject empty recorded populations. Characterize all
-observable path, log, and ordering behavior needed to prevent drift.
+Move only exported `file.Exists` behind the existing filesystem adapter. Start
+with recording contracts in `pkg/file`: require the complete requested path
+and dependency, prove missing returns false, existing and another stat error
+return true, preserve safe zero-value behavior, verify production selects
+`filesystem.System()`, and reject an empty recorded population. Exercise no
+developer path and perform no real filesystem mutation.
 
-Give the private `Bitbucket` flow a complete, resolvable filesystem dependency
-whose production value is selected by `With` and `QueryRepos` as needed. Keep
-exported `With`, `QueryRepos`, `SynchronizeAllRepos`, project/repository query
-behavior, lowercase selection, warnings, and clone/pull behavior unchanged.
-Remove only the direct `os.Stat` from `pkg/bitbucket/bitbucket.go`; do not move
-Git execution, other filesystem/HTTP effects, config, clock/server, P4, P5, or
-later roadmap work.
+Keep `file.Exists(string) bool`, all callers, and every observable result
+unchanged. Use a private complete dependency boundary, with the exported
+function as the production wrapper. Remove only its direct `os.Stat` in
+`pkg/file/file.go`; do not move another file operation, modify the adapter
+contract without focused proof, or enter Bitbucket, HTTP/process, config,
+clock/server, P4, P5, or later roadmap work.
 
 Expected direction is one fewer Q1.3 violation and one fewer production effect
-site (nominally 57 of 67), but regenerate the exact structured measurement and
+site, nominally 56 of 66, but regenerate the exact structured measurement and
 accept it only with zero comparable ratchet regressions. Q1.2, Q1.4, and exact
 Q2.1 should remain unchanged.
 
 ## Verification Notes
 
-Completed from clean implementation commit `1b85711b139c`:
+Completed from clean implementation commit `e13a0366b819`:
 
-- Red launcher evidence: the recording contract expected the 11-argument
-  non-interactive invocation and failed against the old five-argument
-  interactive launcher.
+- Red Bitbucket evidence: new contracts failed to compile before the private
+  repository dependency and recording boundaries existed.
+- Focused Bitbucket/filesystem/process/shell tests: PASS.
 - `/bin/bash test/codex_dev_start_test.sh`: PASS, 62 controls.
-- `make test-agent-start`, `make test-preflight`, and complete `make preflight`:
-  PASS, including 15 audit meta-controls.
+- `make test-preflight` and complete `make preflight`: PASS, including 15
+  audit meta-controls.
 - API/CLI and subprocess compatibility: PASS.
 - `make test`, `make test-install`, uncached tests, race tests, and `go vet`:
   PASS.
 - Host install, status, upgrade, and build acceptance: PASS, 4 of 4.
 - Empty-HOME `go test ./... -count=2`: PASS.
-- Focused audit: expected exit 1 with exact start values and no regression.
+- Focused audit: expected exit 1 with Q1.3 at 57 of 67 and no regression.
 - Clean full audit: expected exit 1, 16 documented findings, L0 8 of 8, five
   improved, two held, zero regressed, and zero dirty paths.
 
@@ -196,21 +201,24 @@ From any directory:
 /Users/perottochristensen/github/ply/upgrade-quality/codex-dev-start.sh
 ```
 
-This now starts the non-interactive supervisor and may run successive fresh
-missions after valid handoffs. Do not invoke it while merely validating the
-handoff; use `--check` or `--print-prompt`. `.agent-task/current.md` is not task
+This starts the non-interactive supervisor and may run successive fresh
+missions after valid handoffs. Do not invoke it while validating the handoff;
+use `--check` or `--print-prompt`. `.agent-task/current.md` is not task
 authority.
 
 ## Stop Conditions
 
 Stop and report rather than forcing progress when:
 
-- Bitbucket selection behavior or exported API cannot be preserved;
+- exported `file.Exists` behavior, its signature, or caller compatibility
+  cannot be preserved;
 - the filesystem dependency is incomplete, unresolvable, function-valued, or
   unsafe at its zero value;
-- the effect cannot be isolated without moving Git execution or another flow;
+- the effect cannot be isolated without moving another file operation or
+  changing the existing adapter contract without proof;
 - a comparable ratchet regresses, the audit exits 2, or the tree cannot be
   measured cleanly;
 - the work requires P4-P8 implementation, publication, distribution, or a real
   successor launch; or
-- the focused Bitbucket move and its separate automatic handoff are complete.
+- the focused `file.Exists` move and its separate automatic handoff are
+  complete.

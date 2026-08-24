@@ -1,13 +1,13 @@
 # Agent Session: Migrate Bitbucket Clone Selection
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T221350+0200-migrate-bitbucket-clone-selection`
 Created: `2026-08-24T22:13:50+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `70ee6d28d1d1dc631c1bfdaf172833aecc21ea105b0f52a869f01633d162eb94`
 Previous: [2026-08-24T212408+0200-supervise-noninteractive-sessions.md](2026-08-24T212408+0200-supervise-noninteractive-sessions.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T224542+0200-migrate-file-exists.md](2026-08-24T224542+0200-migrate-file-exists.md)
+Outcome: Completed at `e13a036`: Bitbucket clone/pull selection now uses the filesystem adapter through a complete zero-value-safe private dependency; 136 tests and the clean gate passed, Q1.3 is 57 of 67, and no comparable ratchet regressed.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

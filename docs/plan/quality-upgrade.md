@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `1b85711`.
+Last measured checkpoint: 2026-08-24, commit `e13a036`.
 
 ## Objective
 
@@ -42,20 +42,20 @@ P8|queued
 
 ## Measured State
 
-| Signal | Baseline | P1B | P2A | P2B | P3.1 | P3.2 | P3.3 | P3.4 | P3.5 | P3.6 | P3.7 | P3.8 | P3.9 | P3.10 | P3.11 | Interpretation |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3, Q0.6, and Q0.8 remain closed. |
-| Test functions | 33 | 37 | 37 | 37 | 39 | 47 | 50 | 55 | 65 | 79 | 92 | 101 | 112 | 123 | 130 | Wpost request, file, copy, lifecycle, error, default-client, safe-default, and population contracts are covered. |
-| Skipped tests | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
-| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | 11 / 23 | 11 / 23 | 11 / 23 | 13 / 24 | 14 / 25 | 15 / 25 | 15 / 25 | 16 / 25 | 16 / 25 | 16 / 25 | Nine packages have no test files; the new contracts stay within already-tested packages. |
-| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q1.2 stays closed; only the two executable `main` functions terminate. |
-| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | 77 / 79 | 76 / 78 | 76 / 78 | 74 / 79 | 71 / 80 | 67 / 77 | 66 / 76 | 64 / 74 | 62 / 72 | 58 / 68 | Only Wpost's request, create, close, and copy sites left the production population. |
-| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 2 / 8 | 3 / 8 | 4 / 8 | 5 / 8 | 6 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | Wpost recording contracts do not claim a new inventory seam. |
-| Executable mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | All five P3 seam drivers remain non-executable and do not qualify as later P5 harnesses. |
-| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
-| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | 0 / 8 | 0 / 9 | 0 / 10 | 0 / 10 | 0 / 11 | 0 / 12 | 0 / 12 | 0 / 12 | 0 / 12 | 0 / 12 | Q0.8 remains improved over the same population. |
-| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures prove schema reachability. |
-| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument is unchanged. |
+| Signal | Baseline | P1B | P2A | P2B | P3.1 | P3.2 | P3.3 | P3.4 | P3.5 | P3.6 | P3.7 | P3.8 | P3.9 | P3.10 | P3.11 | P3.12 | Interpretation |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3, Q0.6, and Q0.8 remain closed. |
+| Test functions | 33 | 37 | 37 | 37 | 39 | 47 | 50 | 55 | 65 | 79 | 92 | 101 | 112 | 123 | 130 | 136 | Bitbucket repository-selection paths, decisions, failures, defaults, and recorded populations are covered. |
+| Skipped tests | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
+| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | 11 / 23 | 11 / 23 | 11 / 23 | 13 / 24 | 14 / 25 | 15 / 25 | 15 / 25 | 16 / 25 | 16 / 25 | 16 / 25 | 16 / 25 | Nine packages have no test files; the new contracts stay within an already-tested package. |
+| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q1.2 stays closed; only the two executable `main` functions terminate. |
+| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | 77 / 79 | 76 / 78 | 76 / 78 | 74 / 79 | 71 / 80 | 67 / 77 | 66 / 76 | 64 / 74 | 62 / 72 | 58 / 68 | 57 / 67 | Bitbucket's repository `os.Stat` probe left the production population. |
+| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 2 / 8 | 3 / 8 | 4 / 8 | 5 / 8 | 6 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | Bitbucket recording contracts do not claim a new inventory seam. |
+| Executable mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | All five P3 seam drivers remain non-executable and do not qualify as later P5 harnesses. |
+| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
+| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | 0 / 8 | 0 / 9 | 0 / 10 | 0 / 10 | 0 / 11 | 0 / 12 | 0 / 12 | 0 / 12 | 0 / 12 | 0 / 12 | 0 / 12 | Q0.8 remains improved over the same population. |
+| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures prove schema reachability. |
+| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument is unchanged. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -204,7 +204,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 11 are complete.
+Status: active. Moves 1 through 12 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -528,8 +528,8 @@ audit meta-suite, and empty-HOME count-2. The full audit exited 1 for 16
 documented findings, never 2, with L0 8 of 8, five improved, two held, zero
 regressed, one not-comparable ratchet, and zero dirty paths.
 
-The requested operational continuity change completed at `1b85711` without
-being relabeled as a numbered P3 quality move. Normal launcher execution now
+The requested operational continuity change completed at `1b85711` separately
+from the numbered P3 quality moves. Normal launcher execution now
 supervises one fresh `codex exec --json` turn per archived mission with exact
 prompt bytes, normal service tier, workspace-write scope, concise terminal
 progress, and uniquely named raw logs outside the worktree. Its structured
@@ -538,9 +538,32 @@ terminal stream and a clean committed reciprocal handoff before another turn;
 failure, malformed or contradictory events, no progress, contract drift, and
 signals stop fail-closed. The 62 Bash 3.2 launcher contracts pass, including
 two-generation progression and eventual `COMPLETE`, without invoking the real
-Codex executable. The complete product gate and audit held every P3 quality
-measurement above exactly, so P3 remains active rather than gaining a P3.12
-column.
+Codex executable.
+
+Move 12 gave the private Bitbucket repository flow one complete dependency
+value containing `filesystem.Dependencies` and a resolvable Git interface.
+Production `With` selects `filesystem.System()`, repository existence delegates
+to the adapter's established only-missing-means-absent rule, and clone/pull
+execution still reaches the unchanged `shell.GitClone` and `shell.GitPull`
+boundaries. The safe zero value refuses a Git operation instead of probing or
+mutating the developer repository.
+
+Six new top-level recording contracts bring the suite to 136 tests. They prove
+the complete repository path and dependency value, missing selection of clone,
+existing and other stat-error selection of pull, exact clone/pull paths and
+logging, operation-error propagation, safe defaults, and non-empty recorded
+stat and Git populations. No adapter contract, inventory label, seam driver, or
+mutation harness changed. Q1.3 moves from 58 of 68 to 57 of 67 while Q1.2 stays
+zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8.
+
+Commit: `e13a036`.
+
+The clean move-12 gate passed focused Bitbucket/filesystem/process/shell
+contracts, API/CLI and subprocess compatibility, all four host flows,
+preflight, test, install, launcher, uncached and race tests, vet, the 15-control
+audit meta-suite, and empty-HOME count-2. The full audit exited 1 for 16
+documented findings, never 2, with L0 8 of 8, five improved, two held, zero
+regressed, one not-comparable ratchet, and zero dirty paths.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
@@ -553,11 +576,11 @@ For each production-effect move, first add characterization or recording
 tests, then move one coherent flow. Defaults must be safe and recording doubles
 must preserve the complete dependency struct. The seven declared P3 swaps
 through Spring download are complete, and Spring discovery, Bitbucket token
-JSON, Kibana POST, and Wpost now use the adapters without adding inventory
-seams. The next coherent flow is Bitbucket clone/pull selection: route its one
-repository `os.Stat` probe through the existing filesystem adapter while
-preserving the legacy missing-means-clone and every-other-result-means-pull
-rule.
+JSON, Kibana POST, Wpost, and Bitbucket clone/pull selection now use the
+adapters without adding inventory seams. The next coherent flow is exported
+`file.Exists`: route its one direct `os.Stat` probe through the existing
+filesystem adapter while preserving its public signature and the legacy rule
+that only a missing-path error returns false.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
