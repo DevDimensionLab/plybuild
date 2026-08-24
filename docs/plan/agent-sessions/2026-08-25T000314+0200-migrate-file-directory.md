@@ -1,13 +1,13 @@
 # Agent Session: Migrate Exported Directory Creation
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T000314+0200-migrate-file-directory`
 Created: `2026-08-25T00:03:14+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `5ed3d0551037823d990e12e0cec3094a214dc793cee463ad92d430ffdea98bf5`
 Previous: [2026-08-24T233519+0200-migrate-file-create.md](2026-08-24T233519+0200-migrate-file-create.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T003130+0200-migrate-file-open.md](2026-08-25T003130+0200-migrate-file-open.md)
+Outcome: exported directory creation moved behind the filesystem adapter at `e054082`; the clean gate passed
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
