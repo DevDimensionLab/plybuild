@@ -27,7 +27,7 @@ launcher="$repo_root/codex-dev-start.sh"
 temp_root=$(mktemp -d "${TMPDIR:-/tmp}/codex-dev-start-test.XXXXXX")
 trap 'rm -rf "$temp_root"' EXIT
 
-expected_skeleton_sha256='3729ed7b311218543d1139ab69d52ca90ff1f3d332d55b09d273dd881f453cf6'
+expected_skeleton_sha256='4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484'
 pass_count=0
 nested_mode='no'
 environment_probe='no'
@@ -591,18 +591,252 @@ cat >"$fake_codex" <<'FAKE_CODEX'
 set -euo pipefail
 : "${FAKE_CODEX_RECORD_DIR:?}"
 mkdir -p "$FAKE_CODEX_RECORD_DIR"
+count_file="$FAKE_CODEX_RECORD_DIR/call-count"
+call_count=0
+if [[ -f "$count_file" ]]; then
+	call_count=$(cat "$count_file")
+fi
+call_count=$((call_count + 1))
+printf '%s\n' "$call_count" >"$count_file"
+call_dir="$FAKE_CODEX_RECORD_DIR/call-$call_count"
+mkdir "$call_dir"
+printf '%s\n' "$#" >"$call_dir/argc"
 printf '%s\n' "$#" >"$FAKE_CODEX_RECORD_DIR/argc"
 index=0
+worktree=''
+previous=''
 for argument in "$@"; do
 	index=$((index + 1))
+	printf '%s' "$argument" >"$call_dir/arg-$index"
 	printf '%s' "$argument" >"$FAKE_CODEX_RECORD_DIR/arg-$index"
+	if [[ "$previous" == '-C' ]]; then
+		worktree=$argument
+	fi
+	previous=$argument
 done
-exit "${FAKE_CODEX_EXIT:-0}"
+if [[ -n "${FAKE_CODEX_SCENARIO_DIR:-}" && -f "$FAKE_CODEX_SCENARIO_DIR/wait-$call_count" ]]; then
+	printf '%s\n' \
+		'{"type":"thread.started","thread_id":"recorded-signal-thread"}' \
+		'{"type":"turn.started"}'
+	printf '%s\n' ready >"$FAKE_CODEX_RECORD_DIR/ready"
+	trap 'printf "%s\n" terminated >"$FAKE_CODEX_RECORD_DIR/terminated"; exit 143' TERM INT HUP
+	while :; do sleep 1; done
+fi
+if [[ -n "${FAKE_CODEX_SCENARIO_DIR:-}" && -f "$FAKE_CODEX_SCENARIO_DIR/hook-$call_count" ]]; then
+	: "${FAKE_CODEX_HANDOFF_HELPER:?}"
+	mode=$(sed -n '1p' "$FAKE_CODEX_SCENARIO_DIR/hook-$call_count")
+	value=$(sed -n '2p' "$FAKE_CODEX_SCENARIO_DIR/hook-$call_count")
+	"$FAKE_CODEX_HANDOFF_HELPER" "$worktree" "$mode" "$value"
+fi
+if [[ -n "${FAKE_CODEX_SCENARIO_DIR:-}" && -f "$FAKE_CODEX_SCENARIO_DIR/events-$call_count.jsonl" ]]; then
+	cat "$FAKE_CODEX_SCENARIO_DIR/events-$call_count.jsonl"
+fi
+exit_code=${FAKE_CODEX_EXIT:-0}
+if [[ -n "${FAKE_CODEX_SCENARIO_DIR:-}" && -f "$FAKE_CODEX_SCENARIO_DIR/exit-$call_count" ]]; then
+	exit_code=$(cat "$FAKE_CODEX_SCENARIO_DIR/exit-$call_count")
+fi
+exit "$exit_code"
 FAKE_CODEX
 chmod +x "$fake_codex"
 mkdir -p "$temp_root/tools"
 cp "$fake_codex" "$temp_root/tools/fake codex"
 chmod +x "$temp_root/tools/fake codex"
+
+handoff_helper="$temp_root/recorded-handoff-helper"
+cat >"$handoff_helper" <<'HANDOFF_HELPER'
+#!/usr/bin/env bash
+set -euo pipefail
+root=$1
+mode=$2
+value=${3:-}
+launcher="$root/codex-dev-start.sh"
+archive_prefix='docs/plan/agent-sessions/'
+
+header_value() {
+	local key=$1
+	awk -v prefix="#|$key=" '
+		$0 == "# CODEX_MUTABLE_SESSION_HEADER_BEGIN" { inside = 1; next }
+		$0 == "# CODEX_MUTABLE_SESSION_HEADER_END" { inside = 0; next }
+		inside && index($0, prefix) == 1 { print substr($0, length(prefix) + 1); found++ }
+		END { if (found != 1) exit 2 }
+	' "$launcher"
+}
+
+replace_header() {
+	local key=$1
+	local replacement_value=$2
+	local replacement
+	replacement=$(mktemp "${TMPDIR:-/tmp}/recorded-handoff-header.XXXXXX")
+	awk -v prefix="#|$key=" -v line="#|$key=$replacement_value" '
+		index($0, prefix) == 1 { print line; replaced++; next }
+		{ print }
+		END { if (replaced != 1) exit 2 }
+	' "$launcher" >"$replacement"
+	mv "$replacement" "$launcher"
+	chmod +x "$launcher"
+}
+
+extract_prompt() {
+	awk '
+		$0 == "# CODEX_MUTABLE_PROMPT_BEGIN" { inside = 1; next }
+		$0 == "# CODEX_MUTABLE_PROMPT_END" { exit }
+		inside { print substr($0, 3) }
+	' "$launcher"
+}
+
+sha256_file() {
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$1" | awk '{ print $1 }'
+	elif command -v shasum >/dev/null 2>&1; then
+		shasum -a 256 "$1" | awk '{ print $1 }'
+	else
+		openssl dgst -sha256 "$1" | awk '{ print $NF }'
+	fi
+}
+
+commit_all() {
+	git -C "$root" add codex-dev-start.sh docs/plan
+	git -C "$root" -c commit.gpgSign=false -c core.hooksPath=/dev/null commit -qm "$1"
+}
+
+case $mode in
+next)
+	old_id=$(header_value SESSION_ID)
+	old_rel=$(header_value SESSION_ARCHIVE_REL)
+	new_id=$value
+	new_rel="$archive_prefix$new_id.md"
+	old_leaf=${old_rel##*/}
+	new_leaf=${new_rel##*/}
+	replacement=$(mktemp "${TMPDIR:-/tmp}/recorded-handoff-archive.XXXXXX")
+	awk -v next_leaf="$new_leaf" '
+		$0 == "<!-- CODEX_SESSION_PROMPT_BEGIN -->" { before = 0 }
+		NR == 1 { before = 1 }
+		before && $0 == "Status: NEXT" { print "Status: ANSWERED - HISTORY"; next }
+		before && $0 == "Next: none" { print "Next: [" next_leaf "](" next_leaf ")"; next }
+		before && $0 == "Outcome: pending" { print "Outcome: recorded supervisor handoff"; next }
+		{ print }
+	' "$root/$old_rel" >"$replacement"
+	mv "$replacement" "$root/$old_rel"
+	replace_header SESSION_ID "$new_id"
+	replace_header SESSION_ARCHIVE_REL "$new_rel"
+	replace_header PREVIOUS_SESSION_ARCHIVE_REL "$old_rel"
+	replacement=$(mktemp "${TMPDIR:-/tmp}/recorded-handoff-prompt.XXXXXX")
+	awk -v mission="#|Recorded supervisor generation $new_id." '
+		in_prompt && !inserted && $0 == "#|# Mission" { print; print "#|"; print mission; inserted = 1; next }
+		$0 == "# CODEX_MUTABLE_PROMPT_BEGIN" { in_prompt = 1 }
+		{ print }
+		END { if (!inserted) exit 2 }
+	' "$launcher" >"$replacement"
+	mv "$replacement" "$launcher"
+	chmod +x "$launcher"
+	prompt_file=$(mktemp "${TMPDIR:-/tmp}/recorded-handoff-prompt-bytes.XXXXXX")
+	extract_prompt >"$prompt_file"
+	digest=$(sha256_file "$prompt_file")
+	created="${new_id:0:13}:${new_id:13:2}:${new_id:15:2}${new_id:17:3}:${new_id:20:2}"
+	{
+		printf '# Agent Session: Recorded Supervisor Generation\n\n'
+		printf 'Status: NEXT\n'
+		printf 'Session ID: `%s`\n' "$new_id"
+		printf 'Created: `%s`\n' "$created"
+		printf 'Source: `codex-dev-start.sh`\n'
+		printf 'Prompt SHA-256: `%s`\n' "$digest"
+		printf 'Previous: [%s](%s)\n' "$old_leaf" "$old_leaf"
+		printf 'Next: none\n'
+		printf 'Outcome: pending\n\n'
+		printf 'The block below is the byte-exact Codex prompt argument, including its terminal LF.\n\n'
+		printf '<!-- CODEX_SESSION_PROMPT_BEGIN -->\n'
+		cat "$prompt_file"
+		printf '<!-- CODEX_SESSION_PROMPT_END -->\n'
+	} >"$root/$new_rel"
+	rm -f "$prompt_file"
+	commit_all "recorded next handoff $new_id"
+	;;
+complete)
+	active_rel=$(header_value SESSION_ARCHIVE_REL)
+	replacement=$(mktemp "${TMPDIR:-/tmp}/recorded-complete-archive.XXXXXX")
+	awk '
+		$0 == "<!-- CODEX_SESSION_PROMPT_BEGIN -->" { before = 0 }
+		NR == 1 { before = 1 }
+		before && $0 == "Status: NEXT" { print "Status: ANSWERED - HISTORY"; next }
+		before && $0 == "Outcome: pending" { print "Outcome: recorded roadmap completion"; next }
+		{ print }
+	' "$root/$active_rel" >"$replacement"
+	mv "$replacement" "$root/$active_rel"
+	replace_header SESSION_STATUS COMPLETE
+	replacement=$(mktemp "${TMPDIR:-/tmp}/recorded-complete-plan.XXXXXX")
+	awk '
+		$0 == "<!-- CODEX_AUTHORIZED_CHECKPOINTS_BEGIN -->" { inside = 1 }
+		inside && $0 ~ /^P(2A|2B|[3-8])[|](active|queued)$/ { sub(/[|](active|queued)$/, "|complete") }
+		{ print }
+		$0 == "<!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->" { inside = 0 }
+	' "$root/docs/plan/quality-upgrade.md" >"$replacement"
+	mv "$replacement" "$root/docs/plan/quality-upgrade.md"
+	commit_all 'recorded complete handoff'
+	;;
+empty-commit)
+	git -C "$root" -c commit.gpgSign=false -c core.hooksPath=/dev/null \
+		commit --allow-empty -qm 'recorded unrelated commit'
+	;;
+dirty)
+	printf '%s\n' dirty >"$root/recorded-untracked-state"
+	;;
+invalid)
+	active_rel=$(header_value SESSION_ARCHIVE_REL)
+	sed -e 's/^Status: NEXT$/Status: ANSWERED - HISTORY/' \
+		-e 's/^Outcome: pending$/Outcome: invalid partial handoff/' \
+		"$root/$active_rel" >"$root/$active_rel.invalid"
+	mv "$root/$active_rel.invalid" "$root/$active_rel"
+	commit_all 'recorded invalid handoff'
+	;;
+drift)
+	replacement=$(mktemp "${TMPDIR:-/tmp}/recorded-contract-drift.XXXXXX")
+	sed 's/Supervise fresh non-interactive Codex turns/Supervise drifted Codex turns/' \
+		"$launcher" >"$replacement"
+	mv "$replacement" "$launcher"
+	chmod +x "$launcher"
+	commit_all 'recorded launcher contract drift'
+	;;
+*) exit 64 ;;
+esac
+HANDOFF_HELPER
+chmod +x "$handoff_helper"
+
+write_success_events() {
+	local directory=$1
+	local index=$2
+	mkdir -p "$directory"
+	cat >"$directory/events-$index.jsonl" <<'EVENTS'
+{"type":"thread.started","thread_id":"recorded-success-thread"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"item-command","type":"command_execution","command":"printf '%s' '$(touch EVENT_TEXT_EXECUTED)'","status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item-agent","type":"agent_message","text":"handoff prepared; $(touch EVENT_TEXT_EXECUTED); `touch EVENT_BACKTICK_EXECUTED`"}}
+{"type":"turn.completed","usage":{"input_tokens":1,"cached_input_tokens":0,"output_tokens":1}}
+EVENTS
+}
+
+clone_supervisor_fixture() {
+	local name=$1
+	SUPERVISOR_FIXTURE="$temp_root/$name"
+	git clone -q "$fixture_root" "$SUPERVISOR_FIXTURE"
+	git_at "$SUPERVISOR_FIXTURE" config user.name 'Codex Supervisor Test'
+	git_at "$SUPERVISOR_FIXTURE" config user.email 'codex-supervisor-test@example.invalid'
+	git_at "$SUPERVISOR_FIXTURE" config commit.gpgSign false
+	git_at "$SUPERVISOR_FIXTURE" config core.hooksPath "$temp_root/empty-hooks"
+}
+
+extract_supervisor_log_root() {
+	local stderr_file=$1
+	sed -n 's/^codex-dev-start: logs: //p' "$stderr_file" | tail -n 1
+}
+
+assert_external_log_root() {
+	local root=$1
+	local worktree=$2
+	[[ -n "$root" && -d "$root" ]] || fail 'supervisor did not preserve its log directory'
+	case "$root/" in
+	"$worktree/"*) fail 'supervisor log directory is inside the worktree' ;;
+	esac
+}
 
 "$launcher" --help >"$temp_root/help.stdout" 2>"$temp_root/help.stderr"
 assert_contains "$temp_root/help.stdout" 'Usage: codex-dev-start.sh'
@@ -655,25 +889,122 @@ for heading in \
 done
 pass 'archived prompt is exact, mission-first, and ordered'
 
-record_dir="$temp_root/codex call"
+record_dir="$temp_root/codex no-progress call"
+no_progress_scenario="$temp_root/no-progress scenario"
+write_success_events "$no_progress_scenario" 1
 set +e
-CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$record_dir" FAKE_CODEX_EXIT=23 \
+CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$record_dir" \
+	FAKE_CODEX_SCENARIO_DIR="$no_progress_scenario" \
+	FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" \
 	"$fixture_root/codex-dev-start.sh" \
 	>"$temp_root/start.stdout" 2>"$temp_root/start.stderr"
 start_status=$?
 set -e
-[[ "$start_status" -eq 23 ]] || fail "Codex exit 23 became $start_status"
-[[ $(cat "$record_dir/argc") -eq 5 ]] || fail 'Codex did not receive exactly five arguments'
-[[ $(cat "$record_dir/arg-1") == '-c' ]] || fail 'first Codex argument is not -c'
-[[ $(cat "$record_dir/arg-2") == 'service_tier="default"' ]] ||
+[[ "$start_status" -ne 0 ]] || fail 'successful event stream without a committed handoff passed'
+[[ $(cat "$record_dir/argc") -eq 11 ]] || fail 'Codex did not receive exactly eleven arguments'
+[[ $(cat "$record_dir/arg-1") == 'exec' ]] || fail 'first Codex argument is not exec'
+[[ $(cat "$record_dir/arg-2") == '-c' ]] || fail 'second Codex argument is not -c'
+[[ $(cat "$record_dir/arg-3") == 'service_tier="default"' ]] ||
 	fail 'Codex service tier is not explicitly normal'
-[[ $(cat "$record_dir/arg-3") == '-C' ]] || fail 'third Codex argument is not -C'
-[[ $(cat "$record_dir/arg-4") == "$fixture_root" ]] || fail 'Codex worktree argument is wrong'
-cmp -s "$record_dir/arg-5" "$temp_root/archive-prompt" ||
+[[ $(cat "$record_dir/arg-4") == '--sandbox' ]] || fail 'fourth Codex argument is not --sandbox'
+[[ $(cat "$record_dir/arg-5") == 'workspace-write' ]] || fail 'Codex sandbox is not workspace-write'
+[[ $(cat "$record_dir/arg-6") == '-C' ]] || fail 'sixth Codex argument is not -C'
+[[ $(cat "$record_dir/arg-7") == "$fixture_root" ]] || fail 'Codex worktree argument is wrong'
+[[ $(cat "$record_dir/arg-8") == '--json' ]] || fail 'eighth Codex argument is not --json'
+[[ $(cat "$record_dir/arg-9") == '--output-last-message' ]] ||
+	fail 'ninth Codex argument is not --output-last-message'
+[[ -n $(cat "$record_dir/arg-10") ]] || fail 'Codex final-message path is empty'
+cmp -s "$record_dir/arg-11" "$temp_root/archive-prompt" ||
 	fail 'Codex argument differs from archived bytes, including terminal LF'
 [[ ! -s "$temp_root/start.stdout" ]] || fail 'launcher polluted Codex stdout'
-[[ ! -s "$temp_root/start.stderr" ]] || fail 'clean start wrote a warning'
-pass 'interactive invocation forces normal service tier and preserves exact prompt bytes'
+assert_contains "$temp_root/start.stderr" 'codex-dev-start: agent: handoff prepared; $(touch EVENT_TEXT_EXECUTED)'
+assert_contains "$temp_root/start.stderr" 'Codex turn completed'
+assert_contains "$temp_root/start.stderr" 'Codex turn made no committed HEAD progress'
+log_root=$(extract_supervisor_log_root "$temp_root/start.stderr")
+assert_external_log_root "$log_root" "$fixture_root"
+cmp -s "$no_progress_scenario/events-1.jsonl" \
+	"$log_root/turn-001-$active_id/events.jsonl" ||
+	fail 'raw external JSONL log differs from the Codex event stream'
+[[ $(cat "$record_dir/call-count") -eq 1 ]] || fail 'no-progress failure started another turn'
+[[ ! -e "$fixture_root/EVENT_TEXT_EXECUTED" && ! -e "$fixture_root/EVENT_BACKTICK_EXECUTED" ]] ||
+	fail 'Codex event text was executed as shell input'
+pass 'non-interactive argv, progress, raw logs, data safety, and no-progress stop'
+
+turn_failed_scenario="$temp_root/turn-failed scenario"
+mkdir -p "$turn_failed_scenario"
+cat >"$turn_failed_scenario/events-1.jsonl" <<'EVENTS'
+{"type":"thread.started","thread_id":"recorded-turn-failed"}
+{"type":"turn.started"}
+{"type":"turn.failed","error":{"message":"recorded failure"}}
+EVENTS
+expect_failure 'turn.failed terminal' 'stream contains 1 failure/error terminal event(s)' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/turn-failed-record" \
+		FAKE_CODEX_SCENARIO_DIR="$turn_failed_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$fixture_root/codex-dev-start.sh"
+
+error_scenario="$temp_root/error-event scenario"
+mkdir -p "$error_scenario"
+cat >"$error_scenario/events-1.jsonl" <<'EVENTS'
+{"type":"thread.started","thread_id":"recorded-error"}
+{"type":"turn.started"}
+{"type":"error","message":"recorded terminal error"}
+EVENTS
+expect_failure 'error terminal' 'stream contains 1 failure/error terminal event(s)' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/error-record" \
+		FAKE_CODEX_SCENARIO_DIR="$error_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$fixture_root/codex-dev-start.sh"
+
+malformed_scenario="$temp_root/malformed-event scenario"
+mkdir -p "$malformed_scenario"
+printf '%s\n' \
+	'{"type":"thread.started","thread_id":"recorded-malformed"}' \
+	'{"type":"turn.started"}' \
+	'{"type":BROKEN}' \
+	'{"type":"turn.completed"}' >"$malformed_scenario/events-1.jsonl"
+expect_failure 'malformed JSONL' 'is not valid JSON' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/malformed-record" \
+		FAKE_CODEX_SCENARIO_DIR="$malformed_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$fixture_root/codex-dev-start.sh"
+
+truncated_scenario="$temp_root/truncated-event scenario"
+mkdir -p "$truncated_scenario"
+printf '%s\n%s\n%s' \
+	'{"type":"thread.started","thread_id":"recorded-truncated"}' \
+	'{"type":"turn.started"}' \
+	'{"type":"turn.completed"}' >"$truncated_scenario/events-1.jsonl"
+expect_failure 'truncated JSONL' 'is truncated (missing terminal LF)' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/truncated-record" \
+		FAKE_CODEX_SCENARIO_DIR="$truncated_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$fixture_root/codex-dev-start.sh"
+
+contradictory_scenario="$temp_root/contradictory-event scenario"
+mkdir -p "$contradictory_scenario"
+cat >"$contradictory_scenario/events-1.jsonl" <<'EVENTS'
+{"type":"thread.started","thread_id":"recorded-contradictory"}
+{"type":"turn.started"}
+{"type":"turn.completed"}
+{"type":"turn.failed","error":"contradiction"}
+EVENTS
+expect_failure 'contradictory terminals' 'appears after a terminal event' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/contradictory-record" \
+		FAKE_CODEX_SCENARIO_DIR="$contradictory_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$fixture_root/codex-dev-start.sh"
+
+empty_scenario="$temp_root/empty-event scenario"
+mkdir -p "$empty_scenario"
+: >"$empty_scenario/events-1.jsonl"
+expect_failure 'empty JSONL population' 'event stream is empty' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/empty-record" \
+		FAKE_CODEX_SCENARIO_DIR="$empty_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$fixture_root/codex-dev-start.sh"
+
+nonzero_scenario="$temp_root/nonzero scenario"
+write_success_events "$nonzero_scenario" 1
+printf '%s\n' 23 >"$nonzero_scenario/exit-1"
+expect_failure 'non-zero Codex exit' 'Codex exited 23' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/nonzero-record" \
+		FAKE_CODEX_SCENARIO_DIR="$nonzero_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$fixture_root/codex-dev-start.sh"
 
 dirty_name='private-untracked-filename-must-not-leak'
 printf 'fixture\n' >"$fixture_root/$dirty_name"
@@ -686,8 +1017,128 @@ assert_contains "$temp_root/dirty-prompt.stderr" \
 	'worktree has local changes; inspect them before editing.'
 assert_not_contains "$temp_root/dirty-prompt" "$dirty_name"
 assert_not_contains "$temp_root/dirty-prompt.stderr" "$dirty_name"
+expect_failure 'dirty supervised start' 'worktree must be clean before starting a supervised turn' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/not-called-dirty-start" \
+		"$fixture_root/codex-dev-start.sh"
+[[ ! -e "$temp_root/not-called-dirty-start" ]] || fail 'dirty start invoked Codex'
 rm "$fixture_root/$dirty_name"
-pass 'dirty worktree is allowed without prompt drift or path leakage'
+pass 'dirty inspection preserves prompt privacy while normal start fails closed'
+
+clone_supervisor_fixture 'successful supervisor repository'
+successful_supervisor_root=$SUPERVISOR_FIXTURE
+success_scenario="$temp_root/successful supervisor scenario"
+write_success_events "$success_scenario" 1
+write_success_events "$success_scenario" 2
+printf '%s\n%s\n' next '2099-01-02T030405+0000-loop-next' >"$success_scenario/hook-1"
+printf '%s\n\n' complete >"$success_scenario/hook-2"
+success_record="$temp_root/successful supervisor record"
+CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$success_record" \
+	FAKE_CODEX_SCENARIO_DIR="$success_scenario" \
+	FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" \
+	"$successful_supervisor_root/codex-dev-start.sh" \
+	>"$temp_root/success-supervisor.stdout" 2>"$temp_root/success-supervisor.stderr"
+[[ ! -s "$temp_root/success-supervisor.stdout" ]] || fail 'successful supervisor polluted stdout'
+[[ $(cat "$success_record/call-count") -eq 2 ]] ||
+	fail 'successful supervisor did not run exactly two fresh turns'
+assert_contains "$temp_root/success-supervisor.stderr" \
+	"committed handoff validated: $active_id -> 2099-01-02T030405+0000-loop-next"
+assert_contains "$temp_root/success-supervisor.stderr" 'authorized roadmap COMPLETE'
+success_log_root=$(extract_supervisor_log_root "$temp_root/success-supervisor.stderr")
+assert_external_log_root "$success_log_root" "$successful_supervisor_root"
+cmp -s "$success_scenario/events-1.jsonl" \
+	"$success_log_root/turn-001-$active_id/events.jsonl" ||
+	fail 'first successful raw log was not preserved'
+cmp -s "$success_scenario/events-2.jsonl" \
+	"$success_log_root/turn-002-2099-01-02T030405+0000-loop-next/events.jsonl" ||
+	fail 'second successful raw log was not preserved'
+second_archive="$successful_supervisor_root/docs/plan/agent-sessions/2099-01-02T030405+0000-loop-next.md"
+extract_archive_prompt "$second_archive" >"$temp_root/second-supervised-prompt"
+cmp -s "$success_record/call-2/arg-11" "$temp_root/second-supervised-prompt" ||
+	fail 'second fresh turn did not receive the committed NEXT prompt bytes'
+[[ ! -e "$successful_supervisor_root/EVENT_TEXT_EXECUTED" && \
+	! -e "$successful_supervisor_root/EVENT_BACKTICK_EXECUTED" ]] ||
+	fail 'successful supervisor executed event text'
+[[ -z $(git_at "$successful_supervisor_root" status --porcelain=v1 --untracked-files=all) ]] ||
+	fail 'successful supervisor left its worktree dirty'
+pass 'committed NEXT handoff starts one fresh successor and COMPLETE stops the loop'
+
+clone_supervisor_fixture 'unchanged-session supervisor repository'
+unchanged_root=$SUPERVISOR_FIXTURE
+unchanged_scenario="$temp_root/unchanged-session scenario"
+write_success_events "$unchanged_scenario" 1
+printf '%s\n\n' empty-commit >"$unchanged_scenario/hook-1"
+expect_failure 'unchanged session handoff' 'post-turn session identity did not change' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/unchanged-record" \
+		FAKE_CODEX_SCENARIO_DIR="$unchanged_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$unchanged_root/codex-dev-start.sh"
+
+clone_supervisor_fixture 'dirty-handoff supervisor repository'
+dirty_handoff_root=$SUPERVISOR_FIXTURE
+dirty_handoff_scenario="$temp_root/dirty-handoff scenario"
+write_success_events "$dirty_handoff_scenario" 1
+printf '%s\n\n' dirty >"$dirty_handoff_scenario/hook-1"
+expect_failure 'dirty handoff' 'post-turn worktree is dirty' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/dirty-handoff-record" \
+		FAKE_CODEX_SCENARIO_DIR="$dirty_handoff_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$dirty_handoff_root/codex-dev-start.sh"
+
+clone_supervisor_fixture 'invalid-handoff supervisor repository'
+invalid_handoff_root=$SUPERVISOR_FIXTURE
+invalid_handoff_scenario="$temp_root/invalid-handoff scenario"
+write_success_events "$invalid_handoff_scenario" 1
+printf '%s\n\n' invalid >"$invalid_handoff_scenario/hook-1"
+expect_failure 'invalid partial handoff' 'active archive status does not match launcher state' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/invalid-handoff-record" \
+		FAKE_CODEX_SCENARIO_DIR="$invalid_handoff_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$invalid_handoff_root/codex-dev-start.sh"
+
+clone_supervisor_fixture 'contract-drift supervisor repository'
+contract_drift_root=$SUPERVISOR_FIXTURE
+contract_drift_scenario="$temp_root/contract-drift scenario"
+write_success_events "$contract_drift_scenario" 1
+printf '%s\n\n' drift >"$contract_drift_scenario/hook-1"
+expect_failure 'post-turn launcher contract' 'launcher contract drifted outside its mutable regions' \
+	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/contract-drift-record" \
+		FAKE_CODEX_SCENARIO_DIR="$contract_drift_scenario" \
+		FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" "$contract_drift_root/codex-dev-start.sh"
+
+clone_supervisor_fixture 'signal supervisor repository'
+signal_root=$SUPERVISOR_FIXTURE
+signal_scenario="$temp_root/signal scenario"
+mkdir -p "$signal_scenario"
+: >"$signal_scenario/wait-1"
+signal_record="$temp_root/signal record"
+CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$signal_record" \
+	FAKE_CODEX_SCENARIO_DIR="$signal_scenario" \
+	FAKE_CODEX_HANDOFF_HELPER="$handoff_helper" \
+	"$signal_root/codex-dev-start.sh" \
+	>"$temp_root/signal.stdout" 2>"$temp_root/signal.stderr" &
+supervisor_pid=$!
+signal_ready='no'
+for signal_attempt in $(seq 1 100); do
+	if [[ -f "$signal_record/ready" ]]; then
+		signal_ready='yes'
+		break
+	fi
+	sleep 0.05
+done
+[[ "$signal_ready" == 'yes' ]] || fail 'signal recorder did not start its child'
+kill -TERM "$supervisor_pid"
+set +e
+wait "$supervisor_pid"
+signal_status=$?
+set -e
+[[ "$signal_status" -ne 0 ]] || fail 'signal interruption returned success'
+[[ -f "$signal_record/terminated" ]] || fail 'signal was not forwarded to the active Codex child'
+[[ $(cat "$signal_record/call-count") -eq 1 ]] || fail 'signal interruption started a successor turn'
+assert_contains "$temp_root/signal.stderr" 'interrupted; inspect'
+signal_log_root=$(extract_supervisor_log_root "$temp_root/signal.stderr")
+assert_external_log_root "$signal_log_root" "$signal_root"
+[[ -f "$signal_log_root/turn-001-$active_id/events.jsonl" ]] ||
+	fail 'signal interruption did not retain the partial raw log'
+[[ -z $(git_at "$signal_root" status --porcelain=v1 --untracked-files=all) ]] ||
+	fail 'signal interruption mutated task authority'
+pass 'signal interruption stops the active child and preserves one partial log'
 
 real_git=$(command -v git)
 git_wrapper_dir="$temp_root/git-wrapper"
@@ -913,7 +1364,7 @@ if [[ "$nested_mode" == 'no' ]]; then
 		sed -n '1,120p' "$temp_root/nested-test.stderr" >&2
 		fail 'contract suite failed from a source archive with a second-generation header'
 	fi
-	assert_contains "$temp_root/nested-test.stdout" 'codex dev start contract: PASS (47 checks)'
+	assert_contains "$temp_root/nested-test.stdout" 'codex dev start contract: PASS (60 checks)'
 	[[ ! -s "$temp_root/nested-test.stderr" ]] || fail 'nested second-generation test warned'
 	pass 'contract suite boots from a source archive with a second-generation header'
 	if CODEX_DEV_START_NESTED=1 "$test_shell" \
@@ -994,19 +1445,20 @@ sed "s|^Next: none$|Next: [$old_leaf]($old_leaf)|" \
 expect_failure 'non-terminal COMPLETE tail' 'active archive tail must have Next: none' \
 	env CODEX_BIN="$fake_codex" "$fixture_root/codex-dev-start.sh" --check
 cp "$temp_root/complete-tail-original" "$fixture_root/$new_rel"
-expect_failure 'completed session start' 'session has no NEXT task' \
-	env CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/not-called-complete" \
-	"$fixture_root/codex-dev-start.sh"
+CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$temp_root/not-called-complete" \
+	"$fixture_root/codex-dev-start.sh" \
+	>"$temp_root/complete-start.stdout" 2>"$temp_root/complete-start.stderr"
+assert_contains "$temp_root/complete-start.stderr" 'authorized roadmap already COMPLETE'
 [[ ! -e "$temp_root/not-called-complete" ]] || fail 'COMPLETE session invoked Codex'
-pass 'COMPLETE state validates history but cannot replay a task'
+pass 'COMPLETE state validates history, reports success, and cannot replay a task'
 
 [[ -z $(git_fixture status --porcelain=v1 --untracked-files=all) ]] ||
 	fail 'launcher contract tests left the fixture worktree dirty'
 pass 'hermetic fixture remains clean after all lifecycle probes'
 
-expected_pass_count=49
+expected_pass_count=62
 if [[ "$nested_mode" == 'yes' ]]; then
-	expected_pass_count=47
+	expected_pass_count=60
 fi
 [[ "$pass_count" -eq "$expected_pass_count" ]] ||
 	fail "contract control count is $pass_count, expected $expected_pass_count"

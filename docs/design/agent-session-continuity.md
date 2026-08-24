@@ -55,18 +55,61 @@ The launcher:
 - derives the repository root from its own physical path;
 - requires its own source to be a regular, non-symlink file;
 - requires the attached `codex/upgrade-quality` branch and expected plan files;
-- accepts `--check`, `--print-prompt`, and a normal interactive start;
-- accepts a dirty worktree, emits one static warning, and never inserts Git
-  filenames or status output into the prompt;
+- accepts `--check`, `--print-prompt`, and a normal supervised start;
+- allows dirty inspection through `--check` and `--print-prompt`, emits one
+  static warning, and never inserts Git filenames or status output into the
+  prompt; normal supervised start requires a clean worktree;
 - fails startup when Git status cannot be measured;
-- resolves `CODEX_BIN` to an external executable file, starts that exact path as
-  `codex -c 'service_tier="default"' -C <repo> <prompt>`, and inherits the
-  user's Codex profile except for this explicit normal-service override;
+- resolves `CODEX_BIN` to an external executable file, requires an external
+  `python3` for structured-event validation, and inherits the user's Codex
+  profile except for explicit normal-service and workspace-write overrides;
 - never resumes an old session or invokes publication commands.
 
 The archive block and decoded launcher prompt are byte-equal, including one
 terminal LF. `--print-prompt` and the Codex argument use those same bytes. Dirty
 state does not rewrite the prompt.
+
+## Non-Interactive Supervisor Protocol
+
+Normal invocation snapshots the validated HEAD, session ID, active archive,
+archive count, and normalized stable-skeleton digest, then starts exactly one
+fresh process with these arguments:
+
+```text
+codex exec -c service_tier="default" --sandbox workspace-write -C <repo> --json --output-last-message <external-path> <exact-prompt>
+```
+
+It never uses `resume` or hands task authority to agent output. Before the first
+turn it creates one unique physical log directory beneath `TMPDIR` (or `/tmp`)
+and rejects a log root inside the worktree. Each fresh turn has its own session-
+named directory containing the byte-exact `events.jsonl`, Codex stderr, and the
+requested final-message path. The launcher prints the log root once and emits
+short progress records for thread start, commands, file changes, agent messages,
+and the terminal turn event. Event strings are printed only as `%s` data by the
+parser; no event field is sourced, evaluated, or executed.
+
+The embedded parser writes each raw input line before decoding it as JSON. A
+successful stream has a non-empty population, exactly one `thread.started`, one
+`turn.started`, and one final `turn.completed`, with no event after that
+terminal. Invalid UTF-8/JSON, an unterminated final line, an empty stream,
+duplicate or contradictory terminals, `turn.failed`, or `error` makes the turn
+fail. The Codex process must independently exit zero. Child stderr and partial
+raw JSONL remain in the printed log directory for diagnosis.
+
+Only after both process and stream succeed does the original parent re-snapshot
+the on-disk launcher and validate the full repository and archive contract. The
+normalized stable skeleton must equal the pre-turn digest, the worktree must be
+clean and attached, and HEAD must have changed. Continuation additionally
+requires a changed session ID, the former archive answered with a reciprocal
+link, and exactly one newly committed archive that is the sole valid `NEXT`
+tail. A `COMPLETE` handoff instead retains and answers the terminal session,
+adds no archive, and succeeds only when the authorized queue has no active or
+queued checkpoint. Any other state stops before another process starts.
+
+`HUP`, `INT`, or `TERM` is forwarded to the active Codex process and stops the
+event parser and parent with a non-zero status. The parent waits for the child,
+does not start another turn, retains the partial logs, and does not alter task
+authority.
 
 ## Archive Graph
 
@@ -133,17 +176,22 @@ start and `--print-prompt` fail instead of replaying the answered task.
 
 | Premise | Evidence | Recheck | Consequence if false |
 | --- | --- | --- | --- |
-| A fresh interactive Codex session accepts an initial prompt and working directory. | Measured 2026-08-24: local `codex-cli 0.149.0` exposes `codex [PROMPT]` and `-C`; the [official CLI reference](https://developers.openai.com/codex/cli/reference/) documents both. | Recording `CODEX_BIN` contract test. | Stop before launch and repair the invocation contract. |
+| A fresh non-interactive Codex turn accepts explicit working-directory, sandbox, JSONL, final-message, service-tier, and prompt values. | Measured 2026-08-24: local `codex-cli 0.149.0` exposes `exec`, `-C`, `--sandbox workspace-write`, `--json`, and `--output-last-message`; the [official non-interactive-mode documentation](https://learn.chatgpt.com/docs/non-interactive-mode) defines fresh `codex exec` and the JSONL turn events. | Recording `CODEX_BIN` asserts all eleven argument bytes and supplies characterized success/failure streams without invoking real Codex. | Stop before launch and repair the invocation or event contract. |
 | Mutable task data can remain non-executable inside one script. | Contract test injects raw commands into each tail region, invokes the script, and observes that neither sentinel is created. | `/bin/bash test/codex_dev_start_test.sh`. | Stop startup and move data behind a verified execution boundary. |
 | One linked archive graph detects duplicate or lost handoffs. | Contract test exercises a second generation, duplicate `NEXT`, disconnected history, a cycle, missing predecessor, broken backlink, historical prompt drift, and `COMPLETE`. | `/bin/bash test/codex_dev_start_test.sh`. | Reject startup until the graph is repaired from Git history. |
 | Dirty recovery requires facts, not injected filenames. | Dirty fixture records the exact Codex argument and static stderr warning. | Compare clean, dirty, archived, and recorded prompt bytes. | Fail startup rather than insert raw status. |
 | Restart commits can exclude unrelated work. | Git supports explicit path staging while other changes remain unstaged. | Inspect staged names before every restart commit. | Do not commit; leave a decision-ready handover. |
-| One startup can avoid a globally selected Fast mode. | Measured 2026-08-24: local `codex-cli 0.149.0` accepts `-c key=value`, and `codex --strict-config -c 'service_tier="default"' --help` exits 0; the [official service-tier reference](https://developers.openai.com/api/reference/cli/resources/responses/methods/create) defines `default` as standard pricing/performance and `fast`/`priority` as Fast mode. | Recording `CODEX_BIN` asserts the exact five launch arguments. | Stop startup and update the pinned invocation contract. |
+| One startup can avoid a globally selected Fast mode. | Measured 2026-08-24: local `codex-cli 0.149.0` accepts `-c key=value`, and `codex --strict-config -c 'service_tier="default"' --help` exits 0; the [official service-tier reference](https://developers.openai.com/api/reference/cli/resources/responses/methods/create) defines `default` as standard pricing/performance and `fast`/`priority` as Fast mode. | Recording `CODEX_BIN` asserts the exact normal-service argument. | Stop startup and update the pinned invocation contract. |
 
 ## Portability
 
 `make test-agent-start` invokes `/bin/bash`. That is Bash 3.2 on the supported
-macOS host and Bash supplied by the Linux image. The test chooses
+macOS host and Bash supplied by the Linux image. The 62-control suite never
+invokes real Codex: its recording executable captures argv and prompt bytes,
+emits JSONL, performs synthetic committed handoffs, and waits for a forwarded
+signal. It rejects empty event and turn populations, event-text execution,
+malformed/truncated/failed streams, no progress, dirty or invalid handoffs,
+contract drift, replay, and premature completion. The test chooses
 `sha256sum` first, then macOS `shasum -a 256`, then `openssl`. Git fixtures
 disable system/global config, templates, signing, and hooks. The checked-in
 launcher and archive graph are copied into a clean synthetic repository before
@@ -165,6 +213,11 @@ launcher test itself has no network dependency.
 - A `NEXT` launcher has exactly one active `NEXT` tail.
 - The mission is the first decoded prompt line and names one primary outcome.
 - The launcher never evaluates mutable task bytes.
+- The supervisor never evaluates JSONL event bytes or trusts final prose as
+  lifecycle evidence.
+- One successful process may authorize at most one fresh successor, and only
+  through a clean committed reciprocal handoff.
+- Raw and partial turn logs remain outside the worktree.
 - Raw worktree data never becomes prompt input.
 - Every session leaves one accurate `NEXT` tail while authorized work remains.
 - `COMPLETE` is valid only when all authorized checkpoints are complete.

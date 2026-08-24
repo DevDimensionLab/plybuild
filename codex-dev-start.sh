@@ -11,13 +11,14 @@ usage() {
 	cat <<EOF
 Usage: $(basename "$0") [--check|--print-prompt|--help]
 
-Start the prepared interactive Codex development session in normal service mode.
+Supervise fresh non-interactive Codex turns in normal service mode.
 
   --check         Validate the worktree, archive chain, and Codex executable.
   --print-prompt  Validate and print the prompt without starting Codex.
   --help          Show this help text.
 
 CODEX_BIN may name an alternate Codex executable for contract tests.
+Raw JSONL and diagnostics are stored in a unique directory outside the worktree.
 EOF
 }
 
@@ -427,6 +428,7 @@ validate_archive_set() {
 	rm -f "$visited"
 	[[ "$visited_count" -eq "$total_count" ]] ||
 		die 'archive set contains disconnected history'
+	ARCHIVE_TOTAL_COUNT=$total_count
 }
 
 validate_active_prompt() {
@@ -471,6 +473,72 @@ resolve_codex() {
 	CODEX_EXECUTABLE="$candidate_dir/$(basename "$candidate")"
 	[[ -f "$CODEX_EXECUTABLE" && -x "$CODEX_EXECUTABLE" ]] ||
 		die 'configured Codex executable is unavailable'
+}
+
+resolve_python() {
+	local candidate
+	local candidate_dir
+	candidate=$(type -P -- python3 2>/dev/null) ||
+		die 'python3 is required to validate Codex JSONL events'
+	[[ -f "$candidate" && -x "$candidate" ]] ||
+		die 'python3 is required to validate Codex JSONL events'
+	candidate_dir=$(cd -P "$(dirname "$candidate")" 2>/dev/null && pwd) ||
+		die 'python3 is required to validate Codex JSONL events'
+	PYTHON_EXECUTABLE="$candidate_dir/$(basename "$candidate")"
+}
+
+normalized_launcher_digest() {
+	local source_file=$1
+	local normalized
+	local digest
+	normalized=$(mktemp "${TMPDIR:-/tmp}/codex-dev-start-skeleton.XXXXXX") ||
+		die 'could not create launcher contract validation state'
+	if ! awk '
+		$0 == "# CODEX_MUTABLE_SESSION_HEADER_BEGIN" {
+			if (inside) exit 2
+			inside = "header"
+			header_begin++
+			print
+			print "__CODEX_MUTABLE_SESSION_HEADER__"
+			next
+		}
+		$0 == "# CODEX_MUTABLE_SESSION_HEADER_END" {
+			if (inside != "header") exit 2
+			inside = ""
+			header_end++
+			print
+			next
+		}
+		$0 == "# CODEX_MUTABLE_PROMPT_BEGIN" {
+			if (inside) exit 2
+			inside = "prompt"
+			prompt_begin++
+			print
+			print "__CODEX_MUTABLE_PROMPT__"
+			next
+		}
+		$0 == "# CODEX_MUTABLE_PROMPT_END" {
+			if (inside != "prompt") exit 2
+			inside = ""
+			prompt_end++
+			print
+			next
+		}
+		!inside { print }
+		END {
+			if (inside || header_begin != 1 || header_end != 1 ||
+			    prompt_begin != 1 || prompt_end != 1) exit 2
+		}
+	' "$source_file" >"$normalized"; then
+		rm -f "$normalized"
+		die 'launcher contract normalization failed'
+	fi
+	digest=$(sha256_file "$normalized") || {
+		rm -f "$normalized"
+		die 'no SHA-256 implementation is available'
+	}
+	rm -f "$normalized"
+	printf '%s\n' "$digest"
 }
 
 validate_authorized_queue() {
@@ -523,6 +591,8 @@ validate_authorized_queue() {
 	' "$plan") || die 'authorized checkpoint queue is malformed'
 	active_count=${counts%% *}
 	queued_count=${counts#* }
+	AUTHORIZED_ACTIVE_COUNT=$active_count
+	AUTHORIZED_QUEUED_COUNT=$queued_count
 	if [[ "$SESSION_STATUS" == 'COMPLETE' ]]; then
 		[[ "$active_count" -eq 0 && "$queued_count" -eq 0 ]] ||
 			die 'session cannot be COMPLETE while authorized checkpoints remain'
@@ -532,43 +602,47 @@ validate_authorized_queue() {
 	fi
 }
 
-main() {
-	local mode='start'
-	local git_root
-	local active_branch
-	local required_file
-	local git_status
+cleanup_supervisor() {
+	if [[ -n "${LAUNCHER_SOURCE:-}" ]]; then
+		rm -f "$LAUNCHER_SOURCE"
+	fi
+	if [[ -n "${ACTIVE_EVENT_FIFO:-}" ]]; then
+		rm -f "$ACTIVE_EVENT_FIFO"
+	fi
+}
 
-	case $# in
-	0) ;;
-	1)
-		case $1 in
-		--check) mode='check' ;;
-		--print-prompt) mode='print' ;;
-		--help|-h)
-			usage
-			exit 0
-			;;
-		*) die "unknown argument: $1" ;;
-		esac
-		;;
-	*) die 'expected at most one argument' ;;
-	esac
+forward_supervisor_signal() {
+	SUPERVISOR_INTERRUPTED='yes'
+	printf '%s\n' 'codex-dev-start: interruption requested; stopping the active turn.' >&2
+	if [[ -n "${ACTIVE_CODEX_PID:-}" ]]; then
+		kill -TERM "$ACTIVE_CODEX_PID" 2>/dev/null || true
+	fi
+	if [[ -n "${ACTIVE_PARSER_PID:-}" ]]; then
+		kill -TERM "$ACTIVE_PARSER_PID" 2>/dev/null || true
+	fi
+}
 
-	SCRIPT_DIR=$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-	SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
+snapshot_launcher_source() {
+	if [[ -n "${LAUNCHER_SOURCE:-}" ]]; then
+		rm -f "$LAUNCHER_SOURCE"
+	fi
 	[[ -f "$SCRIPT_PATH" && ! -L "$SCRIPT_PATH" ]] ||
 		die 'launcher must be a regular, non-symlink file'
-	REPO_ROOT=$SCRIPT_DIR
-	CODEX_BIN=${CODEX_BIN:-codex}
 	LAUNCHER_SOURCE=$(mktemp "${TMPDIR:-/tmp}/codex-dev-start-source.XXXXXX") ||
 		die 'could not create launcher source snapshot'
 	if ! cp "$SCRIPT_PATH" "$LAUNCHER_SOURCE"; then
 		rm -f "$LAUNCHER_SOURCE"
+		LAUNCHER_SOURCE=''
 		die 'could not snapshot launcher source'
 	fi
-	trap 'rm -f "$LAUNCHER_SOURCE"' EXIT
+}
 
+validate_session_state() {
+	local git_root
+	local active_branch
+	local required_file
+
+	snapshot_launcher_source
 	validate_mutable_regions
 	SESSION_STATUS=$(extract_header_value 'SESSION_STATUS') || die 'session status is missing'
 	SESSION_ID=$(extract_header_value 'SESSION_ID') || die 'session ID is missing'
@@ -623,10 +697,297 @@ main() {
 	validate_archive_set
 	validate_active_prompt
 	resolve_codex
-
-	git_status=$(git -C "$REPO_ROOT" status --porcelain=v1 --untracked-files=all) ||
+	resolve_python
+	CURRENT_SKELETON_DIGEST=$(normalized_launcher_digest "$LAUNCHER_SOURCE")
+	CURRENT_HEAD=$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null) ||
+		die 'could not inspect worktree HEAD'
+	WORKTREE_STATUS=$(git -C "$REPO_ROOT" status --porcelain=v1 --untracked-files=all) ||
 		die 'could not inspect worktree status'
-	if [[ -n "$git_status" ]]; then
+}
+
+create_supervisor_log_root() {
+	local requested_root=${TMPDIR:-/tmp}
+	local resolved_root
+	local created
+	resolved_root=$(cd -P "$requested_root" 2>/dev/null && pwd) ||
+		die 'supervisor log root is unavailable'
+	case "$resolved_root/" in
+	"$REPO_ROOT/"*) die 'supervisor log directory must be outside the worktree' ;;
+	esac
+	created=$(mktemp -d "$resolved_root/codex-dev-start.$SESSION_ID.XXXXXX") ||
+		die 'could not create external supervisor log directory'
+	SUPERVISOR_LOG_ROOT=$(cd -P "$created" && pwd) ||
+		die 'could not resolve external supervisor log directory'
+	case "$SUPERVISOR_LOG_ROOT/" in
+	"$REPO_ROOT/"*) die 'supervisor log directory must be outside the worktree' ;;
+	esac
+	printf 'codex-dev-start: logs: %s\n' "$SUPERVISOR_LOG_ROOT" >&2
+}
+
+write_event_parser() {
+	EVENT_PARSER_PATH="$SUPERVISOR_LOG_ROOT/validate-events.py"
+	cat >"$EVENT_PARSER_PATH" <<'PY'
+import json
+import sys
+
+
+def concise(value):
+    if not isinstance(value, str):
+        return ""
+    single_line = " ".join(value.split())
+    return single_line if len(single_line) <= 180 else single_line[:177] + "..."
+
+
+raw_path = sys.argv[1]
+errors = []
+event_count = 0
+thread_started = 0
+turn_started = 0
+completed = 0
+failure_terminals = 0
+terminal_seen = False
+
+with open(raw_path, "wb") as raw_stream:
+    for line_number, raw_line in enumerate(sys.stdin.buffer, 1):
+        raw_stream.write(raw_line)
+        raw_stream.flush()
+        event_count += 1
+        if not raw_line.endswith(b"\n"):
+            errors.append("line {} is truncated (missing terminal LF)".format(line_number))
+        try:
+            event = json.loads(raw_line)
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            errors.append("line {} is not valid JSON: {}".format(line_number, error))
+            continue
+        if not isinstance(event, dict) or not isinstance(event.get("type"), str):
+            errors.append("line {} is not a JSON object with a string type".format(line_number))
+            continue
+        event_type = event["type"]
+        if terminal_seen:
+            errors.append("event {} appears after a terminal event".format(event_type))
+        if event_type == "thread.started":
+            thread_started += 1
+            thread_id = concise(event.get("thread_id"))
+            print("codex-dev-start: turn thread started{}".format(
+                " (" + thread_id + ")" if thread_id else ""), file=sys.stderr, flush=True)
+        elif event_type == "turn.started":
+            turn_started += 1
+        elif event_type in ("item.started", "item.completed"):
+            item = event.get("item")
+            if isinstance(item, dict):
+                item_type = item.get("type")
+                if item_type == "agent_message" and event_type == "item.completed":
+                    print("codex-dev-start: agent: " + concise(item.get("text")),
+                          file=sys.stderr, flush=True)
+                elif item_type == "command_execution":
+                    command = concise(item.get("command"))
+                    if command:
+                        state = "completed" if event_type == "item.completed" else "started"
+                        print("codex-dev-start: command {}: {}".format(state, command),
+                              file=sys.stderr, flush=True)
+                elif item_type == "file_change" and event_type == "item.completed":
+                    print("codex-dev-start: file change completed", file=sys.stderr, flush=True)
+        if event_type == "turn.completed":
+            terminal_seen = True
+            completed += 1
+            print("codex-dev-start: Codex turn completed", file=sys.stderr, flush=True)
+        elif event_type in ("turn.failed", "error"):
+            terminal_seen = True
+            failure_terminals += 1
+            detail = concise(event.get("error")) or concise(event.get("message"))
+            print("codex-dev-start: Codex terminal failure{}".format(
+                ": " + detail if detail else ""), file=sys.stderr, flush=True)
+
+if event_count == 0:
+    errors.append("event stream is empty")
+if thread_started != 1:
+    errors.append("expected exactly one thread.started event, found {}".format(thread_started))
+if turn_started != 1:
+    errors.append("expected exactly one turn.started event, found {}".format(turn_started))
+if completed != 1:
+    errors.append("expected exactly one turn.completed event, found {}".format(completed))
+if failure_terminals:
+    errors.append("stream contains {} failure/error terminal event(s)".format(failure_terminals))
+
+if errors:
+    for error in errors:
+        print("codex-dev-start: invalid Codex JSONL: " + error, file=sys.stderr)
+    raise SystemExit(1)
+PY
+	chmod 600 "$EVENT_PARSER_PATH"
+}
+
+run_codex_turn() {
+	local turn_number=$1
+	local turn_label
+	local turn_dir
+	local raw_log
+	local child_stderr
+	local final_message
+	local codex_rc
+	local parser_rc
+
+	turn_label=$(printf '%03d' "$turn_number")
+	turn_dir="$SUPERVISOR_LOG_ROOT/turn-$turn_label-$SESSION_ID"
+	mkdir "$turn_dir" || die 'could not create turn log directory'
+	raw_log="$turn_dir/events.jsonl"
+	child_stderr="$turn_dir/codex.stderr"
+	final_message="$turn_dir/final-message.txt"
+	ACTIVE_EVENT_FIFO="$turn_dir/events.fifo"
+	mkfifo "$ACTIVE_EVENT_FIFO" || die 'could not create event stream pipe'
+
+	printf 'codex-dev-start: starting session %s\n' "$SESSION_ID" >&2
+	"$PYTHON_EXECUTABLE" "$EVENT_PARSER_PATH" "$raw_log" <"$ACTIVE_EVENT_FIFO" &
+	ACTIVE_PARSER_PID=$!
+	"$CODEX_EXECUTABLE" exec -c "service_tier=\"$CODEX_SERVICE_TIER\"" \
+		--sandbox workspace-write -C "$REPO_ROOT" --json \
+		--output-last-message "$final_message" "$SESSION_PROMPT" \
+		>"$ACTIVE_EVENT_FIFO" 2>"$child_stderr" &
+	ACTIVE_CODEX_PID=$!
+
+	set +e
+	wait "$ACTIVE_CODEX_PID"
+	codex_rc=$?
+	if [[ "$SUPERVISOR_INTERRUPTED" == 'yes' ]] && kill -0 "$ACTIVE_CODEX_PID" 2>/dev/null; then
+		kill -TERM "$ACTIVE_CODEX_PID" 2>/dev/null || true
+		wait "$ACTIVE_CODEX_PID"
+		codex_rc=$?
+	fi
+	ACTIVE_CODEX_PID=''
+	wait "$ACTIVE_PARSER_PID"
+	parser_rc=$?
+	ACTIVE_PARSER_PID=''
+	set -e
+	rm -f "$ACTIVE_EVENT_FIFO"
+	ACTIVE_EVENT_FIFO=''
+
+	if [[ "$SUPERVISOR_INTERRUPTED" == 'yes' ]]; then
+		printf 'codex-dev-start: interrupted; inspect %s\n' "$turn_dir" >&2
+		return 130
+	fi
+	if [[ "$codex_rc" -ne 0 ]]; then
+		printf 'codex-dev-start: Codex exited %s; inspect %s and %s\n' \
+			"$codex_rc" "$raw_log" "$child_stderr" >&2
+		return 1
+	fi
+	if [[ "$parser_rc" -ne 0 ]]; then
+		printf 'codex-dev-start: Codex event validation failed; inspect %s\n' "$raw_log" >&2
+		return 1
+	fi
+	return 0
+}
+
+added_archives_between() {
+	git -C "$REPO_ROOT" diff --name-only --diff-filter=A "$1" "$2" -- "$ARCHIVE_PREFIX" ||
+		die 'could not inspect committed archive progression'
+}
+
+validate_post_turn_progression() {
+	local previous_head=$1
+	local previous_id=$2
+	local previous_archive_rel=$3
+	local previous_archive_count=$4
+	local previous_archive="$REPO_ROOT/$previous_archive_rel"
+	local previous_status
+	local previous_next
+	local expected_next
+	local added_archives
+	local added_count
+
+	validate_session_state
+	[[ "$CURRENT_SKELETON_DIGEST" == "$SUPERVISOR_SKELETON_DIGEST" ]] ||
+		die 'post-turn launcher contract drifted outside its mutable regions'
+	[[ -z "$WORKTREE_STATUS" ]] ||
+		die 'post-turn worktree is dirty; refusing to continue'
+	[[ "$CURRENT_HEAD" != "$previous_head" ]] ||
+		die 'Codex turn made no committed HEAD progress'
+	added_archives=$(added_archives_between "$previous_head" "$CURRENT_HEAD")
+	if [[ -n "$added_archives" ]]; then
+		added_count=$(printf '%s\n' "$added_archives" | wc -l | tr -d '[:space:]')
+	else
+		added_count=0
+	fi
+
+	if [[ "$SESSION_STATUS" == 'COMPLETE' ]]; then
+		[[ "$SESSION_ID" == "$previous_id" && "$SESSION_ARCHIVE_REL" == "$previous_archive_rel" ]] ||
+			die 'COMPLETE handoff changed the terminal session identity'
+		previous_status=$(archive_field "$previous_archive" 'Status') ||
+			die 'former archive Status metadata is invalid after the turn'
+		[[ "$previous_status" == 'ANSWERED - HISTORY' ]] ||
+			die 'former archive was not answered by the committed handoff'
+		previous_next=$(archive_field "$previous_archive" 'Next') ||
+			die 'former archive Next metadata is invalid after the turn'
+		[[ "$ARCHIVE_TOTAL_COUNT" -eq "$previous_archive_count" && "$added_count" -eq 0 ]] ||
+			die 'COMPLETE handoff added an unexpected archive'
+		[[ "$previous_next" == 'none' ]] || die 'COMPLETE archive is not terminal'
+		printf 'codex-dev-start: authorized roadmap COMPLETE at %s\n' "$CURRENT_HEAD" >&2
+		return 2
+	fi
+
+	[[ "$SESSION_STATUS" == 'NEXT' ]] || die 'post-turn launcher state is invalid'
+	[[ "$SESSION_ID" != "$previous_id" ]] ||
+		die 'post-turn session identity did not change'
+	previous_status=$(archive_field "$previous_archive" 'Status') ||
+		die 'former archive Status metadata is invalid after the turn'
+	[[ "$previous_status" == 'ANSWERED - HISTORY' ]] ||
+		die 'former archive was not answered by the committed handoff'
+	previous_next=$(archive_field "$previous_archive" 'Next') ||
+		die 'former archive Next metadata is invalid after the turn'
+	[[ "$PREVIOUS_SESSION_ARCHIVE_REL" == "$previous_archive_rel" ]] ||
+		die 'new session does not identify the former archive as its predecessor'
+	[[ "$ARCHIVE_TOTAL_COUNT" -eq $((previous_archive_count + 1)) ]] ||
+		die 'post-turn archive graph did not add exactly one session'
+	[[ "$added_count" -eq 1 && "$added_archives" == "$SESSION_ARCHIVE_REL" ]] ||
+		die 'committed handoff did not add exactly the active NEXT archive'
+	expected_next="[${SESSION_ARCHIVE_REL##*/}](${SESSION_ARCHIVE_REL##*/})"
+	[[ "$previous_next" == "$expected_next" ]] ||
+		die 'former archive does not link to the new NEXT session'
+	git -C "$REPO_ROOT" cat-file -e "$CURRENT_HEAD:$SESSION_ARCHIVE_REL" 2>/dev/null ||
+		die 'active NEXT archive is not committed at HEAD'
+	printf 'codex-dev-start: committed handoff validated: %s -> %s\n' \
+		"$previous_id" "$SESSION_ID" >&2
+	return 0
+}
+
+main() {
+	local mode='start'
+	local turn_count=0
+	local previous_head
+	local previous_id
+	local previous_archive_rel
+	local previous_archive_count
+	local turn_rc
+	local progress_rc
+
+	case $# in
+	0) ;;
+	1)
+		case $1 in
+		--check) mode='check' ;;
+		--print-prompt) mode='print' ;;
+		--help|-h)
+			usage
+			exit 0
+			;;
+		*) die "unknown argument: $1" ;;
+		esac
+		;;
+	*) die 'expected at most one argument' ;;
+	esac
+
+	SCRIPT_DIR=$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+	SCRIPT_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
+	REPO_ROOT=$SCRIPT_DIR
+	CODEX_BIN=${CODEX_BIN:-codex}
+	LAUNCHER_SOURCE=''
+	ACTIVE_EVENT_FIFO=''
+	ACTIVE_CODEX_PID=''
+	ACTIVE_PARSER_PID=''
+	SUPERVISOR_INTERRUPTED='no'
+	trap cleanup_supervisor EXIT
+
+	validate_session_state
+	if [[ -n "$WORKTREE_STATUS" ]]; then
 		printf '%s\n' \
 			'codex-dev-start: worktree has local changes; inspect them before editing.' >&2
 	fi
@@ -641,15 +1002,51 @@ main() {
 		printf '%s' "$SESSION_PROMPT"
 		exit 0
 		;;
-	start)
-		[[ "$SESSION_STATUS" == 'NEXT' ]] || die 'session has no NEXT task'
-		rm -f "$LAUNCHER_SOURCE"
-		trap - EXIT
-		exec "$CODEX_EXECUTABLE" -c "service_tier=\"$CODEX_SERVICE_TIER\"" \
-			-C "$REPO_ROOT" "$SESSION_PROMPT"
-		;;
+	start) ;;
 	*) die 'internal mode error' ;;
 	esac
+
+	if [[ "$SESSION_STATUS" == 'COMPLETE' ]]; then
+		printf 'codex-dev-start: authorized roadmap already COMPLETE at %s\n' "$CURRENT_HEAD" >&2
+		exit 0
+	fi
+	[[ "$SESSION_STATUS" == 'NEXT' ]] || die 'session has no NEXT task'
+	[[ -z "$WORKTREE_STATUS" ]] || die 'worktree must be clean before starting a supervised turn'
+
+	SUPERVISOR_SKELETON_DIGEST=$CURRENT_SKELETON_DIGEST
+	create_supervisor_log_root
+	write_event_parser
+	trap forward_supervisor_signal HUP INT TERM
+
+	while [[ "$SESSION_STATUS" == 'NEXT' ]]; do
+		turn_count=$((turn_count + 1))
+		previous_head=$CURRENT_HEAD
+		previous_id=$SESSION_ID
+		previous_archive_rel=$SESSION_ARCHIVE_REL
+		previous_archive_count=$ARCHIVE_TOTAL_COUNT
+
+		set +e
+		run_codex_turn "$turn_count"
+		turn_rc=$?
+		set -e
+		if [[ "$turn_rc" -eq 130 ]]; then
+			exit 130
+		fi
+		[[ "$turn_rc" -eq 0 ]] || die 'supervised Codex turn failed'
+
+		set +e
+		validate_post_turn_progression "$previous_head" "$previous_id" \
+			"$previous_archive_rel" "$previous_archive_count"
+		progress_rc=$?
+		set -e
+		case $progress_rc in
+		0) ;;
+		2) exit 0 ;;
+		*) exit "$progress_rc" ;;
+		esac
+	done
+
+	die 'supervisor loop ended without NEXT or COMPLETE state'
 }
 
 main "$@"
