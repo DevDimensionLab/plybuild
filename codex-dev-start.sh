@@ -598,29 +598,31 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-24T061532+0200-close-absolute-l0
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T061532+0200-close-absolute-l0.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=
+#|SESSION_ID=2026-08-24T085458+0200-make-manual-evidence-reachable
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T085458+0200-make-manual-evidence-reachable.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T061532+0200-close-absolute-l0.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Close checkpoint P1: make absolute L0 pass and establish the non-publishing
-#|daily preflight gate. Complete no more than three measured quality moves, keep
-#|the public Go API and CLI behavior compatible, and leave zero comparable
-#|ratchet regressions.
+#|Complete checkpoint P1B: make the six manual L1/L2 rows reachable through
+#|commit-, tree-, inventory-, and instrument-bound structured evidence, then
+#|migrate the exact-toolchain baseline without changing any numeric debt. Use no
+#|more than three measured moves and leave zero comparable ratchet regressions.
 #|
 #|# Changes Since The Previous Prompt
 #|
-#|1. Recovery checkpoint P0 has a reproducible quality baseline and a working
-#|   host install contract.
-#|2. The tracked design, upgrade plan, and rolling handover define the ordered
-#|   path to an honest L2 result.
-#|3. `codex-dev-start.sh` now keeps mutable session data after a stable execution
-#|   boundary, validates its full archive chain, and preserves exact prompt bytes.
-#|4. The launcher and prompt archive replace `.agent-task/current.md` as the
-#|   active session handoff. No P1 quality move is included in this checkpoint.
+#|1. P1 closed absolute L0 at 8 of 8 and added the non-publishing daily
+#|   `make preflight` gate in exactly three quality moves.
+#|2. golangci-lint is pinned at `v2.12.2`; its five-linter gate is clean and
+#|   remains separate from source-rewriting `make format`.
+#|3. The sole production script has an independent negative meta-test, so Q0.8
+#|   is 0 of 1 scripts without a counterpart.
+#|4. The clean P1 audit reports two improved, five held, and zero regressed
+#|   ratchets; its exit 1 is caused only by 20 documented findings above L0.
+#|5. The next ordered checkpoint is P1B. P2 compatibility, publishing, cloud,
+#|   Spring, packaging, and dependency work remain out of scope.
 #|
 #|# Measurements At Start
 #|
@@ -633,9 +635,10 @@ exit 70
 #|git rev-parse --show-toplevel
 #|git rev-parse --short=12 HEAD
 #|git branch --show-current
-#|sed -n '1,260p' docs/design/quality-lift.md
-#|sed -n '1,380p' docs/plan/quality-upgrade.md
 #|sed -n '1,300p' docs/plan/quality-handover.md
+#|sed -n '120,240p' docs/plan/quality-upgrade.md
+#|sed -n '1,260p' docs/design/quality-lift.md
+#|sed -n '1,260p' .quality/baseline/README.md
 #|bash .quality/tools/test-quality-audit.sh
 #|bash .quality/tools/quality-audit.sh . \
 #|  --baseline .quality/baseline/scorecard.json
@@ -666,13 +669,16 @@ exit 70
 #|
 #|Read in this order:
 #|
-#|1. `docs/plan/quality-handover.md` for measured state and environment notes.
-#|2. The P1 section and checkpoint gate in `docs/plan/quality-upgrade.md`.
-#|3. `docs/design/quality-lift.md` for accepted decisions and invariants.
-#|4. `docs/design/agent-session-continuity.md` for handoff authority and archive
-#|   invariants.
-#|5. `.quality/inventory` and the Q0.3/Q0.8 audit implementation before changing
-#|   lint or script controls.
+#|1. `docs/plan/quality-handover.md` for the exact P1 exit and resumption state.
+#|2. The P1B section and checkpoint gate in `docs/plan/quality-upgrade.md`.
+#|3. `docs/design/quality-lift.md` for evidence and ratchet invariants.
+#|4. `.quality/baseline/README.md`, `manual-evidence.json`, and `scorecard.json`
+#|   for the current schema, receipts, instrument identity, and reproduction.
+#|5. Manual-evidence validation and baseline comparison in
+#|   `.quality/tools/scorecard.py`, plus T6b-T8b and T15 in
+#|   `.quality/tools/test-quality-audit.sh`.
+#|6. `.quality/inventory` and `docs/design/agent-session-continuity.md` before
+#|   changing instrument-bound evidence or preparing another restart.
 #|
 #|Do not use `.agent-task/current.md` as task authority. If a statement here is
 #|wrong, record the correction in its owning plan/handover document and carry it
@@ -681,36 +687,38 @@ exit 70
 #|# Environment Constraints
 #|
 #|- Use `LC_ALL=C LANG=C` for deterministic shell tooling.
-#|- Use a fresh `GOCACHE` under `/private/tmp` if the shared cache denies access.
+#|- Use fresh `GOCACHE` and `GOLANGCI_LINT_CACHE` directories under
+#|  `/private/tmp`; both shared caches denied access during restart measurement.
 #|- Probe Docker and shellcheck availability before claiming evidence from them.
 #|- Keep tests independent of developer HOME, public services, and repository
 #|  writes.
-#|- P1 pins the official golangci-lint binary at `v2.12.2`, uses a checked-in v2
-#|  config with `errcheck`, `govet`, `ineffassign`, `staticcheck`, `unused`, and
-#|  the `gofmt` formatter, and keeps the module at Go 1.18. `make lint` must
-#|  neither download nor rewrite; `make format` owns source rewrites.
-#|- The quality baseline is exact-toolchain-bound. Parser, scanner, inventory,
-#|  or Go-context changes require an explicit debt-preserving migration.
+#|- The module stays at Go 1.18. The exact baseline context is Go 1.26.2 on
+#|  Darwin arm64 with the build selectors recorded in the baseline README.
+#|- Parser or schema changes alter instrument identity. Reproduce commit
+#|  `5635d50` with both old and new instruments, preserve every numeric debt
+#|  value, and record both identities; never merely bless a regenerated file.
+#|- A receipt may resolve only an upstream `UNMEASURABLE` row. An explicit
+#|  upstream `FAIL`, an empty declared population, or invalid evidence must not
+#|  become PASS.
 #|- Homebrew remains active in release configuration despite being outside the
 #|  accepted distribution matrix; do not execute publication paths.
 #|
 #|# First Task
 #|
-#|Implement P1 as at most three focused moves:
+#|Implement P1B as at most three focused moves:
 #|
-#|1. Pin golangci-lint `v2.12.2`; set `linters.default: none`, enable the five
-#|   linters and `gofmt` formatter named above, and check the v2 config in. Make
-#|   `make lint` verify and run that preinstalled version without downloads or
-#|   rewrites; add `make format` for `gofmt -w`.
-#|2. Add an independent negative meta-test for `scripts/search-replace.sh`, the
-#|   sole current Q0.8 production-script population, so its underlying value is
-#|   zero. The launcher and audit tools retain their own contract/meta-suites;
-#|   publishing scripts remain owned by P2B.
-#|3. Add a tested `make preflight` that runs build, uncached tests, vet/lint,
-#|   install-contract tests, every `scripts/test-*`, and
-#|   `.quality/tools/test-quality-audit.sh`. Its meta-test must reject empty,
-#|   omitted, or incomplete script populations. Do not add `make verify` or
-#|   `make quality` in P1.
+#|1. Start with failing audit meta-tests, then evolve the structured evidence
+#|   schema so valid, non-empty receipts can resolve Q1.6, Q1.7, Q1.9, Q2.4,
+#|   Q2.8, and Q2.9. Bind receipts to module, commit, measured tree, inventory,
+#|   instrument identity, criterion, and evidence digest. Reject stale,
+#|   duplicate, empty, wrong-kind, dirty-tree, and false-PASS evidence.
+#|2. Prove precedence and populations independently: an upstream FAIL always
+#|   wins, and rows with no underlying harness/script/test population remain
+#|   non-passing. Synthetic non-empty fixtures may demonstrate reachability;
+#|   do not claim the current project passes rows whose population is zero.
+#|3. Perform an explicit debt-preserving baseline migration. Reproduce commit
+#|   `5635d50` under the old and new instruments, compare every numeric metric,
+#|   record both hashes and the reproducible recipe, and retain Q3.9 evidence.
 #|
 #|After each move, run its focused tests and measure from a clean commit. At the
 #|checkpoint, run the complete gate and empty-HOME count-2 command from the plan.

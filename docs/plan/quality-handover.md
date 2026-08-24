@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T08:43:01+02:00
+Generated: 2026-08-24T08:54:58+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -11,7 +11,9 @@ session diary.
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
 - Measured implementation head: `ab9a5c6`.
-- Documentation head: use `git rev-parse --short HEAD` after checkout.
+- Restart preparation base: `bf189a1c04ea`.
+- Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
+  commit contains this handover and no implementation changes.
 - No push or merge was performed.
 
 Earlier focused commits:
@@ -31,8 +33,8 @@ ab9a5c6 quality: add non-publishing preflight
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` still contains the answered-in-practice P1 mission until
-the exact restart trigger authorizes session-tail and archive updates. It
+`codex-dev-start.sh` contains the active P1B mission authorized by the exact
+restart trigger. It
 inherits the user's Codex profile except that it explicitly passes
 `-c 'service_tier="default"'`, overriding the locally configured Fast mode for
 this startup only. Its stable executable section precedes
@@ -75,7 +77,8 @@ child runs assert their exact control count.
 `make test` runs this target through `/bin/bash`.
 
 The active archive is
-`docs/plan/agent-sessions/2026-08-24T061532+0200-close-absolute-l0.md`.
+`docs/plan/agent-sessions/2026-08-24T085458+0200-make-manual-evidence-reachable.md`.
+Its predecessor is answered history with an unchanged prompt and digest.
 The ignored `.agent-task/current.md` source was retired and is absent.
 
 ## Measured Quality State
@@ -144,16 +147,17 @@ P2B.
 
 ## Next Objective
 
-Prepare the next session for P1B from `docs/plan/quality-upgrade.md`: make the
-six manual L1/L2 rows reachable through commit-, tree-, inventory-, and
-instrument-bound structured evidence without letting evidence override an
-upstream failure.
+Complete P1B from `docs/plan/quality-upgrade.md`: make the six manual L1/L2
+rows reachable through commit-, tree-, inventory-, and instrument-bound
+structured evidence without letting evidence override an upstream failure.
 
-The next implementation must migrate the exact-toolchain baseline explicitly:
+The implementation must migrate the exact-toolchain baseline explicitly:
 reproduce commit `5635d50` with the old and new instruments, preserve every
 numeric debt value, and add fail-closed tests for stale, duplicate, empty,
-wrong-kind, dirty-tree, and false-PASS receipts. This mission is queued here;
-do not change launcher/archive state until the user sends `agent-restart`.
+wrong-kind, dirty-tree, and false-PASS receipts. The current project has zero
+mutation harnesses and acceptance scripts, so reachability for
+population-dependent rows must be proven with synthetic non-empty fixtures
+rather than a false project PASS.
 
 ## Start
 
@@ -184,6 +188,14 @@ release, stash, revert, worktree removal, or staging unrelated changes.
 
 Completed during this checkpoint:
 
+- Restart remeasurement at clean `bf189a1c04ea`: `make preflight` PASS after
+  isolating both Go and golangci-lint caches under `/private/tmp`.
+- Restart full quality audit at `bf189a1c04ea`: expected exit 1, L0 8 of 8,
+  20 findings above L0, and zero comparable ratchet regressions.
+- Prepared two-generation archive graph: launcher `--check`, exact prompt
+  digest/mirror, stable skeleton, and all 48 lifecycle controls PASS.
+- Post-transition `make preflight`: PASS, including zero lint issues and all
+  15 quality-audit meta-controls; no publication path ran.
 - `make preflight`: PASS from clean commit `ab9a5c6`; no publishing or packaging
   path ran and the tree remained clean.
 - Pinned golangci-lint `2.12.2`: config verification and `make lint` PASS with
@@ -220,7 +232,10 @@ Environment probes on 2026-08-24:
 - Host Go is 1.26.2 on Darwin arm64; the module declaration remains Go 1.18.
 - golangci-lint is still unavailable on `PATH`; use the explicit temporary path
   above if it remains present, or install the official `v2.12.2` binary outside
-  the repository before rerunning `make lint` or `make preflight`.
+  the repository before rerunning `make lint` or `make preflight`. Set both
+  `GOCACHE` and `GOLANGCI_LINT_CACHE` to fresh `/private/tmp` directories in
+  this sandbox; the default shared caches returned operation-not-permitted
+  errors during restart remeasurement.
 
 ## Stop Conditions
 
@@ -233,4 +248,4 @@ Stop and report rather than forcing progress when:
   later checkpoint;
 - a required external tool is missing and no fail-closed evidence can replace
   it;
-- three P1 moves are complete.
+- three moves in the active checkpoint are complete.

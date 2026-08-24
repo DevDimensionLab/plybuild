@@ -98,7 +98,7 @@ ratchets improved, five held, and zero regressed.
 
 ### P1B - Make Manual L1/L2 Evidence Reachable
 
-Status: next checkpoint; required before claiming L1 or L2.
+Status: active next checkpoint; required before claiming L1 or L2.
 
 The vendored audit always emits UNMEASURABLE for Q1.6, Q1.7, Q1.9, Q2.4,
 Q2.8, and Q2.9. The structured layer only consumes manual evidence for Q3.9.
