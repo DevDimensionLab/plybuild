@@ -658,19 +658,19 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-24T151703+0200-migrate-maven-metadata-http
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T151703+0200-migrate-maven-metadata-http.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T140112+0200-cover-cloud-clone-seam.md
+#|SESSION_ID=2026-08-24T161800+0200-migrate-template-copy-filesystem
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T161800+0200-migrate-template-copy-filesystem.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T151703+0200-migrate-maven-metadata-http.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Complete the next P3 move in one measured change: introduce the declared
-#|`internal/adapter/httpclient` boundary for the coherent Maven metadata XML
-#|request flow and kill the `maven-http` username/password argument swap. Keep
-#|Q1.2 at zero, reduce only the migrated Q1.3 sites, and preserve every P2A
-#|contract with zero comparable ratchet regressions.
+#|`internal/adapter/filesystem` boundary through the coherent non-existing-target
+#|template copy flow and kill the `template-copy` source/destination argument
+#|swap. Keep Q1.2 at zero, reduce only migrated Q1.3 sites, and preserve every
+#|P2A contract with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
@@ -681,15 +681,15 @@ exit 70
 #|# Measurements At Start
 #|
 #|Before editing, inspect branch, HEAD, status, the rolling handover, the P3 plan,
-#|`.quality/inventory`, `pkg/maven/query.go` and its callers/tests, Maven
-#|repository/auth types, `pkg/http/client.go` and every affected XML helper
-#|caller, existing HTTP transport tests, the process and cloud seam patterns,
-#|the Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 scanners, and the P2A compatibility, subprocess,
-#|and host acceptance contracts. Regenerate ignored reports outside the measured
-#|tree or remove them before the clean audit. Implementation commit `ee5e9ab`
-#|has 55 tests across 11 of 23 packages, Q0.6 has zero unsafe direct test writes,
-#|Q1.2 is 0, Q1.3 is 76 violations of 78 production effect sites with four
-#|adapter paths absent, and Q1.4 is 4 of 8. Exact Q2.1 remains 0 of 8 executable
+#|`.quality/inventory`, `pkg/template/template.go` and its tests/callers,
+#|`pkg/file/file.go` copy/merge helpers and every caller/test, relevant project and
+#|template types, the existing process/HTTP/cloud seam patterns, the
+#|Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 scanners, and the P2A compatibility, subprocess, and
+#|host acceptance contracts. Regenerate ignored reports outside the measured
+#|tree or remove them before the clean audit. Implementation commit `ffc4e77`
+#|has 65 tests across 13 of 24 packages, Q0.6 has zero unsafe direct test writes,
+#|Q1.2 is 0, Q1.3 is 74 violations of 79 production effect sites with three
+#|adapter paths absent, and Q1.4 is 5 of 8. Exact Q2.1 remains 0 of 8 executable
 #|harnesses; the upstream filename-only denominator sees three non-executable
 #|`mutate-*` paths. The clean gate passed, the full audit exited 1 for 16
 #|documented findings and never 2, and comparable ratchets were five improved,
@@ -698,70 +698,76 @@ exit 70
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the Maven metadata HTTP move. Do not push, merge,
-#|publish, remove the worktree, stash inherited changes, revert user work, or run
-#|destructive Git commands. Do not invoke a publisher or distribution command.
+#|implementation commit for the template-copy filesystem move. Do not push,
+#|merge, publish, remove the worktree, stash inherited changes, revert user work,
+#|or run destructive Git commands. Do not invoke a publisher or distribution
+#|command.
 #|
 #|Keep Go 1.18. Preserve `cmd.Execute()`, `cmd.ExecuteE()`, `cmd.RootCmd`, the
 #|normalized Cobra tree, root/status/upgrade/build and unknown-command streams
-#|and exits, and all four host acceptance flows. Preserve the exported
-#|`Repository.GetMetaData`, `GetBannedModel`, `http.GetXml`, and
-#|`http.GetAuthXml` signatures and every caller. Production must retain the
-#|repository-derived metadata URL, anonymous GET and basic-auth behavior, XML
-#|decoding, response status/body/close semantics, logging, and formatted errors.
+#|and exits, and all four host acceptance flows. Preserve exported
+#|`template.MergeTemplate`, `file.CopyOrMerge`, and `file.CopyFile` signatures and
+#|every caller. Production must retain exact template filtering and target-path
+#|derivation, existing-target merge selection, non-existing-target copy behavior,
+#|source bytes and mode, missing destination-directory creation, logging, error
+#|order and semantics, search/replace, render, and Maven merge follow-ups.
 #|
-#|Migrate only the network execution needed by the coherent anonymous/basic-auth
-#|XML metadata flow. Use a resolvable interface and complete dependency value,
-#|not stored function dependencies. Do not create a second generic HTTP
-#|implementation or broaden into JSON/token requests, Wget/Wpost, Kibana,
-#|filesystem, clock, server, Docker, dependency upgrades, Spring, distribution,
-#|or formal mutation-harness scope.
+#|Migrate only the filesystem effects needed by the coherent non-existing-target
+#|template copy flow. Use resolvable interfaces and complete dependency values,
+#|not stored function dependencies. Do not create a second generic filesystem
+#|implementation or broaden into existing-target merge internals, unrelated
+#|write/delete/rename/grep/render calls, Git hooks, cloud, Spring/download, HTTP,
+#|clock, server, Docker, dependencies, distribution, or formal mutation-harness
+#|scope.
 #|
 #|# Required Reading
 #|
 #|Read docs/plan/quality-handover.md, the P3 section and checkpoint gate in
 #|docs/plan/quality-upgrade.md, docs/design/quality-lift.md,
 #|docs/design/agent-session-continuity.md, `.quality/inventory`,
-#|`pkg/maven/query.go`, `pkg/maven/query_test.go`, Maven repository/auth types and
-#|all metadata callers, `pkg/http/client.go`, every affected XML helper caller,
-#|the existing transport tests, the process/cloud interface and recording tests,
-#|the Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 implementation in `.quality/tools`, and the P2A
+#|`pkg/template/template.go`, its tests and callers, `pkg/file/file.go` copy/merge
+#|helpers and every caller/test, relevant project/template types, the existing
+#|process/HTTP/cloud interfaces and recording tests, the
+#|Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 implementation in `.quality/tools`, and the P2A
 #|compatibility and host acceptance contracts before editing.
 #|
 #|# Three Moves
 #|
 #|These are three ordered steps inside the single measured P3 move.
 #|
-#|1. Start red with recording anonymous and authenticated metadata contracts.
-#|   Prove the complete repository-derived metadata URL, username before
-#|   password, anonymous selection when auth is nil, parsed XML result,
-#|   dependency errors, response behavior, safe defaults, complete dependency
-#|   delivery, and rejection of an empty recorded population.
+#|1. Start red with recording template copy and filesystem contracts. Prove the
+#|   complete source path stays before the complete resolved target path, a
+#|   missing target selects copy while an existing target retains merge, source
+#|   bytes and mode reach the destination, a missing destination directory is
+#|   created, dependency errors retain their order and behavior, safe defaults
+#|   perform no mutation, the complete dependency reaches the flow, and an empty
+#|   recorded population fails.
 #|
-#|2. Introduce the thinnest zero-value-safe `internal/adapter/httpclient`
-#|   interface boundary and route production through the existing HTTP/XML
-#|   behavior without duplicating request construction or decoding. Preserve
-#|   exact URL construction, GET/basic-auth selection, credential order, logging,
-#|   status/body/close and error semantics. Bind the immutable `maven-http` label
-#|   through the existing non-executable `scripts/mutate-maven-sorting` driver
-#|   and its Q0.8 meta-test, without claiming the later P5 harness.
+#|2. Introduce the thinnest zero-value-safe `internal/adapter/filesystem`
+#|   interface boundary and route only the migrated copy effects through it.
+#|   Preserve source read, destination-directory existence/creation, source mode
+#|   lookup, logging, destination write, and error ordering without duplicating
+#|   `CopyOrMerge` or merge behavior. Bind the immutable `template-copy` label
+#|   through a new non-executable `scripts/mutate-template` seam driver and its
+#|   Q0.8 meta-test, without claiming the later P5 harness.
 #|
-#|3. Run focused Maven/HTTP/adapter/argument-swap tests,
+#|3. Run focused template/file/adapter/argument-swap tests,
 #|   Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 measurements, API/CLI compatibility, all four host
 #|   acceptance flows, the full checkpoint gate, and empty-HOME count-2 from a
-#|   clean commit. Expect Q1.2 to stay zero, `maven-http` to raise Q1.4 from 4 of
-#|   8 to 5 of 8, and exact Q2.1 to remain 0 of 8. Accept only regenerated Q1.3
-#|   values. The full audit may exit 1 for documented findings but never 2.
+#|   clean commit. Expect Q1.2 to stay zero, `template-copy` to raise Q1.4 from 5
+#|   of 8 to 6 of 8, and exact Q2.1 to remain 0 of 8. Accept only regenerated
+#|   Q1.3 values. The full audit may exit 1 for documented findings but never 2.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent Maven metadata
-#|HTTP move or record an exact resumable state. Rewrite the rolling handover,
-#|update the P3 measurements, answer this archive, create one linked NEXT archive,
-#|replace the launcher's mutable regions, run the launcher contract, and make the
-#|separate handoff-only commit `docs: prepare next agent session`.
+#|Before this agent session ends, finish and commit the coherent template-copy
+#|filesystem move or record an exact resumable state. Rewrite the rolling
+#|handover, update the P3 measurements, answer this archive, create one linked
+#|NEXT archive, replace the launcher's mutable regions, run the launcher
+#|contract, and make the separate handoff-only commit
+#|`docs: prepare next agent session`.
 #|
-#|Keep P3 active for later adapter moves. Do not launch the next session.
-#|COMPLETE is valid only after every authorized checkpoint through P8 is
-#|complete.
+#|Keep P3 active for later filesystem adapter moves. Do not launch the next
+#|session. COMPLETE is valid only after every authorized checkpoint through P8
+#|is complete.
 # CODEX_MUTABLE_PROMPT_END

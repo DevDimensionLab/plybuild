@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `ee5e9ab`.
+Last measured checkpoint: 2026-08-24, commit `ffc4e77`.
 
 ## Objective
 
@@ -41,20 +41,20 @@ P8|queued
 
 ## Measured State
 
-| Signal | Baseline | P1B | P2A | P2B | P3.1 | P3.2 | P3.3 | P3.4 | Interpretation |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3, Q0.6, and Q0.8 remain closed. |
-| Test functions | 33 | 37 | 37 | 37 | 39 | 47 | 50 | 55 | Cloud clone/pull selection, complete values, errors, safe defaults, and empty populations are covered. |
-| Skipped tests | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
-| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | 11 / 23 | 11 / 23 | 11 / 23 | Twelve packages still have no test files. |
-| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | 0 | 0 | 0 | Q1.2 stays closed; only the two executable `main` functions terminate. |
-| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | 77 / 79 | 76 / 78 | 76 / 78 | The cloud seam reuses the existing Git/process path and adds no direct external site; four adapter paths remain absent. |
-| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 2 / 8 | 3 / 8 | 4 / 8 | The `git-process`, `maven-process`, `cloud-clone`, and `git-commit` swaps are covered. |
-| Executable mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | All three P3 seam drivers are non-executable and do not qualify as later P5 harnesses. |
-| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
-| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | 0 / 8 | 0 / 9 | 0 / 10 | Q0.8 remains improved over a larger population. |
-| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures still prove schema reachability. |
-| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument remains unchanged. |
+| Signal | Baseline | P1B | P2A | P2B | P3.1 | P3.2 | P3.3 | P3.4 | P3.5 | Interpretation |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3, Q0.6, and Q0.8 remain closed. |
+| Test functions | 33 | 37 | 37 | 37 | 39 | 47 | 50 | 55 | 65 | Maven metadata selection, ordered auth, response behavior, safe defaults, and empty populations are covered. |
+| Skipped tests | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
+| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | 11 / 23 | 11 / 23 | 11 / 23 | 13 / 24 | Eleven packages still have no test files. |
+| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | 0 | 0 | 0 | 0 | Q1.2 stays closed; only the two executable `main` functions terminate. |
+| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | 77 / 79 | 76 / 78 | 76 / 78 | 74 / 79 | Two authenticated XML sites left; the adapter adds three in-boundary HTTP sites, while out-of-scope JSON retains the shared anonymous direct site. |
+| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 2 / 8 | 3 / 8 | 4 / 8 | 5 / 8 | `maven-http` joins the four previously covered swaps. |
+| Executable mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | All three P3 seam drivers remain non-executable and do not qualify as later P5 harnesses. |
+| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
+| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | 0 / 8 | 0 / 9 | 0 / 10 | 0 / 10 | Q0.8 remains improved over the same population. |
+| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures still prove schema reachability. |
+| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument remains unchanged. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -203,7 +203,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 4 are complete.
+Status: active. Moves 1 through 5 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -304,8 +304,40 @@ empty-HOME count-2. The full audit exited 1 for 16 documented findings, never
 2, with L0 8 of 8, five improved, two held, zero regressed, and one
 not-comparable ratchet.
 
-With the process boundary green, introduce thin adapters one at a time using
-`.quality/inventory`:
+Move 5 added the zero-value-safe `internal/adapter/httpclient` boundary for
+complete anonymous or basic-auth GET request values. The system dependency
+preserves the existing anonymous `http.Get` path and authenticated
+`NewRequest`/`SetBasicAuth`/fresh-client path. The exported `http.GetXml` and
+`http.GetAuthXml` signatures still own XML decoding and the shared response
+status, body-read, and close lifecycle; JSON/token, Wget/Wpost, and Kibana
+requests remain outside the move.
+
+Five Maven recording contracts prove the complete repository-derived metadata
+URL, nil-auth anonymous selection, username before password, parsed XML,
+dependency-error propagation, a safe no-request default, complete destination
+delivery, and rejection of an empty population. Adapter and HTTP tests also
+cover complete request forwarding, real anonymous/basic-auth transport,
+success parsing, formatted status errors, read errors, and response closure.
+
+The inventory-bound `scripts/mutate-maven-sorting` path remains deliberately
+non-executable. Its Q0.8 meta-test now binds both the `maven-process` and
+`maven-http` labels to eight Go contracts and still declares no P5 mutations.
+Q1.4 is 5 of 8 and exact Q2.1 remains 0 of 8. The authenticated XML
+`NewRequest` and `Client.Do` sites left Q1.3; the adapter contributes three
+in-boundary HTTP sites while the direct anonymous helper remains for
+out-of-scope JSON, yielding 74 violations of 79 production sites.
+
+Commit: `ffc4e77`.
+
+The clean move-5 gate passed focused Maven/HTTP/adapter/seam tests, API/CLI and
+subprocess compatibility, all four host flows, preflight, test, install,
+launcher, uncached and race tests, vet, the 15-control audit meta-suite, and
+empty-HOME count-2. The full audit exited 1 for 16 documented findings, never
+2, with L0 8 of 8, five improved, two held, zero regressed, and one
+not-comparable ratchet.
+
+With the process and HTTP boundaries green, introduce the remaining thin
+adapter one coherent flow at a time using `.quality/inventory`:
 
 1. `internal/adapter/process` for subprocess execution, not application exit.
 2. `internal/adapter/httpclient` for HTTP request execution.
@@ -313,9 +345,9 @@ With the process boundary green, introduce thin adapters one at a time using
 
 For each adapter, first add a characterization or argument-swap test, then move
 one coherent flow. Defaults must be safe and recording doubles must preserve
-the complete dependency struct. The Git and Maven process seams and cloud clone
-flow are complete; migrate the Maven metadata HTTP flow next before advancing
-to filesystem adapter moves.
+the complete dependency struct. The Git and Maven process seams, cloud clone
+flow, and Maven metadata HTTP flow are complete; introduce the filesystem
+adapter through the template-copy flow next.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.

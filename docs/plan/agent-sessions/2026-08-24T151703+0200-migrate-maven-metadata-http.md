@@ -1,13 +1,13 @@
 # Agent Session: Migrate Maven Metadata HTTP
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T151703+0200-migrate-maven-metadata-http`
 Created: `2026-08-24T15:17:03+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `fc99d15c250eec97129984279a00c650ffadbccd267840300ba3c04f02a8f926`
 Previous: [2026-08-24T140112+0200-cover-cloud-clone-seam.md](2026-08-24T140112+0200-cover-cloud-clone-seam.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T161800+0200-migrate-template-copy-filesystem.md](2026-08-24T161800+0200-migrate-template-copy-filesystem.md)
+Outcome: P3 move 5 completed at ffc4e77: Maven metadata XML now uses the zero-value-safe HTTP client adapter, ordered basic auth is covered, Q1.3 is 74 of 79, Q1.4 is 5 of 8, and the clean gate passed with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
