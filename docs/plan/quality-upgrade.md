@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `89d0f76`.
+Last measured checkpoint: 2026-08-24, commit `dee214c`.
 
 ## Objective
 
@@ -41,20 +41,20 @@ P8|queued
 
 ## Measured State
 
-| Signal | Baseline | P1B | P2A | P2B | P3.1 | P3.2 | P3.3 | P3.4 | P3.5 | P3.6 | P3.7 | Interpretation |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3, Q0.6, and Q0.8 remain closed. |
-| Test functions | 33 | 37 | 37 | 37 | 39 | 47 | 50 | 55 | 65 | 79 | 92 | Spring URL/path order, archive bytes/lifecycle, safe defaults, errors, and follow-ups are covered. |
-| Skipped tests | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
-| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | 11 / 23 | 11 / 23 | 11 / 23 | 13 / 24 | 14 / 25 | 15 / 25 | Ten packages have no test files. |
-| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q1.2 stays closed; only the two executable `main` functions terminate. |
-| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | 77 / 79 | 76 / 78 | 76 / 78 | 74 / 79 | 71 / 80 | 67 / 77 | The four migrated Wget request/create/copy/file-close sites left; one system create site joined the adapter population. |
-| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 2 / 8 | 3 / 8 | 4 / 8 | 5 / 8 | 6 / 8 | 7 / 8 | `spring-download` joins the six previously covered swaps. |
-| Executable mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | All five P3 seam drivers remain non-executable and do not qualify as later P5 harnesses. |
-| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
-| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | 0 / 8 | 0 / 9 | 0 / 10 | 0 / 10 | 0 / 11 | 0 / 12 | Q0.8 remains improved over the same population. |
-| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures prove schema reachability. |
-| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument is unchanged. |
+| Signal | Baseline | P1B | P2A | P2B | P3.1 | P3.2 | P3.3 | P3.4 | P3.5 | P3.6 | P3.7 | P3.8 | Interpretation |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3, Q0.6, and Q0.8 remain closed. |
+| Test functions | 33 | 37 | 37 | 37 | 39 | 47 | 50 | 55 | 65 | 79 | 92 | 101 | Spring discovery URLs, JSON/status/lifecycle errors, safe defaults, and validation selection are covered. |
+| Skipped tests | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
+| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | 11 / 23 | 11 / 23 | 11 / 23 | 13 / 24 | 14 / 25 | 15 / 25 | 15 / 25 | Ten packages have no test files. |
+| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q1.2 stays closed; only the two executable `main` functions terminate. |
+| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | 77 / 79 | 76 / 78 | 76 / 78 | 74 / 79 | 71 / 80 | 67 / 77 | 66 / 76 | The remaining direct anonymous JSON request left without adding a production effect site. |
+| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 2 / 8 | 3 / 8 | 4 / 8 | 5 / 8 | 6 / 8 | 7 / 8 | 7 / 8 | Spring discovery extends the existing driver without claiming a new seam. |
+| Executable mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | All five P3 seam drivers remain non-executable and do not qualify as later P5 harnesses. |
+| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
+| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | 0 / 8 | 0 / 9 | 0 / 10 | 0 / 10 | 0 / 11 | 0 / 12 | 0 / 12 | Q0.8 remains improved over the same population. |
+| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures prove schema reachability. |
+| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument is unchanged. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -203,7 +203,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 7 are complete.
+Status: active. Moves 1 through 8 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -400,6 +400,36 @@ clock and server absent. The full audit exited 1 for 16 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, and one
 not-comparable ratchet.
 
+Move 8 routed the anonymous request used by `http.GetJson` through the existing
+`httpclient.Dependencies` value and the shared response lifecycle. The exported
+signature and JSON unmarshal target remain unchanged. Standard anonymous
+`http.Get` transport and redirects, status `>= 400` text, body read and close,
+dependency, read, and unmarshal errors are recorded without affecting XML,
+token HTTP, Wget/Wpost, or Kibana behavior.
+
+The coherent Spring discovery flow now has a private, zero-value-safe interface
+boundary that passes complete `httpclient.Request` and destination values. The
+exported `GetRoot`, `GetDependencies`, and `Validate` functions preserve the
+exact base and `<base>/dependencies` URLs, parsed response types, validation
+selection and user-dependency order, invalid-dependency reporting, and all
+later build follow-ups. Nine new top-level contracts bring the suite to 101
+tests and reject an empty recorded discovery population.
+
+The non-executable `scripts/mutate-spring` driver still carries its single
+immutable `spring-download` label and now binds 22 focused download and
+discovery contracts. It declares no P5 mutations, so Q1.4 remains 7 of 8 and
+exact Q2.1 remains 0 of 8. Removing the last direct anonymous `GetJson`
+request changes Q1.3 from 67 of 77 to 66 of 76 production effect sites.
+
+Commit: `dee214c`.
+
+The clean move-8 gate passed focused HTTP/Spring/adapter/seam tests, API/CLI and
+subprocess compatibility, all four host flows, preflight, test, install,
+launcher, uncached and race tests, vet, the 15-control audit meta-suite, and
+empty-HOME count-2. The full audit exited 1 for 16 documented findings, never
+2, with L0 8 of 8, five improved, two held, zero regressed, and one
+not-comparable ratchet.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -409,12 +439,12 @@ flow at a time using `.quality/inventory`:
 
 For each move, first add characterization or recording tests, then move one
 coherent flow. Defaults must be safe and recording doubles must preserve the
-complete dependency struct. The seven declared P3 swaps through Spring
-download are complete. The next move routes the anonymous Spring initializer
-discovery JSON GET used by `GetRoot`, `GetDependencies`, and `Validate` through
-the existing HTTP adapter while preserving JSON/status/body/close behavior and
-leaving token HTTP, `Wpost`, Kibana, clock, server, and filesystem follow-ups
-outside that change.
+complete dependency struct. The seven declared P3 swaps through Spring download
+are complete, and Spring discovery now uses the HTTP adapter without adding an
+inventory seam. The next move should route the coherent Bitbucket bearer-token
+JSON GET flow through an extension of that adapter while preserving its request
+headers, response and JSON behavior, and callers. Keep `Wpost`, Kibana, clock,
+server, and filesystem follow-ups outside that change.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.

@@ -1,13 +1,13 @@
 # Agent Session: Migrate Spring JSON HTTP
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T173323+0200-migrate-spring-json-http`
 Created: `2026-08-24T17:33:23+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `5a898a58d4900dc83f8747b2723dfeb23358552db28de2d5508555c7d964f5bf`
 Previous: [2026-08-24T165352+0200-migrate-spring-download.md](2026-08-24T165352+0200-migrate-spring-download.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T181207+0200-migrate-bitbucket-json-http.md](2026-08-24T181207+0200-migrate-bitbucket-json-http.md)
+Outcome: P3 move 8 completed at dee214c: anonymous Spring discovery JSON now uses the HTTP adapter and shared response lifecycle, Q1.3 is 66 of 76, Q1.4 remains 7 of 8, exact Q2.1 remains 0 of 8, and the clean gate passed with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
