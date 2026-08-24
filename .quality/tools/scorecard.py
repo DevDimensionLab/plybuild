@@ -1349,18 +1349,18 @@ def apply_manual_verdicts(parsed, manual):
         item = by_id.get(criterion)
         if not item:
             continue
+        if item["verdict"] == "FAIL":
+            if manual["status"] == "valid" and criterion in manual["receipts"]:
+                force_verdict(item, "FAIL", "upstream failure takes precedence over a valid manual receipt")
+            continue
+        if item["verdict"] != "UNMEASURABLE":
+            continue
         if manual["status"] in ("invalid", "stale"):
-            if item["verdict"] != "FAIL":
-                force_verdict(item, "FAIL", "manual evidence is " + manual["status"])
+            force_verdict(item, "FAIL", "manual evidence is " + manual["status"])
             continue
         if manual["status"] != "valid" or criterion not in manual["receipts"]:
             continue
         receipt = manual["receipts"][criterion]
-        if item["verdict"] == "FAIL":
-            force_verdict(item, "FAIL", "upstream failure takes precedence over a valid manual receipt")
-            continue
-        if item["verdict"] != "UNMEASURABLE":
-            continue
         population = parsed["denominators"].get(population_name, 0)
         if population <= 0:
             force_verdict(

@@ -149,6 +149,14 @@ dirty_tree = copy.deepcopy(TREE)
 dirty_tree.update({"git_clean": False, "measurement_clean": False, "dirty_paths": ["value.go"]})
 assert_status(document, "stale", "dirty tree", dirty_tree)
 
+wrong_inventory = copy.deepcopy(document)
+wrong_inventory["inventory"]["sha256"] = "4" * 64
+assert_status(wrong_inventory, "stale", "wrong inventory")
+
+wrong_instrument = copy.deepcopy(document)
+wrong_instrument["instrument"]["parser_sha256"] = "5" * 64
+assert_status(wrong_instrument, "stale", "wrong instrument")
+
 duplicate = copy.deepcopy(document)
 duplicate["criteria"].append(copy.deepcopy(duplicate["criteria"][0]))
 assert_status(duplicate, "invalid", "duplicate criterion")
@@ -171,4 +179,46 @@ false_pass["criteria"][3]["evidence"]["population"][0]["killed"] = 7
 false_pass["criteria"][3]["evidence_sha256"] = evidence_digest(false_pass["criteria"][3]["evidence"])
 assert_status(false_pass, "invalid", "false PASS payload")
 
+upstream_failure = {
+    "criteria": [
+        {"id": criterion, "verdict": "FAIL", "measured": "automated failure"}
+        for criterion in namespace["MANUAL_CRITERION_KINDS"]
+    ],
+    "denominators": {
+        "test_functions": 1, "mutation_harnesses": 1, "acceptance_scripts": 1,
+    },
+}
+namespace["apply_manual_verdicts"](upstream_failure, manual)
+if any(item["verdict"] != "FAIL" for item in upstream_failure["criteria"]):
+    raise AssertionError("a valid receipt overrode an upstream FAIL: " + repr(upstream_failure))
+
+empty_population = {
+    "criteria": [
+        {"id": criterion, "verdict": "UNMEASURABLE", "measured": "manual"}
+        for criterion in namespace["MANUAL_CRITERION_KINDS"]
+    ],
+    "denominators": {
+        "test_functions": 0, "mutation_harnesses": 0, "acceptance_scripts": 0,
+    },
+}
+namespace["apply_manual_verdicts"](empty_population, manual)
+if any(item["verdict"] == "PASS" for item in empty_population["criteria"]):
+    raise AssertionError("a receipt passed an empty measured population: " + repr(empty_population))
+
+automated_pass = {
+    "criteria": [
+        {"id": criterion, "verdict": "PASS", "measured": "automated pass"}
+        for criterion in namespace["MANUAL_CRITERION_KINDS"]
+    ],
+    "denominators": {
+        "test_functions": 1, "mutation_harnesses": 1, "acceptance_scripts": 1,
+    },
+}
+namespace["apply_manual_verdicts"](
+    automated_pass, {"status": "invalid", "reason": "dishonest receipt"},
+)
+if any(item["verdict"] != "PASS" for item in automated_pass["criteria"]):
+    raise AssertionError("invalid evidence rewrote an automated PASS: " + repr(automated_pass))
+
 print("manual evidence rejects stale, dirty, duplicate, empty, wrong-kind, wrong-digest, and false-PASS receipts")
+print("upstream verdict precedence and measured population guards are independent of receipt validity")

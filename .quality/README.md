@@ -68,6 +68,28 @@ evidence is accepted only for a clean measured tree. Evidence from another
 commit, a dirty tree, duplicate receipts, or an undocumented survivor
 classification is rejected.
 
+Manual-evidence schema 2 binds the whole receipt set to the module, commit,
+commit tree, measured-tree status digest, exact inventory object, and the audit
+instrument fields used by baseline comparison. Its optional `criteria` list can
+resolve only these upstream `UNMEASURABLE` rows and kinds:
+
+| Criterion | Receipt kind | Required truth |
+| --- | --- | --- |
+| Q1.6 | `test-double-contract` | Every dependency has a default and argument recorder; the dependency struct is passed whole. |
+| Q1.7 | `partial-failure-content` | Every partial failure has a content assertion and none is exit-only. |
+| Q1.9 | `nonempty-iteration` | Every iterated collection has an executable empty-population assertion. |
+| Q2.4 | `mutation-run` | Declared equals killed; survived and unusable are zero. |
+| Q2.8 | `input-magnitude-control` | A measured magnitude changes in the declared direction. |
+| Q2.9 | `bad-input-read-only-control` | Bad input exits non-zero and produces or changes zero artifacts. |
+
+Each receipt contains a non-empty `evidence.population` and the SHA-256 of its
+canonical evidence object (UTF-8 JSON, sorted keys, no whitespace, and
+`ensure_ascii=False`). Duplicate criteria or evidence digests, incorrect kinds,
+empty claims, digest mismatches, and claims whose numbers do not prove PASS are
+invalid. A valid receipt still cannot override an upstream FAIL or PASS. It can
+turn `UNMEASURABLE` into PASS only when the independently measured test,
+mutation-harness, or acceptance-script denominator for that row is non-zero.
+
 Do not use the current output file as its own baseline. A `--baseline` path that
 aliases any generated artifact is rejected before outputs are invalidated.
 

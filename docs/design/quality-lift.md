@@ -81,6 +81,10 @@ publishers have been removed. It does not mean an unreviewed production
 - Tests do not write into the worktree and do not depend on a developer HOME.
 - A quality move does not regress any comparable ratchet.
 - Reports from dirty trees or broken audit tooling are not release evidence.
+- Manual receipts are commit-, measured-tree-, inventory-, instrument-, and
+  digest-bound. They can resolve only an upstream `UNMEASURABLE` criterion with
+  an independently non-empty project population; automated PASS and FAIL
+  verdicts retain precedence.
 - Homebrew and Snap remain inactive until they receive explicit scope and
   acceptance coverage.
 
