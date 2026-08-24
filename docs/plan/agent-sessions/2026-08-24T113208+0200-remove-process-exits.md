@@ -1,13 +1,13 @@
 # Agent Session: Remove Process Exits
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T113208+0200-remove-process-exits`
 Created: `2026-08-24T11:32:08+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `31c6f9b006cf6efc0102f7370b2e9cf39beb242099a567631466e120bbfca86f`
 Previous: [2026-08-24T110354+0200-make-distribution-local.md](2026-08-24T110354+0200-make-distribution-local.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T122234+0200-introduce-process-adapter.md](2026-08-24T122234+0200-introduce-process-adapter.md)
+Outcome: P3 move 1 completed at 5c6f2fa: both executable boundaries delegate to `cmd.ExecuteE() error`, Q1.2 fell from 127 to zero, Q1.1 improved from fifteen to thirteen untested packages, and the complete clean implementation gate passed without audit exit 2.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

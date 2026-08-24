@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T11:32:08+02:00
+Generated: 2026-08-24T12:22:34+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,25 +10,25 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `312d16897e52`.
-- Restart preparation base: `312d16897e52`.
+- Measured implementation head: `5c6f2fa33719`.
+- Restart preparation base: `5c6f2fa33719`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no implementation changes.
 - No push, merge, release, publication, stash, revert, or worktree removal was
   performed.
 
-P2B implementation commit:
+P3 move 1 implementation commit:
 
 ```text
-312d168 build: make distribution local-only
+5c6f2fa quality: move process exits to main
 ```
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` is in `NEXT` state for P3. P2B is complete; P3 is active
-and P4-P8 remain queued in the machine-readable plan block. The active archive
-is
-`docs/plan/agent-sessions/2026-08-24T113208+0200-remove-process-exits.md`.
+`codex-dev-start.sh` remains in `NEXT` state for P3. The exit-only-main move is
+complete, P3 adapter moves remain active, and P4-P8 remain queued in the
+machine-readable plan block. The active archive is
+`docs/plan/agent-sessions/2026-08-24T122234+0200-introduce-process-adapter.md`.
 Its predecessor is answered history, and the connected graph has exactly one
 `NEXT` tail.
 
@@ -41,92 +41,103 @@ warning; no status content enters the prompt.
 
 `test/codex_dev_start_test.sh` derives active metadata from the launcher. Its 49
 controls include premature `COMPLETE` rejection while authorized work remains,
-so normal handoff does not require a test edit. The ignored `.agent-task` path
-is absent and is not task authority.
+so normal handoff requires no test edit. The ignored `.agent-task` path remains
+absent and is not task authority.
 
-## P2B Result
+## P3 Move 1 Result
 
-P2B completed its single measured move:
+The first P3 move completed as one measured implementation change:
 
-1. `test/makefile_distribution_test.sh` began red on the active top-level
-   `brews:` key. Its final controls reject Homebrew formula, Homebrew cask, and
-   Snap publisher sections in the default config, require remote release to be
-   disabled, and reject a surviving standalone brew config.
-2. `.goreleaser.yml` now declares configuration version 2, pins its schema link
-   to the official v2.17.1 tag, has `release.disable: true`, and contains no
-   inactive package-manager publisher. `.goreleaser.brews.yml` was removed.
-3. `make snapshot` records exactly
-   `release --snapshot --clean --skip=publish`; `make release` delegates to the
-   same path. Five publication credential variables are cleared. The recording
-   executable rejects leaked credentials, and `make release-brew` fails before
-   the recorder is called.
-4. The distribution contract is part of both `make test` and `make preflight`.
-   GoReleaser and every publisher remained unexecuted; actual snapshot artifact
-   acceptance is still honestly unverified until P6.
-
-The flags and schema were checked against official GoReleaser v2.17.1 sources.
-That version's command definition states that `--snapshot` implies skipping
-announce, publish, and validate; the explicit `--skip=publish`, disabled remote
-release config, absent publishers, and cleared credentials provide independent
-fail-closed layers.
+1. `cmd/entry_boundary_test.go` began red with both entry paths unbound, a
+   missing error-returning command path, and all 127 process-terminating calls.
+   Its syntax-aware scan now requires both executable files to delegate to the
+   same `cmd.ExecuteE() error`, requires exit 1 selection inside each `main`,
+   and rejects `log.Fatal*` or `os.Exit` everywhere else.
+2. `cmd.ExecuteE()` owns Cobra execution and returns errors. The exported
+   `cmd.Execute()` remains `func()` for API compatibility but no longer exits;
+   `cmd.RootCmd` is unchanged. The compatible new symbol is recorded in the
+   API allowlist. Root/status/upgrade/build help and unknown-command stdout,
+   stderr, and exit 1 behavior remain green.
+3. Cobra initializers, pre-run hooks, run hooks, and their unexported helpers
+   now propagate errors. Both `main.go` and `cmd/ply/main.go` print returned
+   errors and call `os.Exit(1)`. The two remaining package-level fatal sites
+   were converted to non-terminating logging without changing exported
+   signatures.
+4. No process, HTTP, filesystem, clock, or server adapter was introduced. That
+   ordered work begins with the next move.
 
 ## Measured Quality State
 
-The clean full audit at `312d16897e52` reports:
+The clean full audit at `5c6f2fa33719` reports:
 
 - Absolute L0: 8 of 8.
-- 37 test functions, zero skipped; 7 of 22 packages have tests.
+- 39 test functions, zero skipped; 9 of 22 packages have tests.
 - Q0.8: 0 of 7 production scripts lack a meta-test.
-- Ratchets: two improved, five held, zero regressed.
-- Process-exiting calls outside `main`: 127.
+- Process-exiting calls outside `main`: 0; Q1.2 is an absolute PASS and an
+  improved ratchet from 127.
+- Packages without tests: 13 of 22, improved from the stored 15-package debt.
 - Direct production effects outside the five declared adapters: 80 of 80.
 - Declared seam swap tests: 0 of 8.
 - Mutation harnesses: 0 of 8.
 - Acceptance scripts: 4 of 4; Q2.5, Q2.6, Q2.7, and Q2.10 pass.
 - Q2.8 and Q2.9 remain honestly `UNMEASURABLE` pending criterion-bound manual
   evidence; the executable magnitude, bad-input, and read-only controls exist.
-- Full audit exit: expected 1 for 16 documented non-passing criteria; no audit
-  returned exit 2.
+- Full audit exit: expected 1 for documented project findings; no audit returned
+  exit 2.
 - Measurement identity: clean, with zero dirty paths.
+
+The implementation audit exposed one inherited Q3.4 regression from a host
+tool sentence added by restart commit `2034f63`. This handoff replaces that
+sentence with a dated probe result. The final clean handoff audit must therefore
+show four improved, three held, and zero regressed comparable ratchets.
 
 Regenerate `target/quality-audit/scorecard.json`; it is ignored output, not
 persistent evidence. Compatibility checks create ignored reports under
-`target/compatibility`; remove those generated reports before the full audit or
-the audit will correctly mark the measurement tree dirty.
+`target/compatibility`; direct them outside the worktree or remove those
+generated reports before the full audit.
 
 ## Decisions And Learned Facts
 
-1. GoReleaser is not installed on the host and was not invoked. The official
-   v2.17.1 tagged schema and command source were inspected before production
-   flags were bound.
-2. There is no production publication target. `make release` is deliberately a
-   local snapshot alias, while the inactive Homebrew target explains its
-   boundary and exits non-zero.
-3. Passing `GOLANGCI_LINT` as a Make command-line variable propagates through
+1. Repository-wide local search found no Ply consumer of `cmd.Execute()` beyond
+   the original root executable. The similarly named Trip functions belong to
+   another Go module. No evidence requires `cmd.Execute()` to terminate.
+2. `cmd.ExecuteE()` temporarily silences Cobra while it executes, restores the
+   public `RootCmd` settings, reproduces unknown-command diagnostics, maps the
+   private documentation-complete sentinel to success, and returns every other
+   error to `main`.
+3. Cobra's initializer callback cannot return an error. It now records the
+   initialization error, and `InitGlobals` or the build boundary returns it
+   before command work begins.
+4. Returning `flag.ErrHelp` from `OkHelp` lets Cobra stop a command and retain
+   successful help behavior without a process exit.
+5. The clean gate improved Q1.1 because the root and `cmd` entry packages gained
+   tests; this was a consequence of the required boundary contract, not adapter
+   scope.
+6. A host probe on 2026-08-24 found no GoReleaser executable, and no GoReleaser
+   or publisher command was invoked. The retained local snapshot contract is
+   outside P3 execution scope.
+7. Passing `GOLANGCI_LINT` as a Make command-line variable propagates through
    `MAKEFLAGS` and defeats the lint meta-test's missing-binary mutant. Provide
    `APIDIFF` and `GOLANGCI_LINT` as environment variables for `make preflight`.
-4. The sandbox denies the default Go and golangci-lint cache paths. Use isolated
+8. The sandbox denies the default Go and golangci-lint cache paths. Use isolated
    `GOCACHE`, `GOTMPDIR`, and `GOLANGCI_LINT_CACHE` directories under
    `/private/tmp`.
-5. P2A API, Cobra, subprocess, and four host acceptance contracts remain green.
-   The distribution move left the process-exit and direct-effect ratchets held.
-6. Both `main.go` and `cmd/ply/main.go` remain active entry points. P3 must bind
-   them to one error/exit boundary before introducing adapters.
 
 ## Next Objective
 
-P3 is active. Its first measured move is the exit-only-main boundary: start
-with a failing contract that proves both executable entry points delegate to
-one error-returning command path, move process termination to the two `main`
-boundaries, and reduce Q1.2 process-exiting calls outside `main` from 127 to
-zero while preserving exported `cmd.Execute()` and `cmd.RootCmd` signatures and
-all P2A CLI/API/acceptance behavior.
+P3 remains active. Introduce `internal/adapter/process` and migrate one coherent
+git flow from `pkg/shell/git.go`. Start red with recording argument-order tests
+for the declared `git-process` and `git-commit` seams: clone must keep URL before
+target directory, and commit must keep target directory before message. The
+recording double must fail on an empty call population and preserve the complete
+dependency value passed to production code.
 
-Do not begin subprocess, HTTP, or filesystem adapter work until the process
-boundary is green and measured. Do not enter Docker, dependencies, cloud,
-Spring, distribution, or mutation scope. If external callers demonstrably
-require `cmd.Execute()` itself to terminate the process, stop for an explicit
-migration decision rather than hiding the exit.
+Reduce Q1.3 by exactly the migrated git call sites and increase Q1.4 only for
+the swaps the new tests kill. Preserve the Q1.2 zero boundary, Go 1.18, all P2A
+API/CLI/subprocess and host acceptance behavior, and zero comparable ratchet
+regressions. Do not migrate Maven or cloud calls in the same move, and do not
+enter HTTP, filesystem, clock, server, Docker, dependency, distribution,
+Spring, or mutation-harness scope.
 
 ## Start
 
@@ -141,28 +152,29 @@ session prepares its successor automatically before stopping.
 
 ## Verification Notes
 
-Completed at the P2B boundary:
+Completed from clean implementation commit `5c6f2fa33719`:
 
-- Focused distribution contract and its Homebrew/Snap/credential/target
-  controls: PASS.
+- Focused entry-boundary tests for both executables: PASS.
+- Both root and `cmd/ply` fresh binaries produced byte-identical help and
+  unknown-command streams with exit 1 for bad input.
 - API and CLI compatibility plus both compatibility meta-tests: PASS.
 - Host install, status, upgrade, and build acceptance: PASS.
 - `make preflight`, `make test`, `make test-install`, `make test-agent-start`,
   uncached tests, race tests, and `go vet ./...`: PASS.
 - Empty-HOME `go test ./... -count=2` with isolated writable state: PASS.
 - `bash .quality/tools/test-quality-audit.sh`: PASS, 15 controls.
-- Clean full audit at `312d16897e52`: expected exit 1, L0 8 of 8, two
-  improved, five held, zero regressed ratchets, and zero dirty paths.
+- Clean full audit: expected exit 1, L0 8 of 8, Q1.2 0, 39 tests, 9 tested
+  packages, and zero dirty paths. The inherited handoff wording is corrected in
+  the restart commit and rechecked there.
 
-Tool paths used at P2B were
-`/private/tmp/ply-p2b-api.4umBuM/bin/apidiff` and
+Tool paths used were `/private/tmp/ply-p2b-api.4umBuM/bin/apidiff` and
 `/private/tmp/ply-p2b-lint.SGWVGp/bin/golangci-lint`; probe before reuse because
-temporary paths are not persistent dependencies. The successful gate used
-`/private/tmp/ply-p2b-gate.gLKunN` for writable caches.
+temporary paths are not persistent dependencies. The clean gate used
+`/private/tmp/ply-p3-clean-gate.v5OyEp` for writable caches.
 
 Environment on 2026-08-24: host Go 1.26.2 on Darwin arm64, module Go 1.18,
-`/bin/bash` 3.2.57, PATH Bash 5.3.9, Docker daemon unavailable, GoReleaser
-unavailable, and shellcheck unavailable.
+`/bin/bash` 3.2.57, and PATH Bash 5.3.9. Docker, public network, cloud, Spring,
+and distribution execution were outside this move.
 
 ## Stop Conditions
 
@@ -171,8 +183,7 @@ Stop and report rather than forcing progress when:
 - the audit exits 2;
 - a comparable ratchet regresses;
 - public CLI or Go API compatibility cannot be established;
-- both executable entry points cannot share one explicit error/exit boundary
-  without an approved compatibility migration;
-- P3 move 1 would require adapter, Docker, cloud, Spring, dependency,
-  distribution, or mutation scope; or
-- the first measured P3 move is complete.
+- the git process adapter cannot preserve exact argument order and defaults;
+- the move requires Maven, cloud, HTTP, filesystem, clock, server, Docker,
+  dependency, distribution, Spring, or mutation-harness scope; or
+- the one coherent git adapter move is complete.

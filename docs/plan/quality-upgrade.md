@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `312d168`.
+Last measured checkpoint: 2026-08-24, commit `5c6f2fa`.
 
 ## Objective
 
@@ -41,20 +41,20 @@ P8|queued
 
 ## Measured State
 
-| Signal | Baseline | P1B | P2A | P2B | Interpretation |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3 and Q0.8 remain closed. |
-| Test functions | 33 | 37 | 37 | 37 | Distribution uses an external executable contract. |
-| Skipped tests | 2 | 0 | 0 | 0 | Q0.6 remains improved. |
-| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | Fifteen packages still have no test files. |
-| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | P2B did not enter P3 process-boundary scope. |
-| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | Q1.3 fails; all five adapter paths are absent. |
-| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
-| Mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
-| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | Q2.5-Q2.7 and Q2.10 pass; Q2.8/Q2.9 remain manual. |
-| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | Q0.8 remains improved over a larger population. |
-| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures still prove schema reachability. |
-| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | Distribution work did not migrate the instrument. |
+| Signal | Baseline | P1B | P2A | P2B | P3.1 | Interpretation |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3 and Q0.8 remain closed. |
+| Test functions | 33 | 37 | 37 | 37 | 39 | Both executable packages now have boundary contracts. |
+| Skipped tests | 2 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
+| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | Thirteen packages still have no test files. |
+| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | Q1.2 is closed; only the two executable `main` functions terminate. |
+| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | Adapter work follows the green process boundary. |
+| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | The next move starts the git process seams. |
+| Mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
+| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
+| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | Q0.8 remains improved over a larger population. |
+| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures still prove schema reachability. |
+| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | The measurement instrument remains unchanged. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -203,15 +203,27 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: queued.
+Status: active. Move 1 is complete.
 
-First reduce Q1.2. Add an error-returning execution path and move process exit
-to the main boundary. Both `main.go` and `cmd/ply/main.go` exist and are used by
-different build paths; contract-test that both delegate to the same error/exit
-path, or explicitly retire one without changing produced artifacts. Preserve
-exported `cmd.Execute()` and `cmd.RootCmd` symbols/signatures through the P2
-compatibility decision. Only after this boundary is green, introduce thin
-adapters one at a time using `.quality/inventory`:
+Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
+both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
+rejects `log.Fatal*` or `os.Exit` outside the two executable `main` functions.
+The legacy exported `cmd.Execute()` and `cmd.RootCmd` signatures remain intact;
+the compatible `ExecuteE` addition is explicit in the P2A API allowlist. Cobra
+initialization, pre-run hooks, and run hooks now return errors, while the two
+entry points alone print the returned error and select exit 1.
+
+Commit: `5c6f2fa`.
+
+The clean implementation gate passed the boundary, API, Cobra, subprocess,
+four host acceptance, preflight, test, race, vet, lint, audit-meta, and
+empty-HOME count-2 contracts. Q1.1 also improved from fifteen to thirteen
+untested packages. The full audit exited 1, never 2. It identified one
+handoff-only Q3.4 wording regression inherited from `2034f63`; finalization
+rephrases that host probe before the next measured move.
+
+With the process boundary green, introduce thin adapters one at a time using
+`.quality/inventory`:
 
 1. `internal/adapter/process` for subprocess execution, not application exit.
 2. `internal/adapter/httpclient` for HTTP request execution.
