@@ -60,6 +60,23 @@ type recordingDirectoryCreateFilesystem struct {
 	mkdirErr  error
 }
 
+type recordedFileOpenOperation struct {
+	name  string
+	path  string
+	data  []byte
+	flags int
+	mode  fs.FileMode
+}
+
+type recordingFileOpenFilesystem struct {
+	operations []recordedFileOpenOperation
+	statInfo   fs.FileInfo
+	statErr    error
+	writeErr   error
+	opened     *os.File
+	openErr    error
+}
+
 type existingFileInfo struct {
 	name string
 }
@@ -92,6 +109,10 @@ func (*recordingFileReadFilesystem) WriteFile(string, []byte, fs.FileMode) error
 	return errors.New("unexpected file-read write")
 }
 
+func (*recordingFileReadFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected file-read open file")
+}
+
 func (*recordingFileReadFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-read create")
 }
@@ -122,6 +143,10 @@ func (*recordingFileExistenceFilesystem) MkdirAll(string, fs.FileMode) error {
 
 func (*recordingFileExistenceFilesystem) WriteFile(string, []byte, fs.FileMode) error {
 	return errors.New("unexpected file-existence write")
+}
+
+func (*recordingFileExistenceFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected file-existence open file")
 }
 
 func (*recordingFileExistenceFilesystem) Create(string) (filesystem.File, error) {
@@ -164,6 +189,10 @@ func (recording *recordingFileOverwriteFilesystem) WriteFile(path string, data [
 	return recording.writeErr
 }
 
+func (*recordingFileOverwriteFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected file-overwrite open file")
+}
+
 func (*recordingFileOverwriteFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-overwrite create")
 }
@@ -204,6 +233,10 @@ func (recording *recordingFileCreateFilesystem) WriteFile(path string, data []by
 	return recording.writeErr
 }
 
+func (*recordingFileCreateFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected file-create open file")
+}
+
 func (*recordingFileCreateFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-create create")
 }
@@ -241,6 +274,10 @@ func (*recordingDirectoryCreateFilesystem) WriteFile(string, []byte, fs.FileMode
 	return errors.New("unexpected directory-create write")
 }
 
+func (*recordingDirectoryCreateFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected directory-create open file")
+}
+
 func (*recordingDirectoryCreateFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected directory-create create")
 }
@@ -265,6 +302,181 @@ func (recording *recordingDirectoryCreateFilesystem) assertedCreates() ([]record
 		return nil, errors.New("recorded directory-create creation population is empty")
 	}
 	return recording.creates, nil
+}
+
+func (*recordingFileOpenFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected append-open read")
+}
+
+func (recording *recordingFileOpenFilesystem) Stat(path string) (fs.FileInfo, error) {
+	recording.operations = append(recording.operations, recordedFileOpenOperation{name: "stat", path: path})
+	return recording.statInfo, recording.statErr
+}
+
+func (*recordingFileOpenFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected append-open mkdir")
+}
+
+func (recording *recordingFileOpenFilesystem) WriteFile(path string, data []byte, mode fs.FileMode) error {
+	recording.operations = append(recording.operations, recordedFileOpenOperation{
+		name: "write", path: path, data: append([]byte{}, data...), mode: mode,
+	})
+	return recording.writeErr
+}
+
+func (*recordingFileOpenFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected append-open create")
+}
+
+func (*recordingFileOpenFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected append-open copy")
+}
+
+func (recording *recordingFileOpenFilesystem) OpenFile(path string, flags int, mode fs.FileMode) (*os.File, error) {
+	recording.operations = append(recording.operations, recordedFileOpenOperation{
+		name: "open-file", path: path, flags: flags, mode: mode,
+	})
+	return recording.opened, recording.openErr
+}
+
+func (recording *recordingFileOpenFilesystem) dependencies() openFileDependencies {
+	return openFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingFileOpenFilesystem) assertedOperations() ([]recordedFileOpenOperation, error) {
+	if len(recording.operations) == 0 {
+		return nil, errors.New("recorded append-open population is empty")
+	}
+	return recording.operations, nil
+}
+
+func TestOpenFileSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemOpenFileDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("OpenFile selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("OpenFile filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestOpenFileMissingPathCreatesExactEmptyFileBeforeAppendOpen(t *testing.T) {
+	path := "/complete append-open/path with spaces/file.txt"
+	missingError := &os.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
+	openError := errors.New("complete append-open dependency error")
+	opened := &os.File{}
+	recording := &recordingFileOpenFilesystem{
+		statErr: missingError,
+		opened:  opened,
+		openErr: openError,
+	}
+	dependencies := recording.dependencies()
+	if dependencies.Files.FileSystem != recording {
+		t.Fatalf("append-open dependency lost its complete filesystem value: %#v", dependencies)
+	}
+
+	actual, err := openFile(dependencies, path)
+
+	if actual != opened || err != openError {
+		t.Fatalf("append-open result was (%p, %v), want exact dependency result (%p, %v)", actual, err, opened, openError)
+	}
+	want := []recordedFileOpenOperation{
+		{name: "stat", path: path},
+		{name: "write", path: path, data: []byte{}, mode: 0644},
+		{name: "open-file", path: path, flags: os.O_APPEND | os.O_WRONLY, mode: 0644},
+	}
+	assertRecordedFileOpenOperations(t, recording, want)
+}
+
+func TestOpenFileExistingAndNonMissingStatErrorsSkipCreation(t *testing.T) {
+	path := "/complete append-open/path with spaces/existing.txt"
+	statError := errors.New("permission denied while probing complete append-open path")
+	tests := []struct {
+		name     string
+		statInfo fs.FileInfo
+		statErr  error
+	}{
+		{name: "existing path", statInfo: existingFileInfo{name: "existing.txt"}},
+		{name: "non-missing stat error", statErr: statError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			opened := &os.File{}
+			recording := &recordingFileOpenFilesystem{
+				statInfo: test.statInfo,
+				statErr:  test.statErr,
+				opened:   opened,
+			}
+
+			actual, err := openFile(recording.dependencies(), path)
+
+			if actual != opened || err != nil {
+				t.Fatalf("append-open result was (%p, %v), want (%p, nil)", actual, err, opened)
+			}
+			want := []recordedFileOpenOperation{
+				{name: "stat", path: path},
+				{name: "open-file", path: path, flags: os.O_APPEND | os.O_WRONLY, mode: 0644},
+			}
+			assertRecordedFileOpenOperations(t, recording, want)
+		})
+	}
+}
+
+func TestOpenFileCreateErrorShortCircuitsBeforeAppendOpen(t *testing.T) {
+	path := "/complete append-open/create-error/file.txt"
+	missingError := &os.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
+	createError := errors.New("complete empty-file creation dependency error")
+	recording := &recordingFileOpenFilesystem{statErr: missingError, writeErr: createError}
+
+	opened, err := openFile(recording.dependencies(), path)
+
+	if opened != nil || err != createError {
+		t.Fatalf("append-open create-error result was (%p, %v), want (nil, %v)", opened, err, createError)
+	}
+	want := []recordedFileOpenOperation{
+		{name: "stat", path: path},
+		{name: "write", path: path, data: []byte{}, mode: 0644},
+	}
+	assertRecordedFileOpenOperations(t, recording, want)
+}
+
+func TestOpenFileDependenciesDefaultToSafeNoPathAccess(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "safe default", "must-not-exist.txt")
+
+	opened, err := openFile(openFileDependencies{}, target)
+
+	if opened != nil || !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe append-open dependency default returned (%p, %v), want (nil, %v)", opened, err, filesystem.ErrNoFilesystem)
+	}
+	if _, statErr := os.Stat(target); !os.IsNotExist(statErr) {
+		t.Fatalf("safe append-open dependency default accessed or mutated the target: %v", statErr)
+	}
+}
+
+func TestRecordedFileOpenRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingFileOpenFilesystem{}
+
+	if _, err := recording.assertedOperations(); err == nil {
+		t.Fatal("empty recorded append-open population passed")
+	}
+}
+
+func assertRecordedFileOpenOperations(
+	t *testing.T,
+	recording *recordingFileOpenFilesystem,
+	want []recordedFileOpenOperation,
+) {
+	t.Helper()
+	operations, err := recording.assertedOperations()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(operations, want) {
+		t.Fatalf("recorded append-open operations differ:\n got: %#v\nwant: %#v", operations, want)
+	}
 }
 
 func TestOpenSelectsCompleteSystemFilesystemDependencies(t *testing.T) {

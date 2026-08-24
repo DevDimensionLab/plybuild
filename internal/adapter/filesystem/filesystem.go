@@ -24,6 +24,7 @@ type FileSystem interface {
 	Stat(string) (fs.FileInfo, error)
 	MkdirAll(string, fs.FileMode) error
 	WriteFile(string, []byte, fs.FileMode) error
+	OpenFile(string, int, fs.FileMode) (*os.File, error)
 	Create(string) (File, error)
 	Copy(File, io.Reader) (int64, error)
 }
@@ -78,6 +79,14 @@ func WriteFile(dependencies Dependencies, path string, data []byte, mode fs.File
 	return dependencies.FileSystem.WriteFile(path, data, mode)
 }
 
+// OpenFile passes the complete path, flags, and mode to the configured dependency.
+func OpenFile(dependencies Dependencies, path string, flags int, mode fs.FileMode) (*os.File, error) {
+	if dependencies.FileSystem == nil {
+		return nil, ErrNoFilesystem
+	}
+	return dependencies.FileSystem.OpenFile(path, flags, mode)
+}
+
 // Create passes the complete destination path to the configured dependency.
 func Create(dependencies Dependencies, path string) (File, error) {
 	if dependencies.FileSystem == nil {
@@ -115,6 +124,10 @@ func (systemFilesystem) MkdirAll(path string, mode fs.FileMode) error {
 
 func (systemFilesystem) WriteFile(path string, data []byte, mode fs.FileMode) error {
 	return os.WriteFile(path, data, mode)
+}
+
+func (systemFilesystem) OpenFile(path string, flags int, mode fs.FileMode) (*os.File, error) {
+	return os.OpenFile(path, flags, mode)
 }
 
 func (systemFilesystem) Create(path string) (File, error) {

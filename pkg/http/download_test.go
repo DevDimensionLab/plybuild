@@ -63,6 +63,10 @@ func (recording *recordingDownloadFilesystem) WriteFile(string, []byte, fs.FileM
 	return errors.New("unexpected write file")
 }
 
+func (recording *recordingDownloadFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected open file")
+}
+
 func (recording *recordingDownloadFilesystem) Create(path string) (filesystem.File, error) {
 	*recording.lifecycle = append(*recording.lifecycle, "create")
 	recording.operations = append(recording.operations, "create")

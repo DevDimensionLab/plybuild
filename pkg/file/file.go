@@ -282,15 +282,26 @@ func createFile(dependencies createFileDependencies, path, content string) error
 	return filesystem.WriteFile(dependencies.Files, path, []byte(content), 0644)
 }
 
-func OpenFile(fileName string) (*os.File, error) {
+type openFileDependencies struct {
+	Files filesystem.Dependencies
+}
 
-	if !Exists(fileName) {
-		if err := CreateFile(fileName, ""); err != nil {
+func systemOpenFileDependencies() openFileDependencies {
+	return openFileDependencies{Files: filesystem.System()}
+}
+
+func OpenFile(fileName string) (*os.File, error) {
+	return openFile(systemOpenFileDependencies(), fileName)
+}
+
+func openFile(dependencies openFileDependencies, fileName string) (*os.File, error) {
+	if !filesystem.Exists(dependencies.Files, fileName) {
+		if err := filesystem.WriteFile(dependencies.Files, fileName, []byte{}, 0644); err != nil {
 			return nil, err
 		}
 	}
 
-	return os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, 0644)
+	return filesystem.OpenFile(dependencies.Files, fileName, os.O_APPEND|os.O_WRONLY, 0644)
 }
 
 func SearchReplace(filePath string, from string, to string) error {

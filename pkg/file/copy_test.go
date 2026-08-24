@@ -75,6 +75,10 @@ func (recording *recordingCopyFilesystem) WriteFile(path string, data []byte, mo
 	return recording.writeErr
 }
 
+func (*recordingCopyFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected open file")
+}
+
 func (*recordingCopyFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected create")
 }
