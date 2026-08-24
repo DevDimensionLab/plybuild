@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T07:38:25+02:00
+Generated: 2026-08-24T08:43:01+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,12 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Last clean quality measurement before session continuity: `166bff5`
-- Checked-out head at handover generation: `166bff5`.
-- Intended continuity checkpoint subject: `dev: add restartable Codex launcher`.
-- Commit attempt on 2026-08-24: the managed sandbox rejected Git writes to the
-  main repository's worktree index/object database. The seven explicit paths
-  below are fully verified but unstaged in this worktree.
+- Measured implementation head: `ab9a5c6`.
+- Documentation head: use `git rev-parse --short HEAD` after checkout.
 - No push or merge was performed.
 
 Earlier focused commits:
@@ -27,12 +23,17 @@ Earlier focused commits:
 25689c5 test: replace skipped Kibana integration
 1cc3361 docs: establish quality upgrade plan
 166bff5 chore: ignore local agent handoffs
+3e80994 dev: add restartable Codex launcher
+2972d11 quality: pin static analysis gate
+e956da7 test: add search-replace meta-test
+ab9a5c6 quality: add non-publishing preflight
 ```
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` starts one fresh interactive Codex session with the P1
-mission. It inherits the user's Codex profile except that it explicitly passes
+`codex-dev-start.sh` still contains the answered-in-practice P1 mission until
+the exact restart trigger authorizes session-tail and archive updates. It
+inherits the user's Codex profile except that it explicitly passes
 `-c 'service_tier="default"'`, overriding the locally configured Fast mode for
 this startup only. Its stable executable section precedes
 `CODEX_STABLE_EXECUTION_END`; both mutable regions are comment-encoded `#|`
@@ -79,19 +80,23 @@ The ignored `.agent-task/current.md` source was retired and is absent.
 
 ## Measured Quality State
 
-The last comparable clean structured audit before this checkpoint reports:
+The clean full audit at `ab9a5c6` reports:
 
-- L0: 7 of 8; Q0.3 is the remaining absolute L0 failure.
+- Absolute L0: 8 of 8.
 - Q0.6: 0 skipped tests out of 37 and 0 unsafe direct test writes.
-- Ratchets: one improved, six held, zero regressed.
+- Q0.8: 0 of 1 production scripts lack a meta-test.
+- Ratchets: two improved, five held, zero regressed.
 - Packages with tests: 7 of 22; fifteen remain without test files.
 - Process-exiting calls outside `main`: 127.
 - Direct production effects outside the five declared adapters: 80 of 80.
 - Declared seam swap tests: 0 of 8.
 - Mutation harnesses: 0 of 8.
 - Acceptance scripts: 0 of 4.
-- Q0.8 production scripts without an independent negative meta-test: 1 of 1,
-  `scripts/search-replace.sh`.
+
+Correction to the prior handover: its structured 7-of-8 count included Q0.8 as
+a held ratchet PASS. The starting raw absolute count was 6 of 8 because Q0.3
+and Q0.8 both failed their underlying criteria. P1 closed both rather than
+treating the held Q0.8 debt as complete.
 
 Regenerate `target/quality-audit/scorecard.json`; it is ignored output, not
 persistent evidence. The full audit may exit 1 for measured findings. Exit 2
@@ -99,7 +104,7 @@ invalidates the checkpoint.
 
 ## Decisions Learned
 
-Contract controls added during continuity review:
+Contract controls established through P0A and P1:
 
 1. Mutable data is after the execution boundary, not executable assignments.
 2. Tests derive session IDs and archive paths and exercise a second generation.
@@ -117,6 +122,12 @@ Contract controls added during continuity review:
    `CODEX_BIN` must resolve to an external executable file.
 9. Startup overrides only `service_tier` to `default`; global Fast mode and all
    other user-profile settings remain untouched.
+10. `make lint` resolves an explicit `GOLANGCI_LINT` before `PATH`, verifies
+    exactly `2.12.2`, forces offline module resolution, validates the v2 config,
+    and never requests fixes.
+11. `make preflight` runs build, uncached tests, vet/lint, launcher/lint/install
+    contracts, every `scripts/test-*`, and the quality meta-suite. Its contract
+    rejects missing, empty, incomplete, orphaned, and symlinked populations.
 
 The archive stores the actual prompt argument, not a template with runtime
 substitutions. Dirty state therefore cannot make the archive and Codex input
@@ -133,36 +144,16 @@ P2B.
 
 ## Next Objective
 
-Execute P1 from `docs/plan/quality-upgrade.md`: close absolute L0 and establish
-the daily preflight gate in no more than three measured moves.
+Prepare the next session for P1B from `docs/plan/quality-upgrade.md`: make the
+six manual L1/L2 rows reachable through commit-, tree-, inventory-, and
+instrument-bound structured evidence without letting evidence override an
+upstream failure.
 
-Before editing P1, inspect branch, HEAD, and all local changes. If HEAD is still
-`166bff5` and the verified continuity diff is intact, stage only `Makefile`,
-`codex-dev-start.sh`, `test/codex_dev_start_test.sh`,
-`docs/design/agent-session-continuity.md`, `docs/plan/quality-upgrade.md`,
-`docs/plan/quality-handover.md`, and the active session archive; verify the
-staged names and commit them as `dev: add restartable Codex launcher`. This
-preservation commit does not consume a P1 move. Do not discard or mix these
-changes with P1 implementation.
-
-1. Pin official golangci-lint `v2.12.2`. Check in a v2 config with
-   `linters.default: none`; enable `errcheck`, `govet`, `ineffassign`,
-   `staticcheck`, `unused`, and the `gofmt` formatter. Keep `go.mod` at Go
-   1.18. `make lint` resolves `GOLANGCI_LINT` before `PATH`, verifies the
-   exact version, and performs no download or rewrite. `make format` owns
-   `gofmt -w`. Installation uses the upstream release binary outside the repo;
-   do not add a networked installer target.
-2. Add an independent negative meta-test for
-   `scripts/search-replace.sh`, the current Q0.8 population. Do not broaden
-   this move into publication work; the launcher and audit scripts already have
-   their own suites.
-3. Add and meta-test `make preflight`: build, uncached tests, vet/lint,
-   install contract, every `scripts/test-*`, and the quality-audit meta-suite.
-   Reject an empty, omitted, or incomplete script population. Do not add
-   `make verify` or `make quality` in P1.
-
-Run each focused test before its broad gate and make one focused commit per
-move. Stop after three moves or on a stop condition below.
+The next implementation must migrate the exact-toolchain baseline explicitly:
+reproduce commit `5635d50` with the old and new instruments, preserve every
+numeric debt value, and add fail-closed tests for stale, duplicate, empty,
+wrong-kind, dirty-tree, and false-PASS receipts. This mission is queued here;
+do not change launcher/archive state until the user sends `agent-restart`.
 
 ## Start
 
@@ -193,6 +184,13 @@ release, stash, revert, worktree removal, or staging unrelated changes.
 
 Completed during this checkpoint:
 
+- `make preflight`: PASS from clean commit `ab9a5c6`; no publishing or packaging
+  path ran and the tree remained clean.
+- Pinned golangci-lint `2.12.2`: config verification and `make lint` PASS with
+  zero issues. The binary used for measurement was installed outside the repo
+  at `/private/tmp/ply-golangci-lint-v2.12.2/golangci-lint`.
+- `test/makefile_lint_test.sh`, `scripts/test-search-replace.sh`, and
+  `test/makefile_preflight_test.sh`: PASS, including their negative controls.
 - `/bin/bash test/codex_dev_start_test.sh`: PASS, 48 controls.
 - `make test-agent-start`: PASS, using macOS Bash 3.2.57.
 - `make test`: PASS with isolated `GOCACHE` and `GOTMPDIR`.
@@ -200,9 +198,11 @@ Completed during this checkpoint:
   `go test -race ./... -count=1`, and `go vet ./...`: PASS.
 - Empty-HOME `go test ./... -count=2` with isolated writable state: PASS.
 - `bash .quality/tools/test-quality-audit.sh`: PASS, 15 controls.
-- Full quality audit: expected exit 1 for measured debt; structured L0 is 7 of
-  8, one ratchet improved, six held, and zero regressed. Q3.4 measured zero
-  state-claim phrases.
+- Full quality audit: expected exit 1 for 20 findings above L0; absolute L0 is
+  8 of 8, Q0.8 is 0 of 1, two ratchets improved, five held, and zero regressed.
+  Q3.4 measured zero state-claim phrases.
+- Exported `go doc -all` output matched `3e80994` byte-for-byte after the static
+  cleanup; no exported Go declaration changed.
 - `codex --strict-config -c 'service_tier="default"' --help`: PASS without a
   model request.
 - Contract runs poisoned with `CDPATH`, global Git fsmonitor, and `GIT_DIR`:
@@ -210,9 +210,6 @@ Completed during this checkpoint:
 - `CODEX_BIN=/usr/bin/true ./codex-dev-start.sh --check`: PASS with the
   expected dirty-tree warning.
 - `git diff --check`: PASS.
-- Explicit `git add` for the continuity checkpoint: blocked because the managed
-  sandbox denied `.git/worktrees/upgrade-quality/index.lock`; no path was
-  staged and no Git ref was changed.
 
 Environment probes on 2026-08-24:
 
@@ -221,8 +218,9 @@ Environment probes on 2026-08-24:
   unavailable. No image build was claimed.
 - `shellcheck` is unavailable. No shellcheck result was claimed.
 - Host Go is 1.26.2 on Darwin arm64; the module declaration remains Go 1.18.
-- golangci-lint probe on 2026-08-24: executable unavailable on `PATH`. P1 must
-  install the pinned external prerequisite before claiming lint evidence.
+- golangci-lint is still unavailable on `PATH`; use the explicit temporary path
+  above if it remains present, or install the official `v2.12.2` binary outside
+  the repository before rerunning `make lint` or `make preflight`.
 
 ## Stop Conditions
 

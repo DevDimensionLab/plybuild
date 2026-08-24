@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-23, commit `25689c5`.
+Last measured checkpoint: 2026-08-24, commit `ab9a5c6`.
 
 ## Objective
 
@@ -27,9 +27,9 @@ because the ratchet verdict says PASS.
 
 ## Measured State
 
-| Signal | Baseline | Commit `25689c5` | Interpretation |
+| Signal | Baseline | Commit `ab9a5c6` | Interpretation |
 | --- | ---: | ---: | --- |
-| L0 PASS | 2 / 8 | 7 / 8 | Q0.3 is the remaining L0 failure. |
+| Absolute L0 PASS | 2 / 8 | 8 / 8 | Q0.3 and Q0.8 are closed. |
 | Test functions | 33 | 37 | Entrypoint and repository-write controls were added. |
 | Skipped tests | 2 | 0 | Q0.6 improved. |
 | Packages with tests | 5 / 20 | 7 / 22 | Fifteen packages still have no test files. |
@@ -38,6 +38,7 @@ because the ratchet verdict says PASS.
 | Declared seam swap tests | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
 | Mutation harnesses | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
 | Acceptance scripts | 0 / 4 | 0 / 4 | Q2.5 fails. |
+| Production scripts without meta-tests | 1 / 1 | 0 / 1 | Q0.8 improved; the population is non-empty. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -74,38 +75,30 @@ Status: complete as an operational prerequisite for P1.
 This apparatus does not consume one of P1's three measured quality moves. Its
 contract test runs in `make test` and every later checkpoint gate.
 
+Commit: `3e80994`.
+
 ### P1 - Close L0 And Establish The Daily Gate
 
-Status: next checkpoint. Limit: three moves.
+Status: complete. The three-move limit was observed.
 
-1. Pin the official golangci-lint binary at `v2.12.2` and check in an explicit
-   version-2 configuration while retaining the module's Go 1.18 declaration.
-   `make lint` must require and verify that preinstalled version, perform no
-   download or source rewrite, and run the explicit linter set. Add `make
-   format` as the only `gofmt -w` target. Tool installation is an explicit
-   developer prerequisite using the upstream release binary outside the
-   repository; do not add a networked installer target. Resolve
-   `GOLANGCI_LINT` first and then `PATH`, and fail with the pinned official
-   install command when the executable or version is wrong. Configure
-   `linters.default: none` and explicitly enable `errcheck`, `govet`,
-   `ineffassign`, `staticcheck`, and `unused`; enable the `gofmt` formatter and
-   make lint fail on formatting drift without rewriting it.
-2. Add an independent negative meta-test for `scripts/search-replace.sh`, the
-   current Q0.8 production-script population, so the measured value reaches
-   zero. `codex-dev-start.sh` and `.quality/tools/*` keep their own contract and
-   meta-suites; publication scripts remain in P2B rather than expanding P1.
-3. Add a tested `make preflight` entry point for build, uncached tests,
-   vet/lint, install-contract tests, every `scripts/test-*`, and
-   `.quality/tools/test-quality-audit.sh`. Its own meta-test must reject an
-   empty, omitted, or incomplete script population. Reserve `make quality` for
-   L2.
+- Pinned the official golangci-lint binary contract at `v2.12.2`, retained Go
+  1.18, split read-only `make lint` from `make format`, and brought the selected
+  five-linter plus `gofmt` gate to zero issues.
+- Added an independent negative meta-test for `scripts/search-replace.sh`; it
+  exercises selection and replacement, exposes pipeline failures, and kills a
+  no-op mutant.
+- Added the non-publishing `make preflight` gate and a contract test that rejects
+  missing, empty, incomplete, orphaned, and symlinked script populations.
+
+Commits: `2972d11`, `e956da7`, `ab9a5c6`.
 
 Exit: L0 is 8 of 8, scripts without meta-tests equals zero, the tree is
-unchanged by the gate, and no ratchet regresses.
+unchanged by the gate, and no ratchet regresses. Verified at `ab9a5c6`: two
+ratchets improved, five held, and zero regressed.
 
 ### P1B - Make Manual L1/L2 Evidence Reachable
 
-Status: required apparatus checkpoint before claiming L1 or L2.
+Status: next checkpoint; required before claiming L1 or L2.
 
 The vendored audit always emits UNMEASURABLE for Q1.6, Q1.7, Q1.9, Q2.4,
 Q2.8, and Q2.9. The structured layer only consumes manual evidence for Q3.9.
@@ -256,6 +249,7 @@ Status: queued after the core L2 flows.
 ## Gate For Every Checkpoint
 
 ```sh
+make preflight
 make test
 make test-install
 make test-agent-start
