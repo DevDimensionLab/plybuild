@@ -1,13 +1,13 @@
 # Agent Session: Supervise Noninteractive Sessions
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T212408+0200-supervise-noninteractive-sessions`
 Created: `2026-08-24T21:24:08+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `df65ec792a101c934fb0c8ee23ce7c00270b9a78d409e715b03b089bd3ddbcde`
 Previous: [2026-08-24T200448+0200-migrate-wpost-http-filesystem.md](2026-08-24T200448+0200-migrate-wpost-http-filesystem.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T221350+0200-migrate-bitbucket-clone-selection.md](2026-08-24T221350+0200-migrate-bitbucket-clone-selection.md)
+Outcome: Completed at `1b85711`: normal launch is a Bash 3.2 non-interactive JSONL supervisor with external raw logs, fail-closed event/process handling, signal forwarding, and committed handoff evidence; 62 launcher contracts and the full product/audit gate passed with all P3 quality values unchanged and zero comparable regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

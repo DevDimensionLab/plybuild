@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T21:24:08+02:00
+Generated: 2026-08-24T22:13:50+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,14 +10,14 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `a7eb3ef400f7`.
-- Restart preparation base: `a7eb3ef400f7`.
+- Measured implementation head: `1b85711b139c`.
+- Restart preparation base: `1b85711b139c`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
-  commit contains this handover and no implementation changes.
-- No push, merge, release, publication, stash, revert, or worktree removal was
-  performed.
+  commit contains this handover and no product implementation changes.
+- No push, merge, release, publication, stash, revert, successor launch, or
+  worktree removal was performed.
 
-P3 implementation commits:
+P3 implementation commits remain:
 
 ```text
 5c6f2fa quality: move process exits to main
@@ -33,228 +33,184 @@ dee214c quality: move Spring discovery behind HTTP adapter
 a7eb3ef quality: move Wpost behind HTTP and filesystem adapters
 ```
 
+The separate operational continuity implementation is:
+
+```text
+1b85711 quality: supervise non-interactive agent sessions
+```
+
+It is not P3.12 and changes no Go quality denominator.
+
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` remains in `NEXT` state while P3 is active and P4-P8
-remain authorized in the machine-readable plan block. Eleven P3 moves are
-complete. At the user's request, the next task is an operational continuity
-move: convert normal launcher execution from one interactive session into a
-non-interactive, observable supervisor loop. After that focused launcher move,
-resume the remaining P3 production-effect migrations.
+`codex-dev-start.sh` remains `NEXT` while P3 is active and P4-P8 remain queued
+in the machine-readable plan block. Its active archive is
+`docs/plan/agent-sessions/2026-08-24T221350+0200-migrate-bitbucket-clone-selection.md`.
+Its predecessor is answered history, and the complete reciprocal graph has
+exactly one `NEXT` tail.
 
-The active archive is
-`docs/plan/agent-sessions/2026-08-24T212408+0200-supervise-noninteractive-sessions.md`.
-Its predecessor is answered history, and the connected graph has exactly one
-`NEXT` tail. The launcher is still interactive and one-shot at this handoff;
-the active task must characterize and change that behavior rather than assume
-it already exists.
+Normal launch is now a Bash 3.2-compatible, non-interactive supervisor. Each
+generation resolves an external Codex executable and invokes exact
+`codex exec` arguments for normal service tier, workspace-write, the repository
+working directory, JSONL, an external final-message path, and the byte-exact
+validated prompt. It does not use interactive mode or resume a thread.
 
-The current launcher validates its attached branch/root, authorized queue,
-strict session metadata, non-symlink planning inputs, reciprocal archive graph,
-historical prompt digests, exact launcher/archive prompt bytes, and external
-Codex executable. Mutable prompt data remains comment-encoded after the stable
-execution boundary. A dirty worktree produces a static warning; no status
-content enters the prompt.
+Every turn receives a unique physical log directory outside the worktree. Raw
+JSONL is preserved byte-for-byte while concise progress is streamed. The
+parser decodes JSON, treats messages only as data, requires the characterized
+thread/turn lifecycle and one final `turn.completed`, and rejects empty,
+malformed, truncated, contradictory, failed, error, post-terminal, and
+non-zero-exit streams.
 
-`test/codex_dev_start_test.sh` derives active metadata from the launcher. Its
-49 controls include premature `COMPLETE` rejection while authorized work
-remains, so ordinary handoff requires no test edit. The next task necessarily
-changes the stable launcher skeleton and must update its pinned digest and
-recording contracts. The ignored `.agent-task` path is absent and is not task
-authority.
+After a successful child exit, the parent re-reads the on-disk launcher and
+validates branch/root, queue, full archive graph, prompt, and normalized stable
+skeleton. A next turn requires a clean changed HEAD, an answered old archive,
+a changed session ID, exactly one new committed `NEXT` archive, and reciprocal
+history. A valid `COMPLETE` requires the whole authorized queue complete.
+Signals are forwarded to the active child/parser and never start a successor.
 
-## P3 Move 11 Result
+`test/codex_dev_start_test.sh` now has 62 controls. They characterize exact
+argv/prompt bytes, logging/progress, malicious event data, two-generation
+continuation, `COMPLETE`, all terminal/JSON/process/no-progress/dirty/handoff/
+contract failures, and signal interruption without using the real Codex
+executable. Mutable header and prompt data remain inert after the stable
+execution boundary; the pinned normalized skeleton digest is
+`4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`.
 
-The eleventh P3 move completed as one measured implementation change:
+## P3 Move 11 Preserved
 
-1. Exported
-   `http.Wpost(downloadUrl, filePath string, formData url.Values) error` and
-   every caller remain unchanged. Production now supplies complete
-   `httpclient.Dependencies` and `filesystem.Dependencies` values to a
-   private, zero-value-safe Wpost boundary.
-2. The existing narrow `httpclient.POST` value gained only an explicit
-   `UseDefaultClient` selection. Wpost passes the complete URL,
-   `[]byte(formData.Encode())`, POST method, and exact
-   `application/x-www-form-urlencoded` header through the adapter while
-   retaining standard `http.PostForm` use of the mutable
-   `http.DefaultClient`. Existing anonymous, basic-auth, bearer JSON, and
-   Kibana POST paths retain their previous client selection.
-3. Wpost still logs the exact debug message before requesting, receives the
-   response before creating/truncating the file, rejects no status, copies the
-   body through the filesystem adapter, defers file close before response close
-   so the file closes first, and ignores both close errors.
-4. Seven new top-level contracts raise the suite from 123 to 130 tests. They
-   prove complete request and dependency delivery, form encoding and content
-   type, default-client redirects and custom redirect behavior, debug logging,
-   request/create/copy errors after recording, non-success copying, exact
-   bytes, create/truncate, close order, ignored close errors, safe defaults,
-   system behavior, and rejection of empty recorded populations.
-5. No inventory entry, seam driver, or mutation label changed. Q1.4 therefore
-   remains 7 of 8 and exact Q2.1 remains 0 of 8. Exactly Wpost's request,
-   create, close, and copy sites left Q1.3.
+Exported `http.Wpost`, every caller, and all P2A API/CLI/subprocess contracts
+remain unchanged. Wpost routes its complete form POST through the HTTP adapter
+with explicit default-client selection and routes create/copy through the
+filesystem adapter while retaining request-before-create, file-before-response
+close order, ignored close errors, exact logging, and no status rejection.
+Its seven contracts remain part of the 130-test suite. No inventory entry,
+seam driver, or mutation label changed; Q1.4 remains 7 of 8 and exact Q2.1
+remains 0 of 8.
 
 ## Measured Quality State
 
-The clean full audit at `a7eb3ef400f7` reports:
+The clean full audit at `1b85711b139c` reports:
 
 - Absolute L0: 8 of 8.
 - 130 test functions, zero skipped; 16 of 25 packages have tests.
-- Q0.6: 18 guarded safe-writer call sites, 13 write and 5 copy, with zero
-  unsafe direct test writes.
+- Q0.6: 18 guarded safe-writer sites, 13 write and 5 copy, with zero unsafe
+  direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
 - Q1.1: 9 of 25 packages have no tests.
 - Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 58 direct external sites outside the declared adapters of 68
-  production effect sites. Clock and server remain absent, so Q1.3 is not
-  comparable. The four direct Wpost effects alone left the population.
-- Q1.4: 7 of 8 declared seams covered: `git-process`, `maven-process`,
-  `cloud-clone`, `maven-http`, `spring-download`, `template-copy`, and
-  `git-commit`.
-- Exact Q2.1: 0 of 8 subjects have a real executable harness. The upstream
-  filename-only denominator sees five non-executable `mutate-*` paths; the
-  exact-path validator records all five as non-executable.
+- Q1.3: 58 direct external sites outside declared adapters of 68 production
+  effect sites. Clock and server remain absent, so it is not comparable.
+- Q1.4: 7 of 8 declared seams covered.
+- Exact Q2.1: 0 of 8 subjects have an executable harness.
 - Acceptance scripts: 4 of 4; Q2.5, Q2.6, Q2.7, and Q2.10 pass.
-- Full audit exit: expected 1 for 16 documented findings; no accepted audit
-  returned exit 2.
+- Full audit: expected exit 1 for 16 documented findings, never 2.
 - Comparable ratchets: five improved, two held, zero regressed; Q1.3 is the
-  single current non-comparable ratchet while two declared adapter paths are
-  absent.
-- Measurement identity: clean at tree `ad2996070ce4`, with zero dirty paths.
+  single current non-comparable ratchet.
+- Measurement identity: clean at tree
+  `9328c0d008527fc18d9dd01dd3877b17316e5d4f`, with zero dirty paths.
 
-Reports were written under `/private/tmp`; no ignored quality or compatibility
-artifact entered the measured tree.
+Reports were written under `/private/tmp/ply-supervisor-gate.WSL8yu`; no
+ignored quality or compatibility artifact entered the measured tree.
 
 ## Decisions And Learned Facts
 
-1. A function-valued effect dependency makes the type-aware Q1.3 scanner fail
-   closed. Use resolvable interfaces and complete dependency values rather than
-   stored functions.
-2. Test recorders must write only through recognized in-memory concrete types
-   or guarded `internal/testutil` helpers. The new system file assertion adds
-   one recognized safe-writer call site, producing the Q0.6 count of 18.
-3. `.quality/inventory` is baseline-checksum-bound. Seam labels stay at their
-   declared driver paths; changing them invalidates comparison.
-4. Non-executable seam drivers keep exact Q2.1 at 0 of 8, while the pinned
-   upstream tool counts their filenames. Q2.2/Q2.3 remain findings until P5.
-5. `http.PostForm` delegates to `http.DefaultClient.PostForm`; preserving it
-   is observably different from allocating a fresh `http.Client` when callers
-   replace the global client's redirect policy. `UseDefaultClient` is
-   therefore part of the complete Wpost request value.
-6. `httpclient.POST` still distinguishes POST presence even for an empty body.
-   Only Wpost selects the default client; Kibana retains a fresh client.
-7. Response ownership remains in Wpost. The HTTP adapter executes the request,
-   and the filesystem adapter creates and copies, but neither duplicates or
-   changes the legacy close/error lifecycle.
-8. Removing Wpost's direct `http.PostForm`, `os.Create`, deferred close, and
-   `io.Copy` calls removes exactly four violations and four production sites,
-   yielding Q1.3 at 58 of 68.
-9. The local `codex-cli 0.149.0` exposes `codex exec --json`,
-   `--sandbox workspace-write`, `-C`, and `--output-last-message`. The
-   [official non-interactive-mode documentation](https://learn.chatgpt.com/docs/non-interactive-mode)
-   describes JSONL progress events including completed and failed turns. The
-   next launcher must characterize the actual local event stream in recording
-   tests before trusting it.
-10. Supervisor continuation must be based on committed repository evidence,
-    not merely an agent final message: changed HEAD, changed session ID, an
-    answered predecessor, one valid NEXT tail, a clean worktree, and a passing
-    launcher contract. `COMPLETE` remains valid only after P8.
-11. Stream concise event summaries to the terminal and preserve raw JSONL logs
-    outside the repository so observability cannot dirty the measured tree.
-    Stop on malformed JSON, `turn.failed`, non-zero Codex exit, contract drift,
-    dirty/no-progress state, or signal.
-12. Provide `APIDIFF` and `GOLANGCI_LINT` as environment variables for
+1. Supervisor success is the conjunction of process exit, structured terminal
+   stream, and committed repository evidence. Final prose is observable only.
+2. The local `codex-cli 0.149.0` event contract used for the implementation is
+   characterized by the recording executable; official documentation alone is
+   not treated as executable truth.
+3. JSONL must be parsed rather than substring-matched. Raw bytes are written
+   before decode, and event strings are never evaluated as shell content.
+4. Logs and final messages stay outside the repository so observation cannot
+   dirty or change task authority.
+5. The parent supervisor, not the agent, owns succession. It starts only after
+   the child ends and the fresh on-disk handoff passes every progression check.
+6. A function-valued effect dependency makes Q1.3 fail closed. Production
+   moves use resolvable interfaces and complete dependency values.
+7. `filesystem.Exists` preserves the relevant legacy rule: only an
+   `os.IsNotExist` error means absent. The Bitbucket boundary must additionally
+   prevent its zero value from reaching a real Git operation.
+8. The remaining Bitbucket `os.Stat` site decides clone versus pull; Git clone
+   and pull already execute through the process adapter and are outside the
+   next move.
+9. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
+   claim P5 mutation coverage.
+10. Provide `APIDIFF` and `GOLANGCI_LINT` as environment variables for
     `make preflight`; Make command-line values propagate through `MAKEFLAGS`
-    and defeat the lint meta-test's missing-binary mutant.
-13. Isolated `GOTMPDIR` must be created before invoking Go. The first
-    `make test` verification attempt failed only because the fresh path did
-    not yet exist; the corrected rerun and all product contracts passed.
+    and defeat the missing-binary mutant.
 
 ## Next Objective
 
-Implement one focused, contract-first launcher change. Normal
-`codex-dev-start.sh` execution should become a non-interactive supervisor
-that invokes exactly one archived mission at a time with
-`codex exec --json --sandbox workspace-write` in normal service tier, streams
-useful progress, and stores raw logs outside the worktree. Preserve
-`--check`, `--print-prompt`, help, branch/root/archive/prompt validation,
-Bash 3.2 support, exact prompt bytes, inert mutable regions, and the no-publish
-boundary.
+Move only Bitbucket repository-existence selection behind the existing
+filesystem adapter. Start with recording contracts in
+`pkg/bitbucket/bitbucket_contract_test.go`: require the complete repository
+path and complete dependencies, prove missing selects clone, existing and
+other stat errors select pull, propagate clone/pull failures, preserve safe
+zero-value behavior, and reject empty recorded populations. Characterize all
+observable path, log, and ordering behavior needed to prevent drift.
 
-After a successful turn, re-read and validate the on-disk launcher and archive
-graph. Continue only when the agent process has ended and a clean committed
-handoff advances both HEAD and session ID to one new valid `NEXT` tail. Stop
-successfully when the validated queue and launcher reach `COMPLETE`. Stop
-fail-closed on a failed/error/malformed event, non-zero exit, signal, dirty
-tree, unchanged state, invalid handoff, or launcher-contract failure. Agent
-final text may be logged but must not override repository evidence.
+Give the private `Bitbucket` flow a complete, resolvable filesystem dependency
+whose production value is selected by `With` and `QueryRepos` as needed. Keep
+exported `With`, `QueryRepos`, `SynchronizeAllRepos`, project/repository query
+behavior, lowercase selection, warnings, and clone/pull behavior unchanged.
+Remove only the direct `os.Stat` from `pkg/bitbucket/bitbucket.go`; do not move
+Git execution, other filesystem/HTTP effects, config, clock/server, P4, P5, or
+later roadmap work.
 
-Begin red by extending `test/codex_dev_start_test.sh` with a recording Codex
-executable and JSONL scenarios for exact argv/prompt, progress and raw logging,
-successful multi-generation continuation, eventual COMPLETE, turn/non-zero
-failure, malformed input, no progress, dirty or invalid handoff, and signal
-cleanup. Update `docs/design/agent-session-continuity.md` with the measured
-protocol. Make one implementation commit, run the full applicable gate, then
-prepare the next P3 session in the usual separate handoff commit.
+Expected direction is one fewer Q1.3 violation and one fewer production effect
+site (nominally 57 of 67), but regenerate the exact structured measurement and
+accept it only with zero comparable ratchet regressions. Q1.2, Q1.4, and exact
+Q2.1 should remain unchanged.
 
-Do not launch a real next session while developing or finalizing this change.
-Do not broaden into the remaining Q1.3 effects, adapter work, mutation
-harnesses, P4-P8 implementation, distribution, or publication.
+## Verification Notes
+
+Completed from clean implementation commit `1b85711b139c`:
+
+- Red launcher evidence: the recording contract expected the 11-argument
+  non-interactive invocation and failed against the old five-argument
+  interactive launcher.
+- `/bin/bash test/codex_dev_start_test.sh`: PASS, 62 controls.
+- `make test-agent-start`, `make test-preflight`, and complete `make preflight`:
+  PASS, including 15 audit meta-controls.
+- API/CLI and subprocess compatibility: PASS.
+- `make test`, `make test-install`, uncached tests, race tests, and `go vet`:
+  PASS.
+- Host install, status, upgrade, and build acceptance: PASS, 4 of 4.
+- Empty-HOME `go test ./... -count=2`: PASS.
+- Focused audit: expected exit 1 with exact start values and no regression.
+- Clean full audit: expected exit 1, 16 documented findings, L0 8 of 8, five
+  improved, two held, zero regressed, and zero dirty paths.
+
+Tool paths used were `/private/tmp/ply-p2b-api.4umBuM/bin/apidiff` and
+`/private/tmp/ply-p2b-lint.SGWVGp/bin/golangci-lint`; probe before reuse.
+
+Environment: host Go 1.26.2 on Darwin arm64, module Go 1.18, `/bin/bash`
+3.2.57, PATH Bash 5.3.9, and `codex-cli 0.149.0`.
 
 ## Start
 
-The active continuity task can be started from any directory:
+From any directory:
 
 ```sh
 /Users/perottochristensen/github/ply/upgrade-quality/codex-dev-start.sh
 ```
 
-This invocation is still interactive and one-shot until the active task lands.
-Do not start through `.agent-task/current.md`; it is not task authority.
-
-## Verification Notes
-
-Completed from clean implementation commit `a7eb3ef400f7`:
-
-- Red evidence: focused Wpost/HTTP-adapter tests failed only on the absent
-  default-client POST value and private complete-dependency boundary.
-- Focused HTTP/httpclient/filesystem plus adjacent Spring, Kibana, Maven, and
-  Bitbucket contracts: PASS.
-- Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1 focused audit: expected exit 1, 18 guarded
-  writes, zero unsafe test writes, 9 untested packages, 0 exits, 58 of 68
-  effects, 7 of 8 seams, and exact 0 of 8 executable harnesses.
-- API and CLI compatibility plus root/status/upgrade/build and unknown-command
-  subprocess surfaces: PASS.
-- Host install, status, upgrade, and build acceptance: PASS.
-- `make preflight`, `make test`, `make test-install`,
-  `make test-agent-start`, uncached tests, race tests, and `go vet ./...`:
-  PASS.
-- Empty-HOME `go test ./... -count=2` with isolated writable state: PASS.
-- Audit meta-suite: PASS, 15 controls and all 228 baseline numeric leaves.
-- Clean full audit: expected exit 1, L0 8 of 8, 130 tests, 16 tested packages,
-  five improved, two held, zero regressed, one not comparable, and zero dirty
-  paths.
-
-Tool paths used were `/private/tmp/ply-p2b-api.4umBuM/bin/apidiff` and
-`/private/tmp/ply-p2b-lint.SGWVGp/bin/golangci-lint`; probe before reuse.
-
-Environment on 2026-08-24: host Go 1.26.2 on Darwin arm64, module Go 1.18,
-`/bin/bash` 3.2.57, PATH Bash 5.3.9, and `codex-cli 0.149.0`. Docker, public
-network, real cloud, real Spring, and distribution execution were outside the
-Wpost move.
+This now starts the non-interactive supervisor and may run successive fresh
+missions after valid handoffs. Do not invoke it while merely validating the
+handoff; use `--check` or `--print-prompt`. `.agent-task/current.md` is not task
+authority.
 
 ## Stop Conditions
 
 Stop and report rather than forcing progress when:
 
-- a non-interactive Codex invocation cannot preserve exact prompt bytes,
-  workspace-write scope, normal service tier, or actionable progress logs;
-- success/continuation cannot be distinguished from failure or no progress
-  using both the JSONL stream and committed repository state;
-- a loop can replay the same task, continue from dirty/invalid state, or mark
-  COMPLETE while authorized checkpoints remain;
-- Bash 3.2, archive-history, dirty-worktree, source-archive, or inert-tail
-  contracts cannot be preserved;
-- the change requires launching a real successor, publishing, distributing, or
-  broadening into production-effect or later-roadmap work; or
-- the focused launcher-supervisor implementation and its separate automatic
-  handoff are complete.
+- Bitbucket selection behavior or exported API cannot be preserved;
+- the filesystem dependency is incomplete, unresolvable, function-valued, or
+  unsafe at its zero value;
+- the effect cannot be isolated without moving Git execution or another flow;
+- a comparable ratchet regresses, the audit exits 2, or the tree cannot be
+  measured cleanly;
+- the work requires P4-P8 implementation, publication, distribution, or a real
+  successor launch; or
+- the focused Bitbucket move and its separate automatic handoff are complete.

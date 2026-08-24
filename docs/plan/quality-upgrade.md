@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `a7eb3ef`.
+Last measured checkpoint: 2026-08-24, commit `1b85711`.
 
 ## Objective
 
@@ -12,8 +12,9 @@ because the ratchet verdict says PASS.
 
 - Work only in `/Users/perottochristensen/github/ply/upgrade-quality` on
   `codex/upgrade-quality`.
-- Start fresh agent sessions with `./codex-dev-start.sh`; its mutable prompt is
-  the sole next-task source and the tracked plan is persistent knowledge.
+- Start fresh agent sessions with `./codex-dev-start.sh`; its supervisor runs
+  one non-interactive archived mission at a time, and its mutable prompt is the
+  sole next-task source while the tracked plan is persistent knowledge.
 - Make one focused commit per measured quality move.
 - Limit a checkpoint to three moves, then update this plan and the handover.
 - At a checkpoint or session boundary, automatically prepare and locally
@@ -527,13 +528,19 @@ audit meta-suite, and empty-HOME count-2. The full audit exited 1 for 16
 documented findings, never 2, with L0 8 of 8, five improved, two held, zero
 regressed, one not-comparable ratchet, and zero dirty paths.
 
-Before the next production-effect move, the user requested one operational
-continuity change: make the normal launcher a non-interactive, observable
-supervisor that runs one archived mission per `codex exec --json` turn,
-validates a real committed handoff before continuing, and stops cleanly when
-the authorized queue reaches `COMPLETE`. This changes no P3 quality
-denominator and leaves P3 active; after it lands, resume one coherent Q1.3
-flow at a time.
+The requested operational continuity change completed at `1b85711` without
+being relabeled as a numbered P3 quality move. Normal launcher execution now
+supervises one fresh `codex exec --json` turn per archived mission with exact
+prompt bytes, normal service tier, workspace-write scope, concise terminal
+progress, and uniquely named raw logs outside the worktree. Its structured
+event parser and post-turn repository validation require both a successful
+terminal stream and a clean committed reciprocal handoff before another turn;
+failure, malformed or contradictory events, no progress, contract drift, and
+signals stop fail-closed. The 62 Bash 3.2 launcher contracts pass, including
+two-generation progression and eventual `COMPLETE`, without invoking the real
+Codex executable. The complete product gate and audit held every P3 quality
+measurement above exactly, so P3 remains active rather than gaining a P3.12
+column.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
@@ -547,8 +554,10 @@ tests, then move one coherent flow. Defaults must be safe and recording doubles
 must preserve the complete dependency struct. The seven declared P3 swaps
 through Spring download are complete, and Spring discovery, Bitbucket token
 JSON, Kibana POST, and Wpost now use the adapters without adding inventory
-seams. Select the next coherent flow from the remaining structured Q1.3
-population only after the launcher-supervisor continuity change is complete.
+seams. The next coherent flow is Bitbucket clone/pull selection: route its one
+repository `os.Stat` probe through the existing filesystem adapter while
+preserving the legacy missing-means-clone and every-other-result-means-pull
+rule.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
