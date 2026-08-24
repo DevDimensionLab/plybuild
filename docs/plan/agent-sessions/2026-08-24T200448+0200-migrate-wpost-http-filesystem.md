@@ -1,13 +1,13 @@
 # Agent Session: Migrate Wpost Through HTTP And Filesystem Adapters
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T200448+0200-migrate-wpost-http-filesystem`
 Created: `2026-08-24T20:04:48+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `d4292c7572e7c114a1e02acdcfbc8f1c7ae604a40e1a34df8a7bf163939e778f`
 Previous: [2026-08-24T192424+0200-migrate-kibana-post-http.md](2026-08-24T192424+0200-migrate-kibana-post-http.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T212408+0200-supervise-noninteractive-sessions.md](2026-08-24T212408+0200-supervise-noninteractive-sessions.md)
+Outcome: P3 move 11 completed at `a7eb3ef`: Wpost now routes its exact form POST request, file creation, and body copy through the HTTP and filesystem adapters, Q1.1 is 9 of 25, Q1.3 is 58 of 68, Q1.4 remains 7 of 8, exact Q2.1 remains 0 of 8, and the clean gate passed with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
