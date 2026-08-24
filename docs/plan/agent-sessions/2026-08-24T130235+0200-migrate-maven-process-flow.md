@@ -1,13 +1,13 @@
 # Agent Session: Migrate Maven Process Flow
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T130235+0200-migrate-maven-process-flow`
 Created: `2026-08-24T13:02:35+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `accbeba9c63b46dfe7d50a59e6707c53dfacdcdb8b5fa102831ba337f6d2571c`
 Previous: [2026-08-24T122234+0200-introduce-process-adapter.md](2026-08-24T122234+0200-introduce-process-adapter.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T140112+0200-cover-cloud-clone-seam.md](2026-08-24T140112+0200-cover-cloud-clone-seam.md)
+Outcome: P3 move 3 completed at f5ee37d: Maven subprocess execution now uses the process adapter, Q1.2 remains zero, Q1.3 is 76 of 78, the Maven swap raises Q1.4 to 3 of 8, and the clean gate passed with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

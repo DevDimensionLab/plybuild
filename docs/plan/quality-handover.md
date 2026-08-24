@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T13:02:35+02:00
+Generated: 2026-08-24T14:01:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,8 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `03d6242de38d`.
-- Restart preparation base: `03d6242de38d`.
+- Measured implementation head: `f5ee37d74665`.
+- Restart preparation base: `f5ee37d74665`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no implementation changes.
 - No push, merge, release, publication, stash, revert, or worktree removal was
@@ -22,15 +22,16 @@ P3 implementation commits:
 ```text
 5c6f2fa quality: move process exits to main
 03d6242 quality: move git processes behind adapter
+f5ee37d quality: move Maven processes behind adapter
 ```
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` remains in `NEXT` state for P3. The exit-only-main and Git
-process-adapter moves are complete. Maven, cloud, and the later adapter moves
+`codex-dev-start.sh` remains in `NEXT` state for P3. The exit-only-main, Git,
+and Maven process-adapter moves are complete. Cloud and the later adapter moves
 remain active, and P4-P8 remain queued in the machine-readable plan block. The
 active archive is
-`docs/plan/agent-sessions/2026-08-24T130235+0200-migrate-maven-process-flow.md`.
+`docs/plan/agent-sessions/2026-08-24T140112+0200-cover-cloud-clone-seam.md`.
 Its predecessor is answered history, and the connected graph has exactly one
 `NEXT` tail.
 
@@ -46,49 +47,47 @@ controls include premature `COMPLETE` rejection while authorized work remains,
 so normal handoff requires no test edit. The ignored `.agent-task` path remains
 absent and is not task authority.
 
-## P3 Move 2 Result
+## P3 Move 3 Result
 
-The second P3 move completed as one measured implementation change:
+The third P3 move completed as one measured implementation change:
 
-1. `internal/adapter/process` now owns operating-system execution. A complete
-   `Command` carries name, argument vector, working directory, stdout, and
-   stderr. A `Runner` interface keeps the scanner resolvable, the zero-value
-   `Dependencies` is an inert default, and production explicitly selects
-   `System()`.
-2. `pkg/shell/git.go` routes clone, pull, init, add, and commit through the
-   adapter without changing exported signatures. Production retains the same
-   `git` argv, empty process `Dir`, `-C` target-directory arguments, output
-   buffers, and legacy error behavior. Git dirty/repository probes continue to
-   use generic `shell.Run`; Maven and other process sites were not migrated.
-3. Recording tests capture complete arguments and working directories, prove
-   clone URL-before-target and commit target-before-message ordering, preserve
-   the complete message value and shell output, prove the safe zero-value
-   default performs no Git mutation, and reject an empty recorded population.
-   The adapter also executes an explicit system-path contract.
-4. The inventory-bound `scripts/mutate-file-shell` path is a non-executable
-   seam-test driver, not the P5 mutation harness. Its meta-test runs all five
-   Git recording contracts and rejects an empty test population, missing
-   labels, executability, or mutation declarations. This raises Q1.4 without
-   claiming Q2.1 coverage.
+1. `maven.RunOn` retains its exported signature and returned callback while a
+   private callback receives the complete `process.Dependencies` value.
+   Production explicitly selects `process.System()` and still runs the same
+   Maven, dot, and ktlint executable/argv in the project directory.
+2. `pkg/maven/command.go` no longer calls `exec.Command` or `cmd.Run` directly.
+   Its complete `process.Command` preserves argument values and order, project
+   `Dir`, inherited environment/stdin, nil stderr, the unchanged
+   `logger.StdOut()` writer, and the dependency's returned error.
+3. Recording tests prove executable-before-every-argument ordering, full
+   dependency values, complete command forwarding, project path, exact stdout
+   writer identity, error propagation, a safe no-process default, and rejection
+   of an empty asserted call population.
+4. The inventory-bound `scripts/mutate-maven-sorting` path is a non-executable
+   seam-test driver, not the P5 harness. Its meta-test runs all three Maven
+   contracts and rejects an empty population, missing label, executability, or
+   mutation declarations. Q1.4 rises without claiming Q2.1 coverage.
 
 ## Measured Quality State
 
-The clean full audit at `03d6242de38d` reports:
+The clean full audit at `f5ee37d74665` reports:
 
 - Absolute L0: 8 of 8.
-- 47 test functions, zero skipped; 11 of 23 packages have tests.
-- Q0.8: 0 of 8 production scripts lack a meta-test.
+- 50 test functions, zero skipped; 11 of 23 packages have tests.
+- Q0.8: 0 of 9 production scripts lack a meta-test.
 - Q1.1: 12 of 23 packages have no tests, improved from the baseline 15.
 - Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 77 direct external sites outside the declared adapters of 79 production
+- Q1.3: 76 direct external sites outside the declared adapters of 78 production
   effect sites. `internal/adapter/process` is valid; the other four adapters are
-  absent, so Q1.3 remains not comparable. The three direct Git sites left the
-  violation population and the adapter owns two process effects.
-- Q1.4: 2 of 8 declared seams covered: `git-process` and `git-commit`.
+  absent, so Q1.3 remains not comparable. Both direct Maven process effects
+  left; the preserved logger stdout is exposed as one filesystem capability at
+  the adapter call.
+- Q1.4: 3 of 8 declared seams covered: `git-process`, `maven-process`, and
+  `git-commit`.
 - Q2.1: 0 of 8 subjects have a real executable harness. The upstream
-  filename-only denominator sees one `mutate-*` path, but the exact-path local
-  validator records it as non-executable. Q2.2/Q2.3 therefore remain documented
-  findings until the real file-shell harness is built in P5.
+  filename-only denominator sees two `mutate-*` paths, but the exact-path local
+  validator records both as non-executable. Q2.2/Q2.3 therefore remain
+  documented findings until the real harnesses are built in P5.
 - Acceptance scripts: 4 of 4; Q2.5, Q2.6, Q2.7, and Q2.10 pass.
 - Q2.8 and Q2.9 remain honestly `UNMEASURABLE` pending criterion-bound manual
   evidence; executable magnitude, bad-input, and read-only controls exist.
@@ -98,9 +97,9 @@ The clean full audit at `03d6242de38d` reports:
   comparable while four declared adapter paths are absent.
 - Measurement identity: clean, with zero dirty paths.
 
-The earlier four-improved / three-held forecast described Q1.4 at 0 of 8.
-Covering the two required Git seams necessarily moves Q1.4 from held to
-improved, yielding the scanner's exact five-improved / two-held result.
+The scanner reports the same five-improved / two-held comparable ratchets as
+the preceding move because Q1.4 was already improved and advances from 2 of 8
+to 3 of 8. Q1.3 remains not comparable until all adapter paths exist.
 
 Regenerate `target/quality-audit/scorecard.json`; it is ignored output, not
 persistent evidence. Compatibility checks create ignored reports under
@@ -118,47 +117,50 @@ generated reports before the full audit.
 3. Resolve temporary-directory symlinks before comparing an executed process's
    physical working directory. On macOS, `/tmp` and `/private/tmp` can name the
    same directory.
-4. `.quality/inventory` is baseline-checksum-bound. The Git seam labels therefore
-   remain at their declared `scripts/mutate-file-shell` path; changing the path
-   invalidates baseline comparison.
-5. The non-executable seam driver keeps Q2.1 at 0 of 8, but the pinned upstream
-   tool counts filenames for its mutation denominator. Q2.2/Q2.3 will report
-   findings until P5 turns that path into the real executable harness and adds
-   its T1-T10 meta-controls.
+4. `.quality/inventory` is baseline-checksum-bound. Seam labels therefore remain
+   at their declared driver paths; changing those paths invalidates baseline
+   comparison.
+5. The non-executable seam drivers keep exact Q2.1 at 0 of 8, but the pinned
+   upstream tool counts filenames for its mutation denominator. Q2.2/Q2.3 will
+   report findings until P5 turns those paths into real executable harnesses and
+   adds their T1-T10 meta-controls.
 6. `shell.run` historically returns an `Output` whose `Err` field is not filled
    from `cmd.Run()`. The Git move preserves that behavior rather than combining
    a seam refactor with an unrelated compatibility change.
 7. The adapter's system path inherits environment and stdin, attaches the
    caller's writers, and assigns `Command.Dir`; empty `Dir` preserves the Git
    helpers' original process working directory.
-8. Passing `GOLANGCI_LINT` as a Make command-line variable propagates through
+8. Passing `logger.StdOut()` in the complete adapter command exposes the
+   returned `*os.File` as a filesystem capability in the type-aware scan. This
+   is the preserved stdout contract, not a remaining direct process effect;
+   Q1.3 therefore moves from 77/79 to 76/78 rather than 75/77.
+9. Passing `GOLANGCI_LINT` as a Make command-line variable propagates through
    `MAKEFLAGS` and defeats the lint meta-test's missing-binary mutant. Provide
    `APIDIFF` and `GOLANGCI_LINT` as environment variables for `make preflight`.
-9. The sandbox denies default Go and golangci-lint cache paths. Use isolated
+10. The sandbox denies default Go and golangci-lint cache paths. Use isolated
    `GOCACHE`, `GOTMPDIR`, and `GOLANGCI_LINT_CACHE` directories under
    `/private/tmp`.
 
 ## Next Objective
 
-P3 remains active. Reuse `internal/adapter/process` for one coherent Maven
-subprocess flow in `pkg/maven/command.go` and cover the declared
-`maven-process` swap. Begin red with a recorder that proves the executable stays
-before all arguments, the project path remains the process working directory,
-the logger stdout writer reaches the process unchanged, the full dependency
-value reaches the production path, defaults remain inert, and empty recorded
-populations fail.
+P3 remains active. Cover the declared `cloud-clone` argument swap in
+`GitCloudConfig.Refresh` as one measured move. Begin red with a recording
+boundary that proves the configured cloud URL stays before the target
+directory on clone, an existing repository selects pull, complete values and
+errors survive, defaults are inert, and empty asserted populations fail.
 
-Preserve exported `maven.RunOn` and its returned callback signature, error
-behavior, exact argv, working directory, and stdout wiring. Migrate only the two
-direct process effects in `pkg/maven/command.go`; do not migrate cloud, generic
-shell, diagrams, profile/editor, browser-opening, HTTP, filesystem, clock, or
-server paths in the same move. Bind the immutable inventory label through the
-declared `scripts/mutate-maven-sorting` path without claiming the later P5
-mutation harness.
+Preserve the exported `CloudConfig` interface, `GitCloudConfig`,
+`OpenGitCloudConfig`, and all Refresh callers. Keep cache-first behavior: pull
+when `<target>/.git` exists, clone otherwise, with the same URL, target, error
+formatting, logging, and filesystem probe. Reuse the existing Git/process path;
+do not duplicate Git argv or broaden into generic shell, Maven, HTTP,
+filesystem-adapter, Docker, dependency, Spring, distribution, or P5 harness
+work.
 
-Expect Q1.2 to stay zero, the two Maven violations to leave Q1.3, and Q1.4 to
-rise from 2 of 8 to 3 of 8. Accept only regenerated scanner values and zero
-comparable regressions.
+Bind only the immutable `cloud-clone` label through the declared non-executable
+`scripts/mutate-config-cloud` driver and its Q0.8 meta-test. Expect Q1.2 to stay
+zero, Q1.4 to rise from 3 of 8 to 4 of 8, exact Q2.1 to remain 0 of 8, and zero
+comparable regressions. Accept only regenerated scanner values.
 
 ## Start
 
@@ -173,11 +175,11 @@ session prepares its successor automatically before stopping.
 
 ## Verification Notes
 
-Completed from clean implementation commit `03d6242de38d`:
+Completed from clean implementation commit `f5ee37d74665`:
 
-- Focused process-adapter, Git argument, safe-default, output, working-directory,
-  and empty-population contracts: PASS.
-- Q1.2/Q1.3/Q1.4 focused audit: expected exit 1, exact 0, 77 of 79, and 2 of 8;
+- Focused process-adapter, Maven argument, safe-default, error, stdout,
+  working-directory, and empty-population contracts: PASS.
+- Q1.2/Q1.3/Q1.4 focused audit: expected exit 1, exact 0, 76 of 78, and 3 of 8;
   clean measurement identity and zero regressions.
 - API and CLI compatibility plus root/status/upgrade/build and unknown-command
   subprocess surfaces: PASS.
@@ -186,7 +188,7 @@ Completed from clean implementation commit `03d6242de38d`:
   uncached tests, race tests, and `go vet ./...`: PASS.
 - Empty-HOME `go test ./... -count=2` with isolated writable state: PASS.
 - Audit meta-suite: PASS, 15 controls and all 228 baseline numeric leaves.
-- Clean full audit: expected exit 1, L0 8 of 8, 47 tests, 11 tested packages,
+- Clean full audit: expected exit 1, L0 8 of 8, 50 tests, 11 tested packages,
   five improved, two held, zero regressed, one not comparable, and zero dirty
   paths.
 
@@ -205,8 +207,8 @@ Stop and report rather than forcing progress when:
 - an audit exits 2 and the adapter/test shape cannot be corrected in scope;
 - a comparable ratchet regresses;
 - public CLI or Go API compatibility cannot be established;
-- the Maven adapter move cannot preserve exact executable, argument, directory,
-  stdout, default, and error behavior;
-- the move requires cloud, HTTP, filesystem, clock, server, Docker, dependency,
+- the cloud seam cannot preserve exact clone/pull selection, URL, target,
+  cache-first behavior, default, and error behavior;
+- the move requires HTTP, filesystem-adapter, clock, server, Docker, dependency,
   distribution, Spring, or formal mutation-harness scope; or
-- the one coherent Maven process move is complete.
+- the one coherent cloud-clone seam move is complete.
