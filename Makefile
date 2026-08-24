@@ -1,8 +1,9 @@
 GO ?= go
+BASH ?= /bin/bash
 
 .DEFAULT_GOAL := all
 
-.PHONY: all build docker-build docker-run docker-publish install run test test-install lint release release-brew upgrade
+.PHONY: all build docker-build docker-run docker-publish install run test test-agent-start test-install lint release release-brew upgrade
 
 build:
 	$(GO) build -o ply ./cmd/ply
@@ -22,9 +23,12 @@ install:
 run:
 	$(GO) run ./cmd/ply
 
-test:
+test: test-agent-start
 	$(GO) test -v -cover ./...
 	bash test/makefile_install_test.sh
+
+test-agent-start:
+	$(BASH) test/codex_dev_start_test.sh
 
 test-install:
 	bash test/makefile_install_test.sh

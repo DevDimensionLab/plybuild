@@ -12,12 +12,18 @@ because the ratchet verdict says PASS.
 
 - Work only in `/Users/perottochristensen/github/ply/upgrade-quality` on
   `codex/upgrade-quality`.
+- Start fresh agent sessions with `./codex-dev-start.sh`; its mutable prompt is
+  the sole next-task source and the tracked plan is persistent knowledge.
 - Make one focused commit per measured quality move.
 - Limit a checkpoint to three moves, then update this plan and the handover.
+- At a checkpoint, recommend `agent-restart` and wait for that exact user
+  message before preparing and locally committing the next session prompt.
 - Run the relevant focused tests before the full gate.
 - Measure every checkpoint from a clean commit with the stored baseline.
 - Require zero ratchet regressions and resolve actionable review findings.
 - Do not push, merge, or remove the worktree without explicit approval.
+- Follow `docs/design/agent-session-continuity.md` for task authority, prompt
+  archives, restart staging, and dirty-worktree recovery.
 
 ## Measured State
 
@@ -49,18 +55,50 @@ Status: complete.
 
 Commits: `3822f4a`, `674e0a4`, `80b43ba`, `25689c5`.
 
+### P0A - Establish Restartable Agent Sessions
+
+Status: complete as an operational prerequisite for P1.
+
+- Added a contract-tested interactive Codex launcher with one mutable mission,
+  inert tail data, a pinned stable-skeleton digest, and Bash 3.2 coverage.
+- Made the launcher prompt and rolling handover the startup path, replacing the
+  ignored local task file as an active source.
+- Added byte-exact, dated prompt archives, a connected reciprocal archive graph,
+  and an explicit `agent-restart` protocol.
+- Kept dirty work recoverable without injecting raw Git output into a prompt.
+- Kept the launcher contract portable to Docker/source archives by testing the
+  checked-in graph inside synthetic Git state and asserting its source types.
+- Forced the fresh session to the normal Codex service tier while retaining the
+  rest of the user's local profile.
+
+This apparatus does not consume one of P1's three measured quality moves. Its
+contract test runs in `make test` and every later checkpoint gate.
+
 ### P1 - Close L0 And Establish The Daily Gate
 
 Status: next checkpoint. Limit: three moves.
 
-1. Pin both the linter version and its checked-in configuration for the selected
-   Go toolchain. Make `make lint` read-only; move rewriting to `make format`.
-2. Give every repository shell script a negative meta-test so the underlying
-   Q0.8 value reaches zero rather than relying on a held ratchet.
+1. Pin the official golangci-lint binary at `v2.12.2` and check in an explicit
+   version-2 configuration while retaining the module's Go 1.18 declaration.
+   `make lint` must require and verify that preinstalled version, perform no
+   download or source rewrite, and run the explicit linter set. Add `make
+   format` as the only `gofmt -w` target. Tool installation is an explicit
+   developer prerequisite using the upstream release binary outside the
+   repository; do not add a networked installer target. Resolve
+   `GOLANGCI_LINT` first and then `PATH`, and fail with the pinned official
+   install command when the executable or version is wrong. Configure
+   `linters.default: none` and explicitly enable `errcheck`, `govet`,
+   `ineffassign`, `staticcheck`, and `unused`; enable the `gofmt` formatter and
+   make lint fail on formatting drift without rewriting it.
+2. Add an independent negative meta-test for `scripts/search-replace.sh`, the
+   current Q0.8 production-script population, so the measured value reaches
+   zero. `codex-dev-start.sh` and `.quality/tools/*` keep their own contract and
+   meta-suites; publication scripts remain in P2B rather than expanding P1.
 3. Add a tested `make preflight` entry point for build, uncached tests,
    vet/lint, install-contract tests, every `scripts/test-*`, and
    `.quality/tools/test-quality-audit.sh`. Its own meta-test must reject an
-   empty or omitted script population. Reserve `make quality` for L2.
+   empty, omitted, or incomplete script population. Reserve `make quality` for
+   L2.
 
 Exit: L0 is 8 of 8, scripts without meta-tests equals zero, the tree is
 unchanged by the gate, and no ratchet regresses.
@@ -220,6 +258,7 @@ Status: queued after the core L2 flows.
 ```sh
 make test
 make test-install
+make test-agent-start
 go test ./... -count=1
 go test -race ./... -count=1
 go vet ./...
@@ -249,10 +288,11 @@ Before treating the gate as clean, require:
 test -z "$(git status --porcelain=v1 --untracked-files=all)"
 ```
 
-The local `.agent-task/current.md` handoff is deliberately ignored by Git but
-is still visible to the audit's filesystem identity. Read it first, then remove
-or move it outside the worktree before a local clean-tree audit. A clean shared
-clone at the exact commit is the preferred checkpoint measurement.
+The ignored `.agent-task/` path is retained only for compatibility and is not a
+startup source. Keep it absent during measurement because ignored files remain
+visible to the audit's filesystem identity. The launcher and prompt archive are
+tracked and contract-tested. A clean shared clone at the exact commit remains
+the preferred checkpoint measurement.
 
 ## Risk Register
 
@@ -264,3 +304,5 @@ clone at the exact commit is the preferred checkpoint measurement.
 | Large toolchain/dependency jump obscures failures | Upgrade in isolated, dependency-only commits. |
 | Ratchet PASS hides unchanged debt | Track the underlying number in this plan and require reduction by L1/L2 exit. |
 | Tests mutate fixtures or developer state | Central safe writers, empty-HOME runs, and tree identity checks. |
+| Agent sessions lose or duplicate task context | One mutable launcher mission, one rolling handover, and one connected reciprocal archive graph. |
+| Prompt mutation changes executable shell behavior | Comment-encoded mutable data after a stable `exit`, plus a pinned normalized skeleton and command-injection probes. |
