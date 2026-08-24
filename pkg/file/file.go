@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"io"
 	"os"
 	"path/filepath"
@@ -122,11 +123,15 @@ func Overwrite(lines []string, filePath string) error {
 }
 
 func CopyOrMerge(sourceFile string, destinationFile string) error {
-	if Exists(destinationFile) {
+	return copyOrMerge(filesystem.System(), sourceFile, destinationFile)
+}
+
+func copyOrMerge(dependencies filesystem.Dependencies, sourceFile string, destinationFile string) error {
+	if filesystem.Exists(dependencies, destinationFile) {
 		return mergeFile(sourceFile, destinationFile)
 	}
 
-	return CopyFile(sourceFile, destinationFile)
+	return copyFile(dependencies, sourceFile, destinationFile)
 }
 
 func mergeFile(sourceFile string, destinationFile string) error {
@@ -145,7 +150,11 @@ func mergeFile(sourceFile string, destinationFile string) error {
 }
 
 func CopyFile(sourceFile string, destinationFile string) error {
-	input, err := os.ReadFile(sourceFile)
+	return copyFile(filesystem.System(), sourceFile, destinationFile)
+}
+
+func copyFile(dependencies filesystem.Dependencies, sourceFile string, destinationFile string) error {
+	input, err := filesystem.ReadFile(dependencies, sourceFile)
 	if err != nil {
 		return err
 	}
@@ -153,21 +162,33 @@ func CopyFile(sourceFile string, destinationFile string) error {
 	pathSeparator := string(os.PathSeparator)
 	destinationParts := strings.Split(destinationFile, pathSeparator)
 	destinationDir := strings.Join(destinationParts[:len(destinationParts)-1], pathSeparator)
-	if !Exists(destinationDir) {
-		err = CreateDirectory(destinationDir)
+	if !filesystem.Exists(dependencies, destinationDir) {
+		err = createDirectory(dependencies, destinationDir)
 		if err != nil {
 			return err
 		}
 	}
 
-	fileInfo, err := os.Stat(sourceFile)
+	fileInfo, err := filesystem.Stat(dependencies, sourceFile)
 	if err != nil {
 		return err
 	}
 
 	log.Debugf("copying FROM\t <= %s", sourceFile)
 	log.Debugf("copying TO\t => %s", destinationFile)
-	return os.WriteFile(destinationFile, input, fileInfo.Mode())
+	return filesystem.WriteFile(dependencies, destinationFile, input, fileInfo.Mode())
+}
+
+func createDirectory(dependencies filesystem.Dependencies, path string) error {
+	_, err := filesystem.Stat(dependencies, path)
+	if os.IsNotExist(err) {
+		errDir := filesystem.MkdirAll(dependencies, path, 0755)
+		if errDir != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func RelPath(sourceDirectory string, filePath string) (string, error) {

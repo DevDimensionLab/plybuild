@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
@@ -94,14 +95,35 @@ func MergeTemplate(cloudTemplate config.CloudTemplate, targetProject config.Proj
 	} else {
 		log.Info(fmt.Sprintf("merging template %s into %s", cloudTemplate.Name, targetProject.Path))
 	}
-	if err := merge(cloudTemplate.Project, targetProject, multiModuleCheck); err != nil {
+	if err := merge(templateCopyDependencies{Files: packageTemplateFiles{}}, cloudTemplate.Project, targetProject, multiModuleCheck); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func merge(sourceProject config.Project, targetProject config.Project, multiModuleCheck bool) error {
+type templateFiles interface {
+	CopyOrMerge(source string, destination string) error
+}
+
+type templateCopyDependencies struct {
+	Files templateFiles
+}
+
+func (dependencies templateCopyDependencies) CopyOrMerge(source string, destination string) error {
+	if dependencies.Files == nil {
+		return filesystem.ErrNoFilesystem
+	}
+	return dependencies.Files.CopyOrMerge(source, destination)
+}
+
+type packageTemplateFiles struct{}
+
+func (packageTemplateFiles) CopyOrMerge(source string, destination string) error {
+	return file.CopyOrMerge(source, destination)
+}
+
+func merge(dependencies templateCopyDependencies, sourceProject config.Project, targetProject config.Project, multiModuleCheck bool) error {
 	sourceDir := sourceProject.Path
 	filesFromTemplate, err := filteredFilesFromTemplate(sourceDir, getIgnores(sourceDir))
 	if err != nil {
@@ -117,7 +139,7 @@ func merge(sourceProject config.Project, targetProject config.Project, multiModu
 		sourceRelPath = replacePathForSource(sourceRelPath, sourceProject.Config, targetProject.Config)
 		targetPath := file.Path("%s/%s", targetProject.Path, sourceRelPath)
 
-		if err = file.CopyOrMerge(f, targetPath); err != nil {
+		if err = dependencies.CopyOrMerge(f, targetPath); err != nil {
 			return err
 		}
 
