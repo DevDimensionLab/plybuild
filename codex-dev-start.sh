@@ -1055,41 +1055,44 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T003130+0200-migrate-file-open
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T003130+0200-migrate-file-open.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T000314+0200-migrate-file-directory.md
+#|SESSION_ID=2026-08-25T010457+0200-migrate-file-open-file
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T010457+0200-migrate-file-open-file.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T003130+0200-migrate-file-open.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete one focused P3 production-effect move: route exported `file.Open`
-#|through the existing filesystem adapter. Preserve its exact returned bytes and
-#|errors, the completed directory-create, file-create, file-overwrite,
-#|file-existence, Bitbucket, Wpost, and supervisor moves, and every P2A contract
-#|with zero comparable ratchet regressions.
+#|Complete one focused P3 production-effect move: route exported `file.OpenFile`'s
+#|append-open operation through the existing filesystem adapter. Preserve its
+#|exact missing-file selection, empty-file creation, flags, mode, returned file
+#|and errors, the completed file-read, directory-create, file-create,
+#|file-overwrite, file-existence, Bitbucket, Wpost, and supervisor moves, and
+#|every P2A contract with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
 #|P3 remains active, P4-P8 are queued in the machine-readable block in
 #|docs/plan/quality-upgrade.md, and the launcher must remain NEXT until every
 #|authorized checkpoint is complete. This mission authorizes only the direct
-#|open/read/ignored-close implementation in exported `Open` in
-#|`pkg/file/file.go`; it does not authorize `OpenFile`'s `os.OpenFile`, another
-#|file operation or Q1.3 flow, a new adapter family or public API, mutation
-#|harnesses, or later roadmap implementation.
+#|`os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, 0644)` operation in exported
+#|`OpenFile` in `pkg/file/file.go` and the narrow operation required in the
+#|existing filesystem adapter. It does not authorize `pkg/shell`'s
+#|`os.OpenFile`, another file operation or Q1.3 flow, a new adapter family or
+#|public API, mutation harnesses, or later roadmap implementation.
 #|
 #|# Measurements At Start
 #|
 #|Before editing, inspect branch, HEAD, status, the rolling handover, this active
 #|archive, the roadmap queue, the complete `pkg/file` implementation and tests,
-#|all callers of `file.Open`, the filesystem adapter and contracts,
-#|`.quality/inventory`, and the continuity and quality-lift designs. Regenerate
-#|ignored reports outside the measured tree or remove them before a clean audit.
+#|all callers of `file.OpenFile`, the filesystem adapter and every complete
+#|filesystem recording double, `.quality/inventory`, and the continuity and
+#|quality-lift designs. Regenerate ignored reports outside the measured tree or
+#|remove them before a clean audit.
 #|
-#|Implementation commit `e054082` has 153 tests across 16 of 25 packages. Q0.6
+#|Implementation commit `27c0d1a` has 157 tests across 16 of 25 packages. Q0.6
 #|has 18 guarded safe-writer sites and zero unsafe direct test writes, Q1.1 is 9
-#|of 25, Q1.2 is 0, Q1.3 is 52 violations of 62 production effect sites with
+#|of 25, Q1.2 is 0, Q1.3 is 50 violations of 60 production effect sites with
 #|clock and server absent, Q1.4 is 7 of 8, and exact Q2.1 is 0 of 8 executable
 #|harnesses. The clean gate passed, the full audit exited 1 for 16 documented
 #|findings and never 2, and comparable ratchets were five improved, two held,
@@ -1104,72 +1107,78 @@ exit 70
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the exported file-read boundary, its recording
-#|contracts, and measured planning notes. Then perform the normal separate
-#|handoff-only commit. Do not push, merge, publish, distribute, remove the
-#|worktree, stash inherited changes, revert user work, or run destructive Git
-#|commands.
+#|implementation commit for the exported append-open boundary, its narrow
+#|filesystem adapter operation, recording contracts, and measured planning
+#|notes. Then perform the normal separate handoff-only commit. Do not push,
+#|merge, publish, distribute, remove the worktree, stash inherited changes,
+#|revert user work, or run destructive Git commands.
 #|
 #|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve the full 62-contract
 #|launcher supervisor, exact prompt/archive bytes, the authorized queue and
 #|reciprocal archive graph. Preserve `cmd.Execute()`, `cmd.ExecuteE()`,
 #|`cmd.RootCmd`, public API/CLI behavior, all four host acceptance flows, the
-#|exported `file.Open(filePath string) ([]byte, error)` signature, `file.OpenFile`,
-#|and every existing caller's observable behavior.
+#|exported `file.OpenFile(fileName string) (*os.File, error)` signature, `Exists`,
+#|`CreateFile`, `Open`, and every existing caller's observable behavior.
 #|
-#|Use a complete, resolvable private filesystem dependency value and a safe zero
-#|value; do not store a function-valued effect dependency. Production must
-#|select `filesystem.System()`. Preserve the legacy behavior exactly: successful
-#|reads return the complete dependency bytes; every dependency error returns a
-#|non-nil empty `[]byte{}` and that exact error, even if the dependency supplies
-#|partial bytes. Do not broaden into another file operation, Bitbucket,
-#|HTTP/process effects, config behavior, Wpost, clock, server, P4 adapters, P5
-#|harnesses, dependencies, Docker, cloud, distribution, or publication.
+#|Use one complete, resolvable private filesystem dependency value and a safe
+#|zero value; do not store a function-valued effect dependency. Production must
+#|select `filesystem.System()`. Preserve the legacy sequence exactly: probe
+#|existence first; only a missing result creates exact empty bytes with mode
+#|`0644`; a create error returns immediately without append-open; existing paths
+#|and non-missing stat errors skip creation; and the final operation receives
+#|the complete path, flags `os.O_APPEND|os.O_WRONLY`, and mode `0644`. Return the
+#|dependency's exact `*os.File` and error pair. Do not broaden into another file
+#|operation, Bitbucket, HTTP/process effects, config behavior, Wpost, clock,
+#|server, P4 adapters, P5 harnesses, dependencies, Docker, cloud, distribution,
+#|or publication.
 #|
 #|# Required Reading
 #|
 #|Read docs/plan/quality-handover.md, the P3 section and checkpoint gate in
 #|docs/plan/quality-upgrade.md, docs/design/agent-session-continuity.md,
 #|docs/design/quality-lift.md, `.quality/inventory`, `pkg/file`, all callers of
-#|`file.Open`, and `internal/adapter/filesystem`. Read the relevant tests and the
-#|Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 audit implementation before editing. Before
-#|the full gate, read the complete launcher contract, relevant Make meta-tests,
-#|P2A API/CLI/subprocess contracts, and all four host acceptance flows.
+#|`file.OpenFile`, and `internal/adapter/filesystem`. Read the relevant tests,
+#|every filesystem test double that implements the complete adapter, and the
+#|Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 audit implementation before editing.
+#|Before the full gate, read the complete launcher contract, relevant Make
+#|meta-tests, P2A API/CLI/subprocess contracts, and all four host acceptance
+#|flows.
 #|
 #|# Three Moves
 #|
-#|1. Start red with recording file-read contracts. Prove the complete path and
-#|   dependency value; representative exact empty, multiline, and binary bytes;
-#|   exact dependency-error propagation with a non-nil empty result even when
-#|   partial bytes accompany the error; the safe zero value with no developer
-#|   path access; production selection of `filesystem.System()`; and a non-empty
-#|   recorded read population. Perform no real filesystem mutation.
+#|1. Start red with recording append-open contracts. Prove the complete
+#|   dependency and path; exact flags and mode; exact returned file pointer and
+#|   dependency error; missing, existing, and non-missing-stat-error sequencing;
+#|   exact empty creation and create-error short circuit; the safe zero value
+#|   with no developer path access; production selection of
+#|   `filesystem.System()`; and non-empty recorded populations. Perform no real
+#|   filesystem mutation.
 #|
-#|2. Implement the smallest private, complete, resolvable, zero-value-safe
-#|   dependency boundary that satisfies those contracts. Keep exported
-#|   `file.Open` as the production wrapper and delegate the read to the unchanged
-#|   filesystem adapter. Remove only its direct `os.Open`, `io.ReadAll`, and
-#|   deferred file close; do not move `OpenFile`'s `os.OpenFile` or another
-#|   operation, and do not change the adapter contract unless the focused tests
-#|   prove it necessary.
+#|2. Add only the smallest zero-value-safe `OpenFile` operation to the existing
+#|   filesystem adapter and its system implementation, updating complete
+#|   recording doubles mechanically. Keep exported `file.OpenFile` as the
+#|   production wrapper and use one complete private dependency to drive its
+#|   existence, conditional empty write, and append-open sequence. Remove only
+#|   its direct `os.OpenFile`. Do not move `pkg/shell`'s `os.OpenFile` or any
+#|   other operation, and do not add a new adapter family or public API.
 #|
-#|3. Run focused file/filesystem contracts, all callers' relevant tests, the
+#|3. Run focused file/filesystem contracts and all callers' relevant tests, the
 #|   launcher contract from `/bin/bash`, Make preflight meta-contracts, API/CLI
 #|   compatibility, full Go tests and race/vet, all four host acceptance flows,
 #|   the audit meta-suite, focused
 #|   Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 measurements, full clean checkpoint
-#|   audit, and empty-HOME count-2. Expect Q1.3 to move nominally from 52 of 62
-#|   to 50 of 60 while Q1.2, Q1.4, and exact Q2.1 hold. Regenerate exact values;
+#|   audit, and empty-HOME count-2. Expect Q1.3 to move nominally from 50 of 60
+#|   to 49 of 60 while Q1.2, Q1.4, and exact Q2.1 hold. Regenerate exact values;
 #|   the full audit may exit 1 for documented findings but never 2.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent `file.Open` move
-#|or record an exact resumable state. Rewrite the rolling handover, record the
-#|measured P3 result, answer this archive, create one linked NEXT archive for the
-#|next coherent P3 effect move, replace only the launcher's mutable regions, run
-#|the launcher contract, and make the separate handoff-only commit
-#|`docs: prepare next agent session`.
+#|Before this agent session ends, finish and commit the coherent
+#|`file.OpenFile` move or record an exact resumable state. Rewrite the rolling
+#|handover, record the measured P3 result, answer this archive, create one linked
+#|NEXT archive for the next coherent P3 effect move, replace only the launcher's
+#|mutable regions, run the launcher contract, and make the separate handoff-only
+#|commit `docs: prepare next agent session`.
 #|
 #|Keep P3 active until its measured exit is documented. Do not launch the next
 #|session. COMPLETE is valid only after every authorized checkpoint through P8
