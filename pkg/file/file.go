@@ -236,10 +236,22 @@ func RelPath(sourceDirectory string, filePath string) (string, error) {
 	return strings.Join(fileParts[cut:], pathSeparator), nil
 }
 
+type createDirectoryDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemCreateDirectoryDependencies() createDirectoryDependencies {
+	return createDirectoryDependencies{Files: filesystem.System()}
+}
+
 func CreateDirectory(path string) error {
-	_, err := os.Stat(path)
+	return createDirectoryWithDependencies(systemCreateDirectoryDependencies(), path)
+}
+
+func createDirectoryWithDependencies(dependencies createDirectoryDependencies, path string) error {
+	_, err := filesystem.Stat(dependencies.Files, path)
 	if os.IsNotExist(err) {
-		errDir := os.MkdirAll(path, 0755)
+		errDir := filesystem.MkdirAll(dependencies.Files, path, 0755)
 		if errDir != nil {
 			return err
 		}

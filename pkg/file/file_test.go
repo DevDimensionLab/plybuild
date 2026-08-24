@@ -41,6 +41,19 @@ type recordingFileCreateFilesystem struct {
 	writeErr error
 }
 
+type recordedDirectoryCreate struct {
+	path string
+	mode fs.FileMode
+}
+
+type recordingDirectoryCreateFilesystem struct {
+	statPaths []string
+	creates   []recordedDirectoryCreate
+	statInfo  fs.FileInfo
+	statErr   error
+	mkdirErr  error
+}
+
 type existingFileInfo struct {
 	name string
 }
@@ -166,6 +179,50 @@ func (recording *recordingFileCreateFilesystem) assertedWrites() ([]recordedFile
 		return nil, errors.New("recorded file-create population is empty")
 	}
 	return recording.writes, nil
+}
+
+func (*recordingDirectoryCreateFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected directory-create read")
+}
+
+func (recording *recordingDirectoryCreateFilesystem) Stat(path string) (fs.FileInfo, error) {
+	recording.statPaths = append(recording.statPaths, path)
+	return recording.statInfo, recording.statErr
+}
+
+func (recording *recordingDirectoryCreateFilesystem) MkdirAll(path string, mode fs.FileMode) error {
+	recording.creates = append(recording.creates, recordedDirectoryCreate{path: path, mode: mode})
+	return recording.mkdirErr
+}
+
+func (*recordingDirectoryCreateFilesystem) WriteFile(string, []byte, fs.FileMode) error {
+	return errors.New("unexpected directory-create write")
+}
+
+func (*recordingDirectoryCreateFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected directory-create create")
+}
+
+func (*recordingDirectoryCreateFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected directory-create copy")
+}
+
+func (recording *recordingDirectoryCreateFilesystem) dependencies() createDirectoryDependencies {
+	return createDirectoryDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingDirectoryCreateFilesystem) assertedStatPaths() ([]string, error) {
+	if len(recording.statPaths) == 0 {
+		return nil, errors.New("recorded directory-create stat population is empty")
+	}
+	return recording.statPaths, nil
+}
+
+func (recording *recordingDirectoryCreateFilesystem) assertedCreates() ([]recordedDirectoryCreate, error) {
+	if len(recording.creates) == 0 {
+		return nil, errors.New("recorded directory-create creation population is empty")
+	}
+	return recording.creates, nil
 }
 
 func TestExistsSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
@@ -391,6 +448,121 @@ func TestRecordedFileCreateRejectsEmptyPopulation(t *testing.T) {
 
 	if _, err := recording.assertedWrites(); err == nil {
 		t.Fatal("empty recorded file-create population passed")
+	}
+}
+
+func TestCreateDirectorySelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemCreateDirectoryDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("CreateDirectory selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("CreateDirectory filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestCreateDirectoryPreservesCompletePathMissingSelectionModeAndLegacyErrors(t *testing.T) {
+	path := "/complete directory-create/path with spaces/nested"
+	missingError := &os.PathError{Op: "stat", Path: path, Err: fs.ErrNotExist}
+	mkdirError := errors.New("complete directory-create dependency error")
+	tests := []struct {
+		name      string
+		mkdirErr  error
+		wantError error
+	}{
+		{name: "missing path is created"},
+		{
+			name:      "creation failure returns original missing-path stat error",
+			mkdirErr:  mkdirError,
+			wantError: missingError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingDirectoryCreateFilesystem{statErr: missingError, mkdirErr: test.mkdirErr}
+			dependencies := recording.dependencies()
+			if dependencies.Files.FileSystem != recording {
+				t.Fatalf("directory-create dependency lost its complete filesystem value: %#v", dependencies)
+			}
+
+			err := createDirectoryWithDependencies(dependencies, path)
+			if err != test.wantError {
+				t.Fatalf("directory-create error was %v, want original stat error %v", err, test.wantError)
+			}
+			statPaths, populationErr := recording.assertedStatPaths()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			if !reflect.DeepEqual(statPaths, []string{path}) {
+				t.Fatalf("directory-create dependency received stat paths %#v, want %#v", statPaths, []string{path})
+			}
+			creates, populationErr := recording.assertedCreates()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			wantCreates := []recordedDirectoryCreate{{path: path, mode: 0755}}
+			if !reflect.DeepEqual(creates, wantCreates) {
+				t.Fatalf("recorded directory creation differs:\n got: %#v\nwant: %#v", creates, wantCreates)
+			}
+		})
+	}
+}
+
+func TestCreateDirectorySkipsCreationForExistingPathAndOtherStatErrors(t *testing.T) {
+	path := "/complete directory-create/path with spaces/existing"
+	otherError := errors.New("permission denied while probing complete directory path")
+	tests := []struct {
+		name string
+		info fs.FileInfo
+		err  error
+	}{
+		{name: "existing path", info: existingFileInfo{name: "existing"}},
+		{name: "non-missing stat error", err: otherError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingDirectoryCreateFilesystem{statInfo: test.info, statErr: test.err}
+
+			if err := createDirectoryWithDependencies(recording.dependencies(), path); err != nil {
+				t.Fatalf("directory-create returned %v, want nil", err)
+			}
+			statPaths, populationErr := recording.assertedStatPaths()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			if !reflect.DeepEqual(statPaths, []string{path}) {
+				t.Fatalf("directory-create dependency received stat paths %#v, want %#v", statPaths, []string{path})
+			}
+			if len(recording.creates) != 0 {
+				t.Fatalf("directory-create selected unexpected creations: %#v", recording.creates)
+			}
+		})
+	}
+}
+
+func TestCreateDirectoryDependenciesDefaultToSafeNoMutation(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "safe default", "must-not-exist")
+
+	if err := createDirectoryWithDependencies(createDirectoryDependencies{}, target); err != nil {
+		t.Fatalf("safe directory-create dependency default returned %v, want nil", err)
+	}
+	if _, statErr := os.Stat(target); !os.IsNotExist(statErr) {
+		t.Fatalf("safe directory-create dependency default mutated the target: %v", statErr)
+	}
+}
+
+func TestRecordedDirectoryCreateRejectsEmptyPopulations(t *testing.T) {
+	recording := &recordingDirectoryCreateFilesystem{}
+
+	if _, err := recording.assertedStatPaths(); err == nil {
+		t.Fatal("empty recorded directory-create stat population passed")
+	}
+	if _, err := recording.assertedCreates(); err == nil {
+		t.Fatal("empty recorded directory-create creation population passed")
 	}
 }
 
