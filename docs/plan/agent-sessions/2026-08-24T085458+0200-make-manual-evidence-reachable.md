@@ -6,7 +6,7 @@ Created: `2026-08-24T08:54:58+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `5eb956f83bd5c5f398f196a0d1cd068eb26917c50ae673e07a6a811c95619023`
 Previous: [2026-08-24T061532+0200-close-absolute-l0.md](2026-08-24T061532+0200-close-absolute-l0.md)
-Next: none
+Next: [2026-08-24T103558+0200-characterize-compatibility.md](2026-08-24T103558+0200-characterize-compatibility.md)
 Outcome: P1B completed in exactly three measured moves at eb987fd: all six manual rows are reachable without overriding automated verdicts or empty populations, the baseline migration preserved all 228 numeric debt leaves and Q3.9, and the checkpoint ended with zero ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.

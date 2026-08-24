@@ -473,6 +473,65 @@ resolve_codex() {
 		die 'configured Codex executable is unavailable'
 }
 
+validate_authorized_queue() {
+	local plan="$REPO_ROOT/docs/plan/quality-upgrade.md"
+	local counts
+	local active_count
+	local queued_count
+	counts=$(awk '
+		$0 == "<!-- CODEX_AUTHORIZED_CHECKPOINTS_BEGIN -->" {
+			begin_count++
+			if (inside || begin_count != 1) invalid = 1
+			inside = 1
+			next
+		}
+		$0 == "<!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->" {
+			end_count++
+			if (!inside || end_count != 1) invalid = 1
+			inside = 0
+			next
+		}
+		inside {
+			entry_count++
+			split($0, fields, "|")
+			expected[1] = "P2A"
+			expected[2] = "P2B"
+			expected[3] = "P3"
+			expected[4] = "P4"
+			expected[5] = "P5"
+			expected[6] = "P6"
+			expected[7] = "P7"
+			expected[8] = "P8"
+			if (fields[1] != expected[entry_count] ||
+			    fields[2] !~ /^(active|queued|complete)$/ || fields[3] != "") invalid = 1
+			if (fields[2] == "active") active++
+			if (fields[2] == "queued") queued++
+			if (fields[2] == "complete") {
+				if (active || queued) invalid = 1
+			} else if (fields[2] == "active") {
+				if (active != 1 || queued) invalid = 1
+			} else if (!active) {
+				invalid = 1
+			}
+			next
+		}
+		END {
+			if (inside || begin_count != 1 || end_count != 1 || entry_count != 8 ||
+			    invalid || active > 1) exit 2
+			printf "%d %d\n", active, queued
+		}
+	' "$plan") || die 'authorized checkpoint queue is malformed'
+	active_count=${counts%% *}
+	queued_count=${counts#* }
+	if [[ "$SESSION_STATUS" == 'COMPLETE' ]]; then
+		[[ "$active_count" -eq 0 && "$queued_count" -eq 0 ]] ||
+			die 'session cannot be COMPLETE while authorized checkpoints remain'
+	else
+		[[ "$active_count" -eq 1 ]] ||
+			die 'NEXT session requires exactly one active authorized checkpoint'
+	fi
+}
+
 main() {
 	local mode='start'
 	local git_root
@@ -560,6 +619,7 @@ main() {
 	[[ "$ARCHIVE_DIR" == "$REPO_ROOT/${ARCHIVE_PREFIX%/}" ]] ||
 		die 'session archive directory escapes the repository'
 
+	validate_authorized_queue
 	validate_archive_set
 	validate_active_prompt
 	resolve_codex
@@ -597,179 +657,82 @@ exit 70
 # CODEX_STABLE_EXECUTION_END
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
-#|SESSION_STATUS=COMPLETE
-#|SESSION_ID=2026-08-24T085458+0200-make-manual-evidence-reachable
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T085458+0200-make-manual-evidence-reachable.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T061532+0200-close-absolute-l0.md
+#|SESSION_STATUS=NEXT
+#|SESSION_ID=2026-08-24T103558+0200-characterize-compatibility
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T103558+0200-characterize-compatibility.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T085458+0200-make-manual-evidence-reachable.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete checkpoint P1B: make the six manual L1/L2 rows reachable through
-#|commit-, tree-, inventory-, and instrument-bound structured evidence, then
-#|migrate the exact-toolchain baseline without changing any numeric debt. Use no
-#|more than three measured moves and leave zero comparable ratchet regressions.
+#|Complete checkpoint P2A in exactly three measured moves: pin and gate the
+#|public Go API against v1.0.1, capture an order-independent Cobra CLI contract,
+#|and add four falsifiable host-binary acceptance verifiers. Preserve public API
+#|and CLI behavior and leave zero comparable ratchet regressions.
 #|
-#|# Changes Since The Previous Prompt
+#|# Authorized Roadmap
 #|
-#|1. P1 closed absolute L0 at 8 of 8 and added the non-publishing daily
-#|   `make preflight` gate in exactly three quality moves.
-#|2. golangci-lint is pinned at `v2.12.2`; its five-linter gate is clean and
-#|   remains separate from source-rewriting `make format`.
-#|3. The sole production script has an independent negative meta-test, so Q0.8
-#|   is 0 of 1 scripts without a counterpart.
-#|4. The clean P1 audit reports two improved, five held, and zero regressed
-#|   ratchets; its exit 1 is caused only by 20 documented findings above L0.
-#|5. The next ordered checkpoint is P1B. P2 compatibility, publishing, cloud,
-#|   Spring, packaging, and dependency work remain out of scope.
+#|The user has authorized the ordered roadmap through P8. P2A is active and
+#|P2B-P8 are queued in the machine-readable block in
+#|docs/plan/quality-upgrade.md. A queued checkpoint is approved work, so the
+#|launcher must remain NEXT until all authorized checkpoints are complete.
 #|
 #|# Measurements At Start
 #|
-#|Run these commands before editing. Treat command output as evidence. Inspect
-#|status and diffs first whenever the launcher warned that the tree is dirty.
+#|Before editing, inspect branch, HEAD, status, the rolling handover, the P2A
+#|plan, the continuity design, and the current quality report. Regenerate reports
+#|rather than relying on ignored output. The full audit may exit 1 for documented
+#|findings; exit 2 invalidates the checkpoint.
 #|
-#|```sh
-#|git status --short --branch
-#|git diff --stat
-#|git rev-parse --show-toplevel
-#|git rev-parse --short=12 HEAD
-#|git branch --show-current
-#|sed -n '1,300p' docs/plan/quality-handover.md
-#|sed -n '120,240p' docs/plan/quality-upgrade.md
-#|sed -n '1,260p' docs/design/quality-lift.md
-#|sed -n '1,260p' .quality/baseline/README.md
-#|bash .quality/tools/test-quality-audit.sh
-#|bash .quality/tools/quality-audit.sh . \
-#|  --baseline .quality/baseline/scorecard.json
-#|```
+#|# Role And Boundaries
 #|
-#|The full audit may exit 1 for documented findings above L0. Exit 2 invalidates
-#|the measurement. Regenerate reports; do not use an old ignored report as
-#|evidence. The launcher never inserts Git paths or other worktree content into
-#|this prompt.
+#|Work autonomously in this worktree on codex/upgrade-quality. Make one focused
+#|commit per measured quality move. Do not push, merge, release, publish, remove
+#|the worktree, stash inherited changes, revert user work, or run destructive Git
+#|commands. Never run make release or make release-brew. Stop if compatibility
+#|cannot be established, the audit exits 2, or a comparable ratchet regresses.
 #|
-#|# Role, Permissions, And Stop Boundaries
-#|
-#|Work autonomously in this worktree on `codex/upgrade-quality`. Inspect before
-#|editing, protect inherited changes, use focused tests, and make one focused
-#|commit per quality move. You may update implementation, tests, quality
-#|apparatus, design decisions, the plan, and the rolling handover when the active
-#|objective requires it.
-#|
-#|Do not mutate this launcher's session regions or any session archive until the
-#|user sends the exact restart trigger. Queue prompt corrections in the rolling
-#|handover meanwhile. Do not push, merge, release, publish, remove the worktree,
-#|stash inherited changes, revert user work, or run destructive Git commands.
-#|Never run `make release` or `make release-brew`. Stop and report when the audit
-#|exits 2, a comparable ratchet regresses, compatibility cannot be established,
-#|later cloud/Spring/packaging scope becomes necessary, or three moves are done.
+#|Keep Go 1.18 for the module. Pin external compatibility tooling without adding
+#|its modern toolchain requirements to go.mod. Use temporary writable caches
+#|under /private/tmp and keep tests independent of developer HOME, public
+#|services, and repository writes.
 #|
 #|# Required Reading
 #|
-#|Read in this order:
+#|Read docs/plan/quality-handover.md, the P2A section and checkpoint gate in
+#|docs/plan/quality-upgrade.md, docs/design/quality-lift.md,
+#|docs/design/agent-session-continuity.md, .quality/inventory, and the existing
+#|Makefile/script contract tests before changing behavior.
 #|
-#|1. `docs/plan/quality-handover.md` for the exact P1 exit and resumption state.
-#|2. The P1B section and checkpoint gate in `docs/plan/quality-upgrade.md`.
-#|3. `docs/design/quality-lift.md` for evidence and ratchet invariants.
-#|4. `.quality/baseline/README.md`, `manual-evidence.json`, and `scorecard.json`
-#|   for the current schema, receipts, instrument identity, and reproduction.
-#|5. Manual-evidence validation and baseline comparison in
-#|   `.quality/tools/scorecard.py`, plus T6b-T8b and T15 in
-#|   `.quality/tools/test-quality-audit.sh`.
-#|6. `.quality/inventory` and `docs/design/agent-session-continuity.md` before
-#|   changing instrument-bound evidence or preparing another restart.
+#|# Three Moves
 #|
-#|Do not use `.agent-task/current.md` as task authority. If a statement here is
-#|wrong, record the correction in its owning plan/handover document and carry it
-#|into the next prompt only during an authorized restart.
+#|1. Pin golang.org/x/exp/cmd/apidiff at
+#|   v0.0.0-20260709172345-9ea1abe57597 outside the project module. Add a
+#|   deterministic v1.0.1 comparison and explicit machine-readable allowlist.
+#|   The current compatible cmd/ply package addition is allowed; incompatible
+#|   changes are not.
+#|2. Export the Cobra command and flag tree to sorted JSON, compare it with a
+#|   v1.0.1 baseline and explicit delta allowlist, and bind help/output/exit
+#|   behavior for host install, status, upgrade, and build.
+#|3. Add scripts/verify-install, verify-status, verify-upgrade, and verify-build
+#|   with matching negative meta-tests. Use fresh host artifacts, isolated HOME,
+#|   copied fixtures, and loopback inputs. Each verifier must fail for missing
+#|   artifacts, false assertions, bad exit behavior, or project-state leakage.
 #|
-#|# Environment Constraints
+#|After each move, run focused tests and measure from a clean commit. At P2A exit,
+#|run the full gate and hermetic count-2 test.
 #|
-#|- Use `LC_ALL=C LANG=C` for deterministic shell tooling.
-#|- Use fresh `GOCACHE` and `GOLANGCI_LINT_CACHE` directories under
-#|  `/private/tmp`; both shared caches denied access during restart measurement.
-#|- Probe Docker and shellcheck availability before claiming evidence from them.
-#|- Keep tests independent of developer HOME, public services, and repository
-#|  writes.
-#|- The module stays at Go 1.18. The exact baseline context is Go 1.26.2 on
-#|  Darwin arm64 with the build selectors recorded in the baseline README.
-#|- Parser or schema changes alter instrument identity. Reproduce commit
-#|  `5635d50` with both old and new instruments, preserve every numeric debt
-#|  value, and record both identities; never merely bless a regenerated file.
-#|- A receipt may resolve only an upstream `UNMEASURABLE` row. An explicit
-#|  upstream `FAIL`, an empty declared population, or invalid evidence must not
-#|  become PASS.
-#|- Homebrew remains active in release configuration despite being outside the
-#|  accepted distribution matrix; do not execute publication paths.
+#|# Automatic Handoff
 #|
-#|# First Task
+#|Before this agent session ends, finish and commit a coherent move or record an
+#|exact resumable state. Rewrite the rolling handover, update checkpoint statuses,
+#|answer this archive, create one linked NEXT archive, and replace the launcher's
+#|mutable session regions. No separate agent-restart message is required.
 #|
-#|Implement P1B as at most three focused moves:
-#|
-#|1. Start with failing audit meta-tests, then evolve the structured evidence
-#|   schema so valid, non-empty receipts can resolve Q1.6, Q1.7, Q1.9, Q2.4,
-#|   Q2.8, and Q2.9. Bind receipts to module, commit, measured tree, inventory,
-#|   instrument identity, criterion, and evidence digest. Reject stale,
-#|   duplicate, empty, wrong-kind, dirty-tree, and false-PASS evidence.
-#|2. Prove precedence and populations independently: an upstream FAIL always
-#|   wins, and rows with no underlying harness/script/test population remain
-#|   non-passing. Synthetic non-empty fixtures may demonstrate reachability;
-#|   do not claim the current project passes rows whose population is zero.
-#|3. Perform an explicit debt-preserving baseline migration. Reproduce commit
-#|   `5635d50` under the old and new instruments, compare every numeric metric,
-#|   record both hashes and the reproducible recipe, and retain Q3.9 evidence.
-#|
-#|After each move, run its focused tests and measure from a clean commit. At the
-#|checkpoint, run the complete gate and empty-HOME count-2 command from the plan.
-#|
-#|# Restart Protocol
-#|
-#|Suggest an agent restart at a natural checkpoint, after three moves, or when
-#|context quality starts falling. Preparation starts only when the user's
-#|trimmed, case-sensitive message is exactly `agent-restart`. That message
-#|authorizes restart preparation and one local allowlisted commit; it does not
-#|authorize push, merge, release, stash, revert, or staging unrelated changes.
-#|
-#|On `agent-restart`:
-#|
-#|1. Read
-#|   `/Users/perottochristensen/github/spk-.agents/skills/spk-agent-restart/SKILL.md`
-#|   when available, then follow this repository protocol as controlling.
-#|2. Re-measure branch, HEAD, status, tests, and quality. Finish a coherent slice
-#|   when feasible. Preserve wrong claims, expensive findings, blind alleys,
-#|   tests not run, and unfinished work when the next agent needs them.
-#|3. Update design notes only for durable decisions or premises, the quality
-#|   plan for roadmap or measured-state changes, and rewrite the rolling
-#|   handover with the exact resumption state.
-#|4. Replace only the two mutable regions below
-#|   `CODEX_STABLE_EXECUTION_END`. Keep every data line prefixed with `#|`, keep
-#|   the normalized stable skeleton unchanged, and set one concrete next
-#|   mission, new session ID/archive path, numbered delta, measurements,
-#|   boundaries, reading order, environment constraints, task, and protocol.
-#|5. Create
-#|   `docs/plan/agent-sessions/YYYY-MM-DDTHHMMSS+ZZZZ-<checkpoint>.md` with
-#|   status `NEXT`, timestamp matching its ID, reciprocal previous link,
-#|   SHA-256 of the prompt block, and the byte-exact decoded launcher prompt,
-#|   including its terminal LF, between standalone
-#|   `<!-- CODEX_SESSION_PROMPT_BEGIN -->` and
-#|   `<!-- CODEX_SESSION_PROMPT_END -->` markers.
-#|6. Mark the prior archive `ANSWERED - HISTORY`, set a non-pending outcome and
-#|   reciprocal next link, and preserve its prompt block and digest unchanged.
-#|   There must be exactly one connected archive chain and one `NEXT` tail.
-#|7. Run `make test-agent-start`, focused tests for changed behavior, and the
-#|   relevant checkpoint gates before staging. A failed required check blocks
-#|   restart preparation unless its external blocker and missing evidence are
-#|   explicit in the handover.
-#|8. Stage only the launcher, plan/design files changed for this checkpoint,
-#|   the prior archive, and the new archive. Commit once with
-#|   `docs: prepare next agent session`. Never stage inherited dirty files.
-#|9. Run `./codex-dev-start.sh --check` after the commit, report the commit and
-#|   next mission, tell the user to run `./codex-dev-start.sh`, then stop. Do not
-#|   launch the next session yourself.
-#|
-#|When the total objective is complete and no follow-up objective has explicit
-#|approval, answer the final archive with a non-pending outcome, leave `Next:
-#|none`, and set `SESSION_STATUS=COMPLETE`. `--check` must pass, while start and
-#|`--print-prompt` fail closed instead of replaying the answered task.
+#|If P2A is complete, activate P2B. If P2A is unfinished, keep P2A active and
+#|write a concrete resume mission. Stage only handoff files in the handoff commit
+#|named docs: prepare next agent session. Do not launch the next session
+#|yourself. COMPLETE is valid only after every authorized checkpoint through P8
+#|is complete.
 # CODEX_MUTABLE_PROMPT_END

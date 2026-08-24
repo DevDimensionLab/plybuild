@@ -27,7 +27,7 @@ launcher="$repo_root/codex-dev-start.sh"
 temp_root=$(mktemp -d "${TMPDIR:-/tmp}/codex-dev-start-test.XXXXXX")
 trap 'rm -rf "$temp_root"' EXIT
 
-expected_skeleton_sha256='71cf171aeaa5f1a4b76b1449fc511c06bc80c717058fb430cecd1584874c59c4'
+expected_skeleton_sha256='3729ed7b311218543d1139ab69d52ca90ff1f3d332d55b09d273dd881f453cf6'
 pass_count=0
 nested_mode='no'
 environment_probe='no'
@@ -416,6 +416,20 @@ commit_fixture() {
 		commit -qm "$1"
 }
 
+complete_authorized_queue() {
+	local plan=$1
+	local replacement="$temp_root/completed-authorized-queue"
+	awk '
+		$0 == "<!-- CODEX_AUTHORIZED_CHECKPOINTS_BEGIN -->" { inside = 1 }
+		inside && $0 ~ /^P(2A|2B|[3-8])[|](active|queued)$/ {
+			sub(/[|](active|queued)$/, "|complete")
+		}
+		{ print }
+		$0 == "<!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->" { inside = 0 }
+	' "$plan" >"$replacement" || fail 'could not complete authorized queue fixture'
+	mv "$replacement" "$plan"
+}
+
 [[ -x "$launcher" ]] || fail 'launcher is not executable'
 test_shell=${BASH:-/bin/bash}
 "$test_shell" -n "$launcher"
@@ -548,7 +562,13 @@ replace_header_value "$fixture_root/codex-dev-start.sh" 'SESSION_ARCHIVE_REL' "$
 replace_header_value "$fixture_root/codex-dev-start.sh" 'PREVIOUS_SESSION_ARCHIVE_REL' ''
 printf '# fixture\n' >"$fixture_root/docs/design/quality-lift.md"
 printf '# fixture\n' >"$fixture_root/docs/design/agent-session-continuity.md"
-printf '# fixture\n' >"$fixture_root/docs/plan/quality-upgrade.md"
+{
+	printf '# fixture\n\n'
+	printf '<!-- CODEX_AUTHORIZED_CHECKPOINTS_BEGIN -->\n'
+	printf '%s\n' 'P2A|active' 'P2B|queued' 'P3|queued' 'P4|queued' \
+		'P5|queued' 'P6|queued' 'P7|queued' 'P8|queued'
+	printf '<!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->\n'
+} >"$fixture_root/docs/plan/quality-upgrade.md"
 printf '# fixture\n' >"$fixture_root/docs/plan/quality-handover.md"
 active_previous_leaf='none'
 if [[ -n "$active_previous_rel" ]]; then
@@ -621,13 +641,12 @@ IFS= read -r first_prompt_line <"$temp_root/printed-prompt"
 previous_line=0
 for heading in \
 	'# Mission' \
-	'# Changes Since The Previous Prompt' \
+	'# Authorized Roadmap' \
 	'# Measurements At Start' \
-	'# Role, Permissions, And Stop Boundaries' \
+	'# Role And Boundaries' \
 	'# Required Reading' \
-	'# Environment Constraints' \
-	'# First Task' \
-	'# Restart Protocol'; do
+	'# Three Moves' \
+	'# Automatic Handoff'; do
 	[[ $(grep -cFx "$heading" "$temp_root/printed-prompt") -eq 1 ]] ||
 		fail "prompt section must occur exactly once: $heading"
 	line=$(grep -nFx "$heading" "$temp_root/printed-prompt" | cut -d: -f1)
@@ -894,7 +913,7 @@ if [[ "$nested_mode" == 'no' ]]; then
 		sed -n '1,120p' "$temp_root/nested-test.stderr" >&2
 		fail 'contract suite failed from a source archive with a second-generation header'
 	fi
-	assert_contains "$temp_root/nested-test.stdout" 'codex dev start contract: PASS (46 checks)'
+	assert_contains "$temp_root/nested-test.stdout" 'codex dev start contract: PASS (47 checks)'
 	[[ ! -s "$temp_root/nested-test.stderr" ]] || fail 'nested second-generation test warned'
 	pass 'contract suite boots from a source archive with a second-generation header'
 	if CODEX_DEV_START_NESTED=1 "$test_shell" \
@@ -960,6 +979,10 @@ pass 'missing links and broken archive backlinks fail closed'
 write_archive "$fixture_root" "$new_rel" 'ANSWERED - HISTORY' "$old_leaf" \
 	'none' 'objective complete' "$fixture_root/codex-dev-start.sh"
 replace_header_value "$fixture_root/codex-dev-start.sh" 'SESSION_STATUS' 'COMPLETE'
+expect_failure 'premature COMPLETE with authorized work' \
+	'session cannot be COMPLETE while authorized checkpoints remain' \
+	env CODEX_BIN="$fake_codex" "$fixture_root/codex-dev-start.sh" --check
+complete_authorized_queue "$fixture_root/docs/plan/quality-upgrade.md"
 commit_fixture 'complete lifecycle'
 CODEX_BIN="$fake_codex" "$fixture_root/codex-dev-start.sh" --check \
 	>"$temp_root/complete-check.stdout" 2>"$temp_root/complete-check.stderr"
@@ -981,9 +1004,9 @@ pass 'COMPLETE state validates history but cannot replay a task'
 	fail 'launcher contract tests left the fixture worktree dirty'
 pass 'hermetic fixture remains clean after all lifecycle probes'
 
-expected_pass_count=48
+expected_pass_count=49
 if [[ "$nested_mode" == 'yes' ]]; then
-	expected_pass_count=46
+	expected_pass_count=47
 fi
 [[ "$pass_count" -eq "$expected_pass_count" ]] ||
 	fail "contract control count is $pass_count, expected $expected_pass_count"

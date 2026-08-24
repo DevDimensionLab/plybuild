@@ -16,14 +16,28 @@ because the ratchet verdict says PASS.
   the sole next-task source and the tracked plan is persistent knowledge.
 - Make one focused commit per measured quality move.
 - Limit a checkpoint to three moves, then update this plan and the handover.
-- At a checkpoint, recommend `agent-restart` and wait for that exact user
-  message before preparing and locally committing the next session prompt.
+- At a checkpoint or session boundary, automatically prepare and locally
+  commit the next authorized session prompt before stopping.
 - Run the relevant focused tests before the full gate.
 - Measure every checkpoint from a clean commit with the stored baseline.
 - Require zero ratchet regressions and resolve actionable review findings.
 - Do not push, merge, or remove the worktree without explicit approval.
 - Follow `docs/design/agent-session-continuity.md` for task authority, prompt
   archives, restart staging, and dirty-worktree recovery.
+
+The user has authorized the ordered roadmap through P8. The following block is
+machine-readable launcher state; keep the order and vocabulary exact.
+
+<!-- CODEX_AUTHORIZED_CHECKPOINTS_BEGIN -->
+P2A|active
+P2B|queued
+P3|queued
+P4|queued
+P5|queued
+P6|queued
+P7|queued
+P8|queued
+<!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->
 
 ## Measured State
 
@@ -67,7 +81,7 @@ Status: complete as an operational prerequisite for P1.
 - Made the launcher prompt and rolling handover the startup path, replacing the
   ignored local task file as an active source.
 - Added byte-exact, dated prompt archives, a connected reciprocal archive graph,
-  and an explicit `agent-restart` protocol.
+  and an automatic handoff protocol.
 - Kept dirty work recoverable without injecting raw Git output into a prompt.
 - Kept the launcher contract portable to Docker/source archives by testing the
   checked-in graph inside synthetic Git state and asserting its source types.

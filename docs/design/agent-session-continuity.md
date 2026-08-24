@@ -16,15 +16,17 @@ Codex process.
 | --- | --- | --- |
 | Stable decisions and premises | `docs/design/*.md` | Change when evidence or an approved decision changes. |
 | Roadmap, checkpoint status, and measured debt | `docs/plan/quality-upgrade.md` | Update after a measured quality move or checkpoint. |
-| Resume state, learned facts, and next boundary | `docs/plan/quality-handover.md` | Rewrite at every agent restart; do not append a session diary. |
-| One next-session mission | `codex-dev-start.sh` mutable prompt | Replace only during authorized restart preparation. |
+| Resume state, learned facts, and next boundary | `docs/plan/quality-handover.md` | Rewrite at every session handoff; do not append a session diary. |
+| One next-session mission | `codex-dev-start.sh` mutable prompt | Replace automatically before an agent session ends. |
 | Active prompt mirror and previous missions | `docs/plan/agent-sessions/*.md` | Require the active byte-exact mirror at startup; preserve answered entries as linked history, never as independent task authority. |
 
 The complete tracked continuity set - launcher, design notes, upgrade plan,
 rolling handover, and archive graph - is sufficient to resume. The launcher's
 mutable prompt remains the sole next-task authority; the active archive is its
 required integrity mirror. The ignored `.agent-task/current.md` is not an input
-to this workflow.
+to this workflow. The machine-readable authorized-checkpoint block in the
+upgrade plan constrains lifecycle state: queued work cannot coexist with a
+`COMPLETE` launcher.
 
 ## Launcher Contract
 
@@ -92,13 +94,14 @@ Runtime validation checks:
 The active archive's prompt block must match the launcher's decoded prompt
 before Codex can start.
 
-## Restart Protocol
+## Automatic Handoff Protocol
 
-The agent may recommend a restart at a natural boundary, after three quality
-moves, or when context quality declines. Preparation begins only when the
-user's trimmed message is exactly the case-sensitive string `agent-restart`.
+The user has authorized the ordered quality roadmap through P8. At a natural
+boundary, after three quality moves, or before context quality declines, the
+agent must prepare the next session before stopping. No separate trigger is
+required.
 
-That trigger authorizes the agent to:
+Session finalization requires the agent to:
 
 1. Re-measure repository and quality state.
 2. Preserve corrected claims, expensive findings, failed approaches, unrun
@@ -110,19 +113,21 @@ That trigger authorizes the agent to:
 6. Create one local commit named `docs: prepare next agent session`.
 7. Report the commit and next command, then stop without starting Codex.
 
-The restart commit may include only the launcher, affected design/plan files,
+The handoff commit may include only the launcher, affected design/plan files,
 the answered archive, and the new archive. Implementation, test, inherited, or
-unrelated dirty files are not auto-staged. The trigger does not authorize push,
-merge, release, stash, revert, or worktree removal.
+unrelated dirty files are not auto-staged. Automatic handoff does not authorize
+push, merge, release, stash, revert, or worktree removal.
 
-Normal task execution may correct plans and the rolling handover, but it must
-not mutate launcher session data or archives. Prompt corrections wait in the
-handover until the exact restart trigger.
+Normal task execution may correct plans and the rolling handover. Launcher
+session data and archives change only during session bootstrap or finalization,
+after a coherent implementation move is committed or an exact resumable state
+is recorded.
 
-If no approved mission remains, restart preparation answers the tail archive,
-leaves its `Next` value as `none`, and changes the launcher header to
-`COMPLETE`. `--check` still validates the graph; normal start and
-`--print-prompt` fail instead of replaying the answered task.
+If no authorized mission remains after P8, finalization answers the tail
+archive, leaves its `Next` value as `none`, and changes the launcher header to
+`COMPLETE`. The launcher rejects `COMPLETE` while the authorized queue contains
+an active or queued checkpoint. `--check` still validates the graph; normal
+start and `--print-prompt` fail instead of replaying the answered task.
 
 ## Premises
 
@@ -161,5 +166,6 @@ launcher test itself has no network dependency.
 - The mission is the first decoded prompt line and names one primary outcome.
 - The launcher never evaluates mutable task bytes.
 - Raw worktree data never becomes prompt input.
-- Only exact `agent-restart` authorizes session-tail and archive mutation.
+- Every session leaves one accurate `NEXT` tail while authorized work remains.
+- `COMPLETE` is valid only when all authorized checkpoints are complete.
 - Restart history supplements Git history; it does not replace measured state.

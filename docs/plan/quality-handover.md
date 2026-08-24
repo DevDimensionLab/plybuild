@@ -36,12 +36,11 @@ eb987fd quality: migrate manual-evidence baseline
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` is in terminal `COMPLETE` state. The P1B prompt remains
-byte-exact inert history below the execution boundary so archive integrity can
-still be checked, but normal start and `--print-prompt` fail closed because no
-approved next task exists. Its stable executable section precedes
-`CODEX_STABLE_EXECUTION_END`; both mutable regions are comment-encoded `#|`
-data after an unconditional `exit`.
+`codex-dev-start.sh` is in `NEXT` state for P2A. The user has authorized the
+ordered roadmap through P8, and the machine-readable queue in the quality plan
+prevents `COMPLETE` while active or queued work remains. Its stable executable
+section precedes `CODEX_STABLE_EXECUTION_END`; both mutable regions are
+comment-encoded `#|` data after an unconditional `exit`.
 
 Startup validates:
 
@@ -78,10 +77,10 @@ child runs assert their exact control count.
 
 `make test` runs this target through `/bin/bash`.
 
-The terminal archive is
-`docs/plan/agent-sessions/2026-08-24T085458+0200-make-manual-evidence-reachable.md`.
-It and its predecessor are answered history; both prompt blocks and digests
-remain unchanged. The connected graph has no `NEXT` archive.
+The active archive is
+`docs/plan/agent-sessions/2026-08-24T103558+0200-characterize-compatibility.md`.
+The P1B archive and its predecessor are answered history; their prompt blocks
+and digests remain unchanged. The connected graph has exactly one `NEXT` tail.
 The ignored `.agent-task/current.md` source was retired and is absent.
 
 ## Measured Quality State
@@ -161,34 +160,23 @@ P2B.
 
 ## Next Objective
 
-P1B is complete in three moves. P2 compatibility, distribution, cloud, Spring,
-packaging, dependency, and publishing work remains outside this session's
-approved scope. There is no approved follow-up objective, so the launcher and
-archive chain are terminal. A future task requires explicit user approval and
-a newly prepared session rather than replaying this answered prompt.
+P1B is complete in three moves. P2A is active: pin and gate the public Go API,
+capture the order-independent Cobra CLI contract, and add four falsifiable
+host-binary acceptance verifiers. P2B-P8 are authorized and queued in order.
 
 ## Start
 
-There is no next task to start. From any directory, the lifecycle check remains
-available:
+The active P2A task can be started from any directory:
 
 ```sh
-/Users/perottochristensen/github/ply/upgrade-quality/codex-dev-start.sh --check
-```
-
-These commands intentionally fail closed in terminal state:
-
-```sh
-/Users/perottochristensen/github/ply/upgrade-quality/codex-dev-start.sh --print-prompt
 /Users/perottochristensen/github/ply/upgrade-quality/codex-dev-start.sh
 ```
 
 Do not start through `.agent-task/current.md`; it is not task authority.
 
-The exact restart trigger was consumed to prepare this terminal transition and
-one local allowlisted commit named `docs: prepare next agent session`. It did
-not authorize push, merge, release, stash, revert, worktree removal, or staging
-unrelated changes.
+Every session now prepares its successor automatically before stopping. This
+does not authorize push, merge, release, stash, revert, worktree removal, or
+staging unrelated changes.
 
 ## Verification Notes
 
