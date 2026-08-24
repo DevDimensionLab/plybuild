@@ -19,6 +19,12 @@ type recordingFileExistenceFilesystem struct {
 	statErr   error
 }
 
+type recordingFileReadFilesystem struct {
+	readPaths []string
+	readData  []byte
+	readErr   error
+}
+
 type recordedFileOverwrite struct {
 	path string
 	data []byte
@@ -67,6 +73,42 @@ func (existingFileInfo) Sys() interface{}   { return nil }
 
 func (*recordingFileExistenceFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected file-existence read")
+}
+
+func (recording *recordingFileReadFilesystem) ReadFile(path string) ([]byte, error) {
+	recording.readPaths = append(recording.readPaths, path)
+	return append([]byte{}, recording.readData...), recording.readErr
+}
+
+func (*recordingFileReadFilesystem) Stat(string) (fs.FileInfo, error) {
+	return nil, errors.New("unexpected file-read stat")
+}
+
+func (*recordingFileReadFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected file-read mkdir")
+}
+
+func (*recordingFileReadFilesystem) WriteFile(string, []byte, fs.FileMode) error {
+	return errors.New("unexpected file-read write")
+}
+
+func (*recordingFileReadFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected file-read create")
+}
+
+func (*recordingFileReadFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected file-read copy")
+}
+
+func (recording *recordingFileReadFilesystem) dependencies() openDependencies {
+	return openDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingFileReadFilesystem) assertedReadPaths() ([]string, error) {
+	if len(recording.readPaths) == 0 {
+		return nil, errors.New("recorded file-read population is empty")
+	}
+	return recording.readPaths, nil
 }
 
 func (recording *recordingFileExistenceFilesystem) Stat(path string) (fs.FileInfo, error) {
@@ -223,6 +265,89 @@ func (recording *recordingDirectoryCreateFilesystem) assertedCreates() ([]record
 		return nil, errors.New("recorded directory-create creation population is empty")
 	}
 	return recording.creates, nil
+}
+
+func TestOpenSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemOpenDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("Open selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("Open filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestOpenPreservesCompletePathBytesAndDependencyError(t *testing.T) {
+	path := "/complete file-read/path with spaces/file.bin"
+	readError := errors.New("complete file-read dependency error")
+	tests := []struct {
+		name     string
+		readData []byte
+		readErr  error
+		wantData []byte
+	}{
+		{name: "empty bytes", readData: []byte{}, wantData: []byte{}},
+		{
+			name:     "multiline bytes",
+			readData: []byte("first complete line\n\nthird complete line\n"),
+			wantData: []byte("first complete line\n\nthird complete line\n"),
+		},
+		{name: "binary bytes", readData: []byte{0x00, 0xff, 0x7f, 0x0a}, wantData: []byte{0x00, 0xff, 0x7f, 0x0a}},
+		{
+			name:     "partial bytes with dependency error",
+			readData: []byte("partial bytes that must be discarded"),
+			readErr:  readError,
+			wantData: []byte{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFileReadFilesystem{readData: test.readData, readErr: test.readErr}
+			dependencies := recording.dependencies()
+			if dependencies.Files.FileSystem != recording {
+				t.Fatalf("file-read dependency lost its complete filesystem value: %#v", dependencies)
+			}
+
+			data, err := open(dependencies, path)
+			if err != test.readErr {
+				t.Fatalf("open error was %v, want exact dependency error %v", err, test.readErr)
+			}
+			if data == nil || !reflect.DeepEqual(data, test.wantData) {
+				t.Fatalf("open bytes were %#v, want non-nil %#v", data, test.wantData)
+			}
+			readPaths, populationErr := recording.assertedReadPaths()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			if !reflect.DeepEqual(readPaths, []string{path}) {
+				t.Fatalf("file-read dependency received paths %#v, want %#v", readPaths, []string{path})
+			}
+		})
+	}
+}
+
+func TestOpenDependenciesDefaultToSafeEmptyErrorWithoutPathAccess(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "safe default", "must-not-be-read.txt")
+
+	data, err := open(openDependencies{}, target)
+
+	if data == nil || len(data) != 0 {
+		t.Fatalf("safe file-read dependency default returned bytes %#v, want non-nil empty bytes", data)
+	}
+	if !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe file-read dependency default returned error %v, want %v", err, filesystem.ErrNoFilesystem)
+	}
+}
+
+func TestRecordedFileReadRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingFileReadFilesystem{}
+
+	if _, err := recording.assertedReadPaths(); err == nil {
+		t.Fatal("empty recorded file-read population passed")
+	}
 }
 
 func TestExistsSelectsCompleteSystemFilesystemDependencies(t *testing.T) {

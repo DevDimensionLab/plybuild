@@ -96,14 +96,20 @@ func exists(dependencies existsDependencies, filename string) bool {
 	return filesystem.Exists(dependencies.Files, filename)
 }
 
-func Open(filePath string) ([]byte, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return []byte{}, err
-	}
-	defer func() { _ = file.Close() }()
+type openDependencies struct {
+	Files filesystem.Dependencies
+}
 
-	byteValue, err := io.ReadAll(file)
+func systemOpenDependencies() openDependencies {
+	return openDependencies{Files: filesystem.System()}
+}
+
+func Open(filePath string) ([]byte, error) {
+	return open(systemOpenDependencies(), filePath)
+}
+
+func open(dependencies openDependencies, filePath string) ([]byte, error) {
+	byteValue, err := filesystem.ReadFile(dependencies.Files, filePath)
 	if err != nil {
 		return []byte{}, err
 	}
