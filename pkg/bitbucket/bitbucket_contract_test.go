@@ -4,11 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
+	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"github.com/sirupsen/logrus"
 )
 
@@ -51,6 +57,247 @@ func (recording *recordingBitbucketQueryHTTP) assertedQueries() ([]recordedBitbu
 		return nil, errors.New("recorded Bitbucket query population is empty")
 	}
 	return recording.queries, nil
+}
+
+type recordingBitbucketRepositoryFilesystem struct {
+	statPaths []string
+	statErr   error
+}
+
+func (*recordingBitbucketRepositoryFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected Bitbucket repository read")
+}
+
+func (recording *recordingBitbucketRepositoryFilesystem) Stat(path string) (fs.FileInfo, error) {
+	recording.statPaths = append(recording.statPaths, path)
+	return nil, recording.statErr
+}
+
+func (*recordingBitbucketRepositoryFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected Bitbucket repository mkdir")
+}
+
+func (*recordingBitbucketRepositoryFilesystem) WriteFile(string, []byte, fs.FileMode) error {
+	return errors.New("unexpected Bitbucket repository write")
+}
+
+func (*recordingBitbucketRepositoryFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected Bitbucket repository create")
+}
+
+func (*recordingBitbucketRepositoryFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected Bitbucket repository copy")
+}
+
+func (recording *recordingBitbucketRepositoryFilesystem) assertedStatPaths() ([]string, error) {
+	if len(recording.statPaths) == 0 {
+		return nil, errors.New("recorded Bitbucket repository stat population is empty")
+	}
+	return recording.statPaths, nil
+}
+
+type recordedBitbucketRepositoryGitCall struct {
+	Operation string
+	Values    []string
+}
+
+type recordingBitbucketRepositoryGit struct {
+	calls       []recordedBitbucketRepositoryGitCall
+	cloneOutput shell.Output
+	pullOutput  shell.Output
+}
+
+func (recording *recordingBitbucketRepositoryGit) dependencies(files *recordingBitbucketRepositoryFilesystem) repositoryDependencies {
+	return repositoryDependencies{
+		Files: filesystem.Dependencies{FileSystem: files},
+		Git:   recording,
+	}
+}
+
+func (recording *recordingBitbucketRepositoryGit) Clone(url string, target string) shell.Output {
+	recording.calls = append(recording.calls, recordedBitbucketRepositoryGitCall{
+		Operation: "clone",
+		Values:    []string{url, target},
+	})
+	return recording.cloneOutput
+}
+
+func (recording *recordingBitbucketRepositoryGit) Pull(target string) shell.Output {
+	recording.calls = append(recording.calls, recordedBitbucketRepositoryGitCall{
+		Operation: "pull",
+		Values:    []string{target},
+	})
+	return recording.pullOutput
+}
+
+func (recording *recordingBitbucketRepositoryGit) assertedCalls() ([]recordedBitbucketRepositoryGitCall, error) {
+	if len(recording.calls) == 0 {
+		return nil, errors.New("recorded Bitbucket repository Git population is empty")
+	}
+	return recording.calls, nil
+}
+
+func TestBitbucketWithSelectsCompleteSystemRepositoryDependencies(t *testing.T) {
+	client := With(logrus.New(), "https://system.bitbucket.example.invalid", "system-token")
+	systemFiles := filesystem.System()
+
+	if client.repositories.Files.FileSystem == nil || client.repositories.Git == nil {
+		t.Fatalf("With selected incomplete repository dependencies: %#v", client.repositories)
+	}
+	if reflect.TypeOf(client.repositories.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("With filesystem dependency is %T, want %T", client.repositories.Files.FileSystem, systemFiles.FileSystem)
+	}
+	if reflect.TypeOf(client.repositories.Git) != reflect.TypeOf(packageRepositoryGit{}) {
+		t.Fatalf("With Git dependency is %T, want %T", client.repositories.Git, packageRepositoryGit{})
+	}
+}
+
+func TestBitbucketMissingRepositorySelectsCloneWithCompletePathAndLogging(t *testing.T) {
+	host := "ssh://git@bitbucket.example.invalid:7999/complete-base"
+	workspace := "/complete workspace with spaces"
+	repository := "/COMPLETE-PROJECT/complete repository"
+	repositoryPath := workspace + repository
+	files := &recordingBitbucketRepositoryFilesystem{statErr: &os.PathError{
+		Op: "stat", Path: repositoryPath, Err: fs.ErrNotExist,
+	}}
+	git := &recordingBitbucketRepositoryGit{}
+	logOutput := &bytes.Buffer{}
+	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
+	logger.SetOutput(logOutput)
+	logger.SetFormatter(&logrus.TextFormatter{DisableColors: true, DisableTimestamp: true})
+	client := Bitbucket{
+		host: host, log: logger, repositories: git.dependencies(files),
+	}
+
+	err := client.cloneOrPull(workspace, repository)
+
+	if err != nil {
+		t.Fatalf("missing Bitbucket repository selection returned an error: %v", err)
+	}
+	assertRecordedBitbucketRepositoryStatPaths(t, files, []string{repositoryPath})
+	wantURL := host + "/scm" + repository + ".git"
+	assertRecordedBitbucketRepositoryGitCalls(t, git, []recordedBitbucketRepositoryGitCall{{
+		Operation: "clone",
+		Values:    []string{wantURL, repositoryPath},
+	}})
+	wantLog := "clone [" + wantURL + "] -> [" + repositoryPath + "]"
+	if !strings.Contains(logOutput.String(), wantLog) {
+		t.Fatalf("Bitbucket clone log lost exact values:\n got: %s\nwant message: %s", logOutput.String(), wantLog)
+	}
+}
+
+func TestBitbucketEveryNonMissingRepositoryResultSelectsPullWithExactPathAndLogging(t *testing.T) {
+	statError := errors.New("permission denied while probing complete repository")
+	tests := []struct {
+		name    string
+		statErr error
+	}{
+		{name: "existing repository"},
+		{name: "other stat error", statErr: statError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			workspace := "/complete pull workspace"
+			repository := "/complete-project/complete-repository"
+			repositoryPath := workspace + repository
+			pullPath := workspace + "/" + repository
+			files := &recordingBitbucketRepositoryFilesystem{statErr: test.statErr}
+			git := &recordingBitbucketRepositoryGit{}
+			logOutput := &bytes.Buffer{}
+			logger := logrus.New()
+			logger.SetLevel(logrus.DebugLevel)
+			logger.SetOutput(logOutput)
+			logger.SetFormatter(&logrus.TextFormatter{DisableColors: true, DisableTimestamp: true})
+			client := Bitbucket{log: logger, repositories: git.dependencies(files)}
+
+			err := client.cloneOrPull(workspace, repository)
+
+			if err != nil {
+				t.Fatalf("non-missing Bitbucket repository selection returned an error: %v", err)
+			}
+			assertRecordedBitbucketRepositoryStatPaths(t, files, []string{repositoryPath})
+			assertRecordedBitbucketRepositoryGitCalls(t, git, []recordedBitbucketRepositoryGitCall{{
+				Operation: "pull",
+				Values:    []string{pullPath},
+			}})
+			wantLog := " pull [" + pullPath + "]"
+			if !strings.Contains(logOutput.String(), wantLog) {
+				t.Fatalf("Bitbucket pull log lost exact values:\n got: %s\nwant message: %s", logOutput.String(), wantLog)
+			}
+		})
+	}
+}
+
+func TestBitbucketCloneOrPullPropagatesRecordedOperationErrors(t *testing.T) {
+	tests := []struct {
+		name      string
+		statErr   error
+		operation string
+	}{
+		{name: "clone", statErr: fs.ErrNotExist, operation: "clone"},
+		{name: "pull", operation: "pull"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			sentinel := errors.New("complete " + test.name + " dependency failure")
+			output := shell.Output{Err: sentinel}
+			_, _ = output.StdOut.WriteString(test.name + " complete stdout\n")
+			_, _ = output.StdErr.WriteString(test.name + " complete stderr\n")
+			files := &recordingBitbucketRepositoryFilesystem{statErr: test.statErr}
+			git := &recordingBitbucketRepositoryGit{cloneOutput: output, pullOutput: output}
+			client := Bitbucket{
+				host: "ssh://git@errors.bitbucket.example.invalid:7999",
+				log:  logrus.New(), repositories: git.dependencies(files),
+			}
+
+			err := client.cloneOrPull("/complete error workspace", "/complete-project/complete-repository")
+
+			if err == nil || err.Error() != output.FormatError().Error() {
+				t.Fatalf("Bitbucket %s error was %v, want %v", test.name, err, output.FormatError())
+			}
+			calls, callsErr := git.assertedCalls()
+			if callsErr != nil {
+				t.Fatal(callsErr)
+			}
+			if len(calls) != 1 || calls[0].Operation != test.operation {
+				t.Fatalf("Bitbucket operation calls were %#v, want one %s", calls, test.operation)
+			}
+		})
+	}
+}
+
+func TestBitbucketRepositoryDependenciesDefaultToNoGitProcessOrMutation(t *testing.T) {
+	workspace := t.TempDir()
+	repository := "/safe-default/must-not-clone"
+	repositoryPath := filepath.Join(workspace, repository)
+	client := Bitbucket{
+		host: "ssh://must-not-run.example.invalid", log: logrus.New(),
+	}
+	wantOutput := shell.Output{Err: filesystem.ErrNoFilesystem}
+
+	err := client.cloneOrPull(workspace, repository)
+
+	if err == nil || err.Error() != wantOutput.FormatError().Error() {
+		t.Fatalf("safe Bitbucket repository default returned %v, want %v", err, wantOutput.FormatError())
+	}
+	if _, statErr := os.Stat(repositoryPath); !os.IsNotExist(statErr) {
+		t.Fatalf("safe Bitbucket repository default mutated the target: %v", statErr)
+	}
+}
+
+func TestRecordedBitbucketRepositoryDependenciesRejectEmptyPopulations(t *testing.T) {
+	files := &recordingBitbucketRepositoryFilesystem{}
+	git := &recordingBitbucketRepositoryGit{}
+
+	if _, err := files.assertedStatPaths(); err == nil {
+		t.Fatal("empty recorded Bitbucket repository stat population passed")
+	}
+	if _, err := git.assertedCalls(); err == nil {
+		t.Fatal("empty recorded Bitbucket repository Git population passed")
+	}
 }
 
 func TestBitbucketQueriesKeepCompleteURLsBearerValuesAndParsedResponses(t *testing.T) {
@@ -256,5 +503,35 @@ func assertRecordedBitbucketQueries(t *testing.T, recording *recordingBitbucketQ
 	}
 	if !reflect.DeepEqual(gotRequests, wantRequests) {
 		t.Fatalf("recorded Bitbucket queries differ:\n got: %#v\nwant: %#v", gotRequests, wantRequests)
+	}
+}
+
+func assertRecordedBitbucketRepositoryStatPaths(
+	t *testing.T,
+	recording *recordingBitbucketRepositoryFilesystem,
+	want []string,
+) {
+	t.Helper()
+	paths, err := recording.assertedStatPaths()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(paths, want) {
+		t.Fatalf("recorded Bitbucket repository stat paths differ:\n got: %#v\nwant: %#v", paths, want)
+	}
+}
+
+func assertRecordedBitbucketRepositoryGitCalls(
+	t *testing.T,
+	recording *recordingBitbucketRepositoryGit,
+	want []recordedBitbucketRepositoryGitCall,
+) {
+	t.Helper()
+	calls, err := recording.assertedCalls()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(calls, want) {
+		t.Fatalf("recorded Bitbucket repository Git calls differ:\n got: %#v\nwant: %#v", calls, want)
 	}
 }

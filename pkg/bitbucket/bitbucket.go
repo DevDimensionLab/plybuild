@@ -1,9 +1,9 @@
 package bitbucket
 
 import (
-	"os"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/http"
@@ -12,18 +12,20 @@ import (
 )
 
 type Bitbucket struct {
-	host        string
-	accessToken string
-	log         logrus.FieldLogger
-	queries     queryDependencies
+	host         string
+	accessToken  string
+	log          logrus.FieldLogger
+	queries      queryDependencies
+	repositories repositoryDependencies
 }
 
 func With(logger logrus.FieldLogger, host string, accessToken string) Bitbucket {
 	return Bitbucket{
-		host:        host,
-		accessToken: accessToken,
-		log:         logger,
-		queries:     systemQueryDependencies(),
+		host:         host,
+		accessToken:  accessToken,
+		log:          logger,
+		queries:      systemQueryDependencies(),
+		repositories: systemRepositoryDependencies(),
 	}
 }
 
@@ -54,6 +56,47 @@ func (packageQueryHTTP) GetBearerJSON(request httpclient.Request, parsed interfa
 		accessToken = request.BearerJSON.AccessToken
 	}
 	return http.GetJsonWithAccessToken("", request.URL, accessToken, parsed)
+}
+
+type repositoryGit interface {
+	Clone(url string, target string) shell.Output
+	Pull(target string) shell.Output
+}
+
+type repositoryDependencies struct {
+	Files filesystem.Dependencies
+	Git   repositoryGit
+}
+
+func (dependencies repositoryDependencies) Clone(url string, target string) shell.Output {
+	if dependencies.Files.FileSystem == nil || dependencies.Git == nil {
+		return shell.Output{Err: filesystem.ErrNoFilesystem}
+	}
+	return dependencies.Git.Clone(url, target)
+}
+
+func (dependencies repositoryDependencies) Pull(target string) shell.Output {
+	if dependencies.Files.FileSystem == nil || dependencies.Git == nil {
+		return shell.Output{Err: filesystem.ErrNoFilesystem}
+	}
+	return dependencies.Git.Pull(target)
+}
+
+func systemRepositoryDependencies() repositoryDependencies {
+	return repositoryDependencies{
+		Files: filesystem.System(),
+		Git:   packageRepositoryGit{},
+	}
+}
+
+type packageRepositoryGit struct{}
+
+func (packageRepositoryGit) Clone(url string, target string) shell.Output {
+	return shell.GitClone(url, target)
+}
+
+func (packageRepositoryGit) Pull(target string) shell.Output {
+	return shell.GitPull(target)
 }
 
 func (bitbucket Bitbucket) SynchronizeAllRepos(excludeProjects []string) error {
@@ -102,7 +145,7 @@ func skipProject(key string, excludeProjects []string) bool {
 func (bitbucket Bitbucket) cloneOrPull(workspace string, repository string) error {
 	repoDir := workspace + repository
 
-	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
+	if !filesystem.Exists(bitbucket.repositories.Files, repoDir) {
 		return bitbucket.clone(workspace, repository)
 	} else {
 		return bitbucket.pull(workspace, repository)
@@ -114,7 +157,7 @@ func (bitbucket Bitbucket) clone(workspace string, repository string) error {
 	toDir := workspace + repository
 
 	bitbucket.log.Debugln("clone [" + gitUrl + "] -> [" + toDir + "]")
-	clone := shell.GitClone(gitUrl, toDir)
+	clone := bitbucket.repositories.Clone(gitUrl, toDir)
 	if clone.Err != nil {
 		return clone.FormatError()
 	}
@@ -126,7 +169,7 @@ func (bitbucket Bitbucket) pull(workspace string, repository string) error {
 	repoDir := file.Path("%s/%s", workspace, repository)
 
 	bitbucket.log.Debugln(" pull [" + repoDir + "]")
-	pull := shell.GitPull(repoDir)
+	pull := bitbucket.repositories.Pull(repoDir)
 	if pull.Err != nil {
 		return pull.FormatError()
 	}
