@@ -1,6 +1,7 @@
 GO ?= go
 GOFMT ?= gofmt
 BASH ?= /bin/bash
+GORELEASER ?= goreleaser
 GOLANGCI_LINT_VERSION := 2.12.2
 APIDIFF_VERSION := v0.0.0-20260709172345-9ea1abe57597
 APIDIFF ?= apidiff
@@ -9,7 +10,7 @@ SCRIPTS_DIR ?= $(REPO_ROOT)/scripts
 
 .DEFAULT_GOAL := all
 
-.PHONY: acceptance all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight release release-brew run test test-agent-start test-cli-surface test-compatibility test-install test-lint test-preflight upgrade
+.PHONY: acceptance all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight release release-brew run snapshot test test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight upgrade
 
 build:
 	$(GO) build -o ply ./cmd/ply
@@ -29,12 +30,15 @@ install:
 run:
 	$(GO) run ./cmd/ply
 
-test: test-agent-start test-lint test-preflight
+test: test-agent-start test-distribution test-lint test-preflight
 	$(GO) test -v -cover ./...
 	bash test/makefile_install_test.sh
 
 test-agent-start:
 	$(BASH) test/codex_dev_start_test.sh
+
+test-distribution:
+	$(BASH) test/makefile_distribution_test.sh
 
 test-install:
 	bash test/makefile_install_test.sh
@@ -102,6 +106,7 @@ preflight: compatibility
 	$(GO) vet ./...
 	$(MAKE) --no-print-directory -C "$(REPO_ROOT)" lint
 	$(BASH) "$(REPO_ROOT)/test/codex_dev_start_test.sh"
+	$(BASH) "$(REPO_ROOT)/test/makefile_distribution_test.sh"
 	$(BASH) "$(REPO_ROOT)/test/makefile_lint_test.sh"
 	$(BASH) "$(REPO_ROOT)/test/makefile_install_test.sh"
 	@set -eu; \
@@ -154,11 +159,15 @@ preflight: compatibility
 	done
 	$(BASH) "$(REPO_ROOT)/.quality/tools/test-quality-audit.sh"
 
-release:
-	goreleaser release --clean
+snapshot:
+	GITHUB_TOKEN= GITLAB_TOKEN= GITEA_TOKEN= HOMEBREW_TAP_GITHUB_TOKEN= SNAPCRAFT_STORE_CREDENTIALS= \
+		"$(GORELEASER)" release --snapshot --clean --skip=publish
+
+release: snapshot
 
 release-brew:
-	goreleaser release --clean --skip=validate -f .goreleaser.brews.yml
+	@printf '%s\n' 'Homebrew distribution is inactive; release-brew is disabled.' >&2
+	@false
 
 upgrade:
 	$(GO) get github.com/devdimensionlab/mvn-pom-mutator
