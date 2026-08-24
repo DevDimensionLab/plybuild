@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `14764fd`.
+Last measured checkpoint: 2026-08-24, commit `312d168`.
 
 ## Objective
 
@@ -30,8 +30,8 @@ machine-readable launcher state; keep the order and vocabulary exact.
 
 <!-- CODEX_AUTHORIZED_CHECKPOINTS_BEGIN -->
 P2A|complete
-P2B|active
-P3|queued
+P2B|complete
+P3|active
 P4|queued
 P5|queued
 P6|queued
@@ -41,20 +41,20 @@ P8|queued
 
 ## Measured State
 
-| Signal | Baseline | P1B | P2A | Interpretation |
-| --- | ---: | ---: | ---: | --- |
-| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | Q0.3 and Q0.8 remain closed. |
-| Test functions | 33 | 37 | 37 | Compatibility and acceptance use external executable controls. |
-| Skipped tests | 2 | 0 | 0 | Q0.6 remains improved. |
-| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | Fifteen packages still have no test files. |
-| Process-exiting calls outside `main` | 127 | 127 | 127 | The CLI exporter correction preserved the ratchet. |
-| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | Q1.3 fails; all five adapter paths are absent. |
-| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
-| Mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
-| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | Q2.5-Q2.7 and Q2.10 pass; Q2.8/Q2.9 remain manual. |
-| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | Q0.8 remains improved over a larger population. |
-| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures still prove schema reachability. |
-| Baseline numeric debt leaves | 228 | 228 | 228 | Compatibility work did not migrate the instrument. |
+| Signal | Baseline | P1B | P2A | P2B | Interpretation |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3 and Q0.8 remain closed. |
+| Test functions | 33 | 37 | 37 | 37 | Distribution uses an external executable contract. |
+| Skipped tests | 2 | 0 | 0 | 0 | Q0.6 remains improved. |
+| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | Fifteen packages still have no test files. |
+| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | P2B did not enter P3 process-boundary scope. |
+| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | Q1.3 fails; all five adapter paths are absent. |
+| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
+| Mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
+| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | Q2.5-Q2.7 and Q2.10 pass; Q2.8/Q2.9 remain manual. |
+| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | Q0.8 remains improved over a larger population. |
+| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures still prove schema reachability. |
+| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | Distribution work did not migrate the instrument. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -181,15 +181,25 @@ five held, and zero regressed ratchets.
 
 ### P2B - Make Distribution Non-Publishing By Default
 
-Status: active; one measured move.
+Status: complete in one measured move.
 
-Remove or isolate the `brews` publisher in `.goreleaser.yml`, disable or guard
-`.goreleaser.brews.yml` and `make release-brew`, and provide a snapshot command
-that cannot publish a GitHub release or package-manager metadata. Add a negative
-test that rejects active Homebrew or Snap publishers in the default release
-path.
+The default v2 GoReleaser configuration now disables remote releases and has no
+Homebrew or Snap sections. The standalone brew configuration was removed,
+`make release-brew` fails closed before any executable is reached, and both
+`make snapshot` and the ordinary `make release` target use the same
+credential-cleared `release --snapshot --clean --skip=publish` invocation.
 
-Exit: binary snapshots are local-only and inactive publishers cannot run.
+`test/makefile_distribution_test.sh` records the exact argv without executing
+GoReleaser, rejects Homebrew formula, Homebrew cask, and Snap publisher mutants,
+requires the remote-release disable, verifies credential isolation, and proves
+the inactive brew target cannot reach the recorder. Preflight runs this
+contract. No publisher or GoReleaser release was invoked.
+
+Commit: `312d168`.
+
+Exit: satisfied. The clean audit at `312d168` exits 1 for the same 16 documented
+findings, with two improved, five held, and zero regressed ratchets. Actual
+snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 

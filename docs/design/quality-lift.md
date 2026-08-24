@@ -33,8 +33,9 @@ plan therefore records both the verdict and the underlying number.
 - Cloud migration to `ply-config` is later work and retains cache-first behavior.
 - Spring repair follows the four core CLI surfaces.
 - Binary and Docker are active distribution targets.
-- Homebrew and Snap are inactive. Release commands are blocked from use until
-  active Homebrew publication is removed from `.goreleaser.yml`.
+- Homebrew and Snap are inactive. The default GoReleaser configuration disables
+  remote releases and contains no package-manager publishers; supported
+  `snapshot` and ordinary `release` Make targets are local-only.
 
 ## Core Surfaces
 
@@ -65,10 +66,10 @@ publishers have been removed. It does not mean an unreviewed production
 
 | State | Evidence |
 | --- | --- |
-| Verified | Host install, status, upgrade, and local build through fresh host artifacts; API/CLI compatibility; command help; uncached, empty-HOME, and race tests; vet, tree identity, and quality meta-tests. |
+| Verified | Host install, status, upgrade, and local build through fresh host artifacts; API/CLI compatibility; command help; local-only distribution configuration and recording contract; uncached, empty-HOME, and race tests; vet, tree identity, and quality meta-tests. |
 | Not verified | Docker build/run, GoReleaser snapshot, public network, real cloud, Spring end-to-end behavior. |
 | Known and accepted for the next plan | Fifteen untested packages, 127 process exits outside `main`, 80 direct effect sites, zero seam swaps, zero mutation harnesses, and no snapshot/Docker acceptance yet. |
-| Known contradiction to resolve before release | `.goreleaser.yml` contains an active `brews` publisher although Homebrew is an inactive target. |
+| Resolved at P2B | Remote releases are disabled in `.goreleaser.yml`, Homebrew/Snap publisher sections are absent, the standalone brew config is removed, and `make release-brew` fails closed. |
 
 ## Invariants
 

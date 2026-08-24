@@ -658,88 +658,91 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-24T110354+0200-make-distribution-local
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T110354+0200-make-distribution-local.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T103558+0200-characterize-compatibility.md
+#|SESSION_ID=2026-08-24T113208+0200-remove-process-exits
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T113208+0200-remove-process-exits.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T110354+0200-make-distribution-local.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete checkpoint P2B in one measured move: make the supported default
-#|distribution workflow local-only, remove inactive Homebrew/Snap publishers from
-#|that path, and prove the snapshot command cannot publish. Leave zero comparable
-#|ratchet regressions and do not execute any publisher.
+#|Complete the first P3 move in one measured change: remove process termination
+#|from non-main code, make both executable entry points delegate to one
+#|error-returning command path, and reduce Q1.2 from 127 process-exiting calls
+#|outside `main` to zero. Preserve the P2A public API, CLI, subprocess, and host
+#|acceptance contracts with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
-#|The user has authorized the ordered roadmap through P8. P2A is complete, P2B is
-#|active, and P3-P8 are queued in the machine-readable block in
+#|The user has authorized the ordered roadmap through P8. P2B is complete, P3 is
+#|active, and P4-P8 are queued in the machine-readable block in
 #|docs/plan/quality-upgrade.md. A queued checkpoint is approved work, so the
 #|launcher must remain NEXT until all authorized checkpoints are complete.
 #|
 #|# Measurements At Start
 #|
-#|Before editing, inspect branch, HEAD, status, the rolling handover, the P2B
-#|plan, `.goreleaser.yml`, `.goreleaser.brews.yml`, the release targets, and their
-#|current contract tests. Regenerate quality reports rather than relying on
-#|ignored output. The clean P2A audit at 14764fd exited 1 for 16 documented
-#|findings with two improved, five held, and zero regressed ratchets. Exit 2
+#|Before editing, inspect branch, HEAD, status, the rolling handover, the P3 plan,
+#|both `main.go` entry points, `cmd.Execute()`, `cmd.RootCmd`, process-exit call
+#|sites, the Q1.2 scanner, and the API/CLI/subprocess contracts. Regenerate
+#|quality reports rather than relying on ignored output. The clean P2B audit at
+#|312d168 exited 1 for 16 documented findings with two improved, five held, zero
+#|regressed ratchets, and 127 process-exiting calls outside `main`. Exit 2
 #|invalidates a checkpoint.
 #|
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on codex/upgrade-quality. Make one focused
-#|implementation commit for P2B. Do not push, merge, publish, remove the worktree,
-#|stash inherited changes, revert user work, or run destructive Git commands.
-#|Do not invoke `make release`, `make release-brew`, or an unguarded GoReleaser
-#|release. Use static configuration checks and a recording executable for
-#|negative publication tests.
+#|implementation commit for this P3 move. Do not push, merge, publish, remove the
+#|worktree, stash inherited changes, revert user work, or run destructive Git
+#|commands. Do not execute any publisher; `make release` is now a local snapshot
+#|alias, but distribution execution is outside this move.
 #|
-#|Keep Go 1.18 and preserve the P2A API, Cobra, subprocess, and host acceptance
-#|contracts. Do not broaden this move into Docker, dependencies, cloud, Spring,
-#|process-exit refactoring, adapters, or mutation harnesses. GoReleaser syntax is
-#|version-sensitive: inspect the repository context and current official,
-#|version-matched help or documentation before binding production flags.
+#|Keep Go 1.18 and preserve exported `cmd.Execute()` and `cmd.RootCmd` symbols and
+#|signatures, the normalized Cobra tree, subprocess output/exit behavior, and all
+#|four host acceptance flows. If evidence shows external callers require
+#|`cmd.Execute()` itself to terminate the process, stop for an explicit migration
+#|decision instead of hiding an exit behind a function variable or adapter.
+#|
+#|Do not introduce subprocess, HTTP, or filesystem adapters until the process
+#|boundary is green and measured. Do not broaden into Docker, dependencies,
+#|cloud, Spring, distribution, or mutation harnesses.
 #|
 #|# Required Reading
 #|
-#|Read docs/plan/quality-handover.md, the P2B section and checkpoint gate in
+#|Read docs/plan/quality-handover.md, the P3 section and checkpoint gate in
 #|docs/plan/quality-upgrade.md, docs/design/quality-lift.md,
-#|docs/design/agent-session-continuity.md, `.goreleaser.yml`,
-#|`.goreleaser.brews.yml`, Makefile release targets, and
-#|test/makefile_preflight_test.sh before editing.
+#|docs/design/agent-session-continuity.md, `.quality/inventory`, both executable
+#|entry points, the command execution path, and the P2A API/CLI/subprocess and
+#|host acceptance contracts before editing.
 #|
 #|# Three Moves
 #|
-#|These are three ordered steps inside the single measured P2B move.
+#|These are three ordered steps inside the single measured P3 move.
 #|
-#|1. Start with a failing distribution contract. It must reject an active Homebrew
-#|or Snap publisher in the default release configuration, reject a callable
-#|inactive-package-manager target, and record the exact local snapshot invocation
-#|without executing GoReleaser or using credentials.
+#|1. Start with a failing entry-boundary contract. It must cover both `main.go`
+#|   and `cmd/ply/main.go`, prove they delegate to the same error-returning command
+#|   path, and reject process termination outside the two `main` functions.
 #|
-#|2. Remove or isolate the `brews` publisher in `.goreleaser.yml`, disable or
-#|explicitly fail closed the standalone brew configuration and
-#|`make release-brew`, and expose a supported snapshot command that cannot create
-#|a GitHub release or package-manager metadata. Preserve an explicit production
-#|release path only if its opt-in boundary is unmistakable and contract-tested;
-#|the ordinary/snapshot path must remain non-publishing.
+#|2. Add the error-returning execution path, keep the exported compatibility
+#|   surface intact, move exit-code selection and termination to the executable
+#|   boundaries, and preserve root/status/upgrade/build plus unknown-command
+#|   stdout, stderr, and exit behavior. Do not begin adapter work in this move.
 #|
-#|3. Run focused negative tests, compatibility, host acceptance, the full checkpoint
-#|gate, and the empty-HOME count-2 test from a clean commit. The full audit may
-#|exit 1 for known findings, but must report zero ratchet regressions.
+#|3. Run the focused boundary tests, API/CLI compatibility, host acceptance, the
+#|   full checkpoint gate, and the empty-HOME count-2 test from a clean commit.
+#|   The full audit may exit 1 for known findings, but Q1.2 must reach zero and no
+#|   comparable ratchet may regress.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the one coherent P2B move or
-#|record an exact resumable state. Rewrite the rolling handover, update checkpoint
-#|statuses, answer this archive, create one linked NEXT archive, and replace the
+#|Before this agent session ends, finish and commit the coherent P3 move or record
+#|an exact resumable state. Rewrite the rolling handover, update checkpoint
+#|status, answer this archive, create one linked NEXT archive, and replace the
 #|launcher's mutable session regions. No separate agent-restart message is
 #|required.
 #|
-#|If P2B is complete, activate P3. If unfinished, keep P2B active with a concrete
-#|resume mission. Stage only handoff files in the handoff commit named
+#|Keep P3 active for the ordered adapter moves after the exit boundary is green.
+#|Stage only handoff files in the handoff commit named
 #|`docs: prepare next agent session`. Do not launch the next session yourself.
 #|COMPLETE is valid only after every authorized checkpoint through P8 is complete.
 # CODEX_MUTABLE_PROMPT_END

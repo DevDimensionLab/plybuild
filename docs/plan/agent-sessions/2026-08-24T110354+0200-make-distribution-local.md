@@ -1,13 +1,13 @@
 # Agent Session: Make Distribution Local-Only
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T110354+0200-make-distribution-local`
 Created: `2026-08-24T11:03:54+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `8a321c84978c98e5e199362a5cfcb2bd71017fb817497127cb194db75d51acba`
 Previous: [2026-08-24T103558+0200-characterize-compatibility.md](2026-08-24T103558+0200-characterize-compatibility.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T113208+0200-remove-process-exits.md](2026-08-24T113208+0200-remove-process-exits.md)
+Outcome: P2B completed at 312d168 with a disabled remote release, no Homebrew/Snap publisher config, local-only snapshot and ordinary release targets, a fail-closed brew target, a clean full gate, and zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
