@@ -1,13 +1,13 @@
 # Agent Session: Migrate Spring Download
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T165352+0200-migrate-spring-download`
 Created: `2026-08-24T16:53:52+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `eecaf214fa80300a4e6eaefb583f697471edafca0e62216801eb98d9a33c9180`
 Previous: [2026-08-24T161800+0200-migrate-template-copy-filesystem.md](2026-08-24T161800+0200-migrate-template-copy-filesystem.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T173323+0200-migrate-spring-json-http.md](2026-08-24T173323+0200-migrate-spring-json-http.md)
+Outcome: P3 move 7 completed at 89d0f76: Spring initializer download now uses the existing HTTP and filesystem adapters, Q1.3 is 67 of 77, Q1.4 is 7 of 8, and the clean gate passed with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
