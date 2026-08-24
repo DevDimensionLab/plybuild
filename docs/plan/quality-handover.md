@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T08:54:58+02:00
+Generated: 2026-08-24T09:36:25+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,7 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `ab9a5c6`.
+- Measured implementation head: the P1B baseline-migration commit containing
+  this handover; use `git rev-parse --short=12 HEAD` after checkout.
 - Restart preparation base: `bf189a1c04ea`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no implementation changes.
@@ -29,6 +30,9 @@ Earlier focused commits:
 2972d11 quality: pin static analysis gate
 e956da7 test: add search-replace meta-test
 ab9a5c6 quality: add non-publishing preflight
+99cebaa quality: bind manual criterion receipts
+4887222 quality: enforce manual evidence precedence
+<this commit> quality: migrate manual-evidence baseline
 ```
 
 ## Continuity Checkpoint
@@ -83,7 +87,7 @@ The ignored `.agent-task/current.md` source was retired and is absent.
 
 ## Measured Quality State
 
-The clean full audit at `ab9a5c6` reports:
+P1B leaves the project debt measured at `ab9a5c6` numerically unchanged:
 
 - Absolute L0: 8 of 8.
 - Q0.6: 0 skipped tests out of 37 and 0 unsafe direct test writes.
@@ -95,6 +99,10 @@ The clean full audit at `ab9a5c6` reports:
 - Declared seam swap tests: 0 of 8.
 - Mutation harnesses: 0 of 8.
 - Acceptance scripts: 0 of 4.
+- Manual L1/L2 reachability: 6 of 6 rows with synthetic non-empty fixtures;
+  the current mutation and acceptance populations remain zero and non-passing.
+- Baseline migration: old and new denominator/criterion objects are equal and
+  all 228 numeric debt leaves match; Q3.9 is PASS under both instruments.
 
 Correction to the prior handover: its structured 7-of-8 count included Q0.8 as
 a held ratchet PASS. The starting raw absolute count was 6 of 8 because Q0.3
@@ -131,6 +139,13 @@ Contract controls established through P0A and P1:
 11. `make preflight` runs build, uncached tests, vet/lint, launcher/lint/install
     contracts, every `scripts/test-*`, and the quality meta-suite. Its contract
     rejects missing, empty, incomplete, orphaned, and symlinked populations.
+12. Manual criterion receipts bind module, commit, commit tree, measured status,
+    inventory, complete instrument identity, criterion kind, and a canonical
+    evidence digest. Criterion-specific numeric/boolean contracts reject a
+    receipt whose declared PASS is false.
+13. Receipts can alter only upstream `UNMEASURABLE`. Automated PASS and FAIL
+    retain precedence, and independently measured test, mutation-harness, or
+    acceptance-script populations must be non-zero.
 
 The archive stores the actual prompt argument, not a template with runtime
 substitutions. Dirty state therefore cannot make the archive and Codex input
@@ -147,17 +162,12 @@ P2B.
 
 ## Next Objective
 
-Complete P1B from `docs/plan/quality-upgrade.md`: make the six manual L1/L2
-rows reachable through commit-, tree-, inventory-, and instrument-bound
-structured evidence without letting evidence override an upstream failure.
-
-The implementation must migrate the exact-toolchain baseline explicitly:
-reproduce commit `5635d50` with the old and new instruments, preserve every
-numeric debt value, and add fail-closed tests for stale, duplicate, empty,
-wrong-kind, dirty-tree, and false-PASS receipts. The current project has zero
-mutation harnesses and acceptance scripts, so reachability for
-population-dependent rows must be proven with synthetic non-empty fixtures
-rather than a false project PASS.
+P1B is complete in three moves. P2 compatibility, distribution, cloud, Spring,
+packaging, dependency, and publishing work remains outside this session's
+approved scope. There is no approved follow-up objective. On an exact
+`agent-restart` trigger, remeasure the clean P1B head and close the active
+archive with `SESSION_STATUS=COMPLETE`, `Next: none`, rather than inventing a
+P2 mission.
 
 ## Start
 
@@ -187,6 +197,18 @@ release, stash, revert, worktree removal, or staging unrelated changes.
 ## Verification Notes
 
 Completed during this checkpoint:
+
+- Schema-2 manual-evidence focused tests: PASS. Synthetic non-empty fixtures
+  reach all six Q1/L2 rows; stale, dirty, duplicate, empty, wrong-kind,
+  wrong-digest, false-PASS, precedence, and zero-population controls all pass.
+- Old/new baseline reproduction: both instruments exit 1 only for source
+  findings; old and new raw bodies match; scorecards reproduce byte-for-byte;
+  denominator and criterion objects and all 228 numeric debt leaves match;
+  Q3.9 remains PASS. The old/new scorecard SHA-256 values are
+  `d420887d73aabf496ff276fcc55d13ad379ac49c9322fad58808b5e28fdba7df`
+  and `5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`.
+- Expanded `bash .quality/tools/test-quality-audit.sh`: PASS, 15 controls,
+  including criterion-bound evidence and dual-instrument T15 reproduction.
 
 - Restart remeasurement at clean `bf189a1c04ea`: `make preflight` PASS after
   isolating both Go and golangci-lint caches under `/private/tmp`.

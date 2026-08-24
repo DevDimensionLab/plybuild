@@ -1,6 +1,7 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `ab9a5c6`.
+Last measured checkpoint: 2026-08-24, P1B (the baseline-migration commit
+containing this update).
 
 ## Objective
 
@@ -27,7 +28,7 @@ because the ratchet verdict says PASS.
 
 ## Measured State
 
-| Signal | Baseline | Commit `ab9a5c6` | Interpretation |
+| Signal | Baseline | P1B | Interpretation |
 | --- | ---: | ---: | --- |
 | Absolute L0 PASS | 2 / 8 | 8 / 8 | Q0.3 and Q0.8 are closed. |
 | Test functions | 33 | 37 | Entrypoint and repository-write controls were added. |
@@ -39,6 +40,8 @@ because the ratchet verdict says PASS.
 | Mutation harnesses | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
 | Acceptance scripts | 0 / 4 | 0 / 4 | Q2.5 fails. |
 | Production scripts without meta-tests | 1 / 1 | 0 / 1 | Q0.8 improved; the population is non-empty. |
+| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | Synthetic non-empty fixtures prove schema reachability; current mutation/acceptance populations remain zero. |
+| Baseline numeric debt leaves | 228 | 228 | Schema-1 and schema-2 instruments produced identical denominators and criterion objects. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -98,21 +101,30 @@ ratchets improved, five held, and zero regressed.
 
 ### P1B - Make Manual L1/L2 Evidence Reachable
 
-Status: active next checkpoint; required before claiming L1 or L2.
+Status: complete in exactly three measured moves; required before claiming L1
+or L2.
 
-The vendored audit always emits UNMEASURABLE for Q1.6, Q1.7, Q1.9, Q2.4,
-Q2.8, and Q2.9. The structured layer only consumes manual evidence for Q3.9.
-Extend the structured evidence schema so commit-, tree-, inventory-, and
-instrument-bound receipts can resolve those six rows. Explicit upstream FAIL
-must always beat a receipt. Add negative meta-tests for stale, duplicate,
-empty, wrong-kind, dirty-tree, and false-PASS evidence.
+- Added schema-2 criterion receipts for Q1.6, Q1.7, Q1.9, Q2.4, Q2.8,
+  and Q2.9. Each receipt is module-, commit-, measured-tree-, inventory-,
+  instrument-, criterion-, and canonical-evidence-digest-bound.
+- Added criterion-specific semantic checks and negative meta-tests for stale,
+  duplicate, empty, wrong-kind, dirty-tree, wrong-digest, and false-PASS
+  evidence. Synthetic non-empty test, mutation-harness, and acceptance-script
+  populations prove all six rows are reachable.
+- Proved automated verdict precedence independently. A receipt can modify only
+  upstream `UNMEASURABLE`; automated PASS/FAIL remains authoritative, and a
+  zero independently measured test/harness/script population cannot pass.
+- Reproduced source commit `5635d50` with the schema-1 and schema-2
+  instruments. The raw bodies, complete criterion objects, complete
+  denominators, and all 228 numeric debt leaves match; Q3.9 remains PASS.
+  `.quality/baseline/instrument-migration.json` records both source commits,
+  complete instrument identities, evidence hashes, and scorecard hashes.
 
-Changing the parser changes the baseline instrument identity. Regenerate the
-baseline from commit `5635d50`, prove every existing numeric debt value is
-preserved, record old and new instrument hashes, and do not reset ratchet debt.
+Commits: `99cebaa`, `4887222`, and the baseline-migration commit containing
+this plan update.
 
-Exit: each manual row can become PASS from valid non-empty evidence, cannot
-override a measured failure, and baseline migration is byte-reproducible.
+Exit: satisfied. No current-project PASS was claimed for Q2.4, Q2.8, or Q2.9;
+their measured mutation-harness and acceptance-script populations remain zero.
 
 ### P2A - Characterize Compatibility
 

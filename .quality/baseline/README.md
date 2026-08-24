@@ -31,18 +31,34 @@ vendored audit, and report-template checksums. Reproduction requires the same
 instrument and toolchain configuration unless the baseline is deliberately
 re-established.
 
-Reproduce both the raw upstream Markdown and authoritative structured JSON from
-the repository root with:
+P1B deliberately migrated the structured schema without migrating debt.
+`instrument-migration.json` records both complete instrument identities. The
+old schema-1 parser is pinned by source commit `8d2cc113241ad58ed21efda5c5a219f2d9ef24b6`
+and SHA-256 `277c2ed18ded263e883ef6ac1a94e10e4b721d16bdbf3f09299ee5aaa59fb071`;
+its scorecard SHA-256 is
+`d420887d73aabf496ff276fcc55d13ad379ac49c9322fad58808b5e28fdba7df`.
+The schema-2 parser is pinned by source commit
+`4887222d38f3dd45a5f61e4231f3b19c27583440` and SHA-256
+`f56dc96885c0f3ab5e18bdb3ccbe155411efc0ce7bacfeb4fe701d8a23d0c31a`;
+the authoritative scorecard SHA-256 is
+`5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`.
+Both runs produce identical denominators and criterion objects, including all
+228 numeric leaves under those objects, and retain Q3.9 PASS. Only schema,
+instrument, and structured manual-evidence identity changed.
+
+Reproduce the current raw upstream Markdown and authoritative schema-2 JSON
+from the repository root with:
 
 ```sh
 quality_root="$PWD/.quality"
-baseline_repo="$(mktemp -d /tmp/ply-baseline.XXXXXX)"
-audit_out="$(mktemp -d /tmp/ply-baseline-audit.XXXXXX)"
+baseline_repo="$(mktemp -d /private/tmp/ply-baseline.XXXXXX)"
+audit_out="$(mktemp -d /private/tmp/ply-baseline-audit.XXXXXX)"
+audit_gocache="$(mktemp -d /private/tmp/ply-baseline-gocache.XXXXXX)"
 git clone --shared --no-checkout "$PWD" "$baseline_repo"
 git -C "$baseline_repo" checkout --detach 5635d50bd161a9a5aa81fc4332cc0c9d68885d08
 mkdir -p "$baseline_repo/.quality"
 cp "$quality_root/baseline/inventory" "$baseline_repo/.quality/inventory"
-export CGO_ENABLED=0 GOENV=off GOWORK=off
+export CGO_ENABLED=0 GOENV=off GOWORK=off GOCACHE="$audit_gocache"
 
 test "$(go version)" = "$(python3 -c \
   'import json,sys; print(json.load(open(sys.argv[1]))["tool"]["go_build"]["version"])' \
@@ -92,3 +108,15 @@ findings, not a broken audit. Exit `2`, a checksum mismatch, a dirty checkout
 beyond the declared inventory overlay, or either failed `cmp` invalidates the
 reproduction. Raw-report line 1 is excluded from the comparison because upstream
 embeds the checkout's absolute path there; every measured line remains covered.
+
+The audit meta-test's T15 control is the reproducible old/new migration recipe.
+It extracts the old instrument and its schema-1 evidence from the recorded Git
+commit, runs old and new instruments over the same `5635d50` checkout and
+inventory overlay under the exact build context above, reproduces both
+scorecard hashes byte-for-byte, compares normalized raw output, verifies both
+instrument identities, compares every denominator and criterion object, counts
+and compares all 228 numeric debt leaves, and asserts Q3.9 remains PASS:
+
+```sh
+LC_ALL=C LANG=C bash .quality/tools/test-quality-audit.sh
+```

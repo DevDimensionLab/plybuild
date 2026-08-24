@@ -800,7 +800,10 @@ ok "stale and empty evidence fail; an explicit missing path is exit 2"
 
 printf 'T8 manual evidence is unique, digest-bound, and valid only for a clean measured tree\n'
 tree="$(git -C "$WORK/repo" rev-parse 'HEAD^{tree}')"
-python3 - "$HERE/../baseline/manual-evidence.json" "$WORK/valid-evidence.json" "$commit" "$tree" <<'PY'
+python3 - "$HERE/../baseline/manual-evidence.json" "$WORK/valid-evidence.json" "$commit" "$tree" \
+  "$WORK/repo/.quality/inventory" "$PARSER" "$WRAPPER" "$WORK/fake-upstream.sh" \
+  "$HERE/go-callscan.go.src" "$HERE/q06-contract_test.go.src" <<'PY'
+import hashlib
 import json
 import sys
 
@@ -809,7 +812,30 @@ with open(sys.argv[1], encoding="utf-8") as stream:
 value["repository"] = {
     "module": "example.invalid/qualityfixture",
     "commit": sys.argv[3],
-    "tree": {"commit_tree": sys.argv[4], "inventory_overlay_sha256": None},
+    "tree": {
+        "commit_tree": sys.argv[4],
+        "status_sha256": hashlib.sha256(b"\0").hexdigest(),
+        "inventory_overlay_sha256": None,
+    },
+}
+inventory_sha256 = hashlib.sha256(open(sys.argv[5], "rb").read()).hexdigest()
+value["inventory"] = {
+    "path": ".quality/inventory", "present": True,
+    "sha256": inventory_sha256, "overlay": False,
+}
+
+def digest(path):
+    return hashlib.sha256(open(path, "rb").read()).hexdigest()
+
+value["instrument"] = {
+    "wrapper_version": 1,
+    "upstream_version": "1",
+    "upstream_sha256": digest(sys.argv[8]),
+    "parser_sha256": digest(sys.argv[6]),
+    "wrapper_sha256": digest(sys.argv[7]),
+    "call_scanner_sha256": digest(sys.argv[9]),
+    "q06_contract_sha256": digest(sys.argv[10]),
+    "report_template_sha256": None,
 }
 with open(sys.argv[2], "w", encoding="utf-8") as stream:
     json.dump(value, stream, indent=2, sort_keys=True)
@@ -2175,36 +2201,139 @@ unset FAKE_HARDLINK_RAW
 assert_no_generated_outputs "$WORK/raw-hardlink-publication-failure" "raw publication hard-link collision"
 ok "post-parser publication failures remove JSON, reports, pending files, blockers, and hard links"
 
-printf 'T15 baseline raw body and authoritative JSON reproduce from the pinned commit\n'
+printf 'T15 old and new baseline instruments reproduce with identical numeric debt\n'
 baseline_repo="$WORK/baseline-repository"
-baseline_out="$WORK/baseline-output"
+old_instrument="$WORK/baseline-old-instrument"
+old_out="$WORK/baseline-old-output"
+new_out="$WORK/baseline-new-output"
+migration="$HERE/../baseline/instrument-migration.json"
 repository_root="$(cd "$HERE/../.." && pwd)"
+old_source="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["old"]["instrument_source_commit"])' "$migration")"
+new_source="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["new"]["instrument_source_commit"])' "$migration")"
 git clone -q --shared --no-checkout "$repository_root" "$baseline_repo"
 git -C "$baseline_repo" checkout -q --detach 5635d50bd161a9a5aa81fc4332cc0c9d68885d08
-mkdir -p "$baseline_repo/.quality" "$baseline_out"
+mkdir -p "$baseline_repo/.quality" "$old_instrument" "$old_out" "$new_out" \
+  "$WORK/baseline-old-gocache" "$WORK/baseline-new-gocache"
 cp "$HERE/../baseline/inventory" "$baseline_repo/.quality/inventory"
+git -C "$repository_root" archive "$old_source" -- \
+  .quality/tools .quality/baseline/manual-evidence.json .quality/baseline/scorecard.json \
+  | tar -x -C "$old_instrument"
+
 LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off \
-  bash "$VENDOR" "$baseline_repo" --out "$baseline_out" >/dev/null
-rc=$?
-[ "$rc" -eq 1 ] || fail "reproduced upstream baseline returned $rc, expected 1"
-LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off python3 "$PARSER" \
-  --report "$baseline_out/scorecard.md" \
-  --output "$baseline_out/scorecard.json" \
+  GOCACHE="$WORK/baseline-old-gocache" \
+  bash "$old_instrument/.quality/tools/vendor/quality-audit.sh" \
+  "$baseline_repo" --out "$old_out" >/dev/null
+old_upstream_rc=$?
+[ "$old_upstream_rc" -eq 1 ] \
+  || fail "old upstream baseline returned $old_upstream_rc, expected 1"
+LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off \
+  GOCACHE="$WORK/baseline-old-gocache" \
+  python3 "$old_instrument/.quality/tools/scorecard.py" \
+  --report "$old_out/scorecard.md" \
+  --output "$old_out/scorecard.json" \
+  --repo "$baseline_repo" \
+  --commit 5635d50bd161a9a5aa81fc4332cc0c9d68885d08 \
+  --upstream "$old_instrument/.quality/tools/vendor/quality-audit.sh" \
+  --upstream-exit "$old_upstream_rc" \
+  --manual-evidence "$old_instrument/.quality/baseline/manual-evidence.json" \
+  --inventory-overlay-sha256 4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d \
+  >/dev/null
+old_structured_rc=$?
+[ "$old_structured_rc" -eq 1 ] \
+  || fail "old structured baseline returned $old_structured_rc, expected 1"
+
+LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off \
+  GOCACHE="$WORK/baseline-new-gocache" \
+  bash "$VENDOR" "$baseline_repo" --out "$new_out" >/dev/null
+new_upstream_rc=$?
+[ "$new_upstream_rc" -eq 1 ] \
+  || fail "new upstream baseline returned $new_upstream_rc, expected 1"
+LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off \
+  GOCACHE="$WORK/baseline-new-gocache" python3 "$PARSER" \
+  --report "$new_out/scorecard.md" \
+  --output "$new_out/scorecard.json" \
   --repo "$baseline_repo" \
   --commit 5635d50bd161a9a5aa81fc4332cc0c9d68885d08 \
   --upstream "$VENDOR" \
-  --upstream-exit 1 \
+  --upstream-exit "$new_upstream_rc" \
   --manual-evidence "$HERE/../baseline/manual-evidence.json" \
   --inventory-overlay-sha256 4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d \
   >/dev/null
-rc=$?
-[ "$rc" -eq 1 ] || fail "reproduced structured baseline returned $rc, expected 1"
-tail -n +2 "$baseline_out/scorecard.md" > "$baseline_out/reproduced-raw.body"
-tail -n +2 "$HERE/../baseline/raw-upstream-scorecard.md" > "$baseline_out/stored-raw.body"
-cmp -s "$baseline_out/reproduced-raw.body" "$baseline_out/stored-raw.body" \
+new_structured_rc=$?
+[ "$new_structured_rc" -eq 1 ] \
+  || fail "new structured baseline returned $new_structured_rc, expected 1"
+
+tail -n +2 "$old_out/scorecard.md" > "$old_out/reproduced-raw.body"
+tail -n +2 "$new_out/scorecard.md" > "$new_out/reproduced-raw.body"
+tail -n +2 "$HERE/../baseline/raw-upstream-scorecard.md" > "$new_out/stored-raw.body"
+cmp -s "$old_out/reproduced-raw.body" "$new_out/reproduced-raw.body" \
+  || fail "old and new raw baseline bodies differ"
+cmp -s "$new_out/reproduced-raw.body" "$new_out/stored-raw.body" \
   || fail "baseline raw report body did not reproduce"
-cmp -s "$baseline_out/scorecard.json" "$HERE/../baseline/scorecard.json" \
-  || fail "authoritative baseline JSON did not reproduce byte-for-byte"
-ok "baseline raw body and structured JSON reproduced"
+cmp -s "$old_out/scorecard.json" "$old_instrument/.quality/baseline/scorecard.json" \
+  || fail "old authoritative baseline JSON did not reproduce byte-for-byte"
+cmp -s "$new_out/scorecard.json" "$HERE/../baseline/scorecard.json" \
+  || fail "new authoritative baseline JSON did not reproduce byte-for-byte"
+
+python3 - "$migration" "$old_out/scorecard.json" "$new_out/scorecard.json" \
+  "$old_instrument/.quality/baseline/manual-evidence.json" \
+  "$HERE/../baseline/manual-evidence.json" "$new_out/reproduced-raw.body" \
+  "$repository_root" "$old_source" "$new_source" <<'PY' \
+  || fail "baseline instrument migration record or debt comparison is invalid"
+import hashlib
+import json
+import subprocess
+import sys
+
+manifest_path, old_path, new_path, old_manual, new_manual, raw_body, repository, old_source, new_source = sys.argv[1:]
+manifest = json.load(open(manifest_path, encoding="utf-8"))
+old = json.load(open(old_path, encoding="utf-8"))
+new = json.load(open(new_path, encoding="utf-8"))
+
+def file_digest(path):
+    return hashlib.sha256(open(path, "rb").read()).hexdigest()
+
+def numeric_leaves(value, path=""):
+    if isinstance(value, bool):
+        return {}
+    if isinstance(value, (int, float)):
+        return {path: value}
+    if isinstance(value, dict):
+        result = {}
+        for key, child in sorted(value.items()):
+            result.update(numeric_leaves(child, path + "/" + str(key)))
+        return result
+    if isinstance(value, list):
+        result = {}
+        for index, child in enumerate(value):
+            result.update(numeric_leaves(child, path + "/" + str(index)))
+        return result
+    return {}
+
+scope_old = {"denominators": old["denominators"], "criteria": old["criteria"]}
+scope_new = {"denominators": new["denominators"], "criteria": new["criteria"]}
+old_numeric = numeric_leaves(scope_old)
+new_numeric = numeric_leaves(scope_new)
+comparison = manifest["comparison"]
+assert old["criteria"] == new["criteria"] and comparison["criteria_equal"] is True
+assert old["denominators"] == new["denominators"] and comparison["denominators_equal"] is True
+assert old_numeric == new_numeric
+assert len(old_numeric) == comparison["numeric_debt_leaves"]
+assert next(value for value in old["criteria"] if value["id"] == "Q3.9")["verdict"] == comparison["q3_9_old_verdict"] == "PASS"
+assert next(value for value in new["criteria"] if value["id"] == "Q3.9")["verdict"] == comparison["q3_9_new_verdict"] == "PASS"
+assert file_digest(old_path) == manifest["old"]["scorecard_sha256"]
+assert file_digest(new_path) == manifest["new"]["scorecard_sha256"]
+assert file_digest(old_manual) == manifest["old"]["manual_evidence_sha256"]
+assert file_digest(new_manual) == manifest["new"]["manual_evidence_sha256"]
+assert file_digest(raw_body) == comparison["raw_report_body_sha256"]
+for label, scorecard, source in (("old", old, old_source), ("new", new, new_source)):
+    assert source == manifest[label]["instrument_source_commit"]
+    assert all(scorecard["tool"].get(key) == value for key, value in manifest[label]["tool"].items())
+    parser_bytes = subprocess.check_output([
+        "git", "-C", repository, "show", source + ":.quality/tools/scorecard.py",
+    ])
+    assert hashlib.sha256(parser_bytes).hexdigest() == manifest[label]["tool"]["parser_sha256"]
+PY
+ok "old/new instruments, raw body, Q3.9, and all 228 numeric debt leaves reproduced"
 
 printf 'OK: 15 quality-audit controls passed\n'
