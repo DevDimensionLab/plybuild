@@ -1,18 +1,21 @@
 package bitbucket
 
 import (
+	"os"
+	"strings"
+
+	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/http"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"github.com/sirupsen/logrus"
-	"os"
-	"strings"
 )
 
 type Bitbucket struct {
 	host        string
 	accessToken string
 	log         logrus.FieldLogger
+	queries     queryDependencies
 }
 
 func With(logger logrus.FieldLogger, host string, accessToken string) Bitbucket {
@@ -20,7 +23,37 @@ func With(logger logrus.FieldLogger, host string, accessToken string) Bitbucket 
 		host:        host,
 		accessToken: accessToken,
 		log:         logger,
+		queries:     systemQueryDependencies(),
 	}
+}
+
+type queryHTTPClient interface {
+	GetBearerJSON(httpclient.Request, interface{}) error
+}
+
+type queryDependencies struct {
+	Client queryHTTPClient
+}
+
+func (dependencies queryDependencies) GetBearerJSON(request httpclient.Request, parsed interface{}) error {
+	if dependencies.Client == nil {
+		return httpclient.ErrNoClient
+	}
+	return dependencies.Client.GetBearerJSON(request, parsed)
+}
+
+func systemQueryDependencies() queryDependencies {
+	return queryDependencies{Client: packageQueryHTTP{}}
+}
+
+type packageQueryHTTP struct{}
+
+func (packageQueryHTTP) GetBearerJSON(request httpclient.Request, parsed interface{}) error {
+	accessToken := ""
+	if request.BearerJSON != nil {
+		accessToken = request.BearerJSON.AccessToken
+	}
+	return http.GetJsonWithAccessToken("", request.URL, accessToken, parsed)
 }
 
 func (bitbucket Bitbucket) SynchronizeAllRepos(excludeProjects []string) error {
@@ -38,7 +71,7 @@ func (bitbucket Bitbucket) SynchronizeAllRepos(excludeProjects []string) error {
 		projectKey := strings.ToLower(bitBucketProject.Key)
 		bitbucket.log.Infoln("project: " + projectKey)
 
-		bitBucketProjectReposResponse, err := QueryRepos(bitbucket.host, projectKey, bitbucket.accessToken)
+		bitBucketProjectReposResponse, err := bitbucket.queryRepos(projectKey)
 		if err != nil {
 			bitbucket.log.Warnln(err)
 		}
@@ -103,12 +136,30 @@ func (bitbucket Bitbucket) pull(workspace string, repository string) error {
 
 func (bitbucket Bitbucket) queryProjects() (*ProjectList, error) {
 	response := ProjectList{}
-	err := http.GetJsonWithAccessToken(bitbucket.host, "/rest/api/1.0/projects?limit=500", bitbucket.accessToken, &response)
+	err := bitbucket.queries.GetBearerJSON(httpclient.Request{
+		URL: bitbucket.host + "/rest/api/1.0/projects?limit=500",
+		BearerJSON: &httpclient.BearerJSON{
+			AccessToken: bitbucket.accessToken,
+		},
+	}, &response)
 	return &response, err
 }
 
 func QueryRepos(host string, projectKey string, accessToken string) (*ProjectRepos, error) {
+	return Bitbucket{
+		host:        host,
+		accessToken: accessToken,
+		queries:     systemQueryDependencies(),
+	}.queryRepos(projectKey)
+}
+
+func (bitbucket Bitbucket) queryRepos(projectKey string) (*ProjectRepos, error) {
 	response := ProjectRepos{}
-	err := http.GetJsonWithAccessToken(host, "/rest/api/1.0/projects/"+projectKey+"/repos?limit=1000", accessToken, &response)
+	err := bitbucket.queries.GetBearerJSON(httpclient.Request{
+		URL: bitbucket.host + "/rest/api/1.0/projects/" + projectKey + "/repos?limit=1000",
+		BearerJSON: &httpclient.BearerJSON{
+			AccessToken: bitbucket.accessToken,
+		},
+	}, &response)
 	return &response, err
 }

@@ -1,15 +1,18 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
+	"github.com/sirupsen/logrus"
 )
 
 type recordedHTTPClient struct {
@@ -26,6 +29,10 @@ func (client *recordedHTTPClient) Do(request httpclient.Request) (*http.Response
 	if request.BasicAuth != nil {
 		copied := *request.BasicAuth
 		request.BasicAuth = &copied
+	}
+	if request.BearerJSON != nil {
+		copied := *request.BearerJSON
+		request.BearerJSON = &copied
 	}
 	client.requests = append(client.requests, request)
 	return client.response, client.err
@@ -332,10 +339,222 @@ func TestGetJSONSystemPreservesAnonymousGETRedirects(t *testing.T) {
 	}
 }
 
+func TestTokenJSONHelperPassesCompleteBearerRequestParsesAndPreservesLifecycle(t *testing.T) {
+	responseJSON := `{"size":1,"values":[{"key":"complete-project"}]}`
+	body := &trackingReadCloser{reader: strings.NewReader(responseJSON)}
+	client := &recordedHTTPClient{response: &http.Response{
+		StatusCode: http.StatusServiceUnavailable,
+		Status:     "503 Must Still Be Parsed",
+		Body:       body,
+	}}
+	parsed := struct {
+		Size   int `json:"size"`
+		Values []struct {
+			Key string `json:"key"`
+		} `json:"values"`
+	}{}
+	logOutput := &bytes.Buffer{}
+	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
+	logger.SetOutput(logOutput)
+	previousLog := log
+	log = logger
+	t.Cleanup(func() { log = previousLog })
+	host := "https://bitbucket.example.invalid:8443"
+	path := "/rest/api/1.0/projects?limit=500&complete=value"
+
+	err := getJsonWithAccessToken(client.dependencies(), host, path, "complete-access-token", &parsed)
+
+	if err != nil {
+		t.Fatalf("token JSON helper returned an error: %v", err)
+	}
+	if parsed.Size != 1 || len(parsed.Values) != 1 || parsed.Values[0].Key != "complete-project" {
+		t.Fatalf("parsed token JSON response was incomplete: %#v", parsed)
+	}
+	if !body.closed || body.reads == 0 {
+		t.Fatalf("token JSON response lifecycle was closed=%t reads=%d", body.closed, body.reads)
+	}
+	want := []httpclient.Request{{
+		URL: host + path,
+		BearerJSON: &httpclient.BearerJSON{
+			AccessToken: "complete-access-token",
+		},
+	}}
+	if !reflect.DeepEqual(client.requests, want) {
+		t.Fatalf("token JSON dependency requests differ:\n got: %#v\nwant: %#v", client.requests, want)
+	}
+	logged := logOutput.String()
+	if !strings.Contains(logged, "GET "+host+path) ||
+		!strings.Contains(logged, "503") || !strings.Contains(logged, strconv.Itoa(len(responseJSON))) {
+		t.Fatalf("token JSON debug logging lost method, URL, status, or body length:\n%s", logged)
+	}
+}
+
+func TestTokenJSONHelperPreservesDependencyIgnoredReadAndUnmarshalErrors(t *testing.T) {
+	t.Run("dependency after complete request", func(t *testing.T) {
+		sentinel := errors.New("token JSON HTTP dependency failed")
+		client := &recordedHTTPClient{err: sentinel}
+		host := "https://dependency.bitbucket.example.invalid"
+		path := "/rest/api/1.0/projects/complete/repos?limit=1000"
+
+		err := getJsonWithAccessToken(client.dependencies(), host, path, "dependency-token", &struct{}{})
+
+		if !errors.Is(err, sentinel) {
+			t.Fatalf("token JSON dependency error was %v, want %v", err, sentinel)
+		}
+		want := []httpclient.Request{{
+			URL: host + path,
+			BearerJSON: &httpclient.BearerJSON{
+				AccessToken: "dependency-token",
+			},
+		}}
+		if !reflect.DeepEqual(client.requests, want) {
+			t.Fatalf("token JSON dependency error lost the complete request:\n got: %#v\nwant: %#v", client.requests, want)
+		}
+	})
+
+	t.Run("read error is ignored after returned bytes", func(t *testing.T) {
+		sentinel := errors.New("token JSON response read failed after bytes")
+		body := &trackingReadCloser{reader: &dataErrorReader{
+			data: []byte(`{"value":"complete despite read error"}`),
+			err:  sentinel,
+		}}
+		client := &recordedHTTPClient{response: &http.Response{
+			StatusCode: http.StatusOK,
+			Status:     "200 OK",
+			Body:       body,
+		}}
+		parsed := struct {
+			Value string `json:"value"`
+		}{}
+
+		err := getJsonWithAccessToken(client.dependencies(), "https://read.example.invalid", "/complete.json", "read-token", &parsed)
+
+		if err != nil {
+			t.Fatalf("ignored token JSON read error was returned: %v", err)
+		}
+		if parsed.Value != "complete despite read error" {
+			t.Fatalf("token JSON bytes returned with read error were not parsed: %#v", parsed)
+		}
+		if !body.closed || body.reads == 0 {
+			t.Fatalf("token JSON read-error lifecycle was closed=%t reads=%d", body.closed, body.reads)
+		}
+	})
+
+	t.Run("unmarshal", func(t *testing.T) {
+		body := &trackingReadCloser{reader: strings.NewReader(`{"incomplete":`)}
+		client := &recordedHTTPClient{response: &http.Response{
+			StatusCode: http.StatusUnauthorized,
+			Status:     "401 Must Not Be Rejected Before Unmarshal",
+			Body:       body,
+		}}
+
+		err := getJsonWithAccessToken(client.dependencies(), "https://unmarshal.example.invalid", "/complete.json", "unmarshal-token", &struct{}{})
+
+		var syntaxError *json.SyntaxError
+		if !errors.As(err, &syntaxError) {
+			t.Fatalf("token JSON unmarshal error was %T %v, want *json.SyntaxError", err, err)
+		}
+		if !body.closed || body.reads == 0 {
+			t.Fatalf("token JSON unmarshal lifecycle was closed=%t reads=%d", body.closed, body.reads)
+		}
+	})
+}
+
+func TestTokenJSONHelperDependenciesDefaultToSafeNoRequest(t *testing.T) {
+	err := getJsonWithAccessToken(
+		httpclient.Dependencies{},
+		"https://must-not-request.example.invalid",
+		"/rest/api/1.0/projects?limit=500",
+		"must-not-request-token",
+		&struct{}{},
+	)
+
+	if !errors.Is(err, httpclient.ErrNoClient) {
+		t.Fatalf("safe token JSON dependency default returned %v, want %v", err, httpclient.ErrNoClient)
+	}
+}
+
+func TestGetTokenJSONSystemPreservesBearerGETRedirects(t *testing.T) {
+	previous := http.DefaultTransport
+	t.Cleanup(func() { http.DefaultTransport = previous })
+	firstBody := &trackingReadCloser{reader: strings.NewReader("redirect")}
+	finalBody := &trackingReadCloser{reader: strings.NewReader(`{"redirected":"complete bearer"}`)}
+	requests := []*http.Request{}
+	http.DefaultTransport = downloadRoundTripFunc(func(request *http.Request) (*http.Response, error) {
+		requests = append(requests, request)
+		if len(requests) == 1 {
+			return &http.Response{
+				StatusCode: http.StatusTemporaryRedirect,
+				Status:     "307 Temporary Redirect",
+				Header:     http.Header{"Location": []string{"https://redirect.example.invalid/final.json"}},
+				Body:       firstBody,
+			}, nil
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Status:     "200 OK",
+			Body:       finalBody,
+		}, nil
+	})
+	parsed := struct {
+		Redirected string `json:"redirected"`
+	}{}
+
+	err := GetJsonWithAccessToken(
+		"https://redirect.example.invalid",
+		"/start.json",
+		"redirect-complete-token",
+		&parsed,
+	)
+
+	if err != nil {
+		t.Fatalf("system token JSON redirect returned an error: %v", err)
+	}
+	if parsed.Redirected != "complete bearer" {
+		t.Fatalf("redirected token JSON value was %q", parsed.Redirected)
+	}
+	if len(requests) != 2 {
+		t.Fatalf("token redirect request population was %d, want 2", len(requests))
+	}
+	wantURLs := []string{
+		"https://redirect.example.invalid/start.json",
+		"https://redirect.example.invalid/final.json",
+	}
+	for index, request := range requests {
+		if request.Method != http.MethodGet || request.URL.String() != wantURLs[index] {
+			t.Fatalf("token redirect request %d was %s %s, want GET %s", index, request.Method, request.URL, wantURLs[index])
+		}
+		if got := request.Header.Get("Authorization"); got != "Bearer redirect-complete-token" {
+			t.Fatalf("token redirect request %d Authorization header was %q", index, got)
+		}
+		if got := request.Header.Get("Content-Type"); got != "application/json" {
+			t.Fatalf("token redirect request %d Content-Type header was %q", index, got)
+		}
+	}
+	if !firstBody.closed || !finalBody.closed {
+		t.Fatalf("token redirect bodies were closed=(%t, %t)", firstBody.closed, finalBody.closed)
+	}
+}
+
 type errorReader struct {
 	err error
 }
 
 func (reader errorReader) Read([]byte) (int, error) {
 	return 0, reader.err
+}
+
+type dataErrorReader struct {
+	data []byte
+	err  error
+}
+
+func (reader *dataErrorReader) Read(buffer []byte) (int, error) {
+	if len(reader.data) == 0 {
+		return 0, reader.err
+	}
+	count := copy(buffer, reader.data)
+	reader.data = reader.data[count:]
+	return count, reader.err
 }

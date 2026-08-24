@@ -96,24 +96,25 @@ func getAuthXml(dependencies httpclient.Dependencies, url, username, password st
 }
 
 func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {
-	req, err := http.NewRequest("GET", host+path, nil)
-	if err != nil {
-		return err
+	return getJsonWithAccessToken(httpclient.System(), host, path, accessToken, response)
+}
+
+func getJsonWithAccessToken(dependencies httpclient.Dependencies, host string, path string, accessToken string, response interface{}) error {
+	request := httpclient.Request{
+		URL: host + path,
+		BearerJSON: &httpclient.BearerJSON{
+			AccessToken: accessToken,
+		},
 	}
-
-	req.Header.Add("Authorization", `Bearer `+accessToken)
-	req.Header.Add("Content-Type", `application/json`)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpclient.Execute(dependencies, request)
 	if err != nil {
-		log.Debugln(req.Method, host+path, err)
+		log.Debugln(http.MethodGet, host+path, err)
 		return err
 	}
 
 	defer func() { _ = resp.Body.Close() }()
 	body, _ := io.ReadAll(resp.Body)
-	log.Debugln(req.Method, host+path, resp.StatusCode, len(body))
+	log.Debugln(http.MethodGet, host+path, resp.StatusCode, len(body))
 
 	return json.Unmarshal(body, &response)
 }

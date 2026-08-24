@@ -60,6 +60,34 @@ func TestExecutePassesCompleteRequestToDependency(t *testing.T) {
 	}
 }
 
+func TestExecutePassesCompleteBearerJSONRequestToDependency(t *testing.T) {
+	wantRequest := Request{
+		URL: "https://complete.example.invalid/rest/api/1.0/projects?limit=500",
+		BearerJSON: &BearerJSON{
+			AccessToken: "complete-bearer-token",
+		},
+	}
+	wantResponse := &http.Response{
+		StatusCode: http.StatusAccepted,
+		Status:     "202 Complete Bearer Response",
+		Body:       io.NopCloser(strings.NewReader("complete bearer body")),
+	}
+	sentinel := errors.New("complete bearer dependency result")
+	client := &recordingClient{response: wantResponse, err: sentinel}
+
+	response, err := Execute(Dependencies{Client: client}, wantRequest)
+
+	if response != wantResponse {
+		t.Fatalf("Execute returned response %#v, want %#v", response, wantResponse)
+	}
+	if !errors.Is(err, sentinel) {
+		t.Fatalf("Execute returned %v, want %v", err, sentinel)
+	}
+	if !reflect.DeepEqual(client.request, wantRequest) {
+		t.Fatalf("dependency received an incomplete bearer JSON request:\n got: %#v\nwant: %#v", client.request, wantRequest)
+	}
+}
+
 func TestSystemPreservesAnonymousAndBasicAuthGETRequests(t *testing.T) {
 	previous := http.DefaultTransport
 	t.Cleanup(func() {
@@ -126,6 +154,51 @@ func TestSystemPreservesAnonymousAndBasicAuthGETRequests(t *testing.T) {
 				t.Fatalf("basic auth was (%q, %q, %t), want (%q, %q, true)", username, password, authenticated, test.username, test.password)
 			}
 		})
+	}
+}
+
+func TestSystemPreservesBearerJSONGETRequestHeaders(t *testing.T) {
+	previous := http.DefaultTransport
+	t.Cleanup(func() { http.DefaultTransport = previous })
+	wantResponse := &http.Response{
+		StatusCode: http.StatusOK,
+		Status:     "200 OK",
+		Body:       io.NopCloser(strings.NewReader("system bearer response")),
+	}
+	var recorded *http.Request
+	http.DefaultTransport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		recorded = request
+		return wantResponse, nil
+	})
+	request := Request{
+		URL: "https://authenticated.example.invalid/complete/bearer.json?limit=500",
+		BearerJSON: &BearerJSON{
+			AccessToken: "system-complete-token",
+		},
+	}
+
+	response, err := Execute(System(), request)
+
+	if err != nil {
+		t.Fatalf("system bearer request returned an error: %v", err)
+	}
+	if response != wantResponse {
+		t.Fatalf("system bearer response was %#v, want %#v", response, wantResponse)
+	}
+	if recorded == nil {
+		t.Fatal("system bearer HTTP request population is empty")
+	}
+	if recorded.Method != http.MethodGet || recorded.URL.String() != request.URL {
+		t.Fatalf("system bearer request was %s %s", recorded.Method, recorded.URL.String())
+	}
+	if got := recorded.Header.Get("Authorization"); got != "Bearer system-complete-token" {
+		t.Fatalf("system bearer Authorization header was %q", got)
+	}
+	if got := recorded.Header.Get("Content-Type"); got != "application/json" {
+		t.Fatalf("system bearer Content-Type header was %q", got)
+	}
+	if username, password, authenticated := recorded.BasicAuth(); authenticated {
+		t.Fatalf("system bearer request unexpectedly used basic auth %q:%q", username, password)
 	}
 }
 
