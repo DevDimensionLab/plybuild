@@ -1,7 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, P1B (the baseline-migration commit
-containing this update).
+Last measured checkpoint: 2026-08-24, commit `eb987fd`.
 
 ## Objective
 
@@ -120,8 +119,7 @@ or L2.
   `.quality/baseline/instrument-migration.json` records both source commits,
   complete instrument identities, evidence hashes, and scorecard hashes.
 
-Commits: `99cebaa`, `4887222`, and the baseline-migration commit containing
-this plan update.
+Commits: `99cebaa`, `4887222`, `eb987fd`.
 
 Exit: satisfied. No current-project PASS was claimed for Q2.4, Q2.8, or Q2.9;
 their measured mutation-harness and acceptance-script populations remain zero.

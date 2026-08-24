@@ -597,7 +597,7 @@ exit 70
 # CODEX_STABLE_EXECUTION_END
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
-#|SESSION_STATUS=NEXT
+#|SESSION_STATUS=COMPLETE
 #|SESSION_ID=2026-08-24T085458+0200-make-manual-evidence-reachable
 #|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T085458+0200-make-manual-evidence-reachable.md
 #|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T061532+0200-close-absolute-l0.md

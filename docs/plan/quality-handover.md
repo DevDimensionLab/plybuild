@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T09:36:25+02:00
+Generated: 2026-08-24T10:05:25+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,9 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: the P1B baseline-migration commit containing
-  this handover; use `git rev-parse --short=12 HEAD` after checkout.
-- Restart preparation base: `bf189a1c04ea`.
+- Measured implementation head: `eb987fd8db58`.
+- Restart preparation base: `eb987fd8db58`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no implementation changes.
 - No push or merge was performed.
@@ -32,16 +31,15 @@ e956da7 test: add search-replace meta-test
 ab9a5c6 quality: add non-publishing preflight
 99cebaa quality: bind manual criterion receipts
 4887222 quality: enforce manual evidence precedence
-<this commit> quality: migrate manual-evidence baseline
+eb987fd quality: migrate manual-evidence baseline
 ```
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` contains the active P1B mission authorized by the exact
-restart trigger. It
-inherits the user's Codex profile except that it explicitly passes
-`-c 'service_tier="default"'`, overriding the locally configured Fast mode for
-this startup only. Its stable executable section precedes
+`codex-dev-start.sh` is in terminal `COMPLETE` state. The P1B prompt remains
+byte-exact inert history below the execution boundary so archive integrity can
+still be checked, but normal start and `--print-prompt` fail closed because no
+approved next task exists. Its stable executable section precedes
 `CODEX_STABLE_EXECUTION_END`; both mutable regions are comment-encoded `#|`
 data after an unconditional `exit`.
 
@@ -80,14 +78,15 @@ child runs assert their exact control count.
 
 `make test` runs this target through `/bin/bash`.
 
-The active archive is
+The terminal archive is
 `docs/plan/agent-sessions/2026-08-24T085458+0200-make-manual-evidence-reachable.md`.
-Its predecessor is answered history with an unchanged prompt and digest.
+It and its predecessor are answered history; both prompt blocks and digests
+remain unchanged. The connected graph has no `NEXT` archive.
 The ignored `.agent-task/current.md` source was retired and is absent.
 
 ## Measured Quality State
 
-P1B leaves the project debt measured at `ab9a5c6` numerically unchanged:
+The clean full audit at `eb987fd8db58` reports:
 
 - Absolute L0: 8 of 8.
 - Q0.6: 0 skipped tests out of 37 and 0 unsafe direct test writes.
@@ -164,39 +163,45 @@ P2B.
 
 P1B is complete in three moves. P2 compatibility, distribution, cloud, Spring,
 packaging, dependency, and publishing work remains outside this session's
-approved scope. There is no approved follow-up objective. On an exact
-`agent-restart` trigger, remeasure the clean P1B head and close the active
-archive with `SESSION_STATUS=COMPLETE`, `Next: none`, rather than inventing a
-P2 mission.
+approved scope. There is no approved follow-up objective, so the launcher and
+archive chain are terminal. A future task requires explicit user approval and
+a newly prepared session rather than replaying this answered prompt.
 
 ## Start
 
-From any directory:
+There is no next task to start. From any directory, the lifecycle check remains
+available:
 
 ```sh
+/Users/perottochristensen/github/ply/upgrade-quality/codex-dev-start.sh --check
+```
+
+These commands intentionally fail closed in terminal state:
+
+```sh
+/Users/perottochristensen/github/ply/upgrade-quality/codex-dev-start.sh --print-prompt
 /Users/perottochristensen/github/ply/upgrade-quality/codex-dev-start.sh
 ```
 
-Non-launching checks:
+Do not start through `.agent-task/current.md`; it is not task authority.
 
-```sh
-cd /Users/perottochristensen/github/ply/upgrade-quality
-./codex-dev-start.sh --check
-./codex-dev-start.sh --print-prompt
-```
-
-The launcher prompt is the sole next-task source. Do not start through
-`.agent-task/current.md`.
-
-At a natural boundary or after three moves, recommend a fresh session and wait.
-Only the user's trimmed, case-sensitive message `agent-restart` authorizes
-prompt/archive preparation and one local allowlisted commit named
-`docs: prepare next agent session`. It does not authorize push, merge,
-release, stash, revert, worktree removal, or staging unrelated changes.
+The exact restart trigger was consumed to prepare this terminal transition and
+one local allowlisted commit named `docs: prepare next agent session`. It did
+not authorize push, merge, release, stash, revert, worktree removal, or staging
+unrelated changes.
 
 ## Verification Notes
 
 Completed during this checkpoint:
+
+- Terminal restart remeasurement at clean `eb987fd8db58`: `make preflight`
+  PASS with the pinned golangci-lint `2.12.2`, zero lint issues, all 48 launcher
+  controls, script/install contracts, and all 15 quality controls.
+- Focused manual-evidence suite and empty-HOME `go test ./... -count=2`: PASS
+  with isolated writable state under `/private/tmp`.
+- Full structured audit at `eb987fd8db58`: expected exit 1 for 20 documented
+  findings, absolute L0 8 of 8, two ratchets improved, five held, and zero
+  regressed. No audit returned exit 2.
 
 - Schema-2 manual-evidence focused tests: PASS. Synthetic non-empty fixtures
   reach all six Q1/L2 rows; stale, dirty, duplicate, empty, wrong-kind,
