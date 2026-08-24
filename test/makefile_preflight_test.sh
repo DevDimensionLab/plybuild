@@ -96,7 +96,7 @@ if ! run_preflight "$complete_scripts" "$tmp_dir/complete-output"; then
 	sed -n '1,200p' "$tmp_dir/complete-output" >&2
 	fail 'complete population did not pass'
 fi
-if [[ $(wc -l <"$calls_file" | tr -d '[:space:]') -ne 13 ]]; then
+if [[ $(wc -l <"$calls_file" | tr -d '[:space:]') -ne 15 ]]; then
 	sed -n '1,200p' "$calls_file" >&2
 	fail 'complete preflight did not execute exactly 12 required calls'
 fi
@@ -110,6 +110,8 @@ assert_once "bash <$repo_root/test/codex_dev_start_test.sh>"
 assert_once "bash <$repo_root/test/makefile_lint_test.sh>"
 assert_once "bash <$repo_root/test/makefile_install_test.sh>"
 assert_once "bash <$repo_root/scripts/check-api-compat.sh>"
+assert_once "bash <$repo_root/scripts/check-cli-compat.sh>"
+assert_once "bash <$repo_root/test/cli_surface_contract_test.sh>"
 assert_once "bash <$complete_scripts/test-alpha>"
 assert_once "bash <$complete_scripts/test-beta>"
 assert_once "bash <$repo_root/.quality/tools/test-quality-audit.sh>"

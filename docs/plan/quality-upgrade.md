@@ -140,12 +140,17 @@ their measured mutation-harness and acceptance-script populations remain zero.
 
 ### P2A - Characterize Compatibility
 
-Status: active; move 1 of 3 complete.
+Status: active; moves 1 and 2 of 3 complete.
 
 Move 1 pins `golang.org/x/exp/cmd/apidiff` at
 `v0.0.0-20260709172345-9ea1abe57597`. The machine-readable v1.0.1 comparison
 allows only the compatible addition of `cmd/ply`; no incompatible change is
 allowed.
+
+Move 2 stores a normalized, order-independent Cobra tree for `v1.0.1` and
+requires an explicit delta allowlist. The current tree has zero deltas. Fresh
+subprocess contracts preserve root, status, upgrade, and build help plus the
+existing unknown-command stdout, stderr, and exit-1 behavior.
 
 1. Pin an API-diff tool and record the exported Go API against tag `v1.0.1`.
    Maintain an explicit compatibility allowlist rather than reviewing raw text.
