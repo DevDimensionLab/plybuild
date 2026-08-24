@@ -30,6 +30,17 @@ type recordingFileOverwriteFilesystem struct {
 	writeErr error
 }
 
+type recordedFileCreate struct {
+	path string
+	data []byte
+	mode fs.FileMode
+}
+
+type recordingFileCreateFilesystem struct {
+	writes   []recordedFileCreate
+	writeErr error
+}
+
 type existingFileInfo struct {
 	name string
 }
@@ -113,6 +124,46 @@ func (recording *recordingFileOverwriteFilesystem) dependencies() overwriteDepen
 func (recording *recordingFileOverwriteFilesystem) assertedWrites() ([]recordedFileOverwrite, error) {
 	if len(recording.writes) == 0 {
 		return nil, errors.New("recorded file-overwrite population is empty")
+	}
+	return recording.writes, nil
+}
+
+func (*recordingFileCreateFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected file-create read")
+}
+
+func (*recordingFileCreateFilesystem) Stat(string) (fs.FileInfo, error) {
+	return nil, errors.New("unexpected file-create stat")
+}
+
+func (*recordingFileCreateFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected file-create mkdir")
+}
+
+func (recording *recordingFileCreateFilesystem) WriteFile(path string, data []byte, mode fs.FileMode) error {
+	recording.writes = append(recording.writes, recordedFileCreate{
+		path: path,
+		data: append([]byte{}, data...),
+		mode: mode,
+	})
+	return recording.writeErr
+}
+
+func (*recordingFileCreateFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected file-create create")
+}
+
+func (*recordingFileCreateFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected file-create copy")
+}
+
+func (recording *recordingFileCreateFilesystem) dependencies() createFileDependencies {
+	return createFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingFileCreateFilesystem) assertedWrites() ([]recordedFileCreate, error) {
+	if len(recording.writes) == 0 {
+		return nil, errors.New("recorded file-create population is empty")
 	}
 	return recording.writes, nil
 }
@@ -265,6 +316,81 @@ func TestRecordedFileOverwriteRejectsEmptyPopulation(t *testing.T) {
 
 	if _, err := recording.assertedWrites(); err == nil {
 		t.Fatal("empty recorded file-overwrite population passed")
+	}
+}
+
+func TestCreateFileSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemCreateFileDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("CreateFile selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("CreateFile filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestCreateFilePreservesCompletePathContentBytesModeAndDependencyError(t *testing.T) {
+	path := "/complete file-create/path with spaces/file.txt"
+	writeError := errors.New("complete file-create dependency error")
+	tests := []struct {
+		name      string
+		content   string
+		wantBytes []byte
+		writeErr  error
+	}{
+		{name: "empty content", content: "", wantBytes: []byte{}},
+		{
+			name:      "multiline content and dependency error",
+			content:   "first complete line\n\nthird complete line\n",
+			wantBytes: []byte("first complete line\n\nthird complete line\n"),
+			writeErr:  writeError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFileCreateFilesystem{writeErr: test.writeErr}
+			dependencies := recording.dependencies()
+			if dependencies.Files.FileSystem != recording {
+				t.Fatalf("file-create dependency lost its complete filesystem value: %#v", dependencies)
+			}
+
+			err := createFile(dependencies, path, test.content)
+			if !errors.Is(err, test.writeErr) {
+				t.Fatalf("create-file error was %v, want %v", err, test.writeErr)
+			}
+			writes, populationErr := recording.assertedWrites()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			want := []recordedFileCreate{{path: path, data: test.wantBytes, mode: 0644}}
+			if !reflect.DeepEqual(writes, want) {
+				t.Fatalf("recorded file-create differs:\n got: %#v\nwant: %#v", writes, want)
+			}
+		})
+	}
+}
+
+func TestCreateFileDependenciesDefaultToSafeNoMutation(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "safe default", "must-not-exist.txt")
+
+	err := createFile(createFileDependencies{}, target, "must not be written")
+
+	if !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe file-create dependency default returned %v, want %v", err, filesystem.ErrNoFilesystem)
+	}
+	if _, statErr := os.Stat(target); !os.IsNotExist(statErr) {
+		t.Fatalf("safe file-create dependency default mutated the target: %v", statErr)
+	}
+}
+
+func TestRecordedFileCreateRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingFileCreateFilesystem{}
+
+	if _, err := recording.assertedWrites(); err == nil {
+		t.Fatal("empty recorded file-create population passed")
 	}
 }
 

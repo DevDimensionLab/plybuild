@@ -248,8 +248,20 @@ func CreateDirectory(path string) error {
 	return nil
 }
 
+type createFileDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemCreateFileDependencies() createFileDependencies {
+	return createFileDependencies{Files: filesystem.System()}
+}
+
 func CreateFile(path, content string) error {
-	return os.WriteFile(path, []byte(content), 0644)
+	return createFile(systemCreateFileDependencies(), path, content)
+}
+
+func createFile(dependencies createFileDependencies, path, content string) error {
+	return filesystem.WriteFile(dependencies.Files, path, []byte(content), 0644)
 }
 
 func OpenFile(fileName string) (*os.File, error) {
