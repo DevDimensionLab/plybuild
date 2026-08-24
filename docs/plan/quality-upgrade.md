@@ -140,7 +140,12 @@ their measured mutation-harness and acceptance-script populations remain zero.
 
 ### P2A - Characterize Compatibility
 
-Status: queued before Q1 refactoring.
+Status: active; move 1 of 3 complete.
+
+Move 1 pins `golang.org/x/exp/cmd/apidiff` at
+`v0.0.0-20260709172345-9ea1abe57597`. The machine-readable v1.0.1 comparison
+allows only the compatible addition of `cmd/ply`; no incompatible change is
+allowed.
 
 1. Pin an API-diff tool and record the exported Go API against tag `v1.0.1`.
    Maintain an explicit compatibility allowlist rather than reviewing raw text.

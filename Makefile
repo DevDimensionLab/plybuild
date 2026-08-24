@@ -2,12 +2,14 @@ GO ?= go
 GOFMT ?= gofmt
 BASH ?= /bin/bash
 GOLANGCI_LINT_VERSION := 2.12.2
+APIDIFF_VERSION := v0.0.0-20260709172345-9ea1abe57597
+APIDIFF ?= apidiff
 REPO_ROOT := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 SCRIPTS_DIR ?= $(REPO_ROOT)/scripts
 
 .DEFAULT_GOAL := all
 
-.PHONY: all build docker-build docker-run docker-publish format install lint preflight release release-brew run test test-agent-start test-install test-lint test-preflight upgrade
+.PHONY: all build compat-api compatibility docker-build docker-run docker-publish format install lint preflight release release-brew run test test-agent-start test-compatibility test-install test-lint test-preflight upgrade
 
 build:
 	$(GO) build -o ply ./cmd/ply
@@ -71,7 +73,16 @@ lint:
 format:
 	cd "$(REPO_ROOT)" && find . -path './vendor' -prune -o -type f -name '*.go' -exec "$(GOFMT)" -w {} +
 
-preflight:
+compat-api:
+	APIDIFF="$(APIDIFF)" APIDIFF_VERSION="$(APIDIFF_VERSION)" \
+		$(BASH) "$(REPO_ROOT)/scripts/check-api-compat.sh"
+
+compatibility: compat-api
+
+test-compatibility:
+	$(BASH) "$(REPO_ROOT)/scripts/test-check-api-compat.sh"
+
+preflight: compatibility
 	$(GO) build ./...
 	$(GO) test ./... -count=1
 	$(GO) vet ./...
