@@ -1,13 +1,13 @@
 # Agent Session: Introduce Process Adapter
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T122234+0200-introduce-process-adapter`
 Created: `2026-08-24T12:22:34+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `48374146595f2d319e21f5f460cac71798a1b4a384311d83438b74725044bd33`
 Previous: [2026-08-24T113208+0200-remove-process-exits.md](2026-08-24T113208+0200-remove-process-exits.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T130235+0200-migrate-maven-process-flow.md](2026-08-24T130235+0200-migrate-maven-process-flow.md)
+Outcome: P3 move 2 completed at 03d6242: the process adapter owns Git clone/pull/init/add/commit execution, Q1.3 fell to 77 of 79, both Git seam swaps raised Q1.4 to 2 of 8, and the complete clean gate passed with zero ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `5c6f2fa`.
+Last measured checkpoint: 2026-08-24, commit `03d6242`.
 
 ## Objective
 
@@ -41,20 +41,20 @@ P8|queued
 
 ## Measured State
 
-| Signal | Baseline | P1B | P2A | P2B | P3.1 | Interpretation |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
-| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3 and Q0.8 remain closed. |
-| Test functions | 33 | 37 | 37 | 37 | 39 | Both executable packages now have boundary contracts. |
-| Skipped tests | 2 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
-| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | Thirteen packages still have no test files. |
-| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | Q1.2 is closed; only the two executable `main` functions terminate. |
-| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | Adapter work follows the green process boundary. |
-| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | The next move starts the git process seams. |
-| Mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
-| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
-| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | Q0.8 remains improved over a larger population. |
-| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures still prove schema reachability. |
-| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | The measurement instrument remains unchanged. |
+| Signal | Baseline | P1B | P2A | P2B | P3.1 | P3.2 | Interpretation |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3 and Q0.8 remain closed. |
+| Test functions | 33 | 37 | 37 | 37 | 39 | 47 | Git process arguments, defaults, output, and the adapter system path are covered. |
+| Skipped tests | 2 | 0 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
+| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | 11 / 23 | Twelve packages still have no test files. |
+| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | 0 | Q1.2 stays closed; only the two executable `main` functions terminate. |
+| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | 77 / 79 | The three direct Git sites left the violation population; four adapter paths remain absent. |
+| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 2 / 8 | The `git-process` and `git-commit` swaps are covered. |
+| Executable mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | The non-executable Git seam driver does not qualify as the later file-shell harness. |
+| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
+| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | 0 / 8 | Q0.8 remains improved over a larger population. |
+| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures still prove schema reachability. |
+| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument remains unchanged. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -203,7 +203,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Move 1 is complete.
+Status: active. Moves 1 and 2 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -221,6 +221,33 @@ empty-HOME count-2 contracts. Q1.1 also improved from fifteen to thirteen
 untested packages. The full audit exited 1, never 2. It identified one
 handoff-only Q3.4 wording regression inherited from `2034f63`; finalization
 rephrases that host probe before the next measured move.
+
+Move 2 added the zero-value-safe `internal/adapter/process` boundary and moved
+Git clone, pull, init, add, and commit execution behind it without changing the
+exported shell API or the legacy `shell.Output` behavior. Recording contracts
+preserve full arguments and working directories, reject an empty population,
+and cover both declared Git swaps. The three direct `pkg/shell/git.go` process
+sites left Q1.3; the adapter contributes two in-boundary process effects, so the
+scanner reports 77 violations of 79 production effect sites and four missing
+adapter paths. Q1.4 is 2 of 8.
+
+The inventory-bound `scripts/mutate-file-shell` path is a deliberately
+non-executable seam-test driver, paired with its Q0.8 meta-test. It carries the
+two labels to the real Go tests but declares no mutations and does not satisfy
+Q2.1; the executable harness ratio stays 0 of 8. The upstream filename-only
+denominator nevertheless calls it one harness and therefore reports the
+expected Q2.2/Q2.3 project findings until P5 replaces it with the real
+file-shell harness.
+
+Commit: `03d6242`.
+
+The clean move-2 gate passed focused adapter/seam tests, API/CLI compatibility,
+all four host flows, preflight, test, install, launcher, uncached and race
+tests, vet, the 15-control audit meta-suite, and empty-HOME count-2. The full
+audit exited 1 for 16 documented findings, never 2, with five improved, two
+held, zero regressed, and one not-comparable ratchet. The prior four-improved /
+three-held forecast described the 0-of-8 Q1.4 state; raising Q1.4 to 2 of 8
+necessarily moves that ratchet from held to improved.
 
 With the process boundary green, introduce thin adapters one at a time using
 `.quality/inventory`:

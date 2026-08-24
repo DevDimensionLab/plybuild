@@ -658,19 +658,19 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-24T122234+0200-introduce-process-adapter
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T122234+0200-introduce-process-adapter.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T113208+0200-remove-process-exits.md
+#|SESSION_ID=2026-08-24T130235+0200-migrate-maven-process-flow
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T130235+0200-migrate-maven-process-flow.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T122234+0200-introduce-process-adapter.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete the second P3 move in one measured change: introduce
-#|`internal/adapter/process`, migrate the coherent git process flow in
-#|`pkg/shell/git.go`, and kill the declared `git-process` and `git-commit`
-#|argument swaps. Reduce Q1.3 by the migrated git sites while keeping Q1.2 at
-#|zero and preserving all P2A contracts with zero comparable ratchet regressions.
+#|Complete the third P3 move in one measured change: reuse
+#|`internal/adapter/process`, migrate the coherent Maven subprocess flow in
+#|`pkg/maven/command.go`, and kill the declared `maven-process` argument swap.
+#|Reduce Q1.3 by the migrated Maven sites while keeping Q1.2 at zero and
+#|preserving all P2A contracts with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
@@ -681,75 +681,84 @@ exit 70
 #|# Measurements At Start
 #|
 #|Before editing, inspect branch, HEAD, status, the rolling handover, the P3 plan,
-#|`.quality/inventory`, `pkg/shell/git.go`, `pkg/shell/command.go`, their callers,
-#|the Q1.3/Q1.4 scanners, existing process tests, and the API/CLI/subprocess and
-#|host acceptance contracts. Regenerate ignored reports. Implementation commit
-#|`5c6f2fa` has 39 tests across 9 of 22 packages, Q1.2 at 0, Q1.3 at 80 of 80
-#|direct sites outside five missing adapters, and Q1.4 at 0 of 8 covered seams.
-#|Its clean gate passed and its full audit exited 1, never 2. The restart handoff
-#|rephrased one inherited Q3.4 host-state sentence; require four improved, three
-#|held, and zero regressed ratchets before accepting this move.
+#|`.quality/inventory`, the process adapter and tests, `pkg/maven/command.go`, all
+#|`maven.RunOn` callers, relevant Maven tests, the Q1.2/Q1.3/Q1.4 scanners, and
+#|the API/CLI/subprocess and host acceptance contracts. Regenerate ignored
+#|reports. Implementation commit `03d6242` has 47 tests across 11 of 23 packages,
+#|Q1.2 at 0, Q1.3 at 77 violations of 79 production effect sites with four
+#|adapter paths absent, and Q1.4 at 2 of 8. The exact Q2.1 validator remains 0 of
+#|8 executable harnesses; the upstream filename-only denominator sees the
+#|non-executable Git seam driver as one `mutate-*` path. The clean gate passed,
+#|the full audit exited 1 for 16 documented findings and never 2, and comparable
+#|ratchets were five improved, two held, and zero regressed.
 #|
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the git process-adapter move. Do not push, merge,
+#|implementation commit for the Maven process-adapter move. Do not push, merge,
 #|publish, remove the worktree, stash inherited changes, revert user work, or run
 #|destructive Git commands. Do not invoke a publisher or distribution command.
 #|
 #|Keep Go 1.18. Preserve `cmd.Execute()`, `cmd.ExecuteE()`, `cmd.RootCmd`, the
 #|normalized Cobra tree, root/status/upgrade/build and unknown-command streams
-#|and exits, and all four host acceptance flows. Default production behavior must
-#|still execute the same git argv in the same directories. Recording doubles must
-#|have safe defaults, capture complete arguments and working directories, and
-#|fail when the asserted call population is empty.
+#|and exits, and all four host acceptance flows. Preserve exported
+#|`maven.RunOn`, its returned callback signature, error behavior, executable and
+#|argument order, project working directory, and logger stdout wiring. Production
+#|must still execute the same Maven/dot/ktlint argv in the same directories.
+#|Recording doubles must have safe defaults, capture complete commands, and fail
+#|when the asserted call population is empty.
 #|
-#|Migrate only the coherent git flow in `pkg/shell/git.go`. Do not migrate Maven
-#|or cloud process calls in the same move. Do not introduce HTTP, filesystem,
-#|clock, or server adapters, and do not enter Docker, dependencies, cloud,
-#|Spring, distribution, or mutation-harness scope.
+#|Migrate only the two direct process effects in `pkg/maven/command.go`. Do not
+#|migrate cloud, generic shell, Git, diagrams, profile/editor, browser-opening,
+#|HTTP, filesystem, clock, or server calls in the same move. Do not enter Docker,
+#|dependencies, cloud, Spring, distribution, or formal mutation-harness scope.
 #|
 #|# Required Reading
 #|
 #|Read docs/plan/quality-handover.md, the P3 section and checkpoint gate in
 #|docs/plan/quality-upgrade.md, docs/design/quality-lift.md,
 #|docs/design/agent-session-continuity.md, `.quality/inventory`,
-#|`pkg/shell/git.go`, `pkg/shell/command.go`, every Git helper caller, the
-#|Q1.3/Q1.4 implementation in `.quality/tools`, and the P2A compatibility and
-#|host acceptance contracts before editing.
+#|`internal/adapter/process/process.go`, its tests, `pkg/maven/command.go`, every
+#|`maven.RunOn` caller, relevant Maven tests, the Q1.2/Q1.3/Q1.4 implementation
+#|in `.quality/tools`, and the P2A compatibility and host acceptance contracts
+#|before editing.
 #|
 #|# Three Moves
 #|
 #|These are three ordered steps inside the single measured P3 move.
 #|
-#|1. Start red with recording argument-order contracts. Prove clone keeps URL
-#|   before target directory, add/commit keeps the target directory before the
-#|   message, the complete dependency value reaches the production path, safe
-#|   defaults perform no real process in tests, and an empty recorded population
-#|   fails.
+#|1. Start red with a recording argument-order contract. Prove the executable
+#|   stays before every argument, the full argument values are preserved, the
+#|   project path becomes the process working directory, the logger stdout writer
+#|   reaches the dependency unchanged, the complete dependency value reaches the
+#|   production callback, safe defaults execute no process, and an empty recorded
+#|   population fails.
 #|
-#|2. Add the thinnest `internal/adapter/process` boundary needed by the Git flow
-#|   and migrate the direct Git clone, pull, init, add, and commit execution paths
-#|   without changing public signatures or `shell.Output` behavior. Keep exact
-#|   argv and working-directory semantics. Do not migrate the generic shell or
-#|   Maven/cloud process paths in this move.
+#|2. Reuse the existing `process.Runner` boundary and migrate `exec.Command` plus
+#|   `cmd.Run` from `pkg/maven/command.go` without changing public signatures or
+#|   behavior. Keep exact executable, argv, `Dir`, inherited environment/stdin,
+#|   nil stderr, logger stdout, and returned error semantics. Do not use a stored
+#|   function dependency: the type-aware scanner requires the resolvable Runner
+#|   interface. Bind the immutable `maven-process` label through the declared
+#|   non-executable `scripts/mutate-maven-sorting` seam driver and a Q0.8
+#|   meta-test, without claiming the later P5 harness.
 #|
-#|3. Run focused adapter and argument-swap tests, Q1.2/Q1.3/Q1.4 measurements,
+#|3. Run focused adapter/Maven/argument-swap tests, Q1.2/Q1.3/Q1.4 measurements,
 #|   API/CLI compatibility, all four host acceptance flows, the full checkpoint
-#|   gate, and the empty-HOME count-2 test from a clean commit. Expect the three
-#|   direct `pkg/shell/git.go` process sites to leave Q1.3 and both declared git
-#|   swaps to raise Q1.4; accept only the scanner's regenerated exact numbers.
+#|   gate, and the empty-HOME count-2 test from a clean commit. Expect the two
+#|   direct Maven process effects to leave Q1.3 and `maven-process` to raise Q1.4
+#|   from 2 of 8 to 3 of 8; accept only the scanner's regenerated exact numbers.
 #|   The full audit may exit 1 for documented findings but never 2.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent git adapter move
-#|or record an exact resumable state. Rewrite the rolling handover, update the P3
-#|measurements, answer this archive, create one linked NEXT archive, replace the
-#|launcher's mutable regions, run the launcher contract, and make the separate
-#|handoff-only commit `docs: prepare next agent session`.
+#|Before this agent session ends, finish and commit the coherent Maven adapter
+#|move or record an exact resumable state. Rewrite the rolling handover, update
+#|the P3 measurements, answer this archive, create one linked NEXT archive,
+#|replace the launcher's mutable regions, run the launcher contract, and make the
+#|separate handoff-only commit `docs: prepare next agent session`.
 #|
-#|Keep P3 active for the ordered Maven/cloud and later adapter moves. Do not
-#|launch the next session. COMPLETE is valid only after every authorized
-#|checkpoint through P8 is complete.
+#|Keep P3 active for the ordered cloud and later adapter moves. Do not launch the
+#|next session. COMPLETE is valid only after every authorized checkpoint through
+#|P8 is complete.
 # CODEX_MUTABLE_PROMPT_END

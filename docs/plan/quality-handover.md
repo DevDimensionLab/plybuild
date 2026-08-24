@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T12:22:34+02:00
+Generated: 2026-08-24T13:02:35+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,25 +10,27 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `5c6f2fa33719`.
-- Restart preparation base: `5c6f2fa33719`.
+- Measured implementation head: `03d6242de38d`.
+- Restart preparation base: `03d6242de38d`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no implementation changes.
 - No push, merge, release, publication, stash, revert, or worktree removal was
   performed.
 
-P3 move 1 implementation commit:
+P3 implementation commits:
 
 ```text
 5c6f2fa quality: move process exits to main
+03d6242 quality: move git processes behind adapter
 ```
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` remains in `NEXT` state for P3. The exit-only-main move is
-complete, P3 adapter moves remain active, and P4-P8 remain queued in the
-machine-readable plan block. The active archive is
-`docs/plan/agent-sessions/2026-08-24T122234+0200-introduce-process-adapter.md`.
+`codex-dev-start.sh` remains in `NEXT` state for P3. The exit-only-main and Git
+process-adapter moves are complete. Maven, cloud, and the later adapter moves
+remain active, and P4-P8 remain queued in the machine-readable plan block. The
+active archive is
+`docs/plan/agent-sessions/2026-08-24T130235+0200-migrate-maven-process-flow.md`.
 Its predecessor is answered history, and the connected graph has exactly one
 `NEXT` tail.
 
@@ -44,52 +46,61 @@ controls include premature `COMPLETE` rejection while authorized work remains,
 so normal handoff requires no test edit. The ignored `.agent-task` path remains
 absent and is not task authority.
 
-## P3 Move 1 Result
+## P3 Move 2 Result
 
-The first P3 move completed as one measured implementation change:
+The second P3 move completed as one measured implementation change:
 
-1. `cmd/entry_boundary_test.go` began red with both entry paths unbound, a
-   missing error-returning command path, and all 127 process-terminating calls.
-   Its syntax-aware scan now requires both executable files to delegate to the
-   same `cmd.ExecuteE() error`, requires exit 1 selection inside each `main`,
-   and rejects `log.Fatal*` or `os.Exit` everywhere else.
-2. `cmd.ExecuteE()` owns Cobra execution and returns errors. The exported
-   `cmd.Execute()` remains `func()` for API compatibility but no longer exits;
-   `cmd.RootCmd` is unchanged. The compatible new symbol is recorded in the
-   API allowlist. Root/status/upgrade/build help and unknown-command stdout,
-   stderr, and exit 1 behavior remain green.
-3. Cobra initializers, pre-run hooks, run hooks, and their unexported helpers
-   now propagate errors. Both `main.go` and `cmd/ply/main.go` print returned
-   errors and call `os.Exit(1)`. The two remaining package-level fatal sites
-   were converted to non-terminating logging without changing exported
-   signatures.
-4. No process, HTTP, filesystem, clock, or server adapter was introduced. That
-   ordered work begins with the next move.
+1. `internal/adapter/process` now owns operating-system execution. A complete
+   `Command` carries name, argument vector, working directory, stdout, and
+   stderr. A `Runner` interface keeps the scanner resolvable, the zero-value
+   `Dependencies` is an inert default, and production explicitly selects
+   `System()`.
+2. `pkg/shell/git.go` routes clone, pull, init, add, and commit through the
+   adapter without changing exported signatures. Production retains the same
+   `git` argv, empty process `Dir`, `-C` target-directory arguments, output
+   buffers, and legacy error behavior. Git dirty/repository probes continue to
+   use generic `shell.Run`; Maven and other process sites were not migrated.
+3. Recording tests capture complete arguments and working directories, prove
+   clone URL-before-target and commit target-before-message ordering, preserve
+   the complete message value and shell output, prove the safe zero-value
+   default performs no Git mutation, and reject an empty recorded population.
+   The adapter also executes an explicit system-path contract.
+4. The inventory-bound `scripts/mutate-file-shell` path is a non-executable
+   seam-test driver, not the P5 mutation harness. Its meta-test runs all five
+   Git recording contracts and rejects an empty test population, missing
+   labels, executability, or mutation declarations. This raises Q1.4 without
+   claiming Q2.1 coverage.
 
 ## Measured Quality State
 
-The clean full audit at `5c6f2fa33719` reports:
+The clean full audit at `03d6242de38d` reports:
 
 - Absolute L0: 8 of 8.
-- 39 test functions, zero skipped; 9 of 22 packages have tests.
-- Q0.8: 0 of 7 production scripts lack a meta-test.
-- Process-exiting calls outside `main`: 0; Q1.2 is an absolute PASS and an
-  improved ratchet from 127.
-- Packages without tests: 13 of 22, improved from the stored 15-package debt.
-- Direct production effects outside the five declared adapters: 80 of 80.
-- Declared seam swap tests: 0 of 8.
-- Mutation harnesses: 0 of 8.
+- 47 test functions, zero skipped; 11 of 23 packages have tests.
+- Q0.8: 0 of 8 production scripts lack a meta-test.
+- Q1.1: 12 of 23 packages have no tests, improved from the baseline 15.
+- Q1.2: 0 process-exiting calls outside `main`.
+- Q1.3: 77 direct external sites outside the declared adapters of 79 production
+  effect sites. `internal/adapter/process` is valid; the other four adapters are
+  absent, so Q1.3 remains not comparable. The three direct Git sites left the
+  violation population and the adapter owns two process effects.
+- Q1.4: 2 of 8 declared seams covered: `git-process` and `git-commit`.
+- Q2.1: 0 of 8 subjects have a real executable harness. The upstream
+  filename-only denominator sees one `mutate-*` path, but the exact-path local
+  validator records it as non-executable. Q2.2/Q2.3 therefore remain documented
+  findings until the real file-shell harness is built in P5.
 - Acceptance scripts: 4 of 4; Q2.5, Q2.6, Q2.7, and Q2.10 pass.
 - Q2.8 and Q2.9 remain honestly `UNMEASURABLE` pending criterion-bound manual
-  evidence; the executable magnitude, bad-input, and read-only controls exist.
-- Full audit exit: expected 1 for documented project findings; no audit returned
-  exit 2.
+  evidence; executable magnitude, bad-input, and read-only controls exist.
+- Full audit exit: expected 1 for 16 documented findings; no accepted audit
+  returned exit 2.
+- Comparable ratchets: five improved, two held, zero regressed; Q1.3 is not
+  comparable while four declared adapter paths are absent.
 - Measurement identity: clean, with zero dirty paths.
 
-The implementation audit exposed one inherited Q3.4 regression from a host
-tool sentence added by restart commit `2034f63`. This handoff replaces that
-sentence with a dated probe result. The final clean handoff audit must therefore
-show four improved, three held, and zero regressed comparable ratchets.
+The earlier four-improved / three-held forecast described Q1.4 at 0 of 8.
+Covering the two required Git seams necessarily moves Q1.4 from held to
+improved, yielding the scanner's exact five-improved / two-held result.
 
 Regenerate `target/quality-audit/scorecard.json`; it is ignored output, not
 persistent evidence. Compatibility checks create ignored reports under
@@ -98,46 +109,56 @@ generated reports before the full audit.
 
 ## Decisions And Learned Facts
 
-1. Repository-wide local search found no Ply consumer of `cmd.Execute()` beyond
-   the original root executable. The similarly named Trip functions belong to
-   another Go module. No evidence requires `cmd.Execute()` to terminate.
-2. `cmd.ExecuteE()` temporarily silences Cobra while it executes, restores the
-   public `RootCmd` settings, reproduces unknown-command diagnostics, maps the
-   private documentation-complete sentinel to success, and returns every other
-   error to `main`.
-3. Cobra's initializer callback cannot return an error. It now records the
-   initialization error, and `InitGlobals` or the build boundary returns it
-   before command work begins.
-4. Returning `flag.ErrHelp` from `OkHelp` lets Cobra stop a command and retain
-   successful help behavior without a process exit.
-5. The clean gate improved Q1.1 because the root and `cmd` entry packages gained
-   tests; this was a consequence of the required boundary contract, not adapter
-   scope.
-6. A host probe on 2026-08-24 found no GoReleaser executable, and no GoReleaser
-   or publisher command was invoked. The retained local snapshot contract is
-   outside P3 execution scope.
-7. Passing `GOLANGCI_LINT` as a Make command-line variable propagates through
+1. A function-valued process dependency makes the type-aware Q1.3 scanner fail
+   closed. Use the `process.Runner` interface; do not replace it with a stored
+   function without extending and meta-testing the scanner in separate scope.
+2. Test recorders must write only through resolved in-memory concrete types.
+   Generic `io.Writer` writes made the Q0.6 scanner fail closed, while asserted
+   `*bytes.Buffer` destinations are recognized as memory-only.
+3. Resolve temporary-directory symlinks before comparing an executed process's
+   physical working directory. On macOS, `/tmp` and `/private/tmp` can name the
+   same directory.
+4. `.quality/inventory` is baseline-checksum-bound. The Git seam labels therefore
+   remain at their declared `scripts/mutate-file-shell` path; changing the path
+   invalidates baseline comparison.
+5. The non-executable seam driver keeps Q2.1 at 0 of 8, but the pinned upstream
+   tool counts filenames for its mutation denominator. Q2.2/Q2.3 will report
+   findings until P5 turns that path into the real executable harness and adds
+   its T1-T10 meta-controls.
+6. `shell.run` historically returns an `Output` whose `Err` field is not filled
+   from `cmd.Run()`. The Git move preserves that behavior rather than combining
+   a seam refactor with an unrelated compatibility change.
+7. The adapter's system path inherits environment and stdin, attaches the
+   caller's writers, and assigns `Command.Dir`; empty `Dir` preserves the Git
+   helpers' original process working directory.
+8. Passing `GOLANGCI_LINT` as a Make command-line variable propagates through
    `MAKEFLAGS` and defeats the lint meta-test's missing-binary mutant. Provide
    `APIDIFF` and `GOLANGCI_LINT` as environment variables for `make preflight`.
-8. The sandbox denies the default Go and golangci-lint cache paths. Use isolated
+9. The sandbox denies default Go and golangci-lint cache paths. Use isolated
    `GOCACHE`, `GOTMPDIR`, and `GOLANGCI_LINT_CACHE` directories under
    `/private/tmp`.
 
 ## Next Objective
 
-P3 remains active. Introduce `internal/adapter/process` and migrate one coherent
-git flow from `pkg/shell/git.go`. Start red with recording argument-order tests
-for the declared `git-process` and `git-commit` seams: clone must keep URL before
-target directory, and commit must keep target directory before message. The
-recording double must fail on an empty call population and preserve the complete
-dependency value passed to production code.
+P3 remains active. Reuse `internal/adapter/process` for one coherent Maven
+subprocess flow in `pkg/maven/command.go` and cover the declared
+`maven-process` swap. Begin red with a recorder that proves the executable stays
+before all arguments, the project path remains the process working directory,
+the logger stdout writer reaches the process unchanged, the full dependency
+value reaches the production path, defaults remain inert, and empty recorded
+populations fail.
 
-Reduce Q1.3 by exactly the migrated git call sites and increase Q1.4 only for
-the swaps the new tests kill. Preserve the Q1.2 zero boundary, Go 1.18, all P2A
-API/CLI/subprocess and host acceptance behavior, and zero comparable ratchet
-regressions. Do not migrate Maven or cloud calls in the same move, and do not
-enter HTTP, filesystem, clock, server, Docker, dependency, distribution,
-Spring, or mutation-harness scope.
+Preserve exported `maven.RunOn` and its returned callback signature, error
+behavior, exact argv, working directory, and stdout wiring. Migrate only the two
+direct process effects in `pkg/maven/command.go`; do not migrate cloud, generic
+shell, diagrams, profile/editor, browser-opening, HTTP, filesystem, clock, or
+server paths in the same move. Bind the immutable inventory label through the
+declared `scripts/mutate-maven-sorting` path without claiming the later P5
+mutation harness.
+
+Expect Q1.2 to stay zero, the two Maven violations to leave Q1.3, and Q1.4 to
+rise from 2 of 8 to 3 of 8. Accept only regenerated scanner values and zero
+comparable regressions.
 
 ## Start
 
@@ -152,25 +173,26 @@ session prepares its successor automatically before stopping.
 
 ## Verification Notes
 
-Completed from clean implementation commit `5c6f2fa33719`:
+Completed from clean implementation commit `03d6242de38d`:
 
-- Focused entry-boundary tests for both executables: PASS.
-- Both root and `cmd/ply` fresh binaries produced byte-identical help and
-  unknown-command streams with exit 1 for bad input.
-- API and CLI compatibility plus both compatibility meta-tests: PASS.
+- Focused process-adapter, Git argument, safe-default, output, working-directory,
+  and empty-population contracts: PASS.
+- Q1.2/Q1.3/Q1.4 focused audit: expected exit 1, exact 0, 77 of 79, and 2 of 8;
+  clean measurement identity and zero regressions.
+- API and CLI compatibility plus root/status/upgrade/build and unknown-command
+  subprocess surfaces: PASS.
 - Host install, status, upgrade, and build acceptance: PASS.
 - `make preflight`, `make test`, `make test-install`, `make test-agent-start`,
   uncached tests, race tests, and `go vet ./...`: PASS.
 - Empty-HOME `go test ./... -count=2` with isolated writable state: PASS.
-- `bash .quality/tools/test-quality-audit.sh`: PASS, 15 controls.
-- Clean full audit: expected exit 1, L0 8 of 8, Q1.2 0, 39 tests, 9 tested
-  packages, and zero dirty paths. The inherited handoff wording is corrected in
-  the restart commit and rechecked there.
+- Audit meta-suite: PASS, 15 controls and all 228 baseline numeric leaves.
+- Clean full audit: expected exit 1, L0 8 of 8, 47 tests, 11 tested packages,
+  five improved, two held, zero regressed, one not comparable, and zero dirty
+  paths.
 
 Tool paths used were `/private/tmp/ply-p2b-api.4umBuM/bin/apidiff` and
 `/private/tmp/ply-p2b-lint.SGWVGp/bin/golangci-lint`; probe before reuse because
-temporary paths are not persistent dependencies. The clean gate used
-`/private/tmp/ply-p3-clean-gate.v5OyEp` for writable caches.
+temporary paths are not persistent dependencies.
 
 Environment on 2026-08-24: host Go 1.26.2 on Darwin arm64, module Go 1.18,
 `/bin/bash` 3.2.57, and PATH Bash 5.3.9. Docker, public network, cloud, Spring,
@@ -180,10 +202,11 @@ and distribution execution were outside this move.
 
 Stop and report rather than forcing progress when:
 
-- the audit exits 2;
+- an audit exits 2 and the adapter/test shape cannot be corrected in scope;
 - a comparable ratchet regresses;
 - public CLI or Go API compatibility cannot be established;
-- the git process adapter cannot preserve exact argument order and defaults;
-- the move requires Maven, cloud, HTTP, filesystem, clock, server, Docker,
-  dependency, distribution, Spring, or mutation-harness scope; or
-- the one coherent git adapter move is complete.
+- the Maven adapter move cannot preserve exact executable, argument, directory,
+  stdout, default, and error behavior;
+- the move requires cloud, HTTP, filesystem, clock, server, Docker, dependency,
+  distribution, Spring, or formal mutation-harness scope; or
+- the one coherent Maven process move is complete.
