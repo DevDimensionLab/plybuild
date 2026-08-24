@@ -37,24 +37,61 @@ func UrlValuesFrom(bootVersion string, config config.ProjectConfiguration) url.V
 }
 
 func GetRoot() (IoRootResponse, error) {
+	return getRoot(systemDiscoveryDependencies())
+}
+
+func getRoot(dependencies discoveryDependencies) (IoRootResponse, error) {
 	var deps IoRootResponse
-	err := http.GetJson(baseUrl, &deps)
+	err := dependencies.GetJSON(httpclient.Request{URL: baseUrl}, &deps)
 	return deps, err
 }
 
 func GetDependencies() (IoDependenciesResponse, error) {
+	return getDependencies(systemDiscoveryDependencies())
+}
+
+func getDependencies(dependencies discoveryDependencies) (IoDependenciesResponse, error) {
 	var deps IoDependenciesResponse
-	err := http.GetJson(baseUrl+"/dependencies", &deps)
+	err := dependencies.GetJSON(httpclient.Request{URL: baseUrl + "/dependencies"}, &deps)
 	return deps, err
 }
 
 func Validate(config config.ProjectConfiguration) error {
+	return validate(systemDiscoveryDependencies(), config)
+}
+
+type discoveryHTTPClient interface {
+	GetJSON(httpclient.Request, interface{}) error
+}
+
+type discoveryDependencies struct {
+	Client discoveryHTTPClient
+}
+
+func (dependencies discoveryDependencies) GetJSON(request httpclient.Request, parsed interface{}) error {
+	if dependencies.Client == nil {
+		return httpclient.ErrNoClient
+	}
+	return dependencies.Client.GetJSON(request, parsed)
+}
+
+func systemDiscoveryDependencies() discoveryDependencies {
+	return discoveryDependencies{Client: packageDiscoveryHTTP{}}
+}
+
+type packageDiscoveryHTTP struct{}
+
+func (packageDiscoveryHTTP) GetJSON(request httpclient.Request, parsed interface{}) error {
+	return http.GetJson(request.URL, parsed)
+}
+
+func validate(dependencies discoveryDependencies, config config.ProjectConfiguration) error {
 	if len(config.Dependencies) == 0 {
 		return nil
 	}
 
 	var invalidDependencies []string
-	validDependencies, err := GetDependencies()
+	validDependencies, err := getDependencies(dependencies)
 	if err != nil {
 		return err
 	}

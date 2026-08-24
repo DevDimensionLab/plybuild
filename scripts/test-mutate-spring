@@ -41,6 +41,15 @@ tests=(
 	TestSpringDownloadDependenciesDefaultToNoRequestOrMutation
 	TestRecordedSpringDownloadOperationsRejectEmptyPopulation
 	TestArchivePathRetainsWorkingDirectoryAndSpringUnixZipName
+	TestJSONHelperPassesCompleteAnonymousRequestAndParsesResponse
+	TestJSONHelperPreservesStatusDependencyReadAndUnmarshalErrors
+	TestJSONHelperDependenciesDefaultToSafeNoRequest
+	TestGetJSONSystemPreservesAnonymousGETRedirects
+	TestSpringDiscoveryKeepsCompleteRootAndDependenciesURLsAndParsesResponses
+	TestSpringDiscoveryReturnsDependencyErrorsAfterCompleteRequestDelivery
+	TestSpringDiscoveryDependenciesDefaultToSafeNoRequest
+	TestSpringValidationSelectsDependenciesRequestAndPreservesErrors
+	TestRecordedSpringDiscoveryRequestsRejectEmptyPopulation
 )
 [[ ${#tests[@]} -gt 0 ]] || fail 'asserted Spring test population is empty'
 for test_name in "${tests[@]}"; do

@@ -13,7 +13,11 @@ import (
 )
 
 func GetJson(url string, parsed interface{}) error {
-	body, err := get(url)
+	return getJson(httpclient.System(), url, parsed)
+}
+
+func getJson(dependencies httpclient.Dependencies, url string, parsed interface{}) error {
+	body, err := getHTTPResponse(dependencies, httpclient.Request{URL: url})
 	if err != nil {
 		return err
 	}
@@ -42,11 +46,6 @@ func getXml(dependencies httpclient.Dependencies, url string, parsed interface{}
 	}
 
 	return nil
-}
-
-func get(url string) ([]byte, error) {
-	resp, err := http.Get(url)
-	return responseBody(url, resp, err)
 }
 
 func getHTTPResponse(dependencies httpclient.Dependencies, request httpclient.Request) ([]byte, error) {
