@@ -2,7 +2,9 @@
 package httpclient
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"net/http"
 )
 
@@ -20,11 +22,18 @@ type BearerJSON struct {
 	AccessToken string
 }
 
+// POST contains the complete body and headers for one POST request.
+type POST struct {
+	Body   []byte
+	Header http.Header
+}
+
 // Request is the complete HTTP request value passed to a dependency.
 type Request struct {
 	URL        string
 	BasicAuth  *BasicAuth
 	BearerJSON *BearerJSON
+	POST       *POST
 }
 
 // Client performs one complete HTTP request.
@@ -55,11 +64,17 @@ func System() Dependencies {
 type systemClient struct{}
 
 func (systemClient) Do(request Request) (*http.Response, error) {
-	if request.BasicAuth == nil && request.BearerJSON == nil {
+	if request.BasicAuth == nil && request.BearerJSON == nil && request.POST == nil {
 		return http.Get(request.URL)
 	}
 
-	httpRequest, err := http.NewRequest("GET", request.URL, nil)
+	method := http.MethodGet
+	var body io.Reader
+	if request.POST != nil {
+		method = http.MethodPost
+		body = bytes.NewReader(request.POST.Body)
+	}
+	httpRequest, err := http.NewRequest(method, request.URL, body)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +84,13 @@ func (systemClient) Do(request Request) (*http.Response, error) {
 	if request.BearerJSON != nil {
 		httpRequest.Header.Add("Authorization", "Bearer "+request.BearerJSON.AccessToken)
 		httpRequest.Header.Add("Content-Type", "application/json")
+	}
+	if request.POST != nil {
+		for name, values := range request.POST.Header {
+			for _, value := range values {
+				httpRequest.Header.Add(name, value)
+			}
+		}
 	}
 	client := &http.Client{}
 	return client.Do(httpRequest)

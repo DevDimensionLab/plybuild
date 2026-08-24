@@ -1,9 +1,9 @@
 package kibana
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"io"
 	"net/http"
@@ -122,23 +122,27 @@ func POST(reguest KibanaFetchRequest) (error, KibanaResponse) {
 }
 
 func internalPOST(request KibanaFetchRequest) (error, KibanaResponse) {
-	client := &http.Client{}
+	return internalPost(httpclient.System(), request)
+}
 
+func internalPost(dependencies httpclient.Dependencies, request KibanaFetchRequest) (error, KibanaResponse) {
 	size := RawParse(`\"size\":\d+`, request.Body)
 	newSize := `"size":` + strconv.Itoa(kibanaMaxResult)
 	request.Body = strings.Replace(request.Body, size, newSize, 1)
 
-	req, err := http.NewRequest("POST", request.Url, bytes.NewBuffer([]byte(request.Body)))
-	if nil != err {
-		return err, KibanaResponse{}
-	}
+	requestHeader := make(http.Header)
+	requestHeader.Add("accept-language", request.AcceptLanguage)
+	requestHeader.Add("authorization", request.Authorization)
+	requestHeader.Add("content-type", request.ContentType)
+	requestHeader.Add("kbn-version", request.KbnVersion)
 
-	req.Header.Add("accept-language", request.AcceptLanguage)
-	req.Header.Add("authorization", request.Authorization)
-	req.Header.Add("content-type", request.ContentType)
-	req.Header.Add("kbn-version", request.KbnVersion)
-
-	resp, err := client.Do(req)
+	resp, err := httpclient.Execute(dependencies, httpclient.Request{
+		URL: request.Url,
+		POST: &httpclient.POST{
+			Body:   []byte(request.Body),
+			Header: requestHeader,
+		},
+	})
 	if nil != err {
 		return err, KibanaResponse{}
 	}
@@ -269,10 +273,48 @@ func ExecuteKibanaQuery(
 	filter map[string]string,
 	resultExits map[string]bool,
 	outputPadding string) (error, KibanaResponse, []string, map[string]bool) {
+	return executeKibanaQuery(
+		systemQueryDependencies(), kibanaRequest, requestTimeInterval, filter, resultExits, outputPadding,
+	)
+}
+
+type queryPOSTClient interface {
+	Post(KibanaFetchRequest) (KibanaResponse, error)
+}
+
+type queryDependencies struct {
+	Client queryPOSTClient
+}
+
+func (dependencies queryDependencies) Post(request KibanaFetchRequest) (KibanaResponse, error) {
+	if dependencies.Client == nil {
+		return KibanaResponse{}, httpclient.ErrNoClient
+	}
+	return dependencies.Client.Post(request)
+}
+
+func systemQueryDependencies() queryDependencies {
+	return queryDependencies{Client: packageQueryPOST{}}
+}
+
+type packageQueryPOST struct{}
+
+func (packageQueryPOST) Post(request KibanaFetchRequest) (KibanaResponse, error) {
+	err, response := POST(request)
+	return response, err
+}
+
+func executeKibanaQuery(
+	dependencies queryDependencies,
+	kibanaRequest KibanaFetchRequest,
+	requestTimeInterval TimeInterval,
+	filter map[string]string,
+	resultExits map[string]bool,
+	outputPadding string) (error, KibanaResponse, []string, map[string]bool) {
 
 	request := CreateRequestForInterval(requestTimeInterval, kibanaRequest)
 
-	err, kibanaResponse := POST(request)
+	kibanaResponse, err := dependencies.Post(request)
 	if err != nil {
 		return err, KibanaResponse{}, nil, resultExits
 	}
@@ -299,7 +341,9 @@ func ExecuteKibanaQuery(
 
 		requestTimeInterval.Lte = responseTimeInterval.Gte
 
-		err, kibanaResponse, subQueryResult, _ := ExecuteKibanaQuery(kibanaRequest, newRequestTimeInterval, filter, updatedResultExits, outputPadding+"  ")
+		err, kibanaResponse, subQueryResult, _ := executeKibanaQuery(
+			dependencies, kibanaRequest, newRequestTimeInterval, filter, updatedResultExits, outputPadding+"  ",
+		)
 		if err != nil {
 			return err, KibanaResponse{}, nil, resultExits
 		}

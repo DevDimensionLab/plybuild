@@ -88,6 +88,40 @@ func TestExecutePassesCompleteBearerJSONRequestToDependency(t *testing.T) {
 	}
 }
 
+func TestExecutePassesCompletePOSTRequestToDependency(t *testing.T) {
+	wantRequest := Request{
+		URL: "https://complete.example.invalid/internal/bsearch?compress=false",
+		POST: &POST{
+			Body: []byte(`{"size":500,"query":{"complete":true}}`),
+			Header: http.Header{
+				"Accept-Language": []string{"nb-NO"},
+				"Authorization":   []string{"Bearer complete-token"},
+				"Content-Type":    []string{"application/json"},
+				"Kbn-Version":     []string{"8.9.0"},
+			},
+		},
+	}
+	wantResponse := &http.Response{
+		StatusCode: http.StatusAccepted,
+		Status:     "202 Complete POST Response",
+		Body:       io.NopCloser(strings.NewReader("complete POST body")),
+	}
+	sentinel := errors.New("complete POST dependency result")
+	client := &recordingClient{response: wantResponse, err: sentinel}
+
+	response, err := Execute(Dependencies{Client: client}, wantRequest)
+
+	if response != wantResponse {
+		t.Fatalf("Execute returned response %#v, want %#v", response, wantResponse)
+	}
+	if !errors.Is(err, sentinel) {
+		t.Fatalf("Execute returned %v, want %v", err, sentinel)
+	}
+	if !reflect.DeepEqual(client.request, wantRequest) {
+		t.Fatalf("dependency received an incomplete POST request:\n got: %#v\nwant: %#v", client.request, wantRequest)
+	}
+}
+
 func TestSystemPreservesAnonymousAndBasicAuthGETRequests(t *testing.T) {
 	previous := http.DefaultTransport
 	t.Cleanup(func() {
@@ -200,6 +234,97 @@ func TestSystemPreservesBearerJSONGETRequestHeaders(t *testing.T) {
 	if username, password, authenticated := recorded.BasicAuth(); authenticated {
 		t.Fatalf("system bearer request unexpectedly used basic auth %q:%q", username, password)
 	}
+}
+
+func TestSystemPreservesPOSTRequestBodyHeadersAndRedirects(t *testing.T) {
+	previous := http.DefaultTransport
+	t.Cleanup(func() { http.DefaultTransport = previous })
+	firstBody := &trackingBody{reader: strings.NewReader("redirect")}
+	finalBody := &trackingBody{reader: strings.NewReader("complete redirected POST response")}
+	requests := []*http.Request{}
+	requestBodies := []string{}
+	http.DefaultTransport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		requests = append(requests, request)
+		body, err := io.ReadAll(request.Body)
+		if err != nil {
+			return nil, err
+		}
+		requestBodies = append(requestBodies, string(body))
+		if len(requests) == 1 {
+			return &http.Response{
+				StatusCode: http.StatusTemporaryRedirect,
+				Status:     "307 Temporary Redirect",
+				Header:     http.Header{"Location": []string{"https://post.example.invalid/final"}},
+				Body:       firstBody,
+			}, nil
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Status:     "200 OK",
+			Body:       finalBody,
+		}, nil
+	})
+	wantBody := `{"size":500,"query":{"redirected":true}}`
+	request := Request{
+		URL: "https://post.example.invalid/start",
+		POST: &POST{
+			Body: []byte(wantBody),
+			Header: http.Header{
+				"Accept-Language": []string{"nb-NO"},
+				"Authorization":   []string{"Bearer redirect-token"},
+				"Content-Type":    []string{"application/json"},
+				"Kbn-Version":     []string{"8.9.0"},
+			},
+		},
+	}
+
+	response, err := Execute(System(), request)
+
+	if err != nil {
+		t.Fatalf("system POST request returned an error: %v", err)
+	}
+	if response == nil || response.Body != finalBody {
+		t.Fatalf("system POST response was %#v", response)
+	}
+	if len(requests) != 2 {
+		t.Fatalf("system POST request population was %d, want 2", len(requests))
+	}
+	wantURLs := []string{"https://post.example.invalid/start", "https://post.example.invalid/final"}
+	for index, recorded := range requests {
+		if recorded.Method != http.MethodPost || recorded.URL.String() != wantURLs[index] {
+			t.Fatalf("system POST request %d was %s %s", index, recorded.Method, recorded.URL)
+		}
+		if requestBodies[index] != wantBody {
+			t.Fatalf("system POST body %d was %q, want %q", index, requestBodies[index], wantBody)
+		}
+		for name, want := range map[string]string{
+			"Accept-Language": "nb-NO",
+			"Authorization":   "Bearer redirect-token",
+			"Content-Type":    "application/json",
+			"Kbn-Version":     "8.9.0",
+		} {
+			if got := recorded.Header.Get(name); got != want {
+				t.Fatalf("system POST request %d header %s was %q, want %q", index, name, got, want)
+			}
+		}
+	}
+	if !firstBody.closed {
+		t.Fatal("redirect response body was not closed")
+	}
+}
+
+type trackingBody struct {
+	reader io.Reader
+	closed bool
+}
+
+func (body *trackingBody) Read(buffer []byte) (int, error) {
+	return body.reader.Read(buffer)
+}
+
+func (body *trackingBody) Close() error {
+	body.closed = true
+	return nil
 }
 
 type roundTripFunc func(*http.Request) (*http.Response, error)
