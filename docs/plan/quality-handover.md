@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T14:01:12+02:00
+Generated: 2026-08-24T15:17:03+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,8 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `f5ee37d74665`.
-- Restart preparation base: `f5ee37d74665`.
+- Measured implementation head: `ee5e9ab80112`.
+- Restart preparation base: `ee5e9ab80112`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no implementation changes.
 - No push, merge, release, publication, stash, revert, or worktree removal was
@@ -23,15 +23,16 @@ P3 implementation commits:
 5c6f2fa quality: move process exits to main
 03d6242 quality: move git processes behind adapter
 f5ee37d quality: move Maven processes behind adapter
+ee5e9ab quality: cover cloud clone seam
 ```
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` remains in `NEXT` state for P3. The exit-only-main, Git,
-and Maven process-adapter moves are complete. Cloud and the later adapter moves
-remain active, and P4-P8 remain queued in the machine-readable plan block. The
-active archive is
-`docs/plan/agent-sessions/2026-08-24T140112+0200-cover-cloud-clone-seam.md`.
+`codex-dev-start.sh` remains in `NEXT` state for P3. The exit-only-main, Git and
+Maven process-adapter, and cloud-clone seam moves are complete. HTTP and the
+later adapter moves remain active, and P4-P8 remain queued in the
+machine-readable plan block. The active archive is
+`docs/plan/agent-sessions/2026-08-24T151703+0200-migrate-maven-metadata-http.md`.
 Its predecessor is answered history, and the connected graph has exactly one
 `NEXT` tail.
 
@@ -47,34 +48,33 @@ controls include premature `COMPLETE` rejection while authorized work remains,
 so normal handoff requires no test edit. The ignored `.agent-task` path remains
 absent and is not task authority.
 
-## P3 Move 3 Result
+## P3 Move 4 Result
 
-The third P3 move completed as one measured implementation change:
+The fourth P3 move completed as one measured implementation change:
 
-1. `maven.RunOn` retains its exported signature and returned callback while a
-   private callback receives the complete `process.Dependencies` value.
-   Production explicitly selects `process.System()` and still runs the same
-   Maven, dot, and ktlint executable/argv in the project directory.
-2. `pkg/maven/command.go` no longer calls `exec.Command` or `cmd.Run` directly.
-   Its complete `process.Command` preserves argument values and order, project
-   `Dir`, inherited environment/stdin, nil stderr, the unchanged
-   `logger.StdOut()` writer, and the dependency's returned error.
-3. Recording tests prove executable-before-every-argument ordering, full
-   dependency values, complete command forwarding, project path, exact stdout
-   writer identity, error propagation, a safe no-process default, and rejection
-   of an empty asserted call population.
-4. The inventory-bound `scripts/mutate-maven-sorting` path is a non-executable
-   seam-test driver, not the P5 harness. Its meta-test runs all three Maven
-   contracts and rejects an empty population, missing label, executability, or
-   mutation declarations. Q1.4 rises without claiming Q2.1 coverage.
+1. A private `refreshGit` interface and complete `refreshGitDependencies` value
+   isolate only the clone/pull choice in `GitCloudConfig.Refresh`. The exported
+   cloud types, interface, constructor, and caller signatures are unchanged.
+2. Production uses `shellRefreshGit`, which delegates directly to the existing
+   `shell.GitClone` and `shell.GitPull` functions. Config reconstructs no Git
+   argv and preserves the exact `<target>/.git` probe, cache-first branch,
+   logging, URL/target order, pull target, and formatted error behavior.
+3. Five recording contracts prove complete clone values, pull-only selection,
+   clone and pull error formatting, a safe no-Git default, whole-dependency
+   delivery, and rejection of an empty asserted call population.
+4. The inventory-bound `scripts/mutate-config-cloud` path is a non-executable
+   seam-test driver, not the P5 harness. Its meta-test binds the immutable
+   `cloud-clone` label to all five contracts and rejects an empty population,
+   missing label, executability, or mutation declarations.
 
 ## Measured Quality State
 
-The clean full audit at `f5ee37d74665` reports:
+The clean full audit at `ee5e9ab80112` reports:
 
 - Absolute L0: 8 of 8.
-- 50 test functions, zero skipped; 11 of 23 packages have tests.
-- Q0.8: 0 of 9 production scripts lack a meta-test.
+- 55 test functions, zero skipped; 11 of 23 packages have tests.
+- Q0.6: 12 guarded safe-writer call sites and zero unsafe direct test writes.
+- Q0.8: 0 of 10 production scripts lack a meta-test.
 - Q1.1: 12 of 23 packages have no tests, improved from the baseline 15.
 - Q1.2: 0 process-exiting calls outside `main`.
 - Q1.3: 76 direct external sites outside the declared adapters of 78 production
@@ -82,11 +82,11 @@ The clean full audit at `f5ee37d74665` reports:
   absent, so Q1.3 remains not comparable. Both direct Maven process effects
   left; the preserved logger stdout is exposed as one filesystem capability at
   the adapter call.
-- Q1.4: 3 of 8 declared seams covered: `git-process`, `maven-process`, and
-  `git-commit`.
+- Q1.4: 4 of 8 declared seams covered: `git-process`, `maven-process`,
+  `cloud-clone`, and `git-commit`.
 - Q2.1: 0 of 8 subjects have a real executable harness. The upstream
-  filename-only denominator sees two `mutate-*` paths, but the exact-path local
-  validator records both as non-executable. Q2.2/Q2.3 therefore remain
+  filename-only denominator sees three `mutate-*` paths, but the exact-path
+  local validator records all three as non-executable. Q2.2/Q2.3 therefore remain
   documented findings until the real harnesses are built in P5.
 - Acceptance scripts: 4 of 4; Q2.5, Q2.6, Q2.7, and Q2.10 pass.
 - Q2.8 and Q2.9 remain honestly `UNMEASURABLE` pending criterion-bound manual
@@ -98,8 +98,8 @@ The clean full audit at `f5ee37d74665` reports:
 - Measurement identity: clean, with zero dirty paths.
 
 The scanner reports the same five-improved / two-held comparable ratchets as
-the preceding move because Q1.4 was already improved and advances from 2 of 8
-to 3 of 8. Q1.3 remains not comparable until all adapter paths exist.
+the preceding move because Q1.4 was already improved and advances from 3 of 8
+to 4 of 8. Q1.3 remains not comparable until all adapter paths exist.
 
 Regenerate `target/quality-audit/scorecard.json`; it is ignored output, not
 persistent evidence. Compatibility checks create ignored reports under
@@ -138,29 +138,35 @@ generated reports before the full audit.
    `MAKEFLAGS` and defeats the lint meta-test's missing-binary mutant. Provide
    `APIDIFF` and `GOLANGCI_LINT` as environment variables for `make preflight`.
 10. The sandbox denies default Go and golangci-lint cache paths. Use isolated
-   `GOCACHE`, `GOTMPDIR`, and `GOLANGCI_LINT_CACHE` directories under
-   `/private/tmp`.
+    `GOCACHE`, `GOTMPDIR`, and `GOLANGCI_LINT_CACHE` directories under
+    `/private/tmp`.
+11. Direct fixture writes are rejected even when their destination derives from
+    `t.TempDir()`. Use the guarded `internal/testutil` writers; the first cloud
+    test setup used `os.MkdirAll`, Q0.6 caught it, and the accepted commit uses
+    `CopyFSOutsideWorkingTree` to create the `.git` marker safely.
 
 ## Next Objective
 
-P3 remains active. Cover the declared `cloud-clone` argument swap in
-`GitCloudConfig.Refresh` as one measured move. Begin red with a recording
-boundary that proves the configured cloud URL stays before the target
-directory on clone, an existing repository selects pull, complete values and
-errors survive, defaults are inert, and empty asserted populations fail.
+P3 remains active. Introduce `internal/adapter/httpclient` for one coherent
+Maven metadata XML request flow and cover the declared `maven-http`
+username/password swap. Begin red with recording anonymous and authenticated
+metadata contracts that prove the complete repository-derived URL, username
+before password, parsed XML result, dependency errors, safe defaults, complete
+dependency delivery, and rejection of an empty population.
 
-Preserve the exported `CloudConfig` interface, `GitCloudConfig`,
-`OpenGitCloudConfig`, and all Refresh callers. Keep cache-first behavior: pull
-when `<target>/.git` exists, clone otherwise, with the same URL, target, error
-formatting, logging, and filesystem probe. Reuse the existing Git/process path;
-do not duplicate Git argv or broaden into generic shell, Maven, HTTP,
-filesystem-adapter, Docker, dependency, Spring, distribution, or P5 harness
-work.
+Preserve the exported `Repository.GetMetaData`, `GetBannedModel`,
+`http.GetXml`, and `http.GetAuthXml` signatures and every caller. Production
+must retain GET/basic-auth request behavior, XML parsing, response status/body
+and close semantics, logging, and errors. Use a resolvable interface rather
+than stored function dependencies, place migrated network execution in the
+declared adapter, and do not create a second generic HTTP implementation.
 
-Bind only the immutable `cloud-clone` label through the declared non-executable
-`scripts/mutate-config-cloud` driver and its Q0.8 meta-test. Expect Q1.2 to stay
-zero, Q1.4 to rise from 3 of 8 to 4 of 8, exact Q2.1 to remain 0 of 8, and zero
-comparable regressions. Accept only regenerated scanner values.
+Bind only the immutable `maven-http` label through the existing non-executable
+`scripts/mutate-maven-sorting` driver and its Q0.8 meta-test. Keep JSON/token,
+Wget/Wpost, Kibana, filesystem, clock, server, Docker, dependencies, Spring,
+distribution, and formal P5 harness work outside the move. Expect Q1.2 to stay
+zero, Q1.4 to rise from 4 of 8 to 5 of 8, exact Q2.1 to remain 0 of 8, and zero
+comparable regressions; accept only regenerated Q1.3 values.
 
 ## Start
 
@@ -175,12 +181,13 @@ session prepares its successor automatically before stopping.
 
 ## Verification Notes
 
-Completed from clean implementation commit `f5ee37d74665`:
+Completed from clean implementation commit `ee5e9ab80112`:
 
-- Focused process-adapter, Maven argument, safe-default, error, stdout,
-  working-directory, and empty-population contracts: PASS.
-- Q1.2/Q1.3/Q1.4 focused audit: expected exit 1, exact 0, 76 of 78, and 3 of 8;
-  clean measurement identity and zero regressions.
+- Focused config/shell/process, clone/pull selection, argument-order,
+  safe-default, error-format, and empty-population contracts: PASS.
+- Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 focused audit: expected exit 1, exact zero unsafe
+  test writes, 0 exits, 76 of 78 effects, 4 of 8 seams, and 0 of 8 executable
+  harnesses.
 - API and CLI compatibility plus root/status/upgrade/build and unknown-command
   subprocess surfaces: PASS.
 - Host install, status, upgrade, and build acceptance: PASS.
@@ -188,7 +195,7 @@ Completed from clean implementation commit `f5ee37d74665`:
   uncached tests, race tests, and `go vet ./...`: PASS.
 - Empty-HOME `go test ./... -count=2` with isolated writable state: PASS.
 - Audit meta-suite: PASS, 15 controls and all 228 baseline numeric leaves.
-- Clean full audit: expected exit 1, L0 8 of 8, 50 tests, 11 tested packages,
+- Clean full audit: expected exit 1, L0 8 of 8, 55 tests, 11 tested packages,
   five improved, two held, zero regressed, one not comparable, and zero dirty
   paths.
 
@@ -207,8 +214,10 @@ Stop and report rather than forcing progress when:
 - an audit exits 2 and the adapter/test shape cannot be corrected in scope;
 - a comparable ratchet regresses;
 - public CLI or Go API compatibility cannot be established;
-- the cloud seam cannot preserve exact clone/pull selection, URL, target,
-  cache-first behavior, default, and error behavior;
-- the move requires HTTP, filesystem-adapter, clock, server, Docker, dependency,
-  distribution, Spring, or formal mutation-harness scope; or
-- the one coherent cloud-clone seam move is complete.
+- the metadata seam cannot preserve exact URL construction, anonymous/basic
+  auth selection, credential order, XML parsing, response lifecycle, defaults,
+  and error behavior;
+- the move requires JSON/token, Wget/Wpost, Kibana, filesystem, clock, server,
+  Docker, dependency, distribution, Spring, or formal mutation-harness scope;
+  or
+- the one coherent Maven metadata HTTP move is complete.
