@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -99,5 +99,5 @@ func WriteGraphStyles(styles GraphStyles, projectPath string) error {
 	if file.Exists(stylesFile) {
 		return nil
 	}
-	return ioutil.WriteFile(stylesFile, jsonStyles, 0644)
+	return os.WriteFile(stylesFile, jsonStyles, 0644)
 }

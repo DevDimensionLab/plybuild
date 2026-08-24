@@ -59,7 +59,7 @@ func (bitbucket Bitbucket) SynchronizeAllRepos(excludeProjects []string) error {
 func skipProject(key string, excludeProjects []string) bool {
 	for _, exclude := range excludeProjects {
 		log.Debugf("Checking against excluded project: %s", exclude)
-		if strings.ToLower(key) == strings.ToLower(exclude) {
+		if strings.EqualFold(key, exclude) {
 			return true
 		}
 	}

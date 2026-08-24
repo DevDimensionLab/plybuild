@@ -79,9 +79,9 @@ func springInfo() {
 	}
 	log.Infof("Latest version of spring boot are: %s\n", latestVersion)
 
-	log.Infof(fmt.Sprintf("Valid dependencies: "))
+	log.Info("Valid dependencies: ")
 	for _, category := range root.Dependencies.Values {
-		fmt.Println(fmt.Sprintf("%s", category.Name))
+		fmt.Println(category.Name)
 		fmt.Printf("================================\n")
 		for _, dep := range category.Values {
 			fmt.Printf("[%s]\n    %s, (%s)\n", dep.Id, dep.Name, dep.Description)
@@ -96,7 +96,7 @@ func showSpringManaged() {
 		log.Fatalln(err)
 	}
 
-	log.Infof(fmt.Sprintf("Spring Boot managed dependencies:"))
+	log.Info("Spring Boot managed dependencies:")
 	var organized = make(map[string][]pom.Dependency)
 	for _, dep := range deps.Dependencies {
 		mvnDep := pom.Dependency{
@@ -107,7 +107,7 @@ func showSpringManaged() {
 	}
 
 	for k, v := range organized {
-		fmt.Println(fmt.Sprintf("GroupId: %s", k))
+		fmt.Printf("GroupId: %s\n", k)
 		fmt.Printf("================================\n")
 		for _, mvnDep := range v {
 			fmt.Printf("  ArtifactId: %s\n", mvnDep.ArtifactId)

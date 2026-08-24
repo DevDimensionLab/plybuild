@@ -234,8 +234,6 @@ func mergeBuildPluginExecutions(from *pom.Plugin, to *pom.Plugin) {
 			log.Infof("merging execution %s into plugin %s:%s", fromExecution.Id, to.GroupId, to.ArtifactId)
 		}
 	}
-
-	return
 }
 
 func mergeBuildPluginConfiguration(from *pom.Plugin, to *pom.Plugin) {
@@ -261,8 +259,6 @@ func mergeBuildPluginConfiguration(from *pom.Plugin, to *pom.Plugin) {
 			log.Infof("merging configuration %s into plugin %s:%s", fromConfiguration.XMLName, to.GroupId, to.ArtifactId)
 		}
 	}
-
-	return
 }
 
 func mergePropertyKey(from *pom.Model, to *pom.Model, version string) {

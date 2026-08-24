@@ -161,7 +161,7 @@ func (localCfgDir LocalConfigDir) GetTerminalConfig() (TerminalConfig, error) {
 	}
 
 	terminalConfig := cfg.TerminalConfig
-	if 0 == terminalConfig.Width {
+	if terminalConfig.Width == 0 {
 		terminalConfig.Width = 80
 	}
 

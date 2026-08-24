@@ -55,7 +55,7 @@ var examplesCmd = &cobra.Command{
 			jsonConfigFile = file.Path("%s/examples/%s/co-pilot.json", ctx.CloudConfig.Implementation().Dir(), exampleName)
 		}
 
-		orderConfig, err := config.InitProjectConfigurationFromFile(jsonConfigFile)
+		orderConfig, _ := config.InitProjectConfigurationFromFile(jsonConfigFile)
 
 		groupId, err := promptForValue("groupId", orderConfig.GroupId, force)
 		if err != nil {
@@ -81,11 +81,10 @@ var examplesCmd = &cobra.Command{
 		}
 		orderConfig.ApplicationName = applicationName
 
-		bootVersion, err := cmd.Flags().GetString("boot-version")
-		upstream, err := cmd.Flags().GetString("upstream")
+		bootVersion, _ := cmd.Flags().GetString("boot-version")
+		upstream, _ := cmd.Flags().GetString("upstream")
 
 		build(orderConfig, upstream, bootVersion, false)
-		return
 	},
 }
 

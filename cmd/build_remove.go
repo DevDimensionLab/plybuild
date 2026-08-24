@@ -49,7 +49,7 @@ func removeGeneratedFiles(force bool) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if answer == false {
+	if !answer {
 		return
 	}
 
@@ -65,7 +65,7 @@ func removeIntellijFiles(force bool) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if answer == false {
+	if !answer {
 		return
 	}
 

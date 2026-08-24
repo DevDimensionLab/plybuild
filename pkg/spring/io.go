@@ -1,7 +1,6 @@
 package spring
 
 import (
-	"errors"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
@@ -48,7 +47,7 @@ func GetDependencies() (IoDependenciesResponse, error) {
 }
 
 func Validate(config config.ProjectConfiguration) error {
-	if config.Dependencies == nil || len(config.Dependencies) == 0 {
+	if len(config.Dependencies) == 0 {
 		return nil
 	}
 
@@ -60,7 +59,7 @@ func Validate(config config.ProjectConfiguration) error {
 
 	for _, userDefinedDependency := range config.Dependencies {
 		valid := false
-		for validDependency, _ := range validDependencies.Dependencies {
+		for validDependency := range validDependencies.Dependencies {
 			if validDependency == userDefinedDependency {
 				valid = true
 			}
@@ -72,10 +71,10 @@ func Validate(config config.ProjectConfiguration) error {
 
 	if len(invalidDependencies) > 0 {
 		validKeys := make([]string, 0, len(validDependencies.Dependencies))
-		for k, _ := range validDependencies.Dependencies {
+		for k := range validDependencies.Dependencies {
 			validKeys = append(validKeys, k)
 		}
-		return errors.New(fmt.Sprintf("%s not found in valid list of dependencies %s", invalidDependencies, validKeys))
+		return fmt.Errorf("%s not found in valid list of dependencies %s", invalidDependencies, validKeys)
 	} else {
 		return nil
 	}

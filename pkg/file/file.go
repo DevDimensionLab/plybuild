@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,12 +54,12 @@ func SuffixIn(keyword string, list []string) bool {
 func ReadJson(file string, parsed interface{}) error {
 	byteValue, err := Open(file)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to read %s, %v", file, err))
+		return fmt.Errorf("Unable to read %s, %v", file, err)
 	}
 
 	err = json.Unmarshal(byteValue, &parsed)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to unmarshal %s, %v", file, err))
+		return fmt.Errorf("Unable to unmarshal %s, %v", file, err)
 	}
 
 	return nil
@@ -69,12 +68,12 @@ func ReadJson(file string, parsed interface{}) error {
 func ReadXml(file string, parsed interface{}) error {
 	byteValue, err := Open(file)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to open %s, %v", file, err))
+		return fmt.Errorf("Unable to open %s, %v", file, err)
 	}
 
 	err = xml.Unmarshal(byteValue, &parsed)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to unmarshal %s, %v", file, err))
+		return fmt.Errorf("Unable to unmarshal %s, %v", file, err)
 	}
 
 	return nil
@@ -82,10 +81,7 @@ func ReadXml(file string, parsed interface{}) error {
 
 func Exists(filename string) bool {
 	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
+	return !os.IsNotExist(err)
 }
 
 func Open(filePath string) ([]byte, error) {
@@ -93,13 +89,12 @@ func Open(filePath string) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
+	defer func() { _ = file.Close() }()
 
-	byteValue, err := ioutil.ReadAll(file)
+	byteValue, err := io.ReadAll(file)
 	if err != nil {
 		return []byte{}, err
 	}
-
-	defer file.Close()
 
 	return byteValue, nil
 }

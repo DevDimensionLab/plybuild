@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
@@ -116,7 +115,7 @@ func (gitCfg GitCloudConfig) LinkFromService(services func() (CloudServices, err
 		}
 	}
 
-	return url, errors.New(fmt.Sprintf("could not get cloud config service information on %s:%s", groupId, artifactId))
+	return url, fmt.Errorf("could not get cloud config service information on %s:%s", groupId, artifactId)
 }
 
 func (gitCfg GitCloudConfig) DefaultServiceEnvironmentUrl(service CloudService, key string) (url string, err error) {
@@ -129,7 +128,7 @@ func (gitCfg GitCloudConfig) DefaultServiceEnvironmentUrl(service CloudService, 
 		}
 	}
 
-	return url, errors.New(fmt.Sprintf("could not find environment with link key %s", key))
+	return url, fmt.Errorf("could not find environment with link key %s", key)
 }
 
 func (gitCfg GitCloudConfig) Deprecated() (CloudDeprecated, error) {
@@ -221,7 +220,7 @@ func (gitCfg GitCloudConfig) Template(name string) (CloudTemplate, error) {
 		}
 	}
 
-	return CloudTemplate{}, errors.New(fmt.Sprintf("could not find any valid templates with name: %s", name))
+	return CloudTemplate{}, fmt.Errorf("could not find any valid templates with name: %s", name)
 }
 
 func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) {

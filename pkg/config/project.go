@@ -9,7 +9,6 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/logger"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"github.com/devdimensionlab/plybuild/pkg/sorting"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -115,7 +114,7 @@ func (config *ProjectConfiguration) WriteTo(targetFile string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(targetFile, data, 0644)
+	return os.WriteFile(targetFile, data, 0644)
 }
 
 func (config *ProjectConfiguration) SourceMainPath() string {
@@ -186,8 +185,8 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 			return nil
 		}
 
-		return errors.New(fmt.Sprintf("%s directory detected, but language was not set in %s",
-			file.Path("%s/src", targetDir), "config file (ply.json, or co-pilot.json"))
+		return fmt.Errorf("%s directory detected, but language was not set in %s",
+			file.Path("%s/src", targetDir), "config file (ply.json, or co-pilot.json")
 	}
 
 	return nil

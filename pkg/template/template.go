@@ -46,7 +46,7 @@ func ListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate)
 	data := createTemplateListRenderingModel(templates)
 
 	var tplOutput bytes.Buffer
-	err = tmpl.Execute(&tplOutput, data)
+	_ = tmpl.Execute(&tplOutput, data)
 
 	return tplOutput.String(), nil
 }

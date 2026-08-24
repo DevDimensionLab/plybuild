@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/kibana"
@@ -61,7 +60,7 @@ var kibanaCmd = &cobra.Command{
 			}
 		} else {
 			content := strings.Join(kibana.RemoveDuplicateStr(result), "\n")
-			file.CreateFile(outputFile, content)
+			_ = file.CreateFile(outputFile, content)
 			println("Output written to [" + outputFile + "]")
 		}
 	},
@@ -82,8 +81,8 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 		checkIfError(err)
 
 		tempDirectory := ".structurizr/"
-		file.DeleteAll(tempDirectory)
-		structurizr.Run(exec.Command("structurizr-cli", "export", "-w", workspace, "-format", "dot", "-output", tempDirectory))
+		_ = file.DeleteAll(tempDirectory)
+		_ = structurizr.Run(exec.Command("structurizr-cli", "export", "-w", workspace, "-format", "dot", "-output", tempDirectory))
 
 		files, err := file.FindAll("dot", []string{}, tempDirectory)
 		checkIfError(err)
@@ -94,7 +93,7 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 			err = structurizr.RunWithOutputToFile(exec.Command("dot", file, "-Tpng"), outputPngFile)
 			checkIfError(err)
 
-			structurizr.Run(exec.Command("open", outputPngFile))
+			_ = structurizr.Run(exec.Command("open", outputPngFile))
 		}
 	},
 }
@@ -126,8 +125,8 @@ func checkIfError(err error) {
 
 func getMandatoryString(cmd *cobra.Command, flag string) (string, error) {
 	val := cmd.Flag(flag).Value.String()
-	if "" == val {
-		return "", errors.New(fmt.Sprintf("missing argument --%s", flag))
+	if val == "" {
+		return "", fmt.Errorf("missing argument --%s", flag)
 	}
 	return val, nil
 }

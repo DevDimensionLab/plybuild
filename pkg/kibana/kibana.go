@@ -112,7 +112,7 @@ const kibanaMaxResult = 500
 func POST(reguest KibanaFetchRequest) (error, KibanaResponse) {
 	err, response := internalPOST(reguest)
 
-	if 0 == len(response.KibanaResult.Result.RawResponse.Hits.Hits) {
+	if len(response.KibanaResult.Result.RawResponse.Hits.Hits) == 0 {
 		println("sleep and retry")
 		time.Sleep(15 * time.Second) // dont stress the server
 		err, response := internalPOST(reguest)
@@ -142,6 +142,7 @@ func internalPOST(request KibanaFetchRequest) (error, KibanaResponse) {
 	if nil != err {
 		return err, KibanaResponse{}
 	}
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if nil != err {
@@ -163,8 +164,6 @@ func internalPOST(request KibanaFetchRequest) (error, KibanaResponse) {
 		return err, KibanaResponse{}
 	}
 
-	defer resp.Body.Close()
-
 	kibanaResponse := KibanaResponse{
 		KibanaResponseHeader: kibanaResponseHeaderLocal,
 		KibanaResult:         kibanaResult}
@@ -185,8 +184,8 @@ func LoadFromFetchRequest(f string) (KibanaFetchRequest, error) {
 	bodyLine := RawParse(bodyPrefix+`{\\".*?`+bodySuffix, fetch)
 	bodyWithSuffix := strings.Replace(bodyLine, bodyPrefix, "", 1)
 	rawBody := strings.Replace(bodyWithSuffix, bodySuffix, "", 1) + "}"
-	bodyWithoutEscaping := strings.Replace(rawBody, `\"`, `"`, -1)
-	bodyWithoutEscapingErr := strings.Replace(bodyWithoutEscaping, `\\`, `\`, -1)
+	bodyWithoutEscaping := strings.ReplaceAll(rawBody, `\"`, `"`)
+	bodyWithoutEscapingErr := strings.ReplaceAll(bodyWithoutEscaping, `\\`, `\`)
 
 	kibanaRequest := KibanaFetchRequest{
 		Url:            strings.Replace(ParseForValueInQuote(`fetch\(".*?\"`, 0, fetch), "compress=true", "compress=false", 1),

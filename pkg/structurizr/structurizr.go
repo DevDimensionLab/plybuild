@@ -23,6 +23,6 @@ func RunWithOutputToFile(command *exec.Cmd, outputFile string) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(outputFile, out.Bytes(), 0644)
+	_ = os.WriteFile(outputFile, out.Bytes(), 0644)
 	return nil
 }

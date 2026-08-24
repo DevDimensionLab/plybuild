@@ -26,7 +26,7 @@ var bitbucketSyncCmd = &cobra.Command{
 		bitbucketHost := cfg.SourceProvider.Host
 		personalAccessToken := cfg.SourceProvider.AccessToken
 
-		if ("" == bitbucketHost) || ("" == personalAccessToken) {
+		if bitbucketHost == "" || personalAccessToken == "" {
 			log.Fatalln("Command requires host and access-token in config-file")
 		}
 

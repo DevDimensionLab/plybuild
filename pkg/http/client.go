@@ -3,10 +3,8 @@ package http
 import (
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -45,17 +43,16 @@ func get(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
-		return nil, errors.New(fmt.Sprintf("%s returned status code [%s]", url, resp.Status))
+		return nil, fmt.Errorf("%s returned status code [%s]", url, resp.Status)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return body, err
 	}
-
-	defer resp.Body.Close()
 
 	return body, nil
 }
@@ -86,17 +83,16 @@ func getBasicAuth(url, username, password string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
-		return nil, errors.New(fmt.Sprintf("%s returned status code [%s]", url, resp.Status))
+		return nil, fmt.Errorf("%s returned status code [%s]", url, resp.Status)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return body, err
 	}
-
-	defer resp.Body.Close()
 
 	return body, nil
 }
@@ -117,8 +113,8 @@ func GetJsonWithAccessToken(host string, path string, accessToken string, respon
 		return err
 	}
 
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	defer func() { _ = resp.Body.Close() }()
+	body, _ := io.ReadAll(resp.Body)
 	log.Debugln(req.Method, host+path, resp.StatusCode, len(body))
 
 	return json.Unmarshal(body, &response)
@@ -130,14 +126,14 @@ func Wget(url, filepath string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() { _ = out.Close() }()
 
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
@@ -150,14 +146,14 @@ func Wpost(downloadUrl, filePath string, formData url.Values) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Create the file
 	out, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() { _ = out.Close() }()
 
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)

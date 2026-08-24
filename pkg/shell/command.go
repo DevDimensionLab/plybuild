@@ -52,7 +52,7 @@ func Unzip(src string, dest string) (filenames []string, err error) {
 	if err != nil {
 		return filenames, err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 
 	for _, f := range r.File {
 		fpath := filepath.Join(dest, f.Name)
@@ -86,7 +86,7 @@ func Unzip(src string, dest string) (filenames []string, err error) {
 			return filenames, err
 		}
 
-		_, err = io.Copy(outFile, rc)
+		_, _ = io.Copy(outFile, rc)
 
 		err = outFile.Close()
 		if err != nil {

@@ -17,8 +17,7 @@ func InitProjectConfigurationFromFile(filePath string) (ProjectConfiguration, er
 		return config, err
 	}
 
-	targetDir := strings.Replace(filePath, projectConfigFileName, "", 1)
-	targetDir = strings.Replace(filePath, legacyProjectConfigFileName, "", 1)
+	targetDir := strings.Replace(filePath, legacyProjectConfigFileName, "", 1)
 
 	err = config.Populate(targetDir)
 	return config, err
@@ -136,7 +135,7 @@ func findRootSourceFilePackageName(suffix string, path string) (packageName stri
 	}
 
 	if len(files) == 0 {
-		return packageName, errors.New(fmt.Sprintf("no files with suffix: %s in %s", suffix, path))
+		return packageName, fmt.Errorf("no files with suffix: %s in %s", suffix, path)
 	}
 
 	lines, err := file.OpenLines(files[0])
@@ -150,8 +149,7 @@ func findRootSourceFilePackageName(suffix string, path string) (packageName stri
 		}
 	}
 
-	return "",
-		errors.New(fmt.Sprintf("failed to get any files with suffix %s and a 'package' line in %s", suffix, path))
+	return "", fmt.Errorf("failed to get any files with suffix %s and a 'package' line in %s", suffix, path)
 }
 
 func projectConfigFile(targetDir string) string {

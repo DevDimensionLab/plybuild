@@ -1,0 +1,38 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  exclusions:
+    rules:
+      # Preserve the legacy exported Kibana result/error ordering.
+      - path: pkg/kibana/kibana.go
+        linters:
+          - staticcheck
+        text: "ST1008:"
+      # These legacy messages are user-visible; preserve their exact text.
+      - path: pkg/file/file.go
+        linters:
+          - staticcheck
+        text: "ST1005:"
+      # Keep the public Upgrade constant's declaration and inferred type stable.
+      - path: pkg/webservice/init.go
+        linters:
+          - staticcheck
+        text: "SA9004:"
+
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: false
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
