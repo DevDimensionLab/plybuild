@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/spf13/cobra"
@@ -10,32 +11,30 @@ var examplesCmd = &cobra.Command{
 	Use:   "example",
 	Short: "Builds example from cloud-config",
 	Long:  `Builds example from cloud-config`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return InitGlobals(cmd)
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		exampleName, _ := cmd.Flags().GetString("name")
 		if exampleName == "" {
-			log.Fatalln("please enter example --name")
+			return fmt.Errorf("please enter example --name")
 		}
 
 		// sync cloud config
 		if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		// force defaults
 		force, err := cmd.Flags().GetBool("force")
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		examples, err := ctx.CloudConfig.Examples()
 		if err != nil {
 			log.Warnln(err)
-			return
+			return nil
 		}
 
 		var foundExample = false
@@ -45,7 +44,7 @@ var examplesCmd = &cobra.Command{
 			}
 		}
 		if !foundExample {
-			log.Fatalf("could not find %s in examples", exampleName)
+			return fmt.Errorf("could not find %s in examples", exampleName)
 		}
 
 		jsonConfigFile := file.Path("%s/examples/%s/ply.json", ctx.CloudConfig.Implementation().Dir(), exampleName)
@@ -59,32 +58,32 @@ var examplesCmd = &cobra.Command{
 
 		groupId, err := promptForValue("groupId", orderConfig.GroupId, force)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		orderConfig.GroupId = groupId
 
 		artifactId, err := promptForValue("artifactId", orderConfig.ArtifactId, force)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		orderConfig.ArtifactId = artifactId
 
 		packageName, err := promptForValue("package", orderConfig.Package, force)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		orderConfig.Package = packageName
 
 		applicationName, err := promptForValue("application-name", orderConfig.Name, force)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		orderConfig.ApplicationName = applicationName
 
 		bootVersion, _ := cmd.Flags().GetString("boot-version")
 		upstream, _ := cmd.Flags().GetString("upstream")
 
-		build(orderConfig, upstream, bootVersion, false)
+		return build(orderConfig, upstream, bootVersion, false)
 	},
 }
 

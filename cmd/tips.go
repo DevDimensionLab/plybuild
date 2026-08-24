@@ -16,12 +16,11 @@ var tipsCmd = &cobra.Command{
 	Long: `A concentrated version of things you need to know for a topic, 
 typically internal know-how that you can't find on the internet`,
 	Args: cobra.ArbitraryArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			tipsListCmd.Run(cmd, args)
-			return
+			return tipsListCmd.RunE(cmd, args)
 		}
-		tipsShowCmd.Run(cmd, args)
+		return tipsShowCmd.RunE(cmd, args)
 	},
 }
 
@@ -29,23 +28,25 @@ var tipsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Lists all tips for current profile",
 	Long:  `Lists all tip for current profile`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
+		return nil
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Infof("Available tips:")
 		tips, err := tips.List(ctx.CloudConfig)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		for _, entry := range tips {
 			log.Infof("- %s", strings.Replace(entry.Name(), ".md", "", 1))
 		}
+		return nil
 	},
 }
 
@@ -53,20 +54,20 @@ var tipsShowCmd = &cobra.Command{
 	Use:   "show",
 	Short: "Show tips",
 	Long:  `Show tips`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
+		return nil
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		if len(args) == 0 {
 			log.Warnln("Missing tips name argument")
-			tipsListCmd.Run(cmd, args)
-			return
+			return tipsListCmd.RunE(cmd, args)
 		}
 
 		name := args[0]
@@ -74,12 +75,12 @@ var tipsShowCmd = &cobra.Command{
 		tipsPath := file.Path("%s/%s.md", tips.LocalDir(ctx.CloudConfig), name)
 		source, err := os.ReadFile(tipsPath)
 		if err != nil {
-			log.Fatalf("Failed to find any tips file for [%s]: %s", name, tipsPath)
+			return fmt.Errorf("failed to find any tips file for [%s]: %s: %w", name, tipsPath, err)
 		}
 
 		terminalConfig, err := ctx.LocalConfig.GetTerminalConfig()
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		result := markdown.Render(string(source), terminalConfig.Width, 2)
 
@@ -88,9 +89,10 @@ var tipsShowCmd = &cobra.Command{
 		log.Infoln("Local source: " + tipsPath)
 		gCloudCfg, err := ctx.CloudConfig.GlobalCloudConfig()
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		log.Infof("Cloud source: %s\n", gCloudCfg.SourceFor(tips.TipsDir, name+".md"))
+		return nil
 	},
 }
 

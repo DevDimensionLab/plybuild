@@ -17,12 +17,13 @@ var buildCmd = &cobra.Command{
 	Short:   "Builds a ply project with ply files and formatting",
 	Long:    `Builds a ply project with ply files and formatting`,
 	Aliases: []string{"generate"},
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := OpenDocumentationWebsite(cmd, "commands/build"); err != nil {
-			log.Fatalln(err)
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if initializationErr != nil {
+			return initializationErr
 		}
+		return OpenDocumentationWebsite(cmd, "commands/build")
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		// fetch user input config
 		bootVersion, _ := cmd.Flags().GetString("boot-version")
@@ -42,29 +43,28 @@ var buildCmd = &cobra.Command{
 			orderConfig, err = config.InitProjectConfigurationFromFile(jsonConfigFile)
 		}
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if orderConfig.Profile != "" {
 			profilesPath, err := config.GetProfilesPathFor(orderConfig.Profile)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 			ctx.LoadProfile(profilesPath)
 		}
 		if interactive {
-			interactiveWebService(&orderConfig)
-		}
-		if err != nil {
-			log.Fatalln(err)
+			if err := interactiveWebService(&orderConfig); err != nil {
+				return err
+			}
 		}
 		if err = orderConfig.Validate(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		// sync cloud config
 		if ctx.ForceCloudSync {
 			if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
 
@@ -87,11 +87,11 @@ var buildCmd = &cobra.Command{
 			orderConfig.ApplicationName = overrideApplicationName
 		}
 
-		build(orderConfig, upstream, bootVersion, disableUpgrade)
+		return build(orderConfig, upstream, bootVersion, disableUpgrade)
 	},
 }
 
-func build(orderConfig config.ProjectConfiguration, upstream, bootVersion string, disableUpgrade bool) {
+func build(orderConfig config.ProjectConfiguration, upstream, bootVersion string, disableUpgrade bool) error {
 
 	var err error
 
@@ -100,13 +100,13 @@ func build(orderConfig config.ProjectConfiguration, upstream, bootVersion string
 	if orderConfig.Templates != nil {
 		cloudTemplates, err = ctx.CloudConfig.ValidTemplatesFrom(orderConfig.Templates)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 	}
 
 	err = spring.Validate(orderConfig)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	// try to set spring-boot version manually
@@ -116,14 +116,14 @@ func build(orderConfig config.ProjectConfiguration, upstream, bootVersion string
 
 	// create or touch targetDirectory
 	if err := file.CreateDirectory(ctx.TargetDirectory); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	if upstream == "initializer" {
 		// download from start.spring.io to targetDirectory
 		err = spring.DownloadInitializer(ctx.TargetDirectory, spring.UrlValuesFrom(bootVersion, orderConfig))
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		// cleanup unwanted files from downloaded content
@@ -138,38 +138,38 @@ func build(orderConfig config.ProjectConfiguration, upstream, bootVersion string
 	// write project config to targetDir
 	projectConfigFile := config.ProjectConfigPath(ctx.TargetDirectory)
 	if err := orderConfig.WriteTo(projectConfigFile); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	// load the newly created project
 	project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	// git init project
 	err = project.GitInit(fmt.Sprintf("Adds project %s", project.Config.Name))
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	// merge templates into the newly created project
 	if cloudTemplates != nil {
 		for _, cloudTemplate := range cloudTemplates {
 			if err := template.MergeTemplate(cloudTemplate, project, true); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
 		// git commit
 		err = project.GitCommit(fmt.Sprintf("Adds templates to %s", project.Config.Name))
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 	}
 
 	// load project into context
 	if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	// format version
@@ -187,21 +187,22 @@ func build(orderConfig config.ProjectConfiguration, upstream, bootVersion string
 	} else {
 		// only apply sorting and writing
 		if err = project.SortAndWritePom(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 	}
 
 	// git commit
 	err = project.GitCommit(fmt.Sprintf("Cleans up and upgrades for project %s", project.Config.Name))
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
+	return nil
 }
 
-func interactiveWebService(orderConfig *config.ProjectConfiguration) {
+func interactiveWebService(orderConfig *config.ProjectConfiguration) error {
 	ioResp, err := spring.GetRoot()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	api.GOptions = api.GenerateOptions{
 		ProjectConfig: orderConfig,
@@ -209,6 +210,7 @@ func interactiveWebService(orderConfig *config.ProjectConfiguration) {
 		IoResponse:    ioResp,
 	}
 	webservice.InitAndBlockStandalone(webservice.Generate, api.CallbackChannel)
+	return nil
 }
 
 func init() {

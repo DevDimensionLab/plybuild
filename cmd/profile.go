@@ -28,19 +28,19 @@ var profileCmd = &cobra.Command{
 	Short:   "Manage profiles settings for ply",
 	Long:    `Manage profiles settings for ply`,
 	Aliases: []string{"profiles"},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if configOpts.UseProfile != "" {
 			log.Infof("switching to config: %s", configOpts.UseProfile)
 			err := config.SwitchProfile(configOpts.UseProfile)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 			profilePath, err := config.GetProfilesPathFor(configOpts.UseProfile)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 			ctx.LoadProfile(profilePath)
-			return
+			return nil
 		}
 
 		if configOpts.Edit {
@@ -53,27 +53,28 @@ var profileCmd = &cobra.Command{
 			cmd.Stdout = os.Stdout
 			err := cmd.Run()
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
 
 		if configOpts.Sync {
 			if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
 
 		if configOpts.Reset {
 			if err := ctx.LocalConfig.TouchFile(); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
 
 		if !configOpts.Reset || !configOpts.Sync || !configOpts.Edit {
 			if err := ctx.LocalConfig.Print(); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
+		return nil
 	},
 }
 
@@ -81,24 +82,22 @@ var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Config display in the terminal",
 	Long:  `Config display in the terminal`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return InitGlobals(cmd)
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		cfg, err := ctx.LocalConfig.Config()
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		width, err := cmd.Flags().GetInt("width")
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		format, err := cmd.Flags().GetString("format")
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		if width != DefaultTerminalWidth {
@@ -111,8 +110,9 @@ var configCmd = &cobra.Command{
 
 		err = ctx.LocalConfig.UpdateLocalConfig(cfg)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 }
 

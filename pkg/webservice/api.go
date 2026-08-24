@@ -22,7 +22,9 @@ func StartWebServer() {
 	http.HandleFunc("/ui/upgrade", api.GetUpgrade)
 	http.HandleFunc("/api/upgrade", api.PostUpgrade)
 
-	log.Fatal(server.ListenAndServe())
+	if err := server.ListenAndServe(); err != nil {
+		log.Print(err)
+	}
 }
 
 func StopWebServer() {

@@ -1,9 +1,16 @@
 package main
 
-import "github.com/devdimensionlab/plybuild/cmd"
+import (
+	"fmt"
+	"github.com/devdimensionlab/plybuild/cmd"
+	"os"
+)
 
-var execute = cmd.Execute
+var execute = cmd.ExecuteE
 
 func main() {
-	execute()
+	if err := execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

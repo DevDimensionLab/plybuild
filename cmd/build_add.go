@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/template"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var addCmd = &cobra.Command{
@@ -20,33 +20,33 @@ var addPomCmd = &cobra.Command{
 	Use:   "pom",
 	Short: "Adds a pom-file into a project",
 	Long:  `Adds a pom-file into a project`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fromPomFile, err := cmd.Flags().GetString("from")
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if fromPomFile == "" {
-			log.Errorln("missing valid --from flag for pom.xml to add from")
-			os.Exit(-1)
+			return errors.New("missing valid --from flag for pom.xml to add from")
 		}
 
 		importModel, err := pom.GetModelFrom(fromPomFile)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		targetProject, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		if err = maven.MergePoms(importModel, targetProject.Type.Model()); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		if err = targetProject.SortAndWritePom(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 }
 
@@ -54,28 +54,27 @@ var addTextCmd = &cobra.Command{
 	Use:   "text",
 	Short: "Merges two text files",
 	Long:  `Merges two text files`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fromFile, err := cmd.Flags().GetString("from")
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if fromFile == "" {
-			log.Errorln("missing valid --from file flag")
-			os.Exit(-1)
+			return errors.New("missing valid --from file flag")
 		}
 
 		toFile, err := cmd.Flags().GetString("to")
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if toFile == "" {
-			log.Errorln("missing valid --to file flag")
-			os.Exit(-1)
+			return errors.New("missing valid --to file flag")
 		}
 
 		if err := file.MergeTextFiles(fromFile, toFile); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 }
 
@@ -83,28 +82,29 @@ var addTemplateCmd = &cobra.Command{
 	Use:   "template",
 	Short: "Adds a template from ply-config",
 	Long:  `Adds a template from ply-config`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		templateName, err := cmd.Flags().GetString("name")
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if templateName == "" {
-			log.Fatalln("Missing template --name")
+			return errors.New("missing template --name")
 		}
 
 		project, err := config.InitProjectFromDirectory(ctx.TargetDirectory)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		cloudTemplate, err := project.CloudConfig.Template(templateName)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		if err := template.MergeTemplate(cloudTemplate, project, false); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 }
 

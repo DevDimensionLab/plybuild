@@ -6,7 +6,6 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/kibana"
 	"github.com/devdimensionlab/plybuild/pkg/structurizr"
 	"github.com/spf13/cobra"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -15,16 +14,17 @@ var diagramsCmd = &cobra.Command{
 	Use:   "diagrams",
 	Short: "Various tools for generating diagrams",
 	Long:  `Various tools for generating diagrams`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 }
 
@@ -32,12 +32,16 @@ var kibanaCmd = &cobra.Command{
 	Use:   "kibana",
 	Short: "Specialized (experimental) command for executing a kibana-query based on a fetch-request [arg: fetch-file] and exporting the result to a json-file [arg: output-file]",
 	Long:  `Specify the query in Kibana, then use developer tools to copy request as fetch (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fetchFile, err := getMandatoryString(cmd, "fetch-file")
-		checkIfError(err)
+		if err != nil {
+			return err
+		}
 
 		extractFieldsInput, err := getMandatoryString(cmd, "extract-fields")
-		checkIfError(err)
+		if err != nil {
+			return err
+		}
 
 		outputFile := cmd.Flag("output-file").Value.String()
 
@@ -45,14 +49,20 @@ var kibanaCmd = &cobra.Command{
 		fieldFilterAndReMapping := kibana.CreateFilter(extractFieldsInput, fieldReMapInput)
 
 		kibanaRequest, err := kibana.LoadFromFetchRequest(fetchFile)
-		checkIfError(err)
+		if err != nil {
+			return err
+		}
 
 		timeInterval, err := kibana.ExtractTimeIntervalFrom(kibanaRequest)
-		checkIfError(err)
+		if err != nil {
+			return err
+		}
 
 		resultExists := make(map[string]bool)
 		err, _, result, _ := kibana.ExecuteKibanaQuery(kibanaRequest, timeInterval, fieldFilterAndReMapping, resultExists, "")
-		checkIfError(err)
+		if err != nil {
+			return err
+		}
 
 		if outputFile == "" {
 			for _, hit := range result {
@@ -63,6 +73,7 @@ var kibanaCmd = &cobra.Command{
 			_ = file.CreateFile(outputFile, content)
 			println("Output written to [" + outputFile + "]")
 		}
+		return nil
 	},
 }
 
@@ -75,26 +86,33 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 - structurizr-cli -> https://structurizr.com/help/cli
 - dot -> https://graphviz.org
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		workspace, err := getMandatoryString(cmd, "workspace")
-		checkIfError(err)
+		if err != nil {
+			return err
+		}
 
 		tempDirectory := ".structurizr/"
 		_ = file.DeleteAll(tempDirectory)
 		_ = structurizr.Run(exec.Command("structurizr-cli", "export", "-w", workspace, "-format", "dot", "-output", tempDirectory))
 
 		files, err := file.FindAll("dot", []string{}, tempDirectory)
-		checkIfError(err)
+		if err != nil {
+			return err
+		}
 
 		for _, file := range files {
 			outputPngFile := strings.Replace(strings.Replace(file, tempDirectory, "", 1), ".dot", "", 1) + ".png"
 			println("Creating -> " + outputPngFile)
 			err = structurizr.RunWithOutputToFile(exec.Command("dot", file, "-Tpng"), outputPngFile)
-			checkIfError(err)
+			if err != nil {
+				return err
+			}
 
 			_ = structurizr.Run(exec.Command("open", outputPngFile))
 		}
+		return nil
 	},
 }
 
@@ -113,14 +131,6 @@ func init() {
 	diagramsCmd.AddCommand(structurizrCmd)
 	structurizrCmd.Flags().StringP("workspace", "w", "", "Path or URL to the workspace JSON file/DSL file(s)")
 
-}
-
-func checkIfError(err error) {
-	if err == nil {
-		return
-	}
-	fmt.Printf("\x1b[31;1m%s\x1b[0m\n", fmt.Sprintf("\nerror: %s", err))
-	os.Exit(1)
 }
 
 func getMandatoryString(cmd *cobra.Command, flag string) (string, error) {

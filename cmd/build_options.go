@@ -34,48 +34,59 @@ var optionsCmd = &cobra.Command{
 	Long:  `Prints options on spring version, dependencies etc`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		return OkHelp(cmd, infoOpts.Any)
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if infoOpts.SpringInfo {
-			springInfo()
+			if err := springInfo(); err != nil {
+				return err
+			}
 		}
 		if infoOpts.SpringManaged {
-			showSpringManaged()
+			if err := showSpringManaged(); err != nil {
+				return err
+			}
 		}
 		if infoOpts.MavenRepositories {
-			showMavenRepositories()
+			if err := showMavenRepositories(); err != nil {
+				return err
+			}
 		}
 		if infoOpts.Templates {
-			showTemplates()
+			if err := showTemplates(); err != nil {
+				return err
+			}
 		}
 		if infoOpts.Examples {
-			showExamples()
+			if err := showExamples(); err != nil {
+				return err
+			}
 		}
+		return nil
 	},
 }
 
-func springInfo() {
+func springInfo() error {
 	repo, err := maven.DefaultRepository()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	latestVersionMeta, err := repo.GetMetaData("org.springframework.boot", "spring-boot")
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	latestVersion, err := latestVersionMeta.LatestRelease()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	root, err := spring.GetRoot()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	log.Infof("Latest version of spring boot are: %s\n", latestVersion)
 
@@ -88,12 +99,13 @@ func springInfo() {
 		}
 		fmt.Printf("\n")
 	}
+	return nil
 }
 
-func showSpringManaged() {
+func showSpringManaged() error {
 	deps, err := spring.GetDependencies()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	log.Info("Spring Boot managed dependencies:")
@@ -113,30 +125,29 @@ func showSpringManaged() {
 			fmt.Printf("  ArtifactId: %s\n", mvnDep.ArtifactId)
 		}
 	}
+	return nil
 }
 
-func showMavenRepositories() {
+func showMavenRepositories() error {
 	settings, _ := maven.NewSettings()
-	if err := settings.ListRepositories(); err != nil {
-		log.Fatalln(err)
-	}
+	return settings.ListRepositories()
 }
 
-func showTemplates() {
+func showTemplates() error {
 	markdownFormat := false
 	templates, err := ctx.CloudConfig.Templates()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	terminalConfig, err := ctx.LocalConfig.GetTerminalConfig()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	if markdownFormat || terminalConfig.Format == "markdown" {
 		markdownDocument, err := template.ListAsMarkdown(ctx.CloudConfig, templates)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		markdownForTerminal := markdown.Render(markdownDocument, terminalConfig.Width, 2)
@@ -144,35 +155,34 @@ func showTemplates() {
 
 		gCloudCfg, err := ctx.CloudConfig.GlobalCloudConfig()
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		cloudSource := gCloudCfg.SourceFor(template.TemplatesDir, "README.md")
-		if err != nil {
-			log.Fatalln(err)
-		}
 		log.Infoln("Cloud source: " + cloudSource)
 	} else {
 		for _, folder := range templates {
 			log.Infof("%s - %s (%s)", folder.Name, folder.Project.Config.Description, folder.Project.Config.Language)
 		}
 	}
+	return nil
 }
 
-func showExamples() {
+func showExamples() error {
 	// sync cloud config
 	if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	examples, err := ctx.CloudConfig.Examples()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	fmt.Println("Available examples are:")
 	for _, example := range examples {
 		fmt.Printf("\t* %s\n", example)
 	}
+	return nil
 }
 
 func init() {

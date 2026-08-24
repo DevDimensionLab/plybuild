@@ -110,7 +110,8 @@ func (ctx *Context) OnRootProject(description string, do ...func(project config.
 
 	rootProject := ctx.Projects[0]
 	if rootProject.Type == nil {
-		log.Fatalln(fmt.Sprintf("no project type defined for path: %s", rootProject.Path))
+		log.Errorln(fmt.Sprintf("no project type defined for path: %s", rootProject.Path))
+		return
 	}
 	log.Info(fmt.Sprintf("%s for file %s", description, rootProject.Type.FilePath()))
 
