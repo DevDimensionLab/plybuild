@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-25T01:04:57+02:00
+Generated: 2026-08-25T01:34:38+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,8 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `27c0d1a34334`.
-- Restart preparation base: `27c0d1a34334`.
+- Measured implementation head: `c2f359794c6d`.
+- Restart preparation base: `c2f359794c6d`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no product implementation changes.
 - No push, merge, release, publication, stash, revert, successor launch, or
@@ -37,6 +37,7 @@ f59a3f0 quality: move file existence behind filesystem adapter
 60e5aac quality: move file create behind filesystem adapter
 e054082 quality: move directory create behind filesystem adapter
 27c0d1a quality: route file open through filesystem adapter
+c2f3597 quality: route file append open through filesystem adapter
 ```
 
 The separate operational continuity implementation is:
@@ -51,9 +52,9 @@ It changes no Go quality denominator and is separate from P3 move numbering.
 
 `codex-dev-start.sh` stays `NEXT` while P3 is active and P4-P8 are queued in
 the machine-readable plan block. Its active archive is
-`docs/plan/agent-sessions/2026-08-25T010457+0200-migrate-file-open-file.md`.
-The file-read predecessor is answered history, and the reciprocal archive graph
-has exactly one `NEXT` tail.
+`docs/plan/agent-sessions/2026-08-25T013438+0200-migrate-file-delete-single.md`.
+The append-open predecessor is answered history, and the reciprocal archive
+graph has exactly one `NEXT` tail.
 
 Normal launch is a Bash 3.2-compatible, non-interactive supervisor. Each
 generation resolves an external Codex executable and invokes exact
@@ -83,181 +84,168 @@ executable. Mutable header and prompt data are inert after the stable execution
 boundary; the pinned normalized skeleton digest is
 `4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`.
 
-## P3 Move 17 Preserved
+## P3 Move 18 Preserved
 
-Exported `file.Open(filePath string) ([]byte, error)`, all resource, config,
-Kibana, render, and package-local callers, and every P2A API/CLI/subprocess
-contract are unchanged. The package owns a private complete file-read
-dependency containing `filesystem.Dependencies`. Production selects
-`filesystem.System()`, and the private helper delegates the complete path to
-the existing `filesystem.ReadFile` operation.
+Exported `file.OpenFile(fileName string) (*os.File, error)` retains its public
+signature and observable behavior. It is the production wrapper around a
+private dependency containing one complete `filesystem.Dependencies` value.
+Production selects `filesystem.System()`; no function-valued effect dependency
+or new adapter family was added.
 
-Successful reads return the dependency's exact complete bytes. Every dependency
-error discards partial data and returns a non-nil empty `[]byte{}` with that
-exact error. The zero dependency returns `filesystem.ErrNoFilesystem` and a
-non-nil empty result without accessing the supplied path. Four recording
-contracts prove the complete dependency and path, exact empty, multiline, and
-binary bytes, partial-data error normalization, exact error identity,
-production system selection, safe defaults, and a non-empty recorded
-population.
+The helper preserves the legacy sequence exactly: it probes existence first;
+only a missing result writes exact empty bytes with mode `0644`; a create error
+returns immediately without append-open; existing paths and non-missing stat
+errors skip creation; and the final adapter call receives the complete path,
+flags `os.O_APPEND|os.O_WRONLY`, and mode `0644`. It returns the dependency's
+exact `*os.File` and error pair. The safe zero value returns
+`filesystem.ErrNoFilesystem` without developer path access.
 
-Only `Open`'s direct `os.Open`, `io.ReadAll`, and ignored deferred close were
-removed. The filesystem adapter contract, inventory, seam drivers, mutation
-labels, public API, and callers did not change. `file.OpenFile` keeps its direct
-`os.OpenFile` append-open operation and is the next isolated flow.
+The existing filesystem adapter gained only `OpenFile`. Its system
+implementation delegates to `os.OpenFile`, and all complete recording doubles
+were updated mechanically. Recording contracts cover the complete dependency
+and path, exact flags and mode, exact returned pointer and error, all three stat
+outcomes, exact empty creation, create-error short circuit, production system
+selection, safe zero behavior, and non-empty recorded populations. Tests use
+no real filesystem mutation.
+
+Only the direct `os.OpenFile` in exported `file.OpenFile` moved. The direct
+operation in `pkg/shell`, every other file operation, inventory, public API,
+Bitbucket, Wpost, supervisor, and every P2A contract remain unchanged.
 
 ## Measured Quality State
 
-The clean full audit at `27c0d1a34334` reports:
+The clean full audit at `c2f359794c6d` reports:
 
 - Absolute L0: 8 of 8.
-- 157 test functions, zero skipped; 16 of 25 packages have tests.
+- 164 test functions, zero skipped; 16 of 25 packages have tests.
 - Q0.6: 18 guarded safe-writer sites, 13 write and 5 copy, with zero unsafe
   direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
 - Q1.1: 9 of 25 packages have no tests.
 - Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 50 direct external sites outside declared adapters of 60 production
+- Q1.3: 49 direct external sites outside declared adapters of 60 production
   effect sites. Clock and server are absent, making this ratchet
   non-comparable.
 - Q1.4: 7 of 8 declared seams covered.
 - Exact Q2.1: 0 of 8 subjects have an executable harness.
 - Q3.4: 0 temporary-state claims.
 - Acceptance scripts: 4 of 4; Q2.5, Q2.6, Q2.7, and Q2.10 pass.
-- Full audit: expected exit 1 for 16 documented findings.
+- Full audit: expected exit 1 for 16 documented findings, never exit 2.
 - Comparable ratchets: five improved, two held, zero regressed; Q1.3 is the
   single non-comparable ratchet.
 - Measurement identity: clean at tree
-  `7efbc5d33c18c6c54fc593bd7f5007f720d7c278`, status SHA-256
+  `d337f5981d2706e09304af5f7e545854ecb1ea90`, status SHA-256
   `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`,
   and zero dirty paths.
 
 The clean report is
-`/private/tmp/ply-file-open-clean.ujkFUr/report-final`. Focused, preflight, and
+`/private/tmp/ply-open-file-clean.Pj3OYI/report-final`. The focused report is
+`/private/tmp/ply-open-file-focused-audit.fLeD7x/report`. Preflight and
 compatibility reports were also kept under `/private/tmp`, so no generated
 report entered the measured commit.
 
 ## Decisions And Learned Facts
 
-1. The private file-read dependency requires the complete
-   `filesystem.Dependencies` value. Production selects `filesystem.System()`;
-   the helper is independently recordable without a function-valued effect
-   dependency.
-2. `filesystem.ReadFile` already supplies the complete operation required by
-   `Open`, so the adapter contract did not change.
-3. The explicit error branch is necessary because a dependency can return
-   partial bytes with an error; the legacy contract discards those bytes and
-   returns a non-nil empty result with the exact error.
-4. Exported `file.OpenFile` is the next isolated filesystem flow. Its existence
-   and empty-create operations already have adapter support; only append-open
-   needs a narrow existing-adapter extension. Moving one direct call into one
-   adapter implementation should change Q1.3 nominally from 50/60 to 49/60.
-5. A function-valued effect dependency makes Q1.3 fail closed. Production
+1. The private append-open dependency must carry the complete
+   `filesystem.Dependencies` value so existence, conditional empty creation,
+   and append-open all resolve through one recordable boundary.
+2. Adapter `OpenFile` is zero-value-safe and returns the exact dependency file
+   and error pair; production selection is independently contract-covered.
+3. A non-missing stat error deliberately skips creation and still attempts the
+   final append-open. A create error deliberately short-circuits it.
+4. `file.DeleteSingleFile(filePath string) error` is the next isolated
+   filesystem flow. It has one direct `os.Remove(filePath)` and requires only a
+   narrow `Remove` extension to the existing adapter. Moving it should change
+   Q1.3 nominally from 49/60 to 48/60.
+5. `DeleteAll` and `ClearDir` have different selection and
+   traversal behavior and are outside the next move.
+6. A function-valued effect dependency makes Q1.3 fail closed. Production
    moves use resolvable interfaces and complete dependency values.
-6. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
+7. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
    claim P5 mutation coverage.
-7. Provide `APIDIFF` and `GOLANGCI_LINT` as environment variables for
+8. Provide `APIDIFF` and `GOLANGCI_LINT` as environment variables for
    `make preflight`; Make command-line values propagate through `MAKEFLAGS`
    and defeat the missing-binary mutant.
-8. Set `GOLANGCI_LINT_CACHE` and `GOCACHE` to writable external directories
+9. Set `GOLANGCI_LINT_CACHE` and `GOCACHE` to writable external directories
    when the default caches reject writes. Keep every generated report outside
    the measured tree.
-9. The tracked full-audit baseline is
-   `.quality/baseline/scorecard.json`. One clean-clone invocation used the
-   nonexistent `.quality/baseline.json` and failed closed before ratchet
-   comparison; the corrected complete audit produced the authoritative exit 1
-   report above.
-10. The ignored inherited `.agent-task/current.md` is only a compatibility
-    mirror, not task authority. The clean local clone produced the
-    implementation checkpoint identity without modifying that file.
+10. The ignored `.agent-task/current.md` is only a compatibility mirror, not
+    task authority. Tracked launcher, handover, archive, and plan state govern
+    the next session.
 11. Supervisor success is the conjunction of process exit, structured
     terminal stream, and committed repository evidence. Final prose is
     observable only.
 
 ## Next Objective
 
-Move only exported `file.OpenFile`'s append-open operation behind a narrow
-extension of the existing filesystem adapter. Start with recording contracts
-in `pkg/file` and the adapter: require the complete dependency and path, exact
-`os.O_APPEND|os.O_WRONLY` flags, mode `0644`, exact returned `*os.File` and
-error, existing/missing/non-missing-stat-error sequencing, exact empty creation,
-create-error short circuit, safe zero-value behavior, production selection of
+Move only exported `file.DeleteSingleFile(filePath string) error`'s direct
+`os.Remove(filePath)` behind a narrow extension of the existing filesystem
+adapter. Start with recording contracts in `pkg/file` and the adapter: require
+the complete dependency and path, exact returned error, safe zero-value
+behavior with no developer path access, production selection of
 `filesystem.System()`, and non-empty recorded populations. Perform no real
 filesystem mutation.
 
-Keep `file.OpenFile(fileName string) (*os.File, error)`, `Exists`, `CreateFile`,
-`Open`, and every observable result unchanged. Use one private complete
-dependency boundary, with the exported function as the production wrapper.
-Drive existence, conditional empty write, and append-open from that same
-dependency. Add only the narrow `OpenFile` operation to
+Keep `DeleteSingleFile`'s public signature and every observable result
+unchanged. Use one private complete dependency boundary, with the exported
+function as the production wrapper. Add only the narrow `Remove` operation to
 `internal/adapter/filesystem` and update complete recording doubles
-mechanically. Do not move `pkg/shell`'s direct `os.OpenFile` or another file
-operation, and do not enter Bitbucket, HTTP/process, config behavior,
+mechanically. Do not move `DeleteAll`, `ClearDir`, another file
+operation, `pkg/shell`, or enter Bitbucket, HTTP/process, config behavior,
 clock/server, P4, P5, or later roadmap work.
 
 Expected direction is one fewer Q1.3 violation with the same production effect
-population, nominally 49 of 60, but regenerate the exact structured
+population, nominally 48 of 60, but regenerate the exact structured
 measurement and accept it only with zero comparable ratchet regressions.
 Q1.2, Q1.4, and exact Q2.1 should remain unchanged.
 
 ## Verification Notes
 
-Completed from clean implementation commit `27c0d1a34334`:
+Completed from clean implementation commit `c2f359794c6d`:
 
-- Red file-read evidence: the new contracts failed to compile because the
-  private dependency constructor and helper did not exist.
-- Focused file/filesystem and all relevant caller tests: PASS.
+- Red append-open evidence: file recording contracts first failed because the
+  private dependency constructor and helper did not exist; the adapter
+  contract then failed because `OpenFile` did not exist.
+- Focused filesystem, file, Bitbucket, HTTP, and relevant caller tests: PASS.
 - `/bin/bash test/codex_dev_start_test.sh`: PASS, 62 controls.
-- Make preflight meta-contracts and a complete `make preflight` rerun: PASS,
-  including 15 audit meta-controls.
-- API/CLI and subprocess compatibility: PASS.
+- The first handoff-only launcher rerun hit the nested signal fixture's partial
+  raw-log timing after controls 1-25; the immediate unchanged standalone rerun
+  passed all 62 controls.
+- Make preflight meta-contracts and complete `make preflight`: PASS, including
+  15 audit meta-controls.
+- API/CLI compatibility and subprocess contracts: PASS.
 - `make test`, `make test-install`, uncached tests, race tests, and `go vet`:
   PASS.
 - Host install, status, upgrade, and build acceptance: PASS, 4 of 4.
 - Empty-HOME `go test ./... -count=2`: PASS.
-- Focused seven-ratchet audit: expected exit 1 with Q1.3 at 50 of 60, four
-  improved, two held, zero regressed, and one not comparable.
+- Focused seven-ratchet audit: expected exit 1; four improved, two held, zero
+  regressed, and one not comparable.
 - Clean full audit: expected exit 1, 16 documented findings, L0 8 of 8, five
-  improved, two held, zero regressed, and zero dirty paths.
-- The first complete `make preflight` run and the first handoff launcher run
-  each hit the documented nested partial-raw-log signal-fixture flake; the
-  standalone launcher and immediate complete reruns passed all 62 controls.
-- One clean-audit command used the wrong baseline path and exited 2 before
-  comparison; the corrected tracked-baseline run completed with the
-  authoritative exit 1 result.
-
-Tool paths used were `/private/tmp/ply-p2b-api.4umBuM/bin/apidiff` and
-`/private/tmp/ply-p2b-lint.SGWVGp/bin/golangci-lint`; probe before reuse.
-
-Environment: host Go 1.26.2 on Darwin arm64, module Go 1.18, `/bin/bash`
-3.2.57, PATH Bash 5.3.9, and `golangci-lint` 2.12.2.
+  improved, two held, zero regressed, and one not comparable.
+- `git diff --check`: PASS before the implementation commit.
+- Implementation commit: `c2f359794c6d9e4e3eecf8f322937f54c70154dc`
+  (`quality: route file append open through filesystem adapter`).
 
 ## Start
 
-From any directory:
-
-```sh
-/Users/perottochristensen/github/ply/upgrade-quality/codex-dev-start.sh
-```
-
-This starts the non-interactive supervisor and may run successive fresh
-missions after valid handoffs. Do not invoke it while validating the handoff;
-use `--check` or `--print-prompt`. `.agent-task/current.md` is not task
-authority.
+1. Read this handover, the linked NEXT archive, the P3 section and checkpoint
+   gate in `docs/plan/quality-upgrade.md`, both design documents, inventory,
+   complete file implementation/tests, callers, adapter, complete recording
+   doubles, and the named audit implementations before editing.
+2. Confirm branch, HEAD, status, reciprocal archive links, and
+   `./codex-dev-start.sh --check`.
+3. Reproduce focused clean baselines as needed, then begin red with recording
+   contracts for only `DeleteSingleFile` and adapter `Remove`.
+4. Finish with one focused implementation commit and one separate handoff-only
+   commit. Leave the launcher `NEXT`; do not launch a successor.
 
 ## Stop Conditions
 
-Stop and report rather than forcing progress when:
-
-- exported `file.OpenFile` behavior, its signature, or compatibility cannot be
-  preserved;
-- the filesystem dependency is incomplete, unresolvable, function-valued, or
-  unsafe at its zero value;
-- the effect cannot be isolated without moving another file operation or
-  adding more than the narrow existing-adapter operation;
-- a comparable ratchet regresses, the audit exits 2 after a valid invocation,
-  or the tree cannot be measured cleanly;
-- the work requires P4-P8 implementation, publication, distribution, or a
-  real successor launch; or
-- the focused `file.OpenFile` move and its separate automatic handoff are
-  complete.
+- Stop before `DeleteAll`, `ClearDir`, another file operation,
+  another adapter family, Q1.4 expansion, P4, mutation harnesses, Docker,
+  cloud, distribution, or publication.
+- Stop if the public API or CLI contract would change.
+- Stop if a comparable ratchet regresses.
+- Stop if the full audit exits 2.
+- Stop if tracked source changes are not isolated from generated reports and
+  handoff-only state.

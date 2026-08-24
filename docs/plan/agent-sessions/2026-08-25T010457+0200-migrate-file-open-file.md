@@ -1,13 +1,13 @@
 # Agent Session: Migrate Exported Append Open
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T010457+0200-migrate-file-open-file`
 Created: `2026-08-25T01:04:57+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `628510ed60aed5506ca3dc9b0263d089422854fca8f9399bac6f7a1450f1ce69`
 Previous: [2026-08-25T003130+0200-migrate-file-open.md](2026-08-25T003130+0200-migrate-file-open.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T013438+0200-migrate-file-delete-single.md](2026-08-25T013438+0200-migrate-file-delete-single.md)
+Outcome: completed P3 move 18 at `c2f3597`; Q1.3 is 49 of 60 with zero comparable ratchet regressions
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

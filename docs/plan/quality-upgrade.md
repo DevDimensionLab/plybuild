@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `27c0d1a`.
+Last measured checkpoint: 2026-08-25, commit `c2f3597`.
 
 ## Objective
 
@@ -725,7 +725,7 @@ and `pkg/shell` retains its separate direct `os.OpenFile`. Q1.3 moves from 50
 of 60 to 49 of 60 while Q1.2 stays zero, Q1.4 stays 7 of 8, and exact Q2.1
 stays 0 of 8.
 
-Commit: recorded by the containing implementation commit.
+Commit: `c2f3597`.
 
 The move-18 implementation gate passed focused file/filesystem and adjacent
 complete-double contracts, API/CLI and subprocess compatibility, all four host
@@ -733,7 +733,9 @@ flows, preflight, test, install, launcher, uncached and race tests, vet, the
 15-control audit meta-suite, and empty-HOME count-2. The focused
 seven-criterion audit exited 1 for documented findings, never 2, with four
 improved, two held, zero regressed, and one not-comparable ratchet. The clean
-committed full audit is recorded by the session handoff.
+full audit at `c2f3597` exited 1 for 16 documented findings, never 2, with L0
+8 of 8, five improved, two held, zero regressed, one not-comparable ratchet,
+and zero dirty paths.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
