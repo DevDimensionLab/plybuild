@@ -1,13 +1,13 @@
 # Agent Session: Migrate Bitbucket JSON HTTP
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T181207+0200-migrate-bitbucket-json-http`
 Created: `2026-08-24T18:12:07+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `9f6c6738f76f82bcd1737c2f1f478edc573a3b5e55089b451df549452e121b0a`
 Previous: [2026-08-24T173323+0200-migrate-spring-json-http.md](2026-08-24T173323+0200-migrate-spring-json-http.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T192424+0200-migrate-kibana-post-http.md](2026-08-24T192424+0200-migrate-kibana-post-http.md)
+Outcome: P3 move 9 completed at 789ae23: Bitbucket bearer JSON GET now uses the HTTP adapter, Q1.1 is 9 of 25, Q1.3 is 64 of 74, Q1.4 remains 7 of 8, exact Q2.1 remains 0 of 8, and the clean gate passed with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
