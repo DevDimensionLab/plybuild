@@ -122,6 +122,36 @@ func TestExecutePassesCompletePOSTRequestToDependency(t *testing.T) {
 	}
 }
 
+func TestExecutePassesCompleteDefaultClientFormPOSTRequestToDependency(t *testing.T) {
+	wantRequest := Request{
+		URL: "https://complete.example.invalid/form-download?complete=value",
+		POST: &POST{
+			Body:             []byte("a-first=first%2Fvalue&z-last=last+value"),
+			Header:           http.Header{"Content-Type": []string{"application/x-www-form-urlencoded"}},
+			UseDefaultClient: true,
+		},
+	}
+	wantResponse := &http.Response{
+		StatusCode: http.StatusAccepted,
+		Status:     "202 Complete Form POST Response",
+		Body:       io.NopCloser(strings.NewReader("complete form POST body")),
+	}
+	sentinel := errors.New("complete form POST dependency result")
+	client := &recordingClient{response: wantResponse, err: sentinel}
+
+	response, err := Execute(Dependencies{Client: client}, wantRequest)
+
+	if response != wantResponse {
+		t.Fatalf("Execute returned response %#v, want %#v", response, wantResponse)
+	}
+	if !errors.Is(err, sentinel) {
+		t.Fatalf("Execute returned %v, want %v", err, sentinel)
+	}
+	if !reflect.DeepEqual(client.request, wantRequest) {
+		t.Fatalf("dependency received an incomplete form POST request:\n got: %#v\nwant: %#v", client.request, wantRequest)
+	}
+}
+
 func TestSystemPreservesAnonymousAndBasicAuthGETRequests(t *testing.T) {
 	previous := http.DefaultTransport
 	t.Cleanup(func() {
@@ -310,6 +340,84 @@ func TestSystemPreservesPOSTRequestBodyHeadersAndRedirects(t *testing.T) {
 	}
 	if !firstBody.closed {
 		t.Fatal("redirect response body was not closed")
+	}
+}
+
+func TestSystemPreservesDefaultClientFormPOSTBodyHeaderAndRedirects(t *testing.T) {
+	previousClient := http.DefaultClient
+	previousTransport := http.DefaultTransport
+	t.Cleanup(func() {
+		http.DefaultClient = previousClient
+		http.DefaultTransport = previousTransport
+	})
+	redirects := 0
+	http.DefaultClient = &http.Client{CheckRedirect: func(request *http.Request, via []*http.Request) error {
+		redirects++
+		return nil
+	}}
+	firstBody := &trackingBody{reader: strings.NewReader("redirect")}
+	finalBody := &trackingBody{reader: strings.NewReader("complete redirected form response")}
+	requests := []*http.Request{}
+	requestBodies := []string{}
+	http.DefaultTransport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		requests = append(requests, request)
+		body, err := io.ReadAll(request.Body)
+		if err != nil {
+			return nil, err
+		}
+		requestBodies = append(requestBodies, string(body))
+		if len(requests) == 1 {
+			return &http.Response{
+				StatusCode: http.StatusTemporaryRedirect,
+				Status:     "307 Temporary Redirect",
+				Header:     http.Header{"Location": []string{"https://form.example.invalid/final"}},
+				Body:       firstBody,
+			}, nil
+		}
+		return &http.Response{
+			StatusCode: http.StatusBadGateway,
+			Status:     "502 Must Still Be Returned",
+			Body:       finalBody,
+		}, nil
+	})
+	wantBody := "a-first=first%2Fvalue&z-last=last+value"
+	request := Request{
+		URL: "https://form.example.invalid/start",
+		POST: &POST{
+			Body:             []byte(wantBody),
+			Header:           http.Header{"Content-Type": []string{"application/x-www-form-urlencoded"}},
+			UseDefaultClient: true,
+		},
+	}
+
+	response, err := Execute(System(), request)
+
+	if err != nil {
+		t.Fatalf("system form POST request returned an error: %v", err)
+	}
+	if response == nil || response.Body != finalBody || response.StatusCode != http.StatusBadGateway {
+		t.Fatalf("system form POST response was %#v", response)
+	}
+	if redirects != 1 {
+		t.Fatalf("default client redirect callback ran %d times, want 1", redirects)
+	}
+	if len(requests) != 2 {
+		t.Fatalf("system form POST request population was %d, want 2", len(requests))
+	}
+	wantURLs := []string{"https://form.example.invalid/start", "https://form.example.invalid/final"}
+	for index, recorded := range requests {
+		if recorded.Method != http.MethodPost || recorded.URL.String() != wantURLs[index] {
+			t.Fatalf("system form POST request %d was %s %s", index, recorded.Method, recorded.URL)
+		}
+		if requestBodies[index] != wantBody {
+			t.Fatalf("system form POST body %d was %q, want %q", index, requestBodies[index], wantBody)
+		}
+		if got := recorded.Header.Get("Content-Type"); got != "application/x-www-form-urlencoded" {
+			t.Fatalf("system form POST request %d Content-Type was %q", index, got)
+		}
+	}
+	if !firstBody.closed {
+		t.Fatal("form redirect response body was not closed")
 	}
 }
 

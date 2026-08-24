@@ -22,10 +22,11 @@ type BearerJSON struct {
 	AccessToken string
 }
 
-// POST contains the complete body and headers for one POST request.
+// POST contains the complete body, headers, and client selection for one POST request.
 type POST struct {
-	Body   []byte
-	Header http.Header
+	Body             []byte
+	Header           http.Header
+	UseDefaultClient bool
 }
 
 // Request is the complete HTTP request value passed to a dependency.
@@ -93,5 +94,8 @@ func (systemClient) Do(request Request) (*http.Response, error) {
 		}
 	}
 	client := &http.Client{}
+	if request.POST != nil && request.POST.UseDefaultClient {
+		client = http.DefaultClient
+	}
 	return client.Do(httpRequest)
 }

@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 )
 
 func GetJson(url string, parsed interface{}) error {
@@ -149,21 +148,40 @@ func wget(dependencies wgetDependencies, url, filepath string) error {
 }
 
 func Wpost(downloadUrl, filePath string, formData url.Values) error {
+	return wpost(wpostDependencies{
+		HTTP:  httpclient.System(),
+		Files: filesystem.System(),
+	}, downloadUrl, filePath, formData)
+}
+
+type wpostDependencies struct {
+	HTTP  httpclient.Dependencies
+	Files filesystem.Dependencies
+}
+
+func wpost(dependencies wpostDependencies, downloadUrl, filePath string, formData url.Values) error {
 	log.Debugf("downloading %s to %s with %s", downloadUrl, filePath, formData)
-	resp, err := http.PostForm(downloadUrl, formData)
+	resp, err := httpclient.Execute(dependencies.HTTP, httpclient.Request{
+		URL: downloadUrl,
+		POST: &httpclient.POST{
+			Body:             []byte(formData.Encode()),
+			Header:           http.Header{"Content-Type": []string{"application/x-www-form-urlencoded"}},
+			UseDefaultClient: true,
+		},
+	})
 	if err != nil {
 		return err
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	// Create the file
-	out, err := os.Create(filePath)
+	out, err := filesystem.Create(dependencies.Files, filePath)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = out.Close() }()
 
 	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
+	_, err = filesystem.Copy(dependencies.Files, out, resp.Body)
 	return err
 }
