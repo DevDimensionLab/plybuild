@@ -129,8 +129,20 @@ func OpenLines(filePath string) ([]string, error) {
 	return strings.Split(string(b), "\n"), nil
 }
 
+type overwriteDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemOverwriteDependencies() overwriteDependencies {
+	return overwriteDependencies{Files: filesystem.System()}
+}
+
 func Overwrite(lines []string, filePath string) error {
-	return os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
+	return overwrite(systemOverwriteDependencies(), lines, filePath)
+}
+
+func overwrite(dependencies overwriteDependencies, lines []string, filePath string) error {
+	return filesystem.WriteFile(dependencies.Files, filePath, []byte(strings.Join(lines, "\n")), 0644)
 }
 
 func CopyOrMerge(sourceFile string, destinationFile string) error {

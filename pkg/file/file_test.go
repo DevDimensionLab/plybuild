@@ -19,6 +19,17 @@ type recordingFileExistenceFilesystem struct {
 	statErr   error
 }
 
+type recordedFileOverwrite struct {
+	path string
+	data []byte
+	mode fs.FileMode
+}
+
+type recordingFileOverwriteFilesystem struct {
+	writes   []recordedFileOverwrite
+	writeErr error
+}
+
 type existingFileInfo struct {
 	name string
 }
@@ -64,6 +75,46 @@ func (recording *recordingFileExistenceFilesystem) assertedStatPaths() ([]string
 		return nil, errors.New("recorded file-existence stat population is empty")
 	}
 	return recording.statPaths, nil
+}
+
+func (*recordingFileOverwriteFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected file-overwrite read")
+}
+
+func (*recordingFileOverwriteFilesystem) Stat(string) (fs.FileInfo, error) {
+	return nil, errors.New("unexpected file-overwrite stat")
+}
+
+func (*recordingFileOverwriteFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected file-overwrite mkdir")
+}
+
+func (recording *recordingFileOverwriteFilesystem) WriteFile(path string, data []byte, mode fs.FileMode) error {
+	recording.writes = append(recording.writes, recordedFileOverwrite{
+		path: path,
+		data: append([]byte{}, data...),
+		mode: mode,
+	})
+	return recording.writeErr
+}
+
+func (*recordingFileOverwriteFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected file-overwrite create")
+}
+
+func (*recordingFileOverwriteFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected file-overwrite copy")
+}
+
+func (recording *recordingFileOverwriteFilesystem) dependencies() overwriteDependencies {
+	return overwriteDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingFileOverwriteFilesystem) assertedWrites() ([]recordedFileOverwrite, error) {
+	if len(recording.writes) == 0 {
+		return nil, errors.New("recorded file-overwrite population is empty")
+	}
+	return recording.writes, nil
 }
 
 func TestExistsSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
@@ -138,6 +189,82 @@ func TestRecordedFileExistenceRejectsEmptyPopulation(t *testing.T) {
 
 	if _, err := recording.assertedStatPaths(); err == nil {
 		t.Fatal("empty recorded file-existence stat population passed")
+	}
+}
+
+func TestOverwriteSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemOverwriteDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("Overwrite selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("Overwrite filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestOverwritePreservesCompleteLinesPathBytesModeAndDependencyError(t *testing.T) {
+	path := "/complete file-overwrite/path with spaces/file.txt"
+	writeError := errors.New("complete file-overwrite dependency error")
+	tests := []struct {
+		name      string
+		lines     []string
+		wantBytes []byte
+		writeErr  error
+	}{
+		{name: "empty lines", lines: []string{}, wantBytes: []byte{}},
+		{name: "single line", lines: []string{"single complete line"}, wantBytes: []byte("single complete line")},
+		{
+			name:      "multiple lines and dependency error",
+			lines:     []string{"first complete line", "", "third complete line", ""},
+			wantBytes: []byte("first complete line\n\nthird complete line\n"),
+			writeErr:  writeError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFileOverwriteFilesystem{writeErr: test.writeErr}
+			dependencies := recording.dependencies()
+			if dependencies.Files.FileSystem != recording {
+				t.Fatalf("file-overwrite dependency lost its complete filesystem value: %#v", dependencies)
+			}
+
+			err := overwrite(dependencies, test.lines, path)
+			if !errors.Is(err, test.writeErr) {
+				t.Fatalf("overwrite error was %v, want %v", err, test.writeErr)
+			}
+			writes, populationErr := recording.assertedWrites()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			want := []recordedFileOverwrite{{path: path, data: test.wantBytes, mode: 0644}}
+			if !reflect.DeepEqual(writes, want) {
+				t.Fatalf("recorded file-overwrite differs:\n got: %#v\nwant: %#v", writes, want)
+			}
+		})
+	}
+}
+
+func TestOverwriteDependenciesDefaultToSafeNoMutation(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "safe default", "must-not-exist.txt")
+
+	err := overwrite(overwriteDependencies{}, []string{"must not be written"}, target)
+
+	if !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe file-overwrite dependency default returned %v, want %v", err, filesystem.ErrNoFilesystem)
+	}
+	if _, statErr := os.Stat(target); !os.IsNotExist(statErr) {
+		t.Fatalf("safe file-overwrite dependency default mutated the target: %v", statErr)
+	}
+}
+
+func TestRecordedFileOverwriteRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingFileOverwriteFilesystem{}
+
+	if _, err := recording.assertedWrites(); err == nil {
+		t.Fatal("empty recorded file-overwrite population passed")
 	}
 }
 
