@@ -3,10 +3,11 @@ GOFMT ?= gofmt
 BASH ?= /bin/bash
 GOLANGCI_LINT_VERSION := 2.12.2
 REPO_ROOT := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+SCRIPTS_DIR ?= $(REPO_ROOT)/scripts
 
 .DEFAULT_GOAL := all
 
-.PHONY: all build docker-build docker-run docker-publish format install lint release release-brew run test test-agent-start test-install test-lint upgrade
+.PHONY: all build docker-build docker-run docker-publish format install lint preflight release release-brew run test test-agent-start test-install test-lint test-preflight upgrade
 
 build:
 	$(GO) build -o ply ./cmd/ply
@@ -26,7 +27,7 @@ install:
 run:
 	$(GO) run ./cmd/ply
 
-test: test-agent-start test-lint
+test: test-agent-start test-lint test-preflight
 	$(GO) test -v -cover ./...
 	bash test/makefile_install_test.sh
 
@@ -38,6 +39,9 @@ test-install:
 
 test-lint:
 	$(BASH) test/makefile_lint_test.sh
+
+test-preflight:
+	$(BASH) test/makefile_preflight_test.sh
 
 lint:
 	@lint_bin="$${GOLANGCI_LINT:-}"; \
@@ -66,6 +70,64 @@ lint:
 
 format:
 	cd "$(REPO_ROOT)" && find . -path './vendor' -prune -o -type f -name '*.go' -exec "$(GOFMT)" -w {} +
+
+preflight:
+	$(GO) build ./...
+	$(GO) test ./... -count=1
+	$(GO) vet ./...
+	$(MAKE) --no-print-directory -C "$(REPO_ROOT)" lint
+	$(BASH) "$(REPO_ROOT)/test/codex_dev_start_test.sh"
+	$(BASH) "$(REPO_ROOT)/test/makefile_lint_test.sh"
+	$(BASH) "$(REPO_ROOT)/test/makefile_install_test.sh"
+	@set -eu; \
+	scripts_dir="$(SCRIPTS_DIR)"; \
+	if [ ! -d "$$scripts_dir" ] || [ -L "$$scripts_dir" ]; then \
+		printf '%s\n' 'preflight: script directory does not exist or is not a regular directory' >&2; \
+		exit 1; \
+	fi; \
+	production_count=0; \
+	for script in "$$scripts_dir"/*; do \
+		[ -f "$$script" ] || continue; \
+		name=$${script##*/}; \
+		case $$name in test-*) continue ;; esac; \
+		if [ -L "$$script" ]; then \
+			printf 'preflight: production script is a symlink: %s\n' "$$name" >&2; \
+			exit 1; \
+		fi; \
+		production_count=$$((production_count + 1)); \
+		if [ ! -f "$$scripts_dir/test-$$name" ] || [ -L "$$scripts_dir/test-$$name" ]; then \
+			printf 'preflight: missing meta-test for %s\n' "$$name" >&2; \
+			exit 1; \
+		fi; \
+	done; \
+	if [ "$$production_count" -eq 0 ]; then \
+		printf '%s\n' 'preflight: production script population is empty' >&2; \
+		exit 1; \
+	fi; \
+	test_count=0; \
+	for test_script in "$$scripts_dir"/test-*; do \
+		[ -f "$$test_script" ] || continue; \
+		name=$${test_script##*/}; \
+		production_name=$${name#test-}; \
+		if [ -L "$$test_script" ]; then \
+			printf 'preflight: meta-test is a symlink: %s\n' "$$name" >&2; \
+			exit 1; \
+		fi; \
+		if [ ! -f "$$scripts_dir/$$production_name" ] || [ -L "$$scripts_dir/$$production_name" ]; then \
+			printf 'preflight: meta-test has no production script: %s\n' "$$name" >&2; \
+			exit 1; \
+		fi; \
+		test_count=$$((test_count + 1)); \
+	done; \
+	if [ "$$test_count" -ne "$$production_count" ]; then \
+		printf 'preflight: script population mismatch: %s production, %s meta-tests\n' \
+			"$$production_count" "$$test_count" >&2; \
+		exit 1; \
+	fi; \
+	for test_script in "$$scripts_dir"/test-*; do \
+		$(BASH) "$$test_script"; \
+	done
+	$(BASH) "$(REPO_ROOT)/.quality/tools/test-quality-audit.sh"
 
 release:
 	goreleaser release --clean
