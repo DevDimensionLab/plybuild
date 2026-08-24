@@ -80,9 +80,20 @@ func ReadXml(file string, parsed interface{}) error {
 	return nil
 }
 
+type existsDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemExistsDependencies() existsDependencies {
+	return existsDependencies{Files: filesystem.System()}
+}
+
 func Exists(filename string) bool {
-	_, err := os.Stat(filename)
-	return !os.IsNotExist(err)
+	return exists(systemExistsDependencies(), filename)
+}
+
+func exists(dependencies existsDependencies, filename string) bool {
+	return filesystem.Exists(dependencies.Files, filename)
 }
 
 func Open(filePath string) ([]byte, error) {
