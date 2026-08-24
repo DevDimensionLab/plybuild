@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# P3 seam-test driver only. This file is deliberately non-executable and does
+# not implement the later file-shell mutation harness.
+# 1. git clone keeps URL before target directory
+# 7. git commit keeps target directory before message
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+go_bin=${GO:-go}
+
+cd "$repo_root"
+"$go_bin" test -json ./pkg/shell -count=1 \
+	-run '^(TestGitCloneKeepsURLBeforeTargetDirectory|TestGitPullAndInitKeepExactArgumentsAndWorkingDirectory|TestGitAddAndCommitKeepsTargetBeforeCompleteMessage|TestGitProcessDependenciesDefaultToNoProcess|TestRecordedGitCallsRejectEmptyPopulation)$'
