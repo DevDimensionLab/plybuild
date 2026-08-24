@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T19:24:24+02:00
+Generated: 2026-08-24T20:04:48+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,8 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `789ae23af28b`.
-- Restart preparation base: `789ae23af28b`.
+- Measured implementation head: `07ac6ce809be`.
+- Restart preparation base: `07ac6ce809be`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no implementation changes.
 - No push, merge, release, publication, stash, revert, or worktree removal was
@@ -29,17 +29,18 @@ ffc4e77 quality: move Maven metadata HTTP behind adapter
 89d0f76 quality: move Spring download behind adapters
 dee214c quality: move Spring discovery behind HTTP adapter
 789ae23 quality: move Bitbucket JSON behind HTTP adapter
+07ac6ce quality: move Kibana POST behind HTTP adapter
 ```
 
 ## Continuity Checkpoint
 
 `codex-dev-start.sh` remains in `NEXT` state for P3. The exit-only-main,
 process-adapter, cloud-clone, Maven metadata HTTP, template-copy filesystem,
-Spring download, Spring discovery JSON, and Bitbucket bearer JSON moves are
-complete. The command-reachable Kibana POST flow is the next coherent HTTP
-move; the unused `Wpost` lifecycle stays separate, and P4-P8 remain authorized
-in the machine-readable plan block. The active archive is
-`docs/plan/agent-sessions/2026-08-24T192424+0200-migrate-kibana-post-http.md`.
+Spring download, Spring discovery JSON, Bitbucket bearer JSON, and Kibana POST
+moves are complete. The unused exported `Wpost` form-download lifecycle is the
+next coherent adapter move, and P4-P8 remain authorized in the machine-readable
+plan block. The active archive is
+`docs/plan/agent-sessions/2026-08-24T200448+0200-migrate-wpost-http-filesystem.md`.
 Its predecessor is answered history, and the connected graph has exactly one
 `NEXT` tail.
 
@@ -55,46 +56,46 @@ content enters the prompt.
 remains, so normal handoff requires no test edit. The ignored `.agent-task`
 path is absent and is not task authority.
 
-## P3 Move 9 Result
+## P3 Move 10 Result
 
-The ninth P3 move completed as one measured implementation change:
+The tenth P3 move completed as one measured implementation change:
 
-1. `httpclient.Request` now has one narrow `BearerJSON` access-token value.
-   Anonymous requests still select standard `http.Get`; basic-auth requests
-   retain their existing fresh-client path. Bearer JSON selects a fresh-client
-   GET with exact authorization and JSON content-type headers and standard
-   redirects.
-2. Exported `http.GetJsonWithAccessToken` retains its signature and exact
-   `json.Unmarshal(body, &response)` target. Only request execution moved
-   through `httpclient.Dependencies`; no status rejection was introduced, read
-   errors remain ignored, and debug logging plus body closure remain unchanged.
-3. Exported `bitbucket.With` and `bitbucket.QueryRepos` plus private
-   `Bitbucket.queryProjects` retain their signatures. A private zero-value-safe
-   interface receives each complete request and decode destination. The exact
-   project/repository URLs and limits, parsed types, lowercase repository
-   selection, synchronization order, warning behavior, and clone/pull
-   follow-ups are preserved.
-4. Eleven new top-level contracts raise the suite from 101 to 112 tests and add
-   `pkg/bitbucket` to the tested population. They prove complete delivery,
-   GET/headers, redirects, non-success parsing, ignored read errors, closure,
-   logging, errors, safe defaults, Bitbucket response content, synchronization
-   selection and warnings, and rejection of an empty population.
+1. `httpclient.Request` now has one narrow `POST` value containing complete
+   body bytes and headers. Anonymous requests retain standard `http.Get`, and
+   basic-auth and bearer JSON retain their existing fresh-client GET paths.
+   POST presence selects a fresh client, `http.MethodPost`, the supplied body,
+   exact headers, and standard redirects.
+2. Exported `kibana.POST`, `KibanaFetchRequest`, `KibanaResponse`, and
+   `ExecuteKibanaQuery` signatures remain unchanged, as does private
+   `internalPOST`. Only its request execution moved through
+   `httpclient.Dependencies`; the exact URL, first `"size"` rewrite to 500,
+   body, four headers, response read/close behavior, absence of status
+   rejection, newline split, and JSON targets/errors remain owned by Kibana.
+3. A private zero-value-safe query interface receives each complete
+   `KibanaFetchRequest` through initial and recursive callers. Production
+   delegates to the exported legacy `POST` boundary; zero-hit retry selection,
+   output, and the 15-second sleep remain unchanged.
+4. Eleven new top-level contracts raise the suite from 112 to 123 tests. They
+   prove complete delivery, POST method/body/headers, redirects, non-success
+   parsing, dependency/read/unmarshal errors, closure, safe defaults, recursive
+   propagation, deterministic retry structure, and rejection of empty
+   recorded populations.
 5. No inventory entry, seam driver, or mutation label changed. Q1.4 therefore
    remains 7 of 8 and exact Q2.1 remains 0 of 8.
 
 ## Measured Quality State
 
-The clean full audit at `789ae23af28b` reports:
+The clean full audit at `07ac6ce809be` reports:
 
 - Absolute L0: 8 of 8.
-- 112 test functions, zero skipped; 16 of 25 packages have tests.
+- 123 test functions, zero skipped; 16 of 25 packages have tests.
 - Q0.6: 17 guarded safe-writer call sites and zero unsafe direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
 - Q1.1: 9 of 25 packages have no tests.
 - Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 64 direct external sites outside the declared adapters of 74
+- Q1.3: 62 direct external sites outside the declared adapters of 72
   production effect sites. Clock and server remain absent, so Q1.3 is not
-  comparable. Both direct token request sites left the population.
+  comparable. Both direct Kibana request-execution sites left the population.
 - Q1.4: 7 of 8 declared seams covered: `git-process`, `maven-process`,
   `cloud-clone`, `maven-http`, `spring-download`, `template-copy`, and
   `git-commit`.
@@ -109,7 +110,7 @@ The clean full audit at `789ae23af28b` reports:
   returned exit 2.
 - Comparable ratchets: five improved, two held, zero regressed; Q1.3 is not
   comparable while two declared adapter paths are absent.
-- Measurement identity: clean at tree `25e44ff84b21`, with zero dirty paths.
+- Measurement identity: clean at tree `9dc934ae917a`, with zero dirty paths.
 
 Reports were written under `/private/tmp`; no ignored quality or compatibility
 artifact entered the measured tree. Keep future generated reports outside the
@@ -128,25 +129,25 @@ worktree or remove them before the clean audit.
 4. Non-executable seam drivers keep exact Q2.1 at 0 of 8, while the pinned
    upstream tool counts their filenames. Q2.2/Q2.3 remain findings until P5
    builds real harnesses and T1-T10 controls.
-5. A `BearerJSON` request value is sufficient to distinguish presence even for
-   an empty access token and to preserve the paired authorization/content-type
-   headers without broadening anonymous or basic-auth values.
-6. `GetJsonWithAccessToken` deliberately does not use the shared XML/anonymous
-   response helper: its legacy contract parses non-success bodies and ignores
-   read errors before JSON decoding.
-7. The Bitbucket query boundary receives whole `httpclient.Request` and decode
-   destination values. `SynchronizeAllRepos` uses that same dependency for
-   projects and lowercase repository queries before unchanged clone/pull work.
-8. Moving `http.NewRequest` and fresh-client `Do` out of the token helper
-   removes exactly two violations and two production effect sites, yielding
-   Q1.3 at 64 of 74.
-9. The remaining direct HTTP paths are the unused exported `Wpost` flow (one
-   HTTP plus three filesystem effects) and command-reachable Kibana POST (two
-   HTTP effects). Keep their request/response and file lifecycles separate.
-10. Kibana `internalPOST` rewrites the first `"size"` value to 500, sends four
-    exact headers, parses the first two newline-separated JSON records, and is
-    retried by `POST` after a 15-second sleep when no hits arrive. Migrate only
-    request execution next; clock/retry behavior is separate.
+5. `httpclient.POST` distinguishes POST presence even for an empty body and
+   carries complete body and header values. It does not alter the anonymous,
+   basic-auth, or bearer JSON GET selection paths.
+6. Kibana `internalPOST` deliberately keeps its response lifecycle separate
+   from the shared XML/anonymous helper: it parses non-success bodies, returns
+   read errors, splits the first two newline records, and unmarshals distinct
+   header/result targets.
+7. The private Kibana query boundary uses idiomatic response-before-error
+   ordering while the exported `POST` signature retains its legacy
+   error-before-response order. Production adapts between them without storing
+   a function dependency.
+8. Retry coverage records syntax and selection without executing the legacy
+   15-second sleep. Clock migration remains a separate P4 concern.
+9. Moving `http.NewRequest` and fresh-client `Do` out of `internalPOST` removes
+   exactly two violations and two production effect sites, yielding Q1.3 at 62
+   of 72.
+10. The remaining direct HTTP path is the unused exported `Wpost` flow. Its
+    scanner population is one HTTP plus three filesystem effects; migrate that
+    coherent request-to-file lifecycle without changing `Wget` or Kibana.
 11. Passing `logger.StdOut()` in the complete Maven command exposes the
     returned `*os.File` as a filesystem capability in Q1.3. This is preserved
     stdout behavior, not a direct process effect.
@@ -155,32 +156,33 @@ worktree or remove them before the clean audit.
     and defeat the lint meta-test's missing-binary mutant.
 13. The sandbox denies default Go and golangci-lint cache paths. Use isolated
     `GOCACHE`, `GOTMPDIR`, and `GOLANGCI_LINT_CACHE` under `/private/tmp`.
+14. Preflight regenerates ignored compatibility reports under `target`; remove
+    only those generated files before the authoritative clean audit or direct
+    report output outside the measured tree.
 
 ## Next Objective
 
-P3 remains active. Route only the command-reachable Kibana POST request
-execution through `internal/adapter/httpclient`. Begin red with recording
-adapter and Kibana contracts for exact POST URL, rewritten body, all four
-headers, complete dependency delivery, dependency/read/JSON errors after
-request recording, no status rejection, body closure, parsed header/result
-content, standard fresh-client redirects, safe defaults, caller selection, and
-rejection of an empty recorded population.
+P3 remains active. Route only the unused exported `http.Wpost` form-download
+lifecycle through `internal/adapter/httpclient` and
+`internal/adapter/filesystem`. Begin red with recording adapter and Wpost
+contracts for the complete URL, exact encoded form body and content type,
+standard `http.PostForm` redirect/client behavior, debug log, response and file
+close order, request/create/copy error order, no status rejection, safe
+defaults, complete dependency delivery, and rejection of empty populations.
 
-Preserve exported `kibana.POST`, `KibanaFetchRequest`, `KibanaResponse`, and
-`ExecuteKibanaQuery` signatures and every caller, plus private `internalPOST`.
-Preserve the first size rewrite to 500, fresh-client POST behavior, exact
-headers, body bytes, response close/read/error behavior, no status rejection,
-newline split and JSON targets/errors, zero-hit retry selection and output,
-recursive interval queries, and command file/output follow-ups. Extend
-`httpclient.Request` only as narrowly as needed for a complete POST value and
-preserve every anonymous/basic-auth/bearer GET caller.
+Preserve the exported `Wpost` signature and every caller, the exact debug
+message, form encoding, POST selection, content type, response-before-create
+lifecycle, create/truncate behavior, file-before-response deferred close order,
+ignored close errors, copy result, and lack of status rejection. Reuse the
+existing narrow POST and filesystem values, extending request representation
+only if characterization proves it is needed to preserve `http.PostForm`
+behavior.
 
-Do not broaden into `Wpost`, filesystem, retry sleep/clock injection, response
-format repair, parsing helpers, result filtering, command output writes, XML,
-other JSON, Git, cloud, server, Docker, dependencies, distribution, or formal
-mutation-harness work. Add no seam driver or label. Q1.1 should remain 9 of 25,
-Q1.4 should remain 7 of 8, and exact Q2.1 should remain 0 of 8; accept only the
-regenerated Q1.3 value.
+Do not change `Wget`, anonymous/basic-auth/bearer GET, Kibana, Spring, Maven,
+Bitbucket, XML/JSON parsing, retry/clock, command writes, Git, cloud, server,
+Docker, dependencies, distribution, or formal mutation-harness scope. Add no
+seam driver or label. Q1.1 should remain 9 of 25, Q1.4 should remain 7 of 8,
+and exact Q2.1 should remain 0 of 8; accept only the regenerated Q1.3 value.
 
 ## Start
 
@@ -195,14 +197,14 @@ session prepares its successor automatically before stopping.
 
 ## Verification Notes
 
-Completed from clean implementation commit `789ae23af28b`:
+Completed from clean implementation commit `07ac6ce809be`:
 
-- Red evidence: focused Bitbucket/HTTP/adapter tests failed only on the absent
-  bearer request value, token dependency helper, and Bitbucket query boundary.
-- Focused Bitbucket/HTTP/httpclient plus adjacent Spring/Maven contracts: PASS;
-  the unchanged Spring driver still runs all 22 named contracts.
+- Red evidence: focused Kibana/HTTP-adapter tests failed only on the absent
+  POST request value, dependency-aware internal POST, and query boundary.
+- Focused Kibana/HTTP/httpclient plus adjacent HTTP, Spring, Maven, and
+  Bitbucket contracts: PASS.
 - Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1 focused audit: expected exit 1, 17 guarded
-  writes, zero unsafe test writes, 9 untested packages, 0 exits, 64 of 74
+  writes, zero unsafe test writes, 9 untested packages, 0 exits, 62 of 72
   effects, 7 of 8 seams, and 0 of 8 executable harnesses.
 - API and CLI compatibility plus root/status/upgrade/build and unknown-command
   subprocess surfaces: PASS.
@@ -210,8 +212,8 @@ Completed from clean implementation commit `789ae23af28b`:
 - `make preflight`, `make test`, `make test-install`, `make test-agent-start`,
   uncached tests, race tests, and `go vet ./...`: PASS.
 - Empty-HOME `go test ./... -count=2` with isolated writable state: PASS.
-- Audit meta-suite: PASS twice, 15 controls and all 228 baseline numeric leaves.
-- Clean full audit: expected exit 1, L0 8 of 8, 112 tests, 16 tested packages,
+- Audit meta-suite: PASS, 15 controls and all 228 baseline numeric leaves.
+- Clean full audit: expected exit 1, L0 8 of 8, 123 tests, 16 tested packages,
   five improved, two held, zero regressed, one not comparable, and zero dirty
   paths.
 
@@ -230,10 +232,11 @@ Stop and report rather than forcing progress when:
 - an audit exits 2 and the adapter/test shape cannot be corrected in scope;
 - a comparable ratchet regresses;
 - public CLI or Go API compatibility cannot be established;
-- the Kibana POST flow cannot preserve exact URL, rewritten body, headers,
-  fresh-client and redirect behavior, body read/close, no status rejection,
-  newline/JSON behavior, retry selection, callers, and later command follow-ups;
-- the move requires `Wpost`, filesystem, clock/retry migration, parsing repair,
-  result filtering, command writes, XML, other JSON, Git, cloud, server, Docker,
+- `Wpost` cannot preserve its exact URL, encoded form body, POST/content type,
+  standard `http.PostForm` client and redirects, debug log, response/create/copy
+  error order, no status rejection, create/truncate, close order, and ignored
+  close errors;
+- the move requires `Wget`, migrated GET or Kibana changes, clock/retry work,
+  parsing repair, command writes, XML/JSON, Git, cloud, server, Docker,
   dependency, distribution, or formal mutation-harness scope; or
-- the one coherent Kibana POST request-execution move is complete.
+- the one coherent `Wpost` request-to-file move is complete.

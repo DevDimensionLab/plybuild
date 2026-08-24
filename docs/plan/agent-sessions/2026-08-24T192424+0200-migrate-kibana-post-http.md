@@ -1,13 +1,13 @@
 # Agent Session: Migrate Kibana POST HTTP
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-24T192424+0200-migrate-kibana-post-http`
 Created: `2026-08-24T19:24:24+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `fc1140ee2109e89d0c61779f00b7aaf664e7e4d65a86146fc3d72fe4f1834db1`
 Previous: [2026-08-24T181207+0200-migrate-bitbucket-json-http.md](2026-08-24T181207+0200-migrate-bitbucket-json-http.md)
-Next: none
-Outcome: pending
+Next: [2026-08-24T200448+0200-migrate-wpost-http-filesystem.md](2026-08-24T200448+0200-migrate-wpost-http-filesystem.md)
+Outcome: P3 move 10 completed at `07ac6ce`: Kibana POST request execution now uses the HTTP adapter, Q1.1 is 9 of 25, Q1.3 is 62 of 72, Q1.4 remains 7 of 8, exact Q2.1 remains 0 of 8, and the clean gate passed with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `789ae23`.
+Last measured checkpoint: 2026-08-24, commit `07ac6ce`.
 
 ## Objective
 
@@ -41,20 +41,20 @@ P8|queued
 
 ## Measured State
 
-| Signal | Baseline | P1B | P2A | P2B | P3.1 | P3.2 | P3.3 | P3.4 | P3.5 | P3.6 | P3.7 | P3.8 | P3.9 | Interpretation |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3, Q0.6, and Q0.8 remain closed. |
-| Test functions | 33 | 37 | 37 | 37 | 39 | 47 | 50 | 55 | 65 | 79 | 92 | 101 | 112 | Bearer GET values, token lifecycle, Bitbucket parsing, and synchronization query selection are covered. |
-| Skipped tests | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
-| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | 11 / 23 | 11 / 23 | 11 / 23 | 13 / 24 | 14 / 25 | 15 / 25 | 15 / 25 | 16 / 25 | Nine packages have no test files; `pkg/bitbucket` joined the tested population. |
-| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q1.2 stays closed; only the two executable `main` functions terminate. |
-| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | 77 / 79 | 76 / 78 | 76 / 78 | 74 / 79 | 71 / 80 | 67 / 77 | 66 / 76 | 64 / 74 | The two bearer-token request sites left without adding a production effect site. |
-| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 2 / 8 | 3 / 8 | 4 / 8 | 5 / 8 | 6 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | Bitbucket recording contracts do not claim a new inventory seam. |
-| Executable mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | All five P3 seam drivers remain non-executable and do not qualify as later P5 harnesses. |
-| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
-| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | 0 / 8 | 0 / 9 | 0 / 10 | 0 / 10 | 0 / 11 | 0 / 12 | 0 / 12 | 0 / 12 | Q0.8 remains improved over the same population. |
-| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures prove schema reachability. |
-| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument is unchanged. |
+| Signal | Baseline | P1B | P2A | P2B | P3.1 | P3.2 | P3.3 | P3.4 | P3.5 | P3.6 | P3.7 | P3.8 | P3.9 | P3.10 | Interpretation |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | 8 / 8 | Q0.3, Q0.6, and Q0.8 remain closed. |
+| Test functions | 33 | 37 | 37 | 37 | 39 | 47 | 50 | 55 | 65 | 79 | 92 | 101 | 112 | 123 | POST values, Kibana parsing/lifecycle, caller selection, retry structure, and recursive dependency propagation are covered. |
+| Skipped tests | 2 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q0.6 remains improved. |
+| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | 7 / 22 | 9 / 22 | 11 / 23 | 11 / 23 | 11 / 23 | 13 / 24 | 14 / 25 | 15 / 25 | 15 / 25 | 16 / 25 | 16 / 25 | Nine packages have no test files; the new contracts stay within already-tested packages. |
+| Process-exiting calls outside `main` | 127 | 127 | 127 | 127 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | Q1.2 stays closed; only the two executable `main` functions terminate. |
+| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | 80 / 80 | 80 / 80 | 77 / 79 | 76 / 78 | 76 / 78 | 74 / 79 | 71 / 80 | 67 / 77 | 66 / 76 | 64 / 74 | 62 / 72 | The two Kibana request-execution sites left without adding a production effect site. |
+| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 2 / 8 | 3 / 8 | 4 / 8 | 5 / 8 | 6 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | 7 / 8 | Kibana recording contracts do not claim a new inventory seam. |
+| Executable mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 8 | All five P3 seam drivers remain non-executable and do not qualify as later P5 harnesses. |
+| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | 4 / 4 | All four host flows pass through fresh artifacts. |
+| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | 0 / 7 | 0 / 7 | 0 / 8 | 0 / 9 | 0 / 10 | 0 / 10 | 0 / 11 | 0 / 12 | 0 / 12 | 0 / 12 | 0 / 12 | Q0.8 remains improved over the same population. |
+| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures prove schema reachability. |
+| Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument is unchanged. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -203,7 +203,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 9 are complete.
+Status: active. Moves 1 through 10 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -464,6 +464,40 @@ audit meta-suite twice, and empty-HOME count-2. The full audit exited 1 for 16
 documented findings, never 2, with L0 8 of 8, five improved, two held, zero
 regressed, and one not-comparable ratchet.
 
+Move 10 extended `httpclient.Request` with one narrow `POST` value containing
+the complete body bytes and headers. The system dependency retains the exact
+anonymous `http.Get` fast path and existing basic-auth and bearer JSON GET
+paths. POST presence selects `http.MethodPost`, a fresh client, and the supplied
+body and headers, preserving standard redirect behavior.
+
+Exported `kibana.POST`, `KibanaFetchRequest`, `KibanaResponse`, and
+`ExecuteKibanaQuery` signatures remain unchanged, as does private
+`internalPOST`. Only its request execution now passes through
+`httpclient.Dependencies`; it still owns the first `"size"` rewrite to 500,
+four exact headers, response body read and close, no status rejection, newline
+split, and header/result JSON decoding. A private zero-value-safe query
+interface receives the complete `KibanaFetchRequest` through initial and
+recursive callers while production delegates to the exported legacy `POST`
+boundary. Retry selection and its 15-second clock remain unchanged.
+
+Eleven new top-level contracts bring the suite to 123 tests. They prove exact
+URL, POST method, rewritten body, all four headers, standard redirects,
+non-success parsing, dependency/read/unmarshal errors, response closure, safe
+defaults, complete caller delivery, recursive propagation, deterministic retry
+structure, and rejection of empty recorded populations. No seam driver or
+inventory label changed, so Q1.4 remains 7 of 8 and exact Q2.1 remains 0 of 8.
+The two direct Kibana request-execution sites left Q1.3, producing 62
+violations of 72 production effect sites.
+
+Commit: `07ac6ce`.
+
+The clean move-10 gate passed focused Kibana/HTTP/adapter and adjacent Spring,
+Maven, and Bitbucket tests, API/CLI and subprocess compatibility, all four host
+flows, preflight, test, install, launcher, uncached and race tests, vet, the
+15-control audit meta-suite, and empty-HOME count-2. The full audit exited 1
+for 16 documented findings, never 2, with L0 8 of 8, five improved, two held,
+zero regressed, and one not-comparable ratchet.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -474,12 +508,12 @@ flow at a time using `.quality/inventory`:
 For each move, first add characterization or recording tests, then move one
 coherent flow. Defaults must be safe and recording doubles must preserve the
 complete dependency struct. The seven declared P3 swaps through Spring download
-are complete, and Spring discovery plus Bitbucket token JSON now use the HTTP
-adapter without adding inventory seams. The next move should route the coherent,
-command-reachable Kibana POST request through a narrow extension of that adapter
-while preserving request rewriting, headers, response parsing, retry callers,
-and output behavior. Keep `Wpost`, clock/retry timing, filesystem, and all other
-follow-ups outside that change.
+are complete, and Spring discovery, Bitbucket token JSON, and Kibana POST now
+use the HTTP adapter without adding inventory seams. The next move should route
+only the unused exported `Wpost` form-download lifecycle through the existing
+HTTP and filesystem adapters while preserving its exact request, file, close,
+and error behavior. Keep `Wget`, every migrated GET and Kibana path,
+clock/retry timing, and all other follow-ups outside that change.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.

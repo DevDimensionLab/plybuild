@@ -658,19 +658,19 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-24T192424+0200-migrate-kibana-post-http
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T192424+0200-migrate-kibana-post-http.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T181207+0200-migrate-bitbucket-json-http.md
+#|SESSION_ID=2026-08-24T200448+0200-migrate-wpost-http-filesystem
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T200448+0200-migrate-wpost-http-filesystem.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T192424+0200-migrate-kibana-post-http.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete the next P3 move in one measured change: route the coherent,
-#|command-reachable Kibana POST request execution through the existing HTTP
-#|adapter. Keep Q1.2 at zero, reduce only migrated Q1.3 sites, hold Q1.1 at 9 of
-#|25, Q1.4 at 7 of 8 and exact Q2.1 at 0 of 8, and preserve every P2A contract
-#|with zero comparable ratchet regressions.
+#|Complete the next P3 move in one measured change: route the unused exported
+#|`pkg/http.Wpost` form-download request-to-file lifecycle through the existing
+#|HTTP and filesystem adapters. Keep Q1.2 at zero, reduce only migrated Q1.3
+#|sites, hold Q1.1 at 9 of 25, Q1.4 at 7 of 8 and exact Q2.1 at 0 of 8, and
+#|preserve every P2A contract with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
@@ -681,86 +681,84 @@ exit 70
 #|# Measurements At Start
 #|
 #|Before editing, inspect branch, HEAD, status, the rolling handover, the P3 plan,
-#|`.quality/inventory`, all of `pkg/kibana` and every caller/test, relevant
-#|`cmd/plugin_diagrams.go` follow-ups, `internal/adapter/httpclient` and every
-#|anonymous/basic-auth/bearer/redirect contract, adjacent `pkg/http` JSON, Wget,
-#|and unused Wpost flows without changing them, the Kibana response types, retry
-#|and recursive interval-query callers, the Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1
-#|scanners, and the P2A compatibility, subprocess, and host acceptance contracts.
-#|Regenerate ignored reports outside the measured tree or remove them before the
-#|clean audit. Implementation commit `789ae23` has 112 tests across 16 of 25
-#|packages, Q0.6 has 17 guarded safe-writer sites and zero unsafe direct test
-#|writes, Q1.1 is 9 of 25, Q1.2 is 0, and Q1.3 is 64 violations of 74 production
-#|effect sites with clock and server absent. Q1.4 is 7 of 8 and exact Q2.1 is 0
-#|of 8 executable harnesses; the upstream filename-only denominator sees five
-#|non-executable `mutate-*` paths. The clean gate passed, the full audit exited 1
-#|for 16 documented findings and never 2, and comparable ratchets were five
-#|improved, two held, and zero regressed.
+#|`.quality/inventory`, all of `pkg/http` and every caller/test, the current
+#|`internal/adapter/httpclient` POST/GET implementation and every caller/test,
+#|`internal/adapter/filesystem` and every caller/test, adjacent Wget and Spring
+#|download contracts, the completed Kibana POST flow, Go's `http.PostForm`
+#|semantics, the Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1 scanners, and the P2A
+#|compatibility, subprocess, and host acceptance contracts. Regenerate ignored
+#|reports outside the measured tree or remove them before the clean audit.
+#|Implementation commit `07ac6ce` has 123 tests across 16 of 25 packages, Q0.6
+#|has 17 guarded safe-writer sites and zero unsafe direct test writes, Q1.1 is 9
+#|of 25, Q1.2 is 0, and Q1.3 is 62 violations of 72 production effect sites with
+#|clock and server absent. Q1.4 is 7 of 8 and exact Q2.1 is 0 of 8 executable
+#|harnesses; the upstream filename-only denominator sees five non-executable
+#|`mutate-*` paths. The clean gate passed, the full audit exited 1 for 16
+#|documented findings and never 2, and comparable ratchets were five improved,
+#|two held, and zero regressed.
 #|
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the Kibana POST request-execution move. Do not push,
-#|merge, publish, remove the worktree, stash inherited changes, revert user work,
-#|or run destructive Git commands. Do not invoke a publisher or distribution
-#|command.
+#|implementation commit for the Wpost request-to-file move. Do not push, merge,
+#|publish, remove the worktree, stash inherited changes, revert user work, or run
+#|destructive Git commands. Do not invoke a publisher or distribution command.
 #|
 #|Keep Go 1.18. Preserve `cmd.Execute()`, `cmd.ExecuteE()`, `cmd.RootCmd`, the
 #|normalized Cobra tree, root/status/upgrade/build and unknown-command streams
-#|and exits, and all four host acceptance flows. Preserve exported `kibana.POST`,
-#|`kibana.KibanaFetchRequest`, `kibana.KibanaResponse`, and
-#|`kibana.ExecuteKibanaQuery` signatures and every caller, plus private
-#|`internalPOST`. Preserve the exact request URL, first `"size"` rewrite to 500,
-#|POST selection and body bytes, `accept-language`, `authorization`,
-#|`content-type`, and `kbn-version` headers, standard fresh-client redirect
-#|behavior, response body read and close behavior, propagated read errors,
-#|absence of status rejection, newline split, JSON unmarshal targets and errors,
-#|zero-hit retry selection and output, recursive interval queries, and later
-#|command output-file follow-ups.
+#|and exits, and all four host acceptance flows. Preserve exported
+#|`http.Wpost(downloadUrl, filePath string, formData url.Values) error` and every
+#|caller. Preserve the exact debug message and values, complete request URL,
+#|`formData.Encode()` body, POST method, `application/x-www-form-urlencoded`
+#|content type, standard `http.PostForm` client and redirect behavior,
+#|response-before-file-create order, absence of status rejection, create/truncate
+#|behavior, copy bytes and errors, file-before-response deferred close order, and
+#|ignored close errors.
 #|
-#|Migrate only request execution used by `internalPOST` and its coherent Kibana
-#|callers. Extend `httpclient.Request` only as narrowly as needed for complete
-#|POST method/body/header values. Use resolvable interfaces and complete
-#|dependency values, not stored function dependencies. Preserve every existing
-#|anonymous, basic-auth, and bearer JSON GET adapter caller. Do not duplicate
-#|generic request execution or broaden into Wpost, filesystem, retry sleep/clock
-#|injection, response format repair, parsing helpers, filtering, command writes,
-#|XML, other JSON, Git, cloud, server, Docker, dependencies, distribution, or
-#|formal mutation-harness scope. Do not create or relabel a seam driver or claim
-#|a new seam or P5 harness.
+#|Migrate only Wpost's coherent request execution, file creation, and body copy
+#|through complete `httpclient.Dependencies` and `filesystem.Dependencies`
+#|values. Reuse the existing narrow POST and filesystem representations, making
+#|only the smallest adapter representation change that characterization proves
+#|necessary to preserve `http.PostForm` behavior. Use resolvable interfaces and
+#|complete dependency values, not stored function dependencies. Preserve every
+#|anonymous, basic-auth, bearer JSON, and Kibana POST adapter caller. Do not
+#|duplicate generic request or filesystem execution or broaden into Wget,
+#|Spring, retry/clock injection, parsing helpers, command writes, XML/JSON, Git,
+#|cloud, server, Docker, dependencies, distribution, or formal mutation-harness
+#|scope. Do not create or relabel a seam driver or claim a new seam or P5
+#|harness.
 #|
 #|# Required Reading
 #|
 #|Read docs/plan/quality-handover.md, the P3 section and checkpoint gate in
 #|docs/plan/quality-upgrade.md, docs/design/quality-lift.md,
 #|docs/design/agent-session-continuity.md, `.quality/inventory`, all of
-#|`pkg/kibana` and every caller/test, relevant `cmd/plugin_diagrams.go` command
-#|and output follow-ups, `internal/adapter/httpclient` and every caller/test, the
-#|adjacent HTTP JSON/Wget/Wpost contracts, Kibana retry and recursive query
-#|behavior, the Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1 implementation in `.quality/tools`,
-#|and the P2A compatibility and host acceptance contracts before editing.
+#|`pkg/http` and every caller/test, `internal/adapter/httpclient` and every
+#|caller/test, `internal/adapter/filesystem` and every caller/test, adjacent Wget
+#|and Spring download contracts, completed Kibana POST contracts, the standard
+#|library `http.PostForm` behavior supported by the Go 1.18 API, the
+#|Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1 implementation in `.quality/tools`, and the P2A
+#|compatibility and host acceptance contracts before editing.
 #|
 #|# Three Moves
 #|
 #|These are three ordered steps inside the single measured P3 move.
 #|
-#|1. Start red with recording HTTP adapter and Kibana POST contracts. Prove the
-#|   complete URL, POST method, rewritten body and four headers, complete
-#|   dependency delivery, dependency errors after recording, non-success body
-#|   parsing, response read/close and read errors, header/result JSON content and
-#|   unmarshal errors, standard redirects, safe defaults, caller selection, and
-#|   rejection of an empty recorded population. Keep retry coverage deterministic
-#|   without waiting 15 seconds or migrating time.
+#|1. Start red with recording HTTP/filesystem and Wpost contracts. Prove the
+#|   complete URL, encoded form body, method, content type, debug log, standard
+#|   client redirects, complete dependency delivery, request/create/copy errors
+#|   after recording, no status rejection, response/file close order and ignored
+#|   close errors, exact copied bytes, safe defaults, and rejection of empty
+#|   recorded populations.
 #|
-#|2. Extend `httpclient.Request` with the thinnest complete POST representation
-#|   and route only `internalPOST` request execution through
-#|   `httpclient.Dependencies`. Preserve its distinct response parsing lifecycle
-#|   and all higher-level Kibana selection. Give the coherent Kibana caller flow
-#|   only the private complete-dependency boundary needed by recording tests.
-#|   Leave every GET path, Wpost, retry clock, parsing/filtering, filesystem, and
-#|   command follow-up unchanged. Do not add or relabel a seam driver.
+#|2. Give Wpost only the private complete-dependency boundary needed by recording
+#|   tests and route its request, create, and copy effects through the existing
+#|   adapters. Preserve the response and file lifecycle in Wpost. Extend the HTTP
+#|   request value only if needed for exact PostForm semantics. Leave Wget, all
+#|   GET paths, Kibana, retry/clock, parsing, commands, and other filesystem flows
+#|   unchanged. Do not add or relabel a seam driver.
 #|
-#|3. Run focused Kibana/httpclient and adjacent HTTP tests,
+#|3. Run focused HTTP/httpclient/filesystem and adjacent Spring/Kibana tests,
 #|   Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1 measurements, API/CLI compatibility, all four
 #|   host acceptance flows, the full checkpoint gate, and empty-HOME count-2 from
 #|   a clean commit. Expect Q1.1 to stay 9 of 25, Q1.2 to stay zero, Q1.4 to stay
@@ -769,8 +767,8 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent Kibana POST move
-#|or record an exact resumable state. Rewrite the rolling handover, update the P3
+#|Before this agent session ends, finish and commit the coherent Wpost move or
+#|record an exact resumable state. Rewrite the rolling handover, update the P3
 #|measurements, answer this archive, create one linked NEXT archive, replace the
 #|launcher's mutable regions, run the launcher contract, and make the separate
 #|handoff-only commit `docs: prepare next agent session`.
