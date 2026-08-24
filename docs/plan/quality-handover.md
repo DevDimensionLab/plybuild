@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T22:45:42+02:00
+Generated: 2026-08-24T23:10:06+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,8 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `e13a0366b819`.
-- Restart preparation base: `e13a0366b819`.
+- Measured implementation head: `f59a3f0fe2de`.
+- Restart preparation base: `f59a3f0fe2de`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no product implementation changes.
 - No push, merge, release, publication, stash, revert, successor launch, or
@@ -32,6 +32,7 @@ dee214c quality: move Spring discovery behind HTTP adapter
 07ac6ce quality: move Kibana POST behind HTTP adapter
 a7eb3ef quality: move Wpost behind HTTP and filesystem adapters
 e13a036 quality: move Bitbucket selection behind filesystem adapter
+f59a3f0 quality: move file existence behind filesystem adapter
 ```
 
 The separate operational continuity implementation is:
@@ -46,9 +47,9 @@ It changes no Go quality denominator and is separate from P3 move numbering.
 
 `codex-dev-start.sh` remains `NEXT` while P3 is active and P4-P8 remain queued
 in the machine-readable plan block. Its active archive is
-`docs/plan/agent-sessions/2026-08-24T224542+0200-migrate-file-exists.md`.
-The Bitbucket predecessor is answered history, and the reciprocal archive graph
-has exactly one `NEXT` tail.
+`docs/plan/agent-sessions/2026-08-24T231006+0200-migrate-file-overwrite.md`.
+The file-existence predecessor is answered history, and the reciprocal archive
+graph has exactly one `NEXT` tail.
 
 Normal launch is a Bash 3.2-compatible, non-interactive supervisor. Each
 generation resolves an external Codex executable and invokes exact
@@ -78,34 +79,33 @@ executable. Mutable header and prompt data remain inert after the stable
 execution boundary; the pinned normalized skeleton digest is
 `4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`.
 
-## P3 Move 12 Preserved
+## P3 Move 13 Preserved
 
-Exported `bitbucket.With`, `bitbucket.QueryRepos`, synchronization behavior,
-and every P2A API/CLI/subprocess contract remain unchanged. Bitbucket now owns
-a private complete repository dependency containing the filesystem adapter and
-a resolvable Git interface. Production `With` selects `filesystem.System()`;
-the only-missing-means-clone rule delegates to `filesystem.Exists`, while every
-other stat result selects pull. Actual operations still delegate to unchanged
-`shell.GitClone` and `shell.GitPull` paths backed by the process adapter.
+Exported `file.Exists(string) bool`, all callers, and every P2A API/CLI and
+subprocess contract remain unchanged. The package now owns a private complete
+existence dependency containing `filesystem.Dependencies`. Production selects
+`filesystem.System()` and the private helper delegates to
+`filesystem.Exists`, preserving the established rule that only a missing-path
+error returns false and every other stat result returns true.
 
-The private zero value refuses clone or pull before any mutation. Six recording
-contracts prove complete paths and dependencies, clone/pull selection, exact
-operation paths and logging, error propagation, safe defaults, and non-empty
-stat and Git populations. The filesystem adapter contract, inventory, seam
-drivers, and mutation labels did not change.
+The dependency's zero value returns false without probing a developer path.
+Four recording contracts prove the complete path and dependency value,
+missing, existing, and other-error results, production system selection, safe
+defaults, and a non-empty recorded stat population. The filesystem adapter
+contract, inventory, seam drivers, and mutation labels did not change.
 
 ## Measured Quality State
 
-The clean full audit at `e13a0366b819` reports:
+The clean full audit at `f59a3f0fe2de` reports:
 
 - Absolute L0: 8 of 8.
-- 136 test functions, zero skipped; 16 of 25 packages have tests.
+- 140 test functions, zero skipped; 16 of 25 packages have tests.
 - Q0.6: 18 guarded safe-writer sites, 13 write and 5 copy, with zero unsafe
   direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
 - Q1.1: 9 of 25 packages have no tests.
 - Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 57 direct external sites outside declared adapters of 67 production
+- Q1.3: 56 direct external sites outside declared adapters of 66 production
   effect sites. Clock and server are absent, making this ratchet
   non-comparable.
 - Q1.4: 7 of 8 declared seams covered.
@@ -115,25 +115,27 @@ The clean full audit at `e13a0366b819` reports:
 - Comparable ratchets: five improved, two held, zero regressed; Q1.3 is the
   single non-comparable ratchet.
 - Measurement identity: clean at tree
-  `d331ce460526eeab779e6bf5d9c13c6706993e20`, with zero dirty paths.
+  `c10ffc6f825bf57a417f3de21f731b22c1e9ac6d`, status SHA-256
+  `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`
+  and zero dirty paths.
 
-The clean report is `/private/tmp/ply-bitbucket-full-audit.fBCZvd`. Focused and
-preflight reports were also kept under `/private/tmp`; empty generated target
-directories were removed before measurement, so no ignored quality or
-compatibility artifact entered the measured tree.
+The clean report is `/private/tmp/ply-file-exists-full-audit.taTsDR`. Focused
+and preflight reports were also kept under `/private/tmp`, so no ignored
+quality or compatibility artifact entered the measured tree.
 
 ## Decisions And Learned Facts
 
-1. `filesystem.Exists` already encodes the legacy rule needed by both flows:
-   only an `os.IsNotExist` error means absent; all other errors mean present.
-2. Bitbucket dependencies must include both the complete filesystem value and
-   a resolvable Git interface. Production still reaches package-level shell
-   functions, preserving the existing process adapter boundary.
-3. An incomplete or zero Bitbucket dependency returns
-   `filesystem.ErrNoFilesystem` before a Git operation; recording tests prove
-   that it cannot touch a developer repository.
-4. The exported `pkg/file.Exists` function has the next isolated direct
-   `os.Stat` probe. Its signature and all callers stay unchanged.
+1. The private existence dependency needs the complete
+   `filesystem.Dependencies` value. Production selects `filesystem.System()`;
+   the helper remains independently recordable without a function-valued
+   effect dependency.
+2. `filesystem.Exists` already supplies the complete legacy result mapping:
+   only `os.IsNotExist` is false; success and all other errors are true.
+3. The zero dependency is safely absent because `filesystem.Exists` returns
+   false before it performs a stat probe when no filesystem is configured.
+4. Exported `file.Overwrite` has the next isolated direct `os.WriteFile` site.
+   Its signature, exact joined bytes, mode, errors, and all callers stay
+   unchanged.
 5. A function-valued effect dependency makes Q1.3 fail closed. Production
    moves use resolvable interfaces and complete dependency values.
 6. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
@@ -141,49 +143,51 @@ compatibility artifact entered the measured tree.
 7. Provide `APIDIFF` and `GOLANGCI_LINT` as environment variables for
    `make preflight`; Make command-line values propagate through `MAKEFLAGS`
    and defeat the missing-binary mutant.
-8. Use external Go cache and temporary directories under `/private/tmp` when
-   local default caches reject writes. Do not put generated reports in the
-   measured tree.
+8. Set `GOLANGCI_LINT_CACHE` and `GOCACHE` to writable external directories
+   when the default caches reject writes. Keep every generated report outside
+   the measured tree.
 9. Supervisor success is the conjunction of process exit, structured terminal
    stream, and committed repository evidence. Final prose is observable only.
 
 ## Next Objective
 
-Move only exported `file.Exists` behind the existing filesystem adapter. Start
-with recording contracts in `pkg/file`: require the complete requested path
-and dependency, prove missing returns false, existing and another stat error
-return true, preserve safe zero-value behavior, verify production selects
-`filesystem.System()`, and reject an empty recorded population. Exercise no
-developer path and perform no real filesystem mutation.
+Move only exported `file.Overwrite` behind the existing filesystem adapter.
+Start with recording contracts in `pkg/file`: require the complete `lines`,
+path, and dependency; prove exact `strings.Join(lines, "\n")` bytes and mode
+`0644`, dependency-error propagation, safe zero-value behavior, production
+selection of `filesystem.System()`, and rejection of an empty recorded
+population. Exercise no developer path and perform no real filesystem
+mutation.
 
-Keep `file.Exists(string) bool`, all callers, and every observable result
-unchanged. Use a private complete dependency boundary, with the exported
-function as the production wrapper. Remove only its direct `os.Stat` in
-`pkg/file/file.go`; do not move another file operation, modify the adapter
-contract without focused proof, or enter Bitbucket, HTTP/process, config,
-clock/server, P4, P5, or later roadmap work.
+Keep `file.Overwrite(lines []string, filePath string) error`, all callers, and
+every observable result unchanged. Use a private complete dependency boundary,
+with the exported function as the production wrapper. Remove only its direct
+`os.WriteFile` in `pkg/file/file.go`; do not move another file operation,
+modify the adapter contract without focused proof, or enter Bitbucket,
+HTTP/process, config, clock/server, P4, P5, or later roadmap work.
 
 Expected direction is one fewer Q1.3 violation and one fewer production effect
-site, nominally 56 of 66, but regenerate the exact structured measurement and
+site, nominally 55 of 65, but regenerate the exact structured measurement and
 accept it only with zero comparable ratchet regressions. Q1.2, Q1.4, and exact
 Q2.1 should remain unchanged.
 
 ## Verification Notes
 
-Completed from clean implementation commit `e13a0366b819`:
+Completed from clean implementation commit `f59a3f0fe2de`:
 
-- Red Bitbucket evidence: new contracts failed to compile before the private
-  repository dependency and recording boundaries existed.
-- Focused Bitbucket/filesystem/process/shell tests: PASS.
+- Red file-existence evidence: new contracts failed to compile because the
+  private dependency constructor and helper did not exist.
+- Focused file/filesystem and all relevant caller tests: PASS.
 - `/bin/bash test/codex_dev_start_test.sh`: PASS, 62 controls.
-- `make test-preflight` and complete `make preflight`: PASS, including 15
-  audit meta-controls.
+- Make preflight meta-contracts and complete `make preflight`: PASS, including
+  15 audit meta-controls.
 - API/CLI and subprocess compatibility: PASS.
 - `make test`, `make test-install`, uncached tests, race tests, and `go vet`:
   PASS.
 - Host install, status, upgrade, and build acceptance: PASS, 4 of 4.
 - Empty-HOME `go test ./... -count=2`: PASS.
-- Focused audit: expected exit 1 with Q1.3 at 57 of 67 and no regression.
+- Focused seven-ratchet audit: expected exit 1 with Q1.3 at 56 of 66, four
+  improved, two held, zero regressed, and one not comparable.
 - Clean full audit: expected exit 1, 16 documented findings, L0 8 of 8, five
   improved, two held, zero regressed, and zero dirty paths.
 
@@ -210,7 +214,7 @@ authority.
 
 Stop and report rather than forcing progress when:
 
-- exported `file.Exists` behavior, its signature, or caller compatibility
+- exported `file.Overwrite` behavior, its signature, or caller compatibility
   cannot be preserved;
 - the filesystem dependency is incomplete, unresolvable, function-valued, or
   unsafe at its zero value;
@@ -220,5 +224,5 @@ Stop and report rather than forcing progress when:
   measured cleanly;
 - the work requires P4-P8 implementation, publication, distribution, or a real
   successor launch; or
-- the focused `file.Exists` move and its separate automatic handoff are
+- the focused `file.Overwrite` move and its separate automatic handoff are
   complete.
