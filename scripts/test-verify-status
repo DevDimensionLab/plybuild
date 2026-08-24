@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+tmp_base=${TMPDIR:-/tmp}
+tmp_base=${tmp_base%/}
+work_root=$(mktemp -d "$tmp_base/ply-test-verify-status.XXXXXX")
+trap 'rm -rf "$work_root"' EXIT
+source "$repo_root/test/acceptance/meta-common.sh"
+artifact="$work_root/fake-ply"
+
+cat >"$artifact" <<'FAKE_ARTIFACT'
+#!/usr/bin/env bash
+set -euo pipefail
+mode=${PLY_FAKE_MODE:-good}
+if [[ "${1:-}" == status && "${2:-}" == --help ]]; then
+	[[ "$mode" != bad-help ]] || exit 1
+	printf 'Status functionality for a project\n'
+	exit 0
+fi
+target=''
+previous=''
+for argument in "$@"; do
+	if [[ "$previous" == --target ]]; then target=$argument; fi
+	previous=$argument
+done
+if [[ ! -f "$target/pom.xml" ]]; then
+	[[ "$mode" != bad-input-write ]] || printf 'unexpected\n' >"$target/created"
+	[[ "$mode" != bad-input-success ]] || exit 0
+	exit 1
+fi
+if [[ "$mode" == mutate ]]; then
+	printf '\nmeta-mutation\n' >>"$target/pom.xml"
+fi
+if [[ "$mode" != silent ]]; then
+	printf 'project status in %s\noutdated dependency\n' "$target"
+fi
+exit 0
+FAKE_ARTIFACT
+chmod +x "$artifact"
+
+verifier="$repo_root/scripts/verify-status"
+acceptance_meta_expect_pass good env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=good "$verifier"
+acceptance_meta_expect_fail mutate env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=mutate "$verifier"
+acceptance_meta_expect_fail silent env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=silent "$verifier"
+acceptance_meta_expect_fail bad-help env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=bad-help "$verifier"
+acceptance_meta_expect_fail bad-input-success env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=bad-input-success "$verifier"
+acceptance_meta_expect_fail bad-input-write env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=bad-input-write "$verifier"
+printf 'test-verify-status: PASS (%s controls)\n' "$acceptance_meta_control"

@@ -9,7 +9,7 @@ SCRIPTS_DIR ?= $(REPO_ROOT)/scripts
 
 .DEFAULT_GOAL := all
 
-.PHONY: all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight release release-brew run test test-agent-start test-cli-surface test-compatibility test-install test-lint test-preflight upgrade
+.PHONY: acceptance all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight release release-brew run test test-agent-start test-cli-surface test-compatibility test-install test-lint test-preflight upgrade
 
 build:
 	$(GO) build -o ply ./cmd/ply
@@ -89,6 +89,12 @@ test-compatibility:
 
 test-cli-surface:
 	$(BASH) "$(REPO_ROOT)/test/cli_surface_contract_test.sh"
+
+acceptance:
+	$(BASH) "$(REPO_ROOT)/scripts/verify-install"
+	$(BASH) "$(REPO_ROOT)/scripts/verify-status"
+	$(BASH) "$(REPO_ROOT)/scripts/verify-upgrade"
+	$(BASH) "$(REPO_ROOT)/scripts/verify-build"
 
 preflight: compatibility
 	$(GO) build ./...

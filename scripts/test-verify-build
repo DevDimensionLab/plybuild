@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+tmp_base=${TMPDIR:-/tmp}
+tmp_base=${tmp_base%/}
+work_root=$(mktemp -d "$tmp_base/ply-test-verify-build.XXXXXX")
+trap 'rm -rf "$work_root"' EXIT
+source "$repo_root/test/acceptance/meta-common.sh"
+artifact="$work_root/fake-ply"
+
+cat >"$artifact" <<'FAKE_ARTIFACT'
+#!/usr/bin/env bash
+set -euo pipefail
+mode=${PLY_FAKE_MODE:-good}
+if [[ "${1:-}" == build && "${2:-}" == --help ]]; then
+	[[ "$mode" != bad-help ]] || exit 1
+	printf 'Builds a ply project\n'
+	exit 0
+fi
+target=''
+config_file=''
+previous=''
+for argument in "$@"; do
+	if [[ "$previous" == --target ]]; then target=$argument; fi
+	if [[ "$previous" == --config-file ]]; then config_file=$argument; fi
+	previous=$argument
+done
+if [[ "${config_file##*/}" == bad-config.json ]]; then
+	[[ "$mode" != bad-input-write ]] || printf 'unexpected\n' >"$target/created"
+	[[ "$mode" != bad-input-success ]] || exit 0
+	exit 1
+fi
+if [[ "$mode" != noop ]]; then
+	group_id=com.example
+	[[ "$mode" != wrong-config ]] || group_id=com.wrong
+	printf '{\n    "groupId": "%s"\n}\n' "$group_id" >"$target/ply.json"
+fi
+if [[ "$mode" == broad-write ]]; then
+	printf 'unexpected\n' >"$target/extra-output"
+fi
+printf 'writes project config file to %s/ply.json\n' "$target"
+exit 0
+FAKE_ARTIFACT
+chmod +x "$artifact"
+
+verifier="$repo_root/scripts/verify-build"
+acceptance_meta_expect_pass good env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=good "$verifier"
+acceptance_meta_expect_fail noop env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=noop "$verifier"
+acceptance_meta_expect_fail broad-write env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=broad-write "$verifier"
+acceptance_meta_expect_fail wrong-config env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=wrong-config "$verifier"
+acceptance_meta_expect_fail bad-help env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=bad-help "$verifier"
+acceptance_meta_expect_fail bad-input-success env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=bad-input-success "$verifier"
+acceptance_meta_expect_fail bad-input-write env PLY_VERIFY_ARTIFACT="$artifact" PLY_FAKE_MODE=bad-input-write "$verifier"
+printf 'test-verify-build: PASS (%s controls)\n' "$acceptance_meta_control"

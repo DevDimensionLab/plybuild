@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+tmp_base=${TMPDIR:-/tmp}
+tmp_base=${tmp_base%/}
+work_root=$(mktemp -d "$tmp_base/ply-verify-install.XXXXXX")
+trap 'rm -rf "$work_root"' EXIT
+log="$work_root/verdict.log"
+go_bin=${PLY_VERIFY_GO:-${GO:-go}}
+gobin="$work_root/missing-bin"
+failures=0
+guard_message='A help probe alone proves nothing without a fresh installed artifact.'
+printf '%s\n' "$guard_message" | tee -a "$log" >/dev/null
+
+if (
+	cd "$repo_root"
+	GOBIN="$gobin" GOCACHE="$work_root/gocache" "$go_bin" install ./cmd/ply
+) >"$work_root/install.stdout" 2>"$work_root/install.stderr"; then
+	printf 'install command: PASS\n' | tee -a "$log"
+else
+	printf 'install command: FAIL\n' | tee -a "$log"
+	failures=$((failures + 1))
+fi
+
+artifact="$gobin/ply"
+if [[ -f "$artifact" && -x "$artifact" && ! -L "$artifact" ]]; then
+	printf 'installed artifact: PASS\n' | tee -a "$log"
+else
+	printf 'installed artifact: FAIL\n' | tee -a "$log"
+	failures=$((failures + 1))
+fi
+
+if [[ -x "$artifact" ]] && HOME="$work_root/home" "$artifact" --help \
+	>"$work_root/help.stdout" 2>"$work_root/help.stderr" &&
+	grep -F 'Usage:' "$work_root/help.stdout" >/dev/null; then
+	printf 'installed --help: PASS\n' | tee -a "$log"
+else
+	printf 'installed --help: FAIL\n' | tee -a "$log"
+	failures=$((failures + 1))
+fi
+
+mkdir -p "$work_root/bad-input-project"
+set +e
+if [[ -x "$artifact" ]]; then
+	(
+		cd "$work_root/bad-input-project"
+		HOME="$work_root/home" "$artifact" definitely-not-a-command
+	) >"$work_root/bad.stdout" 2>"$work_root/bad.stderr"
+	bad_exit=$?
+else
+	bad_exit=0
+fi
+set -e
+printf 'bad-input exit=%s\n' "$bad_exit" | tee -a "$log"
+if [[ "$bad_exit" -eq 0 || -n "$(find "$work_root/bad-input-project" -mindepth 1 -print -quit)" ]]; then
+	failures=$((failures + 1))
+fi
+
+[ "$failures" -eq 0 ]
+printf 'verify-install: PASS\n'
