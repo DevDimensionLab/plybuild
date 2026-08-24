@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T23:35:19+02:00
+Generated: 2026-08-25T00:05:43+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,8 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `61714a503ebc`.
-- Restart preparation base: `61714a503ebc`.
+- Measured implementation head: `60e5aac770cd`.
+- Restart preparation base: `60e5aac770cd`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no product implementation changes.
 - No push, merge, release, publication, stash, revert, successor launch, or
@@ -34,6 +34,7 @@ a7eb3ef quality: move Wpost behind HTTP and filesystem adapters
 e13a036 quality: move Bitbucket selection behind filesystem adapter
 f59a3f0 quality: move file existence behind filesystem adapter
 61714a5 quality: move file overwrite behind filesystem adapter
+60e5aac quality: move file create behind filesystem adapter
 ```
 
 The separate operational continuity implementation is:
@@ -48,8 +49,8 @@ It changes no Go quality denominator and is separate from P3 move numbering.
 
 `codex-dev-start.sh` remains `NEXT` while P3 is active and P4-P8 remain queued
 in the machine-readable plan block. Its active archive is
-`docs/plan/agent-sessions/2026-08-24T233519+0200-migrate-file-create.md`.
-The file-overwrite predecessor is answered history, and the reciprocal archive
+`docs/plan/agent-sessions/2026-08-25T000314+0200-migrate-file-directory.md`.
+The file-create predecessor is answered history, and the reciprocal archive
 graph has exactly one `NEXT` tail.
 
 Normal launch is a Bash 3.2-compatible, non-interactive supervisor. Each
@@ -80,64 +81,66 @@ executable. Mutable header and prompt data remain inert after the stable
 execution boundary; the pinned normalized skeleton digest is
 `4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`.
 
-## P3 Move 14 Preserved
+## P3 Move 15 Preserved
 
-Exported `file.Overwrite(lines []string, filePath string) error`, all callers,
-and every P2A API/CLI/subprocess contract remain unchanged. The package owns a
-private complete overwrite dependency containing `filesystem.Dependencies`.
-Production selects `filesystem.System()` and the private helper delegates the
-single write to `filesystem.WriteFile`, preserving exact
-`strings.Join(lines, "\n")` bytes, mode `0644`, and dependency errors.
+Exported `file.CreateFile(path, content string) error`, all callers, and every
+P2A API/CLI/subprocess contract remain unchanged. The package owns a private
+complete create dependency containing `filesystem.Dependencies`. Production
+selects `filesystem.System()` and the private helper delegates the write to
+`filesystem.WriteFile`, preserving exact `[]byte(content)` bytes, mode `0644`,
+and dependency errors.
 
 The dependency's zero value returns `filesystem.ErrNoFilesystem` without
-mutating a developer path. Four recording contracts prove the complete lines,
-path, dependency value, empty/single/multiple-line bytes, mode, error
-propagation, production system selection, safe defaults, and a non-empty
-recorded write population. The filesystem adapter contract, inventory, seam
-drivers, and mutation labels did not change.
+mutating a developer path. Four recording contracts prove the complete path,
+content, dependency value, representative empty and multiline bytes, mode,
+error propagation, production system selection, safe defaults, and a
+non-empty recorded write population. The filesystem adapter contract,
+inventory, seam drivers, mutation labels, public API, and callers did not
+change. `file.OpenFile` retains its direct `os.OpenFile` behavior.
 
 ## Measured Quality State
 
-The clean full audit at `61714a503ebc` reports:
+The clean full audit at `60e5aac770cd` reports:
 
 - Absolute L0: 8 of 8.
-- 144 test functions, zero skipped; 16 of 25 packages have tests.
+- 148 test functions, zero skipped; 16 of 25 packages have tests.
 - Q0.6: 18 guarded safe-writer sites, 13 write and 5 copy, with zero unsafe
   direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
 - Q1.1: 9 of 25 packages have no tests.
 - Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 55 direct external sites outside declared adapters of 65 production
+- Q1.3: 54 direct external sites outside declared adapters of 64 production
   effect sites. Clock and server are absent, making this ratchet
   non-comparable.
 - Q1.4: 7 of 8 declared seams covered.
 - Exact Q2.1: 0 of 8 subjects have an executable harness.
+- Q3.4: 0 temporary-state claims.
 - Acceptance scripts: 4 of 4; Q2.5, Q2.6, Q2.7, and Q2.10 pass.
 - Full audit: expected exit 1 for 16 documented findings, never 2.
 - Comparable ratchets: five improved, two held, zero regressed; Q1.3 is the
   single non-comparable ratchet.
 - Measurement identity: clean at tree
-  `e65e3307c58ffa37c84177c1b54c437c9efb6c20`, status SHA-256
+  `607b086a3a97578385859ceec03a360cf2dba59a`, status SHA-256
   `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`
   and zero dirty paths.
 
-The clean report is `/private/tmp/ply-file-overwrite-full-audit.6TPy0C/report`. Focused
-and preflight reports were also kept under `/private/tmp`, so no ignored
-quality or compatibility artifact entered the measured tree.
+The clean report is `/private/tmp/ply-file-create-full-clean.efh7lR`. Focused,
+preflight, and compatibility reports were also kept under `/private/tmp`, so
+no ignored report entered the measured tree.
 
 ## Decisions And Learned Facts
 
-1. The private overwrite dependency needs the complete
+1. The private create dependency requires the complete
    `filesystem.Dependencies` value. Production selects `filesystem.System()`;
    the helper remains independently recordable without a function-valued
    effect dependency.
-2. `filesystem.WriteFile` already supplies the complete operation needed by
-   `Overwrite`; the adapter contract did not need to change.
+2. `filesystem.WriteFile` already supplies the complete operation required by
+   `CreateFile`; the adapter contract did not change.
 3. The zero dependency is safely non-mutating because
    `filesystem.WriteFile` returns `filesystem.ErrNoFilesystem` before a write.
-4. Exported `file.CreateFile` has the next isolated direct `os.WriteFile` site.
-   Its signature, exact content bytes, mode, errors, and callers must stay
-   unchanged.
+4. Exported `file.CreateDirectory` is the next isolated filesystem flow. Its
+   direct `os.Stat` and `os.MkdirAll` can use the existing adapter while its
+   missing-only selection, mode, errors, signature, and callers stay fixed.
 5. A function-valued effect dependency makes Q1.3 fail closed. Production
    moves use resolvable interfaces and complete dependency values.
 6. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
@@ -148,41 +151,42 @@ quality or compatibility artifact entered the measured tree.
 8. Set `GOLANGCI_LINT_CACHE` and `GOCACHE` to writable external directories
    when the default caches reject writes. Keep every generated report outside
    the measured tree.
-9. Supervisor success is the conjunction of process exit, structured terminal
-   stream, and committed repository evidence. Final prose is observable only.
-10. One repeated `make test` run missed the partial raw log in the nested
-    signal fixture. Standalone and preflight runs had passed, and the immediate
-    complete rerun passed all 62 controls without a code change. Preserve this
-    as a timing-sensitive harness observation unless it becomes reproducible.
+9. The ignored inherited `.agent-task/current.md` is not task authority. A
+   clean local clone produced the implementation checkpoint identity without
+   deleting or changing that user-owned file.
+10. Supervisor success is the conjunction of process exit, structured
+    terminal stream, and committed repository evidence. Final prose is
+    observable only.
 
 ## Next Objective
 
-Move only exported `file.CreateFile` behind the existing filesystem adapter.
-Start with recording contracts in `pkg/file`: require the complete path,
-content, and dependency; prove exact content bytes and mode `0644`, dependency-
-error propagation, safe zero-value behavior, production selection of
-`filesystem.System()`, and rejection of an empty recorded population. Exercise
-no developer path and perform no real filesystem mutation.
+Move only exported `file.CreateDirectory` behind the existing filesystem
+adapter. Start with recording contracts in `pkg/file`: require the complete
+path and dependency; prove missing-path selection of exactly one recursive
+directory creation with mode `0755`, existing-path and non-missing stat-error
+selection of no creation, preservation of the original missing-path stat error
+when creation fails, safe zero-value behavior, production selection of
+`filesystem.System()`, and non-empty recorded stat and creation populations.
+Exercise no developer path and perform no real filesystem mutation.
 
-Keep `file.CreateFile(path, content string) error`, `file.OpenFile`, direct
-callers in config and command code, and every observable result unchanged. Use
+Keep `file.CreateDirectory(dir string) error`, its config and command callers,
+`file.CreateFile`, `file.OpenFile`, and every observable result unchanged. Use
 a private complete dependency boundary, with the exported function as the
-production wrapper. Remove only its direct `os.WriteFile` in
-`pkg/file/file.go`; do not move `OpenFile`'s `os.OpenFile` or another file
-operation, modify the adapter contract without focused proof, or enter
-Bitbucket, HTTP/process, config behavior, clock/server, P4, P5, or later roadmap
-work.
+production wrapper. Remove only its direct `os.Stat` and `os.MkdirAll` in
+`pkg/file/file.go`; do not move another file operation, modify the adapter
+contract without focused proof, or enter Bitbucket, HTTP/process, config
+behavior, clock/server, P4, P5, or later roadmap work.
 
-Expected direction is one fewer Q1.3 violation and one fewer production effect
-site, nominally 54 of 64, but regenerate the exact structured measurement and
-accept it only with zero comparable ratchet regressions. Q1.2, Q1.4, and exact
-Q2.1 should remain unchanged.
+Expected direction is two fewer Q1.3 violations and two fewer production
+effect sites, nominally 52 of 62, but regenerate the exact structured
+measurement and accept it only with zero comparable ratchet regressions.
+Q1.2, Q1.4, and exact Q2.1 should remain unchanged.
 
 ## Verification Notes
 
-Completed from clean implementation commit `61714a503ebc`:
+Completed from clean implementation commit `60e5aac770cd`:
 
-- Red file-overwrite evidence: new contracts failed to compile because the
+- Red file-create evidence: new contracts failed to compile because the
   private dependency constructor and helper did not exist.
 - Focused file/filesystem and all relevant caller tests: PASS.
 - `/bin/bash test/codex_dev_start_test.sh`: PASS, 62 controls.
@@ -193,18 +197,16 @@ Completed from clean implementation commit `61714a503ebc`:
   PASS.
 - Host install, status, upgrade, and build acceptance: PASS, 4 of 4.
 - Empty-HOME `go test ./... -count=2`: PASS.
-- Focused seven-ratchet audit: expected exit 1 with Q1.3 at 55 of 65, four
+- Focused seven-ratchet audit: expected exit 1 with Q1.3 at 54 of 64, four
   improved, two held, zero regressed, and one not comparable.
 - Clean full audit: expected exit 1, 16 documented findings, L0 8 of 8, five
   improved, two held, zero regressed, and zero dirty paths.
-- One intermediate `make test` invocation hit the signal-fixture observation
-  recorded above; the complete rerun passed.
 
 Tool paths used were `/private/tmp/ply-p2b-api.4umBuM/bin/apidiff` and
 `/private/tmp/ply-p2b-lint.SGWVGp/bin/golangci-lint`; probe before reuse.
 
 Environment: host Go 1.26.2 on Darwin arm64, module Go 1.18, `/bin/bash`
-3.2.57, PATH Bash 5.3.9, and `codex-cli 0.149.0`.
+3.2.57, PATH Bash 5.3.9, and `golangci-lint` 2.12.2.
 
 ## Start
 
@@ -223,15 +225,15 @@ authority.
 
 Stop and report rather than forcing progress when:
 
-- exported `file.CreateFile` behavior, its signature, or caller compatibility
-  cannot be preserved;
+- exported `file.CreateDirectory` behavior, its signature, or caller
+  compatibility cannot be preserved;
 - the filesystem dependency is incomplete, unresolvable, function-valued, or
   unsafe at its zero value;
 - the effect cannot be isolated without moving another file operation or
   changing the existing adapter contract without proof;
 - a comparable ratchet regresses, the audit exits 2, or the tree cannot be
   measured cleanly;
-- the work requires P4-P8 implementation, publication, distribution, or a real
-  successor launch; or
-- the focused `file.CreateFile` move and its separate automatic handoff are
-  complete.
+- the work requires P4-P8 implementation, publication, distribution, or a
+  real successor launch; or
+- the focused `file.CreateDirectory` move and its separate automatic handoff
+  are complete.
