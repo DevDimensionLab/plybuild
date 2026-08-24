@@ -3,6 +3,7 @@ package filesystem
 
 import (
 	"errors"
+	"io"
 	"io/fs"
 	"os"
 )
@@ -11,12 +12,20 @@ import (
 // operating-system filesystem operation.
 var ErrNoFilesystem = errors.New("filesystem dependency is not configured")
 
+// File is a created file that can receive bytes and be closed by its caller.
+type File interface {
+	io.Writer
+	io.Closer
+}
+
 // FileSystem performs the filesystem operations used by a migrated flow.
 type FileSystem interface {
 	ReadFile(string) ([]byte, error)
 	Stat(string) (fs.FileInfo, error)
 	MkdirAll(string, fs.FileMode) error
 	WriteFile(string, []byte, fs.FileMode) error
+	Create(string) (File, error)
+	Copy(File, io.Reader) (int64, error)
 }
 
 // Dependencies contains the filesystem effect used by a caller. Its zero
@@ -69,6 +78,22 @@ func WriteFile(dependencies Dependencies, path string, data []byte, mode fs.File
 	return dependencies.FileSystem.WriteFile(path, data, mode)
 }
 
+// Create passes the complete destination path to the configured dependency.
+func Create(dependencies Dependencies, path string) (File, error) {
+	if dependencies.FileSystem == nil {
+		return nil, ErrNoFilesystem
+	}
+	return dependencies.FileSystem.Create(path)
+}
+
+// Copy passes the created destination and response body to the configured dependency.
+func Copy(dependencies Dependencies, destination File, source io.Reader) (int64, error) {
+	if dependencies.FileSystem == nil {
+		return 0, ErrNoFilesystem
+	}
+	return dependencies.FileSystem.Copy(destination, source)
+}
+
 // System returns the production dependency that uses the operating-system filesystem.
 func System() Dependencies {
 	return Dependencies{FileSystem: systemFilesystem{}}
@@ -90,4 +115,12 @@ func (systemFilesystem) MkdirAll(path string, mode fs.FileMode) error {
 
 func (systemFilesystem) WriteFile(path string, data []byte, mode fs.FileMode) error {
 	return os.WriteFile(path, data, mode)
+}
+
+func (systemFilesystem) Create(path string) (File, error) {
+	return os.Create(path)
+}
+
+func (systemFilesystem) Copy(destination File, source io.Reader) (int64, error) {
+	return io.Copy(destination, source)
 }

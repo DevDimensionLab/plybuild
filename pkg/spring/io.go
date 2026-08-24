@@ -2,6 +2,8 @@ package spring
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
+	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/http"
@@ -85,22 +87,70 @@ func DownloadInitializer(targetDir string, formData url.Values) error {
 	if err != nil {
 		return err
 	}
+	return downloadInitializer(initializerDependencies{IO: packageInitializerIO{}}, targetDir, formData, targetArchiveFile)
+}
 
+type initializerIO interface {
+	Download(string, string) error
+	Unzip(string, string) ([]string, error)
+	Delete(string) error
+}
+
+type initializerDependencies struct {
+	IO initializerIO
+}
+
+func (dependencies initializerDependencies) Download(downloadURL, archivePath string) error {
+	if dependencies.IO == nil {
+		return httpclient.ErrNoClient
+	}
+	return dependencies.IO.Download(downloadURL, archivePath)
+}
+
+func (dependencies initializerDependencies) Unzip(archivePath, targetDirectory string) ([]string, error) {
+	if dependencies.IO == nil {
+		return nil, filesystem.ErrNoFilesystem
+	}
+	return dependencies.IO.Unzip(archivePath, targetDirectory)
+}
+
+func (dependencies initializerDependencies) Delete(archivePath string) error {
+	if dependencies.IO == nil {
+		return filesystem.ErrNoFilesystem
+	}
+	return dependencies.IO.Delete(archivePath)
+}
+
+type packageInitializerIO struct{}
+
+func (packageInitializerIO) Download(downloadURL, archivePath string) error {
+	return http.Wget(downloadURL, archivePath)
+}
+
+func (packageInitializerIO) Unzip(archivePath, targetDirectory string) ([]string, error) {
+	return shell.Unzip(archivePath, targetDirectory)
+}
+
+func (packageInitializerIO) Delete(archivePath string) error {
+	return file.DeleteSingleFile(archivePath)
+}
+
+func downloadInitializer(dependencies initializerDependencies, targetDir string, formData url.Values, targetArchiveFile string) error {
 	downloadUrl := fmt.Sprintf("%s/starter.zip?%s", baseUrl, formData.Encode())
 	log.Infof("Downloading from %s to %s", baseUrl, targetArchiveFile)
-	err = http.Wget(downloadUrl, targetArchiveFile)
+	err := dependencies.Download(downloadUrl, targetArchiveFile)
 	if err != nil {
 		return err
 	}
 
 	log.Infof("Unzipping %s to %s", targetArchiveFile, targetDir)
-	_, err = shell.Unzip(targetArchiveFile, targetDir)
+	_, err = dependencies.Unzip(targetArchiveFile, targetDir)
 	if err != nil {
 		return err
 	}
 
 	log.Infof("Deleting archive file: %s", targetArchiveFile)
-	err = file.DeleteSingleFile(targetArchiveFile)
+	err = dependencies.Delete(targetArchiveFile)
 	return err
 }
 

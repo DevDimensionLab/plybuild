@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -49,6 +50,14 @@ func (recording *recordingFilesystem) WriteFile(path string, data []byte, mode f
 		Name: "write", Path: path, Data: append([]byte(nil), data...), Mode: mode,
 	})
 	return recording.writeErr
+}
+
+func (*recordingFilesystem) Create(string) (File, error) {
+	return nil, errors.New("unexpected create")
+}
+
+func (*recordingFilesystem) Copy(File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected copy")
 }
 
 func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {

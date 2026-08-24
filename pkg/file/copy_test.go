@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -72,6 +73,14 @@ func (recording *recordingCopyFilesystem) WriteFile(path string, data []byte, mo
 		Name: "write", Path: path, Data: append([]byte(nil), data...), Mode: mode,
 	})
 	return recording.writeErr
+}
+
+func (*recordingCopyFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected create")
+}
+
+func (*recordingCopyFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected copy")
 }
 
 func (recording *recordingCopyFilesystem) assertedOperations() ([]recordedCopyOperation, error) {

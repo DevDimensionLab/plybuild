@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# P3 seam-test driver only. This file is deliberately non-executable and does
+# not implement the later Spring mutation harness.
+# 5. Spring download keeps URL before archive path
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+go_bin=${GO:-go}
+
+cd "$repo_root"
+"$go_bin" test -json ./internal/adapter/filesystem ./pkg/http ./pkg/spring -count=1 \
+	-run '^(TestArchiveDependenciesDefaultToSafeNoCreateOrCopy|TestArchiveOperationsPassCompletePathFileAndBody|TestArchiveOperationsReturnDependencyErrors|TestSystemCreateTruncatesAndCopiesArchiveBytes|TestWgetPassesCompleteAnonymousRequestBeforeArchivePathAndCopiesBody|TestWgetReturnsDependencyErrorsAndPreservesCloseOrder|TestWgetDependenciesDefaultToNoRequestOrArchiveMutation|TestWgetSystemPreservesAnonymousTransportAndCreateTruncate|TestSpringDownloadKeepsCompleteEncodedURLBeforeCompleteResolvedArchivePath|TestSpringDownloadReturnsDependencyErrorsInFollowUpOrder|TestSpringDownloadDependenciesDefaultToNoRequestOrMutation|TestRecordedSpringDownloadOperationsRejectEmptyPopulation|TestArchivePathRetainsWorkingDirectoryAndSpringUnixZipName)$'

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"io"
 	"net/http"
@@ -119,22 +120,31 @@ func GetJsonWithAccessToken(host string, path string, accessToken string, respon
 }
 
 func Wget(url, filepath string) error {
-	// Get the data
-	resp, err := http.Get(url)
+	return wget(wgetDependencies{
+		HTTP:  httpclient.System(),
+		Files: filesystem.System(),
+	}, url, filepath)
+}
+
+type wgetDependencies struct {
+	HTTP  httpclient.Dependencies
+	Files filesystem.Dependencies
+}
+
+func wget(dependencies wgetDependencies, url, filepath string) error {
+	resp, err := httpclient.Execute(dependencies.HTTP, httpclient.Request{URL: url})
 	if err != nil {
 		return err
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	// Create the file
-	out, err := os.Create(filepath)
+	out, err := filesystem.Create(dependencies.Files, filepath)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = out.Close() }()
 
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
+	_, err = filesystem.Copy(dependencies.Files, out, resp.Body)
 	return err
 }
 
