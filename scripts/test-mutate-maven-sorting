@@ -20,6 +20,8 @@ fail() {
 	fail 'driver must be a non-executable regular file until the P5 mutation move'
 [[ $(grep -Fxc '# 2. Maven command keeps executable before arguments' "$driver") -eq 1 ]] ||
 	fail 'maven-process mutation label is missing or duplicated'
+[[ $(grep -Fxc '# 4. Maven metadata keeps username before password' "$driver") -eq 1 ]] ||
+	fail 'maven-http mutation label is missing or duplicated'
 if grep -Eq '^mutate2? ' "$driver"; then
 	fail 'P3 seam driver unexpectedly declares a mutation harness operation'
 fi
@@ -31,6 +33,11 @@ tests=(
 	TestMavenCommandKeepsExecutableBeforeArguments
 	TestMavenProcessDependenciesDefaultToNoProcess
 	TestRecordedMavenCommandsRejectEmptyPopulation
+	TestMavenMetadataKeepsUsernameBeforePasswordAndParsesResponse
+	TestMavenMetadataWithoutAuthSelectsAnonymousRequest
+	TestMavenMetadataReturnsDependencyErrorAfterCompleteDelivery
+	TestMavenMetadataDependenciesDefaultToNoRequest
+	TestRecordedMavenMetadataRequestsRejectEmptyPopulation
 )
 [[ ${#tests[@]} -gt 0 ]] || fail 'asserted Maven test population is empty'
 for test_name in "${tests[@]}"; do

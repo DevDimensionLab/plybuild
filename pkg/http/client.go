@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"io"
 	"net/http"
 	"net/url"
@@ -25,7 +26,11 @@ func GetJson(url string, parsed interface{}) error {
 }
 
 func GetXml(url string, parsed interface{}) error {
-	body, err := get(url)
+	return getXml(httpclient.System(), url, parsed)
+}
+
+func getXml(dependencies httpclient.Dependencies, url string, parsed interface{}) error {
+	body, err := getHTTPResponse(dependencies, httpclient.Request{URL: url})
 	if err != nil {
 		return err
 	}
@@ -40,6 +45,15 @@ func GetXml(url string, parsed interface{}) error {
 
 func get(url string) ([]byte, error) {
 	resp, err := http.Get(url)
+	return responseBody(url, resp, err)
+}
+
+func getHTTPResponse(dependencies httpclient.Dependencies, request httpclient.Request) ([]byte, error) {
+	resp, err := httpclient.Execute(dependencies, request)
+	return responseBody(request.URL, resp, err)
+}
+
+func responseBody(url string, resp *http.Response, err error) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +72,17 @@ func get(url string) ([]byte, error) {
 }
 
 func GetAuthXml(url, username, password string, parsed interface{}) error {
-	body, err := getBasicAuth(url, username, password)
+	return getAuthXml(httpclient.System(), url, username, password, parsed)
+}
+
+func getAuthXml(dependencies httpclient.Dependencies, url, username, password string, parsed interface{}) error {
+	body, err := getHTTPResponse(dependencies, httpclient.Request{
+		URL: url,
+		BasicAuth: &httpclient.BasicAuth{
+			Username: username,
+			Password: password,
+		},
+	})
 	if err != nil {
 		return err
 	}
@@ -69,32 +93,6 @@ func GetAuthXml(url, username, password string, parsed interface{}) error {
 	}
 
 	return nil
-}
-
-func getBasicAuth(url, username, password string) ([]byte, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	client := &http.Client{}
-	req.SetBasicAuth(username, password)
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("%s returned status code [%s]", url, resp.Status)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return body, err
-	}
-
-	return body, nil
 }
 
 func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {

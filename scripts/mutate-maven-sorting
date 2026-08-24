@@ -2,6 +2,7 @@
 # P3 seam-test driver only. This file is deliberately non-executable and does
 # not implement the later maven-sorting mutation harness.
 # 2. Maven command keeps executable before arguments
+# 4. Maven metadata keeps username before password
 
 set -euo pipefail
 export LC_ALL=C LANG=C GOENV=off GOWORK=off
@@ -11,4 +12,4 @@ go_bin=${GO:-go}
 
 cd "$repo_root"
 "$go_bin" test -json ./pkg/maven -count=1 \
-	-run '^(TestMavenCommandKeepsExecutableBeforeArguments|TestMavenProcessDependenciesDefaultToNoProcess|TestRecordedMavenCommandsRejectEmptyPopulation)$'
+	-run '^(TestMavenCommandKeepsExecutableBeforeArguments|TestMavenProcessDependenciesDefaultToNoProcess|TestRecordedMavenCommandsRejectEmptyPopulation|TestMavenMetadataKeepsUsernameBeforePasswordAndParsesResponse|TestMavenMetadataWithoutAuthSelectsAnonymousRequest|TestMavenMetadataReturnsDependencyErrorAfterCompleteDelivery|TestMavenMetadataDependenciesDefaultToNoRequest|TestRecordedMavenMetadataRequestsRejectEmptyPopulation)$'
