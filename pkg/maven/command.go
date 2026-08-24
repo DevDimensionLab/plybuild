@@ -2,21 +2,27 @@ package maven
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/logger"
-	"os/exec"
 	"strings"
 )
 
 const versionsPlugin = "org.codehaus.mojo:versions-maven-plugin:2.8.1"
 
 func RunOn(cmd string, args ...string) func(repository Repository, project config.Project) error {
+	return runOn(process.System(), cmd, args...)
+}
+
+func runOn(dependencies process.Dependencies, cmd string, args ...string) func(repository Repository, project config.Project) error {
 	return func(repository Repository, project config.Project) error {
 		log.Infof("running: [%s] => %s %s", project.Path, cmd, strings.Join(args, " "))
-		cmd := exec.Command(cmd, args...)
-		cmd.Dir = project.Path
-		cmd.Stdout = logger.StdOut()
-		return cmd.Run()
+		return process.Execute(dependencies, process.Command{
+			Name:   cmd,
+			Args:   args,
+			Dir:    project.Path,
+			Stdout: logger.StdOut(),
+		})
 	}
 }
 

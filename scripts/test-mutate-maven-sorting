@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+driver="$repo_root/scripts/mutate-maven-sorting"
+tmp_base=${TMPDIR:-/tmp}
+tmp_base=${tmp_base%/}
+work_root=$(mktemp -d "$tmp_base/ply-test-maven-seams.XXXXXX")
+trap 'rm -rf "$work_root"' EXIT
+mkdir -p "$work_root/cache" "$work_root/tmp"
+
+fail() {
+	printf 'Maven seam driver meta-test: %s\n' "$*" >&2
+	exit 1
+}
+
+[[ -f "$driver" && ! -L "$driver" && ! -x "$driver" ]] ||
+	fail 'driver must be a non-executable regular file until the P5 mutation move'
+[[ $(grep -Fxc '# 2. Maven command keeps executable before arguments' "$driver") -eq 1 ]] ||
+	fail 'maven-process mutation label is missing or duplicated'
+if grep -Eq '^mutate2? ' "$driver"; then
+	fail 'P3 seam driver unexpectedly declares a mutation harness operation'
+fi
+
+GOCACHE="$work_root/cache" GOTMPDIR="$work_root/tmp" \
+	bash "$driver" >"$work_root/test.json"
+
+tests=(
+	TestMavenCommandKeepsExecutableBeforeArguments
+	TestMavenProcessDependenciesDefaultToNoProcess
+	TestRecordedMavenCommandsRejectEmptyPopulation
+)
+[[ ${#tests[@]} -gt 0 ]] || fail 'asserted Maven test population is empty'
+for test_name in "${tests[@]}"; do
+	grep -F '"Action":"run"' "$work_root/test.json" |
+		grep -F '"Test":"'"$test_name"'"' >/dev/null ||
+		fail "Maven contract did not run: $test_name"
+done
+
+printf 'test-mutate-maven-sorting: PASS (%s recording contracts)\n' "${#tests[@]}"
