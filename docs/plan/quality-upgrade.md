@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-24, commit `eb987fd`.
+Last measured checkpoint: 2026-08-24, commit `14764fd`.
 
 ## Objective
 
@@ -29,8 +29,8 @@ The user has authorized the ordered roadmap through P8. The following block is
 machine-readable launcher state; keep the order and vocabulary exact.
 
 <!-- CODEX_AUTHORIZED_CHECKPOINTS_BEGIN -->
-P2A|active
-P2B|queued
+P2A|complete
+P2B|active
 P3|queued
 P4|queued
 P5|queued
@@ -41,20 +41,20 @@ P8|queued
 
 ## Measured State
 
-| Signal | Baseline | P1B | Interpretation |
-| --- | ---: | ---: | --- |
-| Absolute L0 PASS | 2 / 8 | 8 / 8 | Q0.3 and Q0.8 are closed. |
-| Test functions | 33 | 37 | Entrypoint and repository-write controls were added. |
-| Skipped tests | 2 | 0 | Q0.6 improved. |
-| Packages with tests | 5 / 20 | 7 / 22 | Fifteen packages still have no test files. |
-| Process-exiting calls outside `main` | 127 | 127 | Formal ratchet PASS, debt unchanged. |
-| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | Q1.3 fails; all five adapter paths are absent. |
-| Declared seam swap tests | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
-| Mutation harnesses | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
-| Acceptance scripts | 0 / 4 | 0 / 4 | Q2.5 fails. |
-| Production scripts without meta-tests | 1 / 1 | 0 / 1 | Q0.8 improved; the population is non-empty. |
-| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | Synthetic non-empty fixtures prove schema reachability; current mutation/acceptance populations remain zero. |
-| Baseline numeric debt leaves | 228 | 228 | Schema-1 and schema-2 instruments produced identical denominators and criterion objects. |
+| Signal | Baseline | P1B | P2A | Interpretation |
+| --- | ---: | ---: | ---: | --- |
+| Absolute L0 PASS | 2 / 8 | 8 / 8 | 8 / 8 | Q0.3 and Q0.8 remain closed. |
+| Test functions | 33 | 37 | 37 | Compatibility and acceptance use external executable controls. |
+| Skipped tests | 2 | 0 | 0 | Q0.6 remains improved. |
+| Packages with tests | 5 / 20 | 7 / 22 | 7 / 22 | Fifteen packages still have no test files. |
+| Process-exiting calls outside `main` | 127 | 127 | 127 | The CLI exporter correction preserved the ratchet. |
+| Direct external effects outside adapters | not trustworthy in upstream scan | 80 / 80 | 80 / 80 | Q1.3 fails; all five adapter paths are absent. |
+| Declared seam swap tests | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
+| Mutation harnesses | 0 / 8 | 0 / 8 | 0 / 8 | Formal ratchet PASS, debt unchanged. |
+| Acceptance scripts | 0 / 4 | 0 / 4 | 4 / 4 | Q2.5-Q2.7 and Q2.10 pass; Q2.8/Q2.9 remain manual. |
+| Production scripts without meta-tests | 1 / 1 | 0 / 1 | 0 / 7 | Q0.8 remains improved over a larger population. |
+| Reachable manual L1/L2 rows | 0 / 6 | 6 / 6 | 6 / 6 | Synthetic non-empty fixtures still prove schema reachability. |
+| Baseline numeric debt leaves | 228 | 228 | 228 | Compatibility work did not migrate the instrument. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
 
@@ -140,8 +140,8 @@ their measured mutation-harness and acceptance-script populations remain zero.
 
 ### P2A - Characterize Compatibility
 
-Status: implementation complete in three measured moves; checkpoint gate
-pending from the clean move-3 commit.
+Status: complete in three measured moves, plus one gate correction that removed
+an accidental process-exit ratchet regression from the build-ignored exporter.
 
 Move 1 pins `golang.org/x/exp/cmd/apidiff` at
 `v0.0.0-20260709172345-9ea1abe57597`. The machine-readable v1.0.1 comparison
@@ -159,6 +159,8 @@ checked-in non-empty fixtures, and loopback Maven metadata. Their 26 independent
 meta-controls kill no-op artifacts, wrong help/output, broad or read-only
 writes, and bad-input exit/artefact regressions.
 
+Commits: `224cbcc`, `06b2a24`, `5f4ba29`; gate correction `14764fd`.
+
 1. Pin an API-diff tool and record the exported Go API against tag `v1.0.1`.
    Maintain an explicit compatibility allowlist rather than reviewing raw text.
 2. Export the Cobra command/flag tree into normalized, order-independent data;
@@ -173,11 +175,13 @@ side effect, stop for an approved migration rather than hiding an exit behind
 an adapter or function variable.
 
 Exit: public API and CLI deltas are machine-readable, core surface contracts
-are executable before refactoring, and all three moves are measured.
+are executable before refactoring, and all three moves are measured. The clean
+audit at `14764fd` exits 1 only for 16 documented findings, with two improved,
+five held, and zero regressed ratchets.
 
 ### P2B - Make Distribution Non-Publishing By Default
 
-Status: one measured move after P2A.
+Status: active; one measured move.
 
 Remove or isolate the `brews` publisher in `.goreleaser.yml`, disable or guard
 `.goreleaser.brews.yml` and `make release-brew`, and provide a snapshot command
@@ -246,13 +250,13 @@ T1-T10, and report `declared == killed`, `survived == 0`, and `unusable == 0`.
 
 Status: queued.
 
-Implement acceptance scripts for `install`, `status`, `upgrade`, and `build`.
-Host install exercises `make install` / `go install`; it is not the `ply install`
-command group. Status, upgrade, and `ply build` run through both a fresh
-GoReleaser snapshot binary and a fresh Docker image. Acceptance uses local
-fixtures, cache, and loopback services so it measures the artifact without
-public infrastructure. Real-boundary smokes are separately labeled. Homebrew
-and Snap remain outside the active distribution matrix.
+Extend the P2A host acceptance scripts for `install`, `status`, `upgrade`, and
+`build` through both a fresh GoReleaser snapshot binary and a fresh Docker
+image. Host install exercises `make install` / `go install`; it is not the
+`ply install` command group. Acceptance continues to use local fixtures, cache,
+and loopback services so it measures the artifact without public
+infrastructure. Real-boundary smokes are separately labeled. Homebrew and Snap
+remain outside the active distribution matrix.
 
 Add `make quality` only when it runs preflight, mutation meta/harnesses,
 acceptance scripts, and the authoritative audit scoped to

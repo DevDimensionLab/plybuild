@@ -65,9 +65,9 @@ publishers have been removed. It does not mean an unreviewed production
 
 | State | Evidence |
 | --- | --- |
-| Verified | Host install, command help, uncached tests, empty-HOME tests, race, vet, tree identity, quality meta-tests. |
+| Verified | Host install, status, upgrade, and local build through fresh host artifacts; API/CLI compatibility; command help; uncached, empty-HOME, and race tests; vet, tree identity, and quality meta-tests. |
 | Not verified | Docker build/run, GoReleaser snapshot, public network, real cloud, Spring end-to-end behavior. |
-| Known and accepted for the next plan | Fifteen untested packages, 127 process exits outside `main`, 80 direct effect sites, zero seam swaps, zero mutation harnesses, zero acceptance scripts. |
+| Known and accepted for the next plan | Fifteen untested packages, 127 process exits outside `main`, 80 direct effect sites, zero seam swaps, zero mutation harnesses, and no snapshot/Docker acceptance yet. |
 | Known contradiction to resolve before release | `.goreleaser.yml` contains an active `brews` publisher although Homebrew is an inactive target. |
 
 ## Invariants
