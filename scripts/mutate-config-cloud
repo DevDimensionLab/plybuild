@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# P3 seam-test driver only. This file is deliberately non-executable and does
+# not implement the later config-cloud mutation harness.
+# 3. cloud clone keeps URL before target directory
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+go_bin=${GO:-go}
+
+cd "$repo_root"
+"$go_bin" test -json ./pkg/config -count=1 \
+	-run '^(TestCloudCloneKeepsCompleteURLBeforeCompleteTargetDirectory|TestCloudRefreshExistingGitPathSelectsPullWithCompleteDependency|TestCloudRefreshFormatsGitDependencyErrors|TestCloudRefreshGitDependenciesDefaultToNoMutation|TestRecordedCloudGitCallsRejectEmptyPopulation)$'

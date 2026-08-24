@@ -15,6 +15,39 @@ type GitCloudConfig struct {
 	Impl DirConfig
 }
 
+type refreshGit interface {
+	Clone(url string, target string) shell.Output
+	Pull(target string) shell.Output
+}
+
+type refreshGitDependencies struct {
+	Git refreshGit
+}
+
+func (dependencies refreshGitDependencies) Clone(url string, target string) shell.Output {
+	if dependencies.Git == nil {
+		return shell.Output{}
+	}
+	return dependencies.Git.Clone(url, target)
+}
+
+func (dependencies refreshGitDependencies) Pull(target string) shell.Output {
+	if dependencies.Git == nil {
+		return shell.Output{}
+	}
+	return dependencies.Git.Pull(target)
+}
+
+type shellRefreshGit struct{}
+
+func (shellRefreshGit) Clone(url string, target string) shell.Output {
+	return shell.GitClone(url, target)
+}
+
+func (shellRefreshGit) Pull(target string) shell.Output {
+	return shell.GitPull(target)
+}
+
 type CloudConfig interface {
 	Implementation() Directory
 	Refresh(localConfig LocalConfigFile) error
@@ -51,6 +84,10 @@ func (gitCfg GitCloudConfig) Implementation() Directory {
 }
 
 func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
+	return gitCfg.refresh(refreshGitDependencies{Git: shellRefreshGit{}}, localConfig)
+}
+
+func (gitCfg GitCloudConfig) refresh(dependencies refreshGitDependencies, localConfig LocalConfigFile) error {
 	localCfg, err := localConfig.Config()
 	if err != nil {
 		return err
@@ -59,13 +96,13 @@ func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
 	target := gitCfg.Implementation().Dir()
 	if file.Exists(file.Path("%s/.git", target)) {
 		log.Info(fmt.Sprintf("pulling cloud config on %s", target))
-		pull := shell.GitPull(target)
+		pull := dependencies.Pull(target)
 		if pull.Err != nil {
 			return pull.FormatError()
 		}
 	} else {
 		log.Info(fmt.Sprintf("cloning %s to %s", localCfg.CloudConfig.Git.Url, target))
-		clone := shell.GitClone(localCfg.CloudConfig.Git.Url, target)
+		clone := dependencies.Clone(localCfg.CloudConfig.Git.Url, target)
 		if clone.Err != nil {
 			return clone.FormatError()
 		}
