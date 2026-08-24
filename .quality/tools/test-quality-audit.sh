@@ -876,6 +876,11 @@ json_assert "$WORK/class-manual/scorecard.json" \
   "survivor classification outside the documented vocabulary was accepted"
 ok "manual receipts are tree/digest-bound, unique, and vocabulary-checked"
 
+printf 'T8c six manual L1/L2 rows require bound, truthful criterion receipts\n'
+python3 "$HERE/test-manual-evidence.py" "$PARSER" \
+  || fail "criterion-bound manual evidence meta-test failed"
+ok "all six rows are reachable and malformed or false-PASS receipts fail closed"
+
 printf 'T8b measurement identity includes ignored and index-hidden source changes\n'
 ignored_repo="$WORK/ignored-source-repo"
 git clone -q "$WORK/repo" "$ignored_repo"

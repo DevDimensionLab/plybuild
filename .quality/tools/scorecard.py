@@ -15,7 +15,7 @@ import tempfile
 from pathlib import Path, PurePosixPath
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 WRAPPER_VERSION = 1
 EXPECTED_LEVEL_COUNTS = {"L0": 8, "L1": 9, "L2": 10, "L3": 9}
 EXPECTED_IDS = (
@@ -29,6 +29,22 @@ INVENTORY_SECTIONS = ("subjects", "seams", "features", "adapters")
 TEST_SUPPORT_PATHS = ("internal/testutil",)
 EXCLUDED_REPOSITORY_ROOTS = (".git", ".quality", "target", "vendor")
 SURVIVOR_CLASSES = {"missing test", "redundant code", "fixture never reaches branch"}
+MANUAL_CRITERION_KINDS = {
+    "Q1.6": "test-double-contract",
+    "Q1.7": "partial-failure-content",
+    "Q1.9": "nonempty-iteration",
+    "Q2.4": "mutation-run",
+    "Q2.8": "input-magnitude-control",
+    "Q2.9": "bad-input-read-only-control",
+}
+MANUAL_CRITERION_POPULATIONS = {
+    "Q1.6": "test_functions",
+    "Q1.7": "test_functions",
+    "Q1.9": "test_functions",
+    "Q2.4": "mutation_harnesses",
+    "Q2.8": "acceptance_scripts",
+    "Q2.9": "acceptance_scripts",
+}
 BASELINE_TOOL_FIELDS = (
     "wrapper_version", "upstream_version", "upstream_sha256", "parser_sha256",
     "wrapper_sha256", "call_scanner_sha256", "q06_contract_sha256",
@@ -1089,7 +1105,141 @@ def normalize_classification(value):
     return re.sub(r"\s+", " ", value.strip().lower().replace("_", " ").replace("-", " "))
 
 
-def validate_manual(path, commit, module, tree):
+def canonical_json_sha256(value):
+    raw = json.dumps(
+        value, ensure_ascii=False, separators=(",", ":"), sort_keys=True,
+    ).encode("utf-8")
+    return sha256_bytes(raw)
+
+
+def is_integer(value, minimum=0):
+    return isinstance(value, int) and not isinstance(value, bool) and value >= minimum
+
+
+def validate_receipt_population(criterion, population):
+    if not isinstance(population, list) or not population:
+        return "evidence population must be a non-empty list"
+    if any(not isinstance(value, dict) for value in population):
+        return "evidence population entries must be objects"
+    subjects = [value.get("subject") for value in population]
+    if any(not has_text(value) for value in subjects):
+        return "every evidence population entry needs a subject"
+    if len(subjects) != len(set(value.strip() for value in subjects)):
+        return "evidence population subjects must be unique"
+
+    required = {
+        "Q1.6": {
+            "subject", "dependencies", "default_doubles", "argument_recorders",
+            "dependency_struct_passed_whole",
+        },
+        "Q1.7": {
+            "subject", "partial_failures", "content_assertions", "exit_only_assertions",
+        },
+        "Q1.9": {
+            "subject", "iterated_collections", "empty_population_assertions",
+        },
+        "Q2.4": {"subject", "declared", "killed", "survived", "unusable"},
+        "Q2.8": {
+            "subject", "comparison", "control_magnitude", "treatment_magnitude",
+            "expected_relation",
+        },
+        "Q2.9": {
+            "subject", "bad_input_exit", "produced_artifacts", "read_only_artifacts_changed",
+        },
+    }[criterion]
+    for value in population:
+        if set(value) != required:
+            return "{} evidence fields do not match its criterion contract".format(criterion)
+        if criterion == "Q1.6":
+            dependencies = value["dependencies"]
+            if (not is_integer(dependencies, 1) or
+                    value["default_doubles"] != dependencies or
+                    value["argument_recorders"] != dependencies or
+                    value["dependency_struct_passed_whole"] is not True):
+                return "Q1.6 PASS requires defaults and argument recorders for every dependency and whole-struct passing"
+        elif criterion == "Q1.7":
+            failures = value["partial_failures"]
+            if (not is_integer(failures, 1) or
+                    not is_integer(value["content_assertions"], failures) or
+                    value["exit_only_assertions"] != 0):
+                return "Q1.7 PASS requires content assertions for every partial failure and no exit-only assertions"
+        elif criterion == "Q1.9":
+            collections = value["iterated_collections"]
+            if (not is_integer(collections, 1) or
+                    not is_integer(value["empty_population_assertions"], collections)):
+                return "Q1.9 PASS requires an empty-population assertion for every iterated collection"
+        elif criterion == "Q2.4":
+            declared = value["declared"]
+            if (not is_integer(declared, 1) or value["killed"] != declared or
+                    value["survived"] != 0 or value["unusable"] != 0):
+                return "Q2.4 PASS requires declared == killed with zero survived and unusable mutations"
+        elif criterion == "Q2.8":
+            control = value["control_magnitude"]
+            treatment = value["treatment_magnitude"]
+            relation = value["expected_relation"]
+
+            def numeric(candidate):
+                return isinstance(candidate, (int, float)) and not isinstance(candidate, bool)
+
+            relation_holds = (
+                relation == "less" and numeric(control) and numeric(treatment) and treatment < control or
+                relation == "greater" and numeric(control) and numeric(treatment) and treatment > control or
+                relation == "different" and numeric(control) and numeric(treatment) and treatment != control
+            )
+            if value["comparison"] != "magnitude" or not relation_holds:
+                return "Q2.8 PASS requires a true magnitude comparison whose treatment has the declared relation"
+        elif criterion == "Q2.9":
+            if (not is_integer(value["bad_input_exit"]) or value["bad_input_exit"] == 0 or
+                    value["produced_artifacts"] != 0 or value["read_only_artifacts_changed"] != 0):
+                return "Q2.9 PASS requires non-zero bad-input exit and zero produced or changed artifacts"
+    return None
+
+
+def validate_criterion_receipts(evidence):
+    receipts = evidence.get("criteria")
+    if not isinstance(receipts, list):
+        return None, "criteria must be a list"
+    criteria = [value.get("criterion") for value in receipts if isinstance(value, dict)]
+    if len(criteria) != len(receipts):
+        return None, "criterion receipts must be objects"
+    if len(criteria) != len(set(criteria)):
+        return None, "criterion receipts must be unique"
+    summaries = {}
+    evidence_digests = []
+    required_fields = {"criterion", "kind", "verdict", "evidence", "evidence_sha256"}
+    for receipt in receipts:
+        criterion = receipt["criterion"]
+        if criterion not in MANUAL_CRITERION_KINDS:
+            return None, "receipt criterion is not manually resolvable: " + str(criterion)
+        if set(receipt) != required_fields:
+            return None, "{} receipt fields do not match the schema".format(criterion)
+        if receipt["kind"] != MANUAL_CRITERION_KINDS[criterion]:
+            return None, "{} receipt kind is wrong".format(criterion)
+        if receipt["verdict"] != "PASS":
+            return None, "{} receipt verdict must be PASS".format(criterion)
+        claim = receipt["evidence"]
+        if (not isinstance(claim, dict) or set(claim) != {"command", "population"} or
+                not has_text(claim.get("command"))):
+            return None, "{} receipt evidence is empty or malformed".format(criterion)
+        digest = receipt["evidence_sha256"]
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            return None, "{} evidence digest is not a lowercase SHA-256".format(criterion)
+        if canonical_json_sha256(claim) != digest:
+            return None, "{} evidence digest does not match its payload".format(criterion)
+        population_error = validate_receipt_population(criterion, claim["population"])
+        if population_error:
+            return None, population_error
+        evidence_digests.append(digest)
+        summaries[criterion] = {
+            "kind": receipt["kind"], "evidence_sha256": digest,
+            "population": len(claim["population"]),
+        }
+    if len(evidence_digests) != len(set(evidence_digests)):
+        return None, "criterion evidence digests must be unique"
+    return summaries, None
+
+
+def validate_manual(path, commit, module, tree, inventory, tool):
     if not path:
         return {"status": "not_supplied"}
     try:
@@ -1101,8 +1251,8 @@ def validate_manual(path, commit, module, tree):
         evidence = json.loads(raw)
     except json.JSONDecodeError as error:
         return {"status": "invalid", "reason": str(error), "sha256": digest}
-    if evidence.get("schema_version") != 1:
-        return {"status": "invalid", "reason": "schema_version must be 1", "sha256": digest}
+    if evidence.get("schema_version") != 2:
+        return {"status": "invalid", "reason": "schema_version must be 2", "sha256": digest}
     repository = evidence.get("repository", {})
     if repository.get("module") != module:
         return {"status": "invalid", "reason": "module does not match", "sha256": digest}
@@ -1113,8 +1263,18 @@ def validate_manual(path, commit, module, tree):
     evidence_tree = repository.get("tree", {})
     if evidence_tree.get("commit_tree") != tree["commit_tree"]:
         return {"status": "stale", "reason": "commit tree does not match", "sha256": digest}
+    if evidence_tree.get("status_sha256") != tree["status_sha256"]:
+        return {"status": "stale", "reason": "measured tree status does not match", "sha256": digest}
     if evidence_tree.get("inventory_overlay_sha256") != tree.get("inventory_overlay_sha256"):
         return {"status": "stale", "reason": "inventory overlay does not match", "sha256": digest}
+    if evidence.get("inventory") != inventory:
+        return {"status": "stale", "reason": "inventory identity does not match", "sha256": digest}
+    expected_instrument = {field: tool.get(field) for field in BASELINE_TOOL_FIELDS}
+    if evidence.get("instrument") != expected_instrument:
+        return {"status": "stale", "reason": "instrument identity does not match", "sha256": digest}
+    criterion_receipts, receipt_error = validate_criterion_receipts(evidence)
+    if receipt_error:
+        return {"status": "invalid", "reason": receipt_error, "sha256": digest}
     findings = evidence.get("findings", {})
     seams = findings.get("seam_test")
     survivors = findings.get("survivors")
@@ -1156,10 +1316,12 @@ def validate_manual(path, commit, module, tree):
         "status": "valid", "commit": commit, "commit_tree": tree["commit_tree"], "sha256": digest,
         "seam_receipts": 3, "survivor_receipts": 3,
         "survivor_classifications": sorted({normalize_classification(value["classification"]) for value in survivors}),
+        "criterion_receipts": len(criterion_receipts), "receipts": criterion_receipts,
+        "inventory_sha256": inventory["sha256"], "instrument": expected_instrument,
     }
 
 
-def apply_manual_verdict(parsed, manual):
+def apply_q39_manual_verdict(parsed, manual):
     item = next((value for value in parsed["criteria"] if value["id"] == "Q3.9"), None)
     if not item:
         return
@@ -1178,6 +1340,40 @@ def apply_manual_verdict(parsed, manual):
         force_verdict(item, "FAIL", "manual evidence is " + manual["status"])
     else:
         force_verdict(item, "UNMEASURABLE", "manual evidence was not supplied")
+
+
+def apply_manual_verdicts(parsed, manual):
+    apply_q39_manual_verdict(parsed, manual)
+    by_id = {value["id"]: value for value in parsed["criteria"]}
+    for criterion, population_name in MANUAL_CRITERION_POPULATIONS.items():
+        item = by_id.get(criterion)
+        if not item:
+            continue
+        if manual["status"] in ("invalid", "stale"):
+            if item["verdict"] != "FAIL":
+                force_verdict(item, "FAIL", "manual evidence is " + manual["status"])
+            continue
+        if manual["status"] != "valid" or criterion not in manual["receipts"]:
+            continue
+        receipt = manual["receipts"][criterion]
+        if item["verdict"] == "FAIL":
+            force_verdict(item, "FAIL", "upstream failure takes precedence over a valid manual receipt")
+            continue
+        if item["verdict"] != "UNMEASURABLE":
+            continue
+        population = parsed["denominators"].get(population_name, 0)
+        if population <= 0:
+            force_verdict(
+                item, "UNMEASURABLE",
+                "valid manual receipt cannot resolve an empty {} population".format(population_name),
+            )
+            continue
+        force_verdict(
+            item, "PASS",
+            "valid {} receipt covers {} evidence subject(s), bound by {}".format(
+                receipt["kind"], receipt["population"], receipt["evidence_sha256"],
+            ),
+        )
 
 
 def summarize(criteria):
@@ -1272,8 +1468,10 @@ def main():
         tree = tree_identity(args.repo, args.commit, args.inventory_overlay_sha256)
         current_tool = tool_metadata(args, parsed, build_context, initial_instrument)
         ratchet = apply_baseline(parsed, args.baseline, module, current_tool, inventory_info)
-        manual = validate_manual(args.manual_evidence, args.commit, module, tree)
-        apply_manual_verdict(parsed, manual)
+        manual = validate_manual(
+            args.manual_evidence, args.commit, module, tree, inventory_info, current_tool,
+        )
+        apply_manual_verdicts(parsed, manual)
         levels, attained = summarize(parsed["criteria"])
         result = {
             "schema_version": SCHEMA_VERSION,
