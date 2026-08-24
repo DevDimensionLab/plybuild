@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-24T23:10:06+02:00
+Generated: 2026-08-24T23:35:19+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,8 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `f59a3f0fe2de`.
-- Restart preparation base: `f59a3f0fe2de`.
+- Measured implementation head: `61714a503ebc`.
+- Restart preparation base: `61714a503ebc`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no product implementation changes.
 - No push, merge, release, publication, stash, revert, successor launch, or
@@ -33,6 +33,7 @@ dee214c quality: move Spring discovery behind HTTP adapter
 a7eb3ef quality: move Wpost behind HTTP and filesystem adapters
 e13a036 quality: move Bitbucket selection behind filesystem adapter
 f59a3f0 quality: move file existence behind filesystem adapter
+61714a5 quality: move file overwrite behind filesystem adapter
 ```
 
 The separate operational continuity implementation is:
@@ -47,8 +48,8 @@ It changes no Go quality denominator and is separate from P3 move numbering.
 
 `codex-dev-start.sh` remains `NEXT` while P3 is active and P4-P8 remain queued
 in the machine-readable plan block. Its active archive is
-`docs/plan/agent-sessions/2026-08-24T231006+0200-migrate-file-overwrite.md`.
-The file-existence predecessor is answered history, and the reciprocal archive
+`docs/plan/agent-sessions/2026-08-24T233519+0200-migrate-file-create.md`.
+The file-overwrite predecessor is answered history, and the reciprocal archive
 graph has exactly one `NEXT` tail.
 
 Normal launch is a Bash 3.2-compatible, non-interactive supervisor. Each
@@ -79,33 +80,34 @@ executable. Mutable header and prompt data remain inert after the stable
 execution boundary; the pinned normalized skeleton digest is
 `4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`.
 
-## P3 Move 13 Preserved
+## P3 Move 14 Preserved
 
-Exported `file.Exists(string) bool`, all callers, and every P2A API/CLI and
-subprocess contract remain unchanged. The package now owns a private complete
-existence dependency containing `filesystem.Dependencies`. Production selects
-`filesystem.System()` and the private helper delegates to
-`filesystem.Exists`, preserving the established rule that only a missing-path
-error returns false and every other stat result returns true.
+Exported `file.Overwrite(lines []string, filePath string) error`, all callers,
+and every P2A API/CLI/subprocess contract remain unchanged. The package owns a
+private complete overwrite dependency containing `filesystem.Dependencies`.
+Production selects `filesystem.System()` and the private helper delegates the
+single write to `filesystem.WriteFile`, preserving exact
+`strings.Join(lines, "\n")` bytes, mode `0644`, and dependency errors.
 
-The dependency's zero value returns false without probing a developer path.
-Four recording contracts prove the complete path and dependency value,
-missing, existing, and other-error results, production system selection, safe
-defaults, and a non-empty recorded stat population. The filesystem adapter
-contract, inventory, seam drivers, and mutation labels did not change.
+The dependency's zero value returns `filesystem.ErrNoFilesystem` without
+mutating a developer path. Four recording contracts prove the complete lines,
+path, dependency value, empty/single/multiple-line bytes, mode, error
+propagation, production system selection, safe defaults, and a non-empty
+recorded write population. The filesystem adapter contract, inventory, seam
+drivers, and mutation labels did not change.
 
 ## Measured Quality State
 
-The clean full audit at `f59a3f0fe2de` reports:
+The clean full audit at `61714a503ebc` reports:
 
 - Absolute L0: 8 of 8.
-- 140 test functions, zero skipped; 16 of 25 packages have tests.
+- 144 test functions, zero skipped; 16 of 25 packages have tests.
 - Q0.6: 18 guarded safe-writer sites, 13 write and 5 copy, with zero unsafe
   direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
 - Q1.1: 9 of 25 packages have no tests.
 - Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 56 direct external sites outside declared adapters of 66 production
+- Q1.3: 55 direct external sites outside declared adapters of 65 production
   effect sites. Clock and server are absent, making this ratchet
   non-comparable.
 - Q1.4: 7 of 8 declared seams covered.
@@ -115,26 +117,26 @@ The clean full audit at `f59a3f0fe2de` reports:
 - Comparable ratchets: five improved, two held, zero regressed; Q1.3 is the
   single non-comparable ratchet.
 - Measurement identity: clean at tree
-  `c10ffc6f825bf57a417f3de21f731b22c1e9ac6d`, status SHA-256
+  `e65e3307c58ffa37c84177c1b54c437c9efb6c20`, status SHA-256
   `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`
   and zero dirty paths.
 
-The clean report is `/private/tmp/ply-file-exists-full-audit.taTsDR`. Focused
+The clean report is `/private/tmp/ply-file-overwrite-full-audit.6TPy0C/report`. Focused
 and preflight reports were also kept under `/private/tmp`, so no ignored
 quality or compatibility artifact entered the measured tree.
 
 ## Decisions And Learned Facts
 
-1. The private existence dependency needs the complete
+1. The private overwrite dependency needs the complete
    `filesystem.Dependencies` value. Production selects `filesystem.System()`;
    the helper remains independently recordable without a function-valued
    effect dependency.
-2. `filesystem.Exists` already supplies the complete legacy result mapping:
-   only `os.IsNotExist` is false; success and all other errors are true.
-3. The zero dependency is safely absent because `filesystem.Exists` returns
-   false before it performs a stat probe when no filesystem is configured.
-4. Exported `file.Overwrite` has the next isolated direct `os.WriteFile` site.
-   Its signature, exact joined bytes, mode, errors, and all callers stay
+2. `filesystem.WriteFile` already supplies the complete operation needed by
+   `Overwrite`; the adapter contract did not need to change.
+3. The zero dependency is safely non-mutating because
+   `filesystem.WriteFile` returns `filesystem.ErrNoFilesystem` before a write.
+4. Exported `file.CreateFile` has the next isolated direct `os.WriteFile` site.
+   Its signature, exact content bytes, mode, errors, and callers must stay
    unchanged.
 5. A function-valued effect dependency makes Q1.3 fail closed. Production
    moves use resolvable interfaces and complete dependency values.
@@ -148,34 +150,39 @@ quality or compatibility artifact entered the measured tree.
    the measured tree.
 9. Supervisor success is the conjunction of process exit, structured terminal
    stream, and committed repository evidence. Final prose is observable only.
+10. One repeated `make test` run missed the partial raw log in the nested
+    signal fixture. Standalone and preflight runs had passed, and the immediate
+    complete rerun passed all 62 controls without a code change. Preserve this
+    as a timing-sensitive harness observation unless it becomes reproducible.
 
 ## Next Objective
 
-Move only exported `file.Overwrite` behind the existing filesystem adapter.
-Start with recording contracts in `pkg/file`: require the complete `lines`,
-path, and dependency; prove exact `strings.Join(lines, "\n")` bytes and mode
-`0644`, dependency-error propagation, safe zero-value behavior, production
-selection of `filesystem.System()`, and rejection of an empty recorded
-population. Exercise no developer path and perform no real filesystem
-mutation.
+Move only exported `file.CreateFile` behind the existing filesystem adapter.
+Start with recording contracts in `pkg/file`: require the complete path,
+content, and dependency; prove exact content bytes and mode `0644`, dependency-
+error propagation, safe zero-value behavior, production selection of
+`filesystem.System()`, and rejection of an empty recorded population. Exercise
+no developer path and perform no real filesystem mutation.
 
-Keep `file.Overwrite(lines []string, filePath string) error`, all callers, and
-every observable result unchanged. Use a private complete dependency boundary,
-with the exported function as the production wrapper. Remove only its direct
-`os.WriteFile` in `pkg/file/file.go`; do not move another file operation,
-modify the adapter contract without focused proof, or enter Bitbucket,
-HTTP/process, config, clock/server, P4, P5, or later roadmap work.
+Keep `file.CreateFile(path, content string) error`, `file.OpenFile`, direct
+callers in config and command code, and every observable result unchanged. Use
+a private complete dependency boundary, with the exported function as the
+production wrapper. Remove only its direct `os.WriteFile` in
+`pkg/file/file.go`; do not move `OpenFile`'s `os.OpenFile` or another file
+operation, modify the adapter contract without focused proof, or enter
+Bitbucket, HTTP/process, config behavior, clock/server, P4, P5, or later roadmap
+work.
 
 Expected direction is one fewer Q1.3 violation and one fewer production effect
-site, nominally 55 of 65, but regenerate the exact structured measurement and
+site, nominally 54 of 64, but regenerate the exact structured measurement and
 accept it only with zero comparable ratchet regressions. Q1.2, Q1.4, and exact
 Q2.1 should remain unchanged.
 
 ## Verification Notes
 
-Completed from clean implementation commit `f59a3f0fe2de`:
+Completed from clean implementation commit `61714a503ebc`:
 
-- Red file-existence evidence: new contracts failed to compile because the
+- Red file-overwrite evidence: new contracts failed to compile because the
   private dependency constructor and helper did not exist.
 - Focused file/filesystem and all relevant caller tests: PASS.
 - `/bin/bash test/codex_dev_start_test.sh`: PASS, 62 controls.
@@ -186,10 +193,12 @@ Completed from clean implementation commit `f59a3f0fe2de`:
   PASS.
 - Host install, status, upgrade, and build acceptance: PASS, 4 of 4.
 - Empty-HOME `go test ./... -count=2`: PASS.
-- Focused seven-ratchet audit: expected exit 1 with Q1.3 at 56 of 66, four
+- Focused seven-ratchet audit: expected exit 1 with Q1.3 at 55 of 65, four
   improved, two held, zero regressed, and one not comparable.
 - Clean full audit: expected exit 1, 16 documented findings, L0 8 of 8, five
   improved, two held, zero regressed, and zero dirty paths.
+- One intermediate `make test` invocation hit the signal-fixture observation
+  recorded above; the complete rerun passed.
 
 Tool paths used were `/private/tmp/ply-p2b-api.4umBuM/bin/apidiff` and
 `/private/tmp/ply-p2b-lint.SGWVGp/bin/golangci-lint`; probe before reuse.
@@ -214,7 +223,7 @@ authority.
 
 Stop and report rather than forcing progress when:
 
-- exported `file.Overwrite` behavior, its signature, or caller compatibility
+- exported `file.CreateFile` behavior, its signature, or caller compatibility
   cannot be preserved;
 - the filesystem dependency is incomplete, unresolvable, function-valued, or
   unsafe at its zero value;
@@ -224,5 +233,5 @@ Stop and report rather than forcing progress when:
   measured cleanly;
 - the work requires P4-P8 implementation, publication, distribution, or a real
   successor launch; or
-- the focused `file.Overwrite` move and its separate automatic handoff are
+- the focused `file.CreateFile` move and its separate automatic handoff are
   complete.
