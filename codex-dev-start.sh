@@ -658,19 +658,19 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-24T161800+0200-migrate-template-copy-filesystem
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T161800+0200-migrate-template-copy-filesystem.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T151703+0200-migrate-maven-metadata-http.md
+#|SESSION_ID=2026-08-24T165352+0200-migrate-spring-download
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T165352+0200-migrate-spring-download.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-24T161800+0200-migrate-template-copy-filesystem.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete the next P3 move in one measured change: introduce the declared
-#|`internal/adapter/filesystem` boundary through the coherent non-existing-target
-#|template copy flow and kill the `template-copy` source/destination argument
-#|swap. Keep Q1.2 at zero, reduce only migrated Q1.3 sites, and preserve every
-#|P2A contract with zero comparable ratchet regressions.
+#|Complete the next P3 move in one measured change: extend the existing HTTP and
+#|filesystem boundaries through the coherent Spring initializer download-to-
+#|archive flow and kill the `spring-download` URL/archive-path argument swap.
+#|Keep Q1.2 at zero, reduce only migrated Q1.3 sites, and preserve every P2A
+#|contract with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
@@ -681,16 +681,17 @@ exit 70
 #|# Measurements At Start
 #|
 #|Before editing, inspect branch, HEAD, status, the rolling handover, the P3 plan,
-#|`.quality/inventory`, `pkg/template/template.go` and its tests/callers,
-#|`pkg/file/file.go` copy/merge helpers and every caller/test, relevant project and
-#|template types, the existing process/HTTP/cloud seam patterns, the
-#|Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 scanners, and the P2A compatibility, subprocess, and
-#|host acceptance contracts. Regenerate ignored reports outside the measured
-#|tree or remove them before the clean audit. Implementation commit `ffc4e77`
-#|has 65 tests across 13 of 24 packages, Q0.6 has zero unsafe direct test writes,
-#|Q1.2 is 0, Q1.3 is 74 violations of 79 production effect sites with three
-#|adapter paths absent, and Q1.4 is 5 of 8. Exact Q2.1 remains 0 of 8 executable
-#|harnesses; the upstream filename-only denominator sees three non-executable
+#|`.quality/inventory`, `pkg/spring/io.go` and every caller/type/test,
+#|`pkg/http/client.go` download helpers and every caller/test, the existing
+#|`internal/adapter/httpclient` and `internal/adapter/filesystem` interfaces and
+#|recording/system tests, `pkg/shell` unzip behavior, relevant build follow-ups,
+#|the Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 scanners, and the P2A compatibility, subprocess,
+#|and host acceptance contracts. Regenerate ignored reports outside the measured
+#|tree or remove them before the clean audit. Implementation commit `204e222`
+#|has 79 tests across 14 of 25 packages, Q0.6 has zero unsafe direct test writes,
+#|Q1.2 is 0, Q1.3 is 71 violations of 80 production effect sites with clock and
+#|server absent, and Q1.4 is 6 of 8. Exact Q2.1 remains 0 of 8 executable
+#|harnesses; the upstream filename-only denominator sees four non-executable
 #|`mutate-*` paths. The clean gate passed, the full audit exited 1 for 16
 #|documented findings and never 2, and comparable ratchets were five improved,
 #|two held, and zero regressed.
@@ -698,7 +699,7 @@ exit 70
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the template-copy filesystem move. Do not push,
+#|implementation commit for the Spring initializer download move. Do not push,
 #|merge, publish, remove the worktree, stash inherited changes, revert user work,
 #|or run destructive Git commands. Do not invoke a publisher or distribution
 #|command.
@@ -706,28 +707,31 @@ exit 70
 #|Keep Go 1.18. Preserve `cmd.Execute()`, `cmd.ExecuteE()`, `cmd.RootCmd`, the
 #|normalized Cobra tree, root/status/upgrade/build and unknown-command streams
 #|and exits, and all four host acceptance flows. Preserve exported
-#|`template.MergeTemplate`, `file.CopyOrMerge`, and `file.CopyFile` signatures and
-#|every caller. Production must retain exact template filtering and target-path
-#|derivation, existing-target merge selection, non-existing-target copy behavior,
-#|source bytes and mode, missing destination-directory creation, logging, error
-#|order and semantics, search/replace, render, and Maven merge follow-ups.
+#|`spring.DownloadInitializer` and `http.Wget` signatures and every caller.
+#|Production must retain archive-path error timing and `spring-<Unix>.zip`
+#|naming, the exact `<base>/starter.zip?<formData.Encode()>` URL, anonymous GET
+#|transport and redirect behavior, the absence of a new HTTP status rejection,
+#|archive create/truncate and response/file close behavior, body-copy bytes,
+#|logging, error order and semantics, unzip selection and errors, archive
+#|deletion and errors, and later build follow-ups.
 #|
-#|Migrate only the filesystem effects needed by the coherent non-existing-target
-#|template copy flow. Use resolvable interfaces and complete dependency values,
-#|not stored function dependencies. Do not create a second generic filesystem
-#|implementation or broaden into existing-target merge internals, unrelated
-#|write/delete/rename/grep/render calls, Git hooks, cloud, Spring/download, HTTP,
-#|clock, server, Docker, dependencies, distribution, or formal mutation-harness
-#|scope.
+#|Migrate only the anonymous download request and archive creation/body-copy
+#|effects required by this coherent flow. Use resolvable interfaces and complete
+#|dependency values, not stored function dependencies. A private helper may
+#|accept the already resolved archive path for deterministic recording tests; do
+#|not migrate `os.Getwd` or `time.Now` before P4. Do not broaden into JSON/XML or
+#|authenticated HTTP, `Wpost`, template/file merge internals, unzip process
+#|internals, archive deletion, demo cleanup, Git, cloud, Kibana, clock, server,
+#|Docker, dependencies, distribution, or formal mutation-harness scope.
 #|
 #|# Required Reading
 #|
 #|Read docs/plan/quality-handover.md, the P3 section and checkpoint gate in
 #|docs/plan/quality-upgrade.md, docs/design/quality-lift.md,
 #|docs/design/agent-session-continuity.md, `.quality/inventory`,
-#|`pkg/template/template.go`, its tests and callers, `pkg/file/file.go` copy/merge
-#|helpers and every caller/test, relevant project/template types, the existing
-#|process/HTTP/cloud interfaces and recording tests, the
+#|`pkg/spring/io.go`, Spring types and every caller/test, `pkg/http/client.go` and
+#|the Wget/Wpost/GET tests and callers, both existing adapter packages and tests,
+#|the shell unzip and file-delete implementations without moving them, the
 #|Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 implementation in `.quality/tools`, and the P2A
 #|compatibility and host acceptance contracts before editing.
 #|
@@ -735,39 +739,38 @@ exit 70
 #|
 #|These are three ordered steps inside the single measured P3 move.
 #|
-#|1. Start red with recording template copy and filesystem contracts. Prove the
-#|   complete source path stays before the complete resolved target path, a
-#|   missing target selects copy while an existing target retains merge, source
-#|   bytes and mode reach the destination, a missing destination directory is
-#|   created, dependency errors retain their order and behavior, safe defaults
-#|   perform no mutation, the complete dependency reaches the flow, and an empty
+#|1. Start red with recording Spring download and adapter contracts. Prove the
+#|   complete encoded download URL stays before the complete resolved archive
+#|   path, response bytes reach that path, create/truncate and close behavior is
+#|   preserved, dependency errors retain their order and behavior, safe defaults
+#|   perform no request or mutation, the complete dependency reaches the flow,
+#|   unzip and delete follow-ups retain their selection and errors, and an empty
 #|   recorded population fails.
 #|
-#|2. Introduce the thinnest zero-value-safe `internal/adapter/filesystem`
-#|   interface boundary and route only the migrated copy effects through it.
-#|   Preserve source read, destination-directory existence/creation, source mode
-#|   lookup, logging, destination write, and error ordering without duplicating
-#|   `CopyOrMerge` or merge behavior. Bind the immutable `template-copy` label
-#|   through a new non-executable `scripts/mutate-template` seam driver and its
-#|   Q0.8 meta-test, without claiming the later P5 harness.
+#|2. Extend the existing adapters only as needed and route the migrated `Wget`
+#|   request/create/body-copy effects through them. Preserve the anonymous
+#|   transport, response/file lifecycle, no-status-check behavior, logging, and
+#|   error order without duplicating Spring or generic file behavior. Bind the
+#|   immutable `spring-download` label through a new non-executable
+#|   `scripts/mutate-spring` seam driver and its Q0.8 meta-test, without claiming
+#|   the later P5 harness.
 #|
-#|3. Run focused template/file/adapter/argument-swap tests,
+#|3. Run focused Spring/HTTP/filesystem/argument-swap tests,
 #|   Q0.6/Q1.2/Q1.3/Q1.4/Q2.1 measurements, API/CLI compatibility, all four host
 #|   acceptance flows, the full checkpoint gate, and empty-HOME count-2 from a
-#|   clean commit. Expect Q1.2 to stay zero, `template-copy` to raise Q1.4 from 5
-#|   of 8 to 6 of 8, and exact Q2.1 to remain 0 of 8. Accept only regenerated
+#|   clean commit. Expect Q1.2 to stay zero, `spring-download` to raise Q1.4 from
+#|   6 of 8 to 7 of 8, and exact Q2.1 to remain 0 of 8. Accept only regenerated
 #|   Q1.3 values. The full audit may exit 1 for documented findings but never 2.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent template-copy
-#|filesystem move or record an exact resumable state. Rewrite the rolling
-#|handover, update the P3 measurements, answer this archive, create one linked
-#|NEXT archive, replace the launcher's mutable regions, run the launcher
-#|contract, and make the separate handoff-only commit
-#|`docs: prepare next agent session`.
+#|Before this agent session ends, finish and commit the coherent Spring download
+#|move or record an exact resumable state. Rewrite the rolling handover, update
+#|the P3 measurements, answer this archive, create one linked NEXT archive,
+#|replace the launcher's mutable regions, run the launcher contract, and make the
+#|separate handoff-only commit `docs: prepare next agent session`.
 #|
-#|Keep P3 active for later filesystem adapter moves. Do not launch the next
+#|Keep P3 active until its measured exit is documented. Do not launch the next
 #|session. COMPLETE is valid only after every authorized checkpoint through P8
 #|is complete.
 # CODEX_MUTABLE_PROMPT_END
