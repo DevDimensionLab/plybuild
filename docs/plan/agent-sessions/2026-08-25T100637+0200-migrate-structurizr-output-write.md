@@ -1,13 +1,13 @@
 # Agent Session: Migrate Structurizr Output Write
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T100637+0200-migrate-structurizr-output-write`
 Created: `2026-08-25T10:06:37+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `50c9e0b237d1ffb29b338b052b92767a6cc05dc87ef4f6ad888fdbf2c8794bdc`
 Previous: [2026-08-25T093228+0200-migrate-tips-show-read.md](2026-08-25T093228+0200-migrate-tips-show-read.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T103319+0200-migrate-maven-graph-styles-write.md](2026-08-25T103319+0200-migrate-maven-graph-styles-write.md)
+Outcome: completed by implementation commit `527a8b9941b27136f5c6cecf36cddd73fedfb6fb`; clean full audit recorded Q1.3 at 31/48 with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
