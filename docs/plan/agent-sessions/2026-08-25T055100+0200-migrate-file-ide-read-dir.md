@@ -1,13 +1,13 @@
 # Agent Session: Migrate Non-Recursive IDE Directory Read
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T055100+0200-migrate-file-ide-read-dir`
 Created: `2026-08-25T05:51:00+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `acef2a39adf67431fe1887e8e553a01e20ce749c4b51ec53c986f9e836f5a4a6`
 Previous: [2026-08-25T052243+0200-migrate-file-grep-recursive.md](2026-08-25T052243+0200-migrate-file-grep-recursive.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T061802+0200-migrate-config-git-hook-read-dir.md](2026-08-25T061802+0200-migrate-config-git-hook-read-dir.md)
+Outcome: Completed in implementation commit `d6cb5939cccefc3fd7ae8e80ef81c6bd5e922342`; the clean checkpoint audit exited 1 for 16 documented findings, never 2, with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

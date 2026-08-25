@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `d03e96d`.
+Last measured checkpoint: 2026-08-25, commit `d6cb593`.
 
 ## Objective
 
@@ -1068,7 +1068,7 @@ adapter extension. Q0.6 records 22 guarded safe-writer sites, 17 write and 5
 copy, with zero unsafe direct writes. Q1.3 moves from 40 of 56 to 39 of 56;
 Q1.2 stays zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8.
 
-Commit: recorded by the containing implementation commit.
+Commit: `d6cb593`.
 
 The move-27 implementation gate passed focused filesystem/file, command-caller,
 and adjacent complete-double contracts, API/CLI and subprocess compatibility,
@@ -1080,7 +1080,9 @@ partial-raw-log signal-fixture flake; their immediate complete reruns passed
 all 62 controls, and the full preflight also passed all 62. The focused
 seven-criterion audit exited 1 for documented findings, never 2, with four
 improved, two held, zero regressed, and one not-comparable ratchet. The clean
-full audit will be recorded from the focused implementation commit.
+full audit at `d6cb593` exited 1 for 16 documented findings, never 2, with L0
+8 of 8, five improved, two held, zero regressed, one not-comparable ratchet,
+and zero dirty paths.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
