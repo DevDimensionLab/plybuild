@@ -221,7 +221,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 31 are complete.
+Status: active. Moves 1 through 32 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -1261,6 +1261,42 @@ zero regressed, and one not-comparable ratchet. The clean full audit at
 `170b0ae` exited 1 for 16 documented findings, never 2, with L0 8 of 8, five
 improved, two held, zero regressed, one not-comparable ratchet, and zero dirty
 paths.
+
+Move 32 routes only exported
+`template.SaveTemplateListMarkdown(gitCfg config.CloudConfig,
+markdownDocument string) (string, error)`'s direct
+`os.WriteFile(readmePath, []byte(markdownDocument), 0644)` operation through
+the existing filesystem adapter. The exported production entry retains its
+signature and selects `filesystem.System()` only for a private complete
+markdown-write dependency. The private composition retains the exact
+`gitCfg.Implementation().Dir() + "/" + TemplatesDir + "/README.md"` path
+expression and delegates that path, `[]byte(markdownDocument)`, and `0644`
+through `filesystem.WriteFile` before returning the exact `readmePath, err`.
+
+Four new top-level template recording contracts bring the suite to 254 tests.
+They prove complete system dependency selection and delivery, the exact
+receiver-derived README path without cleaning or normalization, non-empty
+recorded write populations, exact empty, non-ASCII, and arbitrary document
+bytes, exact `0644` mode, one write attempt, exact returned path on success and
+failure, exact write-error identity, receiver evaluation order and count, and
+safe zero behavior without developer-path access. The production-composition
+contracts perform no real filesystem mutation. No adapter operation, complete
+recording double, `templateCopyDependencies`, inventory label, seam driver,
+mutation harness, public API, caller, list rendering, filtered walking, merge,
+copy, search, render, config, file, or Maven operation changed. Q0.6 remains at
+22 guarded safe-writer sites, 17 write and 5 copy, with zero unsafe direct
+writes. Q1.3 moves from 35 of 52 to 34 of 51; Q1.2 stays zero, Q1.4 stays 7 of
+8, and exact Q2.1 stays 0 of 8.
+
+The move-32 implementation gate passed focused template/filesystem and
+relevant config, file, Maven, and command caller contracts, API/CLI and
+subprocess compatibility, all four host flows, preflight, test, install, the
+standalone 62-control launcher contract, uncached and race tests, vet, the
+15-control audit meta-suite, and empty-HOME count-2. The focused
+seven-criterion audit exited 1 for documented findings, never 2, with four
+improved, two held, zero regressed, and one not-comparable ratchet. The
+implementation commit and authoritative clean full-audit result are recorded
+by the handoff checkpoint.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

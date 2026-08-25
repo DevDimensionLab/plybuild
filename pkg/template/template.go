@@ -26,9 +26,21 @@ type CloudTemplateCategory struct {
 	Templates []config.CloudTemplate
 }
 
+type templateMarkdownWriteDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemTemplateMarkdownWriteDependencies() templateMarkdownWriteDependencies {
+	return templateMarkdownWriteDependencies{Files: filesystem.System()}
+}
+
 func SaveTemplateListMarkdown(gitCfg config.CloudConfig, markdownDocument string) (string, error) {
+	return saveTemplateListMarkdown(systemTemplateMarkdownWriteDependencies(), gitCfg, markdownDocument)
+}
+
+func saveTemplateListMarkdown(dependencies templateMarkdownWriteDependencies, gitCfg config.CloudConfig, markdownDocument string) (string, error) {
 	readmePath := gitCfg.Implementation().Dir() + "/" + TemplatesDir + "/README.md"
-	err := os.WriteFile(readmePath, []byte(markdownDocument), 0644)
+	err := filesystem.WriteFile(dependencies.Files, readmePath, []byte(markdownDocument), 0644)
 	return readmePath, err
 }
 
