@@ -23,6 +23,10 @@ func (*recordingExamplesFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected Examples close")
 }
 
+func (*recordingExamplesFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected Examples reader close")
+}
+
 type recordingExamplesFilesystem struct {
 	readDirPaths     []string
 	readDirEntries   []fs.FileInfo

@@ -22,6 +22,10 @@ func (*recordingTemplateMarkdownFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected template-markdown close")
 }
 
+func (*recordingTemplateMarkdownFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected template-markdown reader close")
+}
+
 type recordedTemplateMarkdownWrite struct {
 	path string
 	data []byte

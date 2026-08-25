@@ -21,6 +21,10 @@ func (recording *recordingStructurizrOutputFilesystem) Close(filesystem.File) er
 	return recording.unexpected("close")
 }
 
+func (recording *recordingStructurizrOutputFilesystem) CloseReader(io.ReadCloser) error {
+	return recording.unexpected("close reader")
+}
+
 type recordedStructurizrOutputWrite struct {
 	path string
 	data []byte

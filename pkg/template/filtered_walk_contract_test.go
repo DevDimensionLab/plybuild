@@ -24,6 +24,10 @@ func (*recordingFilteredWalkFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected filtered-template close")
 }
 
+func (*recordingFilteredWalkFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected filtered-template reader close")
+}
+
 type recordedFilteredWalkCallback struct {
 	path string
 	info fs.FileInfo

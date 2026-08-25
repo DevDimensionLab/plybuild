@@ -31,18 +31,35 @@ func (file *recordedArchiveFile) Close() error {
 	return file.closeErr
 }
 
+type recordedArchiveReadCloser struct {
+	reader     io.Reader
+	closeCalls int
+	closeErr   error
+}
+
+func (reader *recordedArchiveReadCloser) Read(data []byte) (int, error) {
+	return reader.reader.Read(data)
+}
+
+func (reader *recordedArchiveReadCloser) Close() error {
+	reader.closeCalls++
+	return reader.closeErr
+}
+
 type recordingArchiveFilesystem struct {
-	paths        []string
-	zipPaths     []string
-	destinations []File
-	data         []byte
-	file         *recordedArchiveFile
-	zipReader    *zip.ReadCloser
-	closedFiles  []File
-	createErr    error
-	openZipError error
-	copyErr      error
-	closeErr     error
+	paths          []string
+	zipPaths       []string
+	destinations   []File
+	data           []byte
+	file           *recordedArchiveFile
+	zipReader      *zip.ReadCloser
+	closedFiles    []File
+	closedReaders  []io.ReadCloser
+	createErr      error
+	openZipError   error
+	copyErr        error
+	closeErr       error
+	closeReaderErr error
 }
 
 func (*recordingArchiveFilesystem) WorkingDirectory() (string, error) {
@@ -130,6 +147,11 @@ func (recording *recordingArchiveFilesystem) Close(file File) error {
 	return recording.closeErr
 }
 
+func (recording *recordingArchiveFilesystem) CloseReader(reader io.ReadCloser) error {
+	recording.closedReaders = append(recording.closedReaders, reader)
+	return recording.closeReaderErr
+}
+
 func (recording *recordingArchiveFilesystem) assertedZipPaths() ([]string, error) {
 	if len(recording.zipPaths) == 0 {
 		return nil, errors.New("recorded archive-open path population is empty")
@@ -142,6 +164,68 @@ func (recording *recordingArchiveFilesystem) assertedClosedFiles() ([]File, erro
 		return nil, errors.New("recorded archive file-close population is empty")
 	}
 	return recording.closedFiles, nil
+}
+
+func (recording *recordingArchiveFilesystem) assertedClosedReaders() ([]io.ReadCloser, error) {
+	if len(recording.closedReaders) == 0 {
+		return nil, errors.New("recorded archive reader-close population is empty")
+	}
+	return recording.closedReaders, nil
+}
+
+func TestCloseReaderDependenciesDefaultToSafeNoReaderClose(t *testing.T) {
+	reader := &recordedArchiveReadCloser{reader: strings.NewReader("must not be read or closed")}
+
+	err := CloseReader(Dependencies{}, reader)
+
+	if err != ErrNoFilesystem {
+		t.Fatalf("zero-value reader close returned %v, want exact %v", err, ErrNoFilesystem)
+	}
+	if reader.closeCalls != 0 {
+		t.Fatalf("zero-value reader close invoked the supplied reader %d times", reader.closeCalls)
+	}
+}
+
+func TestCloseReaderPassesExactIdentityOnceAndReturnsExactDependencyError(t *testing.T) {
+	reader := &recordedArchiveReadCloser{reader: strings.NewReader("complete reader bytes")}
+	closeError := errors.New("complete reader-close dependency error")
+	recording := &recordingArchiveFilesystem{closeReaderErr: closeError}
+
+	err := CloseReader(Dependencies{FileSystem: recording}, reader)
+
+	if err != closeError {
+		t.Fatalf("reader-close error was %v, want exact dependency error %v", err, closeError)
+	}
+	readers, populationErr := recording.assertedClosedReaders()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if len(readers) != 1 || readers[0] != reader {
+		t.Fatalf("reader-close dependency received %#v, want one exact reader identity %p", readers, reader)
+	}
+	if reader.closeCalls != 0 {
+		t.Fatalf("reader-close forwarder bypassed its dependency and closed the reader %d times", reader.closeCalls)
+	}
+}
+
+func TestSystemCloseReaderInvokesExactReaderOnceAndReturnsExactError(t *testing.T) {
+	closeError := errors.New("complete system reader-close error")
+	reader := &recordedArchiveReadCloser{reader: strings.NewReader("system reader bytes"), closeErr: closeError}
+
+	err := CloseReader(System(), reader)
+
+	if err != closeError || reader.closeCalls != 1 {
+		t.Fatalf("system reader close returned %v after %d attempts, want exact %v after one attempt",
+			err, reader.closeCalls, closeError)
+	}
+}
+
+func TestRecordedCloseReaderRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingArchiveFilesystem{}
+
+	if _, err := recording.assertedClosedReaders(); err == nil {
+		t.Fatal("empty recorded reader-close population passed")
+	}
 }
 
 func TestCloseDependenciesDefaultToSafeNoFileClose(t *testing.T) {

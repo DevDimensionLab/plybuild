@@ -21,6 +21,10 @@ func (recording *recordingLocalConfigUpdateFilesystem) Close(filesystem.File) er
 	return recording.unexpected("close")
 }
 
+func (recording *recordingLocalConfigUpdateFilesystem) CloseReader(io.ReadCloser) error {
+	return recording.unexpected("close reader")
+}
+
 type recordedLocalConfigUpdateWrite struct {
 	path string
 	data []byte

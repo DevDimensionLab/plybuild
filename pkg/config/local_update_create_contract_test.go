@@ -21,6 +21,10 @@ func (recording *recordingLocalConfigUpdateCreateFilesystem) Close(filesystem.Fi
 	return recording.unexpected("close")
 }
 
+func (recording *recordingLocalConfigUpdateCreateFilesystem) CloseReader(io.ReadCloser) error {
+	return recording.unexpected("close reader")
+}
+
 type recordedLocalConfigUpdateCreateFile struct {
 	closeCalls int
 	closeErr   error

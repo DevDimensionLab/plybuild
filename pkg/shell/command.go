@@ -112,7 +112,7 @@ func unzipWithDependencies(dependencies unzipDependencies, src string, dest stri
 			return filenames, err
 		}
 
-		err = rc.Close()
+		err = filesystem.CloseReader(dependencies.Files, rc)
 		if err != nil {
 			return filenames, err
 		}

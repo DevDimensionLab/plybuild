@@ -21,6 +21,10 @@ func (*recordingGrepRecursiveFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected recursive-grep close")
 }
 
+func (*recordingGrepRecursiveFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected recursive-grep reader close")
+}
+
 type recordedGrepRecursiveCallback struct {
 	path string
 	info fs.FileInfo

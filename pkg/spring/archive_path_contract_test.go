@@ -23,6 +23,10 @@ func (recording *recordingSpringArchivePathFilesystem) Close(filesystem.File) er
 	return recording.unexpected("close")
 }
 
+func (recording *recordingSpringArchivePathFilesystem) CloseReader(io.ReadCloser) error {
+	return recording.unexpected("close reader")
+}
+
 type recordingSpringArchivePathFilesystem struct {
 	workingDirectory         string
 	workingDirectoryErr      error

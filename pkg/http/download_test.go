@@ -29,6 +29,10 @@ func (*recordingDownloadFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected download close")
 }
 
+func (*recordingDownloadFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected download reader close")
+}
+
 type recordedDownloadFile struct {
 	lifecycle *[]string
 	closed    bool

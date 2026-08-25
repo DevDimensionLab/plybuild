@@ -22,6 +22,10 @@ func (recording *recordingGraphStylesFilesystem) Close(filesystem.File) error {
 	return recording.unexpected("close")
 }
 
+func (recording *recordingGraphStylesFilesystem) CloseReader(io.ReadCloser) error {
+	return recording.unexpected("close reader")
+}
+
 type recordedGraphStylesWrite struct {
 	path string
 	data []byte

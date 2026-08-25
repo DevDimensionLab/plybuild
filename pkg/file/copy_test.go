@@ -27,6 +27,10 @@ func (*recordingCopyFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected template file copy close")
 }
 
+func (*recordingCopyFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected template file copy reader close")
+}
+
 type recordedCopyOperation struct {
 	Name string
 	Path string

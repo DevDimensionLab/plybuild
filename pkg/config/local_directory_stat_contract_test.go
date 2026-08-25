@@ -22,6 +22,10 @@ func (recording *recordingLocalConfigDirectoryStatFilesystem) Close(filesystem.F
 	return recording.unexpected("close")
 }
 
+func (recording *recordingLocalConfigDirectoryStatFilesystem) CloseReader(io.ReadCloser) error {
+	return recording.unexpected("close reader")
+}
+
 type recordingLocalConfigDirectoryStatFilesystem struct {
 	statPaths            []string
 	statInfo             fs.FileInfo

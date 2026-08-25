@@ -27,6 +27,10 @@ func (*recordingBitbucketRepositoryFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected Bitbucket repository close")
 }
 
+func (*recordingBitbucketRepositoryFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected Bitbucket repository reader close")
+}
+
 type recordedBitbucketQuery struct {
 	Request     httpclient.Request
 	Destination interface{}

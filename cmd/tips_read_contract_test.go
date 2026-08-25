@@ -24,6 +24,10 @@ func (recording *recordingTipsShowReadFilesystem) Close(filesystem.File) error {
 	return recording.unexpected("close")
 }
 
+func (recording *recordingTipsShowReadFilesystem) CloseReader(io.ReadCloser) error {
+	return recording.unexpected("close reader")
+}
+
 type recordingTipsShowReadFilesystem struct {
 	readPaths            []string
 	readData             []byte

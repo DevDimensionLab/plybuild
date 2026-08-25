@@ -22,6 +22,10 @@ func (*recordingFilesystem) Close(File) error {
 	return errors.New("unexpected close")
 }
 
+func (*recordingFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected reader close")
+}
+
 type recordedFilesystemOperation struct {
 	Name        string
 	Path        string

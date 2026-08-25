@@ -23,6 +23,10 @@ func (*recordingRenderFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected render close")
 }
 
+func (*recordingRenderFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected render reader close")
+}
+
 type recordedRenderOperation struct {
 	name string
 	path string

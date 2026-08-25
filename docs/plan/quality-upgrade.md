@@ -2683,6 +2683,63 @@ The clean full audit from commit `0128cd0` exits 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passes.
 
+Move 53 changes only the entry-reader close request in private shell unzip flow
+from direct `err = rc.Close()` to
+`err = filesystem.CloseReader(dependencies.Files, rc)`. The existing filesystem
+interface gains only `CloseReader(io.ReadCloser) error`, its zero-safe forwarding
+helper, and the exact `reader.Close()` system implementation; every complete
+filesystem double receives the mechanical method addition. The public
+`Unzip(string, string) ([]string, error)` signature, complete private dependency
+composition, production `filesystem.System()` selection, exact opened entry-reader
+identity, archive open and deferred close, traversal, zip-slip check, filename
+append order, directory short-circuit, parent creation, output-file open path,
+flags, and mode, entry open, Copy request and ignored results, output-file Close,
+the entry-close assignment and following error branch, later traversal, partial
+results, and all established error and close precedence remain unchanged. No
+archive-open, archive-close, output-file Close, Copy, OpenFile, MkdirAll,
+entry-open, caller, other unzip branch, inventory entry, or other production
+effect changes.
+
+Six focused contracts bring the suite to 358 tests. The adapter contracts prove
+zero-safe behavior without closing a developer-supplied reader, exact reader
+identity and one dependency request, exact dependency error, exact system close
+invocation and error, and rejection of an empty reader-close population. The
+private unzip double records the exact opened reader already delivered as the
+Copy source. Its contracts prove one entry-reader-close request per reached file
+after Copy and successful output-file Close, exact request order and identity,
+exact close-error and partial filenames, suppression of later traversal after an
+entry-close error, suppression of entry Close after an output-close error,
+successful reader Close and later traversal, complete dependency preservation,
+rejection of an empty entry-close population, and absence of unrelated filesystem
+requests. The guarded archive fixture stays below `t.TempDir()`; the focused
+contracts launch no process, touch no network, and change no working directory.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8. The focused audit measures
+Q1.3 at 10 of 32: the direct interface-typed entry-reader `Close` was absent
+from the prior violation set, while the import-aware scanner classifies the new
+adapter request at the caller line because its archive reader argument retains
+filesystem-effect provenance. The exact system implementation is inside the
+declared filesystem adapter, so the denominator and violation count both hold.
+The scanner and inventory remain unchanged.
+
+The move-53 implementation gate passes focused shell/filesystem/Spring and
+relevant process, command, context, config, HTTP, Maven, structurizr, profile,
+browser, tips, file, template, Bitbucket, Wpost, local-config, Kibana, and caller
+package tests; API/CLI and subprocess compatibility; all four host flows and
+their meta-contracts; full preflight, test, install, the standalone 62-control
+launcher contract, uncached and race tests, vet, the pinned linter with zero
+issues, the 15-control audit meta-suite, and empty-HOME count-2. Generated audit
+and compatibility reports and all Go and linter caches stay outside the
+measured tree. The valid focused seven-criterion audit exits 1 for the documented
+Q1.3 finding, never 2, with four improved, two held, zero regressed, and one
+not-comparable ratchet.
+
+Commit: recorded by the following handoff.
+
+The clean committed checkpoint audit is recorded by the following handoff.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 

@@ -23,6 +23,10 @@ func (*recordingProjectConfigFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected project-config close")
 }
 
+func (*recordingProjectConfigFilesystem) CloseReader(io.ReadCloser) error {
+	return errors.New("unexpected project-config reader close")
+}
+
 var _ ProjectConfig = (*ProjectConfiguration)(nil)
 
 type recordedProjectConfigWrite struct {
