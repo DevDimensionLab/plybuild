@@ -6,7 +6,6 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,6 +21,14 @@ type gitHookFilesDependencies struct {
 
 func systemGitHookFilesDependencies() gitHookFilesDependencies {
 	return gitHookFilesDependencies{Files: filesystem.System()}
+}
+
+type examplesDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemExamplesDependencies() examplesDependencies {
+	return examplesDependencies{Files: filesystem.System()}
 }
 
 type refreshGit interface {
@@ -297,8 +304,12 @@ func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) 
 }
 
 func (gitCfg GitCloudConfig) Examples() (templates []string, err error) {
+	return gitCfg.examples(systemExamplesDependencies())
+}
+
+func (gitCfg GitCloudConfig) examples(dependencies examplesDependencies) (templates []string, err error) {
 	examplesDir := file.Path("%s/examples", gitCfg.Implementation().Dir())
-	items, err := ioutil.ReadDir(examplesDir)
+	items, err := filesystem.ReadDir(dependencies.Files, examplesDir)
 	if err != nil {
 		return
 	}
