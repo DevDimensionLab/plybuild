@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `8d49345`.
+Last measured checkpoint: 2026-08-25, commit `7754575`.
 
 ## Objective
 
@@ -93,7 +93,7 @@ P3.32 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
-P3.33 focused measurement:
+P3.33 clean checkpoint:
 
 | Signal | P3.33 | Interpretation |
 | --- | ---: | --- |
@@ -1363,15 +1363,18 @@ safe-writer sites, 17 write and 5 copy, with zero unsafe direct writes. Q1.3
 moves from 34 of 51 to 33 of 50; Q1.2 stays zero, Q1.4 stays 7 of 8, and exact
 Q2.1 stays 0 of 8.
 
-Commit: this implementation commit; the following handoff records its hash.
+Commit: `7754575`.
 
-The move-33 precommit gate passed focused config/filesystem and relevant file,
+The move-33 implementation gate passed focused config/filesystem and relevant file,
 template, Maven, context, and command caller contracts, API/CLI and subprocess
 compatibility, all four host flows, preflight, test, install, the standalone
 62-control launcher contract, uncached and race tests, vet, the 15-control
 audit meta-suite, and empty-HOME count-2. The focused seven-criterion audit
 exited 1 for documented findings, never 2, with four improved, two held, zero
-regressed, and one not-comparable ratchet.
+regressed, and one not-comparable ratchet. The full audit from clean commit
+`7754575` exited 1 for 15 documented findings, never 2, with L0 8 of 8, five
+improved, two held, zero regressed, one not-comparable ratchet, and zero dirty
+paths.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

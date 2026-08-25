@@ -1,13 +1,13 @@
 # Agent Session: Migrate Project Config Write
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T085931+0200-migrate-config-project-write`
 Created: `2026-08-25T08:59:31+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `72f9a1400e9675e5a922abcbaca6d12d44b37ba937bdde51ac7557734c94292e`
 Previous: [2026-08-25T082407+0200-migrate-template-markdown-write.md](2026-08-25T082407+0200-migrate-template-markdown-write.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T093228+0200-migrate-tips-show-read.md](2026-08-25T093228+0200-migrate-tips-show-read.md)
+Outcome: Project config write moved through the filesystem adapter at `7754575`; Q1.3 is 33 of 50.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
