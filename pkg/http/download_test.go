@@ -1,6 +1,7 @@
 package http
 
 import (
+	"archive/zip"
 	"bytes"
 	"errors"
 	"fmt"
@@ -19,6 +20,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/testutil"
 	"github.com/sirupsen/logrus"
 )
+
+func (*recordingDownloadFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected download archive open")
+}
 
 type recordedDownloadFile struct {
 	lifecycle *[]string

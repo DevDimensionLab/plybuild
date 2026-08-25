@@ -1,6 +1,7 @@
 package template
 
 import (
+	"archive/zip"
 	"bytes"
 	"errors"
 	"io"
@@ -14,6 +15,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/sirupsen/logrus"
 )
+
+func (*recordingFilteredWalkFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected filtered-template archive open")
+}
 
 type recordedFilteredWalkCallback struct {
 	path string

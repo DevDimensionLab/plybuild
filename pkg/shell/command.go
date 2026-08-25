@@ -1,7 +1,6 @@
 package shell
 
 import (
-	"archive/zip"
 	"bytes"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
@@ -68,7 +67,7 @@ func Unzip(src string, dest string) (filenames []string, err error) {
 }
 
 func unzipWithDependencies(dependencies unzipDependencies, src string, dest string) (filenames []string, err error) {
-	r, err := zip.OpenReader(src)
+	r, err := filesystem.OpenZipReader(dependencies.Files, src)
 	if err != nil {
 		return filenames, err
 	}

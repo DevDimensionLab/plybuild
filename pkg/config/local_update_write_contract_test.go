@@ -1,6 +1,7 @@
 package config
 
 import (
+	"archive/zip"
 	"errors"
 	"io"
 	"io/fs"
@@ -11,6 +12,10 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
+
+func (*recordingLocalConfigUpdateFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected local-config update-write archive open")
+}
 
 type recordedLocalConfigUpdateWrite struct {
 	path string

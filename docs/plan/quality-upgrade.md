@@ -403,6 +403,22 @@ P3.50 clean checkpoint:
 | Claim phrases in 64 Markdown files | 0 | Q3.4 remains held. |
 | Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
+P3.51 focused implementation measurement:
+
+| Signal | P3.51 | Interpretation |
+| --- | ---: | --- |
+| Test functions | 346 | Seven focused filesystem-adapter and private shell unzip archive-open contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | Both archive fixtures remain guarded below `t.TempDir()`. |
+| Guarded safe-writer sites | 26 | The population is 21 write and 5 copy sites after the focused system archive-open fixture. |
+| Packages with tests | 19 / 25 | The contracts stay in already-tested packages. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 10 / 32 | The one direct `zip.OpenReader` caller site is replaced by one in-boundary adapter implementation site. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Claim phrases in 65 Markdown files | 0 | Q3.4 remains held. |
+| Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -2524,6 +2540,57 @@ Commit: `89918bd`.
 The clean full audit from commit `89918bd` exits 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passes.
+
+Move 51 changes only the initial archive-open request in private shell unzip
+flow from direct `zip.OpenReader(src)` to
+`filesystem.OpenZipReader(dependencies.Files, src)`. The existing filesystem
+interface gains only `OpenZipReader(string) (*zip.ReadCloser, error)`, its
+zero-safe forwarding helper, and the exact `zip.OpenReader(path)` system
+implementation; every complete filesystem double receives the mechanical
+method addition. The public `Unzip` signature, complete private dependency
+composition, production `filesystem.System()` selection, exact source path,
+returned archive identity, early archive-open return, deferred archive close
+expression and placement, traversal, zip-slip check, filename append order,
+directory short-circuit, parent creation, output-file open path, flags, and
+mode, entry open, one payload attempt per reached file, output-file and entry
+close attempts, later traversal, partial results, and all established error
+and close precedence remain unchanged. No other filesystem operation, caller,
+inventory entry, or production effect changes.
+
+Seven focused top-level contracts bring the suite to 346 tests. The adapter
+contracts prove zero-safe behavior, exact path forwarding, exact returned
+reader identity and dependency error, rejection of an empty archive-open
+population, and system entry order, names, and bytes. The private unzip double
+records the one archive-open request before its already-established MkdirAll,
+OpenFile, and Copy requests. Its contracts use an injected reader with a
+deliberately nonexistent supplied source path to prove exact source delivery,
+one request, injected-reader traversal and deferred close, ordered filenames,
+the exact archive-open error with nil partial filenames, complete dependency
+preservation, zero-safe failure before a developer path is opened, rejection
+of an empty recording population, and absence of unrelated filesystem
+requests. Both guarded archive fixtures stay below `t.TempDir()`; the focused
+contracts launch no process, touch no network, and change no working
+directory.
+
+Q0.6 holds with zero skipped tests and zero unsafe direct test writes; the
+guarded safe-writer population is 26 sites, 21 write and 5 copy, after the
+focused system archive fixture. Q1.1 stays 6 of 25, Q1.2 stays zero, Q1.4
+stays 7 of 8, and exact Q2.1 stays 0 of 8. Q1.3 improves from 11 of 32 to 10
+of 32 because the direct public-package archive open becomes one exact
+filesystem-adapter implementation site. The scanner and inventory remain
+unchanged.
+
+The move-51 implementation gate passes focused shell/filesystem/Spring and
+relevant process, command, context, config, HTTP, Maven, structurizr, profile,
+browser, tips, file, template, Bitbucket, Wpost, local-config, Kibana, and
+caller package tests; API/CLI and subprocess compatibility; all four host
+flows and their meta-contracts; full preflight, test, install, the standalone
+62-control launcher contract, uncached and race tests, vet, the pinned linter
+with zero issues, the 15-control audit meta-suite, and empty-HOME count-2.
+Generated audit reports, compatibility reports, Go caches, and linter caches
+stay outside the measured tree. The valid focused seven-criterion audit exits
+1 for the documented Q1.3 finding, never 2, with four improved, two held, zero
+regressed, and one not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

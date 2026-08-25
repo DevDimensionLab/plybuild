@@ -1,6 +1,8 @@
 package filesystem
 
 import (
+	"archive/zip"
+	"bytes"
 	"errors"
 	"io"
 	"io/fs"
@@ -28,10 +30,13 @@ func (file *recordedArchiveFile) Close() error {
 
 type recordingArchiveFilesystem struct {
 	paths        []string
+	zipPaths     []string
 	destinations []File
 	data         []byte
 	file         *recordedArchiveFile
+	zipReader    *zip.ReadCloser
 	createErr    error
+	openZipError error
 	copyErr      error
 }
 
@@ -71,6 +76,11 @@ func (*recordingArchiveFilesystem) OpenFile(string, int, fs.FileMode) (*os.File,
 	return nil, errors.New("unexpected open file")
 }
 
+func (recording *recordingArchiveFilesystem) OpenZipReader(path string) (*zip.ReadCloser, error) {
+	recording.zipPaths = append(recording.zipPaths, path)
+	return recording.zipReader, recording.openZipError
+}
+
 func (*recordingArchiveFilesystem) Remove(string) error {
 	return errors.New("unexpected remove")
 }
@@ -108,6 +118,100 @@ func (recording *recordingArchiveFilesystem) Copy(destination File, source io.Re
 		return int64(len(data)), err
 	}
 	return int64(len(data)), recording.copyErr
+}
+
+func (recording *recordingArchiveFilesystem) assertedZipPaths() ([]string, error) {
+	if len(recording.zipPaths) == 0 {
+		return nil, errors.New("recorded archive-open path population is empty")
+	}
+	return recording.zipPaths, nil
+}
+
+func TestOpenZipReaderDependenciesDefaultToSafeNoArchiveOpen(t *testing.T) {
+	reader, err := OpenZipReader(Dependencies{}, "/developer/archive/path/must-not-be-opened.zip")
+
+	if reader != nil || !errors.Is(err, ErrNoFilesystem) {
+		t.Fatalf("zero-value archive open returned (%#v, %v), want (nil, %v)", reader, err, ErrNoFilesystem)
+	}
+}
+
+func TestOpenZipReaderPassesExactPathReaderIdentityAndError(t *testing.T) {
+	wantReader := &zip.ReadCloser{}
+	wantError := errors.New("complete archive-open dependency error")
+	recording := &recordingArchiveFilesystem{zipReader: wantReader, openZipError: wantError}
+	path := "/complete archive/source path with spaces.zip"
+
+	reader, err := OpenZipReader(Dependencies{FileSystem: recording}, path)
+
+	if reader != wantReader || err != wantError {
+		t.Fatalf("archive open returned (%p, %v), want exact (%p, %v)", reader, err, wantReader, wantError)
+	}
+	paths, populationErr := recording.assertedZipPaths()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(paths, []string{path}) {
+		t.Fatalf("archive-open paths were %#v, want exact supplied path %#v", paths, []string{path})
+	}
+}
+
+func TestRecordedArchiveOpenRejectsEmptyPathPopulation(t *testing.T) {
+	recording := &recordingArchiveFilesystem{}
+
+	if _, err := recording.assertedZipPaths(); err == nil {
+		t.Fatal("empty recorded archive-open path population passed")
+	}
+}
+
+func TestSystemOpenZipReaderPreservesEntryOrderNamesAndBytes(t *testing.T) {
+	var contents bytes.Buffer
+	writer := zip.NewWriter(&contents)
+	entries := []struct {
+		name string
+		data string
+	}{
+		{name: "z-first entry.txt", data: "first archive bytes\n"},
+		{name: "a-second entry.bin", data: "second\x00archive bytes"},
+	}
+	for _, entry := range entries {
+		archiveEntry, err := writer.Create(entry.name)
+		if err != nil {
+			t.Fatalf("create archive entry %q: %v", entry.name, err)
+		}
+		if _, err := archiveEntry.Write([]byte(entry.data)); err != nil {
+			t.Fatalf("write archive entry %q: %v", entry.name, err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatalf("close archive fixture: %v", err)
+	}
+	path := filepath.Join(t.TempDir(), "system archive open.zip")
+	if err := testutil.WriteFileOutsideWorkingTree(path, contents.Bytes(), 0600); err != nil {
+		t.Fatalf("write archive fixture: %v", err)
+	}
+
+	reader, err := OpenZipReader(System(), path)
+	if err != nil {
+		t.Fatalf("system archive open returned an error: %v", err)
+	}
+	defer func() { _ = reader.Close() }()
+	if len(reader.File) != len(entries) {
+		t.Fatalf("system archive entry count was %d, want %d", len(reader.File), len(entries))
+	}
+	for index, entry := range entries {
+		if reader.File[index].Name != entry.name {
+			t.Fatalf("system archive entry %d name was %q, want %q", index, reader.File[index].Name, entry.name)
+		}
+		opened, err := reader.File[index].Open()
+		if err != nil {
+			t.Fatalf("open system archive entry %q: %v", entry.name, err)
+		}
+		data, readErr := io.ReadAll(opened)
+		closeErr := opened.Close()
+		if readErr != nil || closeErr != nil || string(data) != entry.data {
+			t.Fatalf("system archive entry %q returned (%q, %v, %v), want (%q, nil, nil)", entry.name, data, readErr, closeErr, entry.data)
+		}
+	}
 }
 
 func TestArchiveDependenciesDefaultToSafeNoCreateOrCopy(t *testing.T) {

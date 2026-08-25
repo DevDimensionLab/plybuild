@@ -1,6 +1,7 @@
 package maven
 
 import (
+	"archive/zip"
 	"errors"
 	"io"
 	"io/fs"
@@ -12,6 +13,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 )
+
+func (*recordingGraphStylesFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected graph-styles archive open")
+}
 
 type recordedGraphStylesWrite struct {
 	path string

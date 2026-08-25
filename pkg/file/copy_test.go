@@ -1,6 +1,7 @@
 package file
 
 import (
+	"archive/zip"
 	"bytes"
 	"errors"
 	"fmt"
@@ -17,6 +18,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/testutil"
 	"github.com/sirupsen/logrus"
 )
+
+func (*recordingCopyFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected copy archive open")
+}
 
 type recordedCopyOperation struct {
 	Name string

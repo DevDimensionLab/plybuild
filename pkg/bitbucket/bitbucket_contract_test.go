@@ -1,6 +1,7 @@
 package bitbucket
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -17,6 +18,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"github.com/sirupsen/logrus"
 )
+
+func (*recordingBitbucketRepositoryFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected Bitbucket archive open")
+}
 
 type recordedBitbucketQuery struct {
 	Request     httpclient.Request

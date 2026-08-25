@@ -1,6 +1,7 @@
 package config
 
 import (
+	"archive/zip"
 	"bytes"
 	"errors"
 	"io"
@@ -13,6 +14,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/sirupsen/logrus"
 )
+
+func (*recordingProjectConfigFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected project-config archive open")
+}
 
 var _ ProjectConfig = (*ProjectConfiguration)(nil)
 

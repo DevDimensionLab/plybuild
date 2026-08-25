@@ -1,6 +1,7 @@
 package file
 
 import (
+	"archive/zip"
 	"errors"
 	"io"
 	"io/fs"
@@ -11,6 +12,10 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
+
+func (*recordingGrepRecursiveFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected grep archive open")
+}
 
 type recordedGrepRecursiveCallback struct {
 	path string

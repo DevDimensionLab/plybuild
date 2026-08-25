@@ -1,6 +1,7 @@
 package config
 
 import (
+	"archive/zip"
 	"errors"
 	"io"
 	"io/fs"
@@ -13,6 +14,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 )
+
+func (*recordingExamplesFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected examples archive open")
+}
 
 type recordingExamplesFilesystem struct {
 	readDirPaths     []string

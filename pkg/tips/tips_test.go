@@ -1,6 +1,7 @@
 package tips
 
 import (
+	"archive/zip"
 	"errors"
 	"io"
 	"io/fs"
@@ -13,6 +14,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 )
+
+func (*recordingTipsListFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected tips-list archive open")
+}
 
 type recordingTipsListFilesystem struct {
 	readPaths            []string

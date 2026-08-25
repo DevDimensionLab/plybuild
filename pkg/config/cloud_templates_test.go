@@ -1,6 +1,7 @@
 package config
 
 import (
+	"archive/zip"
 	"bytes"
 	"errors"
 	"fmt"
@@ -16,6 +17,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/sirupsen/logrus"
 )
+
+func (*recordingTemplatesFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected templates archive open")
+}
 
 type recordedTemplatesCallback struct {
 	path string

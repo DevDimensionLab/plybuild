@@ -2,6 +2,7 @@
 package filesystem
 
 import (
+	"archive/zip"
 	"errors"
 	"io"
 	"io/fs"
@@ -31,6 +32,7 @@ type FileSystem interface {
 	MkdirAll(string, fs.FileMode) error
 	WriteFile(string, []byte, fs.FileMode) error
 	OpenFile(string, int, fs.FileMode) (*os.File, error)
+	OpenZipReader(string) (*zip.ReadCloser, error)
 	Remove(string) error
 	RemoveAll(string) error
 	Rename(string, string) error
@@ -130,6 +132,14 @@ func OpenFile(dependencies Dependencies, path string, flags int, mode fs.FileMod
 	return dependencies.FileSystem.OpenFile(path, flags, mode)
 }
 
+// OpenZipReader passes the complete archive source path to the configured dependency.
+func OpenZipReader(dependencies Dependencies, path string) (*zip.ReadCloser, error) {
+	if dependencies.FileSystem == nil {
+		return nil, ErrNoFilesystem
+	}
+	return dependencies.FileSystem.OpenZipReader(path)
+}
+
 // Remove passes the complete path to the configured dependency.
 func Remove(dependencies Dependencies, path string) error {
 	if dependencies.FileSystem == nil {
@@ -227,6 +237,10 @@ func (systemFilesystem) WriteFile(path string, data []byte, mode fs.FileMode) er
 
 func (systemFilesystem) OpenFile(path string, flags int, mode fs.FileMode) (*os.File, error) {
 	return os.OpenFile(path, flags, mode)
+}
+
+func (systemFilesystem) OpenZipReader(path string) (*zip.ReadCloser, error) {
+	return zip.OpenReader(path)
 }
 
 func (systemFilesystem) Remove(path string) error {

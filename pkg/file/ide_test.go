@@ -1,6 +1,7 @@
 package file
 
 import (
+	"archive/zip"
 	"errors"
 	"io"
 	"io/fs"
@@ -13,6 +14,10 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
+
+func (*recordingIntellijFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected IntelliJ archive open")
+}
 
 type recordingIntellijFilesystem struct {
 	readDirPaths   []string

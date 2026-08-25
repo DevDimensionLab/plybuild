@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"archive/zip"
 	"errors"
 	"io"
 	"io/fs"
@@ -14,6 +15,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/tips"
 )
+
+func (*recordingTipsShowReadFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected tips-show archive open")
+}
 
 type recordingTipsShowReadFilesystem struct {
 	readPaths            []string

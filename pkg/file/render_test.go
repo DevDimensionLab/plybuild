@@ -1,6 +1,7 @@
 package file
 
 import (
+	"archive/zip"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,10 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
+
+func (*recordingRenderFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
+	return nil, errors.New("unexpected render archive open")
+}
 
 type recordedRenderOperation struct {
 	name string
