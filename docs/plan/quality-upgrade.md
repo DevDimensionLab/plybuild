@@ -425,7 +425,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 43 are complete.
+Status: active. Moves 1 through 44 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -2031,6 +2031,51 @@ Commit: `85f4c2b`.
 The clean full audit from commit `85f4c2b` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
+
+Move 44 extends only the existing process request with `Stdin io.Reader`, maps
+that value directly to `exec.Cmd.Stdin`, and routes only the profile edit
+branch's direct `exec.Command` construction and `cmd.Run` through the process
+adapter. The process adapter's name, arguments, directory, stdout, stderr,
+runner, dependency, execution, system, error, and safe-zero behavior remain
+unchanged. The profile branch still reads `EDITOR` once, replaces only an
+empty value with exact `vim`, evaluates the arbitrary local-config path once,
+then selects one private complete production composition containing
+`process.System()`, exact `os.Stdin`, and exact `os.Stdout`. It makes one
+adapter execution attempt with the exact editor as `Name`, the exact path as
+the only argument, an empty directory, exact stdin/stdout identities, and nil
+stderr. The exact process error still returns before sync, reset, or print;
+success preserves every later branch, condition, order, and result.
+
+Four new top-level profile-editor contracts bring the suite to 308 tests. They
+prove complete production dependency and stream selection, exact non-empty
+and empty `EDITOR` behavior, the `vim` fallback, arbitrary local-config path
+bytes, exact stream identities, empty directory, nil stderr, one non-empty
+recorded attempt, exact error identity, safe zero behavior, and rejection of
+an empty recording population without starting a real or unrelated process.
+The extended process contracts prove exact stdin reader identity reaches a
+recording runner without reads or extra attempts, direct system execution
+receives the delivered input, and all prior command fields, exact errors, and
+safe zero behavior remain intact. No command object, registration, public API,
+inventory, mutation harness, or other process, filesystem, HTTP, tips, config,
+Maven, structurizr, Bitbucket, Wpost, local-config, or supervisor operation
+changed.
+
+Q0.6 stays closed at 24 guarded safe-writer sites, 19 write and 5 copy, with
+zero skipped tests and zero unsafe direct test writes. Q1.1 holds at 7 of 25
+untested packages, Q1.2 stays zero, Q1.3 improves from 21 of 40 to 19 of 38 as
+the two direct profile process sites leave, Q1.4 stays 7 of 8, and exact Q2.1
+stays 0 of 8.
+
+The move-44 implementation gate passed focused process, command, config,
+context, Maven, tips, filesystem, file, template, structurizr, Bitbucket,
+HTTP, Kibana, Spring, shell, local-config, and caller package tests; API/CLI
+and subprocess compatibility; all four host flows and their meta-contracts;
+full preflight, test, install, the standalone 62-control launcher contract,
+uncached and race tests, vet, the 15-control audit meta-suite, and empty-HOME
+count-2. Generated compatibility and audit reports and all Go and linter caches
+remained outside the measured tree. The focused seven-criterion audit exited 1
+for documented findings, never 2, with four improved, two held, zero regressed,
+and one not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

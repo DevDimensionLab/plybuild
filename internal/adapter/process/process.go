@@ -10,6 +10,7 @@ type Command struct {
 	Name   string
 	Args   []string
 	Dir    string
+	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 }
@@ -44,6 +45,7 @@ type systemRunner struct{}
 func (systemRunner) Run(command Command) error {
 	cmd := exec.Command(command.Name, command.Args...)
 	cmd.Dir = command.Dir
+	cmd.Stdin = command.Stdin
 	cmd.Stdout = command.Stdout
 	cmd.Stderr = command.Stderr
 	return cmd.Run()

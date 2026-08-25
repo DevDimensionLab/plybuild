@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"io"
+	"os"
+
+	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/spf13/cobra"
-	"os"
-	"os/exec"
 )
 
 const DefaultTerminalWidth = 80
@@ -22,6 +24,37 @@ func (configOpts ConfigOpts) Any() bool {
 }
 
 var configOpts ConfigOpts
+
+type profileEditorDependencies struct {
+	Process process.Dependencies
+	Stdin   io.Reader
+	Stdout  io.Writer
+}
+
+func systemProfileEditorDependencies() profileEditorDependencies {
+	dependencies := profileEditorDependencies{Process: process.System()}
+	dependencies.Stdin = os.Stdin
+	dependencies.Stdout = os.Stdout
+	return dependencies
+}
+
+func selectProfileEditor(editor string) string {
+	if editor == "" {
+		return "vim"
+	}
+	return editor
+}
+
+func runProfileEditor(dependencies profileEditorDependencies, editor, configPath string) error {
+	return process.Execute(dependencies.Process, process.Command{
+		Name:   editor,
+		Args:   []string{configPath},
+		Dir:    "",
+		Stdin:  dependencies.Stdin,
+		Stdout: dependencies.Stdout,
+		Stderr: nil,
+	})
+}
 
 var profileCmd = &cobra.Command{
 	Use:     "profile",
@@ -44,14 +77,10 @@ var profileCmd = &cobra.Command{
 		}
 
 		if configOpts.Edit {
-			var editor = os.Getenv("EDITOR")
-			if editor == "" {
-				editor = "vim"
-			}
-			cmd := exec.Command(editor, ctx.LocalConfig.FilePath())
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			err := cmd.Run()
+			editor := os.Getenv("EDITOR")
+			editor = selectProfileEditor(editor)
+			configPath := ctx.LocalConfig.FilePath()
+			err := runProfileEditor(systemProfileEditorDependencies(), editor, configPath)
 			if err != nil {
 				return err
 			}
