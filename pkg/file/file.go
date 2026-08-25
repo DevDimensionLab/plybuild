@@ -40,8 +40,20 @@ func findFirst(dependencies findFirstDependencies, fileSuffix string, dir string
 	return
 }
 
+type findAllDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemFindAllDependencies() findAllDependencies {
+	return findAllDependencies{Files: filesystem.System()}
+}
+
 func FindAll(suffix string, excludes []string, dir string) (result []string, err error) {
-	err = filepath.Walk(dir,
+	return findAll(systemFindAllDependencies(), suffix, excludes, dir)
+}
+
+func findAll(dependencies findAllDependencies, suffix string, excludes []string, dir string) (result []string, err error) {
+	err = filesystem.Walk(dependencies.Files, dir,
 		func(path string, fi os.FileInfo, errIn error) error {
 			if strings.HasSuffix(path, suffix) && !SuffixIn(path, excludes) {
 				result = append(result, path)

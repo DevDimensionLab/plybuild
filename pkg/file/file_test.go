@@ -122,6 +122,20 @@ type recordingFindFirstFilesystem struct {
 	walkErr         error
 }
 
+type recordedFindAllCallback struct {
+	path string
+	info fs.FileInfo
+	err  error
+}
+
+type recordingFindAllFilesystem struct {
+	walkRoots       []string
+	walkInputs      []recordedFindAllCallback
+	callbackInputs  []recordedFindAllCallback
+	callbackResults []error
+	walkErr         error
+}
+
 type messageOnlyFormatter struct{}
 
 func (messageOnlyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
@@ -847,6 +861,77 @@ func (recording *recordingFindFirstFilesystem) assertedCallbackInputs() ([]recor
 	return recording.callbackInputs, nil
 }
 
+func (*recordingFindAllFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected find-all read")
+}
+
+func (*recordingFindAllFilesystem) Stat(string) (fs.FileInfo, error) {
+	return nil, errors.New("unexpected find-all stat")
+}
+
+func (*recordingFindAllFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected find-all mkdir")
+}
+
+func (*recordingFindAllFilesystem) WriteFile(string, []byte, fs.FileMode) error {
+	return errors.New("unexpected find-all write")
+}
+
+func (*recordingFindAllFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected find-all open file")
+}
+
+func (*recordingFindAllFilesystem) Remove(string) error {
+	return errors.New("unexpected find-all remove")
+}
+
+func (*recordingFindAllFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected find-all recursive remove")
+}
+
+func (*recordingFindAllFilesystem) Rename(string, string) error {
+	return errors.New("unexpected find-all rename")
+}
+
+func (*recordingFindAllFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected find-all glob")
+}
+
+func (recording *recordingFindAllFilesystem) Walk(root string, callback filepath.WalkFunc) error {
+	recording.walkRoots = append(recording.walkRoots, root)
+	for _, input := range recording.walkInputs {
+		recording.callbackInputs = append(recording.callbackInputs, input)
+		recording.callbackResults = append(recording.callbackResults, callback(input.path, input.info, input.err))
+	}
+	return recording.walkErr
+}
+
+func (*recordingFindAllFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected find-all create")
+}
+
+func (*recordingFindAllFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected find-all copy")
+}
+
+func (recording *recordingFindAllFilesystem) dependencies() findAllDependencies {
+	return findAllDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingFindAllFilesystem) assertedWalkRoots() ([]string, error) {
+	if len(recording.walkRoots) == 0 {
+		return nil, errors.New("recorded find-all walk population is empty")
+	}
+	return recording.walkRoots, nil
+}
+
+func (recording *recordingFindAllFilesystem) assertedCallbackInputs() ([]recordedFindAllCallback, error) {
+	if len(recording.callbackInputs) == 0 {
+		return nil, errors.New("recorded find-all callback population is empty")
+	}
+	return recording.callbackInputs, nil
+}
+
 func captureFileDebugLog(t *testing.T) *bytes.Buffer {
 	t.Helper()
 	output := &bytes.Buffer{}
@@ -979,6 +1064,170 @@ func TestRecordedFindFirstRejectsEmptyPopulations(t *testing.T) {
 	}
 	if _, err := recording.assertedCallbackInputs(); err == nil {
 		t.Fatal("empty recorded find-first callback population passed")
+	}
+}
+
+func TestFindAllSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemFindAllDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("FindAll selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("FindAll filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestFindAllPreservesExactRootCallbackOrderSuffixExclusionsAndOrderedAllMatches(t *testing.T) {
+	root := "/complete find-all/root path with spaces"
+	callbackInputError := errors.New("ignored find-all callback input error")
+	firstMatch := root + "/ordered/z-first.kt"
+	caseSensitiveExclusionMatch := root + "/ordered/EXCLUDE-FIRST/still-included.kt"
+	secondMatch := root + "/ordered/a-second.kt"
+	recording := &recordingFindAllFilesystem{walkInputs: []recordedFindAllCallback{
+		{path: root, info: existingFileInfo{name: "ignored root metadata"}, err: callbackInputError},
+		{path: root + "/ordered/contains.kt/more", info: nil, err: callbackInputError},
+		{path: firstMatch, info: existingFileInfo{name: "ignored directory metadata"}, err: callbackInputError},
+		{path: root + "/ordered/exclude-first/ignored.kt", info: nil, err: callbackInputError},
+		{path: root + "/ordered/ignored-second.kt", info: existingFileInfo{name: "ignored-second.kt"}, err: callbackInputError},
+		{path: root + "/ordered/case-mismatch.KT", info: nil, err: callbackInputError},
+		{path: caseSensitiveExclusionMatch, info: nil, err: callbackInputError},
+		{path: secondMatch, info: existingFileInfo{name: "a-second.kt"}, err: callbackInputError},
+	}}
+	dependencies := recording.dependencies()
+	if dependencies.Files.FileSystem != recording {
+		t.Fatalf("find-all dependency lost its complete filesystem value: %#v", dependencies)
+	}
+
+	result, err := findAll(dependencies, ".kt", []string{"exclude-first", "ignored-second"}, root)
+
+	wantResult := []string{firstMatch, caseSensitiveExclusionMatch, secondMatch}
+	if err != nil || !reflect.DeepEqual(result, wantResult) {
+		t.Fatalf("find-all result was (%#v, %v), want ordered matches (%#v, nil)", result, err, wantResult)
+	}
+	roots, populationErr := recording.assertedWalkRoots()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(roots, []string{root}) {
+		t.Fatalf("find-all walk roots were %#v, want exact root %#v", roots, []string{root})
+	}
+	callbacks, populationErr := recording.assertedCallbackInputs()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(callbacks, recording.walkInputs) {
+		t.Fatalf("find-all callback order was %#v, want %#v", callbacks, recording.walkInputs)
+	}
+	wantCallbackResults := make([]error, len(recording.walkInputs))
+	if !reflect.DeepEqual(recording.callbackResults, wantCallbackResults) {
+		t.Fatalf("find-all callback results were %#v, want all nil", recording.callbackResults)
+	}
+}
+
+func TestFindAllNoMatchReturnsNilResultAndPreservesEmptyOrderedSubstringExclusion(t *testing.T) {
+	root := "/complete find-all/no match"
+	recording := &recordingFindAllFilesystem{walkInputs: []recordedFindAllCallback{
+		{path: root + "/case-mismatch.KT", info: existingFileInfo{name: "case-mismatch.KT"}},
+		{path: root + "/suffix.kt.more", err: errors.New("ignored no-match callback input error")},
+		{path: root + "/would-match.kt", info: existingFileInfo{name: "would-match.kt"}},
+	}}
+
+	result, err := findAll(recording.dependencies(), ".kt", []string{"absent-first", ""}, root)
+
+	if result != nil || err != nil {
+		t.Fatalf("no-match find-all result was (%#v, %v), want (nil, nil)", result, err)
+	}
+	callbacks, populationErr := recording.assertedCallbackInputs()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(callbacks, recording.walkInputs) {
+		t.Fatalf("no-match callback order was %#v, want %#v", callbacks, recording.walkInputs)
+	}
+	wantCallbackResults := make([]error, len(recording.walkInputs))
+	if !reflect.DeepEqual(recording.callbackResults, wantCallbackResults) {
+		t.Fatalf("no-match callback results were %#v, want all nil", recording.callbackResults)
+	}
+}
+
+func TestFindAllReturnsExactNonEOFWalkErrorWithCurrentPartialResult(t *testing.T) {
+	root := "/complete find-all/walk error"
+	firstMatch := root + "/first.kt"
+	secondMatch := root + "/second.kt"
+	walkErrors := []struct {
+		name string
+		err  error
+	}{
+		{name: "ordinary error", err: errors.New("complete find-all non-EOF walk error")},
+		{name: "wrapped EOF is not equal to EOF", err: &os.PathError{Op: "walk", Path: root, Err: io.EOF}},
+	}
+
+	for _, walkError := range walkErrors {
+		t.Run(walkError.name, func(t *testing.T) {
+			recording := &recordingFindAllFilesystem{
+				walkInputs: []recordedFindAllCallback{
+					{path: firstMatch, err: errors.New("ignored first callback error")},
+					{path: root + "/excluded/ignored.kt", info: existingFileInfo{name: "ignored.kt"}},
+					{path: secondMatch, info: existingFileInfo{name: "second.kt"}, err: errors.New("ignored second callback error")},
+				},
+				walkErr: walkError.err,
+			}
+
+			result, err := findAll(recording.dependencies(), ".kt", []string{"/excluded/"}, root)
+
+			want := []string{firstMatch, secondMatch}
+			if err != walkError.err || !reflect.DeepEqual(result, want) {
+				t.Fatalf("walk-error find-all result was (%#v, %v), want current partial result and exact error (%#v, %v)",
+					result, err, want, walkError.err)
+			}
+			if !reflect.DeepEqual(recording.callbackResults, []error{nil, nil, nil}) {
+				t.Fatalf("walk-error callback results were %#v, want all nil", recording.callbackResults)
+			}
+		})
+	}
+}
+
+func TestFindAllNormalizesOnlyFinalEOFWithCurrentPartialResult(t *testing.T) {
+	root := "/complete find-all/final EOF"
+	matchingPath := root + "/partial-result.kt"
+	recording := &recordingFindAllFilesystem{
+		walkInputs: []recordedFindAllCallback{{path: matchingPath, err: errors.New("ignored callback error")}},
+		walkErr:    io.EOF,
+	}
+
+	result, err := findAll(recording.dependencies(), ".kt", nil, root)
+
+	if err != nil || !reflect.DeepEqual(result, []string{matchingPath}) {
+		t.Fatalf("EOF find-all result was (%#v, %v), want current partial result and nil", result, err)
+	}
+	if !reflect.DeepEqual(recording.callbackResults, []error{nil}) {
+		t.Fatalf("EOF callback results were %#v, want nil", recording.callbackResults)
+	}
+}
+
+func TestFindAllDependenciesDefaultToSafeNoDeveloperPathAccess(t *testing.T) {
+	result, err := findAll(
+		findAllDependencies{},
+		".kt",
+		[]string{"excluded"},
+		"/developer/home/project/must-not-be-accessed",
+	)
+
+	if result != nil || !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe find-all dependency default returned (%#v, %v), want (nil, %v)", result, err, filesystem.ErrNoFilesystem)
+	}
+}
+
+func TestRecordedFindAllRejectsEmptyPopulations(t *testing.T) {
+	recording := &recordingFindAllFilesystem{}
+
+	if _, err := recording.assertedWalkRoots(); err == nil {
+		t.Fatal("empty recorded find-all walk population passed")
+	}
+	if _, err := recording.assertedCallbackInputs(); err == nil {
+		t.Fatal("empty recorded find-all callback population passed")
 	}
 }
 
