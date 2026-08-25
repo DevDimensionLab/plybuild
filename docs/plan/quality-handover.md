@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-25T11:56:39+02:00
+Generated: 2026-08-25T12:22:24+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,7 +10,7 @@ session diary.
 - Worktree: /Users/perottochristensen/github/ply/upgrade-quality
 - Branch: codex/upgrade-quality
 - Base: master at 5635d50
-- Measured implementation head and restart preparation base: fd45ebf00307.
+- Measured implementation head and restart preparation base: d2e330b1bb1b.
 - After launch, obtain the session head with git rev-parse --short=12 HEAD; the
   restart commit contains this handover and no product implementation changes.
 - No push, merge, release, publication, stash, revert, successor launch, or
@@ -21,7 +21,7 @@ f5ee37d, ee5e9ab, ffc4e77, 204e222, 89d0f76, dee214c, 789ae23, 07ac6ce,
 a7eb3ef, e13a036, f59a3f0, 61714a5, 60e5aac, e054082, 27c0d1a, c2f3597,
 9e2d669, a4deb76, acda4e3, 838daa1, 224a691, 549685d, 04cfe44, d03e96d,
 d6cb593, 82e631d, cb94f81, dfcfa75, 170b0ae, 8d49345, 7754575, 2566438,
-527a8b9, 886dff0, 89f43aa, and fd45ebf in roadmap order. The separate
+527a8b9, 886dff0, 89f43aa, fd45ebf, and d2e330b in roadmap order. The separate
 operational continuity implementation is 1b85711 and changes no Go quality
 denominator.
 
@@ -29,8 +29,8 @@ denominator.
 
 codex-dev-start.sh stays NEXT while P3 is active and P4-P8 are queued in the
 machine-readable plan block. Its active archive is
-docs/plan/agent-sessions/2026-08-25T115639+0200-migrate-local-config-directory-stat.md.
-The local-config update-write predecessor is answered history, and the
+docs/plan/agent-sessions/2026-08-25T122224+0200-migrate-local-config-touch-create.md.
+The local-config directory-stat predecessor is answered history, and the
 reciprocal archive graph has exactly one NEXT tail.
 
 Normal launch remains a Bash 3.2-compatible non-interactive supervisor with
@@ -41,47 +41,45 @@ skeleton digest remains
 4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484.
 test/codex_dev_start_test.sh retains all 62 controls.
 
-## P3 Move 38 Preserved
+## P3 Move 39 Preserved
 
-Exported `LocalConfigDir.UpdateLocalConfig`, every caller, and all later config,
-context, and profile behavior remain unchanged. It still evaluates exact
-`CheckOrCreateConfigDir()` and its early error, `FilePath()`, the exact
-caller-supplied `config`, `yaml.Marshal(&config)` and its early error, and the
-exact update log in the same order. It preserves the following
-`os.Create(configFilePath)` attempt and its early error. Production then
-selects `filesystem.System()` only for a private complete update-write
-composition and attempts established adapter `WriteFile` once with the exact
-path, YAML bytes, and mode `0644`. The exact write error returns without a
-Close attempt; successful writes still return the exact `f.Close()` result.
+Exported `LocalConfigDir.CheckOrCreateConfigDir`, every caller, and all later
+config, context, and profile behavior remain unchanged. It still evaluates the
+exact `localCfgDir.Implementation().Path` result and attempts one stat with
+that arbitrary string. Production selects `filesystem.System()` only for a
+private complete directory-stat composition and reuses established adapter
+`Stat`, preserving its exact `fs.FileInfo` and error. The enclosing code still
+applies exact `os.IsNotExist(err)`: only a not-exist error attempts exact
+`os.Mkdir(dir, 0755)` and returns its exact non-nil error; every other stat
+result still returns nil.
 
-Four new top-level config contracts bring the suite to 278 tests. They prove
-complete production selection and delivery, exact arbitrary caller-composed
-paths, non-empty recorded write populations, empty, representative, non-ASCII,
-and arbitrary bytes, exact mode, one attempt, exact private-boundary error
-identity, safe zero behavior without developer-path access, and rejection of
-every unrelated filesystem operation. Production-composition tests do not
-mutate the real filesystem or run another command. No adapter, established
-complete double, directory creation, path construction, caller-supplied config,
-YAML semantics, log, `os.Create`, Close, `TouchFile`,
+Four new top-level config contracts bring the suite to 282 tests. They prove
+complete production selection and delivery, exact arbitrary directory paths,
+non-empty recorded stat populations, one attempt, exact metadata and error
+identity for nil, existing, not-exist, and arbitrary error results, safe zero
+behavior without developer-path access, and rejection of every unrelated
+filesystem operation. Production-composition tests do not mutate the real
+filesystem or run another command. No adapter, established complete double,
+directory evaluation or creation, predicate, mode, error, local-config write,
 caller, public API, CLI, or other completed effect changed.
 
 ## Measured Quality State
 
-The clean full audit from implementation commit fd45ebf reports:
+The clean full audit from implementation commit d2e330b reports:
 
 - Absolute L0: 8 of 8.
-- 278 test functions, zero skipped; 17 of 25 packages have tests.
+- 282 test functions, zero skipped; 17 of 25 packages have tests.
 - Q0.6: 22 guarded safe-writer sites, 17 write and 5 copy, and zero unsafe
   direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
 - Q1.1: 8 of 25 packages have no tests.
 - Q1.2: 0 process-exiting calls outside main.
-- Q1.3: 28 direct external sites outside five declared adapters of 45
+- Q1.3: 27 direct external sites outside five declared adapters of 44
   production effect sites; missing clock and server make it non-comparable.
 - Q1.4: 7 of 8 declared seams covered.
 - Exact Q2.1: 0 of 8 subjects have an executable harness.
 - Q3.2: PASS because a real template contract references the README path.
-- Q3.4: 0 temporary-state claims across 52 Markdown files.
+- Q3.4: 0 temporary-state claims across 53 Markdown files.
 - Acceptance: 4 of 4 host flows pass.
 - Full audit: exit 1 for 15 documented findings.
 - Comparable ratchets: five improved, two held, zero regressed; Q1.3 is the
@@ -89,99 +87,104 @@ The clean full audit from implementation commit fd45ebf reports:
 - Clean identity: zero dirty paths.
 
 The clean report is
-/private/tmp/ply-local-config-update-clean-audit/scorecard.json and the focused
-report is /private/tmp/ply-local-config-update-focused/scorecard.json. All
+/private/tmp/ply-local-config-directory-stat-clean-audit/scorecard.json and the
+focused report is
+/private/tmp/ply-local-config-directory-stat-focused/scorecard.json. All
 authoritative audit output and tool caches stayed outside the measured tree.
 
 ## Decisions And Learned Facts
 
-1. The local-config update output write reuses the adapter's established
-   WriteFile operation; this move does not extend the adapter or any established
-   complete filesystem recording double.
-2. Q1.3 moved from 29/46 to 28/45 because the direct UpdateLocalConfig write
-   disappeared while the already-counted adapter operation was reused. Q1.1
-   held at 8/25.
-3. The exact directory/path, caller config, marshal, logging, file creation,
-   write error, and final Close ordering remain visible in the unchanged
-   production sequence around the one replaced call.
+1. The local-config directory stat reuses the adapter's established `Stat`
+   operation; this move does not extend the adapter or any established complete
+   filesystem recording double.
+2. Q1.3 moved from 28/45 to 27/44 because the direct stat disappeared while the
+   already-counted adapter operation was reused. Q1.1 held at 8/25.
+3. Exact directory selection, stat result, not-exist branching, direct mkdir,
+   mode, mkdir error, and every later local-config lifecycle step remain visible
+   around the one replaced call.
 4. The private recording double rejects every unrelated adapter operation and
-   an empty write population. Its safe zero case returns exact
-   filesystem.ErrNoFilesystem without touching a developer path.
-5. The next isolated exact-match flow is
-   `LocalConfigDir.CheckOrCreateConfigDir`'s direct `os.Stat(dir)`. It can reuse
-   established Stat without extending the adapter or an established complete
-   double, nominally moving Q1.3 to 27/44 while Q1.1 holds at 8/25.
-6. That move must preserve exact Implementation().Path evaluation, the
-   `os.IsNotExist` predicate, direct `os.Mkdir(dir, 0755)` selection and exact
-   error, ignored non-not-exist stat errors, and every later local-config
-   effect.
-7. `tips.List` is not an exact reuse: its public result is `[]os.DirEntry`,
-   while the established adapter ReadDir returns `[]fs.FileInfo`. Converting
-   or extending that boundary requires a separate compatibility decision.
-8. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
-   claim P5 mutation coverage.
-9. Supply APIDIFF and GOLANGCI_LINT as environment variables for preflight,
-   and keep GOLANGCI_LINT_CACHE and GOCACHE in writable external directories.
-   The pinned tools are under /private/tmp/ply-quality-tools while that
-   temporary directory remains available.
-10. The authoritative full audit used .quality/baseline/scorecard.json plus
-    .quality/baseline/manual-evidence.json and exited 1 with valid clean
+   an empty stat population. Its safe zero case returns exact
+   `filesystem.ErrNoFilesystem` without touching a developer path.
+5. The next isolated exact-match flow is `LocalConfigDir.TouchFile`'s direct
+   `os.Create(configFilePath)`. It can reuse established `Create` without
+   extending the adapter or an established complete double.
+6. Because established `filesystem.Create` returns the adapter-owned
+   `filesystem.File` interface, replacing that direct create also removes the
+   scanner's concrete `*os.File.Close` classification while retaining the same
+   final `f.Close()` lifecycle call. The nominal Q1.3 result is therefore
+   25/42; regenerate it rather than assuming it.
+7. That move must preserve `CheckOrCreateConfigDir`, exact `FilePath`, config
+   initialization/default, YAML marshal and error, logging, one create attempt
+   and exact create result, the completed adapter write and its error, no Close
+   after a write error, and exact final Close result after write success.
+8. `os.Mkdir(dir, 0755)` is not an exact reuse of established `MkdirAll`; moving
+   it requires a separate adapter-contract decision and is not part of the next
+   create move.
+9. `tips.List` is not an exact reuse: its public result is `[]os.DirEntry`,
+   while established `ReadDir` returns `[]fs.FileInfo`.
+10. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
+    claim P5 mutation coverage.
+11. Supply APIDIFF and GOLANGCI_LINT as environment variables for preflight,
+    and keep GOLANGCI_LINT_CACHE and GOCACHE in writable external directories.
+    The pinned tools remain under /private/tmp/ply-quality-tools while present.
+12. The authoritative full audit used `.quality/baseline/scorecard.json` plus
+    `.quality/baseline/manual-evidence.json` and exited 1 with valid clean
     structured output and zero comparable regressions.
 
 ## Next Objective
 
-Move only the direct `os.Stat(dir)` in
-`LocalConfigDir.CheckOrCreateConfigDir` through the existing filesystem Stat
-operation.
+Move only the direct `os.Create(configFilePath)` in `LocalConfigDir.TouchFile`
+through the existing filesystem `Create` operation.
 
-Start red with focused local-config-directory-stat recording contracts for the
-complete dependency, production system selection, exact arbitrary directory
-paths, non-empty stat populations, one attempt, exact `fs.FileInfo` and error
-identity for nil, existing, not-exist, and arbitrary error results, safe zero
-behavior without developer-path access, and no unrelated adapter operation.
-Production-composition tests must not mutate the real filesystem.
+Start red with focused local-config-touch-create recording contracts for the
+complete dependency, production system selection, exact arbitrary paths,
+non-empty create populations, one attempt, exact `filesystem.File` and error
+identity for nil, successful, arbitrary-error, and unusual combined results,
+safe zero behavior without developer-path access, and no unrelated adapter
+operation. Use a dedicated file double to preserve exact Close results without
+mutating the real filesystem.
 
-Preserve exported config types and methods, every caller, the exact
-`Implementation().Path` result, and public API/CLI behavior. Production must
-select `filesystem.System()` only for a private complete
-local-config-directory-stat composition. Reuse adapter Stat without extending
-the adapter or established complete doubles. Do not change `os.IsNotExist`,
-`os.Mkdir`, mode or error behavior, FilePath, TouchFile, UpdateLocalConfig,
-Config, Print, Exists, context/profile flows, inventory, or another production
-effect.
+Preserve exported config types and methods, every caller, exact directory and
+file path selection, default config and YAML bytes, logging, completed touch
+write composition and exact error, final Close selection and exact result, and
+public API/CLI behavior. Production must select `filesystem.System()` only for
+a private complete local-config-touch-create composition. Reuse adapter Create
+without extending the adapter or established complete doubles. Do not change
+the directory stat/mkdir, `UpdateLocalConfig`, another local-config operation,
+inventory, or another production effect.
 
-Expected direction is nominally Q1.3 27/44 with Q1.1 8/25 and Q0.6, Q1.2,
+Expected direction is nominally Q1.3 25/42 with Q1.1 8/25 and Q0.6, Q1.2,
 Q1.4, and exact Q2.1 held. Regenerate the structured result and require zero
 comparable ratchet regressions.
 
 ## Verification Notes
 
-Completed from implementation commit fd45ebf00307:
+Completed from implementation commit d2e330b1bb1b:
 
 - Red evidence: with an external Go build cache, focused compilation failed
-  only on the absent private local-config-update dependency, system composition,
-  and write composition.
+  only on the absent private local-config-directory-stat dependency, system
+  composition, and stat composition.
 - Focused config/filesystem/process and relevant command, context, file,
   template, Maven, tips, structurizr, Bitbucket, HTTP, Kibana, Spring, and shell
   package tests: PASS.
-- Standalone /bin/bash launcher contract: PASS all 62 controls.
+- Standalone `/bin/bash` launcher contract: PASS all 62 controls on complete
+  reruns; two separate runs hit the documented nested signal-interruption
+  partial-raw-log timing flake before immediate complete passes.
 - Make preflight meta-contract and full preflight: PASS, including all 15 audit
   meta-controls and all 62 launcher controls.
 - API, CLI, and subprocess compatibility: PASS.
-- make test, including the install and launcher contracts: PASS after the
-  first complete run hit the documented nested signal-interruption
-  partial-raw-log timing flake and the immediate complete rerun passed.
+- make test, install, and launcher targets: PASS on completed runs.
 - Uncached tests, race, and vet: PASS.
 - Host install, status, upgrade, and build acceptance: PASS, 4 of 4.
-- Empty-HOME go test ./... -count=2: PASS.
+- Empty-HOME `go test ./... -count=2`: PASS from the clean commit.
 - Focused audit: exit 1, four improved, two held, zero regressed, one
-  non-comparable; Q1.3 is exactly 28/45.
+  non-comparable; Q1.3 is exactly 27/44.
 - Clean full audit: exit 1, 15 findings, L0 8/8, five improved, two held, zero
   regressed, one non-comparable, and zero dirty paths.
-- Handoff-state Q3.4 audit: PASS with zero state-claim phrases across 53
+- Handoff-state Q3.4 audit: PASS with zero state-claim phrases across 54
   Markdown files and zero ratchet regressions.
-- Implementation commit: fd45ebf00307f1bd12f8dfdcf43db856db334bb2
-  (quality: route local config update write through filesystem).
+- Implementation commit: d2e330b1bb1bb2df3e4cb77b8b9b001a4c77d7a8
+  (quality: route local config directory stat through filesystem).
 
 ## Start And Stop
 
@@ -190,12 +193,12 @@ documents, inventory, complete local config implementation/tests and callers,
 context/profile command tests, relevant filesystem/file/template/config/Maven/
 tips/structurizr behavior, existing adapters and relevant doubles, and the
 named audits before editing. Confirm branch, HEAD, status, reciprocal links,
-and ./codex-dev-start.sh --check. Begin red for only the local-config directory
-stat boundary, then finish with one implementation commit and one
-separate handoff-only commit.
+and `./codex-dev-start.sh --check`. Begin red for only the local-config touch
+create boundary, then finish with one implementation commit and one separate
+handoff-only commit.
 
-Stop before `os.IsNotExist`, `os.Mkdir`, directory mode or mkdir errors,
-FilePath, TouchFile, UpdateLocalConfig, another local-config operation, another
+Stop before the directory mkdir, the completed touch write, Close semantics,
+UpdateLocalConfig create or write, another local-config operation, another
 adapter operation or family, Q1.4 expansion, P4, mutation, Docker, cloud
 distribution, or publication. Stop on API/CLI change, comparable ratchet
 regression, authoritative full-audit exit 2, or failure to isolate
