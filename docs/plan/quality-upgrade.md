@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `da7eebf`.
+Last measured checkpoint: 2026-08-25, commit `89918bd`.
 
 ## Objective
 
@@ -382,10 +382,11 @@ P3.49 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
-P3.50 focused implementation measurement:
+P3.50 clean checkpoint:
 
 | Signal | P3.50 | Interpretation |
 | --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
 | Test functions | 339 | Three focused shell unzip copy contracts were added. |
 | Skipped tests | 0 | Q0.6 remains improved. |
 | Unsafe direct test writes | 0 | The archive fixture remains guarded and the copy double writes only in memory. |
@@ -395,6 +396,10 @@ P3.50 focused implementation measurement:
 | Direct external effects outside adapters | 11 / 32 | The direct `io.Copy` call is gone; the scanner still classifies the replacement adapter request because its opened file and archive reader arguments retain filesystem-effect provenance. |
 | Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
 | Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 | Claim phrases in 64 Markdown files | 0 | Q3.4 remains held. |
 | Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
@@ -2513,6 +2518,12 @@ tree; generated compatibility reports are removed before the clean checkpoint
 audit. The valid focused seven-criterion audit exits 1 for the documented
 Q1.3 finding, with four improved, two held, zero regressed, and one
 not-comparable ratchet.
+
+Commit: `89918bd`.
+
+The clean full audit from commit `89918bd` exits 1 for 15 documented findings,
+never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passes.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

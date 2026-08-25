@@ -1,13 +1,13 @@
 # Agent Session: Migrate Shell Unzip Copy
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T181827+0200-migrate-shell-unzip-copy`
 Created: `2026-08-25T18:18:27+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `59b9f50aa0dc33690dc9d4026c684344bea9b197583570bddfec0fa6d76de322`
 Previous: [2026-08-25T174800+0200-migrate-shell-run-process.md](2026-08-25T174800+0200-migrate-shell-run-process.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T185749+0200-migrate-shell-unzip-archive-open.md](2026-08-25T185749+0200-migrate-shell-unzip-archive-open.md)
+Outcome: Move 50 committed as `89918bd`; the direct `io.Copy` is routed through the existing filesystem Copy adapter with 339 tests and zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

@@ -1055,61 +1055,65 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T181827+0200-migrate-shell-unzip-copy
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T181827+0200-migrate-shell-unzip-copy.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T174800+0200-migrate-shell-run-process.md
+#|SESSION_ID=2026-08-25T185749+0200-migrate-shell-unzip-archive-open
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T185749+0200-migrate-shell-unzip-archive-open.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T181827+0200-migrate-shell-unzip-copy.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Complete one focused P3 production-effect move: route only the direct
-#|`io.Copy(outFile, rc)` payload transfer inside the file-entry branch of public
-#|`pkg/shell.Unzip` through the established `filesystem.Copy` adapter operation.
-#|Preserve the public signature, ordered filenames and partial results, exact
-#|archive-entry bytes and destination identity, archive and entry traversal,
-#|copy-result handling, file and entry close order and errors, every earlier
-#|error precedence, and every completed shell Run, unzip, filesystem, Spring,
-#|process, browser, profile, HTTP, tips, config, Maven, structurizr, Bitbucket,
-#|Wpost, local-config, and supervisor move, with zero comparable ratchet
-#|regressions.
+#|`zip.OpenReader(src)` archive-open request at the start of public
+#|`pkg/shell.Unzip` through one narrow operation on the existing filesystem
+#|adapter. Preserve the public signature, exact source path, returned archive
+#|identity, archive close and traversal, entry order and bytes, filenames and
+#|partial results, zip-slip behavior, every completed Unzip operation and error
+#|precedence, and every earlier shell Run, filesystem, Spring, process, browser,
+#|profile, HTTP, tips, config, Maven, structurizr, Bitbucket, Wpost,
+#|local-config, and supervisor move, with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
 #|P3 remains active, P4-P8 are queued in the machine-readable block in
 #|docs/plan/quality-upgrade.md, and the launcher must remain NEXT until every
-#|authorized checkpoint is complete. This mission authorizes focused reshaping
-#|of the existing private unzip recording filesystem only to record the already
-#|established `Copy(filesystem.File, io.Reader) (int64, error)` request and
-#|replacement of the one direct file-entry `io.Copy` call with
-#|`filesystem.Copy(dependencies.Files, outFile, rc)`.
+#|authorized checkpoint is complete. This mission authorizes only one
+#|`OpenZipReader(string) (*zip.ReadCloser, error)` method on the existing
+#|`filesystem.FileSystem`, its zero-safe forwarding helper and exact system
+#|implementation, the mechanical method addition required by every complete
+#|filesystem double, focused adapter and private Unzip recording contracts, and
+#|replacement of the one direct `zip.OpenReader(src)` call with the helper.
 #|
-#|It does not authorize a filesystem interface or adapter implementation change,
-#|another filesystem operation or caller, archive-open injection, output-file or
-#|entry-reader close injection, another unzip branch, shell Run or Git changes,
+#|It does not authorize another filesystem operation or caller, a Copy or Close
+#|change, entry-open injection, another unzip branch, shell Run or Git changes,
 #|process or HTTP work, Spring, Maven, structurizr, plugin diagrams, clock/server
-#|adapters, public API, inventory, mutation harnesses, or later-roadmap
-#|implementation.
+#|adapters, public API, inventory, mutation harnesses, audit reshaping, or
+#|later-roadmap implementation.
 #|
 #|# Measurements At Start
 #|
 #|Before editing, inspect branch, HEAD, status, the rolling handover, this active
 #|archive, the roadmap queue, complete `pkg/shell` source/tests/callers, complete
 #|`internal/adapter/filesystem` source/tests and every complete filesystem double,
-#|all unzip callers and completed unzip contracts, relevant Spring download,
+#|all Unzip callers and completed unzip contracts, relevant Spring download,
 #|command, context, config, HTTP, process, Maven, structurizr, Bitbucket, Wpost,
 #|local-config, browser, profile, tips, file, template, and Kibana code/tests,
 #|`.quality/inventory`, both design documents, and the focused audit
 #|implementation. Regenerate ignored reports outside the measured tree or remove
 #|them before a clean audit.
 #|
-#|Implementation commit `da7eebf` has 336 tests across 19 of 25 packages. Q0.6
+#|Implementation commit `89918bd` has 339 tests across 19 of 25 packages. Q0.6
 #|has 25 guarded safe-writer sites, 20 write and 5 copy, and zero unsafe direct
 #|test writes. Q1.1 is 6 of 25, Q1.2 is 0, Q1.3 is 11 violations of 32 production
 #|effect sites with clock and server absent, Q1.4 is 7 of 8, and exact Q2.1 is 0
 #|of 8 executable harnesses. The clean full audit exited 1 for 15 documented
 #|findings and never 2; comparable ratchets were five improved, two held, and
 #|zero regressed.
+#|
+#|The direct Unzip `io.Copy` identity is gone, but Q1.3 stayed 11/32 because the
+#|scanner retains filesystem provenance through the replacement adapter call's
+#|opened destination and archive-reader arguments. Do not change the scanner or
+#|broaden this move to force an expected number.
 #|
 #|The launcher has 62 Bash 3.2 contracts and supervises fresh non-interactive
 #|JSONL turns with external raw logs. It continues only after a successful
@@ -1119,37 +1123,34 @@ exit 70
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the unzip file-entry copy move and focused private
-#|recording contracts, with measured planning notes. Then make the normal
-#|separate handoff-only commit. Do not push, merge, publish, distribute, remove
-#|the worktree, stash inherited changes, revert user work, or run destructive Git
-#|commands.
+#|implementation commit for the Unzip archive-open move, adapter contracts, and
+#|focused private recording contracts, with measured planning notes. Then make
+#|the normal separate handoff-only commit. Do not push, merge, publish,
+#|distribute, remove the worktree, stash inherited changes, revert user work, or
+#|run destructive Git commands.
 #|
 #|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve public
 #|`Unzip(string, string) ([]string, error)`, the private complete
-#|`unzipDependencies`, production `filesystem.System()` selection, exact joined
-#|paths and zip-slip behavior, filename append order, directory short-circuit,
-#|parent creation, file open flags and mode, entry open, and one payload-transfer
-#|attempt per reached file entry. Characterize the legacy ignored `io.Copy`
-#|count and error before choosing assignments: do not return, wrap, log, or give
-#|precedence to the adapter copy error if the current flow ignores it. Preserve
-#|the following output-file Close and entry-reader Close attempts, their order,
-#|their exact errors and precedence, and later entry traversal.
+#|`unzipDependencies`, production `filesystem.System()` selection, exact source
+#|path forwarding, nil filenames and exact archive-open error, deferred archive
+#|Close expression and placement, exact joined paths and zip-slip behavior,
+#|filename append order, directory short-circuit, parent creation, file open
+#|flags and mode, entry open, one payload attempt per reached file, and later
+#|entry traversal.
 #|
-#|Reuse the existing zero-safe filesystem adapter and its complete `Copy`
-#|operation. Pass the existing complete unzip dependency composition whole. Do
-#|not add fallback, retry, buffering, extra logging, cleanup, deferred closes,
-#|new environment or working-directory behavior, or error normalization. The
-#|focused double may record only existing unzip filesystem requests, compare the
-#|exact destination identity, read delivered source bytes in memory, and return
-#|an arbitrary count/error without writing the destination. Any archive fixture
-#|write must stay guarded below `t.TempDir()`; launch no process, touch no
-#|network, and change no working directory.
+#|Reuse the existing zero-safe adapter shape and pass the complete Unzip
+#|dependency composition whole. Return the exact `*zip.ReadCloser` supplied by
+#|the dependency and do not wrap or rebuild it. A zero dependency must return
+#|`filesystem.ErrNoFilesystem` without opening a developer path. Do not add
+#|fallback, retry, buffering, logging, cleanup, new defers, environment or
+#|working-directory behavior, or error normalization. Any archive fixture write
+#|must stay guarded below `t.TempDir()`; launch no process, touch no network, and
+#|change no working directory.
 #|
-#|Do not change `zip.OpenReader`, either direct Close, OpenFile, MkdirAll, shell
-#|Run, Git composition, structurizr command construction, Maven process
-#|composition, plugin diagrams, the filesystem adapter, another caller, public
-#|API, or `.quality/inventory`.
+#|Do not change `filesystem.Copy`, either direct entry Close, the deferred
+#|archive Close, OpenFile, MkdirAll, entry open, shell Run, Git composition,
+#|structurizr command construction, Maven process composition, plugin diagrams,
+#|another adapter operation or caller, public API, or `.quality/inventory`.
 #|
 #|# Required Reading
 #|
@@ -1157,27 +1158,28 @@ exit 70
 #|docs/plan/quality-upgrade.md, docs/design/agent-session-continuity.md,
 #|docs/design/quality-lift.md, `.quality/inventory`, complete `pkg/shell` source
 #|and tests, every Unzip caller, complete `internal/adapter/filesystem` source and
-#|tests and every complete double, completed unzip/Spring/filesystem/process
-#|contracts, and relevant caller packages before editing. Before the full gate,
-#|read the complete launcher contract, Make meta-tests, P2A API/CLI and subprocess
-#|contracts, and all four host acceptance flows.
+#|tests and every complete double, completed Unzip/Spring/filesystem/process
+#|contracts, the audit's import-aware effect scanner, and relevant caller
+#|packages before editing. Before the full gate, read the complete launcher
+#|contract, Make meta-tests, P2A API/CLI and subprocess contracts, and all four
+#|host acceptance flows.
 #|
 #|# Three Moves
 #|
-#|1. Start red with only focused private unzip Copy recording contracts. Prove
-#|   the exact opened destination identity, one Copy request for each reached
-#|   file entry, exact ordered arbitrary entry bytes delivered through the
-#|   source reader, established operation order after parent creation, OpenFile,
-#|   and entry open, legacy ignored copy count/error behavior, continued close
-#|   and later-entry behavior, rejection of an empty Copy recording population,
-#|   no Copy for directories or earlier failures, and absence of unrelated
-#|   filesystem requests. Invoke no real process or network request.
+#|1. Start red with only focused filesystem adapter and private Unzip
+#|   archive-open recording contracts. Prove exact source path, one request,
+#|   exact returned reader identity, exact injected error and nil partial
+#|   filenames, complete dependency selection, zero-safe behavior, rejection of
+#|   an empty recording population, unchanged traversal with an injected reader,
+#|   and absence of unrelated filesystem requests. Invoke no real process or
+#|   network request.
 #|
-#|2. Change only the direct `io.Copy(outFile, rc)` expression to the existing
-#|   `filesystem.Copy(dependencies.Files, outFile, rc)` helper. Preserve the
-#|   ignored two-value result exactly, keep the surrounding operation and return
-#|   order unchanged, and change no adapter, dependency selection, caller, or
-#|   other effect.
+#|2. Add only `OpenZipReader(string) (*zip.ReadCloser, error)` to the existing
+#|   filesystem interface, zero-safe helper, exact system implementation, and
+#|   complete doubles. Replace only `zip.OpenReader(src)` with
+#|   `filesystem.OpenZipReader(dependencies.Files, src)`. Keep the surrounding
+#|   assignment, early return, defer, operation order, and all later effects
+#|   unchanged.
 #|
 #|3. Run focused shell/filesystem/Spring and relevant process, Maven, command,
 #|   context, config, HTTP, structurizr, profile, browser, tips, file, template,
@@ -1186,19 +1188,19 @@ exit 70
 #|   subprocess compatibility; full Go tests and race/vet; all four host
 #|   acceptance flows; the audit meta-suite; focused Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/
 #|   Q2.1/Q3.4 measurements; full clean checkpoint audit; and empty-HOME count-2.
-#|   Expect nominal Q1.3 to improve from 11 of 32 to 10 of 31 when the one direct
-#|   copy caller site leaves and the existing adapter implementation stays
-#|   singular. Regenerate exact values; the full audit may exit 1 for documented
-#|   findings but never 2.
+#|   Expect nominal Q1.3 to improve from 11 of 32 to 10 of 32 when the direct
+#|   archive-open caller site is replaced by one adapter implementation site.
+#|   Regenerate exact values without changing the scanner; the
+#|   full audit may exit 1 for documented findings but never 2.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent unzip Copy move
-#|or record an exact resumable state. Rewrite the rolling handover, record the
-#|measured P3 result, answer this archive, create one linked NEXT archive for the
-#|next coherent P3 effect move, replace only the launcher's mutable regions, run
-#|the launcher contract, and make the separate handoff-only commit
-#|`docs: prepare next agent session`.
+#|Before this agent session ends, finish and commit the coherent Unzip
+#|archive-open move or record an exact resumable state. Rewrite the rolling
+#|handover, record the measured P3 result, answer this archive, create one linked
+#|NEXT archive for the next coherent P3 effect move, replace only the launcher's
+#|mutable regions, run the launcher contract, and make the separate handoff-only
+#|commit `docs: prepare next agent session`.
 #|
 #|Keep P3 active until its measured exit is documented. Do not launch the next
 #|session. COMPLETE is valid only after every authorized checkpoint through P8
