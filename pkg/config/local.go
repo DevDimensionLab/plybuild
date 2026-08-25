@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -8,6 +9,18 @@ import (
 
 var localConfigFileName = "local-config.yaml"
 var defaultCloudConfigUrl = "https://github.com/devdimensionlab/plybuild-config.git"
+
+type localConfigTouchWriteDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemLocalConfigTouchWriteDependencies() localConfigTouchWriteDependencies {
+	return localConfigTouchWriteDependencies{Files: filesystem.System()}
+}
+
+func writeLocalConfigTouch(dependencies localConfigTouchWriteDependencies, configFilePath string, data []byte) error {
+	return filesystem.WriteFile(dependencies.Files, configFilePath, data, 0644)
+}
 
 type LocalConfigDir struct {
 	impl DirConfig
@@ -78,7 +91,7 @@ func (localCfgDir LocalConfigDir) TouchFile() error {
 		return err
 	}
 
-	err = os.WriteFile(configFilePath, d, 0644)
+	err = writeLocalConfigTouch(systemLocalConfigTouchWriteDependencies(), configFilePath, d)
 	if err != nil {
 		return err
 	}
