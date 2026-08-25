@@ -43,6 +43,10 @@ func (*recordingArchiveFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected read directory")
 }
 
+func (*recordingArchiveFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected read directory entries")
+}
+
 func (*recordingArchiveFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected stat")
 }

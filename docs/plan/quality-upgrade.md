@@ -408,7 +408,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 42 are complete.
+Status: active. Moves 1 through 43 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -1951,6 +1951,63 @@ Commit: `b2d37cc`.
 The clean full audit from commit `b2d37cc` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
+
+Move 43 routes only `tips.List`'s direct `os.ReadDir(LocalDir(gitCfg))`
+operation through one new distinct filesystem adapter `ReadDirEntries`
+operation. The exported `List` signature, `LocalDir`, `TipsDir`, every caller,
+and `tipsShowCmd` remain unchanged. `List` still evaluates the exact
+`LocalDir(gitCfg)` path through its established `file.Path("%s/%s", ...)`
+behavior, selects `filesystem.System()` only for a private complete tips-list
+dependency, and makes one read attempt. A read error still returns the nil
+named result and that exact error without inspecting delivered entries. A
+successful read still inspects entries once in delivered order, excludes
+directories before reading their names, includes only non-directories whose
+exact names have the case-sensitive `.md` suffix, preserves included entry
+identity, and returns nil for empty or all-filtered populations.
+
+Eight new top-level contracts bring the suite to 304 tests and direct tests in
+`pkg/tips`, improving package coverage to 18 of 25. The two filesystem adapter
+contracts, together with the extended zero-value contract, prove exact
+arbitrary paths, one recorded attempt, non-empty populations, exact nil,
+non-nil empty, representative, partial-entry, and arbitrary-error results,
+ordered entry identity, exact `ErrNoFilesystem`, and the system
+implementation's direct `os.ReadDir` filename sorting, names, directory
+classification, and missing-path failure. Six tips-list contracts prove
+complete system dependency selection, exact `LocalDir` evaluation and path,
+one read attempt, exact error identity and nil-on-error behavior without entry
+inspection, delivered-order filtering and entry identity, short-circuit
+`IsDir`/`Name` use without `Info` or `Type`, nil empty/all-filtered results,
+non-empty populations, safe zero behavior, and no unrelated adapter operation.
+The production-composition contract does not read the real filesystem or run
+another command. All 35 pre-existing complete `filesystem.FileSystem` test
+doubles implement the new method only to remain complete: the dedicated
+adapter double records it and the other 34 reject it as unrelated; the new
+tips-list double records only its focused operation. Established `ReadDir`,
+its `ioutil.ReadDir` mapping and `[]fs.FileInfo` result, every other adapter
+operation, inventory, seam drivers, mutation harnesses, public API, CLI,
+callers, tips-show reads and rendering, config, local-config, Maven,
+structurizr, template, file, HTTP, Bitbucket, Wpost, and every other completed
+effect remain unchanged.
+
+Q0.6 stays closed with zero skipped tests and zero unsafe direct test writes;
+its safe-writer population becomes 24 guarded sites, 19 write and 5 copy,
+because the system adapter contract adds two guarded temporary-fixture writes.
+Q1.1 improves from 8 to 7 untested packages. Q1.3 improves from 22 of 40 to 21
+of 40: the direct tips read becomes injected, while the required direct
+`os.ReadDir` system implementation remains inside the exact declared adapter
+and therefore keeps the scanner population at 40. Q1.2 stays zero, Q1.4 stays
+7 of 8, and exact Q2.1 stays 0 of 8.
+
+The move-43 implementation gate passed focused tips/filesystem/process and
+relevant command, context, config, file, template, Maven, structurizr,
+Bitbucket, HTTP, Kibana, Spring, and shell package tests, API/CLI and subprocess
+compatibility, all four host flows and their meta-contracts, full preflight,
+test, install, the standalone 62-control launcher contract, uncached and race
+tests, vet, the 15-control audit meta-suite, and empty-HOME count-2. The full
+preflight rerun used an external golangci-lint cache after one runner-only
+cache-permission failure; every repository control then passed. The focused
+seven-criterion audit exited 1 for documented findings, never 2, with four
+improved, two held, zero regressed, and one not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

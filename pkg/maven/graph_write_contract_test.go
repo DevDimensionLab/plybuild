@@ -33,6 +33,10 @@ func (recording *recordingGraphStylesFilesystem) ReadDir(string) ([]fs.FileInfo,
 	return nil, recording.unexpected("read directory")
 }
 
+func (recording *recordingGraphStylesFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, recording.unexpected("read directory entries")
+}
+
 func (recording *recordingGraphStylesFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, recording.unexpected("stat")
 }

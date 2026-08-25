@@ -61,6 +61,10 @@ func (*recordingRenderFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected render read directory")
 }
 
+func (*recordingRenderFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected render read directory entries")
+}
+
 func (*recordingRenderFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected render stat")
 }

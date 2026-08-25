@@ -32,6 +32,10 @@ func (*recordingTemplateMarkdownFilesystem) ReadDir(string) ([]fs.FileInfo, erro
 	return nil, errors.New("unexpected template-markdown read directory")
 }
 
+func (*recordingTemplateMarkdownFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected template-markdown read directory entries")
+}
+
 func (*recordingTemplateMarkdownFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected template-markdown stat")
 }

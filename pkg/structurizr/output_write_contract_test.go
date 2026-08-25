@@ -32,6 +32,10 @@ func (recording *recordingStructurizrOutputFilesystem) ReadDir(string) ([]fs.Fil
 	return nil, recording.unexpected("read directory")
 }
 
+func (recording *recordingStructurizrOutputFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, recording.unexpected("read directory entries")
+}
+
 func (recording *recordingStructurizrOutputFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, recording.unexpected("stat")
 }

@@ -54,6 +54,10 @@ func (*recordingCopyFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected read directory")
 }
 
+func (*recordingCopyFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected read directory entries")
+}
+
 func (recording *recordingCopyFilesystem) Stat(path string) (fs.FileInfo, error) {
 	recording.operations = append(recording.operations, recordedCopyOperation{Name: "stat", Path: path})
 	if recording.statIndex >= len(recording.statResults) {

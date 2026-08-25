@@ -34,6 +34,10 @@ func (recording *recordingLocalConfigTouchFilesystem) ReadDir(string) ([]fs.File
 	return nil, recording.unexpected("read directory")
 }
 
+func (recording *recordingLocalConfigTouchFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, recording.unexpected("read directory entries")
+}
+
 func (recording *recordingLocalConfigTouchFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, recording.unexpected("stat")
 }

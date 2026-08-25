@@ -31,6 +31,10 @@ func (recording *recordingGitHookFilesystem) ReadDir(path string) ([]fs.FileInfo
 	return append([]fs.FileInfo{}, recording.readDirEntries...), recording.readDirErr
 }
 
+func (*recordingGitHookFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected Git-hook-files read directory entries")
+}
+
 func (*recordingGitHookFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected Git-hook-files stat")
 }

@@ -37,6 +37,10 @@ func (*recordingProjectConfigFilesystem) ReadDir(string) ([]fs.FileInfo, error) 
 	return nil, errors.New("unexpected project-config read directory")
 }
 
+func (*recordingProjectConfigFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected project-config read directory entries")
+}
+
 func (*recordingProjectConfigFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected project-config stat")
 }

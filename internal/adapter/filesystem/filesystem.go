@@ -24,6 +24,7 @@ type File interface {
 type FileSystem interface {
 	ReadFile(string) ([]byte, error)
 	ReadDir(string) ([]fs.FileInfo, error)
+	ReadDirEntries(string) ([]fs.DirEntry, error)
 	Stat(string) (fs.FileInfo, error)
 	Mkdir(string, fs.FileMode) error
 	MkdirAll(string, fs.FileMode) error
@@ -59,6 +60,14 @@ func ReadDir(dependencies Dependencies, path string) ([]fs.FileInfo, error) {
 		return nil, ErrNoFilesystem
 	}
 	return dependencies.FileSystem.ReadDir(path)
+}
+
+// ReadDirEntries passes the complete directory path to the configured dependency.
+func ReadDirEntries(dependencies Dependencies, path string) ([]fs.DirEntry, error) {
+	if dependencies.FileSystem == nil {
+		return nil, ErrNoFilesystem
+	}
+	return dependencies.FileSystem.ReadDirEntries(path)
 }
 
 // Stat passes the complete path to the configured dependency.
@@ -181,6 +190,10 @@ func (systemFilesystem) ReadFile(path string) ([]byte, error) {
 
 func (systemFilesystem) ReadDir(path string) ([]fs.FileInfo, error) {
 	return ioutil.ReadDir(path)
+}
+
+func (systemFilesystem) ReadDirEntries(path string) ([]fs.DirEntry, error) {
+	return os.ReadDir(path)
 }
 
 func (systemFilesystem) Stat(path string) (fs.FileInfo, error) {

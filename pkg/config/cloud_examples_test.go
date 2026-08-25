@@ -31,6 +31,10 @@ func (recording *recordingExamplesFilesystem) ReadDir(path string) ([]fs.FileInf
 	return append([]fs.FileInfo{}, recording.readDirEntries...), recording.readDirErr
 }
 
+func (*recordingExamplesFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected Examples read directory entries")
+}
+
 func (*recordingExamplesFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected Examples stat")
 }

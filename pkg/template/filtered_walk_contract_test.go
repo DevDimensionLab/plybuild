@@ -37,6 +37,10 @@ func (*recordingFilteredWalkFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected filtered-template read directory")
 }
 
+func (*recordingFilteredWalkFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected filtered-template read directory entries")
+}
+
 func (*recordingFilteredWalkFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected filtered-template stat")
 }

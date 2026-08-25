@@ -29,6 +29,10 @@ func (recording *recordingIntellijFilesystem) ReadDir(path string) ([]fs.FileInf
 	return append([]fs.FileInfo{}, recording.readDirEntries...), recording.readDirErr
 }
 
+func (*recordingIntellijFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected non-recursive IDE read directory entries")
+}
+
 func (*recordingIntellijFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected non-recursive IDE stat")
 }

@@ -30,6 +30,10 @@ func (recording *recordingLocalConfigDirectoryStatFilesystem) ReadDir(string) ([
 	return nil, recording.unexpected("read directory")
 }
 
+func (recording *recordingLocalConfigDirectoryStatFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, recording.unexpected("read directory entries")
+}
+
 func (recording *recordingLocalConfigDirectoryStatFilesystem) Stat(path string) (fs.FileInfo, error) {
 	recording.statPaths = append(recording.statPaths, path)
 	return recording.statInfo, recording.statErr

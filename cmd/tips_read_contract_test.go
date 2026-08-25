@@ -31,6 +31,10 @@ func (recording *recordingTipsShowReadFilesystem) ReadDir(string) ([]fs.FileInfo
 	return nil, recording.unexpected("read directory")
 }
 
+func (recording *recordingTipsShowReadFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, recording.unexpected("read directory entries")
+}
+
 func (recording *recordingTipsShowReadFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, recording.unexpected("stat")
 }

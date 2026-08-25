@@ -39,6 +39,10 @@ func (*recordingTemplatesFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected Templates read directory")
 }
 
+func (*recordingTemplatesFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected Templates read directory entries")
+}
+
 func (*recordingTemplatesFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected Templates stat")
 }

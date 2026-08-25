@@ -34,6 +34,10 @@ func (*recordingGrepRecursiveFilesystem) ReadDir(string) ([]fs.FileInfo, error) 
 	return nil, errors.New("unexpected recursive-grep read directory")
 }
 
+func (*recordingGrepRecursiveFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected recursive-grep read directory entries")
+}
+
 func (*recordingGrepRecursiveFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected recursive-grep stat")
 }

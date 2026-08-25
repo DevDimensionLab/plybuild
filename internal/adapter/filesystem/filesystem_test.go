@@ -33,12 +33,14 @@ type recordingFilesystem struct {
 	globMatches         []string
 	readData            []byte
 	readDirEntries      []fs.FileInfo
+	directoryEntries    []fs.DirEntry
 	fileInfo            fs.FileInfo
 	walkInputs          []recordedWalkInput
 	walkCallbackResults []error
 	globErr             error
 	readErr             error
 	readDirErr          error
+	directoryEntriesErr error
 	statErr             error
 	singleMkdirErr      error
 	mkdirErr            error
@@ -59,6 +61,11 @@ func (recording *recordingFilesystem) ReadFile(path string) ([]byte, error) {
 func (recording *recordingFilesystem) ReadDir(path string) ([]fs.FileInfo, error) {
 	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "read-dir", Path: path})
 	return append([]fs.FileInfo{}, recording.readDirEntries...), recording.readDirErr
+}
+
+func (recording *recordingFilesystem) ReadDirEntries(path string) ([]fs.DirEntry, error) {
+	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "read-dir-entries", Path: path})
+	return recording.directoryEntries, recording.directoryEntriesErr
 }
 
 func (recording *recordingFilesystem) Stat(path string) (fs.FileInfo, error) {
@@ -157,6 +164,9 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	}
 	if entries, err := ReadDir(Dependencies{}, target); entries != nil || !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value directory-read dependency returned (%#v, %v), want (nil, %v)", entries, err, ErrNoFilesystem)
+	}
+	if entries, err := ReadDirEntries(Dependencies{}, target); entries != nil || err != ErrNoFilesystem {
+		t.Fatalf("zero-value directory-entry-read dependency returned (%#v, %v), want (nil, %v)", entries, err, ErrNoFilesystem)
 	}
 	callbackCalls := 0
 	if err := Walk(Dependencies{}, target, func(string, fs.FileInfo, error) error {
@@ -396,6 +406,56 @@ func TestReadDirPassesExactPathOrderedEntriesAndExactDependencyError(t *testing.
 	}
 }
 
+func TestReadDirEntriesPassesExactPathOrderedEntryIdentitiesAndExactResults(t *testing.T) {
+	path := `/complete directory-entry-read/path with spaces/../backslash\segment-ø`
+	first := &staticDirEntry{name: "z-first.md"}
+	second := &staticDirEntry{name: "a-second-directory", directory: true}
+	partialError := errors.New("complete partial directory-entry-read dependency error")
+	arbitraryError := errors.New("complete arbitrary directory-entry-read dependency error")
+	tests := []struct {
+		name    string
+		entries []fs.DirEntry
+		err     error
+	}{
+		{name: "nil result"},
+		{name: "non-nil empty result", entries: []fs.DirEntry{}},
+		{name: "representative ordered entries", entries: []fs.DirEntry{first, second}},
+		{name: "partial entries and error", entries: []fs.DirEntry{second, first}, err: partialError},
+		{name: "arbitrary error", err: arbitraryError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFilesystem{
+				directoryEntries:    test.entries,
+				directoryEntriesErr: test.err,
+			}
+
+			actual, err := ReadDirEntries(Dependencies{FileSystem: recording}, path)
+
+			if err != test.err {
+				t.Fatalf("directory-entry-read error was %v, want exact dependency error %v", err, test.err)
+			}
+			if (actual == nil) != (test.entries == nil) || len(actual) != len(test.entries) {
+				t.Fatalf("directory-entry-read entries were %#v, want exact nilness and length %#v", actual, test.entries)
+			}
+			for index := range actual {
+				if actual[index] != test.entries[index] {
+					t.Fatalf("directory-entry-read entry %d was %#v, want exact identity %#v", index, actual[index], test.entries[index])
+				}
+			}
+			want := []recordedFilesystemOperation{{Name: "read-dir-entries", Path: path}}
+			if len(recording.operations) == 0 {
+				t.Fatal("recorded directory-entry-read population is empty")
+			}
+			if !reflect.DeepEqual(recording.operations, want) {
+				t.Fatalf("directory-entry-read dependency received incomplete operations:\n got: %#v\nwant: %#v",
+					recording.operations, want)
+			}
+		})
+	}
+}
+
 func TestSystemReadDirPreservesIoutilFilenameSortingAndMetadata(t *testing.T) {
 	root := t.TempDir()
 	last := filepath.Join(root, "z-last.iml")
@@ -426,6 +486,49 @@ func TestSystemReadDirPreservesIoutilFilenameSortingAndMetadata(t *testing.T) {
 	}
 	if entries[0].Size() != int64(len("first bytes")) || entries[0].IsDir() || !entries[1].IsDir() || entries[2].Size() != int64(len("last")) {
 		t.Fatalf("system directory-read metadata was %#v", entries)
+	}
+}
+
+func TestSystemReadDirEntriesPreservesOsReadDirSortingNamesClassificationAndMissingFailure(t *testing.T) {
+	root := t.TempDir()
+	last := filepath.Join(root, "z-last.md")
+	first := filepath.Join(root, "a-first.txt")
+	directory := filepath.Join(root, "m-directory.md")
+	if err := testutil.WriteFileOutsideWorkingTree(last, []byte("last"), 0641); err != nil {
+		t.Fatalf("create final directory-entry-read fixture: %v", err)
+	}
+	if err := testutil.WriteFileOutsideWorkingTree(first, []byte("first"), 0751); err != nil {
+		t.Fatalf("create first directory-entry-read fixture: %v", err)
+	}
+	if err := MkdirAll(System(), directory, 0705); err != nil {
+		t.Fatalf("create directory-entry-read fixture directory: %v", err)
+	}
+
+	entries, err := ReadDirEntries(System(), root)
+
+	if err != nil {
+		t.Fatalf("system directory-entry-read returned an error: %v", err)
+	}
+	wantNames := []string{"a-first.txt", "m-directory.md", "z-last.md"}
+	names := make([]string, 0, len(entries))
+	directories := make([]bool, 0, len(entries))
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+		directories = append(directories, entry.IsDir())
+	}
+	if !reflect.DeepEqual(names, wantNames) {
+		t.Fatalf("system directory-entry-read names were %#v, want os.ReadDir filename sorting %#v", names, wantNames)
+	}
+	if !reflect.DeepEqual(directories, []bool{false, true, false}) {
+		t.Fatalf("system directory-entry-read classifications were %#v, want file, directory, file", directories)
+	}
+
+	missing := filepath.Join(root, "missing directory with spaces")
+	actualEntries, actualErr := ReadDirEntries(System(), missing)
+	wantEntries, wantErr := os.ReadDir(missing)
+	if actualEntries != nil || wantEntries != nil || !reflect.DeepEqual(actualErr, wantErr) {
+		t.Fatalf("system missing-path result was (%#v, %#v), want exact os.ReadDir result (%#v, %#v)",
+			actualEntries, actualErr, wantEntries, wantErr)
 	}
 }
 
@@ -620,3 +723,13 @@ func (info staticFileInfo) Mode() fs.FileMode  { return info.mode }
 func (info staticFileInfo) ModTime() time.Time { return time.Time{} }
 func (info staticFileInfo) IsDir() bool        { return info.mode.IsDir() }
 func (info staticFileInfo) Sys() interface{}   { return nil }
+
+type staticDirEntry struct {
+	name      string
+	directory bool
+}
+
+func (entry *staticDirEntry) Name() string               { return entry.name }
+func (entry *staticDirEntry) IsDir() bool                { return entry.directory }
+func (entry *staticDirEntry) Type() fs.FileMode          { return fs.ModeDir }
+func (entry *staticDirEntry) Info() (fs.FileInfo, error) { return nil, nil }

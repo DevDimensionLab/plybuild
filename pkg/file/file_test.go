@@ -161,6 +161,10 @@ func (*recordingFileExistenceFilesystem) ReadDir(string) ([]fs.FileInfo, error) 
 	return nil, errors.New("unexpected file-existence read directory")
 }
 
+func (*recordingFileExistenceFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected file-existence read directory entries")
+}
+
 func (recording *recordingFileReadFilesystem) ReadFile(path string) ([]byte, error) {
 	recording.readPaths = append(recording.readPaths, path)
 	return append([]byte{}, recording.readData...), recording.readErr
@@ -168,6 +172,10 @@ func (recording *recordingFileReadFilesystem) ReadFile(path string) ([]byte, err
 
 func (*recordingFileReadFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-read read directory")
+}
+
+func (*recordingFileReadFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected file-read read directory entries")
 }
 
 func (*recordingFileReadFilesystem) Stat(string) (fs.FileInfo, error) {
@@ -297,6 +305,10 @@ func (*recordingFileOverwriteFilesystem) ReadDir(string) ([]fs.FileInfo, error) 
 	return nil, errors.New("unexpected file-overwrite read directory")
 }
 
+func (*recordingFileOverwriteFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected file-overwrite read directory entries")
+}
+
 func (*recordingFileOverwriteFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-overwrite stat")
 }
@@ -369,6 +381,10 @@ func (*recordingFileCreateFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-create read directory")
 }
 
+func (*recordingFileCreateFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected file-create read directory entries")
+}
+
 func (*recordingFileCreateFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-create stat")
 }
@@ -439,6 +455,10 @@ func (*recordingDirectoryCreateFilesystem) ReadFile(string) ([]byte, error) {
 
 func (*recordingDirectoryCreateFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected directory-create read directory")
+}
+
+func (*recordingDirectoryCreateFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected directory-create read directory entries")
 }
 
 func (recording *recordingDirectoryCreateFilesystem) Stat(path string) (fs.FileInfo, error) {
@@ -517,6 +537,10 @@ func (*recordingFileOpenFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected append-open read directory")
 }
 
+func (*recordingFileOpenFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected append-open read directory entries")
+}
+
 func (recording *recordingFileOpenFilesystem) Stat(path string) (fs.FileInfo, error) {
 	recording.operations = append(recording.operations, recordedFileOpenOperation{name: "stat", path: path})
 	return recording.statInfo, recording.statErr
@@ -591,6 +615,10 @@ func (*recordingFileDeleteFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected single-file-delete read directory")
 }
 
+func (*recordingFileDeleteFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected single-file-delete read directory entries")
+}
+
 func (*recordingFileDeleteFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected single-file-delete stat")
 }
@@ -657,6 +685,10 @@ func (*recordingFileDeleteAllFilesystem) ReadFile(string) ([]byte, error) {
 
 func (*recordingFileDeleteAllFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected recursive-delete read directory")
+}
+
+func (*recordingFileDeleteAllFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected recursive-delete read directory entries")
 }
 
 func (*recordingFileDeleteAllFilesystem) Stat(string) (fs.FileInfo, error) {
@@ -727,6 +759,10 @@ func (*recordingFileMoveFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-move read directory")
 }
 
+func (*recordingFileMoveFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected file-move read directory entries")
+}
+
 func (*recordingFileMoveFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-move stat")
 }
@@ -793,6 +829,10 @@ func (*recordingClearDirFilesystem) ReadFile(string) ([]byte, error) {
 
 func (*recordingClearDirFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected clear-directory read directory")
+}
+
+func (*recordingClearDirFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected clear-directory read directory entries")
 }
 
 func (*recordingClearDirFilesystem) Stat(string) (fs.FileInfo, error) {
@@ -869,6 +909,10 @@ func (*recordingFindFirstFilesystem) ReadFile(string) ([]byte, error) {
 
 func (*recordingFindFirstFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected find-first read directory")
+}
+
+func (*recordingFindFirstFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected find-first read directory entries")
 }
 
 func (*recordingFindFirstFilesystem) Stat(string) (fs.FileInfo, error) {
@@ -955,6 +999,10 @@ func (*recordingFindAllFilesystem) ReadFile(string) ([]byte, error) {
 
 func (*recordingFindAllFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 	return nil, errors.New("unexpected find-all read directory")
+}
+
+func (*recordingFindAllFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, errors.New("unexpected find-all read directory entries")
 }
 
 func (*recordingFindAllFilesystem) Stat(string) (fs.FileInfo, error) {

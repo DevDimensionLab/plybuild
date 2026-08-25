@@ -43,6 +43,10 @@ func (recording *recordingLocalConfigUpdateCreateFilesystem) ReadDir(string) ([]
 	return nil, recording.unexpected("read directory")
 }
 
+func (recording *recordingLocalConfigUpdateCreateFilesystem) ReadDirEntries(string) ([]fs.DirEntry, error) {
+	return nil, recording.unexpected("read directory entries")
+}
+
 func (recording *recordingLocalConfigUpdateCreateFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, recording.unexpected("stat")
 }
