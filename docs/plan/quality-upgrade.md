@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `549685d`.
+Last measured checkpoint: 2026-08-25, commit `04cfe44`.
 
 ## Objective
 
@@ -985,7 +985,7 @@ double, inventory label, seam driver, mutation harness, public API, caller, or
 other file operation changed. Q1.3 moves from 42 of 58 to 41 of 57. Q1.2 stays
 zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8.
 
-Commit: recorded by the containing implementation commit.
+Commit: `04cfe44`.
 
 The move-25 implementation gate passed focused file/filesystem and caller
 contracts, adjacent complete-double packages, API/CLI and subprocess
@@ -993,8 +993,9 @@ compatibility, all four host flows, preflight, test, install, the standalone
 62-control launcher contract, uncached and race tests, vet, the 15-control
 audit meta-suite, and empty-HOME count-2. The focused seven-criterion audit
 exited 1 for documented findings, never 2, with four improved, two held, zero
-regressed, and one not-comparable ratchet. The clean full audit will be
-recorded from the focused implementation commit.
+regressed, and one not-comparable ratchet. The clean full audit at `04cfe44`
+exited 1 for 16 documented findings, never 2, with L0 8 of 8, five improved,
+two held, zero regressed, one not-comparable ratchet, and zero dirty paths.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

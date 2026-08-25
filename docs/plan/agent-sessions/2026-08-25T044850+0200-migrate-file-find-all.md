@@ -1,13 +1,13 @@
 # Agent Session: Migrate Exported File Find All Walk
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T044850+0200-migrate-file-find-all`
 Created: `2026-08-25T04:48:50+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c8cba210ebcd957ada77e1c14c84f8b571501cb5b0436aa7d0a4536586a7a85a`
 Previous: [2026-08-25T041554+0200-migrate-file-find-first.md](2026-08-25T041554+0200-migrate-file-find-first.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T052243+0200-migrate-file-grep-recursive.md](2026-08-25T052243+0200-migrate-file-grep-recursive.md)
+Outcome: completed in `04cfe44bf6750d9309f774ffec21a6af576db0bd`; exported find-all now delegates its exact recursive walk through the existing zero-value-safe filesystem adapter, preserving traversal and callback order, suffix and exclusion decisions, ordered all-match accumulation, named results, exact errors, and final `io.EOF` normalization, with the measured P3.25 result recorded in the rolling plan and handover.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
