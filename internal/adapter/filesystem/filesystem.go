@@ -30,6 +30,7 @@ type FileSystem interface {
 	RemoveAll(string) error
 	Rename(string, string) error
 	Glob(string) ([]string, error)
+	Walk(string, filepath.WalkFunc) error
 	Create(string) (File, error)
 	Copy(File, io.Reader) (int64, error)
 }
@@ -124,6 +125,14 @@ func Glob(dependencies Dependencies, pattern string) ([]string, error) {
 	return dependencies.FileSystem.Glob(pattern)
 }
 
+// Walk passes the complete root and callback to the configured dependency.
+func Walk(dependencies Dependencies, root string, callback filepath.WalkFunc) error {
+	if dependencies.FileSystem == nil {
+		return ErrNoFilesystem
+	}
+	return dependencies.FileSystem.Walk(root, callback)
+}
+
 // Create passes the complete destination path to the configured dependency.
 func Create(dependencies Dependencies, path string) (File, error) {
 	if dependencies.FileSystem == nil {
@@ -181,6 +190,10 @@ func (systemFilesystem) Rename(source, destination string) error {
 
 func (systemFilesystem) Glob(pattern string) ([]string, error) {
 	return filepath.Glob(pattern)
+}
+
+func (systemFilesystem) Walk(root string, callback filepath.WalkFunc) error {
+	return filepath.Walk(root, callback)
 }
 
 func (systemFilesystem) Create(path string) (File, error) {

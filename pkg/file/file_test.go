@@ -108,6 +108,20 @@ type recordingClearDirFilesystem struct {
 	removeAllErrs  map[string]error
 }
 
+type recordedFindFirstCallback struct {
+	path string
+	info fs.FileInfo
+	err  error
+}
+
+type recordingFindFirstFilesystem struct {
+	walkRoots       []string
+	walkInputs      []recordedFindFirstCallback
+	callbackInputs  []recordedFindFirstCallback
+	callbackResults []error
+	walkErr         error
+}
+
 type messageOnlyFormatter struct{}
 
 func (messageOnlyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
@@ -166,6 +180,10 @@ func (*recordingFileReadFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected file-read glob")
 }
 
+func (*recordingFileReadFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected file-read walk")
+}
+
 func (*recordingFileReadFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-read create")
 }
@@ -216,6 +234,10 @@ func (*recordingFileExistenceFilesystem) Rename(string, string) error {
 
 func (*recordingFileExistenceFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected file-existence glob")
+}
+
+func (*recordingFileExistenceFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected file-existence walk")
 }
 
 func (*recordingFileExistenceFilesystem) Create(string) (filesystem.File, error) {
@@ -278,6 +300,10 @@ func (*recordingFileOverwriteFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected file-overwrite glob")
 }
 
+func (*recordingFileOverwriteFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected file-overwrite walk")
+}
+
 func (*recordingFileOverwriteFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-overwrite create")
 }
@@ -338,6 +364,10 @@ func (*recordingFileCreateFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected file-create glob")
 }
 
+func (*recordingFileCreateFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected file-create walk")
+}
+
 func (*recordingFileCreateFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-create create")
 }
@@ -393,6 +423,10 @@ func (*recordingDirectoryCreateFilesystem) Rename(string, string) error {
 
 func (*recordingDirectoryCreateFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected directory-create glob")
+}
+
+func (*recordingDirectoryCreateFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected directory-create walk")
 }
 
 func (*recordingDirectoryCreateFilesystem) Create(string) (filesystem.File, error) {
@@ -472,6 +506,10 @@ func (*recordingFileOpenFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected append-open glob")
 }
 
+func (*recordingFileOpenFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected append-open walk")
+}
+
 func (recording *recordingFileOpenFilesystem) dependencies() openFileDependencies {
 	return openFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
 }
@@ -528,6 +566,10 @@ func (*recordingFileDeleteFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected single-file-delete glob")
 }
 
+func (*recordingFileDeleteFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected single-file-delete walk")
+}
+
 func (recording *recordingFileDeleteFilesystem) dependencies() deleteSingleFileDependencies {
 	return deleteSingleFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
 }
@@ -574,6 +616,10 @@ func (*recordingFileDeleteAllFilesystem) Rename(string, string) error {
 
 func (*recordingFileDeleteAllFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected recursive-delete glob")
+}
+
+func (*recordingFileDeleteAllFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected recursive-delete walk")
 }
 
 func (*recordingFileDeleteAllFilesystem) Create(string) (filesystem.File, error) {
@@ -630,6 +676,10 @@ func (recording *recordingFileMoveFilesystem) Rename(source, destination string)
 
 func (*recordingFileMoveFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected file-move glob")
+}
+
+func (*recordingFileMoveFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected file-move walk")
 }
 
 func (*recordingFileMoveFilesystem) Create(string) (filesystem.File, error) {
@@ -689,6 +739,10 @@ func (recording *recordingClearDirFilesystem) Glob(pattern string) ([]string, er
 	return append([]string{}, recording.globMatches...), recording.globErr
 }
 
+func (*recordingClearDirFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected clear-directory walk")
+}
+
 func (*recordingClearDirFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected clear-directory create")
 }
@@ -715,6 +769,84 @@ func (recording *recordingClearDirFilesystem) assertedRemoveAllPaths() ([]string
 	return recording.removeAllPaths, nil
 }
 
+func (*recordingFindFirstFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected find-first read")
+}
+
+func (*recordingFindFirstFilesystem) Stat(string) (fs.FileInfo, error) {
+	return nil, errors.New("unexpected find-first stat")
+}
+
+func (*recordingFindFirstFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected find-first mkdir")
+}
+
+func (*recordingFindFirstFilesystem) WriteFile(string, []byte, fs.FileMode) error {
+	return errors.New("unexpected find-first write")
+}
+
+func (*recordingFindFirstFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected find-first open file")
+}
+
+func (*recordingFindFirstFilesystem) Remove(string) error {
+	return errors.New("unexpected find-first remove")
+}
+
+func (*recordingFindFirstFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected find-first recursive remove")
+}
+
+func (*recordingFindFirstFilesystem) Rename(string, string) error {
+	return errors.New("unexpected find-first rename")
+}
+
+func (*recordingFindFirstFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected find-first glob")
+}
+
+func (recording *recordingFindFirstFilesystem) Walk(root string, callback filepath.WalkFunc) error {
+	recording.walkRoots = append(recording.walkRoots, root)
+	for _, input := range recording.walkInputs {
+		recording.callbackInputs = append(recording.callbackInputs, input)
+		callbackResult := callback(input.path, input.info, input.err)
+		recording.callbackResults = append(recording.callbackResults, callbackResult)
+		if callbackResult != nil {
+			if recording.walkErr != nil {
+				return recording.walkErr
+			}
+			return callbackResult
+		}
+	}
+	return recording.walkErr
+}
+
+func (*recordingFindFirstFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected find-first create")
+}
+
+func (*recordingFindFirstFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected find-first copy")
+}
+
+func (recording *recordingFindFirstFilesystem) dependencies() findFirstDependencies {
+	return findFirstDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingFindFirstFilesystem) assertedWalkRoots() ([]string, error) {
+	if len(recording.walkRoots) == 0 {
+		return nil, errors.New("recorded find-first walk population is empty")
+	}
+	return recording.walkRoots, nil
+}
+
+func (recording *recordingFindFirstFilesystem) assertedCallbackInputs() ([]recordedFindFirstCallback, error) {
+	if len(recording.callbackInputs) == 0 {
+		return nil, errors.New("recorded find-first callback population is empty")
+	}
+	return recording.callbackInputs, nil
+}
+
 func captureFileDebugLog(t *testing.T) *bytes.Buffer {
 	t.Helper()
 	output := &bytes.Buffer{}
@@ -726,6 +858,128 @@ func captureFileDebugLog(t *testing.T) *bytes.Buffer {
 	log = logger
 	t.Cleanup(func() { log = previousLogger })
 	return output
+}
+
+func TestFindFirstSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemFindFirstDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("FindFirst selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("FindFirst filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestFindFirstPreservesExactRootCallbackOrderFirstSuffixMatchAndEOFNormalization(t *testing.T) {
+	root := "/complete find-first/root path with spaces"
+	callbackInputError := errors.New("ignored find-first callback input error")
+	matchingPath := root + "/ordered/first exact match.kt"
+	recording := &recordingFindFirstFilesystem{walkInputs: []recordedFindFirstCallback{
+		{path: root, info: existingFileInfo{name: "root"}, err: callbackInputError},
+		{path: root + "/ordered/not-a-match.java", info: nil, err: callbackInputError},
+		{path: matchingPath, info: existingFileInfo{name: "ignored directory metadata"}, err: callbackInputError},
+		{path: root + "/ordered/must-not-be-visited.kt", info: existingFileInfo{name: "must-not-be-visited.kt"}},
+	}}
+	dependencies := recording.dependencies()
+	if dependencies.Files.FileSystem != recording {
+		t.Fatalf("find-first dependency lost its complete filesystem value: %#v", dependencies)
+	}
+
+	result, err := findFirst(dependencies, ".kt", root)
+
+	if result != matchingPath || err != nil {
+		t.Fatalf("find-first result was (%q, %v), want (%q, nil)", result, err, matchingPath)
+	}
+	roots, populationErr := recording.assertedWalkRoots()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(roots, []string{root}) {
+		t.Fatalf("find-first walk roots were %#v, want exact root %#v", roots, []string{root})
+	}
+	callbacks, populationErr := recording.assertedCallbackInputs()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	wantCallbacks := recording.walkInputs[:3]
+	if !reflect.DeepEqual(callbacks, wantCallbacks) {
+		t.Fatalf("find-first callback order was %#v, want first-match stop %#v", callbacks, wantCallbacks)
+	}
+	if !reflect.DeepEqual(recording.callbackResults, []error{nil, nil, io.EOF}) {
+		t.Fatalf("find-first callback results were %#v, want nil, nil, and io.EOF", recording.callbackResults)
+	}
+}
+
+func TestFindFirstNoMatchUsesOnlyExactCaseSensitivePathSuffixAndReturnsEmptyNil(t *testing.T) {
+	root := "/complete find-first/no match"
+	callbackInputError := errors.New("ignored no-match callback input error")
+	recording := &recordingFindFirstFilesystem{walkInputs: []recordedFindFirstCallback{
+		{path: root, info: existingFileInfo{name: "no match"}, err: callbackInputError},
+		{path: root + "/contains.kt/more", info: nil, err: callbackInputError},
+		{path: root + "/case-mismatch.KT", info: existingFileInfo{name: "case-mismatch.KT"}},
+		{path: root + "/suffix.kt.more", info: existingFileInfo{name: "suffix.kt.more"}},
+	}}
+
+	result, err := findFirst(recording.dependencies(), ".kt", root)
+
+	if result != "" || err != nil {
+		t.Fatalf("no-match find-first result was (%q, %v), want (empty, nil)", result, err)
+	}
+	callbacks, populationErr := recording.assertedCallbackInputs()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(callbacks, recording.walkInputs) {
+		t.Fatalf("no-match callback order was %#v, want %#v", callbacks, recording.walkInputs)
+	}
+	if !reflect.DeepEqual(recording.callbackResults, []error{nil, nil, nil, nil}) {
+		t.Fatalf("no-match callback results were %#v, want all nil", recording.callbackResults)
+	}
+}
+
+func TestFindFirstReturnsExactNonEOFWalkErrorWithCurrentPartialResult(t *testing.T) {
+	root := "/complete find-first/walk error"
+	matchingPath := root + "/partial-result.kt"
+	walkError := errors.New("complete find-first non-EOF walk error")
+	recording := &recordingFindFirstFilesystem{
+		walkInputs: []recordedFindFirstCallback{{path: matchingPath, err: errors.New("ignored callback error")}},
+		walkErr:    walkError,
+	}
+
+	result, err := findFirst(recording.dependencies(), ".kt", root)
+
+	if result != matchingPath || err != walkError {
+		t.Fatalf("walk-error find-first result was (%q, %v), want current partial result and exact error (%q, %v)",
+			result, err, matchingPath, walkError)
+	}
+	if !reflect.DeepEqual(recording.callbackResults, []error{io.EOF}) {
+		t.Fatalf("walk-error callback results were %#v, want io.EOF before dependency error", recording.callbackResults)
+	}
+}
+
+func TestFindFirstDependenciesDefaultToSafeNoDeveloperPathAccess(t *testing.T) {
+	result, err := findFirst(
+		findFirstDependencies{},
+		".kt",
+		"/developer/home/project/must-not-be-accessed",
+	)
+
+	if result != "" || !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe find-first dependency default returned (%q, %v), want (empty, %v)", result, err, filesystem.ErrNoFilesystem)
+	}
+}
+
+func TestRecordedFindFirstRejectsEmptyPopulations(t *testing.T) {
+	recording := &recordingFindFirstFilesystem{}
+
+	if _, err := recording.assertedWalkRoots(); err == nil {
+		t.Fatal("empty recorded find-first walk population passed")
+	}
+	if _, err := recording.assertedCallbackInputs(); err == nil {
+		t.Fatal("empty recorded find-first callback population passed")
+	}
 }
 
 func TestClearDirSelectsCompleteSystemFilesystemDependencies(t *testing.T) {

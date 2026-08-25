@@ -22,21 +22,30 @@ type recordedFilesystemOperation struct {
 	Mode        fs.FileMode
 }
 
+type recordedWalkInput struct {
+	Path string
+	Info fs.FileInfo
+	Err  error
+}
+
 type recordingFilesystem struct {
-	operations   []recordedFilesystemOperation
-	globMatches  []string
-	readData     []byte
-	fileInfo     fs.FileInfo
-	globErr      error
-	readErr      error
-	statErr      error
-	mkdirErr     error
-	writeErr     error
-	opened       *os.File
-	openErr      error
-	removeErr    error
-	removeAllErr error
-	renameErr    error
+	operations          []recordedFilesystemOperation
+	globMatches         []string
+	readData            []byte
+	fileInfo            fs.FileInfo
+	walkInputs          []recordedWalkInput
+	walkCallbackResults []error
+	globErr             error
+	readErr             error
+	statErr             error
+	mkdirErr            error
+	writeErr            error
+	opened              *os.File
+	openErr             error
+	removeErr           error
+	removeAllErr        error
+	renameErr           error
+	walkErr             error
 }
 
 func (recording *recordingFilesystem) ReadFile(path string) ([]byte, error) {
@@ -90,6 +99,14 @@ func (recording *recordingFilesystem) Glob(pattern string) ([]string, error) {
 	return append([]string{}, recording.globMatches...), recording.globErr
 }
 
+func (recording *recordingFilesystem) Walk(root string, callback filepath.WalkFunc) error {
+	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "walk", Path: root})
+	for _, input := range recording.walkInputs {
+		recording.walkCallbackResults = append(recording.walkCallbackResults, callback(input.Path, input.Info, input.Err))
+	}
+	return recording.walkErr
+}
+
 func (*recordingFilesystem) Create(string) (File, error) {
 	return nil, errors.New("unexpected create")
 }
@@ -121,6 +138,16 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	}
 	if matches, err := Glob(Dependencies{}, filepath.Join(target, "*")); matches != nil || !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value glob dependency returned (%#v, %v), want (nil, %v)", matches, err, ErrNoFilesystem)
+	}
+	callbackCalls := 0
+	if err := Walk(Dependencies{}, target, func(string, fs.FileInfo, error) error {
+		callbackCalls++
+		return nil
+	}); !errors.Is(err, ErrNoFilesystem) {
+		t.Fatalf("zero-value walk dependency returned %v, want %v", err, ErrNoFilesystem)
+	}
+	if callbackCalls != 0 {
+		t.Fatalf("zero-value walk dependency invoked its callback %d times", callbackCalls)
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
 		t.Fatalf("zero-value filesystem dependencies mutated the target: %v", err)
@@ -261,6 +288,73 @@ func TestGlobPassesExactPatternOrderedMatchesAndExactDependencyError(t *testing.
 	want := []recordedFilesystemOperation{{Name: "glob", Path: pattern}}
 	if !reflect.DeepEqual(recording.operations, want) {
 		t.Fatalf("glob dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
+	}
+}
+
+func TestWalkPassesExactRootAndCallbackAndReturnsExactDependencyError(t *testing.T) {
+	root := "/complete walk/root path with spaces"
+	callbackPath := root + "/callback target.kt"
+	callbackInfo := staticFileInfo{name: "callback target.kt", size: 41, mode: 0751}
+	callbackInputError := errors.New("complete walk callback input error")
+	callbackReturnError := errors.New("complete walk callback return error")
+	walkError := errors.New("complete walk dependency error")
+	recording := &recordingFilesystem{
+		walkInputs: []recordedWalkInput{{Path: callbackPath, Info: callbackInfo, Err: callbackInputError}},
+		walkErr:    walkError,
+	}
+	dependencies := Dependencies{FileSystem: recording}
+	var callbackInputs []recordedWalkInput
+
+	err := Walk(dependencies, root, func(path string, info fs.FileInfo, err error) error {
+		callbackInputs = append(callbackInputs, recordedWalkInput{Path: path, Info: info, Err: err})
+		return callbackReturnError
+	})
+
+	if err != walkError {
+		t.Fatalf("walk error was %v, want exact dependency error %v", err, walkError)
+	}
+	wantOperations := []recordedFilesystemOperation{{Name: "walk", Path: root}}
+	if !reflect.DeepEqual(recording.operations, wantOperations) {
+		t.Fatalf("walk dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, wantOperations)
+	}
+	if !reflect.DeepEqual(callbackInputs, recording.walkInputs) {
+		t.Fatalf("walk callback received incomplete values:\n got: %#v\nwant: %#v", callbackInputs, recording.walkInputs)
+	}
+	if !reflect.DeepEqual(recording.walkCallbackResults, []error{callbackReturnError}) {
+		t.Fatalf("walk dependency observed callback results %#v, want exact error %#v", recording.walkCallbackResults, []error{callbackReturnError})
+	}
+}
+
+func TestSystemWalkDelegatesRootAndPreservesFilepathTraversalOrder(t *testing.T) {
+	root := t.TempDir()
+	directory := filepath.Join(root, "a-directory")
+	nested := filepath.Join(directory, "nested.txt")
+	last := filepath.Join(root, "z-last.txt")
+	if err := MkdirAll(System(), directory, 0755); err != nil {
+		t.Fatalf("create system walk fixture directory: %v", err)
+	}
+	if err := testutil.WriteFileOutsideWorkingTree(nested, []byte("nested"), 0644); err != nil {
+		t.Fatalf("create nested system walk fixture: %v", err)
+	}
+	if err := testutil.WriteFileOutsideWorkingTree(last, []byte("last"), 0644); err != nil {
+		t.Fatalf("create final system walk fixture: %v", err)
+	}
+	var paths []string
+
+	err := Walk(System(), root, func(path string, info fs.FileInfo, err error) error {
+		if info == nil || err != nil {
+			t.Fatalf("system walk callback received (%#v, %v) for %s", info, err, path)
+		}
+		paths = append(paths, path)
+		return nil
+	})
+
+	if err != nil {
+		t.Fatalf("system walk returned an error: %v", err)
+	}
+	want := []string{root, directory, nested, last}
+	if !reflect.DeepEqual(paths, want) {
+		t.Fatalf("system walk paths were %#v, want filepath order %#v", paths, want)
 	}
 }
 

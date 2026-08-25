@@ -12,8 +12,20 @@ import (
 	"strings"
 )
 
+type findFirstDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemFindFirstDependencies() findFirstDependencies {
+	return findFirstDependencies{Files: filesystem.System()}
+}
+
 func FindFirst(fileSuffix string, dir string) (result string, err error) {
-	err = filepath.Walk(dir,
+	return findFirst(systemFindFirstDependencies(), fileSuffix, dir)
+}
+
+func findFirst(dependencies findFirstDependencies, fileSuffix string, dir string) (result string, err error) {
+	err = filesystem.Walk(dependencies.Files, dir,
 		func(path string, fi os.FileInfo, errIn error) error {
 			if strings.HasSuffix(path, fileSuffix) {
 				result = path

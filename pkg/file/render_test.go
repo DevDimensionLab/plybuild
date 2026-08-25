@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -86,6 +87,10 @@ func (*recordingRenderFilesystem) Rename(string, string) error {
 
 func (*recordingRenderFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected render glob")
+}
+
+func (*recordingRenderFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected render walk")
 }
 
 func (recording *recordingRenderFilesystem) Create(path string) (filesystem.File, error) {

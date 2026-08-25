@@ -101,6 +101,10 @@ func (*recordingBitbucketRepositoryFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected Bitbucket repository glob")
 }
 
+func (*recordingBitbucketRepositoryFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected Bitbucket repository walk")
+}
+
 func (*recordingBitbucketRepositoryFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected Bitbucket repository create")
 }

@@ -95,6 +95,10 @@ func (*recordingCopyFilesystem) Glob(string) ([]string, error) {
 	return nil, errors.New("unexpected glob")
 }
 
+func (*recordingCopyFilesystem) Walk(string, filepath.WalkFunc) error {
+	return errors.New("unexpected walk")
+}
+
 func (*recordingCopyFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected create")
 }
