@@ -22,6 +22,18 @@ func writeLocalConfigTouch(dependencies localConfigTouchWriteDependencies, confi
 	return filesystem.WriteFile(dependencies.Files, configFilePath, data, 0644)
 }
 
+type localConfigUpdateWriteDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemLocalConfigUpdateWriteDependencies() localConfigUpdateWriteDependencies {
+	return localConfigUpdateWriteDependencies{Files: filesystem.System()}
+}
+
+func writeLocalConfigUpdate(dependencies localConfigUpdateWriteDependencies, configFilePath string, data []byte) error {
+	return filesystem.WriteFile(dependencies.Files, configFilePath, data, 0644)
+}
+
 type LocalConfigDir struct {
 	impl DirConfig
 }
@@ -119,7 +131,7 @@ func (localCfgDir LocalConfigDir) UpdateLocalConfig(config LocalConfiguration) e
 		return err
 	}
 
-	err = os.WriteFile(configFilePath, d, 0644)
+	err = writeLocalConfigUpdate(systemLocalConfigUpdateWriteDependencies(), configFilePath, d)
 	if err != nil {
 		return err
 	}

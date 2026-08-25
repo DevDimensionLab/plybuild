@@ -323,7 +323,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 37 are complete.
+Status: active. Moves 1 through 38 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -1616,6 +1616,47 @@ Commit: `89f43aa`.
 The clean full audit from commit `89f43aa` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
+
+Move 38 routes only `LocalConfigDir.UpdateLocalConfig`'s direct
+`os.WriteFile(configFilePath, d, 0644)` operation through the existing
+filesystem adapter. The exported method and every caller remain unchanged. It
+still evaluates `CheckOrCreateConfigDir()` and its early error, exact
+`FilePath()`, the exact caller-supplied `config`, `yaml.Marshal(&config)` and
+its early error, and exact update log in the same order. It then preserves the
+`os.Create(configFilePath)` attempt and its early error before production
+selects `filesystem.System()` only for a private complete update-write
+dependency. The adapter receives the exact caller-composed path, exact YAML
+bytes, and mode `0644` once. Its exact write error remains the result without a
+Close attempt; successful writes still return the exact `f.Close()` result.
+
+Four new top-level config contracts bring the suite to 278 tests. They prove
+complete system dependency selection and delivery, exact arbitrary
+caller-composed paths without cleaning or normalization, non-empty recorded
+write populations, exact empty, representative, non-ASCII, and arbitrary
+output bytes, exact `0644` mode, one write attempt, exact write-error identity
+at the private boundary, safe zero behavior without developer-path access, and
+no unrelated adapter operation. The production-composition contracts do not
+mutate the real filesystem or run another command. No adapter operation,
+established complete recording double, inventory label, seam driver, mutation
+harness, public API, caller, directory evaluation, path construction,
+caller-supplied config, YAML marshaling, logging, file creation or closing,
+`TouchFile`, context/profile behavior, ProjectConfig, CloudConfig, Maven,
+structurizr, tips, template, file, HTTP, Bitbucket, Wpost, or other completed
+effect changed. Q0.6 remains at 22 guarded safe-writer sites, 17 write and 5
+copy, with zero unsafe direct writes. Q1.3 moves from 29 of 46 to 28 of 45;
+Q1.1 stays at 8 untested packages; Q1.2 stays zero, Q1.4 stays 7 of 8, and
+exact Q2.1 stays 0 of 8.
+
+The move-38 implementation gate passed focused config/filesystem/process and
+relevant command, context, file, template, Maven, tips, structurizr,
+Bitbucket, HTTP, Kibana, Spring, and shell package tests, API/CLI and subprocess
+compatibility, all four host flows, full preflight, test, install, the
+standalone 62-control launcher contract, uncached and race tests, vet, the
+15-control audit meta-suite, and empty-HOME count-2. The first complete
+`make test` run hit the documented nested signal-interruption partial-raw-log
+timing flake; its immediate complete rerun passed all 62 launcher controls.
+The focused seven-criterion audit exited 1 for documented findings, never 2,
+with four improved, two held, zero regressed, and one not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
