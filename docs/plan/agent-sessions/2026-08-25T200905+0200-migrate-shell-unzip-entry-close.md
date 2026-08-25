@@ -1,13 +1,13 @@
 # Agent Session: Migrate Shell Unzip Entry Close
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T200905+0200-migrate-shell-unzip-entry-close`
 Created: `2026-08-25T20:09:05+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `10306323a833d851650f4e768502ac0c1bfe0a6580aa1d8ecb352e88f5a2e648`
 Previous: [2026-08-25T193422+0200-migrate-shell-unzip-output-close.md](2026-08-25T193422+0200-migrate-shell-unzip-output-close.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md](2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md)
+Outcome: Implementation commit `70bee0e` routes only the private Unzip entry-reader Close through the filesystem adapter; the focused and clean gates have zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

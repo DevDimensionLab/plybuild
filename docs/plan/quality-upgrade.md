@@ -2718,9 +2718,8 @@ Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
 skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
 zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8. The focused audit measures
 Q1.3 at 10 of 32: the direct interface-typed entry-reader `Close` was absent
-from the prior violation set, while the import-aware scanner classifies the new
-adapter request at the caller line because its archive reader argument retains
-filesystem-effect provenance. The exact system implementation is inside the
+from the prior violation set, and the import-aware scanner also omits the new
+CloseReader adapter request. The exact system implementation is inside the
 declared filesystem adapter, so the denominator and violation count both hold.
 The scanner and inventory remain unchanged.
 
@@ -2736,9 +2735,11 @@ measured tree. The valid focused seven-criterion audit exits 1 for the documente
 Q1.3 finding, never 2, with four improved, two held, zero regressed, and one
 not-comparable ratchet.
 
-Commit: recorded by the following handoff.
+Commit: `70bee0e`.
 
-The clean committed checkpoint audit is recorded by the following handoff.
+The clean full audit from commit `70bee0e` exits 1 for 15 documented findings,
+never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passes.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

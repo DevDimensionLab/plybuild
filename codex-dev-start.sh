@@ -1055,42 +1055,42 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T200905+0200-migrate-shell-unzip-entry-close
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T200905+0200-migrate-shell-unzip-entry-close.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T193422+0200-migrate-shell-unzip-output-close.md
+#|SESSION_ID=2026-08-25T204152+0200-migrate-shell-unzip-archive-close
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T200905+0200-migrate-shell-unzip-entry-close.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete one focused P3 production-effect move: route only the direct
-#|`err = rc.Close()` request in private `pkg/shell.Unzip` through one narrow
-#|entry-reader Close operation on the existing filesystem adapter. Preserve the
-#|public signature, exact opened entry-reader identity, close attempt count and
-#|placement, archive and entry traversal, entry order and bytes, filenames and
-#|partial results, zip-slip behavior, every completed Unzip operation and error
-#|precedence, and every earlier shell, filesystem, Spring, process, browser,
-#|profile, HTTP, tips, config, Maven, structurizr, Bitbucket, Wpost,
-#|local-config, Kibana, and supervisor move, with zero comparable ratchet
-#|regressions.
+#|Complete one focused P3 production-effect move: route only the deferred direct
+#|`_ = r.Close()` request in private `pkg/shell.Unzip` through the existing narrow
+#|filesystem `CloseReader` operation. Preserve the public signature, exact opened
+#|archive-reader identity, deferred placement, one close attempt after every
+#|successful archive open, ignored archive-close result, archive and entry
+#|traversal, entry order and bytes, filenames and partial results, zip-slip
+#|behavior, every completed Unzip operation and error precedence, and every
+#|earlier shell, filesystem, Spring, process, browser, profile, HTTP, tips,
+#|config, Maven, structurizr, Bitbucket, Wpost, local-config, Kibana, and
+#|supervisor move, with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
 #|P3 remains active, P4-P8 are queued in the machine-readable block in
 #|docs/plan/quality-upgrade.md, and the launcher must remain NEXT until every
-#|authorized checkpoint is complete. This mission authorizes only one
-#|`CloseReader(io.ReadCloser) error` method on the existing
-#|`filesystem.FileSystem`, its zero-safe forwarding helper and exact system
-#|implementation, the mechanical method addition required by every complete
-#|filesystem double, focused adapter and private Unzip entry-close recording
-#|contracts, and replacement of the one direct `rc.Close()` call with the
-#|helper.
+#|authorized checkpoint is complete. This mission authorizes only focused
+#|private Unzip archive-close recording contracts and replacement of the one
+#|deferred direct archive close with
+#|`defer func() { _ = filesystem.CloseReader(dependencies.Files, r) }()`.
 #|
-#|It does not authorize archive open or deferred Close, output-file Close, Copy,
-#|OpenFile, MkdirAll, entry-open injection, another unzip branch, shell Run or
-#|Git changes, process or HTTP work, Spring, Maven, structurizr, plugin diagrams,
-#|clock/server adapters, public API, inventory, mutation harnesses, audit
-#|reshaping, or later-roadmap implementation.
+#|Reuse the existing `CloseReader(io.ReadCloser) error` interface operation,
+#|zero-safe helper, exact system implementation, and complete doubles unchanged.
+#|It does not authorize another filesystem method, adapter reshaping, archive
+#|open, entry-reader Close, output-file Close, Copy, OpenFile, MkdirAll,
+#|entry-open injection, another unzip branch, shell Run or Git changes, process
+#|or HTTP work, Spring, Maven, structurizr, plugin diagrams, clock/server
+#|adapters, public API, inventory, mutation harnesses, audit reshaping, or
+#|later-roadmap implementation.
 #|
 #|# Measurements At Start
 #|
@@ -1104,7 +1104,7 @@ exit 70
 #|import-aware effect scanner. Regenerate ignored reports outside the measured
 #|tree or remove them before a clean audit.
 #|
-#|Implementation commit `0128cd0` has 352 tests across 19 of 25 packages. Q0.6
+#|Implementation commit `70bee0e` has 358 tests across 19 of 25 packages. Q0.6
 #|has 26 guarded safe-writer sites, 21 write and 5 copy, and zero unsafe direct
 #|test writes. Q1.1 is 6 of 25, Q1.2 is 0, Q1.3 is 10 violations of 32
 #|production effect sites with clock and server absent, Q1.4 is 7 of 8, and
@@ -1112,13 +1112,12 @@ exit 70
 #|15 documented findings and never 2; comparable ratchets were five improved,
 #|two held, and zero regressed.
 #|
-#|The direct output-file Close is gone, but exact Q1.3 holds at 10/32 because
-#|the scanner retains filesystem provenance through the Close helper's opened
-#|file argument. The direct interface-typed `rc.Close()` is absent from the
-#|reported Q1.3 violation set. A helper receiving that reader or its in-boundary
-#|system implementation may change or hold the measured population. Regenerate
-#|the exact value without changing the scanner or broadening this move to force
-#|an expected number.
+#|The direct interface-typed entry-reader Close is gone. Exact Q1.3 holds at
+#|10/32 because its adapter request is also absent from the reported violation
+#|set. The deferred concrete archive-reader Close is presently absent from that
+#|set as well. Replacing it with the existing helper may change or hold the
+#|measured population; regenerate the exact value without changing the scanner
+#|or broadening this move to force an expected number.
 #|
 #|The launcher has 62 Bash 3.2 contracts and supervises fresh non-interactive
 #|JSONL turns with external raw logs. It continues only after a successful
@@ -1128,34 +1127,33 @@ exit 70
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the Unzip entry-reader-close move, adapter contracts,
-#|and focused private recording contracts, with measured planning notes. Then
-#|make the normal separate handoff-only commit. Do not push, merge, publish,
-#|distribute, remove the worktree, stash inherited changes, revert user work, or
-#|run destructive Git commands.
+#|implementation commit for the deferred Unzip archive-close move and focused
+#|private recording contracts, with measured planning notes. Then make the
+#|normal separate handoff-only commit. Do not push, merge, publish, distribute,
+#|remove the worktree, stash inherited changes, revert user work, or run
+#|destructive Git commands.
 #|
 #|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve public
 #|`Unzip(string, string) ([]string, error)`, the private complete
-#|`unzipDependencies`, production `filesystem.System()` selection, exact opened
-#|entry-reader identity, one entry-close request per reached file after its
-#|successful output-file Close, the assignment and following error branch,
-#|exact close error and partial filenames, suppression of later traversal after
-#|an entry-close error, suppression of entry Close after an output-close error,
-#|and continued later traversal after entry-close success.
+#|`unzipDependencies`, production `filesystem.System()` selection, the exact
+#|`*zip.ReadCloser` returned by `OpenZipReader`, and the current defer immediately
+#|after a successful archive-open request. Make exactly one filesystem
+#|CloseReader request for that archive on every later return, after all reached
+#|entry operations and entry-reader closes. Continue to ignore its exact result
+#|without changing the named return values or any earlier error.
 #|
-#|Reuse the existing zero-safe adapter shape and pass the complete Unzip
-#|dependency composition whole. A zero filesystem dependency must return
-#|`filesystem.ErrNoFilesystem` without closing a developer-supplied reader. Do
-#|not add fallback, retry, logging, cleanup, new defers, environment or
-#|working-directory behavior, or error normalization. Any fixture write must
-#|stay guarded below `t.TempDir()`; launch no process, touch no network, and
-#|change no working directory.
+#|Pass the complete Unzip dependency composition whole. Do not add fallback,
+#|retry, logging, cleanup, another close attempt, a new defer, environment or
+#|working-directory behavior, or error normalization. Do not close an archive
+#|when archive open fails. Any fixture write must stay guarded below
+#|`t.TempDir()`; launch no process, touch no public network, and change no working
+#|directory.
 #|
-#|Do not change `OpenZipReader`, the deferred archive Close,
-#|`filesystem.Copy`, `filesystem.Close` or output-file Close, OpenFile, MkdirAll,
-#|entry open, shell Run, Git composition, structurizr command construction,
-#|Maven process composition, plugin diagrams, another adapter operation or
-#|caller, public API, or `.quality/inventory`.
+#|Do not change `OpenZipReader`, `filesystem.CloseReader` or its system
+#|implementation, entry-reader Close, `filesystem.Close` or output-file Close,
+#|Copy, OpenFile, MkdirAll, entry open, shell Run, Git composition, structurizr
+#|command construction, Maven process composition, plugin diagrams, another
+#|adapter operation or caller, public API, or `.quality/inventory`.
 #|
 #|# Required Reading
 #|
@@ -1171,21 +1169,23 @@ exit 70
 #|
 #|# Three Moves
 #|
-#|1. Start red with only focused filesystem-adapter and private Unzip
-#|   entry-reader-close recording contracts. Prove exact reader identity, one
-#|   request, exact injected error and partial filenames, Copy then output Close
-#|   before entry Close, success traversal, entry-close-error short-circuit
-#|   before later entries, output-close-error short-circuit before entry Close,
-#|   complete dependency selection, zero-safe behavior, rejection of an empty
-#|   recording population, and absence of unrelated filesystem requests. Invoke
-#|   no real process or network request.
+#|1. Start red with only focused private Unzip archive-close recording
+#|   contracts. Prove exact archive identity, one deferred request after every
+#|   successful archive open, request placement after successful traversal and
+#|   entry-reader closes, execution on zip-slip and every established later
+#|   error return, no request after archive-open failure, ignored injected
+#|   archive-close error without result or error-precedence change, complete
+#|   dependency selection, rejection of an empty archive-close recording
+#|   population, distinction from entry-reader-close requests, and absence of
+#|   unrelated filesystem requests. Invoke no real process or public network
+#|   request.
 #|
-#|2. Add only `CloseReader(io.ReadCloser) error` to the existing filesystem
-#|   interface, zero-safe helper, exact system implementation, and complete
-#|   doubles. Replace only `err = rc.Close()` with
-#|   `err = filesystem.CloseReader(dependencies.Files, rc)`. Keep the surrounding
-#|   output Close and its error branch, assignment, following error branch, and
-#|   all earlier and later operations unchanged.
+#|2. Replace only `defer func() { _ = r.Close() }()` with
+#|   `defer func() { _ = filesystem.CloseReader(dependencies.Files, r) }()`.
+#|   Keep the defer placement, anonymous function, ignored assignment, archive
+#|   variable, surrounding open branch, traversal, and every earlier and later
+#|   operation unchanged. Do not change the filesystem adapter or doubles except
+#|   the focused private recording behavior needed by the red contracts.
 #|
 #|3. Run focused shell/filesystem/Spring and relevant process, Maven, command,
 #|   context, config, HTTP, structurizr, profile, browser, tips, file, template,
@@ -1200,8 +1200,8 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent Unzip
-#|entry-reader-close move or record an exact resumable state. Rewrite the rolling
+#|Before this agent session ends, finish and commit the coherent deferred Unzip
+#|archive-close move or record an exact resumable state. Rewrite the rolling
 #|handover, record the measured P3 result, answer this archive, create one linked
 #|NEXT archive for the next coherent P3 effect move, replace only the launcher's
 #|mutable regions, run the launcher contract, and make the separate handoff-only
