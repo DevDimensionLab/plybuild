@@ -2244,6 +2244,52 @@ The clean full audit from commit `d982f63` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
 
+Move 47 adds one private complete shell unzip composition containing only
+`filesystem.Dependencies` and selects `filesystem.System()` only in the public
+production `Unzip` entry. The public signature and caller graph remain
+unchanged. The established body stays in its original order behind the private
+composition, and only its two direct `os.MkdirAll` calls now use the existing
+`filesystem.MkdirAll` forwarding helper with exact `os.ModePerm`. Directory
+entries still append their exact joined path before one creation attempt and
+continue directly after success. File entries still append their exact joined
+path before one parent-directory attempt on `filepath.Dir(fpath)`, and a
+failure still returns before direct file open. Archive open and close, zip-slip
+validation, debug logging, entry order, file open flags and mode, entry open,
+copy, both closes, partial results, and every exact error and precedence remain
+unchanged. No filesystem interface or adapter implementation changed.
+
+Six focused top-level shell contracts bring the suite to 330 tests. They prove
+complete production filesystem selection, exact directory-entry and file-
+parent paths, exact `os.ModePerm`, one attempt for every reached legacy site,
+joined filename append and archive entry order, exact error identity and
+partial filenames on both failure paths, safe zero dependencies returning
+exact `filesystem.ErrNoFilesystem` before any later mutation, rejection of an
+empty recording population, and absence of unrelated adapter operations. The
+single guarded archive-fixture write is confined to `t.TempDir()` and no test
+changes process, network, working-directory, or repository state.
+
+Q0.6 stays closed with zero skipped tests and zero unsafe direct test writes;
+its guarded safe-writer population improves from 24 to 25 sites, 20 write and
+5 copy. Q1.1 stays 6 of 25, Q1.2 stays zero, Q1.3 improves from 15 of 36 to 13
+of 34 as the two direct unzip directory-creation caller sites leave and the
+existing adapter implementation remains singular, Q1.4 stays 7 of 8, and
+exact Q2.1 stays 0 of 8.
+
+The move-47 implementation gate passed focused shell/filesystem/Spring and
+relevant process, command, context, config, HTTP, Maven, structurizr, profile,
+browser, tips, file, template, Bitbucket, Kibana, local-config, and caller
+package tests; API/CLI and subprocess compatibility; all four host flows and
+their meta-contracts; full preflight, test, install, the standalone 62-control
+launcher contract, uncached and race tests, vet, the pinned linter with zero
+issues, the 15-control audit meta-suite, and empty-HOME count-2. Generated
+compatibility and audit reports and all Go and linter caches remained outside
+the measured tree. One standalone launcher attempt, the first complete
+preflight attempt, and the first two complete `make test` attempts hit the
+documented nested signal-interruption partial-raw-log timing flake; complete
+reruns passed all 62 controls. The focused seven-criterion audit exited 1 for
+documented findings, never 2, with four improved, two held, zero regressed,
+and one not-comparable ratchet.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 

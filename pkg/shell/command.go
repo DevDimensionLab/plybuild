@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/logger"
 	"io"
 	"os"
@@ -46,8 +47,19 @@ func run(cmd *exec.Cmd) (output Output) {
 //	return run(exec.Command("unzip", file, "-d", outputDir))
 //}
 
-func Unzip(src string, dest string) (filenames []string, err error) {
+type unzipDependencies struct {
+	Files filesystem.Dependencies
+}
 
+func systemUnzipDependencies() unzipDependencies {
+	return unzipDependencies{Files: filesystem.System()}
+}
+
+func Unzip(src string, dest string) (filenames []string, err error) {
+	return unzipWithDependencies(systemUnzipDependencies(), src, dest)
+}
+
+func unzipWithDependencies(dependencies unzipDependencies, src string, dest string) (filenames []string, err error) {
 	r, err := zip.OpenReader(src)
 	if err != nil {
 		return filenames, err
@@ -65,14 +77,14 @@ func Unzip(src string, dest string) (filenames []string, err error) {
 		filenames = append(filenames, fpath)
 
 		if f.FileInfo().IsDir() {
-			err = os.MkdirAll(fpath, os.ModePerm)
+			err = filesystem.MkdirAll(dependencies.Files, fpath, os.ModePerm)
 			if err != nil {
 				return
 			}
 			continue
 		}
 
-		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+		if err = filesystem.MkdirAll(dependencies.Files, filepath.Dir(fpath), os.ModePerm); err != nil {
 			return filenames, err
 		}
 
