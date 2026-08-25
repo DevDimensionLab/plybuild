@@ -89,6 +89,10 @@ func (*recordingBitbucketRepositoryFilesystem) Remove(string) error {
 	return errors.New("unexpected Bitbucket repository remove")
 }
 
+func (*recordingBitbucketRepositoryFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected Bitbucket repository recursive remove")
+}
+
 func (*recordingBitbucketRepositoryFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected Bitbucket repository create")
 }

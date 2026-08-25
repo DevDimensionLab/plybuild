@@ -82,6 +82,11 @@ type recordingFileDeleteFilesystem struct {
 	removeErr   error
 }
 
+type recordingFileDeleteAllFilesystem struct {
+	removeAllPaths []string
+	removeAllErr   error
+}
+
 type existingFileInfo struct {
 	name string
 }
@@ -122,6 +127,10 @@ func (*recordingFileReadFilesystem) Remove(string) error {
 	return errors.New("unexpected file-read remove")
 }
 
+func (*recordingFileReadFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected file-read recursive remove")
+}
+
 func (*recordingFileReadFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-read create")
 }
@@ -160,6 +169,10 @@ func (*recordingFileExistenceFilesystem) OpenFile(string, int, fs.FileMode) (*os
 
 func (*recordingFileExistenceFilesystem) Remove(string) error {
 	return errors.New("unexpected file-existence remove")
+}
+
+func (*recordingFileExistenceFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected file-existence recursive remove")
 }
 
 func (*recordingFileExistenceFilesystem) Create(string) (filesystem.File, error) {
@@ -210,6 +223,10 @@ func (*recordingFileOverwriteFilesystem) Remove(string) error {
 	return errors.New("unexpected file-overwrite remove")
 }
 
+func (*recordingFileOverwriteFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected file-overwrite recursive remove")
+}
+
 func (*recordingFileOverwriteFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-overwrite create")
 }
@@ -258,6 +275,10 @@ func (*recordingFileCreateFilesystem) Remove(string) error {
 	return errors.New("unexpected file-create remove")
 }
 
+func (*recordingFileCreateFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected file-create recursive remove")
+}
+
 func (*recordingFileCreateFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-create create")
 }
@@ -301,6 +322,10 @@ func (*recordingDirectoryCreateFilesystem) OpenFile(string, int, fs.FileMode) (*
 
 func (*recordingDirectoryCreateFilesystem) Remove(string) error {
 	return errors.New("unexpected directory-create remove")
+}
+
+func (*recordingDirectoryCreateFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected directory-create recursive remove")
 }
 
 func (*recordingDirectoryCreateFilesystem) Create(string) (filesystem.File, error) {
@@ -368,6 +393,10 @@ func (*recordingFileOpenFilesystem) Remove(string) error {
 	return errors.New("unexpected append-open remove")
 }
 
+func (*recordingFileOpenFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected append-open recursive remove")
+}
+
 func (recording *recordingFileOpenFilesystem) dependencies() openFileDependencies {
 	return openFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
 }
@@ -412,6 +441,10 @@ func (recording *recordingFileDeleteFilesystem) Remove(path string) error {
 	return recording.removeErr
 }
 
+func (*recordingFileDeleteFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected single-file-delete recursive remove")
+}
+
 func (recording *recordingFileDeleteFilesystem) dependencies() deleteSingleFileDependencies {
 	return deleteSingleFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
 }
@@ -421,6 +454,54 @@ func (recording *recordingFileDeleteFilesystem) assertedRemovePaths() ([]string,
 		return nil, errors.New("recorded single-file-delete population is empty")
 	}
 	return recording.removePaths, nil
+}
+
+func (*recordingFileDeleteAllFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected recursive-delete read")
+}
+
+func (*recordingFileDeleteAllFilesystem) Stat(string) (fs.FileInfo, error) {
+	return nil, errors.New("unexpected recursive-delete stat")
+}
+
+func (*recordingFileDeleteAllFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected recursive-delete mkdir")
+}
+
+func (*recordingFileDeleteAllFilesystem) WriteFile(string, []byte, fs.FileMode) error {
+	return errors.New("unexpected recursive-delete write")
+}
+
+func (*recordingFileDeleteAllFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected recursive-delete open file")
+}
+
+func (*recordingFileDeleteAllFilesystem) Remove(string) error {
+	return errors.New("unexpected recursive-delete single remove")
+}
+
+func (recording *recordingFileDeleteAllFilesystem) RemoveAll(path string) error {
+	recording.removeAllPaths = append(recording.removeAllPaths, path)
+	return recording.removeAllErr
+}
+
+func (*recordingFileDeleteAllFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected recursive-delete create")
+}
+
+func (*recordingFileDeleteAllFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected recursive-delete copy")
+}
+
+func (recording *recordingFileDeleteAllFilesystem) dependencies() deleteAllDependencies {
+	return deleteAllDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingFileDeleteAllFilesystem) assertedRemoveAllPaths() ([]string, error) {
+	if len(recording.removeAllPaths) == 0 {
+		return nil, errors.New("recorded recursive-delete population is empty")
+	}
+	return recording.removeAllPaths, nil
 }
 
 func TestDeleteSingleFileSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
@@ -488,6 +569,71 @@ func TestRecordedFileDeleteRejectsEmptyPopulation(t *testing.T) {
 
 	if _, err := recording.assertedRemovePaths(); err == nil {
 		t.Fatal("empty recorded single-file-delete population passed")
+	}
+}
+
+func TestDeleteAllSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemDeleteAllDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("DeleteAll selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("DeleteAll filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestDeleteAllPreservesCompletePathAndExactDependencyError(t *testing.T) {
+	path := "/complete recursive-delete/path with spaces"
+	removeError := errors.New("complete recursive-delete dependency error")
+	tests := []struct {
+		name         string
+		removeAllErr error
+	}{
+		{name: "successful removal"},
+		{name: "dependency error", removeAllErr: removeError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFileDeleteAllFilesystem{removeAllErr: test.removeAllErr}
+			dependencies := recording.dependencies()
+			if dependencies.Files.FileSystem != recording {
+				t.Fatalf("recursive-delete dependency lost its complete filesystem value: %#v", dependencies)
+			}
+
+			err := deleteAll(dependencies, path)
+
+			if err != test.removeAllErr {
+				t.Fatalf("recursive-delete error was %v, want exact dependency error %v", err, test.removeAllErr)
+			}
+			removeAllPaths, populationErr := recording.assertedRemoveAllPaths()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			if !reflect.DeepEqual(removeAllPaths, []string{path}) {
+				t.Fatalf("recursive-delete dependency received paths %#v, want %#v", removeAllPaths, []string{path})
+			}
+		})
+	}
+}
+
+func TestDeleteAllDependenciesDefaultToSafeNoPathAccess(t *testing.T) {
+	path := "/developer/home/project/must-not-be-accessed"
+
+	err := deleteAll(deleteAllDependencies{}, path)
+
+	if !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe recursive-delete dependency default returned %v, want %v", err, filesystem.ErrNoFilesystem)
+	}
+}
+
+func TestRecordedFileDeleteAllRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingFileDeleteAllFilesystem{}
+
+	if _, err := recording.assertedRemoveAllPaths(); err == nil {
+		t.Fatal("empty recorded recursive-delete population passed")
 	}
 }
 

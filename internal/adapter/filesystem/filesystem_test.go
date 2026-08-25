@@ -22,16 +22,17 @@ type recordedFilesystemOperation struct {
 }
 
 type recordingFilesystem struct {
-	operations []recordedFilesystemOperation
-	readData   []byte
-	fileInfo   fs.FileInfo
-	readErr    error
-	statErr    error
-	mkdirErr   error
-	writeErr   error
-	opened     *os.File
-	openErr    error
-	removeErr  error
+	operations   []recordedFilesystemOperation
+	readData     []byte
+	fileInfo     fs.FileInfo
+	readErr      error
+	statErr      error
+	mkdirErr     error
+	writeErr     error
+	opened       *os.File
+	openErr      error
+	removeErr    error
+	removeAllErr error
 }
 
 func (recording *recordingFilesystem) ReadFile(path string) ([]byte, error) {
@@ -68,6 +69,11 @@ func (recording *recordingFilesystem) Remove(path string) error {
 	return recording.removeErr
 }
 
+func (recording *recordingFilesystem) RemoveAll(path string) error {
+	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "remove-all", Path: path})
+	return recording.removeAllErr
+}
+
 func (*recordingFilesystem) Create(string) (File, error) {
 	return nil, errors.New("unexpected create")
 }
@@ -90,6 +96,9 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	}
 	if err := Remove(Dependencies{}, target); !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value remove dependency returned %v, want %v", err, ErrNoFilesystem)
+	}
+	if err := RemoveAll(Dependencies{}, target); !errors.Is(err, ErrNoFilesystem) {
+		t.Fatalf("zero-value recursive-remove dependency returned %v, want %v", err, ErrNoFilesystem)
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
 		t.Fatalf("zero-value filesystem dependencies mutated the target: %v", err)
@@ -171,6 +180,23 @@ func TestRemovePassesCompletePathAndReturnsExactDependencyError(t *testing.T) {
 	want := []recordedFilesystemOperation{{Name: "remove", Path: path}}
 	if !reflect.DeepEqual(recording.operations, want) {
 		t.Fatalf("remove dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
+	}
+}
+
+func TestRemoveAllPassesCompletePathAndReturnsExactDependencyError(t *testing.T) {
+	path := "/complete recursive-delete/path with spaces"
+	removeError := errors.New("complete recursive-remove dependency error")
+	recording := &recordingFilesystem{removeAllErr: removeError}
+	dependencies := Dependencies{FileSystem: recording}
+
+	err := RemoveAll(dependencies, path)
+
+	if err != removeError {
+		t.Fatalf("recursive-remove error was %v, want exact dependency error %v", err, removeError)
+	}
+	want := []recordedFilesystemOperation{{Name: "remove-all", Path: path}}
+	if !reflect.DeepEqual(recording.operations, want) {
+		t.Fatalf("recursive-remove dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
 	}
 }
 
@@ -264,6 +290,25 @@ func TestSystemPerformsCompleteFilesystemOperations(t *testing.T) {
 	}
 	if _, err := os.Stat(destination); !os.IsNotExist(err) {
 		t.Fatalf("system remove left the destination present: %v", err)
+	}
+}
+
+func TestSystemRemoveAllRemovesTemporaryDirectoryTree(t *testing.T) {
+	root := t.TempDir()
+	target := filepath.Join(root, "recursive remove", "nested")
+	file := filepath.Join(target, "file.txt")
+	if err := MkdirAll(System(), target, 0755); err != nil {
+		t.Fatalf("create recursive-remove fixture directory: %v", err)
+	}
+	if err := WriteFile(System(), file, []byte("temporary fixture"), 0644); err != nil {
+		t.Fatalf("create recursive-remove fixture file: %v", err)
+	}
+
+	if err := RemoveAll(System(), filepath.Dir(target)); err != nil {
+		t.Fatalf("system recursive remove returned an error: %v", err)
+	}
+	if _, err := os.Stat(filepath.Dir(target)); !os.IsNotExist(err) {
+		t.Fatalf("system recursive remove left the directory tree present: %v", err)
 	}
 }
 

@@ -431,8 +431,20 @@ func deleteSingleFile(dependencies deleteSingleFileDependencies, filePath string
 	return filesystem.Remove(dependencies.Files, filePath)
 }
 
+type deleteAllDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemDeleteAllDependencies() deleteAllDependencies {
+	return deleteAllDependencies{Files: filesystem.System()}
+}
+
 func DeleteAll(dirPath string) error {
-	return os.RemoveAll(dirPath)
+	return deleteAll(systemDeleteAllDependencies(), dirPath)
+}
+
+func deleteAll(dependencies deleteAllDependencies, dirPath string) error {
+	return filesystem.RemoveAll(dependencies.Files, dirPath)
 }
 
 func ClearDir(dirPath string, excludes []string) error {
