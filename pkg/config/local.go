@@ -4,11 +4,24 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"gopkg.in/yaml.v2"
+	"io/fs"
 	"os"
 )
 
 var localConfigFileName = "local-config.yaml"
 var defaultCloudConfigUrl = "https://github.com/devdimensionlab/plybuild-config.git"
+
+type localConfigDirectoryStatDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemLocalConfigDirectoryStatDependencies() localConfigDirectoryStatDependencies {
+	return localConfigDirectoryStatDependencies{Files: filesystem.System()}
+}
+
+func statLocalConfigDirectory(dependencies localConfigDirectoryStatDependencies, dir string) (fs.FileInfo, error) {
+	return filesystem.Stat(dependencies.Files, dir)
+}
 
 type localConfigTouchWriteDependencies struct {
 	Files filesystem.Dependencies
@@ -71,7 +84,7 @@ func (localCfgDir LocalConfigDir) FilePath() string {
 func (localCfgDir LocalConfigDir) CheckOrCreateConfigDir() error {
 	dir := localCfgDir.Implementation().Path
 
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
+	if _, err := statLocalConfigDirectory(systemLocalConfigDirectoryStatDependencies(), dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)
 		if err != nil {
 			return err

@@ -340,7 +340,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 38 are complete.
+Status: active. Moves 1 through 39 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -1680,6 +1680,46 @@ Commit: `fd45ebf`.
 The clean full audit from commit `fd45ebf` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
+
+Move 39 routes only `LocalConfigDir.CheckOrCreateConfigDir`'s direct
+`os.Stat(dir)` operation through the existing filesystem adapter. The exported
+method and every caller remain unchanged. It still evaluates exact
+`localCfgDir.Implementation().Path`, makes one stat attempt with that arbitrary
+string, and applies the same `os.IsNotExist(err)` decision. Only a not-exist
+error attempts exact `os.Mkdir(dir, 0755)` and returns its exact non-nil error;
+nil stat results, existing-directory results, and arbitrary other stat errors
+still return nil without a directory creation attempt. Production selects
+`filesystem.System()` only for a private complete local-config-directory-stat
+dependency, and the adapter preserves the exact `fs.FileInfo` and error.
+
+Four new top-level config contracts bring the suite to 282 tests. They prove
+complete system dependency selection and delivery, exact arbitrary directory
+paths without cleaning or normalization, a non-empty recorded stat population,
+one stat attempt, exact `fs.FileInfo` and error identity for nil, existing,
+not-exist, and arbitrary error results, safe zero behavior without
+developer-path access, and no unrelated adapter operation. The production-
+composition contract does not mutate the real filesystem or run another
+command. No adapter operation, established complete recording double,
+inventory label, seam driver, mutation harness, public API, caller, directory
+evaluation, `os.IsNotExist`, `os.Mkdir`, directory mode or error selection,
+file creation or closing, `TouchFile`, `UpdateLocalConfig`, context/profile
+behavior, ProjectConfig, CloudConfig, Maven, structurizr, tips, template, file,
+HTTP, Bitbucket, Wpost, or other completed effect changed. Q0.6 remains at 22
+guarded safe-writer sites, 17 write and 5 copy, with zero unsafe direct writes.
+Q1.3 moves from 28 of 45 to 27 of 44; Q1.1 stays at 8 untested packages; Q1.2
+stays zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8.
+
+The move-39 implementation gate passed focused config/filesystem/process and
+relevant command, context, file, template, Maven, tips, structurizr,
+Bitbucket, HTTP, Kibana, Spring, and shell package tests, API/CLI and subprocess
+compatibility, all four host flows, full preflight, test, install, the
+standalone 62-control launcher contract, uncached and race tests, vet, the
+15-control audit meta-suite, and empty-HOME count-2. A standalone launcher run
+and a later separate `make test-agent-start` run each hit the documented nested
+signal-interruption partial-raw-log timing flake; their immediate complete
+reruns and the full preflight run passed all 62 launcher controls. The focused
+seven-criterion audit exited 1 for documented findings, never 2, with four
+improved, two held, zero regressed, and one not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
