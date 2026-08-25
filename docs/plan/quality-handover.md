@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-25T20:43:55+02:00
+Generated: 2026-08-25T22:01:07+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -31,9 +31,9 @@ continuity implementation is 1b85711 and changes no Go quality denominator.
 
 `codex-dev-start.sh` remains NEXT while P3 is active and P4-P8 are queued in
 the machine-readable plan block. Its active archive is
-`docs/plan/agent-sessions/2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md`.
-The entry-close predecessor is answered history, and the reciprocal archive
-graph has exactly one NEXT tail.
+`docs/plan/agent-sessions/2026-08-25T220107+0200-resume-shell-unzip-archive-close.md`.
+The blocked archive-close predecessor is answered history, and the reciprocal
+archive graph has exactly one NEXT tail.
 
 Normal launch remains a Bash 3.2-compatible non-interactive supervisor with
 byte-exact archived prompts, unique external raw JSONL logs, structured stream
@@ -134,9 +134,11 @@ empty-HOME state stayed outside the measured tree.
 8. One explicit `make test-agent-start` run hit the documented nested
    signal/partial-log timing flake; the immediate full rerun passed all 62
    controls, as did the earlier standalone and preflight runs.
-9. The next isolated Unzip effect is the deferred direct archive
-   `_ = r.Close()` at `pkg/shell/command.go:74`. Reuse the existing
-   CloseReader boundary and keep the defer and ignored result exact.
+9. A fresh archive-close turn proved that `*zip.ReadCloser` implements
+   `io.Closer` but not the existing `io.ReadCloser` CloseReader parameter. It
+   reverted its attempted red contracts, left the worktree clean, and made no
+   commit. The user then explicitly authorized widening only that parameter to
+   `io.Closer`, with mechanical interface/helper/system/double updates.
 10. The deferred archive Close is absent from the current Q1.3 violation set.
     Regenerate the exact scanner result after moving it rather than assuming a
     denominator change.
@@ -148,10 +150,13 @@ empty-HOME state stayed outside the measured tree.
 ## Next Objective
 
 Move only the deferred archive-reader `_ = r.Close()` effect in private
-`pkg/shell.Unzip` through the existing
-`filesystem.CloseReader(dependencies.Files, r)` helper. Keep public Unzip,
-private `unzipDependencies`, production `filesystem.System()` selection, and
-the existing filesystem adapter unchanged.
+`pkg/shell.Unzip` through
+`filesystem.CloseReader(dependencies.Files, r)`. Widen the existing
+CloseReader parameter from `io.ReadCloser` to `io.Closer` and update its
+interface, zero-safe helper, exact system implementation, and complete doubles
+mechanically. Keep public Unzip, private `unzipDependencies`, production
+`filesystem.System()` selection, adapter behavior, and every other signature
+unchanged.
 
 Start red with focused private Unzip archive-close recording contracts. Prove
 the exact `*zip.ReadCloser` identity, one deferred request after every
@@ -168,8 +173,10 @@ the defer placement, anonymous function, ignored assignment, archive variable,
 surrounding open branch, traversal, and every earlier and later operation
 unchanged.
 
-Do not change OpenZipReader, CloseReader or its system implementation,
-entry-reader Close, output-file Close, Copy, entry open, output OpenFile,
+Do not change OpenZipReader, add another filesystem operation, or change
+CloseReader beyond the authorized `io.Closer` parameter widening and its
+mechanical system/helper/double updates. Do not change entry-reader Close,
+output-file Close, Copy, entry open, output OpenFile,
 directory creation, another unzip function, Run, Git, structurizr, plugin
 diagrams, Maven, HTTP, Spring, clock, server, public API, inventory, audit,
 mutation harnesses, or later-roadmap work. Expect Q0.6 to hold at 26 guarded
@@ -185,6 +192,10 @@ Completed from implementation commit
 - Valid red evidence: adapter tests failed to compile because CloseReader did
   not exist; private shell tests observed no adapter reader-close request and
   no injected error. No process or network request ran.
+- The first archive-close turn stopped before implementation because
+  `*zip.ReadCloser` does not implement `io.ReadCloser`; it reverted its focused
+  red contracts, passed the focused baseline tests, and made no commit. The
+  successor prompt records the user's `io.Closer` authorization.
 - Focused shell/filesystem/Spring and relevant process, Maven, command,
   context, config, HTTP, structurizr, profile, browser, tips, file, template,
   Bitbucket, Wpost, local-config, Kibana, and caller tests: PASS.
@@ -220,8 +231,10 @@ branch, HEAD, status, reciprocal links, and `./codex-dev-start.sh --check`.
 Begin red only for deferred archive Close, then finish with one implementation
 commit and one separate handoff-only commit.
 
-Stop before changing archive open, the CloseReader adapter, entry-reader or
-output-file Close, Copy, entry open, output OpenFile, directory creation,
+Stop before changing archive open, adding another filesystem operation, or
+changing CloseReader beyond the authorized `io.Closer` parameter widening and
+mechanical updates. Stop before changing entry-reader or output-file Close,
+Copy, entry open, output OpenFile, directory creation,
 another unzip function, Run, Git, structurizr, plugin diagrams, Maven, HTTP,
 Spring, clock, server, public API, inventory, Q1.4, P4, mutation, Docker,
 distribution, or publication. Stop on API/CLI change, comparable ratchet

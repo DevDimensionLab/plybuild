@@ -1055,9 +1055,9 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T204152+0200-migrate-shell-unzip-archive-close
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T200905+0200-migrate-shell-unzip-entry-close.md
+#|SESSION_ID=2026-08-25T220107+0200-resume-shell-unzip-archive-close
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T220107+0200-resume-shell-unzip-archive-close.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
@@ -1083,8 +1083,12 @@ exit 70
 #|deferred direct archive close with
 #|`defer func() { _ = filesystem.CloseReader(dependencies.Files, r) }()`.
 #|
-#|Reuse the existing `CloseReader(io.ReadCloser) error` interface operation,
-#|zero-safe helper, exact system implementation, and complete doubles unchanged.
+#|The user explicitly authorizes widening the existing
+#|`CloseReader(io.ReadCloser) error` parameter to `io.Closer`, with only the
+#|mechanically required updates to the interface, zero-safe helper, exact system
+#|implementation, and complete doubles. This authorization supersedes the prior
+#|restriction against changing that parameter type; preserve behavior and every
+#|other signature.
 #|It does not authorize another filesystem method, adapter reshaping, archive
 #|open, entry-reader Close, output-file Close, Copy, OpenFile, MkdirAll,
 #|entry-open injection, another unzip branch, shell Run or Git changes, process
@@ -1119,6 +1123,11 @@ exit 70
 #|measured population; regenerate the exact value without changing the scanner
 #|or broadening this move to force an expected number.
 #|
+#|A prior fresh turn established that `*zip.ReadCloser` implements `io.Closer`
+#|but not `io.ReadCloser`, reverted its attempted red contracts, left the
+#|worktree clean, and made no commit. Resume from that exact state using the
+#|user-authorized parameter widening above.
+#|
 #|The launcher has 62 Bash 3.2 contracts and supervises fresh non-interactive
 #|JSONL turns with external raw logs. It continues only after a successful
 #|structured stream and valid clean committed handoff. Preserve its stable
@@ -1149,8 +1158,10 @@ exit 70
 #|`t.TempDir()`; launch no process, touch no public network, and change no working
 #|directory.
 #|
-#|Do not change `OpenZipReader`, `filesystem.CloseReader` or its system
-#|implementation, entry-reader Close, `filesystem.Close` or output-file Close,
+#|Do not change `OpenZipReader`, add another filesystem operation, or change
+#|`filesystem.CloseReader` beyond the authorized `io.Closer` parameter widening
+#|and its mechanical system/helper/double updates. Do not change entry-reader
+#|Close, `filesystem.Close` or output-file Close,
 #|Copy, OpenFile, MkdirAll, entry open, shell Run, Git composition, structurizr
 #|command construction, Maven process composition, plugin diagrams, another
 #|adapter operation or caller, public API, or `.quality/inventory`.
@@ -1182,10 +1193,14 @@ exit 70
 #|
 #|2. Replace only `defer func() { _ = r.Close() }()` with
 #|   `defer func() { _ = filesystem.CloseReader(dependencies.Files, r) }()`.
+#|   Widen the existing CloseReader parameter from `io.ReadCloser` to
+#|   `io.Closer` and update its interface, zero-safe helper, exact system
+#|   implementation, and complete doubles mechanically.
 #|   Keep the defer placement, anonymous function, ignored assignment, archive
 #|   variable, surrounding open branch, traversal, and every earlier and later
-#|   operation unchanged. Do not change the filesystem adapter or doubles except
-#|   the focused private recording behavior needed by the red contracts.
+#|   operation unchanged. Do not otherwise change the filesystem adapter or
+#|   doubles except the focused private recording behavior needed by the red
+#|   contracts.
 #|
 #|3. Run focused shell/filesystem/Spring and relevant process, Maven, command,
 #|   context, config, HTTP, structurizr, profile, browser, tips, file, template,

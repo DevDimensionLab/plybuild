@@ -1,13 +1,13 @@
-# Agent Session: Migrate Shell Unzip Archive Close
+# Agent Session: Resume Shell Unzip Archive Close
 
-Status: ANSWERED - HISTORY
-Session ID: `2026-08-25T204152+0200-migrate-shell-unzip-archive-close`
-Created: `2026-08-25T20:41:52+02:00`
+Status: NEXT
+Session ID: `2026-08-25T220107+0200-resume-shell-unzip-archive-close`
+Created: `2026-08-25T22:01:07+02:00`
 Source: `codex-dev-start.sh`
-Prompt SHA-256: `7865b0caac88090284817a37cc96e9ef86c4f6b5a98fbc11ec0fc4bf68bba981`
-Previous: [2026-08-25T200905+0200-migrate-shell-unzip-entry-close.md](2026-08-25T200905+0200-migrate-shell-unzip-entry-close.md)
-Next: [2026-08-25T220107+0200-resume-shell-unzip-archive-close.md](2026-08-25T220107+0200-resume-shell-unzip-archive-close.md)
-Outcome: Blocked because `*zip.ReadCloser` implements `io.Closer`, not `io.ReadCloser`; the user authorized the successor session to widen only the existing CloseReader parameter to `io.Closer`.
+Prompt SHA-256: `5c3d557e6030a89417696d4787eb119a05674df0438fdcfb0c2fef21227b9966`
+Previous: [2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md](2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md)
+Next: none
+Outcome: pending
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -34,8 +34,12 @@ private Unzip archive-close recording contracts and replacement of the one
 deferred direct archive close with
 `defer func() { _ = filesystem.CloseReader(dependencies.Files, r) }()`.
 
-Reuse the existing `CloseReader(io.ReadCloser) error` interface operation,
-zero-safe helper, exact system implementation, and complete doubles unchanged.
+The user explicitly authorizes widening the existing
+`CloseReader(io.ReadCloser) error` parameter to `io.Closer`, with only the
+mechanically required updates to the interface, zero-safe helper, exact system
+implementation, and complete doubles. This authorization supersedes the prior
+restriction against changing that parameter type; preserve behavior and every
+other signature.
 It does not authorize another filesystem method, adapter reshaping, archive
 open, entry-reader Close, output-file Close, Copy, OpenFile, MkdirAll,
 entry-open injection, another unzip branch, shell Run or Git changes, process
@@ -70,6 +74,11 @@ set as well. Replacing it with the existing helper may change or hold the
 measured population; regenerate the exact value without changing the scanner
 or broadening this move to force an expected number.
 
+A prior fresh turn established that `*zip.ReadCloser` implements `io.Closer`
+but not `io.ReadCloser`, reverted its attempted red contracts, left the
+worktree clean, and made no commit. Resume from that exact state using the
+user-authorized parameter widening above.
+
 The launcher has 62 Bash 3.2 contracts and supervises fresh non-interactive
 JSONL turns with external raw logs. It continues only after a successful
 structured stream and valid clean committed handoff. Preserve its stable
@@ -100,8 +109,10 @@ when archive open fails. Any fixture write must stay guarded below
 `t.TempDir()`; launch no process, touch no public network, and change no working
 directory.
 
-Do not change `OpenZipReader`, `filesystem.CloseReader` or its system
-implementation, entry-reader Close, `filesystem.Close` or output-file Close,
+Do not change `OpenZipReader`, add another filesystem operation, or change
+`filesystem.CloseReader` beyond the authorized `io.Closer` parameter widening
+and its mechanical system/helper/double updates. Do not change entry-reader
+Close, `filesystem.Close` or output-file Close,
 Copy, OpenFile, MkdirAll, entry open, shell Run, Git composition, structurizr
 command construction, Maven process composition, plugin diagrams, another
 adapter operation or caller, public API, or `.quality/inventory`.
@@ -133,10 +144,14 @@ host acceptance flows.
 
 2. Replace only `defer func() { _ = r.Close() }()` with
    `defer func() { _ = filesystem.CloseReader(dependencies.Files, r) }()`.
+   Widen the existing CloseReader parameter from `io.ReadCloser` to
+   `io.Closer` and update its interface, zero-safe helper, exact system
+   implementation, and complete doubles mechanically.
    Keep the defer placement, anonymous function, ignored assignment, archive
    variable, surrounding open branch, traversal, and every earlier and later
-   operation unchanged. Do not change the filesystem adapter or doubles except
-   the focused private recording behavior needed by the red contracts.
+   operation unchanged. Do not otherwise change the filesystem adapter or
+   doubles except the focused private recording behavior needed by the red
+   contracts.
 
 3. Run focused shell/filesystem/Spring and relevant process, Maven, command,
    context, config, HTTP, structurizr, profile, browser, tips, file, template,
