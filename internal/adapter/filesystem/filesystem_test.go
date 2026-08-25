@@ -32,11 +32,13 @@ type recordingFilesystem struct {
 	operations          []recordedFilesystemOperation
 	globMatches         []string
 	readData            []byte
+	readDirEntries      []fs.FileInfo
 	fileInfo            fs.FileInfo
 	walkInputs          []recordedWalkInput
 	walkCallbackResults []error
 	globErr             error
 	readErr             error
+	readDirErr          error
 	statErr             error
 	mkdirErr            error
 	writeErr            error
@@ -51,6 +53,11 @@ type recordingFilesystem struct {
 func (recording *recordingFilesystem) ReadFile(path string) ([]byte, error) {
 	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "read", Path: path})
 	return append([]byte(nil), recording.readData...), recording.readErr
+}
+
+func (recording *recordingFilesystem) ReadDir(path string) ([]fs.FileInfo, error) {
+	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "read-dir", Path: path})
+	return append([]fs.FileInfo{}, recording.readDirEntries...), recording.readDirErr
 }
 
 func (recording *recordingFilesystem) Stat(path string) (fs.FileInfo, error) {
@@ -138,6 +145,9 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	}
 	if matches, err := Glob(Dependencies{}, filepath.Join(target, "*")); matches != nil || !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value glob dependency returned (%#v, %v), want (nil, %v)", matches, err, ErrNoFilesystem)
+	}
+	if entries, err := ReadDir(Dependencies{}, target); entries != nil || !errors.Is(err, ErrNoFilesystem) {
+		t.Fatalf("zero-value directory-read dependency returned (%#v, %v), want (nil, %v)", entries, err, ErrNoFilesystem)
 	}
 	callbackCalls := 0
 	if err := Walk(Dependencies{}, target, func(string, fs.FileInfo, error) error {
@@ -288,6 +298,63 @@ func TestGlobPassesExactPatternOrderedMatchesAndExactDependencyError(t *testing.
 	want := []recordedFilesystemOperation{{Name: "glob", Path: pattern}}
 	if !reflect.DeepEqual(recording.operations, want) {
 		t.Fatalf("glob dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
+	}
+}
+
+func TestReadDirPassesExactPathOrderedEntriesAndExactDependencyError(t *testing.T) {
+	path := "/complete directory-read/path with spaces"
+	entries := []fs.FileInfo{
+		staticFileInfo{name: "z-first.iml", size: 41, mode: 0751},
+		staticFileInfo{name: "a-second.idea", size: 83, mode: fs.ModeDir | 0705},
+	}
+	readError := errors.New("complete directory-read dependency error")
+	recording := &recordingFilesystem{readDirEntries: entries, readDirErr: readError}
+	dependencies := Dependencies{FileSystem: recording}
+
+	actual, err := ReadDir(dependencies, path)
+
+	if err != readError {
+		t.Fatalf("directory-read error was %v, want exact dependency error %v", err, readError)
+	}
+	if !reflect.DeepEqual(actual, entries) {
+		t.Fatalf("directory-read entries were %#v, want ordered metadata %#v", actual, entries)
+	}
+	want := []recordedFilesystemOperation{{Name: "read-dir", Path: path}}
+	if !reflect.DeepEqual(recording.operations, want) {
+		t.Fatalf("directory-read dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
+	}
+}
+
+func TestSystemReadDirPreservesIoutilFilenameSortingAndMetadata(t *testing.T) {
+	root := t.TempDir()
+	last := filepath.Join(root, "z-last.iml")
+	first := filepath.Join(root, "a-first.txt")
+	directory := filepath.Join(root, "m-directory.idea")
+	if err := testutil.WriteFileOutsideWorkingTree(last, []byte("last"), 0641); err != nil {
+		t.Fatalf("create final directory-read fixture: %v", err)
+	}
+	if err := testutil.WriteFileOutsideWorkingTree(first, []byte("first bytes"), 0751); err != nil {
+		t.Fatalf("create first directory-read fixture: %v", err)
+	}
+	if err := MkdirAll(System(), directory, 0705); err != nil {
+		t.Fatalf("create directory-read fixture directory: %v", err)
+	}
+
+	entries, err := ReadDir(System(), root)
+
+	if err != nil {
+		t.Fatalf("system directory-read returned an error: %v", err)
+	}
+	wantNames := []string{"a-first.txt", "m-directory.idea", "z-last.iml"}
+	names := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	if !reflect.DeepEqual(names, wantNames) {
+		t.Fatalf("system directory-read names were %#v, want filename-sorted %#v", names, wantNames)
+	}
+	if entries[0].Size() != int64(len("first bytes")) || entries[0].IsDir() || !entries[1].IsDir() || entries[2].Size() != int64(len("last")) {
+		t.Fatalf("system directory-read metadata was %#v", entries)
 	}
 }
 

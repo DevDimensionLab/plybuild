@@ -68,6 +68,10 @@ func (*recordingBitbucketRepositoryFilesystem) ReadFile(string) ([]byte, error) 
 	return nil, errors.New("unexpected Bitbucket repository read")
 }
 
+func (*recordingBitbucketRepositoryFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
+	return nil, errors.New("unexpected Bitbucket repository read directory")
+}
+
 func (recording *recordingBitbucketRepositoryFilesystem) Stat(path string) (fs.FileInfo, error) {
 	recording.statPaths = append(recording.statPaths, path)
 	return nil, recording.statErr

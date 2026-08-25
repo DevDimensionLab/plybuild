@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -22,6 +23,7 @@ type File interface {
 // FileSystem performs the filesystem operations used by a migrated flow.
 type FileSystem interface {
 	ReadFile(string) ([]byte, error)
+	ReadDir(string) ([]fs.FileInfo, error)
 	Stat(string) (fs.FileInfo, error)
 	MkdirAll(string, fs.FileMode) error
 	WriteFile(string, []byte, fs.FileMode) error
@@ -48,6 +50,14 @@ func ReadFile(dependencies Dependencies, path string) ([]byte, error) {
 		return nil, ErrNoFilesystem
 	}
 	return dependencies.FileSystem.ReadFile(path)
+}
+
+// ReadDir passes the complete directory path to the configured dependency.
+func ReadDir(dependencies Dependencies, path string) ([]fs.FileInfo, error) {
+	if dependencies.FileSystem == nil {
+		return nil, ErrNoFilesystem
+	}
+	return dependencies.FileSystem.ReadDir(path)
 }
 
 // Stat passes the complete path to the configured dependency.
@@ -158,6 +168,10 @@ type systemFilesystem struct{}
 
 func (systemFilesystem) ReadFile(path string) ([]byte, error) {
 	return os.ReadFile(path)
+}
+
+func (systemFilesystem) ReadDir(path string) ([]fs.FileInfo, error) {
+	return ioutil.ReadDir(path)
 }
 
 func (systemFilesystem) Stat(path string) (fs.FileInfo, error) {
