@@ -382,6 +382,22 @@ P3.49 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
+P3.50 focused implementation measurement:
+
+| Signal | P3.50 | Interpretation |
+| --- | ---: | --- |
+| Test functions | 339 | Three focused shell unzip copy contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The archive fixture remains guarded and the copy double writes only in memory. |
+| Guarded safe-writer sites | 25 | The population remains 20 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in an already-tested package. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 11 / 32 | The direct `io.Copy` call is gone; the scanner still classifies the replacement adapter request because its opened file and archive reader arguments retain filesystem-effect provenance. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Claim phrases in 64 Markdown files | 0 | Q3.4 remains held. |
+| Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -2447,6 +2463,56 @@ Commit: `da7eebf`.
 The clean full audit from commit `da7eebf` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
+
+Move 50 changes only the file-entry payload-transfer expression in private
+shell unzip flow from direct `io.Copy(outFile, rc)` to the existing
+`filesystem.Copy(dependencies.Files, outFile, rc)` forwarding helper. The
+public signature, complete private dependency composition, production
+`filesystem.System()` selection, archive open and close, traversal, zip-slip
+check, filename append order, directory short-circuit, parent creation,
+output-file open path, flags, and mode, entry open, one transfer attempt per
+reached file entry, ignored transfer count and error, output-file then entry
+close attempts, later traversal, partial results, and every earlier error and
+close error identity and precedence remain unchanged. No filesystem interface,
+adapter implementation, dependency selection, caller, other unzip branch, or
+inventory entry changed.
+
+Three focused top-level shell contracts bring the suite to 339 tests. The
+private unzip filesystem double now records only its existing MkdirAll and
+OpenFile requests plus the established Copy request, retaining the exact
+opened destination identity and reading delivered source bytes only into
+memory. The contracts prove exact ordered arbitrary archive-entry bytes, one
+copy request for every reached file entry, parent-create, file-open, entry-open,
+then copy order, arbitrary ignored copy counts and errors, continued output
+and entry closes and later entry traversal, no destination write by the
+double, no copy for directories or earlier failures, rejection of an empty
+copy population, complete dependency preservation, and absence of unrelated
+filesystem requests. The guarded archive fixture stays below `t.TempDir()`;
+the contracts launch no process, touch no network, and change no working
+directory.
+
+Q0.6 holds at 25 guarded safe-writer sites, 20 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2
+stays zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8. The focused audit
+measures Q1.3 at 11 of 32 rather than the expected 10 of 31: the direct
+`io.Copy` identity leaves, but the import-aware scanner continues to classify
+the adapter request at the same caller line because its opened destination and
+archive reader arguments retain filesystem-effect provenance. Changing that
+scanner, the adapter contract, archive-open injection, or either close is
+outside this move, so the measured ratchet holds without regression.
+
+The move-50 implementation gate passes focused shell/filesystem/Spring and
+relevant process, command, context, config, HTTP, Maven, structurizr, profile,
+browser, tips, file, template, Bitbucket, Wpost, local-config, Kibana, and
+caller package tests; API/CLI and subprocess compatibility; all four host
+flows and their meta-contracts; full preflight, test, install, the standalone
+62-control launcher contract, uncached and race tests, vet, the pinned linter
+with zero issues, the 15-control audit meta-suite, and empty-HOME count-2.
+Generated audit reports and Go and linter caches stay outside the measured
+tree; generated compatibility reports are removed before the clean checkpoint
+audit. The valid focused seven-criterion audit exits 1 for the documented
+Q1.3 finding, with four improved, two held, zero regressed, and one
+not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

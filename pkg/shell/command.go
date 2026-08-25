@@ -7,7 +7,6 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/logger"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -107,7 +106,7 @@ func unzipWithDependencies(dependencies unzipDependencies, src string, dest stri
 			return filenames, err
 		}
 
-		_, _ = io.Copy(outFile, rc)
+		_, _ = filesystem.Copy(dependencies.Files, outFile, rc)
 
 		err = outFile.Close()
 		if err != nil {
