@@ -1,13 +1,13 @@
 # Agent Session: Migrate Exported File Grep Recursive Walk
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T052243+0200-migrate-file-grep-recursive`
 Created: `2026-08-25T05:22:43+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `b18512adb495c0d526d381d2ac6ff36cd68c96cabe07913fa9854d034ef87a08`
 Previous: [2026-08-25T044850+0200-migrate-file-find-all.md](2026-08-25T044850+0200-migrate-file-find-all.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T055100+0200-migrate-file-ide-read-dir.md](2026-08-25T055100+0200-migrate-file-ide-read-dir.md)
+Outcome: Completed in implementation commit `d03e96d649925d54634d6625870d9d8591df695e`; the clean checkpoint audit exited 1 for 16 documented findings, never 2, with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
