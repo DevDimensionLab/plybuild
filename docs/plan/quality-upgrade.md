@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `224a691`.
+Last measured checkpoint: 2026-08-25, commit `549685d`.
 
 ## Objective
 
@@ -944,7 +944,7 @@ find-first walk moves behind the adapter while the system adapter contributes
 the corresponding already-declared boundary effect. Q1.2 stays zero, Q1.4
 stays 7 of 8, and exact Q2.1 stays 0 of 8.
 
-Commit: recorded by the containing implementation commit.
+Commit: `549685d`.
 
 The move-24 implementation gate passed focused filesystem/file contracts, both
 caller packages, adjacent complete-double packages, API/CLI and subprocess
@@ -955,8 +955,9 @@ hit the previously observed partial-raw-log signal-fixture flake; the
 standalone, preflight, and immediate complete `make test` rerun passed all 62
 launcher controls. The focused seven-criterion audit exited 1 for documented
 findings, never 2, with four improved, two held, zero regressed, and one
-not-comparable ratchet. The clean full audit will be recorded from the focused
-implementation commit.
+not-comparable ratchet. The clean full audit at `549685d` exited 1 for 16
+documented findings, never 2, with L0 8 of 8, five improved, two held, zero
+regressed, one not-comparable ratchet, and zero dirty paths.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
