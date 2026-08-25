@@ -18,6 +18,10 @@ func (*recordingFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected archive open")
 }
 
+func (*recordingFilesystem) Close(File) error {
+	return errors.New("unexpected close")
+}
+
 type recordedFilesystemOperation struct {
 	Name        string
 	Path        string

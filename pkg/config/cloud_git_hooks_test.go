@@ -19,6 +19,10 @@ func (*recordingGitHookFilesystem) OpenZipReader(string) (*zip.ReadCloser, error
 	return nil, errors.New("unexpected git-hook archive open")
 }
 
+func (*recordingGitHookFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected Git-hook-files close")
+}
+
 type recordingGitHookFilesystem struct {
 	readDirPaths     []string
 	readDirEntries   []fs.FileInfo

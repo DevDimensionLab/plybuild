@@ -18,6 +18,10 @@ func (*recordingGraphStylesFilesystem) OpenZipReader(string) (*zip.ReadCloser, e
 	return nil, errors.New("unexpected graph-styles archive open")
 }
 
+func (recording *recordingGraphStylesFilesystem) Close(filesystem.File) error {
+	return recording.unexpected("close")
+}
+
 type recordedGraphStylesWrite struct {
 	path string
 	data []byte

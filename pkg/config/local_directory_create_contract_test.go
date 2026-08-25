@@ -17,6 +17,10 @@ func (*recordingLocalConfigDirectoryCreateFilesystem) OpenZipReader(string) (*zi
 	return nil, errors.New("unexpected local-config directory-create archive open")
 }
 
+func (recording *recordingLocalConfigDirectoryCreateFilesystem) Close(filesystem.File) error {
+	return recording.unexpected("close")
+}
+
 type recordedLocalConfigDirectoryCreate struct {
 	path string
 	mode fs.FileMode

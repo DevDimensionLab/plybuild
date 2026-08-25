@@ -19,6 +19,10 @@ func (*recordingIntellijFilesystem) OpenZipReader(string) (*zip.ReadCloser, erro
 	return nil, errors.New("unexpected IntelliJ archive open")
 }
 
+func (*recordingIntellijFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected non-recursive IDE close")
+}
+
 type recordingIntellijFilesystem struct {
 	readDirPaths   []string
 	readDirEntries []fs.FileInfo

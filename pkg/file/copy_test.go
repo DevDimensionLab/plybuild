@@ -23,6 +23,10 @@ func (*recordingCopyFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected copy archive open")
 }
 
+func (*recordingCopyFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected template file copy close")
+}
+
 type recordedCopyOperation struct {
 	Name string
 	Path string

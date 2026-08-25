@@ -107,7 +107,7 @@ func unzipWithDependencies(dependencies unzipDependencies, src string, dest stri
 
 		_, _ = filesystem.Copy(dependencies.Files, outFile, rc)
 
-		err = outFile.Close()
+		err = filesystem.Close(dependencies.Files, outFile)
 		if err != nil {
 			return filenames, err
 		}

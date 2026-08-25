@@ -19,6 +19,10 @@ func (*recordingRenderFilesystem) OpenZipReader(string) (*zip.ReadCloser, error)
 	return nil, errors.New("unexpected render archive open")
 }
 
+func (*recordingRenderFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected render close")
+}
+
 type recordedRenderOperation struct {
 	name string
 	path string

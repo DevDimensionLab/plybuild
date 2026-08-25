@@ -16,7 +16,9 @@ import (
 )
 
 type recordedArchiveFile struct {
-	closed bool
+	closed     bool
+	closeCalls int
+	closeErr   error
 }
 
 func (*recordedArchiveFile) Write(data []byte) (int, error) {
@@ -24,8 +26,9 @@ func (*recordedArchiveFile) Write(data []byte) (int, error) {
 }
 
 func (file *recordedArchiveFile) Close() error {
+	file.closeCalls++
 	file.closed = true
-	return nil
+	return file.closeErr
 }
 
 type recordingArchiveFilesystem struct {
@@ -35,9 +38,11 @@ type recordingArchiveFilesystem struct {
 	data         []byte
 	file         *recordedArchiveFile
 	zipReader    *zip.ReadCloser
+	closedFiles  []File
 	createErr    error
 	openZipError error
 	copyErr      error
+	closeErr     error
 }
 
 func (*recordingArchiveFilesystem) WorkingDirectory() (string, error) {
@@ -120,11 +125,78 @@ func (recording *recordingArchiveFilesystem) Copy(destination File, source io.Re
 	return int64(len(data)), recording.copyErr
 }
 
+func (recording *recordingArchiveFilesystem) Close(file File) error {
+	recording.closedFiles = append(recording.closedFiles, file)
+	return recording.closeErr
+}
+
 func (recording *recordingArchiveFilesystem) assertedZipPaths() ([]string, error) {
 	if len(recording.zipPaths) == 0 {
 		return nil, errors.New("recorded archive-open path population is empty")
 	}
 	return recording.zipPaths, nil
+}
+
+func (recording *recordingArchiveFilesystem) assertedClosedFiles() ([]File, error) {
+	if len(recording.closedFiles) == 0 {
+		return nil, errors.New("recorded archive file-close population is empty")
+	}
+	return recording.closedFiles, nil
+}
+
+func TestCloseDependenciesDefaultToSafeNoFileClose(t *testing.T) {
+	file := &recordedArchiveFile{}
+
+	err := Close(Dependencies{}, file)
+
+	if err != ErrNoFilesystem {
+		t.Fatalf("zero-value file close returned %v, want exact %v", err, ErrNoFilesystem)
+	}
+	if file.closeCalls != 0 || file.closed {
+		t.Fatalf("zero-value file close invoked the supplied file %d times (closed=%t)", file.closeCalls, file.closed)
+	}
+}
+
+func TestClosePassesExactFileIdentityOnceAndReturnsExactDependencyError(t *testing.T) {
+	file := &recordedArchiveFile{}
+	closeError := errors.New("complete file-close dependency error")
+	recording := &recordingArchiveFilesystem{closeErr: closeError}
+
+	err := Close(Dependencies{FileSystem: recording}, file)
+
+	if err != closeError {
+		t.Fatalf("file-close error was %v, want exact dependency error %v", err, closeError)
+	}
+	files, populationErr := recording.assertedClosedFiles()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if len(files) != 1 || files[0] != file {
+		t.Fatalf("file-close dependency received %#v, want one exact file identity %p", files, file)
+	}
+	if file.closeCalls != 0 || file.closed {
+		t.Fatalf("file-close forwarder bypassed its dependency and closed the file %d times", file.closeCalls)
+	}
+}
+
+func TestSystemCloseInvokesExactFileOnceAndReturnsExactError(t *testing.T) {
+	closeError := errors.New("complete system file-close error")
+	file := &recordedArchiveFile{closeErr: closeError}
+
+	err := Close(System(), file)
+
+	if err != closeError || file.closeCalls != 1 || !file.closed {
+		t.Fatalf("system file close returned %v after %d attempts (closed=%t), want exact %v after one attempt",
+			err, file.closeCalls, file.closed, closeError)
+	}
+}
+
+func TestRecordedCloseRejectsEmptyFilePopulation(t *testing.T) {
+	recording := &recordingArchiveFilesystem{}
+
+	if _, err := recording.assertedClosedFiles(); err == nil {
+		t.Fatal("empty recorded file-close population passed")
+	}
 }
 
 func TestOpenZipReaderDependenciesDefaultToSafeNoArchiveOpen(t *testing.T) {

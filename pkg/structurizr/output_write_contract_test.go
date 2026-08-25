@@ -17,6 +17,10 @@ func (*recordingStructurizrOutputFilesystem) OpenZipReader(string) (*zip.ReadClo
 	return nil, errors.New("unexpected structurizr archive open")
 }
 
+func (recording *recordingStructurizrOutputFilesystem) Close(filesystem.File) error {
+	return recording.unexpected("close")
+}
+
 type recordedStructurizrOutputWrite struct {
 	path string
 	data []byte

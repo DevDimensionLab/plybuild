@@ -23,6 +23,10 @@ func (*recordingBitbucketRepositoryFilesystem) OpenZipReader(string) (*zip.ReadC
 	return nil, errors.New("unexpected Bitbucket archive open")
 }
 
+func (*recordingBitbucketRepositoryFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected Bitbucket repository close")
+}
+
 type recordedBitbucketQuery struct {
 	Request     httpclient.Request
 	Destination interface{}

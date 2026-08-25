@@ -20,6 +20,10 @@ func (*recordingFilteredWalkFilesystem) OpenZipReader(string) (*zip.ReadCloser, 
 	return nil, errors.New("unexpected filtered-template archive open")
 }
 
+func (*recordingFilteredWalkFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected filtered-template close")
+}
+
 type recordedFilteredWalkCallback struct {
 	path string
 	info fs.FileInfo

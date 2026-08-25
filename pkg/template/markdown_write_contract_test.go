@@ -18,6 +18,10 @@ func (*recordingTemplateMarkdownFilesystem) OpenZipReader(string) (*zip.ReadClos
 	return nil, errors.New("unexpected template-markdown archive open")
 }
 
+func (*recordingTemplateMarkdownFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected template-markdown close")
+}
+
 type recordedTemplateMarkdownWrite struct {
 	path string
 	data []byte

@@ -20,6 +20,10 @@ func (*recordingTipsShowReadFilesystem) OpenZipReader(string) (*zip.ReadCloser, 
 	return nil, errors.New("unexpected tips-show archive open")
 }
 
+func (recording *recordingTipsShowReadFilesystem) Close(filesystem.File) error {
+	return recording.unexpected("close")
+}
+
 type recordingTipsShowReadFilesystem struct {
 	readPaths            []string
 	readData             []byte

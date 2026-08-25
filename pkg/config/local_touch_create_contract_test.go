@@ -17,6 +17,10 @@ func (*recordingLocalConfigTouchCreateFilesystem) OpenZipReader(string) (*zip.Re
 	return nil, errors.New("unexpected local-config touch-create archive open")
 }
 
+func (recording *recordingLocalConfigTouchCreateFilesystem) Close(filesystem.File) error {
+	return recording.unexpected("close")
+}
+
 type recordedLocalConfigTouchCreateFile struct {
 	closeCalls int
 	closeErr   error

@@ -19,6 +19,10 @@ func (*recordingExamplesFilesystem) OpenZipReader(string) (*zip.ReadCloser, erro
 	return nil, errors.New("unexpected examples archive open")
 }
 
+func (*recordingExamplesFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected Examples close")
+}
+
 type recordingExamplesFilesystem struct {
 	readDirPaths     []string
 	readDirEntries   []fs.FileInfo

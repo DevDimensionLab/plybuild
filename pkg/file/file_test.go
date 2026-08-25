@@ -65,6 +65,54 @@ func (*recordingFindAllFilesystem) OpenZipReader(string) (*zip.ReadCloser, error
 	return nil, errors.New("unexpected find-all archive open")
 }
 
+func (*recordingFileExistenceFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected file-existence close")
+}
+
+func (*recordingFileReadFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected file-read close")
+}
+
+func (*recordingFileOverwriteFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected file-overwrite close")
+}
+
+func (*recordingFileCreateFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected file-create close")
+}
+
+func (*recordingDirectoryCreateFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected directory-create close")
+}
+
+func (*recordingFileOpenFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected append-open close")
+}
+
+func (*recordingFileDeleteFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected single-file-delete close")
+}
+
+func (*recordingFileDeleteAllFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected recursive-delete close")
+}
+
+func (*recordingFileMoveFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected file-move close")
+}
+
+func (*recordingClearDirFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected clear-directory close")
+}
+
+func (*recordingFindFirstFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected find-first close")
+}
+
+func (*recordingFindAllFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected find-all close")
+}
+
 type recordingFileExistenceFilesystem struct {
 	statPaths []string
 	statInfo  fs.FileInfo

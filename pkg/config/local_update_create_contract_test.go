@@ -17,6 +17,10 @@ func (*recordingLocalConfigUpdateCreateFilesystem) OpenZipReader(string) (*zip.R
 	return nil, errors.New("unexpected local-config update-create archive open")
 }
 
+func (recording *recordingLocalConfigUpdateCreateFilesystem) Close(filesystem.File) error {
+	return recording.unexpected("close")
+}
+
 type recordedLocalConfigUpdateCreateFile struct {
 	closeCalls int
 	closeErr   error

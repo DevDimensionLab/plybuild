@@ -22,6 +22,10 @@ func (*recordingTemplatesFilesystem) OpenZipReader(string) (*zip.ReadCloser, err
 	return nil, errors.New("unexpected templates archive open")
 }
 
+func (*recordingTemplatesFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected Templates close")
+}
+
 type recordedTemplatesCallback struct {
 	path string
 	info fs.FileInfo

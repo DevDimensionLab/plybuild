@@ -19,6 +19,10 @@ func (*recordingProjectConfigFilesystem) OpenZipReader(string) (*zip.ReadCloser,
 	return nil, errors.New("unexpected project-config archive open")
 }
 
+func (*recordingProjectConfigFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected project-config close")
+}
+
 var _ ProjectConfig = (*ProjectConfiguration)(nil)
 
 type recordedProjectConfigWrite struct {

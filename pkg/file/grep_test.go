@@ -17,6 +17,10 @@ func (*recordingGrepRecursiveFilesystem) OpenZipReader(string) (*zip.ReadCloser,
 	return nil, errors.New("unexpected grep archive open")
 }
 
+func (*recordingGrepRecursiveFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected recursive-grep close")
+}
+
 type recordedGrepRecursiveCallback struct {
 	path string
 	info fs.FileInfo

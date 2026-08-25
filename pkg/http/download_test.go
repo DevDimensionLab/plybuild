@@ -25,6 +25,10 @@ func (*recordingDownloadFilesystem) OpenZipReader(string) (*zip.ReadCloser, erro
 	return nil, errors.New("unexpected download archive open")
 }
 
+func (*recordingDownloadFilesystem) Close(filesystem.File) error {
+	return errors.New("unexpected download close")
+}
+
 type recordedDownloadFile struct {
 	lifecycle *[]string
 	closed    bool

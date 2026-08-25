@@ -424,6 +424,22 @@ P3.51 clean checkpoint:
 | Claim phrases in 65 Markdown files | 0 | Q3.4 remains held. |
 | Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
+P3.52 focused implementation measurement:
+
+| Signal | P3.52 | Interpretation |
+| --- | ---: | --- |
+| Test functions | 352 | Six focused filesystem-adapter and private shell unzip output-close contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The archive fixture remains guarded below `t.TempDir()` and the injected pipe files do not target the repository. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in already-tested packages. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 10 / 32 | The direct output-file Close is gone; the scanner still classifies the replacement adapter request because its opened-file argument retains filesystem-effect provenance. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Claim phrases in 66 Markdown files | 0 | Q3.4 remains held. |
+| Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -2602,6 +2618,59 @@ Commit: `2f0a072`.
 The clean full audit from commit `2f0a072` exits 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passes.
+
+Move 52 changes only the output-file close request in private shell unzip flow
+from direct `err = outFile.Close()` to
+`err = filesystem.Close(dependencies.Files, outFile)`. The existing filesystem
+interface gains only `Close(filesystem.File) error`, its zero-safe forwarding
+helper, and the exact `file.Close()` system implementation; every complete
+filesystem double receives the mechanical method addition. The public
+`Unzip(string, string) ([]string, error)` signature, complete private
+dependency composition, production `filesystem.System()` selection, exact
+opened output identity, archive open and deferred close, traversal, zip-slip
+check, filename append order, directory short-circuit, parent creation,
+output-file open path, flags, and mode, entry open, one payload attempt per
+reached file, the output-close assignment and following error branch, entry
+close, later traversal, partial results, and all established error and close
+precedence remain unchanged. No archive-open, archive-close, entry-reader
+close, Copy, OpenFile, MkdirAll, entry-open, caller, other unzip branch,
+inventory entry, or other production effect changes.
+
+Six focused top-level contracts bring the suite to 352 tests. The adapter
+contracts prove zero-safe behavior without closing a developer-supplied file,
+exact file identity and one request, exact dependency error, exact system
+close invocation and error, and rejection of an empty close population. The
+private unzip double records the exact opened output identity after its
+already-established Copy request. Its contracts prove one output-close request
+per reached file, Copy-before-close order, exact close-error and partial
+filenames, successful entry close and later traversal, error short-circuit
+before entry close and later entries, complete dependency preservation,
+rejection of an empty output-close population, and absence of unrelated
+filesystem requests. The guarded archive fixture stays below `t.TempDir()`;
+the focused contracts launch no process, touch no network, and change no
+working directory.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2
+stays zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8. The focused audit
+measures Q1.3 at 10 of 32: the direct output-file `Close` identity leaves, but
+the import-aware scanner continues to classify the adapter request at the same
+caller line because its opened-file argument retains filesystem-effect
+provenance. The exact system implementation is inside the declared filesystem
+adapter, so the denominator and violation count both hold. The scanner and
+inventory remain unchanged.
+
+The move-52 implementation gate passes focused shell/filesystem/Spring and
+relevant process, command, context, config, HTTP, Maven, structurizr, profile,
+browser, tips, file, template, Bitbucket, Wpost, local-config, Kibana, and
+caller package tests; API/CLI and subprocess compatibility; all four host
+flows and their meta-contracts; full preflight, test, install, the standalone
+62-control launcher contract, uncached and race tests, vet, the pinned linter
+with zero issues, the 15-control audit meta-suite, and empty-HOME count-2.
+Generated audit reports, compatibility reports, Go caches, and linter caches
+stay outside the measured tree. The valid focused seven-criterion audit exits
+1 for the documented Q1.3 finding, never 2, with four improved, two held, zero
+regressed, and one not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

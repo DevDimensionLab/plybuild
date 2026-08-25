@@ -18,6 +18,10 @@ func (*recordingLocalConfigDirectoryStatFilesystem) OpenZipReader(string) (*zip.
 	return nil, errors.New("unexpected local-config directory-stat archive open")
 }
 
+func (recording *recordingLocalConfigDirectoryStatFilesystem) Close(filesystem.File) error {
+	return recording.unexpected("close")
+}
+
 type recordingLocalConfigDirectoryStatFilesystem struct {
 	statPaths            []string
 	statInfo             fs.FileInfo

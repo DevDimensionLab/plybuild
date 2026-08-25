@@ -19,6 +19,10 @@ func (*recordingSpringArchivePathFilesystem) OpenZipReader(string) (*zip.ReadClo
 	return nil, errors.New("unexpected Spring archive open")
 }
 
+func (recording *recordingSpringArchivePathFilesystem) Close(filesystem.File) error {
+	return recording.unexpected("close")
+}
+
 type recordingSpringArchivePathFilesystem struct {
 	workingDirectory         string
 	workingDirectoryErr      error

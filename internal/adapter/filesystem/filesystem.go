@@ -40,6 +40,7 @@ type FileSystem interface {
 	Walk(string, filepath.WalkFunc) error
 	Create(string) (File, error)
 	Copy(File, io.Reader) (int64, error)
+	Close(File) error
 }
 
 // Dependencies contains the filesystem effect used by a caller. Its zero
@@ -196,6 +197,14 @@ func Copy(dependencies Dependencies, destination File, source io.Reader) (int64,
 	return dependencies.FileSystem.Copy(destination, source)
 }
 
+// Close passes the exact file to the configured dependency.
+func Close(dependencies Dependencies, file File) error {
+	if dependencies.FileSystem == nil {
+		return ErrNoFilesystem
+	}
+	return dependencies.FileSystem.Close(file)
+}
+
 // System returns the production dependency that uses the operating-system filesystem.
 func System() Dependencies {
 	return Dependencies{FileSystem: systemFilesystem{}}
@@ -269,4 +278,8 @@ func (systemFilesystem) Create(path string) (File, error) {
 
 func (systemFilesystem) Copy(destination File, source io.Reader) (int64, error) {
 	return io.Copy(destination, source)
+}
+
+func (systemFilesystem) Close(file File) error {
+	return file.Close()
 }
