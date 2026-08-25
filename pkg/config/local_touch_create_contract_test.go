@@ -47,6 +47,10 @@ func (recording *recordingLocalConfigTouchCreateFilesystem) Stat(string) (fs.Fil
 	return nil, recording.unexpected("stat")
 }
 
+func (recording *recordingLocalConfigTouchCreateFilesystem) Mkdir(string, fs.FileMode) error {
+	return recording.unexpected("mkdir")
+}
+
 func (recording *recordingLocalConfigTouchCreateFilesystem) MkdirAll(string, fs.FileMode) error {
 	return recording.unexpected("mkdir")
 }

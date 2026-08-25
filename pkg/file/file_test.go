@@ -174,6 +174,10 @@ func (*recordingFileReadFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-read stat")
 }
 
+func (*recordingFileReadFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected file-read mkdir")
+}
+
 func (*recordingFileReadFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected file-read mkdir")
 }
@@ -228,6 +232,10 @@ func (recording *recordingFileReadFilesystem) assertedReadPaths() ([]string, err
 func (recording *recordingFileExistenceFilesystem) Stat(path string) (fs.FileInfo, error) {
 	recording.statPaths = append(recording.statPaths, path)
 	return recording.statInfo, recording.statErr
+}
+
+func (*recordingFileExistenceFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected file-existence mkdir")
 }
 
 func (*recordingFileExistenceFilesystem) MkdirAll(string, fs.FileMode) error {
@@ -291,6 +299,10 @@ func (*recordingFileOverwriteFilesystem) ReadDir(string) ([]fs.FileInfo, error) 
 
 func (*recordingFileOverwriteFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-overwrite stat")
+}
+
+func (*recordingFileOverwriteFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected file-overwrite mkdir")
 }
 
 func (*recordingFileOverwriteFilesystem) MkdirAll(string, fs.FileMode) error {
@@ -361,6 +373,10 @@ func (*recordingFileCreateFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-create stat")
 }
 
+func (*recordingFileCreateFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected file-create mkdir")
+}
+
 func (*recordingFileCreateFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected file-create mkdir")
 }
@@ -428,6 +444,10 @@ func (*recordingDirectoryCreateFilesystem) ReadDir(string) ([]fs.FileInfo, error
 func (recording *recordingDirectoryCreateFilesystem) Stat(path string) (fs.FileInfo, error) {
 	recording.statPaths = append(recording.statPaths, path)
 	return recording.statInfo, recording.statErr
+}
+
+func (*recordingDirectoryCreateFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected single-directory mkdir")
 }
 
 func (recording *recordingDirectoryCreateFilesystem) MkdirAll(path string, mode fs.FileMode) error {
@@ -502,6 +522,10 @@ func (recording *recordingFileOpenFilesystem) Stat(path string) (fs.FileInfo, er
 	return recording.statInfo, recording.statErr
 }
 
+func (*recordingFileOpenFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected append-open mkdir")
+}
+
 func (*recordingFileOpenFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected append-open mkdir")
 }
@@ -571,6 +595,10 @@ func (*recordingFileDeleteFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected single-file-delete stat")
 }
 
+func (*recordingFileDeleteFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected single-file-delete mkdir")
+}
+
 func (*recordingFileDeleteFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected single-file-delete mkdir")
 }
@@ -633,6 +661,10 @@ func (*recordingFileDeleteAllFilesystem) ReadDir(string) ([]fs.FileInfo, error) 
 
 func (*recordingFileDeleteAllFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected recursive-delete stat")
+}
+
+func (*recordingFileDeleteAllFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected recursive-delete mkdir")
 }
 
 func (*recordingFileDeleteAllFilesystem) MkdirAll(string, fs.FileMode) error {
@@ -699,6 +731,10 @@ func (*recordingFileMoveFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected file-move stat")
 }
 
+func (*recordingFileMoveFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected file-move mkdir")
+}
+
 func (*recordingFileMoveFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected file-move mkdir")
 }
@@ -761,6 +797,10 @@ func (*recordingClearDirFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 
 func (*recordingClearDirFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected clear-directory stat")
+}
+
+func (*recordingClearDirFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected clear-directory mkdir")
 }
 
 func (*recordingClearDirFilesystem) MkdirAll(string, fs.FileMode) error {
@@ -833,6 +873,10 @@ func (*recordingFindFirstFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 
 func (*recordingFindFirstFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected find-first stat")
+}
+
+func (*recordingFindFirstFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected find-first mkdir")
 }
 
 func (*recordingFindFirstFilesystem) MkdirAll(string, fs.FileMode) error {
@@ -915,6 +959,10 @@ func (*recordingFindAllFilesystem) ReadDir(string) ([]fs.FileInfo, error) {
 
 func (*recordingFindAllFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected find-all stat")
+}
+
+func (*recordingFindAllFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected find-all mkdir")
 }
 
 func (*recordingFindAllFilesystem) MkdirAll(string, fs.FileMode) error {

@@ -59,6 +59,10 @@ func (recording *recordingDownloadFilesystem) Stat(string) (fs.FileInfo, error) 
 	return nil, errors.New("unexpected stat")
 }
 
+func (*recordingDownloadFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected mkdir")
+}
+
 func (recording *recordingDownloadFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected mkdir")
 }

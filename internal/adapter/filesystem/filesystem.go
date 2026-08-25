@@ -25,6 +25,7 @@ type FileSystem interface {
 	ReadFile(string) ([]byte, error)
 	ReadDir(string) ([]fs.FileInfo, error)
 	Stat(string) (fs.FileInfo, error)
+	Mkdir(string, fs.FileMode) error
 	MkdirAll(string, fs.FileMode) error
 	WriteFile(string, []byte, fs.FileMode) error
 	OpenFile(string, int, fs.FileMode) (*os.File, error)
@@ -77,6 +78,14 @@ func Exists(dependencies Dependencies, path string) bool {
 	}
 	_, err := dependencies.FileSystem.Stat(path)
 	return !os.IsNotExist(err)
+}
+
+// Mkdir passes the complete directory path and mode to the configured dependency.
+func Mkdir(dependencies Dependencies, path string, mode fs.FileMode) error {
+	if dependencies.FileSystem == nil {
+		return ErrNoFilesystem
+	}
+	return dependencies.FileSystem.Mkdir(path, mode)
 }
 
 // MkdirAll passes the complete directory path and mode to the configured dependency.
@@ -176,6 +185,10 @@ func (systemFilesystem) ReadDir(path string) ([]fs.FileInfo, error) {
 
 func (systemFilesystem) Stat(path string) (fs.FileInfo, error) {
 	return os.Stat(path)
+}
+
+func (systemFilesystem) Mkdir(path string, mode fs.FileMode) error {
+	return os.Mkdir(path, mode)
 }
 
 func (systemFilesystem) MkdirAll(path string, mode fs.FileMode) error {

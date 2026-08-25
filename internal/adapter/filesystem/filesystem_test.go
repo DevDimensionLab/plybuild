@@ -40,6 +40,7 @@ type recordingFilesystem struct {
 	readErr             error
 	readDirErr          error
 	statErr             error
+	singleMkdirErr      error
 	mkdirErr            error
 	writeErr            error
 	opened              *os.File
@@ -63,6 +64,11 @@ func (recording *recordingFilesystem) ReadDir(path string) ([]fs.FileInfo, error
 func (recording *recordingFilesystem) Stat(path string) (fs.FileInfo, error) {
 	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "stat", Path: path})
 	return recording.fileInfo, recording.statErr
+}
+
+func (recording *recordingFilesystem) Mkdir(path string, mode fs.FileMode) error {
+	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "mkdir", Path: path, Mode: mode})
+	return recording.singleMkdirErr
 }
 
 func (recording *recordingFilesystem) MkdirAll(path string, mode fs.FileMode) error {
@@ -125,6 +131,9 @@ func (*recordingFilesystem) Copy(File, io.Reader) (int64, error) {
 func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	target := filepath.Join(t.TempDir(), "safe default", "must-not-exist.txt")
 
+	if err := Mkdir(Dependencies{}, target, 0751); !errors.Is(err, ErrNoFilesystem) {
+		t.Fatalf("zero-value single-directory dependency returned %v, want %v", err, ErrNoFilesystem)
+	}
 	if err := MkdirAll(Dependencies{}, filepath.Dir(target), 0755); !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value directory dependency returned %v, want %v", err, ErrNoFilesystem)
 	}
@@ -161,6 +170,68 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
 		t.Fatalf("zero-value filesystem dependencies mutated the target: %v", err)
+	}
+}
+
+func TestMkdirPassesExactPathAndModeOnceAndReturnsExactDependencyError(t *testing.T) {
+	path := `/complete single-directory/path with spaces/../backslash\segment-ø`
+	mode := fs.FileMode(0713)
+	mkdirError := errors.New("complete single-directory dependency error")
+	tests := []struct {
+		name string
+		err  error
+	}{
+		{name: "success"},
+		{name: "arbitrary error", err: mkdirError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFilesystem{singleMkdirErr: test.err}
+
+			err := Mkdir(Dependencies{FileSystem: recording}, path, mode)
+
+			if err != test.err {
+				t.Fatalf("single-directory error was %v, want exact dependency error %v", err, test.err)
+			}
+			want := []recordedFilesystemOperation{{Name: "mkdir", Path: path, Mode: mode}}
+			if len(recording.operations) == 0 {
+				t.Fatal("recorded single-directory population is empty")
+			}
+			if !reflect.DeepEqual(recording.operations, want) {
+				t.Fatalf("single-directory dependency received incomplete operations:\n got: %#v\nwant: %#v",
+					recording.operations, want)
+			}
+		})
+	}
+}
+
+func TestSystemMkdirPreservesSingleLevelSemantics(t *testing.T) {
+	root := t.TempDir()
+	directory := filepath.Join(root, "single directory")
+	mode := fs.FileMode(0711)
+
+	if err := Mkdir(System(), directory, mode); err != nil {
+		t.Fatalf("system single-directory create returned an error: %v", err)
+	}
+	info, err := os.Stat(directory)
+	if err != nil {
+		t.Fatalf("stat system single-directory result: %v", err)
+	}
+	if !info.IsDir() || info.Mode().Perm() != mode.Perm() {
+		t.Fatalf("system single-directory result has mode %v, want directory mode %v", info.Mode(), mode)
+	}
+	if err := Mkdir(System(), directory, mode); !os.IsExist(err) {
+		t.Fatalf("system single-directory create on existing directory returned %v, want IsExist", err)
+	}
+
+	missingParent := filepath.Join(root, "missing parent")
+	nested := filepath.Join(missingParent, "nested")
+	if err := Mkdir(System(), nested, mode); !os.IsNotExist(err) {
+		t.Fatalf("system nested single-directory create returned %v, want IsNotExist", err)
+	}
+	if _, err := os.Stat(missingParent); !os.IsNotExist(err) {
+		t.Fatalf("system single-directory create recursively created its missing parent: %v", err)
 	}
 }
 

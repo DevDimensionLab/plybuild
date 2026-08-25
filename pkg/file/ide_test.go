@@ -33,6 +33,10 @@ func (*recordingIntellijFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected non-recursive IDE stat")
 }
 
+func (*recordingIntellijFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected non-recursive IDE mkdir")
+}
+
 func (*recordingIntellijFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected non-recursive IDE mkdir")
 }

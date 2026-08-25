@@ -35,6 +35,10 @@ func (recording *recordingLocalConfigDirectoryStatFilesystem) Stat(path string) 
 	return recording.statInfo, recording.statErr
 }
 
+func (recording *recordingLocalConfigDirectoryStatFilesystem) Mkdir(string, fs.FileMode) error {
+	return recording.unexpected("mkdir")
+}
+
 func (recording *recordingLocalConfigDirectoryStatFilesystem) MkdirAll(string, fs.FileMode) error {
 	return recording.unexpected("mkdir")
 }

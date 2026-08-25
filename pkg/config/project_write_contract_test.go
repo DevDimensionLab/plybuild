@@ -41,6 +41,10 @@ func (*recordingProjectConfigFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected project-config stat")
 }
 
+func (*recordingProjectConfigFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected project-config mkdir")
+}
+
 func (*recordingProjectConfigFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected project-config mkdir")
 }

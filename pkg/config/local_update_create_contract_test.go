@@ -47,6 +47,10 @@ func (recording *recordingLocalConfigUpdateCreateFilesystem) Stat(string) (fs.Fi
 	return nil, recording.unexpected("stat")
 }
 
+func (recording *recordingLocalConfigUpdateCreateFilesystem) Mkdir(string, fs.FileMode) error {
+	return recording.unexpected("mkdir")
+}
+
 func (recording *recordingLocalConfigUpdateCreateFilesystem) MkdirAll(string, fs.FileMode) error {
 	return recording.unexpected("mkdir")
 }

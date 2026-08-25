@@ -65,6 +65,10 @@ func (*recordingRenderFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected render stat")
 }
 
+func (*recordingRenderFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected render mkdir")
+}
+
 func (*recordingRenderFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected render mkdir")
 }

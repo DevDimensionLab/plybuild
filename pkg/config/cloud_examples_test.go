@@ -35,6 +35,10 @@ func (*recordingExamplesFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected Examples stat")
 }
 
+func (*recordingExamplesFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected Examples mkdir")
+}
+
 func (*recordingExamplesFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected Examples mkdir")
 }

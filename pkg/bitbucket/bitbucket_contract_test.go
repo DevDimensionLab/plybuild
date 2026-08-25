@@ -77,6 +77,10 @@ func (recording *recordingBitbucketRepositoryFilesystem) Stat(path string) (fs.F
 	return nil, recording.statErr
 }
 
+func (*recordingBitbucketRepositoryFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected Bitbucket repository mkdir")
+}
+
 func (*recordingBitbucketRepositoryFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected Bitbucket repository mkdir")
 }

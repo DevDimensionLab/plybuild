@@ -391,7 +391,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 41 are complete.
+Status: active. Moves 1 through 42 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -1879,6 +1879,55 @@ Commit: `6928a72`.
 The clean full audit from commit `6928a72` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
+
+Move 42 routes only `LocalConfigDir.CheckOrCreateConfigDir`'s direct
+`os.Mkdir(dir, 0755)` operation through one new distinct filesystem adapter
+`Mkdir` operation. The exported method and every caller remain unchanged. It
+still evaluates exact `localCfgDir.Implementation().Path`, makes the completed
+one-attempt adapter `Stat` call with that arbitrary string, and applies the
+same exact `os.IsNotExist(err)` decision. Nil stat results, existing-directory
+results, and arbitrary non-not-exist stat errors still return nil without a
+mkdir. Only a not-exist error selects `filesystem.System()` for a private
+complete local-config-directory-create dependency and makes one single-level
+mkdir attempt with the exact `dir` and mode `0755`; its exact error remains the
+method result and success returns nil.
+
+Six new top-level contracts bring the suite to 296 tests. The two filesystem
+adapter contracts prove exact arbitrary paths and modes, one recorded attempt,
+non-empty populations, exact error identity, safe zero behavior, and the
+system implementation's direct single-level semantics: successful creation,
+existing-directory failure, missing-parent failure, and no recursive parent
+creation. Four local-config-directory-create contracts prove complete system
+dependency selection and delivery, the exact receiver-selected arbitrary path
+without cleaning or normalization, exact `0755`, one attempt, nil and
+arbitrary error results, safe zero behavior without developer-path access,
+non-empty populations, and no unrelated adapter operation. The production-
+composition contract does not mutate the real filesystem or run another
+command. All 34 pre-existing complete `filesystem.FileSystem` test doubles
+implement the new method only to remain complete and reject it as unrelated;
+the dedicated adapter and local-config doubles record it. Established
+`MkdirAll`, stat, every other adapter operation, inventory, seam drivers,
+mutation harnesses, public API, callers, local-config create/write/Close
+lifecycles, context/profile behavior, ProjectConfig, CloudConfig, Maven,
+structurizr, tips, template, file, HTTP, Bitbucket, Wpost, and every other
+completed effect remain unchanged. Q0.6 stays at 22 guarded safe-writer sites,
+17 write and 5 copy, with zero unsafe direct writes. Q1.3 improves from 23 of
+40 to 22 of 40: the direct config mkdir becomes injected, while the required
+direct `os.Mkdir` system implementation remains inside the exact declared
+adapter and therefore keeps the scanner population at 40. Q1.1 stays at 8
+untested packages; Q1.2 stays zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0
+of 8.
+
+The move-42 implementation gate passed focused config/filesystem/process and
+relevant command, context, file, template, Maven, tips, structurizr,
+Bitbucket, HTTP, Kibana, Spring, and shell package tests, API/CLI and subprocess
+compatibility, all four host flows, full preflight, test, install, the
+standalone 62-control launcher contract, uncached and race tests, vet, the
+15-control audit meta-suite, and empty-HOME count-2. The complete preflight
+rerun used contract-correct external Go and golangci-lint caches and tool
+discovery after two runner-only setup failures; every repository control then
+passed. The focused seven-criterion audit exited 1 for documented findings,
+with four improved, two held, zero regressed, and one not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

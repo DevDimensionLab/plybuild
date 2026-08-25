@@ -67,6 +67,10 @@ func (recording *recordingCopyFilesystem) Stat(path string) (fs.FileInfo, error)
 	return result.Info, result.Err
 }
 
+func (*recordingCopyFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected single-directory mkdir")
+}
+
 func (recording *recordingCopyFilesystem) MkdirAll(path string, mode fs.FileMode) error {
 	recording.operations = append(recording.operations, recordedCopyOperation{Name: "mkdir-all", Path: path, Mode: mode})
 	return recording.mkdirErr

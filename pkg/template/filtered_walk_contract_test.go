@@ -41,6 +41,10 @@ func (*recordingFilteredWalkFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected filtered-template stat")
 }
 
+func (*recordingFilteredWalkFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected filtered-template mkdir")
+}
+
 func (*recordingFilteredWalkFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected filtered-template mkdir")
 }

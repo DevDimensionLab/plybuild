@@ -36,6 +36,10 @@ func (recording *recordingStructurizrOutputFilesystem) Stat(string) (fs.FileInfo
 	return nil, recording.unexpected("stat")
 }
 
+func (recording *recordingStructurizrOutputFilesystem) Mkdir(string, fs.FileMode) error {
+	return recording.unexpected("mkdir")
+}
+
 func (recording *recordingStructurizrOutputFilesystem) MkdirAll(string, fs.FileMode) error {
 	return recording.unexpected("mkdir")
 }

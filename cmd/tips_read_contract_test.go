@@ -35,6 +35,10 @@ func (recording *recordingTipsShowReadFilesystem) Stat(string) (fs.FileInfo, err
 	return nil, recording.unexpected("stat")
 }
 
+func (recording *recordingTipsShowReadFilesystem) Mkdir(string, fs.FileMode) error {
+	return recording.unexpected("mkdir")
+}
+
 func (recording *recordingTipsShowReadFilesystem) MkdirAll(string, fs.FileMode) error {
 	return recording.unexpected("mkdir")
 }

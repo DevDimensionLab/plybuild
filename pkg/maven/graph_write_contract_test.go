@@ -37,6 +37,10 @@ func (recording *recordingGraphStylesFilesystem) Stat(string) (fs.FileInfo, erro
 	return nil, recording.unexpected("stat")
 }
 
+func (recording *recordingGraphStylesFilesystem) Mkdir(string, fs.FileMode) error {
+	return recording.unexpected("mkdir")
+}
+
 func (recording *recordingGraphStylesFilesystem) MkdirAll(string, fs.FileMode) error {
 	return recording.unexpected("mkdir")
 }

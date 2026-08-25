@@ -23,6 +23,18 @@ func statLocalConfigDirectory(dependencies localConfigDirectoryStatDependencies,
 	return filesystem.Stat(dependencies.Files, dir)
 }
 
+type localConfigDirectoryCreateDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemLocalConfigDirectoryCreateDependencies() localConfigDirectoryCreateDependencies {
+	return localConfigDirectoryCreateDependencies{Files: filesystem.System()}
+}
+
+func createLocalConfigDirectory(dependencies localConfigDirectoryCreateDependencies, dir string) error {
+	return filesystem.Mkdir(dependencies.Files, dir, 0755)
+}
+
 type localConfigTouchWriteDependencies struct {
 	Files filesystem.Dependencies
 }
@@ -109,7 +121,7 @@ func (localCfgDir LocalConfigDir) CheckOrCreateConfigDir() error {
 	dir := localCfgDir.Implementation().Path
 
 	if _, err := statLocalConfigDirectory(systemLocalConfigDirectoryStatDependencies(), dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
+		err = createLocalConfigDirectory(systemLocalConfigDirectoryCreateDependencies(), dir)
 		if err != nil {
 			return err
 		}

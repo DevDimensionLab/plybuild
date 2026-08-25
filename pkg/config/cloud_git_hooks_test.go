@@ -35,6 +35,10 @@ func (*recordingGitHookFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected Git-hook-files stat")
 }
 
+func (*recordingGitHookFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected Git-hook-files mkdir")
+}
+
 func (*recordingGitHookFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected Git-hook-files mkdir")
 }

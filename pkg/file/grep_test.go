@@ -38,6 +38,10 @@ func (*recordingGrepRecursiveFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected recursive-grep stat")
 }
 
+func (*recordingGrepRecursiveFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected recursive-grep mkdir")
+}
+
 func (*recordingGrepRecursiveFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected recursive-grep mkdir")
 }

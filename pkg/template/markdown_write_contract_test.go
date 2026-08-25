@@ -36,6 +36,10 @@ func (*recordingTemplateMarkdownFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected template-markdown stat")
 }
 
+func (*recordingTemplateMarkdownFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected template-markdown mkdir")
+}
+
 func (*recordingTemplateMarkdownFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected template-markdown mkdir")
 }

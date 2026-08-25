@@ -43,6 +43,10 @@ func (*recordingTemplatesFilesystem) Stat(string) (fs.FileInfo, error) {
 	return nil, errors.New("unexpected Templates stat")
 }
 
+func (*recordingTemplatesFilesystem) Mkdir(string, fs.FileMode) error {
+	return errors.New("unexpected Templates mkdir")
+}
+
 func (*recordingTemplatesFilesystem) MkdirAll(string, fs.FileMode) error {
 	return errors.New("unexpected Templates mkdir")
 }
