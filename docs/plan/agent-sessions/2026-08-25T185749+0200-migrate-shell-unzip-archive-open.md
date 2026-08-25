@@ -1,13 +1,13 @@
 # Agent Session: Migrate Shell Unzip Archive Open
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T185749+0200-migrate-shell-unzip-archive-open`
 Created: `2026-08-25T18:57:49+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `fd0d1791e073db4f7685fe8c5ebd409507ef048a85d775bfcc4e267ecef095ce`
 Previous: [2026-08-25T181827+0200-migrate-shell-unzip-copy.md](2026-08-25T181827+0200-migrate-shell-unzip-copy.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T193422+0200-migrate-shell-unzip-output-close.md](2026-08-25T193422+0200-migrate-shell-unzip-output-close.md)
+Outcome: implementation commit `2f0a072` completed the focused archive-open move with Q1.3 at 10/32 and zero comparable ratchet regressions
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
