@@ -1,13 +1,13 @@
 # Agent Session: Migrate Shell Unzip File Open
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T171500+0200-migrate-shell-unzip-file-open`
 Created: `2026-08-25T17:15:00+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `1baacd1f3c5f19a9ccc97a4d2cefed02cbeb194a9acc2846cfa14621a29ce968`
 Previous: [2026-08-25T163321+0200-migrate-shell-unzip-directory-creation.md](2026-08-25T163321+0200-migrate-shell-unzip-directory-creation.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T174800+0200-migrate-shell-run-process.md](2026-08-25T174800+0200-migrate-shell-run-process.md)
+Outcome: Completed in `2a684a0`; the one unzip file-entry open now uses the existing filesystem adapter with focused order, argument, partial-result, and error-precedence contracts.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
