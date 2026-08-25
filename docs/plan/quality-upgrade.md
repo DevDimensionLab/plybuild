@@ -2826,15 +2826,19 @@ meta-contracts, complete `make test`, install, uncached and race tests, vet,
 all four host flows and their meta-contracts, and empty-HOME count-2 pass. Full
 preflight passes through audit meta-controls T1-T14, then the unchanged T15
 baseline-reproduction control exits 2 because its pinned pre-hermetic baseline
-tests create ten ignored Maven/template fixture paths beyond the authorized
+tests create nine ignored Maven/template fixture paths beyond the authorized
 inventory overlay. The same T15 passed at the preceding checkpoint; this move
 does not alter the audit, baseline, inventory, Maven/template behavior, or
 fixture guards. The mission's no-audit-reshaping boundary leaves that independent
 checkpoint issue unresolved here.
 
-Commit: recorded by the following handoff.
+Commit: `3bd07e9`.
 
-The clean committed checkpoint audit is recorded by the following handoff.
+The clean full audit from commit `3bd07e9` exits 1 for 15 documented findings,
+never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+non-comparable ratchet, and zero dirty paths. P3.54 remains an implementation
+measurement rather than a clean checkpoint because the separate unchanged
+audit-meta T15 control still exits 2 as recorded above.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

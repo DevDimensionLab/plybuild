@@ -1055,174 +1055,139 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T220107+0200-resume-shell-unzip-archive-close
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T220107+0200-resume-shell-unzip-archive-close.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md
+#|SESSION_ID=2026-08-25T225520+0200-resume-unzip-archive-close-gate
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T225520+0200-resume-unzip-archive-close-gate.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T220107+0200-resume-shell-unzip-archive-close.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete one focused P3 production-effect move: route only the deferred direct
-#|`_ = r.Close()` request in private `pkg/shell.Unzip` through the existing narrow
-#|filesystem `CloseReader` operation. Preserve the public signature, exact opened
-#|archive-reader identity, deferred placement, one close attempt after every
-#|successful archive open, ignored archive-close result, archive and entry
-#|traversal, entry order and bytes, filenames and partial results, zip-slip
-#|behavior, every completed Unzip operation and error precedence, and every
-#|earlier shell, filesystem, Spring, process, browser, profile, HTTP, tips,
-#|config, Maven, structurizr, Bitbucket, Wpost, local-config, Kibana, and
-#|supervisor move, with zero comparable ratchet regressions.
+#|Finish the checkpoint gate for the already-committed focused P3 Unzip archive-
+#|close move at `3bd07e9`. Preserve that implementation exactly. Determine why
+#|the unchanged audit meta-suite's T15 baseline-reproduction control now sees nine
+#|ignored Maven/template fixture paths in its pinned pre-hermetic baseline clone,
+#|although T15 passed at predecessor checkpoint `70bee0e`. Restore a truthful
+#|green gate only through environment or invocation correction already supported
+#|by the repository. If the same failure reproduces on the predecessor under the
+#|same environment, record the inherited blocker precisely and stop without
+#|changing the audit, baseline, inventory, fixtures, product code, or tests.
 #|
 #|# Authorized Roadmap
 #|
-#|P3 remains active, P4-P8 are queued in the machine-readable block in
-#|docs/plan/quality-upgrade.md, and the launcher must remain NEXT until every
-#|authorized checkpoint is complete. This mission authorizes only focused
-#|private Unzip archive-close recording contracts and replacement of the one
-#|deferred direct archive close with
-#|`defer func() { _ = filesystem.CloseReader(dependencies.Files, r) }()`.
+#|P3 remains active, P4-P8 remain queued in the machine-readable block in
+#|`docs/plan/quality-upgrade.md`, and the launcher remains NEXT. This mission
+#|authorizes read-only diagnosis, temporary clean shared clones under
+#|`/private/tmp`, exact reruns of the established audit meta-suite and checkpoint
+#|gate, truthful P3.54 planning/handover corrections, and the normal separate
+#|handoff-only commit.
 #|
-#|The user explicitly authorizes widening the existing
-#|`CloseReader(io.ReadCloser) error` parameter to `io.Closer`, with only the
-#|mechanically required updates to the interface, zero-safe helper, exact system
-#|implementation, and complete doubles. This authorization supersedes the prior
-#|restriction against changing that parameter type; preserve behavior and every
-#|other signature.
-#|It does not authorize another filesystem method, adapter reshaping, archive
-#|open, entry-reader Close, output-file Close, Copy, OpenFile, MkdirAll,
-#|entry-open injection, another unzip branch, shell Run or Git changes, process
-#|or HTTP work, Spring, Maven, structurizr, plugin diagrams, clock/server
-#|adapters, public API, inventory, mutation harnesses, audit reshaping, or
-#|later-roadmap implementation.
+#|It does not authorize another production-effect move, an audit or scanner
+#|change, baseline or inventory change, test-fixture change, cleanup added inside
+#|T15, identity weakening, ignored-path exclusion, a Go/product/test change,
+#|commit amendment, revert, adapter work, plugin-diagram work, clock/server work,
+#|mutation work, or later-roadmap implementation. Do not manufacture a green
+#|result with a wrapper, hook, patched temporary instrument, filesystem watcher,
+#|manual mid-test cleanup, cached result, or altered baseline checkout.
 #|
 #|# Measurements At Start
 #|
-#|Before editing, inspect branch, HEAD, status, the rolling handover, this active
-#|archive, the roadmap queue, complete `pkg/shell` source/tests/callers, complete
-#|`internal/adapter/filesystem` source/tests and every complete filesystem
-#|double, all Unzip callers and completed unzip contracts, relevant Spring
-#|download, command, context, config, HTTP, process, Maven, structurizr,
-#|Bitbucket, Wpost, local-config, browser, profile, tips, file, template, and
-#|Kibana code/tests, `.quality/inventory`, both design documents, and the
-#|import-aware effect scanner. Regenerate ignored reports outside the measured
-#|tree or remove them before a clean audit.
+#|Implementation commit `3bd07e99c3170fd0f1c0dda076252c6eb5833db7`
+#|routes only the deferred archive close through
+#|`filesystem.CloseReader(dependencies.Files, r)` and widens that existing
+#|operation from `io.ReadCloser` to `io.Closer` mechanically. It has 360 tests
+#|across 19 of 25 packages. Q0.6 is 26 guarded sites, 21 write and 5 copy, with
+#|zero unsafe direct test writes. Q1.1 is 6/25, Q1.2 is zero, Q1.3 is 10/32,
+#|Q1.4 is 7/8, exact Q2.1 is 0/8, and Q3.4 is zero phrases across 69 Markdown
+#|files. The focused audit exited 1 with four improved, two held, zero regressed,
+#|and one non-comparable selected criterion.
 #|
-#|Implementation commit `70bee0e` has 358 tests across 19 of 25 packages. Q0.6
-#|has 26 guarded safe-writer sites, 21 write and 5 copy, and zero unsafe direct
-#|test writes. Q1.1 is 6 of 25, Q1.2 is 0, Q1.3 is 10 violations of 32
-#|production effect sites with clock and server absent, Q1.4 is 7 of 8, and
-#|exact Q2.1 is 0 of 8 executable harnesses. The clean full audit exited 1 for
-#|15 documented findings and never 2; comparable ratchets were five improved,
-#|two held, and zero regressed.
+#|The authoritative clean full audit at `3bd07e9` is valid: exit 1 for 15
+#|documented findings, L0 8/8, five improved, two held, zero regressed, one
+#|non-comparable, and zero dirty paths. Its structured report is
+#|`/private/tmp/ply-quality-move54-clean-audit/scorecard.json` while retained.
+#|The handoff-only Q3.4 audit adds this archive to the denominator and passes with
+#|zero phrases across 70 Markdown files and zero ratchet regressions.
 #|
-#|The direct interface-typed entry-reader Close is gone. Exact Q1.3 holds at
-#|10/32 because its adapter request is also absent from the reported violation
-#|set. The deferred concrete archive-reader Close is presently absent from that
-#|set as well. Replacing it with the existing helper may change or hold the
-#|measured population; regenerate the exact value without changing the scanner
-#|or broadening this move to force an expected number.
+#|Focused and caller tests, API/CLI/subprocess compatibility, the standalone
+#|62-control launcher, Make meta-contracts, complete `make test`, install,
+#|uncached tests, race, vet, all four host flows and their meta-contracts, and
+#|empty-HOME count-2 pass. Full preflight passes every component until audit meta
+#|T15. Three complete audit-meta attempts pass T1-T14 and fail T15 with exit 2:
+#|`AUDIT BROKEN: inventory overlay mode permits only untracked
+#|.quality/inventory`. Supplying the existing external `GOMODCACHE` removes
+#|read-only module-cache cleanup noise but leaves the same T15 result.
 #|
-#|A prior fresh turn established that `*zip.ReadCloser` implements `io.Closer`
-#|but not `io.ReadCloser`, reverted its attempted red contracts, left the
-#|worktree clean, and made no commit. Resume from that exact state using the
-#|user-authorized parameter widening above.
+#|The retained diagnostic clone at
+#|`/private/tmp/test-ply-quality-audit.qEdLnB/baseline-repository`, if still
+#|present, showed exactly these extra measured paths after the old upstream test
+#|run:
 #|
-#|The launcher has 62 Bash 3.2 contracts and supervises fresh non-interactive
-#|JSONL turns with external raw logs. It continues only after a successful
-#|structured stream and valid clean committed handoff. Preserve its stable
-#|skeleton and do not launch a real successor while developing or finalizing.
+#|- six files under `pkg/maven/test/analyze/target/`;
+#|- `pkg/template/test/target-simple-template/src/main/java/no/ply/template/target/DummyConfiguration.kt`;
+#|- `pkg/template/test/target-test-template/test.properties`;
+#|- `pkg/template/test/target-test-template/textfile.txt`;
+#|- plus the authorized `.quality/inventory` overlay.
+#|
+#|The pinned source commit is `5635d50`, before hermetic fixture commit
+#|`80b43ba`. Directly running its template tests creates the three template
+#|paths. The checked-in T15 calls the old vendor audit before its structured
+#|identity check and contains no intervening cleanup. Do not treat these learned
+#|facts as permission to reshape the instrument.
 #|
 #|# Role And Boundaries
 #|
-#|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the deferred Unzip archive-close move and focused
-#|private recording contracts, with measured planning notes. Then make the
-#|normal separate handoff-only commit. Do not push, merge, publish, distribute,
-#|remove the worktree, stash inherited changes, revert user work, or run
-#|destructive Git commands.
+#|Work autonomously in `/Users/perottochristensen/github/ply/upgrade-quality` on
+#|`codex/upgrade-quality`. Begin at the clean handoff commit following `3bd07e9`.
+#|Do not change or amend `3bd07e9`. Do not push, merge, publish, distribute,
+#|stash, revert, remove the worktree, or launch a successor.
 #|
-#|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve public
-#|`Unzip(string, string) ([]string, error)`, the private complete
-#|`unzipDependencies`, production `filesystem.System()` selection, the exact
-#|`*zip.ReadCloser` returned by `OpenZipReader`, and the current defer immediately
-#|after a successful archive-open request. Make exactly one filesystem
-#|CloseReader request for that archive on every later return, after all reached
-#|entry operations and entry-reader closes. Continue to ignore its exact result
-#|without changing the named return values or any earlier error.
-#|
-#|Pass the complete Unzip dependency composition whole. Do not add fallback,
-#|retry, logging, cleanup, another close attempt, a new defer, environment or
-#|working-directory behavior, or error normalization. Do not close an archive
-#|when archive open fails. Any fixture write must stay guarded below
-#|`t.TempDir()`; launch no process, touch no public network, and change no working
-#|directory.
-#|
-#|Do not change `OpenZipReader`, add another filesystem operation, or change
-#|`filesystem.CloseReader` beyond the authorized `io.Closer` parameter widening
-#|and its mechanical system/helper/double updates. Do not change entry-reader
-#|Close, `filesystem.Close` or output-file Close,
-#|Copy, OpenFile, MkdirAll, entry open, shell Run, Git composition, structurizr
-#|command construction, Maven process composition, plugin diagrams, another
-#|adapter operation or caller, public API, or `.quality/inventory`.
+#|Preserve public `Unzip(string, string) ([]string, error)`, the exact deferred
+#|CloseReader request, the `io.Closer` widening, every complete double, archive
+#|and entry behavior, all other product/test code, and `.quality/inventory`.
+#|Keep Go 1.18 and Bash 3.2 compatibility. Keep reports, clones, Go state, and
+#|diagnostic output outside the measured tree.
 #|
 #|# Required Reading
 #|
-#|Read docs/plan/quality-handover.md, the P3 section and checkpoint gate in
-#|docs/plan/quality-upgrade.md, docs/design/agent-session-continuity.md,
-#|docs/design/quality-lift.md, `.quality/inventory`, complete `pkg/shell` source
-#|and tests, every Unzip caller, complete `internal/adapter/filesystem` source
-#|and tests and every complete double, completed Unzip/Spring/filesystem/process
-#|contracts, the audit's import-aware effect scanner, and relevant caller
-#|packages before editing. Before the full gate, read the complete launcher
-#|contract, Make meta-tests, P2A API/CLI and subprocess contracts, and all four
-#|host acceptance flows.
+#|Read the rolling handover, this archive, P3.54 and the checkpoint gate in
+#|`docs/plan/quality-upgrade.md`, both design documents, `.quality/inventory`,
+#|complete `.quality/tools/test-quality-audit.sh`, the wrapper, parser identity
+#|logic, vendored audit test execution, baseline migration metadata, baseline
+#|README, commits `5635d50`, `80b43ba`, `70bee0e`, and `3bd07e9`, and the exact
+#|prior verification notes. Confirm branch, HEAD, clean status, archive links,
+#|and `./codex-dev-start.sh --check` before diagnosis.
 #|
 #|# Three Moves
 #|
-#|1. Start red with only focused private Unzip archive-close recording
-#|   contracts. Prove exact archive identity, one deferred request after every
-#|   successful archive open, request placement after successful traversal and
-#|   entry-reader closes, execution on zip-slip and every established later
-#|   error return, no request after archive-open failure, ignored injected
-#|   archive-close error without result or error-precedence change, complete
-#|   dependency selection, rejection of an empty archive-close recording
-#|   population, distinction from entry-reader-close requests, and absence of
-#|   unrelated filesystem requests. Invoke no real process or public network
-#|   request.
+#|1. Reproduce T15 without product mutation. Use fresh clean shared clones or
+#|   detached temporary worktrees below `/private/tmp` to compare the complete
+#|   audit meta-suite at `70bee0e` and `3bd07e9` under byte-identical environment,
+#|   toolchain, PATH, HOME/module-cache policy, TMPDIR, GOTMPDIR, and GOCACHE
+#|   setup. Capture exact heads, Go version/environment differences, exit codes,
+#|   dirty-path populations, and whether the old checkout actually succeeded.
+#|   Do not modify either measured clone between its old upstream run and parser.
 #|
-#|2. Replace only `defer func() { _ = r.Close() }()` with
-#|   `defer func() { _ = filesystem.CloseReader(dependencies.Files, r) }()`.
-#|   Widen the existing CloseReader parameter from `io.ReadCloser` to
-#|   `io.Closer` and update its interface, zero-safe helper, exact system
-#|   implementation, and complete doubles mechanically.
-#|   Keep the defer placement, anonymous function, ignored assignment, archive
-#|   variable, surrounding open branch, traversal, and every earlier and later
-#|   operation unchanged. Do not otherwise change the filesystem adapter or
-#|   doubles except the focused private recording behavior needed by the red
-#|   contracts.
+#|2. If an established supported environment/invocation difference explains the
+#|   regression, apply only that external invocation correction and rerun full
+#|   `make preflight`, the standalone audit meta-suite, and the clean checkpoint
+#|   audit. Do not encode an environment workaround in tracked files. If both
+#|   commits reproduce the same T15 failure, stop product work and document that
+#|   inherited harness blocker; do not weaken or edit the audit to pass.
 #|
-#|3. Run focused shell/filesystem/Spring and relevant process, Maven, command,
-#|   context, config, HTTP, structurizr, profile, browser, tips, file, template,
-#|   Bitbucket, Wpost, local-config, Kibana, and caller package tests; the
-#|   launcher contract from `/bin/bash`; Make preflight meta-contracts; API/CLI
-#|   and subprocess compatibility; full Go tests and race/vet; all four host
-#|   acceptance flows; the audit meta-suite; focused Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/
-#|   Q2.1/Q3.4 measurements; full clean checkpoint audit; and empty-HOME count-2.
-#|   Expect Q0.6 to hold at 26 guarded sites and regenerate exact Q1.3 without
-#|   changing the scanner; the full audit may exit 1 for documented findings but
-#|   never 2.
+#|3. If and only if the complete gate becomes green, update P3.54 from
+#|   implementation measurement to a clean checkpoint, retain the exact clean
+#|   audit result, answer this archive, and create one linked NEXT archive for
+#|   the next isolated P3 effect. Otherwise preserve P3.54 as implemented but
+#|   awaiting its gate, rewrite the handover with exact reproduction evidence,
+#|   and leave one valid resumable NEXT archive. In both cases run the launcher
+#|   contract and `--check`, verify Q3.4 and the archive graph, and make only the
+#|   separate `docs: prepare next agent session` commit.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent deferred Unzip
-#|archive-close move or record an exact resumable state. Rewrite the rolling
-#|handover, record the measured P3 result, answer this archive, create one linked
-#|NEXT archive for the next coherent P3 effect move, replace only the launcher's
-#|mutable regions, run the launcher contract, and make the separate handoff-only
-#|commit `docs: prepare next agent session`.
-#|
-#|Keep P3 active until its measured exit is documented. Do not launch the next
-#|session. COMPLETE is valid only after every authorized checkpoint through P8
-#|is complete.
+#|Before the session ends, leave the worktree clean and committed with a truthful
+#|rolling handover and exactly one NEXT archive. Do not launch it. Keep P3 active
+#|and P4-P8 queued. COMPLETE is invalid until every authorized checkpoint through
+#|P8 is complete.
 # CODEX_MUTABLE_PROMPT_END

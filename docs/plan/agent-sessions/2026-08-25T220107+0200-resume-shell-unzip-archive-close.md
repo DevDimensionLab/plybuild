@@ -1,13 +1,13 @@
 # Agent Session: Resume Shell Unzip Archive Close
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T220107+0200-resume-shell-unzip-archive-close`
 Created: `2026-08-25T22:01:07+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `5c3d557e6030a89417696d4787eb119a05674df0438fdcfb0c2fef21227b9966`
 Previous: [2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md](2026-08-25T204152+0200-migrate-shell-unzip-archive-close.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T225520+0200-resume-unzip-archive-close-gate.md](2026-08-25T225520+0200-resume-unzip-archive-close-gate.md)
+Outcome: implementation committed at `3bd07e9`; clean audit valid, checkpoint gate retained for repeated T15 baseline-fixture identity failure
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
