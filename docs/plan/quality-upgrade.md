@@ -2826,11 +2826,11 @@ meta-contracts, complete `make test`, install, uncached and race tests, vet,
 all four host flows and their meta-contracts, and empty-HOME count-2 pass. Full
 preflight passes through audit meta-controls T1-T14, then the unchanged T15
 baseline-reproduction control exits 2 because its pinned pre-hermetic baseline
-tests create nine ignored Maven/template fixture paths beyond the authorized
-inventory overlay. The same T15 passed at the preceding checkpoint; this move
-does not alter the audit, baseline, inventory, Maven/template behavior, or
-fixture guards. The mission's no-audit-reshaping boundary leaves that independent
-checkpoint issue unresolved here.
+tests create ignored Maven/template fixture paths beyond the authorized
+inventory overlay. The earlier recorded predecessor pass is not reproducible;
+this move does not alter the audit, baseline, inventory, Maven/template
+behavior, or fixture guards. The mission's no-audit-reshaping boundary leaves
+that inherited checkpoint issue unresolved here.
 
 Commit: `3bd07e9`.
 
@@ -2839,6 +2839,27 @@ never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 non-comparable ratchet, and zero dirty paths. P3.54 remains an implementation
 measurement rather than a clean checkpoint because the separate unchanged
 audit-meta T15 control still exits 2 as recorded above.
+
+P3.54 gate diagnosis used fresh detached shared clones at `70bee0e` and
+`3bd07e9`, sequentially checked out at the same pathname, with the same freshly
+recreated external HOME, XDG config, TMPDIR, GOTMPDIR, GOCACHE, existing
+GOMODCACHE, PATH, Go 1.26.2 darwin/arm64 toolchain, locale, and Go selector
+environment. Both complete meta-suites exit 1, pass T1-T14, run the old upstream
+baseline audit successfully with its expected exit 1, and fail identically when
+the old structured parser exits 2 on measured-tree identity. Excluding each
+random first-line work-directory suffix, the complete output bodies are
+byte-identical with SHA-256
+`bc83831ae61962b92c3233de04df52f70e3f2a2fdd6d871fb4d0db3f451b733b`.
+
+The paired controlled PATH has no Maven executable. Each pinned `5635d50`
+baseline clone therefore contains exactly the inventory overlay plus the same
+three ignored template merge outputs. The retained developer-environment clone
+contains those three plus six Maven compiler/status/class files because its
+PATH exposes SDKMAN Maven. Removing Maven from PATH explains six of the nine
+ignored paths but cannot make T15 green: the three template outputs alone still
+violate the exact overlay identity. This is an inherited audit-harness blocker,
+not a regression from `3bd07e9`; P3.54 remains implemented and awaits explicit
+scope for an apparatus repair.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

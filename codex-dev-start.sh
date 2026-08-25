@@ -1055,139 +1055,109 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T225520+0200-resume-unzip-archive-close-gate
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T225520+0200-resume-unzip-archive-close-gate.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T220107+0200-resume-shell-unzip-archive-close.md
+#|SESSION_ID=2026-08-25T232218+0200-resume-p354-audit-harness-blocker
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T232218+0200-resume-p354-audit-harness-blocker.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T225520+0200-resume-unzip-archive-close-gate.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Finish the checkpoint gate for the already-committed focused P3 Unzip archive-
-#|close move at `3bd07e9`. Preserve that implementation exactly. Determine why
-#|the unchanged audit meta-suite's T15 baseline-reproduction control now sees nine
-#|ignored Maven/template fixture paths in its pinned pre-hermetic baseline clone,
-#|although T15 passed at predecessor checkpoint `70bee0e`. Restore a truthful
-#|green gate only through environment or invocation correction already supported
-#|by the repository. If the same failure reproduces on the predecessor under the
-#|same environment, record the inherited blocker precisely and stop without
-#|changing the audit, baseline, inventory, fixtures, product code, or tests.
+#|Keep the focused P3.54 Unzip archive-close implementation at `3bd07e9` exactly
+#|as committed and keep its checkpoint gate blocked. The complete unchanged audit
+#|meta-suite now fails identically at predecessor `70bee0e` and implementation
+#|`3bd07e9`; this is an inherited T15 apparatus failure, not a product regression.
+#|Resume only after the user explicitly authorizes an audit-apparatus repair
+#|boundary. Without new authorization, report the required scope decision and
+#|stop without mutation.
 #|
 #|# Authorized Roadmap
 #|
-#|P3 remains active, P4-P8 remain queued in the machine-readable block in
-#|`docs/plan/quality-upgrade.md`, and the launcher remains NEXT. This mission
-#|authorizes read-only diagnosis, temporary clean shared clones under
-#|`/private/tmp`, exact reruns of the established audit meta-suite and checkpoint
-#|gate, truthful P3.54 planning/handover corrections, and the normal separate
-#|handoff-only commit.
-#|
-#|It does not authorize another production-effect move, an audit or scanner
-#|change, baseline or inventory change, test-fixture change, cleanup added inside
-#|T15, identity weakening, ignored-path exclusion, a Go/product/test change,
-#|commit amendment, revert, adapter work, plugin-diagram work, clock/server work,
-#|mutation work, or later-roadmap implementation. Do not manufacture a green
-#|result with a wrapper, hook, patched temporary instrument, filesystem watcher,
-#|manual mid-test cleanup, cached result, or altered baseline checkout.
+#|P3 remains active with moves 1-53 complete and move 54 implemented but awaiting
+#|a clean complete checkpoint gate. P4-P8 remain queued in the machine-readable
+#|block in `docs/plan/quality-upgrade.md`; the launcher remains NEXT. Public
+#|`Unzip(string, string) ([]string, error)`, the exact deferred
+#|`filesystem.CloseReader(dependencies.Files, r)` request, its `io.Closer`
+#|widening, every complete double, all archive/entry behavior, product code,
+#|tests, fixtures, audit, baseline, inventory, and scanner are unchanged.
 #|
 #|# Measurements At Start
 #|
 #|Implementation commit `3bd07e99c3170fd0f1c0dda076252c6eb5833db7`
-#|routes only the deferred archive close through
-#|`filesystem.CloseReader(dependencies.Files, r)` and widens that existing
-#|operation from `io.ReadCloser` to `io.Closer` mechanically. It has 360 tests
-#|across 19 of 25 packages. Q0.6 is 26 guarded sites, 21 write and 5 copy, with
-#|zero unsafe direct test writes. Q1.1 is 6/25, Q1.2 is zero, Q1.3 is 10/32,
-#|Q1.4 is 7/8, exact Q2.1 is 0/8, and Q3.4 is zero phrases across 69 Markdown
-#|files. The focused audit exited 1 with four improved, two held, zero regressed,
-#|and one non-comparable selected criterion.
+#|has 360 tests across 19 of 25 packages. Its authoritative clean full audit is
+#|valid: exit 1 for 15 documented findings, L0 8/8, five improved, two held, zero
+#|regressed, one non-comparable, and zero dirty paths. Q0.6 is 26 guarded sites,
+#|21 write and 5 copy, with zero unsafe direct test writes; Q1.1 is 6/25, Q1.2 is
+#|zero, Q1.3 is 10/32, Q1.4 is 7/8, exact Q2.1 is 0/8, and Q3.4 is zero phrases.
 #|
-#|The authoritative clean full audit at `3bd07e9` is valid: exit 1 for 15
-#|documented findings, L0 8/8, five improved, two held, zero regressed, one
-#|non-comparable, and zero dirty paths. Its structured report is
-#|`/private/tmp/ply-quality-move54-clean-audit/scorecard.json` while retained.
-#|The handoff-only Q3.4 audit adds this archive to the denominator and passes with
-#|zero phrases across 70 Markdown files and zero ratchet regressions.
+#|# Inherited Blocker Evidence
 #|
-#|Focused and caller tests, API/CLI/subprocess compatibility, the standalone
-#|62-control launcher, Make meta-contracts, complete `make test`, install,
-#|uncached tests, race, vet, all four host flows and their meta-contracts, and
-#|empty-HOME count-2 pass. Full preflight passes every component until audit meta
-#|T15. Three complete audit-meta attempts pass T1-T14 and fail T15 with exit 2:
-#|`AUDIT BROKEN: inventory overlay mode permits only untracked
-#|.quality/inventory`. Supplying the existing external `GOMODCACHE` removes
-#|read-only module-cache cleanup noise but leaves the same T15 result.
+#|Fresh detached shared clones at exact heads `70bee0ed16af4b1e2dec179d6a0ba1ae4237c9e0`
+#|and `3bd07e99c3170fd0f1c0dda076252c6eb5833db7` were run sequentially
+#|from the same clone pathname and the same freshly recreated external environment
+#|pathname. PATH, HOME, XDG config, TMPDIR, GOTMPDIR, GOCACHE, existing
+#|GOMODCACHE, locale, Go selectors, and toolchain were identical. Exported
+#|environment evidence has SHA-256
+#|`963ad106f66f7770704a13b3ef619079ae19748b1aafe678700f9233bdc833ef`;
+#|toolchain evidence has SHA-256
+#|`8fc0505f60a4950583fd56222b64a0a175b44fbfc55aff409467602d19592c5f`.
+#|Both used Go 1.26.2 darwin/arm64, `CGO_ENABLED=0`, `GOENV=off`, `GOWORK=off`,
+#|empty `GOFLAGS`, and the same external module cache.
 #|
-#|The retained diagnostic clone at
-#|`/private/tmp/test-ply-quality-audit.qEdLnB/baseline-repository`, if still
-#|present, showed exactly these extra measured paths after the old upstream test
-#|run:
+#|Both complete meta-suites exit 1, pass T1-T14, and have byte-identical normalized
+#|output bodies with SHA-256
+#|`bc83831ae61962b92c3233de04df52f70e3f2a2fdd6d871fb4d0db3f451b733b`.
+#|T15's old upstream baseline audit actually succeeds with expected exit 1; its
+#|following old structured parser exits 2 with `AUDIT BROKEN: inventory overlay
+#|mode permits only untracked .quality/inventory`. Each exact `5635d50` checkout
+#|contains the authorized inventory overlay plus three ignored template outputs.
 #|
-#|- six files under `pkg/maven/test/analyze/target/`;
-#|- `pkg/template/test/target-simple-template/src/main/java/no/ply/template/target/DummyConfiguration.kt`;
-#|- `pkg/template/test/target-test-template/test.properties`;
-#|- `pkg/template/test/target-test-template/textfile.txt`;
-#|- plus the authorized `.quality/inventory` overlay.
-#|
-#|The pinned source commit is `5635d50`, before hermetic fixture commit
-#|`80b43ba`. Directly running its template tests creates the three template
-#|paths. The checked-in T15 calls the old vendor audit before its structured
-#|identity check and contains no intervening cleanup. Do not treat these learned
-#|facts as permission to reshape the instrument.
+#|The retained developer-environment clone additionally contains six Maven
+#|compiler/status/class files below `pkg/maven/test/analyze/target/`. Ambient PATH
+#|exposes SDKMAN Maven; the paired controlled PATH does not. That explains why
+#|earlier attempts saw nine ignored paths, but removing Maven cannot restore a
+#|green T15 because the old template tests still create three ignored outputs.
+#|The paired evidence is retained under `/private/tmp/ply-p354-gate.B7akzM` while
+#|present.
 #|
 #|# Role And Boundaries
 #|
-#|Work autonomously in `/Users/perottochristensen/github/ply/upgrade-quality` on
-#|`codex/upgrade-quality`. Begin at the clean handoff commit following `3bd07e9`.
-#|Do not change or amend `3bd07e9`. Do not push, merge, publish, distribute,
-#|stash, revert, remove the worktree, or launch a successor.
+#|The present scope does not authorize the apparatus change required to make the
+#|baseline reproduction hermetic while retaining exact source, debt, instrument,
+#|and measured-tree identity. Obtain explicit user direction that names the
+#|allowed repair boundary before editing any audit, parser, baseline recipe,
+#|baseline metadata, fixture, test, product, or inventory file. Do not infer that
+#|authority from this NEXT archive.
 #|
-#|Preserve public `Unzip(string, string) ([]string, error)`, the exact deferred
-#|CloseReader request, the `io.Closer` widening, every complete double, archive
-#|and entry behavior, all other product/test code, and `.quality/inventory`.
-#|Keep Go 1.18 and Bash 3.2 compatibility. Keep reports, clones, Go state, and
-#|diagnostic output outside the measured tree.
+#|Do not manufacture green evidence through a wrapper, hook, patched temporary
+#|instrument, filesystem watcher, manual mid-test cleanup, cached result, ignored-
+#|path exclusion, weakened identity, altered `5635d50` checkout, baseline change,
+#|or inventory change. Do not begin another P3 effect, plugin diagrams,
+#|clock/server work, mutation work, or P4-P8 while P3.54 remains blocked.
 #|
 #|# Required Reading
 #|
-#|Read the rolling handover, this archive, P3.54 and the checkpoint gate in
-#|`docs/plan/quality-upgrade.md`, both design documents, `.quality/inventory`,
-#|complete `.quality/tools/test-quality-audit.sh`, the wrapper, parser identity
-#|logic, vendored audit test execution, baseline migration metadata, baseline
-#|README, commits `5635d50`, `80b43ba`, `70bee0e`, and `3bd07e9`, and the exact
-#|prior verification notes. Confirm branch, HEAD, clean status, archive links,
-#|and `./codex-dev-start.sh --check` before diagnosis.
+#|Read `docs/plan/quality-handover.md`, this archive, P3.54 and the checkpoint gate,
+#|both design documents, `.quality/inventory`, the complete audit meta-suite,
+#|wrapper, parser identity logic, vendored test execution, baseline migration
+#|metadata and README, and commits `5635d50`, `80b43ba`, `70bee0e`, and `3bd07e9`.
+#|Confirm branch, HEAD, clean status, reciprocal archive links, and
+#|`./codex-dev-start.sh --check`.
 #|
 #|# Three Moves
 #|
-#|1. Reproduce T15 without product mutation. Use fresh clean shared clones or
-#|   detached temporary worktrees below `/private/tmp` to compare the complete
-#|   audit meta-suite at `70bee0e` and `3bd07e9` under byte-identical environment,
-#|   toolchain, PATH, HOME/module-cache policy, TMPDIR, GOTMPDIR, and GOCACHE
-#|   setup. Capture exact heads, Go version/environment differences, exit codes,
-#|   dirty-path populations, and whether the old checkout actually succeeded.
-#|   Do not modify either measured clone between its old upstream run and parser.
-#|
-#|2. If an established supported environment/invocation difference explains the
-#|   regression, apply only that external invocation correction and rerun full
-#|   `make preflight`, the standalone audit meta-suite, and the clean checkpoint
-#|   audit. Do not encode an environment workaround in tracked files. If both
-#|   commits reproduce the same T15 failure, stop product work and document that
-#|   inherited harness blocker; do not weaken or edit the audit to pass.
-#|
-#|3. If and only if the complete gate becomes green, update P3.54 from
-#|   implementation measurement to a clean checkpoint, retain the exact clean
-#|   audit result, answer this archive, and create one linked NEXT archive for
-#|   the next isolated P3 effect. Otherwise preserve P3.54 as implemented but
-#|   awaiting its gate, rewrite the handover with exact reproduction evidence,
-#|   and leave one valid resumable NEXT archive. In both cases run the launcher
-#|   contract and `--check`, verify Q3.4 and the archive graph, and make only the
-#|   separate `docs: prepare next agent session` commit.
+#|1. Determine whether a new user instruction explicitly authorizes an apparatus
+#|   repair and names its boundary. Do not treat this archive as that authority.
+#|2. If no new scope exists, make no tracked or untracked repository change;
+#|   report the inherited T15 blocker and request the missing decision.
+#|3. If new scope exists, re-read it against the retained paired evidence before
+#|   acting. Preserve exact source, debt, instrument, and measured-tree identity,
+#|   and keep any apparatus repair separate from product implementation.
 #|
 #|# Automatic Handoff
 #|
-#|Before the session ends, leave the worktree clean and committed with a truthful
-#|rolling handover and exactly one NEXT archive. Do not launch it. Keep P3 active
-#|and P4-P8 queued. COMPLETE is invalid until every authorized checkpoint through
-#|P8 is complete.
+#|Without new explicit scope, do not create another successor or repeat the
+#|blocked gate. Leave this committed NEXT state intact and report the blocker.
+#|Do not launch a successor, push, merge, publish, distribute, stash, revert, or
+#|remove the worktree. COMPLETE remains invalid while P3 and P4-P8 are unfinished.
 # CODEX_MUTABLE_PROMPT_END

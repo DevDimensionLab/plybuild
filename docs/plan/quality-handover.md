@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-25T22:55:20+02:00
+Generated: 2026-08-25T23:22:18+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -29,11 +29,11 @@ continuity implementation is 1b85711 and changes no Go quality denominator.
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` remains NEXT because P3.54 has an incomplete audit-meta
-gate and P4-P8 remain queued. Its active archive is
-`docs/plan/agent-sessions/2026-08-25T225520+0200-resume-unzip-archive-close-gate.md`.
-The archive-close implementation archive is answered history, reciprocal links
-are connected, and there is exactly one NEXT tail.
+`codex-dev-start.sh` remains NEXT because P3.54 is blocked on an inherited
+audit-meta apparatus failure and P4-P8 remain queued. Its active archive is
+`docs/plan/agent-sessions/2026-08-25T232218+0200-resume-p354-audit-harness-blocker.md`.
+The gate-diagnosis archive is answered history, reciprocal links are connected,
+and there is exactly one NEXT tail.
 
 Normal launch remains a Bash 3.2-compatible non-interactive supervisor with
 byte-exact archived prompts, unique external raw JSONL logs, structured stream
@@ -105,7 +105,7 @@ report is
 retained. Reports, tools, caches, diagnostic clones, and empty-HOME state stay
 outside the measured tree.
 
-## Incomplete Gate
+## Inherited Gate Blocker
 
 All move-specific and product gates pass except audit meta-control T15:
 
@@ -122,7 +122,8 @@ All move-specific and product gates pass except audit meta-control T15:
   non-comparable; Q1.3 is exactly 10/32.
 - Clean full audit: valid exit 1, 15 findings, zero dirty paths and zero
   comparable regressions.
-- Audit meta-suite: three complete attempts pass T1-T14, then T15 exits 2.
+- Audit meta-suite at the implementation checkpoint: prior complete attempts
+  pass T1-T14, then T15's old structured parser exits 2.
 
 T15 reports `inventory overlay mode permits only untracked
 .quality/inventory`. Its temporary pinned `5635d50` checkout contains the
@@ -133,6 +134,38 @@ external `GOMODCACHE` eliminates read-only cleanup noise but does not change the
 identity failure. The audit, baseline, inventory, fixtures, Maven/template code,
 and scanner are unchanged by move 54, so the mission boundary did not permit a
 tracked workaround or cleanup inside T15.
+
+Fresh paired detached clones now prove the failure is inherited. `70bee0e` and
+`3bd07e9` were each checked out sequentially at the same pathname and run from
+the same freshly recreated external environment pathname with identical PATH,
+HOME, XDG config, TMPDIR, GOTMPDIR, GOCACHE, existing GOMODCACHE, Go selectors,
+locale, and toolchain. The exported-environment files are byte-identical with
+SHA-256 `963ad106f66f7770704a13b3ef619079ae19748b1aafe678700f9233bdc833ef`;
+the Go/toolchain evidence files are byte-identical with SHA-256
+`8fc0505f60a4950583fd56222b64a0a175b44fbfc55aff409467602d19592c5f`.
+Both use Go 1.26.2 darwin/arm64, `CGO_ENABLED=0`, `GOENV=off`, `GOWORK=off`,
+empty `GOFLAGS`, and the same existing module cache.
+
+Both complete meta-suites exit 1, pass T1-T14, and produce identical normalized
+log bodies with SHA-256
+`bc83831ae61962b92c3233de04df52f70e3f2a2fdd6d871fb4d0db3f451b733b`.
+In each T15 run the old upstream baseline audit really succeeds with expected
+exit 1; the following old structured parser exits 2 on the overlay identity.
+Each pinned clone is exactly `5635d50` and has the inventory overlay plus these
+three ignored paths:
+
+- `pkg/template/test/target-simple-template/src/main/java/no/ply/template/target/DummyConfiguration.kt`;
+- `pkg/template/test/target-test-template/test.properties`;
+- `pkg/template/test/target-test-template/textfile.txt`.
+
+The controlled PATH intentionally contains only standard supported tool
+locations and has no `mvn`. The retained developer-environment clone confirms
+that ambient SDKMAN Maven adds exactly six files below
+`pkg/maven/test/analyze/target/`, explaining why prior attempts saw nine ignored
+paths. Removing Maven explains that population difference but is not a green
+invocation correction because the three unconditional template outputs remain.
+The paired evidence is retained below
+`/private/tmp/ply-p354-gate.B7akzM` while present.
 
 ## Decisions And Learned Facts
 
@@ -153,28 +186,32 @@ tracked workaround or cleanup inside T15.
 6. T15 must not be made green by a wrapper, hook, manual mid-run cleanup,
    patched temporary instrument, ignored-path exclusion, weakened identity, or
    altered baseline checkout.
-7. The next agent must compare T15 at predecessor `70bee0e` and implementation
-   `3bd07e9` in byte-identical fresh temporary clones. If both fail identically,
-   record an inherited apparatus blocker and request scope rather than changing
-   audit or product code.
-8. Plugin diagrams remain the next likely isolated production-effect family,
+7. The complete predecessor and implementation meta-suite runs fail
+   identically. The earlier recorded green predecessor gate is not reproducible
+   from the preserved repository and environment evidence; the blocker is not
+   caused by move 54.
+8. PATH exposure of real Maven explains six of the nine ignored outputs, but a
+   no-Maven PATH still fails on three template outputs. No supported external
+   invocation correction found by this mission can make the existing T15
+   identity truthful.
+9. P3.54 needs explicit user scope for an audit-apparatus repair. Product,
+   tests, fixtures, audit, parser, baseline, and inventory remain unchanged.
+10. Plugin diagrams remain the next likely isolated production-effect family,
    but no such move may begin until P3.54's checkpoint gate is truthful.
 
 ## Next Objective
 
-Finish only the P3.54 checkpoint gate. Reproduce the complete audit meta-suite
-at `70bee0e` and `3bd07e9` under identical external toolchain, PATH, HOME/module-
-cache, TMPDIR, GOTMPDIR, and GOCACHE setup using fresh clean clones below
-`/private/tmp`. Capture exact checkout heads, Go environment, exit codes, and
-dirty populations without changing either measured clone between old upstream
-execution and parser identity measurement.
+Keep P3.54 implemented but blocked and request explicit user scope for the
+inherited T15 apparatus failure. Do not rerun product gates or begin another P3
+effect while the checkpoint apparatus is broken. A future authorization must
+name the allowed audit/baseline-reproduction repair boundary; it must preserve
+the exact `5635d50` source checkout, stored baseline debt and identities, and
+measured-tree truth rather than excluding or cleaning evidence after the fact.
 
-If a supported environment/invocation mismatch explains the difference from
-the earlier green predecessor gate, correct only that external invocation and
-rerun full preflight plus the clean audit. If both commits produce the same T15
-failure, preserve the implementation, record the inherited blocker, and stop.
-Do not edit the audit, scanner, baseline, inventory, old/current fixtures,
-product code, tests, or implementation commit.
+Until that decision exists, do not edit the audit, scanner, baseline, inventory,
+old/current fixtures, product code, tests, or implementation commit. Do not
+claim P3.54 as a clean checkpoint and do not begin plugin-diagram, clock/server,
+mutation, or later-roadmap work.
 
 ## Verification Notes
 
@@ -194,7 +231,14 @@ Completed from implementation commit
   zero regressed, one non-comparable, zero dirty paths.
 - Audit meta T1-T14: PASS; T15: repeated exit 2 for the pinned baseline clone's
   nine ignored fixture outputs plus its authorized inventory overlay.
-- Handoff-only Q3.4: exit 0, zero phrases across 70 Markdown files, zero
+- Paired predecessor/implementation audit meta: both exit 1; T1-T14 PASS; old
+  upstream baseline exit 1; old structured baseline exit 2; normalized output
+  bodies and controlled environments are byte-identical.
+- Controlled dirty population: inventory overlay plus three template outputs;
+  developer PATH adds six Maven outputs for nine ignored paths total.
+- No full preflight or clean audit rerun followed the paired failure because the
+  mission explicitly requires stopping on the inherited predecessor blocker.
+- Final handoff-only Q3.4: exit 0, zero phrases across 71 Markdown files, zero
   ratchet regressions.
 - Implementation commit: `3bd07e9` (`refactor: route unzip archive close
   through filesystem adapter`).
@@ -204,10 +248,12 @@ Completed from implementation commit
 Read this handover, the linked NEXT archive, P3.54 and the gate, both design
 documents, inventory, audit meta-suite/wrapper/parser/vendor, baseline migration
 metadata and README, and commits `5635d50`, `80b43ba`, `70bee0e`, and `3bd07e9`.
-Confirm branch, HEAD, clean status, reciprocal links, and launcher `--check`.
+Confirm branch, HEAD, clean status, reciprocal links, launcher `--check`, and
+whether the user supplied new explicit apparatus-repair scope.
 
 Stop before any product/test mutation, audit/scanner/baseline/inventory/fixture
 change, another P3 effect, plugin diagrams, clock/server work, Q1.4, P4,
-mutation, Docker, distribution, or publication. Stop on an authoritative full-
-audit exit 2, comparable ratchet regression, or any proposal that trades away
-measured-tree identity to make T15 pass.
+mutation, Docker, distribution, or publication unless new user authorization
+specifically changes that boundary. Without new scope, report the inherited
+blocker and stop. Always stop on any proposal that trades away measured-tree
+identity to make T15 pass.

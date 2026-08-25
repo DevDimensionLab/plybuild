@@ -1,13 +1,13 @@
 # Agent Session: Resume Unzip Archive Close Gate
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T225520+0200-resume-unzip-archive-close-gate`
 Created: `2026-08-25T22:55:20+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `229b7729de108c595723ef276892d0c75c93adf0b629e7530e0b87c280530a97`
 Previous: [2026-08-25T220107+0200-resume-shell-unzip-archive-close.md](2026-08-25T220107+0200-resume-shell-unzip-archive-close.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T232218+0200-resume-p354-audit-harness-blocker.md](2026-08-25T232218+0200-resume-p354-audit-harness-blocker.md)
+Outcome: paired complete meta-suites at `70bee0e` and `3bd07e9` fail identically in T15, proving an inherited audit-harness blocker; no product or apparatus code changed
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
