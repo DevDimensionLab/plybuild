@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `dfcfa75`.
+Last measured checkpoint: 2026-08-25, commit `170b0ae`.
 
 ## Objective
 
@@ -58,6 +58,23 @@ P8|queued
 | Baseline numeric debt leaves | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | 228 | The measurement instrument is unchanged. |
 
 Authoritative report: `target/quality-audit/scorecard.json`.
+
+P3.31 clean checkpoint:
+
+| Signal | P3.31 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 250 | Seven filtered-walk recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 16 / 25 | No package denominator changed. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 35 / 52 | The filtered template walk now uses the filesystem adapter. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
 ## Checkpoints
 
@@ -1230,6 +1247,8 @@ copy, search, render, config, file, or Maven operation changed. Q0.6 remains at
 writes. Q1.3 moves from 36 of 53 to 35 of 52; Q1.2 stays zero, Q1.4 stays 7 of
 8, and exact Q2.1 stays 0 of 8.
 
+Commit: `170b0ae`.
+
 The move-31 implementation gate passed focused template/filesystem and
 relevant config, file, Maven, and command caller contracts, API/CLI and
 subprocess compatibility, all four host flows, preflight, test, install, the
@@ -1238,8 +1257,10 @@ standalone 62-control launcher contract, uncached and race tests, vet, the
 attempt hit the documented nested launcher signal-interruption partial-raw-log
 timing flake; its immediate complete rerun passed. The focused seven-criterion
 audit exited 1 for documented findings, never 2, with four improved, two held,
-zero regressed, and one not-comparable ratchet. The implementation commit and
-authoritative clean full-audit result are recorded by the handoff checkpoint.
+zero regressed, and one not-comparable ratchet. The clean full audit at
+`170b0ae` exited 1 for 16 documented findings, never 2, with L0 8 of 8, five
+improved, two held, zero regressed, one not-comparable ratchet, and zero dirty
+paths.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
@@ -1261,16 +1282,16 @@ uses the same filesystem dependency for its input read and output creation,
 and exported `file.FindFirst` and `file.FindAll` now use the filesystem
 adapter's narrow `Walk` operation, without adding inventory seams.
 `GitCloudConfig.GitHookFiles` and `GitCloudConfig.Examples` now reuse the
-filesystem adapter's `ReadDir` operation, and `GitCloudConfig.Templates` now
-reuses its `Walk` operation, without adding inventory seams. The next coherent
-flow is `template.filteredFilesFromTemplate`: reuse only the existing
-filesystem `Walk` operation for its direct `filepath.Walk(sourceDir,
-callback)` boundary while preserving exact source root, delivered callback
-order and metadata, existing incoming-error panic behavior, directory
-handling, root-file detection, ordered ignore matching, render exception,
-logging, ordered results, partial results, and exact walk errors. Leave merge
-composition, copy/search/render behavior, `SaveTemplateListMarkdown`, the
-adapter, public API, and every other production effect unchanged.
+filesystem adapter's `ReadDir` operation, while `GitCloudConfig.Templates` and
+`template.filteredFilesFromTemplate` reuse its `Walk` operation, without
+adding inventory seams. The next coherent flow is
+`template.SaveTemplateListMarkdown`: reuse only the existing filesystem
+`WriteFile` operation for its direct `os.WriteFile` boundary while preserving
+the exported signature, exact receiver-derived README path, byte conversion,
+`0644` mode, returned path on success and failure, and exact write error.
+Leave list rendering, filtered walking, merge composition, copy/search/render
+behavior, the adapter, public API, and every other production effect
+unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.

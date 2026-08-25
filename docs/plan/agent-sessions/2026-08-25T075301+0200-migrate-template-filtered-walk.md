@@ -1,13 +1,13 @@
 # Agent Session: Migrate Template Filtered Walk
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T075301+0200-migrate-template-filtered-walk`
 Created: `2026-08-25T07:53:01+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `d22416d4473eac8221bc517d999fe963894a2b6f4274a35f4e8eeec24562684a`
 Previous: [2026-08-25T071258+0200-migrate-config-templates-walk.md](2026-08-25T071258+0200-migrate-config-templates-walk.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T082407+0200-migrate-template-markdown-write.md](2026-08-25T082407+0200-migrate-template-markdown-write.md)
+Outcome: Routed only the filtered template walk through the existing filesystem adapter with exact callback behavior and zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
