@@ -1,13 +1,13 @@
 # Agent Session: Migrate Local Config Directory Mkdir
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T131820+0200-migrate-local-config-directory-mkdir`
 Created: `2026-08-25T13:18:20+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `9eb9230dee677c155cb0b4abbeb3db32499f08d47defef67e6f9997906e57f99`
 Previous: [2026-08-25T125300+0200-migrate-local-config-update-create.md](2026-08-25T125300+0200-migrate-local-config-update-create.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T135854+0200-migrate-tips-list-read-dir.md](2026-08-25T135854+0200-migrate-tips-list-read-dir.md)
+Outcome: completed at `b2d37cc`; Q1.3 improved from 23/40 to 22/40 with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
