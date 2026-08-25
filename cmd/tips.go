@@ -3,12 +3,24 @@ package cmd
 import (
 	"fmt"
 	markdown "github.com/MichaelMure/go-term-markdown"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/tips"
 	"github.com/spf13/cobra"
-	"os"
 	"strings"
 )
+
+type tipsShowReadDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemTipsShowReadDependencies() tipsShowReadDependencies {
+	return tipsShowReadDependencies{Files: filesystem.System()}
+}
+
+func readTipsShowSource(dependencies tipsShowReadDependencies, tipsPath string) ([]byte, error) {
+	return filesystem.ReadFile(dependencies.Files, tipsPath)
+}
 
 var tipsCmd = &cobra.Command{
 	Use:   "tips",
@@ -73,7 +85,7 @@ var tipsShowCmd = &cobra.Command{
 		name := args[0]
 
 		tipsPath := file.Path("%s/%s.md", tips.LocalDir(ctx.CloudConfig), name)
-		source, err := os.ReadFile(tipsPath)
+		source, err := readTipsShowSource(systemTipsShowReadDependencies(), tipsPath)
 		if err != nil {
 			return fmt.Errorf("failed to find any tips file for [%s]: %s: %w", name, tipsPath, err)
 		}

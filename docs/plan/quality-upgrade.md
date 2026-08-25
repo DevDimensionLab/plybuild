@@ -110,6 +110,23 @@ P3.33 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
+P3.34 measured implementation result:
+
+| Signal | P3.34 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 262 | Four tips-show-read recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 16 / 25 | No package denominator changed. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 32 / 49 | The tips-show source read now uses the filesystem adapter. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -1376,6 +1393,38 @@ regressed, and one not-comparable ratchet. The full audit from clean commit
 improved, two held, zero regressed, one not-comparable ratchet, and zero dirty
 paths.
 
+Move 34 routes only `tipsShowCmd.RunE`'s direct
+`os.ReadFile(tipsPath)` operation through the existing filesystem adapter. All
+command objects and registrations remain unchanged. For a non-empty argument
+list, the production entry still evaluates exact `name := args[0]`, then exact
+`file.Path("%s/%s.md", tips.LocalDir(ctx.CloudConfig), name)`, and now selects
+`filesystem.System()` only for a private complete tips-show-read dependency
+before one adapter `ReadFile` attempt with that exact caller-composed path.
+
+Four new top-level command contracts bring the suite to 262 tests. They prove
+complete system dependency selection and delivery, exact caller-composed path
+delivery without cleaning or normalization, non-empty recorded read
+populations, exact empty, representative, non-ASCII, and arbitrary returned
+bytes, one read attempt, exact dependency-error identity at the private
+boundary, safe zero behavior without developer-path access, and no unrelated
+adapter operation. The production-composition contracts neither read the real
+filesystem nor run the command. No adapter operation, established complete
+recording double, inventory label, seam driver, mutation harness, public API,
+command registration, missing-argument branch, list or sync branch, profile,
+path composition, render/output/log/cloud sequencing, config, template, file,
+or Maven behavior changed. Q0.6 remains at 22 guarded safe-writer sites, 17
+write and 5 copy, with zero unsafe direct writes. Q1.3 moves from 33 of 50 to
+32 of 49; Q1.2 stays zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8.
+
+The move-34 implementation gate passed focused command/filesystem and relevant
+tips, context, config, file, template, and Maven caller package tests, API/CLI
+and subprocess compatibility, all four host flows, full preflight, test,
+install, the standalone 62-control launcher contract, uncached and race tests,
+vet, and the 15-control audit meta-suite. The focused seven-criterion audit
+exited 1 for documented findings, never 2, with four improved, two held, zero
+regressed, and one not-comparable ratchet. The clean full checkpoint audit and
+implementation commit identity are recorded by the following session handoff.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -1403,10 +1452,13 @@ adding inventory seams. `template.SaveTemplateListMarkdown` now reuses
 mode, returned path, or error. `(*config.ProjectConfiguration).WriteTo` now
 reuses `WriteFile` without changing the exported method or `ProjectConfig`
 contract, exact log and `json.MarshalIndent` sequencing, caller target,
-serialized bytes, `0644` mode, or exact error. Continue with the next isolated
-production effect while leaving project initialization, `SortAndWritePom`,
-cloud config, template/file/Maven behavior, command sequencing, the adapter,
-public API, and every other completed effect unchanged.
+serialized bytes, `0644` mode, or exact error. `tipsShowCmd.RunE` now reuses
+`ReadFile` without changing command registration, exact name and path
+composition, read error wrapping, returned bytes, or later command sequencing.
+Continue with the next isolated production effect while leaving project
+initialization, `SortAndWritePom`, cloud config, template/file/Maven behavior,
+every other tips branch, command sequencing, the adapter, public API, and every
+other completed effect unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
