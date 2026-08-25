@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `b232dda`.
+Last measured checkpoint: 2026-08-25, commit `6928a72`.
 
 ## Objective
 
@@ -222,6 +222,23 @@ P3.40 clean checkpoint:
 | Packages with tests | 17 / 25 | The contracts stay in the already-tested config package. |
 | Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
 | Direct external effects outside adapters | 25 / 42 | The local-config touch create and concrete file Close classification left the scanner population. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+
+P3.41 clean checkpoint:
+
+| Signal | P3.41 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 290 | Four local-config-update-create recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 17 / 25 | The contracts stay in the already-tested config package. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 23 / 40 | The local-config update create and concrete file Close classification left the scanner population. |
 | Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
 | Executable mutation harnesses | 0 / 8 | P5 remains queued. |
 | Acceptance scripts | 4 / 4 | All host flows pass. |
@@ -1856,6 +1873,12 @@ timing flake; its immediate complete rerun, full preflight, and full test run
 passed all 62 launcher controls. The focused seven-criterion audit exited 1
 for documented findings, never 2, with four improved, two held, zero
 regressed, and one not-comparable ratchet.
+
+Commit: `6928a72`.
+
+The clean full audit from commit `6928a72` exited 1 for 15 documented findings,
+never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

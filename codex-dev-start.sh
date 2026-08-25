@@ -1055,39 +1055,38 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T125300+0200-migrate-local-config-update-create
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T125300+0200-migrate-local-config-update-create.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T122224+0200-migrate-local-config-touch-create.md
+#|SESSION_ID=2026-08-25T131820+0200-migrate-local-config-directory-mkdir
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T131820+0200-migrate-local-config-directory-mkdir.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T125300+0200-migrate-local-config-update-create.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Complete one focused P3 production-effect move: route only the direct
-#|`os.Create(configFilePath)` in `LocalConfigDir.UpdateLocalConfig` through the
-#|existing filesystem adapter. Preserve exact directory and file-path selection,
-#|the caller-supplied config, YAML marshaling, logging, create result and error,
-#|the completed update write, write-error lifecycle, final Close result, every
-#|caller, the completed local-config directory-stat, touch-write, update-write,
-#|and touch-create moves, every completed filesystem, file, template, config,
-#|Maven, tips, structurizr, Bitbucket, Wpost, and supervisor move, and every P2A
-#|contract with zero comparable ratchet regressions.
+#|`os.Mkdir(dir, 0755)` in `LocalConfigDir.CheckOrCreateConfigDir` through one new
+#|exact filesystem adapter `Mkdir` operation. Preserve exact directory selection,
+#|the completed filesystem stat and `os.IsNotExist` decision, one single-level
+#|mkdir attempt, mode, error and return behavior, every caller, both completed
+#|local-config create and write lifecycles, every completed filesystem, file,
+#|template, config, Maven, tips, structurizr, Bitbucket, Wpost, and supervisor
+#|move, and every P2A contract with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
 #|P3 remains active, P4-P8 are queued in the machine-readable block in
 #|docs/plan/quality-upgrade.md, and the launcher must remain NEXT until every
 #|authorized checkpoint is complete. This mission authorizes only the direct
-#|`os.Create(configFilePath)` operation in `LocalConfigDir.UpdateLocalConfig` in
-#|`pkg/config/local.go` and its use of the existing zero-value-safe filesystem
-#|`Create` operation. It authorizes focused config recording contracts and a
-#|dedicated file double for that create boundary and its preserved Close result.
-#|It does not authorize changing `CheckOrCreateConfigDir`, `FilePath`, the
-#|caller-supplied config, YAML marshaling, logging, the completed update
-#|`WriteFile`, its bytes/mode/error, Close selection or result, `TouchFile`,
-#|another config method, an adapter or established complete-double extension,
-#|another production effect, a function-valued effect dependency, a new adapter
-#|family or public API, mutation harnesses, or later roadmap implementation.
+#|`os.Mkdir(dir, 0755)` operation in `LocalConfigDir.CheckOrCreateConfigDir` in
+#|`pkg/config/local.go`; one distinct zero-value-safe internal filesystem adapter
+#|`Mkdir(path string, mode fs.FileMode) error` operation with exact `os.Mkdir`
+#|system semantics; its focused adapter contracts; the mandatory method addition
+#|to every current complete `filesystem.FileSystem` test double; and focused
+#|local-config directory-create recording contracts. It does not authorize
+#|changing `MkdirAll`, the completed stat adapter operation or contracts,
+#|`os.IsNotExist`, another config method or effect, another adapter operation or
+#|family, a function-valued effect dependency, a public API, inventory, mutation
+#|harnesses, or later roadmap implementation.
 #|
 #|# Measurements At Start
 #|
@@ -1097,14 +1096,14 @@ exit 70
 #|`CheckOrCreateConfigDir`, `TouchFile`, `UpdateLocalConfig`, `Config`, `Print`,
 #|and `Exists`, complete `pkg/context/context.go`, `cmd/profile.go`, their relevant
 #|command and context tests, relevant filesystem/file/template/config/Maven/tips/
-#|structurizr behavior, the filesystem and process adapters and relevant
-#|recording doubles, `.quality/inventory`, and the continuity and quality-lift
-#|designs. Regenerate ignored reports outside the measured tree or remove them
-#|before a clean audit.
+#|structurizr behavior, the complete filesystem and process adapters, every
+#|complete `filesystem.FileSystem` implementation and recording double,
+#|`.quality/inventory`, and the continuity and quality-lift designs. Regenerate
+#|ignored reports outside the measured tree or remove them before a clean audit.
 #|
-#|Implementation commit `b232dda` has 286 tests across 17 of 25 packages. Q0.6
+#|Implementation commit `6928a72` has 290 tests across 17 of 25 packages. Q0.6
 #|has 22 guarded safe-writer sites, 17 write and 5 copy, and zero unsafe direct
-#|test writes. Q1.1 is 8 of 25, Q1.2 is 0, Q1.3 is 25 violations of 42 production
+#|test writes. Q1.1 is 8 of 25, Q1.2 is 0, Q1.3 is 23 violations of 40 production
 #|effect sites with clock and server absent, Q1.4 is 7 of 8, and exact Q2.1 is 0
 #|of 8 executable harnesses. The clean gate passed, the full audit exited 1 for
 #|15 documented findings and never 2, and comparable ratchets were five improved,
@@ -1119,7 +1118,8 @@ exit 70
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the local-config update-create boundary, package
+#|implementation commit for the exact filesystem Mkdir operation, mandatory
+#|complete-double compatibility, local-config directory-create boundary,
 #|contracts, and measured planning notes. Then perform the normal separate
 #|handoff-only commit. Do not push, merge, publish, distribute, remove the
 #|worktree, stash inherited changes, revert user work, or run destructive Git
@@ -1134,31 +1134,32 @@ exit 70
 #|ProjectConfig, CloudConfig, Maven, structurizr and tips behavior, and every
 #|caller's observable behavior.
 #|
-#|Use the existing complete filesystem dependency and existing
-#|`Create(name string) (filesystem.File, error)` operation with a safe zero
-#|value; do not add or change an adapter operation, extend an established
-#|complete recording double, or store a function-valued effect dependency.
-#|Production must select `filesystem.System()` only for a private complete
-#|local-config-update-create composition.
+#|Add `Mkdir(string, fs.FileMode) error` to the existing complete
+#|`filesystem.FileSystem` interface, add the matching zero-value-safe package
+#|operation returning exact `filesystem.ErrNoFilesystem`, and map the system
+#|implementation directly to `os.Mkdir`. Keep established `MkdirAll` unchanged.
+#|Update all 34 current complete filesystem test doubles only as required to
+#|remain complete: the new method must record it for its dedicated contracts or
+#|reject it consistently as unrelated everywhere else. Do not store a
+#|function-valued dependency, split the complete dependency, add recursive
+#|behavior, or expose application API.
 #|
-#|Preserve exact `CheckOrCreateConfigDir()` evaluation and early error, exact
-#|`FilePath()` result, the exact caller-supplied `config`,
-#|`yaml.Marshal(&config)` and early error, and exact update log in their existing
-#|order. Make one adapter create attempt with the exact `configFilePath` and
-#|preserve its exact `filesystem.File` and error at the private boundary.
-#|Preserve the enclosing lifecycle: a non-nil create error returns exactly
-#|before the completed write; create success invokes the existing update-write
-#|composition once with the exact path, bytes, and `0644`; a non-nil write error
-#|returns exactly without Close; write success returns the exact final
-#|`f.Close()` result.
+#|Preserve exact `localCfgDir.Implementation().Path` evaluation, the completed
+#|one-attempt adapter `Stat` with that exact arbitrary string, its exact
+#|`fs.FileInfo` and error, and the exact `os.IsNotExist(err)` decision. Nil stat,
+#|existing-directory stat, and arbitrary non-not-exist stat errors must still
+#|return nil without mkdir. Only a not-exist error selects
+#|`filesystem.System()` for a private complete local-config-directory-create
+#|composition and makes one adapter mkdir attempt with the exact `dir` and
+#|`0755`. Preserve the exact mkdir error as the method result and nil on success.
 #|
-#|Do not clean or join paths, preflight, retry, normalize, validate, create an
-#|extra file, change truncation or permission behavior, write through the
-#|created file, defer or add Close, close after a write error, wrap an error,
-#|move the write, change YAML/logging, combine create and write dependencies, or
-#|broaden into directory creation, touch, read, print, existence, context,
-#|profile, Maven, structurizr, tips, template, file, HTTP, Wpost, clock, server,
-#|P4, P5, dependency, Docker, distribution, or publication work.
+#|Do not clean or join the path, preflight, retry, normalize, validate, create
+#|parents, tolerate an existing directory, change permission semantics, wrap an
+#|error, move the stat or predicate, merge stat and mkdir dependencies, or
+#|broaden into local-config path, YAML, logging, create, write, Close, touch,
+#|update, read, print, existence, context, profile, Maven, structurizr, tips,
+#|template, file, HTTP, Wpost, process, clock, server, P4, P5, dependency, Docker,
+#|distribution, or publication work.
 #|
 #|# Required Reading
 #|
@@ -1167,32 +1168,34 @@ exit 70
 #|docs/design/quality-lift.md, `.quality/inventory`, complete
 #|`pkg/config/local.go` and all config tests, every local-config caller, complete
 #|`pkg/context/context.go`, `cmd/profile.go`, and relevant registration, command,
-#|and context tests. Read relevant filesystem/file/template/config/Maven/tips/
-#|structurizr code and tests, `internal/adapter/filesystem`,
-#|`internal/adapter/process`, their relevant complete recording doubles, and the
-#|Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 audit implementation before editing.
-#|Before the full gate, read the complete launcher contract, relevant Make
-#|meta-tests, P2A API/CLI/subprocess contracts, and all four host acceptance
-#|flows.
+#|and context tests. Read complete `internal/adapter/filesystem` source and tests,
+#|every complete filesystem implementation and double, relevant
+#|filesystem/file/template/config/Maven/tips/structurizr code and tests,
+#|`internal/adapter/process`, and the Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 audit
+#|implementation before editing. Before the full gate, read the complete launcher
+#|contract, relevant Make meta-tests, P2A API/CLI/subprocess contracts, and all
+#|four host acceptance flows.
 #|
 #|# Three Moves
 #|
-#|1. Start red with focused local-config-update-create recording contracts.
-#|   Prove the complete dependency, production selection of
-#|   `filesystem.System()`, exact arbitrary file paths, non-empty recorded create
-#|   populations, one attempt, exact `filesystem.File` and error identity for
-#|   nil, successful, arbitrary-error, and unusual combined results, safe zero
-#|   behavior without developer-path access, the dedicated file double's exact
-#|   Close result, and no unrelated adapter operation. Production-composition
-#|   contracts must not mutate the real filesystem or run another command.
+#|1. Start red with focused filesystem adapter Mkdir contracts. Prove exact
+#|   arbitrary paths, exact modes, non-empty recorded populations, one attempt,
+#|   exact error identity, safe zero behavior without developer-path access, and
+#|   system single-level `os.Mkdir` behavior in temporary directories: missing
+#|   parents fail, existing directories fail, and no recursive creation occurs.
+#|   Add focused local-config-directory-create recording contracts that prove the
+#|   complete dependency, production `filesystem.System()` selection, exact path
+#|   and `0755`, one attempt, exact nil/arbitrary error results, non-empty
+#|   populations, and no unrelated operation. Production-composition contracts
+#|   must not mutate the real filesystem or run another command.
 #|
-#|2. Reuse only existing filesystem adapter `Create`. Keep exported
-#|   `LocalConfigDir.UpdateLocalConfig(config LocalConfiguration) error` as the
-#|   production entry, select `filesystem.System()` only for a private complete
-#|   local-config-update-create composition, and replace only its direct
-#|   `os.Create`. Do not change prior evaluation, completed WriteFile evaluation,
-#|   bytes, mode, errors, final Close selection/result, another config effect,
-#|   adapter, complete double, method or caller, inventory, or public API.
+#|2. Add only the exact adapter `Mkdir` operation and mandatory method
+#|   implementations on all current complete test doubles. Keep exported
+#|   `LocalConfigDir.CheckOrCreateConfigDir() error` as the production entry,
+#|   select `filesystem.System()` only for a private complete directory-create
+#|   composition, and replace only its direct `os.Mkdir`. Do not change prior
+#|   stat/predicate evaluation, error selection, another config effect, adapter
+#|   operation, method, caller, inventory, or public API.
 #|
 #|3. Run focused config/filesystem contracts and relevant process, command,
 #|   context, file, template, Maven, tips, and structurizr caller packages'
@@ -1201,19 +1204,18 @@ exit 70
 #|   flows, the audit meta-suite, focused
 #|   Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 measurements, full clean checkpoint
 #|   audit, and empty-HOME count-2. Expect Q1.1 to hold at 8 of 25 and Q1.3 to
-#|   move nominally from 25 of 42 to 23 of 40 because the concrete `*os.File`
-#|   Close classification leaves with the direct create while the same lifecycle
-#|   call remains. Q0.6, Q1.2, Q1.4, and exact Q2.1 must hold. Regenerate exact
+#|   move nominally from 23 of 40 to 22 of 39 because only the direct mkdir leaves
+#|   the population. Q0.6, Q1.2, Q1.4, and exact Q2.1 must hold. Regenerate exact
 #|   values; the full audit may exit 1 for documented findings but never 2.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent local-config
-#|update-create move or record an exact resumable state. Rewrite the rolling
-#|handover, record the measured P3 result, answer this archive, create one linked
-#|NEXT archive for the next coherent P3 effect move, replace only the launcher's
-#|mutable regions, run the launcher contract, and make the separate handoff-only
-#|commit `docs: prepare next agent session`.
+#|Before this agent session ends, finish and commit the coherent filesystem
+#|Mkdir and local-config directory-create move or record an exact resumable
+#|state. Rewrite the rolling handover, record the measured P3 result, answer this
+#|archive, create one linked NEXT archive for the next coherent P3 effect move,
+#|replace only the launcher's mutable regions, run the launcher contract, and
+#|make the separate handoff-only commit `docs: prepare next agent session`.
 #|
 #|Keep P3 active until its measured exit is documented. Do not launch the next
 #|session. COMPLETE is valid only after every authorized checkpoint through P8
