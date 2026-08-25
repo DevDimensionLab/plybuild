@@ -1,13 +1,13 @@
 # Agent Session: Migrate Spring Archive Working Directory
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T155409+0200-migrate-spring-archive-working-directory`
 Created: `2026-08-25T15:54:09+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `8755537d5ed21a2f39f7c5c684336f8a2db5e832c1098171740a5b05ebe3efd7`
 Previous: [2026-08-25T151736+0200-migrate-open-browser-process-start.md](2026-08-25T151736+0200-migrate-open-browser-process-start.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T163321+0200-migrate-shell-unzip-directory-creation.md](2026-08-25T163321+0200-migrate-shell-unzip-directory-creation.md)
+Outcome: Completed by implementation commit `d982f63`; Q1.3 improved to 15/36 with 324 tests and zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
