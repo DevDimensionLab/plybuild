@@ -1,13 +1,13 @@
 # Agent Session: Migrate Exported Recursive Delete
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T020314+0200-migrate-file-delete-all`
 Created: `2026-08-25T02:03:14+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `29594d5fcfd71ecd9ade498dbe6e8b2ebdc1b88f7373524fbfc13c863738cec9`
 Previous: [2026-08-25T013438+0200-migrate-file-delete-single.md](2026-08-25T013438+0200-migrate-file-delete-single.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T023033+0200-migrate-file-move.md](2026-08-25T023033+0200-migrate-file-move.md)
+Outcome: completed in `a4deb76115062c20addaf632f9d7b3b783284b83`; exported recursive deletion now delegates its exact path and error through the existing filesystem adapter, with the measured P3.20 result recorded in the rolling plan and handover.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
