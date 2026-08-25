@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/logger"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
@@ -108,13 +109,25 @@ func (mvnProject MavenProject) Type() ValidProjectType {
 	return Maven
 }
 
+type projectConfigWriteDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemProjectConfigWriteDependencies() projectConfigWriteDependencies {
+	return projectConfigWriteDependencies{Files: filesystem.System()}
+}
+
 func (config *ProjectConfiguration) WriteTo(targetFile string) error {
+	return config.writeTo(systemProjectConfigWriteDependencies(), targetFile)
+}
+
+func (config *ProjectConfiguration) writeTo(dependencies projectConfigWriteDependencies, targetFile string) error {
 	log.Infof("writes project config file to %s", targetFile)
 	data, err := json.MarshalIndent(config, "", "    ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(targetFile, data, 0644)
+	return filesystem.WriteFile(dependencies.Files, targetFile, data, 0644)
 }
 
 func (config *ProjectConfiguration) SourceMainPath() string {

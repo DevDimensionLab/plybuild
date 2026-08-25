@@ -93,6 +93,23 @@ P3.32 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
+P3.33 focused measurement:
+
+| Signal | P3.33 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 258 | Four project-config-write recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 16 / 25 | No package denominator changed. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 33 / 50 | The project config write now uses the filesystem adapter. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -238,7 +255,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 32 are complete.
+Status: active. Moves 1 through 33 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -1319,6 +1336,43 @@ full audit at the committed handoff exited 1 for 15 documented findings, never
 ratchet, and zero dirty paths. The exact README-path contract also makes Q3.2
 pass, reducing the documented finding count from 16 to 15.
 
+Move 33 routes only exported
+`(*config.ProjectConfiguration).WriteTo(targetFile string) error`'s direct
+`os.WriteFile(targetFile, data, 0644)` operation through the existing
+filesystem adapter. The exported method and `ProjectConfig` contract remain
+unchanged. The production entry selects `filesystem.System()` only for a
+private complete project-config-write dependency, and the private composition
+retains the exact first log call, then the exact
+`json.MarshalIndent(config, "", "    ")` evaluation and early error return,
+then one `filesystem.WriteFile` attempt with the exact caller target, returned
+bytes, and `0644` mode.
+
+Four new top-level config contracts bring the suite to 258 tests. They prove
+complete system dependency selection and delivery, the exact caller-supplied
+target without cleaning or normalization, non-empty recorded write
+populations, exact JSON bytes for nil, zero-value, and representative non-nil
+receivers, empty and nil collections, non-ASCII fields and map-key
+serialization, exact `0644` mode, one write attempt, exact write-error
+identity, the exact log before the write, unchanged receiver state, and safe
+zero behavior without developer-path access. The production-composition
+contracts perform no real filesystem mutation. No adapter operation, other
+complete recording double, inventory label, seam driver, mutation harness,
+public API, caller, project initialization, `SortAndWritePom`, cloud config,
+template, file, Maven, or command behavior changed. Q0.6 remains at 22 guarded
+safe-writer sites, 17 write and 5 copy, with zero unsafe direct writes. Q1.3
+moves from 34 of 51 to 33 of 50; Q1.2 stays zero, Q1.4 stays 7 of 8, and exact
+Q2.1 stays 0 of 8.
+
+Commit: this implementation commit; the following handoff records its hash.
+
+The move-33 precommit gate passed focused config/filesystem and relevant file,
+template, Maven, context, and command caller contracts, API/CLI and subprocess
+compatibility, all four host flows, preflight, test, install, the standalone
+62-control launcher contract, uncached and race tests, vet, the 15-control
+audit meta-suite, and empty-HOME count-2. The focused seven-criterion audit
+exited 1 for documented findings, never 2, with four improved, two held, zero
+regressed, and one not-comparable ratchet.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -1343,14 +1397,13 @@ filesystem adapter's `ReadDir` operation, while `GitCloudConfig.Templates` and
 `template.filteredFilesFromTemplate` reuse its `Walk` operation, without
 adding inventory seams. `template.SaveTemplateListMarkdown` now reuses
 `WriteFile` without changing its exact receiver-derived path, document bytes,
-mode, returned path, or error. The next coherent flow is
-`(*config.ProjectConfiguration).WriteTo`: reuse only the existing filesystem
-`WriteFile` operation for its direct `os.WriteFile` boundary while preserving
-the exported method and `ProjectConfig` contract, exact log and
-`json.MarshalIndent` sequencing, caller target, serialized bytes, `0644` mode,
-and exact error. Leave project initialization, `SortAndWritePom`, cloud config,
-template/file/Maven behavior, command sequencing, the adapter, public API, and
-every other production effect unchanged.
+mode, returned path, or error. `(*config.ProjectConfiguration).WriteTo` now
+reuses `WriteFile` without changing the exported method or `ProjectConfig`
+contract, exact log and `json.MarshalIndent` sequencing, caller target,
+serialized bytes, `0644` mode, or exact error. Continue with the next isolated
+production effect while leaving project initialization, `SortAndWritePom`,
+cloud config, template/file/Maven behavior, command sequencing, the adapter,
+public API, and every other completed effect unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
