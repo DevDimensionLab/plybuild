@@ -1,13 +1,13 @@
 # Agent Session: Migrate Config Examples Directory Read
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T064347+0200-migrate-config-examples-read-dir`
 Created: `2026-08-25T06:43:47+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `964801d874d3f7f5a1e24af5a706d7f56a7cec25016550272cab05f6d057d33c`
 Previous: [2026-08-25T061802+0200-migrate-config-git-hook-read-dir.md](2026-08-25T061802+0200-migrate-config-git-hook-read-dir.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T071258+0200-migrate-config-templates-walk.md](2026-08-25T071258+0200-migrate-config-templates-walk.md)
+Outcome: Completed in implementation commit `cb94f81`: the Examples directory read now reuses the existing filesystem adapter, Q1.3 is 37 of 54, the clean audit reported zero dirty paths and zero ratchet regressions, and P3 remains active.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
