@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"gopkg.in/yaml.v3"
@@ -13,6 +14,14 @@ import (
 
 type GitCloudConfig struct {
 	Impl DirConfig
+}
+
+type gitHookFilesDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemGitHookFilesDependencies() gitHookFilesDependencies {
+	return gitHookFilesDependencies{Files: filesystem.System()}
 }
 
 type refreshGit interface {
@@ -193,8 +202,12 @@ func (gitCfg GitCloudConfig) ProjectDefaults() (CloudProjectDefaults, error) {
 }
 
 func (gitCfg GitCloudConfig) GitHookFiles(path string) ([]string, error) {
+	return gitCfg.gitHookFiles(systemGitHookFilesDependencies(), path)
+}
+
+func (gitCfg GitCloudConfig) gitHookFiles(dependencies gitHookFilesDependencies, path string) ([]string, error) {
 	root := file.Path("%s/%s", gitCfg.Implementation().Dir(), path)
-	files, err := ioutil.ReadDir(root)
+	files, err := filesystem.ReadDir(dependencies.Files, root)
 	if err != nil {
 		return nil, err
 	}
