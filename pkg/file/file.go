@@ -447,8 +447,20 @@ func deleteAll(dependencies deleteAllDependencies, dirPath string) error {
 	return filesystem.RemoveAll(dependencies.Files, dirPath)
 }
 
+type clearDirDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemClearDirDependencies() clearDirDependencies {
+	return clearDirDependencies{Files: filesystem.System()}
+}
+
 func ClearDir(dirPath string, excludes []string) error {
-	files, err := filepath.Glob(filepath.Join(dirPath, "*"))
+	return clearDir(systemClearDirDependencies(), dirPath, excludes)
+}
+
+func clearDir(dependencies clearDirDependencies, dirPath string, excludes []string) error {
+	files, err := filesystem.Glob(dependencies.Files, filepath.Join(dirPath, "*"))
 	if err != nil {
 		return err
 	}
@@ -465,7 +477,7 @@ func ClearDir(dirPath string, excludes []string) error {
 			continue
 		}
 		log.Debugf("Removing: %s", file)
-		err = os.RemoveAll(file)
+		err = filesystem.RemoveAll(dependencies.Files, file)
 		if err != nil {
 			return err
 		}

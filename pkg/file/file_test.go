@@ -1,16 +1,19 @@
 package file
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
+	"github.com/sirupsen/logrus"
 )
 
 type recordingFileExistenceFilesystem struct {
@@ -97,6 +100,20 @@ type recordingFileMoveFilesystem struct {
 	renameErr error
 }
 
+type recordingClearDirFilesystem struct {
+	globPatterns   []string
+	globMatches    []string
+	globErr        error
+	removeAllPaths []string
+	removeAllErrs  map[string]error
+}
+
+type messageOnlyFormatter struct{}
+
+func (messageOnlyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	return []byte(entry.Message + "\n"), nil
+}
+
 type existingFileInfo struct {
 	name string
 }
@@ -145,6 +162,10 @@ func (*recordingFileReadFilesystem) Rename(string, string) error {
 	return errors.New("unexpected file-read rename")
 }
 
+func (*recordingFileReadFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected file-read glob")
+}
+
 func (*recordingFileReadFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-read create")
 }
@@ -191,6 +212,10 @@ func (*recordingFileExistenceFilesystem) RemoveAll(string) error {
 
 func (*recordingFileExistenceFilesystem) Rename(string, string) error {
 	return errors.New("unexpected file-existence rename")
+}
+
+func (*recordingFileExistenceFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected file-existence glob")
 }
 
 func (*recordingFileExistenceFilesystem) Create(string) (filesystem.File, error) {
@@ -249,6 +274,10 @@ func (*recordingFileOverwriteFilesystem) Rename(string, string) error {
 	return errors.New("unexpected file-overwrite rename")
 }
 
+func (*recordingFileOverwriteFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected file-overwrite glob")
+}
+
 func (*recordingFileOverwriteFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-overwrite create")
 }
@@ -305,6 +334,10 @@ func (*recordingFileCreateFilesystem) Rename(string, string) error {
 	return errors.New("unexpected file-create rename")
 }
 
+func (*recordingFileCreateFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected file-create glob")
+}
+
 func (*recordingFileCreateFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-create create")
 }
@@ -356,6 +389,10 @@ func (*recordingDirectoryCreateFilesystem) RemoveAll(string) error {
 
 func (*recordingDirectoryCreateFilesystem) Rename(string, string) error {
 	return errors.New("unexpected directory-create rename")
+}
+
+func (*recordingDirectoryCreateFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected directory-create glob")
 }
 
 func (*recordingDirectoryCreateFilesystem) Create(string) (filesystem.File, error) {
@@ -431,6 +468,10 @@ func (*recordingFileOpenFilesystem) Rename(string, string) error {
 	return errors.New("unexpected append-open rename")
 }
 
+func (*recordingFileOpenFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected append-open glob")
+}
+
 func (recording *recordingFileOpenFilesystem) dependencies() openFileDependencies {
 	return openFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
 }
@@ -483,6 +524,10 @@ func (*recordingFileDeleteFilesystem) Rename(string, string) error {
 	return errors.New("unexpected single-file-delete rename")
 }
 
+func (*recordingFileDeleteFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected single-file-delete glob")
+}
+
 func (recording *recordingFileDeleteFilesystem) dependencies() deleteSingleFileDependencies {
 	return deleteSingleFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
 }
@@ -525,6 +570,10 @@ func (recording *recordingFileDeleteAllFilesystem) RemoveAll(path string) error 
 
 func (*recordingFileDeleteAllFilesystem) Rename(string, string) error {
 	return errors.New("unexpected recursive-delete rename")
+}
+
+func (*recordingFileDeleteAllFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected recursive-delete glob")
 }
 
 func (*recordingFileDeleteAllFilesystem) Create(string) (filesystem.File, error) {
@@ -579,6 +628,10 @@ func (recording *recordingFileMoveFilesystem) Rename(source, destination string)
 	return recording.renameErr
 }
 
+func (*recordingFileMoveFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected file-move glob")
+}
+
 func (*recordingFileMoveFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-move create")
 }
@@ -596,6 +649,220 @@ func (recording *recordingFileMoveFilesystem) assertedMoves() ([]recordedFileMov
 		return nil, errors.New("recorded file-move population is empty")
 	}
 	return recording.moves, nil
+}
+
+func (*recordingClearDirFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected clear-directory read")
+}
+
+func (*recordingClearDirFilesystem) Stat(string) (fs.FileInfo, error) {
+	return nil, errors.New("unexpected clear-directory stat")
+}
+
+func (*recordingClearDirFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected clear-directory mkdir")
+}
+
+func (*recordingClearDirFilesystem) WriteFile(string, []byte, fs.FileMode) error {
+	return errors.New("unexpected clear-directory write")
+}
+
+func (*recordingClearDirFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected clear-directory open file")
+}
+
+func (*recordingClearDirFilesystem) Remove(string) error {
+	return errors.New("unexpected clear-directory single remove")
+}
+
+func (recording *recordingClearDirFilesystem) RemoveAll(path string) error {
+	recording.removeAllPaths = append(recording.removeAllPaths, path)
+	return recording.removeAllErrs[path]
+}
+
+func (*recordingClearDirFilesystem) Rename(string, string) error {
+	return errors.New("unexpected clear-directory rename")
+}
+
+func (recording *recordingClearDirFilesystem) Glob(pattern string) ([]string, error) {
+	recording.globPatterns = append(recording.globPatterns, pattern)
+	return append([]string{}, recording.globMatches...), recording.globErr
+}
+
+func (*recordingClearDirFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected clear-directory create")
+}
+
+func (*recordingClearDirFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected clear-directory copy")
+}
+
+func (recording *recordingClearDirFilesystem) dependencies() clearDirDependencies {
+	return clearDirDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingClearDirFilesystem) assertedGlobPatterns() ([]string, error) {
+	if len(recording.globPatterns) == 0 {
+		return nil, errors.New("recorded clear-directory glob population is empty")
+	}
+	return recording.globPatterns, nil
+}
+
+func (recording *recordingClearDirFilesystem) assertedRemoveAllPaths() ([]string, error) {
+	if len(recording.removeAllPaths) == 0 {
+		return nil, errors.New("recorded clear-directory removal population is empty")
+	}
+	return recording.removeAllPaths, nil
+}
+
+func captureFileDebugLog(t *testing.T) *bytes.Buffer {
+	t.Helper()
+	output := &bytes.Buffer{}
+	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
+	logger.SetOutput(output)
+	logger.SetFormatter(messageOnlyFormatter{})
+	previousLogger := log
+	log = logger
+	t.Cleanup(func() { log = previousLogger })
+	return output
+}
+
+func TestClearDirSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemClearDirDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("ClearDir selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("ClearDir filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestClearDirPreservesGlobResultRemovalExclusionAndLoggingOrder(t *testing.T) {
+	directory := "/complete clear-directory/path with spaces"
+	firstRemoval := filepath.Join(directory, "z-selected-first")
+	excluded := filepath.Join(directory, "keep-one-and-keep-two")
+	secondRemoval := filepath.Join(directory, "a-selected-second")
+	recording := &recordingClearDirFilesystem{
+		globMatches: []string{firstRemoval, excluded, secondRemoval},
+	}
+	dependencies := recording.dependencies()
+	if dependencies.Files.FileSystem != recording {
+		t.Fatalf("clear-directory dependency lost its complete filesystem value: %#v", dependencies)
+	}
+	logOutput := captureFileDebugLog(t)
+
+	err := clearDir(dependencies, directory, []string{"keep-one", "keep-two", "absent"})
+
+	if err != nil {
+		t.Fatalf("clear-directory returned %v, want nil", err)
+	}
+	patterns, populationErr := recording.assertedGlobPatterns()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	wantPatterns := []string{filepath.Join(directory, "*")}
+	if !reflect.DeepEqual(patterns, wantPatterns) {
+		t.Fatalf("clear-directory glob patterns were %#v, want %#v", patterns, wantPatterns)
+	}
+	removePaths, populationErr := recording.assertedRemoveAllPaths()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	wantRemovePaths := []string{firstRemoval, secondRemoval}
+	if !reflect.DeepEqual(removePaths, wantRemovePaths) {
+		t.Fatalf("clear-directory removal paths were %#v, want ordered %#v", removePaths, wantRemovePaths)
+	}
+	wantLogs := []string{
+		"Removing: " + firstRemoval,
+		"Skipping removal of: " + excluded,
+		"Skipping removal of: " + excluded,
+		"Removing: " + secondRemoval,
+	}
+	gotLogs := strings.Split(strings.TrimSuffix(logOutput.String(), "\n"), "\n")
+	if !reflect.DeepEqual(gotLogs, wantLogs) {
+		t.Fatalf("clear-directory logs differ:\n got: %#v\nwant: %#v", gotLogs, wantLogs)
+	}
+}
+
+func TestClearDirReturnsExactGlobErrorBeforeLoggingOrRemoval(t *testing.T) {
+	directory := "/complete clear-directory/glob error"
+	globError := errors.New("complete clear-directory glob dependency error")
+	recording := &recordingClearDirFilesystem{
+		globMatches: []string{filepath.Join(directory, "must-not-be-removed")},
+		globErr:     globError,
+	}
+	logOutput := captureFileDebugLog(t)
+
+	err := clearDir(recording.dependencies(), directory, []string{"exclude"})
+
+	if err != globError {
+		t.Fatalf("clear-directory glob error was %v, want exact dependency error %v", err, globError)
+	}
+	patterns, populationErr := recording.assertedGlobPatterns()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(patterns, []string{filepath.Join(directory, "*")}) {
+		t.Fatalf("clear-directory glob patterns were %#v", patterns)
+	}
+	if len(recording.removeAllPaths) != 0 {
+		t.Fatalf("clear-directory removed paths after a glob error: %#v", recording.removeAllPaths)
+	}
+	if logOutput.Len() != 0 {
+		t.Fatalf("clear-directory logged after a glob error: %q", logOutput.String())
+	}
+}
+
+func TestClearDirReturnsExactFirstRemovalErrorAndShortCircuits(t *testing.T) {
+	directory := "/complete clear-directory/removal error"
+	first := filepath.Join(directory, "first")
+	failing := filepath.Join(directory, "failing")
+	afterFailure := filepath.Join(directory, "must-not-be-removed")
+	removeError := errors.New("complete clear-directory recursive-remove dependency error")
+	recording := &recordingClearDirFilesystem{
+		globMatches:   []string{first, failing, afterFailure},
+		removeAllErrs: map[string]error{failing: removeError},
+	}
+	logOutput := captureFileDebugLog(t)
+
+	err := clearDir(recording.dependencies(), directory, nil)
+
+	if err != removeError {
+		t.Fatalf("clear-directory removal error was %v, want exact dependency error %v", err, removeError)
+	}
+	wantPaths := []string{first, failing}
+	if !reflect.DeepEqual(recording.removeAllPaths, wantPaths) {
+		t.Fatalf("clear-directory removal paths were %#v, want first-error short circuit %#v", recording.removeAllPaths, wantPaths)
+	}
+	wantLogs := []string{"Removing: " + first, "Removing: " + failing}
+	gotLogs := strings.Split(strings.TrimSuffix(logOutput.String(), "\n"), "\n")
+	if !reflect.DeepEqual(gotLogs, wantLogs) {
+		t.Fatalf("clear-directory error logs differ:\n got: %#v\nwant: %#v", gotLogs, wantLogs)
+	}
+}
+
+func TestClearDirDependenciesDefaultToSafeNoPathAccess(t *testing.T) {
+	directory := "/developer/home/project/must-not-be-accessed"
+
+	err := clearDir(clearDirDependencies{}, directory, []string{"keep"})
+
+	if !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe clear-directory dependency default returned %v, want %v", err, filesystem.ErrNoFilesystem)
+	}
+}
+
+func TestRecordedClearDirRejectsEmptyPopulations(t *testing.T) {
+	recording := &recordingClearDirFilesystem{}
+
+	if _, err := recording.assertedGlobPatterns(); err == nil {
+		t.Fatal("empty recorded clear-directory glob population passed")
+	}
+	if _, err := recording.assertedRemoveAllPaths(); err == nil {
+		t.Fatal("empty recorded clear-directory removal population passed")
+	}
 }
 
 func TestMoveSelectsCompleteSystemFilesystemDependencies(t *testing.T) {

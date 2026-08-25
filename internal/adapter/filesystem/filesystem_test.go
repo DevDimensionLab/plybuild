@@ -24,8 +24,10 @@ type recordedFilesystemOperation struct {
 
 type recordingFilesystem struct {
 	operations   []recordedFilesystemOperation
+	globMatches  []string
 	readData     []byte
 	fileInfo     fs.FileInfo
+	globErr      error
 	readErr      error
 	statErr      error
 	mkdirErr     error
@@ -83,6 +85,11 @@ func (recording *recordingFilesystem) Rename(source, destination string) error {
 	return recording.renameErr
 }
 
+func (recording *recordingFilesystem) Glob(pattern string) ([]string, error) {
+	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "glob", Path: pattern})
+	return append([]string{}, recording.globMatches...), recording.globErr
+}
+
 func (*recordingFilesystem) Create(string) (File, error) {
 	return nil, errors.New("unexpected create")
 }
@@ -111,6 +118,9 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	}
 	if err := Rename(Dependencies{}, target, target+".moved"); !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value rename dependency returned %v, want %v", err, ErrNoFilesystem)
+	}
+	if matches, err := Glob(Dependencies{}, filepath.Join(target, "*")); matches != nil || !errors.Is(err, ErrNoFilesystem) {
+		t.Fatalf("zero-value glob dependency returned (%#v, %v), want (nil, %v)", matches, err, ErrNoFilesystem)
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
 		t.Fatalf("zero-value filesystem dependencies mutated the target: %v", err)
@@ -227,6 +237,30 @@ func TestRenamePassesCompletePathsAndReturnsExactDependencyError(t *testing.T) {
 	want := []recordedFilesystemOperation{{Name: "rename", Path: source, Destination: destination}}
 	if !reflect.DeepEqual(recording.operations, want) {
 		t.Fatalf("rename dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
+	}
+}
+
+func TestGlobPassesExactPatternOrderedMatchesAndExactDependencyError(t *testing.T) {
+	pattern := "/complete glob/path with spaces/*"
+	matches := []string{
+		"/complete glob/path with spaces/z-result",
+		"/complete glob/path with spaces/a-result",
+	}
+	globError := errors.New("complete glob dependency error")
+	recording := &recordingFilesystem{globMatches: matches, globErr: globError}
+	dependencies := Dependencies{FileSystem: recording}
+
+	actual, err := Glob(dependencies, pattern)
+
+	if err != globError {
+		t.Fatalf("glob error was %v, want exact dependency error %v", err, globError)
+	}
+	if !reflect.DeepEqual(actual, matches) {
+		t.Fatalf("glob matches were %#v, want ordered %#v", actual, matches)
+	}
+	want := []recordedFilesystemOperation{{Name: "glob", Path: pattern}}
+	if !reflect.DeepEqual(recording.operations, want) {
+		t.Fatalf("glob dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
 	}
 }
 

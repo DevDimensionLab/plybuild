@@ -67,6 +67,10 @@ func (*recordingArchiveFilesystem) Rename(string, string) error {
 	return errors.New("unexpected rename")
 }
 
+func (*recordingArchiveFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected glob")
+}
+
 func (recording *recordingArchiveFilesystem) Create(path string) (File, error) {
 	recording.paths = append(recording.paths, path)
 	if recording.createErr != nil {

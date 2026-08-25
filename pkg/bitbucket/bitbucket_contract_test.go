@@ -97,6 +97,10 @@ func (*recordingBitbucketRepositoryFilesystem) Rename(string, string) error {
 	return errors.New("unexpected Bitbucket repository rename")
 }
 
+func (*recordingBitbucketRepositoryFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected Bitbucket repository glob")
+}
+
 func (*recordingBitbucketRepositoryFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected Bitbucket repository create")
 }

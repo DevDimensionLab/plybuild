@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 )
 
 // ErrNoFilesystem reports a zero-value dependency without performing an
@@ -28,6 +29,7 @@ type FileSystem interface {
 	Remove(string) error
 	RemoveAll(string) error
 	Rename(string, string) error
+	Glob(string) ([]string, error)
 	Create(string) (File, error)
 	Copy(File, io.Reader) (int64, error)
 }
@@ -114,6 +116,14 @@ func Rename(dependencies Dependencies, source, destination string) error {
 	return dependencies.FileSystem.Rename(source, destination)
 }
 
+// Glob passes the complete pattern to the configured dependency.
+func Glob(dependencies Dependencies, pattern string) ([]string, error) {
+	if dependencies.FileSystem == nil {
+		return nil, ErrNoFilesystem
+	}
+	return dependencies.FileSystem.Glob(pattern)
+}
+
 // Create passes the complete destination path to the configured dependency.
 func Create(dependencies Dependencies, path string) (File, error) {
 	if dependencies.FileSystem == nil {
@@ -167,6 +177,10 @@ func (systemFilesystem) RemoveAll(path string) error {
 
 func (systemFilesystem) Rename(source, destination string) error {
 	return os.Rename(source, destination)
+}
+
+func (systemFilesystem) Glob(pattern string) ([]string, error) {
+	return filepath.Glob(pattern)
 }
 
 func (systemFilesystem) Create(path string) (File, error) {

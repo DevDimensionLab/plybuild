@@ -91,6 +91,10 @@ func (*recordingCopyFilesystem) Rename(string, string) error {
 	return errors.New("unexpected rename")
 }
 
+func (*recordingCopyFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected glob")
+}
+
 func (*recordingCopyFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected create")
 }

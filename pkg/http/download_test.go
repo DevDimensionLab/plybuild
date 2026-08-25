@@ -79,6 +79,10 @@ func (recording *recordingDownloadFilesystem) Rename(string, string) error {
 	return errors.New("unexpected rename")
 }
 
+func (recording *recordingDownloadFilesystem) Glob(string) ([]string, error) {
+	return nil, errors.New("unexpected glob")
+}
+
 func (recording *recordingDownloadFilesystem) Create(path string) (filesystem.File, error) {
 	*recording.lifecycle = append(*recording.lifecycle, "create")
 	recording.operations = append(recording.operations, "create")
