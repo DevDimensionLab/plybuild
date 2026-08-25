@@ -1,13 +1,13 @@
 # Agent Session: Migrate Tips List Read Dir
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T135854+0200-migrate-tips-list-read-dir`
 Created: `2026-08-25T13:58:54+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `4b20e15b9523ced0ebfe241aa0ba7a8595f2b1ad5e9869d7d7dfccbca89536ae`
 Previous: [2026-08-25T131820+0200-migrate-local-config-directory-mkdir.md](2026-08-25T131820+0200-migrate-local-config-directory-mkdir.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T143403+0200-migrate-profile-editor-process.md](2026-08-25T143403+0200-migrate-profile-editor-process.md)
+Outcome: completed at `85f4c2b`; Q1.1 improved from 8/25 to 7/25 and Q1.3 from 22/40 to 21/40 with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
