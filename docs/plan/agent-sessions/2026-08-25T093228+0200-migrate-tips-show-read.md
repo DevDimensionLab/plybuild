@@ -1,13 +1,13 @@
 # Agent Session: Migrate Tips Show Read
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T093228+0200-migrate-tips-show-read`
 Created: `2026-08-25T09:32:28+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `e3aee95deb8606bfa07dec7e14ea0ace9179a458a0847f0ffe6e1c615eaf9642`
 Previous: [2026-08-25T085931+0200-migrate-config-project-write.md](2026-08-25T085931+0200-migrate-config-project-write.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T100637+0200-migrate-structurizr-output-write.md](2026-08-25T100637+0200-migrate-structurizr-output-write.md)
+Outcome: completed by implementation commit `2566438af9d52505b54b92428913fb6b89f4fd38`; clean full audit recorded Q1.3 at 32/49 with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `7754575`.
+Last measured checkpoint: 2026-08-25, commit `2566438`.
 
 ## Objective
 
@@ -110,7 +110,7 @@ P3.33 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
-P3.34 measured implementation result:
+P3.34 clean checkpoint:
 
 | Signal | P3.34 | Interpretation |
 | --- | ---: | --- |
@@ -1422,8 +1422,13 @@ and subprocess compatibility, all four host flows, full preflight, test,
 install, the standalone 62-control launcher contract, uncached and race tests,
 vet, and the 15-control audit meta-suite. The focused seven-criterion audit
 exited 1 for documented findings, never 2, with four improved, two held, zero
-regressed, and one not-comparable ratchet. The clean full checkpoint audit and
-implementation commit identity are recorded by the following session handoff.
+regressed, and one not-comparable ratchet.
+
+Commit: `2566438`.
+
+The clean full audit from commit `2566438` exited 1 for 15 documented findings,
+never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
