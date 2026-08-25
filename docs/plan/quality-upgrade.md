@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `2a684a0`.
+Last measured checkpoint: 2026-08-25, commit `da7eebf`.
 
 ## Objective
 
@@ -365,7 +365,7 @@ P3.48 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
-P3.49 measured checkpoint:
+P3.49 clean checkpoint:
 
 | Signal | P3.49 | Interpretation |
 | --- | ---: | --- |
@@ -2442,8 +2442,11 @@ signal-interruption partial-raw-log timing flake; complete reruns passed all
 findings, never 2, with four improved, two held, zero regressed, and one
 not-comparable ratchet.
 
-The implementation commit and its clean full-audit result are recorded during
-handoff-only finalization.
+Commit: `da7eebf`.
+
+The clean full audit from commit `da7eebf` exited 1 for 15 documented findings,
+never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

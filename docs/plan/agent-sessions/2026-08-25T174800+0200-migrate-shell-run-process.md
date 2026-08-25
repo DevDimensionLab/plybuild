@@ -1,13 +1,13 @@
 # Agent Session: Migrate Shell Run Process
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T174800+0200-migrate-shell-run-process`
 Created: `2026-08-25T17:48:00+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `cb3efd125fdf1a2cbbb6375cc4adfc44b26587be684e540425c91d8f3340a6ff`
 Previous: [2026-08-25T171500+0200-migrate-shell-unzip-file-open.md](2026-08-25T171500+0200-migrate-shell-unzip-file-open.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T181827+0200-migrate-shell-unzip-copy.md](2026-08-25T181827+0200-migrate-shell-unzip-copy.md)
+Outcome: Move 49 committed as `da7eebf`; Q1.3 improved to 11/32 with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
