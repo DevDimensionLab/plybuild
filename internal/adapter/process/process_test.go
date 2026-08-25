@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -56,6 +58,7 @@ func TestExecutePassesCompleteCommandToDependency(t *testing.T) {
 		Stdin:  stdin,
 		Stdout: stdout,
 		Stderr: stderr,
+		Start:  true,
 	}
 	sentinel := errors.New("recorded result")
 	runner := &recordingRunner{err: sentinel}
@@ -111,5 +114,57 @@ func TestSystemExecutesArgumentsInRequestedWorkingDirectory(t *testing.T) {
 	}
 	if stderr.String() != "system diagnostic\n" {
 		t.Fatalf("system stderr is %q", stderr.String())
+	}
+}
+
+func TestSystemFalseStartModePerformsOneSynchronousRun(t *testing.T) {
+	command := Command{
+		Name:  "/bin/sh",
+		Args:  []string{"-c", "exit 73"},
+		Start: false,
+	}
+
+	err := Execute(System(), command)
+
+	var exitError *exec.ExitError
+	if !errors.As(err, &exitError) {
+		t.Fatalf("false start mode returned %T %v, want one synchronous *exec.ExitError", err, err)
+	}
+	if exitError.ExitCode() != 73 {
+		t.Fatalf("false start mode exit code was %d, want 73", exitError.ExitCode())
+	}
+}
+
+func TestSystemTrueStartModePerformsOneAsynchronousStart(t *testing.T) {
+	command := Command{
+		Name:  "/bin/sh",
+		Args:  []string{"-c", "exit 74"},
+		Start: true,
+	}
+
+	err := Execute(System(), command)
+
+	if err != nil {
+		t.Fatalf("true start mode waited for the child result or returned a start error: %v", err)
+	}
+}
+
+func TestSystemTrueStartModeReturnsExactStartError(t *testing.T) {
+	missingDirectory := filepath.Join(t.TempDir(), "missing working directory")
+	command := Command{
+		Name:  "/bin/sh",
+		Args:  []string{"-c", "exit 0"},
+		Dir:   missingDirectory,
+		Start: true,
+	}
+
+	err := Execute(System(), command)
+
+	pathError, ok := err.(*os.PathError)
+	if !ok {
+		t.Fatalf("true start mode returned %T %v, want the direct start *os.PathError", err, err)
+	}
+	if pathError.Op != "chdir" || pathError.Path != missingDirectory || !errors.Is(pathError.Err, os.ErrNotExist) {
+		t.Fatalf("true start mode changed the direct start error: %#v", pathError)
 	}
 }

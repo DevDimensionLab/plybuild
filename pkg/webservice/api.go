@@ -3,10 +3,10 @@ package webservice
 import (
 	"context"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/webservice/api"
 	"log"
 	"net/http"
-	"os/exec"
 	"runtime"
 	"time"
 )
@@ -33,14 +33,42 @@ func StopWebServer() {
 	_ = server.Shutdown(ctx)
 }
 
+type browserLauncherDependencies struct {
+	Process process.Dependencies
+	GOOS    string
+}
+
+func systemBrowserLauncherDependencies() browserLauncherDependencies {
+	return browserLauncherDependencies{
+		Process: process.System(),
+		GOOS:    runtime.GOOS,
+	}
+}
+
 func OpenBrowser(url string) error {
-	switch runtime.GOOS {
+	return openBrowser(systemBrowserLauncherDependencies(), url)
+}
+
+func openBrowser(dependencies browserLauncherDependencies, url string) error {
+	switch dependencies.GOOS {
 	case "linux":
-		return exec.Command("xdg-open", url).Start()
+		return process.Execute(dependencies.Process, process.Command{
+			Name:  "xdg-open",
+			Args:  []string{url},
+			Start: true,
+		})
 	case "windows":
-		return exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+		return process.Execute(dependencies.Process, process.Command{
+			Name:  "rundll32",
+			Args:  []string{"url.dll,FileProtocolHandler", url},
+			Start: true,
+		})
 	case "darwin":
-		return exec.Command("open", url).Start()
+		return process.Execute(dependencies.Process, process.Command{
+			Name:  "open",
+			Args:  []string{url},
+			Start: true,
+		})
 	default:
 		return fmt.Errorf("unsupported platform")
 	}

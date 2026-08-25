@@ -13,6 +13,7 @@ type Command struct {
 	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
+	Start  bool
 }
 
 // Runner performs one complete process request.
@@ -48,5 +49,8 @@ func (systemRunner) Run(command Command) error {
 	cmd.Stdin = command.Stdin
 	cmd.Stdout = command.Stdout
 	cmd.Stderr = command.Stderr
+	if command.Start {
+		return cmd.Start()
+	}
 	return cmd.Run()
 }

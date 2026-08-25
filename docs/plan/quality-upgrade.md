@@ -442,7 +442,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 44 are complete.
+Status: active. Moves 1 through 45 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -2099,6 +2099,55 @@ Commit: `0e10282`.
 The clean full audit from commit `0e10282` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
+
+Move 45 extends only the existing complete process request with boolean
+`Start`, maps every established command field exactly as before, and selects
+the direct `exec.Cmd.Start()` result only when that value is true; false keeps
+the existing single `exec.Cmd.Run()` attempt. `Runner`, `Dependencies`,
+`Execute`, `System`, safe-zero behavior, name, arguments, directory, stdin,
+stdout, stderr, and every established process caller remain unchanged. Only
+the three direct `exec.Command(...).Start()` branches in `OpenBrowser` move
+behind one private complete browser-launcher composition containing
+`process.System()` and exact `runtime.GOOS`. Linux still requests `xdg-open`
+with the URL as its only argument, Windows still requests `rundll32` with
+exact first argument `url.dll,FileProtocolHandler` and the URL second, and
+Darwin still requests `open` with the URL as its only argument. Every
+supported request has start mode true, empty directory, nil streams, one
+adapter attempt, and the exact start error. Unsupported platforms still
+return exact text `unsupported platform` without a process attempt.
+
+Eight new top-level contracts bring the suite to 316 tests and add direct
+tests to `pkg/webservice`, improving package coverage to 19 of 25. The process
+adapter contracts prove complete start-mode identity reaches a recording
+runner, false retains direct synchronous-run exit behavior, true returns
+without observing the child exit, exact direct start errors remain unwrapped,
+and zero dependencies remain safe. Five private browser-launcher contracts
+prove complete production process and runtime selection, every exact platform
+request, arbitrary URL bytes without rewriting, exact error identity for all
+three supported branches, one non-empty recorded attempt, empty directory,
+nil streams, unsupported-platform no-attempt behavior, safe zero behavior,
+and rejection of an empty recording population without opening a real browser
+or starting a server. `OpenBrowser(string) error`, its callers, every server
+operation and global, public API, CLI, inventory, mutation harness, profile,
+Maven, Git, filesystem, HTTP, tips, config, structurizr, Bitbucket, Wpost,
+local-config, supervisor, and every completed effect remain unchanged.
+
+Q0.6 stays closed at 24 guarded safe-writer sites, 19 write and 5 copy, with
+zero skipped tests and zero unsafe direct test writes. Q1.1 improves from 7 to
+6 of 25 untested packages, Q1.2 stays zero, Q1.3 improves from 19 of 38 to 16
+of 36 as the three browser caller sites leave and the exact adapter start site
+enters, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8.
+
+The move-45 implementation gate passed focused process, webservice, command,
+context, config, HTTP, Maven, shell, structurizr, profile, tips, filesystem,
+file, template, Bitbucket, Kibana, Spring, local-config, and caller package
+tests; API/CLI and subprocess compatibility; all four host flows and their
+meta-contracts; full preflight, the standalone 62-control launcher contract,
+uncached and race tests, vet, the 15-control audit meta-suite, and empty-HOME
+count-2. Generated compatibility and audit reports and all Go and linter
+caches remained outside the measured tree. The focused seven-criterion audit
+exited 1 for documented findings, never 2, with four improved, two held, zero
+regressed, and one not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
