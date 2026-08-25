@@ -1,13 +1,13 @@
 # Agent Session: Migrate Exported File Clear Directory
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T030337+0200-migrate-file-clear-dir`
 Created: `2026-08-25T03:03:37+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `a35a4bf30534736dd7fd776ad13d05667b59eb28bd0da8a42bf707eb58049892`
 Previous: [2026-08-25T023033+0200-migrate-file-move.md](2026-08-25T023033+0200-migrate-file-move.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T034048+0200-migrate-file-render-create.md](2026-08-25T034048+0200-migrate-file-render-create.md)
+Outcome: completed in `838daa153a29d13603a9f3bc1d532321f6db64d9`; exported clear-directory selection and repeated removals now delegate the exact pattern, ordered paths, and exact errors through the existing filesystem adapter, with the measured P3.22 result recorded in the rolling plan and handover.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
