@@ -27,6 +27,18 @@ type localConfigTouchWriteDependencies struct {
 	Files filesystem.Dependencies
 }
 
+type localConfigTouchCreateDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemLocalConfigTouchCreateDependencies() localConfigTouchCreateDependencies {
+	return localConfigTouchCreateDependencies{Files: filesystem.System()}
+}
+
+func createLocalConfigTouch(dependencies localConfigTouchCreateDependencies, configFilePath string) (filesystem.File, error) {
+	return filesystem.Create(dependencies.Files, configFilePath)
+}
+
 func systemLocalConfigTouchWriteDependencies() localConfigTouchWriteDependencies {
 	return localConfigTouchWriteDependencies{Files: filesystem.System()}
 }
@@ -111,7 +123,7 @@ func (localCfgDir LocalConfigDir) TouchFile() error {
 
 	log.Infof("creating new config file %s", configFilePath)
 
-	f, err := os.Create(configFilePath)
+	f, err := createLocalConfigTouch(systemLocalConfigTouchCreateDependencies(), configFilePath)
 	if err != nil {
 		return err
 	}

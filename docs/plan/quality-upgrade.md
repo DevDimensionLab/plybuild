@@ -1744,6 +1744,51 @@ The clean full audit from commit `d2e330b` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
 
+Move 40 routes only `LocalConfigDir.TouchFile`'s direct
+`os.Create(configFilePath)` operation through the existing filesystem adapter.
+The exported method and every caller remain unchanged. It still evaluates
+`CheckOrCreateConfigDir()` and its early error, exact `FilePath()`, the
+zero-value `LocalConfiguration{}`, exact `defaultCloudConfigUrl` assignment,
+`yaml.Marshal(&config)` and its early error, and the exact creation log in the
+same order. Production then selects `filesystem.System()` only for a private
+complete local-config-touch-create dependency. The adapter makes one create
+attempt with the exact caller-composed path and preserves the exact
+`filesystem.File` and error.
+
+Four new top-level config contracts bring the suite to 286 tests. They prove
+complete system dependency selection and delivery, exact arbitrary file paths
+without cleaning or normalization, a non-empty recorded create population,
+one create attempt, exact file and error identity for nil, successful,
+arbitrary-error, and unusual combined results, safe zero behavior without
+developer-path access, the dedicated file double's exact Close result, and no
+unrelated adapter operation. The production-composition contract does not
+mutate the real filesystem or run another command. A non-nil create error
+still returns before the completed touch write; create success still invokes
+the existing touch-write composition once with the exact path, YAML bytes, and
+mode `0644`; a write error still returns without Close; and write success still
+returns the exact final `f.Close()` result. No adapter operation, established
+complete recording double, inventory label, seam driver, mutation harness,
+public API, caller, directory evaluation, path construction, config
+initialization, default URL, YAML marshaling, logging, touch write, update
+behavior, context/profile behavior, ProjectConfig, CloudConfig, Maven,
+structurizr, tips, template, file, HTTP, Bitbucket, Wpost, or other completed
+effect changed. Q0.6 remains at 22 guarded safe-writer sites, 17 write and 5
+copy, with zero unsafe direct writes. Q1.3 moves from 27 of 44 to 25 of 42 as
+the direct create and its concrete `*os.File` Close classification leave while
+the same lifecycle call remains; Q1.1 stays at 8 untested packages; Q1.2 stays
+zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8.
+
+The move-40 implementation gate passed focused config/filesystem/process and
+relevant command, context, file, template, Maven, tips, structurizr,
+Bitbucket, HTTP, Kibana, Spring, and shell package tests, API/CLI and subprocess
+compatibility, all four host flows, full preflight, test, install, the
+standalone 62-control launcher contract, uncached and race tests, vet, the
+15-control audit meta-suite, and empty-HOME count-2. Complete preflight and
+test runs encountered the documented nested signal-interruption partial-raw-
+log timing flake before complete reruns passed all 62 launcher controls. The
+focused seven-criterion audit exited 1 for documented findings, never 2, with
+four improved, two held, zero regressed, and one not-comparable ratchet.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
