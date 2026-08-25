@@ -51,6 +51,18 @@ type localConfigUpdateWriteDependencies struct {
 	Files filesystem.Dependencies
 }
 
+type localConfigUpdateCreateDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemLocalConfigUpdateCreateDependencies() localConfigUpdateCreateDependencies {
+	return localConfigUpdateCreateDependencies{Files: filesystem.System()}
+}
+
+func createLocalConfigUpdate(dependencies localConfigUpdateCreateDependencies, configFilePath string) (filesystem.File, error) {
+	return filesystem.Create(dependencies.Files, configFilePath)
+}
+
 func systemLocalConfigUpdateWriteDependencies() localConfigUpdateWriteDependencies {
 	return localConfigUpdateWriteDependencies{Files: filesystem.System()}
 }
@@ -151,7 +163,7 @@ func (localCfgDir LocalConfigDir) UpdateLocalConfig(config LocalConfiguration) e
 
 	log.Infof("update config file %s", configFilePath)
 
-	f, err := os.Create(configFilePath)
+	f, err := createLocalConfigUpdate(systemLocalConfigUpdateCreateDependencies(), configFilePath)
 	if err != nil {
 		return err
 	}
