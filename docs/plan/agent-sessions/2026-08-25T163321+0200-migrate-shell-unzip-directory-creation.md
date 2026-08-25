@@ -1,13 +1,13 @@
 # Agent Session: Migrate Shell Unzip Directory Creation
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T163321+0200-migrate-shell-unzip-directory-creation`
 Created: `2026-08-25T16:33:21+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3663db78d196aeca13987afb38f908915cf1b083e221f7d8d3392f426a6177de`
 Previous: [2026-08-25T155409+0200-migrate-spring-archive-working-directory.md](2026-08-25T155409+0200-migrate-spring-archive-working-directory.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T171500+0200-migrate-shell-unzip-file-open.md](2026-08-25T171500+0200-migrate-shell-unzip-file-open.md)
+Outcome: completed in `b9fe209`; both direct unzip directory creations now use the existing filesystem adapter with exact legacy order, arguments, errors, and results, and the clean gate has zero ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
