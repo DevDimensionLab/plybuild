@@ -87,6 +87,16 @@ type recordingFileDeleteAllFilesystem struct {
 	removeAllErr   error
 }
 
+type recordedFileMove struct {
+	source      string
+	destination string
+}
+
+type recordingFileMoveFilesystem struct {
+	moves     []recordedFileMove
+	renameErr error
+}
+
 type existingFileInfo struct {
 	name string
 }
@@ -131,6 +141,10 @@ func (*recordingFileReadFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected file-read recursive remove")
 }
 
+func (*recordingFileReadFilesystem) Rename(string, string) error {
+	return errors.New("unexpected file-read rename")
+}
+
 func (*recordingFileReadFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-read create")
 }
@@ -173,6 +187,10 @@ func (*recordingFileExistenceFilesystem) Remove(string) error {
 
 func (*recordingFileExistenceFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected file-existence recursive remove")
+}
+
+func (*recordingFileExistenceFilesystem) Rename(string, string) error {
+	return errors.New("unexpected file-existence rename")
 }
 
 func (*recordingFileExistenceFilesystem) Create(string) (filesystem.File, error) {
@@ -227,6 +245,10 @@ func (*recordingFileOverwriteFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected file-overwrite recursive remove")
 }
 
+func (*recordingFileOverwriteFilesystem) Rename(string, string) error {
+	return errors.New("unexpected file-overwrite rename")
+}
+
 func (*recordingFileOverwriteFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-overwrite create")
 }
@@ -279,6 +301,10 @@ func (*recordingFileCreateFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected file-create recursive remove")
 }
 
+func (*recordingFileCreateFilesystem) Rename(string, string) error {
+	return errors.New("unexpected file-create rename")
+}
+
 func (*recordingFileCreateFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-create create")
 }
@@ -326,6 +352,10 @@ func (*recordingDirectoryCreateFilesystem) Remove(string) error {
 
 func (*recordingDirectoryCreateFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected directory-create recursive remove")
+}
+
+func (*recordingDirectoryCreateFilesystem) Rename(string, string) error {
+	return errors.New("unexpected directory-create rename")
 }
 
 func (*recordingDirectoryCreateFilesystem) Create(string) (filesystem.File, error) {
@@ -397,6 +427,10 @@ func (*recordingFileOpenFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected append-open recursive remove")
 }
 
+func (*recordingFileOpenFilesystem) Rename(string, string) error {
+	return errors.New("unexpected append-open rename")
+}
+
 func (recording *recordingFileOpenFilesystem) dependencies() openFileDependencies {
 	return openFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
 }
@@ -445,6 +479,10 @@ func (*recordingFileDeleteFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected single-file-delete recursive remove")
 }
 
+func (*recordingFileDeleteFilesystem) Rename(string, string) error {
+	return errors.New("unexpected single-file-delete rename")
+}
+
 func (recording *recordingFileDeleteFilesystem) dependencies() deleteSingleFileDependencies {
 	return deleteSingleFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
 }
@@ -485,6 +523,10 @@ func (recording *recordingFileDeleteAllFilesystem) RemoveAll(path string) error 
 	return recording.removeAllErr
 }
 
+func (*recordingFileDeleteAllFilesystem) Rename(string, string) error {
+	return errors.New("unexpected recursive-delete rename")
+}
+
 func (*recordingFileDeleteAllFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected recursive-delete create")
 }
@@ -502,6 +544,126 @@ func (recording *recordingFileDeleteAllFilesystem) assertedRemoveAllPaths() ([]s
 		return nil, errors.New("recorded recursive-delete population is empty")
 	}
 	return recording.removeAllPaths, nil
+}
+
+func (*recordingFileMoveFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected file-move read")
+}
+
+func (*recordingFileMoveFilesystem) Stat(string) (fs.FileInfo, error) {
+	return nil, errors.New("unexpected file-move stat")
+}
+
+func (*recordingFileMoveFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected file-move mkdir")
+}
+
+func (*recordingFileMoveFilesystem) WriteFile(string, []byte, fs.FileMode) error {
+	return errors.New("unexpected file-move write")
+}
+
+func (*recordingFileMoveFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected file-move open file")
+}
+
+func (*recordingFileMoveFilesystem) Remove(string) error {
+	return errors.New("unexpected file-move single remove")
+}
+
+func (*recordingFileMoveFilesystem) RemoveAll(string) error {
+	return errors.New("unexpected file-move recursive remove")
+}
+
+func (recording *recordingFileMoveFilesystem) Rename(source, destination string) error {
+	recording.moves = append(recording.moves, recordedFileMove{source: source, destination: destination})
+	return recording.renameErr
+}
+
+func (*recordingFileMoveFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected file-move create")
+}
+
+func (*recordingFileMoveFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected file-move copy")
+}
+
+func (recording *recordingFileMoveFilesystem) dependencies() moveDependencies {
+	return moveDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingFileMoveFilesystem) assertedMoves() ([]recordedFileMove, error) {
+	if len(recording.moves) == 0 {
+		return nil, errors.New("recorded file-move population is empty")
+	}
+	return recording.moves, nil
+}
+
+func TestMoveSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemMoveDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("Move selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("Move filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestMovePreservesCompletePathsAndExactDependencyError(t *testing.T) {
+	source := "/complete file-move/source path with spaces/source.txt"
+	destination := "/complete file-move/destination path with spaces/destination.txt"
+	renameError := errors.New("complete file-move dependency error")
+	tests := []struct {
+		name      string
+		renameErr error
+	}{
+		{name: "successful rename"},
+		{name: "dependency error", renameErr: renameError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFileMoveFilesystem{renameErr: test.renameErr}
+			dependencies := recording.dependencies()
+			if dependencies.Files.FileSystem != recording {
+				t.Fatalf("file-move dependency lost its complete filesystem value: %#v", dependencies)
+			}
+
+			err := move(dependencies, source, destination)
+
+			if err != test.renameErr {
+				t.Fatalf("file-move error was %v, want exact dependency error %v", err, test.renameErr)
+			}
+			moves, populationErr := recording.assertedMoves()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			want := []recordedFileMove{{source: source, destination: destination}}
+			if !reflect.DeepEqual(moves, want) {
+				t.Fatalf("file-move dependency received values %#v, want %#v", moves, want)
+			}
+		})
+	}
+}
+
+func TestMoveDependenciesDefaultToSafeNoPathAccess(t *testing.T) {
+	source := "/developer/home/project/must-not-be-accessed/source.txt"
+	destination := "/developer/home/project/must-not-be-accessed/destination.txt"
+
+	err := move(moveDependencies{}, source, destination)
+
+	if !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe file-move dependency default returned %v, want %v", err, filesystem.ErrNoFilesystem)
+	}
+}
+
+func TestRecordedFileMoveRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingFileMoveFilesystem{}
+
+	if _, err := recording.assertedMoves(); err == nil {
+		t.Fatal("empty recorded file-move population passed")
+	}
 }
 
 func TestDeleteSingleFileSelectsCompleteSystemFilesystemDependencies(t *testing.T) {

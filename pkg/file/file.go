@@ -473,6 +473,18 @@ func ClearDir(dirPath string, excludes []string) error {
 	return nil
 }
 
+type moveDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemMoveDependencies() moveDependencies {
+	return moveDependencies{Files: filesystem.System()}
+}
+
 func Move(source, destination string) error {
-	return os.Rename(source, destination)
+	return move(systemMoveDependencies(), source, destination)
+}
+
+func move(dependencies moveDependencies, source, destination string) error {
+	return filesystem.Rename(dependencies.Files, source, destination)
 }

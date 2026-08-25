@@ -75,6 +75,10 @@ func (recording *recordingDownloadFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected recursive remove")
 }
 
+func (recording *recordingDownloadFilesystem) Rename(string, string) error {
+	return errors.New("unexpected rename")
+}
+
 func (recording *recordingDownloadFilesystem) Create(path string) (filesystem.File, error) {
 	*recording.lifecycle = append(*recording.lifecycle, "create")
 	recording.operations = append(recording.operations, "create")

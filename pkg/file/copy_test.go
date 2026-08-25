@@ -87,6 +87,10 @@ func (*recordingCopyFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected recursive remove")
 }
 
+func (*recordingCopyFilesystem) Rename(string, string) error {
+	return errors.New("unexpected rename")
+}
+
 func (*recordingCopyFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected create")
 }

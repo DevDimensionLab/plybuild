@@ -14,11 +14,12 @@ import (
 )
 
 type recordedFilesystemOperation struct {
-	Name  string
-	Path  string
-	Data  []byte
-	Flags int
-	Mode  fs.FileMode
+	Name        string
+	Path        string
+	Destination string
+	Data        []byte
+	Flags       int
+	Mode        fs.FileMode
 }
 
 type recordingFilesystem struct {
@@ -33,6 +34,7 @@ type recordingFilesystem struct {
 	openErr      error
 	removeErr    error
 	removeAllErr error
+	renameErr    error
 }
 
 func (recording *recordingFilesystem) ReadFile(path string) ([]byte, error) {
@@ -74,6 +76,13 @@ func (recording *recordingFilesystem) RemoveAll(path string) error {
 	return recording.removeAllErr
 }
 
+func (recording *recordingFilesystem) Rename(source, destination string) error {
+	recording.operations = append(recording.operations, recordedFilesystemOperation{
+		Name: "rename", Path: source, Destination: destination,
+	})
+	return recording.renameErr
+}
+
 func (*recordingFilesystem) Create(string) (File, error) {
 	return nil, errors.New("unexpected create")
 }
@@ -99,6 +108,9 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	}
 	if err := RemoveAll(Dependencies{}, target); !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value recursive-remove dependency returned %v, want %v", err, ErrNoFilesystem)
+	}
+	if err := Rename(Dependencies{}, target, target+".moved"); !errors.Is(err, ErrNoFilesystem) {
+		t.Fatalf("zero-value rename dependency returned %v, want %v", err, ErrNoFilesystem)
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
 		t.Fatalf("zero-value filesystem dependencies mutated the target: %v", err)
@@ -197,6 +209,24 @@ func TestRemoveAllPassesCompletePathAndReturnsExactDependencyError(t *testing.T)
 	want := []recordedFilesystemOperation{{Name: "remove-all", Path: path}}
 	if !reflect.DeepEqual(recording.operations, want) {
 		t.Fatalf("recursive-remove dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
+	}
+}
+
+func TestRenamePassesCompletePathsAndReturnsExactDependencyError(t *testing.T) {
+	source := "/complete file-move/source path with spaces/source.txt"
+	destination := "/complete file-move/destination path with spaces/destination.txt"
+	renameError := errors.New("complete rename dependency error")
+	recording := &recordingFilesystem{renameErr: renameError}
+	dependencies := Dependencies{FileSystem: recording}
+
+	err := Rename(dependencies, source, destination)
+
+	if err != renameError {
+		t.Fatalf("rename error was %v, want exact dependency error %v", err, renameError)
+	}
+	want := []recordedFilesystemOperation{{Name: "rename", Path: source, Destination: destination}}
+	if !reflect.DeepEqual(recording.operations, want) {
+		t.Fatalf("rename dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
 	}
 }
 

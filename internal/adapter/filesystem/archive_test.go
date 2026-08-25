@@ -63,6 +63,10 @@ func (*recordingArchiveFilesystem) RemoveAll(string) error {
 	return errors.New("unexpected recursive remove")
 }
 
+func (*recordingArchiveFilesystem) Rename(string, string) error {
+	return errors.New("unexpected rename")
+}
+
 func (recording *recordingArchiveFilesystem) Create(path string) (File, error) {
 	recording.paths = append(recording.paths, path)
 	if recording.createErr != nil {

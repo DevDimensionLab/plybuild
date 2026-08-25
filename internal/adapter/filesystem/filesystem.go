@@ -27,6 +27,7 @@ type FileSystem interface {
 	OpenFile(string, int, fs.FileMode) (*os.File, error)
 	Remove(string) error
 	RemoveAll(string) error
+	Rename(string, string) error
 	Create(string) (File, error)
 	Copy(File, io.Reader) (int64, error)
 }
@@ -105,6 +106,14 @@ func RemoveAll(dependencies Dependencies, path string) error {
 	return dependencies.FileSystem.RemoveAll(path)
 }
 
+// Rename passes the complete source and destination paths to the configured dependency.
+func Rename(dependencies Dependencies, source, destination string) error {
+	if dependencies.FileSystem == nil {
+		return ErrNoFilesystem
+	}
+	return dependencies.FileSystem.Rename(source, destination)
+}
+
 // Create passes the complete destination path to the configured dependency.
 func Create(dependencies Dependencies, path string) (File, error) {
 	if dependencies.FileSystem == nil {
@@ -154,6 +163,10 @@ func (systemFilesystem) Remove(path string) error {
 
 func (systemFilesystem) RemoveAll(path string) error {
 	return os.RemoveAll(path)
+}
+
+func (systemFilesystem) Rename(source, destination string) error {
+	return os.Rename(source, destination)
 }
 
 func (systemFilesystem) Create(path string) (File, error) {
