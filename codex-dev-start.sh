@@ -1055,54 +1055,55 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T082407+0200-migrate-template-markdown-write
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T082407+0200-migrate-template-markdown-write.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T075301+0200-migrate-template-filtered-walk.md
+#|SESSION_ID=2026-08-25T085931+0200-migrate-config-project-write
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T085931+0200-migrate-config-project-write.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T082407+0200-migrate-template-markdown-write.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Complete one focused P3 production-effect move: route
-#|`template.SaveTemplateListMarkdown`'s direct file write through the existing
-#|filesystem adapter. Preserve the exported signature, exact receiver-derived
-#|README path, document bytes, mode, returned path and write error, every
-#|completed filesystem, file, template, config, Bitbucket, Wpost, and supervisor
-#|move, and every P2A contract with zero comparable ratchet regressions.
+#|`(*config.ProjectConfiguration).WriteTo`'s direct file write through the
+#|existing filesystem adapter. Preserve the exported method and `ProjectConfig`
+#|contract, exact log and JSON-marshal sequencing, target path, serialized bytes,
+#|mode and returned error, every completed filesystem, file, template, config,
+#|Maven, Bitbucket, Wpost, and supervisor move, and every P2A contract with zero
+#|comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
 #|P3 remains active, P4-P8 are queued in the machine-readable block in
 #|docs/plan/quality-upgrade.md, and the launcher must remain NEXT until every
 #|authorized checkpoint is complete. This mission authorizes only the direct
-#|`os.WriteFile(readmePath, []byte(markdownDocument), 0644)` operation in
-#|`SaveTemplateListMarkdown` in `pkg/template/template.go` and its use of the
+#|`os.WriteFile(targetFile, data, 0644)` operation in
+#|`(*ProjectConfiguration).WriteTo` in `pkg/config/project.go` and its use of the
 #|existing zero-value-safe filesystem `WriteFile` operation. It authorizes
-#|focused template recording contracts. It does not authorize
-#|`ListAsMarkdown`, `createTemplateListRenderingModel`,
-#|`filteredFilesFromTemplate`, `MergeTemplate` or `merge` composition or
-#|sequencing, `getIgnores`, copy, search, render, Maven, another template,
-#|config, or file operation, an adapter or complete-double extension, another
-#|production effect, a function-valued effect dependency, a new adapter family
-#|or public API, mutation harnesses, or later roadmap implementation.
+#|focused config recording contracts. It does not authorize changing logging,
+#|JSON composition, marshal error handling, `ProjectConfig`, another project or
+#|config method, `SortAndWritePom`, project initialization, cloud config,
+#|template, file, Maven, command composition or sequencing, an adapter or
+#|complete-double extension, another production effect, a function-valued effect
+#|dependency, a new adapter family or public API, mutation harnesses, or later
+#|roadmap implementation.
 #|
 #|# Measurements At Start
 #|
 #|Before editing, inspect branch, HEAD, status, the rolling handover, this active
-#|archive, the roadmap queue, the complete `pkg/template` implementation and
-#|tests, all callers of `SaveTemplateListMarkdown`, `ListAsMarkdown`,
-#|`filteredFilesFromTemplate`, `merge`, and `MergeTemplate`, the relevant
-#|config/file/Maven behavior, the filesystem adapter and relevant recording
-#|doubles, `.quality/inventory`, and the continuity and quality-lift designs.
-#|Regenerate ignored reports outside the measured tree or remove them before a
-#|clean audit.
+#|archive, the roadmap queue, the complete `pkg/config` implementation and tests,
+#|all callers and interface uses of `(*ProjectConfiguration).WriteTo`,
+#|`ProjectConfig`, `ProjectConfigPath`, `projectConfigFile`, and
+#|`SortAndWritePom`, the relevant command/template/file/Maven behavior, the
+#|filesystem adapter and relevant recording doubles, `.quality/inventory`, and
+#|the continuity and quality-lift designs. Regenerate ignored reports outside
+#|the measured tree or remove them before a clean audit.
 #|
-#|Implementation commit `170b0ae` has 250 tests across 16 of 25 packages. Q0.6
+#|Implementation commit `8d49345` has 254 tests across 16 of 25 packages. Q0.6
 #|has 22 guarded safe-writer sites, 17 write and 5 copy, and zero unsafe direct
-#|test writes. Q1.1 is 9 of 25, Q1.2 is 0, Q1.3 is 35 violations of 52 production
+#|test writes. Q1.1 is 9 of 25, Q1.2 is 0, Q1.3 is 34 violations of 51 production
 #|effect sites with clock and server absent, Q1.4 is 7 of 8, and exact Q2.1 is 0
 #|of 8 executable harnesses. The clean gate passed, the full audit exited 1 for
-#|16 documented findings and never 2, and comparable ratchets were five
+#|15 documented findings and never 2, and comparable ratchets were five
 #|improved, two held, and zero regressed.
 #|
 #|The launcher has 62 Bash 3.2 contracts and supervises fresh non-interactive
@@ -1114,91 +1115,86 @@ exit 70
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for the template markdown write boundary, template
-#|contracts, and measured planning notes. Then perform the normal separate
-#|handoff-only commit. Do not push, merge, publish, distribute, remove the
-#|worktree, stash inherited changes, revert user work, or run destructive Git
-#|commands.
+#|implementation commit for the project-config write boundary, config contracts,
+#|and measured planning notes. Then perform the normal separate handoff-only
+#|commit. Do not push, merge, publish, distribute, remove the worktree, stash
+#|inherited changes, revert user work, or run destructive Git commands.
 #|
 #|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve the full 62-contract
 #|launcher supervisor, exact prompt/archive bytes, the authorized queue and
 #|reciprocal archive graph. Preserve `cmd.Execute()`, `cmd.ExecuteE()`,
 #|`cmd.RootCmd`, public API/CLI behavior, all four host acceptance flows,
-#|`CloudConfig`, `MergeTemplates`, `MergeTemplate`, `merge`,
-#|`templateCopyDependencies`, `templateFiles`, `packageTemplateFiles`,
-#|`filteredFilesFromTemplate`, `getIgnores`, and every caller's observable
-#|behavior.
+#|`ProjectConfig`, `ProjectConfiguration`, `ProjectConfigPath`,
+#|`projectConfigFile`, `SortAndWritePom`, `CloudConfig`, `MergeTemplates`,
+#|template composition, and every caller's observable behavior.
 #|
 #|Use the existing complete filesystem dependency and existing
 #|`WriteFile(name string, data []byte, perm fs.FileMode) error` operation with a
-#|safe zero value; do not add or change an adapter operation, extend
-#|`templateCopyDependencies`, or store a function-valued effect dependency.
+#|safe zero value; do not add or change an adapter operation, extend another
+#|complete recording double, or store a function-valued effect dependency.
 #|Production must select `filesystem.System()` only for a private complete
-#|markdown-write composition.
+#|project-config-write composition.
 #|
-#|Preserve exact evaluation of
-#|`readmePath := gitCfg.Implementation().Dir() + "/" + TemplatesDir +
-#|"/README.md"`. Pass that exact path, `[]byte(markdownDocument)`, and `0644`
-#|through the adapter. Preserve the exact `return readmePath, err`, including the
-#|complete path when the write fails and the exact dependency error without
-#|wrapping, logging, suppression, or substitution. Preserve empty strings,
-#|arbitrary bytes represented by the Go string, nil and non-nil errors, and the
-#|existing single write attempt. Do not clean or join paths, normalize
-#|separators, use `file.Path` or `filepath.Join`, create directories, preflight,
-#|retry, inspect or alter permissions, change `TemplatesDir`, reorder receiver
-#|evaluation, add validation or logging, return an empty path on error, or
-#|broaden into list rendering, filtered walking, merge, copy/search/render,
-#|config, Maven, Bitbucket, HTTP/process effects, Wpost, clock, server, P4
-#|adapters, P5 harnesses, dependencies, Docker, cloud distribution, or
-#|publication.
+#|Preserve the exact first log call
+#|`log.Infof("writes project config file to %s", targetFile)`, then the exact
+#|`json.MarshalIndent(config, "", "    ")` evaluation and early return of its
+#|error, then one adapter write attempt with the exact caller-supplied
+#|`targetFile`, returned `data`, and `0644`. Preserve nil and non-nil receivers,
+#|empty and non-ASCII fields, nil and empty collections, map-key serialization,
+#|arbitrary target strings, the absence of directory creation or path
+#|normalization, and the exact dependency error without wrapping, logging,
+#|suppression, or substitution. Do not clean or join paths, use `file.Path` or
+#|`filepath.Join`, preflight, retry, inspect or alter permissions, reorder
+#|logging or marshaling, mutate the receiver, or broaden into another config,
+#|template, file, Maven, Bitbucket, HTTP/process, Wpost, clock, server, P4
+#|adapter, P5 harness, dependency, Docker, distribution, or publication move.
 #|
 #|# Required Reading
 #|
 #|Read docs/plan/quality-handover.md, the P3 section and checkpoint gate in
 #|docs/plan/quality-upgrade.md, docs/design/agent-session-continuity.md,
-#|docs/design/quality-lift.md, `.quality/inventory`, complete `pkg/template`, all
-#|callers of `SaveTemplateListMarkdown`, `ListAsMarkdown`,
-#|`filteredFilesFromTemplate`, `merge`, and `MergeTemplate`, the relevant
-#|config/file/Maven code and tests, and `internal/adapter/filesystem`. Read the
-#|relevant recording tests and the Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 audit
+#|docs/design/quality-lift.md, `.quality/inventory`, complete `pkg/config`, all
+#|callers and interface uses named above, the relevant command/template/file and
+#|Maven code and tests, and `internal/adapter/filesystem`. Read the relevant
+#|recording tests and the Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 audit
 #|implementation before editing. Before the full gate, read the complete
 #|launcher contract, relevant Make meta-tests, P2A API/CLI/subprocess contracts,
 #|and all four host acceptance flows.
 #|
 #|# Three Moves
 #|
-#|1. Start red with focused markdown-write recording contracts. Prove the
+#|1. Start red with focused project-config-write recording contracts. Prove the
 #|   complete dependency, production selection of `filesystem.System()`, exact
-#|   receiver-derived README path, non-empty recorded write populations, exact
-#|   document bytes including empty and non-ASCII content, exact `0644` mode,
-#|   one write attempt, exact returned path on success and failure, exact write
-#|   error identity, and safe zero behavior without developer-path access.
-#|   Production composition contracts must not mutate the real filesystem.
+#|   caller-supplied target path, non-empty recorded write populations, exact
+#|   JSON bytes for nil and representative non-nil receivers including empty and
+#|   non-ASCII content, exact `0644` mode, one write attempt, exact write error
+#|   identity, unchanged receiver state, and safe zero behavior without
+#|   developer-path access. Production composition contracts must not mutate the
+#|   real filesystem.
 #|
 #|2. Reuse only the existing filesystem adapter `WriteFile` operation. Keep the
-#|   exported `SaveTemplateListMarkdown(gitCfg config.CloudConfig,
-#|   markdownDocument string) (string, error)` as the production entry, select
-#|   `filesystem.System()` only for its private complete composition, and
-#|   replace only its direct `os.WriteFile` with the adapter operation. Do not
-#|   change the path expression, byte conversion, mode, return statement,
-#|   adapter, templateCopyDependencies, complete doubles, another template or
-#|   config/file method or caller, inventory, or public API.
+#|   exported `(*ProjectConfiguration).WriteTo(targetFile string) error` as the
+#|   production entry, select `filesystem.System()` only for its private complete
+#|   composition, and replace only its direct `os.WriteFile` with the adapter
+#|   operation. Do not change the log, marshal expression or early return,
+#|   target argument, bytes, mode, return semantics, adapter, another complete
+#|   double, config method or caller, inventory, or public API.
 #|
-#|3. Run focused template/filesystem contracts and relevant config, file, Maven,
-#|   and command caller packages' tests, the launcher contract from `/bin/bash`,
-#|   Make preflight meta-contracts, API/CLI compatibility, full Go tests and
-#|   race/vet, all four host acceptance flows, the audit meta-suite, focused
-#|   Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 measurements, full clean checkpoint
-#|   audit, and empty-HOME count-2. Expect Q1.3 to move nominally from 35 of 52
-#|   to 34 of 51 while Q0.6, Q1.2, Q1.4, and exact Q2.1 hold. Regenerate exact
-#|   values; the full audit may exit 1 for documented findings but never 2.
+#|3. Run focused config/filesystem contracts and relevant command, template,
+#|   file, and Maven caller packages' tests, the launcher contract from
+#|   `/bin/bash`, Make preflight meta-contracts, API/CLI compatibility, full Go
+#|   tests and race/vet, all four host acceptance flows, the audit meta-suite,
+#|   focused Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 measurements, full clean
+#|   checkpoint audit, and empty-HOME count-2. Expect Q1.3 to move nominally from
+#|   34 of 51 to 33 of 50 while Q0.6, Q1.2, Q1.4, and exact Q2.1 hold. Regenerate
+#|   exact values; the full audit may exit 1 for documented findings but never 2.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent template
-#|markdown write move or record an exact resumable state. Rewrite the rolling
-#|handover, record the measured P3 result, answer this archive, create one linked
-#|NEXT archive for the next coherent P3 effect move, replace only the launcher's
+#|Before this agent session ends, finish and commit the coherent project-config
+#|write move or record an exact resumable state. Rewrite the rolling handover,
+#|record the measured P3 result, answer this archive, create one linked NEXT
+#|archive for the next coherent P3 effect move, replace only the launcher's
 #|mutable regions, run the launcher contract, and make the separate handoff-only
 #|commit `docs: prepare next agent session`.
 #|

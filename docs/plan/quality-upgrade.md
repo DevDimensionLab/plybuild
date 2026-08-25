@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `170b0ae`.
+Last measured checkpoint: 2026-08-25, commit `8d49345`.
 
 ## Objective
 
@@ -69,6 +69,23 @@ P3.31 clean checkpoint:
 | Packages with tests | 16 / 25 | No package denominator changed. |
 | Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
 | Direct external effects outside adapters | 35 / 52 | The filtered template walk now uses the filesystem adapter. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+
+P3.32 clean checkpoint:
+
+| Signal | P3.32 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 254 | Four markdown-write recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 16 / 25 | No package denominator changed. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 34 / 51 | The template markdown write now uses the filesystem adapter. |
 | Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
 | Executable mutation harnesses | 0 / 8 | P5 remains queued. |
 | Acceptance scripts | 4 / 4 | All host flows pass. |
@@ -1288,15 +1305,19 @@ copy, search, render, config, file, or Maven operation changed. Q0.6 remains at
 writes. Q1.3 moves from 35 of 52 to 34 of 51; Q1.2 stays zero, Q1.4 stays 7 of
 8, and exact Q2.1 stays 0 of 8.
 
+Commit: `8d49345`.
+
 The move-32 implementation gate passed focused template/filesystem and
 relevant config, file, Maven, and command caller contracts, API/CLI and
 subprocess compatibility, all four host flows, preflight, test, install, the
 standalone 62-control launcher contract, uncached and race tests, vet, the
 15-control audit meta-suite, and empty-HOME count-2. The focused
 seven-criterion audit exited 1 for documented findings, never 2, with four
-improved, two held, zero regressed, and one not-comparable ratchet. The
-implementation commit and authoritative clean full-audit result are recorded
-by the handoff checkpoint.
+improved, two held, zero regressed, and one not-comparable ratchet. The clean
+full audit at the committed handoff exited 1 for 15 documented findings, never
+2, with L0 8 of 8, five improved, two held, zero regressed, one not-comparable
+ratchet, and zero dirty paths. The exact README-path contract also makes Q3.2
+pass, reducing the documented finding count from 16 to 15.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
@@ -1320,14 +1341,16 @@ adapter's narrow `Walk` operation, without adding inventory seams.
 `GitCloudConfig.GitHookFiles` and `GitCloudConfig.Examples` now reuse the
 filesystem adapter's `ReadDir` operation, while `GitCloudConfig.Templates` and
 `template.filteredFilesFromTemplate` reuse its `Walk` operation, without
-adding inventory seams. The next coherent flow is
-`template.SaveTemplateListMarkdown`: reuse only the existing filesystem
+adding inventory seams. `template.SaveTemplateListMarkdown` now reuses
+`WriteFile` without changing its exact receiver-derived path, document bytes,
+mode, returned path, or error. The next coherent flow is
+`(*config.ProjectConfiguration).WriteTo`: reuse only the existing filesystem
 `WriteFile` operation for its direct `os.WriteFile` boundary while preserving
-the exported signature, exact receiver-derived README path, byte conversion,
-`0644` mode, returned path on success and failure, and exact write error.
-Leave list rendering, filtered walking, merge composition, copy/search/render
-behavior, the adapter, public API, and every other production effect
-unchanged.
+the exported method and `ProjectConfig` contract, exact log and
+`json.MarshalIndent` sequencing, caller target, serialized bytes, `0644` mode,
+and exact error. Leave project initialization, `SortAndWritePom`, cloud config,
+template/file/Maven behavior, command sequencing, the adapter, public API, and
+every other production effect unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.

@@ -1,13 +1,13 @@
 # Agent Session: Migrate Template Markdown Write
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T082407+0200-migrate-template-markdown-write`
 Created: `2026-08-25T08:24:07+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `56749b2d3a17e145c6a9b766a661e60e7f0735faa249e93f1fb8f76a9e674cb0`
 Previous: [2026-08-25T075301+0200-migrate-template-filtered-walk.md](2026-08-25T075301+0200-migrate-template-filtered-walk.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T085931+0200-migrate-config-project-write.md](2026-08-25T085931+0200-migrate-config-project-write.md)
+Outcome: Routed only the template markdown write through the existing filesystem adapter with exact path, bytes, mode, return behavior, and zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
