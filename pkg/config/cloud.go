@@ -7,7 +7,6 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"gopkg.in/yaml.v3"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -29,6 +28,14 @@ type examplesDependencies struct {
 
 func systemExamplesDependencies() examplesDependencies {
 	return examplesDependencies{Files: filesystem.System()}
+}
+
+type templatesDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemTemplatesDependencies() templatesDependencies {
+	return templatesDependencies{Files: filesystem.System()}
 }
 
 type refreshGit interface {
@@ -281,9 +288,13 @@ func (gitCfg GitCloudConfig) Template(name string) (CloudTemplate, error) {
 }
 
 func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) {
+	return gitCfg.templates(systemTemplatesDependencies())
+}
+
+func (gitCfg GitCloudConfig) templates(dependencies templatesDependencies) (templates []CloudTemplate, err error) {
 	root := file.Path("%s/templates", gitCfg.Implementation().Dir())
 
-	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err = filesystem.Walk(dependencies.Files, root, func(path string, info os.FileInfo, err error) error {
 		if err == nil && (info.Name() == projectConfigFileName || info.Name() == legacyProjectConfigFileName) {
 			relPath := strings.Split(path, file.Path("/"+info.Name()))
 			name := strings.Split(relPath[0], file.Path("/templates/"))
