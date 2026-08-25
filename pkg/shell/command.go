@@ -5,10 +5,10 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
+	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/logger"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -27,16 +27,25 @@ func (output Output) FormatError() error {
 	return logger.ExternalError(output.Err, output.String())
 }
 
-func Run(name string, args ...string) Output {
-	return run(exec.Command(name, args...))
+type runDependencies struct {
+	Process process.Dependencies
 }
 
-func run(cmd *exec.Cmd) (output Output) {
-	log.Debugf("running: %s", cmd.String())
-	cmd.Stdout = &output.StdOut
-	cmd.Stderr = &output.StdErr
+func systemRunDependencies() runDependencies {
+	return runDependencies{Process: process.System()}
+}
 
-	if err := cmd.Run(); err != nil {
+func Run(name string, args ...string) Output {
+	return runWithDependencies(systemRunDependencies(), name, args...)
+}
+
+func runWithDependencies(dependencies runDependencies, name string, args ...string) (output Output) {
+	command := process.Command{Name: name, Args: args}
+	log.Debugf("running: %s", strings.Join(append([]string{command.Name}, command.Args...), " "))
+	command.Stdout = &output.StdOut
+	command.Stderr = &output.StdErr
+
+	if err := process.Execute(dependencies.Process, command); err != nil {
 		return output
 	}
 

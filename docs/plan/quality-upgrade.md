@@ -365,6 +365,23 @@ P3.48 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
+P3.49 measured checkpoint:
+
+| Signal | P3.49 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 336 | Four focused shell Run process contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 19 / 25 | The contracts stay in an already-tested package. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 11 / 32 | The direct public-Run process-construction site leaves while the existing system-adapter site remains singular. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -510,7 +527,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 48 are complete.
+Status: active. Moves 1 through 49 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -2378,6 +2395,55 @@ Commit: `2a684a0`.
 The clean full audit from commit `2a684a0` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
+
+Move 49 changes only public `shell.Run`'s direct `exec.Command` construction
+and synchronous `cmd.Run` execution flow to a private complete composition
+containing `process.Dependencies`, with `process.System()` selected only in
+the public production entry. The private flow builds the exact existing
+`process.Command`, keeps command-name and variadic-argument order, wires
+separate stdout and stderr buffers after the established debug log, and makes
+one synchronous `process.Execute` attempt with empty directory and stdin and
+`Start` false. The public signature, `Output` type and methods, returned
+stdout/stderr bytes, callers, and the legacy behavior that discards the
+process error and leaves `Output.Err` nil remain unchanged. The obsolete
+uncalled private `run(*exec.Cmd)` helper is removed. No process interface,
+adapter implementation, caller, other shell operation, or inventory entry
+changed.
+
+Four focused private shell contracts bring the suite to 336 tests. Their
+recording process double records only the complete existing process request,
+copies the ordered argument slice, and writes guarded in-memory stdout and
+stderr bytes. The contracts prove complete production process selection,
+exact command-name and ordered arbitrary argument bytes, one request, the
+synchronous defaults, distinct writer identity and delivered arbitrary
+bytes, exact injected dependency-error observation through the legacy nil
+`Output.Err` contract, safe-zero behavior, rejection of an empty recording
+population, and absence of unrelated process requests. They launch no
+process, touch no network, change no working directory, and write no file.
+
+Q0.6 holds at 25 guarded safe-writer sites, 20 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2
+stays zero, Q1.3 improves from 12 of 33 to 11 of 32 as the one direct public
+Run construction site leaves and the existing adapter implementation remains
+singular, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8.
+
+The move-49 implementation gate passed focused shell/process/Maven and
+relevant command, context, config, filesystem, HTTP, Spring, structurizr,
+profile, browser, tips, file, template, Bitbucket, Kibana, local-config, and
+caller package tests; API/CLI and subprocess compatibility; all four host
+flows and their meta-contracts; full preflight, test, install, the standalone
+62-control launcher contract, uncached and race tests, vet, the pinned linter
+with zero issues, the 15-control audit meta-suite, and empty-HOME count-2.
+Generated compatibility and audit reports and all Go and linter caches
+remained outside the measured tree. One standalone launcher attempt and the
+first complete `make test` attempt hit the documented nested
+signal-interruption partial-raw-log timing flake; complete reruns passed all
+62 controls. The focused seven-criterion audit exited 1 for documented
+findings, never 2, with four improved, two held, zero regressed, and one
+not-comparable ratchet.
+
+The implementation commit and its clean full-audit result are recorded during
+handoff-only finalization.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
