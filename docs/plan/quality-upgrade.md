@@ -204,7 +204,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 30 are complete.
+Status: active. Moves 1 through 31 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -1201,6 +1201,45 @@ never 2, with four improved, two held, zero regressed, and one not-comparable
 ratchet. The clean full audit at `dfcfa75` exited 1 for 16 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths.
+
+Move 31 routes only private
+`template.filteredFilesFromTemplate(sourceDir string, filter []string)
+(files []string, err error)`'s direct `filepath.Walk(sourceDir, callback)`
+operation through the existing filesystem adapter. The unchanged private
+production entry selects `filesystem.System()` for a private complete
+dependency, which delegates the exact supplied `sourceDir` and unchanged
+callback through `filesystem.Walk`. The adapter's system implementation still
+uses `filepath.Walk`, preserving lexical system order, delivered callback
+paths, metadata and incoming errors, callback decisions, and the exact final
+walk error.
+
+Seven new top-level template recording contracts bring the suite to 250
+tests. They prove complete system dependency selection and delivery, the exact
+supplied source root, non-empty recorded walk-root and callback populations,
+delivered callback order, paths, metadata and incoming errors, exact directory
+handling and metadata observations, the existing nil-info incoming-error
+panic, non-nil-info incoming-error processing, slash-based root detection,
+ordered filters, non-root `pom.xml` handling, substring matches, the global
+`.render` exception, exact debug logging, ordered and nil results, exact final
+walk errors, ordered partial results, and safe zero behavior without
+developer-path access. Production-composition contracts perform no real
+filesystem mutation. No adapter operation, complete recording double,
+inventory label, seam driver, mutation harness, public API, caller, merge,
+copy, search, render, config, file, or Maven operation changed. Q0.6 remains at
+22 guarded safe-writer sites, 17 write and 5 copy, with zero unsafe direct
+writes. Q1.3 moves from 36 of 53 to 35 of 52; Q1.2 stays zero, Q1.4 stays 7 of
+8, and exact Q2.1 stays 0 of 8.
+
+The move-31 implementation gate passed focused template/filesystem and
+relevant config, file, Maven, and command caller contracts, API/CLI and
+subprocess compatibility, all four host flows, preflight, test, install, the
+standalone 62-control launcher contract, uncached and race tests, vet, the
+15-control audit meta-suite, and empty-HOME count-2. One full `make test`
+attempt hit the documented nested launcher signal-interruption partial-raw-log
+timing flake; its immediate complete rerun passed. The focused seven-criterion
+audit exited 1 for documented findings, never 2, with four improved, two held,
+zero regressed, and one not-comparable ratchet. The implementation commit and
+authoritative clean full-audit result are recorded by the handoff checkpoint.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

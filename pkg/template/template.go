@@ -10,7 +10,6 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/resources"
 	"os"
-	"path/filepath"
 	"strings"
 	"text/template"
 )
@@ -226,8 +225,20 @@ func cleanForMultiModule(targetProject config.Project) error {
 	return file.DeleteAll(file.Path("%s/src", targetProject.Path))
 }
 
+type filteredWalkDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemFilteredWalkDependencies() filteredWalkDependencies {
+	return filteredWalkDependencies{Files: filesystem.System()}
+}
+
 func filteredFilesFromTemplate(sourceDir string, filter []string) (files []string, err error) {
-	err = filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+	return filteredFilesFromTemplateWithDependencies(systemFilteredWalkDependencies(), sourceDir, filter)
+}
+
+func filteredFilesFromTemplateWithDependencies(dependencies filteredWalkDependencies, sourceDir string, filter []string) (files []string, err error) {
+	err = filesystem.Walk(dependencies.Files, sourceDir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
