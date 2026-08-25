@@ -1,13 +1,13 @@
 # Agent Session: Migrate Config Templates Walk
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T071258+0200-migrate-config-templates-walk`
 Created: `2026-08-25T07:12:58+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `d306fe4c05ba6de66c618f42e04d1032a7cb1da0c4c73a6eee2807e61b0d2e1b`
 Previous: [2026-08-25T064347+0200-migrate-config-examples-read-dir.md](2026-08-25T064347+0200-migrate-config-examples-read-dir.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T075301+0200-migrate-template-filtered-walk.md](2026-08-25T075301+0200-migrate-template-filtered-walk.md)
+Outcome: Templates walk moved through the filesystem adapter at dfcfa75; Q1.3 is 36/53.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
