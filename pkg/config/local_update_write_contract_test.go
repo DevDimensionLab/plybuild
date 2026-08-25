@@ -26,6 +26,10 @@ type recordingLocalConfigUpdateFilesystem struct {
 
 var _ filesystem.FileSystem = (*recordingLocalConfigUpdateFilesystem)(nil)
 
+func (recording *recordingLocalConfigUpdateFilesystem) WorkingDirectory() (string, error) {
+	return "", recording.unexpected("working directory")
+}
+
 func (recording *recordingLocalConfigUpdateFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, recording.unexpected("read")
 }

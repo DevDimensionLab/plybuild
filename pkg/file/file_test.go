@@ -153,6 +153,54 @@ func (existingFileInfo) ModTime() time.Time { return time.Time{} }
 func (existingFileInfo) IsDir() bool        { return false }
 func (existingFileInfo) Sys() interface{}   { return nil }
 
+func (*recordingFileExistenceFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected file-existence working directory")
+}
+
+func (*recordingFileReadFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected file-read working directory")
+}
+
+func (*recordingFileOverwriteFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected file-overwrite working directory")
+}
+
+func (*recordingFileCreateFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected file-create working directory")
+}
+
+func (*recordingDirectoryCreateFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected directory-create working directory")
+}
+
+func (*recordingFileOpenFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected append-open working directory")
+}
+
+func (*recordingFileDeleteFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected single-file-delete working directory")
+}
+
+func (*recordingFileDeleteAllFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected recursive-delete working directory")
+}
+
+func (*recordingFileMoveFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected file-move working directory")
+}
+
+func (*recordingClearDirFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected clear-directory working directory")
+}
+
+func (*recordingFindFirstFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected find-first working directory")
+}
+
+func (*recordingFindAllFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected find-all working directory")
+}
+
 func (*recordingFileExistenceFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected file-existence read")
 }

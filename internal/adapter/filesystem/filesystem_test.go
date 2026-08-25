@@ -30,6 +30,8 @@ type recordedWalkInput struct {
 
 type recordingFilesystem struct {
 	operations          []recordedFilesystemOperation
+	workingDirectory    string
+	workingDirectoryErr error
 	globMatches         []string
 	readData            []byte
 	readDirEntries      []fs.FileInfo
@@ -51,6 +53,24 @@ type recordingFilesystem struct {
 	removeAllErr        error
 	renameErr           error
 	walkErr             error
+}
+
+func (recording *recordingFilesystem) WorkingDirectory() (string, error) {
+	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "working-directory"})
+	return recording.workingDirectory, recording.workingDirectoryErr
+}
+
+func (recording *recordingFilesystem) assertedWorkingDirectoryAttempts() (int, error) {
+	attempts := 0
+	for _, operation := range recording.operations {
+		if operation.Name == "working-directory" {
+			attempts++
+		}
+	}
+	if attempts == 0 {
+		return 0, errors.New("recorded working-directory population is empty")
+	}
+	return attempts, nil
 }
 
 func (recording *recordingFilesystem) ReadFile(path string) ([]byte, error) {
@@ -138,6 +158,10 @@ func (*recordingFilesystem) Copy(File, io.Reader) (int64, error) {
 func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	target := filepath.Join(t.TempDir(), "safe default", "must-not-exist.txt")
 
+	if directory, err := WorkingDirectory(Dependencies{}); directory != "" || err != ErrNoFilesystem {
+		t.Fatalf("zero-value working-directory dependency returned (%q, %v), want (empty, %v)",
+			directory, err, ErrNoFilesystem)
+	}
 	if err := Mkdir(Dependencies{}, target, 0751); !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value single-directory dependency returned %v, want %v", err, ErrNoFilesystem)
 	}
@@ -180,6 +204,69 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
 		t.Fatalf("zero-value filesystem dependencies mutated the target: %v", err)
+	}
+}
+
+func TestWorkingDirectoryReturnsExactArbitraryDependencyValuesAndErrorsFromOneAttempt(t *testing.T) {
+	directoryError := errors.New("complete working-directory dependency error")
+	tests := []struct {
+		name      string
+		directory string
+		err       error
+	}{
+		{name: "empty directory"},
+		{name: "arbitrary directory bytes", directory: string([]byte{
+			'/', 'c', 'o', 'm', 'p', 'l', 'e', 't', 'e', '/', '/', 'w', 'o', 'r', 'k', 'i', 'n', 'g', ' ',
+			'd', 'i', 'r', '/', '.', '.', '/', 'b', 'a', 'c', 'k', 's', 'l', 'a', 's', 'h', '\\', 0xc3, 0xb8, '\n', 0x00,
+		})},
+		{name: "partial directory and arbitrary error", directory: "/partial directory must remain exact", err: directoryError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFilesystem{
+				workingDirectory:    test.directory,
+				workingDirectoryErr: test.err,
+			}
+
+			directory, err := WorkingDirectory(Dependencies{FileSystem: recording})
+
+			if directory != test.directory || err != test.err {
+				t.Fatalf("working-directory result was (%q, %v), want exact (%q, %v)",
+					directory, err, test.directory, test.err)
+			}
+			attempts, populationErr := recording.assertedWorkingDirectoryAttempts()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			if attempts != 1 {
+				t.Fatalf("working-directory dependency made %d attempts, want 1", attempts)
+			}
+			want := []recordedFilesystemOperation{{Name: "working-directory"}}
+			if !reflect.DeepEqual(recording.operations, want) {
+				t.Fatalf("working-directory dependency received unrelated operations:\n got: %#v\nwant: %#v",
+					recording.operations, want)
+			}
+		})
+	}
+}
+
+func TestSystemWorkingDirectoryReturnsExactOsGetwdResult(t *testing.T) {
+	wantDirectory, wantErr := os.Getwd()
+
+	directory, err := WorkingDirectory(System())
+
+	if directory != wantDirectory || !reflect.DeepEqual(err, wantErr) {
+		t.Fatalf("system working-directory result was (%q, %#v), want exact os.Getwd result (%q, %#v)",
+			directory, err, wantDirectory, wantErr)
+	}
+}
+
+func TestRecordedWorkingDirectoryRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingFilesystem{}
+
+	if _, err := recording.assertedWorkingDirectoryAttempts(); err == nil {
+		t.Fatal("empty recorded working-directory population passed")
 	}
 }
 

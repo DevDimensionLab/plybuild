@@ -21,6 +21,10 @@ type recordingGitHookFilesystem struct {
 	readDirErr       error
 }
 
+func (*recordingGitHookFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected Git-hook-files working directory")
+}
+
 func (*recordingGitHookFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected Git-hook-files read")
 }

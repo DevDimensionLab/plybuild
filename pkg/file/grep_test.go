@@ -26,6 +26,10 @@ type recordingGrepRecursiveFilesystem struct {
 	walkErr         error
 }
 
+func (*recordingGrepRecursiveFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected recursive-grep working directory")
+}
+
 func (*recordingGrepRecursiveFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected recursive-grep read")
 }

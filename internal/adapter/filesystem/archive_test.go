@@ -35,6 +35,10 @@ type recordingArchiveFilesystem struct {
 	copyErr      error
 }
 
+func (*recordingArchiveFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected working directory")
+}
+
 func (*recordingArchiveFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected read")
 }

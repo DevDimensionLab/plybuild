@@ -24,6 +24,10 @@ type recordingTipsListFilesystem struct {
 
 var _ filesystem.FileSystem = (*recordingTipsListFilesystem)(nil)
 
+func (recording *recordingTipsListFilesystem) WorkingDirectory() (string, error) {
+	return "", recording.unexpected("working directory")
+}
+
 func (recording *recordingTipsListFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, recording.unexpected("read")
 }

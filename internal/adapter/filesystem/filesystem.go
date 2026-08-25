@@ -22,6 +22,7 @@ type File interface {
 
 // FileSystem performs the filesystem operations used by a migrated flow.
 type FileSystem interface {
+	WorkingDirectory() (string, error)
 	ReadFile(string) ([]byte, error)
 	ReadDir(string) ([]fs.FileInfo, error)
 	ReadDirEntries(string) ([]fs.DirEntry, error)
@@ -44,6 +45,14 @@ type FileSystem interface {
 // callers must select System explicitly.
 type Dependencies struct {
 	FileSystem FileSystem
+}
+
+// WorkingDirectory returns the exact working directory from the configured dependency.
+func WorkingDirectory(dependencies Dependencies) (string, error) {
+	if dependencies.FileSystem == nil {
+		return "", ErrNoFilesystem
+	}
+	return dependencies.FileSystem.WorkingDirectory()
 }
 
 // ReadFile passes the complete source path to the configured dependency.
@@ -183,6 +192,10 @@ func System() Dependencies {
 }
 
 type systemFilesystem struct{}
+
+func (systemFilesystem) WorkingDirectory() (string, error) {
+	return os.Getwd()
+}
 
 func (systemFilesystem) ReadFile(path string) ([]byte, error) {
 	return os.ReadFile(path)

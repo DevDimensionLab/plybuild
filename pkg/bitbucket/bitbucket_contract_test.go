@@ -64,6 +64,10 @@ type recordingBitbucketRepositoryFilesystem struct {
 	statErr   error
 }
 
+func (*recordingBitbucketRepositoryFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected Bitbucket repository working directory")
+}
+
 func (*recordingBitbucketRepositoryFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected Bitbucket repository read")
 }

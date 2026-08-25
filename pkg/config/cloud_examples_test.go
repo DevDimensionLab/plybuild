@@ -21,6 +21,10 @@ type recordingExamplesFilesystem struct {
 	readDirErr       error
 }
 
+func (*recordingExamplesFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected Examples working directory")
+}
+
 func (*recordingExamplesFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected Examples read")
 }

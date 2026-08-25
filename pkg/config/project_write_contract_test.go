@@ -29,6 +29,10 @@ type recordingProjectConfigFilesystem struct {
 	logOutput *bytes.Buffer
 }
 
+func (*recordingProjectConfigFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected project-config working directory")
+}
+
 func (*recordingProjectConfigFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected project-config read")
 }

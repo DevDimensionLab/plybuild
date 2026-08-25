@@ -24,6 +24,10 @@ type recordingTemplateMarkdownFilesystem struct {
 	writeErr error
 }
 
+func (*recordingTemplateMarkdownFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected template-markdown working directory")
+}
+
 func (*recordingTemplateMarkdownFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected template-markdown read")
 }

@@ -20,6 +20,10 @@ type recordingIntellijFilesystem struct {
 	readDirErr     error
 }
 
+func (*recordingIntellijFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected non-recursive IDE working directory")
+}
+
 func (*recordingIntellijFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected non-recursive IDE read")
 }

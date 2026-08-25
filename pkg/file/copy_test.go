@@ -41,6 +41,10 @@ type recordingCopyFilesystem struct {
 	writeErr    error
 }
 
+func (*recordingCopyFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected template file copy working directory")
+}
+
 func (recording *recordingCopyFilesystem) dependencies() filesystem.Dependencies {
 	return filesystem.Dependencies{FileSystem: recording}
 }

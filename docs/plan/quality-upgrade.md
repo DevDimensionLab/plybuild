@@ -459,7 +459,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 45 are complete.
+Status: active. Moves 1 through 46 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -2171,6 +2171,55 @@ Commit: `9fcdfb5`.
 The clean full audit from commit `9fcdfb5` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
+
+Move 46 adds only `WorkingDirectory() (string, error)` to the existing complete
+filesystem interface. Its forwarding helper returns the exact safe-zero pair
+`"", filesystem.ErrNoFilesystem`, otherwise makes one dependency attempt and
+returns the exact string and error. The system implementation directly returns
+`os.Getwd()` without normalization, fallback, retry, logging, or wrapping.
+Every established filesystem method, dependency selection, error sentinel,
+system operation, and caller remains unchanged; all pre-existing complete
+filesystem doubles reject the unrelated operation.
+
+Only the direct `os.Getwd()` in private `pkg/spring.archivePath` moves behind
+one private complete composition selecting `filesystem.System()`.
+`archivePath() (string, error)` remains the production entry. A working-
+directory error returns the same empty path and exact error before the direct
+`time.Now().Unix()` call. Success passes the arbitrary directory bytes
+unchanged to the established `file.Path("%s/spring-%d.zip", curDir, now)` call.
+The filename, timestamp unit, ordering, caller graph, Spring discovery,
+download, unzip, delete, and demo-file behavior remain unchanged. No file,
+HTTP, process, shell, download, unzip, delete, or clock seam was added.
+
+Eight new top-level contracts bring the suite to 324 tests. Three focused
+filesystem-adapter contracts prove exact arbitrary working-directory values
+and errors pass through one recording attempt, the system result matches the
+direct `os.Getwd()` operation, safe-zero identity remains exact, and an empty
+recorded population fails. Five focused private Spring contracts prove
+complete production selection, exact arbitrary directory composition, one
+non-empty attempt, exact error identity and empty error result, safe-zero
+behavior, direct Unix filename construction, rejection of an empty population,
+and absence of unrelated filesystem operations. The contracts do not create a
+real file or invoke HTTP, a process, download, unzip, delete, or a clock seam.
+
+Q0.6 stays closed at 24 guarded safe-writer sites, 19 write and 5 copy, with
+zero skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25,
+Q1.2 stays zero, Q1.3 improves from 16 of 36 to 15 of 36 as the Spring caller
+site leaves and one exact adapter site enters, Q1.4 stays 7 of 8, and exact
+Q2.1 stays 0 of 8.
+
+The move-46 implementation gate passed focused Spring, filesystem, process,
+command, context, config, HTTP, Maven, shell, structurizr, profile, browser,
+tips, file, template, Bitbucket, Kibana, local-config, and caller package tests;
+API/CLI and subprocess compatibility; all four host flows and their
+meta-contracts; full preflight, the standalone 62-control launcher contract,
+uncached and race tests, vet, the 15-control audit meta-suite, and empty-HOME
+count-2. Generated compatibility and audit reports and all Go and linter caches
+remained outside the measured tree. One standalone launcher attempt and one
+`make test` attempt hit the documented nested signal-interruption partial-raw-
+log timing flake; each immediate complete rerun passed all 62 controls. The
+focused seven-criterion audit exited 1 for documented findings, never 2, with
+four improved, two held, zero regressed, and one not-comparable ratchet.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

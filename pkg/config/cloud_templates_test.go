@@ -31,6 +31,10 @@ type recordingTemplatesFilesystem struct {
 	walkErr         error
 }
 
+func (*recordingTemplatesFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected Templates working directory")
+}
+
 func (*recordingTemplatesFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected Templates read")
 }

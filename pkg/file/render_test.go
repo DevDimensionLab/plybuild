@@ -52,6 +52,10 @@ type recordingRenderFilesystem struct {
 	file       *recordedRenderFile
 }
 
+func (*recordingRenderFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected render working directory")
+}
+
 func (recording *recordingRenderFilesystem) ReadFile(path string) ([]byte, error) {
 	recording.operations = append(recording.operations, recordedRenderOperation{name: "read", path: path})
 	return append([]byte{}, recording.readData...), recording.readErr

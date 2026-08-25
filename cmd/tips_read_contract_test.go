@@ -22,6 +22,10 @@ type recordingTipsShowReadFilesystem struct {
 	unexpectedOperations []string
 }
 
+func (recording *recordingTipsShowReadFilesystem) WorkingDirectory() (string, error) {
+	return "", recording.unexpected("working directory")
+}
+
 func (recording *recordingTipsShowReadFilesystem) ReadFile(path string) ([]byte, error) {
 	recording.readPaths = append(recording.readPaths, path)
 	return recording.readData, recording.readErr

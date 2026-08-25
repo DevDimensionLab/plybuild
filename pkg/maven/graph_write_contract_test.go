@@ -25,6 +25,10 @@ type recordingGraphStylesFilesystem struct {
 	unexpectedOperations []string
 }
 
+func (recording *recordingGraphStylesFilesystem) WorkingDirectory() (string, error) {
+	return "", recording.unexpected("working directory")
+}
+
 func (recording *recordingGraphStylesFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, recording.unexpected("read")
 }

@@ -47,6 +47,10 @@ type recordingDownloadFilesystem struct {
 	closeErr   error
 }
 
+func (*recordingDownloadFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected working directory")
+}
+
 func (recording *recordingDownloadFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected read")
 }

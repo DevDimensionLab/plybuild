@@ -35,6 +35,10 @@ type recordingLocalConfigTouchCreateFilesystem struct {
 
 var _ filesystem.FileSystem = (*recordingLocalConfigTouchCreateFilesystem)(nil)
 
+func (recording *recordingLocalConfigTouchCreateFilesystem) WorkingDirectory() (string, error) {
+	return "", recording.unexpected("working directory")
+}
+
 func (recording *recordingLocalConfigTouchCreateFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, recording.unexpected("read")
 }

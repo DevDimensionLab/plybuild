@@ -29,6 +29,10 @@ type recordingFilteredWalkFilesystem struct {
 	walkErr         error
 }
 
+func (*recordingFilteredWalkFilesystem) WorkingDirectory() (string, error) {
+	return "", errors.New("unexpected filtered-walk working directory")
+}
+
 func (*recordingFilteredWalkFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, errors.New("unexpected filtered-template read")
 }

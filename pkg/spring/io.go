@@ -9,7 +9,6 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/http"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 )
@@ -191,8 +190,20 @@ func downloadInitializer(dependencies initializerDependencies, targetDir string,
 	return err
 }
 
+type archivePathDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemArchivePathDependencies() archivePathDependencies {
+	return archivePathDependencies{Files: filesystem.System()}
+}
+
 func archivePath() (path string, err error) {
-	curDir, err := os.Getwd()
+	return archivePathWithDependencies(systemArchivePathDependencies())
+}
+
+func archivePathWithDependencies(dependencies archivePathDependencies) (path string, err error) {
+	curDir, err := filesystem.WorkingDirectory(dependencies.Files)
 	if err != nil {
 		return
 	}

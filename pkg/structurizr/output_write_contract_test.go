@@ -24,6 +24,10 @@ type recordingStructurizrOutputFilesystem struct {
 	unexpectedOperations []string
 }
 
+func (recording *recordingStructurizrOutputFilesystem) WorkingDirectory() (string, error) {
+	return "", recording.unexpected("working directory")
+}
+
 func (recording *recordingStructurizrOutputFilesystem) ReadFile(string) ([]byte, error) {
 	return nil, recording.unexpected("read")
 }
