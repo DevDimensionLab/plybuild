@@ -144,6 +144,23 @@ P3.35 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
+P3.36 checkpoint:
+
+| Signal | P3.36 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 270 | Four Maven graph-style-write recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 17 / 25 | The contracts stay in the already-tested Maven package. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 30 / 47 | The Maven graph-style output write now uses the filesystem adapter. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -289,7 +306,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 35 are complete.
+Status: active. Moves 1 through 36 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -1489,6 +1506,48 @@ The clean full audit from commit `527a8b9` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
 
+Move 36 routes only exported `maven.WriteGraphStyles`' direct
+`os.WriteFile(stylesFile, jsonStyles, 0644)` operation through the existing
+filesystem adapter. The exported function and every caller remain unchanged.
+It still evaluates exact `json.MarshalIndent(styles, "", "    ")` first and
+returns its error before composing exact
+`file.Path("%s/target/dependency-graph-styles.json", projectPath)`. The existing
+`file.Exists(stylesFile)` selection still returns nil without a write when the
+path is present. When absent, production selects `filesystem.System()` only
+for a private complete graph-style-write dependency and attempts the existing
+adapter `WriteFile` operation once with the exact caller-composed path, exact
+marshaled bytes, and mode `0644`, returning the exact write error.
+
+Four new top-level Maven contracts bring the suite to 270 tests. They prove
+complete system dependency selection and delivery, exact arbitrary
+caller-composed paths without cleaning or normalization, non-empty recorded
+write populations, exact empty, representative, non-ASCII, and arbitrary
+output bytes, exact `0644` mode, one write attempt, exact write-error identity
+at the private boundary, safe zero behavior without developer-path access, and
+no unrelated adapter operation. The production-composition contracts neither
+mutate the real filesystem nor run Maven, dot, or another command. No adapter
+operation, established complete recording double, inventory label, seam
+driver, mutation harness, public API, caller, JSON marshaling, path
+construction, existence selection, Graph filtering or style mutation, Graph
+arguments, `RunOn`, Maven/dot execution, command behavior, structurizr, tips,
+config, template, file, HTTP, Bitbucket, Wpost, or other completed effect
+changed. Q0.6 remains at 22 guarded safe-writer sites, 17 write and 5 copy,
+with zero unsafe direct writes. Q1.3 moves from 31 of 48 to 30 of 47; Q1.1
+stays at 8 untested packages; Q1.2 stays zero, Q1.4 stays 7 of 8, and exact
+Q2.1 stays 0 of 8.
+
+The move-36 implementation gate passed focused Maven/filesystem/process and
+relevant command, file, template, config, tips, structurizr, and context
+package tests, API/CLI and subprocess compatibility, all four host flows, full
+preflight, test, install, the standalone 62-control launcher contract,
+uncached and race tests, vet, and the 15-control audit meta-suite. The first
+standalone launcher run hit the documented nested signal-interruption partial-
+raw-log timing flake; its immediate complete rerun passed all 62 controls. The
+focused seven-criterion audit exited 1 for documented findings, never 2, with
+four improved, two held, zero regressed, and one not-comparable ratchet.
+
+Commit: pending clean implementation commit.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -1522,6 +1581,10 @@ composition, read error wrapping, returned bytes, or later command sequencing.
 `structurizr.RunWithOutputToFile` now reuses `WriteFile` without changing
 command construction or execution, buffer capture, early process errors,
 caller path, stdout bytes, `0644` mode, discarded write errors, or callers.
+`maven.WriteGraphStyles` now reuses `WriteFile` without changing JSON marshal
+sequencing, its early error, exact caller-composed target, existence selection,
+no-write-when-present behavior, output bytes, mode, exact error, Graph behavior,
+or command execution.
 Continue with the next isolated production effect while leaving project
 initialization, `SortAndWritePom`, cloud config, template/file/Maven behavior,
 every other tips branch, command sequencing, the adapter, public API, and every
