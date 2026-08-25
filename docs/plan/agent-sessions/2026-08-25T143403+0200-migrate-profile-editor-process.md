@@ -1,13 +1,13 @@
 # Agent Session: Migrate Profile Editor Process
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T143403+0200-migrate-profile-editor-process`
 Created: `2026-08-25T14:34:03+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `44e57e5b74b6f13dab3164312d6d4f618beb0a878fd614a079275940b40057f8`
 Previous: [2026-08-25T135854+0200-migrate-tips-list-read-dir.md](2026-08-25T135854+0200-migrate-tips-list-read-dir.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T151736+0200-migrate-open-browser-process-start.md](2026-08-25T151736+0200-migrate-open-browser-process-start.md)
+Outcome: completed by `0e10282`; exact process stdin and the profile editor boundary are green at Q1.3 19/38, and the next focused P3 process-start move is linked.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

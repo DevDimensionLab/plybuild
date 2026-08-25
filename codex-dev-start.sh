@@ -1055,59 +1055,59 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T143403+0200-migrate-profile-editor-process
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T143403+0200-migrate-profile-editor-process.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T135854+0200-migrate-tips-list-read-dir.md
+#|SESSION_ID=2026-08-25T151736+0200-migrate-open-browser-process-start
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T151736+0200-migrate-open-browser-process-start.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T143403+0200-migrate-profile-editor-process.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete one focused P3 production-effect move: route only the direct
-#|`exec.Command(editor, ctx.LocalConfig.FilePath())` construction and `cmd.Run()`
-#|in the `profileCmd` edit branch through the existing process adapter. Preserve
-#|exact EDITOR lookup and fallback, local-config path selection, executable and
-#|argument values, stdin/stdout/stderr and working-directory behavior, one run
-#|attempt, exact error behavior, every later profile branch and follow-up, every
-#|command object and registration, every completed process, filesystem, HTTP,
-#|tips, config, Maven, structurizr, Bitbucket, Wpost, local-config, and supervisor
-#|move, and every P2A contract with zero comparable ratchet regressions.
+#|Complete one focused P3 production-effect move: route only the three direct
+#|`exec.Command(...).Start()` paths in `pkg/webservice.OpenBrowser` through the
+#|existing process adapter. Preserve exact runtime platform selection,
+#|executable and argument values, asynchronous start semantics, empty working
+#|directory, nil stdin/stdout/stderr, one start attempt, exact start errors, the
+#|unsupported-platform error, every server operation and caller, every completed
+#|process, profile, filesystem, HTTP, tips, config, Maven, structurizr,
+#|Bitbucket, Wpost, local-config, and supervisor move, and every P2A contract
+#|with zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
 #|P3 remains active, P4-P8 are queued in the machine-readable block in
 #|docs/plan/quality-upgrade.md, and the launcher must remain NEXT until every
-#|authorized checkpoint is complete. This mission authorizes only the direct
-#|`exec.Command` and `cmd.Run` operations inside `if configOpts.Edit` in
-#|`cmd/profile.go`; one `Stdin io.Reader` addition to the existing internal
-#|`process.Command` value and its exact direct system mapping to `exec.Cmd.Stdin`;
-#|focused process-stdin contracts; and focused private profile-editor recording
-#|contracts. It does not authorize another process operation or caller, an
-#|environment adapter, a function-valued dependency, another profile/config
-#|branch or effect, a public API, inventory, mutation harnesses, or later roadmap
-#|implementation.
+#|authorized checkpoint is complete. This mission authorizes only the three
+#|chained process constructions and `Start` calls in `OpenBrowser`; one boolean
+#|start-mode addition to the existing internal `process.Command` request and its
+#|exact direct system selection of `exec.Cmd.Start()` instead of the established
+#|`exec.Cmd.Run()`; focused process-start contracts; and focused private browser-
+#|launcher recording contracts. It does not authorize another process caller,
+#|`StartWebServer`, `StopWebServer`, an OS/runtime adapter, a function-valued
+#|dependency, public API, inventory, mutation harnesses, clock/server seams, or
+#|later roadmap implementation.
 #|
 #|# Measurements At Start
 #|
 #|Before editing, inspect branch, HEAD, status, the rolling handover, this active
-#|archive, the roadmap queue, complete `cmd/profile.go`, its registration, every
-#|profile/config command caller and relevant command, context, local-config, and
-#|terminal-width test, complete `internal/adapter/process` source and tests, every
-#|`process.Command`, `process.Dependencies`, `process.Runner`, and `process.Execute`
-#|caller and recording double, the completed Maven process flow, complete tips
-#|and filesystem changes from move 43, relevant config/file/template/Maven/
-#|structurizr/Bitbucket/Wpost code and tests, `.quality/inventory`, the continuity
-#|and quality-lift designs, and the Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 audit
-#|implementation. Regenerate ignored reports outside the measured tree or remove
-#|them before a clean audit.
+#|archive, the roadmap queue, complete `pkg/webservice/api.go` and its package,
+#|every `OpenBrowser` caller and relevant build command/test, complete
+#|`internal/adapter/process` source and tests, every `process.Command`,
+#|`process.Dependencies`, `process.Runner`, and `process.Execute` caller and
+#|recording double, the completed profile-editor stdin move, Maven and Git
+#|process flows, relevant structurizr, shell, context, config, HTTP, tips,
+#|filesystem, Bitbucket, Wpost, and local-config code/tests, `.quality/inventory`,
+#|the continuity and quality-lift designs, and the Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/
+#|Q2.1/Q3.4 audit implementation. Regenerate ignored reports outside the
+#|measured tree or remove them before a clean audit.
 #|
-#|Implementation commit `85f4c2b` has 304 tests across 18 of 25 packages. Q0.6
+#|Implementation commit `0e10282` has 308 tests across 18 of 25 packages. Q0.6
 #|has 24 guarded safe-writer sites, 19 write and 5 copy, and zero unsafe direct
-#|test writes. Q1.1 is 7 of 25, Q1.2 is 0, Q1.3 is 21 violations of 40 production
+#|test writes. Q1.1 is 7 of 25, Q1.2 is 0, Q1.3 is 19 violations of 38 production
 #|effect sites with clock and server absent, Q1.4 is 7 of 8, and exact Q2.1 is 0
 #|of 8 executable harnesses. The clean gate passed, the full audit exited 1 for
-#|15 documented findings and never 2, and comparable ratchets were five improved,
-#|two held, and zero regressed.
+#|15 documented findings and never 2, and comparable ratchets were five
+#|improved, two held, and zero regressed.
 #|
 #|The launcher has 62 Bash 3.2 contracts and supervises fresh non-interactive
 #|JSONL turns with external raw logs. It continues only after a successful
@@ -1118,93 +1118,94 @@ exit 70
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for exact process stdin representation and the profile
-#|editor boundary and contracts, with measured planning notes. Then perform the
-#|normal separate handoff-only commit. Do not push, merge, publish, distribute,
-#|remove the worktree, stash inherited changes, revert user work, or run
-#|destructive Git commands.
+#|implementation commit for exact process start representation and the browser
+#|launcher boundary and contracts, with measured planning notes. Then perform
+#|the normal separate handoff-only commit. Do not push, merge, publish,
+#|distribute, remove the worktree, stash inherited changes, revert user work, or
+#|run destructive Git commands.
 #|
 #|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve the full 62-contract
 #|launcher supervisor, exact prompt/archive bytes, the authorized queue and
-#|reciprocal archive graph. Preserve `cmd.Execute()`, `cmd.ExecuteE()`,
-#|`cmd.RootCmd`, `profileCmd`, `configCmd`, all flags and registrations, public
-#|API/CLI behavior, all four host acceptance flows, `ConfigOpts`, global context,
-#|local terminal width behavior, config types, Maven process behavior, tips
-#|behavior, and every caller's observable behavior.
+#|reciprocal archive graph. Preserve `OpenBrowser(string) error`, every caller,
+#|all three supported platform branches and their order, `StartWebServer`,
+#|`StopWebServer`, server globals and handlers, command registrations, public
+#|API/CLI behavior, all four host acceptance flows, process stdin behavior,
+#|profile behavior, Maven and Git process behavior, and every caller's
+#|observable behavior.
 #|
-#|Add only `Stdin io.Reader` to the existing complete `process.Command` request
-#|and map it directly to `cmd.Stdin` before the existing `cmd.Run`. Keep name,
-#|args, directory, stdout, stderr, safe zero behavior, `Runner`, `Dependencies`,
-#|`Execute`, `System`, and every current caller unchanged. Extend the existing
-#|adapter recording and system contracts to prove exact stdin identity and
-#|delivered input. Do not add a new interface method, reconstruct an incomplete
-#|dependency, invoke a shell, split the process operation, or change error
+#|Add only a boolean start-mode value to the existing complete
+#|`process.Command` request. In the system runner, retain exact command
+#|construction and field mapping, call `cmd.Start()` and return its exact error
+#|only when that value is true, and otherwise retain the existing single
+#|`cmd.Run()` attempt. Keep name, args, directory, stdin, stdout, stderr, safe
+#|zero behavior, `Runner`, `Dependencies`, `Execute`, `System`, and every existing
+#|caller unchanged. Do not add a new interface method, wait for or kill a started
+#|process, retry, invoke a shell, split the process operation, or change error
 #|selection.
 #|
-#|Preserve the current edit order: read `os.Getenv("EDITOR")` once, replace only
-#|an empty value with exact `vim`, evaluate `ctx.LocalConfig.FilePath()` once,
-#|then select `process.System()` only for a private complete profile-editor
-#|composition and make one adapter execution attempt. The request must contain
-#|the exact editor as `Name`, one exact path argument, exact `os.Stdin`, exact
-#|`os.Stdout`, empty `Dir`, and nil `Stderr`. Return the exact process error.
-#|On error, still stop before sync, reset, and print; on success, preserve every
-#|existing later branch, condition, order, and result.
+#|Preserve exact browser selection. Linux must request `xdg-open` with the URL as
+#|its only argument; Windows must request `rundll32` with exact first argument
+#|`url.dll,FileProtocolHandler` and the URL second; Darwin must request `open`
+#|with the URL as its only argument. Each supported request must use start mode,
+#|empty `Dir`, and nil `Stdin`, `Stdout`, and `Stderr`, make one adapter attempt,
+#|return the exact start error, and never wait or run synchronously. An unsupported
+#|platform must return the same exact error text without a process attempt.
 #|
-#|Do not parse or split EDITOR, use a shell, add stderr forwarding, change the
-#|fallback, clean the path, preflight the executable or file, retry, wrap an
-#|error, reorder environment/path selection, change the historically broad final
-#|print predicate, or broaden into profile switching, sync, reset, print,
-#|terminal config, filesystem, HTTP, tips, Maven, structurizr, Wpost, clock,
-#|server, P4, P5, dependency, Docker, distribution, or publication work.
+#|Do not clean, parse, validate, escape, or rewrite the URL; use a shell; add
+#|stream forwarding; change supported-platform order or spelling; preflight an
+#|executable; retry; wrap an error; broaden into HTTP serving, shutdown context,
+#|runtime/clock/server adapters, shell.Run, structurizr processes, Maven, Git,
+#|profile, filesystem, P4, P5, Docker, distribution, or publication work.
 #|
 #|# Required Reading
 #|
 #|Read docs/plan/quality-handover.md, the P3 section and checkpoint gate in
 #|docs/plan/quality-upgrade.md, docs/design/agent-session-continuity.md,
-#|docs/design/quality-lift.md, `.quality/inventory`, complete `cmd/profile.go`
-#|and relevant command, root, context, config, and local-config source/tests,
-#|every profile command registration/caller, complete `internal/adapter/process`
-#|source/tests and every complete process caller and double, the completed Maven
-#|process contracts, complete move-43 tips/filesystem source and focused tests,
-#|relevant file/template/Maven/structurizr/Bitbucket/Wpost code and tests, and the
-#|Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 audit implementation before editing. Before
-#|the full gate, read the complete launcher contract, relevant Make meta-tests,
-#|P2A API/CLI/subprocess contracts, and all four host acceptance flows.
+#|docs/design/quality-lift.md, `.quality/inventory`, complete
+#|`pkg/webservice/api.go` and related source/tests/callers, relevant build command
+#|registration and acceptance contracts, complete `internal/adapter/process`
+#|source/tests and every complete process caller/double, the completed profile,
+#|Maven, and Git process contracts, relevant shell/structurizr/HTTP/context/config
+#|code and tests, and the Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 audit implementation
+#|before editing. Before the full gate, read the complete launcher contract,
+#|relevant Make meta-tests, P2A API/CLI/subprocess contracts, and all four host
+#|acceptance flows.
 #|
 #|# Three Moves
 #|
-#|1. Start red by extending focused process adapter contracts to prove the exact
-#|   `io.Reader` identity reaches a recording runner and direct system execution
-#|   receives exact input while preserving name, args, directory, stdout, stderr,
-#|   one attempt, exact errors, and safe zero behavior. Add focused profile-editor
-#|   contracts that prove complete production dependency selection, exact
-#|   non-empty and empty EDITOR selection with `vim` fallback, exact arbitrary
-#|   local-config path as the only argument, exact stdin/stdout identities, empty
-#|   directory, nil stderr, one attempt, exact error identity, non-empty recorded
-#|   populations, safe zero behavior, and no unrelated command or real process.
+#|1. Start red by extending focused process adapter contracts to prove exact
+#|   start-mode identity reaches a recording runner; false still performs one
+#|   direct synchronous run; true performs one direct asynchronous start with
+#|   exact name, args, directory, streams, and errors; and zero dependencies stay
+#|   safe. Add focused browser-launcher contracts for complete production
+#|   selection, all three exact platform requests, arbitrary URL bytes, one
+#|   attempt, exact errors, unsupported-platform no-attempt behavior, non-empty
+#|   recorded populations, safe zero behavior, and no real browser or server.
 #|
-#|2. Add only `Stdin io.Reader` to `process.Command` and its direct system mapping.
-#|   Keep `profileCmd` as the production entry, preserve EDITOR-before-path
-#|   evaluation, select `process.System()` only for a private complete editor
-#|   composition, and replace only the direct command construction/run. Do not
-#|   change another process call, profile branch, command effect, adapter
-#|   operation, caller, inventory, or public API.
+#|2. Add only the boolean start mode and its direct system branch. Keep
+#|   `OpenBrowser` as the production entry, select `process.System()` only for a
+#|   private complete browser composition, preserve runtime selection, and
+#|   replace only the three direct construction/start chains. Do not change
+#|   another webservice function, process call, adapter operation, caller,
+#|   inventory, or public API.
 #|
-#|3. Run focused command/process/config/context and relevant Maven, tips,
-#|   filesystem, file, template, structurizr, Bitbucket, HTTP, local-config, and
-#|   caller package tests; the launcher contract from `/bin/bash`; Make preflight
-#|   meta-contracts; API/CLI and subprocess compatibility; full Go tests and
-#|   race/vet; all four host acceptance flows; the audit meta-suite; focused
-#|   Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 measurements; full clean checkpoint
-#|   audit; and empty-HOME count-2. Expect Q1.1 to hold at 7 of 25 and nominal
-#|   Q1.3 to improve from 21 of 40 to 19 of 38 when the two direct process sites
-#|   leave. Q0.6, Q1.2, Q1.4, and exact Q2.1 must hold. Regenerate exact values;
-#|   the full audit may exit 1 for documented findings but never 2.
+#|3. Run focused webservice/process and relevant command, context, config, HTTP,
+#|   Maven, shell, structurizr, profile, tips, filesystem, Bitbucket, Wpost,
+#|   local-config, and caller package tests; the launcher contract from
+#|   `/bin/bash`; Make preflight meta-contracts; API/CLI and subprocess
+#|   compatibility; full Go tests and race/vet; all four host acceptance flows;
+#|   the audit meta-suite; focused Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4
+#|   measurements; full clean checkpoint audit; and empty-HOME count-2. Expect
+#|   Q1.1 to improve from 7 to 6 of 25 when `pkg/webservice` gains direct tests
+#|   and nominal Q1.3 to improve from 19 of 38 to 16 of 36 when three caller
+#|   sites leave and one exact adapter start site enters. Q0.6, Q1.2, Q1.4, and
+#|   exact Q2.1 must hold. Regenerate exact values; the full audit may exit 1 for
+#|   documented findings but never 2.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent process-stdin
-#|and profile-editor move or record an exact resumable state. Rewrite the rolling
+#|Before this agent session ends, finish and commit the coherent process-start
+#|and open-browser move or record an exact resumable state. Rewrite the rolling
 #|handover, record the measured P3 result, answer this archive, create one linked
 #|NEXT archive for the next coherent P3 effect move, replace only the launcher's
 #|mutable regions, run the launcher contract, and make the separate handoff-only
