@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `0e10282`.
+Last measured checkpoint: 2026-08-25, commit `9fcdfb5`.
 
 ## Objective
 
@@ -290,6 +290,23 @@ P3.44 clean checkpoint:
 | Packages with tests | 18 / 25 | The contracts stay in already-tested packages. |
 | Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
 | Direct external effects outside adapters | 19 / 38 | Both direct profile-editor process sites leave the production population. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+
+P3.45 clean checkpoint:
+
+| Signal | P3.45 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 316 | Three process-start and five browser-launcher contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 19 / 25 | Direct webservice tests reduce the uncovered package count by one. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 16 / 36 | The three browser command/start chains leave while one exact system-adapter start site enters the production population. |
 | Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
 | Executable mutation harnesses | 0 / 8 | P5 remains queued. |
 | Acceptance scripts | 4 / 4 | All host flows pass. |
@@ -2148,6 +2165,12 @@ count-2. Generated compatibility and audit reports and all Go and linter
 caches remained outside the measured tree. The focused seven-criterion audit
 exited 1 for documented findings, never 2, with four improved, two held, zero
 regressed, and one not-comparable ratchet.
+
+Commit: `9fcdfb5`.
+
+The clean full audit from commit `9fcdfb5` exited 1 for 15 documented findings,
+never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

@@ -1,13 +1,13 @@
 # Agent Session: Migrate Open Browser Process Start
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T151736+0200-migrate-open-browser-process-start`
 Created: `2026-08-25T15:17:36+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3b58e8754104eb4030bccfa56b4390b2c1ca1aaea9e0e6fa103edd50584089b0`
 Previous: [2026-08-25T143403+0200-migrate-profile-editor-process.md](2026-08-25T143403+0200-migrate-profile-editor-process.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T155409+0200-migrate-spring-archive-working-directory.md](2026-08-25T155409+0200-migrate-spring-archive-working-directory.md)
+Outcome: completed by `9fcdfb5` with 316 tests, exact Q1.3 16/36, and zero comparable ratchet regressions
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
