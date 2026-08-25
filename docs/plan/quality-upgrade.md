@@ -127,6 +127,23 @@ P3.34 clean checkpoint:
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 
+P3.35 checkpoint:
+
+| Signal | P3.35 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 266 | Four structurizr-output-write recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 17 / 25 | `pkg/structurizr` now has focused contracts. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 31 / 48 | The structurizr output write now uses the filesystem adapter. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -272,7 +289,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 33 are complete.
+Status: active. Moves 1 through 35 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -1430,6 +1447,44 @@ The clean full audit from commit `2566438` exited 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
 
+Move 35 routes only `structurizr.RunWithOutputToFile`'s direct
+`os.WriteFile(outputFile, out.Bytes(), 0644)` operation through the existing
+filesystem adapter. The exported function and every caller remain unchanged.
+It still creates `var out bytes.Buffer`, then `var stderr bytes.Buffer`, assigns
+the command's stdout and stderr buffers, invokes `command.Run()` once, and
+returns the exact non-nil command error before any write. On success,
+production selects `filesystem.System()` only for a private complete
+structurizr-output-write dependency and makes one adapter `WriteFile` attempt
+with the exact caller path, exact captured stdout bytes, and `0644` mode before
+discarding the write error and returning nil.
+
+Four new top-level structurizr contracts bring the suite to 266 tests and the
+tested population to 17 of 25 packages. They prove complete system dependency
+selection and delivery, exact arbitrary caller path delivery without cleaning
+or normalization, non-empty recorded write populations, exact empty,
+representative, non-ASCII, and arbitrary stdout bytes, exact `0644` mode, one
+write attempt, exact write-error identity at the private boundary, safe zero
+behavior without developer-path access, and no unrelated adapter operation.
+The production-composition contract neither mutates the real filesystem nor
+runs a command. No adapter operation, established complete recording double,
+inventory label, seam driver, mutation harness, public API, caller, command
+construction, command execution, buffer assignment, process error handling,
+plugin-diagram behavior, config, template, file, Maven, or tips behavior
+changed. Q0.6 remains at 22 guarded safe-writer sites, 17 write and 5 copy,
+with zero unsafe direct writes. Q1.3 moves from 32 of 49 to 31 of 48; Q1.1
+moves from 9 to 8 untested packages; Q1.2 stays zero, Q1.4 stays 7 of 8, and
+exact Q2.1 stays 0 of 8.
+
+The move-35 implementation gate passed focused structurizr/filesystem and
+relevant process, command, file, template, config, Maven, tips, and context
+package tests, API/CLI and subprocess compatibility, all four host flows, full
+preflight, test, install, the standalone 62-control launcher contract,
+uncached and race tests, vet, and the 15-control audit meta-suite. The focused
+seven-criterion audit exited 1 for documented findings, never 2, with four
+improved, two held, zero regressed, and one not-comparable ratchet.
+
+Commit: pending clean implementation commit.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -1460,6 +1515,9 @@ contract, exact log and `json.MarshalIndent` sequencing, caller target,
 serialized bytes, `0644` mode, or exact error. `tipsShowCmd.RunE` now reuses
 `ReadFile` without changing command registration, exact name and path
 composition, read error wrapping, returned bytes, or later command sequencing.
+`structurizr.RunWithOutputToFile` now reuses `WriteFile` without changing
+command construction or execution, buffer capture, early process errors,
+caller path, stdout bytes, `0644` mode, discarded write errors, or callers.
 Continue with the next isolated production effect while leaving project
 initialization, `SortAndWritePom`, cloud config, template/file/Maven behavior,
 every other tips branch, command sequencing, the adapter, public API, and every
