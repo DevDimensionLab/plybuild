@@ -85,6 +85,10 @@ func (*recordingBitbucketRepositoryFilesystem) OpenFile(string, int, fs.FileMode
 	return nil, errors.New("unexpected Bitbucket repository open file")
 }
 
+func (*recordingBitbucketRepositoryFilesystem) Remove(string) error {
+	return errors.New("unexpected Bitbucket repository remove")
+}
+
 func (*recordingBitbucketRepositoryFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected Bitbucket repository create")
 }

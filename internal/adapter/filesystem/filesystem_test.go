@@ -31,6 +31,7 @@ type recordingFilesystem struct {
 	writeErr   error
 	opened     *os.File
 	openErr    error
+	removeErr  error
 }
 
 func (recording *recordingFilesystem) ReadFile(path string) ([]byte, error) {
@@ -62,6 +63,11 @@ func (recording *recordingFilesystem) OpenFile(path string, flags int, mode fs.F
 	return recording.opened, recording.openErr
 }
 
+func (recording *recordingFilesystem) Remove(path string) error {
+	recording.operations = append(recording.operations, recordedFilesystemOperation{Name: "remove", Path: path})
+	return recording.removeErr
+}
+
 func (*recordingFilesystem) Create(string) (File, error) {
 	return nil, errors.New("unexpected create")
 }
@@ -81,6 +87,9 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	}
 	if file, err := OpenFile(Dependencies{}, target, os.O_APPEND|os.O_WRONLY, 0644); file != nil || !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value append-open dependency returned (%p, %v), want (nil, %v)", file, err, ErrNoFilesystem)
+	}
+	if err := Remove(Dependencies{}, target); !errors.Is(err, ErrNoFilesystem) {
+		t.Fatalf("zero-value remove dependency returned %v, want %v", err, ErrNoFilesystem)
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
 		t.Fatalf("zero-value filesystem dependencies mutated the target: %v", err)
@@ -145,6 +154,23 @@ func TestOpenFilePassesCompleteValuesAndReturnsExactDependencyResult(t *testing.
 	}}
 	if !reflect.DeepEqual(recording.operations, want) {
 		t.Fatalf("append-open dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
+	}
+}
+
+func TestRemovePassesCompletePathAndReturnsExactDependencyError(t *testing.T) {
+	path := "/complete single-file-delete/path with spaces/file.txt"
+	removeError := errors.New("complete remove dependency error")
+	recording := &recordingFilesystem{removeErr: removeError}
+	dependencies := Dependencies{FileSystem: recording}
+
+	err := Remove(dependencies, path)
+
+	if err != removeError {
+		t.Fatalf("remove error was %v, want exact dependency error %v", err, removeError)
+	}
+	want := []recordedFilesystemOperation{{Name: "remove", Path: path}}
+	if !reflect.DeepEqual(recording.operations, want) {
+		t.Fatalf("remove dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
 	}
 }
 
@@ -232,6 +258,12 @@ func TestSystemPerformsCompleteFilesystemOperations(t *testing.T) {
 	}
 	if !reflect.DeepEqual(written, data) || writtenInfo.Mode().Perm() != info.Mode().Perm() {
 		t.Fatalf("system destination data/mode = (%q, %s), want (%q, %s)", written, writtenInfo.Mode().Perm(), data, info.Mode().Perm())
+	}
+	if err := Remove(System(), destination); err != nil {
+		t.Fatalf("system remove returned an error: %v", err)
+	}
+	if _, err := os.Stat(destination); !os.IsNotExist(err) {
+		t.Fatalf("system remove left the destination present: %v", err)
 	}
 }
 

@@ -79,6 +79,10 @@ func (*recordingCopyFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, er
 	return nil, errors.New("unexpected open file")
 }
 
+func (*recordingCopyFilesystem) Remove(string) error {
+	return errors.New("unexpected remove")
+}
+
 func (*recordingCopyFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected create")
 }

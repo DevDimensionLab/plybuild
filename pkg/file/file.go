@@ -415,8 +415,20 @@ func Equal(fileA string, fileB string) (bool, error) {
 	return true, nil
 }
 
+type deleteSingleFileDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemDeleteSingleFileDependencies() deleteSingleFileDependencies {
+	return deleteSingleFileDependencies{Files: filesystem.System()}
+}
+
 func DeleteSingleFile(filePath string) error {
-	return os.Remove(filePath)
+	return deleteSingleFile(systemDeleteSingleFileDependencies(), filePath)
+}
+
+func deleteSingleFile(dependencies deleteSingleFileDependencies, filePath string) error {
+	return filesystem.Remove(dependencies.Files, filePath)
 }
 
 func DeleteAll(dirPath string) error {

@@ -77,6 +77,11 @@ type recordingFileOpenFilesystem struct {
 	openErr    error
 }
 
+type recordingFileDeleteFilesystem struct {
+	removePaths []string
+	removeErr   error
+}
+
 type existingFileInfo struct {
 	name string
 }
@@ -113,6 +118,10 @@ func (*recordingFileReadFilesystem) OpenFile(string, int, fs.FileMode) (*os.File
 	return nil, errors.New("unexpected file-read open file")
 }
 
+func (*recordingFileReadFilesystem) Remove(string) error {
+	return errors.New("unexpected file-read remove")
+}
+
 func (*recordingFileReadFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-read create")
 }
@@ -147,6 +156,10 @@ func (*recordingFileExistenceFilesystem) WriteFile(string, []byte, fs.FileMode) 
 
 func (*recordingFileExistenceFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
 	return nil, errors.New("unexpected file-existence open file")
+}
+
+func (*recordingFileExistenceFilesystem) Remove(string) error {
+	return errors.New("unexpected file-existence remove")
 }
 
 func (*recordingFileExistenceFilesystem) Create(string) (filesystem.File, error) {
@@ -193,6 +206,10 @@ func (*recordingFileOverwriteFilesystem) OpenFile(string, int, fs.FileMode) (*os
 	return nil, errors.New("unexpected file-overwrite open file")
 }
 
+func (*recordingFileOverwriteFilesystem) Remove(string) error {
+	return errors.New("unexpected file-overwrite remove")
+}
+
 func (*recordingFileOverwriteFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-overwrite create")
 }
@@ -237,6 +254,10 @@ func (*recordingFileCreateFilesystem) OpenFile(string, int, fs.FileMode) (*os.Fi
 	return nil, errors.New("unexpected file-create open file")
 }
 
+func (*recordingFileCreateFilesystem) Remove(string) error {
+	return errors.New("unexpected file-create remove")
+}
+
 func (*recordingFileCreateFilesystem) Create(string) (filesystem.File, error) {
 	return nil, errors.New("unexpected file-create create")
 }
@@ -276,6 +297,10 @@ func (*recordingDirectoryCreateFilesystem) WriteFile(string, []byte, fs.FileMode
 
 func (*recordingDirectoryCreateFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
 	return nil, errors.New("unexpected directory-create open file")
+}
+
+func (*recordingDirectoryCreateFilesystem) Remove(string) error {
+	return errors.New("unexpected directory-create remove")
 }
 
 func (*recordingDirectoryCreateFilesystem) Create(string) (filesystem.File, error) {
@@ -339,6 +364,10 @@ func (recording *recordingFileOpenFilesystem) OpenFile(path string, flags int, m
 	return recording.opened, recording.openErr
 }
 
+func (*recordingFileOpenFilesystem) Remove(string) error {
+	return errors.New("unexpected append-open remove")
+}
+
 func (recording *recordingFileOpenFilesystem) dependencies() openFileDependencies {
 	return openFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
 }
@@ -348,6 +377,118 @@ func (recording *recordingFileOpenFilesystem) assertedOperations() ([]recordedFi
 		return nil, errors.New("recorded append-open population is empty")
 	}
 	return recording.operations, nil
+}
+
+func (*recordingFileDeleteFilesystem) ReadFile(string) ([]byte, error) {
+	return nil, errors.New("unexpected single-file-delete read")
+}
+
+func (*recordingFileDeleteFilesystem) Stat(string) (fs.FileInfo, error) {
+	return nil, errors.New("unexpected single-file-delete stat")
+}
+
+func (*recordingFileDeleteFilesystem) MkdirAll(string, fs.FileMode) error {
+	return errors.New("unexpected single-file-delete mkdir")
+}
+
+func (*recordingFileDeleteFilesystem) WriteFile(string, []byte, fs.FileMode) error {
+	return errors.New("unexpected single-file-delete write")
+}
+
+func (*recordingFileDeleteFilesystem) OpenFile(string, int, fs.FileMode) (*os.File, error) {
+	return nil, errors.New("unexpected single-file-delete open file")
+}
+
+func (*recordingFileDeleteFilesystem) Create(string) (filesystem.File, error) {
+	return nil, errors.New("unexpected single-file-delete create")
+}
+
+func (*recordingFileDeleteFilesystem) Copy(filesystem.File, io.Reader) (int64, error) {
+	return 0, errors.New("unexpected single-file-delete copy")
+}
+
+func (recording *recordingFileDeleteFilesystem) Remove(path string) error {
+	recording.removePaths = append(recording.removePaths, path)
+	return recording.removeErr
+}
+
+func (recording *recordingFileDeleteFilesystem) dependencies() deleteSingleFileDependencies {
+	return deleteSingleFileDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+}
+
+func (recording *recordingFileDeleteFilesystem) assertedRemovePaths() ([]string, error) {
+	if len(recording.removePaths) == 0 {
+		return nil, errors.New("recorded single-file-delete population is empty")
+	}
+	return recording.removePaths, nil
+}
+
+func TestDeleteSingleFileSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+	dependencies := systemDeleteSingleFileDependencies()
+	systemFiles := filesystem.System()
+
+	if dependencies.Files.FileSystem == nil {
+		t.Fatal("DeleteSingleFile selected an incomplete filesystem dependency")
+	}
+	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+		t.Fatalf("DeleteSingleFile filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
+	}
+}
+
+func TestDeleteSingleFilePreservesCompletePathAndExactDependencyError(t *testing.T) {
+	path := "/complete single-file-delete/path with spaces/file.txt"
+	removeError := errors.New("complete single-file-delete dependency error")
+	tests := []struct {
+		name      string
+		removeErr error
+	}{
+		{name: "successful removal"},
+		{name: "dependency error", removeErr: removeError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFileDeleteFilesystem{removeErr: test.removeErr}
+			dependencies := recording.dependencies()
+			if dependencies.Files.FileSystem != recording {
+				t.Fatalf("single-file-delete dependency lost its complete filesystem value: %#v", dependencies)
+			}
+
+			err := deleteSingleFile(dependencies, path)
+
+			if err != test.removeErr {
+				t.Fatalf("single-file-delete error was %v, want exact dependency error %v", err, test.removeErr)
+			}
+			removePaths, populationErr := recording.assertedRemovePaths()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			if !reflect.DeepEqual(removePaths, []string{path}) {
+				t.Fatalf("single-file-delete dependency received paths %#v, want %#v", removePaths, []string{path})
+			}
+		})
+	}
+}
+
+func TestDeleteSingleFileDependenciesDefaultToSafeNoPathAccess(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "safe default", "must-not-be-removed.txt")
+
+	err := deleteSingleFile(deleteSingleFileDependencies{}, target)
+
+	if !errors.Is(err, filesystem.ErrNoFilesystem) {
+		t.Fatalf("safe single-file-delete dependency default returned %v, want %v", err, filesystem.ErrNoFilesystem)
+	}
+	if _, statErr := os.Stat(target); !os.IsNotExist(statErr) {
+		t.Fatalf("safe single-file-delete dependency default accessed or mutated the target: %v", statErr)
+	}
+}
+
+func TestRecordedFileDeleteRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingFileDeleteFilesystem{}
+
+	if _, err := recording.assertedRemovePaths(); err == nil {
+		t.Fatal("empty recorded single-file-delete population passed")
+	}
 }
 
 func TestOpenFileSelectsCompleteSystemFilesystemDependencies(t *testing.T) {

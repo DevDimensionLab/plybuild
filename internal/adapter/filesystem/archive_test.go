@@ -55,6 +55,10 @@ func (*recordingArchiveFilesystem) OpenFile(string, int, fs.FileMode) (*os.File,
 	return nil, errors.New("unexpected open file")
 }
 
+func (*recordingArchiveFilesystem) Remove(string) error {
+	return errors.New("unexpected remove")
+}
+
 func (recording *recordingArchiveFilesystem) Create(path string) (File, error) {
 	recording.paths = append(recording.paths, path)
 	if recording.createErr != nil {
