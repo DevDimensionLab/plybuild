@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-25T02:30:33+02:00
+Generated: 2026-08-25T03:03:37+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,8 +10,8 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`
 - Branch: `codex/upgrade-quality`
 - Base: `master` at `5635d50`
-- Measured implementation head: `a4deb7611506`.
-- Restart preparation base: `a4deb7611506`.
+- Measured implementation head: `acda4e335348`.
+- Restart preparation base: `acda4e335348`.
 - Session head: use `git rev-parse --short=12 HEAD` after launch; the restart
   commit contains this handover and no product implementation changes.
 - No push, merge, release, publication, stash, revert, successor launch, or
@@ -40,6 +40,7 @@ e054082 quality: move directory create behind filesystem adapter
 c2f3597 quality: route file append open through filesystem adapter
 9e2d669 quality: route single-file delete through filesystem adapter
 a4deb76 quality: route recursive delete through filesystem adapter
+acda4e3 quality: route file move through filesystem adapter
 ```
 
 The separate operational continuity implementation is:
@@ -54,9 +55,9 @@ It changes no Go quality denominator and is separate from P3 move numbering.
 
 `codex-dev-start.sh` stays `NEXT` while P3 is active and P4-P8 are queued in
 the machine-readable plan block. Its active archive is
-`docs/plan/agent-sessions/2026-08-25T023033+0200-migrate-file-move.md`.
-The recursive-delete predecessor is answered history, and the reciprocal
-archive graph has exactly one `NEXT` tail.
+`docs/plan/agent-sessions/2026-08-25T030337+0200-migrate-file-clear-dir.md`.
+The file-move predecessor is answered history, and the reciprocal archive
+graph has exactly one `NEXT` tail.
 
 Normal launch is a Bash 3.2-compatible, non-interactive supervisor. Each
 generation resolves an external Codex executable and invokes exact
@@ -86,44 +87,44 @@ executable. Mutable header and prompt data are inert after the stable execution
 boundary; the pinned normalized skeleton digest is
 `4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`.
 
-## P3 Move 20 Preserved
+## P3 Move 21 Preserved
 
-Exported `file.DeleteAll(dirPath string) error` retains its public signature
-and observable behavior. It is the production wrapper around a private
-dependency containing one complete `filesystem.Dependencies` value.
+Exported `file.Move(source, destination string) error` retains its public
+signature and observable behavior. It is the production wrapper around a
+private dependency containing one complete `filesystem.Dependencies` value.
 Production selects `filesystem.System()`; no function-valued effect dependency
 or new adapter family was added.
 
-The helper delegates the complete path unchanged through the adapter and
+The helper delegates both complete paths unchanged through the adapter and
 returns the dependency's exact error. It does not probe, normalize, wrap,
-retry, or select another operation. The safe zero value returns
+retry, copy, remove, or add selection behavior. The safe zero value returns
 `filesystem.ErrNoFilesystem` without developer path access.
 
-The existing filesystem adapter gained only `RemoveAll`. Its system
-implementation delegates to `os.RemoveAll`, and all complete recording doubles
-were updated mechanically. Recording contracts cover the complete dependency
-and exact path, nil success, exact dependency-error identity, production system
-selection, safe zero behavior, and a non-empty recorded population. The file
-contracts perform no real filesystem mutation; the adapter system contract
-removes only a temporary test directory tree.
+The existing filesystem adapter gained only `Rename`. Its system
+implementation delegates once to `os.Rename`, and all complete recording
+doubles were updated mechanically. Recording contracts cover the complete
+dependency, exact source and destination, nil success, exact dependency-error
+identity, production system selection, safe zero behavior, and a non-empty
+recorded population. No file-move recording contract performs real filesystem
+mutation.
 
-Only the direct `os.RemoveAll(dirPath)` in exported `file.DeleteAll` moved.
-`DeleteSingleFile`, `ClearDir`, `Move`, every other file operation, inventory,
-public API, all callers, Bitbucket, Wpost, supervisor, and every P2A contract
-remain unchanged.
+Only the direct `os.Rename(source, destination)` in exported `file.Move` moved.
+`DeleteAll`, `DeleteSingleFile`, `ClearDir`, every other file operation,
+inventory, public API, all callers, Bitbucket, Wpost, supervisor, and every P2A
+contract remain unchanged.
 
 ## Measured Quality State
 
-The clean full audit at `a4deb7611506` reports:
+The clean full audit at `acda4e335348` reports:
 
 - Absolute L0: 8 of 8.
-- 175 test functions, zero skipped; 16 of 25 packages have tests.
+- 180 test functions, zero skipped; 16 of 25 packages have tests.
 - Q0.6: 18 guarded safe-writer sites, 13 write and 5 copy, with zero unsafe
   direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
 - Q1.1: 9 of 25 packages have no tests.
 - Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 47 direct external sites outside declared adapters of 60 production
+- Q1.3: 46 direct external sites outside declared adapters of 60 production
   effect sites. Clock and server are absent, making this ratchet
   non-comparable.
 - Q1.4: 7 of 8 declared seams covered.
@@ -134,32 +135,32 @@ The clean full audit at `a4deb7611506` reports:
 - Comparable ratchets: five improved, two held, zero regressed; Q1.3 is the
   single non-comparable ratchet.
 - Measurement identity: clean at tree
-  `5244b9368e3e7ad65f198cda3bd8ba5f53dcda87`, status SHA-256
+  `8e744e35dfa795e1eb086d50b9de792282c8165f`, status SHA-256
   `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`,
   and zero dirty paths.
 
 The clean report is
-`/private/tmp/ply-delete-all-clean-audit.VXoyus/report`. The focused report is
-`/private/tmp/ply-delete-all-focused.VsD5xC/report`. Preflight, compatibility,
+`/private/tmp/ply-file-move-clean-audit.YE9gz5/report`. The focused report is
+`/private/tmp/ply-file-move-focused.1f2lbZ/report`. Preflight, compatibility,
 Go-gate, acceptance, and hermetic outputs were kept under `/private/tmp`, so no
 generated report entered the measured commit.
 
 ## Decisions And Learned Facts
 
-1. The private recursive-delete dependency carries the complete
+1. The private file-move dependency carries the complete
    `filesystem.Dependencies` value and delegates exactly once; it does not
    reconstruct or store a function-valued effect dependency.
-2. Adapter `RemoveAll` is zero-value-safe and returns the exact dependency
-   error; production selection and system delegation are independently
-   covered.
-3. The exported wrapper preserves the complete path without probing,
-   normalization, wrapping, retry, or new selection behavior.
-4. `file.Move(source, destination string) error` is the next isolated
-   filesystem flow. It has one direct `os.Rename(source, destination)` and
-   requires only a narrow `Rename` extension to the existing adapter. Moving
-   it should change Q1.3 nominally from 47/60 to 46/60.
-5. `ClearDir` combines glob selection with repeated recursive removal and is
-   outside the next move.
+2. Adapter `Rename` is zero-value-safe and returns the exact dependency error;
+   production selection and exact adapter delegation are independently covered.
+3. The exported wrapper preserves both paths without probing, normalization,
+   wrapping, retry, copying, removal, or new selection behavior.
+4. `file.ClearDir(dirPath string, excludes []string) error` is the next isolated
+   filesystem flow. It has one direct `filepath.Glob(filepath.Join(dirPath,
+   "*"))` selection and one repeated `os.RemoveAll(file)` call. Moving both
+   should change Q1.3 nominally from 46/60 to 44/60.
+5. `ClearDir` must preserve the exact glob pattern, glob result order, existing
+   ordered substring-exclusion checks, log behavior, first removal-error
+   short-circuit, and exact glob or removal error.
 6. A function-valued effect dependency makes Q1.3 fail closed. Production
    moves use resolvable interfaces and complete dependency values.
 7. `.quality/inventory` is baseline-checksum-bound. Do not relabel seams or
@@ -176,48 +177,47 @@ generated report entered the measured commit.
     terminal stream, and committed repository evidence. Final prose is
     observable only.
 12. The partial-raw-log signal fixture can still flake. An immediate complete
-    rerun must pass all 62 controls; never weaken or skip the contract.
+    rerun must pass all 62 controls; never weaken or skip the contract. It did
+    not flake during move 21.
 
 ## Next Objective
 
-Move only exported `file.Move(source, destination string) error`'s direct
-`os.Rename(source, destination)` behind a narrow extension of the existing
-filesystem adapter. Start with recording contracts in `pkg/file` and the
-adapter: require the complete dependency, both exact paths, exact returned
-error, safe zero-value behavior with no developer path access, production
-selection of `filesystem.System()`, and non-empty recorded populations.
-Perform no real filesystem mutation.
+Move only exported `file.ClearDir(dirPath string, excludes []string) error`'s
+direct glob selection and repeated recursive removal behind a narrow extension
+of the existing filesystem adapter. Start with recording contracts in
+`pkg/file` and the adapter: require the complete dependency, exact glob pattern,
+ordered matches, exact removal paths, existing exclusion decisions, exact
+returned errors, first-error short-circuit, safe zero-value behavior with no
+developer path access, production selection of `filesystem.System()`, and
+non-empty recorded glob and removal populations. Perform no real filesystem
+mutation in the file recording contracts.
 
-Keep `Move`'s public signature and every observable result unchanged. Use one
-private complete dependency boundary, with the exported function as the
-production wrapper. Add only the narrow `Rename` operation to
-`internal/adapter/filesystem` and update complete recording doubles
-mechanically. Do not move `ClearDir`, another file operation, `pkg/shell`, or
-enter Bitbucket, HTTP/process, config behavior, clock/server, P4, P5, or later
-roadmap work.
+Keep `ClearDir`'s public signature and every observable result unchanged. Use
+one private complete dependency boundary, with the exported function as the
+production wrapper. Add only the narrow `Glob` operation to
+`internal/adapter/filesystem`, reuse its existing `RemoveAll`, and update
+complete recording doubles mechanically. Do not move another file operation,
+`pkg/shell`, or enter Bitbucket, HTTP/process, config behavior, clock/server,
+P4, P5, or later roadmap work.
 
-Expected direction is one fewer Q1.3 violation with the same production effect
-population, nominally 46 of 60, but regenerate the exact structured
+Expected direction is two fewer Q1.3 violations with the same production
+effect population, nominally 44 of 60, but regenerate the exact structured
 measurement and accept it only with zero comparable ratchet regressions.
 Q1.2, Q1.4, and exact Q2.1 should remain unchanged.
 
 ## Verification Notes
 
-Completed from implementation commit `a4deb7611506`:
+Completed from implementation commit `acda4e335348`:
 
-- Red recursive-delete evidence: file recording contracts first failed because
-  the private dependency constructor and helper did not exist; adapter
-  contracts failed because `RemoveAll` did not exist.
-- Focused filesystem, file, template, Bitbucket, HTTP, and command caller
-  tests: PASS.
-- `/bin/bash test/codex_dev_start_test.sh`: PASS, 62 controls, on the immediate
-  complete rerun after one known signal-fixture failure.
+- Red file-move evidence: recording contracts first failed because the private
+  dependency constructor and helper did not exist; adapter contracts failed
+  because `Rename` did not exist.
+- Focused filesystem, file, config caller, Bitbucket, and HTTP tests: PASS.
+- `/bin/bash test/codex_dev_start_test.sh`: PASS, all 62 controls.
 - Make preflight meta-contracts and complete `make preflight`: PASS, including
-  15 audit meta-controls.
+  all 15 audit meta-controls.
 - API/CLI compatibility and subprocess contracts: PASS.
 - `make test`, `make test-install`, full tests, race tests, and `go vet`: PASS.
-  The first complete `make test` run hit the same signal fixture; its immediate
-  complete rerun passed all 62 controls and the remaining gate.
 - Host install, status, upgrade, and build acceptance: PASS, 4 of 4.
 - Empty-HOME `go test ./... -count=2`: PASS.
 - Focused seven-ratchet audit: expected exit 1; four improved, two held, zero
@@ -225,8 +225,8 @@ Completed from implementation commit `a4deb7611506`:
 - Clean full audit: expected exit 1, 16 documented findings, L0 8 of 8, five
   improved, two held, zero regressed, and one not comparable.
 - `git diff --check`: PASS before the implementation commit.
-- Implementation commit: `a4deb76115062c20addaf632f9d7b3b783284b83`
-  (`quality: route recursive delete through filesystem adapter`).
+- Implementation commit: `acda4e335348660d4bfd87b3e6005395ba67d42d`
+  (`quality: route file move through filesystem adapter`).
 
 ## Start
 
@@ -237,15 +237,15 @@ Completed from implementation commit `a4deb7611506`:
 2. Confirm branch, HEAD, status, reciprocal archive links, and
    `./codex-dev-start.sh --check`.
 3. Reproduce focused clean baselines as needed, then begin red with recording
-   contracts for only `Move` and adapter `Rename`.
+   contracts for only `ClearDir`, adapter `Glob`, and the existing adapter
+   `RemoveAll` composition.
 4. Finish with one focused implementation commit and one separate handoff-only
    commit. Leave the launcher `NEXT`; do not launch a successor.
 
 ## Stop Conditions
 
-- Stop before `ClearDir`, another file operation, another adapter family, Q1.4
-  expansion, P4, mutation harnesses, Docker, cloud, distribution, or
-  publication.
+- Stop before another file operation, another adapter family, Q1.4 expansion,
+  P4, mutation harnesses, Docker, cloud, distribution, or publication.
 - Stop if the public API or CLI contract would change.
 - Stop if a comparable ratchet regresses.
 - Stop if the full audit exits 2.
