@@ -23,7 +23,7 @@ func (recording *recordingTipsListFilesystem) Close(filesystem.File) error {
 	return recording.unexpected("close")
 }
 
-func (recording *recordingTipsListFilesystem) CloseReader(io.ReadCloser) error {
+func (recording *recordingTipsListFilesystem) CloseReader(io.Closer) error {
 	return recording.unexpected("close reader")
 }
 

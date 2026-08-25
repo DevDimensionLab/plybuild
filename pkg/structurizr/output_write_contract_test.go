@@ -21,7 +21,7 @@ func (recording *recordingStructurizrOutputFilesystem) Close(filesystem.File) er
 	return recording.unexpected("close")
 }
 
-func (recording *recordingStructurizrOutputFilesystem) CloseReader(io.ReadCloser) error {
+func (recording *recordingStructurizrOutputFilesystem) CloseReader(io.Closer) error {
 	return recording.unexpected("close reader")
 }
 

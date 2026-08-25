@@ -64,6 +64,8 @@ type recordingUnzipFilesystem struct {
 	closeErrors          map[int]error
 	closedReaders        []io.ReadCloser
 	closeReaderErrors    map[int]error
+	closedArchives       []*zip.ReadCloser
+	closeArchiveErrors   map[int]error
 	operationOrder       []string
 	unexpectedOperations []string
 }
@@ -163,13 +165,25 @@ func (recording *recordingUnzipFilesystem) Close(file filesystem.File) error {
 	return file.Close()
 }
 
-func (recording *recordingUnzipFilesystem) CloseReader(reader io.ReadCloser) error {
-	recording.closedReaders = append(recording.closedReaders, reader)
+func (recording *recordingUnzipFilesystem) CloseReader(reader io.Closer) error {
+	if archive, ok := reader.(*zip.ReadCloser); ok {
+		recording.closedArchives = append(recording.closedArchives, archive)
+		recording.operationOrder = append(recording.operationOrder, "close-archive")
+		if err := recording.closeArchiveErrors[len(recording.closedArchives)]; err != nil {
+			return err
+		}
+		return archive.Close()
+	}
+	entryReader, ok := reader.(io.ReadCloser)
+	if !ok {
+		return recording.unexpected("close reader")
+	}
+	recording.closedReaders = append(recording.closedReaders, entryReader)
 	recording.operationOrder = append(recording.operationOrder, "close-reader")
 	if err := recording.closeReaderErrors[len(recording.closedReaders)]; err != nil {
 		return err
 	}
-	return reader.Close()
+	return entryReader.Close()
 }
 
 func (recording *recordingUnzipFilesystem) unexpected(operation string) error {
@@ -223,6 +237,13 @@ func (recording *recordingUnzipFilesystem) assertedClosedReaders() ([]io.ReadClo
 	return recording.closedReaders, nil
 }
 
+func (recording *recordingUnzipFilesystem) assertedClosedArchives() ([]*zip.ReadCloser, error) {
+	if len(recording.closedArchives) == 0 {
+		return nil, errors.New("recorded unzip archive-close population is empty")
+	}
+	return recording.closedArchives, nil
+}
+
 func TestUnzipSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
 	dependencies := systemUnzipDependencies()
 	systemFiles := filesystem.System()
@@ -265,10 +286,11 @@ func TestUnzipArchiveOpenPreservesExactSourceOneRequestReaderIdentityCloseAndTra
 	if !reflect.DeepEqual(paths, []string{source}) {
 		t.Fatalf("archive-open paths were %#v, want one exact source %#v", paths, []string{source})
 	}
+	assertRecordedUnzipArchiveClose(t, recording, injectedReader)
 	if err := injectedReader.Close(); !errors.Is(err, os.ErrClosed) {
 		t.Fatalf("injected archive reader was not closed by Unzip: %v", err)
 	}
-	if !reflect.DeepEqual(recording.operationOrder, []string{"open-zip-reader", "mkdir-all", "mkdir-all"}) {
+	if !reflect.DeepEqual(recording.operationOrder, []string{"open-zip-reader", "mkdir-all", "mkdir-all", "close-archive"}) {
 		t.Fatalf("injected archive-reader operation order differs: %#v", recording.operationOrder)
 	}
 	assertNoRecordedUnzipOpenFiles(t, recording)
@@ -296,6 +318,9 @@ func TestUnzipArchiveOpenReturnsExactErrorNilPartialFilenamesAndNoLaterRequests(
 	if !reflect.DeepEqual(recording.operationOrder, []string{"open-zip-reader"}) {
 		t.Fatalf("archive-open failure operation order differs: %#v", recording.operationOrder)
 	}
+	if len(recording.closedArchives) != 0 {
+		t.Fatalf("archive-open failure made archive-close requests: %#v", recording.closedArchives)
+	}
 	assertNoRecordedUnzipOpenFiles(t, recording)
 	assertNoRecordedUnzipCopies(t, recording)
 	assertNoUnexpectedUnzipOperations(t, recording)
@@ -308,6 +333,8 @@ func TestUnzipDirectoryEntriesPreserveJoinedAppendOrderModeAndOneAttemptPerEntry
 	})
 	destination := filepath.Join(t.TempDir(), "complete destination with spaces")
 	recording := newRecordingUnzipFilesystem(t, archive)
+	archiveCloseError := errors.New("complete ignored successful archive-close dependency error")
+	recording.closeArchiveErrors = map[int]error{1: archiveCloseError}
 
 	filenames, err := unzipWithDependencies(recording.dependencies(), archive, destination)
 
@@ -326,6 +353,11 @@ func TestUnzipDirectoryEntriesPreserveJoinedAppendOrderModeAndOneAttemptPerEntry
 		{path: wantFilenames[1], mode: os.ModePerm},
 	}
 	assertRecordedUnzipMkdirs(t, recording, wantMkdirs)
+	assertRecordedUnzipArchiveClose(t, recording, recording.openedArchives[1])
+	wantOrder := []string{"open-zip-reader", "mkdir-all", "mkdir-all", "close-archive"}
+	if !reflect.DeepEqual(recording.operationOrder, wantOrder) {
+		t.Fatalf("directory-entry operation order differs:\n got: %#v\nwant: %#v", recording.operationOrder, wantOrder)
+	}
 	assertNoRecordedUnzipOpenFiles(t, recording)
 	assertNoRecordedUnzipCopies(t, recording)
 	assertNoUnexpectedUnzipOperations(t, recording)
@@ -341,6 +373,7 @@ func TestUnzipDirectoryEntryMkdirFailureReturnsExactErrorAndPartialFilenames(t *
 	mkdirError := errors.New("complete unzip directory-entry dependency error")
 	recording := newRecordingUnzipFilesystem(t, archive)
 	recording.mkdirErrors = map[int]error{2: mkdirError}
+	recording.closeArchiveErrors = map[int]error{1: errors.New("ignored archive-close error after directory error")}
 
 	filenames, err := unzipWithDependencies(recording.dependencies(), archive, destination)
 
@@ -358,6 +391,11 @@ func TestUnzipDirectoryEntryMkdirFailureReturnsExactErrorAndPartialFilenames(t *
 		{path: wantFilenames[0], mode: os.ModePerm},
 		{path: wantFilenames[1], mode: os.ModePerm},
 	})
+	assertRecordedUnzipArchiveClose(t, recording, recording.openedArchives[1])
+	wantOrder := []string{"open-zip-reader", "mkdir-all", "mkdir-all", "close-archive"}
+	if !reflect.DeepEqual(recording.operationOrder, wantOrder) {
+		t.Fatalf("directory-entry failure operation order differs:\n got: %#v\nwant: %#v", recording.operationOrder, wantOrder)
+	}
 	assertNoRecordedUnzipOpenFiles(t, recording)
 	assertNoRecordedUnzipCopies(t, recording)
 	assertNoUnexpectedUnzipOperations(t, recording)
@@ -390,6 +428,11 @@ func TestUnzipFileParentMkdirFailureReturnsExactErrorAndPartialFilenamesBeforeFi
 		{path: wantFilenames[0], mode: os.ModePerm},
 		{path: filepath.Dir(wantFilenames[1]), mode: os.ModePerm},
 	})
+	assertRecordedUnzipArchiveClose(t, recording, recording.openedArchives[1])
+	wantOrder := []string{"open-zip-reader", "mkdir-all", "mkdir-all", "close-archive"}
+	if !reflect.DeepEqual(recording.operationOrder, wantOrder) {
+		t.Fatalf("file-parent failure operation order differs:\n got: %#v\nwant: %#v", recording.operationOrder, wantOrder)
+	}
 	assertNoRecordedUnzipOpenFiles(t, recording)
 	assertNoRecordedUnzipCopies(t, recording)
 	assertNoUnexpectedUnzipOperations(t, recording)
@@ -427,7 +470,8 @@ func TestUnzipFileOpenPreservesJoinedAppendEntryOrderParentFlagsModeErrorAndPrec
 		flags: os.O_WRONLY | os.O_CREATE | os.O_TRUNC,
 		mode:  0613,
 	}})
-	wantOrder := []string{"open-zip-reader", "mkdir-all", "mkdir-all", "open-file"}
+	assertRecordedUnzipArchiveClose(t, recording, recording.openedArchives[1])
+	wantOrder := []string{"open-zip-reader", "mkdir-all", "mkdir-all", "open-file", "close-archive"}
 	if !reflect.DeepEqual(recording.operationOrder, wantOrder) {
 		t.Fatalf("unzip filesystem operation order differs:\n got: %#v\nwant: %#v", recording.operationOrder, wantOrder)
 	}
@@ -451,6 +495,7 @@ func TestUnzipFileCopyPreservesOpenedDestinationsOrderedBytesAttemptsIgnoredResu
 	recording.openedFiles = map[int]*os.File{1: firstWriter, 2: secondWriter}
 	recording.copyCounts = map[int]int64{1: 918273645, 2: -41}
 	recording.copyErrors = map[int]error{1: copyError}
+	recording.closeArchiveErrors = map[int]error{1: errors.New("complete ignored archive-close error after traversal")}
 	var entryReaders []*recordingUnzipEntryReadCloser
 	recordUnzipEntryCloses(recording.openedArchives[1], &entryReaders)
 	dependencies := recording.dependencies()
@@ -486,11 +531,13 @@ func TestUnzipFileCopyPreservesOpenedDestinationsOrderedBytesAttemptsIgnoredResu
 	})
 	assertRecordedUnzipCloses(t, recording, []filesystem.File{firstWriter, secondWriter})
 	assertRecordedUnzipReaderCloses(t, recording, recordedUnzipCopyReaders(t, recording))
+	assertRecordedUnzipArchiveClose(t, recording, recording.openedArchives[1])
 	wantOrder := []string{
 		"open-zip-reader",
 		"mkdir-all",
 		"mkdir-all", "open-file", "copy", "close", "close-reader",
 		"mkdir-all", "open-file", "copy", "close", "close-reader",
+		"close-archive",
 	}
 	if !reflect.DeepEqual(recording.operationOrder, wantOrder) {
 		t.Fatalf("unzip file-copy operation order differs:\n got: %#v\nwant: %#v", recording.operationOrder, wantOrder)
@@ -536,7 +583,8 @@ func TestUnzipOutputCloseReturnsExactErrorAfterCopyAndStopsBeforeEntryCloseAndLa
 	}})
 	assertRecordedUnzipCopies(t, recording, []recordedUnzipCopy{{destination: firstWriter, data: firstData}})
 	assertRecordedUnzipCloses(t, recording, []filesystem.File{firstWriter})
-	wantOrder := []string{"open-zip-reader", "mkdir-all", "open-file", "copy", "close"}
+	assertRecordedUnzipArchiveClose(t, recording, recording.openedArchives[1])
+	wantOrder := []string{"open-zip-reader", "mkdir-all", "open-file", "copy", "close", "close-archive"}
 	if !reflect.DeepEqual(recording.operationOrder, wantOrder) {
 		t.Fatalf("output-close failure operation order differs:\n got: %#v\nwant: %#v", recording.operationOrder, wantOrder)
 	}
@@ -565,6 +613,7 @@ func TestUnzipEntryReaderCloseReturnsExactErrorAfterCopyAndOutputCloseAndStopsLa
 	recording := newRecordingUnzipFilesystem(t, archive)
 	recording.openedFiles = map[int]*os.File{1: firstWriter, 2: secondWriter}
 	recording.closeReaderErrors = map[int]error{1: closeError}
+	recording.closeArchiveErrors = map[int]error{1: errors.New("ignored archive-close error after entry-reader error")}
 	var entryReaders []*recordingUnzipEntryReadCloser
 	recordUnzipEntryCloses(recording.openedArchives[1], &entryReaders)
 
@@ -589,7 +638,8 @@ func TestUnzipEntryReaderCloseReturnsExactErrorAfterCopyAndOutputCloseAndStopsLa
 		t.Fatalf("entry-reader-close failure opened readers %#v, want exactly one", entryReaders)
 	}
 	assertRecordedUnzipReaderCloses(t, recording, recordedUnzipCopyReaders(t, recording))
-	wantOrder := []string{"open-zip-reader", "mkdir-all", "open-file", "copy", "close", "close-reader"}
+	assertRecordedUnzipArchiveClose(t, recording, recording.openedArchives[1])
+	wantOrder := []string{"open-zip-reader", "mkdir-all", "open-file", "copy", "close", "close-reader", "close-archive"}
 	if !reflect.DeepEqual(recording.operationOrder, wantOrder) {
 		t.Fatalf("entry-reader-close failure operation order differs:\n got: %#v\nwant: %#v", recording.operationOrder, wantOrder)
 	}
@@ -625,9 +675,36 @@ func TestUnzipEntryOpenFailurePreventsCopyAfterParentAndFileOpen(t *testing.T) {
 	assertRecordedUnzipOpenFiles(t, recording, []recordedUnzipOpenFile{{
 		path: wantFilenames[0], flags: os.O_WRONLY | os.O_CREATE | os.O_TRUNC, mode: 0607,
 	}})
+	assertRecordedUnzipArchiveClose(t, recording, recording.openedArchives[1])
 	assertNoRecordedUnzipCopies(t, recording)
-	if !reflect.DeepEqual(recording.operationOrder, []string{"open-zip-reader", "mkdir-all", "open-file"}) {
+	if !reflect.DeepEqual(recording.operationOrder, []string{"open-zip-reader", "mkdir-all", "open-file", "close-archive"}) {
 		t.Fatalf("entry-open failure operation order differs: %#v", recording.operationOrder)
+	}
+	assertNoUnexpectedUnzipOperations(t, recording)
+}
+
+func TestUnzipZipSlipReturnsExactErrorBeforeTraversalAndStillDefersExactArchiveClose(t *testing.T) {
+	archive := writeUnzipArchive(t, []unzipArchiveEntry{{
+		name: "../must-not-escape.txt", data: []byte("must not be copied"),
+	}})
+	destination := filepath.Join(t.TempDir(), "zip slip destination")
+	recording := newRecordingUnzipFilesystem(t, archive)
+	recording.closeArchiveErrors = map[int]error{1: errors.New("ignored archive-close error after zip-slip")}
+
+	filenames, err := unzipWithDependencies(recording.dependencies(), archive, destination)
+
+	wantError := filepath.Join(destination, "../must-not-escape.txt") + ": illegal file path"
+	if filenames != nil || err == nil || err.Error() != wantError {
+		t.Fatalf("zip-slip returned (%#v, %v), want (nil, %q)", filenames, err, wantError)
+	}
+	assertRecordedUnzipArchiveClose(t, recording, recording.openedArchives[1])
+	if !reflect.DeepEqual(recording.operationOrder, []string{"open-zip-reader", "close-archive"}) {
+		t.Fatalf("zip-slip operation order differs: %#v", recording.operationOrder)
+	}
+	assertNoRecordedUnzipOpenFiles(t, recording)
+	assertNoRecordedUnzipCopies(t, recording)
+	if len(recording.closedReaders) != 0 {
+		t.Fatalf("zip-slip made entry-reader-close requests: %#v", recording.closedReaders)
 	}
 	assertNoUnexpectedUnzipOperations(t, recording)
 }
@@ -694,6 +771,14 @@ func TestRecordedUnzipRejectsEmptyEntryReaderClosePopulation(t *testing.T) {
 
 	if _, err := recording.assertedClosedReaders(); err == nil {
 		t.Fatal("empty recorded unzip entry-reader-close population passed")
+	}
+}
+
+func TestRecordedUnzipRejectsEmptyArchiveClosePopulation(t *testing.T) {
+	recording := &recordingUnzipFilesystem{}
+
+	if _, err := recording.assertedClosedArchives(); err == nil {
+		t.Fatal("empty recorded unzip archive-close population passed")
 	}
 }
 
@@ -824,6 +909,22 @@ func assertRecordedUnzipReaderCloses(t *testing.T, recording *recordingUnzipFile
 	}
 	if !reflect.DeepEqual(readers, want) {
 		t.Fatalf("recorded unzip entry-reader-close calls differ:\n got: %#v\nwant: %#v", readers, want)
+	}
+}
+
+func assertRecordedUnzipArchiveClose(t *testing.T, recording *recordingUnzipFilesystem, want *zip.ReadCloser) {
+	t.Helper()
+	archives, err := recording.assertedClosedArchives()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(archives) != 1 || archives[0] != want {
+		t.Fatalf("recorded unzip archive-close calls were %#v, want one exact archive identity %p", archives, want)
+	}
+	for _, reader := range recording.closedReaders {
+		if any(reader) == any(want) {
+			t.Fatalf("archive-close identity was mixed into entry-reader-close requests: %#v", recording.closedReaders)
+		}
 	}
 }
 

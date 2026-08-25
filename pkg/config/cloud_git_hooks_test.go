@@ -23,7 +23,7 @@ func (*recordingGitHookFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected Git-hook-files close")
 }
 
-func (*recordingGitHookFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingGitHookFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected Git-hook-files reader close")
 }
 

@@ -23,7 +23,7 @@ func (*recordingRenderFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected render close")
 }
 
-func (*recordingRenderFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingRenderFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected render reader close")
 }
 

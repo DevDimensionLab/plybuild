@@ -24,7 +24,7 @@ func (*recordingFilteredWalkFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected filtered-template close")
 }
 
-func (*recordingFilteredWalkFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFilteredWalkFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected filtered-template reader close")
 }
 

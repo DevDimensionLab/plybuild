@@ -23,7 +23,7 @@ func (*recordingExamplesFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected Examples close")
 }
 
-func (*recordingExamplesFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingExamplesFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected Examples reader close")
 }
 

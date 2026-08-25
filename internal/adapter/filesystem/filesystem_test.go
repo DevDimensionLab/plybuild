@@ -22,7 +22,7 @@ func (*recordingFilesystem) Close(File) error {
 	return errors.New("unexpected close")
 }
 
-func (*recordingFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected reader close")
 }
 

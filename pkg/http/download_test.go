@@ -29,7 +29,7 @@ func (*recordingDownloadFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected download close")
 }
 
-func (*recordingDownloadFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingDownloadFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected download reader close")
 }
 

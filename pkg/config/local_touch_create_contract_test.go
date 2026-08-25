@@ -21,7 +21,7 @@ func (recording *recordingLocalConfigTouchCreateFilesystem) Close(filesystem.Fil
 	return recording.unexpected("close")
 }
 
-func (recording *recordingLocalConfigTouchCreateFilesystem) CloseReader(io.ReadCloser) error {
+func (recording *recordingLocalConfigTouchCreateFilesystem) CloseReader(io.Closer) error {
 	return recording.unexpected("close reader")
 }
 

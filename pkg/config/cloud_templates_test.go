@@ -26,7 +26,7 @@ func (*recordingTemplatesFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected Templates close")
 }
 
-func (*recordingTemplatesFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingTemplatesFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected Templates reader close")
 }
 

@@ -21,7 +21,7 @@ func (recording *recordingLocalConfigUpdateCreateFilesystem) Close(filesystem.Fi
 	return recording.unexpected("close")
 }
 
-func (recording *recordingLocalConfigUpdateCreateFilesystem) CloseReader(io.ReadCloser) error {
+func (recording *recordingLocalConfigUpdateCreateFilesystem) CloseReader(io.Closer) error {
 	return recording.unexpected("close reader")
 }
 

@@ -54,7 +54,7 @@ type recordingArchiveFilesystem struct {
 	file           *recordedArchiveFile
 	zipReader      *zip.ReadCloser
 	closedFiles    []File
-	closedReaders  []io.ReadCloser
+	closedReaders  []io.Closer
 	createErr      error
 	openZipError   error
 	copyErr        error
@@ -147,7 +147,7 @@ func (recording *recordingArchiveFilesystem) Close(file File) error {
 	return recording.closeErr
 }
 
-func (recording *recordingArchiveFilesystem) CloseReader(reader io.ReadCloser) error {
+func (recording *recordingArchiveFilesystem) CloseReader(reader io.Closer) error {
 	recording.closedReaders = append(recording.closedReaders, reader)
 	return recording.closeReaderErr
 }
@@ -166,7 +166,7 @@ func (recording *recordingArchiveFilesystem) assertedClosedFiles() ([]File, erro
 	return recording.closedFiles, nil
 }
 
-func (recording *recordingArchiveFilesystem) assertedClosedReaders() ([]io.ReadCloser, error) {
+func (recording *recordingArchiveFilesystem) assertedClosedReaders() ([]io.Closer, error) {
 	if len(recording.closedReaders) == 0 {
 		return nil, errors.New("recorded archive reader-close population is empty")
 	}

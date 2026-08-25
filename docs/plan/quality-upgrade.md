@@ -445,6 +445,46 @@ P3.52 clean checkpoint:
 | Claim phrases in 66 Markdown files | 0 | Q3.4 remains held. |
 | Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
+P3.53 clean checkpoint:
+
+| Signal | P3.53 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 358 | Six focused filesystem-adapter and private shell unzip entry-reader-close contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The archive fixture remains guarded below `t.TempDir()`. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in already-tested packages. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 10 / 32 | The direct entry-reader Close and its adapter request are both absent from the scanner's reported violation set. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 68 Markdown files | 0 | Q3.4 remains held. |
+| Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
+P3.54 implementation measurement:
+
+| Signal | P3.54 | Interpretation |
+| --- | ---: | --- |
+| Test functions | 360 | Two focused private shell unzip archive-close contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The archive fixture remains guarded below `t.TempDir()`. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in an already-tested package. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 10 / 32 | The concrete deferred archive Close and its adapter request are both absent from the scanner's reported violation set. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 69 Markdown files | 0 | Q3.4 remains held. |
+| Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -590,7 +630,8 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 52 are complete.
+Status: active. Moves 1 through 53 are complete; move 54 is implemented and
+awaits a clean complete checkpoint gate.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -2740,6 +2781,60 @@ Commit: `70bee0e`.
 The clean full audit from commit `70bee0e` exits 1 for 15 documented findings,
 never 2, with L0 8 of 8, five improved, two held, zero regressed, one
 not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passes.
+
+Move 54 changes only the deferred concrete archive-reader close request in
+private shell unzip flow from direct `_ = r.Close()` to
+`_ = filesystem.CloseReader(dependencies.Files, r)` inside the same anonymous
+defer immediately after successful archive open. The existing filesystem
+`CloseReader` parameter is widened from `io.ReadCloser` to `io.Closer` in the
+interface, zero-safe helper, exact system implementation, and every complete
+filesystem double so it accepts the exact `*zip.ReadCloser` returned by
+`OpenZipReader`. The public `Unzip(string, string) ([]string, error)` signature,
+complete private dependency composition, production `filesystem.System()`
+selection, exact archive identity, defer placement, archive and entry
+traversal, zip-slip check, filenames, entry order and bytes, directory and file
+operations, entry-reader and output-file closes, partial results, and every
+established error and close precedence remain unchanged. Archive close is
+attempted exactly once after each successful archive open and never after an
+open failure; its exact result remains ignored without changing named results
+or an earlier error.
+
+Two focused top-level contracts bring the suite to 360 tests, while the
+existing complete private Unzip contracts now record the archive-close request.
+They prove the exact opened archive identity, one deferred request after
+successful traversal and after every reached entry-reader close, execution on
+zip-slip and every established later error return, no request after archive-open
+failure, ignored injected archive-close errors without result or precedence
+changes, complete dependency preservation, distinction from entry-reader-close
+requests, rejection of an empty archive-close population, and absence of
+unrelated filesystem operations. The guarded archive fixture stays below
+`t.TempDir()`; the focused contracts launch no process, touch no network, and
+change no working directory.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, Q1.4 stays 7 of 8, and exact Q2.1 stays 0 of 8. The focused audit measures
+Q1.3 at 10 of 32: the prior concrete archive-reader Close was absent from its
+reported violation set, and the import-aware scanner also omits the replacement
+adapter request. The scanner and inventory remain unchanged. The selected
+seven-criterion audit exits 1 for documented findings, never 2, with four
+improved, two held, zero regressed, and one non-comparable ratchet.
+
+Focused shell/filesystem/Spring and all relevant caller-package tests, API/CLI
+and subprocess compatibility, the 62-control launcher contract, Make
+meta-contracts, complete `make test`, install, uncached and race tests, vet,
+all four host flows and their meta-contracts, and empty-HOME count-2 pass. Full
+preflight passes through audit meta-controls T1-T14, then the unchanged T15
+baseline-reproduction control exits 2 because its pinned pre-hermetic baseline
+tests create ten ignored Maven/template fixture paths beyond the authorized
+inventory overlay. The same T15 passed at the preceding checkpoint; this move
+does not alter the audit, baseline, inventory, Maven/template behavior, or
+fixture guards. The mission's no-audit-reshaping boundary leaves that independent
+checkpoint issue unresolved here.
+
+Commit: recorded by the following handoff.
+
+The clean committed checkpoint audit is recorded by the following handoff.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

@@ -23,7 +23,7 @@ func (*recordingIntellijFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected non-recursive IDE close")
 }
 
-func (*recordingIntellijFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingIntellijFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected non-recursive IDE reader close")
 }
 

@@ -41,7 +41,7 @@ type FileSystem interface {
 	Create(string) (File, error)
 	Copy(File, io.Reader) (int64, error)
 	Close(File) error
-	CloseReader(io.ReadCloser) error
+	CloseReader(io.Closer) error
 }
 
 // Dependencies contains the filesystem effect used by a caller. Its zero
@@ -207,7 +207,7 @@ func Close(dependencies Dependencies, file File) error {
 }
 
 // CloseReader passes the exact reader to the configured dependency.
-func CloseReader(dependencies Dependencies, reader io.ReadCloser) error {
+func CloseReader(dependencies Dependencies, reader io.Closer) error {
 	if dependencies.FileSystem == nil {
 		return ErrNoFilesystem
 	}
@@ -293,6 +293,6 @@ func (systemFilesystem) Close(file File) error {
 	return file.Close()
 }
 
-func (systemFilesystem) CloseReader(reader io.ReadCloser) error {
+func (systemFilesystem) CloseReader(reader io.Closer) error {
 	return reader.Close()
 }

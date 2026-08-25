@@ -23,7 +23,7 @@ func (*recordingProjectConfigFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected project-config close")
 }
 
-func (*recordingProjectConfigFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingProjectConfigFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected project-config reader close")
 }
 

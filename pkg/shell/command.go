@@ -71,7 +71,7 @@ func unzipWithDependencies(dependencies unzipDependencies, src string, dest stri
 	if err != nil {
 		return filenames, err
 	}
-	defer func() { _ = r.Close() }()
+	defer func() { _ = filesystem.CloseReader(dependencies.Files, r) }()
 
 	for _, f := range r.File {
 		fpath := filepath.Join(dest, f.Name)

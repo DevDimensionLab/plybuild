@@ -69,7 +69,7 @@ func (*recordingFileExistenceFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected file-existence close")
 }
 
-func (*recordingFileExistenceFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFileExistenceFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected file-existence reader close")
 }
 
@@ -77,7 +77,7 @@ func (*recordingFileReadFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected file-read close")
 }
 
-func (*recordingFileReadFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFileReadFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected file-read reader close")
 }
 
@@ -85,7 +85,7 @@ func (*recordingFileOverwriteFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected file-overwrite close")
 }
 
-func (*recordingFileOverwriteFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFileOverwriteFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected file-overwrite reader close")
 }
 
@@ -93,7 +93,7 @@ func (*recordingFileCreateFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected file-create close")
 }
 
-func (*recordingFileCreateFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFileCreateFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected file-create reader close")
 }
 
@@ -101,7 +101,7 @@ func (*recordingDirectoryCreateFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected directory-create close")
 }
 
-func (*recordingDirectoryCreateFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingDirectoryCreateFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected directory-create reader close")
 }
 
@@ -109,7 +109,7 @@ func (*recordingFileOpenFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected append-open close")
 }
 
-func (*recordingFileOpenFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFileOpenFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected append-open reader close")
 }
 
@@ -117,7 +117,7 @@ func (*recordingFileDeleteFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected single-file-delete close")
 }
 
-func (*recordingFileDeleteFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFileDeleteFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected single-file-delete reader close")
 }
 
@@ -125,7 +125,7 @@ func (*recordingFileDeleteAllFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected recursive-delete close")
 }
 
-func (*recordingFileDeleteAllFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFileDeleteAllFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected recursive-delete reader close")
 }
 
@@ -133,7 +133,7 @@ func (*recordingFileMoveFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected file-move close")
 }
 
-func (*recordingFileMoveFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFileMoveFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected file-move reader close")
 }
 
@@ -141,7 +141,7 @@ func (*recordingClearDirFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected clear-directory close")
 }
 
-func (*recordingClearDirFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingClearDirFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected clear-directory reader close")
 }
 
@@ -149,7 +149,7 @@ func (*recordingFindFirstFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected find-first close")
 }
 
-func (*recordingFindFirstFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFindFirstFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected find-first reader close")
 }
 
@@ -157,7 +157,7 @@ func (*recordingFindAllFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected find-all close")
 }
 
-func (*recordingFindAllFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingFindAllFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected find-all reader close")
 }
 

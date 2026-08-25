@@ -24,7 +24,7 @@ func (recording *recordingTipsShowReadFilesystem) Close(filesystem.File) error {
 	return recording.unexpected("close")
 }
 
-func (recording *recordingTipsShowReadFilesystem) CloseReader(io.ReadCloser) error {
+func (recording *recordingTipsShowReadFilesystem) CloseReader(io.Closer) error {
 	return recording.unexpected("close reader")
 }
 

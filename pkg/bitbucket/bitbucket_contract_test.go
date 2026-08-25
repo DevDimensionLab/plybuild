@@ -27,7 +27,7 @@ func (*recordingBitbucketRepositoryFilesystem) Close(filesystem.File) error {
 	return errors.New("unexpected Bitbucket repository close")
 }
 
-func (*recordingBitbucketRepositoryFilesystem) CloseReader(io.ReadCloser) error {
+func (*recordingBitbucketRepositoryFilesystem) CloseReader(io.Closer) error {
 	return errors.New("unexpected Bitbucket repository reader close")
 }
 

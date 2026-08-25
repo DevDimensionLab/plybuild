@@ -22,7 +22,7 @@ func (recording *recordingGraphStylesFilesystem) Close(filesystem.File) error {
 	return recording.unexpected("close")
 }
 
-func (recording *recordingGraphStylesFilesystem) CloseReader(io.ReadCloser) error {
+func (recording *recordingGraphStylesFilesystem) CloseReader(io.Closer) error {
 	return recording.unexpected("close reader")
 }
 
