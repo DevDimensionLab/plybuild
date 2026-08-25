@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `89f43aa`.
+Last measured checkpoint: 2026-08-25, commit `fd45ebf`.
 
 ## Objective
 
@@ -171,6 +171,23 @@ P3.37 clean checkpoint:
 | Packages with tests | 17 / 25 | The contracts stay in the already-tested config package. |
 | Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
 | Direct external effects outside adapters | 29 / 46 | The local-config touch output write now uses the filesystem adapter. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Acceptance scripts | 4 / 4 | All host flows pass. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+
+P3.38 clean checkpoint:
+
+| Signal | P3.38 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 278 | Four local-config-update-write recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Packages with tests | 17 / 25 | The contracts stay in the already-tested config package. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 28 / 45 | The local-config update output write now uses the filesystem adapter. |
 | Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
 | Executable mutation harnesses | 0 / 8 | P5 remains queued. |
 | Acceptance scripts | 4 / 4 | All host flows pass. |
@@ -1657,6 +1674,12 @@ standalone 62-control launcher contract, uncached and race tests, vet, the
 timing flake; its immediate complete rerun passed all 62 launcher controls.
 The focused seven-criterion audit exited 1 for documented findings, never 2,
 with four improved, two held, zero regressed, and one not-comparable ratchet.
+
+Commit: `fd45ebf`.
+
+The clean full audit from commit `fd45ebf` exited 1 for 15 documented findings,
+never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+not-comparable ratchet, and zero dirty paths. Empty-HOME count-2 also passed.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:

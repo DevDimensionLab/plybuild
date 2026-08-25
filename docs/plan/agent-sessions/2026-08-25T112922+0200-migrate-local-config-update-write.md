@@ -1,13 +1,13 @@
 # Agent Session: Migrate Local Config Update Write
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-25T112922+0200-migrate-local-config-update-write`
 Created: `2026-08-25T11:29:22+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `7d14b9be4ca6e1e80d75ac318c9b7c432071677102730fffca9a38e0b543af87`
 Previous: [2026-08-25T110346+0200-migrate-local-config-touch-write.md](2026-08-25T110346+0200-migrate-local-config-touch-write.md)
-Next: none
-Outcome: pending
+Next: [2026-08-25T115639+0200-migrate-local-config-directory-stat.md](2026-08-25T115639+0200-migrate-local-config-directory-stat.md)
+Outcome: completed at `fd45ebf`; Q1.3 improved from 29/46 to 28/45, and the clean full audit exited 1 for 15 documented findings with zero ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
