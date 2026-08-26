@@ -1,13 +1,13 @@
 # Agent Session: Narrow Maven Standard Output Provenance
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T130843+0200-narrow-maven-standard-output-provenance`
 Created: `2026-08-26T13:08:43+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3c880bbf28373de5dd123a7cd01ae045fdef9518c6520002ea67b66d1e569ce0`
 Previous: [2026-08-26T124026+0200-narrow-unzip-output-file-provenance.md](2026-08-26T124026+0200-narrow-unzip-output-file-provenance.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T134455+0200-migrate-spring-archive-clock.md](2026-08-26T134455+0200-migrate-spring-archive-clock.md)
+Outcome: P3 move 66 completed at c627a3e: Maven retains its exact debug-only system standard output through a narrow process helper and private selector while public RunOn no longer inherits concrete os.Stdout provenance through the complete process dependency; exact Q1.3 improved from 5/27 to 4/27 and every complete gate passed with zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

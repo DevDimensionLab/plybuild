@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `40cece5`.
+Last measured checkpoint: 2026-08-26, commit `c627a3e`.
 
 ## Objective
 
@@ -32,8 +32,8 @@ machine-readable launcher state; keep the order and vocabulary exact.
 <!-- CODEX_AUTHORIZED_CHECKPOINTS_BEGIN -->
 P2A|complete
 P2B|complete
-P3|active
-P4|queued
+P3|complete
+P4|active
 P5|queued
 P6|queued
 P7|queued
@@ -705,6 +705,26 @@ P3.65 clean checkpoint (product `40cece5`):
 | Claim phrases in 83 Markdown files | 0 | Q3.4 remains held. |
 | Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
+P3.66 clean checkpoint (product `c627a3e`):
+
+| Signal | P3.66 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 388 | Existing focused process-standard-output and Maven recording contracts were strengthened without changing the test denominator. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The focused contracts record in memory, launch no external program, touch no network, and write no repository fixture. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in already-tested packages. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 4 / 27 | Public Maven `RunOn` now selects the exact system runner and standard output without inheriting concrete `os.Stdout` provenance through the complete process dependency; the adapter helper keeps the production-effect denominator at 27. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 84 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -850,7 +870,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 63 are complete.
+Status: complete. Moves 1 through 66 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -3659,6 +3679,57 @@ SHA-256
 `1bae6abec78d2306c2205bdf1f96b7bffdabcef7e82a232a2aedafe536f3bf56`;
 the measured commit tree is `c1009903d65b062786604f71d8f1fa89d2dfe61d`.
 
+Move 66 changes only the process adapter's standard-output forwarding surface
+and Maven's private production dependency selection. New
+`process.SystemStdout` returns the exact existing `Stdout(System(), true)`
+composition. It performs no fallback, wrapping, buffering, copying, logging,
+cleanup, retry, or global-state mutation, and the complete process dependency,
+runner, system selectors, execution path, and implementation remain unchanged.
+
+Private `systemRunOnDependencies` carries the exact existing
+`process.SystemRunner()` and that exact system standard output. Public
+`maven.RunOn` replaces only its complete `process.System()` selection with that
+private selector; private `runOn`, every callback and caller, and the return
+path are unchanged. Every arbitrary command and argument byte and order,
+repository value, exact project directory, info log before execution,
+conditional stdout selection for debug and trace only, nil stdin and stderr,
+synchronous one-attempt execution, and direct process error remain exact.
+
+Strengthened focused contracts keep the suite at 388 tests. They prove exact
+`os.Stdout` identity through the existing process composition, exact system
+runner identity, complete caller-owned dependency delivery and preservation,
+every log and command field, the complete log-level matrix, callback
+construction and invocation timing, one exact attempt, direct error, safe zero
+behavior, non-empty populations, exported public composition, and absence of
+another process operation. The contracts launch no external program, touch no
+network, and write no repository fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, regenerated exact Q1.3 improves from 5 of 27 to 4 of 27, Q1.4 stays 7 of
+8, exact Q2.1 stays 0 of 8, and Q3.4 stays zero phrases across 84 Markdown
+files. The unchanged import-aware scanner no longer follows concrete
+`os.Stdout` provenance through Maven's complete public `RunOn` dependency.
+Clock and server remain absent, so Q1.3 remains the single non-comparable
+ratchet. The scanner, inventory, baseline, and audit apparatus are unchanged.
+
+The clean move-66 gate passes focused process, Maven, and relevant caller
+tests; API/CLI and fresh subprocess compatibility; build, complete and uncached
+tests, race, vet, pinned lint, all 62 launcher controls, Make and all
+production-script meta-contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. Two complete Make attempts
+hit the established nested partial-raw-log signal-fixture flake before an
+unchanged complete `make test` rerun passed. The clean full audit exits 1 for
+the same 15 documented findings, never 2, with L0 8 of 8, five improved, two
+held, zero regressed, one non-comparable ratchet, and zero dirty paths.
+
+Product commit: `c627a3e`.
+
+The authoritative clean full audit from `c627a3e` has structured scorecard
+SHA-256
+`1023a95ee7e4d7a10e95ae647821892dae71b8815f35062ee5e4b8cbd9c207d0`;
+the measured commit tree is `fc8ae247df072a17c61d3e68a8359dfb4f1d7765`.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -3725,21 +3796,18 @@ archive and entry opens, path validation, directories, copy and close calls,
 order, ignored and direct errors, partial filenames, traversal, exported
 `Unzip`, complete adapter interface and system implementation, exported
 `filesystem.OpenFile`, public `file.OpenFile`, and every public behavior.
-Continue with only Maven's remaining system-standard-output provenance: add one
-narrow process adapter helper for the exact existing `Stdout(System(), true)`
-composition, give public `RunOn` a private production selector carrying the
-exact existing system runner and standard output, and preserve its complete
-debug-only stdout, command, log, callback, error, and public behavior. Leave
-server behavior, Unzip, other process callers, browser, profile, shell Run and
-Git, plugin diagrams, clock/server work, inventory, scanner, audit apparatus,
-and P4-P8 unchanged.
+The P3 exit is satisfied: process exits outside `main` are zero, every P3
+production-effect move is recorded, its migrated call sites no longer appear
+in Q1.3, and the CLI/API contracts remain compatible. P4 is now active. Begin
+it with one focused clock-adapter move for Spring's archive-path timestamp;
+leave Kibana sleep and server behavior for later coherent P4 moves.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
 
 ### P4 - Finish Absolute L1
 
-Status: queued.
+Status: active.
 
 - Add `internal/adapter/clock` and `internal/adapter/server`.
 - Cover all eight declared seams with executable swap tests.

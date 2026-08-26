@@ -1055,112 +1055,110 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-26T130843+0200-narrow-maven-standard-output-provenance
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T130843+0200-narrow-maven-standard-output-provenance.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T124026+0200-narrow-unzip-output-file-provenance.md
+#|SESSION_ID=2026-08-26T134455+0200-migrate-spring-archive-clock
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T134455+0200-migrate-spring-archive-clock.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T130843+0200-narrow-maven-standard-output-provenance.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete one focused P3 provenance move: preserve Maven's exact debug-only
-#|system standard output while preventing public `RunOn` from inheriting concrete
-#|`os.Stdout` provenance through the complete `process.System()` dependency.
-#|Preserve exact command, log, directory, arguments, streams, error, callback,
-#|dependency, and public behavior; P3.65; every completed move; and zero
-#|comparable ratchet regressions.
+#|Begin P4 with one focused clock move: introduce the declared clock adapter and
+#|migrate only Spring's private archive-path timestamp selection from direct
+#|`time.Now().Unix()` to that boundary. Preserve exact directory, timestamp,
+#|path, error, dependency, caller, and public behavior; completed P3; every prior
+#|checkpoint; and zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
-#|P3 remains active, P4-P8 remain queued in the machine-readable block in
-#|`docs/plan/quality-upgrade.md`, and the launcher must remain NEXT until all
-#|authorized checkpoints finish. P3.65 product commit `40cece5` passed its
+#|P3 is complete, P4 is active, and P5-P8 remain queued in the machine-readable
+#|block in `docs/plan/quality-upgrade.md`. The launcher must remain NEXT until all
+#|authorized checkpoints finish. P3.66 product commit `c627a3e` passed its
 #|truthful complete checkpoint.
 #|
-#|This mission authorizes only focused process-standard-output and Maven command
-#|recording contracts; one narrow process adapter helper that returns the exact
-#|existing system standard output by delegating to the existing `Stdout(System(),
-#|true)` composition; one private Maven production dependency selector carrying
-#|the exact existing `SystemRunner()` and that exact standard output; and
-#|replacement of the one `process.System()` selection in public `maven.RunOn`
-#|with that selector.
+#|This mission authorizes only focused clock-adapter and Spring archive-path
+#|recording contracts; one narrow `internal/adapter/clock` dependency that
+#|returns the exact existing system time; one exact safe-zero clock read; adding
+#|that dependency to Spring's private archive-path dependency and production
+#|selector; and replacing only the one direct `time.Now()` selection in private
+#|`archivePathWithDependencies` with that adapter read.
 #|
-#|It does not authorize changing `process.Dependencies`, `Runner`, `System`,
-#|`SystemRunner`, `Stdout`, `Execute`, or system execution; changing Maven command
-#|flow, logging, debug selection, callbacks, callers, arguments, or public API;
-#|Unzip; browser launcher; plugin diagrams; profile editor; shell Run or Git;
-#|filesystem, HTTP, clock, or server work; inventory; scanner; audit apparatus;
-#|mutation harnesses; or P4-P8 implementation.
+#|It does not authorize changing another Spring flow or public API; Kibana sleep;
+#|web server construction, start, shutdown, address, timeout, or handlers;
+#|process, HTTP, or filesystem adapters; Maven; Unzip; browser; plugin diagrams;
+#|profile; shell Run or Git; inventory; scanner; audit apparatus; mutation
+#|harnesses; or later P4 and P5-P8 implementation.
 #|
 #|# Measurements At Start
 #|
-#|Clean product commit `40cece5` has 388 tests across 19 of 25 packages. Q0.6 has
+#|Clean product commit `c627a3e` has 388 tests across 19 of 25 packages. Q0.6 has
 #|26 guarded safe-writer sites, 21 write and 5 copy, zero skipped tests, and zero
-#|unsafe direct test writes. Q1.1 is 6/25, Q1.2 is zero, exact Q1.3 is 5/27 with
+#|unsafe direct test writes. Q1.1 is 6/25, Q1.2 is zero, exact Q1.3 is 4/27 with
 #|clock and server absent, Q1.4 is 7/8, exact Q2.1 is 0/8, and Q3.4 is zero
-#|phrases across 83 Markdown files.
+#|phrases across 84 Markdown files.
 #|
 #|The authoritative clean full audit exits 1 for 15 documented findings, never
 #|2, with L0 8/8, five improved, two held, zero regressed, one non-comparable
 #|ratchet, and zero dirty paths. Its scorecard SHA-256 is
-#|`1bae6abec78d2306c2205bdf1f96b7bffdabcef7e82a232a2aedafe536f3bf56`.
+#|`1023a95ee7e4d7a10e95ae647821892dae71b8815f35062ee5e4b8cbd9c207d0`.
 #|The repaired T15 proof passes all 15 controls and reproduces the exact stored
 #|debt and instrument identities.
 #|
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for this single Maven standard-output provenance move
-#|and its recording contracts, then make the normal separate continuity-only
-#|commit. Do not push, merge, publish, distribute, remove the worktree, stash
-#|inherited changes, revert user work, or run destructive Git commands.
+#|implementation commit for this single Spring archive-clock move and its
+#|recording contracts, then make the normal separate continuity-only commit. Do
+#|not push, merge, publish, distribute, remove the worktree, stash inherited
+#|changes, revert user work, or run destructive Git commands.
 #|
-#|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve the existing complete
-#|caller-owned Maven process dependency value. The new helper must select the
-#|same exact `os.Stdout` identity through the existing process composition,
-#|without fallback, wrapping, buffering, copying, logging, cleanup, retry, or
-#|global state. The private Maven selector must retain the exact system runner
-#|and exact standard output while adding no other capability.
+#|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. The clock adapter must return
+#|the exact `time.Now` value without fallback, truncation, rounding, timezone
+#|conversion, caching, monotonic rewriting, logging, cleanup, retry, or global
+#|state. Its zero dependency must be safe and deterministic. Preserve the
+#|existing complete caller-owned Spring archive-path dependency value; the
+#|private production selector must retain the exact complete filesystem system
+#|dependency and add only the exact system clock.
 #|
-#|Preserve every arbitrary command and argument byte, argument order, callback
-#|shape and invocation timing, repository value, exact project directory, info
-#|log before execution, conditional stdout selection for debug and trace only,
-#|nil stdin and stderr, synchronous execution, one exact attempt, direct process
-#|error, safe zero injected dependency behavior, non-empty population, exported
-#|`RunOn` signature and return, callers, and every public behavior.
+#|Preserve the exact working-directory request and its direct error before any
+#|clock read, one clock read only after directory success, exact `Unix()` second,
+#|the `spring-%d.zip` name and slash composition, arbitrary directory bytes,
+#|pre-epoch and subsecond injected values, named returns, caller behavior, and
+#|every public path. Do not alter archive creation, download, unzip, deletion,
+#|logging, or error behavior.
 #|
 #|Focused tests must launch no external program, touch no network, and write no
 #|repository fixture. Preserve complete caller-owned dependency fields in every
-#|affected recording double. Leave all completed filesystem, process execution,
-#|browser, plugin-diagrams, profile, shell, Maven graph, Unzip, server, and clock
-#|behavior unchanged.
+#|affected recording double. Leave all completed filesystem, process, HTTP,
+#|Maven, browser, plugin-diagrams, profile, shell, and Unzip behavior unchanged.
 #|
 #|# Required Reading
 #|
 #|Before editing, confirm branch, HEAD, clean status, reciprocal archive links,
-#|launcher `--check`, and exact commit `40cece5`. Read the rolling handover, this
-#|archive, the P3 tail and checkpoint gate, both design documents,
-#|`.quality/inventory`, complete process adapter code/tests and every complete
-#|process double/caller, complete Maven command code/contracts and callers, the
-#|P3.65 Unzip output-file contracts, P3.64 browser-launcher contracts, P3.63
-#|plugin-diagrams contracts, P3.62 profile-editor contracts, P3.61 shell Git
-#|contracts, P3.60 shell Run contracts, the import-aware scanner, API/CLI
-#|contracts, and the T15 repair and baseline reproduction README.
+#|launcher `--check`, and exact commit `c627a3e`. Read the rolling handover, this
+#|archive, the P4 entry and checkpoint gate, both design documents,
+#|`.quality/inventory`, complete Spring archive-path code/contracts and every
+#|caller, both remaining direct clock sites, every complete adapter source/test
+#|and dependency-preserving recording double, the P3.66 Maven contracts, the
+#|import-aware scanner, API/CLI contracts, and the T15 repair and baseline
+#|reproduction README.
 #|
 #|# Three Moves
 #|
-#|1. Start red by strengthening the focused process-standard-output and Maven
-#|   recording contracts. Prove exact system stdout identity, exact runner,
-#|   complete dependency delivery and preservation, every log and command field,
-#|   the full log-level matrix, one attempt, exact error, safe zero behavior,
-#|   non-empty population, public composition, and absence of another operation.
-#|2. Add only the authorized narrow system-standard-output helper and private
-#|   Maven selector, then replace only public `RunOn`'s authorized
-#|   `process.System()` selection. Preserve the complete process adapter API and
-#|   system implementation, `runOn`, every callback and caller, and the return
-#|   path. Regenerate exact Q1.3 without changing the scanner or broadening the
-#|   move to force a number.
-#|3. Run focused process/Maven and relevant caller tests; API/CLI and subprocess
+#|1. Start red with focused clock-adapter and Spring archive-path recording
+#|   contracts. Prove safe zero behavior, exact system-time identity within a
+#|   bounded before/after observation, complete dependency delivery and
+#|   preservation, working-directory-before-clock order, no clock read after a
+#|   directory error, one exact read after success, arbitrary injected times,
+#|   exact path and returns, non-empty population, public composition, and
+#|   absence of another operation.
+#|2. Add only the authorized narrow clock adapter, the private Spring clock
+#|   dependency and exact production selection, then replace only private
+#|   `archivePathWithDependencies`' direct `time.Now()` with the adapter read.
+#|   Preserve the filesystem dependency, `archivePath`, every caller, and the
+#|   complete return path. Regenerate exact Q1.3 without changing the scanner or
+#|   broadening the move to force a number.
+#|3. Run focused clock/Spring and relevant caller tests; API/CLI and subprocess
 #|   compatibility; launcher and Make contracts; complete tests, race, and vet;
 #|   all four host acceptance flows; the 15-control audit meta-suite; focused
 #|   Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 measurement; full clean audit; and
@@ -1170,12 +1168,12 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent Maven standard-
-#|output provenance move or record an exact resumable state. Rewrite the rolling
-#|handover, record the measured P3 result, answer this archive, create exactly one
+#|Before this agent session ends, finish and commit the coherent Spring archive-
+#|clock move or record an exact resumable state. Rewrite the rolling handover,
+#|record the measured P4 result, answer this archive, create exactly one
 #|reciprocally linked NEXT archive for the next coherent authorized roadmap move,
 #|replace only the launcher's mutable regions, run launcher and handoff contracts,
 #|and make the separate `docs: prepare next agent session` commit. Do not launch a
 #|real successor, push, merge, publish, distribute, stash, revert, or remove the
-#|worktree. COMPLETE remains invalid while P3 or P4-P8 is unfinished.
+#|worktree. COMPLETE remains invalid while P4 or P5-P8 is unfinished.
 # CODEX_MUTABLE_PROMPT_END
