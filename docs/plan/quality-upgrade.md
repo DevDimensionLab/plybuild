@@ -4468,6 +4468,38 @@ repairs only Q1.9's executable empty-population assertions, starting with all
 51 confirmed table blockers and completing classification of the remaining
 test iterations before any receipt is reconsidered.
 
+Move 11 completes that Q1.9-only test repair. Commit `3a8f0bc` changes 40
+`_test.go` files and no production file, adding executable fail-on-empty
+assertions without changing test data, order, subtest names, side effects, or
+public behavior. A fresh AST inventory still contains exactly 169 syntactic
+test ranges. Executable-control-flow review classifies all 169 as 72 range
+sites that required and now have a new assertion, 83 that were already
+independently guarded, and 14 fixture/support sites whose emptiness is valid or
+whose result population is rejected elsewhere. All 64 loops over a local
+identifier named `tests` now have a direct executable non-empty guard; the 51
+previous blockers and 21 additional expectation, recording, and helper range
+sites are repaired. The final inventory SHA-256 is
+`05b2fc916c1c9d94a44322fcbb997d3e142a9ee70fe11b40de0b43e84a88b343`;
+the complete path/function/collection/classification/guard record SHA-256 is
+`5f8cb9f00dec919769fde376ae240ae9d5a281063f2a48508d7439f9786eb005`.
+
+The exact affected packages, all 69 named empty-population contracts, complete
+uncached tests, race, vet, API/CLI and subprocess compatibility, pinned lint,
+launcher and Make contracts, complete preflight, all four host acceptance
+flows, the 15-control audit meta-suite, and empty-HOME count-2 pass. The clean
+no-evidence audit measures commit
+`3a8f0bcd030baf787a29440ee8e4e4a087edb33b`, tree
+`75dee3dcc1cb2fd91f7eb359e96b31cc4be3d986`, and zero dirty paths. Its
+scorecard SHA-256 is
+`08e5ff9d450a6fa3b8824d82c720d339cf0d44003a490d01d3a412681081a615`;
+it exits 1 for the same 13 documented non-passing criteria, never 2, with 453
+tests across all 27 packages, L0 8 of 8, L1 six PASS and Q1.6/Q1.7/Q1.9
+UNMEASURABLE, six improved ratchets, two held, zero regressed, and zero
+non-comparable. Q1.9 is independently supported by the complete classified
+population, but remains formally UNMEASURABLE because no manual-evidence
+receipt was authorized while Q1.7 is blocked. P4 therefore remains active for
+the eight previously classified Q1.7 gaps; P5-P8 remain queued.
+
 ### P5 - Build L2 Mutation Evidence
 
 Status: queued.

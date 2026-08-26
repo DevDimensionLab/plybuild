@@ -1,13 +1,13 @@
 # Agent Session: Repair Q1.9 Empty Populations
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T195729+0200-repair-q19-empty-populations`
 Created: `2026-08-26T19:57:29+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `971da199b2dc19466bfb32f7b48a913dbe6f33fb778149ac18d138102b2da3af`
 Previous: [2026-08-26T191251+0200-record-p4-manual-l1-evidence.md](2026-08-26T191251+0200-record-p4-manual-l1-evidence.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T204147+0200-repair-q17-partial-failures.md](2026-08-26T204147+0200-repair-q17-partial-failures.md)
+Outcome: test-only commit `3a8f0bc` classifies all 169 test ranges and repairs all 72 in-scope empty-population range sites; the complete gate and clean audit pass their contracts, Q1.9 is now supported by exhaustive source review, and P4 remains active for Q1.7
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

@@ -1055,62 +1055,78 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-26T195729+0200-repair-q19-empty-populations
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T195729+0200-repair-q19-empty-populations.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T191251+0200-record-p4-manual-l1-evidence.md
+#|SESSION_ID=2026-08-26T204147+0200-repair-q17-partial-failures
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T204147+0200-repair-q17-partial-failures.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T195729+0200-repair-q19-empty-populations.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P4 with one Q1.9-only test move. Exhaustively classify all 169 current
-#|Go test `range` statements, then add executable assertions that fail when every
-#|in-scope assertion-driving collection is empty. Repair all 51 confirmed local
-#|`tests`-table blockers and every additional unguarded expectation, recording,
-#|or helper population found in the remaining 105 ranges. Do not infer coverage
-#|from the 69 existing empty-population contracts or from non-empty literals.
+#|Continue P4 with one Q1.7-only test move. Repair the eight confirmed operations
+#|whose per-item failure content, continuation, or ordered partial result lacks
+#|an exact executable contract. Reclassify all 17 in-scope operations from
+#|executable control flow and do not infer coverage from the 23 existing focused
+#|tests or from exit-code assertions alone.
 #|
 #|# Authorized Roadmap
 #|
-#|P3 is complete. P4 remains active because Q1.7 and Q1.9 failed exhaustive
-#|manual review; P5-P8 remain queued in the machine-readable block in
-#|`docs/plan/quality-upgrade.md`. Q1.6's complete 57-struct, 74-field production
-#|population is independently supported, but no schema-2 receipt was created
-#|because the evidence mission required all three manual rows to be valid. The
-#|launcher must remain NEXT until P4 and P5-P8 finish.
+#|P3 is complete. P4 remains active only for Q1.7 remediation and later combined
+#|manual evidence; P5-P8 remain queued in the machine-readable block in
+#|`docs/plan/quality-upgrade.md`. Q1.6 is independently supported by its complete
+#|57-struct, 74-field review, and Q1.9 is independently supported by its complete
+#|169-range classification. Neither support permits a schema-2 receipt in this
+#|test-only session. The launcher must remain NEXT until P4 and P5-P8 finish.
 #|
-#|This mission authorizes only read-only reclassification of the 169 `_test.go`
-#|range sites; test-only fail-on-empty assertions for every assertion-driving
-#|table, expected collection, recorded collection, or validation helper that can
-#|otherwise false-green; focused tests needed to keep their exact behavior; one
-#|focused test-only implementation commit; clean automated measurement; and the
-#|normal separate continuity commit. It does not authorize production changes,
-#|Q1.7 remediation, a manual-evidence document or receipt, audit/parser/scanner
-#|changes, `.quality/inventory` or baseline changes, executable P5 harnesses,
-#|T1-T10 changes, another seam, acceptance changes, P6-P8 work, or a Q1.9 PASS
-#|claim unless the complete classified population supports it.
+#|This mission authorizes read-only reclassification of the 17 Q1.7 operations;
+#|test-only characterization of `initCmd`, `Bitbucket.SynchronizeAllRepos`,
+#|`spring.DeleteDemoFiles`, `Repository.upgradeDependencies`,
+#|`Repository.upgradePluginsOnModel`, `maven.RemoveDeprecated`,
+#|`template.MergeTemplates`, and `GitCloudConfig.ValidTemplatesFrom`; focused
+#|test helpers needed to exercise their existing behavior; one focused test-only
+#|implementation commit; clean automated measurement; and the normal separate
+#|continuity commit. It does not authorize production changes, another seam,
+#|manual evidence or receipts, Q1.9 changes, audit/parser/scanner changes,
+#|`.quality/inventory` or baseline changes, executable P5 harnesses, T1-T10
+#|changes, acceptance changes, P6-P8 work, or a Q1.7 PASS claim unless the
+#|complete classified population supports it.
 #|
 #|# Measurements At Start
 #|
-#|The evidence review measured clean commit
-#|`18beee0a806bcc962cb2f7fbdd5952e43a2cb633`, exact parent product commit
-#|`c382caa38be167fe17f847370ad8a12270644de3`, and commit tree
-#|`85a6c67f38b8f764b849dcfac4da9eec071d22d0`. The clean no-evidence scorecard
-#|SHA-256 is
-#|`37ef9bd20cfddf450f381bbc1afe5bd8ea5a037f5a8b0f50713572d22e613f2b`;
-#|the initial and final copies are byte-identical. It records 453 tests across all
-#|27 packages, L0 8/8, L1 six PASS and Q1.6/Q1.7/Q1.9 UNMEASURABLE, six improved
-#|ratchets, two held, zero regressed, zero non-comparable, and zero dirty paths.
-#|The audit exits 1 for 13 documented non-passing criteria, never 2.
+#|The Q1.9 move produced test-only commit
+#|`3a8f0bcd030baf787a29440ee8e4e4a087edb33b`, exact tree
+#|`75dee3dcc1cb2fd91f7eb359e96b31cc4be3d986`, on unchanged production commit
+#|`c382caa38be167fe17f847370ad8a12270644de3`. Its exhaustive 169-range record
+#|classifies 72 repaired, 83 independently guarded, and 14 fixture/support range
+#|sites; all 64 local `tests` loops are now directly guarded. Q1.9 is supported,
+#|but no manual-evidence document or receipt was created.
 #|
-#|All 169 test ranges were enumerated. The complete local `tests` table class is
-#|64 loops: 13 guarded and 51 unguarded. Confirmed non-table gaps include the
-#|entrypoint collection, plugin-diagrams call expectations, archive-entry
-#|validation, HTTP header expectations, cloud/template walk-error tables,
-#|find/grep walk-error tables, Maven version order, Spring ordered-log helper,
-#|filtered-template metadata and walk errors, and tips metadata. The remaining
-#|105 ranges still require explicit item-by-item classification; the confirmed
-#|list is not permission to stop early.
+#|The clean no-evidence scorecard SHA-256 is
+#|`08e5ff9d450a6fa3b8824d82c720d339cf0d44003a490d01d3a412681081a615`.
+#|It records 453 tests across all 27 packages, L0 8/8, L1 six PASS and
+#|Q1.6/Q1.7/Q1.9 UNMEASURABLE, six improved ratchets, two held, zero regressed,
+#|zero non-comparable, and zero dirty paths. The audit exits 1 for 13 documented
+#|non-passing criteria, never 2.
+#|
+#|# Q1.7 Scope And Blockers
+#|
+#|Include a production collection-item failure path when it reports the failure
+#|and continues, and an operation when it can return a populated partial
+#|aggregate with an error. Exclude fail-fast errors before partial state,
+#|intentionally ignored errors with no reported partial result, non-error
+#|business warnings, sequential non-collection phases, and test support. Inspect
+#|executable control flow; names and search hits are not classification evidence.
+#|
+#|The complete scope is 17 operations. Nine have exact content coverage. The
+#|eight confirmed gaps are the `initCmd` project-loop failures;
+#|`SynchronizeAllRepos` clone/pull warning; `DeleteDemoFiles` discovery/deletion
+#|failures; dependency version, maximum-version, and upgrade failures; per-plugin
+#|upgrade failures; `RemoveDeprecated` partial-result and warn/continue paths;
+#|`MergeTemplates` merge warning; and `ValidTemplatesFrom` ordered partial result
+#|with error. A new contract must assert the exact observable failure content and
+#|also prove later-item continuation or the exact populated partial result where
+#|that behavior exists. Prefer existing doubles and log-capture helpers. Preserve
+#|all production behavior and process-state restoration.
 #|
 #|# Role And Boundaries
 #|
@@ -1121,16 +1137,12 @@ exit 70
 #|worktree, stash inherited changes, revert user work, or run destructive Git
 #|commands.
 #|
-#|An in-scope assertion must be executable and must fail if its intended
-#|population is empty. Prefer a direct pre-loop `len(collection) == 0` fatal
-#|assertion with a subject-specific message. For helpers, reject an empty caller
-#|population at the helper boundary when non-empty input is part of that helper's
-#|contract. Preserve subtest names, table order, exact values, expected side
-#|effects, process-state restoration, public behavior, and Go 1.18 compatibility.
-#|Do not add meaningless guards to fixture construction/delivery loops or to
-#|result loops whose empty state already fails an independent executable
-#|cardinality assertion. Record every exclusion and the assertion that makes it
-#|safe.
+#|If any confirmed blocker cannot be exercised through current seams without a
+#|production change, exhaust safe test-only approaches, record the exact
+#|controllability gap, and keep Q1.7 blocked. Do not change production or add a
+#|seam under this mission. Preserve test names and data already in place, exact
+#|failure strings and ordering, public behavior, side effects, callback order,
+#|and Go 1.18 compatibility.
 #|
 #|Keep every generated report outside the worktree. Set
 #|`API_COMPAT_REPORT_OUT` and `CLI_COMPAT_REPORT_OUT` to external paths whenever
@@ -1141,43 +1153,42 @@ exit 70
 #|# Required Reading
 #|
 #|Before editing, confirm branch, HEAD, clean and ignored status, reciprocal
-#|archive links, launcher `--check`, exact product ancestry, and the authorized
+#|archive links, launcher `--check`, exact ancestry, and the authorized
 #|checkpoint block. Read the rolling handover, this archive, the complete P4
-#|entry and checkpoint gate, both design documents, `.quality/README.md`, the
-#|Q1.9 criterion and schema-2 validation path, the complete range reports or
-#|regenerate them from source, all 169 enclosing tests/helpers, all existing
-#|empty-population assertions, the complete audit wrapper, T15 repair, API/CLI
-#|and launcher contracts, and the Make and acceptance gates. Do not classify a
-#|range by name or search hit alone; inspect its executable control flow.
+#|entry and gate, both design documents, `.quality/README.md`, the Q1.7 criterion
+#|and schema-2 validation path, all 17 production operations and enclosing call
+#|flows, every existing partial-failure test and helper, the complete audit
+#|wrapper, T15 repair, API/CLI and launcher contracts, and Make and acceptance
+#|gates. Do not classify an operation by name or search hit alone.
 #|
 #|# Three Moves
 #|
-#|1. Regenerate the exact 169-range inventory from the clean current tree. State
-#|   the inclusion and exclusion rules before editing. Classify every range as
-#|   fixture/support, independently guarded, or requiring a new executable
-#|   assertion. Add guards to all 51 confirmed `tests` tables and every other
-#|   in-scope unguarded population. Keep a complete path, function, collection,
-#|   classification, and guard/exclusion record outside the worktree.
-#|2. Run the exact affected test population, all named empty-population tests,
-#|   complete uncached tests, race, and vet. Re-enumerate every range and inspect
-#|   each new guard in executable context. If any intended population can still
-#|   be empty without failure, keep Q1.9 blocked. Do not create manual evidence
-#|   because Q1.7 remains blocked even if Q1.9 is repaired.
+#|1. Regenerate the complete 17-operation Q1.7 record from the clean current
+#|   tree. For each operation record path, function, every included failure
+#|   branch, existing exact-content/continuation coverage, new contract, or exact
+#|   exclusion outside the worktree. Add focused test-only contracts for every
+#|   exercisable branch among the eight gaps. Require exact failure content and
+#|   later-item continuation or exact ordered partial results as applicable.
+#|2. Run the exact affected tests, the complete 17-operation focused population,
+#|   complete uncached tests, race, and vet. Inspect every new assertion in its
+#|   executable context. If any included failure path can still occur without an
+#|   exact content assertion and continuation/partial-result proof, keep Q1.7
+#|   blocked. Do not create manual evidence in this session.
 #|3. Run API/CLI and subprocess compatibility with external report paths; pinned
 #|   lint; launcher and Make contracts; complete preflight; all four host
 #|   acceptance flows; the 15-control audit meta-suite; empty-HOME count-2; and a
 #|   clean no-evidence audit. Require audit exit never 2 and zero dirty paths.
-#|   Record the exact new population, product commit, scorecard, and next P4
-#|   blocker in continuity.
+#|   Record the exact population, implementation commit, scorecard, and next P4
+#|   blocker or evidence-only next step in continuity.
 #|
 #|# Automatic Handoff
 #|
-#|Before this session ends, finish and commit the coherent Q1.9 test-only move or
+#|Before this session ends, finish and commit the coherent Q1.7 test-only move or
 #|record an exact resumable blocker. Rewrite the rolling handover, record the P4
 #|result in the roadmap, answer this archive, create exactly one reciprocally
 #|linked NEXT archive for the next coherent P4 move, replace only the launcher's
 #|mutable regions, run launcher and handoff contracts, and make the separate
 #|continuity-only commit. Do not launch a real successor, push, merge, publish,
-#|distribute, stash, revert, or remove the worktree. P4 remains active for Q1.7,
-#|and COMPLETE remains invalid while P4 or P5-P8 is unfinished.
+#|distribute, stash, revert, or remove the worktree. COMPLETE remains invalid
+#|while P4 or P5-P8 is unfinished.
 # CODEX_MUTABLE_PROMPT_END
