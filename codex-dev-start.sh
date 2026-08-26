@@ -1055,121 +1055,113 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-26T084000+0200-migrate-plugin-diagrams-dot
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T084000+0200-migrate-plugin-diagrams-dot.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T080352+0200-migrate-plugin-diagrams-open.md
+#|SESSION_ID=2026-08-26T091301+0200-migrate-maven-debug-stdout
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T091301+0200-migrate-maven-debug-stdout.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T084000+0200-migrate-plugin-diagrams-dot.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete one focused P3 production-effect move: route only the direct Graphviz
-#|`dot` conversion request in `cmd/plugin_diagrams.go` through the existing
-#|`internal/adapter/process` boundary while preserving the conversion's captured
-#|stdout, discarded stderr, exact output write, error behavior, and following
-#|ignored macOS open attempt. Preserve the completed export and open moves, Cobra
-#|behavior, every completed move, and zero comparable ratchet regressions.
+#|Complete one focused P3 production-effect move: route only Maven command's
+#|conditional `logger.StdOut()` capability selection in `pkg/maven/command.go`
+#|through the existing `internal/adapter/process` dependency while preserving the
+#|exact Maven command, conditional stdout identity, returned process error, and
+#|all completed behavior. Preserve P3.57, every completed move, and zero
+#|comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
 #|P3 remains active, P4-P8 remain queued in the machine-readable block in
 #|`docs/plan/quality-upgrade.md`, and the launcher must remain NEXT until all
-#|authorized checkpoints finish. P3.56 product commit `6f4bc37` passed its
+#|authorized checkpoints finish. P3.57 product commit `9164e06` passed its
 #|truthful complete checkpoint.
 #|
-#|This mission authorizes only private plugin-diagrams Graphviz recording
-#|contracts, the private process/filesystem dependency composition required to
-#|preserve the existing conversion output behavior, and replacement of this one
-#|call:
+#|This mission authorizes only focused process-adapter and Maven recording
+#|contracts, one narrow standard-output capability on the existing process
+#|dependency, the production selection needed to supply `os.Stdout` from
+#|`process.System()`, the conditional forwarding helper, mechanical preservation
+#|of that complete dependency in relevant process doubles/callers, and replacement
+#|of this one caller-side selection:
 #|
 #|```go
-#|err = structurizr.RunWithOutputToFile(exec.Command("dot", file, "-Tpng"), outputPngFile)
+#|Stdout: logger.StdOut(),
 #|```
 #|
-#|with an equivalent private helper using `process.Execute` for the direct `dot`
-#|request and the existing filesystem adapter for the exact successful stdout
-#|write. It does not authorize the completed export or `open` requests, another
-#|plugin-diagrams flow, `structurizr.Run` or `RunWithOutputToFile`, any adapter,
-#|another caller, public API, inventory, scanner, audit apparatus, clock/server,
-#|mutation harnesses, or P4-P8 implementation.
+#|It does not authorize another Maven flow, command arguments, logging, the
+#|exported `maven.RunOn` signature or returned callback, `pkg/logger` behavior or
+#|public API, plugin diagrams, another process request, another adapter, shell
+#|unzip provenance, inventory, scanner, audit apparatus, clock/server, mutation
+#|harnesses, or P4-P8 implementation.
 #|
 #|# Measurements At Start
 #|
-#|Clean product commit `6f4bc37` has 369 tests across 19 of 25 packages. Q0.6 has
+#|Clean product commit `9164e06` has 375 tests across 19 of 25 packages. Q0.6 has
 #|26 guarded safe-writer sites, 21 write and 5 copy, zero skipped tests, and zero
-#|unsafe direct test writes. Q1.1 is 6/25, Q1.2 is zero, Q1.3 is 8/30 with clock
+#|unsafe direct test writes. Q1.1 is 6/25, Q1.2 is zero, Q1.3 is 7/29 with clock
 #|and server absent, Q1.4 is 7/8, exact Q2.1 is 0/8, and Q3.4 is zero phrases
-#|across 74 Markdown files.
+#|across 75 Markdown files.
 #|
 #|The authoritative clean full audit exits 1 for 15 documented findings, never
 #|2, with L0 8/8, five improved, two held, zero regressed, one non-comparable
 #|ratchet, and zero dirty paths. Its scorecard SHA-256 is
-#|`efaaee797a34d182d03d6830d0af4c342b7e744180775942119a77c7e0f88090`.
+#|`9f584097422a17fd6eea005dda97182e042aad05a34837f0461ce0933248f700`.
 #|The repaired T15 proof passes all 15 controls and reproduces the exact stored
 #|debt and instrument identities.
 #|
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for this single Graphviz-process move and its recording
-#|contracts, then make the normal separate continuity-only commit. Do not push,
-#|merge, publish, distribute, remove the worktree, stash inherited changes,
-#|revert user work, or run destructive Git commands.
+#|implementation commit for this single Maven stdout-selection move and its
+#|recording contracts, then make the normal separate continuity-only commit. Do
+#|not push, merge, publish, distribute, remove the worktree, stash inherited
+#|changes, revert user work, or run destructive Git commands.
 #|
-#|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve exact executable
-#|`dot`, ordered arguments `file`, `-Tpng`, empty `Dir`, nil stdin, distinct
-#|stdout/stderr buffers, `Start: false`, and one synchronous attempt for each
-#|discovered file. Preserve the exact direct process error and suppress the output
-#|write and following open attempt on that error. On process success, preserve the
-#|exact stdout bytes, `outputPngFile`, mode `0644`, one write attempt, ignored
-#|write error, discarded stderr bytes, and following one ignored open attempt.
-#|Preserve iteration after a successful conversion/open sequence. Recording tests
-#|must reject empty process and write populations.
+#|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve exact executable and
+#|ordered argument bytes, `project.Path` as `Dir`, nil stdin and stderr,
+#|`Start: false`, one synchronous process attempt, and the exact dependency error.
+#|When the global logrus debug level is enabled, preserve exact `os.Stdout`
+#|identity as the command stdout. When it is disabled, preserve nil stdout. Keep
+#|the log call before process execution and preserve every level/state behavior.
 #|
-#|Select `process.System()` and `filesystem.System()` only in the production
-#|composition. Pass the complete private dependency value without fallback,
-#|retry, logging, another process or write attempt, error wrapping, environment or
-#|working-directory behavior, output transformation, cleanup, or surfaced write
-#|error. The zero dependency must remain safe and must not launch a tool or write
-#|a file. Focused tests must launch no real `structurizr-cli`, `dot`, or `open`
-#|program, touch no network, and write no repository fixture.
+#|Select the process runner and standard-output capability together only in
+#|`process.System()`. The narrow forwarding helper must return the injected writer
+#|only when enabled and nil otherwise. Pass the complete dependency value without
+#|fallback, retry, logging changes, another process attempt, error wrapping,
+#|environment changes, cleanup, or global-state leakage. The zero dependency must
+#|remain safe: no tool launch and nil output. Focused tests must launch no real
+#|Maven or another program, touch no network, and write no repository fixture.
 #|
-#|Do not change mandatory workspace lookup, `.structurizr/` deletion, completed
-#|export `process.Execute` request, dot-file discovery, iteration order, output
-#|PNG construction, printed text, completed open `process.Execute` request,
-#|Cobra registration/flags/help, initialization, `pkg/structurizr`, either
-#|adapter, API/CLI surface, inventory, scanner, baseline, audit repair, or any
-#|completed product behavior.
+#|Do not change the command's name, arguments, directory, error behavior,
+#|`Repository` value behavior, exported callback shape, logging text/order,
+#|`pkg/logger`, plugin diagrams, shell unzip, another caller, public API/CLI,
+#|inventory, scanner, baseline, audit repair, or any completed product behavior.
 #|
 #|# Required Reading
 #|
 #|Before editing, confirm branch, HEAD, clean status, reciprocal archive links,
-#|launcher `--check`, and exact commit `6f4bc37`. Read the rolling handover, this
+#|launcher `--check`, and exact commit `9164e06`. Read the rolling handover, this
 #|archive, the P3 tail and checkpoint gate, both design documents,
-#|`.quality/inventory`, complete plugin-diagrams and structurizr code/tests and
-#|Cobra callers, the process and filesystem adapters and every complete relevant
-#|double/caller, the import-aware scanner, API/CLI contracts, and the T15 repair
-#|and baseline reproduction README.
+#|`.quality/inventory`, complete Maven and logger code/tests/callers, the process
+#|adapter and every complete process double/caller, the import-aware scanner,
+#|API/CLI contracts, and the T15 repair and baseline reproduction README.
 #|
 #|# Three Moves
 #|
-#|1. Start red with only focused private plugin-diagrams Graphviz recording
-#|   contracts. Prove the exact complete process command and stream identities,
-#|   one request, exact process error precedence, no write/open after process
-#|   failure, exact successful output bytes/path/mode, ignored exact write error,
-#|   following open placement, complete system dependency selection, safe zero
-#|   dependency, non-empty populations, and absence of export, open, or another
-#|   unrelated process/write request. Use a private helper boundary so focused
-#|   tests invoke no external program.
-#|2. Add only the private Graphviz process/filesystem dependency composition and
-#|   route the one direct `dot` request through `process.Execute`. Preserve the
-#|   existing successful output write through `filesystem.WriteFile`, including
-#|   its ignored result, and keep the following completed open helper unchanged.
-#|   Leave `pkg/structurizr` and its exported functions untouched. Regenerate exact
-#|   Q1.3 without changing the scanner or broadening the move to force a number.
-#|3. Run focused cmd/process/filesystem/structurizr and relevant caller tests;
-#|   API/CLI and subprocess compatibility; launcher and Make contracts; complete
-#|   tests, race, and vet; the 15-control audit meta-suite; focused
+#|1. Start red with focused process-adapter and Maven recording contracts. Prove
+#|   exact system `os.Stdout` selection, enabled injected-writer identity, disabled
+#|   and zero-dependency nil output, the complete Maven command in both level
+#|   states, one request, exact error, complete dependency preservation, rejection
+#|   of an empty recorded population, and absence of another process request. Use
+#|   recording boundaries so focused tests invoke no external program.
+#|2. Add only the narrow process standard-output dependency capability and
+#|   conditional forwarding helper, then route the one Maven `logger.StdOut()`
+#|   selection through it. Preserve every existing command field and return path.
+#|   Leave `pkg/logger` untouched. Regenerate exact Q1.3 without changing the
+#|   scanner or broadening the move to force a number.
+#|3. Run focused Maven/process/logger and relevant caller tests; API/CLI and
+#|   subprocess compatibility; launcher and Make contracts; complete tests, race,
+#|   and vet; the 15-control audit meta-suite; focused
 #|   Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 measurement; full clean audit; and
 #|   empty-HOME count-2. Expect Q0.6 to hold at 26 guarded sites. The full audit
 #|   may exit 1 for documented findings but never 2, and comparable ratchets must
@@ -1177,7 +1169,7 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent Graphviz-process
+#|Before this agent session ends, finish and commit the coherent Maven stdout
 #|move or record an exact resumable state. Rewrite the rolling handover, record
 #|the measured P3 result, answer this archive, create exactly one reciprocally
 #|linked NEXT archive for the next coherent authorized roadmap move, replace only

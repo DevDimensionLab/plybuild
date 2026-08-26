@@ -1,13 +1,13 @@
 # Agent Session: Migrate Plugin Diagrams Dot
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T084000+0200-migrate-plugin-diagrams-dot`
 Created: `2026-08-26T08:40:00+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `5c260abb2033cc27c5c7ee8ee57d6f485cc4e44ed753bf926b408d99d3a5ba05`
 Previous: [2026-08-26T080352+0200-migrate-plugin-diagrams-open.md](2026-08-26T080352+0200-migrate-plugin-diagrams-open.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T091301+0200-migrate-maven-debug-stdout.md](2026-08-26T091301+0200-migrate-maven-debug-stdout.md)
+Outcome: product commit `9164e06` routes only Graphviz conversion and its exact successful stdout write through the process and filesystem adapters; 375 tests, Q1.3 7/29, the clean gate, T15, full audit, and empty-HOME count-2 pass with zero comparable regressions
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
