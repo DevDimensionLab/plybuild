@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `4f1f45f`.
+Last measured checkpoint: 2026-08-26, commit `88a95ad`.
 
 ## Objective
 
@@ -33,8 +33,8 @@ machine-readable launcher state; keep the order and vocabulary exact.
 P2A|complete
 P2B|complete
 P3|complete
-P4|active
-P5|queued
+P4|complete
+P5|active
 P6|queued
 P7|queued
 P8|queued
@@ -3862,7 +3862,7 @@ from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
 
 ### P4 - Finish Absolute L1
 
-Status: active.
+Status: complete.
 
 - Add `internal/adapter/clock` and `internal/adapter/server`.
 - Cover all eight declared seams with executable swap tests.
@@ -4583,9 +4583,82 @@ complete classified populations but remain formally UNMEASURABLE because this
 move did not authorize schema-2 evidence. P4 remains active for the combined
 manual-evidence checkpoint; P5-P8 remain queued.
 
+Move 14 completes the combined schema-2 manual-evidence checkpoint from clean
+continuity commit `88a95ad6effe7c2198d9505963dc19022bcabc10`, whose exact
+parent is `4f1f45f3f758f2f09dd7d20967efe8ef74a0c613`. The measured
+commit tree is `120d8db0b83a7724b0026f7c18a77a706e9f1cda`; the clean
+status SHA-256 is
+`6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`;
+the inventory SHA-256 remains
+`4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d`.
+Every helper, record, report, cache, and the evidence document remained outside
+the worktree.
+
+Fresh Go-structure review confirms 57 production dependency structs and 74
+named fields for Q1.6. All 57 receipt subjects have a default double and
+argument recorder for every field and whole-struct delivery; the 245 exact
+focused contracts run and pass. The fresh struct inventory, review record, and
+contract manifest have SHA-256 values
+`38ff8cb2ad78f9ebf41fcfc5aeba2f9c5ddcf6a7dcf467f14f5fc1886a6345da`,
+`2dff55671c9b545a28de2e7ff7bcb614eb3064d01b2436ce58a20ce9a875f45b`,
+and `6e045b462101ae8feab21ee6d6e117cb308fdaaec7a6615e70de215588914955`.
+The Q1.6 receipt SHA-256 is
+`85db15d942b850f99baa518428043533ceee7b94d911b2de94b6e45a5f3f0ad7`.
+
+Fresh executable-flow review keeps Q1.7 at 17 production operations and
+enumerates 42 distinct included failure branches. Every branch has exact
+failure content plus continuation or an exact ordered partial result, with no
+exit-only assertion. All 34 exact named contracts run and pass. The
+classification and manifest retain SHA-256 values
+`01cb1abc6293f780fd0caffd6a37da7398ea6d49e9b6b7589ae15ff23d83b9eb`
+and `0772d019160fe45a8eeefce5fcadba7821fc18da896374d19cb2b48a1dbb05e3`.
+The Q1.7 receipt SHA-256 is
+`e94221777b1f8ea0300cdc286fbb7086440d1038b5b9e9da0f7d845d18845e2d`.
+
+Fresh AST enumeration corrects the inherited Q1.9 total: current HEAD has 183,
+not 169, syntactic test `range` sites. The 14 additional sites came from later
+Q1.7 tests. The complete current classification contains 168
+assertion-required ranges and 15 fixture-construction, delivery, or state-copy
+support exclusions; all required ranges have executable empty-population
+failures. The 69 exact named guard contracts run and pass, and the complete
+34-contract Q1.7 run covers all later sites. The AST inventory, complete
+classification, required-population record, and named-guard manifest have
+SHA-256 values
+`417d9add0e20ae9791a5d5a106ccb5dc1accdccacc9d99355092b25a2cf10787`,
+`8326a5ef3037f9cdd72e16a470ead8c2d4e4de96e960215af8002dce5ccc5c26`,
+`107d5953139a2959a0777047183893e894ff5743480979c04e2cb6e9bd5d08b7`,
+and `bfd7210785bc672192575e372b098ebb1cbf226b5793d0ac8c15065be0e6295b`.
+The Q1.9 receipt SHA-256 is
+`6d4bf0c4429fa7a731078b84bc850d401a1c636f4cf72bb8d110dfe4700d9616`.
+
+The external schema-2 document contains only the three authorized criterion
+receipts and has SHA-256
+`c97c0336998508fe410fc3f56b65cc41762281850ba5822d53c623dc74be34c0`.
+The clean no-evidence, focused manual-evidence, and full authoritative
+scorecards have SHA-256 values
+`0d038c41c160c8851b405e32f69bb9dcf03729749fca5f423ef18435b2cc58e2`,
+`63ede0de00d52d950f10845ee8d6e16c1e948e73c8dd183c368ef0e87cc4c729`,
+and `52490a43d26c5b6c1e6031460352a9fbc6de31bba52128301d3d3e1f31d86bc6`.
+The focused audit exits 0. The full audit exits 1 for the nine documented
+P5-P8 findings, never 2, and records all nine L1 rows PASS, L0 8 of 8, six
+improved ratchets, two held, zero regressed, zero non-comparable, and zero
+dirty paths. Every non-manual criterion object is identical to the no-evidence
+audit.
+
+API/CLI and CLI-surface compatibility, fresh entry/subprocess contracts,
+pinned golangci-lint 2.12.2, complete tests across 27 packages, race, vet,
+launcher and Make contracts, all four host acceptance flows, exact empty-HOME
+count-2, the standalone 15-control audit meta-suite, and complete preflight all
+pass. Two launcher invocations missed the known signal-fixture partial-log
+timing assertion, once under concurrent heavy gates and once in the final
+source-archive nested generation; unchanged isolated reruns and complete
+preflight pass all 62 controls. Ordinary and ignored status are empty after the
+gate. P4 is complete; P5 is active for the first bounded `cli-context`
+mutation-harness move, while P6-P8 remain queued.
+
 ### P5 - Build L2 Mutation Evidence
 
-Status: queued.
+Status: active.
 
 Implement the eight named harnesses from `.quality/inventory`, one subject per
 measured move and no more than three moves per checkpoint. Each harness must

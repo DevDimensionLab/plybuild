@@ -1,13 +1,13 @@
 # Agent Session: Record P4 Combined Manual Evidence
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T220403+0200-record-p4-combined-manual-evidence`
 Created: `2026-08-26T22:04:03+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `dd2d52e4513e02a362c1b51ebd895913cbcb8b5d953499015b83761bae8e245f`
 Previous: [2026-08-26T213324+0200-repair-q17-delete-demo-discovery.md](2026-08-26T213324+0200-repair-q17-delete-demo-discovery.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T224925+0200-build-p5-cli-context-harness.md](2026-08-26T224925+0200-build-p5-cli-context-harness.md)
+Outcome: P4 complete: external schema-2 Q1.6/Q1.7/Q1.9 evidence is valid, focused audit exits 0, full audit records all nine L1 rows PASS with zero dirty paths, and every P4 gate passes.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

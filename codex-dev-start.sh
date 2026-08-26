@@ -1055,162 +1055,138 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-26T220403+0200-record-p4-combined-manual-evidence
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T220403+0200-record-p4-combined-manual-evidence.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T213324+0200-repair-q17-delete-demo-discovery.md
+#|SESSION_ID=2026-08-26T224925+0200-build-p5-cli-context-harness
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T224925+0200-build-p5-cli-context-harness.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T220403+0200-record-p4-combined-manual-evidence.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Finish P4 only if exhaustive current-project review still truthfully supports
-#|the three remaining manual L1 rows. Record exact non-empty schema-2 receipts
-#|for Q1.6 default dependency doubles, Q1.7 partial-failure content assertions,
-#|and Q1.9 executable empty-population assertions, then prove them with clean
-#|focused and full authoritative audits. Do not infer PASS from a sample or
-#|manufacture evidence.
+#|Begin P5 with exactly one mutation-evidence subject: `cli-context`. Create its
+#|executable mutation harness and falsifiability meta-test, run at least eight
+#|meaningful mutations against disposable external copies, and finish the move
+#|only if every declared mutation is killed with zero survived and zero unusable.
+#|Do not treat compilation failures, empty test selections, or a sampled subset
+#|as mutation evidence.
 #|
 #|# Authorized Roadmap
 #|
-#|P3 is complete. P4 is active only for combined Q1.6/Q1.7/Q1.9 manual evidence;
-#|P5-P8 remain queued in the machine-readable block in
-#|`docs/plan/quality-upgrade.md`. Q1.6 is independently supported by its
-#|complete 57-struct, 74-field review, Q1.7 by its complete 17-operation
-#|executable-flow classification, and Q1.9 by its complete 169-range
-#|classification. The launcher must remain NEXT until P4 and P5-P8 finish.
+#|P2A, P2B, P3, and P4 are complete. P5 is active; P6-P8 remain queued in the
+#|machine-readable block in `docs/plan/quality-upgrade.md`. The first
+#|`.quality/inventory` subject is `cli-context`, with production roots `cmd` and
+#|`pkg/context` and declared harness `scripts/mutate-cli-context`. This session
+#|may create only that harness and `scripts/test-mutate-cli-context`, plus the
+#|smallest focused in-subject test or private seam repair if an actually executed
+#|mutation exposes a classified gap. P5 remains active after this first subject.
 #|
-#|This evidence-only mission authorizes exhaustive read-only source and contract
-#|review; external temporary scripts, reports, and one commit-bound schema-2
-#|manual-evidence document; exact Q1.6/Q1.7/Q1.9 receipt validation; clean
-#|focused and full audits using that explicit external document; and the normal
-#|single continuity-only commit. It does not authorize production or test
-#|changes, a checked-in or worktree-local evidence file, another seam, exported
-#|API changes, validator or scanner changes, `.quality/inventory` or
-#|baseline changes, executable P5 harnesses, T1-T10 changes, acceptance changes,
-#|P6-P8 work, or a PASS claim that a complete reviewed population does not
-#|support.
+#|This mission does not authorize another mutation subject, `.quality/inventory`
+#|changes, audit/parser/scanner/baseline changes, acceptance expansion, P6-P8,
+#|Go or dependency upgrades, exported API or CLI changes, packaging,
+#|publication, or distribution. Keep every mutant checkout, cache, report, and
+#|generated artifact outside the worktree. Never create
+#|`.agent-task/current.md` or `.quality/manual-evidence.json`.
 #|
 #|# Measurements At Start
 #|
-#|Focused Q1.7 implementation commit
-#|`4f1f45f3f758f2f09dd7d20967efe8ef74a0c613` has exact tree
-#|`7326302c171604dc315e2f79cd6871c55935aa60`. It changes only
-#|`pkg/spring/io.go` and
-#|`pkg/spring/delete_demo_files_partial_failure_test.go`. Public
-#|`DeleteDemoFiles(string, config.ProjectConfiguration)` delegates to a
-#|private helper accepting only the discovery function and passes
-#|`file.FindFirst` in production. One exact test injects the discovery
-#|error, proves the `.kt` and `src/test/kotlin` request, asserts
-#|`Unable to find testfile, fileSuffix=.kt`, and proves continuation to
-#|delete `HELP.md`, `mvnw`, and `mvnw.cmd`.
+#|The P4 evidence checkpoint is clean continuity commit
+#|`88a95ad6effe7c2198d9505963dc19022bcabc10`, exact parent
+#|`4f1f45f3f758f2f09dd7d20967efe8ef74a0c613`, and tree
+#|`120d8db0b83a7724b0026f7c18a77a706e9f1cda`. The clean status SHA-256 is
+#|`6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`.
+#|After launch, the new continuity HEAD must have exact parent `88a95ad`.
 #|
-#|The complete Q1.7 population remains 17 operations and every included path now
-#|has exact failure content plus continuation or exact ordered partial-result
-#|coverage. The final classification SHA-256 is
-#|`01cb1abc6293f780fd0caffd6a37da7398ea6d49e9b6b7589ae15ff23d83b9eb`;
-#|the exact 34-contract population manifest SHA-256 is
-#|`0772d019160fe45a8eeefce5fcadba7821fc18da896374d19cb2b48a1dbb05e3`.
-#|Q1.6's complete population remains 57 dependency structs and 74 fields.
-#|Q1.9's complete population remains 169 syntactic test ranges.
+#|The external schema-2 document has SHA-256
+#|`c97c0336998508fe410fc3f56b65cc41762281850ba5822d53c623dc74be34c0`.
+#|Its Q1.6, Q1.7, and Q1.9 receipt SHA-256 values are respectively
+#|`85db15d942b850f99baa518428043533ceee7b94d911b2de94b6e45a5f3f0ad7`,
+#|`e94221777b1f8ea0300cdc286fbb7086440d1038b5b9e9da0f7d845d18845e2d`,
+#|and `6d4bf0c4429fa7a731078b84bc850d401a1c636f4cf72bb8d110dfe4700d9616`.
+#|The focused audit exits 0 with scorecard SHA-256
+#|`63ede0de00d52d950f10845ee8d6e16c1e948e73c8dd183c368ef0e87cc4c729`.
+#|The full audit exits 1, never 2, with scorecard SHA-256
+#|`52490a43d26c5b6c1e6031460352a9fbc6de31bba52128301d3d3e1f31d86bc6`:
+#|L0 is 8/8, all nine L1 rows PASS, six ratchets improve, two hold, none
+#|regress, and dirty paths are empty. Its nine remaining non-passing rows are
+#|P5-P8 debt.
 #|
-#|All focused Q1.7 contracts, complete uncached tests, race, vet, API/CLI and
-#|subprocess compatibility, pinned lint, launcher and Make contracts, complete
-#|preflight, all four host acceptance flows, the 15-control audit meta-suite, and
-#|empty-HOME count-2 pass. The no-evidence audit scorecard SHA-256 is
-#|`ce4190dc03b7bc37aa285569f737b2a59a38c15c5e99db125e340c64e6301b5e`.
-#|It records 464 tests across all 27 packages, L0 8/8, final wrapper L1 six PASS
-#|and Q1.6/Q1.7/Q1.9 UNMEASURABLE, six improved ratchets, two held, zero
-#|regressed, zero non-comparable, and zero dirty paths. It exits 1 for 13
-#|documented non-passing criteria, never 2. No evidence document or receipt was
-#|created in the repair session.
+#|Fresh P4 gate results pass API/CLI and subprocess compatibility, pinned lint,
+#|all 27 package tests, race, vet, launcher and Make contracts, all four host
+#|acceptance flows, empty-HOME count-2, complete preflight, and the 15-control
+#|audit meta-suite. Current Q1.9 structure contains 183 total test ranges: 168
+#|assertion-required and 15 fixture/support exclusions.
 #|
 #|# Role And Boundaries
 #|
-#|Work autonomously in this worktree on `codex/upgrade-quality`. Confirm
-#|the new continuity HEAD and exact ancestry before measuring; its exact parent
-#|must be `4f1f45f`. This checkpoint must not create a product
-#|implementation commit. The receipts bind the exact clean current continuity
-#|HEAD and are supplied from outside the repository. After measurement, make
-#|only the normal `docs: prepare next agent session` continuity commit.
+#|Work autonomously in this worktree on `codex/upgrade-quality`. Confirm the new
+#|continuity HEAD and exact ancestry before editing. Preserve current behavior,
+#|public Go API, Cobra surface, output, ordering, error text, exit status, and
+#|compatibility. Inspect all relevant `cmd` and `pkg/context` production paths
+#|and their complete test populations before selecting mutations.
 #|
-#|Keep the evidence document and every generated report or helper outside the
-#|worktree; never create `.quality/manual-evidence.json` or
-#|`.agent-task/current.md`. The measured tree counts tracked, untracked,
-#|and ignored bytes. Confirm ordinary and ignored status before every
-#|authoritative audit. Set `API_COMPAT_REPORT_OUT` and
-#|`CLI_COMPAT_REPORT_OUT` to external paths whenever running
-#|compatibility.
+#|The production harness must be a regular executable script and the meta-test
+#|must prove its contract can fail. Each declared mutation must be deterministic,
+#|unique, meaningful, applied exactly once inside the authorized production
+#|roots, and run in a fresh disposable copy. Require a clean unmodified control,
+#|a non-empty exact selected test population for every mutant, and evidence that
+#|the selected tests actually run. Do not count a mutation as killed merely
+#|because source selection, setup, compilation, tooling, or the harness failed.
 #|
-#|Use schema version 2 and include only Q1.6, Q1.7, and Q1.9 receipts. Derive the
-#|exact current commit, commit tree, clean status digest, inventory object, and
-#|complete instrument object from a clean no-evidence audit of current HEAD.
-#|Compute every `evidence_sha256` from canonical UTF-8 JSON with sorted
-#|keys, no whitespace, and `ensure_ascii=False`. Pass the evidence
-#|explicitly with `--manual-evidence`.
+#|Implement and name the roadmap's T1-T10 methodology controls. At minimum they
+#|must fail closed on an empty or duplicate mutation manifest, out-of-scope or
+#|zero/multiple source replacements, empty test selection, a broken clean
+#|control, a mutant that was not compiled and exercised, falsified result
+#|accounting, a surviving mutation without classification, repository-local
+#|artifacts, and non-deterministic declared/killed totals. The final report must
+#|state exact `declared`, `killed`, `survived`, and `unusable` counts and identify
+#|every mutation and its killing test population.
 #|
-#|For Q1.6, enumerate the complete in-scope dependency-struct population and
-#|prove every dependency has a safe default and argument recorder and each
-#|struct is passed whole rather than reconstructed field by field. For Q1.7,
-#|enumerate all production operations that report collection-item failures and
-#|continue or return a populated partial aggregate with an error, and prove
-#|every included failure has exact content and continuation or ordered partial
-#|result. For Q1.9, enumerate the complete in-scope test collection-iteration
-#|population and prove every required collection has an executable assertion
-#|that fails when empty. State exact inclusion and exclusion rules before
-#|counting and run the named contracts behind every claim.
-#|
-#|If any denominator is empty or any item fails its criterion, do not emit a
-#|false receipt. Record the exact blocker, keep the affected row UNMEASURABLE,
-#|leave P4 active, and prepare the smallest truthful successor task. Do not push,
-#|merge, publish, distribute, remove the worktree, stash inherited changes,
-#|revert user work, launch a successor, or run destructive Git commands.
+#|If a genuine survivor appears, classify it as a reachability, observability,
+#|or controllability gap before changing tests or adding a private seam. Make
+#|only the smallest `cmd` or `pkg/context` repair needed to kill that mutation,
+#|then rerun the complete harness. Do not manufacture easy mutants around known
+#|assertions or weaken a mutation until it passes.
 #|
 #|# Required Reading
 #|
-#|Before measuring, confirm branch, HEAD, clean and ignored status, reciprocal
+#|Before editing, confirm branch, HEAD, clean and ignored status, reciprocal
 #|archive links, launcher `--check`, exact ancestry, and the authorized
-#|checkpoint block. Read the rolling handover, this archive, the complete P4
-#|entry and gate, both design documents, `.quality/README.md`,
-#|`.quality/inventory`, the complete audit wrapper, complete schema-2
-#|parser and manual-evidence negative meta-test, baseline manual example and
-#|reproduction README, T15 repair, all 57 dependency structs and 74 fields with
-#|their default/recording contracts, all 17 Q1.7 production operations and their
-#|exact 34-contract population, and all 169 Q1.9 ranges with their executable
-#|guards and exclusions. Read API/CLI, launcher, Make, and acceptance contracts
-#|needed by the final gate. Do not rely on names or text search alone where Go
-#|structure or runtime execution establishes the population.
+#|checkpoint block. Read the rolling handover, this archive, the complete P5
+#|entry and checkpoint gate, both design documents, `.quality/README.md`,
+#|`.quality/inventory`, the complete mutation-harness discovery and Q2.1-Q2.4
+#|logic in the vendored audit and structured parser, the six existing
+#|non-executable P3/P4 seam drivers and their meta-tests, Make/preflight script
+#|population contracts, and all production/tests under `cmd` and `pkg/context`
+#|that establish the proposed mutant population. Do not infer reachability or a
+#|kill from names, grep results, compilation failure, or exit status alone.
 #|
 #|# Three Moves
 #|
-#|1. Run a clean no-evidence audit to capture exact current repository, tree,
-#|   status, inventory, instrument, denominator, and automated criterion
-#|   identities. Regenerate explicit exhaustive scope and records for Q1.6,
-#|   Q1.7, and Q1.9; inspect every subject in executable context; run exact
-#|   non-empty focused contract populations; and record counts, exclusions, and
-#|   hashes outside the worktree.
-#|2. Only if all three complete populations satisfy their required truth, create
-#|   one external schema-2 document bound to clean current HEAD. Validate its
-#|   canonical receipt digests, run focused Q1.6/Q1.7/Q1.9 audit, and run the
-#|   full authoritative audit with the same explicit document. Require all three
-#|   rows PASS, all automated results held, audit exit never 2, and zero dirty
-#|   paths. Record document, receipt, record, and scorecard SHA-256 identities.
-#|3. Run API/CLI and subprocess compatibility with external report paths; pinned
-#|   lint; launcher and Make contracts; complete tests, race, and vet; complete
-#|   preflight; all four host acceptance flows; the 15-control audit meta-suite;
-#|   and empty-HOME count-2 in proportion to the evidence checkpoint. Mark P4
-#|   complete and hand off the first bounded P5 move only if all nine L1 rows and
-#|   every P4 exit are valid and non-empty.
+#|1. Define an explicit `cli-context` mutation scope and non-empty manifest of at
+#|   least eight behaviorally meaningful mutations. Map each mutation to exact
+#|   production syntax and the non-empty named tests expected to kill it. Record
+#|   exclusions and reject any mutation that cannot be applied exactly once.
+#|2. Implement `scripts/mutate-cli-context` and
+#|   `scripts/test-mutate-cli-context`. Run the unmodified control and every
+#|   mutant in isolated external copies; prove all T1-T10 negative controls; fix
+#|   only a classified in-subject gap if required. Require exact
+#|   `declared == killed`, `survived == 0`, and `unusable == 0`.
+#|3. Make one focused implementation commit, then measure it cleanly with the
+#|   focused harness/meta-test, automated Q2.1-Q2.4 audit view, API/CLI and
+#|   subprocess compatibility, pinned lint, complete tests/race/vet, launcher
+#|   and Make contracts, complete preflight, host acceptance, audit meta-suite,
+#|   and empty-HOME count-2. Record the result and prepare the next bounded P5
+#|   subject with one continuity-only commit.
 #|
 #|# Automatic Handoff
 #|
-#|Before this session ends, finish the coherent combined evidence checkpoint or
-#|record an exact resumable blocker. Rewrite the rolling handover, record the P4
-#|result in the roadmap, answer this archive, create exactly one reciprocally
-#|linked NEXT archive for the next coherent authorized roadmap move, replace
-#|only the launcher's mutable regions, run launcher and handoff contracts, and
-#|make the single continuity-only `docs: prepare next agent session`
-#|commit. If P4 completes, the next archive must begin the first narrowly bounded
-#|P5 mutation-evidence subject; otherwise it must name the exact P4 blocker. Do
-#|not launch a real successor, push, merge, publish, distribute, stash, revert,
-#|or remove the worktree. COMPLETE remains invalid while P5-P8 are unfinished.
+#|Before this session ends, finish the coherent `cli-context` mutation-harness
+#|move or record an exact resumable blocker. Rewrite the rolling handover, record
+#|the result in the roadmap, answer this archive, create exactly one reciprocally
+#|linked NEXT archive, replace only the launcher's mutable regions, run launcher
+#|and handoff contracts, and make the normal continuity-only
+#|`docs: prepare next agent session` commit after the focused implementation
+#|commit. Do not launch a real successor, push, merge, publish, distribute,
+#|stash, revert, or remove the worktree. COMPLETE remains invalid while P5-P8
+#|are unfinished.
 # CODEX_MUTABLE_PROMPT_END
