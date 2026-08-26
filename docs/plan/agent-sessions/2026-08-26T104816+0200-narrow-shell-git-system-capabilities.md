@@ -1,13 +1,16 @@
 # Agent Session: Narrow Shell Git System Capabilities
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T104816+0200-narrow-shell-git-system-capabilities`
 Created: `2026-08-26T10:48:16+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `578798bfc15a6925974fa4d1aecf1fe9285765da616de0dd3d6bf6808598ee21`
 Previous: [2026-08-26T101755+0200-narrow-shell-run-system-capability.md](2026-08-26T101755+0200-narrow-shell-run-system-capability.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T111924+0200-narrow-profile-editor-system-capability.md](2026-08-26T111924+0200-narrow-profile-editor-system-capability.md)
+Outcome: Product commit `5b678ab` gives the four public shell Git wrappers one
+exact runner-only system process dependency. All focused and complete gates
+pass; exact Q1.3 improves to 10/32 and the clean audit exits 1 for the same 15
+findings with zero comparable regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
