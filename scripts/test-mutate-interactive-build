@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+driver="$repo_root/scripts/mutate-interactive-build"
+tmp_base=${TMPDIR:-/tmp}
+tmp_base=${tmp_base%/}
+work_root=$(mktemp -d "$tmp_base/ply-test-interactive-build-seam.XXXXXX")
+trap 'rm -rf "$work_root"' EXIT
+mkdir -p "$work_root/cache" "$work_root/tmp"
+
+fail() {
+	printf 'interactive-build seam driver meta-test: %s\n' "$*" >&2
+	exit 1
+}
+
+[[ -f "$driver" && ! -L "$driver" && ! -x "$driver" ]] ||
+	fail 'driver must be a non-executable regular file until the P5 mutation move'
+[[ $(grep -Fxc '# 8. interactive server binds only to loopback' "$driver") -eq 1 ]] ||
+	fail 'loopback-server mutation label is missing or duplicated'
+if grep -Eq '^mutate2? ' "$driver"; then
+	fail 'P4 seam driver unexpectedly declares a mutation harness operation'
+fi
+
+GOCACHE="$work_root/cache" GOTMPDIR="$work_root/tmp" \
+	bash "$driver" >"$work_root/test.json"
+grep -F '"Action":"pass"' "$work_root/test.json" >/dev/null ||
+	fail 'JSON test execution recorded no successful action'
+if grep -F '"Action":"fail"' "$work_root/test.json" >/dev/null; then
+	fail 'JSON test execution recorded a failure action'
+fi
+
+tests=(
+	TestInteractiveBuildPreservesRootOptionsEndpointCallbackAndValidationOrder
+	TestInteractiveUpgradePreservesProjectGuardsEndpointAndCallbackCaller
+	TestInteractiveWebserviceCallersPreserveEndpointServerBrowserAndCallbackComposition
+	TestInteractiveWebServerBindsOnlyToExactIPv4Loopback
+	TestStartWebServerSelectsExactProductionDependenciesAndPublicComposition
+	TestStartWebServerRegistersExactHandlersBeforeOneListenAndLogsOnlyNonNilError
+	TestStopWebServerSelectsExactProductionDependenciesAndPublicComposition
+	TestStopWebServerUsesExactBackgroundFiveSecondContextOnceDefersCancelAndIgnoresError
+	TestRecordedWebServerDependenciesRejectEmptyPopulations
+	TestOpenBrowserSelectsExactSystemRunnerWithoutProcessStandardOutputAndRuntimePlatform
+	TestBrowserLauncherPreservesEveryPlatformRequestURLStartAttemptAndError
+	TestDependenciesDefaultToSafeNoServerOperation
+	TestListenAndServePassesExactServerOnceAndReturnsExactError
+	TestShutdownPassesExactServerAndContextOnceAndReturnsExactError
+	TestSystemSelectsOneCompleteDirectServerOperationDependency
+	TestRecordedServerOperationsRejectEmptyPopulations
+	TestGetGenerateRendersExactStatusAndBodyBytesAndRestoresGlobals
+	TestGetUpgradeRendersExactStatusAndBodyBytesAndRestoresGlobals
+	TestPostGeneratePreservesFormMutationCallbackAndExactResponseAndRestoresGlobals
+	TestPostUpgradeDeliversOneCallbackAndExactResponseAndRestoresGlobals
+	TestRecordedWebserviceAPICallbacksRejectEmptyPopulation
+)
+[[ ${#tests[@]} -gt 0 ]] || fail 'asserted interactive-build test population is empty'
+for test_name in "${tests[@]}"; do
+	grep -F '"Action":"run"' "$work_root/test.json" |
+		grep -F '"Test":"'"$test_name"'"' >/dev/null ||
+		fail "interactive-build contract did not run: $test_name"
+done
+
+printf 'test-mutate-interactive-build: PASS (%s recording contracts)\n' "${#tests[@]}"

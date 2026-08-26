@@ -14,7 +14,7 @@ import (
 
 const port = 7999
 
-var server = &http.Server{Addr: fmt.Sprintf(":%d", port)}
+var server = &http.Server{Addr: fmt.Sprintf("127.0.0.1:%d", port)}
 
 type startWebServerDependencies struct {
 	ServerOperations serveradapter.Dependencies

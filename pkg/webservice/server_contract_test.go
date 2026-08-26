@@ -206,12 +206,24 @@ func (recording *recordingWebServerTimeout) assertedRequests() ([]context.Contex
 	return recording.parents, recording.durations, nil
 }
 
+func TestInteractiveWebServerBindsOnlyToExactIPv4Loopback(t *testing.T) {
+	if port != 7999 {
+		t.Fatalf("interactive web server port is %d, want exactly 7999", port)
+	}
+	if server == nil || server.Addr != "127.0.0.1:7999" {
+		t.Fatalf("interactive package-level server is %#v, want exact IPv4 loopback address 127.0.0.1:7999", server)
+	}
+	if selectWebServer() != server {
+		t.Fatalf("interactive server selector returned %p, want exact package-level server %p", selectWebServer(), server)
+	}
+}
+
 func TestStartWebServerSelectsExactProductionDependenciesAndPublicComposition(t *testing.T) {
 	dependencies := systemStartWebServerDependencies()
 	systemOperations := serveradapter.System()
 
-	if server == nil || server.Addr != ":7999" {
-		t.Fatalf("StartWebServer package-level server is %#v, want exact :7999 address", server)
+	if server == nil || server.Addr != "127.0.0.1:7999" {
+		t.Fatalf("StartWebServer package-level server is %#v, want exact 127.0.0.1:7999 address", server)
 	}
 	assertSameFunction(t, dependencies.Server, serveradapter.Selector(selectWebServer), "StartWebServer server selector")
 	if dependencies.Server() != server {
@@ -345,8 +357,8 @@ func TestStopWebServerSelectsExactProductionDependenciesAndPublicComposition(t *
 	dependencies := systemStopWebServerDependencies()
 	systemOperations := serveradapter.System()
 
-	if server == nil || server.Addr != ":7999" {
-		t.Fatalf("StopWebServer package-level server is %#v, want exact :7999 address", server)
+	if server == nil || server.Addr != "127.0.0.1:7999" {
+		t.Fatalf("StopWebServer package-level server is %#v, want exact 127.0.0.1:7999 address", server)
 	}
 	assertSameFunction(t, dependencies.Server, serveradapter.Selector(selectWebServer), "StopWebServer server selector")
 	if dependencies.Server() != server {
