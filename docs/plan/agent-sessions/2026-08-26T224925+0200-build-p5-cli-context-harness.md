@@ -1,13 +1,13 @@
 # Agent Session: Build P5 CLI Context Harness
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T224925+0200-build-p5-cli-context-harness`
 Created: `2026-08-26T22:49:25+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `531f519e3df4d31d9d7b8683fc3ba26eace358c11d07e27f0ddc885fac0a3125`
 Previous: [2026-08-26T220403+0200-record-p4-combined-manual-evidence.md](2026-08-26T220403+0200-record-p4-combined-manual-evidence.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T233325+0200-build-p5-config-cloud-harness.md](2026-08-26T233325+0200-build-p5-config-cloud-harness.md)
+Outcome: completed `cli-context` at implementation `1dbc163` with T1-T10 and exact totals `declared=10`, `killed=10`, `survived=0`, `unusable=0`; P5 remains active
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

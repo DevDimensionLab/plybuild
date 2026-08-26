@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `88a95ad`.
+Last measured checkpoint: 2026-08-26, commit `1dbc163`.
 
 ## Objective
 
@@ -4659,6 +4659,60 @@ mutation-harness move, while P6-P8 remain queued.
 ### P5 - Build L2 Mutation Evidence
 
 Status: active.
+
+P5.1 clean checkpoint (first subject `cli-context`, implementation `1dbc163`):
+
+- Added the regular executable `scripts/mutate-cli-context` and its executable
+  `scripts/test-mutate-cli-context` falsifiability meta-test. The inventory is
+  unchanged; exact executable subject coverage improves from 0 of 8 to 1 of 8.
+- The harness declares ten unique, deterministic production mutations across
+  `cmd` and `pkg/context`: CLI exit status, interactive build endpoint,
+  interactive upgrade endpoint, recursive discovery branch, flattened-POM
+  exclusion, target-directory exclusion, stealth selection, per-project
+  dry-run gate, root-project selection, and configured Maven-repository
+  selection. Every search syntax occurs exactly once.
+- One clean external control ran each exact selection. Every mutant used a
+  fresh external Git archive, cache, HOME, config, and temp root; compiled
+  separately; and ran its non-empty exact named test population under
+  `go test -json`. A mutation counted as killed only when every selected test
+  emitted a run and terminal action and at least one selected test emitted a
+  failure. Final totals are `declared=10`, `killed=10`, `survived=0`, and
+  `unusable=0`; no production or test repair was required.
+- T1-T10 fail closed on empty and duplicate manifests, unauthorized paths,
+  zero and multiple replacements, empty/inexact test selection, a broken
+  clean control, an uncompiled or unexercised mutant, falsified accounting, an
+  unclassified survivor, repository-local artifacts, and non-deterministic
+  manifest/totals. The production run report SHA-256 is
+  `53d1489a6db15f18cd2acf38ff49ab3fb0db545a6c8e63639c90311f9bf53d5c`;
+  the T1-T10 meta-log SHA-256 is
+  `f1d801fccc97af714d483f5a3c84202fe9868fa19b17038ada0d56dbd6f3e67e`.
+- The no-evidence Q2.1-Q2.4 structured view records the exact Q2.1 numerator
+  1 of 8, Q2.2/Q2.3 debt only in the remaining P3/P4 seam drivers, and Q2.4
+  `UNMEASURABLE` until supplied the run receipt; its scorecard SHA-256 is
+  `7500813f38b080a06494b62d70a3def51ddd35bf75d6f804e382ddb2133c4545`.
+  The current external schema-2 document adds only the truthful `cli-context`
+  Q2.4 receipt to refreshed Q1.6/Q1.7/Q1.9 receipts. Its SHA-256 is
+  `0a6659c3b5a5234ca19134b4e2305de43a094fcb02032f0c6e106f5bbecaabbd`;
+  Q2.4 evidence-object SHA-256 is
+  `70e2101ca2719d07022dd42e8db56b9ffc76c444473460907a216b9f6f4b124f`.
+  The focused four-row audit exits 0 with scorecard SHA-256
+  `c693cc912f8c936c4438661aae48102ec09d05fe1ec4a78ad52f7c3d40abf7b8`.
+- The full authoritative audit exits 1, never 2, with scorecard SHA-256
+  `20528637cc01f651f6411484575bf3cec7f1a1ac6cccc9f1b30cdf9b989838ac`:
+  L0 is 8 of 8, L1 is 9 of 9, Q2.1 improves from 0 of 8 to 1 of 8,
+  Q2.4 passes, seven ratchets improve, one holds, none regress, dirty paths
+  are empty, and eight P5-P8 rows remain non-passing.
+- API/CLI and subprocess compatibility, pinned golangci-lint 2.12.2, complete
+  tests across all 27 packages, race, vet, launcher and Make contracts, all
+  four host acceptance flows, exact empty-HOME count-2, the standalone
+  15-control audit meta-suite, and complete preflight all pass. API and CLI
+  report SHA-256 values remain
+  `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+  and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+
+P5 remains active. The next bounded move converts only the existing
+`config-cloud` P3 seam driver and its meta-test into the second real mutation
+harness; it must not start a third subject.
 
 Implement the eight named harnesses from `.quality/inventory`, one subject per
 measured move and no more than three moves per checkpoint. Each harness must
