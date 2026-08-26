@@ -1055,119 +1055,127 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-26T061848+0200-resume-p354-audit-harness-repair
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T061848+0200-resume-p354-audit-harness-repair.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T232218+0200-resume-p354-audit-harness-blocker.md
+#|SESSION_ID=2026-08-26T072802+0200-migrate-plugin-diagrams-export
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T072802+0200-migrate-plugin-diagrams-export.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T061848+0200-resume-p354-audit-harness-repair.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Repair only the inherited P3.54 T15 baseline-reproduction audit apparatus, make
-#|the complete checkpoint truthful and green, and then resume the authorized
-#|roadmap. Keep the focused Unzip archive-close product implementation at
-#|`3bd07e9` exactly as committed. Both predecessor `70bee0e` and implementation
-#|`3bd07e9` fail T15 identically after passing T1-T14, so this is an apparatus
-#|repair, not permission to reshape product behavior or its measurements.
+#|Complete one focused P3 production-effect move: route only the ignored
+#|`structurizr-cli export` process request in `cmd/plugin_diagrams.go` through the
+#|existing `internal/adapter/process` boundary. Preserve its exact command name,
+#|ordered arguments, empty working directory and streams, synchronous execution,
+#|one attempt, ignored error, and continued file discovery. Preserve the later
+#|Graphviz `dot` and macOS `open` requests, Cobra behavior, every completed move,
+#|and zero comparable ratchet regressions.
 #|
 #|# Authorized Roadmap
 #|
-#|P3 remains active with moves 1-53 complete and move 54 implemented but awaiting
-#|a truthful complete checkpoint gate. P4-P8 remain queued in
-#|`docs/plan/quality-upgrade.md`, and the launcher remains NEXT. This mission adds
-#|only the audit-apparatus repair needed to unblock that checkpoint; it does not
-#|authorize another production-effect move before the gate passes.
+#|P3 remains active, P4-P8 remain queued in the machine-readable block in
+#|`docs/plan/quality-upgrade.md`, and the launcher must remain NEXT until all
+#|authorized checkpoints finish. P3.54 product commit `3bd07e9` and focused
+#|audit-apparatus commit `ce736a2` passed their truthful complete checkpoint.
 #|
-#|## Explicit User Authorization
+#|This mission authorizes only private plugin-diagrams export recording
+#|contracts, the private dependency composition required to select
+#|`process.System()` for production, and replacement of this one request:
 #|
-#|On 2026-08-26 the user explicitly accepted the recommended boundary. Begin with
-#|the smallest repair in T15 orchestration in
-#|`.quality/tools/test-quality-audit.sh`. Only if evidence proves that
-#|orchestration alone cannot produce a truthful baseline reproduction, this
-#|authorization also permits changes to the directly related baseline
-#|reproduction recipe, metadata, apparatus-owned fixtures, and structured parser.
-#|Document why each expansion is necessary before making it.
+#|```go
+#|_ = structurizr.Run(exec.Command("structurizr-cli", "export", "-w", workspace, "-format", "dot", "-output", tempDirectory))
+#|```
 #|
-#|This authorization supersedes the previous prohibition on those exact
-#|audit-apparatus changes. It does not authorize changing the product
-#|implementation, historical baseline source `5635d50`, stored baseline debt,
-#|instrument identities, `.quality/inventory`, measured-tree truth, or unrelated
-#|audit, scanner, fixture, test, product, launcher, or roadmap behavior.
+#|with the equivalent ignored `process.Execute` request. It does not authorize
+#|the Graphviz `dot` request, macOS `open` request, another plugin-diagrams flow,
+#|`structurizr.Run` or `RunWithOutputToFile`, the process adapter, another
+#|adapter/caller, public API, inventory, scanner, audit apparatus, clock/server,
+#|mutation harnesses, or P4-P8 implementation.
 #|
 #|# Measurements At Start
 #|
-#|Product implementation commit `3bd07e99c3170fd0f1c0dda076252c6eb5833db7`
-#|has 360 tests across 19 of 25 packages. Its authoritative clean full audit is
-#|valid: exit 1 for 15 documented findings, L0 8/8, five improved, two held, zero
-#|regressed, one non-comparable, and zero dirty paths. Q0.6 is 26 guarded sites,
-#|Q1.1 is 6/25, Q1.2 is zero, Q1.3 is 10/32, Q1.4 is 7/8, exact Q2.1 is 0/8,
-#|and Q3.4 is zero phrases.
+#|Checkpoint commit `ce736a2` has the unchanged P3.54 product tree with 360 tests
+#|across 19 of 25 packages. Q0.6 has 26 guarded safe-writer sites, 21 write and 5
+#|copy, zero skipped tests, and zero unsafe direct test writes. Q1.1 is 6/25,
+#|Q1.2 is zero, Q1.3 is 10/32 with clock and server absent, Q1.4 is 7/8, exact
+#|Q2.1 is 0/8, and Q3.4 is zero phrases across 72 Markdown files.
 #|
-#|Fresh paired runs at predecessor `70bee0e` and implementation `3bd07e9` used
-#|the same clone pathname, recreated external environment pathname, environment,
-#|toolchain, and module cache. Both complete audit meta-suites pass T1-T14 and
-#|then fail T15 identically. The old upstream baseline audit returns the expected
-#|exit 1; its following structured parser exits 2 because the exact `5635d50`
-#|checkout contains the authorized inventory overlay plus three ignored outputs
-#|created by old template tests. Normalized output SHA-256 is
-#|`bc83831ae61962b92c3233de04df52f70e3f2a2fdd6d871fb4d0db3f451b733b`.
-#|Retained evidence is below `/private/tmp/ply-p354-gate.B7akzM` while present.
+#|The authoritative clean full audit exits 1 for 15 documented findings, never
+#|2, with L0 8/8, five improved, two held, zero regressed, one non-comparable
+#|ratchet, and zero dirty paths. Its scorecard SHA-256 is
+#|`c7ff3bd2cf32f8615c0fb1329c980bafba9b5e988cf4e785f4b8dc608d3f4243`.
+#|Both complete repaired old/new T15 proofs pass all 15 controls and reproduce
+#|the exact stored debt and instrument identities.
 #|
 #|# Role And Boundaries
 #|
-#|Preserve the exact `5635d50` source, stored debt, instrument identities,
-#|inventory overlay, scanner meaning, and the truth about every path in the tree
-#|being measured. T15 must remain capable of detecting real source, instrument,
-#|inventory, metadata, and dirty-tree drift. Preserve expected audit exit 1 for
-#|documented findings and reserve exit 2 for genuinely broken measurement.
+#|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
+#|implementation commit for this single export-process move and its recording
+#|contracts, then make the normal separate continuity-only commit. Do not push,
+#|merge, publish, distribute, remove the worktree, stash inherited changes,
+#|revert user work, or run destructive Git commands.
 #|
-#|Do not manufacture green evidence through ignored-path exclusions, after-test
-#|cleanup, a wrapper or hook, filesystem watcher, cached result, weakened
-#|identity, altered baseline checkout, baseline debt change, inventory change, or
-#|a parser exception for the three observed outputs. Do not change current
-#|product fixtures merely to accommodate historical `5635d50` behavior. If the
-#|repair cannot satisfy all invariants inside the authorized boundary, stop with
-#|the smallest evidenced additional-scope request.
+#|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve the exact
+#|`structurizr-cli` name and arguments `export`, `-w`, the caller-supplied
+#|workspace, `-format`, `dot`, `-output`, `.structurizr/`. Preserve empty `Dir`,
+#|nil stdin/stdout/stderr, `Start: false`, one synchronous attempt, ignored
+#|process error, and unconditional continuation to `file.FindAll` after that
+#|attempt. A recording test must reject an empty request population.
+#|
+#|Select `process.System()` only in the production composition. Pass the complete
+#|private dependency value without fallback, retry, logging, another process
+#|attempt, error wrapping, environment or working-directory behavior, output
+#|capture, or cleanup. The zero dependency must remain a safe no-op and must not
+#|launch an external tool. Focused tests must launch no real process, touch no
+#|network, and write no repository fixture.
+#|
+#|Do not change the preceding mandatory workspace lookup, exact
+#|`.structurizr/` deletion, following dot-file discovery, iteration order, output
+#|PNG path construction, printed text, `dot` execution/error return, `open`
+#|execution/ignored error, Cobra command registration, flags/help, initialization,
+#|`pkg/structurizr`, `internal/adapter/process`, API/CLI surface, inventory,
+#|scanner, baseline, audit repair, or any completed product behavior.
 #|
 #|# Required Reading
 #|
-#|Use `$agent-task-handoff` and read `.agent-task/current.md`,
-#|`docs/plan/quality-handover.md`, this archive, P3.54 and its checkpoint gate,
-#|both design documents, `.quality/inventory`, the complete audit meta-suite,
-#|T15 orchestration, wrapper, parser identity logic, vendored test execution,
-#|baseline reproduction metadata and README, and commits `5635d50`, `80b43ba`,
-#|`70bee0e`, and `3bd07e9`. Confirm branch, HEAD, clean status, reciprocal archive
-#|links, `./codex-dev-start.sh --check`, and retained paired evidence before edit.
-#|After reading, remove only the ephemeral ignored `.agent-task/current.md` before
-#|measurement because the audit deliberately counts ignored paths as dirty-tree
-#|evidence; this committed archive remains the authoritative task record.
+#|Before editing, confirm branch, HEAD, clean status, reciprocal archive links,
+#|launcher `--check`, and exact commits `3bd07e9` and `ce736a2`. Read the rolling
+#|handover, this archive, the P3 tail and checkpoint gate, both design documents,
+#|`.quality/inventory`, complete `cmd/plugin_diagrams.go`, all diagrams and Cobra
+#|callers/contracts, complete `pkg/structurizr`, the process adapter and all
+#|complete doubles/callers, the import-aware scanner, API/CLI contracts, and the
+#|T15 repair and baseline reproduction README.
 #|
 #|# Three Moves
 #|
-#|1. Reproduce the inherited failure and add the smallest focused failing
-#|   apparatus contract that distinguishes truthful test-generated output from
-#|   genuine baseline-source or measured-tree drift. Inspect the exact T15 data
-#|   flow before choosing the repair; do not assume the parser is the right layer.
+#|1. Start red with only focused private plugin-diagrams export recording
+#|   contracts. Prove exact complete `process.Command`, one request, exact ignored
+#|   injected error, continuation to file discovery, system dependency selection,
+#|   safe zero dependency, non-empty recorded population, and absence of unrelated
+#|   process requests. Use a private helper boundary so tests invoke no real
+#|   `structurizr-cli`, `dot`, or `open` program.
 #|
-#|2. Repair T15 orchestration first. Expand only when a focused red test and the
-#|   data flow prove a directly related recipe, metadata, apparatus-owned fixture,
-#|   or structured-parser change is necessary. Keep the repair general to the
-#|   invariant, not special-cased to the three filenames, and make a focused
-#|   apparatus commit separate from `3bd07e9` and continuity documentation.
+#|2. Add only the private process dependency composition and route the one export
+#|   request through `process.Execute`. Keep the request position after deletion
+#|   and before discovery, ignored assignment semantics, command data, following
+#|   operations, and all direct `dot`/`open` code unchanged. Regenerate exact Q1.3
+#|   without changing the scanner or broadening the move to force a number.
 #|
-#|3. Prove focused red/green, run the complete unchanged audit meta-suite against
-#|   predecessor and implementation where required, and run the complete P3.54
-#|   checkpoint. Confirm exact identities, valid expected audit exits, zero
-#|   product-path changes, zero comparable ratchet regressions, and a clean tree.
-#|   Do not begin the next product-effect move until the checkpoint is truthful.
+#|3. Run focused cmd/process/structurizr and relevant caller tests; API/CLI and
+#|   subprocess compatibility; launcher and Make contracts; complete tests,
+#|   race, and vet; the 15-control audit meta-suite; focused Q0.6/Q1.1/Q1.2/Q1.3/
+#|   Q1.4/Q2.1/Q3.4 measurement; full clean audit; and empty-HOME count-2. Expect
+#|   Q0.6 to hold at 26 guarded sites. The full audit may exit 1 for documented
+#|   findings but never 2, and comparable ratchets must not regress.
 #|
 #|# Automatic Handoff
 #|
-#|After the repair and P3.54 checkpoint pass, update the measured roadmap and
-#|rolling handover, answer this archive, create one reciprocally linked NEXT
-#|archive for the next coherent authorized roadmap move, replace only the
-#|launcher's mutable regions, run launcher and handoff contracts, and make the
-#|normal separate `docs: prepare next agent session` commit. Do not launch a real
+#|Before this agent session ends, finish and commit the coherent export-process
+#|move or record an exact resumable state. Rewrite the rolling handover, record
+#|the measured P3 result, answer this archive, create exactly one reciprocally
+#|linked NEXT archive for the next coherent authorized roadmap move, replace only
+#|the launcher's mutable regions, run launcher and handoff contracts, and make
+#|the separate `docs: prepare next agent session` commit. Do not launch a real
 #|successor, push, merge, publish, distribute, stash, revert, or remove the
 #|worktree. COMPLETE remains invalid while P3 or P4-P8 is unfinished.
 # CODEX_MUTABLE_PROMPT_END

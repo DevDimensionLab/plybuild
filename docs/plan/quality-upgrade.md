@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-25, commit `0128cd0`.
+Last measured checkpoint: 2026-08-26, commit `ce736a2`.
 
 ## Objective
 
@@ -466,7 +466,7 @@ P3.53 clean checkpoint:
 | Claim phrases in 68 Markdown files | 0 | Q3.4 remains held. |
 | Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
-P3.54 implementation measurement:
+P3.54 clean checkpoint (product `3bd07e9`, audit apparatus `ce736a2`):
 
 | Signal | P3.54 | Interpretation |
 | --- | ---: | --- |
@@ -482,8 +482,8 @@ P3.54 implementation measurement:
 | Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
-| Claim phrases in 69 Markdown files | 0 | Q3.4 remains held. |
-| Focused comparable ratchets | 4 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+| Claim phrases in 72 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
 ## Checkpoints
 
@@ -2823,43 +2823,49 @@ improved, two held, zero regressed, and one non-comparable ratchet.
 Focused shell/filesystem/Spring and all relevant caller-package tests, API/CLI
 and subprocess compatibility, the 62-control launcher contract, Make
 meta-contracts, complete `make test`, install, uncached and race tests, vet,
-all four host flows and their meta-contracts, and empty-HOME count-2 pass. Full
-preflight passes through audit meta-controls T1-T14, then the unchanged T15
-baseline-reproduction control exits 2 because its pinned pre-hermetic baseline
-tests create ignored Maven/template fixture paths beyond the authorized
-inventory overlay. The earlier recorded predecessor pass is not reproducible;
-this move does not alter the audit, baseline, inventory, Maven/template
-behavior, or fixture guards. The mission's no-audit-reshaping boundary leaves
-that inherited checkpoint issue unresolved here.
+all four host flows and their meta-contracts, the repaired 15-control audit
+meta-suite, the clean full audit, and empty-HOME count-2 pass. The full audit
+exits 1 for 15 documented findings, never 2, with L0 8 of 8, five improved,
+two held, zero regressed, one non-comparable ratchet, and zero dirty paths.
 
-Commit: `3bd07e9`.
+Product commit: `3bd07e9`. Audit-apparatus commit: `ce736a2`.
 
-The clean full audit from commit `3bd07e9` exits 1 for 15 documented findings,
-never 2, with L0 8 of 8, five improved, two held, zero regressed, one
-non-comparable ratchet, and zero dirty paths. P3.54 remains an implementation
-measurement rather than a clean checkpoint because the separate unchanged
-audit-meta T15 control still exits 2 as recorded above.
+The authoritative clean full audit from `ce736a2` measures the unchanged
+`3bd07e9` product tree. Its structured scorecard SHA-256 is
+`c7ff3bd2cf32f8615c0fb1329c980bafba9b5e988cf4e785f4b8dc608d3f4243`;
+the measured commit tree is `20266d8c4ff215679c981f9e4bf5d005fb435656`.
 
-P3.54 gate diagnosis used fresh detached shared clones at `70bee0e` and
-`3bd07e9`, sequentially checked out at the same pathname, with the same freshly
-recreated external HOME, XDG config, TMPDIR, GOTMPDIR, GOCACHE, existing
-GOMODCACHE, PATH, Go 1.26.2 darwin/arm64 toolchain, locale, and Go selector
-environment. Both complete meta-suites exit 1, pass T1-T14, run the old upstream
-baseline audit successfully with its expected exit 1, and fail identically when
-the old structured parser exits 2 on measured-tree identity. Excluding each
-random first-line work-directory suffix, the complete output bodies are
-byte-identical with SHA-256
-`bc83831ae61962b92c3233de04df52f70e3f2a2fdd6d871fb4d0db3f451b733b`.
+The inherited failure was reproduced before repair: exact predecessor
+`70bee0e` and implementation `3bd07e9` replicas passed T1-T14 and failed T15
+identically after historical tests created ignored measured-tree paths. A
+focused red contract then proved that T15 had to distinguish audit-test effects
+from source present before execution without excluding or deleting either.
 
-The paired controlled PATH has no Maven executable. Each pinned `5635d50`
-baseline clone therefore contains exactly the inventory overlay plus the same
-three ignored template merge outputs. The retained developer-environment clone
-contains those three plus six Maven compiler/status/class files because its
-PATH exposes SDKMAN Maven. Removing Maven from PATH explains six of the nine
-ignored paths but cannot make T15 green: the three template outputs alone still
-violate the exact overlay identity. This is an inherited audit-harness blocker,
-not a regression from `3bd07e9`; P3.54 remains implemented and awaits explicit
-scope for an apparatus repair.
+T15 now verifies pristine old/new replicas before execution, rejects a tracked
+source-drift probe, and records every post-test path, mode, raw digest, and
+checkout-root-independent digest in separate clean-HOME effect replicas. It
+runs the historical raw audit in equivalent execution replicas and feeds old
+and new structured parsers equivalent pristine replicas of exact `5635d50`
+plus the authorized inventory overlay. This preserves dirty-path truth while
+preventing test-created output from masquerading as pre-measurement source.
+
+Orchestration alone exposed a second historical precondition: an empty HOME
+made the untouched historical tests pass, while stored baseline debt records
+their failure. The directly related reproduction recipe and migration metadata
+therefore pin an apparatus-owned directory-shaped legacy active-profile fixture
+with marker SHA-256
+`cb95f24c35d3987f8aba51231aade19580ffe9242324804fcad2ccff350d1c9a`.
+The parser, historical checkout, baseline scorecards and raw debt, instrument
+identities, inventory, scanner, and product remain unchanged.
+
+Complete repaired meta-suites pass all 15 controls over the unchanged
+implementation-content tree and over exact predecessor `70bee0e` with only the
+four apparatus paths overlaid. Old and new structured baseline hashes reproduce
+as `d420887d73aabf496ff276fcc55d13ad379ac49c9322fad58808b5e28fdba7df`
+and `5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`;
+the normalized stored raw body reproduces as
+`cf23c9dca987acd3a966693f933c4c7eca9f7d11c51f0fbabfe1d697f3d7497f`.
+All 228 numeric debt leaves and Q3.9 match.
 
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
@@ -2902,10 +2908,11 @@ or command execution.
 evaluation, path selection, config initialization, default cloud URL, YAML
 marshal sequencing, logging, file creation, exact output bytes, mode, write
 error, close behavior, `UpdateLocalConfig`, or callers.
-Continue with the next isolated production effect while leaving project
-initialization, `SortAndWritePom`, cloud config, template/file/Maven behavior,
-every other tips branch, command sequencing, the adapter, public API, and every
-other completed effect unchanged.
+Continue with the isolated `structurizr-cli export` process request in
+`cmd/plugin_diagrams.go`. Leave the later Graphviz `dot` and macOS `open`
+requests, project initialization, `SortAndWritePom`, cloud config,
+template/file/Maven behavior, every other tips branch, command sequencing, the
+adapter, public API, and every completed effect unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
