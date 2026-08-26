@@ -17,7 +17,7 @@ type recordingProfileEditorProcess struct {
 
 func (recording *recordingProfileEditorProcess) dependencies() profileEditorDependencies {
 	dependencies := systemProfileEditorDependencies()
-	dependencies.Process = process.Dependencies{Runner: recording}
+	dependencies.Process.Runner = recording
 	return dependencies
 }
 
@@ -38,7 +38,7 @@ func TestProfileEditorSelectsCompleteSystemProcessDependencies(t *testing.T) {
 	dependencies := systemProfileEditorDependencies()
 	systemProcess := process.System()
 
-	if dependencies.Process.Runner == nil {
+	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout {
 		t.Fatal("profile editor selected an incomplete process dependency")
 	}
 	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {

@@ -15,8 +15,10 @@ type recordingBrowserLauncherProcess struct {
 }
 
 func (recording *recordingBrowserLauncherProcess) dependencies(goos string) browserLauncherDependencies {
+	processDependencies := process.System()
+	processDependencies.Runner = recording
 	return browserLauncherDependencies{
-		Process: process.Dependencies{Runner: recording},
+		Process: processDependencies,
 		GOOS:    goos,
 	}
 }
@@ -38,7 +40,7 @@ func TestOpenBrowserSelectsCompleteSystemProcessAndRuntimePlatform(t *testing.T)
 	dependencies := systemBrowserLauncherDependencies()
 	systemProcess := process.System()
 
-	if dependencies.Process.Runner == nil {
+	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout {
 		t.Fatal("OpenBrowser selected an incomplete process dependency")
 	}
 	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {

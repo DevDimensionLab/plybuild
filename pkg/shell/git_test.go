@@ -30,7 +30,9 @@ type recordingProcess struct {
 }
 
 func (recording *recordingProcess) dependencies() process.Dependencies {
-	return process.Dependencies{Runner: recording}
+	dependencies := process.System()
+	dependencies.Runner = recording
+	return dependencies
 }
 
 func (recording *recordingProcess) Run(command process.Command) error {

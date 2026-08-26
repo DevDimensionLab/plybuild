@@ -47,6 +47,32 @@ func TestDependenciesDefaultToSafeNoOp(t *testing.T) {
 	}
 }
 
+func TestSystemSelectsExactStandardOutput(t *testing.T) {
+	dependencies := System()
+
+	if dependencies.Stdout != os.Stdout {
+		t.Fatalf("system standard output is %T, want exact os.Stdout", dependencies.Stdout)
+	}
+}
+
+func TestStdoutForwardsInjectedWriterOnlyWhenEnabled(t *testing.T) {
+	injected := &bytes.Buffer{}
+	dependencies := Dependencies{Stdout: injected}
+
+	if got := Stdout(dependencies, true); got != injected {
+		t.Fatalf("enabled standard output is %T, want exact injected writer", got)
+	}
+	if got := Stdout(dependencies, false); got != nil {
+		t.Fatalf("disabled standard output is %T, want nil", got)
+	}
+}
+
+func TestStdoutDependenciesDefaultToNil(t *testing.T) {
+	if got := Stdout(Dependencies{}, true); got != nil {
+		t.Fatalf("zero-value standard output is %T, want nil", got)
+	}
+}
+
 func TestExecutePassesCompleteCommandToDependency(t *testing.T) {
 	stdin := &bytes.Buffer{}
 	stdout := &bytes.Buffer{}

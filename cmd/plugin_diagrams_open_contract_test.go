@@ -19,9 +19,9 @@ type recordingPluginDiagramsOpenProcess struct {
 }
 
 func (recording *recordingPluginDiagramsOpenProcess) dependencies() pluginDiagramsOpenDependencies {
-	return pluginDiagramsOpenDependencies{
-		Process: process.Dependencies{Runner: recording},
-	}
+	dependencies := systemPluginDiagramsOpenDependencies()
+	dependencies.Process.Runner = recording
+	return dependencies
 }
 
 func (recording *recordingPluginDiagramsOpenProcess) Run(command process.Command) error {
@@ -41,7 +41,7 @@ func TestPluginDiagramsOpenSelectsCompleteSystemProcessDependencies(t *testing.T
 	dependencies := systemPluginDiagramsOpenDependencies()
 	systemProcess := process.System()
 
-	if dependencies.Process.Runner == nil {
+	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout {
 		t.Fatal("plugin-diagrams open selected an incomplete process dependency")
 	}
 	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {

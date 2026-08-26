@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/config"
-	"github.com/devdimensionlab/plybuild/pkg/logger"
+	"github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -21,7 +21,7 @@ func runOn(dependencies process.Dependencies, cmd string, args ...string) func(r
 			Name:   cmd,
 			Args:   args,
 			Dir:    project.Path,
-			Stdout: logger.StdOut(),
+			Stdout: process.Stdout(dependencies, logrus.IsLevelEnabled(logrus.DebugLevel)),
 		})
 	}
 }

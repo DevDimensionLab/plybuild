@@ -17,7 +17,9 @@ type recordingShellRunProcess struct {
 }
 
 func (recording *recordingShellRunProcess) dependencies() runDependencies {
-	return runDependencies{Process: process.Dependencies{Runner: recording}}
+	dependencies := systemRunDependencies()
+	dependencies.Process.Runner = recording
+	return dependencies
 }
 
 func (recording *recordingShellRunProcess) Run(command process.Command) error {
@@ -43,7 +45,7 @@ func TestRunSelectsCompleteSystemProcessDependencies(t *testing.T) {
 	dependencies := systemRunDependencies()
 	systemProcess := process.System()
 
-	if dependencies.Process.Runner == nil {
+	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout {
 		t.Fatal("Run selected an incomplete process dependency")
 	}
 	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {

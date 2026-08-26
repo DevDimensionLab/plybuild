@@ -20,9 +20,9 @@ type recordingPluginDiagramsExportProcess struct {
 }
 
 func (recording *recordingPluginDiagramsExportProcess) dependencies() pluginDiagramsExportDependencies {
-	return pluginDiagramsExportDependencies{
-		Process: process.Dependencies{Runner: recording},
-	}
+	dependencies := systemPluginDiagramsExportDependencies()
+	dependencies.Process.Runner = recording
+	return dependencies
 }
 
 func (recording *recordingPluginDiagramsExportProcess) Run(command process.Command) error {
@@ -42,7 +42,7 @@ func TestPluginDiagramsExportSelectsCompleteSystemProcessDependencies(t *testing
 	dependencies := systemPluginDiagramsExportDependencies()
 	systemProcess := process.System()
 
-	if dependencies.Process.Runner == nil {
+	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout {
 		t.Fatal("plugin-diagrams export selected an incomplete process dependency")
 	}
 	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {

@@ -34,10 +34,10 @@ type recordingPluginDiagramsGraphvizEffects struct {
 }
 
 func (recording *recordingPluginDiagramsGraphvizEffects) dependencies() pluginDiagramsGraphvizDependencies {
-	return pluginDiagramsGraphvizDependencies{
-		Process: process.Dependencies{Runner: recording},
-		Files:   filesystem.Dependencies{FileSystem: recording},
-	}
+	dependencies := systemPluginDiagramsGraphvizDependencies()
+	dependencies.Process.Runner = recording
+	dependencies.Files = filesystem.Dependencies{FileSystem: recording}
+	return dependencies
 }
 
 func (recording *recordingPluginDiagramsGraphvizEffects) Run(command process.Command) error {
@@ -159,7 +159,8 @@ func TestPluginDiagramsGraphvizSelectsCompleteSystemProcessAndFilesystemDependen
 	systemProcess := process.System()
 	systemFiles := filesystem.System()
 
-	if dependencies.Process.Runner == nil || dependencies.Files.FileSystem == nil {
+	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout ||
+		dependencies.Files.FileSystem == nil {
 		t.Fatal("plugin-diagrams Graphviz selected incomplete process or filesystem dependencies")
 	}
 	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {

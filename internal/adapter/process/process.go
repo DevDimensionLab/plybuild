@@ -2,6 +2,7 @@ package process
 
 import (
 	"io"
+	"os"
 	"os/exec"
 )
 
@@ -25,6 +26,7 @@ type Runner interface {
 // a safe no-op; production callers must select System explicitly.
 type Dependencies struct {
 	Runner Runner
+	Stdout io.Writer
 }
 
 // Execute passes the complete command to the configured dependency.
@@ -35,10 +37,21 @@ func Execute(dependencies Dependencies, command Command) error {
 	return dependencies.Runner.Run(command)
 }
 
+// Stdout returns the configured standard-output writer only when enabled.
+func Stdout(dependencies Dependencies, enabled bool) io.Writer {
+	if !enabled {
+		return nil
+	}
+	return dependencies.Stdout
+}
+
 // System returns the production dependency that executes an operating-system
 // process.
 func System() Dependencies {
-	return Dependencies{Runner: systemRunner{}}
+	return Dependencies{
+		Runner: systemRunner{},
+		Stdout: os.Stdout,
+	}
 }
 
 type systemRunner struct{}
