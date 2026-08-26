@@ -1,13 +1,21 @@
 # Agent Session: Record P4 Manual L1 Evidence
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T191251+0200-record-p4-manual-l1-evidence`
 Created: `2026-08-26T19:12:51+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `a37605edc2c426e6ea0984c0f2436977c0249158d020523fd56c262a699dade0`
 Previous: [2026-08-26T184054+0200-close-loopback-seam.md](2026-08-26T184054+0200-close-loopback-seam.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T195729+0200-repair-q19-empty-populations.md](2026-08-26T195729+0200-repair-q19-empty-populations.md)
+Outcome: The exhaustive evidence review created no schema-2 document because
+Q1.7 has eight uncovered operations among 17 in scope and Q1.9 has 51
+unguarded local-table loops among 64, plus confirmed non-table gaps among 169
+total test ranges. Q1.6's complete 57-struct, 74-field population is supported
+independently, but all three rows remain UNMEASURABLE. Initial and final clean
+no-evidence audits are byte-identical at scorecard SHA-256
+`37ef9bd20cfddf450f381bbc1afe5bd8ea5a037f5a8b0f50713572d22e613f2b`,
+exit 1 for 13 documented findings, and contain zero dirty paths. P4 remains
+active; the reciprocal NEXT move repairs Q1.9 only.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

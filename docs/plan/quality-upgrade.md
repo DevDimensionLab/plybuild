@@ -4412,9 +4412,61 @@ It exits 1 for 13 documented findings, never 2, with L0 8 of 8, six
 improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
 paths. The focused eight-criterion scorecard SHA-256 is
 `b63afac3b5917dd45d74e19ace4fbf588fe3c871356db4abf1d0c428dea6f703`.
-Continue P4 by reviewing and recording exact non-empty, commit-bound manual L1
-receipts for Q1.6, Q1.7, and Q1.9. P4 remains active until all three rows are
-truthfully valid; P5-P8 remain queued.
+The evidence review after move 10 measured the clean continuity commit
+`18beee0a806bcc962cb2f7fbdd5952e43a2cb633`, whose parent is exact product
+commit `c382caa`. Its commit tree is
+`85a6c67f38b8f764b849dcfac4da9eec071d22d0`; the clean status digest is
+`6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`,
+inventory SHA-256 is
+`4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d`,
+and the complete instrument identity is recorded in the rolling handover.
+Initial and final clean no-evidence scorecards are byte-identical with
+SHA-256
+`37ef9bd20cfddf450f381bbc1afe5bd8ea5a037f5a8b0f50713572d22e613f2b`.
+They exit 1 for the same 13 documented findings, never 2, with L0 8 of 8,
+L1 six PASS and three UNMEASURABLE, six improved ratchets, two held, zero
+regressed, zero non-comparable, and zero dirty paths.
+
+The complete Q1.6 production population contains 57 dependency structs with
+74 fields: five adapter structs and 52 private composition structs. Read-only
+structure review found safe defaults, argument-recording contracts, and
+whole-struct delivery for that population; 245 focused top-level dependency
+and recording contracts pass. No Q1.6 receipt was emitted because the evidence
+mission required all three manual populations to be valid before creating the
+external schema-2 document.
+
+Q1.7 cannot truthfully receive a receipt. The explicit scope includes
+collection-item failure paths that log and continue, plus operations that
+return a populated partial aggregate with an error; it excludes fail-fast
+pre-population errors, intentionally ignored errors without a reported partial
+result, non-error business warnings, sequential non-collection phases, and
+test support. Seventeen operations are in scope. Nine have exact failure-
+content coverage, but eight do not: `cmd`'s `initCmd` project loop;
+`Bitbucket.SynchronizeAllRepos`' clone/pull warning branch;
+`spring.DeleteDemoFiles`; `Repository.upgradeDependencies`;
+`Repository.upgradePluginsOnModel`; `maven.RemoveDeprecated`;
+`template.MergeTemplates`; and `GitCloudConfig.ValidTemplatesFrom`. The
+existing 23 focused top-level partial-failure contracts pass, but they are a
+covered subset and cannot establish the missing eight operations.
+
+Q1.9 also cannot truthfully receive a receipt. All 169 syntactic Go test
+`range` statements were enumerated. The complete local-table subpopulation has
+64 loops over an identifier named `tests`: only 13 functions contain an
+executable `len(tests)` guard and 51 can false-green when that table is empty.
+Additional non-table expectation and helper populations have the same gap.
+The existing 69 named empty-population contracts pass, but they do not cover
+the failed table population. The exact external review reports have SHA-256
+`c4978c74184f94a8369f9f3e4b8c1a48e90db15ab9b6db24749dce45f7e72c25`
+for all 169 ranges and
+`d832e212662a36c472b1f8cac2d1d8f0e57f87e98dbb4551ab20352c1e521c1c`
+for the 64-table classification.
+
+No manual-evidence document or receipt digest was created, and no focused or
+full manual-evidence audit was run. P4 therefore remains active, Q1.6, Q1.7,
+and Q1.9 remain UNMEASURABLE, and P5-P8 remain queued. The next coherent move
+repairs only Q1.9's executable empty-population assertions, starting with all
+51 confirmed table blockers and completing classification of the remaining
+test iterations before any receipt is reconsidered.
 
 ### P5 - Build L2 Mutation Evidence
 

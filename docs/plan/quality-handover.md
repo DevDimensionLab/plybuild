@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-26T19:12:51+02:00
+Generated: 2026-08-26T19:57:29+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,170 +10,266 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
-- Focused P4.10 product implementation:
-  `c382caa38be167fe17f847370ad8a12270644de3`.
-- Preceding P4.9 product implementation:
-  `746a5abbdc5b879201bc83690b3c633831dca81b`.
-- Truthful P3.54 audit-apparatus repair:
-  `ce736a233e1be1e17f290ad8cf3a327bf70ccfd0`.
-- After launch, obtain the continuity head with `git rev-parse --short=12 HEAD`;
-  the final commit changes only planning, archives, and launcher mutable state.
-- No push, merge, release, publication, distribution, stash, revert, successor
-  launch, or worktree removal was performed.
-
-All earlier focused P3 and P4 implementation commits and their clean
-checkpoints remain recorded in `docs/plan/quality-upgrade.md`. The separate
-operational continuity implementation is `1b85711`, and the focused T15 repair
-is `ce736a2`; neither changes a Go quality denominator.
+- Product commit: `c382caa38be167fe17f847370ad8a12270644de3`.
+- Evidence-review commit before this continuity handoff:
+  `18beee0a806bcc962cb2f7fbdd5952e43a2cb633`.
+- Exact parent of `18beee0`: `c382caa38be167fe17f847370ad8a12270644de3`.
+- After launch, obtain the new docs-only continuity HEAD with
+  `git rev-parse --short=12 HEAD`.
+- No product or test file changed in the evidence review. No manual-evidence
+  file was created in or outside the repository.
+- No push, merge, release, publication, distribution, stash, revert,
+  successor launch, or worktree removal was performed.
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` remains NEXT because P4 is active and P5-P8 are queued. Its
-active archive is
-`docs/plan/agent-sessions/2026-08-26T191251+0200-record-p4-manual-l1-evidence.md`.
-The P4.10 loopback archive is answered history and links reciprocally to that
-archive. The graph has exactly one NEXT tail. The archived prompt SHA-256 is
-`a37605edc2c426e6ea0984c0f2436977c0249158d020523fd56c262a699dade0`.
+`codex-dev-start.sh` remains NEXT because P4 is active and P5-P8 are queued.
+Its active archive is
+`docs/plan/agent-sessions/2026-08-26T195729+0200-repair-q19-empty-populations.md`.
+The evidence-review archive is answered history and links reciprocally to the
+new tail. The graph has exactly one NEXT archive. The launcher stable skeleton
+remains SHA-256
+`4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`,
+and all 62 launcher controls remain unchanged.
 
-Normal launch remains a Bash 3.2-compatible non-interactive supervisor with
-byte-exact archived prompts, unique external raw JSONL logs, structured stream
-validation, post-turn repository revalidation, clean committed handoff
-requirements, signal forwarding, and no implicit resume. The stable normalized
-skeleton digest remains
-`4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`.
-`test/codex_dev_start_test.sh` retains all 62 controls.
+## Evidence Decision
 
-## P4 Move 10
+P4 did not complete. Q1.7 and Q1.9 have real current-project blockers, so the
+three schema-2 receipts were not created. Q1.6, Q1.7, and Q1.9 consequently
+remain UNMEASURABLE in the authoritative scorecard. There is no evidence-file
+SHA-256 and there are no canonical receipt digests to record. No
+`--manual-evidence` audit was run; a covered subset was never promoted to PASS.
 
-Product commit `c382caa` changes only the private package-level interactive
-HTTP server address from `:7999` to `127.0.0.1:7999`. Port 7999, the exact
-`*http.Server` identity, selector and adapter, four handler paths and order,
-listen/log behavior, background shutdown context, five-second timeout, deferred
-cancellation, ignored shutdown error, endpoint URIs, browser request, callback
-blocking, public signatures, and all callers remain exact. Tests do not open a
-socket, start the server, or launch a browser.
+The explicit scope rules were:
 
-Four focused contracts bring the suite to 453 tests across all 27 packages.
-They pin the exact IPv4 loopback address and unchanged start/stop selection;
-endpoint URIs and server/browser/callback composition; standalone and project
-blocking flow; interactive build option delivery and validation order; and
-interactive upgrade guards and callback selection.
+- Q1.6 includes every production struct in `cmd`, `internal`, or `pkg` whose
+  type name ends in `Dependencies` or `dependencies`, and every field in those
+  structs. It excludes interfaces, selector functions, ordinary configuration
+  structs, and test-only doubles. Each field must have safe default behavior,
+  an argument-observing double, and whole-struct delivery.
+- Q1.7 includes a production collection-item failure path when it reports the
+  failure and continues, and an operation when it can return a populated
+  partial aggregate with an error. It excludes fail-fast errors before any
+  partial state, ignored errors with no reported partial result, non-error
+  business warnings, sequential non-collection phases, and fixture/support
+  code.
+- Q1.9 begins with every syntactic Go `range` statement in a `_test.go` file.
+  Assertion-driving tables, expectations, recorded collections, and structural
+  searches require executable empty-population failure. Fixture construction
+  or delivery loops are excluded, as are result loops whose emptiness already
+  fails an independent executable assertion. Classification never treats a
+  comment, a non-empty literal, or a passing sample as a guard.
 
-The regular non-executable `scripts/mutate-interactive-build` seam driver
-contains `8. interactive server binds only to loopback` exactly once, declares
-no `mutate` or `mutate2` operation, and runs 21 named command, webservice,
-server-adapter, API, and callback contracts with isolated Go state. Its
-reciprocal meta-contract proves its mode and source shape, exact label, absence
-of premature mutation operations, successful JSON test execution, non-empty
-population, and every named test run. All eight declared P4 seams now have
-executable swap coverage.
+## Q1.6 Review
 
-## T15 Apparatus Checkpoint
+The complete production population is 57 structs and 74 fields: five adapter
+structs with seven fields and 52 private composition structs with 67 fields.
+The exact enumeration command was a read-only parser over all production Go
+files; its report is `/private/tmp/ply-p4-q16-population.txt`, SHA-256
+`0fe1db8870845b245adeb32a8a5f40cb537a9d5efc6d2b4efd1238c50a2deda9`.
+Structure and contract review found every field safely defaulted and observed,
+and every composition struct delivered whole rather than reconstructed from an
+incoming value. This independently supports Q1.6, but no receipt was emitted
+because Q1.7 and Q1.9 failed the all-three precondition.
 
-The P3.54 T15 repair remains unchanged. Separate verified execution and
-structured replicas preserve historical test effects while measuring a
-pristine exact `5635d50` checkout plus the declared inventory overlay. The
-complete 15-control proof passes and reproduces old scorecard
-`d420887d73aabf496ff276fcc55d13ad379ac49c9322fad58808b5e28fdba7df`,
-new scorecard
-`5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`,
-normalized stored raw body
-`cf23c9dca987acd3a966693f933c4c7eca9f7d11c51f0fbabfe1d697f3d7497f`,
-Q3.9, and all 228 numeric debt leaves. P4.10 did not modify the apparatus,
-parser, scanner, baseline, inventory, or reproduction recipe.
+The focused command was:
 
-## Measured Quality State
+```sh
+go test -json ./... \
+  -run 'Test.*(Dependencies|Dependency|Recorded|PassesComplete|PreservesComplete|SelectsCompleteSystem)' \
+  -count=1
+```
 
-The authoritative clean full audit from product commit `c382caa` reports:
+It passed 245 top-level tests across 27 packages with zero failures. The JSON
+report SHA-256 is
+`ab5a59ebbb65de5564799792ea83cc1775b514a258535f0cfc9de809c26d464e`.
 
-- Measured commit tree: `6e44c014c73fb8c99c6c90f20a64a41f314fce43`.
-- Structured scorecard SHA-256:
-  `b4c7ddc7d163a833663f8b7cd876e94aadf4c1a875b945252a46441e354c6b72`.
-- Absolute L0: 8 of 8.
-- 453 test functions, zero skipped; all 27 packages have tests.
-- Q0.6: 29 guarded safe-writer sites, 23 write and 6 copy, with zero unsafe
-  direct test writes.
-- Q0.8: all 13 production scripts have reciprocal meta-tests.
-- Q1.1: 0 of 27 packages has no tests.
-- Q1.2: 0 process-exiting calls outside `main`.
-- Q1.3: 0 direct external sites outside five valid declared adapters of 27
-  production effect sites.
-- Q1.4: 8 of 8 declared seams covered.
-- Q1.6, Q1.7, and Q1.9: UNMEASURABLE because current-project manual receipts
-  have not yet been supplied.
-- Exact Q2.1: 0 of 8 subjects has an executable harness.
-- Q3.4: 0 state-claim phrases across 94 Markdown files.
-- Acceptance: 4 of 4 host flows pass.
-- Full audit: exit 1 for 13 documented non-passing criteria, never 2.
-- Comparable ratchets: six improved, two held, zero regressed, zero
-  non-comparable.
-- Clean identity: zero dirty paths.
+## Q1.7 Review
 
-The focused eight-criterion scorecard under
-`/private/tmp/ply-p4-interactive-focused-audit.b6Hgfs` has SHA-256
-`b63afac3b5917dd45d74e19ace4fbf588fe3c871356db4abf1d0c428dea6f703`.
-The full clean audit is under
-`/private/tmp/ply-p4-interactive-full-audit.YuyZ2i`. Pinned tools remain under
-`/private/tmp/ply-p4-tools` and `/private/tmp/ply-p358-tools`. The empty-HOME
-count-2 proof is under `/private/tmp/ply-p4-interactive-hermetic.RFfdQW`.
+The complete scope contains 17 operations. These nine have exact content
+assertions for their partial failures:
+
+- `Context.FindAndPopulateMavenProjects`
+- `Context.OnEachMavenProject`
+- `Context.OnRootProject`
+- `GitCloudConfig.templates`
+- `findFirst`
+- `findAll`
+- `grepRecursive`
+- `filteredFilesFromTemplateWithDependencies`
+- `unzipWithDependencies`
+
+These eight do not have complete failure-content coverage and are the exact
+blockers:
+
+- `cmd/build_init.go`: the `initCmd` project loop reports missing type,
+  initialization, configuration-write, and POM-write failures without a
+  command contract.
+- `pkg/bitbucket/bitbucket.go`: repository-query warning content is asserted,
+  but the clone/pull warning branch in `SynchronizeAllRepos` is not.
+- `pkg/spring/io.go`: `DeleteDemoFiles` reports discovery and deletion
+  failures while continuing, with no contract reference.
+- `pkg/maven/dependency.go`: `upgradeDependencies` continues after version,
+  maximum-version, and upgrade failures without log-content assertions.
+- `pkg/maven/plugin.go`: `upgradePluginsOnModel` continues after per-plugin
+  upgrade errors without a content assertion.
+- `pkg/maven/deprecated.go`: `RemoveDeprecated` can return a partial template
+  result or warn and continue, with no direct contract.
+- `pkg/template/template.go`: `MergeTemplates` warns and continues after a
+  template merge failure, with no direct contract.
+- `pkg/config/cloud.go`: `ValidTemplatesFrom` returns an ordered partial
+  template slice with an error, with no direct contract.
+
+The focused covered-subset run passed 23 top-level tests and 46 total test
+events across six packages, with zero failures. Its JSON SHA-256 is
+`f7b9bf9827b47c82db7a089ecf317dd3b5d2ca2c57beee511a438f1522f530ee`.
+Those 23 tests are evidence of the nine covered operations only; they do not
+support a Q1.7 receipt.
+
+## Q1.9 Review
+
+The complete syntactic population is 169 Go test `range` statements. The exact
+enumeration is `/private/tmp/ply-p4-q19-all-range-population.txt`, SHA-256
+`c4978c74184f94a8369f9f3e4b8c1a48e90db15ab9b6db24749dce45f7e72c25`.
+The complete local table class contains 64 loops over the identifier `tests`:
+13 enclosing test functions have an executable `len(tests)` assertion and 51
+do not. The exact classification report is
+`/private/tmp/ply-p4-q19-named-table-audit.txt`, SHA-256
+`d832e212662a36c472b1f8cac2d1d8f0e57f87e98dbb4551ab20352c1e521c1c`.
+
+The 51 confirmed table blockers are at:
+
+- `cmd/profile_editor_contract_test.go:82`,
+  `cmd/tips_read_contract_test.go:156`.
+- `internal/adapter/filesystem/filesystem_test.go:245,305,418,562,776` and
+  `internal/adapter/httpclient/client_test.go:185`.
+- `pkg/bitbucket/bitbucket_contract_test.go:257,300,454`.
+- `pkg/config/cloud_examples_test.go:233`,
+  `cloud_git_hooks_test.go:236`, `cloud_refresh_test.go:147`,
+  `local_directory_create_contract_test.go:151`,
+  `local_directory_stat_contract_test.go:174`,
+  `local_touch_create_contract_test.go:168`,
+  `local_touch_write_contract_test.go:163`,
+  `local_update_create_contract_test.go:168`,
+  `local_update_write_contract_test.go:163`, and
+  `project_write_contract_test.go:240`.
+- `pkg/file/copy_test.go:204,300` and
+  `pkg/file/file_test.go:1780,1847,1915,2009,2122,2206,2275,2350,2424,2467`.
+- `pkg/http/client_test.go:91`, `download_test.go:260,429`, and
+  `pkg/kibana/post_contract_test.go:433`.
+- `pkg/maven/command_test.go:86`, `graph_write_contract_test.go:162`, and
+  `pkg/shell/git_test.go:168,268,364`.
+- `pkg/spring/archive_path_contract_test.go:230`,
+  `discovery_contract_test.go:125,175`, and
+  `download_contract_test.go:149`.
+- `pkg/structurizr/output_write_contract_test.go:160`,
+  `pkg/template/markdown_write_contract_test.go:178`,
+  `pkg/tips/tips_test.go:307`,
+  `pkg/webservice/browser_launcher_contract_test.go:96`, and
+  `pkg/webservice/server_contract_test.go:292`.
+
+The remaining 105 ranges include fixture/support loops, structurally guarded
+AST searches, output loops with independent cardinality assertions, and
+additional unguarded expectation/helper populations. Confirmed additional
+gaps include `cmd/entry_boundary_test.go:23,37`,
+`cmd/plugin_diagrams_export_contract_test.go:166`,
+`internal/adapter/filesystem/archive_test.go:410`,
+`internal/adapter/httpclient/client_test.go:330`,
+`pkg/config/cloud_templates_test.go:286,347`,
+`pkg/file/file_test.go:1552`, `pkg/file/grep_test.go:229`,
+`pkg/maven/version_test.go:215`,
+`pkg/spring/download_contract_test.go:225`,
+`pkg/template/filtered_walk_contract_test.go:283,348`, and
+`pkg/tips/tips_test.go:278`. The next move must finish the 105-loop
+classification rather than assuming these are the only additional gaps.
+
+The existing empty-population regex run passed 69 named top-level contracts
+across 27 packages, with zero failures. Its JSON SHA-256 is
+`103ef6620ce810f663e1783cafbc6f6debb227f911dba973133aa60fd3122f7a`.
+That covered subset cannot support Q1.9 while the 51-table class fails.
+
+## Authoritative Measurement
+
+Both valid clean audits ran without manual evidence:
+
+```sh
+bash .quality/tools/quality-audit.sh . \
+  --baseline .quality/baseline/scorecard.json --out "$external_out"
+```
+
+They are byte-identical. The authoritative identity is:
+
+- commit: `18beee0a806bcc962cb2f7fbdd5952e43a2cb633`
+- commit tree: `85a6c67f38b8f764b849dcfac4da9eec071d22d0`
+- status SHA-256:
+  `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`
+- inventory SHA-256:
+  `4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d`
+- scorecard SHA-256:
+  `37ef9bd20cfddf450f381bbc1afe5bd8ea5a037f5a8b0f50713572d22e613f2b`
+- output root: `/private/tmp/ply-p4-evidence-review.lUcTJA`
+
+The complete instrument object is:
+
+```json
+{"call_scanner_sha256":"73dba9d563fb0b3e85af032487d024c7f42b80fd76de9f928d2888fed7347879","go_build":{"cgo_enabled":"0","go386":"","goamd64":"","goarch":"arm64","goarm":"","goarm64":"v8.0","goenv":"off","goexperiment":"","goflags":"","gomips":"","gomips64":"","goos":"darwin","goppc64":"","goriscv64":"","gowasm":"","gowork":"off","production_files":{"count":93,"sha256":"c9d17a29325acec93f4db4ca11bfcf41b65d02d0ef3e460290fe5b8986743ec5"},"test_files":{"count":70,"sha256":"8b1c804a39428d39cf9609176a24a8c6e261812ab5a31ddffbaa915afa125840"},"version":"go version go1.26.2 darwin/arm64"},"mode":"full mode","parser_sha256":"f56dc96885c0f3ab5e18bdb3ccbe155411efc0ce7bacfeb4fe701d8a23d0c31a","partial":false,"q06_contract_sha256":"7881988a831b02e367b21aa0d2ad3d08e25afb7524a5c30f8bfa2a2533c64772","report_template_sha256":"3138b45cd2ad3f3e396ad3c5ea1325130619d6d2c61c2d2c64db262035c0f07d","upstream_exit":1,"upstream_sha256":"45787c231a0f07f27093824b19685aee4fb4cab5159cdb7864834b79fbc9cee9","upstream_version":"1","wrapper_sha256":"b896bb8fac4c81fd5c4aab40732b3064e8355fa0d320dbc4b797541192beda75","wrapper_version":1}
+```
+
+Denominators are 453 test functions, 27 packages with tests of 27 packages,
+164 Go files, 95 Markdown files, 92 table-driven tests, 13 scripts, five
+adapters, eight seams, eight subjects, six non-executable mutation drivers,
+and four acceptance scripts. The audit exits 1 for 13 documented non-passing
+criteria, never 2. L0 is 8/8; L1 is six PASS and three UNMEASURABLE; ratchets
+are six improved, two held, zero regressed, and zero non-comparable; dirty
+paths are empty.
+
+A deliberately rejected post-gate audit detected four generated ignored files
+under `target/compatibility` and `target/quality-audit` and set
+`measurement_clean=false`. Its scorecard SHA-256 was
+`a5eb6dd0cbf5db8ffbd46a58d71523e2939166bd62d1d03edaf82ff7ca73c251`;
+it is not evidence. Those exact generated files and their now-empty directories
+were removed, and the final clean audit reproduced the initial scorecard byte
+for byte. Future compatibility gates should set `API_COMPAT_REPORT_OUT` and
+`CLI_COMPAT_REPORT_OUT` outside the worktree; the authoritative audit output
+must also stay external.
+
+## Gate Result
+
+The corrected complete gate passes API/CLI and CLI-surface compatibility,
+fresh subprocess meta-contracts, build, all 453 tests, race, vet, pinned
+golangci-lint 2.12.2 with zero issues, `make preflight`, `make test`,
+`make test-install`, `make test-agent-start`, all 62 launcher controls, all
+Make and production-script contracts, all four host acceptance flows, the
+15-control audit meta-suite including the repaired T15 reproduction, and the
+empty-HOME count-2 run. The first compatibility attempt was runner-invalid
+because a fresh module cache was incompatible with the check's required
+offline phase; the unchanged rerun against the populated module cache passed.
 
 ## Next Objective
 
-Finish P4 only if exhaustive source-and-test review can truthfully support
-schema-2 manual receipts for Q1.6, Q1.7, and Q1.9. Enumerate a non-empty exact
-population for each row: dependency structs and their default/recording doubles
-for Q1.6; per-item or partial-failure command paths and content assertions for
-Q1.7; and test-iterated collections plus executable empty-population assertions
-for Q1.9. Record the commands, subjects, exact counts, and exclusions. If any
-required truth fails, do not claim PASS; record the exact failing population
-and keep P4 active.
+Repair Q1.9 only. Add executable fail-on-empty assertions to every in-scope
+assertion-driving collection among the 169 enumerated test ranges. Start with
+all 51 confirmed `tests`-table blockers, classify each of the remaining 105
+ranges under the rules above, and repair every additional expectation,
+recording, or helper population whose emptiness can skip its assertions. Do
+not add guards to fixture-construction loops or loops already protected by an
+independent executable cardinality assertion. Do not change production code,
+the audit apparatus, inventory, baseline, or acceptance behavior.
 
-The measured-tree implementation deliberately counts ignored and untracked
-repository bytes. Therefore, build the commit-bound manual-evidence document
-outside the worktree, never at `.quality/manual-evidence.json`, and pass it
-explicitly with `--manual-evidence`. Bind it to the exact clean current commit,
-tree, status digest, inventory, and audit instruments; include only the three
-authorized L1 receipts and canonical evidence digests. A valid clean full audit
-must make Q1.6, Q1.7, and Q1.9 PASS while preserving every automated verdict
-and ratchet. Record the external document SHA-256, receipt digests, populations,
-scorecard identity, and audit exit in tracked continuity. Do not weaken the
-validator, scanner, inventory, baseline, contracts, or product code to obtain a
-receipt.
-
-## Verification Notes
-
-- The initial exact-address test failed only on the old `:7999` value; it passed
-  after the one-line production change and exact start/stop assertion updates.
-- Focused command, webservice, API, server-adapter, driver, coverage,
-  shuffle-count-10, and vet checks pass. The driver meta-test reports all 21
-  named contracts.
-- Actual API/CLI, CLI surface, fresh executable subprocess, and compatibility
-  meta-contracts pass with reports and caches outside the worktree.
-- Complete build and tests, race, vet, exact pinned lint, `make preflight`,
-  `make test`, Make contracts, install, and all 62 launcher controls pass.
-- All production-script meta-contracts, all four host acceptance flows, and the
-  repaired 15-control audit meta-suite pass.
-- Broader unchanged launcher invocations intermittently hit the documented
-  partial-raw-log signal-fixture race at controls 26 and 50. Unchanged
-  standalone launcher and complete Make reruns passed all 62 controls.
-- Empty-HOME `go test ./... -count=2` passes with isolated writable state and
-  the existing read-only module cache.
-- Full clean audit: expected exit 1, 13 non-passing criteria, six improved, two
-  held, zero regressed, zero non-comparable, and zero dirty paths.
+After the test-only move, rerun exact Q1.9 enumeration and guard validation,
+the full gate, and the clean no-evidence audit. Q1.7 will remain blocked and no
+manual-evidence document may be created in that session. P4 stays active and
+P5-P8 stay queued.
 
 ## Start And Stop
 
-Read this handover, the linked NEXT archive, the complete P4 entry and
-checkpoint gate, both design documents, `.quality/README.md`, the complete
-schema-2 parser and negative meta-test, baseline reproduction materials, all
-dependency-double, partial-failure, and non-empty-population contracts, the
-full audit wrapper, and the T15 repair before recording evidence. Confirm
-branch, HEAD, clean status, reciprocal archive links, launcher `--check`, and
-exact product commit `c382caa`.
+Read this handover, the linked NEXT archive, the complete P4 entry and gate,
+both design documents, the Q1.9 criterion source, every one of the 169 range
+sites, and the existing empty-population contracts before editing. Confirm
+branch, HEAD, clean and ignored status, reciprocal archive links, launcher
+`--check`, and exact product ancestry.
 
-Do not make a product-code or test change for this evidence-only checkpoint.
-Measure the clean current continuity head with an external receipt file, then
-make the normal continuity-only commit that records the result and advances to
-P5 only when every P4 exit is truthfully satisfied. Stop before an executable
-P5 harness, T1-T10, P6-P8, publication, or distribution. Do not push, merge,
-stash, revert, launch a successor, or remove the worktree.
+Make one focused test-only implementation commit and one separate continuity
+commit. Stop before Q1.7 remediation, schema-2 evidence, production changes,
+P5 mutation work, T1-T10 changes, P6-P8, publication, or distribution. Do not
+push, merge, stash, revert, launch a successor, or remove the worktree.
