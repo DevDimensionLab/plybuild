@@ -1,13 +1,13 @@
 # Agent Session: Repair Q1.7 Partial Failures
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T204147+0200-repair-q17-partial-failures`
 Created: `2026-08-26T20:41:47+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `71727d1e6f93f11f45bba986fefe84a0f48dee5f64e07479691a892111422801`
 Previous: [2026-08-26T195729+0200-repair-q19-empty-populations.md](2026-08-26T195729+0200-repair-q19-empty-populations.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T213324+0200-repair-q17-delete-demo-discovery.md](2026-08-26T213324+0200-repair-q17-delete-demo-discovery.md)
+Outcome: Seven of eight Q1.7 blocker operations were fully repaired test-only; `DeleteDemoFiles` deletion failures were repaired, but its discovery-warning branch is uncontrollable without a production injection seam, so Q1.7 remains blocked.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

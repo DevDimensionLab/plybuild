@@ -4500,6 +4500,49 @@ population, but remains formally UNMEASURABLE because no manual-evidence
 receipt was authorized while Q1.7 is blocked. P4 therefore remains active for
 the eight previously classified Q1.7 gaps; P5-P8 remain queued.
 
+Move 12 completes every Q1.7 contract exercisable through the production
+control points that existed at its start. Test-only commit `7be93e7` changes
+seven `_test.go` files and no production file. Ten new top-level contracts
+bring the suite from 453 to 463 tests. They assert the exact ordered
+failure content and continuation or populated partial result for `initCmd`;
+`Bitbucket.SynchronizeAllRepos` repository-query, clone, and pull failures;
+the deletions in `spring.DeleteDemoFiles`; dependency version,
+maximum-version, parse, and metadata failures; plugin version, parse,
+metadata, and release failures; both `maven.RemoveDeprecated` partial/error
+and replacement-warning paths; `template.MergeTemplates`; and
+`GitCloudConfig.ValidTemplatesFrom`.
+
+Fresh executable-flow classification keeps the complete population at 17
+operations. Sixteen operations now have exact content plus continuation or
+ordered-partial-result coverage. One included branch remains blocked:
+`DeleteDemoFiles`' discovery warning. That public function hard-codes
+`file.FindFirst`, whose system `filepath.Walk` callback ignores every incoming
+walk error and returns only `nil` or `io.EOF`; final `io.EOF` is normalized to
+nil. Therefore no current test seam can make the checked `err` non-nil. This
+mission forbade the production injection seam required to exercise the branch,
+so no Q1.7 PASS claim or manual receipt was made. The complete 17-row record
+SHA-256 is
+`4b247f3343a651374b96245d6c15b563f573a152799f3329713c578ace863e57`;
+the exact 33-contract focused population manifest SHA-256 is
+`43391020bb74aa696a750c68cbdefad40ceee4de5928c4f547356f581ddcae22`.
+
+The exact affected packages, complete 33-contract Q1.7 population, complete
+uncached tests, race, vet, API/CLI and subprocess compatibility, pinned lint,
+launcher and Make contracts, complete preflight, all four host acceptance
+flows, the 15-control audit meta-suite, and empty-HOME count-2 pass. The known
+unchanged launcher partial-raw-log signal fixture missed during initial
+broader runs; unchanged standalone, complete `make test`, and complete
+preflight reruns passed all 62 controls. The clean no-evidence audit measures
+commit `7be93e7e822f05bdb007e4e5a1a00402e620a6cb`, tree
+`0f0955f8bbe3e49f5c8d1b4f98454dcb04ea62f1`, and zero dirty paths. Its
+scorecard SHA-256 is
+`b2ccc93dbb045f06404f955ac4b122a614a654f2c0d983d48941fe7026b352ec`;
+it exits 1 for the same 13 documented non-passing criteria, never 2, with 463
+tests across all 27 packages, L0 8 of 8, L1 six PASS and Q1.6/Q1.7/Q1.9
+UNMEASURABLE, six improved ratchets, two held, zero regressed, and zero
+non-comparable. P4 remains active for the one Q1.7 controllability repair and
+later combined manual evidence; P5-P8 remain queued.
+
 ### P5 - Build L2 Mutation Evidence
 
 Status: queued.
