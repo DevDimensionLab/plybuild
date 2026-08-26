@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"errors"
 	"os"
 	"reflect"
@@ -15,8 +16,9 @@ type recordingProfileEditorProcess struct {
 	err      error
 }
 
-func (recording *recordingProfileEditorProcess) dependencies() profileEditorDependencies {
-	dependencies := systemProfileEditorDependencies()
+func (recording *recordingProfileEditorProcess) dependencies(
+	dependencies profileEditorDependencies,
+) profileEditorDependencies {
 	dependencies.Process.Runner = recording
 	return dependencies
 }
@@ -34,16 +36,20 @@ func (recording *recordingProfileEditorProcess) assertedCommands() ([]process.Co
 	return recording.commands, nil
 }
 
-func TestProfileEditorSelectsCompleteSystemProcessDependencies(t *testing.T) {
+func TestProfileEditorSelectsExactSystemRunnerWithoutProcessStandardOutput(t *testing.T) {
 	dependencies := systemProfileEditorDependencies()
 	systemProcess := process.System()
 
-	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout {
-		t.Fatal("profile editor selected an incomplete process dependency")
+	if dependencies.Process.Runner == nil {
+		t.Fatal("profile editor selected no system process runner")
 	}
-	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {
+	if dependencies.Process.Runner != systemProcess.Runner {
 		t.Fatalf("profile-editor process dependency is %T, want %T",
 			dependencies.Process.Runner, systemProcess.Runner)
+	}
+	if dependencies.Process.Stdout != nil {
+		t.Fatalf("profile editor inherited unused process standard output %T, want nil",
+			dependencies.Process.Stdout)
 	}
 	if dependencies.Stdin != os.Stdin {
 		t.Fatalf("profile-editor stdin is %T, want exact os.Stdin", dependencies.Stdin)
@@ -77,8 +83,17 @@ func TestProfileEditorPreservesExactEditorFallbackPathStreamsAttemptAndError(t *
 		t.Run(test.name, func(t *testing.T) {
 			t.Setenv("EDITOR", test.editorValue)
 			recording := &recordingProfileEditorProcess{err: test.processErr}
-			dependencies := recording.dependencies()
-			if dependencies.Process.Runner != recording {
+			callerOwnedProcessStdout := &bytes.Buffer{}
+			stdin := bytes.NewBufferString("complete profile-editor stdin bytes\n")
+			stdout := &bytes.Buffer{}
+			dependencies := recording.dependencies(profileEditorDependencies{
+				Process: process.Dependencies{Stdout: callerOwnedProcessStdout},
+				Stdin:   stdin,
+				Stdout:  stdout,
+			})
+			if dependencies.Process.Runner != recording ||
+				dependencies.Process.Stdout != callerOwnedProcessStdout ||
+				dependencies.Stdin != stdin || dependencies.Stdout != stdout {
 				t.Fatalf("profile-editor dependency lost its complete process value: %#v", dependencies)
 			}
 			localConfig := config.OpenLocalConfig(`/arbitrary profile directory//with spaces/../backslash\segment-β`)
@@ -98,15 +113,23 @@ func TestProfileEditorPreservesExactEditorFallbackPathStreamsAttemptAndError(t *
 				Name:   test.wantEditor,
 				Args:   []string{configPath},
 				Dir:    "",
-				Stdin:  os.Stdin,
-				Stdout: os.Stdout,
+				Stdin:  stdin,
+				Stdout: stdout,
 				Stderr: nil,
+				Start:  false,
 			}}
 			if !reflect.DeepEqual(commands, want) {
 				t.Fatalf("recorded profile-editor commands differ:\n got: %#v\nwant: %#v", commands, want)
 			}
-			if commands[0].Stdin != os.Stdin || commands[0].Stdout != os.Stdout {
-				t.Fatal("profile-editor standard stream identities changed")
+			if len(commands) != 1 {
+				t.Fatalf("profile editor made %d process requests, want exactly 1", len(commands))
+			}
+			if len(commands[0].Args) != 1 || commands[0].Args[0] != configPath {
+				t.Fatalf("profile editor changed its single exact config-path argument: %#v", commands[0].Args)
+			}
+			if commands[0].Stdin != stdin || commands[0].Stdout != stdout ||
+				commands[0].Stdout == callerOwnedProcessStdout {
+				t.Fatal("profile-editor dependency-selected command stream identities changed")
 			}
 		})
 	}

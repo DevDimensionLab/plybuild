@@ -32,7 +32,7 @@ type profileEditorDependencies struct {
 }
 
 func systemProfileEditorDependencies() profileEditorDependencies {
-	dependencies := profileEditorDependencies{Process: process.System()}
+	dependencies := profileEditorDependencies{Process: process.SystemRunner()}
 	dependencies.Stdin = os.Stdin
 	dependencies.Stdout = os.Stdout
 	return dependencies
