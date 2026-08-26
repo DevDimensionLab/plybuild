@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-26T17:28:16+02:00
+Generated: 2026-08-26T18:01:11+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,10 +10,10 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
-- Focused P4.7 product implementation:
+- Focused P4.8 product implementation:
+  `67344a800db0030e1aceb908562eef8c8153394b`.
+- Preceding P4.7 product implementation:
   `4da64d2468307d39ed3e8303ad9183fa18d71a75`.
-- Preceding P4.6 product implementation:
-  `8eeeb2a8fe923bd644b65f3c77c6fae805b0ee17`.
 - Truthful P3.54 audit-apparatus repair:
   `ce736a233e1be1e17f290ad8cf3a327bf70ccfd0`.
 - After launch, obtain the continuity head with `git rev-parse --short=12 HEAD`;
@@ -30,10 +30,10 @@ is `ce736a2`; neither changes a Go quality denominator.
 
 `codex-dev-start.sh` remains NEXT because P4 is active and P5-P8 are queued. Its
 active archive is
-`docs/plan/agent-sessions/2026-08-26T172816+0200-cover-logger-package.md`.
-The P4.7 webservice-API archive is answered history and links reciprocally to
-that archive. The graph has exactly one NEXT tail. The archived prompt SHA-256
-is `551a599d5cb7993bd7e215a9b0bdf985598d29e9ecac7305f49ede79ff4dabc6`.
+`docs/plan/agent-sessions/2026-08-26T180111+0200-cover-context-package.md`.
+The P4.8 logger archive is answered history and links reciprocally to that
+archive. The graph has exactly one NEXT tail. The archived prompt SHA-256 is
+`d15a436b770b306c5003da989c238153a0822b4b2a4b632e56265bca8ecc676a`.
 
 Normal launch remains a Bash 3.2-compatible non-interactive supervisor with
 byte-exact archived prompts, unique external raw JSONL logs, structured stream
@@ -43,44 +43,36 @@ skeleton digest remains
 `4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484`.
 `test/codex_dev_start_test.sh` retains all 62 controls.
 
-## P4 Move 7
+## P4 Move 8
 
-Product commit `4da64d2` adds only
-`pkg/webservice/api/handlers_test.go`. All three production API files, exported
-handler signatures, `GenerateOptions`, package globals, channel identity and
-capacity, routes, callers, forms, templates, HTML, callback timing, and response
-semantics remain unchanged. Five focused contracts bring the suite to 434
-tests across 25 of 27 packages and cover all four handlers at 100% statement
-coverage.
+Product commit `67344a8` adds only `pkg/logger/logger_test.go`. Both production
+logger files, exported signatures, exact package globals and identities,
+private logger and collector-hook arrangement, standard-logrus split, levels,
+fields, formatter, output selection, callers, logging bytes, and observable
+behavior remain unchanged. Six focused contracts bring the suite to 440 tests
+across 26 of 27 packages and cover every logger statement, including package
+initialization.
 
-Generate GET uses only an in-memory recorder/request and a static CloudConfig
-test value. It executes the existing `text/template` path and pins status 200,
-the exact 2,957-byte body with SHA-256
-`9a9eb38ab026e751b06dee004e84d8db9a427454c5e33f4b864ebc83635399c1`,
-one template-list request, and representative raw project, template, dependency
-group, dependency ID, and dependency name bytes. Upgrade GET executes the
-existing `html/template` path and pins status 200 plus the exact 788-byte body
-with SHA-256
-`ae9194d9a6734d1fe568692e11327fc1b31b3f0d797fd558fd6ceba3ffa58ecc`.
-The raw unquoted Generate values are deliberate characterization; preferred
-validation, quoting, or escaping remains a later product decision requiring
-explicit authority.
+The contracts pin the exact ordered `Info` and `Warn` collector levels,
+append-only capture of exact entry pointers without copying, and the collector
+hook installed only on the private package logger. `DebugLogger` returns an
+empty allocated field map and enables debug only on the private logger;
+`Context` returns empty data; and `ExternalError` preserves representative
+exact multiline and empty text without wrapping. JSON logging selects the
+exact zero `logrus.JSONFormatter`; field-logger transitions are exact;
+`StdOut` depends only on standard-logrus debug enablement and returns the exact
+`os.Stdout` pointer or nil; and `LogEntries` exposes the collector's exact
+slice backing and entry pointers without copying.
 
-Generate POST proves exact body parsing, body-over-query first-value selection
-for all six scalar fields, preservation of every other project field, and
-ordered duplicate-preserving append of all template and dependency values.
-Both POST handlers return status 200 and exact `OK` before a receiver exists on
-the test-owned unbuffered callback channel, then deliver exactly one `true`
-callback. Upgrade POST retains its exact choice not to parse a malformed form
-body. Each unbuffered rendezvous releases the only sender. The tests perform no
-sleep, timed wait, socket, external program, logger mutation, or fixture write,
-and leak no goroutine.
-
-Every handler subtest restores `GOptions`, `CallbackChannel`, and
-`CurrentProject`; its outer contract verifies restored pointer/channel
-identities and values. Recorded callback and iterated table populations reject
-empty inputs. No production code, scanner, inventory, audit apparatus, manual
-evidence, mutation harness, or completed contract changed.
+Every mutating subtest snapshots and restores the exact `fieldLogger`,
+`collector`, private `log`, and touched private and standard-logrus level,
+formatter, output, hooks, and caller-reporting state. Outer contracts verify
+the restored identities and values. The tests use only in-memory logrus
+objects and buffers, use no parallelism around globals, and leave no hook or
+entry behind. They open no socket, launch no program, sleep no clock, and write
+no fixture. Every iterated table and recorded-entry population is required to
+be non-empty. Preferred logger ownership, isolation, copying, formatting, or
+output design remains a later product decision requiring explicit authority.
 
 ## T15 Apparatus Checkpoint
 
@@ -94,28 +86,29 @@ new scorecard
 `5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`,
 normalized stored raw body
 `cf23c9dca987acd3a966693f933c4c7eca9f7d11c51f0fbabfe1d697f3d7497f`,
-Q3.9, and all 228 numeric debt leaves. P4.7 did not modify the apparatus,
+Q3.9, and all 228 numeric debt leaves. P4.8 did not modify the apparatus,
 parser, scanner, baseline, inventory, or reproduction recipe.
 
 ## Measured Quality State
 
-The authoritative clean full audit from product commit `4da64d2` reports:
+The authoritative clean full audit from product commit `67344a8` reports:
 
-- Measured commit tree: `d23edc06e2f958c43f2add2a43c540f48c7145e9`.
+- Measured commit tree: `e85dc852f5875c812509b8f7e1b08520d7f0251d`.
 - Structured scorecard SHA-256:
-  `0682df76893e0eac05302870ea986b1f18cab32e7513a7e0e91ab85da5f16c38`.
+  `38e938f060312840cb244a575536aa613266b172de98542cb2bb2e0998da576b`.
 - Absolute L0: 8 of 8.
-- 434 test functions, zero skipped; 25 of 27 packages have tests.
+- 440 test functions, zero skipped; 26 of 27 packages have tests.
+- `pkg/logger`: 100% statement coverage.
 - Q0.6: 27 guarded safe-writer sites, 22 write and 5 copy, with zero unsafe
   direct test writes.
 - Q0.8: 0 of 12 production scripts lack a meta-test.
-- Q1.1: 2 of 27 packages have no tests.
+- Q1.1: 1 of 27 packages has no tests.
 - Q1.2: 0 process-exiting calls outside `main`.
 - Q1.3: 0 direct external sites outside five valid declared adapters of 27
   production effect sites.
 - Q1.4: 7 of 8 declared seams covered.
 - Exact Q2.1: 0 of 8 subjects have an executable harness.
-- Q3.4: 0 state-claim phrases across 91 Markdown files.
+- Q3.4: 0 state-claim phrases across 92 Markdown files.
 - Acceptance: 4 of 4 host flows pass.
 - Full audit: exit 1 for 13 documented non-passing criteria, never 2.
 - Comparable ratchets: six improved, two held, zero regressed, zero
@@ -123,51 +116,52 @@ The authoritative clean full audit from product commit `4da64d2` reports:
 - Clean identity: zero dirty paths.
 
 The focused seven-criterion scorecard under
-`/private/tmp/ply-p4-api-focused-audit.EVMVn0` has SHA-256
-`54b314c71a0e6bce29b84647d347d15b643ecf3c8baf982876411ef7b72cb428`.
+`/private/tmp/ply-p4-logger-focused-audit.8CF6Sv` has SHA-256
+`5c640e0717d17f3200b1acfed83171f1cc824529ae2af18ab9b31a7b4fa77ee6`.
 The full clean audit is under
-`/private/tmp/ply-p4-api-full-audit.1qAqQS`. Pinned tools remain under
+`/private/tmp/ply-p4-logger-full-audit.bqTIxi`. Pinned tools remain under
 `/private/tmp/ply-p4-tools` and `/private/tmp/ply-p358-tools`.
 
 ## Next Objective
 
-Continue P4 with one test-only coverage move for `pkg/logger`, reducing the
-remaining untested package population without changing production code or
-global semantics. Characterize the exact `Collector` hook levels and ordered
-entry-pointer capture; the package logger's installed collector hook;
-`DebugLogger`, `Context`, and `ExternalError`; JSON formatter selection;
-field-logger state; `StdOut`; and `LogEntries`.
+Continue P4 with one test-only coverage move for `pkg/context`, the sole
+remaining untested package, reducing Q1.1 from 1 of 27 to zero without changing
+production code or observable semantics. Characterize the existing Context
+state, `FindAndPopulateMavenProjects`, `OnEachMavenProject`, `OnRootProject`,
+`LoadProfile`, `GetMavenRepository`, package logger initialization, and
+`SetLogger` through their current file, config, Maven, project, and logger
+interfaces.
 
-Keep the move inside one new `pkg/logger` test file. Do not use parallel tests
-around package or logrus globals. Snapshot and restore `fieldLogger`,
-`collector`, `log`, and every mutated standard-logrus value, preserving exact
-pointer identities and leaving no state after cleanup. Use only in-memory
-logrus values and buffers; do not write a fixture, open a socket, launch a
-program, wait on a clock, or add a seam. Reject empty table and recorded-entry
-populations before iterating. Expect Q1.1 to improve from 2/27 to 1/27 while
-exact Q1.3 remains 0/27. Leave `pkg/context`, API handlers, templates, callers,
-logging behavior, scanner, inventory, apparatus, mutation work, manual
+Keep the move inside one new `pkg/context` test file. Use `t.TempDir()`, the
+central guarded writer, in-memory logrus values, and isolated test-owned HOME,
+config, Maven, and process state. Do not use parallel tests around globals or
+process state. Snapshot and restore the private logger's exact identity plus
+every environment, working-directory, or other process value touched. Open no
+socket, access no network, launch no program, and perform no sleep or timed
+wait. Require all iterated table, callback, project, job, and recorded-entry
+populations to be non-empty. Leave production context, logger, config, Maven,
+file code, callers, scanner, inventory, apparatus, mutation work, manual
 evidence, and P5-P8 unchanged.
 
 ## Verification Notes
 
-- Focused API, webservice, templates, and command caller tests pass; the API
-  package reports 100% statement coverage and its focused race run passes.
+- Focused logger and relevant command and package caller tests pass; the logger
+  package reports 100% statement coverage and its focused race, vet, shuffled
+  count-10, and pinned-lint runs pass.
 - Actual API/CLI, CLI surface, fresh executable subprocess, and compatibility
   meta-contracts pass with reports and caches outside the worktree.
 - Complete build and uncached tests, race, vet, exact pinned lint,
   `make preflight`, `make test`, Make contracts, and all 62 launcher controls
   pass.
-- The first two standalone launcher invocations hit the documented partial-
-  raw-log signal-fixture race at control 26. The third passed its primary
-  signal control but hit the same race in the nested control-50 run. The fourth
-  unchanged complete invocation passed all 62 controls.
-- The first `make test` invocation hit the same launcher race at control 26;
-  its unchanged complete rerun passed.
+- The first focused coverage invocation used the sandbox-blocked default Go
+  build cache; its unchanged isolated-cache rerun passed.
+- Initial standalone launcher and `make test` invocations hit the documented
+  partial-raw-log signal-fixture race at control 26 or during its nested
+  control-50 run; unchanged complete reruns passed all 62 controls.
 - All production-script meta-contracts, all four host acceptance flows, and the
   repaired 15-control audit meta-suite pass.
 - Empty-HOME `go test ./... -count=2` passes with isolated writable state under
-  `/private/tmp/ply-p4-api-hermetic.oKxSI3` and the existing module cache.
+  `/private/tmp/ply-p4-logger-hermetic.rbdLgq` and the existing module cache.
 - Full clean audit: expected exit 1, 13 non-passing criteria, six improved, two
   held, zero regressed, zero non-comparable, and zero dirty paths.
 
@@ -175,15 +169,16 @@ evidence, and P5-P8 unchanged.
 
 Read this handover, the linked NEXT archive, the complete P4 entry and
 checkpoint gate, both design documents, `.quality/inventory`, both complete
-logger production files and package initialization, all logger callers,
-relevant logrus types and package-level state behavior, representative
-global-restoration/log-capture/exact-error/stdout/non-empty contracts, the
-import-aware scanner, API/CLI contracts, and the T15 repair and baseline
-reproduction README before editing. Confirm branch, HEAD, clean status,
-reciprocal archive links, launcher `--check`, and exact product commit
-`4da64d2`.
+context production files, every context caller, and all reached config,
+project, Maven, file, logger, profile, and guarded-writer code. Read
+representative restoration, temporary-home, working-directory, exact-log,
+partial-result, job-order, dry-run, callback, pointer-identity, and non-empty
+contracts, the import-aware scanner, API/CLI contracts, and the T15 repair and
+baseline reproduction README before editing. Confirm branch, HEAD, clean
+status, reciprocal archive links, launcher `--check`, and exact product commit
+`67344a8`.
 
-Make one focused logger test implementation commit, then the normal separate
-continuity commit. Stop before production logger/context/API/template changes,
-another untested package, manual evidence, P5-P8, publication, or distribution.
+Make one focused context test implementation commit, then the normal separate
+continuity commit. Stop before production context/logger/config/Maven/file
+changes, another package, manual evidence, P5-P8, publication, or distribution.
 Do not push, merge, stash, revert, launch a successor, or remove the worktree.

@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `4da64d2`.
+Last measured checkpoint: 2026-08-26, commit `67344a8`.
 
 ## Objective
 
@@ -4244,6 +4244,65 @@ improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
 paths. The focused seven-criterion scorecard SHA-256 is
 `54b314c71a0e6bce29b84647d347d15b643ecf3c8baf982876411ef7b72cb428`.
 Continue P4 with one test-only characterization move for `pkg/logger`.
+
+Move 8 adds only `pkg/logger/logger_test.go`; both production logger files,
+all exported signatures, package globals and pointer identities, hook
+installation, levels, fields, formatter and output selection, callers, logging
+bytes, and observable behavior are unchanged. Six focused characterization
+contracts bring the suite to 440 tests across 26 of 27 packages and cover
+`pkg/logger` at 100% statement coverage.
+
+The contracts pin the exact ordered `Info` and `Warn` collector levels,
+append-only capture of the exact entry pointers without copying, and the
+collector hook installed only on the private package logger. They preserve and
+characterize the existing private-versus-standard logrus state split:
+`DebugLogger` returns an empty allocated field map and enables debug only on
+the private logger; `Context` returns empty data; `ExternalError` keeps its
+representative exact multiline and empty text without wrapping; JSON selection
+uses the exact zero `logrus.JSONFormatter`; field-logger transitions are exact;
+and `StdOut` depends only on standard-logrus debug enablement and returns the
+exact `os.Stdout` pointer or nil. `LogEntries` exposes the collector's exact
+slice backing and entry pointers without copying. Preferred logger ownership,
+isolation, copying, formatting, or output design remains a later product
+decision requiring explicit scope.
+
+Each mutating subtest snapshots and restores the exact `fieldLogger`,
+`collector`, private `log`, and touched private and standard-logrus level,
+formatter, output, hooks, and caller-reporting state; its outer contract proves
+the restored identities and values. No parallel test, socket, external
+program, sleep, timed wait, fixture write, hook leak, or entry leak is added.
+Every iterated table and recorded-entry population rejects an empty input.
+
+Q0.6 holds at 27 guarded safe-writer sites, 22 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 improves from 2 of 27 to
+1 of 27, Q1.2 remains zero, exact Q1.3 remains 0 of 27 with all five adapter
+paths valid, Q1.4 remains 7 of 8, exact Q2.1 remains 0 of 8, and Q3.4 remains
+zero phrases across 92 Markdown files. The scanner, inventory, baseline, audit
+apparatus, mutation harnesses, production code, and all completed contracts are
+unchanged.
+
+The clean move-8 gate passes focused logger and relevant command and package
+caller tests at 100% logger coverage; API/CLI, CLI surface, and fresh
+subprocess compatibility; build, complete and uncached tests, race, vet,
+pinned lint, `make preflight`, `make test`, all 62 launcher controls, Make and
+production-script contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. The first focused coverage
+invocation used the sandbox-blocked default Go build cache; its unchanged
+isolated-cache rerun passed. Initial launcher and `make test` invocations hit
+the documented partial-raw-log signal-fixture race at control 26 or the nested
+control-50 run; unchanged complete reruns passed all controls.
+
+Product commit: `67344a8`.
+
+The authoritative clean full audit from `67344a8` has structured scorecard
+SHA-256
+`38e938f060312840cb244a575536aa613266b172de98542cb2bb2e0998da576b`;
+the measured commit tree is `e85dc852f5875c812509b8f7e1b08520d7f0251d`.
+It exits 1 for 13 documented findings, never 2, with L0 8 of 8, six
+improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
+paths. The focused seven-criterion scorecard SHA-256 is
+`5c640e0717d17f3200b1acfed83171f1cc824529ae2af18ab9b31a7b4fa77ee6`.
+Continue P4 with one test-only characterization move for `pkg/context`.
 
 ### P5 - Build L2 Mutation Evidence
 
