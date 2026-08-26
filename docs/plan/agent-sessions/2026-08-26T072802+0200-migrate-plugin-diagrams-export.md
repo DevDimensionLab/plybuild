@@ -1,13 +1,13 @@
 # Agent Session: Migrate Plugin Diagrams Export
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T072802+0200-migrate-plugin-diagrams-export`
 Created: `2026-08-26T07:28:02+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `1b6cf593ab559a4650717479f248b7ecb49ce676574e1d46f4511e734a6b50f8`
 Previous: [2026-08-26T061848+0200-resume-p354-audit-harness-repair.md](2026-08-26T061848+0200-resume-p354-audit-harness-repair.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T080352+0200-migrate-plugin-diagrams-open.md](2026-08-26T080352+0200-migrate-plugin-diagrams-open.md)
+Outcome: product commit `3972fc6` routes only the ignored structurizr export request through the process adapter; 364 tests, Q1.3 9/31, the clean gate, T15, full audit, and empty-HOME count-2 pass with zero comparable regressions
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
