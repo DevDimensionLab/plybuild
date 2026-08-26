@@ -4134,6 +4134,54 @@ paths. The focused seven-criterion scorecard SHA-256 is
 Continue P4 with one test-only characterization move for
 `pkg/webservice/templates`.
 
+Move 6 adds only `pkg/webservice/templates/templates_test.go`; all four
+production template sources, exported `Generate` and `Upgrade` untyped string
+constants, private header/body/footer fragments, API callers, parser choices,
+HTML, form behavior, and observable output remain unchanged. Three focused
+characterization contracts prove exact complete lengths and SHA-256 identities
+for both public templates and all four private fragments, exact shared-header +
+private-body + shared-footer composition, leading and trailing bytes, form
+actions, input names, template actions and counts, CDN references, and
+successful parsing through the callers' exact `text/template` Generate and
+`html/template` Upgrade engines. Every table rejects an empty population before
+iteration. The package contains no statements, so Go correctly reports
+`[no statements]` coverage while the new test file closes its Q1.1 package gap.
+
+The existing unquoted Generate value attributes and caller-selected
+`text/template` parsing are deliberately preserved. Preferred quoting or HTML
+escaping is a later product decision requiring explicit authority; this move
+does not change bytes to make that preference pass.
+
+The suite now has 429 tests across 24 of 27 packages. Q0.6 holds at 27 guarded
+safe-writer sites, 22 write and 5 copy, with zero skipped tests and zero unsafe
+direct test writes. Q1.1 improves from 4 of 27 to 3 of 27, Q1.2 remains zero,
+exact Q1.3 remains 0 of 27 with all five adapter paths valid, Q1.4 remains 7 of
+8, exact Q2.1 remains 0 of 8, and Q3.4 remains zero phrases across 90 Markdown
+files. The scanner, inventory, baseline, audit apparatus, mutation harnesses,
+production templates, API globals, and callers are unchanged.
+
+The clean move-6 gate passes focused templates, API, and webservice caller
+tests; API/CLI, CLI surface, and fresh subprocess compatibility; build,
+complete and uncached tests, race, vet, pinned lint, `make preflight`, all 62
+launcher controls, Make and production-script contracts, all four host
+acceptance flows, the repaired 15-control audit meta-suite, and empty-HOME
+count-2. The first `make test` invocation hit the documented nested partial-
+raw-log signal-fixture race at launcher control 26; its immediate unchanged
+complete rerun passed all controls.
+
+Product commit: `8eeeb2a`.
+
+The authoritative clean full audit from `8eeeb2a` has structured scorecard
+SHA-256
+`213df9ece4eb7c231ec3faa8f76e9180e9215a6ef0fc7d83039911940224c7e7`;
+the measured commit tree is `9c7322b185f485b4202cec0691ce9fd39c8dbdc0`.
+It exits 1 for 13 documented findings, never 2, with L0 8 of 8, six
+improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
+paths. The focused seven-criterion scorecard SHA-256 is
+`aaa5507955ca84ef255432c998ee2c3092776caeb737754736e78752bc49a57a`.
+Continue P4 with one test-only characterization move for
+`pkg/webservice/api`.
+
 ### P5 - Build L2 Mutation Evidence
 
 Status: queued.
