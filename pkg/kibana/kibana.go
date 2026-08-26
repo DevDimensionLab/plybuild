@@ -3,6 +3,7 @@ package kibana
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/clock"
 	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"io"
@@ -109,13 +110,36 @@ type KibanaResponse struct {
 
 const kibanaMaxResult = 500
 
+type postDependencies struct {
+	InternalPOST func(KibanaFetchRequest) (error, KibanaResponse)
+	Clock        clock.Dependencies
+}
+
+func (dependencies postDependencies) Post(request KibanaFetchRequest) (error, KibanaResponse) {
+	if dependencies.InternalPOST == nil {
+		return httpclient.ErrNoClient, KibanaResponse{}
+	}
+	return dependencies.InternalPOST(request)
+}
+
+func systemPostDependencies() postDependencies {
+	return postDependencies{
+		InternalPOST: internalPOST,
+		Clock:        clock.System(),
+	}
+}
+
 func POST(reguest KibanaFetchRequest) (error, KibanaResponse) {
-	err, response := internalPOST(reguest)
+	return post(systemPostDependencies(), reguest)
+}
+
+func post(dependencies postDependencies, reguest KibanaFetchRequest) (error, KibanaResponse) {
+	err, response := dependencies.Post(reguest)
 
 	if len(response.KibanaResult.Result.RawResponse.Hits.Hits) == 0 {
 		println("sleep and retry")
-		time.Sleep(15 * time.Second) // dont stress the server
-		err, response := internalPOST(reguest)
+		clock.Sleep(dependencies.Clock, 15*time.Second) // dont stress the server
+		err, response := dependencies.Post(reguest)
 		return err, response
 	}
 	return err, response

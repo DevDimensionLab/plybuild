@@ -14,7 +14,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/adapter/clock"
 	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 )
 
@@ -59,6 +61,78 @@ func (recording *recordingKibanaHTTP) assertedRequests() ([]httpclient.Request, 
 		return nil, errors.New("recorded Kibana POST request population is empty")
 	}
 	return recording.requests, nil
+}
+
+type recordedKibanaRetryResult struct {
+	err      error
+	response KibanaResponse
+}
+
+type recordingKibanaRetryPOST struct {
+	requests []KibanaFetchRequest
+	results  []recordedKibanaRetryResult
+	sequence *[]string
+}
+
+func (recording *recordingKibanaRetryPOST) dependencies(
+	dependencies postDependencies,
+) postDependencies {
+	dependencies.InternalPOST = recording.Post
+	return dependencies
+}
+
+//nolint:staticcheck // The recorder preserves the existing error-first internalPOST contract.
+func (recording *recordingKibanaRetryPOST) Post(request KibanaFetchRequest) (error, KibanaResponse) {
+	recording.requests = append(recording.requests, request)
+	if recording.sequence != nil {
+		*recording.sequence = append(*recording.sequence, "post")
+	}
+	index := len(recording.requests) - 1
+	if index >= len(recording.results) {
+		return errors.New("recorded Kibana retry result population is empty"), KibanaResponse{}
+	}
+	return recording.results[index].err, recording.results[index].response
+}
+
+func (recording *recordingKibanaRetryPOST) assertedRequests() ([]KibanaFetchRequest, error) {
+	if len(recording.requests) == 0 {
+		return nil, errors.New("recorded Kibana retry POST population is empty")
+	}
+	return recording.requests, nil
+}
+
+type recordingKibanaRetrySleeper struct {
+	durations []time.Duration
+	sequence  *[]string
+}
+
+func (recording *recordingKibanaRetrySleeper) dependencies(
+	dependencies postDependencies,
+) postDependencies {
+	dependencies.Clock.Sleeper = recording
+	return dependencies
+}
+
+func (recording *recordingKibanaRetrySleeper) Sleep(duration time.Duration) {
+	recording.durations = append(recording.durations, duration)
+	if recording.sequence != nil {
+		*recording.sequence = append(*recording.sequence, "sleep")
+	}
+}
+
+func (recording *recordingKibanaRetrySleeper) assertedDurations() ([]time.Duration, error) {
+	if len(recording.durations) == 0 {
+		return nil, errors.New("recorded Kibana retry sleep population is empty")
+	}
+	return recording.durations, nil
+}
+
+type recordingKibanaRetryClock struct {
+	now time.Time
+}
+
+func (recording *recordingKibanaRetryClock) Now() time.Time {
+	return recording.now
 }
 
 type recordingKibanaQueryPOST struct {
@@ -253,6 +327,159 @@ func TestKibanaQueryDependenciesDefaultToSafeNoPOST(t *testing.T) {
 	}
 }
 
+func TestPOSTSelectsExactInternalPOSTAndCompleteSystemClock(t *testing.T) {
+	dependencies := systemPostDependencies()
+	systemClock := clock.System()
+
+	if dependencies.InternalPOST == nil {
+		t.Fatal("Kibana retry selected no internalPOST operation")
+	}
+	if reflect.ValueOf(dependencies.InternalPOST).Pointer() != reflect.ValueOf(internalPOST).Pointer() {
+		t.Fatal("Kibana retry no longer selects the exact existing internalPOST operation")
+	}
+	if dependencies.Clock.Clock == nil || dependencies.Clock.Sleeper == nil {
+		t.Fatalf("Kibana retry selected an incomplete system clock: %#v", dependencies.Clock)
+	}
+	if reflect.TypeOf(dependencies.Clock.Clock) != reflect.TypeOf(systemClock.Clock) ||
+		reflect.TypeOf(dependencies.Clock.Sleeper) != reflect.TypeOf(systemClock.Sleeper) {
+		t.Fatalf("Kibana retry clock dependency is %#v, want exact complete system clock %#v",
+			dependencies.Clock, systemClock)
+	}
+	assertPublicPOSTComposition(t)
+	assertPrivatePOSTRetryComposition(t)
+}
+
+func TestPOSTRecordingDoublesPreserveCompleteCallerDependencies(t *testing.T) {
+	callerOperation := internalPOST
+	callerClock := &recordingKibanaRetryClock{now: time.Unix(-73, 456789123)}
+	callerSleeper := &recordingKibanaRetrySleeper{}
+	initial := postDependencies{
+		InternalPOST: callerOperation,
+		Clock: clock.Dependencies{
+			Clock:   callerClock,
+			Sleeper: callerSleeper,
+		},
+	}
+	postRecording := &recordingKibanaRetryPOST{}
+	sleepRecording := &recordingKibanaRetrySleeper{}
+
+	withPOST := postRecording.dependencies(initial)
+	withSleep := sleepRecording.dependencies(initial)
+
+	if withPOST.InternalPOST == nil ||
+		reflect.ValueOf(withPOST.InternalPOST).Pointer() != reflect.ValueOf(postRecording.Post).Pointer() ||
+		withPOST.Clock.Clock != callerClock || withPOST.Clock.Sleeper != callerSleeper {
+		t.Fatalf("Kibana retry POST recorder lost the complete caller-owned dependency: %#v", withPOST)
+	}
+	if withSleep.InternalPOST == nil ||
+		reflect.ValueOf(withSleep.InternalPOST).Pointer() != reflect.ValueOf(callerOperation).Pointer() ||
+		withSleep.Clock.Clock != callerClock || withSleep.Clock.Sleeper != sleepRecording {
+		t.Fatalf("Kibana retry sleep recorder lost the complete caller-owned dependency: %#v", withSleep)
+	}
+}
+
+func TestPOSTReturnsExactFirstResultWithoutSleepOrRetryForNonEmptyHits(t *testing.T) {
+	request := completeKibanaFetchRequest()
+	firstError := errors.New("complete first Kibana retry result error")
+	firstResponse := kibanaResponseForTimestamps(t, []string{"2023-01-04T05:06:07.890123456Z"})
+	sequence := []string{}
+	postRecording := &recordingKibanaRetryPOST{
+		results:  []recordedKibanaRetryResult{{err: firstError, response: firstResponse}},
+		sequence: &sequence,
+	}
+	sleepRecording := &recordingKibanaRetrySleeper{sequence: &sequence}
+	dependencies := sleepRecording.dependencies(postRecording.dependencies(postDependencies{}))
+
+	err, response := post(dependencies, request)
+
+	if err != firstError || !reflect.DeepEqual(response, firstResponse) {
+		t.Fatalf("Kibana non-empty first result was (%v, %#v), want exact (%v, %#v)",
+			err, response, firstError, firstResponse)
+	}
+	requests, populationErr := postRecording.assertedRequests()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(requests, []KibanaFetchRequest{request}) {
+		t.Fatalf("Kibana non-empty retry requests were %#v, want one exact request %#v",
+			requests, []KibanaFetchRequest{request})
+	}
+	if len(sleepRecording.durations) != 0 {
+		t.Fatalf("Kibana non-empty result slept with durations %#v, want none", sleepRecording.durations)
+	}
+	if !reflect.DeepEqual(sequence, []string{"post"}) {
+		t.Fatalf("Kibana non-empty result effect order was %#v, want one first request", sequence)
+	}
+}
+
+func TestPOSTPrintsSleepsAndRetriesOnceAfterEmptyHitsDespiteFirstError(t *testing.T) {
+	request := completeKibanaFetchRequest()
+	firstError := errors.New("complete discarded first Kibana retry error")
+	secondError := errors.New("complete returned second Kibana retry error")
+	tests := []struct {
+		name           string
+		secondResponse KibanaResponse
+	}{
+		{
+			name:           "non-empty second result",
+			secondResponse: kibanaResponseForTimestamps(t, []string{"2023-01-04T05:06:07Z"}),
+		},
+		{
+			name:           "empty second result never causes a third request",
+			secondResponse: KibanaResponse{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			sequence := []string{}
+			postRecording := &recordingKibanaRetryPOST{
+				results: []recordedKibanaRetryResult{
+					{err: firstError, response: KibanaResponse{}},
+					{err: secondError, response: test.secondResponse},
+				},
+				sequence: &sequence,
+			}
+			sleepRecording := &recordingKibanaRetrySleeper{sequence: &sequence}
+			dependencies := sleepRecording.dependencies(postRecording.dependencies(postDependencies{}))
+
+			err, response := post(dependencies, request)
+
+			if err != secondError || !reflect.DeepEqual(response, test.secondResponse) {
+				t.Fatalf("Kibana retry result was (%v, %#v), want exact second (%v, %#v)",
+					err, response, secondError, test.secondResponse)
+			}
+			requests, populationErr := postRecording.assertedRequests()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			wantRequests := []KibanaFetchRequest{request, request}
+			if !reflect.DeepEqual(requests, wantRequests) {
+				t.Fatalf("Kibana retry requests were %#v, want two exact requests %#v", requests, wantRequests)
+			}
+			durations, populationErr := sleepRecording.assertedDurations()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			if !reflect.DeepEqual(durations, []time.Duration{15 * time.Second}) {
+				t.Fatalf("Kibana retry sleep durations were %#v, want one exact 15-second duration", durations)
+			}
+			if !reflect.DeepEqual(sequence, []string{"post", "sleep", "post"}) {
+				t.Fatalf("Kibana retry effect order was %#v, want request, sleep, request", sequence)
+			}
+		})
+	}
+}
+
+func TestPOSTDependenciesDefaultToSafeNoRequestOrRealSleep(t *testing.T) {
+	err, response := post(postDependencies{}, completeKibanaFetchRequest())
+
+	if !errors.Is(err, httpclient.ErrNoClient) || !reflect.DeepEqual(response, KibanaResponse{}) {
+		t.Fatalf("safe Kibana retry default returned (%v, %#v), want (%v, empty response)",
+			err, response, httpclient.ErrNoClient)
+	}
+}
+
 func TestPOSTSystemPreservesFreshClientRedirects(t *testing.T) {
 	previous := http.DefaultTransport
 	t.Cleanup(func() { http.DefaultTransport = previous })
@@ -385,7 +612,211 @@ func TestExecuteKibanaQueryReturnsPOSTErrorAfterCompleteCallerDelivery(t *testin
 	}
 }
 
-func TestPOSTKeepsZeroHitRetrySelectionAndOutputWithoutWaiting(t *testing.T) {
+func assertPublicPOSTComposition(t *testing.T) {
+	t.Helper()
+	function := parsedKibanaFunction(t, "POST")
+	if function.Type.Params == nil || len(function.Type.Params.List) != 1 ||
+		function.Type.Results == nil || len(function.Type.Results.List) != 2 ||
+		function.Body == nil || len(function.Body.List) != 1 {
+		t.Fatal("public Kibana POST signature or single-return composition changed")
+	}
+	returned, ok := function.Body.List[0].(*ast.ReturnStmt)
+	if !ok || len(returned.Results) != 1 {
+		t.Fatal("public Kibana POST no longer directly returns one private composition")
+	}
+	call, ok := returned.Results[0].(*ast.CallExpr)
+	if !ok || len(call.Args) != 2 {
+		t.Fatal("public Kibana POST no longer returns post with dependencies and exact request")
+	}
+	callee, calleeOK := call.Fun.(*ast.Ident)
+	selector, selectorOK := call.Args[0].(*ast.CallExpr)
+	var selectorName *ast.Ident
+	selectorNameOK := false
+	if selectorOK {
+		selectorName, selectorNameOK = selector.Fun.(*ast.Ident)
+	}
+	request, requestOK := call.Args[1].(*ast.Ident)
+	if !calleeOK || callee.Name != "post" || !selectorOK || !selectorNameOK ||
+		selectorName.Name != "systemPostDependencies" || len(selector.Args) != 0 ||
+		!requestOK || request.Name != "reguest" {
+		t.Fatal("public Kibana POST no longer selects exact private production dependencies beside its request")
+	}
+}
+
+func assertPrivatePOSTRetryComposition(t *testing.T) {
+	t.Helper()
+	retryFunction := parsedKibanaFunction(t, "post")
+	if retryFunction.Body == nil || len(retryFunction.Body.List) != 3 {
+		t.Fatal("private Kibana POST retry composition no longer has request, selection, and first return")
+	}
+	assertKibanaRetryPOSTAssignment(t, retryFunction.Body.List[0])
+
+	retry, ok := retryFunction.Body.List[1].(*ast.IfStmt)
+	if !ok || retry.Body == nil || len(retry.Body.List) != 4 {
+		t.Fatal("private Kibana POST retry selection no longer has print, sleep, request, and return")
+	}
+	zeroHitSelection := false
+	ast.Inspect(retry.Cond, func(node ast.Node) bool {
+		comparison, ok := node.(*ast.BinaryExpr)
+		if !ok || comparison.Op != token.EQL {
+			return true
+		}
+		length, lengthOK := comparison.X.(*ast.CallExpr)
+		zero, zeroOK := comparison.Y.(*ast.BasicLit)
+		var identifier *ast.Ident
+		identifierOK := false
+		if lengthOK {
+			identifier, identifierOK = length.Fun.(*ast.Ident)
+		}
+		zeroHitSelection = lengthOK && zeroOK && identifierOK &&
+			identifier.Name == "len" && len(length.Args) == 1 && zero.Value == "0"
+		return !zeroHitSelection
+	})
+	if !zeroHitSelection {
+		t.Fatal("private Kibana POST retry selection is no longer based only on zero hit-list length")
+	}
+
+	printStatement, ok := retry.Body.List[0].(*ast.ExprStmt)
+	if !ok {
+		t.Fatal("Kibana retry print is no longer the first branch operation")
+	}
+	printCall, ok := printStatement.X.(*ast.CallExpr)
+	var printName *ast.Ident
+	printNameOK := false
+	var printText *ast.BasicLit
+	printTextOK := false
+	if ok {
+		printName, printNameOK = printCall.Fun.(*ast.Ident)
+		if len(printCall.Args) == 1 {
+			printText, printTextOK = printCall.Args[0].(*ast.BasicLit)
+		}
+	}
+	if !ok || !printNameOK || printName.Name != "println" || len(printCall.Args) != 1 ||
+		!printTextOK || printText.Value != strconv.Quote("sleep and retry") {
+		t.Fatal("Kibana retry no longer prints the exact sleep and retry text first")
+	}
+
+	sleepStatement, ok := retry.Body.List[1].(*ast.ExprStmt)
+	if !ok {
+		t.Fatal("Kibana retry sleep is no longer the second branch operation")
+	}
+	sleepCall, ok := sleepStatement.X.(*ast.CallExpr)
+	var sleepSelector *ast.SelectorExpr
+	sleepSelectorOK := false
+	if ok {
+		sleepSelector, sleepSelectorOK = sleepCall.Fun.(*ast.SelectorExpr)
+	}
+	var sleepPackage *ast.Ident
+	sleepPackageOK := false
+	if sleepSelectorOK {
+		sleepPackage, sleepPackageOK = sleepSelector.X.(*ast.Ident)
+	}
+	var clockValue *ast.SelectorExpr
+	clockValueOK := false
+	var duration *ast.BinaryExpr
+	durationOK := false
+	if ok && len(sleepCall.Args) == 2 {
+		clockValue, clockValueOK = sleepCall.Args[0].(*ast.SelectorExpr)
+		duration, durationOK = sleepCall.Args[1].(*ast.BinaryExpr)
+	}
+	var dependencyName *ast.Ident
+	dependencyNameOK := false
+	if clockValueOK {
+		dependencyName, dependencyNameOK = clockValue.X.(*ast.Ident)
+	}
+	var fifteen *ast.BasicLit
+	fifteenOK := false
+	var second *ast.SelectorExpr
+	secondOK := false
+	if durationOK {
+		fifteen, fifteenOK = duration.X.(*ast.BasicLit)
+		second, secondOK = duration.Y.(*ast.SelectorExpr)
+	}
+	var timePackage *ast.Ident
+	timePackageOK := false
+	if secondOK {
+		timePackage, timePackageOK = second.X.(*ast.Ident)
+	}
+	if !ok || !sleepSelectorOK || !sleepPackageOK || sleepPackage.Name != "clock" ||
+		sleepSelector.Sel.Name != "Sleep" || len(sleepCall.Args) != 2 || !clockValueOK ||
+		!dependencyNameOK || dependencyName.Name != "dependencies" || clockValue.Sel.Name != "Clock" ||
+		!durationOK || duration.Op != token.MUL || !fifteenOK || fifteen.Value != "15" ||
+		!secondOK || !timePackageOK || timePackage.Name != "time" || second.Sel.Name != "Second" {
+		t.Fatal("Kibana retry no longer delegates the exact 15*time.Second duration through its clock")
+	}
+
+	assertKibanaRetryPOSTAssignment(t, retry.Body.List[2])
+	assertKibanaErrorResponseReturn(t, retry.Body.List[3])
+	assertKibanaErrorResponseReturn(t, retryFunction.Body.List[2])
+
+	calls := map[string]int{}
+	ast.Inspect(retryFunction.Body, func(node ast.Node) bool {
+		call, ok := node.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		switch function := call.Fun.(type) {
+		case *ast.Ident:
+			calls[function.Name]++
+		case *ast.SelectorExpr:
+			if receiver, ok := function.X.(*ast.Ident); ok {
+				calls[receiver.Name+"."+function.Sel.Name]++
+			}
+		}
+		return true
+	})
+	wantCalls := map[string]int{"dependencies.Post": 2, "println": 1, "clock.Sleep": 1, "len": 1}
+	if !reflect.DeepEqual(calls, wantCalls) {
+		t.Fatalf("private Kibana retry operations were %#v, want only %#v", calls, wantCalls)
+	}
+}
+
+func assertKibanaRetryPOSTAssignment(t *testing.T, statement ast.Stmt) {
+	t.Helper()
+	assignment, ok := statement.(*ast.AssignStmt)
+	if !ok || assignment.Tok != token.DEFINE || len(assignment.Lhs) != 2 || len(assignment.Rhs) != 1 {
+		t.Fatal("Kibana retry request no longer assigns exact error and response values")
+	}
+	errName, errOK := assignment.Lhs[0].(*ast.Ident)
+	responseName, responseOK := assignment.Lhs[1].(*ast.Ident)
+	call, callOK := assignment.Rhs[0].(*ast.CallExpr)
+	var selector *ast.SelectorExpr
+	selectorOK := false
+	if callOK {
+		selector, selectorOK = call.Fun.(*ast.SelectorExpr)
+	}
+	var dependency *ast.Ident
+	dependencyOK := false
+	if selectorOK {
+		dependency, dependencyOK = selector.X.(*ast.Ident)
+	}
+	var request *ast.Ident
+	requestOK := false
+	if callOK && len(call.Args) == 1 {
+		request, requestOK = call.Args[0].(*ast.Ident)
+	}
+	if !errOK || errName.Name != "err" || !responseOK || responseName.Name != "response" ||
+		!callOK || !selectorOK || !dependencyOK || dependency.Name != "dependencies" ||
+		selector.Sel.Name != "Post" || len(call.Args) != 1 || !requestOK || request.Name != "reguest" {
+		t.Fatal("Kibana retry request no longer calls the dependency once with the exact request")
+	}
+}
+
+func assertKibanaErrorResponseReturn(t *testing.T, statement ast.Stmt) {
+	t.Helper()
+	returned, ok := statement.(*ast.ReturnStmt)
+	if !ok || len(returned.Results) != 2 {
+		t.Fatal("Kibana retry no longer returns exact error and response values")
+	}
+	errName, errOK := returned.Results[0].(*ast.Ident)
+	responseName, responseOK := returned.Results[1].(*ast.Ident)
+	if !errOK || errName.Name != "err" || !responseOK || responseName.Name != "response" {
+		t.Fatal("Kibana retry return order is no longer error before response")
+	}
+}
+
+func parsedKibanaFunction(t *testing.T, name string) *ast.FuncDecl {
+	t.Helper()
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("could not locate Kibana retry contract test")
@@ -395,63 +826,33 @@ func TestPOSTKeepsZeroHitRetrySelectionAndOutputWithoutWaiting(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse Kibana implementation: %v", err)
 	}
-	var retryFunction *ast.FuncDecl
 	for _, declaration := range parsed.Decls {
 		function, ok := declaration.(*ast.FuncDecl)
-		if ok && function.Recv == nil && function.Name.Name == "POST" {
-			retryFunction = function
-			break
+		if ok && function.Recv == nil && function.Name.Name == name {
+			return function
 		}
 	}
-	if retryFunction == nil {
-		t.Fatal("Kibana POST retry function is missing")
-	}
-	internalCalls := 0
-	zeroHitSelection := false
-	retryOutput := false
-	retrySleep := false
-	ast.Inspect(retryFunction.Body, func(node ast.Node) bool {
-		switch value := node.(type) {
-		case *ast.CallExpr:
-			if identifier, ok := value.Fun.(*ast.Ident); ok {
-				if identifier.Name == "internalPOST" {
-					internalCalls++
-				}
-				if identifier.Name == "println" && len(value.Args) == 1 {
-					literal, ok := value.Args[0].(*ast.BasicLit)
-					retryOutput = ok && literal.Value == strconv.Quote("sleep and retry")
-				}
-			}
-			if selector, ok := value.Fun.(*ast.SelectorExpr); ok {
-				packageName, packageOK := selector.X.(*ast.Ident)
-				retrySleep = retrySleep || (packageOK && packageName.Name == "time" && selector.Sel.Name == "Sleep")
-			}
-		case *ast.BinaryExpr:
-			literal, ok := value.Y.(*ast.BasicLit)
-			call, callOK := value.X.(*ast.CallExpr)
-			if ok && callOK && value.Op == token.EQL {
-				identifier, identifierOK := call.Fun.(*ast.Ident)
-				zeroHitSelection = zeroHitSelection ||
-					(identifierOK && literal.Value == "0" && identifier.Name == "len")
-			}
-		}
-		return true
-	})
-	if internalCalls != 2 || !zeroHitSelection || !retryOutput || !retrySleep {
-		t.Fatalf("retry contract was calls=%d zero-hit=%t output=%t sleep=%t",
-			internalCalls, zeroHitSelection, retryOutput, retrySleep)
-	}
+	t.Fatalf("private Kibana function %q is missing", name)
+	return nil
 }
 
 func TestRecordedKibanaPOSTRequestsRejectEmptyPopulations(t *testing.T) {
 	httpRecording := &recordingKibanaHTTP{}
 	queryRecording := &recordingKibanaQueryPOST{}
+	retryPOSTRecording := &recordingKibanaRetryPOST{}
+	retrySleepRecording := &recordingKibanaRetrySleeper{}
 
 	if _, err := httpRecording.assertedRequests(); err == nil {
 		t.Fatal("empty recorded Kibana HTTP POST request population passed")
 	}
 	if _, err := queryRecording.assertedRequests(); err == nil {
 		t.Fatal("empty recorded Kibana query POST population passed")
+	}
+	if _, err := retryPOSTRecording.assertedRequests(); err == nil {
+		t.Fatal("empty recorded Kibana retry POST population passed")
+	}
+	if _, err := retrySleepRecording.assertedDurations(); err == nil {
+		t.Fatal("empty recorded Kibana retry sleep population passed")
 	}
 }
 
