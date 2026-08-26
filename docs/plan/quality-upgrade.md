@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-27, commit `e5b4a26`.
+Last measured checkpoint: 2026-08-27, commit `1a40e11`.
 
 ## Objective
 
@@ -4761,9 +4761,62 @@ P5.2 clean checkpoint (second subject `config-cloud`, implementation
   `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
   and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
 
+P5.3 clean checkpoint (third subject `maven-sorting`, implementation
+`1a40e11`):
+
+- Replaced the non-executable P3 `maven-sorting` seam driver with the regular
+  executable `scripts/mutate-maven-sorting` harness and replaced its meta-test
+  with an executable T1-T10 falsifiability test. The inventory and exact seam
+  labels `2. Maven command keeps executable before arguments` and
+  `4. Maven metadata keeps username before password` are unchanged; exact
+  executable subject coverage improves from 2 of 8 to 3 of 8.
+- The harness declares ten unique deterministic mutations across
+  `pkg/maven/command.go`, `pkg/maven/query.go`, and `pkg/sorting/sort.go`:
+  Maven executable/argument ordering; metadata username/password and coordinate
+  path ordering; authentication and error gates; dependency swap/comparison
+  directions; sort-key field ordering; group-match gating; and compile-scope
+  priority. Every production search syntax occurs exactly once and every
+  declaration binds an exact non-empty named test population.
+- One clean external control ran every exact selection. Every mutant used a
+  fresh external Git archive, cache, HOME, config, and temp root; compiled its
+  changed package separately; and ran its selected JSON test population with
+  exact run and terminal-action validation. Final totals are `declared=10`,
+  `killed=10`, `survived=0`, and `unusable=0`; no production or test repair was
+  required.
+- T1-T10 fail closed on empty/duplicate manifests, unauthorized paths,
+  zero/multiple replacements, empty or inexact test selection, a broken clean
+  control, an uncompiled/unexercised mutant, false accounting, an unclassified
+  survivor, repository-local artifacts, and non-deterministic declarations or
+  totals. The run report SHA-256 is
+  `6b360f604802c047b4946b474c35b2860d47bda4581b3cb33f5af45653dc111e`;
+  the independent T1-T10 meta-log SHA-256 is
+  `fda3185a71ebd842f3e924ae507ad0daa9d59d4b30da3699d114c0ff0d2d53b3`.
+- The no-evidence Q2.1-Q2.4 view records exact Q2.1 coverage 3 of 8 and has
+  scorecard SHA-256
+  `f6e6c4ecaf67549fde6c913f848a1630c79237659a000c540b308b5f8fb8e724`.
+  The refreshed external schema-2 document covers all three completed P5
+  subjects and has SHA-256
+  `a279e8ac3402cacad23eb757bc3adbf7e9e1e105115135f7183ebf5353ff1bb4`;
+  its Q2.4 evidence-object SHA-256 is
+  `53d27607c73ae97ea00dcfce384a373c5c421fcd1e900433521fbfbb1e4bf689`.
+  The focused audit exits 0 with scorecard SHA-256
+  `07d9f680bba06cb88c589fe87962feaf74ca6add94fda8b933679d6a98bc313c`.
+- The full authoritative audit exits 1, never 2, with scorecard SHA-256
+  `122deef2c884c1e3f6edb3052b20d47c0fad82ba5a4dc44f0b3696afe947d9f4`:
+  L0 is 8 of 8, L1 is 9 of 9, Q2.1 is 3 of 8, Q2.4 passes, seven
+  ratchets improve, one holds, none regress, and dirty paths are empty. Eight
+  P5-P8 rows remain non-passing.
+- API/CLI and subprocess compatibility, pinned golangci-lint 2.12.2, complete
+  tests across all 27 packages, race, vet, `make test`, all 62 launcher
+  controls, Make contracts, all four host acceptance flows, exact empty-HOME
+  count-2, the standalone 15-control audit meta-suite, and complete preflight
+  all pass. API and CLI report SHA-256 values remain
+  `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+  and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+
 P5 remains active. The next bounded move converts only the existing
-`maven-sorting` P3 seam driver and its meta-test into the third real mutation
-harness; it must not start a fourth subject.
+`template` P3 seam driver and its meta-test into the fourth real mutation
+harness; it must not start a fifth subject.
 
 Implement the eight named harnesses from `.quality/inventory`, one subject per
 measured move and no more than three moves per checkpoint. Each harness must

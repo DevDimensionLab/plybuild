@@ -1055,33 +1055,31 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-27T001140+0200-build-p5-maven-sorting-harness
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T001140+0200-build-p5-maven-sorting-harness.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T233325+0200-build-p5-config-cloud-harness.md
+#|SESSION_ID=2026-08-27T010033+0200-build-p5-template-harness
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T010033+0200-build-p5-template-harness.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T001140+0200-build-p5-maven-sorting-harness.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P5 with exactly one mutation-evidence subject: `maven-sorting`. Convert
-#|its existing P3 seam driver and meta-test into a real executable mutation
-#|harness and T1-T10 falsifiability test. Finish only if at least eight meaningful
+#|Continue P5 with exactly one mutation-evidence subject: `template`. Convert its
+#|existing P3 seam driver and meta-test into a real executable mutation harness
+#|and T1-T10 falsifiability test. Finish only if at least eight meaningful
 #|mutations are actually compiled and exercised in disposable external copies and
 #|the final totals are `declared == killed`, `survived == 0`, and `unusable == 0`.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P4 are complete. P5 is active with `cli-context` and `config-cloud`
-#|complete as the first two of eight subjects; P6-P8 remain queued in
-#|`docs/plan/quality-upgrade.md`. This session may change only
-#|`scripts/mutate-maven-sorting`, `scripts/test-mutate-maven-sorting`, and the
-#|smallest focused test or private seam inside `pkg/maven` or `pkg/sorting` if an
-#|actually executed survivor exposes a classified gap. Preserve both inventory
-#|seam labels exactly:
-#|`2. Maven command keeps executable before arguments`
-#|`4. Maven metadata keeps username before password`.
+#|P2A-P4 are complete. P5 is active with `cli-context`, `config-cloud`, and
+#|`maven-sorting` complete as the first three of eight subjects; P6-P8 remain
+#|queued in `docs/plan/quality-upgrade.md`. This session may change only
+#|`scripts/mutate-template`, `scripts/test-mutate-template`, and the smallest
+#|focused test or private seam inside `pkg/template` if an actually executed
+#|survivor exposes a classified gap. Preserve the inventory seam label exactly:
+#|`6. template copy keeps source before destination`.
 #|
-#|Do not start a fourth mutation subject or change `.quality/inventory`, either
+#|Do not start a fifth mutation subject or change `.quality/inventory`, any
 #|completed P5 harness, audit/parser/scanner/baseline code, acceptance, P6-P8,
 #|Go/dependencies, exported APIs, CLI behavior, packaging, publication, or
 #|distribution. Keep all checkouts, caches, reports, and generated artifacts
@@ -1090,31 +1088,34 @@ exit 70
 #|
 #|# Measurements At Start
 #|
-#|The clean P5.2 implementation is
-#|`e5b4a26db271ac43d514bc0e9b2e19c23cdbc144`, exact parent
-#|`be33bb9fa9e6d9831f824c831d9de113123a710b`, tree
-#|`baa63ed3c4d44f063854a4fbee63728cf336c937`, and clean status SHA-256
+#|The clean P5.3 implementation is
+#|`1a40e1146f27619d1b46e53f2e24b155760bcc7c`, exact parent
+#|`e0f9a4efe38349caf97d61f335cace017d52b4f3`, tree
+#|`44ab7771e8e9c4ea3f9a2c44b248db4500567d34`, and clean status SHA-256
 #|`6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`.
-#|After launch, the new continuity HEAD must have exact parent `e5b4a26`.
+#|After launch, the new continuity HEAD must have exact parent `1a40e11`.
 #|
 #|The `cli-context` report and T1-T10 meta-log SHA-256 values are
 #|`53d1489a6db15f18cd2acf38ff49ab3fb0db545a6c8e63639c90311f9bf53d5c`
 #|and `f1d801fccc97af714d483f5a3c84202fe9868fa19b17038ada0d56dbd6f3e67e`.
-#|The `config-cloud` report and T1-T10 meta-log SHA-256 values are
+#|The `config-cloud` values are
 #|`db76fdf8c624c4326483ae71fa9ec3e7e0f94de4d6d3ae8a4dff185c9a7f23f7`
 #|and `12b1197d521681b70dea0b481f6b7d8bb9daba2ca21dc68a635868177d43ffec`.
+#|The `maven-sorting` values are
+#|`6b360f604802c047b4946b474c35b2860d47bda4581b3cb33f5af45653dc111e`
+#|and `fda3185a71ebd842f3e924ae507ad0daa9d59d4b30da3699d114c0ff0d2d53b3`.
 #|Each subject has exact totals 10 declared, 10 killed, 0 survived, and 0
 #|unusable.
 #|
 #|The refreshed external schema-2 document SHA-256 is
-#|`7665b6d6d15da8dbd6b2da3e20a45902cb4e1076683fb0e1acd52c17b85c4648`;
+#|`a279e8ac3402cacad23eb757bc3adbf7e9e1e105115135f7183ebf5353ff1bb4`;
 #|its Q2.4 receipt SHA-256 is
-#|`496ae9cd500b896080a14874dd5ff34bc0bdf521a401cbb7044e5f87604184b5`.
+#|`53d27607c73ae97ea00dcfce384a373c5c421fcd1e900433521fbfbb1e4bf689`.
 #|The focused audit exits 0 with scorecard SHA-256
-#|`7ef785e2a17b5371358cc18741a78fe7cbca65c587725970970710d42a7a6b0c`.
+#|`07d9f680bba06cb88c589fe87962feaf74ca6add94fda8b933679d6a98bc313c`.
 #|The full audit exits 1, never 2, with scorecard SHA-256
-#|`4a7089ea117a97bdf5b265f3712c534954417e00ff352b24a5874a2d710bf648`:
-#|L0 is 8/8, L1 is 9/9, Q2.1 is 2/8, Q2.4 passes, seven ratchets
+#|`122deef2c884c1e3f6edb3052b20d47c0fad82ba5a4dc44f0b3696afe947d9f4`:
+#|L0 is 8/8, L1 is 9/9, Q2.1 is 3/8, Q2.4 passes, seven ratchets
 #|improve, one holds, none regress, dirty paths are empty, and eight P5-P8 rows
 #|remain non-passing. All complete checkpoint gates pass.
 #|
@@ -1123,10 +1124,10 @@ exit 70
 #|Work autonomously on `codex/upgrade-quality`. Before editing, confirm branch,
 #|HEAD, exact ancestry, clean and ignored status, reciprocal archive links,
 #|launcher `--check`, and the authorized checkpoint block. Inspect every
-#|production and test file under `pkg/maven` and `pkg/sorting` before defining the
-#|mutation population. Read both completed P5 harness/meta-test pairs as the
-#|methodology reference and the current non-executable `maven-sorting`
-#|driver/meta-test as history to replace.
+#|production and test file under `pkg/template` before defining the mutation
+#|population. Read all three completed P5 harness/meta-test pairs as the
+#|methodology reference and the current non-executable `template` driver/meta-test
+#|as history to replace.
 #|
 #|Declare at least eight deterministic, unique, behaviorally meaningful
 #|mutations. Bind each to exact production syntax that occurs once and a
@@ -1153,16 +1154,16 @@ exit 70
 #|
 #|Read the rolling handover, this archive, complete P5 entry and checkpoint gate,
 #|both design documents, `.quality/README.md`, `.quality/inventory`, complete
-#|mutation discovery and Q2.1-Q2.4 logic in the vendored audit and parser, both
-#|completed P5 script pairs, the existing `maven-sorting` scripts, relevant
-#|Make/preflight population contracts, and complete `pkg/maven` and `pkg/sorting`
-#|production and test populations. Do not infer reachability or a kill from
-#|names, grep, compilation failure, or exit status alone.
+#|mutation discovery and Q2.1-Q2.4 logic in the vendored audit and parser, all
+#|three completed P5 script pairs, the existing `template` scripts, relevant
+#|Make/preflight population contracts, and the complete `pkg/template`
+#|production and test population. Do not infer reachability or a kill from names,
+#|grep, compilation failure, or exit status alone.
 #|
 #|# Three Moves
 #|
-#|1. Define the explicit `maven-sorting` scope, exclusions, and manifest of at
-#|   least eight exact mutations with named killing tests.
+#|1. Define the explicit `template` scope, exclusions, and manifest of at least
+#|   eight exact mutations with named killing tests.
 #|2. Convert the two existing scripts to the executable harness and T1-T10
 #|   meta-test; run the clean control and every mutant externally; repair only a
 #|   classified in-subject gap; require zero survived and zero unusable.
@@ -1170,16 +1171,16 @@ exit 70
 #|   automated Q2.1-Q2.4 view, refreshed external receipt audit, API/CLI and
 #|   subprocess compatibility, pinned lint, complete tests/race/vet, launcher
 #|   and Make contracts, complete preflight, host acceptance, audit meta-suite,
-#|   and empty-HOME count-2. Record the result and hand off only the fourth P5
+#|   and empty-HOME count-2. Record the result and hand off only the fifth P5
 #|   subject with one continuity-only commit.
 #|
 #|# Automatic Handoff
 #|
-#|Before ending, finish the coherent `maven-sorting` move or record an exact
-#|resumable blocker. Rewrite the rolling handover, update the roadmap, answer
-#|this archive, create exactly one reciprocal NEXT archive, replace only the
-#|launcher's mutable regions, run launcher and handoff contracts, and make the
-#|normal `docs: prepare next agent session` continuity commit after the focused
+#|Before ending, finish the coherent `template` move or record an exact resumable
+#|blocker. Rewrite the rolling handover, update the roadmap, answer this archive,
+#|create exactly one reciprocal NEXT archive, replace only the launcher's mutable
+#|regions, run launcher and handoff contracts, and make the normal
+#|`docs: prepare next agent session` continuity commit after the focused
 #|implementation commit. Do not launch a successor, push, merge, publish,
 #|distribute, stash, revert, or remove the worktree. P5 remains active.
 # CODEX_MUTABLE_PROMPT_END
