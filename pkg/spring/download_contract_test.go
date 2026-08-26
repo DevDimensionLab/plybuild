@@ -146,6 +146,10 @@ func TestSpringDownloadReturnsDependencyErrorsInFollowUpOrder(t *testing.T) {
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestSpringDownloadReturnsDependencyErrorsInFollowUpOrder test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			err := downloadInitializer(test.recording.dependencies(), targetDirectory, formData, archivePath)
@@ -221,6 +225,9 @@ func assertRecordedInitializerOperations(t *testing.T, recording *recordingIniti
 
 func assertOrderedLogValues(t *testing.T, output string, values []string) {
 	t.Helper()
+	if len(values) == 0 {
+		t.Fatal("Spring initializer ordered-log expectation population is empty")
+	}
 	previous := -1
 	for _, value := range values {
 		index := strings.Index(output, value)

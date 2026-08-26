@@ -201,6 +201,10 @@ func TestCopyOrMergeExistingTargetRetainsMergeSelection(t *testing.T) {
 		{name: "non-missing stat error remains existing", statErr: errors.New("destination stat failed")},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestCopyOrMergeExistingTargetRetainsMergeSelection test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			source := "/complete template/Existing.kt"
@@ -295,6 +299,10 @@ func TestCopyFileReturnsDependencyErrorsInLegacyOrder(t *testing.T) {
 			},
 			wantError: "destination write failed",
 		},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestCopyFileReturnsDependencyErrorsInLegacyOrder test-case population is empty")
 	}
 
 	for _, test := range tests {

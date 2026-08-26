@@ -247,6 +247,9 @@ func TestFindAndPopulateMavenProjectsPreservesRecursiveWalkAppendPartialAndError
 				len(ctx.Projects), ctx.Projects)
 		}
 		wantPaths := []string{existing.Path, firstDir + string(os.PathSeparator), "", root + string(os.PathSeparator)}
+		if len(wantPaths) == 0 {
+			t.Fatal("recursive project path expectation population is empty")
+		}
 		for index, want := range wantPaths {
 			if ctx.Projects[index].Path != want {
 				t.Fatalf("recursive project %d path was %q, want ordered %q", index, ctx.Projects[index].Path, want)

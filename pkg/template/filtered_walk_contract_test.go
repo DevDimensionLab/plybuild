@@ -280,7 +280,11 @@ func TestFilteredFilesFromTemplatePreservesExactRootCallbackOrderMetadataErrorsF
 		t.Fatalf("directory metadata observations were IsDir=%d Name=%d other=%d, want 1, 0, 0",
 			directoryInfo.isDirCalls, directoryInfo.nameCalls, directoryInfo.otherMetadataCalls())
 	}
-	for _, info := range []*filteredWalkFileInfo{rootPomInfo, nestedPomInfo, ignoredInfo, renderInfo, backslashPomInfo, laterFilterInfo, includedInfo} {
+	metadata := []*filteredWalkFileInfo{rootPomInfo, nestedPomInfo, ignoredInfo, renderInfo, backslashPomInfo, laterFilterInfo, includedInfo}
+	if len(metadata) == 0 {
+		t.Fatal("filtered-template metadata expectation population is empty")
+	}
+	for _, info := range metadata {
 		if info.isDirCalls != 1 || info.nameCalls != 1 || info.otherMetadataCalls() != 0 {
 			t.Fatalf("non-directory %q metadata observations were IsDir=%d Name=%d other=%d, want 1, 1, 0",
 				info.name, info.isDirCalls, info.nameCalls, info.otherMetadataCalls())
@@ -343,6 +347,10 @@ func TestFilteredFilesFromTemplateReturnsEveryExactFinalWalkErrorWithCurrentOrde
 		{name: "ordinary error", err: errors.New("complete filtered-template walk dependency error")},
 		{name: "EOF is not normalized", err: io.EOF},
 		{name: "wrapped EOF", err: &os.PathError{Op: "walk", Path: "/complete filtered-template root", Err: io.EOF}},
+	}
+
+	if len(walkErrors) == 0 {
+		t.Fatal("filtered-template final walk-error test-case population is empty")
 	}
 
 	for _, walkError := range walkErrors {

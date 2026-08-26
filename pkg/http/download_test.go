@@ -257,6 +257,10 @@ func TestWgetReturnsDependencyErrorsAndPreservesCloseOrder(t *testing.T) {
 		{name: "copy closes file before response", copyErr: copyError, wantError: copyError, wantLifecycle: []string{"request", "create", "copy", "file-close", "response-close"}},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestWgetReturnsDependencyErrorsAndPreservesCloseOrder test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			lifecycle := []string{}
@@ -424,6 +428,10 @@ func TestWpostReturnsDependencyErrorsAfterRecordingAndPreservesCloseOrder(t *tes
 			responseCloseErr: ignoredResponseCloseError,
 			wantLifecycle:    []string{"request", "create", "copy", "file-close", "response-close"},
 		},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestWpostReturnsDependencyErrorsAfterRecordingAndPreservesCloseOrder test-case population is empty")
 	}
 
 	for _, test := range tests {

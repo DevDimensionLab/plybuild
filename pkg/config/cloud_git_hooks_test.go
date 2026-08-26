@@ -233,6 +233,10 @@ func TestGitHookFilesReturnsNilForEmptyAndAllDirectoryPopulations(t *testing.T) 
 		}},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestGitHookFilesReturnsNilForEmptyAndAllDirectoryPopulations test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			gitCfg := GitCloudConfig{Impl: DirConfig{Path: "/complete nil-result receiver"}}

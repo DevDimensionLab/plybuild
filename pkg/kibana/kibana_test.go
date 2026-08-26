@@ -131,6 +131,9 @@ func TestExecuteKibanaQueryRecordsRequestAndConvertsHits(t *testing.T) {
 		`{"application":"orders-api","team":"payments"}`: true,
 		`{"application":"billing-api","team":"finance"}`: true,
 	}
+	if len(wantResults) == 0 {
+		t.Fatal("Kibana converted-hit expectation population is empty")
+	}
 	if len(result) != len(wantResults) {
 		t.Fatalf("converted %d hits, want %d: %v", len(result), len(wantResults), result)
 	}

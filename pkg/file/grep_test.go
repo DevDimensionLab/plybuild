@@ -226,6 +226,10 @@ func TestGrepRecursiveReturnsExactNonEOFWalkErrorWithCurrentPartialResult(t *tes
 		{name: "wrapped EOF is not equal to EOF", err: &os.PathError{Op: "walk", Path: root, Err: io.EOF}},
 	}
 
+	if len(walkErrors) == 0 {
+		t.Fatal("recursive-grep final walk-error test-case population is empty")
+	}
+
 	for _, walkError := range walkErrors {
 		t.Run(walkError.name, func(t *testing.T) {
 			recording := &recordingGrepRecursiveFilesystem{

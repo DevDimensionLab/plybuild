@@ -144,6 +144,10 @@ func TestCloudRefreshFormatsGitDependencyErrors(t *testing.T) {
 		{name: "pull", existing: true, operation: "pull"},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestCloudRefreshFormatsGitDependencyErrors test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			target := filepath.Join(t.TempDir(), test.name+" cloud target")

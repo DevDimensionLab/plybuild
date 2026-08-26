@@ -382,6 +382,9 @@ func TestSystemOpenZipReaderPreservesEntryOrderNamesAndBytes(t *testing.T) {
 		{name: "z-first entry.txt", data: "first archive bytes\n"},
 		{name: "a-second entry.bin", data: "second\x00archive bytes"},
 	}
+	if len(entries) == 0 {
+		t.Fatal("system archive-entry expectation population is empty")
+	}
 	for _, entry := range entries {
 		archiveEntry, err := writer.Create(entry.name)
 		if err != nil {

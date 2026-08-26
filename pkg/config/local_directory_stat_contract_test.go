@@ -171,6 +171,10 @@ func TestLocalConfigDirectoryStatPreservesExactDirectoryFileInfoAndError(t *test
 		{name: "partial metadata and arbitrary error", info: partialInfo, err: otherError},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestLocalConfigDirectoryStatPreservesExactDirectoryFileInfoAndError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingLocalConfigDirectoryStatFilesystem{statInfo: test.info, statErr: test.err}

@@ -157,6 +157,10 @@ func TestStructurizrOutputWritePreservesExactPathBytesModeAndDependencyError(t *
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestStructurizrOutputWritePreservesExactPathBytesModeAndDependencyError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingStructurizrOutputFilesystem{writeErr: test.writeErr}

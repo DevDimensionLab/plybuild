@@ -1549,6 +1549,10 @@ func TestFindAllReturnsExactNonEOFWalkErrorWithCurrentPartialResult(t *testing.T
 		{name: "wrapped EOF is not equal to EOF", err: &os.PathError{Op: "walk", Path: root, Err: io.EOF}},
 	}
 
+	if len(walkErrors) == 0 {
+		t.Fatal("find-all final walk-error test-case population is empty")
+	}
+
 	for _, walkError := range walkErrors {
 		t.Run(walkError.name, func(t *testing.T) {
 			recording := &recordingFindAllFilesystem{
@@ -1777,6 +1781,10 @@ func TestMovePreservesCompletePathsAndExactDependencyError(t *testing.T) {
 		{name: "dependency error", renameErr: renameError},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestMovePreservesCompletePathsAndExactDependencyError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingFileMoveFilesystem{renameErr: test.renameErr}
@@ -1842,6 +1850,10 @@ func TestDeleteSingleFilePreservesCompletePathAndExactDependencyError(t *testing
 	}{
 		{name: "successful removal"},
 		{name: "dependency error", removeErr: removeError},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestDeleteSingleFilePreservesCompletePathAndExactDependencyError test-case population is empty")
 	}
 
 	for _, test := range tests {
@@ -1910,6 +1922,10 @@ func TestDeleteAllPreservesCompletePathAndExactDependencyError(t *testing.T) {
 	}{
 		{name: "successful removal"},
 		{name: "dependency error", removeAllErr: removeError},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestDeleteAllPreservesCompletePathAndExactDependencyError test-case population is empty")
 	}
 
 	for _, test := range tests {
@@ -2004,6 +2020,10 @@ func TestOpenFileExistingAndNonMissingStatErrorsSkipCreation(t *testing.T) {
 	}{
 		{name: "existing path", statInfo: existingFileInfo{name: "existing.txt"}},
 		{name: "non-missing stat error", statErr: statError},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestOpenFileExistingAndNonMissingStatErrorsSkipCreation test-case population is empty")
 	}
 
 	for _, test := range tests {
@@ -2119,6 +2139,10 @@ func TestOpenPreservesCompletePathBytesAndDependencyError(t *testing.T) {
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestOpenPreservesCompletePathBytesAndDependencyError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingFileReadFilesystem{readData: test.readData, readErr: test.readErr}
@@ -2203,6 +2227,10 @@ func TestExistsPreservesCompletePathAndLegacyStatResults(t *testing.T) {
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestExistsPreservesCompletePathAndLegacyStatResults test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingFileExistenceFilesystem{statInfo: test.info, statErr: test.err}
@@ -2270,6 +2298,10 @@ func TestOverwritePreservesCompleteLinesPathBytesModeAndDependencyError(t *testi
 			wantBytes: []byte("first complete line\n\nthird complete line\n"),
 			writeErr:  writeError,
 		},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestOverwritePreservesCompleteLinesPathBytesModeAndDependencyError test-case population is empty")
 	}
 
 	for _, test := range tests {
@@ -2347,6 +2379,10 @@ func TestCreateFilePreservesCompletePathContentBytesModeAndDependencyError(t *te
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestCreateFilePreservesCompletePathContentBytesModeAndDependencyError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingFileCreateFilesystem{writeErr: test.writeErr}
@@ -2421,6 +2457,10 @@ func TestCreateDirectoryPreservesCompletePathMissingSelectionModeAndLegacyErrors
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestCreateDirectoryPreservesCompletePathMissingSelectionModeAndLegacyErrors test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingDirectoryCreateFilesystem{statErr: missingError, mkdirErr: test.mkdirErr}
@@ -2462,6 +2502,10 @@ func TestCreateDirectorySkipsCreationForExistingPathAndOtherStatErrors(t *testin
 	}{
 		{name: "existing path", info: existingFileInfo{name: "existing"}},
 		{name: "non-missing stat error", err: otherError},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestCreateDirectorySkipsCreationForExistingPathAndOtherStatErrors test-case population is empty")
 	}
 
 	for _, test := range tests {

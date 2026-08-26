@@ -175,6 +175,10 @@ func TestSaveTemplateListMarkdownPreservesExactReceiverPathDocumentBytesModeRetu
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestSaveTemplateListMarkdownPreservesExactReceiverPathDocumentBytesModeReturnedPathAndWriteError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			directory := &recordingTemplateMarkdownDirectory{path: `/complete receiver root//with spaces/../backslash\segment`}

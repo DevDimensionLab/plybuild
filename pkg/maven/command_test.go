@@ -83,6 +83,10 @@ func TestMavenCommandKeepsExecutableBeforeArguments(t *testing.T) {
 		{name: "trace level", level: logrus.TraceLevel, wantStdout: true},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestMavenCommandKeepsExecutableBeforeArguments test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			setGlobalLogrusLevel(t, test.level)

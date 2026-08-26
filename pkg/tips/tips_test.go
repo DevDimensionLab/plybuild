@@ -260,6 +260,9 @@ func TestListPreservesDeliveredOrderEntryIdentityAndExactShortCircuitFiltering(t
 		t.Fatalf("tips-list filtering returned an error: %v", err)
 	}
 	want := []os.DirEntry{first, second}
+	if len(want) == 0 {
+		t.Fatal("tips-list delivered-entry expectation population is empty")
+	}
 	if len(actual) != len(want) {
 		t.Fatalf("tips-list result was %#v, want two exact delivered entries %#v", actual, want)
 	}
@@ -275,7 +278,11 @@ func TestListPreservesDeliveredOrderEntryIdentityAndExactShortCircuitFiltering(t
 	if !reflect.DeepEqual(delivered, entries) {
 		t.Fatalf("tips-list delivered entries were %#v, want exact order and identities %#v", delivered, entries)
 	}
-	for _, entry := range []*recordingTipsDirEntry{directory, first, uppercase, extraSuffix, second} {
+	metadata := []*recordingTipsDirEntry{directory, first, uppercase, extraSuffix, second}
+	if len(metadata) == 0 {
+		t.Fatal("tips-list metadata expectation population is empty")
+	}
+	for _, entry := range metadata {
 		isDir, name, entryType, info := entry.observationCounts()
 		wantNameCalls := 1
 		if entry.directory {
@@ -302,6 +309,10 @@ func TestListReturnsNilForEmptyAndAllFilteredPopulations(t *testing.T) {
 			&recordingTipsDirEntry{name: "ordinary.txt"},
 			&recordingTipsDirEntry{name: "case-mismatch.MD"},
 		}},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestListReturnsNilForEmptyAndAllFilteredPopulations test-case population is empty")
 	}
 
 	for _, test := range tests {

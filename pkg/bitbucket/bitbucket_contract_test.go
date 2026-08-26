@@ -254,6 +254,10 @@ func TestBitbucketEveryNonMissingRepositoryResultSelectsPullWithExactPathAndLogg
 		{name: "other stat error", statErr: statError},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestBitbucketEveryNonMissingRepositoryResultSelectsPullWithExactPathAndLogging test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			workspace := "/complete pull workspace"
@@ -295,6 +299,10 @@ func TestBitbucketCloneOrPullPropagatesRecordedOperationErrors(t *testing.T) {
 	}{
 		{name: "clone", statErr: fs.ErrNotExist, operation: "clone"},
 		{name: "pull", operation: "pull"},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestBitbucketCloneOrPullPropagatesRecordedOperationErrors test-case population is empty")
 	}
 
 	for _, test := range tests {
@@ -449,6 +457,10 @@ func TestBitbucketQueriesReturnDependencyErrorsAfterCompleteDelivery(t *testing.
 				return err
 			},
 		},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestBitbucketQueriesReturnDependencyErrorsAfterCompleteDelivery test-case population is empty")
 	}
 
 	for _, test := range tests {

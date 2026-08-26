@@ -153,6 +153,10 @@ func TestTipsShowReadPreservesExactCallerComposedPathBytesAndDependencyError(t *
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestTipsShowReadPreservesExactCallerComposedPathBytesAndDependencyError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingTipsShowReadFilesystem{readData: test.readData, readErr: test.readErr}

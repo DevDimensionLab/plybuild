@@ -227,6 +227,10 @@ func TestArchivePathPreservesArbitraryDirectoryInjectedUnixSecondOrderAndExactRe
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestArchivePathPreservesArbitraryDirectoryInjectedUnixSecondOrderAndExactReturns test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			sequence := []string{}

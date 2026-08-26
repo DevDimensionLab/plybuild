@@ -430,6 +430,10 @@ func TestPOSTPrintsSleepsAndRetriesOnceAfterEmptyHitsDespiteFirstError(t *testin
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestPOSTPrintsSleepsAndRetriesOnceAfterEmptyHitsDespiteFirstError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			sequence := []string{}

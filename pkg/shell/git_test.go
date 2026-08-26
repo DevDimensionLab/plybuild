@@ -165,6 +165,10 @@ func TestGitPullAndInitKeepExactArgumentsAndWorkingDirectory(t *testing.T) {
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestGitPullAndInitKeepExactArgumentsAndWorkingDirectory test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingProcess{}
@@ -265,6 +269,10 @@ func TestGitWrappersPreserveExactRequestsLogsStreamsBytesAttemptsAndLegacyErrors
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestGitWrappersPreserveExactRequestsLogsStreamsBytesAttemptsAndLegacyErrors test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			sequence := []string{}
@@ -359,6 +367,10 @@ func TestGitProcessDependenciesDefaultToNoProcess(t *testing.T) {
 		{name: "add and commit", run: func() Output {
 			return gitAddAndCommit(process.Dependencies{}, target, "must not commit")
 		}},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestGitProcessDependenciesDefaultToNoProcess test-case population is empty")
 	}
 
 	for _, test := range tests {

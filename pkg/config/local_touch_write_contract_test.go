@@ -160,6 +160,10 @@ func TestLocalConfigTouchWritePreservesExactCallerComposedPathBytesModeAndDepend
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestLocalConfigTouchWritePreservesExactCallerComposedPathBytesModeAndDependencyError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingLocalConfigTouchFilesystem{writeErr: test.writeErr}

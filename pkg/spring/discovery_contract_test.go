@@ -122,6 +122,10 @@ func TestSpringDiscoveryReturnsDependencyErrorsAfterCompleteRequestDelivery(t *t
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestSpringDiscoveryReturnsDependencyErrorsAfterCompleteRequestDelivery test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingSpringDiscoveryHTTP{err: sentinel}
@@ -170,6 +174,10 @@ func TestSpringDiscoveryDependenciesDefaultToSafeNoRequest(t *testing.T) {
 				return validate(discoveryDependencies{}, config.ProjectConfiguration{Dependencies: []string{"must-not-request"}})
 			},
 		},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestSpringDiscoveryDependenciesDefaultToSafeNoRequest test-case population is empty")
 	}
 
 	for _, test := range tests {

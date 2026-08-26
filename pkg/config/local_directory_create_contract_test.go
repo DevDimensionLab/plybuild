@@ -148,6 +148,10 @@ func TestLocalConfigDirectoryCreatePreservesExactCallerSelectedPathModeAttemptAn
 		{name: "arbitrary error", err: mkdirError},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestLocalConfigDirectoryCreatePreservesExactCallerSelectedPathModeAttemptAndError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingLocalConfigDirectoryCreateFilesystem{mkdirErr: test.err}

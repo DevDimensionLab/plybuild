@@ -165,6 +165,10 @@ func TestLocalConfigTouchCreatePreservesExactCallerComposedPathFileErrorAndClose
 		{name: "unusual file and error result", createFile: combinedFile, createErr: createError},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestLocalConfigTouchCreatePreservesExactCallerComposedPathFileErrorAndCloseResult test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingLocalConfigTouchCreateFilesystem{

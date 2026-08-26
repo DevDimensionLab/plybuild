@@ -242,6 +242,10 @@ func TestWorkingDirectoryReturnsExactArbitraryDependencyValuesAndErrorsFromOneAt
 		{name: "partial directory and arbitrary error", directory: "/partial directory must remain exact", err: directoryError},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestWorkingDirectoryReturnsExactArbitraryDependencyValuesAndErrorsFromOneAttempt test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingFilesystem{
@@ -300,6 +304,10 @@ func TestMkdirPassesExactPathAndModeOnceAndReturnsExactDependencyError(t *testin
 	}{
 		{name: "success"},
 		{name: "arbitrary error", err: mkdirError},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestMkdirPassesExactPathAndModeOnceAndReturnsExactDependencyError test-case population is empty")
 	}
 
 	for _, test := range tests {
@@ -413,6 +421,10 @@ func TestOpenFileHelpersPassCompleteValuesAndReturnExactDependencyResult(t *test
 				return OpenFileAsFile(dependencies, path, flags, mode)
 			},
 		},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestOpenFileHelpersPassCompleteValuesAndReturnExactDependencyResult test-case population is empty")
 	}
 
 	for _, test := range tests {
@@ -559,6 +571,10 @@ func TestReadDirEntriesPassesExactPathOrderedEntryIdentitiesAndExactResults(t *t
 		{name: "arbitrary error", err: arbitraryError},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestReadDirEntriesPassesExactPathOrderedEntryIdentitiesAndExactResults test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingFilesystem{
@@ -612,6 +628,9 @@ func TestSystemReadDirPreservesIoutilFilenameSortingAndMetadata(t *testing.T) {
 		t.Fatalf("system directory-read returned an error: %v", err)
 	}
 	wantNames := []string{"a-first.txt", "m-directory.idea", "z-last.iml"}
+	if len(wantNames) == 0 {
+		t.Fatal("system directory-read filename expectation population is empty")
+	}
 	names := make([]string, 0, len(entries))
 	for _, entry := range entries {
 		names = append(names, entry.Name())
@@ -645,6 +664,9 @@ func TestSystemReadDirEntriesPreservesOsReadDirSortingNamesClassificationAndMiss
 		t.Fatalf("system directory-entry-read returned an error: %v", err)
 	}
 	wantNames := []string{"a-first.txt", "m-directory.md", "z-last.md"}
+	if len(wantNames) == 0 {
+		t.Fatal("system directory-entry-read filename expectation population is empty")
+	}
 	names := make([]string, 0, len(entries))
 	directories := make([]bool, 0, len(entries))
 	for _, entry := range entries {
@@ -771,6 +793,10 @@ func TestOperationsReturnDependencyErrors(t *testing.T) {
 				return WriteFile(dependencies, "/destination/file", []byte("bytes"), 0640)
 			},
 		},
+	}
+
+	if len(tests) == 0 {
+		t.Fatal("TestOperationsReturnDependencyErrors test-case population is empty")
 	}
 
 	for _, test := range tests {

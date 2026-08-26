@@ -255,6 +255,9 @@ func TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingN
 	}
 
 	wantNames := []string{"test-template", file.Path("legacy-category/legacy-template")}
+	if len(wantNames) == 0 {
+		t.Fatal("Templates name expectation population is empty")
+	}
 	if len(actual) != len(wantNames) {
 		t.Fatalf("Templates returned %#v, want %d ordered matches", actual, len(wantNames))
 	}
@@ -265,6 +268,9 @@ func TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingN
 	}
 	wantDirectories := []string{currentDirectory, legacyDirectory}
 	wantConfigFiles := []string{currentPath, legacyPath}
+	if len(wantDirectories) != len(wantNames) || len(wantConfigFiles) != len(wantNames) {
+		t.Fatal("Templates path expectation populations do not match the guarded name population")
+	}
 	for index := range actual {
 		if actual[index].Project.Path != wantDirectories[index] || actual[index].Project.ConfigFile != wantConfigFiles[index] {
 			t.Fatalf("Templates result %d loaded project path/config was (%q, %q), want (%q, %q)",
@@ -283,7 +289,11 @@ func TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingN
 		t.Fatalf("Templates info.Name calls were root=%d ignored=%d current=%d legacy=%d, want exact comparisons 2,2,2,3",
 			rootInfo.nameCalls, ignoredInfo.nameCalls, currentInfo.nameCalls, legacyInfo.nameCalls)
 	}
-	for _, info := range []*templatesFileInfo{rootInfo, ignoredInfo, currentInfo, legacyInfo} {
+	metadata := []*templatesFileInfo{rootInfo, ignoredInfo, currentInfo, legacyInfo}
+	if len(metadata) == 0 {
+		t.Fatal("Templates metadata expectation population is empty")
+	}
+	for _, info := range metadata {
 		if calls := info.nonNameMetadataCalls(); calls != 0 {
 			t.Fatalf("Templates inspected non-name metadata for %q %d times", info.name, calls)
 		}
@@ -342,6 +352,10 @@ func TestTemplatesReturnsEveryExactFinalWalkErrorWithCurrentOrderedPartialResult
 		{name: "ordinary error", err: errors.New("complete Templates walk dependency error")},
 		{name: "EOF is not normalized", err: io.EOF},
 		{name: "wrapped EOF", err: &os.PathError{Op: "walk", Path: "/complete Templates root", Err: io.EOF}},
+	}
+
+	if len(walkErrors) == 0 {
+		t.Fatal("Templates final walk-error test-case population is empty")
 	}
 
 	for _, walkError := range walkErrors {

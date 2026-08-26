@@ -93,6 +93,10 @@ func TestBrowserLauncherPreservesEveryPlatformRequestURLStartAttemptAndError(t *
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestBrowserLauncherPreservesEveryPlatformRequestURLStartAttemptAndError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingBrowserLauncherProcess{err: test.processErr}

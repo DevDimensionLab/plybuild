@@ -289,6 +289,10 @@ func TestStartWebServerRegistersExactHandlersBeforeOneListenAndLogsOnlyNonNilErr
 		{name: "non-nil error is printed exactly", err: listenError},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestStartWebServerRegistersExactHandlersBeforeOneListenAndLogsOnlyNonNilError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			sequence := []string{}

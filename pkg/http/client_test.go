@@ -88,6 +88,10 @@ func TestXMLHelpersPreserveAnonymousAndBasicAuthResponseBehavior(t *testing.T) {
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestXMLHelpersPreserveAnonymousAndBasicAuthResponseBehavior test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			body := &trackingReadCloser{reader: strings.NewReader(`<metadata><release>complete-response</release></metadata>`)}

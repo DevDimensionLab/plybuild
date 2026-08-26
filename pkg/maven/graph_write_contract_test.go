@@ -159,6 +159,10 @@ func TestGraphStylesWritePreservesExactCallerComposedPathBytesModeAndDependencyE
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestGraphStylesWritePreservesExactCallerComposedPathBytesModeAndDependencyError test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recording := &recordingGraphStylesFilesystem{writeErr: test.writeErr}

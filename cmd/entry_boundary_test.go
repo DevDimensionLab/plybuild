@@ -20,6 +20,10 @@ func TestExecutableEntryBoundary(t *testing.T) {
 	repositoryRoot := testRepositoryRoot(t)
 	entrypoints := []string{"main.go", "cmd/ply/main.go"}
 
+	if len(entrypoints) == 0 {
+		t.Fatal("executable entrypoint population is empty")
+	}
+
 	for _, relativePath := range entrypoints {
 		relativePath := relativePath
 		t.Run(relativePath, func(t *testing.T) {
@@ -181,6 +185,9 @@ func assertExecutionFunctions(t *testing.T, repositoryRoot string) {
 
 func processTerminationViolations(t *testing.T, repositoryRoot string, entrypoints []string) ([]string, map[string]int) {
 	t.Helper()
+	if len(entrypoints) == 0 {
+		t.Fatal("process-termination entrypoint population is empty")
+	}
 	allowedEntrypoints := make(map[string]bool, len(entrypoints))
 	for _, entrypoint := range entrypoints {
 		allowedEntrypoints[entrypoint] = true

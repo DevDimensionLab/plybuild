@@ -182,6 +182,10 @@ func TestSystemPreservesAnonymousAndBasicAuthGETRequests(t *testing.T) {
 		},
 	}
 
+	if len(tests) == 0 {
+		t.Fatal("TestSystemPreservesAnonymousAndBasicAuthGETRequests test-case population is empty")
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			wantResponse := &http.Response{
@@ -320,6 +324,15 @@ func TestSystemPreservesPOSTRequestBodyHeadersAndRedirects(t *testing.T) {
 		t.Fatalf("system POST request population was %d, want 2", len(requests))
 	}
 	wantURLs := []string{"https://post.example.invalid/start", "https://post.example.invalid/final"}
+	wantHeaders := map[string]string{
+		"Accept-Language": "nb-NO",
+		"Authorization":   "Bearer redirect-token",
+		"Content-Type":    "application/json",
+		"Kbn-Version":     "8.9.0",
+	}
+	if len(wantHeaders) == 0 {
+		t.Fatal("system POST header expectation population is empty")
+	}
 	for index, recorded := range requests {
 		if recorded.Method != http.MethodPost || recorded.URL.String() != wantURLs[index] {
 			t.Fatalf("system POST request %d was %s %s", index, recorded.Method, recorded.URL)
@@ -327,12 +340,7 @@ func TestSystemPreservesPOSTRequestBodyHeadersAndRedirects(t *testing.T) {
 		if requestBodies[index] != wantBody {
 			t.Fatalf("system POST body %d was %q, want %q", index, requestBodies[index], wantBody)
 		}
-		for name, want := range map[string]string{
-			"Accept-Language": "nb-NO",
-			"Authorization":   "Bearer redirect-token",
-			"Content-Type":    "application/json",
-			"Kbn-Version":     "8.9.0",
-		} {
+		for name, want := range wantHeaders {
 			if got := recorded.Header.Get(name); got != want {
 				t.Fatalf("system POST request %d header %s was %q, want %q", index, name, got, want)
 			}

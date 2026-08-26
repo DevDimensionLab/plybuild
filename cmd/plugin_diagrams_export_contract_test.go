@@ -163,6 +163,9 @@ func assertPluginDiagramsExportBetweenDeletionAndDiscovery(t *testing.T) {
 		t.Fatal("private plugin-diagrams flow is missing its deletion, export, or discovery statement")
 	}
 	wantCalls := []string{"file.DeleteAll", "process.Execute", "file.FindAll"}
+	if len(wantCalls) == 0 {
+		t.Fatal("plugin-diagrams call expectation population is empty")
+	}
 	for index, want := range wantCalls {
 		assignment, callName := assignedCall(function.Body.List[index+1])
 		if callName != want {
