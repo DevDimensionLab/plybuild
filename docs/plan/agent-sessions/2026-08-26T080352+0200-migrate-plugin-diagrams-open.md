@@ -1,13 +1,13 @@
 # Agent Session: Migrate Plugin Diagrams Open
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T080352+0200-migrate-plugin-diagrams-open`
 Created: `2026-08-26T08:03:52+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `33599b9547262f76055dfa8d61c121e541051d6633a1ece6ad924a1b5eb40831`
 Previous: [2026-08-26T072802+0200-migrate-plugin-diagrams-export.md](2026-08-26T072802+0200-migrate-plugin-diagrams-export.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T084000+0200-migrate-plugin-diagrams-dot.md](2026-08-26T084000+0200-migrate-plugin-diagrams-dot.md)
+Outcome: product commit `6f4bc37` routes only the ignored macOS open request through the process adapter; 369 tests, Q1.3 8/30, the clean gate, T15, full audit, and empty-HOME count-2 pass with zero comparable regressions
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

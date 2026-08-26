@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `3972fc6`.
+Last measured checkpoint: 2026-08-26, commit `6f4bc37`.
 
 ## Objective
 
@@ -503,6 +503,26 @@ P3.55 clean checkpoint (product `3972fc6`):
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 | Claim phrases in 73 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
+P3.56 clean checkpoint (product `6f4bc37`):
+
+| Signal | P3.56 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 369 | Five focused private plugin-diagrams open-process contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The focused contracts use only a recorder and source AST; they launch no external program. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in an already-tested package. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 8 / 30 | The isolated macOS `open` construction/execution site moved through the existing process adapter. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 74 Markdown files | 0 | Q3.4 remains held. |
 | Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
 ## Checkpoints
@@ -2933,6 +2953,52 @@ SHA-256
 `ced6611a0990d55285007f9b9d19a990bbbe2bef9ee2fbe18084420fe9956fa6`;
 the measured commit tree is `395bbad053237f8769be804e211c7cb0f49550cc`.
 
+Move 56 changes only the ignored macOS `open` process request after each
+successful Graphviz conversion in private plugin-diagrams flow.
+`structurizrCmd.RunE` retains the mandatory workspace lookup and now passes the
+complete private `pluginDiagramsOpenDependencies` value alongside the completed
+export dependency. Production selects `process.System()` explicitly.
+
+After the unchanged direct `dot` request succeeds and before the range advances,
+the private `openStructurizrDiagram` helper calls `_ = process.Execute` once with
+executable `open`, the exact single `outputPngFile` argument, and zero values for
+directory, streams, and Start. The synchronous result remains ignored, and the
+next discovered file is attempted unconditionally. Workspace lookup, deletion,
+export, discovery, iteration, output path construction, printed text, direct
+Graphviz execution and error, output capture and writing, Cobra behavior,
+public API, `pkg/structurizr`, adapter, scanner, inventory, and audit apparatus
+are unchanged.
+
+Five focused private contracts bring the suite to 369 tests. They prove complete
+production process selection, the exact command and arbitrary output-path bytes,
+one request per helper invocation, synchronous zero-value directory and streams,
+the exact directly ignored injected process error, safe-zero behavior, rejection
+of an empty recorded population, placement only after the direct Graphviz error
+gate, unconditional continued iteration, complete dependency delivery, and
+absence of export, `dot`, or another process request. They launch no external
+program, touch no network, and write no repository fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, Q1.3 improves from 9 of 31 to 8 of 30, Q1.4 stays 7 of 8, exact Q2.1
+stays 0 of 8, and Q3.4 stays zero phrases across 74 Markdown files. The scanner
+and inventory remain unchanged.
+
+The clean move-56 gate passes focused cmd/process/structurizr and relevant
+caller tests; API/CLI and subprocess compatibility; build, complete and
+uncached tests, race, vet, pinned lint, all 62 launcher controls, Make and all
+production-script meta-contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. The clean full audit exits
+1 for the same 15 documented findings, never 2, with L0 8 of 8, five improved,
+two held, zero regressed, one non-comparable ratchet, and zero dirty paths.
+
+Product commit: `6f4bc37`.
+
+The authoritative clean full audit from `6f4bc37` has structured scorecard
+SHA-256
+`efaaee797a34d182d03d6830d0af4c342b7e744180775942119a77c7e0f88090`;
+the measured commit tree is `cf7c1af5b9ecbbbb7b218cfa6951354d6bf94854`.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -2974,12 +3040,14 @@ or command execution.
 evaluation, path selection, config initialization, default cloud URL, YAML
 marshal sequencing, logging, file creation, exact output bytes, mode, write
 error, close behavior, `UpdateLocalConfig`, or callers.
-The isolated `structurizr-cli export` request in `cmd/plugin_diagrams.go` now
-uses the process adapter. Continue with only the ignored macOS `open` request
-after each successful direct Graphviz conversion. Leave the Graphviz `dot`
-request, completed export request, project initialization, `SortAndWritePom`,
-cloud config, template/file/Maven behavior, every other tips branch, command
-sequencing, the adapter, public API, and every completed effect unchanged.
+The isolated `structurizr-cli export` and ignored macOS `open` requests in
+`cmd/plugin_diagrams.go` now use the process adapter. Continue with only the
+direct Graphviz `dot` conversion request and preserve its captured stdout,
+discarded stderr, output write, early process error, and following open attempt.
+Leave both completed plugin-diagrams requests, project initialization,
+`SortAndWritePom`, cloud config, template/file/Maven behavior, every other tips
+branch, command sequencing, the adapters, public API, and every completed effect
+unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
