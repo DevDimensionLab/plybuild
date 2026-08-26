@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/kibana"
-	"github.com/devdimensionlab/plybuild/pkg/structurizr"
 	"github.com/spf13/cobra"
-	"os/exec"
 	"strings"
 )
 
@@ -95,6 +95,7 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 		}
 		return runStructurizrDiagrams(
 			systemPluginDiagramsExportDependencies(),
+			systemPluginDiagramsGraphvizDependencies(),
 			systemPluginDiagramsOpenDependencies(),
 			workspace,
 		)
@@ -107,6 +108,18 @@ type pluginDiagramsExportDependencies struct {
 
 func systemPluginDiagramsExportDependencies() pluginDiagramsExportDependencies {
 	return pluginDiagramsExportDependencies{Process: process.System()}
+}
+
+type pluginDiagramsGraphvizDependencies struct {
+	Process process.Dependencies
+	Files   filesystem.Dependencies
+}
+
+func systemPluginDiagramsGraphvizDependencies() pluginDiagramsGraphvizDependencies {
+	return pluginDiagramsGraphvizDependencies{
+		Process: process.System(),
+		Files:   filesystem.System(),
+	}
 }
 
 type pluginDiagramsOpenDependencies struct {
@@ -124,8 +137,29 @@ func openStructurizrDiagram(dependencies pluginDiagramsOpenDependencies, outputP
 	})
 }
 
+func convertStructurizrDiagram(
+	dependencies pluginDiagramsGraphvizDependencies,
+	inputDotFile string,
+	outputPngFile string,
+) error {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	err := process.Execute(dependencies.Process, process.Command{
+		Name:   "dot",
+		Args:   []string{inputDotFile, "-Tpng"},
+		Stdout: &stdout,
+		Stderr: &stderr,
+	})
+	if err != nil {
+		return err
+	}
+	_ = filesystem.WriteFile(dependencies.Files, outputPngFile, stdout.Bytes(), 0644)
+	return nil
+}
+
 func runStructurizrDiagrams(
 	exportDependencies pluginDiagramsExportDependencies,
+	graphvizDependencies pluginDiagramsGraphvizDependencies,
 	openDependencies pluginDiagramsOpenDependencies,
 	workspace string,
 ) error {
@@ -144,7 +178,7 @@ func runStructurizrDiagrams(
 	for _, file := range files {
 		outputPngFile := strings.Replace(strings.Replace(file, tempDirectory, "", 1), ".dot", "", 1) + ".png"
 		println("Creating -> " + outputPngFile)
-		err = structurizr.RunWithOutputToFile(exec.Command("dot", file, "-Tpng"), outputPngFile)
+		err = convertStructurizrDiagram(graphvizDependencies, file, outputPngFile)
 		if err != nil {
 			return err
 		}

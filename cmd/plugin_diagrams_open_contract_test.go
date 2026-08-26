@@ -97,7 +97,7 @@ func TestRecordedPluginDiagramsOpenCommandsRejectEmptyPopulation(t *testing.T) {
 	}
 }
 
-func TestPluginDiagramsOpenRemainsAfterSuccessfulDirectDotAndContinuesIteration(t *testing.T) {
+func TestPluginDiagramsOpenRemainsAfterSuccessfulGraphvizAndContinuesIteration(t *testing.T) {
 	function := parsedPluginDiagramsFunction(t, "runStructurizrDiagrams")
 	var loop *ast.RangeStmt
 	ast.Inspect(function.Body, func(node ast.Node) bool {
@@ -111,23 +111,31 @@ func TestPluginDiagramsOpenRemainsAfterSuccessfulDirectDotAndContinuesIteration(
 		t.Fatal("private plugin-diagrams flow is missing its discovered-file iteration")
 	}
 
-	dotIndex := -1
+	graphvizIndex := -1
 	for index, statement := range loop.Body.List {
-		_, callName := assignedCall(statement)
-		if callName == "structurizr.RunWithOutputToFile" {
-			dotIndex = index
+		assignment, ok := statement.(*ast.AssignStmt)
+		if !ok || len(assignment.Rhs) != 1 {
+			continue
+		}
+		call, ok := assignment.Rhs[0].(*ast.CallExpr)
+		if !ok {
+			continue
+		}
+		identifier, ok := call.Fun.(*ast.Ident)
+		if ok && identifier.Name == "convertStructurizrDiagram" {
+			graphvizIndex = index
 			break
 		}
 	}
-	if dotIndex < 0 || dotIndex+2 >= len(loop.Body.List) {
-		t.Fatal("plugin-diagrams iteration is missing direct dot conversion, error gate, or open helper")
+	if graphvizIndex < 0 || graphvizIndex+2 >= len(loop.Body.List) {
+		t.Fatal("plugin-diagrams iteration is missing Graphviz conversion, error gate, or open helper")
 	}
-	assertDirectPluginDiagramsDotRequest(t, loop.Body.List[dotIndex])
-	assertPluginDiagramsDotErrorGate(t, loop.Body.List[dotIndex+1])
+	assertPrivatePluginDiagramsGraphvizRequest(t, loop.Body.List[graphvizIndex])
+	assertPluginDiagramsDotErrorGate(t, loop.Body.List[graphvizIndex+1])
 
-	openCall, ok := loop.Body.List[dotIndex+2].(*ast.ExprStmt)
+	openCall, ok := loop.Body.List[graphvizIndex+2].(*ast.ExprStmt)
 	if !ok {
-		t.Fatalf("plugin-diagrams open helper statement is %T, want direct expression", loop.Body.List[dotIndex+2])
+		t.Fatalf("plugin-diagrams open helper statement is %T, want direct expression", loop.Body.List[graphvizIndex+2])
 	}
 	call, ok := openCall.X.(*ast.CallExpr)
 	if !ok {
@@ -145,7 +153,7 @@ func TestPluginDiagramsOpenRemainsAfterSuccessfulDirectDotAndContinuesIteration(
 	if !dependencyOK || dependency.Name != "openDependencies" || !outputOK || output.Name != "outputPngFile" {
 		t.Fatalf("plugin-diagrams open helper arguments are %#v, want complete openDependencies and outputPngFile", call.Args)
 	}
-	if dotIndex+2 != len(loop.Body.List)-1 {
+	if graphvizIndex+2 != len(loop.Body.List)-1 {
 		t.Fatal("plugin-diagrams open helper no longer unconditionally continues to the next discovered file")
 	}
 }
@@ -187,31 +195,29 @@ func parsedPluginDiagramsFunction(t *testing.T, name string) *ast.FuncDecl {
 	return nil
 }
 
-func assertDirectPluginDiagramsDotRequest(t *testing.T, statement ast.Stmt) {
+func assertPrivatePluginDiagramsGraphvizRequest(t *testing.T, statement ast.Stmt) {
 	t.Helper()
-	assignment, callName := assignedCall(statement)
-	if callName != "structurizr.RunWithOutputToFile" || assignment == nil {
-		t.Fatalf("plugin-diagrams conversion calls %q, want structurizr.RunWithOutputToFile", callName)
+	assignment, ok := statement.(*ast.AssignStmt)
+	if !ok || len(assignment.Rhs) != 1 {
+		t.Fatalf("plugin-diagrams conversion is %T, want one assigned helper call", statement)
 	}
-	call := assignment.Rhs[0].(*ast.CallExpr)
-	if len(call.Args) != 2 {
-		t.Fatalf("plugin-diagrams conversion received %d arguments, want command and output path", len(call.Args))
-	}
-	dotCall, ok := call.Args[0].(*ast.CallExpr)
+	call, ok := assignment.Rhs[0].(*ast.CallExpr)
 	if !ok {
-		t.Fatalf("plugin-diagrams conversion command is %T, want exec.Command call", call.Args[0])
+		t.Fatalf("plugin-diagrams conversion expression is %T, want helper call", assignment.Rhs[0])
 	}
-	selector, ok := dotCall.Fun.(*ast.SelectorExpr)
-	if !ok {
-		t.Fatalf("plugin-diagrams conversion command function is %T, want exec.Command", dotCall.Fun)
+	identifier, ok := call.Fun.(*ast.Ident)
+	if !ok || identifier.Name != "convertStructurizrDiagram" {
+		t.Fatalf("plugin-diagrams conversion helper is %#v, want convertStructurizrDiagram", call.Fun)
 	}
-	receiver, receiverOK := selector.X.(*ast.Ident)
-	if !receiverOK || receiver.Name != "exec" || selector.Sel.Name != "Command" || len(dotCall.Args) == 0 {
-		t.Fatalf("plugin-diagrams conversion command is %#v, want direct exec.Command", dotCall.Fun)
+	if len(call.Args) != 3 {
+		t.Fatalf("plugin-diagrams conversion received %d arguments, want dependency, input, and output", len(call.Args))
 	}
-	dotName, ok := dotCall.Args[0].(*ast.BasicLit)
-	if !ok || dotName.Kind != token.STRING || dotName.Value != `"dot"` {
-		t.Fatalf("plugin-diagrams conversion executable is %#v, want exact dot", dotCall.Args[0])
+	dependency, dependencyOK := call.Args[0].(*ast.Ident)
+	input, inputOK := call.Args[1].(*ast.Ident)
+	output, outputOK := call.Args[2].(*ast.Ident)
+	if !dependencyOK || dependency.Name != "graphvizDependencies" || !inputOK || input.Name != "file" ||
+		!outputOK || output.Name != "outputPngFile" {
+		t.Fatalf("plugin-diagrams conversion helper arguments are %#v", call.Args)
 	}
 }
 
