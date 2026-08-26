@@ -40,7 +40,7 @@ type browserLauncherDependencies struct {
 
 func systemBrowserLauncherDependencies() browserLauncherDependencies {
 	return browserLauncherDependencies{
-		Process: process.System(),
+		Process: process.SystemRunner(),
 		GOOS:    runtime.GOOS,
 	}
 }
