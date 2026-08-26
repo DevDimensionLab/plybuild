@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `0b96f10`.
+Last measured checkpoint: 2026-08-26, commit `40cece5`.
 
 ## Objective
 
@@ -683,6 +683,26 @@ P3.64 clean checkpoint (product `0b96f10`):
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 | Claim phrases in 81 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
+P3.65 clean checkpoint (product `40cece5`):
+
+| Signal | P3.65 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 388 | Two existing focused filesystem-open and Unzip file-open contracts were strengthened without changing the test denominator. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The focused contracts record in memory, launch no external program, touch no network, and write no repository fixture. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in already-tested packages. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 5 / 27 | Unzip's unchanged destination open now returns through `filesystem.File`, so the following adapter `Copy` and `Close` requests no longer inherit concrete `*os.File` provenance. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 83 Markdown files | 0 | Q3.4 remains held. |
 | Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
 ## Checkpoints
@@ -3587,6 +3607,58 @@ SHA-256
 `f817974080ab4b1641155e24e7d2b7f4d0fddf1ae7c06d7c4922320a70f5a842`;
 the measured commit tree is `8a7180aa20082d504a47ce8bdb4a12d405c9bf50`.
 
+Move 65 changes only the private filesystem adapter forwarding surface and
+shell Unzip's destination-file open call. New `filesystem.OpenFileAsFile`
+delegates once to the complete existing `FileSystem.OpenFile` operation with
+the exact path, flags, and mode while returning its exact file through the
+existing `filesystem.File` interface and preserving the exact error. The
+complete `FileSystem` interface, system implementation, exported
+`filesystem.OpenFile`, public `file.OpenFile`, and every other operation and
+caller are unchanged.
+
+`unzipWithDependencies` now uses that helper only for its one destination
+open. Exact source and destination bytes, archive open and deferred close,
+zip-slip boundary and error, archive directory metadata classification, joined
+paths, recursive directories and modes, ordered filenames, destination flags,
+entry modes and opens, ignored copy results, output and reader closes, attempts,
+operation order, direct errors, partial filenames, error precedence, traversal,
+safe zero behavior, system selection, exported `Unzip`, and its caller remain
+unchanged. There is no selection, fallback, retry, wrapping, logging, cleanup,
+or global-state change.
+
+Two strengthened focused top-level contracts keep the suite at 388 tests. They
+prove safe zero behavior, exact complete dependency delivery and preservation,
+path, flags, mode, returned `filesystem.File` identity, exact error, non-empty
+population, absence of another filesystem operation, the exact private helper
+placement, and every existing Unzip archive, path, directory, entry, copy,
+close, order, partial-result, error-precedence, and traversal guarantee. The
+contracts launch no external program, touch no network, and write no repository
+fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, regenerated exact Q1.3 improves from 7 of 29 to 5 of 27, Q1.4 stays 7 of
+8, exact Q2.1 stays 0 of 8, and Q3.4 stays zero phrases across 83 Markdown
+files. The unchanged import-aware scanner no longer follows concrete
+`*os.File` provenance through Unzip's adapter `Copy` and `Close` requests.
+Clock and server remain absent, so Q1.3 remains the single non-comparable
+ratchet. The scanner, inventory, baseline, and audit apparatus are unchanged.
+
+The clean move-65 gate passes focused filesystem, Unzip, Spring, and relevant
+caller tests; API/CLI and fresh subprocess compatibility; build, complete and
+uncached tests, race, vet, pinned lint, all 62 launcher controls, Make and all
+production-script meta-contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. The clean full audit exits
+1 for the same 15 documented findings, never 2, with L0 8 of 8, five improved,
+two held, zero regressed, one non-comparable ratchet, and zero dirty paths.
+
+Product commit: `40cece5`.
+
+The authoritative clean full audit from `40cece5` has structured scorecard
+SHA-256
+`1bae6abec78d2306c2205bdf1f96b7bffdabcef7e82a232a2aedafe536f3bf56`;
+the measured commit tree is `c1009903d65b062786604f71d8f1fa89d2dfe61d`.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -3646,18 +3718,21 @@ The private browser-launcher selector now also uses the exact runner-only system
 dependency while retaining runtime platform selection, the exact asynchronous
 commands and URLs for Linux, Windows, and macOS, direct start errors,
 unsupported-platform behavior, safe zero behavior, and public `OpenBrowser`
-behavior. Continue with only shell Unzip's destination-file provenance: add one
-narrow filesystem helper that delegates to the complete existing
-`FileSystem.OpenFile` operation but returns the existing `File` interface, and
-use it only for that destination open. Preserve the exact path, flags, mode,
-returned file and error, archive and entry opens, path validation, directories,
-copy and close calls, order, ignored and direct errors, partial filenames,
-traversal, exported `Unzip`, the existing complete `FileSystem` interface and
-system implementation, exported `filesystem.OpenFile`, public `file.OpenFile`,
-and every public behavior. Leave server behavior, Maven's completed dependency
-and stdout selection, process callers, browser, profile, shell Run and Git,
-plugin diagrams, other Unzip operations, clock/server work, inventory, scanner,
-audit apparatus, and P4-P8 unchanged.
+behavior. Shell Unzip's destination open now also returns through the existing
+`filesystem.File` interface while retaining the same complete
+`FileSystem.OpenFile` operation, path, flags, mode, returned file and error,
+archive and entry opens, path validation, directories, copy and close calls,
+order, ignored and direct errors, partial filenames, traversal, exported
+`Unzip`, complete adapter interface and system implementation, exported
+`filesystem.OpenFile`, public `file.OpenFile`, and every public behavior.
+Continue with only Maven's remaining system-standard-output provenance: add one
+narrow process adapter helper for the exact existing `Stdout(System(), true)`
+composition, give public `RunOn` a private production selector carrying the
+exact existing system runner and standard output, and preserve its complete
+debug-only stdout, command, log, callback, error, and public behavior. Leave
+server behavior, Unzip, other process callers, browser, profile, shell Run and
+Git, plugin diagrams, clock/server work, inventory, scanner, audit apparatus,
+and P4-P8 unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.

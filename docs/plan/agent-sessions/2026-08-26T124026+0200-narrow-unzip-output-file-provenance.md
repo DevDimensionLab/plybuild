@@ -1,13 +1,13 @@
 # Agent Session: Narrow Unzip Output File Provenance
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T124026+0200-narrow-unzip-output-file-provenance`
 Created: `2026-08-26T12:40:26+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `ce9587d3ed287014fd7012c23b620583b619ab5eb375c69d72fcfae79fddfc88`
 Previous: [2026-08-26T121214+0200-narrow-browser-launcher-system-capability.md](2026-08-26T121214+0200-narrow-browser-launcher-system-capability.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T130843+0200-narrow-maven-standard-output-provenance.md](2026-08-26T130843+0200-narrow-maven-standard-output-provenance.md)
+Outcome: Completed in product commit `40cece5337359d313a2fda3200c9d1fab3850c44`.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
