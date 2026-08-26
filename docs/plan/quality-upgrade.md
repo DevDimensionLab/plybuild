@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `c627a3e`.
+Last measured checkpoint: 2026-08-26, commit `91422eb`.
 
 ## Objective
 
@@ -724,6 +724,26 @@ P3.66 clean checkpoint (product `c627a3e`):
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 | Claim phrases in 84 Markdown files | 0 | Q3.4 remains held. |
 | Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
+P4.1 clean checkpoint (product `91422eb`):
+
+| Signal | P4.1 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 394 | Four clock-adapter contracts and two additional Spring archive-path recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The focused contracts record in memory, launch no external program, touch no network, and write no repository fixture. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 20 / 26 | The new clock adapter is a tested package; the six packages without test files are unchanged. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 3 / 27 | Spring's archive timestamp now crosses the exact declared clock adapter; the clock adapter is present and only the server adapter is missing. |
+| Declared seam swap tests | 7 / 8 | This focused clock move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 85 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 remains the single not-comparable selected criterion because the declared server adapter is absent. |
 
 ## Checkpoints
 
@@ -3800,7 +3820,8 @@ The P3 exit is satisfied: process exits outside `main` are zero, every P3
 production-effect move is recorded, its migrated call sites no longer appear
 in Q1.3, and the CLI/API contracts remain compatible. P4 is now active. Begin
 it with one focused clock-adapter move for Spring's archive-path timestamp;
-leave Kibana sleep and server behavior for later coherent P4 moves.
+that move is complete, and Kibana sleep and server behavior remain later
+coherent P4 moves.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
@@ -3821,6 +3842,65 @@ zero, direct effects outside adapters equals zero, direct time calls outside
 `internal/adapter/clock` equal zero, a movable fake clock proves time control,
 all eight seam swaps are covered, and every manual L1 row has valid non-empty
 evidence.
+
+Move 1 introduces only the declared `internal/adapter/clock` current-time
+boundary and migrates only Spring's private archive-path timestamp selection.
+`clock.Now` returns the exact injected `time.Time`; its zero dependency returns
+the deterministic exact zero time, and `clock.System` selects a private system
+clock whose only read directly returns `time.Now()`. It performs no fallback,
+truncation, rounding, timezone conversion, caching, monotonic rewriting,
+logging, cleanup, retry, or global-state mutation.
+
+Private `archivePathDependencies` retains the exact complete filesystem system
+dependency and adds only the exact complete system clock. The existing working-
+directory request and direct error still happen before any clock read. After
+directory success, exactly one clock read supplies the unchanged `Unix()`
+second to the unchanged `spring-%d.zip` name and slash composition. Named
+returns, arbitrary directory bytes, pre-epoch and subsecond conversion,
+`archivePath`, every caller, archive creation, download, unzip, deletion,
+logging, errors, and public behavior remain exact.
+
+Six focused contracts bring the suite to 394 tests across 20 of 26 packages.
+They prove deterministic safe zero behavior, a direct system-time value within
+a bounded before/after observation, exact arbitrary injected times, complete
+dependency delivery and preservation, directory-before-clock order, no clock
+read after a directory error, one read after success, exact path and returns,
+non-empty populations, public composition, and absence of another operation.
+They launch no external program, touch no network, and write no repository
+fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 is now 6 of 26 because
+the tested clock adapter adds one package, Q1.2 stays zero, regenerated exact
+Q1.3 improves from 4 of 27 to 3 of 27, Q1.4 stays 7 of 8, exact Q2.1 stays 0
+of 8, and Q3.4 stays zero phrases across 85 Markdown files. The declared clock
+adapter is now present; the server adapter remains absent, so Q1.3 remains the
+single non-comparable ratchet. The scanner, inventory, baseline, and audit
+apparatus are unchanged.
+
+The clean move-1 gate passes focused clock, Spring, and relevant caller tests;
+API/CLI and fresh subprocess compatibility; build, complete and uncached tests,
+race, vet, pinned lint, all 62 launcher controls, Make and all production-script
+meta-contracts, all four host acceptance flows, the repaired 15-control audit
+meta-suite, and empty-HOME count-2. The first API compatibility invocation
+lacked the exact pinned `apidiff` executable and passed after rebuilding that
+pin outside the worktree. The first preflight invocation used the sandbox-
+blocked default lint cache and its isolated-cache rerun passed. The first
+complete `make test` invocation hit the established nested partial-raw-log
+signal-fixture flake; its immediate unchanged complete rerun passed all 62
+controls. The clean full audit exits 1 for 14 documented non-passing criteria,
+never 2, with L0 8 of 8, five improved, two held, zero regressed, one non-
+comparable ratchet, and zero dirty paths.
+
+Product commit: `91422eb`.
+
+The authoritative clean full audit from `91422eb` has structured scorecard
+SHA-256
+`60bc1cf4994c63444d9b841f1dfd971d99283b21aad02cf3a859305c41fc62c4`;
+the measured commit tree is `eedf149499ead042a28352a4c35b9d827f41a58f`.
+Continue P4 with the one remaining direct clock site: migrate only Kibana
+public `POST`'s exact fixed retry sleep through the clock adapter, leaving the
+two web server sites for a later coherent P4 move.
 
 ### P5 - Build L2 Mutation Evidence
 

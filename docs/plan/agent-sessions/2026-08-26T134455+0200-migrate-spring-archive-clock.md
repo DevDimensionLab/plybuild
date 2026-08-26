@@ -1,13 +1,13 @@
 # Agent Session: Migrate Spring Archive Clock
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T134455+0200-migrate-spring-archive-clock`
 Created: `2026-08-26T13:44:55+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `d7555a234bd2a57b20e3074617a6cf2b5bf36e644e0b1e7881500614dcd52662`
 Previous: [2026-08-26T130843+0200-narrow-maven-standard-output-provenance.md](2026-08-26T130843+0200-narrow-maven-standard-output-provenance.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T141928+0200-migrate-kibana-retry-sleep.md](2026-08-26T141928+0200-migrate-kibana-retry-sleep.md)
+Outcome: Product commit `91422eb` added the exact safe-zero/system clock adapter and migrated only Spring's private archive-path timestamp selection. The clean checkpoint has 394 tests, improves exact Q1.3 from 4/27 to 3/27, and has zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
