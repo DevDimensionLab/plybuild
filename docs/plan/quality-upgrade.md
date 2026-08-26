@@ -4304,6 +4304,71 @@ paths. The focused seven-criterion scorecard SHA-256 is
 `5c640e0717d17f3200b1acfed83171f1cc824529ae2af18ab9b31a7b4fa77ee6`.
 Continue P4 with one test-only characterization move for `pkg/context`.
 
+Move 9 adds only `pkg/context/context_test.go`; both production Context files,
+all exported fields and method signatures, the private package logger and its
+initialization, config and project ownership, file and Maven calls, callers,
+logging, errors, writes, globals, and observable behavior are unchanged. Nine
+focused characterization contracts bring the suite to 449 tests across all 27
+packages and cover `pkg/context` at 97.6% statement coverage.
+
+The contracts pin package logger initialization plus exact `SetLogger`
+assignment and restoration; zero and directly owned public Context state;
+non-recursive and recursive project discovery; existing-project append,
+filesystem traversal, and partial-result order; missing-root and invalid-project
+behavior; empty project handling; cloud-default merging and errors; project-type
+skips; stealth, dry-run, dirty-repository, job, nil-job, and write behavior;
+root-project selection; profile assignment, creation, retention, and failure;
+configured authenticated and anonymous repositories; legacy default repository
+selection; and representative exact log levels, messages, and errors. Value
+copies, shared pointer fields, callback order, early returns, continuations, and
+non-empty iterated and recorded populations are explicit.
+
+All test-created directories and files remain below `t.TempDir()` and use the
+two central guarded writers. Every logger, environment, homedir cache, and
+working-directory mutation restores its exact original identity and value. No
+parallel test around process state, socket, network access, external program,
+sleep, timed wait, repository fixture, leaked hook, entry, file, environment,
+or process-state change is added. The two uncovered statements are legacy
+error logs that current interfaces cannot induce deterministically:
+`file.FindAll` suppresses callback walk errors, and `maven.DefaultRepository`
+derives its home from `os/user.Current().HomeDir` and offers no injectable
+failure seam. Preferred error propagation and a caller-owned Maven home or
+repository seam remain later product decisions requiring explicit scope.
+
+Q0.6 improves to 29 guarded safe-writer sites, 23 write and 6 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 improves from 1 of 27 to
+0 of 27, Q1.2 remains zero, exact Q1.3 remains 0 of 27 with all five adapter
+paths valid, Q1.4 remains 7 of 8, exact Q2.1 remains 0 of 8, and Q3.4 remains
+zero phrases across 93 Markdown files. The scanner, inventory, baseline, audit
+apparatus, mutation harnesses, production code, and all completed contracts are
+unchanged.
+
+The clean move-9 gate passes focused context and command caller tests at 97.6%
+context coverage; API/CLI, CLI surface, and fresh subprocess compatibility;
+build, complete and uncached tests, race, vet, pinned lint, `make preflight`,
+`make test`, all 62 launcher controls, Make and production-script contracts,
+all four host acceptance flows, the repaired 15-control audit meta-suite, and
+empty-HOME count-2. The first focused audit exposed three direct fixture
+directory writes; replacing those test-only setup calls with the existing
+guarded copy writer and amending the single product commit restored exact Q0.6
+before the authoritative measurements. The first `make test` invocation hit
+the documented partial-raw-log signal-fixture race at launcher control 26; its
+immediate unchanged standalone launcher run and complete Make rerun passed.
+
+Product commit: `746a5ab`.
+
+The authoritative clean full audit from `746a5ab` has structured scorecard
+SHA-256
+`48a58e58abf53254ec318de93266a683f60e6ac4a194e02b187c76c170a823b2`;
+the measured commit tree is `7bfabae149bffc5dfd2ad59f90abb08e29c982f2`.
+It exits 1 for 13 documented findings, never 2, with L0 8 of 8, six
+improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
+paths. The focused seven-criterion scorecard SHA-256 is
+`f937c9be84913156be11dfa9a937565959cfcde6ba1b9389bea7b2f337e0d7c6`.
+Continue P4 with the eighth declared interactive-server loopback seam and its
+non-executable P4 seam driver; P4 remains active until all seam and manual L1
+evidence is valid.
+
 ### P5 - Build L2 Mutation Evidence
 
 Status: queued.

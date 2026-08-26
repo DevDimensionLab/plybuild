@@ -1055,119 +1055,111 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-26T180111+0200-cover-context-package
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T180111+0200-cover-context-package.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T172816+0200-cover-logger-package.md
+#|SESSION_ID=2026-08-26T184054+0200-close-loopback-seam
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T184054+0200-close-loopback-seam.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T180111+0200-cover-context-package.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P4 with one focused test-only coverage move for the sole remaining
-#|untested package, `pkg/context`. Add deterministic characterization contracts
-#|for the complete existing public Context operations and logger selection
-#|without changing production code, filesystem/config/Maven behavior, project
-#|ownership, logging, callers, or observable semantics. Preserve every completed
-#|checkpoint and produce zero comparable ratchet regressions.
+#|Continue P4 with one focused interactive-server seam move. Change the existing
+#|private HTTP server from all-interface binding to the inventory-declared exact
+#|IPv4 loopback address while preserving port 7999, server identity, startup and
+#|shutdown composition, handlers, logging, browser behavior, callers, and every
+#|other observable semantic. Add the non-executable P4 seam driver and its exact
+#|meta-contract so all eight declared seams have executable swap coverage.
 #|
 #|# Authorized Roadmap
 #|
 #|P3 is complete, P4 is active, and P5-P8 remain queued in the machine-readable
 #|block in `docs/plan/quality-upgrade.md`. The launcher must remain NEXT until all
-#|authorized checkpoints finish. P4.8 product commit `67344a8` added complete
-#|logger-package characterization, improved Q1.1 from 2/27 to 1/27, and held
-#|exact Q1.3 at zero of 27.
+#|authorized checkpoints finish. P4.9 product commit `746a5ab` added complete
+#|deterministic `pkg/context` characterization, improved Q1.1 from 1/27 to 0/27,
+#|and held exact Q1.3 at zero of 27. P4 is still incomplete because Q1.4 is 7/8
+#|and the manual L1 evidence rows remain unrecorded.
 #|
-#|This mission authorizes only focused tests in `pkg/context` that characterize
-#|the existing `Context` state, `FindAndPopulateMavenProjects`,
-#|`OnEachMavenProject`, `OnRootProject`, `LoadProfile`, `GetMavenRepository`,
-#|package logger initialization, and `SetLogger`, plus the exact existing file,
-#|config, Maven, project, and logger behavior those operations already invoke. It
-#|does not authorize changing any production file, extracting a seam, changing
-#|project or config ownership, changing walk or append order, validation,
-#|logging, errors, writes, Maven repository selection, globals, callers,
-#|scanners, audit apparatus, inventory, mutation harnesses, acceptance scripts,
-#|public APIs, another package, manual evidence, or P5-P8 implementation. If
-#|truthful tests expose a preferred isolation, ownership, validation, logging,
-#|or repository design, preserve the existing behavior and record that product
-#|decision for later scope.
+#|This mission authorizes only the exact package-level interactive server address
+#|change in `pkg/webservice/api.go`, focused contracts for that address and its
+#|existing start/stop selection, the new non-executable
+#|`scripts/mutate-interactive-build` P4 seam driver, its
+#|`scripts/test-mutate-interactive-build` meta-contract, and exact existing
+#|command/webservice caller behavior reached by that driver. It does not authorize
+#|making the driver executable, implementing a P5 mutation harness or T1-T10,
+#|changing `.quality/inventory`, adding another seam or adapter, changing the
+#|port, endpoint URI, browser launch, server lifecycle, goroutines, callbacks,
+#|handlers, logging, errors, globals, public APIs, command behavior, acceptance
+#|scripts, audit apparatus, baseline, manual evidence, or any other package or
+#|roadmap phase.
 #|
 #|# Measurements At Start
 #|
-#|Clean product commit `67344a8` has 440 tests across 26 of 27 packages and
-#|`pkg/logger` has 100% statement coverage. Q0.6 has 27 guarded safe-writer
-#|sites, 22 write and 5 copy, zero skipped tests, and zero unsafe direct test
-#|writes. Q1.1 is 1/27, Q1.2 is zero, exact Q1.3 is 0/27 with all five declared
+#|Clean product commit `746a5ab` has 449 tests across all 27 packages and
+#|`pkg/context` has 97.6% statement coverage. Q0.6 has 29 guarded safe-writer
+#|sites, 23 write and 6 copy, zero skipped tests, and zero unsafe direct test
+#|writes. Q1.1 is 0/27, Q1.2 is zero, exact Q1.3 is 0/27 with all five declared
 #|adapters valid, Q1.4 is 7/8, exact Q2.1 is 0/8, and Q3.4 is zero phrases across
-#|92 Markdown files.
+#|93 Markdown files.
 #|
 #|The authoritative clean full audit exits 1 for 13 documented non-passing
 #|criteria, never 2, with L0 8/8, six improved, two held, zero regressed, zero
 #|non-comparable ratchets, and zero dirty paths. Its scorecard SHA-256 is
-#|`38e938f060312840cb244a575536aa613266b172de98542cb2bb2e0998da576b`.
+#|`48a58e58abf53254ec318de93266a683f60e6ac4a194e02b187c76c170a823b2`.
 #|The repaired T15 proof passes all 15 controls and reproduces the exact stored
 #|debt and instrument identities.
 #|
 #|# Role And Boundaries
 #|
 #|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|test implementation commit for this single package-coverage move, then make the
-#|normal separate continuity-only commit. Do not push, merge, publish,
-#|distribute, remove the worktree, stash inherited changes, revert user work, or
-#|run destructive Git commands.
+#|implementation commit for this single loopback seam move, then make the normal
+#|separate continuity-only commit. Do not push, merge, publish, distribute,
+#|remove the worktree, stash inherited changes, revert user work, or run
+#|destructive Git commands.
 #|
-#|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve the exact exported
-#|Context fields and method signatures, private package logger and its
-#|initialization, `SetLogger` assignment, value-versus-pointer behavior, project
-#|append and traversal order, root-project selection, nil-job skipping, error
-#|continuation and early-return choices, cloud-default merge, stealth and dry-run
-#|effects, profile creation, Maven repository selection, exact log levels and
-#|messages, and all existing file/config/Maven calls. Characterize representative
-#|success, empty, error, skip, and partial-result paths that can be exercised
-#|deterministically through the current interfaces. Do not add copying,
-#|validation, recovery, synchronization, sorting, filtering, normalization,
-#|fallbacks, output redirection, reset APIs, or error propagation.
+#|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve the exact private
+#|package-level `*http.Server` identity and the exact port constant 7999, changing
+#|only its `Addr` from `:7999` to `127.0.0.1:7999`. Preserve the exact selector,
+#|adapter, four handler paths and order, listen attempt, nil/non-nil error log,
+#|shutdown background context, five-second timeout, deferred cancellation,
+#|ignored shutdown error, endpoint URI, browser request, callback blocking,
+#|public signatures, and caller control flow. Do not open a socket in tests.
 #|
-#|Focused tests may use only `t.TempDir()`, guarded test writers, in-memory
-#|models, logrus loggers/hooks/buffers, and isolated test-owned HOME/config/Maven
-#|state. Every test that changes the private package logger or process state must
-#|restore the exact original logger pointer/interface identity, environment,
-#|working directory, and any other touched value. Do not use parallel tests
-#|around globals or process state. Tests must open no socket, access no network,
-#|launch no external program, perform no sleep or timed wait, write no repository
-#|fixture, and leave no log hook, entry, file, environment value, or process-state
-#|change behind. Reject empty table-driven, callback, project, job, and recorded-
-#|entry populations before iterating. Leave logger, API handlers, templates,
-#|resources, sorting, server, clock, Kibana, Spring, Maven production code,
-#|config production code, filesystem production code, adapters, browser, plugin
-#|diagrams, profile, shell, Unzip, and every completed contract unchanged.
+#|Follow the established P4 seam-driver pattern: the driver is a regular
+#|non-symlink file, remains non-executable, contains the exact inventory label
+#|`8. interactive server binds only to loopback` once, declares no `mutate` or
+#|`mutate2` operation, and runs a non-empty exact set of relevant command,
+#|webservice, server-adapter, API, and callback contracts with isolated Go cache
+#|and temporary state. Its meta-test must prove the driver shape, exact label,
+#|absence of premature mutation operations, successful JSON test execution, and
+#|every named test run. Do not weaken an existing exact server contract merely to
+#|accept both broad and loopback addresses.
 #|
 #|# Required Reading
 #|
 #|Before editing, confirm branch, HEAD, clean status, reciprocal archive links,
-#|launcher `--check`, and exact product commit `67344a8`. Read the rolling
+#|launcher `--check`, and exact product commit `746a5ab`. Read the rolling
 #|handover, this archive, the complete P4 entry and checkpoint gate, both design
-#|documents, `.quality/inventory`, both complete production files under
-#|`pkg/context`, every context caller, and the exact config, project, Maven, file,
-#|logger, profile, and guarded-writer code reached by each method. Read
-#|representative exact-error, log-capture, global-restoration, temporary-home,
-#|working-directory, pointer-identity, partial-result, callback-order,
-#|nil-callback, dry-run, and explicit non-empty contracts, the import-aware
-#|scanner, API/CLI contracts, and the T15 repair and baseline reproduction
-#|README.
+#|documents, `.quality/inventory`, complete `pkg/webservice/api.go` and
+#|`pkg/webservice/init.go`, `cmd/build.go`, every interactive-server caller, the
+#|server adapter, all webservice server/browser/API contracts, all seven existing
+#|P4 seam drivers and meta-contracts, representative exact-address,
+#|pointer-identity, callback, non-empty, and process-state restoration contracts,
+#|the import-aware scanner, API/CLI contracts, and the T15 repair and baseline
+#|reproduction README.
 #|
 #|# Three Moves
 #|
-#|1. Add one focused `pkg/context` test file proving the complete deterministic
-#|   existing Context method branches and state transitions, exact logger
-#|   selection and restoration, representative logs/errors, traversal and job
-#|   order, value and pointer behavior, dry-run/write behavior, profile behavior,
-#|   repository selection, partial results, and non-empty populations. Do not
-#|   change production context behavior to make preferred isolation pass.
-#|2. Run the focused package and command caller tests, inspect package coverage,
-#|   and confirm that only the new context test file changed. Regenerate focused
-#|   Q0.6/Q1.1/Q1.2/Q1.3/Q1.4/Q2.1/Q3.4 without changing scanner or inventory.
-#|   Expect Q1.1 to improve from 1/27 to 0/27 and exact Q1.3 to hold at 0/27.
+#|1. Start with a focused failing exact-address contract, then change only the
+#|   private server address to exact IPv4 loopback and update the existing exact
+#|   start/stop selection assertions. Add the non-executable interactive-build
+#|   seam driver and meta-contract with a non-empty exact test population. Do not
+#|   launch the real server or browser.
+#|2. Run focused webservice, API, server-adapter, command, and driver meta-tests;
+#|   inspect coverage and confirm only the authorized production, test, and two
+#|   script files changed. Regenerate focused Q0.6/Q0.8/Q1.1/Q1.2/Q1.3/Q1.4/
+#|   Q2.1/Q3.4 without changing scanner or inventory. Expect Q1.4 to improve from
+#|   7/8 to 8/8, Q1.1 and exact Q1.3 to hold at zero, and the script/meta-test
+#|   populations to remain reciprocal.
 #|3. Run API/CLI and subprocess compatibility; launcher and Make contracts;
 #|   complete tests, race, vet, and pinned lint; all four host acceptance flows;
 #|   the 15-control audit meta-suite; full clean audit; and empty-HOME count-2.
@@ -1176,7 +1168,7 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent context coverage
+#|Before this agent session ends, finish and commit the coherent loopback seam
 #|move or record an exact resumable state. Rewrite the rolling handover, record
 #|the measured P4 result, answer this archive, create exactly one reciprocally
 #|linked NEXT archive for the next coherent authorized roadmap move, replace only
