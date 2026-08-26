@@ -1,13 +1,16 @@
 # Agent Session: Narrow Shell Run System Capability
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T101755+0200-narrow-shell-run-system-capability`
 Created: `2026-08-26T10:17:55+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3e150735be39600469a295d93fe7c9167c717b27270b4c741dc48e4314e1fba7`
 Previous: [2026-08-26T094645+0200-migrate-shell-unzip-entry-open.md](2026-08-26T094645+0200-migrate-shell-unzip-entry-open.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T104816+0200-narrow-shell-git-system-capabilities.md](2026-08-26T104816+0200-narrow-shell-git-system-capabilities.md)
+Outcome: Product commit `8503601` selects the exact runner-only system process
+dependency for public shell Run. All focused and complete gates pass; exact
+Q1.3 improves to 14/36 and the clean audit exits 1 for the same 15 findings
+with zero comparable regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

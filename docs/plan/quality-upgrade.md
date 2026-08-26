@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `9f56714`.
+Last measured checkpoint: 2026-08-26, commit `8503601`.
 
 ## Objective
 
@@ -585,6 +585,26 @@ P3.59 clean checkpoint (product `9f56714`):
 | Claim phrases in 76 Markdown files | 0 | Q3.4 remains held. |
 | Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
+P3.60 clean checkpoint (product `8503601`):
+
+| Signal | P3.60 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 386 | One focused process-selector contract and one shell Run logging/order contract were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The focused contracts record in memory, launch no external program, touch no network, and write no repository fixture. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in already-tested packages. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 14 / 36 | Public shell Run now selects the exact system runner without inheriting the unused `os.Stdout` capability. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 78 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -730,7 +750,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 59 are complete.
+Status: active. Moves 1 through 60 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -3216,6 +3236,58 @@ SHA-256
 `41b51871f6436851613af04c86af93b6fb7f7f0e7f74833c47d8e3d45ddfb10e`;
 the measured commit tree is `18f303931958d94ba72b9ed861faa24b94e29925`.
 
+Move 60 changes only public shell `Run`'s production process-capability
+selection. The existing process adapter now exports `SystemRunner()`, which
+returns the exact existing `systemRunner` with a nil standard-output field.
+Private `systemRunDependencies()` selects that runner-only dependency instead
+of `process.System()`. The complete `process.System()` implementation remains
+the same runner plus exact `os.Stdout`, preserving Maven's completed debug
+standard-output behavior and every other caller.
+
+The exported `Run(name string, args ...string) Output` signature, command name
+and ordered argument bytes, debug log text and placement, distinct stdout and
+stderr buffer identities, nil stdin and working directory, synchronous
+execution, one exact runner request, returned output bytes, legacy nil
+`Output.Err` after a dependency error, safe zero dependency, and every return
+path remain unchanged. No process execution, retry, fallback, wrapping,
+logging, cleanup, or global-state behavior changed.
+
+Two focused top-level contracts bring the suite to 386 tests. The process
+contract proves the runner-only selector carries the exact system runner and
+nil stdout while `process.System()` still carries exact `os.Stdout`. The shell
+contracts prove the complete arbitrary command and stdout/stderr identities,
+exact dependency error behavior, complete caller-owned dependency preservation,
+exact log-before-process ordering, one non-empty request population, absence of
+a second request, and the safe zero behavior. The recording boundaries launch
+no external program, touch no network, and write no repository fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, regenerated exact Q1.3 improves from 15 of 37 to 14 of 36, Q1.4 stays 7
+of 8, exact Q2.1 stays 0 of 8, and Q3.4 stays zero phrases across 78 Markdown
+files. The unchanged import-aware scanner no longer follows `os.Stdout`
+provenance through this one runner-only dependency. Clock and server remain
+absent, so Q1.3 remains the single non-comparable ratchet. The scanner,
+inventory, baseline, and audit apparatus are unchanged.
+
+The clean move-60 gate passes focused process/shell and all relevant process
+caller tests; API/CLI and fresh subprocess compatibility; build, complete and
+uncached tests, race, vet, pinned lint, all 62 launcher controls, Make and all
+production-script meta-contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. Repeated complete Make
+attempts hit the previously observed partial-raw-log signal-fixture flake; an
+immediate standalone launcher run and the final complete `make test` rerun
+passed all 62 controls. The clean full audit exits 1 for the same 15 documented
+findings, never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+non-comparable ratchet, and zero dirty paths.
+
+Product commit: `8503601`.
+
+The authoritative clean full audit from `8503601` has structured scorecard
+SHA-256
+`09ef869b92d3d77a6deb0e5e4f1cd9bdeec1d72596ace95648d6165cf10797e1`;
+the measured commit tree is `480c44f20723b48c74243ab4b8c5618c8ddf81fd`.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -3262,15 +3334,18 @@ requests in `cmd/plugin_diagrams.go` now use the process adapter; the Graphviz
 stdout write also uses the filesystem adapter. Maven command's conditional
 standard-output selection now uses the complete process dependency. Shell
 Unzip's archive-entry reader selection now uses the complete filesystem
-dependency without changing any other archive operation. Continue with only
-public shell `Run`'s production process-capability selection: add a narrow
-runner-only system selector to the process adapter and use it only in
-`systemRunDependencies`, so that this caller no longer inherits the unused
-system standard-output capability. Preserve the exact system runner and every
-command, output buffer, error, log, zero-dependency behavior, public API, and
-Maven's completed full dependency and stdout selection. Leave Git wrappers,
-profile, plugin diagrams, browser launching, Unzip, clock/server work,
-inventory, scanner, and every completed effect unchanged.
+dependency without changing any other archive operation. Public shell `Run`
+now uses the process adapter's exact runner-only system dependency without
+inheriting its unused standard-output capability. Continue with only the four
+public shell Git execution wrappers' production process-capability selections:
+reuse `process.SystemRunner()` through one private complete selector for
+`GitClone`, `GitPull`, `GitInit`, and `GitAddAndCommit`, so those wrappers no
+longer inherit the same unused capability. Preserve the exact Git commands,
+ordered arguments, logs, output buffers, request counts and sequencing, legacy
+error behavior, safe zero dependency, public API, and Maven's completed full
+dependency and stdout selection. Leave `GitDirty`/`GitIsRepo`, profile, plugin
+diagrams, browser launching, Unzip, clock/server work, inventory, scanner, and
+every completed effect unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
