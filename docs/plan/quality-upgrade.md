@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `64c6189`.
+Last measured checkpoint: 2026-08-26, commit `4da64d2`.
 
 ## Objective
 
@@ -4181,6 +4181,69 @@ paths. The focused seven-criterion scorecard SHA-256 is
 `aaa5507955ca84ef255432c998ee2c3092776caeb737754736e78752bc49a57a`.
 Continue P4 with one test-only characterization move for
 `pkg/webservice/api`.
+
+Move 7 adds only `pkg/webservice/api/handlers_test.go`; all three production
+API files, exported handler signatures, `GenerateOptions`, `GOptions`,
+`CallbackChannel`, `CurrentProject`, routes, templates, callers, HTML, form
+parsing, response text, callback timing, config, Spring, and observable behavior
+are unchanged. Five focused characterization contracts bring the suite to 434
+tests across 25 of 27 packages and cover all four handlers at 100% statement
+coverage.
+
+Generate GET is executed through the existing `text/template` handler path and
+pins the exact representative 2,957-byte response with SHA-256
+`9a9eb38ab026e751b06dee004e84d8db9a427454c5e33f4b864ebc83635399c1`,
+status 200, one cloud-template selection, and the existing raw, unquoted project,
+template, dependency-name, and dependency-ID bytes. Upgrade GET is executed
+through the existing `html/template` path and pins status 200 plus the exact
+788-byte response with SHA-256
+`ae9194d9a6734d1fe568692e11327fc1b31b3f0d797fd558fd6ceba3ffa58ecc`.
+Preferred validation, attribute quoting, or escaping remains a later product
+decision requiring explicit scope.
+
+Generate POST proves body parsing, body-over-query first-value scalar selection,
+exact overwrite of the six existing scalar project fields, preservation of
+every other field, and ordered duplicate-preserving append of every submitted
+`templates` and `dependencies` value. Both POST handlers return exact status
+200 and `OK`, return before a test-owned unbuffered callback receiver exists,
+then deliver exactly one `true` callback. Upgrade POST preserves its existing
+choice not to parse even a malformed form body. The unbuffered rendezvous
+releases each only sender; no sleep, timed wait, socket, external program,
+logger mutation, fixture write, or goroutine leak is introduced. Each subtest
+restores the exact `GOptions`, `CallbackChannel`, and `CurrentProject` values,
+and the outer contracts verify restored pointer/channel identities and values.
+Recorded callbacks and every iterated table reject empty populations.
+
+Q0.6 holds at 27 guarded safe-writer sites, 22 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 improves from 3 of 27 to
+2 of 27, Q1.2 remains zero, exact Q1.3 remains 0 of 27 with all five adapter
+paths valid, Q1.4 remains 7 of 8, exact Q2.1 remains 0 of 8, and Q3.4 remains
+zero phrases across 91 Markdown files. The scanner, inventory, baseline, audit
+apparatus, mutation harnesses, production code, and all completed contracts are
+unchanged.
+
+The clean move-7 gate passes focused API, webservice, templates, and command
+caller tests at 100% API-handler coverage; API/CLI, CLI surface, and fresh
+subprocess compatibility; build, complete and uncached tests, race, vet, pinned
+lint, `make preflight`, `make test`, all 62 launcher controls, Make and
+production-script contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. Three initial standalone
+launcher invocations hit the documented partial-raw-log signal-fixture race:
+twice at control 26 and once inside the nested control-50 run; the fourth
+unchanged complete run passed all 62 controls. The first `make test` invocation
+hit the same race at control 26; its unchanged complete rerun passed.
+
+Product commit: `4da64d2`.
+
+The authoritative clean full audit from `4da64d2` has structured scorecard
+SHA-256
+`0682df76893e0eac05302870ea986b1f18cab32e7513a7e0e91ab85da5f16c38`;
+the measured commit tree is `d23edc06e2f958c43f2add2a43c540f48c7145e9`.
+It exits 1 for 13 documented findings, never 2, with L0 8 of 8, six
+improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
+paths. The focused seven-criterion scorecard SHA-256 is
+`54b314c71a0e6bce29b84647d347d15b643ecf3c8baf982876411ef7b72cb428`.
+Continue P4 with one test-only characterization move for `pkg/logger`.
 
 ### P5 - Build L2 Mutation Evidence
 
