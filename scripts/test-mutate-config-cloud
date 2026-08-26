@@ -4,41 +4,108 @@ set -euo pipefail
 export LC_ALL=C LANG=C GOENV=off GOWORK=off
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-driver="$repo_root/scripts/mutate-config-cloud"
+harness="$repo_root/scripts/mutate-config-cloud"
 tmp_base=${TMPDIR:-/tmp}
 tmp_base=${tmp_base%/}
-work_root=$(mktemp -d "$tmp_base/ply-test-cloud-seam.XXXXXX")
-trap 'rm -rf "$work_root"' EXIT
-mkdir -p "$work_root/cache" "$work_root/tmp"
+work_root=$(mktemp -d "$tmp_base/ply-test-mutate-config-cloud.XXXXXX")
+trap 'rm -rf "$work_root"' EXIT HUP INT TERM
 
 fail() {
-	printf 'cloud seam driver meta-test: %s\n' "$*" >&2
+	printf 'test-mutate-config-cloud: %s\n' "$*" >&2
 	exit 1
 }
 
-[[ -f "$driver" && ! -L "$driver" && ! -x "$driver" ]] ||
-	fail 'driver must be a non-executable regular file until the P5 mutation move'
-[[ $(grep -Fxc '# 3. cloud clone keeps URL before target directory' "$driver") -eq 1 ]] ||
-	fail 'cloud-clone mutation label is missing or duplicated'
-if grep -Eq '^mutate2? ' "$driver"; then
-	fail 'P3 seam driver unexpectedly declares a mutation harness operation'
-fi
+[[ -f $harness && ! -L $harness && -x $harness ]] ||
+	fail 'production harness must be a regular executable file'
+[[ $(grep -cE '^mutate "' "$harness") -eq 10 ]] ||
+	fail 'production harness must declare exactly ten visible mutations'
+[[ $(grep -Fxc '[ "$survived" -eq 0 ] || fail '\''surviving mutations remain'\''' "$harness") -eq 1 ]] ||
+	fail 'production harness zero-survivor gate is missing or duplicated'
 
-GOCACHE="$work_root/cache" GOTMPDIR="$work_root/tmp" \
-	bash "$driver" >"$work_root/test.json"
+run_failure() {
+	local name=$1 expected=$2
+	local output="$work_root/$name.log"
+	shift 2
+	if MUTATION_CONFIG_CLOUD_META_TEST=1 "$@" "$harness" >"$output" 2>&1; then
+		fail "$name falsification unexpectedly passed"
+	fi
+	grep -F "$expected" "$output" >/dev/null || {
+		sed -n '1,160p' "$output" >&2
+		fail "$name falsification did not report its exact contract"
+	}
+}
 
-tests=(
-	TestCloudCloneKeepsCompleteURLBeforeCompleteTargetDirectory
-	TestCloudRefreshExistingGitPathSelectsPullWithCompleteDependency
-	TestCloudRefreshFormatsGitDependencyErrors
-	TestCloudRefreshGitDependenciesDefaultToNoMutation
-	TestRecordedCloudGitCallsRejectEmptyPopulation
+printf 'T1 manifest must be non-empty and unique\n'
+run_failure T1-empty 'T1 mutation manifest is empty' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=empty-manifest
+run_failure T1-duplicate 'T1 duplicate mutation ID' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=duplicate-manifest
+
+printf 'T2 mutations must stay inside authorized production roots\n'
+run_failure T2 'T2 mutation path is outside pkg/config' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=out-of-scope
+
+printf 'T3 every source replacement must apply exactly once\n'
+run_failure T3-zero 'T3 mutation source replacement count is 0, want exactly 1' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=zero-replacement
+run_failure T3-multiple 'want exactly 1' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=multiple-replacement
+
+printf 'T4 every mutant must select a non-empty exact test population\n'
+run_failure T4 'T4 selected test population is empty or inexact' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=empty-selection
+
+printf 'T5 the clean unmodified control must pass\n'
+run_failure T5 'T5 clean unmodified control failed' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=broken-control
+
+printf 'T6 a mutant must compile and execute its selected tests\n'
+run_failure T6 'T6 mutant was not compiled and exercised' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=unexercised
+
+printf 'T7 reported result accounting must match immutable result records\n'
+run_failure T7 'T7 falsified result accounting' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=false-accounting
+
+printf 'T8 every survivor needs a gap classification\n'
+run_failure T8 'T8 surviving mutation lacks reachability, observability, or controllability classification' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=survivor-unclassified
+
+printf 'T9 every checkout cache report and artifact must be external\n'
+run_failure T9 'repository-local artifacts are forbidden' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=repository-local-artifacts
+[[ ! -e $repo_root/.mutation-local-artifacts-meta ]] ||
+	fail 'T9 repository-local artifact probe created its rejected path'
+
+printf 'T10 declared mutations and totals must be deterministic\n'
+run_failure T10 'T10 mutation manifest or declared totals are non-deterministic' \
+	env MUTATION_CONFIG_CLOUD_META_FAULT=nondeterministic
+
+positive_log="$work_root/positive.log"
+"$harness" >"$positive_log"
+grep -Fxc 'subject=config-cloud' "$positive_log" >/dev/null || fail 'positive report lost its subject'
+grep -Fxc 'control=passed selections=10' "$positive_log" >/dev/null || fail 'positive report lost its clean control count'
+grep -Fxc 'declared=10 killed=10 survived=0 unusable=0' "$positive_log" >/dev/null ||
+	fail 'positive report totals are not exact'
+
+expected_mutations=(
+	'cloud-clone-argument-order|TestCloudCloneKeepsCompleteURLBeforeCompleteTargetDirectory'
+	'cloud-refresh-existing-branch|TestCloudCloneKeepsCompleteURLBeforeCompleteTargetDirectory,TestCloudRefreshExistingGitPathSelectsPullWithCompleteDependency'
+	'cloud-pull-error-gate|TestCloudRefreshFormatsGitDependencyErrors'
+	'cloud-clone-error-gate|TestCloudRefreshFormatsGitDependencyErrors'
+	'git-hook-file-classification|TestGitHookFilesPreservesReceiverRootDeliveredOrderMetadataClassificationAndFilenameResults'
+	'template-config-name-matching|TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingNamesAndProjects'
+	'template-relative-name-component|TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingNamesAndProjects'
+	'example-directory-classification|TestExamplesPreservesReceiverRootDeliveredOrderMetadataClassificationAndDirectoryNameResults'
+	'default-service-environment-selection|TestGitCloudConfig_DefaultServiceEnvironmentUrl'
+	'valid-template-deduplication|TestGitCloudConfigValidTemplatesFromReturnsExactOrderedPartialResultWithError'
 )
-[[ ${#tests[@]} -gt 0 ]] || fail 'asserted cloud test population is empty'
-for test_name in "${tests[@]}"; do
-	grep -F '"Action":"run"' "$work_root/test.json" |
-		grep -F '"Test":"'"$test_name"'"' >/dev/null ||
-		fail "cloud contract did not run: $test_name"
+[[ ${#expected_mutations[@]} -eq 10 ]] || fail 'expected mutation population is empty or incomplete'
+for expected in "${expected_mutations[@]}"; do
+	id=${expected%%|*}
+	tests=${expected#*|}
+	grep -E "^mutation=${id} status=killed .* tests=${tests} detail=selected-test-failure$" \
+		"$positive_log" >/dev/null || fail "positive report did not bind killed mutation $id to $tests"
 done
 
-printf 'test-mutate-config-cloud: PASS (%s recording contracts)\n' "${#tests[@]}"
+printf 'test-mutate-config-cloud: PASS (T1-T10, declared=10 killed=10 survived=0 unusable=0)\n'
