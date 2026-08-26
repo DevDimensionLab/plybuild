@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/kibana"
 	"github.com/devdimensionlab/plybuild/pkg/structurizr"
@@ -92,28 +93,42 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 		if err != nil {
 			return err
 		}
+		return runStructurizrDiagrams(systemPluginDiagramsExportDependencies(), workspace)
+	},
+}
 
-		tempDirectory := ".structurizr/"
-		_ = file.DeleteAll(tempDirectory)
-		_ = structurizr.Run(exec.Command("structurizr-cli", "export", "-w", workspace, "-format", "dot", "-output", tempDirectory))
+type pluginDiagramsExportDependencies struct {
+	Process process.Dependencies
+}
 
-		files, err := file.FindAll("dot", []string{}, tempDirectory)
+func systemPluginDiagramsExportDependencies() pluginDiagramsExportDependencies {
+	return pluginDiagramsExportDependencies{Process: process.System()}
+}
+
+func runStructurizrDiagrams(dependencies pluginDiagramsExportDependencies, workspace string) error {
+	tempDirectory := ".structurizr/"
+	_ = file.DeleteAll(tempDirectory)
+	_ = process.Execute(dependencies.Process, process.Command{
+		Name: "structurizr-cli",
+		Args: []string{"export", "-w", workspace, "-format", "dot", "-output", tempDirectory},
+	})
+
+	files, err := file.FindAll("dot", []string{}, tempDirectory)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		outputPngFile := strings.Replace(strings.Replace(file, tempDirectory, "", 1), ".dot", "", 1) + ".png"
+		println("Creating -> " + outputPngFile)
+		err = structurizr.RunWithOutputToFile(exec.Command("dot", file, "-Tpng"), outputPngFile)
 		if err != nil {
 			return err
 		}
 
-		for _, file := range files {
-			outputPngFile := strings.Replace(strings.Replace(file, tempDirectory, "", 1), ".dot", "", 1) + ".png"
-			println("Creating -> " + outputPngFile)
-			err = structurizr.RunWithOutputToFile(exec.Command("dot", file, "-Tpng"), outputPngFile)
-			if err != nil {
-				return err
-			}
-
-			_ = structurizr.Run(exec.Command("open", outputPngFile))
-		}
-		return nil
-	},
+		_ = structurizr.Run(exec.Command("open", outputPngFile))
+	}
+	return nil
 }
 
 func init() {
