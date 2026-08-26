@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `1dbc163`.
+Last measured checkpoint: 2026-08-27, commit `e5b4a26`.
 
 ## Objective
 
@@ -4710,9 +4710,60 @@ P5.1 clean checkpoint (first subject `cli-context`, implementation `1dbc163`):
   `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
   and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
 
+P5.2 clean checkpoint (second subject `config-cloud`, implementation
+`e5b4a26`):
+
+- Replaced the non-executable P3 `config-cloud` seam driver with the regular
+  executable `scripts/mutate-config-cloud` harness and replaced its meta-test
+  with an executable T1-T10 falsifiability test. The inventory and exact seam
+  label `3. cloud clone keeps URL before target directory` are unchanged;
+  exact executable subject coverage improves from 1 of 8 to 2 of 8.
+- The harness declares ten unique deterministic mutations in
+  `pkg/config/cloud.go`: clone argument ordering, existing-repository branch,
+  pull and clone error gates, Git-hook file classification, template config
+  matching and relative naming, example directory classification, default
+  service-environment selection, and valid-template deduplication. Every
+  production search syntax occurs exactly once and every declaration binds an
+  exact non-empty named `pkg/config` test population.
+- One clean external control ran every exact selection. Every mutant used a
+  fresh external Git archive, cache, HOME, config, and temp root; compiled
+  separately; and ran its selected JSON test population with exact run and
+  terminal-action validation. Final totals are `declared=10`, `killed=10`,
+  `survived=0`, and `unusable=0`; no production or test repair was required.
+- T1-T10 fail closed on empty/duplicate manifests, unauthorized paths,
+  zero/multiple replacements, empty or inexact test selection, a broken clean
+  control, an uncompiled/unexercised mutant, false accounting, an unclassified
+  survivor, repository-local artifacts, and non-deterministic manifests or
+  totals. The run report SHA-256 is
+  `db76fdf8c624c4326483ae71fa9ec3e7e0f94de4d6d3ae8a4dff185c9a7f23f7`;
+  the independent T1-T10 meta-log SHA-256 is
+  `12b1197d521681b70dea0b481f6b7d8bb9daba2ca21dc68a635868177d43ffec`.
+- The no-evidence Q2.1-Q2.4 view records exact Q2.1 coverage 2 of 8 and has
+  scorecard SHA-256
+  `5a17bd88fc7a48065883d72b1c6383b037fc2b47c18e47390918ba7cd782ed24`.
+  The refreshed external schema-2 document covers both completed P5 subjects
+  and has SHA-256
+  `7665b6d6d15da8dbd6b2da3e20a45902cb4e1076683fb0e1acd52c17b85c4648`;
+  its Q2.4 evidence-object SHA-256 is
+  `496ae9cd500b896080a14874dd5ff34bc0bdf521a401cbb7044e5f87604184b5`.
+  The focused audit exits 0 with scorecard SHA-256
+  `7ef785e2a17b5371358cc18741a78fe7cbca65c587725970970710d42a7a6b0c`.
+- The full authoritative audit exits 1, never 2, with scorecard SHA-256
+  `4a7089ea117a97bdf5b265f3712c534954417e00ff352b24a5874a2d710bf648`:
+  L0 is 8 of 8, L1 is 9 of 9, Q2.1 is 2 of 8, Q2.4 passes, seven
+  ratchets improve, one holds, none regress, and dirty paths are empty. Eight
+  P5-P8 rows remain non-passing.
+- API/CLI and subprocess compatibility, pinned golangci-lint 2.12.2, complete
+  tests across all 27 packages, race, vet, `make test`, all 62 launcher
+  controls, Make contracts, all four host acceptance flows, exact empty-HOME
+  count-2, the standalone 15-control audit meta-suite, and complete preflight
+  all pass. API and CLI report SHA-256 values remain
+  `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+  and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+
 P5 remains active. The next bounded move converts only the existing
-`config-cloud` P3 seam driver and its meta-test into the second real mutation
-harness; it must not start a third subject.
+`maven-sorting` P3 seam driver and its meta-test into the third real mutation
+harness; it must not start a fourth subject.
 
 Implement the eight named harnesses from `.quality/inventory`, one subject per
 measured move and no more than three moves per checkpoint. Each harness must

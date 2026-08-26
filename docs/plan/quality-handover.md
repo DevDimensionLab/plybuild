@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-26T23:33:25+02:00
+Generated: 2026-08-27T00:11:40+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,18 +10,18 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
-- P5.1 implementation commit:
-  `1dbc163b6716b96c3036ca95cadfd5a4a47c669d`.
+- P5.2 implementation commit:
+  `e5b4a26db271ac43d514bc0e9b2e19c23cdbc144`.
 - Its exact parent is the launch continuity commit
-  `8bf2e9aa4953dbb6bda946d8dbbd645a946f7526`.
+  `be33bb9fa9e6d9831f824c831d9de113123a710b`.
 - Measured implementation tree:
-  `23241502a50d38c0bdce711855d0507fa3d798ac`.
+  `baa63ed3c4d44f063854a4fbee63728cf336c937`.
 - Clean status SHA-256:
   `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`.
 - After handoff, obtain the new continuity HEAD with `git rev-parse HEAD`; its
-  exact parent must be `1dbc163`.
-- The implementation adds only `scripts/mutate-cli-context` and
-  `scripts/test-mutate-cli-context`. No production Go, Go test, inventory,
+  exact parent must be `e5b4a26`.
+- The implementation changes only `scripts/mutate-config-cloud` and
+  `scripts/test-mutate-config-cloud`. No production Go, Go test, inventory,
   audit, parser, scanner, baseline, acceptance, API, CLI, packaging, or
   dependency file changed.
 - No push, merge, release, publication, distribution, stash, revert,
@@ -31,9 +31,9 @@ session diary.
 
 `codex-dev-start.sh` remains NEXT because P5 is active and P6-P8 are queued.
 Its active archive is
-`docs/plan/agent-sessions/2026-08-26T233325+0200-build-p5-config-cloud-harness.md`.
-The `cli-context` archive is answered history and links reciprocally to the new
-tail. The graph has exactly one NEXT archive. Only the launcher's mutable
+`docs/plan/agent-sessions/2026-08-27T001140+0200-build-p5-maven-sorting-harness.md`.
+The `config-cloud` archive is answered history and links reciprocally to the
+new tail. The graph has exactly one NEXT archive. Only the launcher's mutable
 header and prompt regions changed; the stable execution region is unchanged.
 
 The tracked launcher/archive apparatus remains the task source. Do not create
@@ -41,16 +41,15 @@ The tracked launcher/archive apparatus remains the task source. Do not create
 ignored and untracked bytes, so ordinary and ignored status must both be empty
 at a measured checkpoint.
 
-## P5.1 Result
+## P5.2 Result
 
-The first of eight mutation subjects, `cli-context`, is complete:
+The second of eight mutation subjects, `config-cloud`, is complete:
 
-- The executable harness declares ten deterministic, unique mutations across
-  the authorized `cmd` and `pkg/context` roots: CLI exit status, interactive
-  build endpoint, interactive upgrade endpoint, recursive discovery branch,
-  flattened-POM exclusion, target-directory exclusion, stealth-mode selection,
-  per-project dry-run gate, root-project selection, and configured Maven
-  repository selection.
+- The executable harness declares ten deterministic, unique mutations in
+  `pkg/config/cloud.go`: clone argument ordering, the existing-repository
+  branch, pull and clone error gates, Git-hook file classification, template
+  config matching and relative naming, example-directory classification,
+  default service-environment selection, and valid-template deduplication.
 - Each declaration binds one exact production replacement to a non-empty exact
   named test population. Every original syntax occurs exactly once. Test files,
   generated files, vendor, other subjects, equivalent replacements, and known
@@ -69,53 +68,55 @@ The first of eight mutation subjects, `cli-context`, is complete:
   repository-local artifacts, and non-deterministic declarations/totals.
 
 Every mutation and killing population is in the retained report
-`/private/tmp/ply-cli-context-authoritative.gvdHKm.report.txt`; its SHA-256 is
-`53d1489a6db15f18cd2acf38ff49ab3fb0db545a6c8e63639c90311f9bf53d5c`.
+`/private/tmp/ply-config-cloud-authoritative.AL9ate/report.txt`; its SHA-256 is
+`db76fdf8c624c4326483ae71fa9ec3e7e0f94de4d6d3ae8a4dff185c9a7f23f7`.
 All retained mutant checkouts and logs are under
-`/private/tmp/ply-cli-context-authoritative.gvdHKm`. The independent T1-T10
-meta-log is `/private/tmp/ply-cli-context-meta.XXXXXX.log`, SHA-256
-`f1d801fccc97af714d483f5a3c84202fe9868fa19b17038ada0d56dbd6f3e67e`.
+`/private/tmp/ply-config-cloud-authoritative.AL9ate/work`. The independent
+T1-T10 meta-log is
+`/private/tmp/ply-config-cloud-authoritative.AL9ate/meta.log`, SHA-256
+`12b1197d521681b70dea0b481f6b7d8bb9daba2ca21dc68a635868177d43ffec`.
 
 ## Authoritative Measurement
 
 The refreshed external evidence and audits are under
-`/private/tmp/ply-cli-context-evidence.Ij0EsY`. Current Go production and test
-bytes are identical to P4 evidence commit `88a95ad`; nevertheless, the exact
-245 Q1.6, 34 Q1.7, and 69 Q1.9 named populations were rerun at `1dbc163` and
+`/private/tmp/ply-config-cloud-evidence.uZBhkl`. Current Go production and test
+bytes are unchanged by P5.2; nevertheless, the exact 245 Q1.6, 34 Q1.7, and
+69 Q1.9 named populations were rerun at `e5b4a26` and
 all named tests emitted one run and one pass. Event-log SHA-256 values are
-`369ef7a7acac7d46e5735e7fe8b1ba48383623f791f328bddc847e7d4d7c4a60`,
-`426b26697215c46ac494acda287aba1abf06916b1e909fb093fd95d3100d54e9`,
-and `8822c2e67a8c588616c81ca0c68379d9810a2d1df9cbb2565f4826aa9bb882c0`.
+`8f50bbefaa4e9b2d6f981cd21ec5215b08ab438fbc9867d3019b470e027b1e68`,
+`c636f81d7d471347ac7be7ef255badfbc35b78c6bedc906e281de2f7b76b42a9`,
+and `b468616dfd9751ff91fc2cfe5c71cf412ea08fe3c1af2e1c78fcd07d1428359f`.
 
 The external schema-2 document contains refreshed Q1.6, Q1.7, Q1.9 receipts
-and one `cli-context` Q2.4 receipt. Its SHA-256 is
-`0a6659c3b5a5234ca19134b4e2305de43a094fcb02032f0c6e106f5bbecaabbd`.
+and Q2.4 receipts for both completed P5 subjects. Its SHA-256 is
+`7665b6d6d15da8dbd6b2da3e20a45902cb4e1076683fb0e1acd52c17b85c4648`.
 Evidence-object SHA-256 values are:
 
-- Q1.6: `7d5a47c65720d218e5cf8bebb41564f06a9fd8280d8f5c419d0a30e896ef7c79`;
-- Q1.7: `12878ba1b2a8cb0c5d6faa12f134c3fc5e40b1d99285444520ed3bbd2ec5b64a`;
-- Q1.9: `45ab5d3ff070b6b35ac5354110f05f953350bda3cb509e1c1cf78fee08c37aea`;
-- Q2.4: `70e2101ca2719d07022dd42e8db56b9ffc76c444473460907a216b9f6f4b124f`.
+- Q1.6: `fba28325058f5fbc728a45e1e9da7d8db6d004053e1709ad84b5178cc0cfd0a0`;
+- Q1.7: `4400c6f5d0b8eaff61573fef6de94c4ebc2375fd97fc507702265949f7eaaf90`;
+- Q1.9: `e582319bbaa6b2e629ae704915f967924b1b4764266585d0e7b8abc6da01d609`;
+- Q2.4: `496ae9cd500b896080a14874dd5ff34bc0bdf521a401cbb7044e5f87604184b5`.
 
 The focused Q1.6/Q1.7/Q1.9/Q2.4 audit exits 0 with scorecard SHA-256
-`c693cc912f8c936c4438661aae48102ec09d05fe1ec4a78ad52f7c3d40abf7b8`.
+`7ef785e2a17b5371358cc18741a78fe7cbca65c587725970970710d42a7a6b0c`.
 The full authoritative audit exits 1, never 2, with scorecard SHA-256
-`20528637cc01f651f6411484575bf3cec7f1a1ac6cccc9f1b30cdf9b989838ac`.
-It records L0 8/8, all nine L1 rows PASS, Q2.1 improved from 0/8 to 1/8,
+`4a7089ea117a97bdf5b265f3712c534954417e00ff352b24a5874a2d710bf648`.
+It records L0 8/8, all nine L1 rows PASS, Q2.1 improved from 1/8 to 2/8,
 Q2.4 PASS, seven improved ratchets, one held, zero regressed, zero
 non-comparable, and zero dirty paths. Eight P5-P8 rows remain non-passing.
 
 The separate no-evidence Q2.1-Q2.4 view is under
-`/private/tmp/ply-cli-context-q2-audit.h6auIu`, scorecard SHA-256
-`7500813f38b080a06494b62d70a3def51ddd35bf75d6f804e382ddb2133c4545`.
-It exposes the exact unratcheted state: Q2.1 is 1/8; Q2.2 and Q2.3 identify
+`/private/tmp/ply-config-cloud-evidence.uZBhkl/no-evidence-q2`, scorecard
+SHA-256
+`5a17bd88fc7a48065883d72b1c6383b037fc2b47c18e47390918ba7cd782ed24`.
+It exposes the exact unratcheted state: Q2.1 is 2/8; Q2.2 and Q2.3 identify
 only the remaining non-executable P3/P4 drivers; Q2.4 is unmeasurable without
 the external run receipt.
 
 ## Gate Result
 
 Gate logs and external caches are under
-`/private/tmp/ply-cli-context-gate.RxKw8d`. API/CLI and CLI-surface
+`/private/tmp/ply-config-cloud-gate.1sHPne`. API/CLI and CLI-surface
 compatibility, compatibility meta-tests, pinned golangci-lint 2.12.2 with zero
 issues, complete uncached tests across all 27 packages, race, vet, `make test`,
 all 62 launcher controls, Make distribution/install/lint/preflight contracts,
@@ -129,22 +130,23 @@ after the complete gate.
 
 ## Next Objective
 
-Convert exactly the second inventory subject, `config-cloud`, whose production
-root is `pkg/config` and whose declared harness is
-`scripts/mutate-config-cloud`. Replace the existing non-executable P3 seam
-driver and its `scripts/test-mutate-config-cloud` meta-test with one executable
+Convert exactly the third inventory subject, `maven-sorting`, whose production
+roots are `pkg/maven` and `pkg/sorting` and whose declared harness is
+`scripts/mutate-maven-sorting`. Replace the existing non-executable P3 seam
+driver and its `scripts/test-mutate-maven-sorting` meta-test with one executable
 mutation harness and T1-T10 falsifiability test. Define at least eight
-meaningful config/cloud mutations after inspecting the complete production and
-test populations. Preserve seam label
-`3. cloud clone keeps URL before target directory`.
+meaningful mutations after inspecting both complete production and test
+populations. Preserve both seam labels exactly:
+`2. Maven command keeps executable before arguments` and
+`4. Maven metadata keeps username before password`.
 
-Use the completed `cli-context` harness as the methodology reference. Require
+Use both completed P5 harnesses as methodology references. Require
 one clean external control, fresh external copies and caches, exact test
 discovery, successful mutant compilation, selected JSON run/terminal actions,
 and exact totals `declared == killed`, `survived == 0`, `unusable == 0`. If a
 genuine survivor appears, classify it as reachability, observability, or
 controllability before the smallest in-subject test or private seam repair.
-Do not start a third subject. P5 remains active afterward.
+Do not start a fourth subject. P5 remains active afterward.
 
 ## Start And Stop
 
@@ -154,7 +156,7 @@ Read the rolling handover, linked NEXT archive, complete P5 entry/gate, both
 designs, `.quality/README.md`, `.quality/inventory`, complete mutation audit and
 parser logic, both completed and legacy harness/meta-test pairs relevant to the
 move, Make/preflight contracts, and every production/test path under
-`pkg/config` before selecting mutations.
+`pkg/maven` and `pkg/sorting` before selecting mutations.
 
 Stop before another subject, inventory/audit/parser/scanner/baseline changes,
 acceptance expansion, P6-P8, Go/dependency upgrades, exported API/CLI changes,
