@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"errors"
 	"go/ast"
 	"go/parser"
@@ -19,8 +20,9 @@ type recordingPluginDiagramsExportProcess struct {
 	err      error
 }
 
-func (recording *recordingPluginDiagramsExportProcess) dependencies() pluginDiagramsExportDependencies {
-	dependencies := systemPluginDiagramsExportDependencies()
+func (recording *recordingPluginDiagramsExportProcess) dependencies(
+	dependencies pluginDiagramsExportDependencies,
+) pluginDiagramsExportDependencies {
 	dependencies.Process.Runner = recording
 	return dependencies
 }
@@ -38,16 +40,20 @@ func (recording *recordingPluginDiagramsExportProcess) assertedCommands() ([]pro
 	return recording.commands, nil
 }
 
-func TestPluginDiagramsExportSelectsCompleteSystemProcessDependencies(t *testing.T) {
+func TestPluginDiagramsExportSelectsExactSystemRunnerWithoutProcessStandardOutput(t *testing.T) {
 	dependencies := systemPluginDiagramsExportDependencies()
 	systemProcess := process.System()
 
-	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout {
-		t.Fatal("plugin-diagrams export selected an incomplete process dependency")
+	if dependencies.Process.Runner == nil {
+		t.Fatal("plugin-diagrams export selected no system process runner")
 	}
-	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {
+	if dependencies.Process.Runner != systemProcess.Runner {
 		t.Fatalf("plugin-diagrams export process dependency is %T, want %T",
 			dependencies.Process.Runner, systemProcess.Runner)
+	}
+	if dependencies.Process.Stdout != nil {
+		t.Fatalf("plugin-diagrams export inherited unused process standard output %T, want nil",
+			dependencies.Process.Stdout)
 	}
 }
 
@@ -56,8 +62,11 @@ func TestPluginDiagramsExportPreservesExactRequestAttemptIgnoredErrorAndContinue
 	workspace := `/arbitrary workspace path//with spaces/../backslash\diagram-ø.dsl`
 	processError := errors.New("complete ignored plugin-diagrams export process dependency error")
 	recording := &recordingPluginDiagramsExportProcess{err: processError}
-	dependencies := recording.dependencies()
-	if dependencies.Process.Runner != recording {
+	callerOwnedProcessStdout := &bytes.Buffer{}
+	dependencies := recording.dependencies(pluginDiagramsExportDependencies{
+		Process: process.Dependencies{Stdout: callerOwnedProcessStdout},
+	})
+	if dependencies.Process.Runner != recording || dependencies.Process.Stdout != callerOwnedProcessStdout {
 		t.Fatalf("plugin-diagrams export dependency lost its complete process value: %#v", dependencies)
 	}
 

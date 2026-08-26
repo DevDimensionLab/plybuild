@@ -33,10 +33,11 @@ type recordingPluginDiagramsGraphvizEffects struct {
 	unexpectedOperations []string
 }
 
-func (recording *recordingPluginDiagramsGraphvizEffects) dependencies() pluginDiagramsGraphvizDependencies {
-	dependencies := systemPluginDiagramsGraphvizDependencies()
+func (recording *recordingPluginDiagramsGraphvizEffects) dependencies(
+	dependencies pluginDiagramsGraphvizDependencies,
+) pluginDiagramsGraphvizDependencies {
 	dependencies.Process.Runner = recording
-	dependencies.Files = filesystem.Dependencies{FileSystem: recording}
+	dependencies.Files.FileSystem = recording
 	return dependencies
 }
 
@@ -158,20 +159,23 @@ func (recording *recordingPluginDiagramsGraphvizEffects) CloseReader(io.Closer) 
 	return recording.unexpected("close reader")
 }
 
-func TestPluginDiagramsGraphvizSelectsCompleteSystemProcessAndFilesystemDependencies(t *testing.T) {
+func TestPluginDiagramsGraphvizSelectsExactSystemRunnerWithoutProcessStandardOutputAndExactSystemFilesystem(t *testing.T) {
 	dependencies := systemPluginDiagramsGraphvizDependencies()
 	systemProcess := process.System()
 	systemFiles := filesystem.System()
 
-	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout ||
-		dependencies.Files.FileSystem == nil {
-		t.Fatal("plugin-diagrams Graphviz selected incomplete process or filesystem dependencies")
+	if dependencies.Process.Runner == nil {
+		t.Fatal("plugin-diagrams Graphviz selected no system process runner")
 	}
-	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {
+	if dependencies.Process.Runner != systemProcess.Runner {
 		t.Fatalf("plugin-diagrams Graphviz process dependency is %T, want %T",
 			dependencies.Process.Runner, systemProcess.Runner)
 	}
-	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
+	if dependencies.Process.Stdout != nil {
+		t.Fatalf("plugin-diagrams Graphviz inherited unused process standard output %T, want nil",
+			dependencies.Process.Stdout)
+	}
+	if dependencies.Files.FileSystem == nil || dependencies.Files.FileSystem != systemFiles.FileSystem {
 		t.Fatalf("plugin-diagrams Graphviz filesystem dependency is %T, want %T",
 			dependencies.Files.FileSystem, systemFiles.FileSystem)
 	}
@@ -188,8 +192,12 @@ func TestPluginDiagramsGraphvizPreservesExactRequestStreamsOutputWriteAndIgnored
 		stderr:   stderrBytes,
 		writeErr: writeError,
 	}
-	dependencies := recording.dependencies()
-	if dependencies.Process.Runner != recording || dependencies.Files.FileSystem != recording {
+	callerOwnedProcessStdout := &bytes.Buffer{}
+	dependencies := recording.dependencies(pluginDiagramsGraphvizDependencies{
+		Process: process.Dependencies{Stdout: callerOwnedProcessStdout},
+	})
+	if dependencies.Process.Runner != recording || dependencies.Process.Stdout != callerOwnedProcessStdout ||
+		dependencies.Files.FileSystem != recording {
 		t.Fatalf("plugin-diagrams Graphviz dependency lost its complete value: %#v", dependencies)
 	}
 
@@ -251,7 +259,7 @@ func TestPluginDiagramsGraphvizReturnsExactProcessErrorBeforeWriteOrOpen(t *test
 	}
 
 	err := convertStructurizrDiagram(
-		recording.dependencies(),
+		recording.dependencies(pluginDiagramsGraphvizDependencies{}),
 		"/complete process-error input.dot",
 		"/developer/home/project/must-not-be-written-or-opened.png",
 	)
@@ -263,8 +271,27 @@ func TestPluginDiagramsGraphvizReturnsExactProcessErrorBeforeWriteOrOpen(t *test
 	if populationErr != nil {
 		t.Fatal(populationErr)
 	}
-	if len(commands) != 1 || commands[0].Name != "dot" {
+	if len(commands) != 1 {
 		t.Fatalf("plugin-diagrams Graphviz process-error requests were %#v, want one dot request", commands)
+	}
+	command := commands[0]
+	if command.Name != "dot" || !reflect.DeepEqual(command.Args, []string{
+		"/complete process-error input.dot", "-Tpng",
+	}) {
+		t.Fatalf("plugin-diagrams Graphviz process-error request changed executable or ordered arguments: %#v", command)
+	}
+	if command.Dir != "" || command.Stdin != nil || command.Start {
+		t.Fatalf("plugin-diagrams Graphviz process-error request changed synchronous defaults: %#v", command)
+	}
+	stdout, stdoutOK := command.Stdout.(*bytes.Buffer)
+	stderr, stderrOK := command.Stderr.(*bytes.Buffer)
+	if !stdoutOK || !stderrOK || stdout == stderr {
+		t.Fatalf("plugin-diagrams Graphviz process-error streams were stdout=%T stderr=%T with identities %p and %p",
+			command.Stdout, command.Stderr, stdout, stderr)
+	}
+	if !bytes.Equal(stdout.Bytes(), recording.stdout) || !bytes.Equal(stderr.Bytes(), recording.stderr) {
+		t.Fatalf("plugin-diagrams Graphviz process-error stream bytes changed: stdout=%v stderr=%v",
+			stdout.Bytes(), stderr.Bytes())
 	}
 	if len(recording.writes) != 0 || !reflect.DeepEqual(recording.sequence, []string{"process"}) {
 		t.Fatalf("plugin-diagrams Graphviz continued after process error: writes=%#v sequence=%#v",

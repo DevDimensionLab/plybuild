@@ -107,7 +107,7 @@ type pluginDiagramsExportDependencies struct {
 }
 
 func systemPluginDiagramsExportDependencies() pluginDiagramsExportDependencies {
-	return pluginDiagramsExportDependencies{Process: process.System()}
+	return pluginDiagramsExportDependencies{Process: process.SystemRunner()}
 }
 
 type pluginDiagramsGraphvizDependencies struct {
@@ -117,7 +117,7 @@ type pluginDiagramsGraphvizDependencies struct {
 
 func systemPluginDiagramsGraphvizDependencies() pluginDiagramsGraphvizDependencies {
 	return pluginDiagramsGraphvizDependencies{
-		Process: process.System(),
+		Process: process.SystemRunner(),
 		Files:   filesystem.System(),
 	}
 }
@@ -127,7 +127,7 @@ type pluginDiagramsOpenDependencies struct {
 }
 
 func systemPluginDiagramsOpenDependencies() pluginDiagramsOpenDependencies {
-	return pluginDiagramsOpenDependencies{Process: process.System()}
+	return pluginDiagramsOpenDependencies{Process: process.SystemRunner()}
 }
 
 func openStructurizrDiagram(dependencies pluginDiagramsOpenDependencies, outputPngFile string) {

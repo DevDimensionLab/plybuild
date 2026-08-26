@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"errors"
 	"go/ast"
 	"go/parser"
@@ -18,8 +19,9 @@ type recordingPluginDiagramsOpenProcess struct {
 	err      error
 }
 
-func (recording *recordingPluginDiagramsOpenProcess) dependencies() pluginDiagramsOpenDependencies {
-	dependencies := systemPluginDiagramsOpenDependencies()
+func (recording *recordingPluginDiagramsOpenProcess) dependencies(
+	dependencies pluginDiagramsOpenDependencies,
+) pluginDiagramsOpenDependencies {
 	dependencies.Process.Runner = recording
 	return dependencies
 }
@@ -37,16 +39,20 @@ func (recording *recordingPluginDiagramsOpenProcess) assertedCommands() ([]proce
 	return recording.commands, nil
 }
 
-func TestPluginDiagramsOpenSelectsCompleteSystemProcessDependencies(t *testing.T) {
+func TestPluginDiagramsOpenSelectsExactSystemRunnerWithoutProcessStandardOutput(t *testing.T) {
 	dependencies := systemPluginDiagramsOpenDependencies()
 	systemProcess := process.System()
 
-	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout {
-		t.Fatal("plugin-diagrams open selected an incomplete process dependency")
+	if dependencies.Process.Runner == nil {
+		t.Fatal("plugin-diagrams open selected no system process runner")
 	}
-	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {
+	if dependencies.Process.Runner != systemProcess.Runner {
 		t.Fatalf("plugin-diagrams open process dependency is %T, want %T",
 			dependencies.Process.Runner, systemProcess.Runner)
+	}
+	if dependencies.Process.Stdout != nil {
+		t.Fatalf("plugin-diagrams open inherited unused process standard output %T, want nil",
+			dependencies.Process.Stdout)
 	}
 }
 
@@ -54,8 +60,11 @@ func TestPluginDiagramsOpenPreservesExactRequestAttemptAndIgnoredError(t *testin
 	outputPngFile := `/arbitrary output path//with spaces/../backslash\diagram-ø.png`
 	processError := errors.New("complete ignored plugin-diagrams open process dependency error")
 	recording := &recordingPluginDiagramsOpenProcess{err: processError}
-	dependencies := recording.dependencies()
-	if dependencies.Process.Runner != recording {
+	callerOwnedProcessStdout := &bytes.Buffer{}
+	dependencies := recording.dependencies(pluginDiagramsOpenDependencies{
+		Process: process.Dependencies{Stdout: callerOwnedProcessStdout},
+	})
+	if dependencies.Process.Runner != recording || dependencies.Process.Stdout != callerOwnedProcessStdout {
 		t.Fatalf("plugin-diagrams open dependency lost its complete process value: %#v", dependencies)
 	}
 
