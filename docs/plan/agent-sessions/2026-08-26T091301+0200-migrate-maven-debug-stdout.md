@@ -1,13 +1,13 @@
 # Agent Session: Migrate Maven Debug Stdout
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T091301+0200-migrate-maven-debug-stdout`
 Created: `2026-08-26T09:13:01+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `58e0daf53a3bef445f0f1fff667e8c2223f4ceb47c39f44526366e524e0fd13d`
 Previous: [2026-08-26T084000+0200-migrate-plugin-diagrams-dot.md](2026-08-26T084000+0200-migrate-plugin-diagrams-dot.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T094645+0200-migrate-shell-unzip-entry-open.md](2026-08-26T094645+0200-migrate-shell-unzip-entry-open.md)
+Outcome: product commit `4376e05` routes only Maven's conditional stdout selection through the complete process dependency; 380 tests, exact Q1.3 15/37, the clean gate, T15, full audit, and empty-HOME count-2 pass with zero comparable regressions
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

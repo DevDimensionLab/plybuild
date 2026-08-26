@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `9164e06`.
+Last measured checkpoint: 2026-08-26, commit `4376e05`.
 
 ## Objective
 
@@ -543,6 +543,26 @@ P3.57 clean checkpoint (product `9164e06`):
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 | Claim phrases in 75 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
+P3.58 clean checkpoint (product `4376e05`):
+
+| Signal | P3.58 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 380 | Five focused process/Maven recording contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The focused contracts record in memory and launch no external program. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in already-tested packages. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 15 / 37 | The Maven caller-side `logger.StdOut()` selection moved behind the process dependency; the unchanged import-aware scanner now follows the new standard-output capability through existing `process.System()` selections. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 76 Markdown files | 0 | Q3.4 remains held. |
 | Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
 ## Checkpoints
@@ -3070,6 +3090,57 @@ SHA-256
 `9f584097422a17fd6eea005dda97182e042aad05a34837f0461ce0933248f700`;
 the measured commit tree is `78fef4303e29d2b8d79434727bb8f7d9e0fd070a`.
 
+Move 58 changes only Maven command's conditional standard-output capability
+selection. `process.Dependencies` now carries the runner and standard-output
+writer together, `process.System()` selects its existing runner and exact
+`os.Stdout` identity together, and the narrow `process.Stdout` helper returns
+that injected writer only when enabled. `pkg/maven/command.go` retains its
+global logrus level predicate but forwards the complete process dependency to
+the helper instead of selecting output through `logger.StdOut()`.
+
+Every Maven command retains the exact executable and ordered argument bytes,
+`project.Path` directory, nil stdin and stderr, synchronous Start false, one
+process attempt, exact dependency error, and unchanged log text before process
+execution. Debug and trace retain exact production `os.Stdout`; panic, fatal,
+error, warn, and info retain nil stdout. The zero dependency remains a safe
+no-op with nil output. `maven.RunOn`, its returned callback, `Repository`,
+`pkg/logger`, plugin diagrams, shell unzip, all other callers, public API/CLI,
+scanner, inventory, audit apparatus, and every completed effect are unchanged.
+
+Five new contracts bring the suite to 380 tests. They prove exact system
+`os.Stdout`, enabled injected-writer identity, disabled and zero-dependency nil
+output, every global logrus level, the complete Maven command, one request,
+exact error, complete dependency preservation, exact log ordering, rejection
+of an empty population, and absence of another process request. Relevant
+process doubles now start from the complete system dependency and replace only
+the runner. Recording boundaries launch no external program, touch no network,
+and write no repository fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, regenerated exact Q1.3 is 15 of 37, Q1.4 stays 7 of 8, exact Q2.1 stays 0
+of 8, and Q3.4 stays zero phrases across 76 Markdown files. The caller-side
+`logger.StdOut()` site moved behind the process dependency; the unchanged
+import-aware scanner follows the new `os.Stdout` capability through existing
+`process.System()` selections, accounting for the changed exact population.
+Clock and server remain absent, so Q1.3 remains the single non-comparable
+ratchet. The scanner and inventory are unchanged.
+
+The clean move-58 gate passes focused process/Maven/logger and relevant caller
+tests; API/CLI and subprocess compatibility; build, complete and uncached
+tests, race, vet, pinned lint, all 62 launcher controls, Make and all
+production-script meta-contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. The clean full audit exits
+1 for the same 15 documented findings, never 2, with L0 8 of 8, five improved,
+two held, zero regressed, one non-comparable ratchet, and zero dirty paths.
+
+Product commit: `4376e05`.
+
+The authoritative clean full audit from `4376e05` has structured scorecard
+SHA-256
+`09cb1f364cbf55243f557d77c400b4befa7672d5b0a9378ad9e7d7cd6447ce32`;
+the measured commit tree is `550e10792b81c5b1fa3bc4714a451a1afb586541`.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -3113,14 +3184,14 @@ marshal sequencing, logging, file creation, exact output bytes, mode, write
 error, close behavior, `UpdateLocalConfig`, or callers.
 The isolated `structurizr-cli export`, Graphviz `dot`, and ignored macOS `open`
 requests in `cmd/plugin_diagrams.go` now use the process adapter; the Graphviz
-stdout write also uses the filesystem adapter. Continue with only Maven command
-stdout selection: move the conditional `logger.StdOut()` capability selection
-at `pkg/maven/command.go` behind the existing process dependency while
-preserving debug-enabled `os.Stdout`, debug-disabled nil output, complete Maven
-commands, and exact errors. Leave plugin diagrams, Maven arguments and working
-directory, logging, `pkg/logger` public behavior, shell scanner-provenance
-findings, clock/server work, inventory, scanner, and every completed effect
-unchanged.
+stdout write also uses the filesystem adapter. Maven command's conditional
+standard-output selection now uses the complete process dependency. Continue
+with only shell unzip entry-reader provenance: move the direct `zip.File.Open`
+selection in `pkg/shell/command.go` behind the existing filesystem dependency
+while preserving exact archive-entry identity, traversal and partial filenames,
+copy and close order, all error precedence, ignored copy errors, and deferred
+archive close. Leave process/Maven, every other unzip operation, public API,
+clock/server work, inventory, scanner, and every completed effect unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
