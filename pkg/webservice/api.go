@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
+	serveradapter "github.com/devdimensionlab/plybuild/internal/adapter/server"
 	"github.com/devdimensionlab/plybuild/pkg/webservice/api"
 	"log"
 	"net/http"
@@ -15,22 +16,84 @@ const port = 7999
 
 var server = &http.Server{Addr: fmt.Sprintf(":%d", port)}
 
+type startWebServerDependencies struct {
+	ServerOperations serveradapter.Dependencies
+	Server           serveradapter.Selector
+	HandleFunc       func(string, func(http.ResponseWriter, *http.Request))
+	Print            func(...interface{})
+}
+
+func systemStartWebServerDependencies() startWebServerDependencies {
+	return startWebServerDependencies{
+		ServerOperations: serveradapter.System(),
+		Server:           selectWebServer,
+		HandleFunc:       http.HandleFunc,
+		Print:            log.Print,
+	}
+}
+
 func StartWebServer() {
-	http.HandleFunc("/ui/generate", api.GetGenerate)
-	http.HandleFunc("/api/generate", api.PostGenerate)
+	startWebServer(systemStartWebServerDependencies())
+}
 
-	http.HandleFunc("/ui/upgrade", api.GetUpgrade)
-	http.HandleFunc("/api/upgrade", api.PostUpgrade)
+func startWebServer(dependencies startWebServerDependencies) {
+	dependencies.handleFunc("/ui/generate", api.GetGenerate)
+	dependencies.handleFunc("/api/generate", api.PostGenerate)
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Print(err)
+	dependencies.handleFunc("/ui/upgrade", api.GetUpgrade)
+	dependencies.handleFunc("/api/upgrade", api.PostUpgrade)
+
+	if err := serveradapter.ListenAndServe(dependencies.ServerOperations, dependencies.Server); err != nil {
+		dependencies.print(err)
+	}
+}
+
+func selectWebServer() *http.Server {
+	return server
+}
+
+func (dependencies startWebServerDependencies) handleFunc(
+	path string,
+	handler func(http.ResponseWriter, *http.Request),
+) {
+	if dependencies.HandleFunc != nil {
+		dependencies.HandleFunc(path, handler)
+	}
+}
+
+func (dependencies startWebServerDependencies) print(arguments ...interface{}) {
+	if dependencies.Print != nil {
+		dependencies.Print(arguments...)
+	}
+}
+
+type stopWebServerDependencies struct {
+	ServerOperations serveradapter.Dependencies
+	Server           serveradapter.Selector
+	Background       func() context.Context
+	WithTimeout      func(context.Context, time.Duration) (context.Context, context.CancelFunc)
+}
+
+func systemStopWebServerDependencies() stopWebServerDependencies {
+	return stopWebServerDependencies{
+		ServerOperations: serveradapter.System(),
+		Server:           selectWebServer,
+		Background:       context.Background,
+		WithTimeout:      context.WithTimeout,
 	}
 }
 
 func StopWebServer() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	stopWebServer(systemStopWebServerDependencies())
+}
+
+func stopWebServer(dependencies stopWebServerDependencies) {
+	if dependencies.Background == nil || dependencies.WithTimeout == nil {
+		return
+	}
+	ctx, cancel := dependencies.WithTimeout(dependencies.Background(), 5*time.Second)
 	defer cancel()
-	_ = server.Shutdown(ctx)
+	_ = serveradapter.Shutdown(dependencies.ServerOperations, dependencies.Server, ctx)
 }
 
 type browserLauncherDependencies struct {
