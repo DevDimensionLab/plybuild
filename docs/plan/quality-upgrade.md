@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `cbb620a`.
+Last measured checkpoint: 2026-08-26, commit `64c6189`.
 
 ## Objective
 
@@ -4090,6 +4090,49 @@ improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
 paths. The focused seven-criterion scorecard SHA-256 is
 `7f6fbf4354a7b7040c350ba0786b468a054d2febae6b7a3c9031507e16471723`.
 Continue P4 with one test-only characterization move for `pkg/resources`.
+
+Move 5 adds only `pkg/resources/resources_test.go`; production
+`pkg/resources/resources.go`, its two exported function signatures, config and
+file boundaries, callers, and observable filesystem behavior are unchanged.
+Three focused characterization contracts prove the exact one-time
+`Implementation` and `Dir` selection with no `FilePath` call, representative,
+empty, and trailing-separator `LocalDir` path bytes, literal resource/filename
+slash composition, successful empty, arbitrary, non-UTF-8, and nested resource
+reads, exact byte-to-string preservation, direct missing `*os.PathError` shape,
+and non-empty table populations. All fixtures live below `t.TempDir()`, their
+parents are prepared first, and their files use the central guarded writer.
+
+The suite now has 426 tests across 23 of 27 packages. Q0.6 has 27 guarded safe-
+writer sites, 22 write and 5 copy, with zero skipped tests and zero unsafe direct
+test writes. Q1.1 improves from 5 of 27 to 4 of 27, Q1.2 remains zero, exact
+Q1.3 remains 0 of 27 with all five adapter paths valid, Q1.4 remains 7 of 8,
+exact Q2.1 remains 0 of 8, and Q3.4 remains zero phrases across 89 Markdown
+files. The scanner, inventory, baseline, audit apparatus, mutation harnesses,
+and production code are unchanged.
+
+The clean move-5 gate passes focused resources and template caller tests at
+100% resources statement coverage; API/CLI, CLI surface, and fresh subprocess
+compatibility; build, complete and uncached tests, race, vet, pinned lint,
+`make preflight`, `make test`, all 62 launcher controls, Make and production-
+script contracts, all four host acceptance flows, the repaired 15-control audit
+meta-suite, and empty-HOME count-2. The first focused coverage command and first
+preflight invocation used sandbox-blocked default build/lint caches; unchanged
+isolated-cache reruns passed. The first `make test` invocation hit the documented
+nested partial-raw-log signal-fixture race; its immediate unchanged complete
+rerun passed all controls.
+
+Product commit: `64c6189`.
+
+The authoritative clean full audit from `64c6189` has structured scorecard
+SHA-256
+`2bbbc911efefe7427cd3413b73b0a96583a1111460e57f5cdfb9b145b6818a95`;
+the measured commit tree is `88da045036be8849a8a3ffb327e01bb5f23c81b5`.
+It exits 1 for 13 documented findings, never 2, with L0 8 of 8, six
+improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
+paths. The focused seven-criterion scorecard SHA-256 is
+`9eedfafb6977fae6a0e27b878174b49ecf3536b7d8997b2746df41f722f34430`.
+Continue P4 with one test-only characterization move for
+`pkg/webservice/templates`.
 
 ### P5 - Build L2 Mutation Evidence
 
