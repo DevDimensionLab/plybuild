@@ -1055,109 +1055,119 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-25T232218+0200-resume-p354-audit-harness-blocker
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T232218+0200-resume-p354-audit-harness-blocker.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T225520+0200-resume-unzip-archive-close-gate.md
+#|SESSION_ID=2026-08-26T061848+0200-resume-p354-audit-harness-repair
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T061848+0200-resume-p354-audit-harness-repair.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-25T232218+0200-resume-p354-audit-harness-blocker.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Keep the focused P3.54 Unzip archive-close implementation at `3bd07e9` exactly
-#|as committed and keep its checkpoint gate blocked. The complete unchanged audit
-#|meta-suite now fails identically at predecessor `70bee0e` and implementation
-#|`3bd07e9`; this is an inherited T15 apparatus failure, not a product regression.
-#|Resume only after the user explicitly authorizes an audit-apparatus repair
-#|boundary. Without new authorization, report the required scope decision and
-#|stop without mutation.
+#|Repair only the inherited P3.54 T15 baseline-reproduction audit apparatus, make
+#|the complete checkpoint truthful and green, and then resume the authorized
+#|roadmap. Keep the focused Unzip archive-close product implementation at
+#|`3bd07e9` exactly as committed. Both predecessor `70bee0e` and implementation
+#|`3bd07e9` fail T15 identically after passing T1-T14, so this is an apparatus
+#|repair, not permission to reshape product behavior or its measurements.
 #|
 #|# Authorized Roadmap
 #|
 #|P3 remains active with moves 1-53 complete and move 54 implemented but awaiting
-#|a clean complete checkpoint gate. P4-P8 remain queued in the machine-readable
-#|block in `docs/plan/quality-upgrade.md`; the launcher remains NEXT. Public
-#|`Unzip(string, string) ([]string, error)`, the exact deferred
-#|`filesystem.CloseReader(dependencies.Files, r)` request, its `io.Closer`
-#|widening, every complete double, all archive/entry behavior, product code,
-#|tests, fixtures, audit, baseline, inventory, and scanner are unchanged.
+#|a truthful complete checkpoint gate. P4-P8 remain queued in
+#|`docs/plan/quality-upgrade.md`, and the launcher remains NEXT. This mission adds
+#|only the audit-apparatus repair needed to unblock that checkpoint; it does not
+#|authorize another production-effect move before the gate passes.
+#|
+#|## Explicit User Authorization
+#|
+#|On 2026-08-26 the user explicitly accepted the recommended boundary. Begin with
+#|the smallest repair in T15 orchestration in
+#|`.quality/tools/test-quality-audit.sh`. Only if evidence proves that
+#|orchestration alone cannot produce a truthful baseline reproduction, this
+#|authorization also permits changes to the directly related baseline
+#|reproduction recipe, metadata, apparatus-owned fixtures, and structured parser.
+#|Document why each expansion is necessary before making it.
+#|
+#|This authorization supersedes the previous prohibition on those exact
+#|audit-apparatus changes. It does not authorize changing the product
+#|implementation, historical baseline source `5635d50`, stored baseline debt,
+#|instrument identities, `.quality/inventory`, measured-tree truth, or unrelated
+#|audit, scanner, fixture, test, product, launcher, or roadmap behavior.
 #|
 #|# Measurements At Start
 #|
-#|Implementation commit `3bd07e99c3170fd0f1c0dda076252c6eb5833db7`
+#|Product implementation commit `3bd07e99c3170fd0f1c0dda076252c6eb5833db7`
 #|has 360 tests across 19 of 25 packages. Its authoritative clean full audit is
 #|valid: exit 1 for 15 documented findings, L0 8/8, five improved, two held, zero
 #|regressed, one non-comparable, and zero dirty paths. Q0.6 is 26 guarded sites,
-#|21 write and 5 copy, with zero unsafe direct test writes; Q1.1 is 6/25, Q1.2 is
-#|zero, Q1.3 is 10/32, Q1.4 is 7/8, exact Q2.1 is 0/8, and Q3.4 is zero phrases.
+#|Q1.1 is 6/25, Q1.2 is zero, Q1.3 is 10/32, Q1.4 is 7/8, exact Q2.1 is 0/8,
+#|and Q3.4 is zero phrases.
 #|
-#|# Inherited Blocker Evidence
-#|
-#|Fresh detached shared clones at exact heads `70bee0ed16af4b1e2dec179d6a0ba1ae4237c9e0`
-#|and `3bd07e99c3170fd0f1c0dda076252c6eb5833db7` were run sequentially
-#|from the same clone pathname and the same freshly recreated external environment
-#|pathname. PATH, HOME, XDG config, TMPDIR, GOTMPDIR, GOCACHE, existing
-#|GOMODCACHE, locale, Go selectors, and toolchain were identical. Exported
-#|environment evidence has SHA-256
-#|`963ad106f66f7770704a13b3ef619079ae19748b1aafe678700f9233bdc833ef`;
-#|toolchain evidence has SHA-256
-#|`8fc0505f60a4950583fd56222b64a0a175b44fbfc55aff409467602d19592c5f`.
-#|Both used Go 1.26.2 darwin/arm64, `CGO_ENABLED=0`, `GOENV=off`, `GOWORK=off`,
-#|empty `GOFLAGS`, and the same external module cache.
-#|
-#|Both complete meta-suites exit 1, pass T1-T14, and have byte-identical normalized
-#|output bodies with SHA-256
+#|Fresh paired runs at predecessor `70bee0e` and implementation `3bd07e9` used
+#|the same clone pathname, recreated external environment pathname, environment,
+#|toolchain, and module cache. Both complete audit meta-suites pass T1-T14 and
+#|then fail T15 identically. The old upstream baseline audit returns the expected
+#|exit 1; its following structured parser exits 2 because the exact `5635d50`
+#|checkout contains the authorized inventory overlay plus three ignored outputs
+#|created by old template tests. Normalized output SHA-256 is
 #|`bc83831ae61962b92c3233de04df52f70e3f2a2fdd6d871fb4d0db3f451b733b`.
-#|T15's old upstream baseline audit actually succeeds with expected exit 1; its
-#|following old structured parser exits 2 with `AUDIT BROKEN: inventory overlay
-#|mode permits only untracked .quality/inventory`. Each exact `5635d50` checkout
-#|contains the authorized inventory overlay plus three ignored template outputs.
-#|
-#|The retained developer-environment clone additionally contains six Maven
-#|compiler/status/class files below `pkg/maven/test/analyze/target/`. Ambient PATH
-#|exposes SDKMAN Maven; the paired controlled PATH does not. That explains why
-#|earlier attempts saw nine ignored paths, but removing Maven cannot restore a
-#|green T15 because the old template tests still create three ignored outputs.
-#|The paired evidence is retained under `/private/tmp/ply-p354-gate.B7akzM` while
-#|present.
+#|Retained evidence is below `/private/tmp/ply-p354-gate.B7akzM` while present.
 #|
 #|# Role And Boundaries
 #|
-#|The present scope does not authorize the apparatus change required to make the
-#|baseline reproduction hermetic while retaining exact source, debt, instrument,
-#|and measured-tree identity. Obtain explicit user direction that names the
-#|allowed repair boundary before editing any audit, parser, baseline recipe,
-#|baseline metadata, fixture, test, product, or inventory file. Do not infer that
-#|authority from this NEXT archive.
+#|Preserve the exact `5635d50` source, stored debt, instrument identities,
+#|inventory overlay, scanner meaning, and the truth about every path in the tree
+#|being measured. T15 must remain capable of detecting real source, instrument,
+#|inventory, metadata, and dirty-tree drift. Preserve expected audit exit 1 for
+#|documented findings and reserve exit 2 for genuinely broken measurement.
 #|
-#|Do not manufacture green evidence through a wrapper, hook, patched temporary
-#|instrument, filesystem watcher, manual mid-test cleanup, cached result, ignored-
-#|path exclusion, weakened identity, altered `5635d50` checkout, baseline change,
-#|or inventory change. Do not begin another P3 effect, plugin diagrams,
-#|clock/server work, mutation work, or P4-P8 while P3.54 remains blocked.
+#|Do not manufacture green evidence through ignored-path exclusions, after-test
+#|cleanup, a wrapper or hook, filesystem watcher, cached result, weakened
+#|identity, altered baseline checkout, baseline debt change, inventory change, or
+#|a parser exception for the three observed outputs. Do not change current
+#|product fixtures merely to accommodate historical `5635d50` behavior. If the
+#|repair cannot satisfy all invariants inside the authorized boundary, stop with
+#|the smallest evidenced additional-scope request.
 #|
 #|# Required Reading
 #|
-#|Read `docs/plan/quality-handover.md`, this archive, P3.54 and the checkpoint gate,
+#|Use `$agent-task-handoff` and read `.agent-task/current.md`,
+#|`docs/plan/quality-handover.md`, this archive, P3.54 and its checkpoint gate,
 #|both design documents, `.quality/inventory`, the complete audit meta-suite,
-#|wrapper, parser identity logic, vendored test execution, baseline migration
-#|metadata and README, and commits `5635d50`, `80b43ba`, `70bee0e`, and `3bd07e9`.
-#|Confirm branch, HEAD, clean status, reciprocal archive links, and
-#|`./codex-dev-start.sh --check`.
+#|T15 orchestration, wrapper, parser identity logic, vendored test execution,
+#|baseline reproduction metadata and README, and commits `5635d50`, `80b43ba`,
+#|`70bee0e`, and `3bd07e9`. Confirm branch, HEAD, clean status, reciprocal archive
+#|links, `./codex-dev-start.sh --check`, and retained paired evidence before edit.
+#|After reading, remove only the ephemeral ignored `.agent-task/current.md` before
+#|measurement because the audit deliberately counts ignored paths as dirty-tree
+#|evidence; this committed archive remains the authoritative task record.
 #|
 #|# Three Moves
 #|
-#|1. Determine whether a new user instruction explicitly authorizes an apparatus
-#|   repair and names its boundary. Do not treat this archive as that authority.
-#|2. If no new scope exists, make no tracked or untracked repository change;
-#|   report the inherited T15 blocker and request the missing decision.
-#|3. If new scope exists, re-read it against the retained paired evidence before
-#|   acting. Preserve exact source, debt, instrument, and measured-tree identity,
-#|   and keep any apparatus repair separate from product implementation.
+#|1. Reproduce the inherited failure and add the smallest focused failing
+#|   apparatus contract that distinguishes truthful test-generated output from
+#|   genuine baseline-source or measured-tree drift. Inspect the exact T15 data
+#|   flow before choosing the repair; do not assume the parser is the right layer.
+#|
+#|2. Repair T15 orchestration first. Expand only when a focused red test and the
+#|   data flow prove a directly related recipe, metadata, apparatus-owned fixture,
+#|   or structured-parser change is necessary. Keep the repair general to the
+#|   invariant, not special-cased to the three filenames, and make a focused
+#|   apparatus commit separate from `3bd07e9` and continuity documentation.
+#|
+#|3. Prove focused red/green, run the complete unchanged audit meta-suite against
+#|   predecessor and implementation where required, and run the complete P3.54
+#|   checkpoint. Confirm exact identities, valid expected audit exits, zero
+#|   product-path changes, zero comparable ratchet regressions, and a clean tree.
+#|   Do not begin the next product-effect move until the checkpoint is truthful.
 #|
 #|# Automatic Handoff
 #|
-#|Without new explicit scope, do not create another successor or repeat the
-#|blocked gate. Leave this committed NEXT state intact and report the blocker.
-#|Do not launch a successor, push, merge, publish, distribute, stash, revert, or
-#|remove the worktree. COMPLETE remains invalid while P3 and P4-P8 are unfinished.
+#|After the repair and P3.54 checkpoint pass, update the measured roadmap and
+#|rolling handover, answer this archive, create one reciprocally linked NEXT
+#|archive for the next coherent authorized roadmap move, replace only the
+#|launcher's mutable regions, run launcher and handoff contracts, and make the
+#|normal separate `docs: prepare next agent session` commit. Do not launch a real
+#|successor, push, merge, publish, distribute, stash, revert, or remove the
+#|worktree. COMPLETE remains invalid while P3 or P4-P8 is unfinished.
 # CODEX_MUTABLE_PROMPT_END

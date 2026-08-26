@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-25T23:22:18+02:00
+Generated: 2026-08-26T06:18:48+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -29,11 +29,15 @@ continuity implementation is 1b85711 and changes no Go quality denominator.
 
 ## Continuity Checkpoint
 
-`codex-dev-start.sh` remains NEXT because P3.54 is blocked on an inherited
-audit-meta apparatus failure and P4-P8 remain queued. Its active archive is
-`docs/plan/agent-sessions/2026-08-25T232218+0200-resume-p354-audit-harness-blocker.md`.
-The gate-diagnosis archive is answered history, reciprocal links are connected,
-and there is exactly one NEXT tail.
+`codex-dev-start.sh` remains NEXT because the user has now explicitly authorized
+a minimal repair of the inherited P3.54 audit-meta apparatus failure and P4-P8
+remain queued. Its active archive is
+`docs/plan/agent-sessions/2026-08-26T061848+0200-resume-p354-audit-harness-repair.md`.
+The blocker archive is answered history, reciprocal links are connected, and
+there is exactly one NEXT tail. T15 orchestration is the first and narrowest
+authorized repair surface; directly related reproduction recipe, metadata,
+apparatus-owned fixtures, and structured parser are conditional on evidence of
+necessity.
 
 Normal launch remains a Bash 3.2-compatible non-interactive supervisor with
 byte-exact archived prompts, unique external raw JSONL logs, structured stream
@@ -194,24 +198,25 @@ The paired evidence is retained below
    no-Maven PATH still fails on three template outputs. No supported external
    invocation correction found by this mission can make the existing T15
    identity truthful.
-9. P3.54 needs explicit user scope for an audit-apparatus repair. Product,
-   tests, fixtures, audit, parser, baseline, and inventory remain unchanged.
+9. The user supplied explicit scope for a minimal P3.54 audit-apparatus repair:
+   start with T15 orchestration and expand only when necessary to the directly
+   related recipe, metadata, apparatus fixtures, or structured parser. Product,
+   historical source, baseline debt, identities, and inventory remain locked.
 10. Plugin diagrams remain the next likely isolated production-effect family,
    but no such move may begin until P3.54's checkpoint gate is truthful.
 
 ## Next Objective
 
-Keep P3.54 implemented but blocked and request explicit user scope for the
-inherited T15 apparatus failure. Do not rerun product gates or begin another P3
-effect while the checkpoint apparatus is broken. A future authorization must
-name the allowed audit/baseline-reproduction repair boundary; it must preserve
-the exact `5635d50` source checkout, stored baseline debt and identities, and
-measured-tree truth rather than excluding or cleaning evidence after the fact.
+Repair the inherited T15 apparatus failure within the user-authorized boundary.
+Begin with `.quality/tools/test-quality-audit.sh` orchestration; expand only when
+focused evidence proves a directly related reproduction recipe, metadata,
+apparatus-owned fixture, or structured-parser change is necessary. Preserve the
+exact `5635d50` source checkout, stored baseline debt and identities, inventory,
+and measured-tree truth rather than excluding or cleaning evidence after fact.
 
-Until that decision exists, do not edit the audit, scanner, baseline, inventory,
-old/current fixtures, product code, tests, or implementation commit. Do not
-claim P3.54 as a clean checkpoint and do not begin plugin-diagram, clock/server,
-mutation, or later-roadmap work.
+Keep product implementation `3bd07e9` unchanged. Do not claim P3.54 as a clean
+checkpoint or begin plugin-diagram, clock/server, mutation, or later-roadmap
+work until the repaired complete checkpoint passes truthfully.
 
 ## Verification Notes
 
@@ -238,8 +243,8 @@ Completed from implementation commit
   developer PATH adds six Maven outputs for nine ignored paths total.
 - No full preflight or clean audit rerun followed the paired failure because the
   mission explicitly requires stopping on the inherited predecessor blocker.
-- Final handoff-only Q3.4: exit 0, zero phrases across 71 Markdown files, zero
-  ratchet regressions.
+- Authorization handoff-only Q3.4: exit 0, zero phrases across 73 Markdown
+  files, zero ratchet regressions.
 - Implementation commit: `3bd07e9` (`refactor: route unzip archive close
   through filesystem adapter`).
 
@@ -249,11 +254,10 @@ Read this handover, the linked NEXT archive, P3.54 and the gate, both design
 documents, inventory, audit meta-suite/wrapper/parser/vendor, baseline migration
 metadata and README, and commits `5635d50`, `80b43ba`, `70bee0e`, and `3bd07e9`.
 Confirm branch, HEAD, clean status, reciprocal links, launcher `--check`, and
-whether the user supplied new explicit apparatus-repair scope.
+the explicit authorization in the active archive and `.agent-task/current.md`.
 
-Stop before any product/test mutation, audit/scanner/baseline/inventory/fixture
-change, another P3 effect, plugin diagrams, clock/server work, Q1.4, P4,
-mutation, Docker, distribution, or publication unless new user authorization
-specifically changes that boundary. Without new scope, report the inherited
-blocker and stop. Always stop on any proposal that trades away measured-tree
-identity to make T15 pass.
+Repair only the authorized T15 apparatus surface. Stop before product mutation,
+historical source, baseline debt, instrument identity, inventory, or unrelated
+scanner changes, another P3 effect, plugin diagrams, clock/server work, Q1.4,
+P4, mutation, Docker, distribution, or publication. Always stop on any proposal
+that trades away measured-tree identity to make T15 pass.
