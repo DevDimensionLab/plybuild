@@ -164,6 +164,20 @@ type recordingBitbucketRepositoryGit struct {
 	pullOutput  shell.Output
 }
 
+type recordingBitbucketLogHook struct {
+	entries []*logrus.Entry
+}
+
+func (hook *recordingBitbucketLogHook) Levels() []logrus.Level {
+	return logrus.AllLevels
+}
+
+func (hook *recordingBitbucketLogHook) Fire(entry *logrus.Entry) error {
+	copy := *entry
+	hook.entries = append(hook.entries, &copy)
+	return nil
+}
+
 func (recording *recordingBitbucketRepositoryGit) dependencies(files *recordingBitbucketRepositoryFilesystem) repositoryDependencies {
 	return repositoryDependencies{
 		Files: filesystem.Dependencies{FileSystem: files},
@@ -541,6 +555,160 @@ func TestBitbucketSynchronizationSelectsProjectThenLowercaseRepositoryQueryAndWa
 	}
 	if !strings.Contains(logOutput.String(), sentinel.Error()) {
 		t.Fatalf("Bitbucket synchronization did not warn on repository query error:\n%s", logOutput.String())
+	}
+}
+
+func TestBitbucketSynchronizationReportsRepositoryQueryFailureExactlyAndContinuesToLaterProject(t *testing.T) {
+	host := "https://query-continuation.bitbucket.example.invalid"
+	token := "query-continuation-token"
+	projectURL := host + "/rest/api/1.0/projects?limit=500"
+	failedRepositoryURL := host + "/rest/api/1.0/projects/failed-project/repos?limit=1000"
+	laterRepositoryURL := host + "/rest/api/1.0/projects/later-project/repos?limit=1000"
+	sentinel := errors.New("complete repository query continuation failure")
+	queries := &recordingBitbucketQueryHTTP{
+		responses: map[string]string{
+			projectURL:         `{"values":[{"key":"FAILED-PROJECT"},{"key":"LATER-PROJECT"}]}`,
+			laterRepositoryURL: `{"values":[{"name":"later-repository"}]}`,
+		},
+		errors: map[string]error{failedRepositoryURL: sentinel},
+	}
+	files := &recordingBitbucketRepositoryFilesystem{statErr: fs.ErrNotExist}
+	git := &recordingBitbucketRepositoryGit{}
+	hook := &recordingBitbucketLogHook{}
+	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
+	logger.SetOutput(io.Discard)
+	logger.AddHook(hook)
+	client := With(logger, host, token)
+	client.queries = queries.dependencies()
+	client.repositories = git.dependencies(files)
+
+	err := client.SynchronizeAllRepos(nil)
+
+	if err != nil {
+		t.Fatalf("Bitbucket query-failure synchronization returned an error: %v", err)
+	}
+	assertRecordedBitbucketQueries(t, queries, []recordedBitbucketQuery{
+		{Request: httpclient.Request{URL: projectURL, BearerJSON: &httpclient.BearerJSON{AccessToken: token}}, Destination: (*ProjectList)(nil)},
+		{Request: httpclient.Request{URL: failedRepositoryURL, BearerJSON: &httpclient.BearerJSON{AccessToken: token}}, Destination: (*ProjectRepos)(nil)},
+		{Request: httpclient.Request{URL: laterRepositoryURL, BearerJSON: &httpclient.BearerJSON{AccessToken: token}}, Destination: (*ProjectRepos)(nil)},
+	})
+	assertRecordedBitbucketRepositoryGitCalls(t, git, []recordedBitbucketRepositoryGitCall{{
+		Operation: "clone",
+		Values: []string{
+			host + "/scm/later-project/later-repository.git",
+			"./later-project/later-repository",
+		},
+	}})
+	if len(hook.entries) == 0 {
+		t.Fatal("Bitbucket repository-query continuation log population is empty")
+	}
+	var warnings []string
+	for _, entry := range hook.entries {
+		if entry.Level == logrus.WarnLevel {
+			warnings = append(warnings, entry.Message)
+		}
+	}
+	if !reflect.DeepEqual(warnings, []string{sentinel.Error()}) {
+		t.Fatalf("Bitbucket repository-query warnings were %#v, want exact singleton %q", warnings, sentinel)
+	}
+}
+
+func TestBitbucketSynchronizationReportsCloneAndPullFailuresExactlyAndContinuesToLaterRepositories(t *testing.T) {
+	tests := []struct {
+		name      string
+		statErr   error
+		operation string
+	}{
+		{name: "clone", statErr: fs.ErrNotExist, operation: "clone"},
+		{name: "pull", operation: "pull"},
+	}
+	if len(tests) == 0 {
+		t.Fatal("Bitbucket synchronization failure test-case population is empty")
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			host := "https://sync-errors.bitbucket.example.invalid"
+			projectURL := host + "/rest/api/1.0/projects?limit=500"
+			repositoryURL := host + "/rest/api/1.0/projects/mixed-project/repos?limit=1000"
+			queries := &recordingBitbucketQueryHTTP{responses: map[string]string{
+				projectURL: `{"values":[{"key":"MiXeD-PrOjEcT"}]}`,
+				repositoryURL: `{"values":[
+					{"name":"first-repository"},
+					{"name":"later-repository"}
+				]}`,
+			}}
+			sentinel := errors.New("complete " + test.name + " synchronization failure")
+			operationOutput := shell.Output{Err: sentinel}
+			_, _ = operationOutput.StdOut.WriteString(test.name + " exact stdout\n")
+			_, _ = operationOutput.StdErr.WriteString(test.name + " exact stderr\n")
+			files := &recordingBitbucketRepositoryFilesystem{statErr: test.statErr}
+			git := &recordingBitbucketRepositoryGit{
+				cloneOutput: operationOutput,
+				pullOutput:  operationOutput,
+			}
+			hook := &recordingBitbucketLogHook{}
+			logger := logrus.New()
+			logger.SetLevel(logrus.DebugLevel)
+			logger.SetOutput(io.Discard)
+			logger.AddHook(hook)
+			client := With(logger, host, "sync-error-token")
+			client.queries = queries.dependencies()
+			client.repositories = git.dependencies(files)
+
+			err := client.SynchronizeAllRepos(nil)
+
+			if err != nil {
+				t.Fatalf("Bitbucket synchronization returned an error: %v", err)
+			}
+			assertRecordedBitbucketQueries(t, queries, []recordedBitbucketQuery{
+				{Request: httpclient.Request{URL: projectURL, BearerJSON: &httpclient.BearerJSON{AccessToken: "sync-error-token"}}, Destination: (*ProjectList)(nil)},
+				{Request: httpclient.Request{URL: repositoryURL, BearerJSON: &httpclient.BearerJSON{AccessToken: "sync-error-token"}}, Destination: (*ProjectRepos)(nil)},
+			})
+			wantRepositories := []string{
+				"/mixed-project/first-repository",
+				"/mixed-project/later-repository",
+			}
+			if len(wantRepositories) == 0 {
+				t.Fatal("Bitbucket synchronization repository expectation population is empty")
+			}
+			wantStats := make([]string, 0, len(wantRepositories))
+			wantCalls := make([]recordedBitbucketRepositoryGitCall, 0, len(wantRepositories))
+			for _, repository := range wantRepositories {
+				wantStats = append(wantStats, "."+repository)
+				if test.operation == "clone" {
+					wantCalls = append(wantCalls, recordedBitbucketRepositoryGitCall{
+						Operation: "clone",
+						Values:    []string{host + "/scm" + repository + ".git", "." + repository},
+					})
+				} else {
+					wantCalls = append(wantCalls, recordedBitbucketRepositoryGitCall{
+						Operation: "pull",
+						Values:    []string{"./" + repository},
+					})
+				}
+			}
+			assertRecordedBitbucketRepositoryStatPaths(t, files, wantStats)
+			assertRecordedBitbucketRepositoryGitCalls(t, git, wantCalls)
+
+			if len(hook.entries) == 0 {
+				t.Fatal("Bitbucket synchronization log population is empty")
+			}
+			var warnings []string
+			for _, entry := range hook.entries {
+				if entry.Level == logrus.WarnLevel {
+					warnings = append(warnings, entry.Message)
+				}
+			}
+			wantWarnings := []string{
+				operationOutput.FormatError().Error(),
+				operationOutput.FormatError().Error(),
+			}
+			if !reflect.DeepEqual(warnings, wantWarnings) {
+				t.Fatalf("Bitbucket %s warnings were %#v, want exact ordered failures %#v", test.name, warnings, wantWarnings)
+			}
+		})
 	}
 }
 
