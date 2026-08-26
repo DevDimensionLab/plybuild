@@ -191,6 +191,9 @@ func TestDependenciesDefaultToSafeNoFilesystemMutation(t *testing.T) {
 	if file, err := OpenFile(Dependencies{}, target, os.O_APPEND|os.O_WRONLY, 0644); file != nil || !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value append-open dependency returned (%p, %v), want (nil, %v)", file, err, ErrNoFilesystem)
 	}
+	if file, err := OpenFileAsFile(Dependencies{}, target, os.O_APPEND|os.O_WRONLY, 0644); file != nil || !errors.Is(err, ErrNoFilesystem) {
+		t.Fatalf("zero-value interface append-open dependency returned (%#v, %v), want (nil, %v)", file, err, ErrNoFilesystem)
+	}
 	if err := Remove(Dependencies{}, target); !errors.Is(err, ErrNoFilesystem) {
 		t.Fatalf("zero-value remove dependency returned %v, want %v", err, ErrNoFilesystem)
 	}
@@ -388,25 +391,53 @@ func TestOperationsPassCompleteValuesToDependency(t *testing.T) {
 	}
 }
 
-func TestOpenFilePassesCompleteValuesAndReturnsExactDependencyResult(t *testing.T) {
+func TestOpenFileHelpersPassCompleteValuesAndReturnExactDependencyResult(t *testing.T) {
 	path := "/complete append-open/path with spaces/file.txt"
 	flags := os.O_APPEND | os.O_WRONLY
 	mode := fs.FileMode(0644)
 	opened := &os.File{}
 	openError := errors.New("complete append-open dependency error")
-	recording := &recordingFilesystem{opened: opened, openErr: openError}
-	dependencies := Dependencies{FileSystem: recording}
-
-	actual, err := OpenFile(dependencies, path, flags, mode)
-
-	if actual != opened || err != openError {
-		t.Fatalf("append-open result was (%p, %v), want exact dependency result (%p, %v)", actual, err, opened, openError)
+	tests := []struct {
+		name   string
+		invoke func(Dependencies) (File, error)
+	}{
+		{
+			name: "preserved concrete return",
+			invoke: func(dependencies Dependencies) (File, error) {
+				return OpenFile(dependencies, path, flags, mode)
+			},
+		},
+		{
+			name: "interface return",
+			invoke: func(dependencies Dependencies) (File, error) {
+				return OpenFileAsFile(dependencies, path, flags, mode)
+			},
+		},
 	}
-	want := []recordedFilesystemOperation{{
-		Name: "open-file", Path: path, Flags: flags, Mode: mode,
-	}}
-	if !reflect.DeepEqual(recording.operations, want) {
-		t.Fatalf("append-open dependency received incomplete values:\n got: %#v\nwant: %#v", recording.operations, want)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			recording := &recordingFilesystem{opened: opened, openErr: openError}
+			dependencies := Dependencies{FileSystem: recording}
+			if dependencies.FileSystem != recording {
+				t.Fatalf("append-open dependency lost its complete filesystem value: %#v", dependencies)
+			}
+
+			actual, err := test.invoke(dependencies)
+
+			if actual != opened || err != openError {
+				t.Fatalf("append-open result was (%#v, %v), want exact dependency result (%p, %v)", actual, err, opened, openError)
+			}
+			want := []recordedFilesystemOperation{{
+				Name: "open-file", Path: path, Flags: flags, Mode: mode,
+			}}
+			if len(recording.operations) == 0 {
+				t.Fatal("recorded append-open population is empty")
+			}
+			if !reflect.DeepEqual(recording.operations, want) {
+				t.Fatalf("append-open dependency received incomplete or unrelated operations:\n got: %#v\nwant: %#v", recording.operations, want)
+			}
+		})
 	}
 }
 

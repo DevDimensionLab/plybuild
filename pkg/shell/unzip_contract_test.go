@@ -4,12 +4,17 @@ import (
 	"archive/zip"
 	"bytes"
 	"errors"
+	"go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
 	"hash/crc32"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
@@ -464,6 +469,7 @@ func TestUnzipFileParentMkdirFailureReturnsExactErrorAndPartialFilenamesBeforeFi
 }
 
 func TestUnzipFileOpenPreservesJoinedAppendEntryOrderParentFlagsModeErrorAndPrecedence(t *testing.T) {
+	assertPrivateUnzipOutputOpenUsesFileInterfaceHelper(t)
 	archive := writeUnzipArchive(t, []unzipArchiveEntry{
 		{name: "first directory/", directory: true},
 		{name: "nested parent/complete file.bin", mode: 0613, method: 99},
@@ -473,8 +479,12 @@ func TestUnzipFileOpenPreservesJoinedAppendEntryOrderParentFlagsModeErrorAndPrec
 	openError := errors.New("complete unzip file-open dependency error")
 	recording := newRecordingUnzipFilesystem(t, archive)
 	recording.openErrors = map[int]error{1: openError}
+	dependencies := recording.dependencies()
+	if dependencies.Files.FileSystem != recording {
+		t.Fatalf("unzip dependency lost its complete filesystem value: %#v", dependencies)
+	}
 
-	filenames, err := unzipWithDependencies(recording.dependencies(), archive, destination)
+	filenames, err := unzipWithDependencies(dependencies, archive, destination)
 
 	if err != openError {
 		t.Fatalf("file-open error was %v, want exact dependency error %v before %v", err, openError, zip.ErrAlgorithm)
@@ -503,6 +513,76 @@ func TestUnzipFileOpenPreservesJoinedAppendEntryOrderParentFlagsModeErrorAndPrec
 	}
 	assertNoRecordedUnzipCopies(t, recording)
 	assertNoUnexpectedUnzipOperations(t, recording)
+}
+
+func assertPrivateUnzipOutputOpenUsesFileInterfaceHelper(t *testing.T) {
+	t.Helper()
+	_, testFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate shell Unzip contract")
+	}
+	fileSet := token.NewFileSet()
+	parsed, err := parser.ParseFile(fileSet, filepath.Join(filepath.Dir(testFile), "command.go"), nil, 0)
+	if err != nil {
+		t.Fatalf("parse shell Unzip source: %v", err)
+	}
+	var function *ast.FuncDecl
+	for _, declaration := range parsed.Decls {
+		candidate, ok := declaration.(*ast.FuncDecl)
+		if ok && candidate.Recv == nil && candidate.Name.Name == "unzipWithDependencies" {
+			function = candidate
+			break
+		}
+	}
+	if function == nil || function.Body == nil {
+		t.Fatal("private shell Unzip flow is missing")
+	}
+	var helperCalls []*ast.CallExpr
+	concreteCalls := 0
+	ast.Inspect(function.Body, func(node ast.Node) bool {
+		call, ok := node.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		selector, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+		packageName, ok := selector.X.(*ast.Ident)
+		if !ok || packageName.Name != "filesystem" {
+			return true
+		}
+		switch selector.Sel.Name {
+		case "OpenFileAsFile":
+			helperCalls = append(helperCalls, call)
+		case "OpenFile":
+			concreteCalls++
+		}
+		return true
+	})
+	if len(helperCalls) != 1 || concreteCalls != 0 {
+		t.Fatalf("private shell Unzip has %d interface-returning and %d concrete destination opens, want exactly 1 and 0",
+			len(helperCalls), concreteCalls)
+	}
+	call := helperCalls[0]
+	if len(call.Args) != 4 {
+		t.Fatalf("private shell Unzip destination open has %d arguments, want complete dependency, path, flags, and mode", len(call.Args))
+	}
+	want := []string{
+		"dependencies.Files",
+		"fpath",
+		"os.O_WRONLY | os.O_CREATE | os.O_TRUNC",
+		"f.Mode()",
+	}
+	for index, argument := range call.Args {
+		var rendered bytes.Buffer
+		if err := format.Node(&rendered, fileSet, argument); err != nil {
+			t.Fatalf("format shell Unzip destination-open argument %d: %v", index, err)
+		}
+		if rendered.String() != want[index] {
+			t.Fatalf("shell Unzip destination-open argument %d was %q, want exact %q", index, rendered.String(), want[index])
+		}
+	}
 }
 
 func TestUnzipFileCopyPreservesOpenedDestinationsOrderedBytesAttemptsIgnoredResultsClosesAndTraversal(t *testing.T) {

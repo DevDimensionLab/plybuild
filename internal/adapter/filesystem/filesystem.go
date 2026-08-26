@@ -135,6 +135,15 @@ func OpenFile(dependencies Dependencies, path string, flags int, mode fs.FileMod
 	return dependencies.FileSystem.OpenFile(path, flags, mode)
 }
 
+// OpenFileAsFile passes the complete path, flags, and mode to the configured
+// dependency while returning the opened file through the File interface.
+func OpenFileAsFile(dependencies Dependencies, path string, flags int, mode fs.FileMode) (File, error) {
+	if dependencies.FileSystem == nil {
+		return nil, ErrNoFilesystem
+	}
+	return dependencies.FileSystem.OpenFile(path, flags, mode)
+}
+
 // OpenZipReader passes the complete archive source path to the configured dependency.
 func OpenZipReader(dependencies Dependencies, path string) (*zip.ReadCloser, error) {
 	if dependencies.FileSystem == nil {

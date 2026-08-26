@@ -95,7 +95,7 @@ func unzipWithDependencies(dependencies unzipDependencies, src string, dest stri
 			return filenames, err
 		}
 
-		outFile, err := filesystem.OpenFile(dependencies.Files, fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		outFile, err := filesystem.OpenFileAsFile(dependencies.Files, fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 		if err != nil {
 			return filenames, err
 		}
