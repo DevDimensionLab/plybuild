@@ -2,6 +2,7 @@ package spring
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/clock"
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"github.com/devdimensionlab/plybuild/pkg/config"
@@ -10,7 +11,6 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"net/url"
 	"strings"
-	"time"
 )
 
 var baseUrl = "https://start.spring.io"
@@ -192,10 +192,14 @@ func downloadInitializer(dependencies initializerDependencies, targetDir string,
 
 type archivePathDependencies struct {
 	Files filesystem.Dependencies
+	Clock clock.Dependencies
 }
 
 func systemArchivePathDependencies() archivePathDependencies {
-	return archivePathDependencies{Files: filesystem.System()}
+	return archivePathDependencies{
+		Files: filesystem.System(),
+		Clock: clock.System(),
+	}
 }
 
 func archivePath() (path string, err error) {
@@ -208,7 +212,7 @@ func archivePathWithDependencies(dependencies archivePathDependencies) (path str
 		return
 	}
 
-	now := time.Now().Unix()
+	now := clock.Now(dependencies.Clock).Unix()
 	path = file.Path("%s/spring-%d.zip", curDir, now)
 	return
 }

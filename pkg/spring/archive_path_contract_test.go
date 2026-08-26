@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/adapter/clock"
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 )
@@ -35,6 +36,7 @@ type recordingSpringArchivePathFilesystem struct {
 	workingDirectory         string
 	workingDirectoryErr      error
 	workingDirectoryAttempts int
+	sequence                 *[]string
 	unexpectedOperations     []string
 }
 
@@ -42,6 +44,9 @@ var _ filesystem.FileSystem = (*recordingSpringArchivePathFilesystem)(nil)
 
 func (recording *recordingSpringArchivePathFilesystem) WorkingDirectory() (string, error) {
 	recording.workingDirectoryAttempts++
+	if recording.sequence != nil {
+		*recording.sequence = append(*recording.sequence, "working-directory")
+	}
 	return recording.workingDirectory, recording.workingDirectoryErr
 }
 
@@ -110,8 +115,11 @@ func (recording *recordingSpringArchivePathFilesystem) unexpected(operation stri
 	return errors.New("unexpected Spring archive-path " + operation)
 }
 
-func (recording *recordingSpringArchivePathFilesystem) dependencies() archivePathDependencies {
-	return archivePathDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+func (recording *recordingSpringArchivePathFilesystem) dependencies(
+	dependencies archivePathDependencies,
+) archivePathDependencies {
+	dependencies.Files.FileSystem = recording
+	return dependencies
 }
 
 func (recording *recordingSpringArchivePathFilesystem) assertedWorkingDirectoryAttempts() (int, error) {
@@ -121,9 +129,38 @@ func (recording *recordingSpringArchivePathFilesystem) assertedWorkingDirectoryA
 	return recording.workingDirectoryAttempts, nil
 }
 
-func TestArchivePathSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+type recordingSpringArchivePathClock struct {
+	now      time.Time
+	attempts int
+	sequence *[]string
+}
+
+func (recording *recordingSpringArchivePathClock) Now() time.Time {
+	recording.attempts++
+	if recording.sequence != nil {
+		*recording.sequence = append(*recording.sequence, "clock")
+	}
+	return recording.now
+}
+
+func (recording *recordingSpringArchivePathClock) dependencies(
+	dependencies archivePathDependencies,
+) archivePathDependencies {
+	dependencies.Clock.Clock = recording
+	return dependencies
+}
+
+func (recording *recordingSpringArchivePathClock) assertedAttempts() (int, error) {
+	if recording.attempts == 0 {
+		return 0, errors.New("recorded Spring archive-path clock population is empty")
+	}
+	return recording.attempts, nil
+}
+
+func TestArchivePathSelectsCompleteSystemFilesystemAndClockDependencies(t *testing.T) {
 	dependencies := systemArchivePathDependencies()
 	systemFiles := filesystem.System()
+	systemClock := clock.System()
 
 	if dependencies.Files.FileSystem == nil {
 		t.Fatal("archivePath selected an incomplete filesystem dependency")
@@ -132,41 +169,96 @@ func TestArchivePathSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
 		t.Fatalf("archivePath filesystem dependency is %T, want %T",
 			dependencies.Files.FileSystem, systemFiles.FileSystem)
 	}
+	if dependencies.Clock.Clock == nil {
+		t.Fatal("archivePath selected an incomplete clock dependency")
+	}
+	if reflect.TypeOf(dependencies.Clock.Clock) != reflect.TypeOf(systemClock.Clock) {
+		t.Fatalf("archivePath clock dependency is %T, want %T",
+			dependencies.Clock.Clock, systemClock.Clock)
+	}
 }
 
-func TestArchivePathPreservesArbitraryWorkingDirectoryAndDirectUnixZipConstruction(t *testing.T) {
-	workingDirectory := string([]byte{
+func TestSpringArchivePathRecordingDoublesPreserveCompleteCallerDependencies(t *testing.T) {
+	callerFiles := &recordingSpringArchivePathFilesystem{}
+	callerClock := &recordingSpringArchivePathClock{}
+	initial := archivePathDependencies{
+		Files: filesystem.Dependencies{FileSystem: callerFiles},
+		Clock: clock.Dependencies{Clock: callerClock},
+	}
+	filesRecording := &recordingSpringArchivePathFilesystem{}
+	clockRecording := &recordingSpringArchivePathClock{}
+
+	withFiles := filesRecording.dependencies(initial)
+	withClock := clockRecording.dependencies(initial)
+
+	if withFiles.Files.FileSystem != filesRecording || withFiles.Clock.Clock != callerClock {
+		t.Fatalf("filesystem recorder lost the complete caller-owned dependency: %#v", withFiles)
+	}
+	if withClock.Files.FileSystem != callerFiles || withClock.Clock.Clock != clockRecording {
+		t.Fatalf("clock recorder lost the complete caller-owned dependency: %#v", withClock)
+	}
+}
+
+func TestArchivePathPreservesArbitraryDirectoryInjectedUnixSecondOrderAndExactReturns(t *testing.T) {
+	arbitraryDirectory := string([]byte{
 		'/', 'a', 'r', 'b', 'i', 't', 'r', 'a', 'r', 'y', '/', '/', 'w', 'o', 'r', 'k', 'i', 'n', 'g', ' ',
 		'd', 'i', 'r', '/', '.', '.', '/', 'b', 'a', 'c', 'k', 's', 'l', 'a', 's', 'h', '\\', 0xc3, 0xb8, '\n', 0x00,
 	})
-	recording := &recordingSpringArchivePathFilesystem{workingDirectory: workingDirectory}
-	dependencies := recording.dependencies()
-	if dependencies.Files.FileSystem != recording {
-		t.Fatalf("archive-path dependency lost its complete filesystem value: %#v", dependencies)
+	tests := []struct {
+		name             string
+		workingDirectory string
+		now              time.Time
+	}{
+		{
+			name:             "arbitrary directory and positive subsecond",
+			workingDirectory: arbitraryDirectory,
+			now:              time.Unix(1700000000, 999999999),
+		},
+		{
+			name:             "pre-epoch subsecond keeps negative Unix floor",
+			workingDirectory: `/pre-epoch//directory/../segment\-ø`,
+			now:              time.Unix(-1, 500000000),
+		},
+		{
+			name:             "arbitrary timezone keeps absolute Unix second",
+			workingDirectory: "relative directory remains relative",
+			now: time.Date(2031, time.April, 5, 6, 7, 8, 123456789,
+				time.FixedZone("arbitrary injected zone", 9*60*60+17*60)),
+		},
 	}
-	before := time.Now().Unix()
 
-	archive, err := archivePathWithDependencies(dependencies)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			sequence := []string{}
+			files := &recordingSpringArchivePathFilesystem{
+				workingDirectory: test.workingDirectory,
+				sequence:         &sequence,
+			}
+			clockRecording := &recordingSpringArchivePathClock{now: test.now, sequence: &sequence}
+			dependencies := clockRecording.dependencies(files.dependencies(archivePathDependencies{}))
+			if dependencies.Files.FileSystem != files || dependencies.Clock.Clock != clockRecording {
+				t.Fatalf("archive-path dependency delivery is incomplete: %#v", dependencies)
+			}
 
-	after := time.Now().Unix()
-	if err != nil {
-		t.Fatalf("archive-path composition returned an error: %v", err)
-	}
-	matchedTimestamp := false
-	for timestamp := before; timestamp <= after; timestamp++ {
-		if archive == file.Path("%s/spring-%d.zip", workingDirectory, timestamp) {
-			matchedTimestamp = true
-			break
-		}
-	}
-	if !matchedTimestamp {
-		t.Fatalf("archive path %q did not preserve directory %q and direct Unix timestamp in [%d, %d]",
-			archive, workingDirectory, before, after)
-	}
-	assertOneSpringArchivePathWorkingDirectoryAttempt(t, recording)
-	if len(recording.unexpectedOperations) != 0 {
-		t.Fatalf("archive-path composition invoked unrelated filesystem operations: %#v",
-			recording.unexpectedOperations)
+			archive, err := archivePathWithDependencies(dependencies)
+
+			if err != nil {
+				t.Fatalf("archive-path composition returned an error: %v", err)
+			}
+			want := file.Path("%s/spring-%d.zip", test.workingDirectory, test.now.Unix())
+			if archive != want {
+				t.Fatalf("archive path was %q, want exact directory and injected Unix-second path %q", archive, want)
+			}
+			assertOneSpringArchivePathWorkingDirectoryAttempt(t, files)
+			assertOneSpringArchivePathClockAttempt(t, clockRecording)
+			if !reflect.DeepEqual(sequence, []string{"working-directory", "clock"}) {
+				t.Fatalf("archive-path effect order was %#v, want directory before clock", sequence)
+			}
+			if len(files.unexpectedOperations) != 0 {
+				t.Fatalf("archive-path composition invoked unrelated filesystem operations: %#v",
+					files.unexpectedOperations)
+			}
+		})
 	}
 }
 
@@ -175,15 +267,23 @@ func TestArchivePathReturnsEmptyPathAndExactWorkingDirectoryErrorAfterOneAttempt
 	recording := &recordingSpringArchivePathFilesystem{
 		workingDirectory:    "/partial directory must be discarded",
 		workingDirectoryErr: directoryError,
+		sequence:            &[]string{},
 	}
+	clockRecording := &recordingSpringArchivePathClock{now: time.Unix(1700000001, 0), sequence: recording.sequence}
 
-	archive, err := archivePathWithDependencies(recording.dependencies())
+	archive, err := archivePathWithDependencies(clockRecording.dependencies(recording.dependencies(archivePathDependencies{})))
 
 	if archive != "" || err != directoryError {
 		t.Fatalf("archive-path error result was (%q, %v), want (empty, exact %v)",
 			archive, err, directoryError)
 	}
 	assertOneSpringArchivePathWorkingDirectoryAttempt(t, recording)
+	if clockRecording.attempts != 0 {
+		t.Fatalf("archive-path read the clock %d times after a directory error, want 0", clockRecording.attempts)
+	}
+	if !reflect.DeepEqual(*recording.sequence, []string{"working-directory"}) {
+		t.Fatalf("archive-path directory-error sequence was %#v, want only working-directory", *recording.sequence)
+	}
 	if len(recording.unexpectedOperations) != 0 {
 		t.Fatalf("archive-path error invoked unrelated filesystem operations: %#v",
 			recording.unexpectedOperations)
@@ -207,6 +307,14 @@ func TestRecordedSpringArchivePathRejectsEmptyWorkingDirectoryPopulation(t *test
 	}
 }
 
+func TestRecordedSpringArchivePathRejectsEmptyClockPopulation(t *testing.T) {
+	recording := &recordingSpringArchivePathClock{}
+
+	if _, err := recording.assertedAttempts(); err == nil {
+		t.Fatal("empty recorded Spring archive-path clock population passed")
+	}
+}
+
 func assertOneSpringArchivePathWorkingDirectoryAttempt(t *testing.T, recording *recordingSpringArchivePathFilesystem) {
 	t.Helper()
 	attempts, err := recording.assertedWorkingDirectoryAttempts()
@@ -215,5 +323,16 @@ func assertOneSpringArchivePathWorkingDirectoryAttempt(t *testing.T, recording *
 	}
 	if attempts != 1 {
 		t.Fatalf("archive-path composition made %d working-directory attempts, want 1", attempts)
+	}
+}
+
+func assertOneSpringArchivePathClockAttempt(t *testing.T, recording *recordingSpringArchivePathClock) {
+	t.Helper()
+	attempts, err := recording.assertedAttempts()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if attempts != 1 {
+		t.Fatalf("archive-path composition made %d clock attempts, want 1", attempts)
 	}
 }

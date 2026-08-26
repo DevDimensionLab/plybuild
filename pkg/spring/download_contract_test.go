@@ -3,13 +3,14 @@ package spring
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"github.com/sirupsen/logrus"
@@ -183,17 +184,27 @@ func TestArchivePathRetainsWorkingDirectoryAndSpringUnixZipName(t *testing.T) {
 	if err != nil {
 		t.Fatalf("resolve test working directory: %v", err)
 	}
+	before := time.Now().Unix()
 
 	archive, err := archivePath()
 
+	after := time.Now().Unix()
 	if err != nil {
 		t.Fatalf("resolve Spring archive path: %v", err)
 	}
 	if filepath.Dir(archive) != workingDirectory {
 		t.Fatalf("archive directory was %q, want %q", filepath.Dir(archive), workingDirectory)
 	}
-	if matched := regexp.MustCompile(`^spring-[0-9]+\.zip$`).MatchString(filepath.Base(archive)); !matched {
-		t.Fatalf("archive name was %q, want spring-<Unix>.zip", filepath.Base(archive))
+	matchedTimestamp := false
+	for timestamp := before; timestamp <= after; timestamp++ {
+		if archive == filepath.Join(workingDirectory, "spring-"+fmt.Sprint(timestamp)+".zip") {
+			matchedTimestamp = true
+			break
+		}
+	}
+	if !matchedTimestamp {
+		t.Fatalf("archive path %q did not preserve the public system composition in Unix-second range [%d, %d]",
+			archive, before, after)
 	}
 }
 
