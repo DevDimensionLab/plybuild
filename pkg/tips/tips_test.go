@@ -15,6 +15,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/file"
 )
 
+func (*recordingTipsListFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected tips-list archive entry open")
+}
+
 func (*recordingTipsListFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected tips-list archive open")
 }

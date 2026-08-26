@@ -15,6 +15,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/file"
 )
 
+func (*recordingGitHookFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected git-hook archive entry open")
+}
+
 func (*recordingGitHookFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected git-hook archive open")
 }

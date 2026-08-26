@@ -33,6 +33,7 @@ type FileSystem interface {
 	WriteFile(string, []byte, fs.FileMode) error
 	OpenFile(string, int, fs.FileMode) (*os.File, error)
 	OpenZipReader(string) (*zip.ReadCloser, error)
+	OpenZipEntry(*zip.File) (io.ReadCloser, error)
 	Remove(string) error
 	RemoveAll(string) error
 	Rename(string, string) error
@@ -140,6 +141,14 @@ func OpenZipReader(dependencies Dependencies, path string) (*zip.ReadCloser, err
 		return nil, ErrNoFilesystem
 	}
 	return dependencies.FileSystem.OpenZipReader(path)
+}
+
+// OpenZipEntry passes the exact archive entry to the configured dependency.
+func OpenZipEntry(dependencies Dependencies, entry *zip.File) (io.ReadCloser, error) {
+	if dependencies.FileSystem == nil {
+		return nil, ErrNoFilesystem
+	}
+	return dependencies.FileSystem.OpenZipEntry(entry)
 }
 
 // Remove passes the complete path to the configured dependency.
@@ -259,6 +268,10 @@ func (systemFilesystem) OpenFile(path string, flags int, mode fs.FileMode) (*os.
 
 func (systemFilesystem) OpenZipReader(path string) (*zip.ReadCloser, error) {
 	return zip.OpenReader(path)
+}
+
+func (systemFilesystem) OpenZipEntry(entry *zip.File) (io.ReadCloser, error) {
+	return entry.Open()
 }
 
 func (systemFilesystem) Remove(path string) error {

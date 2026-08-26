@@ -14,6 +14,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/config"
 )
 
+func (*recordingTemplateMarkdownFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected template Markdown archive entry open")
+}
+
 func (*recordingTemplateMarkdownFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected template-markdown archive open")
 }

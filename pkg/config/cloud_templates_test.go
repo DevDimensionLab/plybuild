@@ -18,6 +18,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func (*recordingTemplatesFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected templates archive entry open")
+}
+
 func (*recordingTemplatesFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected templates archive open")
 }

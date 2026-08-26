@@ -15,6 +15,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/file"
 )
 
+func (*recordingSpringArchivePathFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected Spring archive entry open")
+}
+
 func (*recordingSpringArchivePathFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected Spring archive open")
 }

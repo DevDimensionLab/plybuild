@@ -15,6 +15,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func (*recordingProjectConfigFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected project-config archive entry open")
+}
+
 func (*recordingProjectConfigFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected project-config archive open")
 }

@@ -13,6 +13,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
 
+func (*recordingStructurizrOutputFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected Structurizr output archive entry open")
+}
+
 func (*recordingStructurizrOutputFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected structurizr archive open")
 }

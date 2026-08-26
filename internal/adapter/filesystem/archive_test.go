@@ -49,14 +49,17 @@ func (reader *recordedArchiveReadCloser) Close() error {
 type recordingArchiveFilesystem struct {
 	paths          []string
 	zipPaths       []string
+	zipEntries     []*zip.File
 	destinations   []File
 	data           []byte
 	file           *recordedArchiveFile
 	zipReader      *zip.ReadCloser
+	zipEntryReader io.ReadCloser
 	closedFiles    []File
 	closedReaders  []io.Closer
 	createErr      error
 	openZipError   error
+	openEntryError error
 	copyErr        error
 	closeErr       error
 	closeReaderErr error
@@ -101,6 +104,11 @@ func (*recordingArchiveFilesystem) OpenFile(string, int, fs.FileMode) (*os.File,
 func (recording *recordingArchiveFilesystem) OpenZipReader(path string) (*zip.ReadCloser, error) {
 	recording.zipPaths = append(recording.zipPaths, path)
 	return recording.zipReader, recording.openZipError
+}
+
+func (recording *recordingArchiveFilesystem) OpenZipEntry(entry *zip.File) (io.ReadCloser, error) {
+	recording.zipEntries = append(recording.zipEntries, entry)
+	return recording.zipEntryReader, recording.openEntryError
 }
 
 func (*recordingArchiveFilesystem) Remove(string) error {
@@ -157,6 +165,13 @@ func (recording *recordingArchiveFilesystem) assertedZipPaths() ([]string, error
 		return nil, errors.New("recorded archive-open path population is empty")
 	}
 	return recording.zipPaths, nil
+}
+
+func (recording *recordingArchiveFilesystem) assertedZipEntries() ([]*zip.File, error) {
+	if len(recording.zipEntries) == 0 {
+		return nil, errors.New("recorded archive-entry-open population is empty")
+	}
+	return recording.zipEntries, nil
 }
 
 func (recording *recordingArchiveFilesystem) assertedClosedFiles() ([]File, error) {
@@ -319,6 +334,44 @@ func TestRecordedArchiveOpenRejectsEmptyPathPopulation(t *testing.T) {
 	}
 }
 
+func TestOpenZipEntryDependenciesDefaultToSafeNoEntryOpen(t *testing.T) {
+	entry := &zip.File{FileHeader: zip.FileHeader{Method: 99}}
+
+	reader, err := OpenZipEntry(Dependencies{}, entry)
+
+	if reader != nil || err != ErrNoFilesystem {
+		t.Fatalf("zero-value archive-entry open returned (%#v, %v), want (nil, exact %v)", reader, err, ErrNoFilesystem)
+	}
+}
+
+func TestOpenZipEntryPassesExactEntryAndReturnsExactReaderAndError(t *testing.T) {
+	entry := &zip.File{FileHeader: zip.FileHeader{Name: "complete entry identity.bin", Method: 99}}
+	wantReader := &recordedArchiveReadCloser{reader: strings.NewReader("complete injected entry bytes")}
+	wantError := errors.New("complete archive-entry-open dependency error")
+	recording := &recordingArchiveFilesystem{zipEntryReader: wantReader, openEntryError: wantError}
+
+	reader, err := OpenZipEntry(Dependencies{FileSystem: recording}, entry)
+
+	if reader != wantReader || err != wantError {
+		t.Fatalf("archive-entry open returned (%p, %v), want exact (%p, %v)", reader, err, wantReader, wantError)
+	}
+	entries, populationErr := recording.assertedZipEntries()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if len(entries) != 1 || entries[0] != entry {
+		t.Fatalf("archive-entry-open dependency received %#v, want one exact entry identity %p", entries, entry)
+	}
+}
+
+func TestRecordedArchiveEntryOpenRejectsEmptyPopulation(t *testing.T) {
+	recording := &recordingArchiveFilesystem{}
+
+	if _, err := recording.assertedZipEntries(); err == nil {
+		t.Fatal("empty recorded archive-entry-open population passed")
+	}
+}
+
 func TestSystemOpenZipReaderPreservesEntryOrderNamesAndBytes(t *testing.T) {
 	var contents bytes.Buffer
 	writer := zip.NewWriter(&contents)
@@ -358,7 +411,7 @@ func TestSystemOpenZipReaderPreservesEntryOrderNamesAndBytes(t *testing.T) {
 		if reader.File[index].Name != entry.name {
 			t.Fatalf("system archive entry %d name was %q, want %q", index, reader.File[index].Name, entry.name)
 		}
-		opened, err := reader.File[index].Open()
+		opened, err := OpenZipEntry(System(), reader.File[index])
 		if err != nil {
 			t.Fatalf("open system archive entry %q: %v", entry.name, err)
 		}

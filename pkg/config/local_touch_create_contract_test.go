@@ -13,6 +13,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
 
+func (*recordingLocalConfigTouchCreateFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected local-config touch-create archive entry open")
+}
+
 func (*recordingLocalConfigTouchCreateFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected local-config touch-create archive open")
 }

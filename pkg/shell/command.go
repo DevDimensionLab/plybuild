@@ -100,7 +100,7 @@ func unzipWithDependencies(dependencies unzipDependencies, src string, dest stri
 			return filenames, err
 		}
 
-		rc, err := f.Open()
+		rc, err := filesystem.OpenZipEntry(dependencies.Files, f)
 		if err != nil {
 			return filenames, err
 		}

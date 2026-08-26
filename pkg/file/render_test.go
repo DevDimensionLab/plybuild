@@ -15,6 +15,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
 
+func (*recordingRenderFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected render archive entry open")
+}
+
 func (*recordingRenderFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected render archive open")
 }

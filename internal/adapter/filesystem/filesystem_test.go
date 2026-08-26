@@ -14,6 +14,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/testutil"
 )
 
+func (*recordingFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected archive entry open")
+}
+
 func (*recordingFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected archive open")
 }

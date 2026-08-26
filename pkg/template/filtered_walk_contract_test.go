@@ -16,6 +16,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func (*recordingFilteredWalkFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected filtered-walk archive entry open")
+}
+
 func (*recordingFilteredWalkFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected filtered-template archive open")
 }

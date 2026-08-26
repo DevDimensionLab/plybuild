@@ -14,6 +14,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
 
+func (*recordingLocalConfigDirectoryStatFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected local-config directory-stat archive entry open")
+}
+
 func (*recordingLocalConfigDirectoryStatFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected local-config directory-stat archive open")
 }

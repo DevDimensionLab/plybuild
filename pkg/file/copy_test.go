@@ -19,6 +19,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func (*recordingCopyFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected copy archive entry open")
+}
+
 func (*recordingCopyFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected copy archive open")
 }

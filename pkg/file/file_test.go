@@ -17,48 +17,96 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func (*recordingFileExistenceFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected file-existence archive entry open")
+}
+
 func (*recordingFileExistenceFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected file-existence archive open")
+}
+
+func (*recordingFileReadFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected file-read archive entry open")
 }
 
 func (*recordingFileReadFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected file-read archive open")
 }
 
+func (*recordingFileOverwriteFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected file-overwrite archive entry open")
+}
+
 func (*recordingFileOverwriteFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected file-overwrite archive open")
+}
+
+func (*recordingFileCreateFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected file-create archive entry open")
 }
 
 func (*recordingFileCreateFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected file-create archive open")
 }
 
+func (*recordingDirectoryCreateFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected directory-create archive entry open")
+}
+
 func (*recordingDirectoryCreateFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected directory-create archive open")
+}
+
+func (*recordingFileOpenFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected file-open archive entry open")
 }
 
 func (*recordingFileOpenFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected file-open archive open")
 }
 
+func (*recordingFileDeleteFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected file-delete archive entry open")
+}
+
 func (*recordingFileDeleteFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected file-delete archive open")
+}
+
+func (*recordingFileDeleteAllFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected file-delete-all archive entry open")
 }
 
 func (*recordingFileDeleteAllFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected file-delete-all archive open")
 }
 
+func (*recordingFileMoveFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected file-move archive entry open")
+}
+
 func (*recordingFileMoveFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected file-move archive open")
+}
+
+func (*recordingClearDirFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected clear-dir archive entry open")
 }
 
 func (*recordingClearDirFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected clear-dir archive open")
 }
 
+func (*recordingFindFirstFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected find-first archive entry open")
+}
+
 func (*recordingFindFirstFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected find-first archive open")
+}
+
+func (*recordingFindAllFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected find-all archive entry open")
 }
 
 func (*recordingFindAllFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {

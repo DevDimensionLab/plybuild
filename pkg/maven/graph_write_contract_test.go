@@ -14,6 +14,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/file"
 )
 
+func (*recordingGraphStylesFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected graph-styles archive entry open")
+}
+
 func (*recordingGraphStylesFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected graph-styles archive open")
 }

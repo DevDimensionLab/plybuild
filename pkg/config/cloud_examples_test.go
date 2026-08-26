@@ -15,6 +15,10 @@ import (
 	"github.com/devdimensionlab/plybuild/pkg/file"
 )
 
+func (*recordingExamplesFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected examples archive entry open")
+}
+
 func (*recordingExamplesFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected examples archive open")
 }

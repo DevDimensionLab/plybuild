@@ -21,6 +21,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func (*recordingDownloadFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected download archive entry open")
+}
+
 func (*recordingDownloadFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected download archive open")
 }

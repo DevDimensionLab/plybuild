@@ -19,6 +19,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func (*recordingBitbucketRepositoryFilesystem) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, errors.New("unexpected Bitbucket archive entry open")
+}
+
 func (*recordingBitbucketRepositoryFilesystem) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, errors.New("unexpected Bitbucket archive open")
 }

@@ -114,6 +114,10 @@ func (recording *recordingPluginDiagramsGraphvizEffects) OpenFile(string, int, f
 	return nil, recording.unexpected("open file")
 }
 
+func (recording *recordingPluginDiagramsGraphvizEffects) OpenZipEntry(*zip.File) (io.ReadCloser, error) {
+	return nil, recording.unexpected("archive entry open")
+}
+
 func (recording *recordingPluginDiagramsGraphvizEffects) OpenZipReader(string) (*zip.ReadCloser, error) {
 	return nil, recording.unexpected("archive open")
 }
