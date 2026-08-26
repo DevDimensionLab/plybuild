@@ -1,13 +1,13 @@
 # Agent Session: Narrow Plugin Diagrams System Capabilities
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T114525+0200-narrow-plugin-diagrams-system-capabilities`
 Created: `2026-08-26T11:45:25+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3c4d8c36dc53e9af1a1006043655afe6497d9f54e4bc9a393a41f460b0179bf9`
 Previous: [2026-08-26T111924+0200-narrow-profile-editor-system-capability.md](2026-08-26T111924+0200-narrow-profile-editor-system-capability.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T121214+0200-narrow-browser-launcher-system-capability.md](2026-08-26T121214+0200-narrow-browser-launcher-system-capability.md)
+Outcome: completed in product commit `1bce06f2e0eac3f89dad530e004c89ba123666e7`
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
