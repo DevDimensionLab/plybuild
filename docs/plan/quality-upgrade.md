@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `67344a8`.
+Last measured checkpoint: 2026-08-26, commit `4f1f45f`.
 
 ## Objective
 
@@ -4542,6 +4542,46 @@ tests across all 27 packages, L0 8 of 8, L1 six PASS and Q1.6/Q1.7/Q1.9
 UNMEASURABLE, six improved ratchets, two held, zero regressed, and zero
 non-comparable. P4 remains active for the one Q1.7 controllability repair and
 later combined manual evidence; P5-P8 remain queued.
+
+Move 13 adds the single private controllability seam authorized for the last
+Q1.7 branch. Public `spring.DeleteDemoFiles(string,
+config.ProjectConfiguration)` keeps its exact signature and delegates to an
+unexported helper that accepts only the discovery function; production passes
+`file.FindFirst`. Suffix selection, discovery arguments, warning spelling,
+fixed demo-file order, deletion behavior, and all other side effects remain
+unchanged. No dependency struct, deletion injection, exported API, audit,
+scanner, parser, inventory, baseline, acceptance, mutation-harness, or manual
+evidence change was made.
+
+Focused implementation commit `4f1f45f` adds one exact discovery-failure
+contract. It injects a sentinel error, proves the exact `.kt` suffix and
+`src/test/kotlin` lookup path, asserts warning
+`Unable to find testfile, fileSuffix=.kt`, and proves continuation deletes
+`HELP.md`, `mvnw`, and `mvnw.cmd`. The suite increases from 463 to 464
+top-level tests. Fresh executable-control-flow review keeps the complete Q1.7
+population at 17 operations and now supports every included failure branch
+with exact content plus continuation or exact ordered partial-result coverage.
+The final 17-row record SHA-256 is
+`01cb1abc6293f780fd0caffd6a37da7398ea6d49e9b6b7589ae15ff23d83b9eb`;
+the exact 34-contract population manifest SHA-256 is
+`0772d019160fe45a8eeefce5fcadba7821fc18da896374d19cb2b48a1dbb05e3`.
+
+Focused Spring and complete 34-contract Q1.7 tests, complete uncached tests,
+race, vet, API/CLI and CLI-surface compatibility, fresh subprocess contracts,
+pinned lint, launcher and Make contracts, complete preflight, all four host
+acceptance flows, the 15-control audit meta-suite, and empty-HOME count-2 pass.
+The clean no-evidence audit measures commit
+`4f1f45f3f758f2f09dd7d20967efe8ef74a0c613`, tree
+`7326302c171604dc315e2f79cd6871c55935aa60`, and zero dirty paths. Its
+scorecard SHA-256 is
+`ce4190dc03b7bc37aa285569f737b2a59a38c15c5e99db125e340c64e6301b5e`;
+it exits 1 for the same 13 documented non-passing criteria, never 2, with 464
+tests across all 27 packages, L0 8 of 8, L1 six PASS and Q1.6/Q1.7/Q1.9
+UNMEASURABLE, six improved ratchets, two held, zero regressed, and zero
+non-comparable. Q1.6, Q1.7, and Q1.9 are now independently supported by their
+complete classified populations but remain formally UNMEASURABLE because this
+move did not authorize schema-2 evidence. P4 remains active for the combined
+manual-evidence checkpoint; P5-P8 remain queued.
 
 ### P5 - Build L2 Mutation Evidence
 

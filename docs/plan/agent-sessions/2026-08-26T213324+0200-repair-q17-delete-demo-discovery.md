@@ -1,13 +1,27 @@
 # Agent Session: Repair Q1.7 Delete Demo Discovery
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T213324+0200-repair-q17-delete-demo-discovery`
 Created: `2026-08-26T21:33:24+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `f3b98dbaad1e7c0f7839914054a2ddb71e27b297ec56a9f3d7cc62e9fdb591c7`
 Previous: [2026-08-26T204147+0200-repair-q17-partial-failures.md](2026-08-26T204147+0200-repair-q17-partial-failures.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T220403+0200-record-p4-combined-manual-evidence.md](2026-08-26T220403+0200-record-p4-combined-manual-evidence.md)
+Outcome: Focused implementation commit
+`4f1f45f3f758f2f09dd7d20967efe8ef74a0c613` adds only the authorized
+private discovery-function helper and one exact test. The public signature and
+production behavior remain unchanged. The complete 17-operation
+executable-flow review now supports every included Q1.7 path; its final record
+SHA-256 is
+`01cb1abc6293f780fd0caffd6a37da7398ea6d49e9b6b7589ae15ff23d83b9eb`,
+and the 34-contract population manifest SHA-256 is
+`0772d019160fe45a8eeefce5fcadba7821fc18da896374d19cb2b48a1dbb05e3`.
+All required gates pass. The clean no-evidence audit measures tree
+`7326302c171604dc315e2f79cd6871c55935aa60`, has scorecard SHA-256
+`ce4190dc03b7bc37aa285569f737b2a59a38c15c5e99db125e340c64e6301b5e`,
+exits 1 rather than 2, and records zero dirty paths. No manual evidence was
+created, so P4 remains active for the reciprocally linked combined
+Q1.6/Q1.7/Q1.9 schema-2 evidence checkpoint.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

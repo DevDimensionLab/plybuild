@@ -1055,143 +1055,162 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-26T213324+0200-repair-q17-delete-demo-discovery
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T213324+0200-repair-q17-delete-demo-discovery.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T204147+0200-repair-q17-partial-failures.md
+#|SESSION_ID=2026-08-26T220403+0200-record-p4-combined-manual-evidence
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T220403+0200-record-p4-combined-manual-evidence.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T213324+0200-repair-q17-delete-demo-discovery.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P4 with one narrowly bounded Q1.7 controllability repair. Add the
-#|smallest private seam needed to exercise `spring.DeleteDemoFiles`' discovery
-#|failure, then add an exact executable contract for its warning content and
-#|continuation to the fixed demo-file loop. Reclassify all 17 Q1.7 operations
-#|from executable control flow before deciding whether Q1.7 is supported.
+#|Finish P4 only if exhaustive current-project review still truthfully supports
+#|the three remaining manual L1 rows. Record exact non-empty schema-2 receipts
+#|for Q1.6 default dependency doubles, Q1.7 partial-failure content assertions,
+#|and Q1.9 executable empty-population assertions, then prove them with clean
+#|focused and full authoritative audits. Do not infer PASS from a sample or
+#|manufacture evidence.
 #|
 #|# Authorized Roadmap
 #|
-#|P3 is complete. P4 remains active for this one Q1.7 repair and later combined
-#|manual evidence; P5-P8 remain queued in the machine-readable block in
-#|`docs/plan/quality-upgrade.md`. Q1.6 is independently supported by its complete
-#|57-struct, 74-field review, and Q1.9 is independently supported by its complete
-#|169-range classification. No schema-2 receipt is authorized in this seam
-#|session. The launcher must remain NEXT until P4 and P5-P8 finish.
+#|P3 is complete. P4 is active only for combined Q1.6/Q1.7/Q1.9 manual evidence;
+#|P5-P8 remain queued in the machine-readable block in
+#|`docs/plan/quality-upgrade.md`. Q1.6 is independently supported by its
+#|complete 57-struct, 74-field review, Q1.7 by its complete 17-operation
+#|executable-flow classification, and Q1.9 by its complete 169-range
+#|classification. The launcher must remain NEXT until P4 and P5-P8 finish.
 #|
-#|This mission authorizes exactly one private, unexported function-parameter
-#|seam in `pkg/spring/io.go` around the `file.FindFirst` call made by
-#|`DeleteDemoFiles`; one focused exact discovery-failure test and its test-only
-#|helpers; read-only reclassification of all 17 Q1.7 operations; one focused
-#|production-and-test implementation commit; clean automated measurement; and
-#|the normal separate continuity commit. Prefer a private helper to which the
-#|public `DeleteDemoFiles` delegates with `file.FindFirst`. Do not add a
-#|dependency struct or inject deletion behavior.
-#|
-#|This mission does not authorize an exported API or signature change, any
-#|other production change or seam, manual evidence or receipts, Q1.6 or Q1.9
-#|changes, audit/parser/scanner changes, `.quality/inventory` or baseline
-#|changes, executable P5 harnesses, T1-T10 changes, acceptance changes, P6-P8
-#|work, or a Q1.7 PASS claim unless the complete classified population supports
-#|it.
+#|This evidence-only mission authorizes exhaustive read-only source and contract
+#|review; external temporary scripts, reports, and one commit-bound schema-2
+#|manual-evidence document; exact Q1.6/Q1.7/Q1.9 receipt validation; clean
+#|focused and full audits using that explicit external document; and the normal
+#|single continuity-only commit. It does not authorize production or test
+#|changes, a checked-in or worktree-local evidence file, another seam, exported
+#|API changes, validator or scanner changes, `.quality/inventory` or
+#|baseline changes, executable P5 harnesses, T1-T10 changes, acceptance changes,
+#|P6-P8 work, or a PASS claim that a complete reviewed population does not
+#|support.
 #|
 #|# Measurements At Start
 #|
-#|The Q1.7 characterization move produced test-only commit
-#|`7be93e7e822f05bdb007e4e5a1a00402e620a6cb`, exact tree
-#|`0f0955f8bbe3e49f5c8d1b4f98454dcb04ea62f1`, on unchanged production commit
-#|`c382caa38be167fe17f847370ad8a12270644de3`. Ten new top-level contracts bring
-#|the suite from 453 to 463 tests. The exact affected packages, complete
-#|33-contract focused population, complete uncached tests, race, vet, API/CLI
-#|and subprocess compatibility, pinned lint, launcher and Make contracts,
-#|complete preflight, all four host acceptance flows, the 15-control audit
-#|meta-suite, and empty-HOME count-2 pass.
+#|Focused Q1.7 implementation commit
+#|`4f1f45f3f758f2f09dd7d20967efe8ef74a0c613` has exact tree
+#|`7326302c171604dc315e2f79cd6871c55935aa60`. It changes only
+#|`pkg/spring/io.go` and
+#|`pkg/spring/delete_demo_files_partial_failure_test.go`. Public
+#|`DeleteDemoFiles(string, config.ProjectConfiguration)` delegates to a
+#|private helper accepting only the discovery function and passes
+#|`file.FindFirst` in production. One exact test injects the discovery
+#|error, proves the `.kt` and `src/test/kotlin` request, asserts
+#|`Unable to find testfile, fileSuffix=.kt`, and proves continuation to
+#|delete `HELP.md`, `mvnw`, and `mvnw.cmd`.
 #|
-#|The clean no-evidence scorecard SHA-256 is
-#|`b2ccc93dbb045f06404f955ac4b122a614a654f2c0d983d48941fe7026b352ec`.
-#|It records 463 tests across all 27 packages, L0 8/8, L1 six PASS and
-#|Q1.6/Q1.7/Q1.9 UNMEASURABLE, six improved ratchets, two held, zero regressed,
-#|zero non-comparable, and zero dirty paths. The audit exits 1 for 13 documented
-#|non-passing criteria, never 2.
+#|The complete Q1.7 population remains 17 operations and every included path now
+#|has exact failure content plus continuation or exact ordered partial-result
+#|coverage. The final classification SHA-256 is
+#|`01cb1abc6293f780fd0caffd6a37da7398ea6d49e9b6b7589ae15ff23d83b9eb`;
+#|the exact 34-contract population manifest SHA-256 is
+#|`0772d019160fe45a8eeefce5fcadba7821fc18da896374d19cb2b48a1dbb05e3`.
+#|Q1.6's complete population remains 57 dependency structs and 74 fields.
+#|Q1.9's complete population remains 169 syntactic test ranges.
 #|
-#|The exhaustive 17-operation Q1.7 record now classifies 16 operations as having
-#|exact failure content plus continuation or exact ordered partial-result
-#|coverage. Its SHA-256 is
-#|`4b247f3343a651374b96245d6c15b563f573a152799f3329713c578ace863e57`.
-#|The exact 33-contract focused population manifest SHA-256 is
-#|`43391020bb74aa696a750c68cbdefad40ceee4de5928c4f547356f581ddcae22`.
-#|
-#|The sole remaining included branch is `DeleteDemoFiles`' discovery warning.
-#|The public function hard-codes `file.FindFirst`. That function hard-codes the
-#|system filesystem, its walk callback ignores each incoming walk error and
-#|returns only `nil` or `io.EOF`, and final `io.EOF` is normalized to nil. Safe
-#|test-only approaches therefore cannot make the checked discovery error
-#|non-nil. Deletion failures in the same operation already have exact warning
-#|and later-item continuation coverage.
+#|All focused Q1.7 contracts, complete uncached tests, race, vet, API/CLI and
+#|subprocess compatibility, pinned lint, launcher and Make contracts, complete
+#|preflight, all four host acceptance flows, the 15-control audit meta-suite, and
+#|empty-HOME count-2 pass. The no-evidence audit scorecard SHA-256 is
+#|`ce4190dc03b7bc37aa285569f737b2a59a38c15c5e99db125e340c64e6301b5e`.
+#|It records 464 tests across all 27 packages, L0 8/8, final wrapper L1 six PASS
+#|and Q1.6/Q1.7/Q1.9 UNMEASURABLE, six improved ratchets, two held, zero
+#|regressed, zero non-comparable, and zero dirty paths. It exits 1 for 13
+#|documented non-passing criteria, never 2. No evidence document or receipt was
+#|created in the repair session.
 #|
 #|# Role And Boundaries
 #|
-#|Work autonomously in this worktree on `codex/upgrade-quality`. Confirm the new
-#|continuity HEAD and exact ancestry before editing. Preserve the public
-#|`DeleteDemoFiles(string, config.ProjectConfiguration)` signature and make it
-#|delegate to one unexported helper accepting only the discovery function. Pass
-#|`file.FindFirst` in production. Preserve the current suffix selection, lookup
-#|arguments, exact logs including existing spelling, deletion behavior, item
-#|ordering, side effects, and Go 1.18 compatibility.
+#|Work autonomously in this worktree on `codex/upgrade-quality`. Confirm
+#|the new continuity HEAD and exact ancestry before measuring; its exact parent
+#|must be `4f1f45f`. This checkpoint must not create a product
+#|implementation commit. The receipts bind the exact clean current continuity
+#|HEAD and are supplied from outside the repository. After measurement, make
+#|only the normal `docs: prepare next agent session` continuity commit.
 #|
-#|The new test must inject a sentinel discovery error, assert the exact warning
-#|`Unable to find testfile, fileSuffix=.kt`, prove the discovery function
-#|received the exact suffix and test-directory path, and prove the later
-#|`HELP.md`, `mvnw`, and `mvnw.cmd` items were deleted. Preserve every existing
-#|test and process-state restoration. Make one focused implementation commit,
-#|then the separate `docs: prepare next agent session` continuity commit.
+#|Keep the evidence document and every generated report or helper outside the
+#|worktree; never create `.quality/manual-evidence.json` or
+#|`.agent-task/current.md`. The measured tree counts tracked, untracked,
+#|and ignored bytes. Confirm ordinary and ignored status before every
+#|authoritative audit. Set `API_COMPAT_REPORT_OUT` and
+#|`CLI_COMPAT_REPORT_OUT` to external paths whenever running
+#|compatibility.
 #|
-#|Do not push, merge, publish, distribute, remove the worktree, stash inherited
-#|changes, revert user work, or run destructive Git commands. Keep every
-#|generated report outside the worktree. Set `API_COMPAT_REPORT_OUT` and
-#|`CLI_COMPAT_REPORT_OUT` to external paths whenever running compatibility. The
-#|measured-tree identity counts ignored, untracked, and tracked bytes, so confirm
-#|both ordinary and ignored status before every authoritative audit.
+#|Use schema version 2 and include only Q1.6, Q1.7, and Q1.9 receipts. Derive the
+#|exact current commit, commit tree, clean status digest, inventory object, and
+#|complete instrument object from a clean no-evidence audit of current HEAD.
+#|Compute every `evidence_sha256` from canonical UTF-8 JSON with sorted
+#|keys, no whitespace, and `ensure_ascii=False`. Pass the evidence
+#|explicitly with `--manual-evidence`.
+#|
+#|For Q1.6, enumerate the complete in-scope dependency-struct population and
+#|prove every dependency has a safe default and argument recorder and each
+#|struct is passed whole rather than reconstructed field by field. For Q1.7,
+#|enumerate all production operations that report collection-item failures and
+#|continue or return a populated partial aggregate with an error, and prove
+#|every included failure has exact content and continuation or ordered partial
+#|result. For Q1.9, enumerate the complete in-scope test collection-iteration
+#|population and prove every required collection has an executable assertion
+#|that fails when empty. State exact inclusion and exclusion rules before
+#|counting and run the named contracts behind every claim.
+#|
+#|If any denominator is empty or any item fails its criterion, do not emit a
+#|false receipt. Record the exact blocker, keep the affected row UNMEASURABLE,
+#|leave P4 active, and prepare the smallest truthful successor task. Do not push,
+#|merge, publish, distribute, remove the worktree, stash inherited changes,
+#|revert user work, launch a successor, or run destructive Git commands.
 #|
 #|# Required Reading
 #|
-#|Before editing, confirm branch, HEAD, clean and ignored status, reciprocal
+#|Before measuring, confirm branch, HEAD, clean and ignored status, reciprocal
 #|archive links, launcher `--check`, exact ancestry, and the authorized
 #|checkpoint block. Read the rolling handover, this archive, the complete P4
-#|entry and gate, both design documents, `.quality/README.md`, the Q1.7 criterion
-#|and schema-2 validation path, all 17 production operations and enclosing call
-#|flows, the complete 17-row classification, every focused partial-failure test
-#|and helper, `pkg/spring/io.go`, `pkg/file/file.go`, the complete audit wrapper,
-#|T15 repair, API/CLI and launcher contracts, and Make and acceptance gates. Do
-#|not classify an operation by name or search hit alone.
+#|entry and gate, both design documents, `.quality/README.md`,
+#|`.quality/inventory`, the complete audit wrapper, complete schema-2
+#|parser and manual-evidence negative meta-test, baseline manual example and
+#|reproduction README, T15 repair, all 57 dependency structs and 74 fields with
+#|their default/recording contracts, all 17 Q1.7 production operations and their
+#|exact 34-contract population, and all 169 Q1.9 ranges with their executable
+#|guards and exclusions. Read API/CLI, launcher, Make, and acceptance contracts
+#|needed by the final gate. Do not rely on names or text search alone where Go
+#|structure or runtime execution establishes the population.
 #|
 #|# Three Moves
 #|
-#|1. Regenerate the complete 17-operation Q1.7 record from the clean current
-#|   tree. Implement only the private discovery-function seam described above.
-#|   Add the exact discovery warning, lookup-argument, and fixed-file continuation
-#|   contract. Inspect every included and excluded branch in executable context.
-#|2. Run the exact Spring tests, the complete 17-operation focused population,
-#|   complete uncached tests, race, and vet. Reclassify all 17 operations and
-#|   require exact failure content plus continuation or exact ordered partial
-#|   result for every included path. If any included path remains uncovered,
-#|   keep Q1.7 blocked. Do not create manual evidence in this session.
+#|1. Run a clean no-evidence audit to capture exact current repository, tree,
+#|   status, inventory, instrument, denominator, and automated criterion
+#|   identities. Regenerate explicit exhaustive scope and records for Q1.6,
+#|   Q1.7, and Q1.9; inspect every subject in executable context; run exact
+#|   non-empty focused contract populations; and record counts, exclusions, and
+#|   hashes outside the worktree.
+#|2. Only if all three complete populations satisfy their required truth, create
+#|   one external schema-2 document bound to clean current HEAD. Validate its
+#|   canonical receipt digests, run focused Q1.6/Q1.7/Q1.9 audit, and run the
+#|   full authoritative audit with the same explicit document. Require all three
+#|   rows PASS, all automated results held, audit exit never 2, and zero dirty
+#|   paths. Record document, receipt, record, and scorecard SHA-256 identities.
 #|3. Run API/CLI and subprocess compatibility with external report paths; pinned
-#|   lint; launcher and Make contracts; complete preflight; all four host
-#|   acceptance flows; the 15-control audit meta-suite; empty-HOME count-2; and a
-#|   clean no-evidence audit. Require audit exit never 2 and zero dirty paths.
-#|   Record the implementation commit, exact population, scorecard, and whether
-#|   the next P4 move is evidence-only or another exact blocker repair.
+#|   lint; launcher and Make contracts; complete tests, race, and vet; complete
+#|   preflight; all four host acceptance flows; the 15-control audit meta-suite;
+#|   and empty-HOME count-2 in proportion to the evidence checkpoint. Mark P4
+#|   complete and hand off the first bounded P5 move only if all nine L1 rows and
+#|   every P4 exit are valid and non-empty.
 #|
 #|# Automatic Handoff
 #|
-#|Before this session ends, finish and commit the narrow Q1.7 seam and contract
-#|or record an exact resumable blocker. Rewrite the rolling handover, record the
-#|P4 result in the roadmap, answer this archive, create exactly one reciprocally
-#|linked NEXT archive for the next coherent P4 move, replace only the launcher's
-#|mutable regions, run launcher and handoff contracts, and make the separate
-#|continuity-only commit. If all 17 operations support Q1.7, the next coherent
-#|P4 move is combined schema-2 manual evidence for Q1.6, Q1.7, and Q1.9; do not
-#|create that evidence in this session. Do not launch a real successor, push,
-#|merge, publish, distribute, stash, revert, or remove the worktree. COMPLETE
-#|remains invalid while P4 or P5-P8 is unfinished.
+#|Before this session ends, finish the coherent combined evidence checkpoint or
+#|record an exact resumable blocker. Rewrite the rolling handover, record the P4
+#|result in the roadmap, answer this archive, create exactly one reciprocally
+#|linked NEXT archive for the next coherent authorized roadmap move, replace
+#|only the launcher's mutable regions, run launcher and handoff contracts, and
+#|make the single continuity-only `docs: prepare next agent session`
+#|commit. If P4 completes, the next archive must begin the first narrowly bounded
+#|P5 mutation-evidence subject; otherwise it must name the exact P4 blocker. Do
+#|not launch a real successor, push, merge, publish, distribute, stash, revert,
+#|or remove the worktree. COMPLETE remains invalid while P5-P8 are unfinished.
 # CODEX_MUTABLE_PROMPT_END
