@@ -61,7 +61,7 @@ func TestPluginDiagramsExportPreservesExactRequestAttemptIgnoredErrorAndContinue
 		t.Fatalf("plugin-diagrams export dependency lost its complete process value: %#v", dependencies)
 	}
 
-	err := runStructurizrDiagrams(dependencies, workspace)
+	err := runStructurizrDiagrams(dependencies, pluginDiagramsOpenDependencies{}, workspace)
 
 	if err != nil {
 		t.Fatalf("plugin-diagrams returned %v after exact ignored process error %v", err, processError)
@@ -92,6 +92,7 @@ func TestPluginDiagramsExportDependenciesDefaultToSafeNoProcess(t *testing.T) {
 
 	err := runStructurizrDiagrams(
 		pluginDiagramsExportDependencies{},
+		pluginDiagramsOpenDependencies{},
 		"/developer/home/project/must-not-be-accessed/workspace.dsl",
 	)
 

@@ -93,7 +93,11 @@ Support for structurizr requires binaries from structurizr-cli and graphviz inst
 		if err != nil {
 			return err
 		}
-		return runStructurizrDiagrams(systemPluginDiagramsExportDependencies(), workspace)
+		return runStructurizrDiagrams(
+			systemPluginDiagramsExportDependencies(),
+			systemPluginDiagramsOpenDependencies(),
+			workspace,
+		)
 	},
 }
 
@@ -105,10 +109,29 @@ func systemPluginDiagramsExportDependencies() pluginDiagramsExportDependencies {
 	return pluginDiagramsExportDependencies{Process: process.System()}
 }
 
-func runStructurizrDiagrams(dependencies pluginDiagramsExportDependencies, workspace string) error {
+type pluginDiagramsOpenDependencies struct {
+	Process process.Dependencies
+}
+
+func systemPluginDiagramsOpenDependencies() pluginDiagramsOpenDependencies {
+	return pluginDiagramsOpenDependencies{Process: process.System()}
+}
+
+func openStructurizrDiagram(dependencies pluginDiagramsOpenDependencies, outputPngFile string) {
+	_ = process.Execute(dependencies.Process, process.Command{
+		Name: "open",
+		Args: []string{outputPngFile},
+	})
+}
+
+func runStructurizrDiagrams(
+	exportDependencies pluginDiagramsExportDependencies,
+	openDependencies pluginDiagramsOpenDependencies,
+	workspace string,
+) error {
 	tempDirectory := ".structurizr/"
 	_ = file.DeleteAll(tempDirectory)
-	_ = process.Execute(dependencies.Process, process.Command{
+	_ = process.Execute(exportDependencies.Process, process.Command{
 		Name: "structurizr-cli",
 		Args: []string{"export", "-w", workspace, "-format", "dot", "-output", tempDirectory},
 	})
@@ -126,7 +149,7 @@ func runStructurizrDiagrams(dependencies pluginDiagramsExportDependencies, works
 			return err
 		}
 
-		_ = structurizr.Run(exec.Command("open", outputPngFile))
+		openStructurizrDiagram(openDependencies, outputPngFile)
 	}
 	return nil
 }
