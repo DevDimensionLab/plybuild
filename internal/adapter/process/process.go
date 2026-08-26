@@ -54,6 +54,12 @@ func System() Dependencies {
 	}
 }
 
+// SystemRunner returns the production dependency that only executes an
+// operating-system process.
+func SystemRunner() Dependencies {
+	return Dependencies{Runner: systemRunner{}}
+}
+
 type systemRunner struct{}
 
 func (systemRunner) Run(command Command) error {

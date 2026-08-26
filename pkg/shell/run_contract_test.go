@@ -3,10 +3,12 @@ package shell
 import (
 	"bytes"
 	"errors"
+	"io"
 	"reflect"
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
+	"github.com/sirupsen/logrus"
 )
 
 type recordingShellRunProcess struct {
@@ -14,15 +16,23 @@ type recordingShellRunProcess struct {
 	stdout   []byte
 	stderr   []byte
 	err      error
+	sequence *[]string
 }
 
-func (recording *recordingShellRunProcess) dependencies() runDependencies {
-	dependencies := systemRunDependencies()
-	dependencies.Process.Runner = recording
-	return dependencies
+type recordingShellRunLogHook struct {
+	entries  []*logrus.Entry
+	sequence *[]string
+}
+
+func (recording *recordingShellRunProcess) dependencies(dependencies process.Dependencies) runDependencies {
+	dependencies.Runner = recording
+	return runDependencies{Process: dependencies}
 }
 
 func (recording *recordingShellRunProcess) Run(command process.Command) error {
+	if recording.sequence != nil {
+		*recording.sequence = append(*recording.sequence, "process")
+	}
 	command.Args = append([]string(nil), command.Args...)
 	recording.commands = append(recording.commands, command)
 	if command.Stdout != nil {
@@ -41,16 +51,32 @@ func (recording *recordingShellRunProcess) assertedCommands() ([]process.Command
 	return recording.commands, nil
 }
 
-func TestRunSelectsCompleteSystemProcessDependencies(t *testing.T) {
+func (hook *recordingShellRunLogHook) Levels() []logrus.Level {
+	return logrus.AllLevels
+}
+
+func (hook *recordingShellRunLogHook) Fire(entry *logrus.Entry) error {
+	if hook.sequence != nil {
+		*hook.sequence = append(*hook.sequence, "log")
+	}
+	copy := *entry
+	hook.entries = append(hook.entries, &copy)
+	return nil
+}
+
+func TestRunSelectsExactSystemRunnerWithoutStandardOutput(t *testing.T) {
 	dependencies := systemRunDependencies()
 	systemProcess := process.System()
 
-	if dependencies.Process.Runner == nil || dependencies.Process.Stdout != systemProcess.Stdout {
-		t.Fatal("Run selected an incomplete process dependency")
+	if dependencies.Process.Runner == nil {
+		t.Fatal("Run selected no system process runner")
 	}
-	if reflect.TypeOf(dependencies.Process.Runner) != reflect.TypeOf(systemProcess.Runner) {
-		t.Fatalf("Run process dependency is %T, want %T",
+	if dependencies.Process.Runner != systemProcess.Runner {
+		t.Fatalf("Run process dependency is %T, want exact runner %T",
 			dependencies.Process.Runner, systemProcess.Runner)
+	}
+	if dependencies.Process.Stdout != nil {
+		t.Fatalf("Run inherited unused standard output %T, want nil", dependencies.Process.Stdout)
 	}
 }
 
@@ -69,8 +95,9 @@ func TestRunPreservesExactRequestStreamsSynchronousAttemptBytesAndLegacyErrorRes
 		stderr: stderrBytes,
 		err:    processError,
 	}
-	dependencies := recording.dependencies()
-	if dependencies.Process.Runner != recording {
+	callerOwnedStdout := &bytes.Buffer{}
+	dependencies := recording.dependencies(process.Dependencies{Stdout: callerOwnedStdout})
+	if dependencies.Process.Runner != recording || dependencies.Process.Stdout != callerOwnedStdout {
 		t.Fatalf("Run dependency lost its complete process value: %#v", dependencies)
 	}
 
@@ -102,6 +129,51 @@ func TestRunPreservesExactRequestStreamsSynchronousAttemptBytesAndLegacyErrorRes
 	}
 	if output.Err != nil {
 		t.Fatalf("legacy Run Output.Err was %v after exact dependency error %v, want nil", output.Err, processError)
+	}
+}
+
+func TestRunLogsExactCommandBeforeOneProcessRequest(t *testing.T) {
+	sequence := []string{}
+	hook := &recordingShellRunLogHook{sequence: &sequence}
+	testLogger := logrus.New()
+	testLogger.SetOutput(io.Discard)
+	testLogger.SetLevel(logrus.DebugLevel)
+	testLogger.AddHook(hook)
+	previousLog := log
+	log = testLogger
+	t.Cleanup(func() {
+		log = previousLog
+	})
+	recording := &recordingShellRunProcess{sequence: &sequence}
+	name := `complete shell tool\path-ø`
+	arguments := []string{"first complete argument", `second\argument`}
+
+	output := runWithDependencies(
+		recording.dependencies(process.Dependencies{}),
+		name,
+		arguments...,
+	)
+
+	if output.Err != nil || output.StdOut.Len() != 0 || output.StdErr.Len() != 0 {
+		t.Fatalf("Run logging contract returned unexpected output: %#v", output)
+	}
+	if !reflect.DeepEqual(sequence, []string{"log", "process"}) {
+		t.Fatalf("Run log/process order was %#v, want log before process", sequence)
+	}
+	if len(hook.entries) != 1 {
+		t.Fatalf("Run emitted %d log entries, want exactly 1", len(hook.entries))
+	}
+	wantMessage := "running: " + name + " first complete argument second\\argument"
+	if hook.entries[0].Level != logrus.DebugLevel || hook.entries[0].Message != wantMessage {
+		t.Fatalf("Run log entry was level=%s message=%q, want debug %q",
+			hook.entries[0].Level, hook.entries[0].Message, wantMessage)
+	}
+	commands, populationErr := recording.assertedCommands()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if len(commands) != 1 {
+		t.Fatalf("Run logging contract recorded %d process requests, want exactly 1", len(commands))
 	}
 }
 

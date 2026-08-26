@@ -30,7 +30,7 @@ type runDependencies struct {
 }
 
 func systemRunDependencies() runDependencies {
-	return runDependencies{Process: process.System()}
+	return runDependencies{Process: process.SystemRunner()}
 }
 
 func Run(name string, args ...string) Output {

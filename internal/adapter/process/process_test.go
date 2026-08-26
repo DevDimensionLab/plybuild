@@ -55,6 +55,25 @@ func TestSystemSelectsExactStandardOutput(t *testing.T) {
 	}
 }
 
+func TestSystemRunnerSelectsExactSystemRunnerWithoutStandardOutput(t *testing.T) {
+	runnerOnly := SystemRunner()
+	complete := System()
+
+	if runnerOnly.Runner == nil {
+		t.Fatal("runner-only system dependency has no process runner")
+	}
+	if runnerOnly.Runner != complete.Runner {
+		t.Fatalf("runner-only system dependency is %T, want exact runner %T",
+			runnerOnly.Runner, complete.Runner)
+	}
+	if runnerOnly.Stdout != nil {
+		t.Fatalf("runner-only system standard output is %T, want nil", runnerOnly.Stdout)
+	}
+	if complete.Stdout != os.Stdout {
+		t.Fatalf("complete system standard output is %T, want exact os.Stdout", complete.Stdout)
+	}
+}
+
 func TestStdoutForwardsInjectedWriterOnlyWhenEnabled(t *testing.T) {
 	injected := &bytes.Buffer{}
 	dependencies := Dependencies{Stdout: injected}
@@ -103,6 +122,9 @@ func TestExecutePassesCompleteCommandToDependency(t *testing.T) {
 	}
 	if runner.command.Stdin != stdin {
 		t.Fatal("stdin reader identity did not reach the process dependency unchanged")
+	}
+	if runner.command.Stdout != stdout || runner.command.Stderr != stderr {
+		t.Fatal("stdout or stderr writer identity did not reach the process dependency unchanged")
 	}
 }
 
