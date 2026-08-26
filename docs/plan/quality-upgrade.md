@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `9601d29`.
+Last measured checkpoint: 2026-08-26, commit `cbb620a`.
 
 ## Objective
 
@@ -4043,8 +4043,53 @@ SHA-256
 the measured commit tree is `fd78ef577b886a423d2964f4352503d2aac8992b`.
 The focused seven-criterion scorecard SHA-256 is
 `d52e2d34017dac46134a4eacc2fca628e4e39bed995995ab7837217796ca65ed`.
-Continue P4 by reducing the remaining untested logic-package population,
-beginning with one test-only characterization move for `pkg/sorting`.
+
+Move 4 adds only `pkg/sorting/sort_test.go`; `pkg/sorting/sort.go`, its API,
+and every caller are unchanged. Nine focused characterization contracts prove
+exact slice length, value-receiver and shared-slice behavior, in-place swap and
+full sort, strict less-than comparison, complete concatenated key construction,
+all scope weights, matching `1-` and nonmatching `100-` group prefixes,
+case-sensitive substring selection, empty sort-key behavior, group and artifact
+tie-breaks, and non-empty table populations. The package reaches 100% statement
+coverage without a request, socket, external program, wait, global-state
+mutation, or repository fixture write.
+
+The existing implementation compares its formatted keys lexically. Therefore
+an unknown scope's textual `100:` prefix sorts before the empty scope's `10:`
+prefix. The new contracts deliberately preserve that legacy result; changing
+it to a preferred numeric order is a later product decision, not part of this
+coverage move. Dependency fields outside scope, group ID, and artifact ID also
+remain outside the comparison key.
+
+The suite now has 423 tests across 22 of 27 packages. Q0.6 holds at 26 guarded
+safe-writer sites, 21 write and 5 copy, with zero skipped tests and zero unsafe
+direct test writes. Q1.1 improves from 6 of 27 to 5 of 27, Q1.2 remains zero,
+exact Q1.3 remains 0 of 27 with all five adapter paths valid, Q1.4 remains 7 of
+8, exact Q2.1 remains 0 of 8, and Q3.4 remains zero phrases across 88 Markdown
+files. The scanner, inventory, baseline, audit apparatus, mutation harnesses,
+and production code are unchanged.
+
+The clean move-4 gate passes focused sorting, config, and Maven caller tests at
+100% sorting coverage; API/CLI, CLI surface, and fresh subprocess compatibility;
+build, complete and uncached tests, race, vet, pinned lint, `make test`, all 62
+launcher controls, Make and production-script contracts, all four host
+acceptance flows, the repaired 15-control audit meta-suite, and empty-HOME
+count-2. The first integrated preflight invocation supplied the pinned linter
+as a Make command-line override, which leaked into and invalidated the
+fake-linter negative control; the unchanged rerun supplied the same pin through
+the environment and passed the complete preflight.
+
+Product commit: `cbb620a`.
+
+The authoritative clean full audit from `cbb620a` has structured scorecard
+SHA-256
+`4f7550ad8fd184f09237c5f8ae339a1d746ab8c2b366706d4cd9c5feb79ae0af`;
+the measured commit tree is `18d1ff3d026dc358f7f854b338fd7d5e2d411c68`.
+It exits 1 for 13 documented findings, never 2, with L0 8 of 8, six
+improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
+paths. The focused seven-criterion scorecard SHA-256 is
+`7f6fbf4354a7b7040c350ba0786b468a054d2febae6b7a3c9031507e16471723`.
+Continue P4 with one test-only characterization move for `pkg/resources`.
 
 ### P5 - Build L2 Mutation Evidence
 
