@@ -7,8 +7,12 @@ import (
 	"strings"
 )
 
+func systemGitDependencies() process.Dependencies {
+	return process.SystemRunner()
+}
+
 func GitClone(url string, target string) Output {
-	return gitClone(process.System(), url, target)
+	return gitClone(systemGitDependencies(), url, target)
 }
 
 func gitClone(dependencies process.Dependencies, url string, target string) Output {
@@ -16,7 +20,7 @@ func gitClone(dependencies process.Dependencies, url string, target string) Outp
 }
 
 func GitPull(targetDir string) Output {
-	return gitPull(process.System(), targetDir)
+	return gitPull(systemGitDependencies(), targetDir)
 }
 
 func gitPull(dependencies process.Dependencies, targetDir string) Output {
@@ -47,7 +51,7 @@ func GitIsRepo(targetDir string) (bool, error) {
 }
 
 func GitInit(targetDir string) Output {
-	return gitInit(process.System(), targetDir)
+	return gitInit(systemGitDependencies(), targetDir)
 }
 
 func gitInit(dependencies process.Dependencies, targetDir string) Output {
@@ -55,7 +59,7 @@ func gitInit(dependencies process.Dependencies, targetDir string) Output {
 }
 
 func GitAddAndCommit(targetDir string, message string) Output {
-	return gitAddAndCommit(process.System(), targetDir, message)
+	return gitAddAndCommit(systemGitDependencies(), targetDir, message)
 }
 
 func gitAddAndCommit(dependencies process.Dependencies, targetDir string, message string) Output {
