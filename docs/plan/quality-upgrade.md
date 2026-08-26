@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `4376e05`.
+Last measured checkpoint: 2026-08-26, commit `9f56714`.
 
 ## Objective
 
@@ -565,6 +565,26 @@ P3.58 clean checkpoint (product `4376e05`):
 | Claim phrases in 76 Markdown files | 0 | Q3.4 remains held. |
 | Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
+P3.59 clean checkpoint (product `9f56714`):
+
+| Signal | P3.59 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 384 | Four focused filesystem and shell archive-entry-open contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The focused contracts use guarded temporary archives and recording boundaries; they launch no external program. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in already-tested packages. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 15 / 37 | The unchanged scanner does not catalog `archive/zip.File.Open`, so the exact population holds while the operation moves behind the filesystem dependency. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 76 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
 ## Checkpoints
 
 ### P0 - Recovery And Measurement
@@ -710,7 +730,7 @@ snapshot artifact execution remains P6 acceptance work.
 
 ### P3 - Remove Process Exits, Then Introduce Seams
 
-Status: active. Moves 1 through 57 are complete.
+Status: active. Moves 1 through 59 are complete.
 
 Move 1 reduced Q1.2 from 127 to zero. A syntax-aware boundary contract covers
 both `main.go` files, requires them to delegate to `cmd.ExecuteE() error`, and
@@ -3141,6 +3161,61 @@ SHA-256
 `09cb1f364cbf55243f557d77c400b4befa7672d5b0a9378ad9e7d7cd6447ce32`;
 the measured commit tree is `550e10792b81c5b1fa3bc4714a451a1afb586541`.
 
+Move 59 changes only shell Unzip's direct archive-entry reader selection in
+private `unzipWithDependencies`. The existing complete filesystem dependency
+now exposes `OpenZipEntry(*zip.File) (io.ReadCloser, error)`, whose zero-safe
+helper returns the established `ErrNoFilesystem` and whose system
+implementation invokes `Open` on the exact supplied entry. Production replaces
+only `rc, err := f.Open()` with the helper call on the existing injected
+filesystem dependency.
+
+The exported `Unzip` signature, archive source and destination, one archive
+open, exact deferred archive-close identity and ignored result, entry order,
+log text and placement, zip-slip check, partial-filename append point,
+directory handling, parent creation, destination flags and entry mode remain
+unchanged. Each file entry still opens its destination before one entry-open
+attempt, copies once with the exact returned reader while ignoring count and
+error, closes output before entry reader, returns the same close errors, and
+suppresses every later operation after the same failure points. A zero
+dependency performs no archive or entry open or filesystem mutation and
+returns the exact established error.
+
+Four focused top-level contracts bring the suite to 384 tests, while the
+complete shell recorder now captures entry-open identity, reader, error, and
+operation placement. They prove the exact `*zip.File`, exact returned reader
+and error, safe zero behavior, the complete successful file-entry sequence,
+entry-open failure after destination open, suppression of copy, closes, and
+later traversal on that failure, complete dependency preservation, rejection
+of an empty entry-open population, and absence of an unrelated filesystem
+request. Every complete filesystem double and caller mechanically preserves
+the extended dependency. Focused tests use only the existing guarded temporary
+archive helper, launch no external process, touch no network, and write no
+repository fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, regenerated exact Q1.3 stays 15 of 37 because the unchanged scanner does
+not catalog `archive/zip.File.Open`, Q1.4 stays 7 of 8, exact Q2.1 stays 0 of 8,
+and Q3.4 stays zero phrases across 76 Markdown files. The scanner, inventory,
+baseline, and audit apparatus are unchanged.
+
+The clean move-59 gate passes focused filesystem/shell and all relevant caller
+tests; API/CLI and subprocess compatibility; complete tests, race, vet, pinned
+lint, all 62 launcher controls, Make and production-script meta-contracts, all
+four host acceptance flows, the repaired 15-control audit meta-suite, and
+empty-HOME count-2. The first complete preflight attempt reached only the
+sandbox-blocked default golangci-lint cache; its isolated-cache rerun passed.
+The clean full audit exits 1 for the same 15 documented findings, never 2, with
+L0 8 of 8, five improved, two held, zero regressed, one non-comparable ratchet,
+and zero dirty paths.
+
+Product commit: `9f56714`.
+
+The authoritative clean full audit from `9f56714` has structured scorecard
+SHA-256
+`41b51871f6436851613af04c86af93b6fb7f7f0e7f74833c47d8e3d45ddfb10e`;
+the measured commit tree is `18f303931958d94ba72b9ed861faa24b94e29925`.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -3185,13 +3260,17 @@ error, close behavior, `UpdateLocalConfig`, or callers.
 The isolated `structurizr-cli export`, Graphviz `dot`, and ignored macOS `open`
 requests in `cmd/plugin_diagrams.go` now use the process adapter; the Graphviz
 stdout write also uses the filesystem adapter. Maven command's conditional
-standard-output selection now uses the complete process dependency. Continue
-with only shell unzip entry-reader provenance: move the direct `zip.File.Open`
-selection in `pkg/shell/command.go` behind the existing filesystem dependency
-while preserving exact archive-entry identity, traversal and partial filenames,
-copy and close order, all error precedence, ignored copy errors, and deferred
-archive close. Leave process/Maven, every other unzip operation, public API,
-clock/server work, inventory, scanner, and every completed effect unchanged.
+standard-output selection now uses the complete process dependency. Shell
+Unzip's archive-entry reader selection now uses the complete filesystem
+dependency without changing any other archive operation. Continue with only
+public shell `Run`'s production process-capability selection: add a narrow
+runner-only system selector to the process adapter and use it only in
+`systemRunDependencies`, so that this caller no longer inherits the unused
+system standard-output capability. Preserve the exact system runner and every
+command, output buffer, error, log, zero-dependency behavior, public API, and
+Maven's completed full dependency and stdout selection. Leave Git wrappers,
+profile, plugin diagrams, browser launching, Unzip, clock/server work,
+inventory, scanner, and every completed effect unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.

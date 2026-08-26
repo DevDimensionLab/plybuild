@@ -1,13 +1,15 @@
 # Agent Session: Migrate Shell Unzip Entry Open
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T094645+0200-migrate-shell-unzip-entry-open`
 Created: `2026-08-26T09:46:45+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `01d203669b16b811b43fa302783b41bb66c7866f86ed30749884fa3f1a4d3876`
 Previous: [2026-08-26T091301+0200-migrate-maven-debug-stdout.md](2026-08-26T091301+0200-migrate-maven-debug-stdout.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T101755+0200-narrow-shell-run-system-capability.md](2026-08-26T101755+0200-narrow-shell-run-system-capability.md)
+Outcome: Product commit `9f56714` routes the exact archive entry through the
+existing filesystem dependency. All focused and complete gates pass; the clean
+audit exits 1 for the same 15 findings with zero comparable regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
