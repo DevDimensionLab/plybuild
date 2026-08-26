@@ -2202,66 +2202,322 @@ assert_no_generated_outputs "$WORK/raw-hardlink-publication-failure" "raw public
 ok "post-parser publication failures remove JSON, reports, pending files, blockers, and hard links"
 
 printf 'T15 old and new baseline instruments reproduce with identical numeric debt\n'
-baseline_repo="$WORK/baseline-repository"
+old_effect_repo="$WORK/baseline-old-effect-repository"
+old_reproduction_repo="$WORK/baseline-old-reproduction-repository"
+old_structured_repo="$WORK/baseline-old-structured-repository"
+new_effect_repo="$WORK/baseline-new-effect-repository"
+new_reproduction_repo="$WORK/baseline-new-reproduction-repository"
+new_structured_repo="$WORK/baseline-new-structured-repository"
+baseline_drift_probe="$WORK/baseline-drift-probe"
 old_instrument="$WORK/baseline-old-instrument"
+old_effect_out="$WORK/baseline-old-effect-output"
 old_out="$WORK/baseline-old-output"
+new_effect_out="$WORK/baseline-new-effect-output"
 new_out="$WORK/baseline-new-output"
+old_effect_home="$WORK/baseline-old-effect-home"
+new_effect_home="$WORK/baseline-new-effect-home"
+old_reproduction_home="$WORK/baseline-old-reproduction-home"
+new_reproduction_home="$WORK/baseline-new-reproduction-home"
+reproduction_home_fixture="$HERE/../baseline/reproduction-home"
 migration="$HERE/../baseline/instrument-migration.json"
 repository_root="$(cd "$HERE/../.." && pwd)"
 old_source="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["old"]["instrument_source_commit"])' "$migration")"
 new_source="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["new"]["instrument_source_commit"])' "$migration")"
-git clone -q --shared --no-checkout "$repository_root" "$baseline_repo"
-git -C "$baseline_repo" checkout -q --detach 5635d50bd161a9a5aa81fc4332cc0c9d68885d08
-mkdir -p "$baseline_repo/.quality" "$old_instrument" "$old_out" "$new_out" \
-  "$WORK/baseline-old-gocache" "$WORK/baseline-new-gocache"
-cp "$HERE/../baseline/inventory" "$baseline_repo/.quality/inventory"
+baseline_commit=5635d50bd161a9a5aa81fc4332cc0c9d68885d08
+baseline_overlay_sha256=4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d
+baseline_gomodcache="$(go env GOMODCACHE)"
+[ -n "$baseline_gomodcache" ] && [ "${baseline_gomodcache#/}" != "$baseline_gomodcache" ] \
+  || fail "could not resolve the shared Go module cache before isolating baseline HOME"
+
+prepare_baseline_reproduction_repo() {
+  destination="$1"
+  git clone -q --shared --no-checkout "$repository_root" "$destination" || return 1
+  git -C "$destination" checkout -q --detach "$baseline_commit" || return 1
+  mkdir -p "$destination/.quality" || return 1
+  cp "$HERE/../baseline/inventory" "$destination/.quality/inventory"
+}
+
+prepare_baseline_reproduction_home() {
+  destination="$1"
+  mkdir -p "$destination" || return 1
+  cp -R "$reproduction_home_fixture/." "$destination" || return 1
+  python3 - "$migration" "$destination" <<'PY'
+import hashlib
+import json
+from pathlib import Path
+import sys
+
+metadata = json.load(open(sys.argv[1], encoding="utf-8"))["measured_source"]["reproduction_home"]
+root = Path(sys.argv[2]).resolve()
+relative = metadata["active_profile_path"]
+if not relative or Path(relative).is_absolute() or Path(relative).as_posix() != relative or ".." in Path(relative).parts:
+    raise SystemExit(1)
+active_profile = root / relative
+if metadata["active_profile_type"] != "directory" or not active_profile.is_dir() or active_profile.is_symlink():
+    raise SystemExit(1)
+marker = active_profile / ".fixture"
+if not marker.is_file() or marker.is_symlink():
+    raise SystemExit(1)
+if hashlib.sha256(marker.read_bytes()).hexdigest() != metadata["marker_sha256"]:
+    raise SystemExit(1)
+PY
+}
+
+assert_baseline_reproduction_input() {
+  identity_parser="$1"
+  identity_repo="$2"
+  python3 - "$identity_parser" "$identity_repo" "$baseline_commit" "$baseline_overlay_sha256" <<'PY'
+from pathlib import Path
+import sys
+
+source, repository, commit, overlay = sys.argv[1:]
+namespace = {"__name__": "quality_baseline_input_contract", "__file__": source}
+exec(compile(Path(source).read_text(encoding="utf-8"), source, "exec"), namespace)
+inventory, inventory_identity = namespace["inventory_snapshot"](repository, overlay)
+tree = namespace["tree_identity"](repository, commit, overlay)
+namespace["verify_inventory_identity"](repository, inventory_identity)
+if not tree["measurement_clean"] or tree["dirty_paths"] != [".quality/inventory"]:
+    raise SystemExit(1)
+PY
+}
+
+write_baseline_reproduction_effect_manifest() {
+  identity_parser="$1"
+  identity_repo="$2"
+  manifest_output="$3"
+  python3 - "$identity_parser" "$identity_repo" "$manifest_output" <<'PY'
+import hashlib
+import json
+import os
+from pathlib import Path
+import stat
+import sys
+
+source, repository_value, output = sys.argv[1:]
+namespace = {"__name__": "quality_baseline_effect_contract", "__file__": source}
+exec(compile(Path(source).read_text(encoding="utf-8"), source, "exec"), namespace)
+repository = Path(repository_value).resolve()
+effects = []
+for relative in namespace["measurement_dirty_paths"](repository):
+    path = repository / relative
+    if path.is_symlink():
+        target = os.fsencode(os.readlink(path))
+        effect = {
+            "path": relative,
+            "type": "symlink",
+            "target_sha256": hashlib.sha256(target).hexdigest(),
+            "relocatable_target_sha256": hashlib.sha256(
+                target.replace(os.fsencode(str(repository)), b"<BASELINE_REPOSITORY>")
+            ).hexdigest(),
+        }
+    elif path.is_file():
+        contents = path.read_bytes()
+        effect = {
+            "path": relative,
+            "type": "file",
+            "mode": stat.S_IMODE(path.stat().st_mode),
+            "sha256": hashlib.sha256(contents).hexdigest(),
+            "relocatable_sha256": hashlib.sha256(
+                contents.replace(os.fsencode(str(repository)), b"<BASELINE_REPOSITORY>")
+            ).hexdigest(),
+        }
+    elif path.exists():
+        effect = {"path": relative, "type": "other", "mode": stat.S_IMODE(path.stat().st_mode)}
+    else:
+        effect = {"path": relative, "type": "missing"}
+    effects.append(effect)
+Path(output).write_text(
+    json.dumps(effects, ensure_ascii=False, separators=(",", ":"), sort_keys=True) + "\n",
+    encoding="utf-8",
+)
+PY
+}
+
+compare_baseline_reproduction_effect_manifests() {
+  old_manifest="$1"
+  new_manifest="$2"
+  python3 - "$old_manifest" "$new_manifest" <<'PY'
+import json
+import sys
+
+old = json.load(open(sys.argv[1], encoding="utf-8"))
+new = json.load(open(sys.argv[2], encoding="utf-8"))
+if len(old) != len(new):
+    raise SystemExit(1)
+for old_effect, new_effect in zip(old, new):
+    for key in ("path", "type", "mode"):
+        if old_effect.get(key) != new_effect.get(key):
+            raise SystemExit(1)
+    if old_effect["type"] == "file":
+        if old_effect["relocatable_sha256"] != new_effect["relocatable_sha256"]:
+            raise SystemExit(1)
+    elif old_effect["type"] == "symlink":
+        if old_effect["relocatable_target_sha256"] != new_effect["relocatable_target_sha256"]:
+            raise SystemExit(1)
+PY
+}
+
+prepare_baseline_reproduction_repo "$old_effect_repo" \
+  || fail "could not prepare exact old baseline effect input"
+prepare_baseline_reproduction_repo "$old_reproduction_repo" \
+  || fail "could not prepare exact old baseline reproduction input"
+prepare_baseline_reproduction_repo "$old_structured_repo" \
+  || fail "could not prepare exact old baseline structured input"
+prepare_baseline_reproduction_repo "$new_effect_repo" \
+  || fail "could not prepare exact new baseline effect input"
+prepare_baseline_reproduction_repo "$new_reproduction_repo" \
+  || fail "could not prepare exact new baseline reproduction input"
+prepare_baseline_reproduction_repo "$new_structured_repo" \
+  || fail "could not prepare exact new baseline structured input"
+prepare_baseline_reproduction_repo "$baseline_drift_probe" \
+  || fail "could not prepare baseline source-drift probe"
+prepare_baseline_reproduction_home "$old_reproduction_home" \
+  || fail "could not prepare pinned old baseline HOME fixture"
+prepare_baseline_reproduction_home "$new_reproduction_home" \
+  || fail "could not prepare pinned new baseline HOME fixture"
+mkdir -p "$old_instrument" "$old_effect_out" "$old_out" "$new_effect_out" "$new_out" \
+  "$old_effect_home" "$new_effect_home" \
+  "$WORK/baseline-old-effect-gocache" "$WORK/baseline-old-gocache" \
+  "$WORK/baseline-new-effect-gocache" "$WORK/baseline-new-gocache"
 git -C "$repository_root" archive "$old_source" -- \
   .quality/tools .quality/baseline/manual-evidence.json .quality/baseline/scorecard.json \
   | tar -x -C "$old_instrument"
 
-LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off \
+assert_baseline_reproduction_input \
+  "$old_instrument/.quality/tools/scorecard.py" "$old_effect_repo" \
+  || fail "exact old baseline effect input was not accepted before audit execution"
+assert_baseline_reproduction_input \
+  "$old_instrument/.quality/tools/scorecard.py" "$old_reproduction_repo" \
+  || fail "exact old baseline reproduction input was not accepted before audit execution"
+assert_baseline_reproduction_input \
+  "$old_instrument/.quality/tools/scorecard.py" "$old_structured_repo" \
+  || fail "exact old baseline structured input was not accepted before measurement"
+assert_baseline_reproduction_input "$PARSER" "$new_effect_repo" \
+  || fail "exact new baseline effect input was not accepted before audit execution"
+assert_baseline_reproduction_input "$PARSER" "$new_reproduction_repo" \
+  || fail "exact new baseline reproduction input was not accepted before audit execution"
+assert_baseline_reproduction_input "$PARSER" "$new_structured_repo" \
+  || fail "exact new baseline structured input was not accepted before measurement"
+printf '\nT15 pre-existing baseline source drift\n' >> "$baseline_drift_probe/README.md"
+if assert_baseline_reproduction_input \
+  "$old_instrument/.quality/tools/scorecard.py" "$baseline_drift_probe" >/dev/null 2>&1; then
+  fail "pre-existing baseline source drift was accepted as test-generated output"
+fi
+write_baseline_reproduction_effect_manifest \
+  "$old_instrument/.quality/tools/scorecard.py" "$old_effect_repo" "$old_effect_out/effects-before.json" \
+  || fail "could not record old baseline effects before audit execution"
+write_baseline_reproduction_effect_manifest \
+  "$PARSER" "$new_effect_repo" "$new_effect_out/effects-before.json" \
+  || fail "could not record new baseline effects before audit execution"
+compare_baseline_reproduction_effect_manifests \
+  "$old_effect_out/effects-before.json" "$new_effect_out/effects-before.json" \
+  || fail "old and new baseline execution inputs differ before audit execution"
+
+LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off HOME="$old_effect_home" \
+  GOMODCACHE="$baseline_gomodcache" \
+  GOCACHE="$WORK/baseline-old-effect-gocache" \
+  bash "$old_instrument/.quality/tools/vendor/quality-audit.sh" \
+  "$old_effect_repo" --out "$old_effect_out" >/dev/null
+old_effect_rc=$?
+[ "$old_effect_rc" -eq 1 ] \
+  || fail "old baseline effect probe returned $old_effect_rc, expected 1"
+write_baseline_reproduction_effect_manifest \
+  "$old_instrument/.quality/tools/scorecard.py" "$old_effect_repo" "$old_effect_out/effects-after.json" \
+  || fail "could not record old test-generated baseline effects"
+cmp -s "$old_effect_out/effects-before.json" "$old_effect_out/effects-after.json" \
+  && fail "historical baseline audit produced no test-generated output for the focused contract"
+
+LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off HOME="$new_effect_home" \
+  GOMODCACHE="$baseline_gomodcache" \
+  GOCACHE="$WORK/baseline-new-effect-gocache" \
+  bash "$VENDOR" "$new_effect_repo" --out "$new_effect_out" >/dev/null
+new_effect_rc=$?
+[ "$new_effect_rc" -eq 1 ] \
+  || fail "new baseline effect probe returned $new_effect_rc, expected 1"
+write_baseline_reproduction_effect_manifest \
+  "$PARSER" "$new_effect_repo" "$new_effect_out/effects-after.json" \
+  || fail "could not record new test-generated baseline effects"
+cmp -s "$new_effect_out/effects-before.json" "$new_effect_out/effects-after.json" \
+  && fail "new historical baseline audit produced no test-generated output for the focused contract"
+compare_baseline_reproduction_effect_manifests \
+  "$old_effect_out/effects-after.json" "$new_effect_out/effects-after.json" \
+  || fail "old and new baseline effect probes changed different paths or relocation-independent bytes"
+tail -n +2 "$old_effect_out/scorecard.md" > "$old_effect_out/reproduced-raw.body"
+tail -n +2 "$new_effect_out/scorecard.md" > "$new_effect_out/reproduced-raw.body"
+cmp -s "$old_effect_out/reproduced-raw.body" "$new_effect_out/reproduced-raw.body" \
+  || fail "old and new baseline effect-probe reports differ"
+
+write_baseline_reproduction_effect_manifest \
+  "$old_instrument/.quality/tools/scorecard.py" "$old_reproduction_repo" "$old_out/effects-before.json" \
+  || fail "could not record old reproduction effects before audit execution"
+write_baseline_reproduction_effect_manifest \
+  "$PARSER" "$new_reproduction_repo" "$new_out/effects-before.json" \
+  || fail "could not record new reproduction effects before audit execution"
+compare_baseline_reproduction_effect_manifests \
+  "$old_out/effects-before.json" "$new_out/effects-before.json" \
+  || fail "old and new baseline reproduction inputs differ before audit execution"
+
+LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off HOME="$old_reproduction_home" \
+  GOMODCACHE="$baseline_gomodcache" \
   GOCACHE="$WORK/baseline-old-gocache" \
   bash "$old_instrument/.quality/tools/vendor/quality-audit.sh" \
-  "$baseline_repo" --out "$old_out" >/dev/null
+  "$old_reproduction_repo" --out "$old_out" >/dev/null
 old_upstream_rc=$?
 [ "$old_upstream_rc" -eq 1 ] \
   || fail "old upstream baseline returned $old_upstream_rc, expected 1"
-LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off \
+write_baseline_reproduction_effect_manifest \
+  "$old_instrument/.quality/tools/scorecard.py" "$old_reproduction_repo" "$old_out/effects-after.json" \
+  || fail "could not record old reproduction effects after audit execution"
+LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off HOME="$old_reproduction_home" \
+  GOMODCACHE="$baseline_gomodcache" \
   GOCACHE="$WORK/baseline-old-gocache" \
   python3 "$old_instrument/.quality/tools/scorecard.py" \
   --report "$old_out/scorecard.md" \
   --output "$old_out/scorecard.json" \
-  --repo "$baseline_repo" \
-  --commit 5635d50bd161a9a5aa81fc4332cc0c9d68885d08 \
+  --repo "$old_structured_repo" \
+  --commit "$baseline_commit" \
   --upstream "$old_instrument/.quality/tools/vendor/quality-audit.sh" \
   --upstream-exit "$old_upstream_rc" \
   --manual-evidence "$old_instrument/.quality/baseline/manual-evidence.json" \
-  --inventory-overlay-sha256 4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d \
+  --inventory-overlay-sha256 "$baseline_overlay_sha256" \
   >/dev/null
 old_structured_rc=$?
 [ "$old_structured_rc" -eq 1 ] \
   || fail "old structured baseline returned $old_structured_rc, expected 1"
+assert_baseline_reproduction_input \
+  "$old_instrument/.quality/tools/scorecard.py" "$old_structured_repo" \
+  || fail "old structured measurement changed its exact baseline input"
 
-LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off \
+LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off HOME="$new_reproduction_home" \
+  GOMODCACHE="$baseline_gomodcache" \
   GOCACHE="$WORK/baseline-new-gocache" \
-  bash "$VENDOR" "$baseline_repo" --out "$new_out" >/dev/null
+  bash "$VENDOR" "$new_reproduction_repo" --out "$new_out" >/dev/null
 new_upstream_rc=$?
 [ "$new_upstream_rc" -eq 1 ] \
   || fail "new upstream baseline returned $new_upstream_rc, expected 1"
-LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off \
+write_baseline_reproduction_effect_manifest \
+  "$PARSER" "$new_reproduction_repo" "$new_out/effects-after.json" \
+  || fail "could not record new reproduction effects after audit execution"
+compare_baseline_reproduction_effect_manifests \
+  "$old_out/effects-after.json" "$new_out/effects-after.json" \
+  || fail "old and new baseline reproductions changed different paths or relocation-independent bytes"
+LC_ALL=C LANG=C CGO_ENABLED=0 GOENV=off GOWORK=off HOME="$new_reproduction_home" \
+  GOMODCACHE="$baseline_gomodcache" \
   GOCACHE="$WORK/baseline-new-gocache" python3 "$PARSER" \
   --report "$new_out/scorecard.md" \
   --output "$new_out/scorecard.json" \
-  --repo "$baseline_repo" \
-  --commit 5635d50bd161a9a5aa81fc4332cc0c9d68885d08 \
+  --repo "$new_structured_repo" \
+  --commit "$baseline_commit" \
   --upstream "$VENDOR" \
   --upstream-exit "$new_upstream_rc" \
   --manual-evidence "$HERE/../baseline/manual-evidence.json" \
-  --inventory-overlay-sha256 4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d \
+  --inventory-overlay-sha256 "$baseline_overlay_sha256" \
   >/dev/null
 new_structured_rc=$?
 [ "$new_structured_rc" -eq 1 ] \
   || fail "new structured baseline returned $new_structured_rc, expected 1"
+assert_baseline_reproduction_input "$PARSER" "$new_structured_repo" \
+  || fail "new structured measurement changed its exact baseline input"
 
 tail -n +2 "$old_out/scorecard.md" > "$old_out/reproduced-raw.body"
 tail -n +2 "$new_out/scorecard.md" > "$new_out/reproduced-raw.body"
@@ -2315,6 +2571,7 @@ scope_new = {"denominators": new["denominators"], "criteria": new["criteria"]}
 old_numeric = numeric_leaves(scope_old)
 new_numeric = numeric_leaves(scope_new)
 comparison = manifest["comparison"]
+measured_source = manifest["measured_source"]
 assert old["criteria"] == new["criteria"] and comparison["criteria_equal"] is True
 assert old["denominators"] == new["denominators"] and comparison["denominators_equal"] is True
 assert old_numeric == new_numeric
@@ -2328,6 +2585,9 @@ assert file_digest(new_manual) == manifest["new"]["manual_evidence_sha256"]
 assert file_digest(raw_body) == comparison["raw_report_body_sha256"]
 for label, scorecard, source in (("old", old, old_source), ("new", new, new_source)):
     assert source == manifest[label]["instrument_source_commit"]
+    assert scorecard["repository"]["commit"] == measured_source["commit"]
+    assert scorecard["repository"]["tree"]["commit_tree"] == measured_source["commit_tree"]
+    assert scorecard["repository"]["tree"]["inventory_overlay_sha256"] == measured_source["inventory_overlay_sha256"]
     assert all(scorecard["tool"].get(key) == value for key, value in manifest[label]["tool"].items())
     parser_bytes = subprocess.check_output([
         "git", "-C", repository, "show", source + ":.quality/tools/scorecard.py",

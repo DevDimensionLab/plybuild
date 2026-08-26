@@ -51,14 +51,25 @@ from the repository root with:
 
 ```sh
 quality_root="$PWD/.quality"
-baseline_repo="$(mktemp -d /private/tmp/ply-baseline.XXXXXX)"
+execution_repo="$(mktemp -d /private/tmp/ply-baseline-execution.XXXXXX)"
+structured_repo="$(mktemp -d /private/tmp/ply-baseline-structured.XXXXXX)"
+reproduction_home="$(mktemp -d /private/tmp/ply-baseline-home.XXXXXX)"
 audit_out="$(mktemp -d /private/tmp/ply-baseline-audit.XXXXXX)"
 audit_gocache="$(mktemp -d /private/tmp/ply-baseline-gocache.XXXXXX)"
-git clone --shared --no-checkout "$PWD" "$baseline_repo"
-git -C "$baseline_repo" checkout --detach 5635d50bd161a9a5aa81fc4332cc0c9d68885d08
-mkdir -p "$baseline_repo/.quality"
-cp "$quality_root/baseline/inventory" "$baseline_repo/.quality/inventory"
-export CGO_ENABLED=0 GOENV=off GOWORK=off GOCACHE="$audit_gocache"
+baseline_gomodcache="$(go env GOMODCACHE)"
+for baseline_repo in "$execution_repo" "$structured_repo"; do
+  git clone --shared --no-checkout "$PWD" "$baseline_repo"
+  git -C "$baseline_repo" checkout --detach 5635d50bd161a9a5aa81fc4332cc0c9d68885d08
+  mkdir -p "$baseline_repo/.quality"
+  cp "$quality_root/baseline/inventory" "$baseline_repo/.quality/inventory"
+done
+cp -R "$quality_root/baseline/reproduction-home/." "$reproduction_home"
+active_profile="$reproduction_home/.co-pilot/profiles/.active_profile"
+test -d "$active_profile" && test ! -L "$active_profile"
+test "$(shasum -a 256 "$active_profile/.fixture" | awk '{print $1}')" = \
+  cb95f24c35d3987f8aba51231aade19580ffe9242324804fcad2ccff350d1c9a
+export CGO_ENABLED=0 GOENV=off GOWORK=off GOCACHE="$audit_gocache" \
+  GOMODCACHE="$baseline_gomodcache"
 
 test "$(go version)" = "$(python3 -c \
   'import json,sys; print(json.load(open(sys.argv[1]))["tool"]["go_build"]["version"])' \
@@ -73,18 +84,20 @@ for key in GOOS GOARCH CGO_ENABLED GOFLAGS \
   test "$(go env "$key")" = "$expected"
 done
 
-if LC_ALL=C LANG=C bash "$quality_root/tools/vendor/quality-audit.sh" \
-  "$baseline_repo" --out "$audit_out"; then
+if LC_ALL=C LANG=C HOME="$reproduction_home" \
+  bash "$quality_root/tools/vendor/quality-audit.sh" \
+  "$execution_repo" --out "$audit_out"; then
   upstream_rc=0
 else
   upstream_rc=$?
 fi
 test "$upstream_rc" -eq 1
 
-if LC_ALL=C LANG=C python3 "$quality_root/tools/scorecard.py" \
+if LC_ALL=C LANG=C HOME="$reproduction_home" \
+  python3 "$quality_root/tools/scorecard.py" \
   --report "$audit_out/scorecard.md" \
   --output "$audit_out/scorecard.json" \
-  --repo "$baseline_repo" \
+  --repo "$structured_repo" \
   --commit 5635d50bd161a9a5aa81fc4332cc0c9d68885d08 \
   --upstream "$quality_root/tools/vendor/quality-audit.sh" \
   --upstream-exit 1 \
@@ -109,13 +122,28 @@ beyond the declared inventory overlay, or either failed `cmp` invalidates the
 reproduction. Raw-report line 1 is excluded from the comparison because upstream
 embeds the checkout's absolute path there; every measured line remains covered.
 
+The directory-shaped legacy active-profile fixture is part of the pinned
+reproduction environment recorded in `instrument-migration.json`; it reproduces
+the stored historical test failure without changing the measured source. The
+vendored audit runs in an execution replica because the exact historical tests
+can create ignored files there. The structured parser reads an independently
+verified pristine replica of the same commit and inventory overlay, so those
+test effects cannot be mistaken for source present before measurement.
+
 The audit meta-test's T15 control is the reproducible old/new migration recipe.
 It extracts the old instrument and its schema-1 evidence from the recorded Git
-commit, runs old and new instruments over the same `5635d50` checkout and
-inventory overlay under the exact build context above, reproduces both
-scorecard hashes byte-for-byte, compares normalized raw output, verifies both
-instrument identities, compares every denominator and criterion object, counts
-and compares all 228 numeric debt leaves, and asserts Q3.9 remains PASS:
+commit. Before using the pinned reproduction environment, it runs old and new
+vendored audits in separate clean-HOME replicas, records every changed path and
+raw byte digest, requires their path, mode, and relocation-independent content
+digests to match, and proves pre-existing source drift is rejected. Only the
+two disposable checkout roots are normalized for that comparison; the raw
+digests remain in the retained manifests. It then runs old and new instruments
+over equivalent `5635d50`
+execution and structured replicas under the exact build context above,
+reproduces both scorecard hashes byte-for-byte, compares normalized raw output,
+verifies both instrument identities, compares every denominator and criterion
+object, counts and compares all 228 numeric debt leaves, and asserts Q3.9
+remains PASS:
 
 ```sh
 LC_ALL=C LANG=C bash .quality/tools/test-quality-audit.sh

@@ -3,7 +3,12 @@
   "measured_source": {
     "commit": "5635d50bd161a9a5aa81fc4332cc0c9d68885d08",
     "commit_tree": "ad3b300e55a9ff08936c09fdbeb875a35bbcf376",
-    "inventory_overlay_sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d"
+    "inventory_overlay_sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d",
+    "reproduction_home": {
+      "active_profile_path": ".co-pilot/profiles/.active_profile",
+      "active_profile_type": "directory",
+      "marker_sha256": "cb95f24c35d3987f8aba51231aade19580ffe9242324804fcad2ccff350d1c9a"
+    }
   },
   "old": {
     "instrument_source_commit": "8d2cc113241ad58ed21efda5c5a219f2d9ef24b6",
