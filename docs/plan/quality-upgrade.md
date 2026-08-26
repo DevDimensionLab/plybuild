@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `1bce06f`.
+Last measured checkpoint: 2026-08-26, commit `0b96f10`.
 
 ## Objective
 
@@ -657,6 +657,26 @@ P3.63 clean checkpoint (product `1bce06f`):
 | Packages with tests | 19 / 25 | The contracts stay in an already-tested package. |
 | Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
 | Direct external effects outside adapters | 8 / 30 | The three private plugin-diagrams selectors now carry the exact system runner without giving their one Structurizr caller composition the unused process-dependency `os.Stdout` capability. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 81 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
+P3.64 clean checkpoint (product `0b96f10`):
+
+| Signal | P3.64 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 388 | Five existing focused browser-launcher selector, platform, error, and public-composition contracts were strengthened; the recording double now preserves the complete caller-owned dependency. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The focused contracts record in memory, launch no external program, touch no network, and write no repository fixture. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in an already-tested package. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 7 / 29 | The private browser-launcher selector now carries the exact system runner without giving public `OpenBrowser` the unused process-dependency `os.Stdout` capability. |
 | Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
 | Executable mutation harnesses | 0 / 8 | P5 remains queued. |
 | Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
@@ -3511,6 +3531,62 @@ SHA-256
 `5cf5c2c171749e42dee5dfea6f5986b09dce96d00510560f4e625c7a6e4e3643`;
 the measured commit tree is `ebd29be397a8fbdda257ad94e3c8863fbaae84fa`.
 
+Move 64 changes only the private browser-launcher production
+process-capability selection. `systemBrowserLauncherDependencies()` now
+carries the exact existing `process.SystemRunner()` instead of
+`process.System()`, so its complete process dependency has a nil `Stdout`. Its
+separate exact `runtime.GOOS` selection, `openBrowser`, exported `OpenBrowser`,
+its caller, command fields, return path, and every other process caller remain
+unchanged.
+
+The exact asynchronous `xdg-open` Linux request, `rundll32` Windows request
+with ordered `url.dll,FileProtocolHandler` and URL arguments, and `open` macOS
+request are unchanged. Each arbitrary URL byte, empty directory, nil stdin,
+stdout, and stderr command streams, `Start: true`, direct process start error,
+one exact request attempt, absence of another request, exact unsupported-
+platform error without a process attempt, safe zero dependency, and every
+public behavior remain intact. There is no fallback, retry, wrapping, logging,
+synchronous execution, cleanup, or global-state change.
+
+Five strengthened focused top-level contracts keep the suite at 388 tests.
+They prove exact system-runner identity with nil process-dependency stdout,
+unchanged exact runtime platform selection, complete platform requests, URL
+arguments, stream identities, asynchronous attempts, direct errors, safe zero
+behavior, complete caller-owned dependency preservation, non-empty population,
+absence of another request, and the exported wrapper's exact composition. The
+recording double preserves the complete caller-owned browser dependency. The
+contracts launch no external program, touch no network, and write no repository
+fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, regenerated exact Q1.3 improves from 8 of 30 to 7 of 29, Q1.4 stays 7 of
+8, exact Q2.1 stays 0 of 8, and Q3.4 stays zero phrases across 81 Markdown
+files. The unchanged import-aware scanner no longer follows `os.Stdout`
+provenance through the private browser-launcher runner-only production
+dependency. Clock and server remain absent, so Q1.3 remains the single non-
+comparable ratchet. The scanner, inventory, baseline, and audit apparatus are
+unchanged.
+
+The clean move-64 gate passes focused browser-launcher, process, and relevant
+caller tests; API/CLI and fresh subprocess compatibility; build, complete and
+uncached tests, race, vet, pinned lint, all 62 launcher controls, Make and all
+production-script meta-contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. One complete preflight
+invocation hit the established nested partial-raw-log signal-fixture flake; its
+immediate complete unchanged rerun passed all 62 controls. Compatibility used
+the exact pinned `apidiff` path after the first shell environment lacked that
+executable on `PATH`. The clean full audit exits 1 for the same 15 documented
+findings, never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+non-comparable ratchet, and zero dirty paths.
+
+Product commit: `0b96f10`.
+
+The authoritative clean full audit from `0b96f10` has structured scorecard
+SHA-256
+`f817974080ab4b1641155e24e7d2b7f4d0fddf1ae7c06d7c4922320a70f5a842`;
+the measured commit tree is `8a7180aa20082d504a47ce8bdb4a12d405c9bf50`.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -3566,14 +3642,22 @@ the exact runner-only system dependency while retaining its separate exact
 selectors now also use the exact runner-only system dependency while retaining
 their exact export, Graphviz, open, write, error, discovery, and iteration
 behavior and the Graphviz selector's complete exact filesystem dependency.
-Continue with only the private browser-launcher production selector: make its
-complete process dependency use `process.SystemRunner()` while preserving
-runtime platform selection, the exact asynchronous commands and URLs for
-Linux, Windows, and macOS, direct start errors, unsupported-platform behavior,
-safe zero behavior, and public `OpenBrowser` behavior. Leave server behavior,
-Maven's completed full dependency and stdout selection, `process.System()`,
-profile, shell Run and Git, plugin diagrams, Unzip, clock/server work,
-inventory, scanner, and P4-P8 unchanged.
+The private browser-launcher selector now also uses the exact runner-only system
+dependency while retaining runtime platform selection, the exact asynchronous
+commands and URLs for Linux, Windows, and macOS, direct start errors,
+unsupported-platform behavior, safe zero behavior, and public `OpenBrowser`
+behavior. Continue with only shell Unzip's destination-file provenance: add one
+narrow filesystem helper that delegates to the complete existing
+`FileSystem.OpenFile` operation but returns the existing `File` interface, and
+use it only for that destination open. Preserve the exact path, flags, mode,
+returned file and error, archive and entry opens, path validation, directories,
+copy and close calls, order, ignored and direct errors, partial filenames,
+traversal, exported `Unzip`, the existing complete `FileSystem` interface and
+system implementation, exported `filesystem.OpenFile`, public `file.OpenFile`,
+and every public behavior. Leave server behavior, Maven's completed dependency
+and stdout selection, process callers, browser, profile, shell Run and Git,
+plugin diagrams, other Unzip operations, clock/server work, inventory, scanner,
+audit apparatus, and P4-P8 unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
