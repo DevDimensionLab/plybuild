@@ -10,8 +10,14 @@ import (
 
 const versionsPlugin = "org.codehaus.mojo:versions-maven-plugin:2.8.1"
 
+func systemRunOnDependencies() process.Dependencies {
+	dependencies := process.SystemRunner()
+	dependencies.Stdout = process.SystemStdout()
+	return dependencies
+}
+
 func RunOn(cmd string, args ...string) func(repository Repository, project config.Project) error {
-	return runOn(process.System(), cmd, args...)
+	return runOn(systemRunOnDependencies(), cmd, args...)
 }
 
 func runOn(dependencies process.Dependencies, cmd string, args ...string) func(repository Repository, project config.Project) error {

@@ -3,11 +3,15 @@ package process
 import (
 	"bytes"
 	"errors"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -52,6 +56,68 @@ func TestSystemSelectsExactStandardOutput(t *testing.T) {
 
 	if dependencies.Stdout != os.Stdout {
 		t.Fatalf("system standard output is %T, want exact os.Stdout", dependencies.Stdout)
+	}
+	standardOutput := SystemStdout()
+	if standardOutput == nil {
+		t.Fatal("system standard-output composition is empty")
+	}
+	if standardOutput != dependencies.Stdout || standardOutput != os.Stdout {
+		t.Fatalf("system standard-output composition is %T, want exact existing os.Stdout identity", standardOutput)
+	}
+	assertSystemStdoutComposition(t)
+}
+
+func assertSystemStdoutComposition(t *testing.T) {
+	t.Helper()
+	_, testFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("could not locate process standard-output contract")
+	}
+	fileSet := token.NewFileSet()
+	parsed, err := parser.ParseFile(fileSet, filepath.Join(filepath.Dir(testFile), "process.go"), nil, 0)
+	if err != nil {
+		t.Fatalf("parse process adapter source: %v", err)
+	}
+	var function *ast.FuncDecl
+	for _, declaration := range parsed.Decls {
+		candidate, ok := declaration.(*ast.FuncDecl)
+		if ok && candidate.Recv == nil && candidate.Name.Name == "SystemStdout" {
+			function = candidate
+			break
+		}
+	}
+	if function == nil || function.Type.Params == nil || len(function.Type.Params.List) != 0 ||
+		function.Type.Results == nil || len(function.Type.Results.List) != 1 ||
+		function.Body == nil || len(function.Body.List) != 1 {
+		t.Fatal("SystemStdout signature or single-return body changed")
+	}
+	result, resultOK := function.Type.Results.List[0].Type.(*ast.SelectorExpr)
+	var resultPackage *ast.Ident
+	resultPackageOK := false
+	if resultOK {
+		resultPackage, resultPackageOK = result.X.(*ast.Ident)
+	}
+	if !resultOK || !resultPackageOK || resultPackage.Name != "io" || result.Sel.Name != "Writer" {
+		t.Fatal("SystemStdout no longer returns io.Writer")
+	}
+	returned, ok := function.Body.List[0].(*ast.ReturnStmt)
+	if !ok || len(returned.Results) != 1 {
+		t.Fatal("SystemStdout no longer directly returns one existing composition")
+	}
+	stdoutCall, ok := returned.Results[0].(*ast.CallExpr)
+	if !ok || len(stdoutCall.Args) != 2 {
+		t.Fatal("SystemStdout no longer returns Stdout with the complete dependency and enabled selection")
+	}
+	stdout, stdoutOK := stdoutCall.Fun.(*ast.Ident)
+	systemCall, systemCallOK := stdoutCall.Args[0].(*ast.CallExpr)
+	enabled, enabledOK := stdoutCall.Args[1].(*ast.Ident)
+	if !stdoutOK || stdout.Name != "Stdout" || !systemCallOK || len(systemCall.Args) != 0 ||
+		!enabledOK || enabled.Name != "true" {
+		t.Fatal("SystemStdout no longer delegates to the exact Stdout(System(), true) composition")
+	}
+	system, systemOK := systemCall.Fun.(*ast.Ident)
+	if !systemOK || system.Name != "System" {
+		t.Fatal("SystemStdout no longer selects the existing complete system dependency")
 	}
 }
 

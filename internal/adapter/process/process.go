@@ -45,6 +45,11 @@ func Stdout(dependencies Dependencies, enabled bool) io.Writer {
 	return dependencies.Stdout
 }
 
+// SystemStdout returns the production standard-output writer.
+func SystemStdout() io.Writer {
+	return Stdout(System(), true)
+}
+
 // System returns the production dependency that executes an operating-system
 // process.
 func System() Dependencies {
