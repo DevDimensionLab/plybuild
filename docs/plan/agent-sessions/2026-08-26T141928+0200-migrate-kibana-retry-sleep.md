@@ -1,13 +1,13 @@
 # Agent Session: Migrate Kibana Retry Sleep
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T141928+0200-migrate-kibana-retry-sleep`
 Created: `2026-08-26T14:19:28+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `6a88ef2bfa7dc1aa912ccac6ef78ab2f1d0974813be9c512290087ff79982116`
 Previous: [2026-08-26T134455+0200-migrate-spring-archive-clock.md](2026-08-26T134455+0200-migrate-spring-archive-clock.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T145252+0200-migrate-web-server-effects.md](2026-08-26T145252+0200-migrate-web-server-effects.md)
+Outcome: Product commit `4c0d97a` added exact safe-zero/system duration sleep to the complete clock adapter and migrated only public Kibana `POST`'s fixed retry sleep. The clean checkpoint has 401 tests, improves exact Q1.3 from 3/27 to 2/27, and has zero comparable ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

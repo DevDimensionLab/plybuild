@@ -3898,9 +3898,68 @@ The authoritative clean full audit from `91422eb` has structured scorecard
 SHA-256
 `60bc1cf4994c63444d9b841f1dfd971d99283b21aad02cf3a859305c41fc62c4`;
 the measured commit tree is `eedf149499ead042a28352a4c35b9d827f41a58f`.
-Continue P4 with the one remaining direct clock site: migrate only Kibana
-public `POST`'s exact fixed retry sleep through the clock adapter, leaving the
-two web server sites for a later coherent P4 move.
+
+Move 2 extends only the existing clock adapter with exact duration sleep and
+migrates only Kibana public `POST`'s fixed retry delay. `clock.Sleep` passes the
+exact requested `time.Duration` to its injected sleeper once; its zero
+dependency is a deterministic no-op. The private system clock now implements
+both existing exact `Now` and exact `Sleep`, with production sleep delegating
+its argument directly to `time.Sleep` once and performing no fallback,
+normalization, clamping, rounding, conversion, caching, logging, cleanup,
+retry, or global-state mutation.
+
+Private `postDependencies` owns the complete existing `internalPOST` operation
+and the complete clock dependency, and its production selector chooses exactly
+`internalPOST` plus `clock.System()`. Public `POST` composes only that selector
+and the private dependency-taking operation. One first request still happens
+before hit-list selection. A non-empty first hit list returns the exact first
+error and response with no print, sleep, or retry. An empty first hit list,
+including with a non-nil first error, still prints `sleep and retry`, sleeps
+once for exactly 15 seconds, retries the same complete request once, and
+returns the exact second error and response. The first result is discarded and
+there is no third request. `internalPOST`, `internalPost`, request execution,
+parsing, response bodies, callers, and public APIs are unchanged.
+
+Seven net new focused contracts bring the suite to 401 tests across 20 of 26
+packages. They prove safe zero sleep, arbitrary exact duration delivery, direct
+system delegation, complete caller-owned dependency delivery and preservation,
+first-request ordering, both hit-selection branches, retry despite a first
+error, exact print/sleep/retry order and duration, exact returned identities,
+at most two requests, non-empty recorded populations, public composition, and
+absence of another operation. They perform no real sleep, launch no external
+program, touch no network, and write no repository fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 26, Q1.2
+stays zero, regenerated exact Q1.3 improves from 3 of 27 to 2 of 27, Q1.4
+stays 7 of 8, exact Q2.1 stays 0 of 8, and Q3.4 stays zero phrases across 86
+Markdown files. Both remaining Q1.3 violations are the unchanged server calls
+in `pkg/webservice/api.go`; the declared server adapter alone remains absent.
+The scanner, inventory, baseline, and audit apparatus are unchanged.
+
+The clean move-2 gate passes focused clock, Kibana, and relevant caller tests;
+API/CLI and fresh subprocess compatibility; build, complete and uncached tests,
+race, vet, pinned lint, all 62 launcher controls, Make and all production-script
+meta-contracts, all four host acceptance flows, the repaired 15-control audit
+meta-suite, and empty-HOME count-2. One preflight launcher signal-fixture run
+failed at its documented partial-raw-log race; its immediate unchanged complete
+rerun passed all 62 controls and the full preflight. The clean full audit exits
+1 for 14 documented non-passing criteria, never 2, with L0 8 of 8, five
+improved, two held, zero regressed, one non-comparable ratchet, and zero dirty
+paths.
+
+Product commit: `4c0d97a`.
+
+The authoritative clean full audit from `4c0d97a` has structured scorecard
+SHA-256
+`be0142a87d2ccb5ff1a3d9414ba9d376843f7ab8b92e5ba0f75f512913e0b0db`;
+the measured commit tree is `2bff9b81b137130ba026772a37526bbb24595c32`.
+The focused seven-criterion scorecard SHA-256 is
+`10cf5c8891a57a0ac883b9b685afd8ad719d14adffadf5dcfa5ff0db6631e63a`.
+Continue P4 with the one remaining direct-effect group: introduce the declared
+server adapter and migrate only webservice's exact `ListenAndServe` and
+`Shutdown` calls, leaving server construction, address, handlers, timeout,
+logging, callers, and public behavior exact.
 
 ### P5 - Build L2 Mutation Evidence
 
