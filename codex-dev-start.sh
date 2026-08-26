@@ -1055,125 +1055,136 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-26T184054+0200-close-loopback-seam
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T184054+0200-close-loopback-seam.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T180111+0200-cover-context-package.md
+#|SESSION_ID=2026-08-26T191251+0200-record-p4-manual-l1-evidence
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T191251+0200-record-p4-manual-l1-evidence.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-26T184054+0200-close-loopback-seam.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P4 with one focused interactive-server seam move. Change the existing
-#|private HTTP server from all-interface binding to the inventory-declared exact
-#|IPv4 loopback address while preserving port 7999, server identity, startup and
-#|shutdown composition, handlers, logging, browser behavior, callers, and every
-#|other observable semantic. Add the non-executable P4 seam driver and its exact
-#|meta-contract so all eight declared seams have executable swap coverage.
+#|Finish P4 only if an exhaustive current-project review truthfully supports the
+#|three remaining manual L1 rows. Record exact non-empty schema-2 receipts for
+#|Q1.6 default dependency doubles, Q1.7 partial-failure content assertions, and
+#|Q1.9 executable empty-population assertions, then prove them with the clean
+#|authoritative audit. Do not infer PASS from a sample or manufacture evidence.
 #|
 #|# Authorized Roadmap
 #|
-#|P3 is complete, P4 is active, and P5-P8 remain queued in the machine-readable
-#|block in `docs/plan/quality-upgrade.md`. The launcher must remain NEXT until all
-#|authorized checkpoints finish. P4.9 product commit `746a5ab` added complete
-#|deterministic `pkg/context` characterization, improved Q1.1 from 1/27 to 0/27,
-#|and held exact Q1.3 at zero of 27. P4 is still incomplete because Q1.4 is 7/8
-#|and the manual L1 evidence rows remain unrecorded.
+#|P3 is complete, P4 is active only because Q1.6, Q1.7, and Q1.9 have no
+#|current-project receipts, and P5-P8 remain queued in the machine-readable block
+#|in `docs/plan/quality-upgrade.md`. The launcher must remain NEXT until every
+#|authorized checkpoint finishes. P4.10 product commit `c382caa` changed only the
+#|private interactive server address to `127.0.0.1:7999`, added four focused
+#|contracts and the eighth regular non-executable seam driver, and improved Q1.4
+#|from 7/8 to 8/8. Every automated P4 exit now passes.
 #|
-#|This mission authorizes only the exact package-level interactive server address
-#|change in `pkg/webservice/api.go`, focused contracts for that address and its
-#|existing start/stop selection, the new non-executable
-#|`scripts/mutate-interactive-build` P4 seam driver, its
-#|`scripts/test-mutate-interactive-build` meta-contract, and exact existing
-#|command/webservice caller behavior reached by that driver. It does not authorize
-#|making the driver executable, implementing a P5 mutation harness or T1-T10,
-#|changing `.quality/inventory`, adding another seam or adapter, changing the
-#|port, endpoint URI, browser launch, server lifecycle, goroutines, callbacks,
-#|handlers, logging, errors, globals, public APIs, command behavior, acceptance
-#|scripts, audit apparatus, baseline, manual evidence, or any other package or
-#|roadmap phase.
+#|This evidence-only mission authorizes exhaustive read-only source and contract
+#|review; external temporary scripts, reports, and one commit-bound schema-2
+#|manual-evidence document; exact Q1.6/Q1.7/Q1.9 receipt validation; clean focused
+#|and full audits using that explicit external document; and tracked continuity
+#|records of the commands, populations, exclusions, canonical receipt digests,
+#|evidence-document hash, scorecard identity, and result. It does not authorize
+#|production or test changes, a checked-in or worktree-local manual-evidence file,
+#|validator or scanner changes, `.quality/inventory` or baseline changes, an
+#|executable P5 mutation harness, T1-T10 work, another seam, acceptance changes,
+#|P6-P8 work, or a PASS claim that the complete reviewed population does not
+#|support.
 #|
 #|# Measurements At Start
 #|
-#|Clean product commit `746a5ab` has 449 tests across all 27 packages and
-#|`pkg/context` has 97.6% statement coverage. Q0.6 has 29 guarded safe-writer
-#|sites, 23 write and 6 copy, zero skipped tests, and zero unsafe direct test
-#|writes. Q1.1 is 0/27, Q1.2 is zero, exact Q1.3 is 0/27 with all five declared
-#|adapters valid, Q1.4 is 7/8, exact Q2.1 is 0/8, and Q3.4 is zero phrases across
-#|93 Markdown files.
+#|Clean product commit `c382caa` has 453 tests across all 27 packages. Q0.6 has
+#|29 guarded safe-writer sites, 23 write and 6 copy, zero skipped tests, and zero
+#|unsafe direct test writes. Q0.8 is reciprocal for all 13 production scripts.
+#|Q1.1 is 0/27, Q1.2 is zero, exact Q1.3 is 0/27 with all five declared adapters
+#|valid, Q1.4 is 8/8, exact Q2.1 is 0/8, and Q3.4 is zero phrases across 94
+#|Markdown files.
 #|
 #|The authoritative clean full audit exits 1 for 13 documented non-passing
-#|criteria, never 2, with L0 8/8, six improved, two held, zero regressed, zero
-#|non-comparable ratchets, and zero dirty paths. Its scorecard SHA-256 is
-#|`48a58e58abf53254ec318de93266a683f60e6ac4a194e02b187c76c170a823b2`.
-#|The repaired T15 proof passes all 15 controls and reproduces the exact stored
-#|debt and instrument identities.
+#|criteria, never 2, with L0 8/8, L1 six PASS and three UNMEASURABLE, six improved
+#|ratchets, two held, zero regressed, zero non-comparable, and zero dirty paths.
+#|Its scorecard SHA-256 is
+#|`b4c7ddc7d163a833663f8b7cd876e94aadf4c1a875b945252a46441e354c6b72`;
+#|the measured product tree is `6e44c014c73fb8c99c6c90f20a64a41f314fce43`.
+#|The repaired T15 proof still passes all 15 controls and reproduces the exact
+#|stored debt and instrument identities.
 #|
 #|# Role And Boundaries
 #|
-#|Work autonomously in this worktree on `codex/upgrade-quality`. Make one focused
-#|implementation commit for this single loopback seam move, then make the normal
-#|separate continuity-only commit. Do not push, merge, publish, distribute,
-#|remove the worktree, stash inherited changes, revert user work, or run
-#|destructive Git commands.
+#|Work autonomously in this worktree on `codex/upgrade-quality`. This checkpoint
+#|must not create a product implementation commit: the receipts bind the exact
+#|clean current continuity commit and are supplied from outside the repository.
+#|After the measurement, make only the normal continuity commit that records the
+#|result and prepares the next authorized session. Do not push, merge, publish,
+#|distribute, remove the worktree, stash inherited changes, revert user work, or
+#|run destructive Git commands.
 #|
-#|Keep Go 1.18 and `/bin/bash` 3.2 compatibility. Preserve the exact private
-#|package-level `*http.Server` identity and the exact port constant 7999, changing
-#|only its `Addr` from `:7999` to `127.0.0.1:7999`. Preserve the exact selector,
-#|adapter, four handler paths and order, listen attempt, nil/non-nil error log,
-#|shutdown background context, five-second timeout, deferred cancellation,
-#|ignored shutdown error, endpoint URI, browser request, callback blocking,
-#|public signatures, and caller control flow. Do not open a socket in tests.
+#|The measured-tree implementation counts tracked, untracked, and ignored
+#|repository bytes. Keep the evidence document and every generated report or
+#|helper outside the worktree; never create `.quality/manual-evidence.json`.
+#|Derive the exact current commit, commit tree, clean status digest, inventory
+#|object, and complete instrument object from a clean audit of the current HEAD.
+#|Use schema version 2, include only Q1.6/Q1.7/Q1.9 receipts, and compute each
+#|`evidence_sha256` from canonical UTF-8 JSON with sorted keys, no whitespace, and
+#|`ensure_ascii=False`. Pass the document explicitly with `--manual-evidence`.
 #|
-#|Follow the established P4 seam-driver pattern: the driver is a regular
-#|non-symlink file, remains non-executable, contains the exact inventory label
-#|`8. interactive server binds only to loopback` once, declares no `mutate` or
-#|`mutate2` operation, and runs a non-empty exact set of relevant command,
-#|webservice, server-adapter, API, and callback contracts with isolated Go cache
-#|and temporary state. Its meta-test must prove the driver shape, exact label,
-#|absence of premature mutation operations, successful JSON test execution, and
-#|every named test run. Do not weaken an existing exact server contract merely to
-#|accept both broad and loopback addresses.
+#|For Q1.6, enumerate the complete in-scope dependency-struct population and
+#|prove every dependency has a default and argument recorder and that each struct
+#|is passed whole rather than reconstructed field by field. For Q1.7, enumerate
+#|all commands or operations that can report per-item or partial failures and
+#|prove every such failure has a content assertion and none is exit-only. For
+#|Q1.9, enumerate the complete in-scope test collection-iteration population and
+#|prove every iterated collection has an executable assertion that fails when its
+#|population is empty. State exact inclusion and exclusion rules before counting;
+#|run the named contracts behind every claim. If any denominator is empty or any
+#|item fails its required truth, record the exact blocker, keep that row
+#|UNMEASURABLE, and leave P4 active.
 #|
 #|# Required Reading
 #|
-#|Before editing, confirm branch, HEAD, clean status, reciprocal archive links,
-#|launcher `--check`, and exact product commit `746a5ab`. Read the rolling
+#|Before measuring, confirm branch, HEAD, clean status, reciprocal archive links,
+#|launcher `--check`, and exact product parent `c382caa`. Read the rolling
 #|handover, this archive, the complete P4 entry and checkpoint gate, both design
-#|documents, `.quality/inventory`, complete `pkg/webservice/api.go` and
-#|`pkg/webservice/init.go`, `cmd/build.go`, every interactive-server caller, the
-#|server adapter, all webservice server/browser/API contracts, all seven existing
-#|P4 seam drivers and meta-contracts, representative exact-address,
-#|pointer-identity, callback, non-empty, and process-state restoration contracts,
-#|the import-aware scanner, API/CLI contracts, and the T15 repair and baseline
-#|reproduction README.
+#|documents, `.quality/README.md`, `.quality/inventory`, complete audit wrapper,
+#|complete schema-2 parser and manual-evidence negative meta-test, baseline manual
+#|example and reproduction README, T15 repair, all dependency structs and their
+#|default/recording contracts, all command and operation partial-failure paths and
+#|their assertions, and every contract that iterates or validates a non-empty
+#|recorded collection. Read the API/CLI and launcher contracts needed by the final
+#|gate. Do not rely only on names or text search where Go structure or runtime
+#|execution is needed to establish the population.
 #|
 #|# Three Moves
 #|
-#|1. Start with a focused failing exact-address contract, then change only the
-#|   private server address to exact IPv4 loopback and update the existing exact
-#|   start/stop selection assertions. Add the non-executable interactive-build
-#|   seam driver and meta-contract with a non-empty exact test population. Do not
-#|   launch the real server or browser.
-#|2. Run focused webservice, API, server-adapter, command, and driver meta-tests;
-#|   inspect coverage and confirm only the authorized production, test, and two
-#|   script files changed. Regenerate focused Q0.6/Q0.8/Q1.1/Q1.2/Q1.3/Q1.4/
-#|   Q2.1/Q3.4 without changing scanner or inventory. Expect Q1.4 to improve from
-#|   7/8 to 8/8, Q1.1 and exact Q1.3 to hold at zero, and the script/meta-test
-#|   populations to remain reciprocal.
-#|3. Run API/CLI and subprocess compatibility; launcher and Make contracts;
-#|   complete tests, race, vet, and pinned lint; all four host acceptance flows;
-#|   the 15-control audit meta-suite; full clean audit; and empty-HOME count-2.
-#|   The full audit may exit 1 for documented findings but never 2, and no
-#|   comparable ratchet may regress.
+#|1. Run a clean audit without manual evidence to capture the exact current
+#|   repository, tree, status, inventory, instrument, denominator, and automated
+#|   criterion identities. Define explicit exhaustive scope rules for Q1.6,
+#|   Q1.7, and Q1.9; enumerate every subject; inspect its production and test
+#|   structure; and run a non-empty exact contract population. Record exact
+#|   counts, commands, exclusions, and any failing item.
+#|2. Only if all three complete populations satisfy their required truth, create
+#|   an external schema-2 document bound to the clean current HEAD, validate its
+#|   canonical receipt digests, run focused Q1.6/Q1.7/Q1.9 audit, and then run the
+#|   full authoritative audit with the same explicit document. Require all three
+#|   rows to become PASS, every automated result to hold, audit exit never 2, and
+#|   zero dirty paths. Record the document and scorecard SHA-256 identities. If a
+#|   claim cannot be proved, do not change code in this mission; hand off the
+#|   exact smallest truthful remediation instead.
+#|3. Run API/CLI compatibility, launcher and Make contracts, complete tests,
+#|   race, vet, pinned lint, all four host acceptance flows, the 15-control audit
+#|   meta-suite, and empty-HOME count-2 in proportion to the evidence checkpoint.
+#|   Confirm the worktree stayed byte-clean throughout measurement. Mark P4
+#|   complete and advance the roadmap to the first P5 subject only if every P4
+#|   exit, including all nine L1 rows, is valid and non-empty.
 #|
 #|# Automatic Handoff
 #|
-#|Before this agent session ends, finish and commit the coherent loopback seam
-#|move or record an exact resumable state. Rewrite the rolling handover, record
-#|the measured P4 result, answer this archive, create exactly one reciprocally
-#|linked NEXT archive for the next coherent authorized roadmap move, replace only
-#|the launcher's mutable regions, run launcher and handoff contracts, and make
-#|the separate `docs: prepare next agent session` commit. Do not launch a real
-#|successor, push, merge, publish, distribute, stash, revert, or remove the
+#|Before this agent session ends, finish the coherent evidence checkpoint or
+#|record an exact resumable blocker. Rewrite the rolling handover, record the
+#|measured P4 result, answer this archive, create exactly one reciprocally linked
+#|NEXT archive for the next coherent authorized roadmap move, replace only the
+#|launcher's mutable regions, run launcher and handoff contracts, and make the
+#|single continuity-only `docs: prepare next agent session` commit. Do not launch
+#|a real successor, push, merge, publish, distribute, stash, revert, or remove the
 #|worktree. COMPLETE remains invalid while P4 or P5-P8 is unfinished.
 # CODEX_MUTABLE_PROMPT_END

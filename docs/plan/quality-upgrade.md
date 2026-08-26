@@ -4365,9 +4365,56 @@ It exits 1 for 13 documented findings, never 2, with L0 8 of 8, six
 improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
 paths. The focused seven-criterion scorecard SHA-256 is
 `f937c9be84913156be11dfa9a937565959cfcde6ba1b9389bea7b2f337e0d7c6`.
-Continue P4 with the eighth declared interactive-server loopback seam and its
-non-executable P4 seam driver; P4 remains active until all seam and manual L1
-evidence is valid.
+Move 10 changes only the private package-level interactive HTTP server address
+from `:7999` to exact IPv4 loopback `127.0.0.1:7999`. The port constant, exact
+`*http.Server` identity, selector and adapter, four handler paths and order,
+single listen attempt, nil/non-nil error logging, background shutdown context,
+five-second timeout, deferred cancellation, ignored shutdown error, endpoint
+URIs, browser request, callback blocking, public signatures, and command caller
+flow remain unchanged. No contract opens a socket, launches a browser, or
+starts the real server.
+
+Four focused contracts bring the suite to 453 tests across all 27 packages.
+They prove the exact address and unchanged start/stop selection, endpoint URIs,
+server/browser/callback composition, standalone and project blocking flow,
+interactive build option delivery and validation order, and interactive
+upgrade guards and callback selection. The new regular non-executable
+`scripts/mutate-interactive-build` P4 seam driver contains the eighth inventory
+label exactly once, declares no mutation operation, and runs 21 named command,
+webservice, server-adapter, API, and callback contracts. Its reciprocal
+meta-contract proves the driver shape, label, absence of premature mutation,
+successful JSON execution, non-empty population, and every named test run.
+
+Q0.6 remains 29 guarded safe-writer sites, 23 write and 6 copy, with zero
+skipped tests and zero unsafe direct test writes. Q0.8 remains reciprocal for
+all 13 production scripts. Q1.1 remains 0 of 27, Q1.2 remains zero, exact Q1.3
+remains 0 of 27 with all five adapter paths valid, Q1.4 improves from 7 of 8 to
+8 of 8, exact Q2.1 remains 0 of 8, and Q3.4 remains zero phrases across 94
+Markdown files. The scanner, inventory, baseline, audit apparatus, executable
+mutation harness population, and acceptance behavior are unchanged.
+
+The clean move-10 gate passes focused coverage and shuffled tests; API/CLI,
+surface, and fresh subprocess compatibility; build, complete tests, race, vet,
+pinned lint, `make preflight`, `make test`, all 62 launcher controls, Make and
+all production-script contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. Unchanged launcher tests
+intermittently hit the documented partial-raw-log signal-fixture race during
+two broader invocations; unchanged standalone and complete Make reruns passed
+all controls.
+
+Product commit: `c382caa`.
+
+The authoritative clean full audit from `c382caa` has structured scorecard
+SHA-256
+`b4c7ddc7d163a833663f8b7cd876e94aadf4c1a875b945252a46441e354c6b72`;
+the measured commit tree is `6e44c014c73fb8c99c6c90f20a64a41f314fce43`.
+It exits 1 for 13 documented findings, never 2, with L0 8 of 8, six
+improved ratchets, two held, zero regressed, zero non-comparable, and zero dirty
+paths. The focused eight-criterion scorecard SHA-256 is
+`b63afac3b5917dd45d74e19ace4fbf588fe3c871356db4abf1d0c428dea6f703`.
+Continue P4 by reviewing and recording exact non-empty, commit-bound manual L1
+receipts for Q1.6, Q1.7, and Q1.9. P4 remains active until all three rows are
+truthfully valid; P5-P8 remain queued.
 
 ### P5 - Build L2 Mutation Evidence
 
