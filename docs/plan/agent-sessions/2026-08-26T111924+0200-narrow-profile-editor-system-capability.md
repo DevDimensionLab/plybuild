@@ -1,13 +1,16 @@
 # Agent Session: Narrow Profile Editor System Capability
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T111924+0200-narrow-profile-editor-system-capability`
 Created: `2026-08-26T11:19:24+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `120d496bfbbd83ec455b6de007e916ecc7b6ebb971566f4ed563ab8b239e0163`
 Previous: [2026-08-26T104816+0200-narrow-shell-git-system-capabilities.md](2026-08-26T104816+0200-narrow-shell-git-system-capabilities.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T114525+0200-narrow-plugin-diagrams-system-capabilities.md](2026-08-26T114525+0200-narrow-plugin-diagrams-system-capabilities.md)
+Outcome: Product commit `b0d324a` gives the private profile-editor selector the
+exact runner-only system dependency while preserving separate terminal streams.
+All focused and complete gates pass; exact Q1.3 improves to 9/31 and the clean
+audit exits 1 for the same 15 findings with zero comparable regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

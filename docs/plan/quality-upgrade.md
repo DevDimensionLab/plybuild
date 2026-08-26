@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `5b678ab`.
+Last measured checkpoint: 2026-08-26, commit `b0d324a`.
 
 ## Objective
 
@@ -623,6 +623,26 @@ P3.61 clean checkpoint (product `5b678ab`):
 | Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 | Claim phrases in 79 Markdown files | 0 | Q3.4 remains held. |
+| Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
+
+P3.62 clean checkpoint (product `b0d324a`):
+
+| Signal | P3.62 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 388 | Four existing focused profile-editor selector, request, stream, and error contracts were strengthened. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Unsafe direct test writes | 0 | The focused contracts record in memory, launch no external program, touch no network, and write no repository fixture. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites. |
+| Packages with tests | 19 / 25 | The contracts stay in an already-tested package. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 9 / 31 | The private profile-editor selector now carries the exact system runner without inheriting the unused process-dependency `os.Stdout` capability. |
+| Declared seam swap tests | 7 / 8 | This move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Production scripts without meta-tests | 0 / 12 | Q0.8 remains improved. |
+| Reachable manual L1/L2 rows | 6 / 6 | Evidence reachability is unchanged. |
+| Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
+| Claim phrases in 80 Markdown files | 0 | Q3.4 remains held. |
 | Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 is the single not-comparable selected criterion because the declared clock and server adapters remain absent. |
 
 ## Checkpoints
@@ -3356,6 +3376,58 @@ SHA-256
 `0632a71b59dc2793c2cf308d0514569b698cdead3f02fef83a87cbe029fccfff`;
 the measured commit tree is `010970642433199467db2fa3b6eaaf7c9ab7bece`.
 
+Move 62 changes only the private profile-editor production process-capability
+selection. `systemProfileEditorDependencies()` now returns the exact existing
+`process.SystemRunner()` instead of `process.System()`, so its complete process
+dependency has a nil `Stdout`. Its separate command-stream fields remain exact
+`os.Stdin` and `os.Stdout`. `runProfileEditor`, profile commands and
+configuration, Maven, shell Run and Git, plugin diagrams, browser, Unzip, every
+other caller, and both process adapter selectors remain unchanged.
+
+The arbitrary editor executable, single exact config-path argument, empty
+directory, dependency-selected stdin and stdout, nil stderr, synchronous
+execution, exact one-request population, direct runner error, safe zero
+dependency, `EDITOR` selection, `vim` default, Cobra registration and flags,
+later profile operations and errors, and every public path remain unchanged.
+There is no fallback, retry, wrapping, additional logging, execution, cleanup,
+or global-state change.
+
+Four strengthened focused top-level contracts keep the suite at 388 tests.
+They prove exact system-runner identity with nil process-dependency stdout,
+separate exact production terminal streams, complete arbitrary editor and
+config-path requests and injected stream identities, direct errors, safe zero
+behavior, complete caller-owned dependency preservation, a non-empty
+one-request population, and absence of another request. The recording boundary
+launches no external program, touches no network, and writes no repository
+fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 stays 6 of 25, Q1.2 stays
+zero, regenerated exact Q1.3 improves from 10 of 32 to 9 of 31, Q1.4 stays 7 of
+8, exact Q2.1 stays 0 of 8, and Q3.4 stays zero phrases across 80 Markdown
+files. The unchanged import-aware scanner no longer follows `os.Stdout`
+provenance through the private profile-editor runner-only production dependency.
+Clock and server remain absent, so Q1.3 remains the single non-comparable
+ratchet. The scanner, inventory, baseline, and audit apparatus are unchanged.
+
+The clean move-62 gate passes focused profile/process and all relevant process
+caller tests; API/CLI and fresh subprocess compatibility; build, complete and
+uncached tests, race, vet, pinned lint, all 62 launcher controls, Make and all
+production-script meta-contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. The first complete Make
+attempt hit the established nested partial-raw-log signal-fixture flake; its
+immediate standalone launcher run and the final complete `make test` rerun
+passed all 62 controls. The clean full audit exits 1 for the same 15 documented
+findings, never 2, with L0 8 of 8, five improved, two held, zero regressed, one
+non-comparable ratchet, and zero dirty paths.
+
+Product commit: `b0d324a`.
+
+The authoritative clean full audit from `b0d324a` has structured scorecard
+SHA-256
+`e9d5e45b477cde1791a0e73b0d5cf1332036fec371ccf29f4d9b0827a838ab46`;
+the measured commit tree is `86b97ce8e9cbdbc2259a21a28e87c3678552c06d`.
+
 With the process, HTTP, and filesystem boundaries green, continue one coherent
 flow at a time using `.quality/inventory`:
 
@@ -3405,14 +3477,16 @@ Unzip's archive-entry reader selection now uses the complete filesystem
 dependency without changing any other archive operation. Public shell `Run`
 and the four public shell Git execution wrappers now use the process adapter's
 exact runner-only system dependency without inheriting its unused
-standard-output capability. Continue with only the existing private
-profile-editor production selector: make its complete process dependency use
-`process.SystemRunner()` while preserving its separate exact `os.Stdin` and
-`os.Stdout` command streams, editor and config-path selection, command fields,
-error behavior, safe zero dependency, public behavior, and every completed
-effect. Leave Maven's completed full dependency and stdout selection,
-`process.System()`, shell Run and Git, plugin diagrams, browser launching,
-Unzip, clock/server work, inventory, scanner, and P4-P8 unchanged.
+standard-output capability. The private profile-editor selector now also uses
+the exact runner-only system dependency while retaining its separate exact
+`os.Stdin` and `os.Stdout` command streams. Continue with only the three existing
+private plugin-diagrams production selectors: make their complete process
+dependencies use `process.SystemRunner()` while preserving their exact export,
+Graphviz, open, write, error, discovery, and iteration behavior and the
+Graphviz selector's complete exact filesystem dependency. Leave Maven's
+completed full dependency and stdout selection, `process.System()`, profile,
+shell Run and Git, browser launching, Unzip, clock/server work, inventory,
+scanner, and P4-P8 unchanged.
 
 Exit: process exits outside `main` reach zero, migrated call sites disappear
 from Q1.3, their seam swaps are killed, and CLI/API contracts stay compatible.
