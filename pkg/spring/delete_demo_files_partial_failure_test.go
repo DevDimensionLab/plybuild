@@ -96,6 +96,39 @@ func TestDeleteDemoFilesReportsDeletionFailuresExactlyAndContinues(t *testing.T)
 	})
 }
 
+func TestDeleteDemoFilesReportsDiscoveryFailureExactlyAndContinuesToFixedDemoFiles(t *testing.T) {
+	root := copyDeleteDemoFixture(t, fstest.MapFS{
+		"HELP.md":  &fstest.MapFile{Data: []byte("help\n"), Mode: 0o644},
+		"mvnw":     &fstest.MapFile{Data: []byte("wrapper\n"), Mode: 0o755},
+		"mvnw.cmd": &fstest.MapFile{Data: []byte("wrapper\n"), Mode: 0o644},
+	})
+	hook := captureDeleteDemoWarnings(t)
+	sentinel := errors.New("complete DeleteDemoFiles discovery failure")
+	type discoveryCall struct {
+		fileSuffix string
+		directory  string
+	}
+	var calls []discoveryCall
+	findFirst := func(fileSuffix string, directory string) (string, error) {
+		calls = append(calls, discoveryCall{fileSuffix: fileSuffix, directory: directory})
+		return "", sentinel
+	}
+
+	deleteDemoFiles(findFirst, root, config.ProjectConfiguration{
+		MavenProjectConfiguration: config.MavenProjectConfiguration{Language: "kotlin"},
+	})
+
+	wantCalls := []discoveryCall{{
+		fileSuffix: ".kt",
+		directory:  filepath.Join(root, "src", "test", "kotlin"),
+	}}
+	if !reflect.DeepEqual(calls, wantCalls) {
+		t.Fatalf("DeleteDemoFiles discovery calls were %#v, want exact lookup %#v", calls, wantCalls)
+	}
+	assertDeleteDemoWarnings(t, hook, []string{"Unable to find testfile, fileSuffix=.kt"})
+	assertDeleteDemoFilesAbsent(t, root, []string{"HELP.md", "mvnw", "mvnw.cmd"})
+}
+
 func copyDeleteDemoFixture(t *testing.T, fixture fstest.MapFS) string {
 	t.Helper()
 	if len(fixture) == 0 {

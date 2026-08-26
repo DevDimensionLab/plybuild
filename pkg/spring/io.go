@@ -218,13 +218,17 @@ func archivePathWithDependencies(dependencies archivePathDependencies) (path str
 }
 
 func DeleteDemoFiles(targetDir string, orderConfig config.ProjectConfiguration) {
+	deleteDemoFiles(file.FindFirst, targetDir, orderConfig)
+}
+
+func deleteDemoFiles(findFirst func(string, string) (string, error), targetDir string, orderConfig config.ProjectConfiguration) {
 
 	var fileSuffix = ".kt"
 	if orderConfig.Language == "java" {
 		fileSuffix = ".java"
 	}
 
-	testFile, err := file.FindFirst(fileSuffix, file.Path("%s/src/test/%s", targetDir, orderConfig.Language))
+	testFile, err := findFirst(fileSuffix, file.Path("%s/src/test/%s", targetDir, orderConfig.Language))
 	if err != nil {
 		log.Warnf("Unable to find testfile, fileSuffix=" + fileSuffix)
 	} else {
