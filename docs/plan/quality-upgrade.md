@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-26, commit `91422eb`.
+Last measured checkpoint: 2026-08-26, commit `9601d29`.
 
 ## Objective
 
@@ -744,6 +744,40 @@ P4.1 clean checkpoint (product `91422eb`):
 | Baseline numeric debt leaves | 228 | The measurement instrument is unchanged. |
 | Claim phrases in 85 Markdown files | 0 | Q3.4 remains held. |
 | Complete comparable ratchets | 5 improved, 2 held, 0 regressed | Q1.3 remains the single not-comparable selected criterion because the declared server adapter is absent. |
+
+P4.2 clean checkpoint (product `4c0d97a`):
+
+| Signal | P4.2 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 401 | Seven exact clock-sleep and Kibana retry contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites, with zero unsafe direct test writes. |
+| Packages with tests | 20 / 26 | The six packages without test files are unchanged. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 2 / 27 | Kibana retry sleep crosses the clock adapter; only the two webservice server calls remain. |
+| Declared seam swap tests | 7 / 8 | The focused retry move adds no inventory seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Claim phrases in 86 Markdown files | 0 | Q3.4 remains held. |
+| Full audit | exit 1, 14 non-passing | The audit never exits 2 and records zero dirty paths. |
+| Complete ratchets | 5 improved, 2 held, 0 regressed, 1 non-comparable | Q1.3 remains non-comparable only because the server adapter is absent. |
+
+P4.3 clean checkpoint (product `9601d29`):
+
+| Signal | P4.3 | Interpretation |
+| --- | ---: | --- |
+| Absolute L0 PASS | 8 / 8 | Every absolute gate remains closed. |
+| Test functions | 414 | Thirteen exact server-adapter and webservice start/stop contracts were added. |
+| Skipped tests | 0 | Q0.6 remains improved. |
+| Guarded safe-writer sites | 26 | The population holds at 21 write and 5 copy sites, with zero unsafe direct test writes. |
+| Packages with tests | 21 / 27 | The new server adapter is tested; six packages still have no test files. |
+| Process-exiting calls outside `main` | 0 | Q1.2 stays closed. |
+| Direct external effects outside adapters | 0 / 27 | All five declared adapter paths are present and valid. |
+| Declared seam swap tests | 7 / 8 | The server effect move does not claim the separate loopback-address seam. |
+| Executable mutation harnesses | 0 / 8 | P5 remains queued. |
+| Claim phrases in 87 Markdown files | 0 | Q3.4 remains held. |
+| Full audit | exit 1, 13 non-passing | One prior Q1.3 finding closes; the audit never exits 2 and records zero dirty paths. |
+| Complete ratchets | 6 improved, 2 held, 0 regressed, 0 non-comparable | Every selected ratchet is now comparable. |
 
 ## Checkpoints
 
@@ -3956,10 +3990,61 @@ SHA-256
 the measured commit tree is `2bff9b81b137130ba026772a37526bbb24595c32`.
 The focused seven-criterion scorecard SHA-256 is
 `10cf5c8891a57a0ac883b9b685afd8ad719d14adffadf5dcfa5ff0db6631e63a`.
-Continue P4 with the one remaining direct-effect group: introduce the declared
-server adapter and migrate only webservice's exact `ListenAndServe` and
-`Shutdown` calls, leaving server construction, address, handlers, timeout,
-logging, callers, and public behavior exact.
+
+Move 3 adds the declared `internal/adapter/server` boundary and migrates only
+webservice's exact `ListenAndServe` and `Shutdown` effects. The unchanged
+package-level `*http.Server` still has address `:7999`; the same four handler
+paths and callbacks register in the same order before one listen attempt. A
+non-nil listen error still reaches `log.Print` exactly once, nil prints
+nothing, and stop still derives one context from `context.Background()` with
+exactly five seconds, defers cancellation, attempts one shutdown, and ignores
+its exact error.
+
+The adapter's production operations call the corresponding method once on the
+exact caller-selected server and return its exact error. Safe-zero dependencies
+select no server, perform no network operation, and return deterministic nil.
+Private start and stop compositions retain complete caller-owned operation,
+server-selector, handler, logger, background, and timeout dependencies. The
+server selector is dereferenced only inside the declared adapter, preserving
+the exact global identity while allowing the unchanged import-aware scanner to
+recognize the boundary.
+
+Thirteen focused contracts bring the suite to 414 tests across 21 of 27
+packages. They record exact server and context identities, direct system
+delegation, complete dependency preservation, handler/listen and
+background/timeout/shutdown/cancel order, nil/non-nil logging, ignored shutdown
+errors, safe-zero behavior, public composition, non-empty populations, and the
+absence of an unrelated operation. They open no socket, make no request,
+perform no wait, launch no program, mutate no production server, and write no
+repository fixture.
+
+Q0.6 holds at 26 guarded safe-writer sites, 21 write and 5 copy, with zero
+skipped tests and zero unsafe direct test writes. Q1.1 is 6 of 27, Q1.2 is
+zero, exact Q1.3 improves from 2 of 27 to 0 of 27 with all five adapter paths
+valid, Q1.4 stays 7 of 8, exact Q2.1 stays 0 of 8, and Q3.4 is zero phrases
+across 87 Markdown files. The scanner, inventory, baseline, audit apparatus,
+server construction, and address policy are unchanged.
+
+The clean move-3 gate passes focused server/webservice and caller tests;
+API/CLI and fresh subprocess compatibility; build, complete tests, race, vet,
+pinned lint, `make test`, complete preflight, all 62 launcher controls, Make
+and production-script contracts, all four host acceptance flows, the repaired
+15-control audit meta-suite, and empty-HOME count-2. An initial preflight
+invocation used the wrong tool variable names before the correctly pinned
+complete rerun passed. The clean full audit exits 1 for 13 documented
+non-passing criteria, never 2, with L0 8 of 8, six improved, two held, zero
+regressed, zero non-comparable ratchets, and zero dirty paths.
+
+Product commit: `9601d29`.
+
+The authoritative clean full audit from `9601d29` has structured scorecard
+SHA-256
+`010923f3718d99723c99c76a6b541669cb7f99d7a4a8eb119044705be005cdfa`;
+the measured commit tree is `fd78ef577b886a423d2964f4352503d2aac8992b`.
+The focused seven-criterion scorecard SHA-256 is
+`d52e2d34017dac46134a4eacc2fca628e4e39bed995995ab7837217796ca65ed`.
+Continue P4 by reducing the remaining untested logic-package population,
+beginning with one test-only characterization move for `pkg/sorting`.
 
 ### P5 - Build L2 Mutation Evidence
 

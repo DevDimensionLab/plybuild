@@ -1,13 +1,13 @@
 # Agent Session: Migrate Web Server Effects
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-26T145252+0200-migrate-web-server-effects`
 Created: `2026-08-26T14:52:52+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `58f61de9e370f4904361e44146cc016d27e54b0f27752631faada84d87fdcaac`
 Previous: [2026-08-26T141928+0200-migrate-kibana-retry-sleep.md](2026-08-26T141928+0200-migrate-kibana-retry-sleep.md)
-Next: none
-Outcome: pending
+Next: [2026-08-26T153936+0200-cover-sorting-package.md](2026-08-26T153936+0200-cover-sorting-package.md)
+Outcome: Product `9601d29` added the declared server boundary and exact webservice start/stop recording contracts; exact Q1.3 measured 0/27 and the clean full audit exited 1 for 13 documented findings with zero ratchet regressions.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
