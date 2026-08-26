@@ -1,15 +1,511 @@
 #!/usr/bin/env bash
-# P3 seam-test driver only. This file is deliberately non-executable and does
-# not implement the later maven-sorting mutation harness.
-# 2. Maven command keeps executable before arguments
-# 4. Maven metadata keeps username before password
 
 set -euo pipefail
 export LC_ALL=C LANG=C GOENV=off GOWORK=off
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 go_bin=${GO:-go}
+python_bin=${PYTHON3:-python3}
+tmp_base=${TMPDIR:-/tmp}
+tmp_base=${tmp_base%/}
+keep_work=${MUTATION_MAVEN_SORTING_KEEP_WORK:-0}
+meta_test=${MUTATION_MAVEN_SORTING_META_TEST:-0}
+meta_fault=${MUTATION_MAVEN_SORTING_META_FAULT:-}
+requested_work=${MUTATION_MAVEN_SORTING_WORK_ROOT:-}
+work_root=
 
-cd "$repo_root"
-"$go_bin" test -json ./pkg/maven -count=1 \
-	-run '^(TestMavenCommandKeepsExecutableBeforeArguments|TestMavenProcessDependenciesDefaultToNoProcess|TestRecordedMavenCommandsRejectEmptyPopulation|TestMavenMetadataKeepsUsernameBeforePasswordAndParsesResponse|TestMavenMetadataWithoutAuthSelectsAnonymousRequest|TestMavenMetadataReturnsDependencyErrorAfterCompleteDelivery|TestMavenMetadataDependenciesDefaultToNoRequest|TestRecordedMavenMetadataRequestsRejectEmptyPopulation)$'
+fail() {
+	printf 'mutate-maven-sorting: %s\n' "$*" >&2
+	exit 1
+}
+
+cleanup() {
+	if [[ -n ${work_root:-} && -d $work_root && $keep_work != 1 ]]; then
+		rm -rf "$work_root"
+	fi
+}
+trap cleanup EXIT HUP INT TERM
+
+[[ -f ${BASH_SOURCE[0]} && ! -L ${BASH_SOURCE[0]} && -x ${BASH_SOURCE[0]} ]] ||
+	fail 'harness must be a regular executable file'
+[[ $meta_test == 0 || $meta_test == 1 ]] || fail 'invalid meta-test selector'
+[[ $keep_work == 0 || $keep_work == 1 ]] || fail 'invalid keep-work selector'
+if [[ -n $meta_fault && $meta_test != 1 ]]; then
+	fail 'meta fault requires MUTATION_MAVEN_SORTING_META_TEST=1'
+fi
+case $meta_fault in
+''|empty-manifest|duplicate-manifest|out-of-scope|zero-replacement|multiple-replacement|empty-selection|broken-control|unexercised|false-accounting|survivor-unclassified|repository-local-artifacts|nondeterministic) ;;
+*) fail "unknown meta fault: $meta_fault" ;;
+esac
+
+go_bin=$(command -v "$go_bin") || fail 'go executable is unavailable'
+python_bin=$(command -v "$python_bin") || fail 'python3 executable is unavailable'
+[[ -f $go_bin && -x $go_bin ]] || fail 'go executable is not a regular executable file'
+[[ -f $python_bin && -x $python_bin ]] || fail 'python3 executable is not a regular executable file'
+
+git_root=$(git -C "$repo_root" rev-parse --show-toplevel 2>/dev/null) ||
+	fail 'repository root is not a Git worktree'
+[[ $git_root == "$repo_root" ]] || fail 'harness repository root does not match the Git root'
+[[ -z $(git -C "$repo_root" status --porcelain=v1 -uall) ]] ||
+	fail 'source repository is not clean'
+[[ -z $(git -C "$repo_root" status --porcelain=v1 --ignored -uall) ]] ||
+	fail 'source repository has ordinary or ignored artifacts'
+
+if [[ $meta_fault == repository-local-artifacts ]]; then
+	requested_work="$repo_root/.mutation-local-artifacts-meta"
+fi
+
+if [[ -n $requested_work ]]; then
+	work_root=$requested_work
+	"$python_bin" - "$repo_root" "$work_root" <<'PY' ||
+import os
+import sys
+
+repo, candidate = (os.path.realpath(value) for value in sys.argv[1:])
+try:
+    inside = os.path.commonpath((repo, candidate)) == repo
+except ValueError:
+    inside = False
+if inside:
+    print("mutation work root must be outside the repository", file=sys.stderr)
+    raise SystemExit(1)
+PY
+		fail 'repository-local artifacts are forbidden'
+	[[ ! -e $work_root && ! -L $work_root ]] || fail 'requested work root already exists'
+	mkdir -p "$work_root" || fail 'could not create requested external work root'
+else
+	work_root=$(mktemp -d "$tmp_base/ply-mutate-maven-sorting.XXXXXX") ||
+		fail 'could not create external mutation work root'
+fi
+
+"$python_bin" - "$repo_root" "$work_root" <<'PY' || fail 'mutation work root is not external'
+import os
+import sys
+
+repo, candidate = (os.path.realpath(value) for value in sys.argv[1:])
+try:
+    inside = os.path.commonpath((repo, candidate)) == repo
+except ValueError:
+    inside = False
+if inside:
+    raise SystemExit(1)
+PY
+
+mutation_ids=()
+mutation_paths=()
+mutation_searches=()
+mutation_replacements=()
+mutation_packages=()
+mutation_tests=()
+mutation_classifications=()
+
+mutate() {
+	[[ $# -eq 7 ]] || fail 'internal mutation declaration has the wrong field count'
+	mutation_ids+=("$1")
+	mutation_paths+=("$2")
+	mutation_searches+=("$3")
+	mutation_replacements+=("$4")
+	mutation_packages+=("$5")
+	mutation_tests+=("$6")
+	mutation_classifications+=("$7")
+}
+
+declare_manifest() {
+# 2. Maven command keeps executable before arguments
+mutate "maven-command-executable-argument-order" "pkg/maven/command.go" $'\t\t\tName:   cmd,\n\t\t\tArgs:   args,' $'\t\t\tName:   strings.Join(args, " "),\n\t\t\tArgs:   []string{cmd},' "./pkg/maven" "TestMavenCommandKeepsExecutableBeforeArguments" ""
+# 4. Maven metadata keeps username before password
+mutate "maven-metadata-username-password-order" "pkg/maven/query.go" $'\t\t\tUsername: repo.Auth.Username,\n\t\t\tPassword: repo.Auth.Password,' $'\t\t\tUsername: repo.Auth.Password,\n\t\t\tPassword: repo.Auth.Username,' "./pkg/maven" "TestMavenMetadataKeepsUsernameBeforePasswordAndParsesResponse" ""
+mutate "maven-metadata-coordinate-path-order" "pkg/maven/query.go" $'\t\tstrings.ReplaceAll(groupID, ".", "/"),\n\t\tstrings.ReplaceAll(artifactId, ".", "/"))' $'\t\tstrings.ReplaceAll(artifactId, ".", "/"),\n\t\tstrings.ReplaceAll(groupID, ".", "/"))' "./pkg/maven" "TestMavenMetadataKeepsUsernameBeforePasswordAndParsesResponse" ""
+mutate "maven-metadata-authentication-gate" "pkg/maven/query.go" "if repo.Auth != nil {" "if repo.Auth == nil {" "./pkg/maven" "TestMavenMetadataWithoutAuthSelectsAnonymousRequest" ""
+mutate "maven-metadata-error-gate" "pkg/maven/query.go" $'\tif err != nil {\n\t\treturn metaData, err\n\t}' $'\tif err == nil {\n\t\treturn metaData, err\n\t}' "./pkg/maven" "TestMavenMetadataReturnsDependencyErrorAfterCompleteDelivery" ""
+mutate "dependency-sort-swap-direction" "pkg/sorting/sort.go" "func (a DependencySort) Swap(i, j int) { a.Deps[i], a.Deps[j] = a.Deps[j], a.Deps[i] }" "func (a DependencySort) Swap(i, j int) { a.Deps[i], a.Deps[j] = a.Deps[i], a.Deps[j] }" "./pkg/sorting" "TestDependencySortSwapMutatesSharedSliceThroughValueReceiver" ""
+mutate "dependency-sort-comparison-direction" "pkg/sorting/sort.go" "return concat(a, sortKey) < concat(b, sortKey)" "return concat(a, sortKey) > concat(b, sortKey)" "./pkg/sorting" "TestDependencySortLessCharacterizesScopeGroupAndArtifactTieBreaks" ""
+mutate "dependency-sort-key-field-order" "pkg/sorting/sort.go" "return fmt.Sprintf(\"%d:%s:%s\", scopeWeight(dep.Scope), groupIdWeight(dep.GroupId, sortKey), dep.ArtifactId)" "return fmt.Sprintf(\"%d:%s:%s\", scopeWeight(dep.Scope), dep.ArtifactId, groupIdWeight(dep.GroupId, sortKey))" "./pkg/sorting" "TestConcatCharacterizesExactScopeGroupAndArtifactKey" ""
+mutate "dependency-sort-group-match-gate" "pkg/sorting/sort.go" "if strings.Contains(groupId, sortKey) {" "if !strings.Contains(groupId, sortKey) {" "./pkg/sorting" "TestGroupIDWeightCharacterizesContainsCaseAndEmptySortKey" ""
+mutate "dependency-sort-compile-scope-priority" "pkg/sorting/sort.go" $'\tcase "compile":\n\t\treturn 20' $'\tcase "compile":\n\t\treturn 25' "./pkg/sorting" "TestScopeWeightCharacterizesEveryExistingScopeClass" ""
+}
+
+reset_manifest() {
+	mutation_ids=()
+	mutation_paths=()
+	mutation_searches=()
+	mutation_replacements=()
+	mutation_packages=()
+	mutation_tests=()
+	mutation_classifications=()
+}
+
+apply_manifest_fault() {
+	local pass=$1 last
+	case $meta_fault in
+	empty-manifest)
+		reset_manifest
+		;;
+	duplicate-manifest)
+		mutate "${mutation_ids[0]}" "${mutation_paths[0]}" "${mutation_searches[0]}" \
+			"${mutation_replacements[0]}" "${mutation_packages[0]}" "${mutation_tests[0]}" \
+			"${mutation_classifications[0]}"
+		;;
+	out-of-scope)
+		mutation_paths[0]="README.md"
+		;;
+	zero-replacement)
+		mutation_searches[0]="mutation source syntax that cannot exist"
+		;;
+	multiple-replacement)
+		mutation_paths[0]="pkg/sorting/sort.go"
+		mutation_searches[0]="return"
+		mutation_replacements[0]="return /* mutated repeated syntax */"
+		;;
+	empty-selection)
+		mutation_tests[0]="TestMutationSelectionMustNotExist"
+		;;
+	nondeterministic)
+		if [[ $pass -eq 2 ]]; then
+			last=$((${#mutation_ids[@]} - 1))
+			unset 'mutation_ids[last]' 'mutation_paths[last]' 'mutation_searches[last]' \
+				'mutation_replacements[last]' 'mutation_packages[last]' 'mutation_tests[last]' \
+				'mutation_classifications[last]'
+		fi
+		;;
+	esac
+}
+
+serialize_manifest() {
+	local index
+	for ((index = 0; index < ${#mutation_ids[@]}; index++)); do
+		printf '%s\034%s\034%s\034%s\034%s\034%s\034%s\n' \
+			"${mutation_ids[index]}" "${mutation_paths[index]}" \
+			"${mutation_searches[index]}" "${mutation_replacements[index]}" \
+			"${mutation_packages[index]}" "${mutation_tests[index]}" \
+			"${mutation_classifications[index]}"
+	done
+}
+
+replacement_count() {
+	"$python_bin" - "$1" "$2" <<'PY'
+from pathlib import Path
+import sys
+
+print(Path(sys.argv[1]).read_text(encoding="utf-8").count(sys.argv[2]))
+PY
+}
+
+validate_manifest() {
+	local declared index other path count signature other_signature package test_name
+	declared=${#mutation_ids[@]}
+	[[ $declared -gt 0 ]] || fail 'T1 mutation manifest is empty'
+	for ((index = 0; index < declared; index++)); do
+		[[ -n ${mutation_ids[index]} ]] || fail 'T1 mutation ID is empty'
+		[[ -n ${mutation_searches[index]} && -n ${mutation_replacements[index]} ]] ||
+			fail "T3 mutation syntax is empty: ${mutation_ids[index]}"
+		[[ ${mutation_searches[index]} != "${mutation_replacements[index]}" ]] ||
+			fail "T3 mutation replacement is unchanged: ${mutation_ids[index]}"
+		for ((other = 0; other < index; other++)); do
+			[[ ${mutation_ids[index]} != "${mutation_ids[other]}" ]] ||
+				fail "T1 duplicate mutation ID: ${mutation_ids[index]}"
+			signature=${mutation_paths[index]}$'\034'${mutation_searches[index]}$'\034'${mutation_replacements[index]}
+			other_signature=${mutation_paths[other]}$'\034'${mutation_searches[other]}$'\034'${mutation_replacements[other]}
+			[[ $signature != "$other_signature" ]] ||
+				fail "T1 duplicate mutation operation: ${mutation_ids[index]}"
+		done
+		path=${mutation_paths[index]}
+		case $path in
+		pkg/maven/*.go|pkg/sorting/*.go) ;;
+		*) fail "T2 mutation path is outside pkg/maven and pkg/sorting: $path" ;;
+		esac
+		case $path in
+		*..*|/*|*_test.go) fail "T2 mutation path is not an authorized production source: $path" ;;
+		esac
+		[[ -f $repo_root/$path && ! -L $repo_root/$path ]] ||
+			fail "T2 mutation source is not a regular file: $path"
+		count=$(replacement_count "$repo_root/$path" "${mutation_searches[index]}") ||
+			fail "T3 could not inspect mutation source: ${mutation_ids[index]}"
+		[[ $count -eq 1 ]] ||
+			fail "T3 mutation source replacement count is $count, want exactly 1: ${mutation_ids[index]}"
+		[[ -n ${mutation_packages[index]} ]] ||
+			fail "T4 package selection is empty: ${mutation_ids[index]}"
+		IFS=',' read -r -a selected_packages <<<"${mutation_packages[index]}"
+		[[ ${#selected_packages[@]} -gt 0 ]] || fail "T4 package selection is empty: ${mutation_ids[index]}"
+		for package in "${selected_packages[@]}"; do
+			case $package in
+			./pkg/maven|./pkg/sorting) ;;
+			*) fail "T4 package selection is outside the subject: $package" ;;
+			esac
+		done
+		[[ -n ${mutation_tests[index]} ]] ||
+			fail "T4 test selection is empty: ${mutation_ids[index]}"
+		IFS=',' read -r -a selected_tests <<<"${mutation_tests[index]}"
+		[[ ${#selected_tests[@]} -gt 0 ]] || fail "T4 test selection is empty: ${mutation_ids[index]}"
+		for test_name in "${selected_tests[@]}"; do
+			[[ $test_name =~ ^Test[A-Za-z0-9_]+$ ]] ||
+				fail "T4 invalid exact test name for ${mutation_ids[index]}: $test_name"
+		done
+		case ${mutation_classifications[index]} in
+		''|reachability|observability|controllability) ;;
+		*) fail "T8 invalid survivor classification: ${mutation_ids[index]}" ;;
+		esac
+	done
+}
+
+reset_manifest
+declare_manifest
+apply_manifest_fault 1
+validate_manifest
+first_manifest=$(serialize_manifest)
+reset_manifest
+declare_manifest
+apply_manifest_fault 2
+validate_manifest
+second_manifest=$(serialize_manifest)
+[[ $first_manifest == "$second_manifest" ]] || fail 'T10 mutation manifest or declared totals are non-deterministic'
+declared=${#mutation_ids[@]}
+
+fresh_copy() {
+	local name=$1 destination="$work_root/$1/repo"
+	mkdir -p "$destination" "$work_root/$name/cache" "$work_root/$name/tmp" \
+		"$work_root/$name/home" "$work_root/$name/config" || return 1
+	git -C "$repo_root" archive --format=tar HEAD | tar -xf - -C "$destination" || return 1
+	printf '%s\n' "$destination"
+}
+
+test_regex() {
+	local csv=$1
+	printf '^(%s)$\n' "${csv//,/|}"
+}
+
+run_go_test() {
+	local case_root=$1 output=$2 mode=$3 packages_csv=$4 tests_csv=$5
+	local regex
+	local -a package_args
+	IFS=',' read -r -a package_args <<<"$packages_csv"
+	regex=$(test_regex "$tests_csv")
+	case $mode in
+	list)
+		(
+			cd "$case_root/repo"
+			HOME="$case_root/home" XDG_CONFIG_HOME="$case_root/config" \
+				GOCACHE="$case_root/cache" GOTMPDIR="$case_root/tmp" GOMODCACHE="$go_mod_cache" \
+				"$go_bin" test "${package_args[@]}" -count=1 -list "$regex"
+		) >"$output" 2>&1
+		;;
+	compile)
+		(
+			cd "$case_root/repo"
+			HOME="$case_root/home" XDG_CONFIG_HOME="$case_root/config" \
+				GOCACHE="$case_root/cache" GOTMPDIR="$case_root/tmp" GOMODCACHE="$go_mod_cache" \
+				"$go_bin" test "${package_args[@]}" -count=1 -run '^$'
+		) >"$output" 2>&1
+		;;
+	execute)
+		(
+			cd "$case_root/repo"
+			HOME="$case_root/home" XDG_CONFIG_HOME="$case_root/config" \
+				GOCACHE="$case_root/cache" GOTMPDIR="$case_root/tmp" GOMODCACHE="$go_mod_cache" \
+				"$go_bin" test -json "${package_args[@]}" -count=1 -run "$regex"
+		) >"$output" 2>&1
+		;;
+	*) return 97 ;;
+	esac
+}
+
+validate_list_selection() {
+	"$python_bin" - "$1" "$2" <<'PY'
+from pathlib import Path
+import sys
+
+lines = Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace").splitlines()
+actual = [line.strip() for line in lines if line.strip().startswith("Test")]
+expected = sys.argv[2].split(",") if sys.argv[2] else []
+if not actual or len(actual) != len(set(actual)) or sorted(actual) != sorted(expected):
+    print("selected test population mismatch: actual={!r} expected={!r}".format(actual, expected), file=sys.stderr)
+    raise SystemExit(1)
+PY
+}
+
+json_test_counts() {
+	"$python_bin" - "$1" "$2" <<'PY'
+import json
+from pathlib import Path
+import sys
+
+expected = sys.argv[2].split(",") if sys.argv[2] else []
+actions = {name: [] for name in expected}
+for line in Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace").splitlines():
+    try:
+        event = json.loads(line)
+    except json.JSONDecodeError:
+        continue
+    name = event.get("Test")
+    if name in actions and event.get("Action") in {"run", "pass", "fail", "skip"}:
+        actions[name].append(event["Action"])
+runs = sum("run" in values for values in actions.values())
+passes = sum("pass" in values for values in actions.values())
+fails = sum("fail" in values for values in actions.values())
+skips = sum("skip" in values for values in actions.values())
+print(runs, passes, fails, skips)
+PY
+}
+
+apply_mutation() {
+	local destination=$1 search=$2 replacement=$3
+	"$python_bin" - "$destination" "$search" "$replacement" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+search, replacement = sys.argv[2:]
+source = path.read_text(encoding="utf-8")
+count = source.count(search)
+if count != 1:
+    print("source replacement count is {}, want exactly 1".format(count), file=sys.stderr)
+    raise SystemExit(1)
+path.write_text(source.replace(search, replacement, 1), encoding="utf-8")
+PY
+}
+
+validate_survivor_classification() {
+	local mutation_id=$1 classification=$2
+	case $classification in
+	reachability|observability|controllability) return 0 ;;
+	*) fail "T8 surviving mutation lacks reachability, observability, or controllability classification: $mutation_id" ;;
+	esac
+}
+
+validate_result_accounting() {
+	local result_file=$1 claimed_declared=$2 claimed_killed=$3 claimed_survived=$4 claimed_unusable=$5
+	local actual_declared actual_killed actual_survived actual_unusable
+	actual_declared=$(wc -l <"$result_file" | tr -d '[:space:]')
+	actual_killed=$(awk -F '|' '$2 == "killed" {count++} END {print count + 0}' "$result_file")
+	actual_survived=$(awk -F '|' '$2 == "survived" {count++} END {print count + 0}' "$result_file")
+	actual_unusable=$(awk -F '|' '$2 == "unusable" {count++} END {print count + 0}' "$result_file")
+	[[ $actual_declared -eq $claimed_declared && $actual_killed -eq $claimed_killed && \
+		$actual_survived -eq $claimed_survived && $actual_unusable -eq $claimed_unusable ]] ||
+		fail "T7 falsified result accounting: claimed=$claimed_declared/$claimed_killed/$claimed_survived/$claimed_unusable actual=$actual_declared/$actual_killed/$actual_survived/$actual_unusable"
+}
+
+case $meta_fault in
+broken-control)
+	fail 'T5 clean unmodified control failed'
+	;;
+unexercised)
+	fail 'T6 mutant was not compiled and exercised: maven-command-executable-argument-order'
+	;;
+false-accounting)
+	printf '%s\n' 'synthetic|killed|./pkg/maven|TestSynthetic|' >"$work_root/meta-results"
+	validate_result_accounting "$work_root/meta-results" 1 2 0 0
+	fail 'T7 falsified accounting control did not fire'
+	;;
+survivor-unclassified)
+	validate_survivor_classification 'synthetic-survivor' ''
+	fail 'T8 survivor classification control did not fire'
+	;;
+esac
+
+go_mod_cache=$(GOENV=off GOWORK=off "$go_bin" env GOMODCACHE) || fail 'could not resolve Go module cache'
+[[ -d $go_mod_cache ]] || fail 'Go module cache is unavailable'
+
+control_repo=$(fresh_copy control) || fail 'T5 could not create clean control copy'
+control_root=${control_repo%/repo}
+for ((index = 0; index < declared; index++)); do
+	list_log="$control_root/list-$index.log"
+	if ! run_go_test "$control_root" "$list_log" list "${mutation_packages[index]}" "${mutation_tests[index]}"; then
+		fail "T4 test discovery failed for ${mutation_ids[index]}"
+	fi
+	validate_list_selection "$list_log" "${mutation_tests[index]}" ||
+		fail "T4 selected test population is empty or inexact: ${mutation_ids[index]}"
+	control_log="$control_root/control-$index.json"
+	set +e
+	run_go_test "$control_root" "$control_log" execute "${mutation_packages[index]}" "${mutation_tests[index]}"
+	control_rc=$?
+	set -e
+	read -r control_runs control_passes control_fails control_skips <<<"$(json_test_counts "$control_log" "${mutation_tests[index]}")"
+	IFS=',' read -r -a selected_tests <<<"${mutation_tests[index]}"
+	expected_count=${#selected_tests[@]}
+	[[ $control_rc -eq 0 && $control_runs -eq $expected_count && $control_passes -eq $expected_count && \
+		$control_fails -eq 0 && $control_skips -eq 0 ]] ||
+		fail "T5 clean unmodified control failed for ${mutation_ids[index]} (exit=$control_rc run=$control_runs pass=$control_passes fail=$control_fails skip=$control_skips)"
+done
+
+result_file="$work_root/results.txt"
+: >"$result_file"
+killed=0
+survived=0
+unusable=0
+classification_failure=0
+
+for ((index = 0; index < declared; index++)); do
+	id=${mutation_ids[index]}
+	case_repo=$(fresh_copy "mutant-$index") || fail "could not create disposable copy for $id"
+	case_root=${case_repo%/repo}
+	target="$case_repo/${mutation_paths[index]}"
+	if ! apply_mutation "$target" "${mutation_searches[index]}" "${mutation_replacements[index]}" \
+		>"$case_root/replacement.log" 2>&1; then
+		unusable=$((unusable + 1))
+		printf '%s|unusable|%s|%s|replacement\n' "$id" "${mutation_packages[index]}" "${mutation_tests[index]}" >>"$result_file"
+		continue
+	fi
+
+	set +e
+	run_go_test "$case_root" "$case_root/compile.log" compile "${mutation_packages[index]}" "${mutation_tests[index]}"
+	compile_rc=$?
+	set -e
+	if [[ $compile_rc -ne 0 ]]; then
+		unusable=$((unusable + 1))
+		printf '%s|unusable|%s|%s|compile\n' "$id" "${mutation_packages[index]}" "${mutation_tests[index]}" >>"$result_file"
+		continue
+	fi
+
+	set +e
+	run_go_test "$case_root" "$case_root/test.json" execute "${mutation_packages[index]}" "${mutation_tests[index]}"
+	test_rc=$?
+	set -e
+	read -r test_runs test_passes test_fails test_skips <<<"$(json_test_counts "$case_root/test.json" "${mutation_tests[index]}")"
+	IFS=',' read -r -a selected_tests <<<"${mutation_tests[index]}"
+	expected_count=${#selected_tests[@]}
+	if [[ $test_runs -ne $expected_count || $test_skips -ne 0 || $((test_passes + test_fails)) -ne $expected_count ]]; then
+		unusable=$((unusable + 1))
+		printf '%s|unusable|%s|%s|exercise\n' "$id" "${mutation_packages[index]}" "${mutation_tests[index]}" >>"$result_file"
+		continue
+	fi
+	if [[ $test_rc -ne 0 && $test_fails -gt 0 ]]; then
+		killed=$((killed + 1))
+		printf '%s|killed|%s|%s|selected-test-failure\n' "$id" "${mutation_packages[index]}" "${mutation_tests[index]}" >>"$result_file"
+	elif [[ $test_rc -eq 0 && $test_passes -eq $expected_count && $test_fails -eq 0 ]]; then
+		survived=$((survived + 1))
+		printf '%s|survived|%s|%s|%s\n' "$id" "${mutation_packages[index]}" "${mutation_tests[index]}" "${mutation_classifications[index]}" >>"$result_file"
+		if [[ -z ${mutation_classifications[index]} ]]; then
+			classification_failure=1
+		fi
+	else
+		unusable=$((unusable + 1))
+		printf '%s|unusable|%s|%s|tool-or-package-failure\n' "$id" "${mutation_packages[index]}" "${mutation_tests[index]}" >>"$result_file"
+	fi
+done
+
+validate_result_accounting "$result_file" "$declared" "$killed" "$survived" "$unusable"
+
+printf 'subject=maven-sorting\n'
+printf 'scope=pkg/maven/command.go,pkg/maven/query.go,pkg/sorting/sort.go\n'
+printf 'exclusions=other pkg/maven production,test files,fixtures,generated files,vendor,other inventory subjects,equivalent unobserved or non-compiling replacements\n'
+printf 'control=passed selections=%s\n' "$declared"
+while IFS='|' read -r id status packages tests detail; do
+	printf 'mutation=%s status=%s packages=%s tests=%s detail=%s\n' "$id" "$status" "$packages" "$tests" "$detail"
+done <"$result_file"
+printf 'declared=%s killed=%s survived=%s unusable=%s\n' "$declared" "$killed" "$survived" "$unusable"
+if [[ $keep_work == 1 ]]; then
+	printf 'artifacts=%s\n' "$work_root"
+fi
+
+if [[ $classification_failure -ne 0 ]]; then
+	for ((index = 0; index < declared; index++)); do
+		if grep -F "${mutation_ids[index]}|survived|" "$result_file" >/dev/null && \
+			[[ -z ${mutation_classifications[index]} ]]; then
+			validate_survivor_classification "${mutation_ids[index]}" "${mutation_classifications[index]}"
+		fi
+	done
+fi
+
+[ "$survived" -eq 0 ] || fail 'surviving mutations remain'
+[ "$unusable" -eq 0 ] || fail 'unusable mutations remain'
+[ "$killed" -eq "$declared" ] || fail 'declared and killed totals differ'
