@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-27, commit `1a40e11`.
+Last measured checkpoint: 2026-08-27, commit `5829939`.
 
 ## Objective
 
@@ -4968,9 +4968,63 @@ P5.6 clean checkpoint (sixth subject `spring`, implementation `9c20e52`):
   `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
   and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
 
-P5 remains active. The next bounded move creates only the declared `http`
-harness and matching meta-test as the seventh real mutation subject; it must
-not start the eighth subject.
+P5.7 clean implementation checkpoint (seventh subject `http`, implementation
+`5829939`):
+
+- Added the regular executable `scripts/mutate-http` and its executable
+  `scripts/test-mutate-http` T1-T10 falsifiability test. The inventory remains
+  unchanged; `http` has no separate seam label. Exact executable subject
+  coverage improves from 6 of 8 to 7 of 8.
+- The harness declares ten deterministic, unique mutations in
+  `pkg/http/client.go`: anonymous JSON request URL; response dependency and
+  status gates; response-body source; basic-auth credential order; bearer URL
+  component order and token selection; Wget request URL and destination path;
+  and Wpost request URL. Every production search syntax occurs exactly once
+  and every declaration binds an exact non-empty named `pkg/http` test.
+- One clean external control ran every exact selection. Every mutant used a
+  fresh external Git archive, cache, HOME, config, and temp root; compiled the
+  changed package separately; and ran its selected JSON test population with
+  exact run and terminal-action validation. Final totals are `declared=10`,
+  `killed=10`, `survived=0`, and `unusable=0`; no production or test repair was
+  required.
+- T1-T10 fail closed on empty/duplicate manifests, unauthorized paths,
+  zero/multiple replacements, empty or inexact test selection, a broken clean
+  control, an uncompiled/unexercised mutant, false accounting, an unclassified
+  survivor, repository-local artifacts, and non-deterministic declarations or
+  totals. The run report SHA-256 is
+  `865d29bee9baad2053e603e188d8ccdd5688ecbcbe053979f586d535898645c7`;
+  the independent T1-T10 meta-log SHA-256 is
+  `6b932bf00ed9ae0f14152b821ee5cfcd4636c09c739fe0b4d21ef7974b900270`.
+- The no-evidence Q2.1-Q2.4 view records exact Q2.1 coverage 7 of 8 and has
+  scorecard SHA-256
+  `46a5070d9538576053e5b8889fac01b87f90b1bcfa9e5bc9326c7ab334a98ed2`.
+  Q2.2 and Q2.3 now identify only the legacy `interactive-build` recorder.
+  The refreshed external schema-2 document covers all seven completed P5
+  subjects and has SHA-256
+  `c4f5d9c8c97aa653afd1b4ef8095f1e1bd35873bc40acc5ab9e6d9f308544713`;
+  its Q2.4 evidence-object SHA-256 is
+  `6a462402ad3de49c3f14b3907664e04edd39af7b360421b6497a170a1a620de8`.
+  The focused audit exits 0 with scorecard SHA-256
+  `a9034e35989bf4d1508edd5deda4b59fc4ffc34172db12052996a27c39d56383`.
+- The full authoritative audit exits 1, never 2, with scorecard SHA-256
+  `c3d8cebe64fd4aebc10596852ec9ece963937bc079858e9fab0300a41d8fb968`:
+  L0 is 8 of 8, all nine L1 rows pass, Q2.1 is 7 of 8, Q2.4 passes,
+  seven ratchets improve, and one Q3.4 documentation-phrase ratchet regresses.
+  Its three findings are literal `currently` phrases in the required tracked
+  rolling handover and byte-exact current prompt archive; the implementation
+  introduced no product or apparatus regression, and immutable prompt history
+  cannot be rewritten truthfully. Nine P5-P8 rows are non-passing.
+- API/CLI and entry/subprocess compatibility, pinned golangci-lint 2.12.2,
+  complete tests across all 27 packages, race, vet, `make test`, all 62
+  launcher controls, Make contracts, all four host acceptance flows, exact
+  empty-HOME count-2, the standalone 15-control audit meta-suite, and complete
+  preflight all pass. The first complete preflight hit the previously recorded
+  final signal-fixture timing miss after 25 launcher controls; the unchanged
+  rerun passed the entire gate.
+
+P5 remains active. The next bounded move converts only the declared
+`interactive-build` driver and matching meta-test into the eighth real mutation
+subject; it must not start P6.
 
 Implement the eight named harnesses from `.quality/inventory`, one subject per
 measured move and no more than three moves per checkpoint. Each harness must
