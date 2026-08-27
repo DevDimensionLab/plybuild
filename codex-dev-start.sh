@@ -1055,32 +1055,32 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-27T021552+0200-build-p5-file-shell-harness
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T021552+0200-build-p5-file-shell-harness.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T010033+0200-build-p5-template-harness.md
+#|SESSION_ID=2026-08-27T030846+0200-build-p5-spring-harness
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T030846+0200-build-p5-spring-harness.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T021552+0200-build-p5-file-shell-harness.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P5 with exactly one mutation-evidence subject: `file-shell`. Convert
-#|its existing P3 seam driver and meta-test into a real executable mutation
-#|harness and T1-T10 falsifiability test. Finish only if at least eight meaningful
+#|Continue P5 with exactly one mutation-evidence subject: `spring`. Convert its
+#|existing P3 seam driver and meta-test into a real executable mutation harness
+#|and T1-T10 falsifiability test. Finish only if at least eight meaningful
 #|mutations are actually compiled and exercised in disposable external copies and
 #|the final totals are `declared == killed`, `survived == 0`, and `unusable == 0`.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P4 are complete. P5 is active with `cli-context`, `config-cloud`,
-#|`maven-sorting`, and `template` complete as the first four of eight subjects;
-#|P6-P8 remain queued in `docs/plan/quality-upgrade.md`. This session may change
-#|only `scripts/mutate-file-shell`, `scripts/test-mutate-file-shell`, and the
-#|smallest focused test or private seam inside `pkg/file` or `pkg/shell` if an
-#|actually executed survivor exposes a classified gap. Preserve both inventory
-#|seam labels exactly: `1. git clone keeps URL before target directory` and
-#|`7. git commit keeps target directory before message`.
+#|`maven-sorting`, `template`, and `file-shell` complete as the first five of
+#|eight subjects; P6-P8 remain queued in `docs/plan/quality-upgrade.md`. This
+#|session may change only `scripts/mutate-spring`,
+#|`scripts/test-mutate-spring`, and the smallest focused test or private seam
+#|inside `pkg/spring` if an actually executed survivor exposes a classified gap.
+#|Preserve the inventory seam label exactly:
+#|`5. Spring download keeps URL before archive path`.
 #|
-#|Do not start a sixth mutation subject or change `.quality/inventory`, any
+#|Do not start a seventh mutation subject or change `.quality/inventory`, any
 #|completed P5 harness, audit/parser/scanner/baseline code, acceptance, P6-P8,
 #|Go/dependencies, exported APIs, CLI behavior, packaging, publication, or
 #|distribution. Keep all checkouts, caches, reports, and generated artifacts
@@ -1089,12 +1089,12 @@ exit 70
 #|
 #|# Measurements At Start
 #|
-#|The clean P5.4 implementation is
-#|`da1cc888a9d6059e1853ae9051cfa00e3c1875bb`, exact parent
-#|`0b1f81579fa4269ed7c9aa005f2835d86d4a8b51`, tree
-#|`ebe0ac95221cd47538dae207e0fae1a07739cbd2`, and clean status SHA-256
+#|The clean P5.5 implementation is
+#|`7bb94acf47e5971bf331f09e3e2e17ff94e137f6`, exact parent
+#|`f575f315bdee668c62ed217f67f4d0cf0a455c1f`, tree
+#|`00a6db27697d337df9cb6e1bba59f3f791fea923`, and clean status SHA-256
 #|`6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`.
-#|After launch, the new continuity HEAD must have exact parent `da1cc88`.
+#|After launch, the new continuity HEAD must have exact parent `7bb94ac`.
 #|
 #|The `cli-context` report and T1-T10 meta-log SHA-256 values are
 #|`53d1489a6db15f18cd2acf38ff49ab3fb0db545a6c8e63639c90311f9bf53d5c`
@@ -1108,18 +1108,21 @@ exit 70
 #|The `template` values are
 #|`e769cb49b2ae6fd3da15b207acab8ef11c402f5bff171dc6e150623b93279e95`
 #|and `cde7a149274b7f4b968a40b1ec5e4f7769c5d6d4243edcb40783a4fa19ba91bd`.
+#|The `file-shell` values are
+#|`ea12b122e6210f2b2c8c64a7792ce74a9886e2273e9ddac6176df6552afd1c29`
+#|and `759ad7a28b3d3ab06d42d42e8e1679e0df516d6abdfd90f3fbac1e92e52bfaad`.
 #|Each subject has exact totals 10 declared, 10 killed, 0 survived, and 0
 #|unusable.
 #|
 #|The refreshed external schema-2 document SHA-256 is
-#|`f235776be8c9fc454906415a1f983aeebf6ef29adbd4a8665a83e3bed76fe050`;
+#|`c5ec79633274ad618b7c78568e38891b9955352e020053c8b3d987ad6348fd5e`;
 #|its Q2.4 receipt SHA-256 is
-#|`bd2899300363740c159c07b41dfa76201371ec5e74b29ac545e20033ebb0a433`.
+#|`732083b2add74a30bf5bed70ef9446682bbba20ebb4d1dfc89d0b904db81b922`.
 #|The focused audit exits 0 with scorecard SHA-256
-#|`28732aa8d367b86cfb74a3e25d42a9909d01e8fc4564d4488d720b04675c4e8f`.
+#|`5261b60d5e20338c5f1a88870b60c55e54411200a7fa84a0d80791dd96597001`.
 #|The full audit exits 1, never 2, with scorecard SHA-256
-#|`fcfddf9b5794dabb1d2bdbbc19b04d594522bf7efbd7db7432a35882a6ee797c`:
-#|L0 is 8/8, L1 is 9/9, Q2.1 is 4/8, Q2.4 passes, seven ratchets improve, one
+#|`7a42d1f40ec96641fce8dab1188a32a73a2f6f790cedea60e98e5b05b1833502`:
+#|L0 is 8/8, L1 is 9/9, Q2.1 is 5/8, Q2.4 passes, seven ratchets improve, one
 #|holds, none regress, dirty paths are empty, and eight P5-P8 rows remain
 #|non-passing. All complete checkpoint gates pass.
 #|
@@ -1128,10 +1131,11 @@ exit 70
 #|Work autonomously on `codex/upgrade-quality`. Before editing, confirm branch,
 #|HEAD, exact ancestry, clean and ignored status, reciprocal archive links,
 #|launcher `--check`, and the authorized checkpoint block. Inspect every
-#|production and test file under `pkg/file` and `pkg/shell`, plus the process
-#|adapter used by the Git seam, before defining the mutation population. Read all
-#|four completed P5 harness/meta-test pairs as the methodology reference and the
-#|current non-executable `file-shell` driver/meta-test as history to replace.
+#|production and test file under `pkg/spring`, plus the HTTP client and filesystem
+#|adapters used by its download and archive seams, before defining the mutation
+#|population. Read all five completed P5 harness/meta-test pairs as the
+#|methodology reference and the current non-executable `spring` driver/meta-test
+#|as history to replace.
 #|
 #|Declare at least eight deterministic, unique, behaviorally meaningful
 #|mutations. Bind each to exact production syntax that occurs once and a
@@ -1159,15 +1163,15 @@ exit 70
 #|Read the rolling handover, this archive, complete P5 entry and checkpoint gate,
 #|both design documents, `.quality/README.md`, `.quality/inventory`, complete
 #|mutation discovery and Q2.1-Q2.4 logic in the vendored audit and parser, all
-#|four completed P5 script pairs, the existing `file-shell` scripts, relevant
-#|Make/preflight population contracts, the process adapter, and the complete
-#|`pkg/file` and `pkg/shell` production and test populations. Do not infer
+#|five completed P5 script pairs, the existing `spring` scripts, relevant
+#|Make/preflight population contracts, the HTTP client and filesystem adapters,
+#|and the complete `pkg/spring` production and test population. Do not infer
 #|reachability or a kill from names, grep, compilation failure, or exit status
 #|alone.
 #|
 #|# Three Moves
 #|
-#|1. Define the explicit `file-shell` scope, exclusions, and manifest of at least
+#|1. Define the explicit `spring` scope, exclusions, and manifest of at least
 #|   eight exact mutations with named killing tests.
 #|2. Convert the two existing scripts to the executable harness and T1-T10
 #|   meta-test; run the clean control and every mutant externally; repair only a
@@ -1176,15 +1180,15 @@ exit 70
 #|   automated Q2.1-Q2.4 view, refreshed external receipt audit, API/CLI and
 #|   subprocess compatibility, pinned lint, complete tests/race/vet, launcher
 #|   and Make contracts, complete preflight, host acceptance, audit meta-suite,
-#|   and empty-HOME count-2. Record the result and hand off only the sixth P5
+#|   and empty-HOME count-2. Record the result and hand off only the seventh P5
 #|   subject with one continuity-only commit.
 #|
 #|# Automatic Handoff
 #|
-#|Before ending, finish the coherent `file-shell` move or record an exact
-#|resumable blocker. Rewrite the rolling handover, update the roadmap, answer this
-#|archive, create exactly one reciprocal NEXT archive, replace only the launcher's
-#|mutable regions, run launcher and handoff contracts, and make the normal
+#|Before ending, finish the coherent `spring` move or record an exact resumable
+#|blocker. Rewrite the rolling handover, update the roadmap, answer this archive,
+#|create exactly one reciprocal NEXT archive, replace only the launcher's mutable
+#|regions, run launcher and handoff contracts, and make the normal
 #|`docs: prepare next agent session` continuity commit after the focused
 #|implementation commit. Do not launch a successor, push, merge, publish,
 #|distribute, stash, revert, or remove the worktree. P5 remains active.
