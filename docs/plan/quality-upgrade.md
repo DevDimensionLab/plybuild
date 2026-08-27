@@ -4917,9 +4917,60 @@ P5.5 clean checkpoint (fifth subject `file-shell`, implementation `7bb94ac`):
   `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
   and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
 
-P5 remains active. The next bounded move converts only the existing
-`spring` P3 seam driver and its meta-test into the sixth real mutation harness;
-it must not start a seventh subject.
+P5.6 clean checkpoint (sixth subject `spring`, implementation `9c20e52`):
+
+- Replaced the non-executable P3 `spring` seam driver with the regular
+  executable `scripts/mutate-spring` harness and replaced its meta-test with an
+  executable T1-T10 falsifiability test. The inventory and exact seam label
+  `5. Spring download keeps URL before archive path` are unchanged; exact
+  executable subject coverage improves from 5 of 8 to 6 of 8.
+- The harness declares ten unique deterministic mutations in
+  `pkg/spring/io.go`: download and unzip argument ordering; download and unzip
+  error gates; archive deletion selection; injected Unix-second ordering; root
+  and dependency discovery URLs; empty-dependency validation; and valid
+  dependency equality. Every production search syntax occurs exactly once and
+  every declaration binds an exact non-empty named `pkg/spring` test
+  population.
+- One clean external control ran every exact selection. Every mutant used a
+  fresh external Git archive, cache, HOME, config, and temp root; compiled the
+  changed package separately; and ran its selected JSON test population with
+  exact run and terminal-action validation. Final totals are `declared=10`,
+  `killed=10`, `survived=0`, and `unusable=0`; no production or test repair was
+  required.
+- T1-T10 fail closed on empty/duplicate manifests, unauthorized paths,
+  zero/multiple replacements, empty or inexact test selection, a broken clean
+  control, an uncompiled/unexercised mutant, false accounting, an unclassified
+  survivor, repository-local artifacts, and non-deterministic declarations or
+  totals. The run report SHA-256 is
+  `0aa2bdcb32cf20372f8a7b5c232dcefc93668259eb4ed76c45f8ca339b1dbf25`;
+  the independent T1-T10 meta-log SHA-256 is
+  `f373190fa04abba73b61453b1693f892aced845d931ce267b3674ea84961fa06`.
+- The no-evidence Q2.1-Q2.4 view records exact Q2.1 coverage 6 of 8 and has
+  scorecard SHA-256
+  `a05b6401db516d8dc09e213b6545aa080a58fdb48ca710de29a2d1dff9e49d1f`.
+  The refreshed external schema-2 document covers all six completed P5
+  subjects and has SHA-256
+  `1eaabad8e769ad3bdc8eedfcf145aa521cb982da1d64697c06535df1e4b5ff14`;
+  its Q2.4 evidence-object SHA-256 is
+  `61731b25435e57c08c0c813d34d41cfce24644defabb13483fbc5cf88ee1194c`.
+  The focused audit exits 0 with scorecard SHA-256
+  `ab347e874db50c8df2682c30ad86f95f47c109bed71342dc131e90c3bb645a0c`.
+- The full authoritative audit exits 1, never 2, with scorecard SHA-256
+  `50ea67476a0e01cf7e31fa58e8a6c4590934d6691939b5c304e835a8af6aaf67`:
+  L0 is 8 of 8, L1 is 9 of 9, Q2.1 is 6 of 8, Q2.4 passes, seven
+  ratchets improve, one holds, none regress, and dirty paths are empty. Eight
+  P5-P8 rows remain non-passing.
+- API/CLI and entry/subprocess compatibility, pinned golangci-lint 2.12.2,
+  complete tests across all 27 packages, race, vet, `make test`, all 62
+  launcher controls, Make contracts, all four host acceptance flows, exact
+  empty-HOME count-2, the standalone 15-control audit meta-suite, and complete
+  preflight all pass. API and CLI report SHA-256 values remain
+  `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+  and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+
+P5 remains active. The next bounded move creates only the declared `http`
+harness and matching meta-test as the seventh real mutation subject; it must
+not start the eighth subject.
 
 Implement the eight named harnesses from `.quality/inventory`, one subject per
 measured move and no more than three moves per checkpoint. Each harness must
