@@ -10,7 +10,7 @@ SCRIPTS_DIR ?= $(REPO_ROOT)/scripts
 
 .DEFAULT_GOAL := all
 
-.PHONY: acceptance all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight release release-brew run snapshot test test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight upgrade
+.PHONY: acceptance acceptance-snapshot all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight release release-brew run snapshot test test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight upgrade
 
 build:
 	$(GO) build -o ply ./cmd/ply
@@ -99,6 +99,10 @@ acceptance:
 	$(BASH) "$(REPO_ROOT)/scripts/verify-status"
 	$(BASH) "$(REPO_ROOT)/scripts/verify-upgrade"
 	$(BASH) "$(REPO_ROOT)/scripts/verify-build"
+
+acceptance-snapshot:
+	PLY_SNAPSHOT_GORELEASER="$(GORELEASER)" \
+		$(BASH) "$(SCRIPTS_DIR)/accept-snapshot"
 
 preflight: compatibility
 	$(GO) build ./...

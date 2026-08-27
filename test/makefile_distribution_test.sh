@@ -12,8 +12,10 @@ standalone_brew_config=${GORELEASER_BREW_CONFIG_UNDER_TEST:-"$repo_root/.gorelea
 fake_goreleaser="$tmp_dir/recording goreleaser"
 calls_file="$tmp_dir/goreleaser-calls"
 make_workspace="$tmp_dir/make workspace"
+snapshot_scripts="$tmp_dir/snapshot scripts"
+snapshot_calls="$tmp_dir/snapshot-acceptance-calls"
 
-mkdir -p "$make_workspace"
+mkdir -p "$make_workspace" "$snapshot_scripts"
 
 fail() {
 	printf 'make distribution contract: %s\n' "$*" >&2
@@ -98,6 +100,13 @@ done
 EOF
 chmod +x "$fake_goreleaser"
 
+cat >"$snapshot_scripts/accept-snapshot" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'GORELEASER=%s\n' "${PLY_SNAPSHOT_GORELEASER-}" >>"$FAKE_SNAPSHOT_ACCEPTANCE_CALLS"
+EOF
+chmod +x "$snapshot_scripts/accept-snapshot"
+
 run_distribution_target() {
 	local target=$1
 	local output=$2
@@ -127,6 +136,25 @@ for target in snapshot release; do
 		fail "$target did not record the exact local-only GoReleaser invocation"
 done
 
+: >"$snapshot_calls"
+: >"$calls_file"
+if ! (
+	cd "$make_workspace"
+	FAKE_SNAPSHOT_ACCEPTANCE_CALLS="$snapshot_calls" \
+		make --no-print-directory -f "$makefile_under_test" \
+			BASH=/bin/bash GORELEASER="$fake_goreleaser" \
+			SCRIPTS_DIR="$snapshot_scripts" acceptance-snapshot
+) >"$tmp_dir/acceptance-snapshot-output" 2>&1; then
+	sed -n '1,160p' "$tmp_dir/acceptance-snapshot-output" >&2
+	fail 'acceptance-snapshot did not invoke the focused orchestration'
+fi
+[[ $(wc -l <"$snapshot_calls" | tr -d '[:space:]') -eq 1 ]] ||
+	fail 'acceptance-snapshot did not invoke exactly one orchestration'
+grep -Fqx "GORELEASER=$fake_goreleaser" "$snapshot_calls" ||
+	fail 'acceptance-snapshot did not pass the configured GoReleaser tool'
+[[ ! -s "$calls_file" ]] ||
+	fail 'acceptance-snapshot bypassed its orchestration and invoked GoReleaser directly'
+
 if run_distribution_target release-brew "$tmp_dir/release-brew-output"; then
 	fail 'release-brew remained callable'
 fi
@@ -134,4 +162,4 @@ fi
 grep -F 'Homebrew distribution is inactive' "$tmp_dir/release-brew-output" >/dev/null ||
 	fail 'release-brew did not explain its fail-closed boundary'
 
-printf 'make distribution contract: PASS (default config, snapshot argv, credential isolation, and inactive publishers checked)\n'
+printf 'make distribution contract: PASS (default config, snapshot argv, credential isolation, snapshot acceptance wiring, and inactive publishers checked)\n'
