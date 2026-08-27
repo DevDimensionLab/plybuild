@@ -1055,72 +1055,82 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-27T054500+0200-build-p6-snapshot-acceptance
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T054500+0200-build-p6-snapshot-acceptance.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T044626+0200-build-p5-interactive-build-harness.md
+#|SESSION_ID=2026-08-27T064625+0200-build-p6-docker-acceptance
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T064625+0200-build-p6-docker-acceptance.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T054500+0200-build-p6-snapshot-acceptance.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Begin P6 with exactly one acceptance-evidence target: the host-platform
-#|GoReleaser snapshot binary. Build a real fresh snapshot through the established
-#|credential-cleared non-publishing path, revalidate host install as its separate
-#|`make install` / `go install` contract, and exercise status, upgrade, and build
-#|against the exact snapshot executable. Finish only with executable
-#|falsifiability controls and retained external evidence that proves every
-#|declared verifier ran against that artifact.
+#|Continue P6 with exactly one acceptance-evidence target: a fresh local Docker
+#|image. Build it through a real daemon-backed, non-publishing path from clean
+#|committed source, revalidate host install as its separate `make install` /
+#|`go install` contract, and exercise status, upgrade, and build through the
+#|exact immutable image against local fixtures. Finish only with executable
+#|falsifiability controls and retained external evidence proving every declared
+#|verifier ran through that image.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P5 are complete. P6 is active; P7-P8 remain queued in
+#|P2A-P5 are complete. The host-platform GoReleaser snapshot target is complete
+#|in `06e3ac4`; P6 remains active and P7-P8 remain queued in
 #|`docs/plan/quality-upgrade.md`. This session may change only the smallest
-#|focused acceptance orchestration and meta-test under `scripts`, a shared
+#|focused Docker acceptance orchestration and meta-test under `scripts`, a shared
 #|private helper under `test/acceptance`, and focused `Makefile` or
-#|`test/makefile_distribution_test.sh` wiring needed to expose the snapshot
-#|acceptance target. Change `.goreleaser.yml` only if an actually executed clean
-#|snapshot exposes a classified local-artifact defect and only with the smallest
-#|non-publishing repair.
+#|`test/makefile_distribution_test.sh` wiring needed to expose the image
+#|acceptance target. Change `Dockerfile` only if an actually executed clean
+#|daemon build exposes a classified local-acceptance defect and only with the
+#|smallest non-publishing repair.
 #|
-#|Do not start Docker acceptance, add `make quality`, change production Go or Go
-#|tests, alter `.quality/inventory`, audit/parser/scanner/baseline code, completed
-#|P5 harnesses, Go/dependencies, exported API/CLI behavior, fixtures unrelated to
-#|the four core flows, package-manager publishers, remote releases, publication,
-#|or distribution outside the local snapshot. Keep all snapshot output, tools,
+#|Do not add `make quality`, reimplement snapshot acceptance, change
+#|`.goreleaser.yml`, production Go or Go tests, `.quality/inventory`,
+#|audit/parser/scanner/baseline code, completed P5 harnesses, Go/dependencies,
+#|exported API/CLI behavior, fixtures unrelated to the four core flows,
+#|`docker-publish.sh`, package-manager publishers, registry publication, remote
+#|releases, or distribution outside the local image. Keep build contexts, logs,
 #|caches, reports, and generated artifacts outside the worktree. Never create
 #|`.agent-task/current.md` or `.quality/manual-evidence.json`.
 #|
 #|# Measurements At Start
 #|
-#|The clean P5.8 implementation is
-#|`58c5224183308e8e48aa4d91b25b65c1e4021a96`, exact parent
-#|`5bcd6c48a8ce6a09f0553368e1f5c34e2bf09cef`, tree
-#|`8cc32082df0fbc4af2f10810c8ecf5274fecbc63`, and clean status SHA-256
+#|The clean snapshot implementation is
+#|`06e3ac43282c1f4ccd3b99cec78d02e009a90645`, exact parent
+#|`61763f4b5728fa77f9c947c66fcc04ba5136c208`, tree
+#|`0cb65473791c5eebf12f5aa6df9534be4a955a01`, and clean status SHA-256
 #|`6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`.
-#|After launch, the new continuity HEAD must have exact parent `58c5224`.
+#|After launch, the new continuity HEAD must have exact parent `06e3ac4`.
 #|
-#|P5 has eight executable subjects, 80 declared mutations, 80 killed, 0
-#|survived, and 0 unusable. The `interactive-build` report and T1-T10 meta-log
-#|SHA-256 values are
-#|`109619d5d336a52f01d5f751d3b89b5bcfa85f2ba512cdc5073fbc58e1954d5f`
-#|and `22a0ac95820514fec641d72289c6ef1a3a56023cc6471f4c2e154087199c9f81`.
-#|The external eight-subject schema-2 document SHA-256 is
-#|`b12d4c262ecd16c9529887968cc33324552b08a7cd1d300ff0f1dff6e34acbba`;
-#|its Q2.4 evidence-object SHA-256 is
-#|`2565dd9824e224520004774521164f0d24ff771b134f7662125a337ae27dd09d`.
+#|The accepted GoReleaser v2.17.1 run used exact argv
+#|`release --snapshot --clean --skip=publish`, cleared all five release
+#|credentials, and produced exactly one `darwin/arm64` executable:
+#|`dist/plybuild_darwin_arm64_v8.0/ply`, size 19,389,170, SHA-256
+#|`28d7012a81e9bdab2b776a8be64f84d12fc9e2f239e52dcbfc2932f7469d2e4f`.
+#|Its report and evidence-manifest SHA-256 values are
+#|`6e759f75ae40c27c6312cfc4f4c1e8a8c4eab56119a64a88fa4c4c62dec40f61`
+#|and `bb33ae40ccab0992284318a123c9462fa86ae6a1e5dd2c7b881d0b302c4ab9a1`.
+#|Host install passed separately with its artifact override unset; status,
+#|upgrade, and build each emitted one terminal PASS and two non-help behavioral
+#|traces against that exact snapshot. All 20 snapshot controls pass.
 #|
-#|The focused Q1.6/Q1.7/Q1.9/Q2.4 audit exits 0 with scorecard SHA-256
-#|`a5478b88f4dbd99dfa5561eafa09117c649a3f3998b79b34818b54b3970d6077`.
+#|P5 remains eight executable subjects, 80 declared, 80 killed, 0 survived, and
+#|0 unusable. The refreshed external schema-2 document SHA-256 is
+#|`7a09ec592025564f6600b3edf21fd0c2d56dc28fd73a92de2b3bb80024f32e70`.
+#|The exact Q1.6/Q1.7/Q1.9/Q2.4 audit exits 0 with scorecard SHA-256
+#|`2b8d42fa6457ab02bd6dbed85d3fd13ccd0552cae794d8cc7c6d70644e09cbae`.
 #|The full audit exits 1, never 2, with scorecard SHA-256
-#|`9032b0e3763c64f820564f1608fd6ef52b0a751311c4dcbcd9a2fca8b1eef972`:
-#|L0 is 8/8, L1 is 9/9, Q2.1-Q2.4 pass, seven ratchets improve, the Q3.4
+#|`9b75a367fc07ddc698787103f80360227e6f03827009c62c4a80a59dcd547b4d`:
+#|L0 is 8/8, L1 is 9/9, L2 is 8/10, seven ratchets improve, the Q3.4
 #|documentation-phrase ratchet records one regression from immutable prompt
-#|history, dirty paths are empty, and seven P6-P8 rows remain non-passing.
+#|history, dirty paths are empty, and seven rows remain non-passing. The focused
+#|Q2.5-Q2.10 scorecard SHA-256 is
+#|`367819708c9959d6b6bd6085e7a362124c95a2f9bb744db48a7294a1ffa0d482`;
+#|Q2.5, Q2.6, Q2.7, and Q2.10 pass while Q2.8 and Q2.9 remain manual.
 #|
 #|API/CLI and entry/subprocess compatibility, pinned lint, complete tests/race/
 #|vet, `make test`, 62 launcher controls, Make contracts, four host acceptance
-#|flows, complete preflight, the 15-control audit meta-suite, and empty-HOME
-#|count-2 pass. API and CLI report SHA-256 values are
+#|flows, snapshot meta/acceptance, complete preflight, the 15-control audit
+#|meta-suite, and empty-HOME count-2 pass. API and CLI report SHA-256 values are
 #|`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
 #|and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
 #|
@@ -1128,69 +1138,82 @@ exit 70
 #|
 #|Work autonomously on `codex/upgrade-quality`. Before editing, confirm branch,
 #|HEAD, exact ancestry, clean and ignored status, reciprocal archive links,
-#|launcher `--check`, and the authorized checkpoint block. Establish the exact
-#|GoReleaser version and host artifact naming from the accepted config and tool
-#|metadata. Use a pinned external GoReleaser binary; do not install it into the
-#|repository or change module dependencies.
+#|launcher `--check`, and the authorized checkpoint block. Probe the real Docker
+#|client and daemon before choosing an implementation shape. Record exact client,
+#|server, builder, host, and selected image-platform identities; a static
+#|Dockerfile reading or a recording-only fake is not acceptance evidence.
 #|
-#|Run the exact local-only snapshot argv with every release credential cleared.
-#|Require a clean HEAD source, a fresh external output root, zero remote
-#|publication, and exact unambiguous discovery of one regular executable for the
-#|host GOOS/GOARCH. Reject stale pre-existing output, zero or multiple candidates,
-#|symlinks, wrong platform paths, and artifacts not produced by the commanded
-#|run. Record tool identity, command, commit, artifact path, size, and digest.
+#|Use a clean external source archive or clone at exact HEAD and a unique local
+#|tag that cannot name a pre-existing image. Require an actual daemon build,
+#|zero login/push/publish operations, exact unambiguous post-build resolution to
+#|one immutable image ID, a build-created identity rather than a stale tag, and
+#|inspection of OS, architecture, entrypoint, creation/config metadata, and the
+#|regular executable inside the final image. Record command, commit, context
+#|identity, image tag and ID, platform, executable path, size, and digest.
+#|Reject missing or multiple identities, mutable-tag substitution, wrong
+#|platform/configuration, symlinked or non-executable image artifacts, and
+#|images not produced by the commanded run.
 #|
 #|Keep host install semantically separate: it remains `make install` /
-#|`go install ./cmd/ply` into a missing temporary GOBIN. Reuse the existing
-#|status, upgrade, and build acceptance verifiers through their artifact override
-#|rather than duplicating their behavioral assertions. Require exact non-empty
-#|verifier selection and terminal PASS records, and prove each selected verifier
-#|received the snapshot path. A help-only smoke is not evidence.
+#|`go install ./cmd/ply` into a missing temporary GOBIN and `verify-install`
+#|runs with its artifact override unset. Reuse the existing status, upgrade, and
+#|build acceptance verifiers through the smallest artifact/runtime bridge rather
+#|than duplicating their behavioral assertions. Mount only the exact external
+#|fixture/cache/output state needed for those behaviors. Require exact non-empty
+#|verifier selection, one terminal PASS per verifier, non-help behavior, and
+#|runtime receipts proving every selected command used the immutable image ID,
+#|not merely the tag or a host binary.
 #|
-#|Add focused meta-controls that fail closed for at least: no GoReleaser call;
-#|wrong or publishing argv; leaked credentials; stale, missing, ambiguous,
-#|symlinked, or non-executable artifact; skipped or duplicate verifier selection;
-#|artifact substitution; a verifier failure; and repository-local output. Do not
-#|weaken an assertion or accept a recording-only distribution run as real
-#|snapshot evidence.
+#|Add focused meta-controls that fail closed for at least: no Docker build/run;
+#|wrong build or run argv; login, push, or another publishing operation; stale
+#|tag or image; missing or ambiguous identity; wrong platform, entrypoint, or
+#|configuration; missing, symlinked, or non-executable `/bin/ply`; skipped or
+#|duplicate verifier selection; tag retargeting or image substitution; a
+#|verifier failure; duplicate terminal PASS; and repository-local output. Do not
+#|weaken an assertion, accept help-only smoke as behavioral evidence, or infer
+#|runtime use from filenames, static config, grep, or exit status alone.
 #|
 #|# Required Reading
 #|
 #|Read the rolling handover, this archive, the complete P6 and checkpoint-gate
 #|entries, both design documents, `.quality/README.md`, `.quality/inventory`, and
-#|the complete Q2.5-Q2.10 discovery/parser logic. Read the full `.goreleaser.yml`,
-#|Make snapshot/release/acceptance targets, distribution and Make meta-tests, all
-#|four acceptance verifiers and meta-tests, shared acceptance helpers and
-#|fixtures, CLI/API compatibility contracts, and relevant archive history before
-#|choosing the orchestration. Do not infer artifact production or verifier
-#|execution from filenames, static config, grep, or exit status alone.
+#|the complete Q2.5-Q2.10 discovery/parser logic. Read the full Dockerfile,
+#|`docker-publish.sh`, Docker Make targets and their meta-tests, `.dockerignore`
+#|if present, the complete snapshot acceptance orchestration/helper/meta-test,
+#|all four acceptance verifiers and meta-tests, shared acceptance helpers and
+#|fixtures, CLI/API compatibility contracts, and relevant Docker/distribution
+#|archive history before defining the image population.
 #|
 #|# Three Moves
 #|
-#|1. Define the exact snapshot artifact population, host-platform selection,
-#|   provenance record, exclusions, and non-publishing invocation. Run a clean
-#|   external probe before choosing the smallest implementation shape.
-#|2. Implement one executable snapshot acceptance path and its falsifiability
-#|   controls. Run a real fresh external snapshot, the separate host-install
-#|   verifier, and exact status/upgrade/build verifiers against the snapshot;
-#|   retain every report and artifact externally.
+#|1. Define the exact build context, final-image population, immutable identity,
+#|   platform/config/executable provenance, exclusions, and non-publishing build
+#|   and run argv. Run a clean external daemon probe before choosing the smallest
+#|   implementation shape, and classify any Dockerfile defect from executed
+#|   evidence.
+#|2. Implement one executable Docker acceptance path and its falsifiability
+#|   controls. Run a real fresh daemon build, the separate host-install verifier,
+#|   and exact status/upgrade/build verifiers through the immutable image; retain
+#|   every report, inspection record, runtime receipt, and image identity
+#|   externally.
 #|3. Make one focused implementation commit, then run focused meta-tests, actual
-#|   snapshot acceptance, API/CLI and entry/subprocess compatibility, pinned
-#|   lint, complete tests/race/vet, launcher and Make contracts, complete
-#|   preflight, existing host acceptance, audit meta-suite, full and focused
-#|   Q2.5-Q2.10 audit views, and empty-HOME count-2. Record the bounded P6 result
-#|   and hand off the separate Docker acceptance move without implementing it.
+#|   Docker acceptance, retained snapshot acceptance/meta, API/CLI and
+#|   entry/subprocess compatibility, pinned lint, complete tests/race/vet,
+#|   launcher and Make contracts, complete preflight, existing host acceptance,
+#|   audit meta-suite, full and focused Q2.5-Q2.10 audit views, and empty-HOME
+#|   count-2. Record the bounded Docker result and hand off the separate final P6
+#|   evidence/`make quality` move without implementing it.
 #|
 #|# Automatic Handoff
 #|
-#|Before ending, finish the coherent snapshot-binary move or record an exact
+#|Before ending, finish the coherent Docker-image move or record an exact
 #|resumable blocker. Rewrite the rolling handover, update the roadmap, answer
-#|this archive, create exactly one reciprocal NEXT archive for the separate P6
-#|Docker acceptance move, replace only the launcher's mutable regions, run
-#|launcher and handoff contracts, and make the normal
+#|this archive, create exactly one reciprocal NEXT archive for the final P6
+#|evidence and `make quality` exit-gate move, replace only the launcher's mutable
+#|regions, run launcher and handoff contracts, and make the normal
 #|`docs: prepare next agent session` continuity commit after the focused
 #|implementation commit. Do not launch a successor, push, merge, publish, invoke
-#|an ordinary production release, enable a publisher, stash, revert, or remove
-#|the worktree. P6 remains active until both snapshot and Docker evidence plus
-#|the `make quality` exit gate pass.
+#|an ordinary production release, enable a publisher, delete retained evidence,
+#|stash, revert, or remove the worktree. P6 remains active until snapshot and
+#|Docker evidence plus the scoped `make quality` audit exit gate all pass.
 # CODEX_MUTABLE_PROMPT_END

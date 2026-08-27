@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-27T05:45:00+02:00
+Generated: 2026-08-27T06:46:25+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,189 +10,231 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
-- P5.8 implementation commit:
-  `58c5224183308e8e48aa4d91b25b65c1e4021a96`.
+- P6 snapshot implementation commit:
+  `06e3ac43282c1f4ccd3b99cec78d02e009a90645`.
 - Its exact parent is the launch continuity commit
-  `5bcd6c48a8ce6a09f0553368e1f5c34e2bf09cef`.
+  `61763f4b5728fa77f9c947c66fcc04ba5136c208`; that commit's exact parent is
+  the completed P5.8 implementation `58c5224`.
 - Measured implementation tree:
-  `8cc32082df0fbc4af2f10810c8ecf5274fecbc63`.
+  `0cb65473791c5eebf12f5aa6df9534be4a955a01`.
 - Clean status SHA-256:
   `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`.
 - After handoff, obtain the new continuity HEAD with `git rev-parse HEAD`; its
-  exact parent must be `58c5224`.
-- The implementation changes only `scripts/mutate-interactive-build` and
-  `scripts/test-mutate-interactive-build`. No production Go, Go test,
-  inventory, audit, parser, scanner, baseline, acceptance, API, CLI, packaging,
-  or dependency file changed.
-- No push, merge, release, publication, distribution, stash, revert,
-  successor launch, or worktree removal was performed.
+  exact parent must be `06e3ac4`.
+- The implementation changes only `Makefile`, `scripts/accept-snapshot`,
+  `scripts/test-accept-snapshot`,
+  `test/acceptance/snapshot_acceptance.py`, and
+  `test/makefile_distribution_test.sh`.
+- No `.goreleaser.yml`, Docker, production Go, Go test, inventory, audit,
+  parser, scanner, baseline, dependency, API, CLI, fixture, completed P5, or
+  publisher file changed.
+- No push, merge, release, publication, registry operation, Docker acceptance,
+  `make quality`, stash, revert, successor launch, or worktree removal was
+  performed.
 
 ## Continuity Checkpoint
 
-P5 is complete and P6 is active. `codex-dev-start.sh` remains NEXT for the
-first bounded P6 snapshot-binary acceptance move. Its active archive is the
-single new tail under `docs/plan/agent-sessions`; the `interactive-build`
-archive is answered history and links reciprocally to it. The graph has exactly
-one NEXT archive. Only the launcher's mutable header and prompt regions change;
-the stable execution region remains byte-identical.
+P5 is complete and P6 remains active. The host-platform GoReleaser snapshot is
+one finished P6 acceptance target; the fresh Docker image is the next separate
+target. `codex-dev-start.sh` remains NEXT for that Docker-only move. The
+snapshot archive is answered history and links reciprocally to the single new
+Docker archive. The graph has exactly one NEXT archive. Only the launcher's
+mutable header and prompt regions change; the stable execution region remains
+byte-identical.
 
 The tracked launcher/archive apparatus remains the task source. Do not create
 `.agent-task/current.md` or `.quality/manual-evidence.json`. The audit counts
 ignored and untracked bytes, so ordinary and ignored status must both be empty
 at a measured checkpoint.
 
-## P5.8 Result
+## Snapshot Acceptance Result
 
-The eighth mutation subject, `interactive-build`, and P5 are complete:
+The executable `scripts/accept-snapshot`, its executable
+`scripts/test-accept-snapshot` meta-test, and the private
+`test/acceptance/snapshot_acceptance.py` helper implement one fail-closed
+acceptance path exposed as `make acceptance-snapshot`.
 
-- The executable harness declares ten deterministic, unique mutations across
-  `cmd/build.go`, `pkg/webservice/init.go`, and `pkg/webservice/api.go`:
-  project configuration, cloud configuration, root response, and generation
-  endpoint wiring; URI host and asynchronous server start; loopback bind;
-  generate route; listen-error gate; and Darwin browser platform selection.
-- The inventory remains byte-exact, including
-  `8. interactive server binds only to loopback`. Each declaration binds
-  production syntax occurring exactly once to a non-empty exact named test
-  population. Other production, tests, fixtures, generated/vendor code,
-  adapters, completed subjects, equivalent replacements, and known
-  non-compiling replacements are excluded.
-- One clean unmodified external control ran every exact selection. Each mutant
-  used a fresh external Git archive, cache, HOME, config, and temp root; every
-  changed package compiled separately; and selected tests ran under
-  `go test -json` with exact discovery, run, and terminal-action validation.
-  Setup, discovery, selection, compilation, tooling, and unrelated failures
-  are unusable; only a selected test failure counts as killed.
-- Exact totals are `declared=10`, `killed=10`, `survived=0`, and
-  `unusable=0`. No reachability, observability, or controllability gap appeared,
-  so no production or test repair was made.
-- T1-T10 prove failure for empty/duplicate manifests, unauthorized paths,
-  zero/multiple replacements, empty or inexact tests, broken control,
-  uncompiled/unexercised mutants, false accounting, unclassified survivors,
-  repository-local artifacts, and non-deterministic declarations/totals.
+The orchestration requires:
 
-Every mutation and killing population is in
-`/private/tmp/ply-interactive-evidence.A49cuF/report.txt`, SHA-256
-`109619d5d336a52f01d5f751d3b89b5bcfa85f2ba512cdc5073fbc58e1954d5f`.
-Retained control/mutant copies and logs are under
-`/private/tmp/ply-interactive-evidence.A49cuF/harness-work`. The independent
-T1-T10 meta-log is `/private/tmp/ply-interactive-evidence.A49cuF/meta.log`,
-SHA-256
-`22a0ac95820514fec641d72289c6ef1a3a56023cc6471f4c2e154087199c9f81`.
+- a clean committed source and a new external evidence root with no stale
+  bytes;
+- a regular external GoReleaser whose schema pin, `--version`, and Go build
+  metadata all identify v2.17.1 for the host;
+- the exact Make invocation `release --snapshot --clean --skip=publish` with
+  all five release credentials cleared and publication disabled;
+- fresh `artifacts.json` and `metadata.json` from the commanded run;
+- exactly one Binary record for host `darwin/arm64`, with the path derived
+  from metadata rather than guessed from a filename;
+- no symlink path component, a regular executable, fresh timestamps, exact
+  platform metadata, and embedded VCS revision equal to the source commit with
+  `vcs.modified=false`;
+- a separate host install into an initially missing external `GOBIN`, followed
+  by `verify-install` with `PLY_VERIFY_ARTIFACT` unset; and
+- exact status, upgrade, and build selection, one terminal PASS each, non-help
+  runtime traces against the snapshot path, and stable before/after artifact
+  identity.
 
-## Authoritative Measurement
+The meta-test has 20 controls. It rejects no GoReleaser call; wrong or
+publishing argv; leaked credentials; stale output; missing, ambiguous,
+symlinked, non-executable, wrong-platform, misplaced, wrong-build-platform, or
+foreign artifacts; skipped or duplicate verifier selection; artifact
+substitution; verifier failure; duplicate terminal PASS; and repository-local
+output.
 
-The refreshed external evidence and audits are under
-`/private/tmp/ply-interactive-evidence.A49cuF`. The exact 245 Q1.6, 34 Q1.7,
-and 69 Q1.9 named populations were rerun at `58c5224`; every named test emitted
-one top-level run and one pass. Manifest SHA-256 values are
-`845cc6bdfaa0e4e84956a96a162e84ed0372238f067f8d2b22d05f7a22307f27`,
-`cb028c078c2f61283a974ec308a3a0a2de1a6694cd2a60a130b6f4dd7f357d0d`,
-and `c6488bd00c342304d8d1fa46a4af6dce33c9b095ec6ad1572bc9e0de40252034`.
-Event-log SHA-256 values are
-`2a1747ea2bd24e3c136b5a3e7687b32b2a9b570371fa5c133b2864cf2da67d88`,
-`36c426ebb1ae611078b78061c0a9b5761060c7c0f68166ee23902aed6911a962`,
-and `6610731598fe7180cce3911db8a4ed8e4cca88c3fdbab3f8783f769dbe910a44`.
+An initial real target attempt rejected the system `go` command because that
+command path was a symlink. No snapshot evidence root was created and the
+source remained clean. The implementation now resolves command symlink chains
+to their final regular executable before recording identity. The classified
+failed log is retained at
+`/private/tmp/ply-snapshot-evidence.jfKty7/acceptance-target.log`.
 
-The external schema-2 document contains refreshed Q1.6, Q1.7, Q1.9 receipts
-and Q2.4 receipts for all eight completed P5 subjects. Its SHA-256 is
-`b12d4c262ecd16c9529887968cc33324552b08a7cd1d300ff0f1dff6e34acbba`.
-Evidence-object SHA-256 values are:
+## Retained Snapshot Evidence
 
-- Q1.6: `94412396d46985af08ca81a649717d7947ea9061d420c89a675d9968d7646e65`;
-- Q1.7: `106af984ce687f78a5356e7191747851a9509f40406bba9a507395397cfa4337`;
-- Q1.9: `afc77255af92c22c1ed817bcfcf06cac8e43fe9340968afc2a153b64d2bd6df5`;
-- Q2.4: `2565dd9824e224520004774521164f0d24ff771b134f7662125a337ae27dd09d`.
+The clean tool probe is under `/private/tmp/ply-snapshot-probe.CiDxj0`.
+The official `goreleaser_Darwin_arm64.tar.gz` v2.17.1 checksum is
+`b65624885c25da9a677b7ad11cf86a02123cc5a56af66f6b4ebb574658eada2e`.
+The retained GoReleaser executable is 84,264,062 bytes with SHA-256
+`f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`.
+The clean external probe found eight Binary records and exactly one host
+candidate; no local-artifact defect required a configuration change.
 
-The focused Q1.6/Q1.7/Q1.9/Q2.4 audit exits 0 with scorecard SHA-256
-`a5478b88f4dbd99dfa5561eafa09117c649a3f3998b79b34818b54b3970d6077`.
+The authoritative run is under
+`/private/tmp/ply-snapshot-evidence.XnZgfB/run`. Its report records:
+
+- source commit `06e3ac43282c1f4ccd3b99cec78d02e009a90645` and tree
+  `0cb65473791c5eebf12f5aa6df9534be4a955a01`;
+- exact command `release --snapshot --clean --skip=publish`, five cleared
+  credentials, and disabled/skipped remote publication;
+- exactly one host artifact at
+  `source/dist/plybuild_darwin_arm64_v8.0/ply`, target
+  `darwin_arm64_v8.0`, size 19,389,170, SHA-256
+  `28d7012a81e9bdab2b776a8be64f84d12fc9e2f239e52dcbfc2932f7469d2e4f`;
+- separate host-install artifact size 26,504,386, SHA-256
+  `ca1d0ead122a8da336298a26d6dbc0574ef6bf6d684bb53dff595520241572fa`;
+- `verify-install` PASS with the override unset; and
+- status, upgrade, and build PASS, each with two non-help behavioral traces
+  against the exact snapshot executable.
+
+The report SHA-256 is
+`6e759f75ae40c27c6312cfc4f4c1e8a8c4eab56119a64a88fa4c4c62dec40f61`.
+The evidence-manifest SHA-256 is
+`bb33ae40ccab0992284318a123c9462fa86ae6a1e5dd2c7b881d0b302c4ab9a1`.
+The outer target log SHA-256 is
+`54721148f142db090a680bd25d2e87d449271a46e393ef8fcd2667b3a51d32e1`.
+The metadata SHA-256 is
+`91b1f025906cb79a1637838bcef25bd072469ab454cbfc7952ad547033640e68`.
+
+Verifier trace SHA-256 values are:
+
+- status:
+  `a27905a76a9c46cfb2259cc859a7f9d6307e9af727104753e1cff8e755eb2b63`;
+- upgrade:
+  `532b3e047fafb077b33e461b74b447e7a4dd57e6a03be23ced19928bb9eacc3a`;
+- build:
+  `1abb49da0f902d6f42cf4a251ecf3fef8ee116606f55f8d4a16e6560b6a42550`.
+
+## Audit Measurement
+
+The external gate and audit root is
+`/private/tmp/ply-snapshot-gate.06e3ac4`; its evidence-manifest SHA-256 is
+`61d453d3edf60fc582523472b02ca8d89449ced1dd04c54273e19b44de309255`.
+The refreshed external schema-2 document is bound to the clean implementation
+commit and has SHA-256
+`7a09ec592025564f6600b3edf21fd0c2d56dc28fd73a92de2b3bb80024f32e70`.
+Its Q1.6, Q1.7, Q1.9, and Q2.4 evidence-object SHA-256 values are:
+
+- `e504d3a4446654b1d403a8c72400693f2f0be9f34ca02497ba4f04e9a03df8e7`;
+- `07aaa86eeebd1b6ed8fcc5de69040e12b72c4d808589d8c93602a09ca20e5e18`;
+- `e2a5c56643a2b018e6e6e1b75bde168eb9077af5ed67090aa7a4ce33a9643226`;
+- `29a4f2387fa72461fd966d0022ba5a29018d3b7c1ab79191efd11ae43c1576fd`.
+
+The focused receipt audit exits 0 with scorecard SHA-256
+`2b8d42fa6457ab02bd6dbed85d3fd13ccd0552cae794d8cc7c6d70644e09cbae`.
 The full authoritative audit exits 1, never 2, with scorecard SHA-256
-`9032b0e3763c64f820564f1608fd6ef52b0a751311c4dcbcd9a2fca8b1eef972`.
-It records L0 8/8, L1 9/9, Q2.1-Q2.4 PASS, seven improved ratchets, one
-Q3.4 documentation-phrase regression, zero dirty paths, and seven non-passing
-P6-P8 rows. Immutable prompt history was not rewritten.
+`9b75a367fc07ddc698787103f80360227e6f03827009c62c4a80a59dcd547b4d`.
+It records L0 8/8, L1 9/9, L2 8/10, seven improved ratchets, one Q3.4
+documentation-phrase regression from immutable prompt history, zero dirty
+paths, and the same seven non-passing rows: Q2.8, Q2.9, Q3.1, Q3.3, Q3.4,
+Q3.7, and Q3.8.
 
-The no-evidence Q2 view is under
-`/private/tmp/ply-interactive-evidence.A49cuF/no-evidence-q2`, scorecard
-SHA-256
-`4154c02e7520e2021cbcb4ffee777b00d1448c6f451717691d5a5bceb9f8c221`.
-It exposes the unratcheted state: Q2.1 is 8/8, Q2.2 and Q2.3 pass, and Q2.4 is
-unmeasurable without the external run receipt.
-
-The report and meta-log SHA-256 pairs for all eight subjects are:
-
-- `cli-context`: `53d1489a6db15f18cd2acf38ff49ab3fb0db545a6c8e63639c90311f9bf53d5c`,
-  `f1d801fccc97af714d483f5a3c84202fe9868fa19b17038ada0d56dbd6f3e67e`;
-- `config-cloud`: `db76fdf8c624c4326483ae71fa9ec3e7e0f94de4d6d3ae8a4dff185c9a7f23f7`,
-  `12b1197d521681b70dea0b481f6b7d8bb9daba2ca21dc68a635868177d43ffec`;
-- `maven-sorting`: `6b360f604802c047b4946b474c35b2860d47bda4581b3cb33f5af45653dc111e`,
-  `fda3185a71ebd842f3e924ae507ad0daa9d59d4b30da3699d114c0ff0d2d53b3`;
-- `template`: `e769cb49b2ae6fd3da15b207acab8ef11c402f5bff171dc6e150623b93279e95`,
-  `cde7a149274b7f4b968a40b1ec5e4f7769c5d6d4243edcb40783a4fa19ba91bd`;
-- `file-shell`: `ea12b122e6210f2b2c8c64a7792ce74a9886e2273e9ddac6176df6552afd1c29`,
-  `759ad7a28b3d3ab06d42d42e8e1679e0df516d6abdfd90f3fbac1e92e52bfaad`;
-- `spring`: `0aa2bdcb32cf20372f8a7b5c232dcefc93668259eb4ed76c45f8ca339b1dbf25`,
-  `f373190fa04abba73b61453b1693f892aced845d931ce267b3674ea84961fa06`;
-- `http`: `865d29bee9baad2053e603e188d8ccdd5688ecbcbe053979f586d535898645c7`,
-  `6b932bf00ed9ae0f14152b821ee5cfcd4636c09c739fe0b4d21ef7974b900270`;
-- `interactive-build`:
-  `109619d5d336a52f01d5f751d3b89b5bcfa85f2ba512cdc5073fbc58e1954d5f`,
-  `22a0ac95820514fec641d72289c6ef1a3a56023cc6471f4c2e154087199c9f81`.
+The focused Q2.5-Q2.10 view exits 1, never 2, with scorecard SHA-256
+`367819708c9959d6b6bd6085e7a362124c95a2f9bb744db48a7294a1ffa0d482`.
+Q2.5, Q2.6, Q2.7, and Q2.10 pass; Q2.8 and Q2.9 remain honestly manual.
+Snapshot orchestration is deliberately not named `verify-*`, so it does not
+silently change the four-core-flow audit denominator.
 
 ## Gate Result
 
-Gate logs and isolated tools/caches are under
-`/private/tmp/ply-interactive-gate.58c5224`. API/CLI and explicit
-entry/subprocess compatibility, compatibility meta-tests, pinned
-golangci-lint 2.12.2 with zero issues, complete uncached tests across all 27
-packages, race, vet, `make test`, all 62 launcher controls, Make
+API/CLI and explicit entry/subprocess compatibility, compatibility meta-tests,
+pinned golangci-lint 2.12.2 with zero issues, complete uncached tests across all
+27 packages, race, vet, `make test`, all 62 launcher controls, Make
 distribution/install/lint/preflight contracts, all four host acceptance flows,
-exact empty-HOME count-2, the standalone 15-control audit meta-suite, and
-complete preflight pass. API and CLI report SHA-256 values remain
+the 20-control snapshot meta-test, exact empty-HOME count-2, the standalone
+15-control audit meta-suite, and complete preflight pass.
+
+API and CLI report SHA-256 values remain
 `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
 and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
-The complete passing preflight, acceptance, audit-meta, empty-HOME count-2,
-entry/subprocess, and `make test` log SHA-256 values are respectively
-`a85d99220dc8054c56cad12c34d6bd629f9760e7068ac3451c6485fa211c226f`,
-`36b484c628424a75eac04fd1550952ef4b8ecea87123c15e2c6d2b6b02400f00`,
-`ae853e4750310bf06d5a580067531fd2a08dd4c869efc04675c9b5fa10272baa`,
-`9c1e7a2d0e60897d50363ac1bf58997aadccbbd53d3fc8ba8ebee2eeef0bc7c8`,
-`6802980545289c487914d32b2fad16f9e74a9739bf7f49d25f022b1c841d0c78`,
-and `57fa7347b37727909495066130b35f88cf2276febc06937c5ad470febc0e98af`.
+Passing log SHA-256 values include:
 
-The first complete preflight hit the known signal-retention timing control
-after 25 launcher assertions. No source changed; the standalone launcher suite
-had already passed all 62 controls, and the unchanged complete preflight rerun
-passed the entire gate. Ordinary and ignored status were empty before
-authoritative measurement and after the complete implementation gate.
+- complete preflight:
+  `21b41a0a87e07e2eb12b4c469e997a1451ede29972de9d7db373b50e3a774e93`;
+- host acceptance:
+  `36b484c628424a75eac04fd1550952ef4b8ecea87123c15e2c6d2b6b02400f00`;
+- standalone audit meta-suite:
+  `ae853e4750310bf06d5a580067531fd2a08dd4c869efc04675c9b5fa10272baa`;
+- empty-HOME count-2:
+  `d42090481f02f3e17f5c0a4a7eee7f565339e6196110e9831f4056d875a7e1fb`;
+- entry/subprocess:
+  `fac2f31951e4c4c5e1ad41b80925a4b7c0ddb2bc7bcd951bea9266a7f0e4a096`;
+- `make test`:
+  `9beeeb53b603276b2e6e6944d726adccc8c1f4d7e0fd0c038cd85e90a61d46d4`;
+- snapshot meta-test:
+  `9804c5b0d54f5ada0dcfbd1ee401559dc026c8aa93778b2c604afb64adffa9b9`.
+
+The first isolated compatibility attempt used an empty HOME without the
+existing external module cache, so the offline API exporter failed before
+comparison; the retained unchanged rerun with explicit `GOMODCACHE` passed.
+The first complete preflight hit the known launcher signal-retention timing
+control after 25 nested assertions. No source changed; the standalone launcher
+suite had already passed all 62 controls, and the unchanged isolated complete
+preflight rerun passed. Ordinary and ignored status were empty before
+authoritative measurement and after the implementation gate.
 
 ## Next Objective
 
-Begin P6 with one bounded snapshot-binary acceptance move. Produce a real fresh
-GoReleaser snapshot through the credential-cleared, non-publishing path in an
-external directory. Revalidate host install as the separate `make install` /
-`go install` contract, then run the existing status, upgrade, and build
-acceptance behavior against the exact host-platform snapshot executable.
-Require exact artifact discovery, provenance, executable identity, non-empty
-behavioral verdicts, and falsifiability controls that reject missing, stale,
-ambiguous, or substituted artifacts and skipped verifier populations.
+Continue P6 with one bounded daemon-backed Docker acceptance move. Build a
+fresh local image from clean committed source with a unique non-publishing
+identity, inspect and record the exact image ID/platform/configuration and the
+regular executable inside it, revalidate host install as the separate
+`make install` / `go install` contract, and run the existing status, upgrade,
+and build behaviors through the exact image against local fixtures. Require
+runtime proof, not static Dockerfile inspection or a help-only smoke.
 
-Do not start Docker acceptance in the same move. Do not add `make quality`
-until both the snapshot and Docker acceptance populations exist and the P6
-exit conditions can be measured. Preserve the non-publishing distribution
-contract, inactive Homebrew/Snap boundary, CLI/API behavior, Go/dependency
-baseline, and all completed P5 evidence.
+Add fail-closed controls for missing Docker calls, stale or substituted images,
+wrong build/run or publishing operations, ambiguous identities, wrong
+platform/configuration, missing/non-executable image artifacts, skipped or
+duplicate verifiers, verifier failure, and repository-local evidence. Use a
+real daemon probe before choosing the smallest orchestration. Change
+`Dockerfile` only if that executed clean probe exposes a classified local
+acceptance defect.
+
+Do not reimplement snapshot acceptance and do not add `make quality` in the
+Docker move. P6 remains active after Docker evidence until the separate final
+quality-gate move resolves Q2.8/Q2.9 evidence and proves the scoped audit exit.
 
 ## Start And Stop
 
 Confirm branch, HEAD, exact ancestry, clean and ignored status, reciprocal
 links, launcher `--check`, and the authorized checkpoint block before editing.
-Read this handover, the linked NEXT archive, the full P6 and checkpoint-gate
-entries, both design documents, the complete GoReleaser/Make distribution
-path and its tests, every acceptance verifier/meta-test and shared helper, and
-the Q2.5-Q2.10 audit/parser logic before defining the snapshot population.
+Read this handover, the linked NEXT archive, the complete P6 and checkpoint
+gate, both design documents, the full snapshot implementation and evidence
+schema, Dockerfile/Make/publish boundaries and their tests, every acceptance
+verifier/meta-test/helper/fixture, and Q2.5-Q2.10 audit/parser logic before
+defining the image population.
 
-Stop before Docker work, `make quality`, P7-P8, Go/dependency upgrades,
-production/API/CLI behavior, publication, remote releases, package-manager
-publishers, or unrelated audit/inventory/P5 changes. Keep all generated
-artifacts external. Do not push, merge, stash, revert, launch a successor, or
-remove the worktree.
+Stop before `make quality`, P7-P8, Go/dependency upgrades, production/API/CLI
+behavior, remote publication, registry pushes, package-manager publishers, or
+unrelated audit/inventory/P5/snapshot changes. Keep generated contexts, logs,
+reports, and caches external. Do not push, merge, stash, revert, launch a
+successor, or remove the worktree.

@@ -1,13 +1,13 @@
 # Agent Session: Build P6 Snapshot Acceptance
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-27T054500+0200-build-p6-snapshot-acceptance`
 Created: `2026-08-27T05:45:00+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `a5280f7ef856db7a1af4feb2a9619d1bee6cfeb4deaeda44be616e983be6d068`
 Previous: [2026-08-27T044626+0200-build-p5-interactive-build-harness.md](2026-08-27T044626+0200-build-p5-interactive-build-harness.md)
-Next: none
-Outcome: pending
+Next: [2026-08-27T064625+0200-build-p6-docker-acceptance.md](2026-08-27T064625+0200-build-p6-docker-acceptance.md)
+Outcome: Snapshot acceptance completed in `06e3ac4`; real external artifact evidence and the implementation gate passed.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

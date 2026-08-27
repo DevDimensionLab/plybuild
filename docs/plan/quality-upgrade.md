@@ -5079,6 +5079,62 @@ P5 is complete: all eight named inventory subjects have regular executable
 harnesses, at least eight meaningful mutations, T1-T10 controls, and exact
 zero-survivor/zero-unusable totals. P6 is the next active phase.
 
+P6 snapshot-binary checkpoint (implementation `06e3ac4`):
+
+- Added the regular executable `scripts/accept-snapshot`, its executable
+  20-control falsifiability test, the private
+  `test/acceptance/snapshot_acceptance.py` helper, and focused Make/distribution
+  wiring. The orchestration requires a clean committed source, a fresh external
+  evidence root, exact pinned GoReleaser identity, the established
+  credential-cleared `release --snapshot --clean --skip=publish` invocation,
+  and metadata-derived discovery of exactly one host executable. No
+  `.goreleaser.yml`, production Go, Go test, inventory, audit, parser, scanner,
+  baseline, dependency, API, CLI, or completed P5 file changed.
+- A real GoReleaser v2.17.1 run at `06e3ac4` produced exactly one
+  `darwin/arm64` binary record,
+  `dist/plybuild_darwin_arm64_v8.0/ply`. The retained executable is 19,389,170
+  bytes with SHA-256
+  `28d7012a81e9bdab2b776a8be64f84d12fc9e2f239e52dcbfc2932f7469d2e4f`.
+  The report and evidence-manifest SHA-256 values are
+  `6e759f75ae40c27c6312cfc4f4c1e8a8c4eab56119a64a88fa4c4c62dec40f61`
+  and `bb33ae40ccab0992284318a123c9462fa86ae6a1e5dd2c7b881d0b302c4ab9a1`.
+- Host install remained a separate `make install` / `go install ./cmd/ply`
+  contract into an initially missing external `GOBIN`; `verify-install` ran
+  with its artifact override unset. The exact snapshot path then drove the
+  existing status, upgrade, and build verifiers. Each emitted exactly one
+  terminal PASS and two non-help behavioral trace records against the stable
+  snapshot identity.
+- The 20 controls fail closed for no GoReleaser call, wrong or publishing argv,
+  leaked credentials, stale output, missing/ambiguous/symlinked/non-executable,
+  wrong-platform, misplaced, wrong-build-platform, or foreign artifacts,
+  skipped/duplicate verifiers, artifact substitution, verifier failure,
+  duplicate terminal PASS, and repository-local output. The focused meta-log
+  SHA-256 is
+  `9804c5b0d54f5ada0dcfbd1ee401559dc026c8aa93778b2c604afb64adffa9b9`.
+- API/CLI and entry/subprocess compatibility, pinned golangci-lint 2.12.2,
+  complete uncached tests across 27 packages, race, vet, `make test`, all 62
+  launcher controls, Make contracts, all four existing host acceptance flows,
+  exact empty-HOME count-2, the standalone 15-control audit meta-suite, and an
+  unchanged complete preflight rerun pass. The first preflight hit the known
+  launcher signal-retention timing control after 25 assertions; its retained
+  log records the classified fixture flake and the isolated unchanged rerun
+  passed the full gate.
+- The current external schema-2 document validates at `06e3ac4`. Its SHA-256 is
+  `7a09ec592025564f6600b3edf21fd0c2d56dc28fd73a92de2b3bb80024f32e70`;
+  the exact Q1.6/Q1.7/Q1.9/Q2.4 audit exits 0. The full authoritative audit
+  exits 1, never 2, with scorecard SHA-256
+  `9b75a367fc07ddc698787103f80360227e6f03827009c62c4a80a59dcd547b4d`:
+  L0 is 8/8, L1 is 9/9, L2 is 8/10, seven ratchets improve, one documentation
+  ratchet regresses from immutable prompt history, and the same seven rows are
+  non-passing. The focused Q2.5-Q2.10 view has scorecard SHA-256
+  `367819708c9959d6b6bd6085e7a362124c95a2f9bb744db48a7294a1ffa0d482`:
+  Q2.5, Q2.6, Q2.7, and Q2.10 pass while Q2.8 and Q2.9 remain honestly manual.
+
+This is one bounded P6 acceptance target, not P6 exit. Fresh daemon-backed
+Docker evidence is next; `make quality` remains deferred until both artifact
+populations exist and the scoped L2 gate can be implemented without masking
+Q2.8 or Q2.9.
+
 The eight named harnesses from `.quality/inventory` were implemented one
 subject per measured move. Each declares its mutations, proves it can fail,
 includes the methodology T1-T10 meta-controls, and reports declared versus
