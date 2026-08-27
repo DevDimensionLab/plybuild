@@ -5159,6 +5159,25 @@ Docker acceptance remains the next P6 move. Docker Desktop must be started
 outside the managed workspace sandbox and `docker version` must report a real
 Server identity before the resume session edits or implements anything.
 
+P6 Docker daemon resume attempt (launch continuity `ddea23b`):
+
+- Exact ancestry, ordinary and ignored cleanliness, reciprocal archive links,
+  the launcher check, and the authorized P6 checkpoint passed again.
+- The fail-closed probe stopped before Dockerfile inspection or implementation:
+  Docker 29.4.0 returned JSON `Server: null`; `docker version`, `docker info`,
+  and `docker desktop status` exited 1 for `desktop-linux`. Buildx 0.33.0 could
+  name the builder but reported no driver or supported platforms because the
+  daemon was unreachable. The managed sandbox again could not open Docker
+  Desktop's required host log.
+- No Docker build/run, login, push, publication, design selection, image claim,
+  or repository implementation change occurred. The 42-file external manifest
+  at `/private/tmp/ply-docker-probe.IpwJLG` verifies and has SHA-256
+  `7adb0412028e616c4041a527e3a215d514a69f42a65d5f77d7da34e181ed614e`.
+
+Docker acceptance remains blocked on a daemon started outside the managed
+sandbox. The next session must repeat the same Client+Server and `docker info`
+gate before reading the Dockerfile or selecting an implementation design.
+
 The eight named harnesses from `.quality/inventory` were implemented one
 subject per measured move. Each declares its mutations, proves it can fail,
 includes the methodology T1-T10 meta-controls, and reports declared versus
