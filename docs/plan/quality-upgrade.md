@@ -4814,9 +4814,60 @@ P5.3 clean checkpoint (third subject `maven-sorting`, implementation
   `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
   and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
 
+P5.4 clean checkpoint (fourth subject `template`, implementation `da1cc88`):
+
+- Replaced the non-executable P3 `template` seam driver with the regular
+  executable `scripts/mutate-template` harness and replaced its meta-test with
+  an executable T1-T10 falsifiability test. The inventory and exact seam label
+  `6. template copy keeps source before destination` are unchanged; exact
+  executable subject coverage improves from 3 of 8 to 4 of 8.
+- The harness declares ten unique deterministic mutations in
+  `pkg/template/template.go`: source-root selection, target path component
+  ordering, copy argument ordering, copy error gating, walk directory
+  classification, root-POM detection, nested-POM exemption, render-file
+  exemption, returned file ordering, and markdown write bytes. Every production
+  search syntax occurs exactly once and every declaration binds an exact
+  non-empty named `pkg/template` test population.
+- One clean external control ran every exact selection. Every mutant used a
+  fresh external Git archive, cache, HOME, config, and temp root; compiled the
+  changed package separately; and ran its selected JSON test population with
+  exact run and terminal-action validation. Final totals are `declared=10`,
+  `killed=10`, `survived=0`, and `unusable=0`; no production or test repair was
+  required.
+- T1-T10 fail closed on empty/duplicate manifests, unauthorized paths,
+  zero/multiple replacements, empty or inexact test selection, a broken clean
+  control, an uncompiled/unexercised mutant, false accounting, an unclassified
+  survivor, repository-local artifacts, and non-deterministic declarations or
+  totals. The run report SHA-256 is
+  `e769cb49b2ae6fd3da15b207acab8ef11c402f5bff171dc6e150623b93279e95`;
+  the independent T1-T10 meta-log SHA-256 is
+  `cde7a149274b7f4b968a40b1ec5e4f7769c5d6d4243edcb40783a4fa19ba91bd`.
+- The no-evidence Q2.1-Q2.4 view records exact Q2.1 coverage 4 of 8 and has
+  scorecard SHA-256
+  `1f29a6fdd16484ec3c4741772dde20ce3b076025532db90f1231506f7ee137d3`.
+  The refreshed external schema-2 document covers all four completed P5
+  subjects and has SHA-256
+  `f235776be8c9fc454906415a1f983aeebf6ef29adbd4a8665a83e3bed76fe050`;
+  its Q2.4 evidence-object SHA-256 is
+  `bd2899300363740c159c07b41dfa76201371ec5e74b29ac545e20033ebb0a433`.
+  The focused audit exits 0 with scorecard SHA-256
+  `28732aa8d367b86cfb74a3e25d42a9909d01e8fc4564d4488d720b04675c4e8f`.
+- The full authoritative audit exits 1, never 2, with scorecard SHA-256
+  `fcfddf9b5794dabb1d2bdbbc19b04d594522bf7efbd7db7432a35882a6ee797c`:
+  L0 is 8 of 8, L1 is 9 of 9, Q2.1 is 4 of 8, Q2.4 passes, seven
+  ratchets improve, one holds, none regress, and dirty paths are empty. Eight
+  P5-P8 rows remain non-passing.
+- API/CLI and entry/subprocess compatibility, pinned golangci-lint 2.12.2,
+  complete tests across all 27 packages, race, vet, `make test`, all 62
+  launcher controls, Make contracts, all four host acceptance flows, exact
+  empty-HOME count-2, the standalone 15-control audit meta-suite, and complete
+  preflight all pass. API and CLI report SHA-256 values remain
+  `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+  and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+
 P5 remains active. The next bounded move converts only the existing
-`template` P3 seam driver and its meta-test into the fourth real mutation
-harness; it must not start a fifth subject.
+`file-shell` P3 seam driver and its meta-test into the fifth real mutation
+harness; it must not start a sixth subject.
 
 Implement the eight named harnesses from `.quality/inventory`, one subject per
 measured move and no more than three moves per checkpoint. Each harness must
