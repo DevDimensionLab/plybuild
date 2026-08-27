@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-27, commit `5829939`.
+Last measured checkpoint: 2026-08-27, commit `58c5224`.
 
 ## Objective
 
@@ -34,8 +34,8 @@ P2A|complete
 P2B|complete
 P3|complete
 P4|complete
-P5|active
-P6|queued
+P5|complete
+P6|active
 P7|queued
 P8|queued
 <!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->
@@ -4658,7 +4658,7 @@ mutation-harness move, while P6-P8 remain queued.
 
 ### P5 - Build L2 Mutation Evidence
 
-Status: active.
+Status: complete.
 
 P5.1 clean checkpoint (first subject `cli-context`, implementation `1dbc163`):
 
@@ -5022,23 +5022,75 @@ P5.7 clean implementation checkpoint (seventh subject `http`, implementation
   final signal-fixture timing miss after 25 launcher controls; the unchanged
   rerun passed the entire gate.
 
-P5 remains active. The next bounded move converts only the declared
-`interactive-build` driver and matching meta-test into the eighth real mutation
-subject; it must not start P6.
+P5.8 clean implementation checkpoint (eighth subject `interactive-build`,
+implementation `58c5224`):
 
-Implement the eight named harnesses from `.quality/inventory`, one subject per
-measured move and no more than three moves per checkpoint. Each harness must
-declare its mutations, prove it can fail, include the methodology T1-T10
-meta-controls, and report declared versus killed mutations. Surviving mutations
-must be classified as reachability, observability, or controllability gaps and
-drive a test or seam improvement.
+- Replaced the P3 recording driver with the regular executable
+  `scripts/mutate-interactive-build` harness and replaced its meta-test with an
+  executable T1-T10 falsifiability test. The inventory and exact seam label
+  `8. interactive server binds only to loopback` are unchanged. Exact
+  executable subject coverage improves from 7 of 8 to 8 of 8.
+- The harness declares ten deterministic, unique mutations across
+  `cmd/build.go`, `pkg/webservice/init.go`, and `pkg/webservice/api.go`:
+  project configuration, cloud configuration, root response, and generation
+  endpoint wiring; interactive URI host and asynchronous server start;
+  loopback bind address; generate route; listen-error gate; and Darwin browser
+  platform selection. Every production search syntax occurs exactly once and
+  every declaration binds an exact non-empty named test population.
+- One clean unmodified external control ran every exact selection. Every mutant
+  used a fresh external Git archive, cache, HOME, config, and temp root;
+  compiled every changed package separately; and ran its selected JSON test
+  population with exact run and terminal-action validation. Final totals are
+  `declared=10`, `killed=10`, `survived=0`, and `unusable=0`; no production or
+  test repair was required.
+- T1-T10 fail closed on empty/duplicate manifests, unauthorized paths,
+  zero/multiple replacements, empty or inexact test selection, a broken clean
+  control, an uncompiled/unexercised mutant, false accounting, an unclassified
+  survivor, repository-local artifacts, and non-deterministic declarations or
+  totals. The retained run report SHA-256 is
+  `109619d5d336a52f01d5f751d3b89b5bcfa85f2ba512cdc5073fbc58e1954d5f`;
+  the independent T1-T10 meta-log SHA-256 is
+  `22a0ac95820514fec641d72289c6ef1a3a56023cc6471f4c2e154087199c9f81`.
+- The no-evidence Q2 view records Q2.1 at 8 of 8 and automated PASS verdicts
+  for Q2.1-Q2.3; Q2.4 remains correctly unmeasurable without the external
+  receipt. Its scorecard SHA-256 is
+  `4154c02e7520e2021cbcb4ffee777b00d1448c6f451717691d5a5bceb9f8c221`.
+  The refreshed schema-2 document covers all eight completed subjects and has
+  SHA-256
+  `b12d4c262ecd16c9529887968cc33324552b08a7cd1d300ff0f1dff6e34acbba`;
+  its Q2.4 evidence-object SHA-256 is
+  `2565dd9824e224520004774521164f0d24ff771b134f7662125a337ae27dd09d`.
+  The focused audit exits 0 with scorecard SHA-256
+  `a5478b88f4dbd99dfa5561eafa09117c649a3f3998b79b34818b54b3970d6077`.
+- The full authoritative audit exits 1, never 2, with scorecard SHA-256
+  `9032b0e3763c64f820564f1608fd6ef52b0a751311c4dcbcd9a2fca8b1eef972`:
+  L0 is 8 of 8, L1 is 9 of 9, Q2.1-Q2.4 pass, seven ratchets improve,
+  one Q3.4 documentation-phrase ratchet regresses, dirty paths are empty, and
+  seven P6-P8 rows remain non-passing.
+- API/CLI and entry/subprocess compatibility, pinned golangci-lint 2.12.2,
+  complete tests across all 27 packages, race, vet, `make test`, all 62
+  launcher controls, Make contracts, all four host acceptance flows, exact
+  empty-HOME count-2, the standalone 15-control audit meta-suite, and complete
+  preflight all pass. The first complete preflight hit the known launcher
+  signal-retention timing control after 25 passes; the unchanged complete
+  rerun passed the entire gate.
+
+P5 is complete: all eight named inventory subjects have regular executable
+harnesses, at least eight meaningful mutations, T1-T10 controls, and exact
+zero-survivor/zero-unusable totals. P6 is the next active phase.
+
+The eight named harnesses from `.quality/inventory` were implemented one
+subject per measured move. Each declares its mutations, proves it can fail,
+includes the methodology T1-T10 meta-controls, and reports declared versus
+killed mutations. No survivor remained to require a reachability,
+observability, or controllability repair.
 
 Exit: all eight harnesses declare at least eight meaningful mutations, pass
 T1-T10, and report `declared == killed`, `survived == 0`, and `unusable == 0`.
 
 ### P6 - Build L2 Acceptance Evidence
 
-Status: queued.
+Status: active.
 
 Extend the P2A host acceptance scripts for `install`, `status`, `upgrade`, and
 `build` through both a fresh GoReleaser snapshot binary and a fresh Docker
