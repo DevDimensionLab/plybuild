@@ -1,13 +1,13 @@
 # Agent Session: Build P6 Docker Acceptance
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-27T064625+0200-build-p6-docker-acceptance`
 Created: `2026-08-27T06:46:25+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `07fbc927bebce327a22c92dcd6404e1a53f1b7d0e7a40081295b7584d54c10ff`
 Previous: [2026-08-27T054500+0200-build-p6-snapshot-acceptance.md](2026-08-27T054500+0200-build-p6-snapshot-acceptance.md)
-Next: none
-Outcome: pending
+Next: [2026-08-27T070412+0200-resume-p6-docker-daemon-blocker.md](2026-08-27T070412+0200-resume-p6-docker-daemon-blocker.md)
+Outcome: Blocked before implementation because the installed Docker client had no reachable daemon and the managed sandbox could not start Docker Desktop; exact external probe evidence is retained.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

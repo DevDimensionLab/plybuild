@@ -5135,6 +5135,30 @@ Docker evidence is next; `make quality` remains deferred until both artifact
 populations exist and the scoped L2 gate can be implemented without masking
 Q2.8 or Q2.9.
 
+P6 Docker daemon attempt (launch continuity `9fa49c3`):
+
+- The branch, exact ancestry, ordinary and ignored cleanliness, reciprocal
+  archive graph, launcher check, and active authorized P6 checkpoint all
+  passed before the probe. Required Docker, distribution, snapshot,
+  acceptance, audit, compatibility, fixture, and design inputs were read.
+- The installed Docker 29.4.0 client and buildx 0.33.0 select the
+  `desktop-linux` context on a macOS 15.3.1 arm64 host, but no server answered:
+  `docker version` and `docker info` exited 1. Docker Desktop 4.70.0 could not
+  be started from the managed sandbox because its required
+  `~/Library/Containers/com.docker.docker` log state is outside the writable
+  roots; LaunchServices, Apple Events, and UI control were unavailable.
+- No alternate local daemon is installed. No Docker build or run occurred, so
+  no Dockerfile defect, image identity, platform, executable population, or
+  verifier runtime can be claimed. No implementation shape was selected and no
+  production, test, Make, Dockerfile, or distribution file changed.
+- Exact external blocker evidence is retained at
+  `/private/tmp/ply-docker-blocker.KRsWoi`; its evidence-manifest SHA-256 is
+  `991d7bf4a7a739b9d971da7776a8be7e447d2aad6c931a7cf72c1bbdaeb682ae`.
+
+Docker acceptance remains the next P6 move. Docker Desktop must be started
+outside the managed workspace sandbox and `docker version` must report a real
+Server identity before the resume session edits or implements anything.
+
 The eight named harnesses from `.quality/inventory` were implemented one
 subject per measured move. Each declares its mutations, proves it can fail,
 includes the methodology T1-T10 meta-controls, and reports declared versus
