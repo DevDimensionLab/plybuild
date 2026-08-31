@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import http.server
+import socketserver
 import sys
 from pathlib import Path
 
@@ -25,11 +26,18 @@ class RepositoryHandler(http.server.BaseHTTPRequestHandler):
         return
 
 
+class LoopbackServer(http.server.ThreadingHTTPServer):
+    def server_bind(self):
+        socketserver.TCPServer.server_bind(self)
+        self.server_name = "localhost"
+        self.server_port = self.server_address[1]
+
+
 def main():
     if len(sys.argv) != 3:
         raise SystemExit("usage: loopback_repository.py PORT_FILE RELEASE")
     port_file, RepositoryHandler.release = sys.argv[1:]
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), RepositoryHandler)
+    server = LoopbackServer(("127.0.0.1", 0), RepositoryHandler)
     Path(port_file).write_text(
         "http://127.0.0.1:{}\n".format(server.server_address[1]), encoding="utf-8"
     )

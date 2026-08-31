@@ -14,8 +14,10 @@ calls_file="$tmp_dir/goreleaser-calls"
 make_workspace="$tmp_dir/make workspace"
 snapshot_scripts="$tmp_dir/snapshot scripts"
 snapshot_calls="$tmp_dir/snapshot-acceptance-calls"
+docker_scripts="$tmp_dir/docker scripts"
+docker_calls="$tmp_dir/docker-acceptance-calls"
 
-mkdir -p "$make_workspace" "$snapshot_scripts"
+mkdir -p "$make_workspace" "$snapshot_scripts" "$docker_scripts"
 
 fail() {
 	printf 'make distribution contract: %s\n' "$*" >&2
@@ -107,6 +109,13 @@ printf 'GORELEASER=%s\n' "${PLY_SNAPSHOT_GORELEASER-}" >>"$FAKE_SNAPSHOT_ACCEPTA
 EOF
 chmod +x "$snapshot_scripts/accept-snapshot"
 
+cat >"$docker_scripts/accept-docker" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'accept-docker\n' >>"$FAKE_DOCKER_ACCEPTANCE_CALLS"
+EOF
+chmod +x "$docker_scripts/accept-docker"
+
 run_distribution_target() {
 	local target=$1
 	local output=$2
@@ -155,6 +164,21 @@ grep -Fqx "GORELEASER=$fake_goreleaser" "$snapshot_calls" ||
 [[ ! -s "$calls_file" ]] ||
 	fail 'acceptance-snapshot bypassed its orchestration and invoked GoReleaser directly'
 
+: >"$docker_calls"
+if ! (
+	cd "$make_workspace"
+	FAKE_DOCKER_ACCEPTANCE_CALLS="$docker_calls" \
+		make --no-print-directory -f "$makefile_under_test" \
+			BASH=/bin/bash SCRIPTS_DIR="$docker_scripts" acceptance-docker
+) >"$tmp_dir/acceptance-docker-output" 2>&1; then
+	sed -n '1,160p' "$tmp_dir/acceptance-docker-output" >&2
+	fail 'acceptance-docker did not invoke the focused orchestration'
+fi
+[[ $(wc -l <"$docker_calls" | tr -d '[:space:]') -eq 1 ]] ||
+	fail 'acceptance-docker did not invoke exactly one orchestration'
+grep -Fqx 'accept-docker' "$docker_calls" ||
+	fail 'acceptance-docker invoked the wrong focused orchestration'
+
 if run_distribution_target release-brew "$tmp_dir/release-brew-output"; then
 	fail 'release-brew remained callable'
 fi
@@ -162,4 +186,4 @@ fi
 grep -F 'Homebrew distribution is inactive' "$tmp_dir/release-brew-output" >/dev/null ||
 	fail 'release-brew did not explain its fail-closed boundary'
 
-printf 'make distribution contract: PASS (default config, snapshot argv, credential isolation, snapshot acceptance wiring, and inactive publishers checked)\n'
+printf 'make distribution contract: PASS (default config, snapshot argv, credential isolation, snapshot/Docker acceptance wiring, and inactive publishers checked)\n'

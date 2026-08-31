@@ -1,9 +1,9 @@
 ## Builder image
 FROM golang:alpine as build
 
-ENV GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+ENV GO111MODULE=on CGO_ENABLED=0
 
-RUN apk --update add bash make git less openssh curl && \
+RUN apk --update add bash make git less openssh curl python3 && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
 

@@ -53,6 +53,11 @@ acceptance_prepare_home() {
 	local home=$1
 	local repository_url=$2
 	local profile="$home/.ply/profiles/default"
+	if [[ -n "${PLY_ACCEPTANCE_REPOSITORY_HOST:-}" ]]; then
+		[[ "$PLY_ACCEPTANCE_REPOSITORY_HOST" =~ ^[A-Za-z0-9.-]+$ ]] ||
+			acceptance_fail 'repository host override is malformed'
+		repository_url=${repository_url/127.0.0.1/$PLY_ACCEPTANCE_REPOSITORY_HOST}
+	fi
 	mkdir -p "$profile/cloud-config"
 	printf 'default\n' >"$home/.ply/profiles/.active_profile"
 	printf 'cloudConfig:\n  git:\n    url: ""\nnexus:\n  url: "%s"\n' \
