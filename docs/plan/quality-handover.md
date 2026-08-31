@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-31T09:21:24+02:00
+Generated: 2026-08-31T11:38:50+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,176 +10,184 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
-- Launch continuity commit:
+- Docker acceptance implementation commit:
+  `7e3729321fdd28d7d561e5160fa7065387b68b03`.
+- Its exact parent is the launch continuity commit
+  `8fdfb9b07412a5c794e8a003c27d5a6dfd7ddb30`, whose exact parent is
   `36156e4dd74db213cecb02d74197da687ec1bb03`.
-- Its exact parent is the fourth Docker-blocker continuity commit
-  `fde001c31342e087533ccd9925b26ba4085cd15d`.
-- After handoff, obtain the new continuity HEAD with `git rev-parse HEAD`; its
-  exact parent must be `36156e4`.
-- The snapshot implementation tree is
-  `0cb65473791c5eebf12f5aa6df9534be4a955a01`.
-- Clean status SHA-256 is
+- After this handoff, obtain the new continuity HEAD with
+  `git rev-parse HEAD`; its exact parent must be `7e37293`.
+- The clean implementation tree is
+  `b5f46f56ba639755e91f482d6df62cf320f810be`; its empty ordinary and
+  ignored status SHA-256 is
   `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`.
-- All five Docker attempts made no implementation, test, Makefile, Dockerfile,
-  or distribution change because no daemon-backed build could be started.
-- No Docker build or run, login, push, publication, GoReleaser run, ordinary
-  release, `make quality`, stash, revert, successor launch, or worktree removal
-  was performed.
+- The implementation changed only `Dockerfile`, focused `Makefile` and
+  distribution-contract wiring, `scripts/accept-docker`, its meta-test, and
+  shared private acceptance helpers. No production Go, Go test, dependency,
+  audit, baseline, inventory, publisher, registry, release, or completed P5
+  harness changed.
+- No login, push, publication, remote release, ordinary release,
+  `make quality`, schema-2 evidence creation, stash, revert, successor launch,
+  or worktree removal occurred.
 
 ## Continuity Checkpoint
 
-P5 is complete and P6 remains active. The host-platform GoReleaser snapshot is
-a finished P6 acceptance target. Docker acceptance remains wholly unfinished
-because the installed Docker client could not reach or start a daemon from the
-managed workspace sandbox. P7-P8 remain queued and `make quality` remains
-deferred.
+P2A-P5 are complete. P6 remains active, but both required artifact populations
+are now demonstrated: a current clean GoReleaser snapshot and a current clean
+local Docker image each ran status, upgrade, and build against local fixtures,
+with host install kept separate. The only remaining P6 move is current external
+schema-2 Q2.8/Q2.9 evidence plus the scoped `make quality` L2 exit gate. P7-P8
+remain queued.
 
-The snapshot archive, first Docker archive, and four resume archives are
-answered history. The fourth resume archive links reciprocally to one new
-resume-only Docker archive, which is the sole NEXT tail. Only the launcher's
-mutable header and prompt regions change; its stable execution region remains
-byte-identical.
+The prior snapshot and Docker-blocker archives are answered history. The
+Docker-success archive links reciprocally to exactly one NEXT archive for the
+final P6 move. Only the launcher's mutable header and prompt regions changed;
+its stable execution region remains byte-identical.
 
 The tracked launcher/archive apparatus remains the task source. Do not create
 `.agent-task/current.md` or `.quality/manual-evidence.json`. The audit counts
 ignored and untracked bytes, so ordinary and ignored status must both be empty
-at a measured checkpoint.
+at every authoritative measurement.
 
-## Docker Daemon Blocker
+## Live Daemon And Classified Build
 
-The clean launch state was verified before probing:
-
-- branch `codex/upgrade-quality` at `36156e4`, exact parent `fde001c`;
-- no ordinary, untracked, or ignored status entries;
-- reciprocal archive graph and authorized P6 checkpoint valid; and
-- `./codex-dev-start.sh --check` PASS for the Docker session.
-
-The rolling handover, active archive, reciprocal archive graph, authorized P6
-checkpoint, and launcher contracts were rechecked before the fresh probe.
-The daemon gate failed before any Dockerfile or implementation input was read,
-so no design or image population was defined.
-
-The retained blocker evidence is
-`/private/tmp/ply-docker-blocker.KRsWoi`. Its evidence-manifest SHA-256 is
-`991d7bf4a7a739b9d971da7776a8be7e447d2aad6c931a7cf72c1bbdaeb682ae`.
+The mandatory pre-design probe passed before the Dockerfile was read or any
+repository file was edited. Fresh evidence is retained at
+`/private/tmp/ply-docker-probe.NL83Jw`; its verified evidence-manifest SHA-256
+is `219851ff9c5ee84d8a59ac541445b17f8f28aaf0f095a2e363afa48bb593050e`.
 It records:
 
-- Docker client 29.4.0, API 1.54, Go 1.26.1, commit `9d7ad9f`,
-  `darwin/arm64`;
-- buildx `v0.33.0-desktop.1`, commit
-  `7f91f038ac14cbf5c4b2a6b76470860814424da1`;
-- selected context `desktop-linux`, endpoint
+- Docker client 29.4.0 and Docker Desktop 4.70.0 / Engine 29.4.0 server
+  identities;
+- selected context `desktop-linux` at
   `unix:///Users/perottochristensen/.docker/run/docker.sock`;
-- host macOS 15.3.1 build 24D70 on Darwin 24.3.0 arm64;
-- Docker Desktop app metadata version 4.70.0 build 224270; and
-- `docker version` exit 1, `docker info` exit 1, and `docker desktop status`
-  exit 1 because no server answered.
+- `docker version` and `docker info` exit 0 with daemon host `linux/arm64`;
+  and
+- buildx 0.33.0, BuildKit v0.29.0, the `docker` builder driver, and supported
+  `linux/arm64` platform.
 
-The installed app could not be started from this environment. `open` exited 1
-with LaunchServices `kLSNoExecutableErr`; the bundled backend exists and is
-signed, but both it and `docker desktop status/start` must create logs under
-`~/Library/Containers/com.docker.docker`, which is outside the session's
-writable roots and failed with `operation not permitted`. Apple Events were
-unavailable and Computer Use approval for `com.docker.docker` was denied. No
-alternate Colima, OrbStack, or Podman executable is installed. The daemon must
-therefore be started by the user or another process outside this sandbox before
-the next session.
+Executed clean daemon builds under
+`/private/tmp/ply-docker-classify.3jFRxJ` distinguished environment failures
+from two local Dockerfile defects. Default buildx first required unwritable
+user activity state and then a credential helper unavailable to the anonymous
+build; the accepted local path therefore uses an external empty Docker config
+and the non-publishing daemon builder with `DOCKER_BUILDKIT=0`. That real build
+then proved the builder lacked `python3`, so the launcher contract failed, and
+proved the Dockerfile's forced `GOARCH=amd64` produced the wrong executable for
+an arm64 image. Adding builder `python3` and allowing Go to select the native
+target were the smallest repairs. An external clean candidate build passed
+before those two lines and the acceptance path were committed.
 
-The latest repeated probe is retained at
-`/private/tmp/ply-docker-probe.g26Ld5`. Its 91-entry evidence manifest verifies,
-and the manifest SHA-256 is
-`9c91e10b69eb9b7bf223f135840d11c23775d1e1f51a63715d48a07a34f72a80`.
-It records:
+## Authoritative Docker Evidence
 
-- Docker client 29.4.0 and buildx `v0.33.0-desktop.1`;
-- selected context `desktop-linux` and the same Unix socket endpoint;
-- macOS 15.3.1 build 24D70 on Darwin 24.3.0 arm64;
-- `docker version` exit 1 with JSON `Server: null`, `docker info` exit 1,
-  and `docker desktop status` exit 1;
-- a named `desktop-linux` builder with no driver or supported-platform
-  identity because buildx could not reach the daemon; and
-- the same sandbox denial while Docker Desktop tried to open its host log.
+The successful clean run is retained at
+`/private/tmp/ply-docker-evidence.7e37293-20260831t1110`. Its 506-entry
+manifest verifies; the manifest and report SHA-256 values are
+`6128c6a1c9471a0ffb64b57f519053582986fcb59907135d041c5ad1a6ec2bee`
+and `f9ae547a1bd98fdcbf49b1f4e222d49d6da5bc83ebfe7bec515372ca039c8b09`.
+The report binds all claims to source commit `7e37293`, tree `b5f46f5`, and
+archive SHA-256
+`3b1f83fa4915d09a6c7018c9e977e67da0d3bcdf4ef2533d7f869a79fc5cee30`.
 
-No Docker build or run, login, push, publication, Dockerfile read, design
-choice, or repository implementation change occurred in the latest attempt.
+The unique absent tag
+`ply-acceptance:7e3729321fdd-20260831t090408-47800` was created by exactly one
+actual `docker build --no-cache --tag ... <external-clean-context>` call. No
+login, push, publication, or non-anonymous credential operation occurred. The
+tag resolved unambiguously before and after every verifier to immutable image
+ID and descriptor digest
+`sha256:a3b1f58b9861f23f555cdcfc51b6fc82d3452d9425c3314c48997fec5bd475ff`.
+Inspection records:
 
-This remains an external execution blocker, not a Dockerfile defect. A static
-read cannot classify the current Dockerfile, and no orchestration shape was
-selected or implemented. The successor must first require `docker version` to
-contain a real Server identity and `docker info` to exit 0; it must stop before
-editing if those conditions do not hold.
+- platform `linux/arm64`, entrypoint `/bin/ply`, empty default command, no
+  leaked cross-target configuration, and image size 275,720,311 bytes;
+- regular, non-symlink, executable `/bin/ply`, size 23,797,696 bytes and
+  SHA-256
+  `972bf6fca791fae76eecf09cd9cfcb04ffa7a994405985fa090b304b48ad58f8`;
+- a separate initially missing host `GOBIN`; `make install` / `go install
+  ./cmd/ply` produced a 26,504,386-byte host executable with SHA-256
+  `ca1d0ead122a8da336298a26d6dbc0574ef6bf6d684bb53dff595520241572fa`;
+  `verify-install` passed with its artifact override unset; and
+- exactly three Docker verifiers, status, upgrade, and build. Each emitted one
+  terminal PASS, two non-help behavioral receipts, and three runtime receipts
+  proving the exact immutable image ID was executed. The call ledger records
+  54 allowed Docker calls, one build, ten runs, and zero publication calls.
 
-## Retained Snapshot Evidence
+The executable Docker meta-test passes all 26 controls, including no or wrong
+build/run calls, publication, stale/ambiguous/retargeted identity, wrong
+platform/configuration/entrypoint, invalid `/bin/ply`, skipped or duplicate
+verifiers, substitution, verifier failure, duplicate PASS, and local output.
 
-The authoritative snapshot run remains under
-`/private/tmp/ply-snapshot-evidence.XnZgfB/run`. It records clean source commit
-`06e3ac4`, exact credential-cleared argv
-`release --snapshot --clean --skip=publish`, and exactly one `darwin/arm64`
-artifact at `source/dist/plybuild_darwin_arm64_v8.0/ply`, size 19,389,170,
-SHA-256
-`28d7012a81e9bdab2b776a8be64f84d12fc9e2f239e52dcbfc2932f7469d2e4f`.
+## Current Snapshot And Complete Gate
 
-The report SHA-256 is
-`6e759f75ae40c27c6312cfc4f4c1e8a8c4eab56119a64a88fa4c4c62dec40f61`
-and the evidence-manifest SHA-256 is
-`bb33ae40ccab0992284318a123c9462fa86ae6a1e5dd2c7b881d0b302c4ab9a1`.
-Host install passed separately with the artifact override unset. Status,
-upgrade, and build each emitted exactly one terminal PASS and two non-help
-behavioral traces against that snapshot. All 20 snapshot meta-controls pass.
+The current clean snapshot rerun is retained under
+`/private/tmp/ply-p6-docker-gate.KpjA7l/snapshot-evidence`. Its report SHA-256
+is `830da95218ab85884f040ad62088504a72ddd7d212b368b472c1ce2ea0da581a`.
+GoReleaser v2.17.1 ran exact credential-cleared argv
+`release --snapshot --clean --skip=publish` at `7e37293` and produced one
+`darwin/arm64` artifact, size 19,389,170 and SHA-256
+`6283963e4fcd72a2bffb2f574eeff3c6e93b6f993982b99a0f5af7b713eb704f`.
+Separate host install passed and status, upgrade, and build each produced one
+PASS and two behavioral traces against that exact snapshot.
 
-## Prior Gate And Audit Measurement
+The complete gate root is `/private/tmp/ply-p6-docker-gate.KpjA7l`. Its
+verified 534-entry evidence-manifest SHA-256 is
+`b7d1e6d82eada86df900b22556a74239ab793142836fb0d288971b7a3be3abbf`.
+It retains passing receipts for:
 
-The last complete implementation gate is the clean `06e3ac4` snapshot gate.
-API/CLI and entry/subprocess compatibility, pinned golangci-lint 2.12.2,
-complete uncached tests across 27 packages, race, vet, `make test`, all 62
-launcher controls, Make contracts, all four host acceptance flows, snapshot
-meta/acceptance, complete preflight, the 15-control audit meta-suite, and
-empty-HOME count-2 passed.
+- Docker meta 26/26 and snapshot meta 20/20;
+- actual current snapshot acceptance and all four existing host acceptances;
+- API and CLI compatibility, CLI surface, and entry/subprocess packages;
+- pinned golangci-lint 2.12.2, complete uncached tests across all 27 packages,
+  race, vet, `make test`, launcher check, and Make contracts;
+- complete preflight, including all eight mutation meta-tests and all other
+  script meta-tests;
+- an independent rerun of the 15-control audit meta-suite; and
+- exact empty-HOME count-2.
 
-The external schema-2 document SHA-256 is
-`7a09ec592025564f6600b3edf21fd0c2d56dc28fd73a92de2b3bb80024f32e70`.
-The exact Q1.6/Q1.7/Q1.9/Q2.4 audit exits 0 with scorecard SHA-256
-`2b8d42fa6457ab02bd6dbed85d3fd13ccd0552cae794d8cc7c6d70644e09cbae`.
-The full audit exits 1, never 2, with scorecard SHA-256
-`9b75a367fc07ddc698787103f80360227e6f03827009c62c4a80a59dcd547b4d`:
-L0 is 8/8, L1 is 9/9, L2 is 8/10, seven ratchets improve, Q3.4 records one
-prompt-history regression, dirty paths are empty, and seven rows remain
-non-passing.
+No manual evidence was supplied to the authoritative audit views. The full
+audit exits 1, never 2, at clean commit `7e37293`; its scorecard SHA-256 is
+`c7c4c9a9cff2831bedd6c5417660551d69771f44e625339d8b01f55b29e1daec`.
+L0 is 8/8, L1 has six PASS and three UNMEASURABLE, L2 has seven PASS and three
+UNMEASURABLE, seven ratchets improve, one regresses, and dirty paths are empty.
+The unmeasurable L2 rows are Q2.4, Q2.8, and Q2.9 as expected without current
+schema-2 receipts.
 
-The focused Q2.5-Q2.10 view exits 1, never 2, with scorecard SHA-256
-`367819708c9959d6b6bd6085e7a362124c95a2f9bb744db48a7294a1ffa0d482`.
-Q2.5, Q2.6, Q2.7, and Q2.10 pass; Q2.8 and Q2.9 remain honestly manual.
-Docker orchestration must remain outside the `verify-*` audit denominator.
+The focused Q2.5-Q2.10 view also exits 1, never 2, and has scorecard SHA-256
+`4a76baac730083a683580492e7e1eb4b6a7918641775fc1fdaf9a9e87c5bfe3c`.
+Q2.5, Q2.6, Q2.7, and Q2.10 pass; only Q2.8 and Q2.9 remain honestly
+unmeasurable. Docker and snapshot orchestration remain outside the four-script
+`verify-*` audit denominator.
 
 ## Next Objective
 
-Before starting the next Codex session, start Docker Desktop outside the managed
-workspace sandbox and verify that `docker version` includes both Client and
-Server records and that `docker info` exits 0 for `desktop-linux`.
+Finish P6 with one bounded exit-gate move. Recheck all schema-2 and P6 quality
+contracts, then implement the smallest `make quality` target and executable
+contract test that run preflight, mutation meta-tests and actual mutation
+harnesses, all required host/snapshot/Docker acceptance, and the authoritative
+audit scoped exactly to `--only Q0.*,Q1.*,Q2.*`. It must require a non-empty
+external schema-2 evidence input, external output roots, a real daemon-backed
+Docker population, all required criterion populations, and audit exit 0.
 
-Then resume the same bounded P6 Docker target. Run a clean external daemon
-probe before choosing the smallest design. Build a fresh local image from clean
-committed source with a unique non-publishing tag; bind it to one immutable
-image ID; inspect platform, entrypoint, configuration, creation metadata, and
-regular executable provenance; revalidate host install separately; and run the
-existing status, upgrade, and build behaviors through the immutable image with
-runtime receipts. Add the required fail-closed meta-controls and retain all
-evidence externally.
-
-Change `Dockerfile` only if the executed clean build exposes a classified local
-acceptance defect. Do not add `make quality` during Docker acceptance. After
-successful Docker evidence and its full gate, hand off the separate final P6
-schema-2 evidence and scoped `make quality` exit-gate move.
+After committing that focused wiring, create one external schema-2 document
+bound to the exact clean commit, tree, inventory, instruments, subjects, and
+retained executable observations. Refresh the already valid Q1.6, Q1.7, Q1.9,
+and Q2.4 receipts and add truthful Q2.8 magnitude and Q2.9 non-zero-plus-zero-
+artifact receipts for the exact four core verifier population. Run `make
+quality` through fresh snapshot and Docker evidence and require the clean
+Q0/Q1/Q2 audit to attain L2 with no held material debt. A separate full audit
+may continue to exit 1 for L3 debt.
 
 ## Start And Stop
 
-Confirm branch, HEAD, exact ancestry, clean and ignored status, reciprocal
-links, launcher `--check`, and the authorized checkpoint block before editing.
-Recheck the retained blocker facts, then require a live daemon before choosing
-or implementing Docker acceptance.
+Confirm branch, HEAD, exact ancestry, empty ordinary and ignored status,
+reciprocal links, launcher `--check`, and the authorized P6 checkpoint before
+editing. Probe `docker version` for real Client and Server identities and
+require `docker info` exit 0 before running the final gate. Recheck the Docker
+and snapshot manifests rather than assuming retained paths are valid.
 
-Stop before `make quality`, P7-P8, Go/dependency upgrades, production/API/CLI
-behavior, remote publication, registry pushes, package-manager publishers, or
-unrelated audit/inventory/P5/snapshot changes. Keep generated contexts, logs,
-reports, and caches external. Do not push, merge, stash, revert, launch a
-successor, or remove the worktree.
+Stop before P7-P8 implementation, Go or dependency upgrades, production/API/CLI
+behavior, audit/inventory/baseline changes, checked-in evidence, remote
+publication, publishers, registries, or unrelated acceptance/harness changes.
+Keep evidence, reports, logs, contexts, caches, and generated artifacts outside
+the worktree. Do not push, merge, publish, release, delete retained evidence,
+stash, revert, launch a successor, or remove the worktree.

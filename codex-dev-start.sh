@@ -1055,120 +1055,141 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-31T092124+0200-resume-p6-docker-daemon-blocker
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-31T092124+0200-resume-p6-docker-daemon-blocker.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-31T091258+0200-resume-p6-docker-daemon-blocker.md
+#|SESSION_ID=2026-08-31T113850+0200-complete-p6-quality-exit-gate
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-31T113850+0200-complete-p6-quality-exit-gate.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-31T092124+0200-resume-p6-docker-daemon-blocker.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Resume P6 with the same single acceptance-evidence target: a fresh local Docker
-#|image. Proceed only after a real local daemon is already reachable. Build from
-#|clean committed source through a non-publishing daemon path, revalidate host
-#|install as the separate `make install` / `go install` contract, and exercise
-#|status, upgrade, and build through the exact immutable image against local
-#|fixtures. Finish only with executable falsifiability controls and retained
-#|external evidence proving every declared verifier ran through that image.
+#|Finish P6 with the one remaining exit-gate move: create current external
+#|schema-2 evidence for the completed acceptance population and add the smallest
+#|scoped `make quality` target that proves Q0-Q2 as one executable apparatus.
+#|Require a fresh clean snapshot and fresh clean local Docker image during the
+#|real gate. Finish only when the exact `--only Q0.*,Q1.*,Q2.*` audit exits 0 at
+#|L2 with no missing population or held material debt.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P5 are complete. Snapshot acceptance is complete in `06e3ac4`; P6 remains
-#|active and P7-P8 remain queued. Change only the smallest focused Docker
-#|acceptance orchestration and meta-test under `scripts`, a shared private helper
-#|under `test/acceptance`, and focused `Makefile` or
-#|`test/makefile_distribution_test.sh` wiring needed to expose the target. Change
-#|`Dockerfile` only if an executed clean daemon build exposes a classified local
-#|acceptance defect, and then make only the smallest non-publishing repair.
+#|P2A-P5 are complete. P6 is active; current snapshot and Docker acceptance are
+#|complete at `7e37293`. P7-P8 remain queued until this move succeeds. Change
+#|only the smallest focused `Makefile` quality wiring and executable Make
+#|contract test, plus a private test helper only if the target cannot otherwise
+#|be falsified cleanly. Preserve the existing preflight, mutation, host,
+#|snapshot, Docker, and audit entry points rather than reimplementing them.
 #|
-#|Do not add `make quality`, reimplement snapshot acceptance, change
-#|`.goreleaser.yml`, production Go or Go tests, `.quality/inventory`, audit or
-#|baseline instruments, completed P5 harnesses, dependencies, API/CLI behavior,
-#|unrelated fixtures, `docker-publish.sh`, publishers, registry state, remote
-#|releases, or distribution outside the local image. Keep contexts, caches,
-#|reports, logs, and generated artifacts outside the worktree. Never create
-#|`.agent-task/current.md` or `.quality/manual-evidence.json`.
+#|Do not change production Go or Go tests, `Dockerfile`, `.goreleaser.yml`,
+#|existing acceptance or mutation implementations, dependencies,
+#|`.quality/inventory`, audit/parser/scanner/baseline instruments, API/CLI
+#|behavior, fixtures, publishers, `docker-publish.sh`, registries, or release
+#|configuration. Keep the schema-2 document, audit output, build contexts,
+#|caches, reports, logs, and generated artifacts outside the worktree. Never
+#|create `.agent-task/current.md` or `.quality/manual-evidence.json`.
 #|
 #|# Measurements At Start
 #|
-#|All five prior Docker attempts made no implementation change. The latest launch
-#|continuity was `36156e4dd74db213cecb02d74197da687ec1bb03`, exact parent
-#|`fde001c`, with clean ordinary and ignored status. After this handoff, the new
-#|continuity HEAD must have exact parent `36156e4`.
+#|The Docker implementation commit is
+#|`7e3729321fdd28d7d561e5160fa7065387b68b03`, exact parent
+#|`8fdfb9b07412a5c794e8a003c27d5a6dfd7ddb30`, clean tree
+#|`b5f46f56ba639755e91f482d6df62cf320f810be`. After this handoff the new
+#|continuity HEAD must have exact parent `7e37293` and empty ordinary and ignored
+#|status.
 #|
-#|The fresh 2026-08-31 probe again found Docker client 29.4.0 and buildx 0.33.0
-#|selecting `desktop-linux` at
-#|`unix:///Users/perottochristensen/.docker/run/docker.sock` on macOS 15.3.1
-#|arm64. `docker version` returned `Server: null` and exited 1; `docker info`
-#|and `docker desktop status` also exited 1. Builder driver and supported
-#|platforms were unavailable. The sandbox again could not write Docker
-#|Desktop's required `~/Library/Containers/com.docker.docker` log state. Exact
-#|fresh evidence remains at `/private/tmp/ply-docker-probe.g26Ld5`; its verified
-#|91-entry evidence-manifest SHA-256 is
-#|`9c91e10b69eb9b7bf223f135840d11c23775d1e1f51a63715d48a07a34f72a80`.
+#|The current Docker evidence is
+#|`/private/tmp/ply-docker-evidence.7e37293-20260831t1110`. Its verified
+#|506-entry manifest SHA-256 is
+#|`6128c6a1c9471a0ffb64b57f519053582986fcb59907135d041c5ad1a6ec2bee`.
+#|The fresh image is `linux/arm64`, entrypoint `/bin/ply`, immutable ID
+#|`sha256:a3b1f58b9861f23f555cdcfc51b6fc82d3452d9425c3314c48997fec5bd475ff`;
+#|status, upgrade, and build each have one PASS, two behavioral receipts, and
+#|three immutable-ID runtime receipts. Host install passed separately with its
+#|artifact override unset. The meta-test passes 26/26.
 #|
-#|Before reading the Dockerfile as an implementation input or editing anything,
-#|require `docker version` to contain real Client and Server identities and
-#|require `docker info` to exit 0 for the selected context. Record fresh client,
-#|server, builder, host, and supported-platform identities externally. If no
-#|daemon is available, do not implement from static assumptions; retain the new
-#|probe and hand off the exact blocker again.
+#|The complete current gate is `/private/tmp/ply-p6-docker-gate.KpjA7l`; its
+#|verified 534-entry manifest SHA-256 is
+#|`b7d1e6d82eada86df900b22556a74239ab793142836fb0d288971b7a3be3abbf`.
+#|It contains the current snapshot rerun, all requested compatibility,
+#|lint/test/race/vet/Make/launcher/preflight/host/meta/empty-HOME receipts, and
+#|the full and focused audits. With no manual evidence, Q2.5, Q2.6, Q2.7, and
+#|Q2.10 pass while Q2.8 and Q2.9 remain unmeasurable. The full audit also leaves
+#|Q2.4 unmeasurable, as expected.
+#|
+#|The last valid external schema-2 document is
+#|`/private/tmp/ply-snapshot-gate.06e3ac4/manual-evidence-q16-q17-q19-q24.json`,
+#|SHA-256
+#|`7a09ec592025564f6600b3edf21fd0c2d56dc28fd73a92de2b3bb80024f32e70`.
+#|It is prior-commit evidence and must not be reused as current evidence; use it
+#|only as a schema and receipt-population input to an independent fresh review.
 #|
 #|# Role And Boundaries
 #|
-#|Use a clean external archive or clone at exact HEAD and a unique tag that
-#|cannot name a pre-existing image. Require one actual daemon build, zero
-#|login/push/publish operations, a build-created immutable image ID, exact
-#|unambiguous tag resolution, and inspection of OS, architecture, entrypoint,
-#|creation/configuration metadata, and the regular executable `/bin/ply`. Record
-#|the build argv, commit, context identity, tag, image ID, platform, executable
-#|path, size, and digest. Reject stale or ambiguous identity, tag retargeting,
-#|wrong platform/configuration, artifact substitution, and missing, symlinked, or
-#|non-executable image content.
+#|The new target must invoke, through existing entry points, complete preflight;
+#|every mutation meta-test and actual mutation harness; the four host acceptance
+#|verifiers; fresh snapshot acceptance; fresh Docker acceptance; and the
+#|authoritative audit scoped exactly to `--only Q0.*,Q1.*,Q2.*`. It must accept
+#|explicit external tool, evidence, cache, and output paths, require a non-empty
+#|external schema-2 document, and reject repository-local generated state.
 #|
-#|Keep host install semantically separate in a missing external GOBIN and run
-#|`verify-install` with its artifact override unset. Reuse the existing status,
-#|upgrade, and build verifiers through the smallest runtime bridge. Mount only
-#|the exact external fixture/cache/output state they require. Require the exact
-#|non-empty verifier population, one terminal PASS each, non-help behavior, and
-#|runtime receipts proving each command used the immutable image ID rather than
-#|the tag or a host executable.
+#|The target must fail closed for a missing or duplicate required stage, an
+#|empty mutation or acceptance population, wrong stage argv or ordering where
+#|ordering is contractual, missing or repository-local evidence/output, a
+#|skipped fresh artifact population, a missing criterion population, an audit
+#|scope other than exact Q0-Q2, audit exit 1 or 2, or a report that does not
+#|attain L2. It may not turn the separate full L3 report into an exit gate.
 #|
-#|Add controls that fail closed for no Docker build/run; wrong build or run argv;
-#|login, push, or publication; stale, missing, or ambiguous image identity; wrong
-#|platform, entrypoint, or configuration; missing, symlinked, or non-executable
-#|`/bin/ply`; skipped or duplicate verifiers; tag retargeting or image
-#|substitution; verifier failure; duplicate terminal PASS; and repository-local
-#|output. Do not weaken assertions or accept help-only, static, grep-only, or
-#|exit-status-only evidence.
+#|# Schema-2 Evidence Contract
+#|
+#|Make the focused wiring commit before producing current receipts. Then create
+#|one external schema-2 document bound to that exact clean commit, commit tree,
+#|module, inventory, audit instruments, and every declared subject or acceptance
+#|script digest. Refresh the already proved Q1.6, Q1.7, Q1.9, and Q2.4 receipts
+#|from fresh current observations. Add Q2.8 observations that compare a real
+#|input magnitude with the treatment in the declared direction, and Q2.9
+#|observations that jointly prove bad input exits non-zero and creates or changes
+#|zero artifacts. Cover the exact non-empty four-script core verifier population;
+#|do not infer a receipt from grep, counts, help output, or exit status alone.
+#|
+#|Canonicalize the JSON exactly as required by the parser, record the whole-file
+#|and criterion-object SHA-256 values, and pass it explicitly with
+#|`--manual-evidence`. First require the focused Q1.6/Q1.7/Q1.9/Q2.4/Q2.8/Q2.9
+#|audit to exit 0. Then require the exact Q0/Q1/Q2 audit used by `make quality`
+#|to exit 0 and attain L2 with no absent, duplicate, stale, dirty, malformed, or
+#|held evidence.
 #|
 #|# Required Reading
 #|
 #|Confirm branch, HEAD, exact ancestry, clean and ignored status, reciprocal
 #|archive links, launcher `--check`, and the authorized checkpoint block. Read
-#|the rolling handover and this archive, then recheck the complete P6/gate,
-#|design, Docker/distribution, snapshot, acceptance, compatibility, fixture, and
-#|Q2.5-Q2.10 contracts before defining the image population.
+#|the rolling handover and this archive; recheck the complete P6 quality-target,
+#|schema-2, scorecard, baseline, preflight, mutation, host acceptance,
+#|snapshot/Docker, Make, compatibility, fixture, and Q0-Q2 contracts before
+#|choosing the target shape.
 #|
 #|# Three Moves
 #|
-#|Run a clean external daemon probe before choosing the design. Implement one
-#|executable Docker acceptance path, run the real fresh build, separate host
-#|install, and exact status/upgrade/build verifiers, and retain every receipt.
-#|Make one focused implementation commit. Then run focused meta-tests, actual
-#|Docker acceptance, retained snapshot acceptance/meta, API/CLI and
-#|entry/subprocess compatibility, pinned lint, complete tests/race/vet, launcher
-#|and Make contracts, complete preflight, existing host acceptance, audit
-#|meta-suite, full and focused Q2.5-Q2.10 audit views, and empty-HOME count-2.
+#|Probe Docker first. Require `docker version` to contain real Client and Server
+#|identities and `docker info` to exit 0 for the selected context before relying
+#|on Docker in the final apparatus. Revalidate both retained manifests. Make one
+#|focused implementation commit, produce fresh external schema-2 evidence at
+#|that exact commit, and run focused contract controls plus the actual complete
+#|`make quality` path with fresh snapshot and Docker evidence.
+#|
+#|Then rerun current snapshot/Docker meta and acceptance, API/CLI and
+#|entry/subprocess compatibility, pinned lint, complete tests/race/vet,
+#|launcher and Make contracts, complete preflight, existing host acceptance,
+#|the standalone audit meta-suite, focused and full audits, and empty-HOME
+#|count-2. Retain executable evidence for every declared stage and verifier.
 #|
 #|# Automatic Handoff
 #|
-#|After successful Docker evidence, rewrite the rolling handover and roadmap,
-#|answer this archive, create exactly one reciprocal NEXT archive for the final
-#|P6 schema-2 evidence and scoped `make quality` exit-gate move, replace only the
-#|launcher's mutable regions, run launcher/handoff contracts, and make the normal
-#|`docs: prepare next agent session` commit. Do not launch a successor, push,
-#|merge, publish, release, delete retained evidence, stash, revert, or remove the
-#|worktree. P6 remains active until snapshot and Docker evidence plus the scoped
-#|quality audit exit gate all pass.
+#|After the exact Q0-Q2 gate exits 0, mark P6 complete and P7 active while P8
+#|remains queued. Rewrite the rolling handover and roadmap, answer this archive,
+#|create exactly one reciprocal NEXT archive for the first bounded P7 toolchain
+#|baseline move, replace only the launcher's mutable regions, run launcher and
+#|handoff contracts, and make the normal `docs: prepare next agent session`
+#|commit. Do not implement P7 in this session.
+#|
+#|Do not launch a successor, push, merge, publish, release, delete retained
+#|evidence or the local image, stash, revert, or remove the worktree.
 # CODEX_MUTABLE_PROMPT_END

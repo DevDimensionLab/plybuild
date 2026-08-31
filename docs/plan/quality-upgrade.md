@@ -5235,6 +5235,69 @@ Docker acceptance remains blocked on a daemon started outside the managed
 sandbox. The next session must repeat the same Client+Server and `docker info`
 gate before reading the Dockerfile or selecting an implementation design.
 
+P6 Docker-image checkpoint (implementation `7e37293`):
+
+- The mandatory external probe passed before Dockerfile inspection or editing:
+  Docker client 29.4.0 reached Docker Desktop 4.70.0 / Engine 29.4.0 through
+  `desktop-linux`; `docker version` and `docker info` exited 0; and the daemon,
+  builder driver, BuildKit, host, and supported platform identities were
+  recorded. The verified probe-manifest SHA-256 is
+  `219851ff9c5ee84d8a59ac541445b17f8f28aaf0f095a2e363afa48bb593050e`.
+- Executed clean builds classified two local Dockerfile defects: the builder
+  needed `python3` to execute the existing launcher contract, and forced
+  `GOARCH=amd64` created the wrong executable for a native arm64 image. The
+  smallest repair added `python3` and removed forced target variables. The
+  accepted non-publishing path used an external empty Docker config and the
+  daemon builder with `DOCKER_BUILDKIT=0`; no credential, login, push, publish,
+  registry, or remote release operation ran.
+- Added executable `scripts/accept-docker`, its 26-control meta-test, private
+  Docker acceptance helper, and focused Make/distribution wiring. The path
+  requires clean committed archive source, a unique absent tag, exactly one
+  no-cache daemon build, immutable and unambiguous identity, platform and
+  configuration inspection, and a regular non-symlink executable `/bin/ply`.
+  It rejects absent or wrong build/run calls, publication, stale or ambiguous
+  identity, tag retargeting, substitution, wrong platform/configuration,
+  invalid executable content, skipped or duplicate verifiers, verifier
+  failure, duplicate terminal PASS, and repository-local output.
+- The authoritative clean build used tag
+  `ply-acceptance:7e3729321fdd-20260831t090408-47800` and produced immutable
+  `linux/arm64` image
+  `sha256:a3b1f58b9861f23f555cdcfc51b6fc82d3452d9425c3314c48997fec5bd475ff`,
+  entrypoint `/bin/ply`, size 275,720,311. `/bin/ply` is regular and executable,
+  size 23,797,696, SHA-256
+  `972bf6fca791fae76eecf09cd9cfcb04ffa7a994405985fa090b304b48ad58f8`.
+  Exactly one build, ten runs, and zero publication operations were recorded.
+- Host install remained a separate initially missing external `GOBIN` and
+  `make install` / `go install ./cmd/ply` contract. `verify-install` passed
+  with its artifact override unset. Status, upgrade, and build then each
+  emitted one terminal PASS, two non-help behavioral receipts, and three
+  runtime receipts proving the immutable image ID, not the tag or a host
+  executable, ran. The 506-entry Docker evidence manifest and report SHA-256
+  values are
+  `6128c6a1c9471a0ffb64b57f519053582986fcb59907135d041c5ad1a6ec2bee`
+  and `f9ae547a1bd98fdcbf49b1f4e222d49d6da5bc83ebfe7bec515372ca039c8b09`.
+- Current snapshot acceptance reran at `7e37293` with GoReleaser v2.17.1,
+  exact non-publishing argv, separate host install, and all three exact
+  verifiers. Docker meta 26/26, snapshot meta 20/20, API/CLI and
+  entry/subprocess compatibility, pinned lint, complete tests/race/vet,
+  launcher and Make contracts, complete preflight, existing host acceptance,
+  the independent 15-control audit meta-suite, and empty-HOME count-2 all
+  pass. The verified 534-entry gate-manifest SHA-256 is
+  `b7d1e6d82eada86df900b22556a74239ab793142836fb0d288971b7a3be3abbf`.
+- With no manual evidence supplied, the clean full audit exits 1, never 2, and
+  its scorecard SHA-256 is
+  `c7c4c9a9cff2831bedd6c5417660551d69771f44e625339d8b01f55b29e1daec`:
+  L0 is 8/8, L1 has six PASS and three UNMEASURABLE, L2 has seven PASS and
+  three UNMEASURABLE, seven ratchets improve, one regresses, and dirty paths
+  are empty. The focused Q2.5-Q2.10 scorecard SHA-256 is
+  `4a76baac730083a683580492e7e1eb4b6a7918641775fc1fdaf9a9e87c5bfe3c`:
+  Q2.5, Q2.6, Q2.7, and Q2.10 pass while Q2.8 and Q2.9 remain honestly
+  unmeasurable.
+
+Both P6 artifact populations are now complete. P6 remains active only for the
+current external schema-2 Q2.8/Q2.9 evidence and scoped `make quality` exit
+gate defined below; P7-P8 remain queued.
+
 The eight named harnesses from `.quality/inventory` were implemented one
 subject per measured move. Each declares its mutations, proves it can fail,
 includes the methodology T1-T10 meta-controls, and reports declared versus
