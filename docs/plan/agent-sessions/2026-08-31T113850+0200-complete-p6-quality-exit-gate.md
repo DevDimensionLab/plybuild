@@ -1,13 +1,13 @@
 # Agent Session: Complete P6 Quality Exit Gate
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-31T113850+0200-complete-p6-quality-exit-gate`
 Created: `2026-08-31T11:38:50+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `e61cefa211102b8b71d8a0b163153025d872614ffb12af9c8faef81857c9edec`
 Previous: [2026-08-31T092124+0200-resume-p6-docker-daemon-blocker.md](2026-08-31T092124+0200-resume-p6-docker-daemon-blocker.md)
-Next: none
-Outcome: pending
+Next: [2026-08-31T193743+0200-adopt-p7-toolchain-baseline.md](2026-08-31T193743+0200-adopt-p7-toolchain-baseline.md)
+Outcome: P6 completed at `097a9f1`: current schema-2 evidence validates all six manual criteria, the exact 21-stage `make quality` apparatus exits 0 with all 27 Q0-Q2 rows passing at clean L2, and the complete independent regression gate is retained and verified.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

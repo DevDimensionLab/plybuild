@@ -35,8 +35,8 @@ P2B|complete
 P3|complete
 P4|complete
 P5|complete
-P6|active
-P7|queued
+P6|complete
+P7|active
 P8|queued
 <!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->
 
@@ -5294,9 +5294,44 @@ P6 Docker-image checkpoint (implementation `7e37293`):
   Q2.5, Q2.6, Q2.7, and Q2.10 pass while Q2.8 and Q2.9 remain honestly
   unmeasurable.
 
-Both P6 artifact populations are now complete. P6 remains active only for the
-current external schema-2 Q2.8/Q2.9 evidence and scoped `make quality` exit
-gate defined below; P7-P8 remain queued.
+P6 quality exit checkpoint (implementation `097a9f1`):
+
+- Added the scoped `make quality` apparatus and its executable Make contract.
+  The target preserves the existing preflight, eight mutation meta-tests and
+  harnesses, four host verifiers, fresh snapshot acceptance, fresh Docker
+  acceptance, and authoritative audit entry points. It requires explicit
+  external regular tools, schema-2 evidence, output, Go caches, and module
+  cache; rejects local or stale state; and proves an exact ordered 21-stage
+  population before accepting only `--only Q0.*,Q1.*,Q2.*` at clean L2.
+- The canonical external schema-2 document is retained at
+  `/private/tmp/ply-p6-quality-review.097a9f1.IfKUcH/manual-evidence-schema-2.json`.
+  Its SHA-256 is
+  `1601eaa449b2435908024aa8675445d5d95d84cc59e03db8a4529ad573a55bdb`.
+  It binds six current receipts to commit `097a9f1`, tree `8f9616f`, the
+  inventory and audit instruments, every declared mutation subject, and all
+  four core verifier scripts. The focused Q1.6/Q1.7/Q1.9/Q2.4/Q2.8/Q2.9
+  audit exits 0.
+- The exact complete apparatus exits 0 under
+  `/private/tmp/ply-p6-quality-gate.097a9f1-final.lOV5NN`. Its verified
+  15,849-entry manifest SHA-256 is
+  `b89ac6645f814d40d2444ddca3a808919afacf40c873b576a170bc0e5a4091a6`.
+  All 27 Q0-Q2 criteria pass, L2 is attained, manual evidence is valid with
+  six receipts, mutation and acceptance denominators are 8 and 4, and held,
+  regressed, not-comparable, and dirty-path counts are zero. The scorecard
+  SHA-256 is
+  `bfe32a5e7eb90e9c7e9cc756a47f38bfefd68866e754cbb030653d409fce5322`.
+- The independent regression gate is retained at
+  `/private/tmp/ply-p6-regression-gate.097a9f1.YGeuN9`. Its verified
+  15,458-entry manifest SHA-256 is
+  `85fc11883c3ecd9ce444ae23777ef34c36944273d03fbc1f869b17fa477c7de1`.
+  Fresh snapshot and Docker acceptance, compatibility, pinned lint, complete
+  tests/race/vet, launcher and Make contracts, complete preflight, host
+  acceptance, audit meta 15/15, focused and Q0-Q2 audits, and empty-HOME
+  count-2 pass. The separate full report exits the expected 1 at L2 only for
+  four queued L3 rows; it is not an exit gate.
+
+P6 is complete. P7 is active for the first bounded maintained-toolchain
+baseline move; P8 remains queued.
 
 The eight named harnesses from `.quality/inventory` were implemented one
 subject per measured move. Each declares its mutations, proves it can fail,
@@ -5309,7 +5344,7 @@ T1-T10, and report `declared == killed`, `survived == 0`, and `unusable == 0`.
 
 ### P6 - Build L2 Acceptance Evidence
 
-Status: active.
+Status: complete.
 
 Extend the P2A host acceptance scripts for `install`, `status`, `upgrade`, and
 `build` through both a fresh GoReleaser snapshot binary and a fresh Docker
@@ -5329,7 +5364,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: queued after honest L2.
+Status: active after honest L2.
 
 - Select and document Go 1.26 or 1.27 based on supported stable tooling at
   execution time; update the module declaration and CI together.
