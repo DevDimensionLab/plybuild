@@ -1055,9 +1055,9 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-08-27T071452+0200-resume-p6-docker-daemon-blocker
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T071452+0200-resume-p6-docker-daemon-blocker.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T070412+0200-resume-p6-docker-daemon-blocker.md
+#|SESSION_ID=2026-08-31T090507+0200-resume-p6-docker-daemon-blocker
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-31T090507+0200-resume-p6-docker-daemon-blocker.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-27T071452+0200-resume-p6-docker-daemon-blocker.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
@@ -1091,21 +1091,21 @@ exit 70
 #|
 #|# Measurements At Start
 #|
-#|Both prior Docker attempts made no implementation change. The latest launch
-#|continuity was `ddea23b1dbdf5a3277abcf0152d1dd187048c83e`, exact parent
-#|`9fa49c3`, with clean ordinary and ignored status. After this handoff, the new
-#|continuity HEAD must have exact parent `ddea23b`.
+#|All three prior Docker attempts made no implementation change. The latest
+#|launch continuity was `20dbf71a17f2108a6a66c99af9226ce2fbf6a92c`, exact
+#|parent `ddea23b`, with clean ordinary and ignored status. After this handoff,
+#|the new continuity HEAD must have exact parent `20dbf71`.
 #|
-#|The fresh 2026-08-27 probe again found Docker client 29.4.0 and buildx 0.33.0
+#|The fresh 2026-08-31 probe again found Docker client 29.4.0 and buildx 0.33.0
 #|selecting `desktop-linux` at
 #|`unix:///Users/perottochristensen/.docker/run/docker.sock` on macOS 15.3.1
 #|arm64. `docker version` returned `Server: null` and exited 1; `docker info`
 #|and `docker desktop status` also exited 1. Builder driver and supported
 #|platforms were unavailable. The sandbox again could not write Docker
 #|Desktop's required `~/Library/Containers/com.docker.docker` log state. Exact
-#|fresh evidence remains at `/private/tmp/ply-docker-probe.IpwJLG`; its verified
+#|fresh evidence remains at `/private/tmp/ply-docker-probe.ffXBUb`; its verified
 #|evidence-manifest SHA-256 is
-#|`7adb0412028e616c4041a527e3a215d514a69f42a65d5f77d7da34e181ed614e`.
+#|`16ed6fed1d517f8585815032363e2ba8b2a57fa6f1e811ad4bde4da892ec2a52`.
 #|
 #|Before reading the Dockerfile as an implementation input or editing anything,
 #|require `docker version` to contain real Client and Server identities and

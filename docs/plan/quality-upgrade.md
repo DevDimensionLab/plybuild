@@ -5178,6 +5178,25 @@ Docker acceptance remains blocked on a daemon started outside the managed
 sandbox. The next session must repeat the same Client+Server and `docker info`
 gate before reading the Dockerfile or selecting an implementation design.
 
+P6 Docker daemon second resume attempt (launch continuity `20dbf71`):
+
+- Exact ancestry, ordinary and ignored cleanliness, reciprocal archive links,
+  the launcher check, and the authorized P6 checkpoint passed again.
+- The fail-closed probe stopped before Dockerfile inspection or implementation:
+  Docker 29.4.0 returned JSON `Server: null`; `docker version`, `docker info`,
+  and `docker desktop status` exited 1 for `desktop-linux`. Buildx 0.33.0 named
+  the builder but exposed no driver or supported platforms because the daemon
+  was unreachable. The managed sandbox again could not open Docker Desktop's
+  required host log.
+- No Docker build/run, login, push, publication, design selection, image claim,
+  or repository implementation change occurred. The 49-file external manifest
+  at `/private/tmp/ply-docker-probe.ffXBUb` verifies and has SHA-256
+  `16ed6fed1d517f8585815032363e2ba8b2a57fa6f1e811ad4bde4da892ec2a52`.
+
+Docker acceptance remains blocked on a daemon started outside the managed
+sandbox. The next session must repeat the same Client+Server and `docker info`
+gate before reading the Dockerfile or selecting an implementation design.
+
 The eight named harnesses from `.quality/inventory` were implemented one
 subject per measured move. Each declares its mutations, proves it can fail,
 includes the methodology T1-T10 meta-controls, and reports declared versus

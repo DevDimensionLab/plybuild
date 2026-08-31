@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-27T07:14:52+02:00
+Generated: 2026-08-31T09:05:07+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -11,16 +11,16 @@ session diary.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
 - Launch continuity commit:
+  `20dbf71a17f2108a6a66c99af9226ce2fbf6a92c`.
+- Its exact parent is the second Docker-blocker continuity commit
   `ddea23b1dbdf5a3277abcf0152d1dd187048c83e`.
-- Its exact parent is the first Docker-blocker continuity commit
-  `9fa49c304b28ceccb1d55dee9c6cf980f75dc160`.
 - After handoff, obtain the new continuity HEAD with `git rev-parse HEAD`; its
-  exact parent must be `ddea23b`.
+  exact parent must be `20dbf71`.
 - The snapshot implementation tree is
   `0cb65473791c5eebf12f5aa6df9534be4a955a01`.
 - Clean status SHA-256 is
   `6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d`.
-- Both Docker attempts made no implementation, test, Makefile, Dockerfile, or
+- All three Docker attempts made no implementation, test, Makefile, Dockerfile, or
   distribution change because no daemon-backed build could be started.
 - No Docker build or run, login, push, publication, GoReleaser run, ordinary
   release, `make quality`, stash, revert, successor launch, or worktree removal
@@ -34,8 +34,8 @@ because the installed Docker client could not reach or start a daemon from the
 managed workspace sandbox. P7-P8 remain queued and `make quality` remains
 deferred.
 
-The snapshot archive, first Docker archive, and first resume archive are
-answered history. The first resume archive links reciprocally to one new
+The snapshot archive, first Docker archive, and two resume archives are
+answered history. The second resume archive links reciprocally to one new
 resume-only Docker archive, which is the sole NEXT tail. Only the launcher's
 mutable header and prompt regions change; its stable execution region remains
 byte-identical.
@@ -49,12 +49,12 @@ at a measured checkpoint.
 
 The clean launch state was verified before probing:
 
-- branch `codex/upgrade-quality` at `ddea23b`, exact parent `9fa49c3`;
+- branch `codex/upgrade-quality` at `20dbf71`, exact parent `ddea23b`;
 - no ordinary, untracked, or ignored status entries;
 - reciprocal archive graph and authorized P6 checkpoint valid; and
 - `./codex-dev-start.sh --check` PASS for the Docker session.
 
-The rolling handover, both reciprocal Docker archives, complete P6 and
+The rolling handover, all reciprocal Docker archives, complete P6 and
 checkpoint gate, and launcher contracts were rechecked before the fresh probe.
 The daemon gate failed before any Dockerfile or implementation input was read,
 so no design or image population was defined.
@@ -85,10 +85,10 @@ alternate Colima, OrbStack, or Podman executable is installed. The daemon must
 therefore be started by the user or another process outside this sandbox before
 the next session.
 
-The fresh repeated probe is retained at
-`/private/tmp/ply-docker-probe.IpwJLG`. Its 42-file evidence manifest verifies,
+The latest repeated probe is retained at
+`/private/tmp/ply-docker-probe.ffXBUb`. Its 49-file evidence manifest verifies,
 and the manifest SHA-256 is
-`7adb0412028e616c4041a527e3a215d514a69f42a65d5f77d7da34e181ed614e`.
+`16ed6fed1d517f8585815032363e2ba8b2a57fa6f1e811ad4bde4da892ec2a52`.
 It records:
 
 - Docker client 29.4.0 and buildx `v0.33.0-desktop.1`;
@@ -101,7 +101,7 @@ It records:
 - the same sandbox denial while Docker Desktop tried to open its host log.
 
 No Docker build or run, login, push, publication, Dockerfile read, design
-choice, or repository implementation change occurred in the repeated attempt.
+choice, or repository implementation change occurred in the latest attempt.
 
 This remains an external execution blocker, not a Dockerfile defect. A static
 read cannot classify the current Dockerfile, and no orchestration shape was
