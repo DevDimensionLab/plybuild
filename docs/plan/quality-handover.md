@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-08-31T19:37:43+02:00
+Generated: 2026-09-01T15:46:46+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,161 +10,172 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
-- P6 quality implementation commit:
-  `097a9f15782c773e47a61d903f5d09f5c96408f0`.
+- P7 toolchain implementation commit:
+  `16ecb67eebb6450226d3264f30a64a14391b5245`.
 - Its exact parent is the launch continuity commit
-  `b8b803c807166b00ed2cd257789b2337b41b9eab`, whose exact parent is the
-  Docker acceptance implementation `7e3729321fdd28d7d561e5160fa7065387b68b03`.
+  `9852ed15b6e22ec0263bc4f81a973f4e088d7cf5`, whose exact parent is the P6
+  implementation `097a9f15782c773e47a61d903f5d09f5c96408f0`.
 - The implementation tree is
-  `8f9616f7c4efd90a4d346adb0af4156566e1914d`.
+  `94262fbfd426692fdc44f9eb21f85065ed40a6e2`.
 - After this handoff, obtain the new continuity HEAD with
-  `git rev-parse HEAD`; its exact parent must be `097a9f1`.
-- The focused implementation changed only `Makefile` and executable
-  `test/makefile_quality_test.sh`. No production Go or Go tests, dependency,
-  Dockerfile, GoReleaser configuration, existing acceptance or mutation
-  implementation, inventory, audit/parser/scanner/baseline instrument,
-  fixture, publisher, registry, or release configuration changed.
-- The implementation and every authoritative P6 measurement had empty
-  ordinary and ignored status. No push, merge, publication, release, stash,
-  revert, successor launch, evidence deletion, image deletion, or worktree
+  `git rev-parse HEAD`; its exact parent must be `16ecb67`.
+- The implementation and every accepted measurement had empty ordinary and
+  ignored status. No push, merge, publication, release, stash, revert,
+  successor launch, retained-evidence deletion, image deletion, or worktree
   removal occurred.
 
 ## Continuity Checkpoint
 
-P2A-P6 are complete. P7 is active for one bounded maintained-Go toolchain
-baseline move; P8 remains queued. The exact Q0-Q2 apparatus exits 0 at clean
-L2 with every required population present and no held material debt.
+P2A-P6 are complete. P7 remains active after its bounded maintained-toolchain
+baseline move; dependency groups remain. P8 is queued.
 
-The P6 archive is answered history and links reciprocally to exactly one NEXT
-P7 archive. Only the launcher's mutable header and prompt regions changed; its
-stable executable skeleton remains byte-identical.
+The answered toolchain archive links reciprocally to exactly one NEXT archive
+for the first small dependency group. Only the launcher's mutable header and
+prompt regions changed; its stable executable skeleton remains byte-identical.
 
 The tracked launcher/archive apparatus remains the task source. Do not create
-`.agent-task/current.md` or `.quality/manual-evidence.json`. Audit evidence,
-reports, caches, build contexts, and generated artifacts remain external.
+`.agent-task/current.md` or `.quality/manual-evidence.json`. Downloaded tools,
+module/build caches, reports, generated files, build contexts, and audit
+evidence remain external.
 
-## P6 Implementation And Contract
+## Maintained Toolchain Decision
 
-`make quality` now composes the existing entry points instead of duplicating
-them. It requires explicit absolute external regular executables for Go, Bash,
-GoReleaser, apidiff, golangci-lint, Docker, and Python; an explicit non-empty
-external schema-2 document; a fresh external output root; and external Go build
-and module caches.
+The selected baseline is exact Go 1.26.7. Go 1.27.0 was rejected for this move
+because pinned golangci-lint 2.12.2 was built with Go 1.26.2 and its official
+support policy does not claim targets newer than the build Go line. Pinned
+GoReleaser 2.17.1 was built with Go 1.26.5. Updating either quality tool to
+admit Go 1.27 would have mixed dependency upgrades into the toolchain move.
 
-The target validates and runs, in contractual order:
+Primary Go releases/toolchain/module documentation, pinned golangci-lint and
+GoReleaser module/release metadata, setup-go v2's official manifest, Docker
+Official Image source, and registry manifests are recorded in
+`.quality/baseline/toolchain-migration.json` and the P7 roadmap record.
 
-- complete preflight;
-- all eight mutation meta-tests and all eight actual mutation harnesses, each
-  with exact `declared=10 killed=10 survived=0 unusable=0` receipts;
-- all four host acceptance verifiers;
-- fresh snapshot and Docker acceptance; and
-- the authoritative audit with exact scope `--only Q0.*,Q1.*,Q2.*`.
+The retained official candidate is
+`/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`:
 
-It rejects missing or duplicate stages, wrong ordering, empty populations,
-local or stale evidence/output, skipped artifact populations, audit exit 1 or
-2, missing criteria, non-L2 output, dirty measurements, or held, regressed, or
-not-comparable scoped debt. Its executable contract passes all fail-closed
-controls and is included in `make test`.
+- version: `go version go1.26.7 darwin/arm64`;
+- executable SHA-256:
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
+- official archive SHA-256:
+  `020a1e82d85d1df183e0d3c2c6ddf181c295327fca19b3d8d614855b6cb49f6d`.
 
-## Current Schema-2 Evidence
+Contractual declarations now agree:
 
-The independent review root is
-`/private/tmp/ply-p6-quality-review.097a9f1.IfKUcH`. The canonical document is
-`manual-evidence-schema-2.json`, SHA-256
-`1601eaa449b2435908024aa8675445d5d95d84cc59e03db8a4529ad573a55bdb`.
-It is bound to commit `097a9f1`, tree `8f9616f`, module, inventory, audit
-instruments, every declared mutation subject, every mutation/meta script, and
-the exact non-empty four-script verifier population.
+- `go.mod` retains the characterized language floor `go 1.18` and adds exact
+  preferred `toolchain go1.26.7`;
+- the Docker builder is
+  `golang:1.26.7-alpine3.24@sha256:28d89ee9cc0ff9fec75c82ca201e6bf7fdf9a679d4b7b24dfa04f2bb766bb468`;
+- the deactivated release workflow and active README name 1.26.7; and
+- the exact baseline instrument identity names 1.26.7.
 
-Criterion-object SHA-256 values are:
+The deactivated lint workflow has no separate Go selector. The inactive Snap
+publisher remains a P8 scope decision. Raising the module language floor to
+1.26.7 was rejected because it introduced ten pinned-lint findings from newer
+language-analysis semantics; retaining the documented `go`/`toolchain` split
+keeps this move behavior- and toolchain-only.
 
-- Q1.6: `393e8e9d4afcc510b81cf59f443512c48efd5ce292762eb02b6f45ae274717b0`;
-- Q1.7: `298e43239ca5d81bbaba08f7ad44be5a658885ccf11da83ec571b745b2e0ee01`;
-- Q1.9: `730b6217ba8dc8e76253026bca3a84c89361fa2cd579490ba0878e92099600e1`;
-- Q2.4: `a437cf14c0c3733abdda988e13621a634368c524fb1c49ff9f38167db7539c7a`;
-- Q2.8: `579d83d4b8c04a768b2458ce70d62848680b7f55583a7e5feedc5e55bd7b2668`;
-  and
-- Q2.9: `0b781b5184a03ee427d2532870102570df8235c614edd1a87eb0b338724127db`.
+## Baseline Reproduction And Compatibility
 
-Fresh observations compare real input/treatment magnitudes in the declared
-direction for install, status, upgrade, and build. All four bad-input probes
-exit non-zero while creating or changing zero protected artifacts. The focused
-six-criterion audit exits 0 with all receipts valid.
+Old Go 1.26.2 reproduced the stored pre-P7 scorecard at
+`/private/tmp/ply-p7-baseline-old-go1.26.2.iHSEG4`, SHA-256
+`5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`.
+Go 1.26.7 reproduced the migrated scorecard at
+`/private/tmp/ply-p7-baseline-new-go1.26.7.xY13SW`, SHA-256
+`9f044510ae95d1df85b6c0868323c11453f97015c16fc46721d70c9da0b3a463`.
+Only `tool.go_build.version` differs: the raw body, criteria, denominators, and
+all 228 numeric debt leaves are identical.
 
-## Exact Quality Gate
+Both toolchains select the same 233 modules and 143 non-standard packages,
+emit byte-identical core help, and preserve the same existing 207-line
+`go mod tidy -diff` projection. No direct or indirect version or `go.sum`
+entry changed. API/CLI and entry/subprocess compatibility, generated archive
+and Docker contracts, and all host behavior remain green.
 
-The authoritative apparatus root is
-`/private/tmp/ply-p6-quality-gate.097a9f1-final.lOV5NN`. Its verified
-15,849-entry evidence-manifest SHA-256 is
-`b89ac6645f814d40d2444ddca3a808919afacf40c873b576a170bc0e5a4091a6`.
+Audit-meta T15 composes old/new instrument reproduction with the pre-P7/current
+Go scorecards. It requires byte-exact authoritative baselines and compares all
+228 numeric leaves across both axes.
+
+## Accepted External Evidence
+
+The commit-bound schema-2 review root is
+`/private/tmp/ply-p7-quality-review.16ecb67.Ugm5Bh`. Its verified 22,002-entry
+manifest SHA-256 is
+`9fc89ac3d4296c2ad7f9a30b6f9decc308113a6b5008afecd12b741983a7e6eb`.
+The canonical evidence SHA-256 is
+`f3ea505bc6bd414f74bcdbc5b5f6b747bfadf7dc48ddc16ad9977937b0c4958d`;
+all six manual receipts validate and the focused audit exits 0.
+
+The exact complete apparatus root is
+`/private/tmp/ply-p7-quality-gate.16ecb67-final.hdvr9q`. Its verified
+246,560-entry manifest SHA-256 is
+`15136fa28368eb4ada0b81dfddc4f36daa19f17b7ab00d3a4ea85d496066cb8e`.
 The exact 21-line stage ledger ends with `audit:Q0.*,Q1.*,Q2.*`, and
-`make quality` exits 0.
+`make quality` exits 0. The Q0-Q2 scorecard SHA-256 is
+`0cf6f16797ec73ed8d51944a77dc0cde4de85e174526b915afb58542e98d4cec`:
+all 27 rows pass at L2, manual evidence is valid, mutation and acceptance
+populations are 8/8 and 4/4, and held, regressed, current-not-comparable, and
+dirty counts are zero.
 
-The scorecard SHA-256 is
-`bfe32a5e7eb90e9c7e9cc756a47f38bfefd68866e754cbb030653d409fce5322`.
-All 27 scoped criteria pass; attained level is L2; manual evidence is valid
-with six receipts; mutation and acceptance denominators are 8 and 4; held,
-regressed, and current-not-comparable counts are zero; and the measured tree is
-clean with zero dirty paths.
+The independent accepted regression root is
+`/private/tmp/ply-p7-regression-gate.16ecb67-final.4nMFvg`. Its verified
+67,726-entry manifest SHA-256 is
+`48be0c3b828c60702ff4f06c513b8720dba4259c9df39d99cf23b0f655dffded`.
+All 36 ledger stages pass, including declaration/graph contracts,
+compatibility, pinned lint, tests/race/vet, launcher and Make contracts,
+complete preflight, host/snapshot/Docker meta and acceptance, standalone audit
+meta, focused and Q0-Q2 audits, and empty-HOME count-2. The focused and Q0-Q2
+scorecards are
+`00ff8e287212841d18de0bb7107aa7af49a58f105f7280597059b09e7a0b4fab`
+and
+`0cf6f16797ec73ed8d51944a77dc0cde4de85e174526b915afb58542e98d4cec`.
+The full scorecard is
+`980caa86d74519abec73de7a3896b77a5c9c51c7754c3e9f901ee9ea4f9d3960`;
+it exits the expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-The gate produced a fresh `darwin/arm64` snapshot artifact, size 19,389,170,
-SHA-256
-`b740c5e0df160aedeee034718fce416ec38a3012f936121efec341e0dd147a63`.
-It also produced and retained fresh local `linux/arm64` image
-`sha256:7aa5b59b2116179f848e749d59841faf14a563c3b8bfaf35bfd54e72fd0c42aa`,
-entrypoint `/bin/ply`, size 275,721,016. Snapshot and Docker status, upgrade,
-and build verifiers all pass; host install remains separate with its artifact
-override unset.
+The complete cross-root index is
+`/private/tmp/ply-p7-complete-move.16ecb67.tGLtNi/evidence-index.json`, SHA-256
+`68e9a7cf649a02b882703bd079d37fafab69caba166a97efa164616308b9578b`.
+Its verified one-entry manifest SHA-256 is
+`8da5e8a79e26cbb8e4279150f820c8e0bf88da1fb032860015b079d8da718607`.
 
-## Independent Regression Gate
-
-The post-gate rerun is retained at
-`/private/tmp/ply-p6-regression-gate.097a9f1.YGeuN9`. Its verified 15,458-entry
-evidence-manifest SHA-256 is
-`85fc11883c3ecd9ce444ae23777ef34c36944273d03fbc1f869b17fa477c7de1`.
-It retains passing current receipts for snapshot meta 20/20 and fresh
-acceptance, Docker meta 26/26 and a second fresh image, API/CLI and
-entry/subprocess compatibility, pinned golangci-lint 2.12.2, complete tests,
-race, vet, launcher 62/62, Make contracts, complete preflight, all four host
-verifiers, audit meta 15/15, and empty-HOME count-2.
-
-The focused six-criterion and exact Q0-Q2 scorecard SHA-256 values are
-`441b773a56141b5cbf8f1a20e129a39c2543aded13280895d109ba4929bb2ced`
-and `bfe32a5e7eb90e9c7e9cc756a47f38bfefd68866e754cbb030653d409fce5322`;
-both exit 0. The full audit exits the expected 1, never 2, and its scorecard
-SHA-256 is
-`5e12b8b9348a98aa2d18c153bc1e9ae591fd36333ffd24cb0443ec082af08a9c`.
-It attains L2 with 32/36 PASS; only queued L3 rows Q3.1 and Q3.4 fail and Q3.3
-and Q3.7 remain unmeasurable. The full report is not an exit gate.
-
-Two retained attempts hit the characterized launcher signal-retention timing
-fixture. Isolated unchanged reruns passed launcher 62/62, the complete Make
-contract, and complete preflight. No product or quality-apparatus failure
-remains.
+For exact replay, put the candidate SDK directory first in `PATH` as well as
+passing its absolute `GO`; T15's historical instruments invoke literal `go`.
+Do not inject ambient `GOFLAGS`, because the audit meta-contract intentionally
+changes that variable in its probes. Warm a fresh external `GOMODCACHE` from a
+Git archive outside the worktree: `go mod download all` adds 208 historical
+checksums if run in the real tree. Diagnostic roots from those characterized
+environment mistakes are not accepted evidence.
 
 ## Next Objective
 
-Begin P7 with one bounded toolchain-baseline move. Determine from current
-primary support evidence whether Go 1.26 or 1.27 is the maintained baseline
-supported by the pinned quality tools. Inventory every declared toolchain
-identity before editing, then migrate the module, build, CI, release, and
-documented declarations together only where they are active or contractual.
+Implement only the first small P7 dependency group: direct
+`golang.org/x/term v0.5.0` and the coupled `golang.org/x/sys v0.5.0` selection
+required by it. Verify current releases, module requirements, Go support, and
+security information from primary sources before choosing versions.
 
-Keep this move toolchain-only: do not upgrade dependency versions or change
-production/API/CLI behavior. Reproduce old and new quality measurements with
-both instrument identities, explain any numeric or compatibility drift, refresh
-external evidence that becomes commit-bound, and retain all generated state
-outside the worktree.
+Capture old/new module graphs and `go mod tidy -diff` projections in external
+state first. Admit no unrelated direct or indirect version change; if minimum
+version selection requires a wider group, stop and record the decision instead
+of broadening scope. Keep the Go 1.26.7 declarations and exact baseline
+identity unchanged unless a measured incompatibility requires stopping.
+
+Make one dependency-only implementation commit. Prove pinned lint,
+tests/race/vet, API/CLI and entry/subprocess compatibility, generated artifact
+and host/snapshot/Docker behavior, audit reproduction, exact Q0-Q2 L2, the
+separate queued-L3 result, and empty-HOME count-2 from clean external state.
+Do not change production behavior to accommodate an upgrade in the same move.
 
 ## Start And Stop
 
-Confirm branch, HEAD, exact ancestry, empty ordinary and ignored status,
-reciprocal links, launcher `--check`, and the authorized P7 checkpoint before
-editing. Read the P7 roadmap, current toolchain declarations, baseline identity
-contract, active and deactivated CI, Docker/release inputs, and pinned-tool
-support policy. Verify time-sensitive toolchain support from primary sources.
+Confirm branch, exact ancestry, clean ordinary and ignored status, reciprocal
+links, launcher `--check`, the P7/P8 queue, implementation commit/tree, and all
+accepted manifests before editing. Read the active archive, this handover, the
+P7 roadmap, module graph, dependency callers/tests, toolchain contract,
+compatibility, snapshot/Docker, and audit contracts.
 
-Stop before dependency upgrades, P8 domain modernization, unrelated behavior,
-API/CLI changes, publication, publishers, registries, or release. Do not push,
-merge, publish, release, delete retained evidence or either retained local
-image, stash, revert, launch a successor, or remove the worktree.
+Stop before any dependency outside the terminal pair, behavior/API/CLI change,
+quality-tool upgrade, P8 domain work, inactive packaging work, publication,
+publisher/registry/credential change, or release. Do not push, merge, publish,
+release, delete retained evidence or images, stash, revert, launch a successor,
+or remove the worktree.

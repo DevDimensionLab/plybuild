@@ -1,13 +1,13 @@
 # Agent Session: Adopt P7 Toolchain Baseline
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-08-31T193743+0200-adopt-p7-toolchain-baseline`
 Created: `2026-08-31T19:37:43+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `ee0464ab62a1f4e35f9b0b0d452f8a7c87ed24dc5a9822a7fb6e7d85923285f5`
 Previous: [2026-08-31T113850+0200-complete-p6-quality-exit-gate.md](2026-08-31T113850+0200-complete-p6-quality-exit-gate.md)
-Next: none
-Outcome: pending
+Next: [2026-09-01T154646+0200-upgrade-terminal-dependencies.md](2026-09-01T154646+0200-upgrade-terminal-dependencies.md)
+Outcome: Go 1.26.7 was adopted at `16ecb67` as the exact preferred, Docker, release-workflow, documentation, and baseline toolchain while retaining the Go 1.18 language floor; old/new instruments preserve all 228 numeric debt leaves, exact Q0-Q2 exits 0 at clean L2, and the complete independent regression is sealed with no API, CLI, dependency, acceptance, or artifact-contract drift.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

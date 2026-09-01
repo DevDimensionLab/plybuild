@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-08-27, commit `58c5224`.
+Last measured checkpoint: 2026-09-01, commit `16ecb67`.
 
 ## Objective
 
@@ -5330,8 +5330,8 @@ P6 quality exit checkpoint (implementation `097a9f1`):
   count-2 pass. The separate full report exits the expected 1 at L2 only for
   four queued L3 rows; it is not an exit gate.
 
-P6 is complete. P7 is active for the first bounded maintained-toolchain
-baseline move; P8 remains queued.
+P6 and the first bounded P7 maintained-toolchain baseline move are complete.
+P7 remains active for dependency groups; P8 remains queued.
 
 The eight named harnesses from `.quality/inventory` were implemented one
 subject per measured move. Each declares its mutations, proves it can fail,
@@ -5404,14 +5404,64 @@ Toolchain baseline move (2026-09-01):
   byte-exact archived/current scorecards, permits only the recorded Go version
   field between toolchain identities, and independently compares all 228
   numeric debt leaves across both instrument and toolchain axes.
+- The focused implementation is commit
+  `16ecb67eebb6450226d3264f30a64a14391b5245`, exact parent
+  `9852ed15b6e22ec0263bc4f81a973f4e088d7cf5`, clean tree
+  `94262fbfd426692fdc44f9eb21f85065ed40a6e2`. No direct or indirect
+  dependency version, production Go behavior, API/CLI surface, acceptance or
+  mutation population, publisher, registry, credential, or release behavior
+  changed.
+- Current schema-2 review evidence is retained at
+  `/private/tmp/ply-p7-quality-review.16ecb67.Ugm5Bh`; its verified
+  22,002-entry manifest SHA-256 is
+  `9fc89ac3d4296c2ad7f9a30b6f9decc308113a6b5008afecd12b741983a7e6eb`.
+  The canonical evidence SHA-256 is
+  `f3ea505bc6bd414f74bcdbc5b5f6b747bfadf7dc48ddc16ad9977937b0c4958d`,
+  and the focused six-receipt audit exits 0.
+- The exact complete quality apparatus exits 0 at
+  `/private/tmp/ply-p7-quality-gate.16ecb67-final.hdvr9q`. Its verified
+  246,560-entry manifest SHA-256 is
+  `15136fa28368eb4ada0b81dfddc4f36daa19f17b7ab00d3a4ea85d496066cb8e`.
+  Its exact 21-stage ledger ends in `audit:Q0.*,Q1.*,Q2.*`; all 27 scoped
+  criteria pass at L2 with valid manual evidence, 8/8 mutation and 4/4
+  acceptance populations, and zero held, regressed, not-comparable, or dirty
+  counts. The Q0-Q2 scorecard SHA-256 is
+  `0cf6f16797ec73ed8d51944a77dc0cde4de85e174526b915afb58542e98d4cec`.
+- The independent 36-stage regression is retained at
+  `/private/tmp/ply-p7-regression-gate.16ecb67-final.4nMFvg`; its verified
+  67,726-entry manifest SHA-256 is
+  `48be0c3b828c60702ff4f06c513b8720dba4259c9df39d99cf23b0f655dffded`.
+  Toolchain declarations, graph selection, API/CLI and entry/subprocess
+  compatibility, pinned lint, tests/race/vet, launcher and Make contracts,
+  complete preflight, host/snapshot/Docker meta and acceptance, standalone
+  audit meta, focused and Q0-Q2 audits, and empty-HOME count-2 pass. The full
+  report exits the expected 1 only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+  Fresh-cache replay requires the candidate SDK directory first in `PATH` as
+  well as exact `GO`, no ambient `GOFLAGS`, and module-cache warming from an
+  external source archive; these conditions keep literal `go` subprocesses on
+  1.26.7 without rewriting the repository's historical `go.sum`.
+- The complete cross-root evidence index is
+  `/private/tmp/ply-p7-complete-move.16ecb67.tGLtNi/evidence-index.json`,
+  SHA-256
+  `68e9a7cf649a02b882703bd079d37fafab69caba166a97efa164616308b9578b`;
+  its verified one-entry manifest SHA-256 is
+  `8da5e8a79e26cbb8e4279150f820c8e0bf88da1fb032860015b079d8da718607`.
 
-- Select and document Go 1.26 or 1.27 based on supported stable tooling at
-  execution time; update the module declaration and CI together.
+The next bounded P7 group is only the coupled Go terminal modules:
+direct `golang.org/x/term v0.5.0` and the `golang.org/x/sys v0.5.0` version
+required by that selection. Verify current releases and module requirements
+from primary sources before choosing versions. Do not admit another direct or
+indirect version change merely because `go get` proposes it; stop and explain
+any wider minimum-version-selection requirement before broadening the group.
+
+- Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
+  reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
   vet/lint, API/CLI diff, acceptance, and vulnerability scanning after each.
 - Keep dependency-only commits separate from behavior changes.
-- Migrate the exact-toolchain baseline by reproducing old and new measurements;
-  preserve every debt value and record both instrument identities.
+- The exact-toolchain baseline migration is complete: old/new instruments were
+  reproduced with every comparable debt value preserved and both identities
+  recorded.
 
 Exit: the declared toolchain matches the verified toolchain, dependency
 upgrades have no unexplained output or API drift, and vulnerability findings
