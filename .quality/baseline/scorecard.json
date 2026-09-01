@@ -1543,7 +1543,7 @@
         "count": 14,
         "sha256": "dcc538ca99211b5b6c0394908ea97aacbd1bcd9d722d2636e5ff0bc8fb29afb5"
       },
-      "version": "go version go1.26.2 darwin/arm64"
+      "version": "go version go1.26.7 darwin/arm64"
     },
     "mode": "full mode",
     "parser_sha256": "f56dc96885c0f3ab5e18bdb3ccbe155411efc0ce7bacfeb4fe701d8a23d0c31a",

@@ -5364,7 +5364,46 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after honest L2.
+Status: active after the maintained-toolchain baseline move; dependency groups
+remain queued.
+
+Toolchain baseline move (2026-09-01):
+
+- Selected exact Go 1.26.7. Go 1.26 and Go 1.27 are both maintained, but the
+  pinned golangci-lint 2.12.2 binary was built with Go 1.26.2 and its primary
+  support policy does not claim targets newer than its build Go line. Pinned
+  GoReleaser 2.17.1 was built with Go 1.26.5. Go 1.27.0 was therefore rejected
+  for this move rather than upgrading quality-tool dependencies out of scope.
+- The official Go archive, actions/go-versions manifest, Docker Official Image
+  source, and Docker registry manifest all resolve Go 1.26.7. The module's
+  distinct preferred-toolchain directive, Docker builder, deactivated release
+  workflow, active documentation, and exact-toolchain baseline now declare one
+  version. The module retains `go 1.18` as its characterized language and
+  compatibility floor, following Go's documented separation of the `go` and
+  `toolchain` directives. Raising that floor provisionally introduced ten
+  pinned-lint findings from newer language-analysis semantics; changing source
+  or lint policy would not be toolchain-only. The split declaration instead
+  preserves the 0-issue pinned-lint contract. The deactivated lint workflow has
+  no independent Go selector; inactive Snap packaging remains a separate P8
+  scope decision.
+- Old Go 1.26.2 reproduced the stored baseline at scorecard SHA-256
+  `5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`.
+  Candidate Go 1.26.7 produced
+  `9f044510ae95d1df85b6c0868323c11453f97015c16fc46721d70c9da0b3a463`;
+  the only structured difference is `tool.go_build.version`. The raw body,
+  every criterion and denominator, and all 228 numeric debt leaves match.
+- Before and after the declaration change, both tools selected the same 233
+  modules and 143 non-standard packages, emitted byte-identical core help, and
+  reproduced the same existing 207-line `go mod tidy -diff`. That untidy
+  historical sum/indirect-requirement debt belongs to the queued dependency
+  work and was not edited here. The unchanged projection is pinned in
+  `toolchain-migration.json`; no dependency metadata was rewritten in this
+  toolchain-only move.
+- Audit-meta T15 now composes the existing schema-1/schema-2 instrument
+  reproduction with the pre-P7/current Go 1.26.2/1.26.7 scorecards. It requires
+  byte-exact archived/current scorecards, permits only the recorded Go version
+  field between toolchain identities, and independently compares all 228
+  numeric debt leaves across both instrument and toolchain axes.
 
 - Select and document Go 1.26 or 1.27 based on supported stable tooling at
   execution time; update the module declaration and CI together.

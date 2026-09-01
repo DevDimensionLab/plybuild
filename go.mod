@@ -2,6 +2,8 @@ module github.com/devdimensionlab/plybuild
 
 go 1.18
 
+toolchain go1.26.7
+
 require (
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/devdimensionlab/mvn-pom-mutator v0.2.3

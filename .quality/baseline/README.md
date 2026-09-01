@@ -21,7 +21,7 @@ intended adapter directories were absent, so Q1.3 is a project finding and is
 not a comparable ratchet precondition until those exact directories exist.
 
 The structured baseline is also bound to the selected Go build context. It was
-measured with `go version go1.26.2 darwin/arm64`, `GOOS=darwin`, `GOARCH=arm64`,
+measured with `go version go1.26.7 darwin/arm64`, `GOOS=darwin`, `GOARCH=arm64`,
 `CGO_ENABLED=0`, `GOENV=off`, `GOWORK=off`, `GOARM64=v8.0`, and empty
 `GOFLAGS`/`GOEXPERIMENT`; `go list`
 selected 86 production and 14 test files. All architecture-specific Go build
@@ -30,6 +30,23 @@ The scorecard also pins the wrapper, parser, source scanner, Q0.6 contract,
 vendored audit, and report-template checksums. Reproduction requires the same
 instrument and toolchain configuration unless the baseline is deliberately
 re-established.
+
+P7 deliberately re-established only the exact Go toolchain identity. The old
+Go 1.26.2 run reproduced the stored schema-2 scorecard byte-for-byte at SHA-256
+`5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`.
+The Go 1.26.7 run produced the current authoritative scorecard at SHA-256
+`9f044510ae95d1df85b6c0868323c11453f97015c16fc46721d70c9da0b3a463`.
+The raw report body remained byte-identical, every denominator and criterion
+object matched, and all 228 numeric debt leaves were preserved. Exact binary,
+archive, image, pinned-tool, support-source, and comparison identities are in
+`toolchain-migration.json`. Go 1.27 was not selected because pinned
+golangci-lint 2.12.2 was built with Go 1.26.2 and its support policy does not
+claim target Go versions newer than the Go line used to compile the linter.
+The module retains its characterized `go 1.18` language-compatibility floor and
+adds the distinct preferred-toolchain contract `toolchain go1.26.7`. This is
+the Go toolchain selection model's intended separation: builds select the exact
+maintained toolchain without silently enabling newer language, vet, or lint
+semantics in this bounded move.
 
 P1B deliberately migrated the structured schema without migrating debt.
 `instrument-migration.json` records both complete instrument identities. The
@@ -40,7 +57,7 @@ its scorecard SHA-256 is
 The schema-2 parser is pinned by source commit
 `4887222d38f3dd45a5f61e4231f3b19c27583440` and SHA-256
 `f56dc96885c0f3ab5e18bdb3ccbe155411efc0ce7bacfeb4fe701d8a23d0c31a`;
-the authoritative scorecard SHA-256 is
+the pre-P7 schema-2 scorecard SHA-256 was
 `5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`.
 Both runs produce identical denominators and criterion objects, including all
 228 numeric leaves under those objects, and retain Q3.9 PASS. Only schema,
@@ -56,7 +73,8 @@ structured_repo="$(mktemp -d /private/tmp/ply-baseline-structured.XXXXXX)"
 reproduction_home="$(mktemp -d /private/tmp/ply-baseline-home.XXXXXX)"
 audit_out="$(mktemp -d /private/tmp/ply-baseline-audit.XXXXXX)"
 audit_gocache="$(mktemp -d /private/tmp/ply-baseline-gocache.XXXXXX)"
-baseline_gomodcache="$(go env GOMODCACHE)"
+audit_gotmpdir="$(mktemp -d /private/tmp/ply-baseline-gotmp.XXXXXX)"
+baseline_gomodcache="$(mktemp -d /private/tmp/ply-baseline-gomodcache.XXXXXX)"
 for baseline_repo in "$execution_repo" "$structured_repo"; do
   git clone --shared --no-checkout "$PWD" "$baseline_repo"
   git -C "$baseline_repo" checkout --detach 5635d50bd161a9a5aa81fc4332cc0c9d68885d08
@@ -68,7 +86,8 @@ active_profile="$reproduction_home/.co-pilot/profiles/.active_profile"
 test -d "$active_profile" && test ! -L "$active_profile"
 test "$(shasum -a 256 "$active_profile/.fixture" | awk '{print $1}')" = \
   cb95f24c35d3987f8aba51231aade19580ffe9242324804fcad2ccff350d1c9a
-export CGO_ENABLED=0 GOENV=off GOWORK=off GOCACHE="$audit_gocache" \
+export CGO_ENABLED=0 GOENV=off GOWORK=off GOTOOLCHAIN=local \
+  GOCACHE="$audit_gocache" GOTMPDIR="$audit_gotmpdir" \
   GOMODCACHE="$baseline_gomodcache"
 
 test "$(go version)" = "$(python3 -c \

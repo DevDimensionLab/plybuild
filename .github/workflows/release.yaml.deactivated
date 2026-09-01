@@ -25,7 +25,7 @@ jobs:
         name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.15
+          go-version: '1.26.7'
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
@@ -34,4 +34,3 @@ jobs:
           args: release --rm-dist --parallelism=1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

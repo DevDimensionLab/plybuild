@@ -16,7 +16,7 @@ Heads up!
 - start with `ply format pom`, verify that the rewrite of the pom.xml is ok, commit, and from now on you will easily see the diff that ply introduces with ```ply upgrade <2party|3party|spring-boot|plugins|all>```
 - or just use  `ply status` (no rewrite) and manually upgrade your pom.xml based on what is reported as outdated, current option if you need to keep your pom.xml formatting
   
-Requirement: https://golang.org/doc/install
+Requirement: [Go 1.26.7](https://go.dev/doc/install)
 
 ```shell script
   _____  _       

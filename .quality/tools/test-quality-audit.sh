@@ -2220,6 +2220,7 @@ old_reproduction_home="$WORK/baseline-old-reproduction-home"
 new_reproduction_home="$WORK/baseline-new-reproduction-home"
 reproduction_home_fixture="$HERE/../baseline/reproduction-home"
 migration="$HERE/../baseline/instrument-migration.json"
+toolchain_migration="$HERE/../baseline/toolchain-migration.json"
 repository_root="$(cd "$HERE/../.." && pwd)"
 old_source="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["old"]["instrument_source_commit"])' "$migration")"
 new_source="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["new"]["instrument_source_commit"])' "$migration")"
@@ -2526,25 +2527,29 @@ cmp -s "$old_out/reproduced-raw.body" "$new_out/reproduced-raw.body" \
   || fail "old and new raw baseline bodies differ"
 cmp -s "$new_out/reproduced-raw.body" "$new_out/stored-raw.body" \
   || fail "baseline raw report body did not reproduce"
-cmp -s "$old_out/scorecard.json" "$old_instrument/.quality/baseline/scorecard.json" \
-  || fail "old authoritative baseline JSON did not reproduce byte-for-byte"
 cmp -s "$new_out/scorecard.json" "$HERE/../baseline/scorecard.json" \
   || fail "new authoritative baseline JSON did not reproduce byte-for-byte"
 
 python3 - "$migration" "$old_out/scorecard.json" "$new_out/scorecard.json" \
   "$old_instrument/.quality/baseline/manual-evidence.json" \
   "$HERE/../baseline/manual-evidence.json" "$new_out/reproduced-raw.body" \
-  "$repository_root" "$old_source" "$new_source" <<'PY' \
-  || fail "baseline instrument migration record or debt comparison is invalid"
+  "$repository_root" "$old_source" "$new_source" "$toolchain_migration" \
+  "$old_instrument/.quality/baseline/scorecard.json" <<'PY' \
+  || fail "baseline instrument/toolchain migration record or debt comparison is invalid"
 import hashlib
 import json
 import subprocess
 import sys
 
-manifest_path, old_path, new_path, old_manual, new_manual, raw_body, repository, old_source, new_source = sys.argv[1:]
+(
+    manifest_path, old_path, new_path, old_manual, new_manual, raw_body,
+    repository, old_source, new_source, toolchain_manifest_path, archived_old_path,
+) = sys.argv[1:]
 manifest = json.load(open(manifest_path, encoding="utf-8"))
+toolchain_manifest = json.load(open(toolchain_manifest_path, encoding="utf-8"))
 old = json.load(open(old_path, encoding="utf-8"))
 new = json.load(open(new_path, encoding="utf-8"))
+archived_old = json.load(open(archived_old_path, encoding="utf-8"))
 
 def file_digest(path):
     return hashlib.sha256(open(path, "rb").read()).hexdigest()
@@ -2578,8 +2583,8 @@ assert old_numeric == new_numeric
 assert len(old_numeric) == comparison["numeric_debt_leaves"]
 assert next(value for value in old["criteria"] if value["id"] == "Q3.9")["verdict"] == comparison["q3_9_old_verdict"] == "PASS"
 assert next(value for value in new["criteria"] if value["id"] == "Q3.9")["verdict"] == comparison["q3_9_new_verdict"] == "PASS"
-assert file_digest(old_path) == manifest["old"]["scorecard_sha256"]
-assert file_digest(new_path) == manifest["new"]["scorecard_sha256"]
+assert file_digest(archived_old_path) == manifest["old"]["scorecard_sha256"]
+assert file_digest(new_path) == toolchain_manifest["new"]["scorecard_sha256"]
 assert file_digest(old_manual) == manifest["old"]["manual_evidence_sha256"]
 assert file_digest(new_manual) == manifest["new"]["manual_evidence_sha256"]
 assert file_digest(raw_body) == comparison["raw_report_body_sha256"]
@@ -2593,7 +2598,36 @@ for label, scorecard, source in (("old", old, old_source), ("new", new, new_sour
         "git", "-C", repository, "show", source + ":.quality/tools/scorecard.py",
     ])
     assert hashlib.sha256(parser_bytes).hexdigest() == manifest[label]["tool"]["parser_sha256"]
+
+pre_toolchain_raw = subprocess.check_output([
+    "git", "-C", repository, "show",
+    toolchain_manifest["old"]["scorecard_source_commit"] + ":.quality/baseline/scorecard.json",
+])
+pre_toolchain = json.loads(pre_toolchain_raw)
+assert hashlib.sha256(pre_toolchain_raw).hexdigest() == toolchain_manifest["old"]["scorecard_sha256"]
+assert hashlib.sha256(pre_toolchain_raw).hexdigest() == manifest["new"]["scorecard_sha256"]
+
+def without_go_version(scorecard):
+    value = json.loads(json.dumps(scorecard))
+    del value["tool"]["go_build"]["version"]
+    return value
+
+assert without_go_version(old) == without_go_version(archived_old)
+assert without_go_version(new) == without_go_version(pre_toolchain)
+assert archived_old["tool"]["go_build"]["version"] == toolchain_manifest["old"]["version"]
+assert pre_toolchain["tool"]["go_build"]["version"] == toolchain_manifest["old"]["version"]
+assert old["tool"]["go_build"]["version"] == toolchain_manifest["new"]["version"]
+assert new["tool"]["go_build"]["version"] == toolchain_manifest["new"]["version"]
+
+toolchain_comparison = toolchain_manifest["comparison"]
+pre_scope = {"denominators": pre_toolchain["denominators"], "criteria": pre_toolchain["criteria"]}
+new_scope = {"denominators": new["denominators"], "criteria": new["criteria"]}
+assert pre_toolchain["criteria"] == new["criteria"] and toolchain_comparison["criteria_equal"] is True
+assert pre_toolchain["denominators"] == new["denominators"] and toolchain_comparison["denominators_equal"] is True
+assert numeric_leaves(pre_scope) == numeric_leaves(new_scope)
+assert len(numeric_leaves(new_scope)) == toolchain_comparison["numeric_debt_leaves"]
+assert toolchain_comparison["numeric_debt_equal"] is True
 PY
-ok "old/new instruments, raw body, Q3.9, and all 228 numeric debt leaves reproduced"
+ok "old/new instruments and Go toolchains reproduce the raw body, Q3.9, and all 228 numeric debt leaves"
 
 printf 'OK: 15 quality-audit controls passed\n'
