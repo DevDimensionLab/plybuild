@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Terminal Dependencies
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-01T154646+0200-upgrade-terminal-dependencies`
 Created: `2026-09-01T15:46:46+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3b941599d6de87621bcdfe4551818606034b787d49ed11feaf8a7ddff53d94ef`
 Previous: [2026-08-31T193743+0200-adopt-p7-toolchain-baseline.md](2026-08-31T193743+0200-adopt-p7-toolchain-baseline.md)
-Next: none
-Outcome: pending
+Next: [2026-09-02T142312+0200-upgrade-logrus-dependency.md](2026-09-02T142312+0200-upgrade-logrus-dependency.md)
+Outcome: `golang.org/x/term` moved from v0.5.0 to v0.29.0 and its sole MVS coupling `golang.org/x/sys` moved from v0.5.0 to v0.30.0 at `0f93a52`; the retained Go 1.18 floor selects the highest compatible terminal pair, exact Q0-Q2 exits 0 at clean L2, and the complete independent regression has no unrelated module, API, CLI, acceptance, artifact, or reachable-vulnerability drift.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

@@ -5364,8 +5364,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the maintained-toolchain baseline move; dependency groups
-remain queued.
+Status: active after the maintained-toolchain baseline move and terminal-pair
+dependency group; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -5447,12 +5447,67 @@ Toolchain baseline move (2026-09-01):
   its verified one-entry manifest SHA-256 is
   `8da5e8a79e26cbb8e4279150f820c8e0bf88da1fb032860015b079d8da718607`.
 
-The next bounded P7 group is only the coupled Go terminal modules:
-direct `golang.org/x/term v0.5.0` and the `golang.org/x/sys v0.5.0` version
-required by that selection. Verify current releases and module requirements
-from primary sources before choosing versions. Do not admit another direct or
-indirect version change merely because `go get` proposes it; stop and explain
-any wider minimum-version-selection requirement before broadening the group.
+Terminal dependency group (2026-09-02):
+
+- Selected direct `golang.org/x/term v0.29.0` and its exact MVS coupling
+  `golang.org/x/sys v0.30.0`. Both declare Go 1.18. Their immediately newer
+  releases raise the module floor to Go 1.23, while the latest releases declare
+  Go 1.25, so v0.29.0/v0.30.0 is the highest pair compatible with the retained
+  `go 1.18` language floor and preferred Go 1.26.7 toolchain.
+- The external old/candidate comparison retains 233 selected modules, 143
+  non-standard packages, and 3,551 graph edges. Only the authorized pair and
+  its version-bearing edges change. The pre-existing 207-line tidy projection
+  becomes 211 lines only for pair checksums; no unrelated selection or checksum
+  enters the candidate.
+- Exact host and Windows vulnerability scans preserve 22 reachable findings.
+  GO-2026-5024 remains module-only for `golang.org/x/sys/windows` before v0.44.0
+  and is not symbol-reachable in either selection. Requiring its fixed version
+  would raise the language floor and was not mixed into this dependency group.
+- The focused implementation is commit
+  `0f93a527d1f95cc043a695101746d359c74c9c54`, exact parent
+  `e25a98546c20f8707ffe4f71b1d544fc8fb4944f`, clean tree
+  `ebbc91e08907b37175faf45ddc3283e8bd0ed771`. Exact
+  `go get golang.org/x/term@v0.29.0` changes only `go.mod` and `go.sum`; no
+  source, public API/CLI, toolchain, build/release input, quality contract,
+  acceptance/mutation population, artifact contract, publisher, registry,
+  credential, packaging, or P8 code changes.
+- Selection evidence is retained at
+  `/private/tmp/ply-p7-terminal-selection.ctFhJk`; its verified 76,252-entry
+  manifest SHA-256 is
+  `c5cb5e2706ecccfc8eea7c80cadaa747c458e605b2919ab80cd378b263f84aca`.
+  Commit-bound schema-2 evidence is retained at
+  `/private/tmp/ply-p7-terminal-quality-review.0f93a52.nzAZ5z`; its verified
+  252,440-entry manifest SHA-256 is
+  `5213d578d639a85bae51c2b85cba73ff72fc380e950afa23dabc1728e3370d4a`.
+- Exact `make quality` exits 0 at
+  `/private/tmp/ply-p7-terminal-quality-gate.0f93a52.V0TBoc`. Its verified
+  268,572-entry manifest SHA-256 is
+  `e8027bcb9e2a30ff2fbbf3e3bb8c1a1072abe98a7f55ff6a1fb313c4200d91df`.
+  The Q0-Q2 scorecard SHA-256 is
+  `1ec4203b099e49017f67a906f19a2ceeb69f1e86b7ca33bd6f8cd1bf23a27cc5`:
+  all 27 rows pass at L2 with valid manual evidence, 8/8 mutation and 4/4
+  acceptance populations, and zero held, regressed, not-comparable, or dirty
+  counts.
+- The independent 40-stage regression is retained at
+  `/private/tmp/ply-p7-terminal-regression-gate.0f93a52-final.hIYQFq`; its
+  verified 68,961-entry manifest SHA-256 is
+  `1a4414491a83262c4e7684dcc50d7c8372310a66d41e67cf0b9b9b30aca4964a`.
+  Focused callers, pinned lint, tests/race/vet, API/CLI and entry/subprocess
+  compatibility, launcher and Make contracts, complete preflight, host and
+  fresh snapshot/Docker meta and acceptance, audit meta, focused and Q0-Q2
+  audits, vulnerability equality, and empty-HOME count-2 pass. The full report
+  exits the expected 1 only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+
+The next bounded P7 group is only direct
+`github.com/sirupsen/logrus v1.9.0` -> `v1.9.3`. As probed on 2026-09-02,
+v1.9.3 is the highest release retaining the `go 1.18` floor; v1.10.x requires
+Go 1.23. Its external MVS projection changes only logrus and its two checksums.
+The retained selection root is
+`/private/tmp/ply-p7-next-group-selection.0f93a52.Nl74oE`, with verified
+31,623-entry manifest SHA-256
+`e91b0260398550ed95d15063dbfbb96e01c2467b9f878ea70a0e459f25ec9b01`.
+Independently reverify primary release and vulnerability evidence before
+editing; stop if replay requires another module rather than broadening scope.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

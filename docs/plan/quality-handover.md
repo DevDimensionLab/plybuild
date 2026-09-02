@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-01T15:46:46+02:00
+Generated: 2026-09-02T14:23:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,15 +10,15 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
-- P7 toolchain implementation commit:
-  `16ecb67eebb6450226d3264f30a64a14391b5245`.
+- P7 terminal-pair implementation commit:
+  `0f93a527d1f95cc043a695101746d359c74c9c54`.
 - Its exact parent is the launch continuity commit
-  `9852ed15b6e22ec0263bc4f81a973f4e088d7cf5`, whose exact parent is the P6
-  implementation `097a9f15782c773e47a61d903f5d09f5c96408f0`.
+  `e25a98546c20f8707ffe4f71b1d544fc8fb4944f`, whose exact parent is the P7
+  toolchain implementation `16ecb67eebb6450226d3264f30a64a14391b5245`.
 - The implementation tree is
-  `94262fbfd426692fdc44f9eb21f85065ed40a6e2`.
+  `ebbc91e08907b37175faf45ddc3283e8bd0ed771`.
 - After this handoff, obtain the new continuity HEAD with
-  `git rev-parse HEAD`; its exact parent must be `16ecb67`.
+  `git rev-parse HEAD`; its exact parent must be `0f93a52`.
 - The implementation and every accepted measurement had empty ordinary and
   ignored status. No push, merge, publication, release, stash, revert,
   successor launch, retained-evidence deletion, image deletion, or worktree
@@ -26,11 +26,12 @@ session diary.
 
 ## Continuity Checkpoint
 
-P2A-P6 are complete. P7 remains active after its bounded maintained-toolchain
-baseline move; dependency groups remain. P8 is queued.
+P2A-P6 are complete. P7 remains active after its maintained-toolchain move and
+first terminal dependency group; further dependency groups remain. P8 is
+queued.
 
-The answered toolchain archive links reciprocally to exactly one NEXT archive
-for the first small dependency group. Only the launcher's mutable header and
+The answered terminal archive links reciprocally to exactly one NEXT archive
+for direct `github.com/sirupsen/logrus`. Only the launcher's mutable header and
 prompt regions changed; its stable executable skeleton remains byte-identical.
 
 The tracked launcher/archive apparatus remains the task source. Do not create
@@ -38,143 +39,147 @@ The tracked launcher/archive apparatus remains the task source. Do not create
 module/build caches, reports, generated files, build contexts, and audit
 evidence remain external.
 
-## Maintained Toolchain Decision
+## Terminal-Pair Decision
 
-The selected baseline is exact Go 1.26.7. Go 1.27.0 was rejected for this move
-because pinned golangci-lint 2.12.2 was built with Go 1.26.2 and its official
-support policy does not claim targets newer than the build Go line. Pinned
-GoReleaser 2.17.1 was built with Go 1.26.5. Updating either quality tool to
-admit Go 1.27 would have mixed dependency upgrades into the toolchain move.
+The bounded dependency selection is:
 
-Primary Go releases/toolchain/module documentation, pinned golangci-lint and
-GoReleaser module/release metadata, setup-go v2's official manifest, Docker
-Official Image source, and registry manifests are recorded in
-`.quality/baseline/toolchain-migration.json` and the P7 roadmap record.
+- direct `golang.org/x/term v0.5.0` -> `v0.29.0`;
+- coupled indirect `golang.org/x/sys v0.5.0` -> `v0.30.0`.
 
-The retained official candidate is
-`/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`:
+As verified on 2026-09-02, the latest releases are x/term v0.45.0 and x/sys
+v0.47.0, both declaring Go 1.25. The selected x/term v0.29.0 declares Go 1.18
+and requires x/sys v0.30.0, which also declares Go 1.18. The immediately newer
+x/term v0.30.0 and x/sys v0.31.0 raise their module floors to Go 1.23. The
+selected pair is therefore the highest release pair compatible with the
+retained `go 1.18` language floor, while remaining fully supported by preferred
+Go 1.26.7 and the pinned golangci-lint 2.12.2 and GoReleaser 2.17.1 tools.
 
-- version: `go version go1.26.7 darwin/arm64`;
-- executable SHA-256:
-  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
-- official archive SHA-256:
-  `020a1e82d85d1df183e0d3c2c6ddf181c295327fca19b3d8d614855b6cb49f6d`.
+The external old/candidate comparison selected 233 modules, 143 non-standard
+packages, and 3,551 graph edges in both states. The only selection changes are
+the two authorized modules and their version-bearing edges. The existing tidy
+projection changes from 207 to 211 lines only because of those pair checksums;
+no unrelated version or checksum enters the candidate projection. The
+`golang.org/x/term.ReadPassword` implementations used by `prompt.go` remain
+byte-identical for the supported platforms.
 
-Contractual declarations now agree:
+Primary module repositories and the Go vulnerability database record
+GO-2026-5024 for `golang.org/x/sys/windows` before v0.44.0. Exact host and
+Windows scans preserve the pre-existing 22 reachable findings and do not
+report this advisory as symbol-reachable; the module-only scan reports it in
+both old and new selections. Eliminating that module-level advisory would
+require a later x/sys line and a higher language floor, so it was not silently
+mixed into this bounded pair move.
 
-- `go.mod` retains the characterized language floor `go 1.18` and adds exact
-  preferred `toolchain go1.26.7`;
-- the Docker builder is
-  `golang:1.26.7-alpine3.24@sha256:28d89ee9cc0ff9fec75c82ca201e6bf7fdf9a679d4b7b24dfa04f2bb766bb468`;
-- the deactivated release workflow and active README name 1.26.7; and
-- the exact baseline instrument identity names 1.26.7.
+## Implementation And Compatibility
 
-The deactivated lint workflow has no separate Go selector. The inactive Snap
-publisher remains a P8 scope decision. Raising the module language floor to
-1.26.7 was rejected because it introduced ten pinned-lint findings from newer
-language-analysis semantics; retaining the documented `go`/`toolchain` split
-keeps this move behavior- and toolchain-only.
+The exact Go command performed
+`go get golang.org/x/term@v0.29.0`; dependency metadata was not hand-edited.
+Commit `0f93a52` changes only `go.mod` and `go.sum` with six insertions and two
+deletions. It does not change source, public Go API, CLI output or semantics,
+toolchain declarations, Docker/release inputs, quality tools or thresholds,
+baselines, compatibility allowlists, acceptance/mutation populations,
+packaging, publishers, registries, credentials, or P8 code.
 
-## Baseline Reproduction And Compatibility
+The external candidate and committed implementation pass the focused terminal
+callers, complete tests, race, vet, host/Linux/Windows builds, pinned
+lint, public help, API/CLI and entry/subprocess compatibility, launcher and
+Make contracts, complete preflight, host acceptance, snapshot and Docker meta
+and acceptance, audit meta, focused/Q0-Q2/full audits, vulnerability equality,
+and empty-HOME count-2.
 
-Old Go 1.26.2 reproduced the stored pre-P7 scorecard at
-`/private/tmp/ply-p7-baseline-old-go1.26.2.iHSEG4`, SHA-256
-`5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490`.
-Go 1.26.7 reproduced the migrated scorecard at
-`/private/tmp/ply-p7-baseline-new-go1.26.7.xY13SW`, SHA-256
-`9f044510ae95d1df85b6c0868323c11453f97015c16fc46721d70c9da0b3a463`.
-Only `tool.go_build.version` differs: the raw body, criteria, denominators, and
-all 228 numeric debt leaves are identical.
+The declared and verified toolchain remains exact Go 1.26.7. The retained
+official executable is
+`/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`, SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+Put its directory first in `PATH` as well as passing exact `GO`; literal `go`
+subprocesses must resolve to it. Keep `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, and do not inject ambient `GOFLAGS`.
 
-Both toolchains select the same 233 modules and 143 non-standard packages,
-emit byte-identical core help, and preserve the same existing 207-line
-`go mod tidy -diff` projection. No direct or indirect version or `go.sum`
-entry changed. API/CLI and entry/subprocess compatibility, generated archive
-and Docker contracts, and all host behavior remain green.
-
-Audit-meta T15 composes old/new instrument reproduction with the pre-P7/current
-Go scorecards. It requires byte-exact authoritative baselines and compares all
-228 numeric leaves across both axes.
+Warm fresh external module caches from Git archives outside the worktree. A
+real-tree `go mod download all` materializes historical checksum debt and is
+not an authorized tidy. The accepted regression includes both current and
+v1.0.1 archive bootstraps for compatibility.
 
 ## Accepted External Evidence
 
-The commit-bound schema-2 review root is
-`/private/tmp/ply-p7-quality-review.16ecb67.Ugm5Bh`. Its verified 22,002-entry
+The terminal selection root is
+`/private/tmp/ply-p7-terminal-selection.ctFhJk`. Its verified 76,252-entry
 manifest SHA-256 is
-`9fc89ac3d4296c2ad7f9a30b6f9decc308113a6b5008afecd12b741983a7e6eb`.
-The canonical evidence SHA-256 is
-`f3ea505bc6bd414f74bcdbc5b5f6b747bfadf7dc48ddc16ad9977937b0c4958d`;
-all six manual receipts validate and the focused audit exits 0.
+`c5cb5e2706ecccfc8eea7c80cadaa747c458e605b2919ab80cd378b263f84aca`;
+its summary SHA-256 is
+`371e40242b52af838354ea375a82ad13d63ffaf8731a4ba53ad91ad70e0bcfef`.
 
-The exact complete apparatus root is
-`/private/tmp/ply-p7-quality-gate.16ecb67-final.hdvr9q`. Its verified
-246,560-entry manifest SHA-256 is
-`15136fa28368eb4ada0b81dfddc4f36daa19f17b7ab00d3a4ea85d496066cb8e`.
-The exact 21-line stage ledger ends with `audit:Q0.*,Q1.*,Q2.*`, and
-`make quality` exits 0. The Q0-Q2 scorecard SHA-256 is
-`0cf6f16797ec73ed8d51944a77dc0cde4de85e174526b915afb58542e98d4cec`:
-all 27 rows pass at L2, manual evidence is valid, mutation and acceptance
-populations are 8/8 and 4/4, and held, regressed, current-not-comparable, and
-dirty counts are zero.
+The commit-bound schema-2 review root is
+`/private/tmp/ply-p7-terminal-quality-review.0f93a52.nzAZ5z`. Its verified
+252,440-entry manifest SHA-256 is
+`5213d578d639a85bae51c2b85cba73ff72fc380e950afa23dabc1728e3370d4a`.
+The manual evidence SHA-256 is
+`952ffd64db2d5207dc12e0c25c2e3cf58844c6e744b2e7c5f9cfba401fac228f`;
+all 242 reviewed subjects and 207 declared files bind to `0f93a52`, all manual
+receipts validate, and the focused scorecard SHA-256 is
+`52800b59a800bed8597fa0e29959d9a72ca850fa55dcd0ddb57a1d6c1e33d56a`.
+
+The exact complete quality apparatus root is
+`/private/tmp/ply-p7-terminal-quality-gate.0f93a52.V0TBoc`. Its verified
+268,572-entry manifest SHA-256 is
+`e8027bcb9e2a30ff2fbbf3e3bb8c1a1072abe98a7f55ff6a1fb313c4200d91df`.
+Exact `make quality` exits 0. The Q0-Q2 scorecard SHA-256 is
+`1ec4203b099e49017f67a906f19a2ceeb69f1e86b7ca33bd6f8cd1bf23a27cc5`:
+all 27 rows pass at L2, mutation and acceptance populations are 8/8 and 4/4,
+and held, regressed, current-not-comparable, and dirty counts are zero. Its
+Docker artifact's internal evidence manifest is verified at SHA-256
+`05ab1e065d8fa18d06eb6e4127fc0fffcea223eb68be627b744c7f4006976`.
 
 The independent accepted regression root is
-`/private/tmp/ply-p7-regression-gate.16ecb67-final.4nMFvg`. Its verified
-67,726-entry manifest SHA-256 is
-`48be0c3b828c60702ff4f06c513b8720dba4259c9df39d99cf23b0f655dffded`.
-All 36 ledger stages pass, including declaration/graph contracts,
-compatibility, pinned lint, tests/race/vet, launcher and Make contracts,
-complete preflight, host/snapshot/Docker meta and acceptance, standalone audit
-meta, focused and Q0-Q2 audits, and empty-HOME count-2. The focused and Q0-Q2
-scorecards are
-`00ff8e287212841d18de0bb7107aa7af49a58f105f7280597059b09e7a0b4fab`
-and
-`0cf6f16797ec73ed8d51944a77dc0cde4de85e174526b915afb58542e98d4cec`.
-The full scorecard is
-`980caa86d74519abec73de7a3896b77a5c9c51c7754c3e9f901ee9ea4f9d3960`;
+`/private/tmp/ply-p7-terminal-regression-gate.0f93a52-final.hIYQFq`. Its
+verified 68,961-entry manifest SHA-256 is
+`1a4414491a83262c4e7684dcc50d7c8372310a66d41e67cf0b9b9b30aca4964a`.
+All 40 ledger stages pass. The focused and Q0-Q2 scorecards are the hashes
+above. The full scorecard SHA-256 is
+`e8d7dea22e12e08e64cbee667a4a24d1959d17b4ec1b93f9b0ad1bc08e6f808e`;
 it exits the expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+Its fresh Docker artifact's internal evidence manifest is verified at SHA-256
+`6ae30d5c3aa2447c3bb655662f049acbe66ea72bf697d1b9bc400fcb77b8d305`.
 
-The complete cross-root index is
-`/private/tmp/ply-p7-complete-move.16ecb67.tGLtNi/evidence-index.json`, SHA-256
-`68e9a7cf649a02b882703bd079d37fafab69caba166a97efa164616308b9578b`.
-Its verified one-entry manifest SHA-256 is
-`8da5e8a79e26cbb8e4279150f820c8e0bf88da1fb032860015b079d8da718607`.
-
-For exact replay, put the candidate SDK directory first in `PATH` as well as
-passing its absolute `GO`; T15's historical instruments invoke literal `go`.
-Do not inject ambient `GOFLAGS`, because the audit meta-contract intentionally
-changes that variable in its probes. Warm a fresh external `GOMODCACHE` from a
-Git archive outside the worktree: `go mod download all` adds 208 historical
-checksums if run in the real tree. Diagnostic roots from those characterized
-environment mistakes are not accepted evidence.
+Two timing diagnostics are retained but are not accepted gates: a first
+preflight launcher subprocess and a first Make-contract launcher subprocess
+received signals after producing partial logs. Immediate isolated reruns and
+the complete quality and final regression ledgers pass the exact contracts.
+The earlier incomplete regression root is likewise diagnostic only; the final
+root above is authoritative.
 
 ## Next Objective
 
-Implement only the first small P7 dependency group: direct
-`golang.org/x/term v0.5.0` and the coupled `golang.org/x/sys v0.5.0` selection
-required by it. Verify current releases, module requirements, Go support, and
-security information from primary sources before choosing versions.
+Implement only direct `github.com/sirupsen/logrus v1.9.0` -> `v1.9.3`.
+Reverify release and vulnerability evidence before editing. The retained next
+selection root is
+`/private/tmp/ply-p7-next-group-selection.0f93a52.Nl74oE`; its verified
+31,623-entry manifest SHA-256 is
+`e91b0260398550ed95d15063dbfbb96e01c2467b9f878ea70a0e459f25ec9b01`
+and its summary SHA-256 is
+`b822c4102c01ddcad1032271c99ef0f7c92e76cb7dc9bbbdc02f8e1753a26c4b`.
 
-Capture old/new module graphs and `go mod tidy -diff` projections in external
-state first. Admit no unrelated direct or indirect version change; if minimum
-version selection requires a wider group, stop and record the decision instead
-of broadening scope. Keep the Go 1.26.7 declarations and exact baseline
-identity unchanged unless a measured incompatibility requires stopping.
+As probed on 2026-09-02, current logrus v1.10.0-v1.10.2 require Go 1.23;
+v1.9.3 declares Go 1.13 and is the highest release retaining the module's Go
+1.18 floor. The external `go get github.com/sirupsen/logrus@v1.9.3` projection
+changes only the logrus selection and adds its two checksums; current x/sys
+v0.30.0 already exceeds logrus's lower requirement, so no coupled module moves.
 
-Make one dependency-only implementation commit. Prove pinned lint,
-tests/race/vet, API/CLI and entry/subprocess compatibility, generated artifact
-and host/snapshot/Docker behavior, audit reproduction, exact Q0-Q2 L2, the
-separate queued-L3 result, and empty-HOME count-2 from clean external state.
-Do not change production behavior to accommodate an upgrade in the same move.
+Make one dependency-only implementation commit. Stop if independent MVS replay
+requires another module, or if the candidate changes behavior, API/CLI,
+acceptance, artifacts, vulnerability reachability, or baseline debt. Do not
+combine Cobra, Viper, another dependency, a source fix, or P8 work with this
+group.
 
 ## Start And Stop
 
 Confirm branch, exact ancestry, clean ordinary and ignored status, reciprocal
 links, launcher `--check`, the P7/P8 queue, implementation commit/tree, and all
 accepted manifests before editing. Read the active archive, this handover, the
-P7 roadmap, module graph, dependency callers/tests, toolchain contract,
-compatibility, snapshot/Docker, and audit contracts.
+P7 roadmap, module graph, logrus callers/tests, toolchain contract,
+compatibility, snapshot/Docker, quality, and audit contracts.
 
-Stop before any dependency outside the terminal pair, behavior/API/CLI change,
+Stop before any dependency outside logrus, behavior/API/CLI change,
 quality-tool upgrade, P8 domain work, inactive packaging work, publication,
 publisher/registry/credential change, or release. Do not push, merge, publish,
 release, delete retained evidence or images, stash, revert, launch a successor,

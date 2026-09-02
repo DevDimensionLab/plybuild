@@ -1055,112 +1055,120 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-01T154646+0200-upgrade-terminal-dependencies
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-01T154646+0200-upgrade-terminal-dependencies.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-08-31T193743+0200-adopt-p7-toolchain-baseline.md
+#|SESSION_ID=2026-09-02T142312+0200-upgrade-logrus-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-02T142312+0200-upgrade-logrus-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-01T154646+0200-upgrade-terminal-dependencies.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 with its first small dependency group: upgrade only direct
-#|`golang.org/x/term v0.5.0` and the coupled `golang.org/x/sys v0.5.0` selection
-#|required by it. Choose current compatible versions from primary evidence,
-#|preserve behavior and all quality contracts, and finish only with no unrelated
-#|module, API, CLI, acceptance, artifact, or baseline drift.
+#|Continue P7 with its next smallest dependency group: upgrade only direct
+#|`github.com/sirupsen/logrus v1.9.0` to `v1.9.3`. Independently reverify the
+#|release decision from primary evidence, preserve behavior and every quality
+#|contract, and finish only with no unrelated module, API, CLI, acceptance,
+#|artifact, vulnerability, or baseline drift.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P6 are complete. The bounded Go 1.26.7 toolchain baseline move is complete;
-#|P7 remains active for dependency groups and P8 remains queued. This session may
-#|change only the terminal pair's required `go.mod`/`go.sum` dependency metadata,
-#|their focused executable contract if one is needed, and the roadmap record.
+#|P2A-P6 are complete. The Go 1.26.7 toolchain move and terminal-pair group are
+#|complete; P7 remains active for dependency groups and P8 remains queued. This
+#|session may change only logrus's required `go.mod`/`go.sum` metadata, a focused
+#|executable contract if one is needed, and the roadmap record.
 #|
-#|Do not update another direct or indirect module merely because `go get` or
-#|`go mod tidy` proposes it. First determine the terminal pair's exact minimum
-#|version-selection closure. If it requires a wider group, stop and record the
-#|decision instead of broadening scope.
+#|The external probe selected v1.9.3 because it is the highest logrus release
+#|compatible with the retained `go 1.18` language floor. Current v1.10.x releases
+#|require Go 1.23. The v1.9.3 probe changed only logrus: no coupled direct or
+#|indirect version moved. Stop and record the decision if independent replay
+#|requires a wider minimum-version-selection closure.
 #|
 #|# Measurements At Start
 #|
-#|The P7 toolchain implementation commit is
-#|`16ecb67eebb6450226d3264f30a64a14391b5245`, exact parent
-#|`9852ed15b6e22ec0263bc4f81a973f4e088d7cf5`, clean tree
-#|`94262fbfd426692fdc44f9eb21f85065ed40a6e2`. After the handoff, the continuity
-#|HEAD must have exact parent `16ecb67`, and ordinary and ignored status must be
+#|The terminal-pair implementation commit is
+#|`0f93a527d1f95cc043a695101746d359c74c9c54`, exact parent
+#|`e25a98546c20f8707ffe4f71b1d544fc8fb4944f`, clean tree
+#|`ebbc91e08907b37175faf45ddc3283e8bd0ed771`. After the handoff, the continuity
+#|HEAD must have exact parent `0f93a52`, and ordinary and ignored status must be
 #|empty.
 #|
-#|The declared and verified toolchain is Go 1.26.7. The retained official
+#|The declared and verified toolchain remains Go 1.26.7. The retained official
 #|executable is
 #|`/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`, SHA-256
 #|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
 #|Put its directory first in `PATH` as well as passing exact `GO`; audit
 #|reproduction invokes literal `go`. Do not inject ambient `GOFLAGS`.
 #|
+#|The exact terminal selection root is
+#|`/private/tmp/ply-p7-terminal-selection.ctFhJk`, with verified 76,252-entry
+#|manifest SHA-256
+#|`c5cb5e2706ecccfc8eea7c80cadaa747c458e605b2919ab80cd378b263f84aca`.
+#|The next-group selection root is
+#|`/private/tmp/ply-p7-next-group-selection.0f93a52.Nl74oE`, with verified
+#|31,623-entry manifest SHA-256
+#|`e91b0260398550ed95d15063dbfbb96e01c2467b9f878ea70a0e459f25ec9b01`.
+#|
 #|The exact quality root is
-#|`/private/tmp/ply-p7-quality-gate.16ecb67-final.hdvr9q`, with verified
-#|246,560-entry manifest SHA-256
-#|`15136fa28368eb4ada0b81dfddc4f36daa19f17b7ab00d3a4ea85d496066cb8e`.
+#|`/private/tmp/ply-p7-terminal-quality-gate.0f93a52.V0TBoc`, with verified
+#|268,572-entry manifest SHA-256
+#|`e8027bcb9e2a30ff2fbbf3e3bb8c1a1072abe98a7f55ff6a1fb313c4200d91df`.
 #|Its Q0-Q2 scorecard SHA-256 is
-#|`0cf6f16797ec73ed8d51944a77dc0cde4de85e174526b915afb58542e98d4cec`:
+#|`1ec4203b099e49017f67a906f19a2ceeb69f1e86b7ca33bd6f8cd1bf23a27cc5`:
 #|all 27 criteria pass at L2, populations are 8/8 and 4/4, and held, regressed,
 #|not-comparable, and dirty counts are zero.
 #|
 #|The independent regression root is
-#|`/private/tmp/ply-p7-regression-gate.16ecb67-final.4nMFvg`, with verified
-#|67,726-entry manifest SHA-256
-#|`48be0c3b828c60702ff4f06c513b8720dba4259c9df39d99cf23b0f655dffded`.
-#|All 36 stages pass. Its full report exits 1 only for queued L3 rows Q3.1,
+#|`/private/tmp/ply-p7-terminal-regression-gate.0f93a52-final.hIYQFq`, with
+#|verified 68,961-entry manifest SHA-256
+#|`1a4414491a83262c4e7684dcc50d7c8372310a66d41e67cf0b9b9b30aca4964a`.
+#|All 40 stages pass. Its full report exits 1 only for queued L3 rows Q3.1,
 #|Q3.3, Q3.4, and Q3.7; it is not a P7 dependency-group exit gate.
 #|
 #|# Role And Boundaries
 #|
-#|Verify time-sensitive terminal-pair releases, module `go` requirements,
-#|release notes, and relevant vulnerability information from primary Go module,
-#|repository, and Go vulnerability sources. Record why the selected versions are
-#|compatible with the pinned Go 1.26.7, golangci-lint 2.12.2, GoReleaser 2.17.1,
-#|and the retained `go 1.18` language floor.
+#|Verify time-sensitive logrus releases, module `go` requirements, release
+#|metadata, and relevant vulnerability information from primary Go module,
+#|repository, and Go vulnerability sources. Record why the selected version is
+#|compatible with pinned Go 1.26.7, golangci-lint 2.12.2, GoReleaser 2.17.1, and
+#|the retained `go 1.18` language floor.
 #|
 #|Do not change production Go behavior, public Go API, CLI semantics, toolchain
-#|declarations, Docker or release inputs, quality-tool versions, quality
-#|thresholds, baseline numeric debt, compatibility allowlists, acceptance or
-#|mutation populations, publishers, registries, credentials, inactive packaging,
-#|or P8 domain code. Do not combine a source fix with this dependency move; stop
-#|on an incompatible behavior change.
+#|declarations, Docker or release inputs, another dependency, quality-tool
+#|versions, quality thresholds, baseline numeric debt, compatibility allowlists,
+#|acceptance or mutation populations, publishers, registries, credentials,
+#|inactive packaging, or P8 domain code. Do not combine a source fix with this
+#|dependency move; stop on an incompatible behavior change.
 #|
 #|Keep module/build caches, graph projections, vulnerability results, reports,
 #|generated artifacts, build contexts, schema-2 evidence, and audit output
-#|outside the worktree. Warm a fresh module cache from an external Git archive;
-#|running `go mod download all` in the real tree adds 208 historical checksum
-#|lines and is not an authorized tidy. Never create `.agent-task/current.md` or
-#|`.quality/manual-evidence.json`.
+#|outside the worktree. Warm fresh module caches from external Git archives;
+#|never use a real-tree `go mod download all` as a tidy surrogate. Never create
+#|`.agent-task/current.md` or `.quality/manual-evidence.json`.
 #|
 #|# Required Reading
 #|
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher `--check`, and the P7/P8 checkpoint block before
 #|editing. Verify the accepted manifests. Read the rolling handover, this
-#|archive, the P7 roadmap, `go.mod`/`go.sum`, terminal-module callers and tests,
-#|toolchain declaration and baseline-reproduction contracts, compatibility,
-#|snapshot/Docker, quality, and audit contracts.
+#|archive, the P7 roadmap, `go.mod`/`go.sum`, logrus callers and tests, toolchain
+#|and baseline-reproduction contracts, compatibility, snapshot/Docker, quality,
+#|and audit contracts.
 #|
 #|# Three Moves
 #|
 #|From clean external state, record the old module graph, selected versions,
 #|package population, checksums, `go mod tidy -diff` projection, build/test/lint
 #|result, public help, API/CLI reports, generated artifact contracts, and a
-#|vulnerability baseline. Probe the candidate pair in an external copy first.
-#|Compare old/new graphs exactly and require every changed module and checksum to
-#|belong to the authorized terminal pair closure.
+#|vulnerability baseline. Probe v1.9.3 in an external copy first. Compare old/new
+#|graphs exactly and require every changed module and checksum to be logrus.
 #|
-#|Make one focused dependency-only implementation commit. Do not hand-edit
-#|dependency metadata to force the desired graph. Re-run the focused terminal
-#|callers/tests, pinned lint, complete tests/race/vet, API/CLI and
-#|entry/subprocess compatibility, launcher and Make contracts, complete
-#|preflight, host acceptance, fresh snapshot/Docker meta and acceptance, audit
-#|meta, focused and exact Q0-Q2 audits, the separate full audit, vulnerability
-#|comparison, and empty-HOME count-2. Refresh external schema-2 evidence only if
-#|the exact commit binding requires it.
+#|Make one focused dependency-only implementation commit using the exact Go
+#|tool, without hand-editing dependency metadata. Re-run focused logrus callers
+#|and tests, pinned lint, complete tests/race/vet, API/CLI and entry/subprocess
+#|compatibility, launcher and Make contracts, complete preflight, host
+#|acceptance, fresh snapshot/Docker meta and acceptance, audit meta, focused and
+#|exact Q0-Q2 audits, the separate full audit, vulnerability comparison, and
+#|empty-HOME count-2. Refresh external schema-2 evidence when commit binding
+#|requires it.
 #|
 #|Require exact `make quality` exit 0 at L2 with all 27 Q0-Q2 rows present,
 #|8/8 mutation and 4/4 acceptance populations, and zero held, regressed,
