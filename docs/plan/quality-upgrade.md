@@ -5364,8 +5364,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the maintained-toolchain baseline move and terminal-pair
-dependency group; further dependency groups remain queued.
+Status: active after the maintained-toolchain baseline move, terminal-pair
+dependency group, and logrus dependency group; further dependency groups
+remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -5498,16 +5499,64 @@ Terminal dependency group (2026-09-02):
   audits, vulnerability equality, and empty-HOME count-2 pass. The full report
   exits the expected 1 only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-The next bounded P7 group is only direct
-`github.com/sirupsen/logrus v1.9.0` -> `v1.9.3`. As probed on 2026-09-02,
-v1.9.3 is the highest release retaining the `go 1.18` floor; v1.10.x requires
-Go 1.23. Its external MVS projection changes only logrus and its two checksums.
-The retained selection root is
-`/private/tmp/ply-p7-next-group-selection.0f93a52.Nl74oE`, with verified
-31,623-entry manifest SHA-256
-`e91b0260398550ed95d15063dbfbb96e01c2467b9f878ea70a0e459f25ec9b01`.
+Logrus dependency group (2026-09-03):
+
+- Selected direct `github.com/sirupsen/logrus v1.9.3`. The originally queued
+  assertion that it was the highest Go-1.18-compatible release was corrected:
+  v1.9.4 exists and declares Go 1.17, but its module requirements raise
+  `github.com/stretchr/testify v1.8.1` to v1.10.0. Version v1.9.3 declares Go
+  1.13 and is the highest release that preserves both the retained Go 1.18
+  floor and this session's one-module MVS closure. The v1.10.x line declares
+  Go 1.23.
+- The external old/candidate comparison retains 233 selected modules, 143
+  production non-standard dependencies, 197 including tests, and 3,551 graph
+  edges. Only logrus changes. The 211-line historical tidy projection becomes
+  217 lines only for the two v1.9.3 checksums.
+- GO-2025-4188 affects logrus writer-scanner APIs before v1.9.3. Those symbols
+  were not reachable here, and the upgrade removes the module-level finding:
+  host and Windows reachable findings remain 22 while module findings improve
+  from 34 to 33 with no addition.
+- The focused implementation is commit
+  `efc47ca02f9e02e3d31466ef4ddbb58c90772b9c`, exact parent
+  `30a0bfd2a7aa47d8ef6be4c9f7411280f886ce83`, clean tree
+  `f8b4d04e75c91981455df97d510fa715be267a47`. Exact
+  `go get github.com/sirupsen/logrus@v1.9.3` changes only `go.mod` and `go.sum`.
+- Selection evidence is retained at
+  `/private/tmp/ply-p7-logrus-selection.30a0bfd.vNfo6P`; its verified
+  44,364-entry manifest SHA-256 is
+  `678daa930e157e38ffd9b1f08e88eebefc9d00cc150ba8ee153da4820a4f49ad`.
+  Schema-2 review evidence is retained at
+  `/private/tmp/ply-p7-logrus-quality-review.efc47ca.1rtWsz`; its verified
+  42,550-entry manifest SHA-256 is
+  `436f8ef7d05a66aea0cf0473ae95c5f5f58a3bd952de8a6b4db9a9def82eaa29`.
+- Exact `make quality` exits 0 at
+  `/private/tmp/ply-p7-logrus-quality-gate.efc47ca.1944215232`; its verified
+  234,632-entry manifest SHA-256 is
+  `49c0d0158c7ed5248fa27c33258fe3fe191024f02c684b3050444e567848e40c`.
+  The Q0-Q2 scorecard SHA-256 is
+  `52b675981b8beb2ca37ea7c56f96e99a76064e9dae8d4c510c749203483b20c0`:
+  all 27 rows pass at L2 with 8/8 mutation and 4/4 acceptance populations and
+  zero held, regressed, not-comparable, or dirty counts.
+- The independent 40-stage regression is retained at
+  `/private/tmp/ply-p7-logrus-regression-gate.efc47ca-final.mAc8VU`; its
+  verified 68,942-entry manifest SHA-256 is
+  `3afd845878b5b3b9874e13c0759aadc7e43d8df2aa5db3b32725c63c635c7c2b`.
+  All required compatibility, test, lint, preflight, acceptance, audit,
+  vulnerability, hermeticity, and clean-tree stages pass. The full report
+  exits the expected 1 only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+
+The next bounded P7 group is direct `github.com/spf13/cobra v1.6.1` ->
+`v1.10.1` with only its existing-module MVS closure:
+`github.com/cpuguy83/go-md2man/v2 v2.0.2` -> `v2.0.6` and
+`github.com/spf13/pflag v1.0.5` -> `v1.0.9`. All selected modules retain the
+Go 1.18 floor. Latest Cobra v1.10.2 also declares Go 1.15 but introduces
+`go.yaml.in/yaml/v3 v3.0.4`, growing the selection from 233 to 234 modules, so
+it is outside this smaller group. The retained selection root is
+`/private/tmp/ply-p7-next-cobra-selection.efc47ca-final.AmKPDY`, with verified
+38,241-entry manifest SHA-256
+`9259d539fae2470870eaeed6644b0728024ef01a2914de2e042c60e0df03eb91`.
 Independently reverify primary release and vulnerability evidence before
-editing; stop if replay requires another module rather than broadening scope.
+editing; stop if replay requires a wider closure rather than broadening scope.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

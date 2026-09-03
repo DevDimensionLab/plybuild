@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Logrus Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-02T142312+0200-upgrade-logrus-dependency`
 Created: `2026-09-02T14:23:12+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `aca406817d3a846547d13d63a91def327089ed97b586fcb8b93fa38dcb43ddaf`
 Previous: [2026-09-01T154646+0200-upgrade-terminal-dependencies.md](2026-09-01T154646+0200-upgrade-terminal-dependencies.md)
-Next: none
-Outcome: pending
+Next: [2026-09-03T212310+0200-upgrade-cobra-dependency.md](2026-09-03T212310+0200-upgrade-cobra-dependency.md)
+Outcome: `github.com/sirupsen/logrus` moved from v1.9.0 to v1.9.3 at `efc47ca`; independent release replay found newer v1.9.4 but also proved that it widens MVS through `github.com/stretchr/testify`, so v1.9.3 is the highest release preserving this session's one-module closure and retained Go 1.18 floor. Exact Q0-Q2 exits 0 at clean L2, the independent 40-stage regression passes, and GO-2025-4188 is removed with no unrelated module, API, CLI, acceptance, artifact, reachable-vulnerability, or baseline drift.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
