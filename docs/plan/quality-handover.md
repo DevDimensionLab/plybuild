@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-03T21:23:10+02:00
+Generated: 2026-09-03T23:32:49+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -10,15 +10,15 @@ session diary.
 - Worktree: `/Users/perottochristensen/github/ply/upgrade-quality`.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
-- P7 logrus implementation commit:
-  `efc47ca02f9e02e3d31466ef4ddbb58c90772b9c`.
-- Its exact parent is the launch continuity commit
-  `30a0bfd2a7aa47d8ef6be4c9f7411280f886ce83`, whose exact parent is the terminal
-  dependency implementation `0f93a527d1f95cc043a695101746d359c74c9c54`.
+- P7 Cobra implementation commit:
+  `e14ed5ecd0856893c282f37995077542845fb563`.
+- Its exact parent is the Cobra launch continuity commit
+  `b10076effe353edfae1020e0585175332cc2ea5d`, whose exact parent is the logrus
+  implementation `efc47ca02f9e02e3d31466ef4ddbb58c90772b9c`.
 - The implementation tree is
-  `f8b4d04e75c91981455df97d510fa715be267a47`.
+  `f17f7cf92e3c52be38f1a5180e283023a76aa75a`.
 - After this handoff, obtain the new continuity HEAD with `git rev-parse HEAD`;
-  its exact parent must be `efc47ca`.
+  its exact parent must be `e14ed5e`.
 - The implementation and every accepted measurement had empty ordinary and
   ignored status. No push, merge, publication, release, stash, revert,
   successor launch, retained-evidence deletion, image deletion, or worktree
@@ -27,10 +27,11 @@ session diary.
 ## Continuity Checkpoint
 
 P2A-P6 are complete. P7 remains active after its maintained-toolchain move,
-terminal dependency group, and logrus dependency group. P8 remains queued.
+terminal dependency group, logrus dependency group, and Cobra dependency
+group. P8 remains queued.
 
-The answered logrus archive links reciprocally to exactly one NEXT archive for
-the three-module Cobra closure. Only the launcher's mutable header and prompt
+The answered Cobra archive links reciprocally to exactly one NEXT archive for
+the one-module pflag patch. Only the launcher's mutable header and prompt
 regions changed; its stable executable skeleton must remain byte-identical.
 
 The tracked launcher/archive apparatus remains the task source. Do not create
@@ -38,42 +39,44 @@ The tracked launcher/archive apparatus remains the task source. Do not create
 module/build caches, reports, generated files, build contexts, and audit
 evidence remain external.
 
-## Logrus Decision
+## Cobra Decision
 
 The bounded dependency selection is direct
-`github.com/sirupsen/logrus v1.9.0` -> `v1.9.3`.
+`github.com/spf13/cobra v1.6.1` -> `v1.10.1` plus exactly:
 
-Independent primary-evidence replay corrected the incoming assertion that
-v1.9.3 was the highest release compatible with Go 1.18. Logrus v1.9.4 was
-published on 2026-01-15 and declares Go 1.17, but it raises
-`github.com/stretchr/testify v1.8.1` to v1.10.0 in this graph. Logrus v1.9.3
-declares Go 1.13 and is the highest release that preserves both the retained
-`go 1.18` language floor and this session's one-module MVS closure. The v1.10.x
-line declares Go 1.23.
+- `github.com/cpuguy83/go-md2man/v2 v2.0.2` -> `v2.0.6`;
+- `github.com/spf13/pflag v1.0.5` -> `v1.0.9`.
 
-The external old/candidate comparison selects 233 modules, 143 production
-non-standard dependencies, 197 including tests, and 3,551 graph edges in both
-states. Only logrus changes. The historical tidy projection changes from 211
-to 217 lines only for the two v1.9.3 checksums. Candidate build, complete tests,
-pinned lint, public help, API/CLI, snapshot/Docker meta, and distribution
-contracts pass without drift.
+Independent primary repository, Go proxy, module, and tag evidence replayed the
+incoming choice. Cobra v1.10.1 was published 2025-09-01 and declares Go 1.15;
+go-md2man v2.0.6 and pflag v1.0.9 declare Go 1.12. Cobra v1.10.2 remains the
+latest release and also declares Go 1.15, but it swaps the existing YAML module
+path for `go.yaml.in/yaml/v3 v3.0.4`. That increases selection from 233 to 234
+modules and graph edges from 3,551 to 3,552, so v1.10.1 is the highest release
+preserving this session's smaller existing-module closure.
 
-GO-2025-4188 affects logrus Writer/WriterLevel scanner variants before v1.9.3.
-The repository does not call those symbols. Host and Windows reachable findings
-remain the same 22 IDs, while module findings improve from 34 to 33 by removing
-only GO-2025-4188.
+Old and selected states retain 233 selected modules, 3,551 graph edges, and a
+byte-identical 429-package test population. The historical tidy projection
+changes from 217 to 238 lines only for authorized checksums. Candidate build,
+complete tests, pinned lint, public help, API/CLI, snapshot/Docker meta, and
+distribution contracts pass without drift.
+
+Host and Windows symbol-level vulnerability findings stay at the same 22 IDs;
+host module findings stay at the same 33 IDs. The primary Go vulnerability
+module index has no entry for Cobra, go-md2man, or pflag at the selected
+versions.
 
 ## Implementation And Compatibility
 
 The exact Go command performed
-`go get github.com/sirupsen/logrus@v1.9.3`; dependency metadata was not
-hand-edited. Commit `efc47ca` changes only `go.mod` and `go.sum`, with three
-insertions and one deletion. It does not change source, public Go API, CLI
-output or semantics, toolchain declarations, Docker/release inputs, quality
-tools or thresholds, baselines, compatibility allowlists, acceptance/mutation
+`go get github.com/spf13/cobra@v1.10.1`; dependency metadata was not hand-edited.
+Commit `e14ed5e` changes only `go.mod` and `go.sum`, with seven insertions and
+two deletions. It does not change source, public Go API, CLI output or
+semantics, toolchain declarations, Docker/release inputs, quality tools or
+thresholds, baselines, compatibility allowlists, acceptance/mutation
 populations, packaging, publishers, registries, credentials, or P8 code.
 
-The candidate and committed implementation pass focused logrus callers,
+The candidate and committed implementation pass focused Cobra callers,
 complete tests, race, vet, pinned lint, public help, API/CLI and
 entry/subprocess compatibility, launcher and Make contracts, complete
 preflight, host acceptance, fresh snapshot and Docker meta/acceptance, audit
@@ -95,95 +98,106 @@ archive bootstraps for compatibility.
 
 ## Accepted External Evidence
 
-The independent wider-release recheck root is
-`/private/tmp/ply-p7-logrus-reverify.6YhT0c`. Its verified 12,458-entry manifest
-SHA-256 is
-`950d152aa8239ce625593a181d74a166f6d7c1c05a3ab34b132463c98362ab8f`.
-It records the v1.9.4/testify closure and v1.10.2 Go 1.23 floor.
-
-The accepted v1.9.3 selection root is
-`/private/tmp/ply-p7-logrus-selection.30a0bfd.vNfo6P`. Its verified 44,364-entry
+The independently replayed Cobra selection root is
+`/private/tmp/ply-p7-cobra-selection.b10076e.94XcUY`. Its verified 43,656-entry
 manifest SHA-256 is
-`678daa930e157e38ffd9b1f08e88eebefc9d00cc150ba8ee153da4820a4f49ad`;
+`5e8a8cce3fe2495620987bce5bc9ebb98ac6db871aa4d7e14875a00f45f05e8f`;
 its selection-summary SHA-256 is
-`9acb25cede390d34884c97f02f2b06a9ae1f8507271cdfb534c95365b399dda9`.
+`d93ceaa82a5cc2128574b075bb6ee2d7bb26a1d2d0525e42d55919ff5e18b135`.
 
 The commit-bound schema-2 review root is
-`/private/tmp/ply-p7-logrus-quality-review.efc47ca.1rtWsz`. Its verified
-42,550-entry manifest SHA-256 is
-`436f8ef7d05a66aea0cf0473ae95c5f5f58a3bd952de8a6b4db9a9def82eaa29`.
-The manual evidence SHA-256 is
-`dd1360ea2a24750e96929a4bf465456bb69ca650742a686cb640283e5d3bf679`;
-all 242 subjects and 207 declared files bind to `efc47ca`, and all six receipts
-validate.
+`/private/tmp/ply-p7-cobra-quality-review.e14ed5e.SQfQ5c`. Its verified
+449-entry manifest SHA-256 is
+`a2becf7b8f273162520bccdad21a2ecaeaca867008fd3d1c1e79d1d9b1d9691e`.
+The canonical evidence SHA-256 is
+`ff89b536faa0ca7f2edf4e3835858d62e62a54697aba961e7ae6526a321fc5b9`;
+all declared source digests were independently refreshed and all six receipts
+validate. A deliberately invalid digest probe is retained separately inside
+the root.
 
 The exact complete quality apparatus root is
-`/private/tmp/ply-p7-logrus-quality-gate.efc47ca.1944215232`. Its verified
-234,632-entry manifest SHA-256 is
-`49c0d0158c7ed5248fa27c33258fe3fe191024f02c684b3050444e567848e40c`.
+`/private/tmp/ply-p7-cobra-quality-gate.e14ed5e.1788465147.56571`. Its verified
+234,708-entry manifest SHA-256 is
+`a59de1e99bdb27b1bcd1e364f2a5feb1d9ba7c1dfec1a1fc381fd93327749e71`.
 Exact `make quality` exits 0. The Q0-Q2 scorecard SHA-256 is
-`52b675981b8beb2ca37ea7c56f96e99a76064e9dae8d4c510c749203483b20c0`:
-all 27 rows pass at L2, mutation and acceptance populations are 8/8 and 4/4,
-and held, regressed, current-not-comparable, and dirty counts are zero. Its
-Docker artifact's internal evidence manifest is verified at SHA-256
-`b162d0f52c4c96e20560212748b7a7d0cd57a4bf72c4b2bb7c99aae9389a0871`.
+`3756e807d0fb56aee5f49b4a43d60e80526c6ab7f1b8456b388cccedfb20b9b8`:
+all 27 rows pass at L2 with valid manual evidence, 8/8 mutation and 4/4
+acceptance populations, 80/80 killed mutations, and zero held, regressed,
+current-not-comparable, or dirty counts. Its Docker artifact's internal
+evidence manifest SHA-256 is
+`26127866f5f1d2cce2c4a4a3d36ae2770b0df8f415f86c8b13126b1fd8525a3a`.
 
 The independent accepted regression root is
-`/private/tmp/ply-p7-logrus-regression-gate.efc47ca-final.mAc8VU`. Its verified
-68,942-entry manifest SHA-256 is
-`3afd845878b5b3b9874e13c0759aadc7e43d8df2aa5db3b32725c63c635c7c2b`.
+`/private/tmp/ply-p7-cobra-regression-gate.e14ed5e.H7N4M5`. Its verified
+97,882-entry manifest SHA-256 is
+`ec18888b35837e6353825cecec7edeb4bd1daa25a7cc428c4ace567130fb80f1`.
 All 40 ledger stages pass. The exact Q0-Q2 scorecard has the same hash above;
 the full scorecard SHA-256 is
-`b512c477b75fc0db63ebfcb4e6016527137454d75cb24ca57d96c731996a1a7e`.
+`0f9011741f9b421abdf30f42da16deb4b19b3c6641ceb0a886ca0ce86bb60b8c`.
 It exits the expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
-Its fresh Docker artifact's internal evidence manifest is verified at SHA-256
-`d2faf89ffed2beba2c6d954dbe59477b798f76744e7d4f9ed375d7b5856010f7`.
+Fresh Docker acceptance built once and ran ten containers without publication.
+Its initial attempt inherited the runner's empty HOME and could not discover
+Docker Desktop buildx before any build; that attempt is retained verbatim. The
+canonical retry used the operator HOME only for plugin discovery, then the
+acceptance contract bound the actual build to a fresh external Docker config.
 
-One first quality attempt is retained as diagnostic evidence: it used an empty
-HOME that hid Docker Desktop's buildx plugin and failed at Docker acceptance.
-The complete rerun above used the normal Docker context and passed. Two
-regression harness-invocation corrections are recorded before their ledger
-stages: focused partial audits do not attain a whole level, and module-only
-govulncheck accepts no package pattern. Neither was a product or dependency
-failure; all 40 final ledger stages pass.
+The older logrus selection manifest file still has its recorded SHA-256 and
+44,364 entries, but its HOME telemetry count file later changed and now causes
+one material verification failure. No tracked or accepted result changed. The
+fresh independent Cobra selection above supersedes it for current decisions;
+do not cite the older root as currently fully material-verified.
 
 ## Next Objective
 
-Implement direct `github.com/spf13/cobra v1.6.1` -> `v1.10.1` and only its
-existing-module MVS closure:
-
-- `github.com/cpuguy83/go-md2man/v2 v2.0.2` -> `v2.0.6`;
-- `github.com/spf13/pflag v1.0.5` -> `v1.0.9`.
+Implement only existing indirect `github.com/spf13/pflag v1.0.9` -> latest
+`v1.0.10`.
 
 The retained selection root is
-`/private/tmp/ply-p7-next-cobra-selection.efc47ca-final.AmKPDY`; its verified
-38,241-entry manifest SHA-256 is
-`9259d539fae2470870eaeed6644b0728024ef01a2914de2e042c60e0df03eb91`
-and its summary SHA-256 is
-`f346d139106096cf31de4841efd89484da5c4a32499d73bd381b29a72ebe5ae5`.
+`/private/tmp/ply-p7-next-pflag-selection.e14ed5e-final.IJI34Q`; its verified
+38,164-entry manifest SHA-256 is
+`16b28f1dd4fd329b7404d16cb00367a8610f9dd354b3bfed87c9ac4eebf0c5d4`
+and its selection-summary SHA-256 is
+`cc04bd6d258e132b6ea2fe7c560cde11ead7da43b7673bda0d876441c45cbdde`.
 
-As probed on 2026-09-03, Cobra v1.10.1 declares Go 1.15 and retains 233
-selected modules, 3,551 graph edges, and the exact 429-package test population.
-Only Cobra, go-md2man/v2, and pflag selections move; focused build/test/lint and
-byte-identical public help pass. Latest v1.10.2 also declares Go 1.15 but adds
-`go.yaml.in/yaml/v3 v3.0.4`, increasing selection to 234 modules and 3,552
-edges. It is outside the next smaller group.
+As probed on 2026-09-03, pflag v1.0.10 is latest, was published 2025-09-02,
+and declares Go 1.12. It retains 233 selected modules, 3,551 graph edges, and
+the exact 429-package population. Only pflag moves; the tidy projection grows
+from 238 to 240 lines for its two checksums. Candidate build, complete tests,
+pinned lint, byte-identical public help, and exact 22/33/22 vulnerability
+populations pass.
 
 Make one dependency-only implementation commit. Stop if independent MVS replay
-requires another module, or if the candidate changes behavior, API/CLI,
-acceptance, artifacts, vulnerability reachability, or baseline debt. Do not
-combine Viper, another dependency, a source fix, or P8 work with this group.
+requires another module or checksum, or if the candidate changes behavior,
+API/CLI, acceptance, artifacts, vulnerability reachability, or baseline debt.
+Do not combine Viper, another dependency, a source fix, or P8 work with this
+group.
+
+## Deferred Viper Probe
+
+A wider probe is retained at
+`/private/tmp/ply-p7-next-viper-selection.e14ed5e-final.YYuSN8`; its verified
+52,381-entry manifest SHA-256 is
+`b17256b1e57146dbb341206667828cce831823b8a0270d97152b9734a225ffe4`
+and its summary SHA-256 is
+`052e9613b0b7410d70cf9239631768bac93819021bd296070ade3af0a510153a`.
+
+Viper v1.16.0 is the next release and preserves the 429-package population,
+but changes 31 selected modules, adds `github.com/google/s2a-go`, grows graph
+edges from 3,551 to 3,561, and upgrades `testify` to a module declaring Go
+1.20. Viper v1.17.0 further grows selection to 245 modules, graph edges to
+3,611, and packages to 437. Viper requires a separate closure/language-floor
+decision and is not the next small group.
 
 ## Start And Stop
 
 Confirm branch, exact ancestry, clean ordinary and ignored status, reciprocal
 links, launcher `--check`, the P7/P8 queue, implementation commit/tree, and all
 accepted manifests before editing. Read the active archive, this handover, the
-P7 roadmap, module graph, Cobra callers/tests, toolchain contract,
+P7 roadmap, module graph, pflag/Cobra callers and tests, toolchain contract,
 compatibility, snapshot/Docker, quality, and audit contracts.
 
-Stop before any dependency outside the three-module Cobra closure,
-behavior/API/CLI change, quality-tool upgrade, P8 domain work, inactive
-packaging work, publication, publisher/registry/credential change, or release.
-Do not push, merge, publish, release, delete retained evidence or images, stash,
-revert, launch a successor, or remove the worktree.
+Stop before any dependency other than pflag v1.0.10, behavior/API/CLI change,
+quality-tool upgrade, P8 domain work, inactive packaging work, publication,
+publisher/registry/credential change, or release. Do not push, merge, publish,
+release, delete retained evidence or images, stash, revert, launch a successor,
+or remove the worktree.

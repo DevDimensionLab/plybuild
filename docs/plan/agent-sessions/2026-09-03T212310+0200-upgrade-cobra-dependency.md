@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Cobra Dependency Group
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-03T212310+0200-upgrade-cobra-dependency`
 Created: `2026-09-03T21:23:10+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3897f37dd49051769f2c4e6e1637dcf4718f358518d2853708f0479723a410dd`
 Previous: [2026-09-02T142312+0200-upgrade-logrus-dependency.md](2026-09-02T142312+0200-upgrade-logrus-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-03T233249+0200-upgrade-pflag-dependency.md](2026-09-03T233249+0200-upgrade-pflag-dependency.md)
+Outcome: `github.com/spf13/cobra` moved from v1.6.1 to v1.10.1 with exactly `github.com/cpuguy83/go-md2man/v2` v2.0.6 and `github.com/spf13/pflag` v1.0.9 at `e14ed5e`; independent primary-evidence and graph replay confirmed the 233-module, 3,551-edge closure while rejecting v1.10.2 because it adds `go.yaml.in/yaml/v3`. Exact Q0-Q2 exits 0 at clean L2, the independent 40-stage regression passes, and old/candidate vulnerability populations remain exactly equal with no production, API, CLI, acceptance, artifact, baseline, or unrelated dependency drift.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

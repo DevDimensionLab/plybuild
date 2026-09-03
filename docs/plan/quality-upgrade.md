@@ -5364,9 +5364,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the maintained-toolchain baseline move, terminal-pair
-dependency group, and logrus dependency group; further dependency groups
-remain queued.
+Status: active after the maintained-toolchain baseline move, terminal-pair,
+logrus, and Cobra dependency groups; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -5545,18 +5544,105 @@ Logrus dependency group (2026-09-03):
   vulnerability, hermeticity, and clean-tree stages pass. The full report
   exits the expected 1 only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-The next bounded P7 group is direct `github.com/spf13/cobra v1.6.1` ->
-`v1.10.1` with only its existing-module MVS closure:
-`github.com/cpuguy83/go-md2man/v2 v2.0.2` -> `v2.0.6` and
-`github.com/spf13/pflag v1.0.5` -> `v1.0.9`. All selected modules retain the
-Go 1.18 floor. Latest Cobra v1.10.2 also declares Go 1.15 but introduces
-`go.yaml.in/yaml/v3 v3.0.4`, growing the selection from 233 to 234 modules, so
-it is outside this smaller group. The retained selection root is
-`/private/tmp/ply-p7-next-cobra-selection.efc47ca-final.AmKPDY`, with verified
-38,241-entry manifest SHA-256
-`9259d539fae2470870eaeed6644b0728024ef01a2914de2e042c60e0df03eb91`.
-Independently reverify primary release and vulnerability evidence before
-editing; stop if replay requires a wider closure rather than broadening scope.
+  A Cobra-session recheck found that this selection manifest file still has
+  the recorded digest and 44,364 entries, but one mutable Go telemetry count
+  file beneath its retained HOME no longer matches. The other 44,363 material
+  files remain covered by the manifest. No repository state changed; the
+  independently rebuilt Cobra selection below supersedes that older selection
+  root for current dependency decisions.
+
+Cobra dependency group (2026-09-03):
+
+- Selected direct `github.com/spf13/cobra v1.6.1` -> `v1.10.1` with exactly
+  `github.com/cpuguy83/go-md2man/v2 v2.0.2` -> `v2.0.6` and
+  `github.com/spf13/pflag v1.0.5` -> `v1.0.9`. Primary repository and module
+  evidence confirms that Cobra v1.10.1 declares Go 1.15, go-md2man v2.0.6 and
+  pflag v1.0.9 declare Go 1.12, and all are compatible with preferred Go
+  1.26.7 and the retained main-module `go 1.18` declaration.
+- Cobra v1.10.2 is the latest release, also declares Go 1.15, and replaces the
+  existing YAML module path with `go.yaml.in/yaml/v3 v3.0.4`. It therefore
+  grows selection from 233 to 234 modules and graph edges from 3,551 to 3,552.
+  Version v1.10.1 is the highest release preserving the smaller three-module,
+  existing-module closure.
+- Old and selected states retain exactly 233 selected modules, 3,551 graph
+  edges, and the byte-identical 429-package test population. The historical
+  217-line tidy projection becomes 238 lines only for authorized closure
+  checksums. Build, complete tests, pinned lint, public help, API/CLI,
+  snapshot/Docker meta, and distribution contracts pass. Host/Windows symbol
+  findings remain 22 and host module findings remain 33, with exact old/new ID
+  equality and no primary Go-vulnerability entry for the three closure
+  modules.
+- The focused implementation is commit
+  `e14ed5ecd0856893c282f37995077542845fb563`, exact parent
+  `b10076effe353edfae1020e0585175332cc2ea5d`, clean tree
+  `f17f7cf92e3c52be38f1a5180e283023a76aa75a`. Exact
+  `go get github.com/spf13/cobra@v1.10.1` changes only `go.mod` and `go.sum`,
+  with seven insertions and two deletions; dependency metadata was not
+  hand-edited and no behavior, API/CLI, toolchain, release, quality, baseline,
+  population, packaging, publisher, registry, credential, or P8 source changed.
+- Independent selection evidence is retained at
+  `/private/tmp/ply-p7-cobra-selection.b10076e.94XcUY`; its verified
+  43,656-entry manifest SHA-256 is
+  `5e8a8cce3fe2495620987bce5bc9ebb98ac6db871aa4d7e14875a00f45f05e8f`.
+  Its selection-summary SHA-256 is
+  `d93ceaa82a5cc2128574b075bb6ee2d7bb26a1d2d0525e42d55919ff5e18b135`.
+- Commit-bound schema-2 review evidence is retained at
+  `/private/tmp/ply-p7-cobra-quality-review.e14ed5e.SQfQ5c`; its verified
+  449-entry manifest SHA-256 is
+  `a2becf7b8f273162520bccdad21a2ecaeaca867008fd3d1c1e79d1d9b1d9691e`.
+  The canonical evidence SHA-256 is
+  `ff89b536faa0ca7f2edf4e3835858d62e62a54697aba961e7ae6526a321fc5b9`,
+  every declared subject/file digest was independently refreshed, and all six
+  receipts validate.
+- Exact `make quality` exits 0 at
+  `/private/tmp/ply-p7-cobra-quality-gate.e14ed5e.1788465147.56571`. Its
+  verified 234,708-entry manifest SHA-256 is
+  `a59de1e99bdb27b1bcd1e364f2a5feb1d9ba7c1dfec1a1fc381fd93327749e71`.
+  The Q0-Q2 scorecard SHA-256 is
+  `3756e807d0fb56aee5f49b4a43d60e80526c6ab7f1b8456b388cccedfb20b9b8`:
+  all 27 rows pass at L2 with valid manual evidence, 8/8 mutation and 4/4
+  acceptance populations, 80/80 killed mutations, and zero held, regressed,
+  not-comparable, or dirty counts. Its Docker artifact's internal evidence
+  manifest SHA-256 is
+  `26127866f5f1d2cce2c4a4a3d36ae2770b0df8f415f86c8b13126b1fd8525a3a`.
+- The independent 40-stage regression is retained at
+  `/private/tmp/ply-p7-cobra-regression-gate.e14ed5e.H7N4M5`; its verified
+  97,882-entry manifest SHA-256 is
+  `ec18888b35837e6353825cecec7edeb4bd1daa25a7cc428c4ace567130fb80f1`.
+  Focused callers, compatibility, lint, tests/race/vet, launcher and Make
+  contracts, complete preflight, host and fresh snapshot/Docker acceptance,
+  audit meta, focused and Q0-Q2 audits, vulnerability equality, empty-HOME
+  count-2, and final cleanliness pass. The full report exits the expected 1,
+  never 2, only for Q3.1, Q3.3, Q3.4, and Q3.7; its scorecard SHA-256 is
+  `0f9011741f9b421abdf30f42da16deb4b19b3c6641ceb0a886ca0ce86bb60b8c`.
+  An initial Docker attempt inherited an isolated HOME that hid Docker
+  Desktop's buildx plugin and stopped before build; it is retained alongside
+  the passing canonical retry, which used the operator HOME only for plugin
+  discovery and a fresh external Docker configuration for the actual build.
+
+The next bounded P7 group is existing indirect
+`github.com/spf13/pflag v1.0.9` -> latest `v1.0.10`. Pflag v1.0.10 declares Go
+1.12 and changes only that existing selection: both sides retain 233 modules,
+3,551 graph edges, the exact 429-package population, and equal 22/33/22
+host-symbol/host-module/Windows-symbol vulnerability IDs. The 238-line tidy
+projection becomes 240 lines only for the v1.0.10 checksum pair; candidate
+build, complete tests, pinned lint, and byte-identical help pass. The retained
+selection root is
+`/private/tmp/ply-p7-next-pflag-selection.e14ed5e-final.IJI34Q`, with verified
+38,164-entry manifest SHA-256
+`16b28f1dd4fd329b7404d16cb00367a8610f9dd354b3bfed87c9ac4eebf0c5d4`
+and selection-summary SHA-256
+`cc04bd6d258e132b6ea2fe7c560cde11ead7da43b7673bda0d876441c45cbdde`.
+
+A wider Viper probe is retained at
+`/private/tmp/ply-p7-next-viper-selection.e14ed5e-final.YYuSN8`, with verified
+52,381-entry manifest SHA-256
+`b17256b1e57146dbb341206667828cce831823b8a0270d97152b9734a225ffe4`.
+Even the next Viper v1.16.0 release changes 31 selections, adds
+`github.com/google/s2a-go`, and raises selected `testify` to a module declaring
+Go 1.20. Viper v1.17.0 further grows selection from 234 to 245 modules and the
+package population from 429 to 437. Viper therefore requires a later, explicit
+closure and compatibility decision and is not part of the pflag group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
