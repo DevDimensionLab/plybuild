@@ -1055,46 +1055,56 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-03T233249+0200-upgrade-pflag-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-03T233249+0200-upgrade-pflag-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-03T212310+0200-upgrade-cobra-dependency.md
+#|SESSION_ID=2026-09-04T013713+0200-upgrade-viper-closure
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T013713+0200-upgrade-viper-closure.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-03T233249+0200-upgrade-pflag-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 with its next smallest dependency group: upgrade existing indirect
-#|`github.com/spf13/pflag v1.0.9` to latest `v1.0.10` as a one-module move.
-#|Independently reverify the release decision from primary evidence, preserve
+#|Continue P7 with its next measured dependency group: evaluate and, only after a
+#|truthful compatibility decision, upgrade direct
+#|`github.com/spf13/viper v1.15.0` to `v1.16.0` with its exact 31-selection MVS
+#|closure. Preserve
 #|behavior and every quality contract, and finish with no unrelated drift.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P6 are complete. The Go 1.26.7 toolchain, terminal pair, logrus group, and
-#|Cobra closure are complete; P7 remains active for dependency groups and P8
-#|remains queued. This session may change only pflag's required `go.mod`/`go.sum`
-#|metadata, a focused executable contract if one is needed, and the roadmap
-#|record.
+#|P2A-P6 are complete. The Go 1.26.7 toolchain, terminal pair, logrus group,
+#|Cobra closure, and pflag patch are complete; P7 remains active for dependency
+#|groups and P8 remains queued. This session may change only the required
+#|Viper-closure `go.mod`/`go.sum` metadata, a focused executable contract if one
+#|is needed, and the roadmap record.
 #|
-#|The external probe selected v1.0.10 as the latest pflag release. It declares
-#|Go 1.12 and changes only the existing pflag selection: 233 selected modules,
-#|3,551 graph edges, and the exact 429-package test population are retained. The
-#|historical `go mod tidy -diff` projection grows from 238 to 240 lines only for
-#|the two v1.0.10 checksums. Do not silently widen this group; stop and record the
-#|decision if independent replay changes any other selected module or checksum.
+#|The current-tree external probe selected v1.16.0 as the smallest next stable
+#|Viper release. It changes exactly 31 selected modules, adds only
+#|`github.com/google/s2a-go v0.1.3`, grows the selection from 233 to 234 modules
+#|and the graph from 3,551 to 3,561 edges, and preserves the exact 429-package
+#|test population. The historical `go mod tidy -diff` projection grows from 240
+#|to 270 lines. Do not silently widen this group; stop and record the decision if
+#|independent replay changes any other selection, checksum, edge, or package.
 #|
-#|Viper is deliberately not combined with this move. The retained wider probe
-#|found that even its smallest next release, v1.16.0, changes 31 selected modules,
-#|adds `github.com/google/s2a-go`, and raises selected `testify` to a module that
-#|declares Go 1.20. That requires a separate scope and compatibility decision.
+#|Viper v1.16.0 declares Go 1.17, but its closure selects
+#|`github.com/stretchr/testify v1.8.3`, whose module declares Go 1.20. Exact Go
+#|1.26.7 builds the candidate while the main module retains `go 1.18`. Before
+#|implementation, independently decide whether this transitive declaration is
+#|compatible with the project's stated Go 1.18 language floor. If it is not,
+#|stop and hand off the evidence without raising the floor or implementing a
+#|partial closure.
+#|
+#|Latest Viper v1.21.0 declares Go 1.23.0. The retained wider probe found that
+#|already v1.17.0 expands selection to 245 modules and the package population to
+#|437. Newer Viper releases and a toolchain/language-floor move are outside this
+#|group.
 #|
 #|# Measurements At Start
 #|
-#|The Cobra implementation commit is
-#|`e14ed5ecd0856893c282f37995077542845fb563`, exact parent
-#|`b10076effe353edfae1020e0585175332cc2ea5d`, clean tree
-#|`f17f7cf92e3c52be38f1a5180e283023a76aa75a`. After the handoff, the continuity
-#|HEAD must have exact parent `e14ed5e`, and ordinary and ignored status must be
+#|The pflag implementation commit is
+#|`360b2f3c792ca131d259f40852619f2840cefdf1`, exact parent
+#|`4f0cc642e9c45960b641133c32a0ffc6b1b3a94b`, clean tree
+#|`a1b941041f5ae685613dd44f4f2db20092cd472c`. After the handoff, the continuity
+#|HEAD must have exact parent `360b2f3`, and ordinary and ignored status must be
 #|empty.
 #|
 #|The declared and verified toolchain remains Go 1.26.7. The retained official
@@ -1102,53 +1112,65 @@ exit 70
 #|`/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`, SHA-256
 #|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
 #|Put its directory first in `PATH` as well as passing exact `GO`; audit
-#|reproduction invokes literal `go`. Do not inject ambient `GOFLAGS`.
+#|reproduction invokes literal `go`. Keep `GOENV=off`, `GOWORK=off`,
+#|`GOTOOLCHAIN=local`, and do not inject ambient `GOFLAGS`.
 #|
-#|The independently replayed Cobra selection root is
-#|`/private/tmp/ply-p7-cobra-selection.b10076e.94XcUY`, with verified
-#|43,656-entry manifest SHA-256
-#|`5e8a8cce3fe2495620987bce5bc9ebb98ac6db871aa4d7e14875a00f45f05e8f`.
-#|The next-group pflag selection root is
-#|`/private/tmp/ply-p7-next-pflag-selection.e14ed5e-final.IJI34Q`, with verified
-#|38,164-entry manifest SHA-256
-#|`16b28f1dd4fd329b7404d16cb00367a8610f9dd354b3bfed87c9ac4eebf0c5d4`.
+#|The independently replayed pflag selection root is
+#|`/private/tmp/ply-p7-pflag-selection.4f0cc64.58RgL0`. Its final verified
+#|44,617-entry manifest SHA-256 is
+#|`b64cad473c92a5551e997010f88243d46fafa2ddc65c11db5d2d6bb90786298c`;
+#|read its retained incident note before relying on the original pre-cache
+#|manifest.
 #|
-#|The exact Cobra quality root is
-#|`/private/tmp/ply-p7-cobra-quality-gate.e14ed5e.1788465147.56571`, with verified
-#|234,708-entry manifest SHA-256
-#|`a59de1e99bdb27b1bcd1e364f2a5feb1d9ba7c1dfec1a1fc381fd93327749e71`.
+#|The exact pflag quality root is
+#|`/private/tmp/ply-p7-pflag-quality-gate.360b2f3.1788472549.40415`, with verified
+#|234,799-entry manifest SHA-256
+#|`47971b2e6cf9399f085e233d9a264f9d22c2e5f45dd024375fbb8e151cbd36c6`.
 #|Its Q0-Q2 scorecard SHA-256 is
-#|`3756e807d0fb56aee5f49b4a43d60e80526c6ab7f1b8456b388cccedfb20b9b8`:
+#|`f50ee942007f4cf5b76b0d87f610469f9d95dc04c6363779e2d6e83a7c632934`:
 #|all 27 criteria pass at L2, populations are 8/8 and 4/4, and held, regressed,
 #|not-comparable, and dirty counts are zero.
 #|
-#|The independent Cobra regression root is
-#|`/private/tmp/ply-p7-cobra-regression-gate.e14ed5e.H7N4M5`, with verified
-#|97,882-entry manifest SHA-256
-#|`ec18888b35837e6353825cecec7edeb4bd1daa25a7cc428c4ace567130fb80f1`.
+#|The independent pflag regression root is
+#|`/private/tmp/ply-p7-pflag-regression-gate.360b2f3.gb4Rvk`, with verified
+#|92,211-entry manifest SHA-256
+#|`ec5eb0c20975138fd96b4de3c10f855c0ceb11a5f1152039be2586025beec857`.
 #|All 40 stages pass. Its full report exits 1 only for queued L3 rows Q3.1,
 #|Q3.3, Q3.4, and Q3.7; it is not a P7 dependency-group exit gate.
 #|
+#|The current-tree Viper selection root is
+#|`/private/tmp/ply-p7-next-viper-selection.360b2f3-final.oGxITF`, with verified
+#|40,078-entry manifest SHA-256
+#|`1390745861503e9f57169fff6054db637e14aa6f7ada9b708c9b9155879253a4`
+#|and selection-summary SHA-256
+#|`d3b2704feeab8883cbc67ab98d5aebdb880ee601fde8157aba4fc10ca1d340f5`.
+#|The candidate build, complete tests, pinned lint, public help, exact package
+#|population, and 22/33/22 Darwin-symbol/Darwin-module/Windows-symbol
+#|vulnerability populations pass without drift.
+#|
 #|# Role And Boundaries
 #|
-#|Verify time-sensitive pflag release metadata, tag identity, module `go`
-#|requirement, checksums, release changes, and relevant vulnerability information
-#|from primary Go module, repository, and Go vulnerability sources. Record why
-#|v1.0.10 is compatible with pinned Go 1.26.7, golangci-lint 2.12.2, GoReleaser
-#|2.17.1, Cobra v1.10.1, and the retained `go 1.18` language floor.
+#|Verify time-sensitive Viper release metadata, tag identity, module `go`
+#|requirement, checksums, release changes, the exact 31-module closure, every
+#|relevant closure `go` declaration, and vulnerability information from primary
+#|Go module, repository, Go documentation, and Go vulnerability sources. Record
+#|why the decision is or is not compatible with pinned Go 1.26.7,
+#|golangci-lint 2.12.2, GoReleaser 2.17.1, Cobra v1.10.1, pflag v1.0.10, and the
+#|retained `go 1.18` language floor.
 #|
 #|Do not change production Go behavior, public Go API, CLI semantics, toolchain
-#|declarations, Docker or release inputs, any dependency other than pflag,
-#|quality-tool versions, quality thresholds, baseline numeric debt,
-#|compatibility allowlists, acceptance or mutation populations, publishers,
-#|registries, credentials, inactive packaging, or P8 domain code. Do not combine
-#|Viper, a source fix, or another dependency with this move; stop on an
-#|incompatible behavior change.
+#|or main-module language declarations, Docker or release inputs, any dependency
+#|outside the exact v1.16.0 MVS closure, quality-tool versions, quality
+#|thresholds, baseline numeric debt, compatibility allowlists, acceptance or
+#|mutation populations, publishers, registries, credentials, inactive
+#|packaging, or P8 domain code. Do not combine a source fix or another dependency
+#|group with this move; stop on an incompatible behavior or floor decision.
 #|
 #|Keep module/build caches, graph projections, vulnerability results, reports,
 #|generated artifacts, build contexts, schema-2 evidence, and audit output
-#|outside the worktree. Warm fresh module caches from external Git archives;
-#|never use a real-tree `go mod download all` as a tidy surrogate. Never create
+#|outside the worktree. Warm fresh module caches from a separate external Git
+#|archive; never run `go mod download all` inside a measured old/candidate tree
+#|or use a real-tree download as a tidy surrogate. Never create
 #|`.agent-task/current.md` or `.quality/manual-evidence.json`.
 #|
 #|# Required Reading
@@ -1156,7 +1178,7 @@ exit 70
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher `--check`, and the P7/P8 checkpoint block before
 #|editing. Verify the accepted manifests. Read the rolling handover, this
-#|archive, the P7 roadmap, `go.mod`/`go.sum`, pflag/Cobra callers and tests,
+#|archive, the P7 roadmap, `go.mod`/`go.sum`, Viper/config callers and tests,
 #|toolchain and baseline-reproduction contracts, compatibility, snapshot/Docker,
 #|quality, and audit contracts.
 #|
@@ -1165,33 +1187,34 @@ exit 70
 #|From clean external state, record the old module graph, selected versions,
 #|package population, checksums, `go mod tidy -diff` projection, build/test/lint
 #|result, public help, API/CLI reports, generated artifact contracts, and a
-#|vulnerability baseline. Reverify v1.0.10 against the current Go proxy and
-#|repository release/tag evidence. Compare old/new graphs exactly and require the
-#|sole changed selection and new checksum pair to be pflag v1.0.10.
+#|vulnerability baseline. Reverify v1.16.0 and every closure change against
+#|current proxy and repository evidence. Reproduce the retained 31-selection
+#|closure exactly and decide the Go 1.18-floor question before editing.
 #|
-#|Make one focused dependency-only implementation commit using the exact Go
-#|tool, without hand-editing dependency metadata. Re-run focused pflag/Cobra
-#|callers and tests, pinned lint, complete tests/race/vet, API/CLI and
-#|entry/subprocess compatibility, launcher and Make contracts, complete
-#|preflight, host acceptance, fresh snapshot/Docker meta and acceptance, audit
-#|meta, focused and exact Q0-Q2 audits, the separate full audit, vulnerability
-#|comparison, and empty-HOME count-2. Refresh external schema-2 evidence when
-#|commit binding requires it.
+#|Only if compatible, make one focused dependency-only implementation commit
+#|using the exact Go tool, without hand-editing dependency metadata. Re-run
+#|focused Viper/config callers and tests, pinned lint, complete tests/race/vet,
+#|API/CLI and entry/subprocess compatibility, launcher and Make contracts,
+#|complete preflight, host acceptance, fresh snapshot/Docker meta and
+#|acceptance, audit meta, focused and exact Q0-Q2 audits, the separate full
+#|audit, vulnerability comparison, and empty-HOME count-2. Refresh external
+#|schema-2 evidence when commit binding requires it.
 #|
-#|Require exact `make quality` exit 0 at L2 with all 27 Q0-Q2 rows present,
-#|8/8 mutation and 4/4 acceptance populations, and zero held, regressed,
+#|Require exact `make quality` exit 0 at L2 with all 27 Q0-Q2 rows present, 8/8
+#|mutation and 4/4 acceptance populations, and zero held, regressed,
 #|not-comparable, or dirty counts. The full report may exit 1 only for the four
 #|queued L3 rows, never 2. Retain immutable external evidence and verified
 #|manifests for graph selection, quality, regression, and artifacts.
 #|
 #|# Automatic Handoff
 #|
-#|After this group succeeds, keep P7 active and P8 queued. Rewrite the rolling
-#|handover and roadmap, answer this archive, create exactly one reciprocal NEXT
-#|archive for the next evidence-selected dependency group, replace only the
-#|launcher's mutable regions, run launcher and handoff contracts, and make the
-#|normal `docs: prepare next agent session` commit. Do not implement the next
-#|group in this session.
+#|After this group succeeds, keep P7 active unless the measured dependency queue
+#|is exhausted and keep P8 queued. Rewrite the rolling handover and roadmap,
+#|answer this archive, create exactly one reciprocal NEXT archive for the next
+#|evidence-selected dependency group, replace only the launcher's mutable
+#|regions, run launcher and handoff contracts, and make the normal
+#|`docs: prepare next agent session` commit. Do not implement the next group in
+#|this session.
 #|
 #|Do not launch a successor, push, merge, publish, release, delete retained
 #|evidence or local images, stash, revert, or remove the worktree.

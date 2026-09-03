@@ -5365,7 +5365,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move, terminal-pair,
-logrus, and Cobra dependency groups; further dependency groups remain queued.
+logrus, Cobra, and pflag dependency groups; further dependency groups remain
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -5620,29 +5621,96 @@ Cobra dependency group (2026-09-03):
   the passing canonical retry, which used the operator HOME only for plugin
   discovery and a fresh external Docker configuration for the actual build.
 
-The next bounded P7 group is existing indirect
-`github.com/spf13/pflag v1.0.9` -> latest `v1.0.10`. Pflag v1.0.10 declares Go
-1.12 and changes only that existing selection: both sides retain 233 modules,
-3,551 graph edges, the exact 429-package population, and equal 22/33/22
-host-symbol/host-module/Windows-symbol vulnerability IDs. The 238-line tidy
-projection becomes 240 lines only for the v1.0.10 checksum pair; candidate
-build, complete tests, pinned lint, and byte-identical help pass. The retained
-selection root is
-`/private/tmp/ply-p7-next-pflag-selection.e14ed5e-final.IJI34Q`, with verified
-38,164-entry manifest SHA-256
-`16b28f1dd4fd329b7404d16cb00367a8610f9dd354b3bfed87c9ac4eebf0c5d4`
-and selection-summary SHA-256
-`cc04bd6d258e132b6ea2fe7c560cde11ead7da43b7673bda0d876441c45cbdde`.
+Pflag dependency group (2026-09-04):
 
-A wider Viper probe is retained at
-`/private/tmp/ply-p7-next-viper-selection.e14ed5e-final.YYuSN8`, with verified
-52,381-entry manifest SHA-256
-`b17256b1e57146dbb341206667828cce831823b8a0270d97152b9734a225ffe4`.
-Even the next Viper v1.16.0 release changes 31 selections, adds
-`github.com/google/s2a-go`, and raises selected `testify` to a module declaring
-Go 1.20. Viper v1.17.0 further grows selection from 234 to 245 modules and the
-package population from 429 to 437. Viper therefore requires a later, explicit
-closure and compatibility decision and is not part of the pflag group.
+- Selected existing indirect `github.com/spf13/pflag v1.0.9` -> latest
+  `v1.0.10` as a one-module move. Primary Go proxy and repository evidence
+  confirms the 2025-09-02 release, exact tag commit
+  `0491e5702ad2bb108bc519a5221bcc0f52aa9564`, verified GitHub commit
+  signature, Go 1.12 declaration, and checksum pair. The release's only
+  production edit restores its declared Go 1.12 compatibility by replacing an
+  `errors.Is` comparison with direct `ErrHelp` equality; the remaining release
+  edits are documentation or tests.
+- Both states retain exactly 233 selected modules, 3,551 graph edges, and the
+  byte-identical 429-package population. Only pflag changes. The historical
+  tidy projection grows from 238 to 240 lines for the v1.0.10 checksum pair.
+  Candidate and committed build, complete tests, race, vet, pinned lint,
+  public help, API/CLI and entry/subprocess compatibility, host/snapshot/Docker
+  acceptance, audit contracts, and empty-HOME count-2 pass. Darwin symbol,
+  Darwin module, and Windows symbol vulnerability ID sets remain exactly
+  22/33/22, and the primary Go vulnerability module index has no pflag entry.
+- The focused implementation is commit
+  `360b2f3c792ca131d259f40852619f2840cefdf1`, exact parent
+  `4f0cc642e9c45960b641133c32a0ffc6b1b3a94b`, clean tree
+  `a1b941041f5ae685613dd44f4f2db20092cd472c`. Exact
+  `go get github.com/spf13/pflag@v1.0.10` changes only `go.mod` and `go.sum`,
+  with three insertions and one deletion; dependency metadata was not
+  hand-edited.
+- Independent selection evidence is retained at
+  `/private/tmp/ply-p7-pflag-selection.4f0cc64.58RgL0`. Its final verified
+  44,617-entry manifest SHA-256 is
+  `b64cad473c92a5551e997010f88243d46fafa2ddc65c11db5d2d6bb90786298c`,
+  and selection-summary SHA-256 is
+  `e47aa25c01cfaab27409b83b6cbf809e81a315e55725744c17a447df8f96bf79`.
+  The original 43,102-entry manifest, SHA-256
+  `c7712aafaf9d8440cd2661ce6ffaa4a638321ddbdb9719b49a187420276b430d`,
+  verified at seal time; follow-on candidate use later rewrote 27 Go
+  build-cache action indexes. The original manifest, passing verification log,
+  later mismatch log, and final post-cache manifest are all retained; stable
+  selection outputs did not change.
+- Commit-bound schema-2 review evidence is retained at
+  `/private/tmp/ply-p7-pflag-quality-review.360b2f3.57B9Z6`; its verified
+  447-entry manifest SHA-256 is
+  `caeace41486ddc6797b5fc737ccd5a4757d2052eb3a5c3451f7da0bcc39f04b8`.
+  The canonical evidence SHA-256 is
+  `d3c5d725e99fb633186277cd66fc9dc1f17b1c8f0705926b70c449f990526c69`,
+  every declared source digest was refreshed, and all six receipts validate.
+- Exact `make quality` exits 0 at
+  `/private/tmp/ply-p7-pflag-quality-gate.360b2f3.1788472549.40415`. Its
+  verified 234,799-entry manifest SHA-256 is
+  `47971b2e6cf9399f085e233d9a264f9d22c2e5f45dd024375fbb8e151cbd36c6`.
+  The Q0-Q2 scorecard SHA-256 is
+  `f50ee942007f4cf5b76b0d87f610469f9d95dc04c6363779e2d6e83a7c632934`:
+  all 27 rows pass at L2 with valid manual evidence, 8/8 mutation and 4/4
+  acceptance populations, 80/80 killed mutations, and zero held, regressed,
+  not-comparable, or dirty counts. Its Docker artifact built once, ran ten
+  containers, published zero times, and has internal evidence-manifest
+  SHA-256 `3d0f1e342dbd9e218d371e29914f7aafdec93d81920b9cfd3f06a3f77ff094d5`.
+- The independent 40-stage regression is retained at
+  `/private/tmp/ply-p7-pflag-regression-gate.360b2f3.gb4Rvk`; its verified
+  92,211-entry manifest SHA-256 is
+  `ec5eb0c20975138fd96b4de3c10f855c0ceb11a5f1152039be2586025beec857`.
+  All required selection, compatibility, lint, test/race/vet, launcher/Make,
+  complete preflight, host/snapshot/Docker, audit, vulnerability, empty-HOME,
+  and clean-tree stages pass. One preflight attempt retained a transient
+  launcher signal-fixture failure; the isolated 62-check launcher suite and
+  the complete preflight retry passed before acceptance. The full report exits
+  the expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7; its
+  scorecard SHA-256 is
+  `4f72c988701326e4a21749306a6155fa849ac3c31ba4e0b293ec6a9f3f92bf08`.
+
+The next bounded P7 group is direct `github.com/spf13/viper v1.15.0` ->
+`v1.16.0` and its exact MVS closure. A current-tree external probe retains 234
+selected modules, grows graph edges from 3,551 to 3,561, changes 31 selected
+modules, adds only `github.com/google/s2a-go`, and preserves the exact
+429-package population. The tidy projection grows from 240 to 270 lines.
+Candidate build, complete tests, pinned lint, byte-identical help, and exact
+22/33/22 vulnerability populations pass. The verified selection root is
+`/private/tmp/ply-p7-next-viper-selection.360b2f3-final.oGxITF`, with
+40,078-entry manifest SHA-256
+`1390745861503e9f57169fff6054db637e14aa6f7ada9b708c9b9155879253a4`
+and selection-summary SHA-256
+`d3b2704feeab8883cbc67ab98d5aebdb880ee601fde8157aba4fc10ca1d340f5`.
+
+Viper v1.16.0 is the smallest next stable release and declares Go 1.17, but
+its closure selects `github.com/stretchr/testify v1.8.3`, whose module declares
+Go 1.20. The preferred Go 1.26.7 toolchain builds that closure while the main
+module can retain its `go 1.18` language declaration, but whether this remains
+truthful compatibility with the retained floor requires an explicit decision
+before implementation. Latest Viper v1.21.0 declares Go 1.23.0; already
+v1.17.0 widens the retained probe to 245 modules and 437 packages. Do not
+silently widen beyond the measured v1.16.0 closure or combine a language-floor
+change with it.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
