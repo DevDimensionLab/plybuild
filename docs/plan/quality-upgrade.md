@@ -6052,30 +6052,109 @@ Go-md2man v2.0.7 dependency group (2026-09-04):
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
   Vulnerability populations remain exact 22/33/22.
 
-The next bounded P7 group is selected indirect
-`github.com/dlclark/regexp2 v1.8.1` -> latest `v1.12.0`. The clean offline
-replay changes exactly that one selection and retains 234 modules, 3,556 graph
-edges, and the exact 429-package test population. Exact `go get` replaces the
-existing indirect requirement and adds only the v1.12.0 module/checksum pair,
-while retaining the v1.8.1 checksum pair. The historical tidy projection grows
-278 -> 282 lines, retains the v1.12.0 requirement, and would remove the old
-v1.8.1 checksum pair.
+Regexp2 v1.12.0 dependency group (2026-09-04):
 
-Regexp2 v1.12.0 declares Go 1.13 and preserves the Go 1.18 floor. Its
-lightweight tag resolves to unsigned commit
-`3d5df45b703801b3fe51eb3f5c0dd302e8b0d676`, and checksum pair is
-`h1:0j4c5qQmnC6XOWNjP3PIXURXN2gWx76rd3KvgdPkCz8=` /
-`h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=`. Regexp2 and
-regexp2/syntax are loaded through
-`plybuild/cmd -> go-term-markdown -> Chroma -> regexp2`. Exact build, complete
-tests, pinned lint, byte-identical help, identical API/CLI reports, artifact
-meta-contracts, and 22/33/22 vulnerability parity pass. The sealed selection
-root is
-`/private/tmp/ply-p7-next-selection.55dc69d.8kz8Cw`; its verified 49,090-entry
-manifest SHA-256 is
-`a2d03742f02396ede46ac73a19b00191812d84cfcad2b416dcf1f19b460b3a10`,
-and selection-summary SHA-256 is
-`f5ee0c23f405f47fb6ae9627ae9a8faabc6a8112713c3691c9f8bcb95d6927e1`.
+- Upgraded selected indirect `github.com/dlclark/regexp2 v1.8.1` to latest
+  v1.12.0 as an exact one-selection move. Current proxy and repository evidence
+  confirms its 2026-04-18 publication, lightweight unsigned tag at commit
+  `3d5df45b703801b3fe51eb3f5c0dd302e8b0d676`, Go 1.13 declaration, and
+  checksum pair `h1:0j4c5qQmnC6XOWNjP3PIXURXN2gWx76rd3KvgdPkCz8=` /
+  `h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=`.
+- Both states retain exactly 234 selected modules, 3,556 graph edges, and the
+  byte-identical 429-package test population. Only regexp2 changes. Exact
+  `go get` replaces the indirect requirement and adds the v1.12.0 checksum
+  pair while retaining the old v1.8.1 pair. The historical tidy projection
+  grows 278 -> 282 lines, retains the explicit v1.12.0 pin, and would remove
+  the old selected checksum pair; the projection was recorded, not applied.
+- Regexp2 and regexp2/syntax are loaded through
+  `plybuild/cmd -> go-term-markdown -> Chroma -> regexp2`. The 12-commit delta
+  fixes lazy-loop stack corruption and termination, timeout false positives,
+  runner text retention, and ECMAScript plus Singleline dot behavior; it adds
+  single-letter Unicode property syntax, timeout test controls, text
+  marshaling, regressions, and documentation. The Go vulnerability module
+  index has no regexp2 entry.
+- Exact `go get github.com/dlclark/regexp2@v1.12.0` produced dependency-only
+  commit `3fd6684941c57bf004ac7d09b73f5e716c12689b`, parent
+  `d043241b0f092235edb63353a83daf1f57996bd5`, and clean tree
+  `8d08fa15c7bd85a229380d8336ca25a3312f19b1`. Only `go.mod` and `go.sum`
+  changed with three insertions and one deletion. Production behavior, public
+  API/CLI, toolchain and language declarations, distribution, quality,
+  packaging, publication, credential, and P8 contracts are unchanged.
+- The authoritative pre-implementation selection root remains
+  `/private/tmp/ply-p7-next-selection.55dc69d.8kz8Cw`; its verified 49,090-entry
+  manifest SHA-256 is
+  `a2d03742f02396ede46ac73a19b00191812d84cfcad2b416dcf1f19b460b3a10`.
+  The independent implementation replay is retained at
+  `/private/tmp/ply-p7-regexp2-replay.d043241.GjPoeU`; its verified
+  46,723-entry manifest SHA-256 is
+  `5b614df2c43b7769643aab1bd3b96a7bcbb959efc3f63ba3df1ac02d00c5f1fa`,
+  and selection-summary SHA-256 is
+  `6df19722cc55cf8099f99ccd18b3396836ab58c0dc4ab072eb23c8ad71af5024`.
+- Commit-bound schema-2 review evidence is retained at
+  `/private/tmp/ply-p7-regexp2-quality-review.3fd6684.l0sSof`. Its verified
+  24-entry manifest SHA-256 is
+  `62d0e6c4e10db44fcd646bd3683568cf77711b2ece9fb04dfb6bd7dca68a5a62`;
+  manual evidence SHA-256 is
+  `6a39bf49fe11affd7e75bf09451fd42bb81ec3fdb7a06e2bdc124caa5dc6fa5f`,
+  focused scorecard SHA-256 is
+  `59d4a096d6cdf4a1d79d8a0876c853a17bffd88285910fb0985ac3226d2e0a56`,
+  and all six focused receipts pass.
+- Exact `make quality` exits 0 at
+  `/private/tmp/ply-p7-regexp2-quality-parent.3fd6684.1BZGVe/quality-gate`.
+  Its verified 235,425-entry manifest SHA-256 is
+  `9bcc902d7eac1085e8f453989faf4b4d432522eb5a97928454177faba2280115`.
+  Q0-Q2 scorecard SHA-256
+  `0e7139dc25cc2cd125807536e24b18e27f91f48084cd5ddf644381ee292dd2a8`
+  records 27/27 PASS at L2, 80/80 killed mutations, 8/8 mutation and 4/4
+  acceptance populations, and zero held, regressed, not-comparable, or dirty
+  counts.
+- The independent regression root is
+  `/private/tmp/ply-p7-regexp2-regression-gate.3fd6684.YQdxua`; its verified
+  70,973-entry manifest SHA-256 is
+  `2443aa2ba177642c2416f534ab66b83ac1be498080396e75c0ec87e40f3fcce7`,
+  and regression-summary SHA-256 is
+  `dcce4656a650406e9ee4dbcfb31ea8a69991267c917ce8f96b9c7e94170ab8b7`.
+  All 40 stages pass, including complete preflight, host and fresh snapshot/
+  Docker acceptance, audit meta, empty-HOME count-2, and exact 22/33/22
+  vulnerability parity. Full scorecard SHA-256
+  `c95201c96297a198b7bec9b5a031443e42c0fe4be5f17a4d383362b9dce5f527`
+  exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+
+Current queue decisions and next bounded P7 group (2026-09-04):
+
+- Reject `github.com/fatih/color v1.14.1` -> latest v1.19.0 because the latest
+  module declares Go 1.25.0. Reject `github.com/fsnotify/fsnotify v1.6.0` ->
+  latest v1.10.1 because it declares Go 1.23. Neither candidate was
+  implemented; both exceed the retained Go 1.18 floor.
+- Select indirect `github.com/gomarkdown/markdown`
+  `v0.0.0-20221013030248-663e2500819c` -> latest pseudoversion
+  `v0.0.0-20260824154242-13c5cf49db8d`. The proxy exposes no tagged module
+  versions. The latest version was observed at 2026-08-24T15:42:42Z, resolves
+  to unsigned commit `13c5cf49db8d0bd189d6d04337e618ae01a83c8f`, declares Go 1.12,
+  and has checksum pair
+  `h1:8VtgBGEPLZ2Yn0Fuh6Pwmy3qF6indeaqy8mrBMbUKRQ=` /
+  `h1:JDGcbDT52eL4fju3sZ4TeHGsQwhG9nbDV21aMyhwPoA=`.
+- The clean offline replay changes exactly gomarkdown, retains 234 modules,
+  3,556 graph edges, and the exact 429-package test population, and loads four
+  gomarkdown packages through `plybuild/cmd -> go-term-markdown`. Exact get
+  adds only the new checksum pair and retains the old selected pair. Tidy grows
+  282 -> 285 lines while retaining the explicit pin. Build, complete tests,
+  dependency self-tests, focused go-term-markdown rendering tests, pinned lint,
+  byte-identical help, identical API/CLI reports, and artifact meta-contracts
+  pass.
+- The candidate removes reachable GO-2023-2074 and GO-2024-3205 and removes
+  module-level GO-2026-5208 as well, moving vulnerability populations from
+  22/33/22 to 20/30/20 with no additions. The 119-commit, 87-file delta also
+  changes parser/renderer hooks and Markdown semantics, fixes panics/loops and
+  quadratic parsing, improves large-document performance, and adds broad
+  regressions and documentation; the next session must independently reverify
+  this loaded behavior before implementation.
+- The sealed selection root is
+  `/private/tmp/ply-p7-gomarkdown-selection.3fd6684.VhoTOi`; its verified
+  46,966-entry manifest SHA-256 is
+  `85c97bd06674c2b1b76cca98de6d203a2442273ae86afbe2f258e66506892e26`,
+  and selection-summary SHA-256 is
+  `d6451deffdb8b70fc7112e3acdeae44aea1876ef1cb686cfe0ccf7e8e917db87`.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

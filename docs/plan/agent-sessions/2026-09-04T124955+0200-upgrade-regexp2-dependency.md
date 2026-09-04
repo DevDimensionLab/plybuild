@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Regexp2 Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T124955+0200-upgrade-regexp2-dependency`
 Created: `2026-09-04T12:49:55+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `03166e3c53f8147223715a66747a1672e1cf23ebb8f4a4fb7e983dd90f848e5e`
 Previous: [2026-09-04T105124+0200-upgrade-go-md2man-dependency.md](2026-09-04T105124+0200-upgrade-go-md2man-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-04T145138+0200-upgrade-gomarkdown-dependency.md](2026-09-04T145138+0200-upgrade-gomarkdown-dependency.md)
+Outcome: Upgraded only selected indirect `github.com/dlclark/regexp2` from v1.8.1 to v1.12.0 in dependency-only commit `3fd6684`; exact selection, Markdown/highlighting, quality, regression, artifact, vulnerability-parity, and clean-tree gates pass, and P7 remains active for the measured gomarkdown latest-pseudoversion group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
