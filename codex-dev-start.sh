@@ -1055,54 +1055,56 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-04T202725+0200-evaluate-google-btree-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T202725+0200-evaluate-google-btree-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T171914+0200-evaluate-gomarkdown-compatible-fallback.md
+#|SESSION_ID=2026-09-04T231513+0200-evaluate-google-go-cmp-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T231513+0200-evaluate-google-go-cmp-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T202725+0200-evaluate-google-btree-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected indirect
-#|`github.com/google/btree v1.0.0` against latest `v1.1.3` as one bounded
-#|dependency group. Resolve the candidate from primary evidence and implement it
-#|with one exact Go selection only if it preserves the retained Go 1.18 floor,
-#|has an explained minimal closure, and passes every quality contract.
+#|`github.com/google/go-cmp v0.5.9` as one bounded dependency group. Resolve and
+#|reject latest v0.7.0 if its preliminary Go 1.21 floor is confirmed, then
+#|evaluate highest floor-compatible v0.6.0 in the same module group. Implement
+#|one exact selection only if it preserves the retained Go 1.18 floor, has an
+#|explained minimal closure, and passes every quality contract.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain and the
-#|completed dependency groups through accepted gomarkdown fallback
-#|`v0.0.0-20260824151336-45814d58469f`. Viper v1.16.0, Emoji v2.2.14, ini
-#|v1.67.3, fatih/color v1.19.0, fsnotify v1.10.1, and latest gomarkdown
-#|`v0.0.0-20260824154242-13c5cf49db8d` remain rejected for their recorded floor
-#|or loaded-behavior failures. Do not revisit those decisions or combine another
-#|group. P8 remains queued.
+#|completed dependency groups through accepted Google btree v1.1.3. Viper
+#|v1.16.0, Emoji v2.2.14, ini v1.67.3, fatih/color v1.19.0, fsnotify v1.10.1,
+#|and latest gomarkdown `v0.0.0-20260824154242-13c5cf49db8d` remain rejected for
+#|their recorded floor or loaded-behavior failures. Do not revisit those
+#|decisions or combine another module group. P8 remains queued.
 #|
-#|The current build list selects google/btree v1.0.0 through the historical
-#|module graph, while the complete main-module test population loads no
-#|google/btree package and `go mod why -m` reports that the main module does not
-#|need it. Preliminary primary proxy evidence identifies latest v1.1.3 at tag
-#|commit `aeba20f7a1e1315badec4eca4fdc9f754f5f880a`, published
-#|2024-08-21T16:26:17Z, with a Go 1.18 declaration. Treat every one of those
-#|facts as a candidate input until independently reproduced.
+#|The current build list selects go-cmp v0.5.9. The complete test population
+#|loads five go-cmp packages through
+#|`plybuild/cmd -> mvn-pom-mutator/pkg/pom -> go-cmp/cmp`. Preliminary primary
+#|proxy evidence identifies latest v0.7.0 at tag commit
+#|`9b12f366a942ebc7254abc7f32ca05068b455fb7`, published
+#|2025-01-14T18:15:44Z, with Go 1.21. Preliminary proxy evidence identifies
+#|v0.6.0 at tag commit `c3ad8435e7bef96af35732bc0789e5a2278c6d5f`,
+#|published 2023-08-31T17:32:40Z, with Go 1.13. Treat every one of those facts as
+#|a candidate input until independently reproduced.
 #|
-#|This session may change only google/btree's exact required go.mod/go.sum
-#|metadata and the roadmap/handoff record. Do not change production Go, another
+#|This session may change only go-cmp's exact required go.mod/go.sum metadata
+#|and the roadmap/handoff record. Do not change production Go, another
 #|dependency, the language/toolchain declaration, quality apparatus,
 #|Docker/release inputs, packaging, publishers, or P8 code.
 #|
 #|# Measurements At Start
 #|
-#|Accepted gomarkdown implementation is commit
-#|`d4f053808e389cf163665087f78690cca05999ce`, exact parent
-#|`18d67bb9293cef56b13b8bcb9e3dfbe22fd23045`, clean tree
-#|`cbf28809e55d95589b86a0d9e57eeaba2401542d`. After the documentation handoff,
-#|continuity HEAD must have exact parent `d4f0538`, and ordinary and ignored
+#|Accepted btree implementation is commit
+#|`2e2f8e09918d1105cdc24ac34214690daf8d0cff`, exact parent
+#|`6f3f39db3d2f449937f0e0bb35c3a3e919d627ed`, clean tree
+#|`b70ada27a9db80515551c07c2c738f3fe0336498`. After the documentation handoff,
+#|continuity HEAD must have exact parent `2e2f8e0`, and ordinary and ignored
 #|status must be empty.
 #|
-#|Current dependency measurements are 234 selected modules, 3,556 graph edges,
-#|429 complete test packages, four loaded gomarkdown packages, a 285-line tidy
+#|Current dependency measurements are 234 selected modules, 3,557 graph edges,
+#|429 complete test packages, five loaded go-cmp packages, a 299-line tidy
 #|projection, and exact Darwin-symbol/Darwin-module/Windows-symbol vulnerability
 #|populations 20/30/20. The retained main module declares Go 1.18 and prefers
 #|toolchain Go 1.26.7.
@@ -1115,81 +1117,83 @@ exit 70
 #|golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and govulncheck v1.7.0
 #|binaries and hashes recorded in the handover.
 #|
-#|The accepted gomarkdown decision replay is
-#|`/private/tmp/ply-p7-gomarkdown-fallback-replay.18d67bb.U5kpjt`. Its original
-#|42,120-entry seal is retained at SHA-256
-#|`dfdce8f20a3dbd4257a0a1dc22034d2c903f000a20f935d12c0509cfff303b4c`;
-#|four later-used Go telemetry counters drifted, and its verified final
-#|42,127-entry post-use manifest SHA-256 is
-#|`b438197999acb18ad6955d66c5d38e0af92df8b0693ecba7445f5a960b1b1fa8`.
-#|Selection-summary SHA-256 is
-#|`697d2467a20850656b1213494c9c2fe4557df8a61d1ec9eacff94cdf41d2b28a`.
+#|Accepted btree selection evidence is
+#|`/private/tmp/ply-p7-btree-selection.6f3f39d.oPbcTr`, with verified
+#|52,933-entry manifest SHA-256
+#|`bc86252747c48e4389fd1b60c8c4843f8003c7342a4f7cf79b66b7f1bf4d8006`
+#|and selection-summary SHA-256
+#|`45d485b4cf7d1d6d2db91f2b320b4b3fe2ef42fff36a6803619d576c8dd3b1e8`.
 #|
 #|Commit-bound schema-2 evidence is
-#|`/private/tmp/ply-p7-gomarkdown-fallback-quality-review.d4f0538.sBeoKD`, with
-#|verified 2,304-entry manifest SHA-256
-#|`cdd7691693373d726fdec2e954aacdc11bcae0bbffde3a471edd56c34de78ab6`
+#|`/private/tmp/ply-p7-btree-quality-review.2e2f8e0.kUNRFX`, with verified
+#|9,482-entry manifest SHA-256
+#|`52aa4d4743e2cc70fa9f1d17a2e068941d7dbb67f90ee25e8b2dc6c9652c5ee1`
 #|and manual-evidence SHA-256
-#|`ffdee0e8a622a8de34220a7773bf32b87d5368698cc25d18a28c2b49b711cc17`.
+#|`e7625cadbab2cd817c9e932e28b83248a7b000573adc4f24fb00f40a8380d03d`.
 #|
 #|Exact accepted quality evidence is
-#|`/private/tmp/ply-p7-gomarkdown-fallback-quality-parent.d4f0538-final.2kKFpS`.
-#|Its verified 252,314-entry manifest SHA-256 is
-#|`70ef46136c13b7e5276ac1ef1af62514013902e93c9e115551d863f0f3a8e40b`;
+#|`/private/tmp/ply-p7-btree-quality-parent.2e2f8e0-final.6v4pBz`. Its verified
+#|252,397-entry manifest SHA-256 is
+#|`2395eb672221bac15a70b564dbce09bf28546d93876111dd22fff6500b1fc7cf`;
 #|Q0-Q2 scorecard SHA-256 is
-#|`a2298bb0457549c71c90a9069d3f1ffe219f7f21b62d7b47684d16dc7fdfe870`.
-#|Exact make quality passes all 27 rows at L2, 80/80 mutations, 8/8 mutation and
-#|4/4 acceptance populations, with held, regressed, not-comparable, and dirty
-#|counts zero.
+#|`980dec57493b17f6d1954dc247e59f1e3be81754ccf230efa60f059a8d273395`.
+#|Exact make quality passes all 21 stages and 27 rows at L2, 80/80 mutations,
+#|8/8 mutation and 4/4 acceptance populations, with held, regressed,
+#|not-comparable, and dirty counts zero.
 #|
 #|The independent regression root is
-#|`/private/tmp/ply-p7-gomarkdown-fallback-regression-gate.d4f0538.6YaNVS`.
-#|Its verified 57,472-entry manifest SHA-256 is
-#|`daba32728fe7cf75d594371d5e04f0be74101f3a38cd007aaf4e6a51210f8e4f`;
+#|`/private/tmp/ply-p7-btree-regression-gate.2e2f8e0.FhWpnk`. Its verified
+#|24,197-entry manifest SHA-256 is
+#|`9cca917b12dd761c58bf91652e78b3e999f55eeb1ffc39f9f3bbf56a52aef463`;
 #|regression-summary SHA-256 is
-#|`4add3dd6e08503abaf553113b72e5677e97cad09b9553cbf6f9a7216ae4cc145`.
-#|It binds the exact graph/package/tidy populations, 30 retained renderer
-#|passes across 34 individual cases with zero regressions, exact 20/30/20
-#|vulnerabilities, empty-HOME count-2, and the expected full-audit L3-only exit.
+#|`f348bd0b9e0f68c698c43f466904b66c1c3db6eab5e783b14364aaf40b6b1ea2`.
+#|It binds exact graph/package/tidy populations, module and repository gates,
+#|identical help/API/CLI, exact 20/30/20 vulnerabilities, empty-HOME count-2,
+#|and the expected full-audit L3-only exit.
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve google/btree v1.1.3 through
-#|the Go proxy, checksum database, and upstream repository. Record the exact tag
-#|commit/time, module Go declaration, checksum pair, source identity, tag and
-#|commit signature status, relevant history since v1.0.0, and primary Go
-#|vulnerability data. Do not infer compatibility from the preliminary proxy
-#|check.
+#|From fresh external archives and caches, resolve go-cmp v0.7.0 and v0.6.0
+#|through the Go proxy, checksum database, and upstream repository. Record exact
+#|tag commits/times, module Go declarations, checksum pairs, source identity,
+#|tag and commit signature status, relevant history since v0.5.9, and primary
+#|Go vulnerability data. Do not infer compatibility from the preliminary proxy
+#|checks.
 #|
-#|Measure old versus candidate selected modules, graph edges, complete package
+#|First resolve latest v0.7.0. If its Go 1.21 declaration is confirmed, record
+#|its rejection without selecting it. Then prove that v0.6.0 is the highest
+#|release compatible with Go 1.18 before evaluating its closure and behavior.
+#|Keep latest rejection and fallback acceptance in this one go-cmp group; do not
+#|evaluate another module.
+#|
+#|Measure old versus fallback selected modules, graph edges, complete package
 #|population, checksums, loaded packages/path, explicit exact-get diff, and
 #|`go mod tidy -diff`. Require exactly one changed module selection and explain
-#|every main-edge or checksum change. Because google/btree is currently not
-#|loaded, prove that status independently and run the candidate module's own
-#|complete tests in addition to repository build, complete tests/race/vet,
-#|pinned lint, byte-identical public help, and identical API/CLI reports.
+#|every main-edge or checksum change. Because go-cmp is loaded, run focused
+#|mvn-pom-mutator/consumer behavior and the candidate module's complete tests in
+#|addition to repository build, complete tests/race/vet, pinned lint,
+#|byte-identical public help, and identical API/CLI reports.
 #|
 #|Stop and record rejection without editing dependency metadata if canonical
-#|resolution, Go-floor compatibility, exact closure, source identity,
-#|module self-tests, or any repository behavior/quality contract fails. Measure
-#|the exact vulnerability population; do not assume parity merely because the
-#|module is unloaded.
+#|resolution, Go-floor compatibility, exact closure, source identity, module
+#|self-tests, loaded behavior, or any repository quality contract fails. Measure
+#|the exact vulnerability population; do not assume parity.
 #|
 #|# Required Reading
 #|
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher `--check`, and the P7/P8 checkpoint before editing.
 #|Verify every accepted manifest. Read this archive, the rolling handover, P7 in
-#|the roadmap, go.mod/go.sum, the accepted gomarkdown evidence, and the
-#|toolchain, compatibility, snapshot/Docker, quality, baseline-reproduction,
-#|and audit contracts.
+#|the roadmap, go.mod/go.sum, the accepted btree evidence, and the toolchain,
+#|compatibility, snapshot/Docker, quality, baseline-reproduction, and audit
+#|contracts.
 #|
 #|# Three Moves
 #|
 #|Only if all decision evidence passes, use exact Go 1.26.7 and exact
-#|`go get github.com/google/btree@v1.1.3` for one dependency-only commit. Do not
-#|hand-edit module metadata and do not use tidy as the implementation command.
-#|Preserve every retained selection, including gomarkdown fallback, regexp2
+#|`go get github.com/google/go-cmp@v0.6.0` for one dependency-only commit. Do not
+#|hand-edit module metadata and do not use tidy as implementation. Preserve every
+#|retained selection, including btree v1.1.3, gomarkdown fallback, regexp2
 #|v1.12.0, Cobra v1.10.2, YAML v3.0.5, go-md2man v2.0.7, Blackfriday v2.1.0,
 #|pflag v1.0.10, Uniseg v0.4.7, Colorable v0.1.15, and go-isatty v0.0.20.
 #|

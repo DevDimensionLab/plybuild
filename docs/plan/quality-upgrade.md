@@ -5365,8 +5365,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through regexp2 v1.12.0 plus the accepted pre-breaking
-gomarkdown fallback; Google btree and further dependency groups remain queued.
+dependency groups through accepted Google btree v1.1.3; Google go-cmp and
+further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6167,11 +6167,45 @@ Current queue decisions and next bounded P7 group (2026-09-04):
   `70ef46136c13b7e5276ac1ef1af62514013902e93c9e115551d863f0f3a8e40b`,
   and `daba32728fe7cf75d594371d5e04f0be74101f3a38cd007aaf4e6a51210f8e4f`;
   complete evidence identities are indexed in the rolling handover.
-- Next, separately evaluate selected indirect `github.com/google/btree v1.0.0`
-  against latest v1.1.3. Preliminary proxy evidence identifies v1.1.3 at
-  commit `aeba20f7a1e1315badec4eca4fdc9f754f5f880a` with Go 1.18; reproduce all
-  primary identity, closure, loaded-path, vulnerability, and quality evidence
-  before any exact-selection implementation.
+- Accept selected indirect `github.com/google/btree v1.0.0` -> latest v1.1.3.
+  Primary proxy, checksum-database, and repository evidence binds its
+  lightweight unsigned tag to commit
+  `aeba20f7a1e1315badec4eca4fdc9f754f5f880a` at
+  2024-08-21T16:26:17Z, declaring Go 1.18, with checksum pair
+  `h1:CVpQJjYgC4VbzxeGVHfvZrv1ctoYCAI8vbl07Fcxlyg=` /
+  `h1:qOPhT0dTNdNzV6Z/lhRX0YXUafgPLFUh+gZMl761Gm4=`. All nine proxy files
+  match the tag-commit archive, and the primary vulnerability module index has
+  no btree entry.
+- Both states select 234 modules and byte-identical 429-package complete test
+  populations. Exactly one selection changes. Graph edges grow 3,556 -> 3,557
+  only because the exact selection adds the main-module edge to btree v1.1.3;
+  historical transitive edges are unchanged. No btree package loads, and
+  `go mod why -m` says the main module does not need it. Tidy projects
+  285 -> 299 lines and was recorded, not applied.
+- Exact `go get github.com/google/btree@v1.1.3` produced dependency-only commit
+  `2e2f8e0`, parent `6f3f39d`, tree `b70ada2`, changing only `go.mod` and
+  `go.sum`. Candidate module tests/race/vet and focused clone tests pass.
+  Repository build/tests/race/vet, pinned lint, help/API/CLI identity, exact
+  quality, empty-HOME count-2, and clean-tree gates pass; vulnerability ID
+  populations remain exactly 20/30/20.
+- Accepted selection, review, exact-quality, and regression evidence is sealed
+  respectively at `/private/tmp/ply-p7-btree-selection.6f3f39d.oPbcTr`,
+  `/private/tmp/ply-p7-btree-quality-review.2e2f8e0.kUNRFX`,
+  `/private/tmp/ply-p7-btree-quality-parent.2e2f8e0-final.6v4pBz`, and
+  `/private/tmp/ply-p7-btree-regression-gate.2e2f8e0.FhWpnk`. Their verified
+  manifest SHA-256 values are
+  `bc86252747c48e4389fd1b60c8c4843f8003c7342a4f7cf79b66b7f1bf4d8006`,
+  `52aa4d4743e2cc70fa9f1d17a2e068941d7dbb67f90ee25e8b2dc6c9652c5ee1`,
+  `2395eb672221bac15a70b564dbce09bf28546d93876111dd22fff6500b1fc7cf`,
+  and `9cca917b12dd761c58bf91652e78b3e999f55eeb1ffc39f9f3bbf56a52aef463`.
+  Exact quality passes 21/21 stages, 27/27 rows at L2, and 80/80 mutations;
+  full audit exits expected 1 only for Q3.1, Q3.3, Q3.4, and Q3.7.
+- Next, evaluate selected indirect `github.com/google/go-cmp v0.5.9` as one
+  module group. Preliminary proxy evidence identifies latest v0.7.0 at commit
+  `9b12f366a942ebc7254abc7f32ca05068b455fb7` with Go 1.21 and v0.6.0 at
+  commit `c3ad8435e7bef96af35732bc0789e5a2278c6d5f` with Go 1.13. Independently
+  reject latest if its floor is confirmed, then evaluate v0.6.0 as the
+  highest compatible fallback before any exact-selection implementation.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
