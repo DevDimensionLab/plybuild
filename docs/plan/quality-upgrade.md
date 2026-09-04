@@ -5364,10 +5364,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the maintained-toolchain baseline move, terminal-pair,
-logrus, Cobra, pflag, Uniseg, Colorable/go-isatty, Cobra/YAML, and YAML v3.0.5
-dependency groups, plus the rejected Viper, Emoji, and ini closure decisions;
-further dependency groups remain queued.
+Status: active after the maintained-toolchain baseline move and completed
+dependency groups through regexp2 v1.12.0, plus the rejected Viper, Emoji, ini,
+fatih/color, fsnotify, and latest-gomarkdown decisions; the pre-breaking
+gomarkdown fallback and further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6126,35 +6126,32 @@ Current queue decisions and next bounded P7 group (2026-09-04):
   module declares Go 1.25.0. Reject `github.com/fsnotify/fsnotify v1.6.0` ->
   latest v1.10.1 because it declares Go 1.23. Neither candidate was
   implemented; both exceed the retained Go 1.18 floor.
-- Select indirect `github.com/gomarkdown/markdown`
-  `v0.0.0-20221013030248-663e2500819c` -> latest pseudoversion
-  `v0.0.0-20260824154242-13c5cf49db8d`. The proxy exposes no tagged module
-  versions. The latest version was observed at 2026-08-24T15:42:42Z, resolves
-  to unsigned commit `13c5cf49db8d0bd189d6d04337e618ae01a83c8f`, declares Go 1.12,
-  and has checksum pair
-  `h1:8VtgBGEPLZ2Yn0Fuh6Pwmy3qF6indeaqy8mrBMbUKRQ=` /
-  `h1:JDGcbDT52eL4fju3sZ4TeHGsQwhG9nbDV21aMyhwPoA=`.
-- The clean offline replay changes exactly gomarkdown, retains 234 modules,
-  3,556 graph edges, and the exact 429-package test population, and loads four
-  gomarkdown packages through `plybuild/cmd -> go-term-markdown`. Exact get
-  adds only the new checksum pair and retains the old selected pair. Tidy grows
-  282 -> 285 lines while retaining the explicit pin. Build, complete tests,
-  dependency self-tests, focused go-term-markdown rendering tests, pinned lint,
-  byte-identical help, identical API/CLI reports, and artifact meta-contracts
-  pass.
-- The candidate removes reachable GO-2023-2074 and GO-2024-3205 and removes
-  module-level GO-2026-5208 as well, moving vulnerability populations from
-  22/33/22 to 20/30/20 with no additions. The 119-commit, 87-file delta also
-  changes parser/renderer hooks and Markdown semantics, fixes panics/loops and
-  quadratic parsing, improves large-document performance, and adds broad
-  regressions and documentation; the next session must independently reverify
-  this loaded behavior before implementation.
-- The sealed selection root is
-  `/private/tmp/ply-p7-gomarkdown-selection.3fd6684.VhoTOi`; its verified
-  46,966-entry manifest SHA-256 is
-  `85c97bd06674c2b1b76cca98de6d203a2442273ae86afbe2f258e66506892e26`,
-  and selection-summary SHA-256 is
-  `d6451deffdb8b70fc7112e3acdeae44aea1876ef1cb686cfe0ccf7e8e917db87`.
+- Reject latest indirect `github.com/gomarkdown/markdown`
+  `v0.0.0-20260824154242-13c5cf49db8d`. Its exact one-selection closure,
+  Go 1.12 declaration, 234-module/3,556-edge/429-package population, and
+  22/33/22 -> 20/30/20 vulnerability improvement reproduce, but loaded
+  behavior does not: five previously passing go-term-markdown v0.1.4 renderer
+  cases panic with `Unknown node type *ast.ReferenceDefinition`.
+- Commit `d18ffa2a47071de47ab9ad4dd61f0a01158ff97a` deliberately adds reference
+  definitions to the AST for round trip, while the retained consumer's type
+  switch panics on unknown nodes. Because this is a loaded user-visible path,
+  no dependency metadata was changed. Focused contract commit `8a6ef5f` now
+  makes reference-definition rendering executable while preserving the exact
+  282-line tidy projection and every dependency classification.
+- Exact `make quality` at `8a6ef5f` passes 27/27 Q0-Q2 rows at L2, 80/80
+  mutations, all host/snapshot/Docker acceptance, and zero exit-gate
+  regressions. Final current-tree graph, package, tidy, and vulnerability
+  populations remain 234/3,556/429, 282 lines, and 22/33/22.
+- The sealed decision replay is
+  `/private/tmp/ply-p7-gomarkdown-replay.1cf74aa.DA6bP5`, manifest SHA-256
+  `a1258b38e5ce00799d716b369b43e7d64f02d9b0562dba587e15b3662f7c02d6`.
+  Commit-bound quality and regression evidence is indexed in the rolling
+  handover.
+- Next, separately measure immediate pre-breaking gomarkdown commit
+  `45814d58469f9a462c899674ee58ca440b432dbf`. Resolve its canonical proxy
+  pseudoversion and require exact closure, all retained renderer passes, the
+  focused contract, Go-floor compatibility, and measured security improvement
+  before any exact-get implementation.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

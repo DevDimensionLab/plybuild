@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Gomarkdown Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T145138+0200-upgrade-gomarkdown-dependency`
 Created: `2026-09-04T14:51:38+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `d34836648fac466d13642b8ee20822f4fa743c7daa5c7d004be0749d9172b661`
 Previous: [2026-09-04T124955+0200-upgrade-regexp2-dependency.md](2026-09-04T124955+0200-upgrade-regexp2-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-04T171914+0200-evaluate-gomarkdown-compatible-fallback.md](2026-09-04T171914+0200-evaluate-gomarkdown-compatible-fallback.md)
+Outcome: Rejected latest gomarkdown pseudoversion `v0.0.0-20260824154242-13c5cf49db8d`: exact closure and security gains reproduce, but five previously passing loaded go-term-markdown rendering cases panic on the candidate's new `*ast.ReferenceDefinition` nodes. Dependency metadata remains unchanged; focused contract commit `8a6ef5f` preserves the failure boundary, and P7 continues with a separately measured pre-breaking fallback.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
