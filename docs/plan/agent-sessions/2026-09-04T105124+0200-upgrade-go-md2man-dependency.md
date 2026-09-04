@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Go-md2man Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T105124+0200-upgrade-go-md2man-dependency`
 Created: `2026-09-04T10:51:24+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `718cca634d724dc53662afb492dee3034079af47accf8a02b09a7313b0400480`
 Previous: [2026-09-04T083743+0200-upgrade-yaml-v3-dependency.md](2026-09-04T083743+0200-upgrade-yaml-v3-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-04T124955+0200-upgrade-regexp2-dependency.md](2026-09-04T124955+0200-upgrade-regexp2-dependency.md)
+Outcome: Upgraded only selected indirect `github.com/cpuguy83/go-md2man/v2` from v2.0.6 to v2.0.7 in dependency-only commit `55dc69d`; all required selection, compatibility, quality, regression, artifact, vulnerability, and clean-tree gates passed, and P7 remains active for the measured regexp2 v1.12.0 group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

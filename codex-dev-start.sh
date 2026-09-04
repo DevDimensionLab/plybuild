@@ -1055,60 +1055,61 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-04T105124+0200-upgrade-go-md2man-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T105124+0200-upgrade-go-md2man-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T083743+0200-upgrade-yaml-v3-dependency.md
+#|SESSION_ID=2026-09-04T124955+0200-upgrade-regexp2-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T124955+0200-upgrade-regexp2-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T105124+0200-upgrade-go-md2man-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 with its next measured dependency group: upgrade selected indirect
-#|github.com/cpuguy83/go-md2man/v2 v2.0.6 to latest v2.0.7 as an exact
-#|one-selection move. Independently reverify the decision from primary evidence,
-#|preserve behavior and every quality contract, and finish with no unrelated
-#|drift.
+#|github.com/dlclark/regexp2 v1.8.1 to latest v1.12.0 as an exact one-selection
+#|move. Independently reverify the decision from primary evidence, preserve the
+#|loaded Markdown/highlighting behavior and every quality contract, and finish
+#|with no unrelated drift.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. The Go 1.26.7 toolchain, terminal pair, logrus, Cobra
 #|v1.10.1 closure, pflag, Uniseg, Colorable/go-isatty, Cobra v1.10.2/YAML v3.0.4,
-#|and YAML v3.0.5 groups are complete. Viper v1.16.0, Emoji v2.2.14, and ini
-#|v1.67.3 are rejected because their closures violate the retained Go 1.18 floor.
-#|P7 remains active for dependency groups and P8 remains queued.
+#|YAML v3.0.5, and go-md2man v2.0.7 groups are complete. Viper v1.16.0, Emoji
+#|v2.2.14, and ini v1.67.3 are rejected because their closures violate the
+#|retained Go 1.18 floor. P7 remains active for dependency groups and P8 remains
+#|queued.
 #|
-#|This session may change only the exact go-md2man v2.0.7 pin's required
-#|go.mod/go.sum metadata, including the unchanged selected Blackfriday v2.1.0
-#|metadata recorded by exact go get, a focused executable contract if one is
-#|genuinely needed, and the roadmap record. Do not revisit Viper, Emoji, or ini,
-#|raise the language floor, or combine another dependency group.
+#|This session may change only the exact regexp2 v1.12.0 pin's required
+#|go.mod/go.sum metadata, a focused executable Markdown/highlighting contract if
+#|one is genuinely needed, and the roadmap record. Do not revisit Viper, Emoji,
+#|or ini, raise the language floor, or combine another dependency group.
 #|
 #|The clean offline current-tree probe changes exactly one selection:
-#|github.com/cpuguy83/go-md2man/v2 v2.0.6 -> v2.0.7. Both states retain 234
-#|selected modules and the exact 429-package population. Exact go get adds
-#|explicit indirect requirements for go-md2man v2.0.7 and its already-selected
-#|github.com/russross/blackfriday/v2 v2.1.0, so the graph gains three edges,
-#|3,553 -> 3,556, without changing Blackfriday's selection. The historical
-#|go mod tidy -diff projection grows from 271 to 278 lines. No loaded main-module
-#|package imports go-md2man or Blackfriday, so projected tidy removes the two
-#|explicit requirements and their newly materialized checksum lines; record this
-#|known metadata consequence rather than using tidy as the implementation
-#|command. Go-md2man declares Go 1.12, Blackfriday has no go directive, and the
-#|main module remains Go 1.18. Exact Go 1.26.7 build, complete tests, pinned lint,
+#|github.com/dlclark/regexp2 v1.8.1 -> v1.12.0. Both states retain 234 selected
+#|modules, 3,556 graph edges, and the exact 429-package test population. Exact
+#|go get replaces the existing indirect requirement and adds only the v1.12.0
+#|module/checksum pair while retaining the old v1.8.1 checksum pair. The
+#|historical go mod tidy -diff projection grows from 278 to 282 lines; it retains
+#|the explicit v1.12.0 requirement and projects removal of the old v1.8.1
+#|checksum pair. Record this known metadata consequence rather than using tidy as
+#|the implementation command.
+#|
+#|Regexp2 and regexp2/syntax are loaded through plybuild/cmd -> go-term-markdown
+#|-> Chroma -> regexp2. Regexp2 v1.12.0 declares Go 1.13 and the main module
+#|remains Go 1.18. Exact Go 1.26.7 build, complete tests, pinned lint,
 #|byte-identical public help, identical API/CLI reports, artifact meta-contracts,
 #|and 22/33/22 vulnerability parity pass.
 #|
 #|Stop and record the decision if independent replay changes any other selection,
-#|checksum, edge, package, declared minimum Go version, API/CLI report, public
-#|help, or vulnerability population.
+#|checksum, edge count, package population, declared minimum Go version, API/CLI
+#|report, public help, loaded path, or vulnerability population.
 #|
 #|# Measurements At Start
 #|
 #|The last P7 implementation commit is
-#|cfdcb370e98ba4e4536f0bf08d5b1abbb01f1856, exact parent
-#|fdd9986d55d0aee27679ccc3675710e03f0d1e1a, clean tree
-#|7244802bfe8e229ab128c122c0b6cb1a49fc7729. After the YAML v3.0.5 handoff, the
-#|continuity HEAD must have exact parent cfdcb37, and ordinary and ignored status
+#|55dc69dda20c4d8f96b6dbcdd70cfef76467cc85, exact parent
+#|6fe18fe01326f77bee375d3f8834b44a0416907d, clean tree
+#|321e39594a4bbe0b7c6afda4e9e5a07cf395fe47. After the go-md2man handoff, the
+#|continuity HEAD must have exact parent 55dc69d, and ordinary and ignored status
 #|must be empty.
 #|
 #|The declared and verified toolchain remains Go 1.26.7. The retained official
@@ -1131,39 +1132,39 @@ exit 70
 #|/private/tmp/ply-p7-terminal-selection.ctFhJk/tools/bin/govulncheck, SHA-256
 #|0db06024e71e82bd3e4444d57b757abf86fd4b7d0b08c1c21ca811597c953cd5.
 #|
-#|The accepted YAML v3.0.5 selection root is
-#|/private/tmp/ply-p7-yaml-selection.fdd9986.cf5t7R. Its verified 31,004-entry
+#|The authoritative go-md2man implementation selection root is
+#|/private/tmp/ply-p7-md2man-selection.6fe18fe.fBmfEU. Its verified 44,219-entry
 #|manifest SHA-256 is
-#|1274e8d593cc6dd526ef2c857168212204660653eb6045835ae7943cfc94d986;
+#|77c1ec0a2fd1b60e4369d87c3c387efc39bcb1297cc6cf698fac6af3b42d6807;
 #|selection-summary.json SHA-256 is
-#|6dcd8a236217e7b620b7408a4d79270d36003e1364563ead6b875d361950825b.
+#|7c5cab15a7a0d813df60b176666fae4b9bd536c2f081566032509da18c1873dd.
 #|
-#|The exact accepted YAML schema-2 review root is
-#|/private/tmp/ply-p7-yaml-quality-review.cfdcb37.3xOd0m. Its verified 22-entry
+#|The exact accepted go-md2man schema-2 review root is
+#|/private/tmp/ply-p7-md2man-quality-review.55dc69d.BdRjpS. Its verified 22-entry
 #|manifest SHA-256 is
-#|ea61323dafe61f94c4d60846817e4c9e7918a28bf086ce0bb8ea5cac01045dd0;
+#|af36ebc39220021cb78b7995f975d68c35b46b52e94dc854d8f5bce17e8fe6c5;
 #|manual evidence SHA-256 is
-#|19d5ea397a9db90479596f40db04ca3ab3932b245ccc8334eccb9dd3fdf4e818,
+#|e8b1e54604b073ea71d0bf2a568f0e69b60cd22ef90a530eb1cfa233d561c68f,
 #|and all six focused rows pass.
 #|
-#|The exact accepted YAML quality root is
-#|/private/tmp/ply-p7-yaml-quality-parent.cfdcb37.xxdcLh/quality-gate. Its
-#|verified 235,241-entry manifest SHA-256 is
-#|919b44aa5ec811e2df49dc7784d02c7f70820e52939e8b8545d8347859db0417.
+#|The exact accepted go-md2man quality root is
+#|/private/tmp/ply-p7-md2man-quality-parent.55dc69d.7VciIk/quality-gate. Its
+#|verified 235,335-entry manifest SHA-256 is
+#|79765081255f37f2223a4cfa10b37e900cdb2842f3b60589cac985b747ad64ed.
 #|Its Q0-Q2 scorecard SHA-256 is
-#|9f8e6e70705a7c3d27456a78c8cdf7bf23f5d7ca47dbdfabb83371f15c886c95:
+#|798ab4be7e9642cd822bb855e5010f6477fa3cd3524c06422da2feef45643c71:
 #|exact make quality passes all 27 rows at L2, 80/80 mutations, 8/8 mutation and
 #|4/4 acceptance populations, with held, regressed, not-comparable, and dirty
 #|counts zero.
 #|
-#|The independent YAML regression root is
-#|/private/tmp/ply-p7-yaml-regression-gate.cfdcb37.dISqmD. Its verified
-#|59,161-entry manifest SHA-256 is
-#|2f0206fcc142c17858347fd814ffbb4b996d20c3a3b70f9a335aa141c7cc3cdd.
+#|The independent go-md2man regression root is
+#|/private/tmp/ply-p7-md2man-regression-gate.55dc69d.bD0Kbx. Its verified
+#|68,729-entry manifest SHA-256 is
+#|bd07a6975b0a495c872bde02c15a3c745e5527768baaf4edded40362af072fa3.
 #|All 40 stages pass. Its regression-summary.json SHA-256 is
-#|8552e0df7ed87a8ad1a327b72e1967a3adb295039126edbf97a5f312e56ecd95;
+#|e7b852b82883a12d37a1977f4d170dcb16f19520af5d4c05a5215aa9f80cba63;
 #|full scorecard SHA-256 is
-#|1fbccda6eccc11fe9f3628a6dcad906d4d7fab920c7acccedf5c6d2bcf799b68.
+#|ff12e563966050557bc2755e1e60541eebb8cef01cccc66db8cd0ea3b7e7d0b3.
 #|The full audit exits 1 only for queued L3 rows Q3.1, Q3.3, Q3.4, and Q3.7 and
 #|is not a P7 dependency-group exit gate. Vulnerability populations remain
 #|exactly 22/33/22.
@@ -1174,48 +1175,43 @@ exit 70
 #|c7af82cbe2327de51dc93fcf48c61e65e6b38e5d51a3a7556c07d6d753016181.
 #|Do not implement it: selected github.com/stretchr/objx v0.5.2 declares Go 1.20.
 #|
-#|The authoritative go-md2man selection root is
-#|/private/tmp/ply-p7-next-selection.cfdcb37.LkLUsE. Its verified 26,533-entry
+#|The authoritative regexp2 selection root is
+#|/private/tmp/ply-p7-next-selection.55dc69d.8kz8Cw. Its verified 49,090-entry
 #|manifest SHA-256 is
-#|527a0d1d869845326c4b3b6ba16dc6c6b8b5794728b4e56d50145db88e9e6ebc;
+#|a2d03742f02396ede46ac73a19b00191812d84cfcad2b416dcf1f19b460b3a10;
 #|selection-summary.json SHA-256 is
-#|83a016e8807b8737cdf26895f382e67f8efaff4ae2371c7fccd5db5f55e15f9d.
+#|f5ee0c23f405f47fb6ae9627ae9a8faabc6a8112713c3691c9f8bcb95d6927e1.
 #|
-#|Go-md2man v2.0.7's observed proxy time is 2025-04-24T23:51:24Z. It declares
-#|Go 1.12, its lightweight tag resolves to verified commit
-#|061b6c7cbecd6752049221aa15b7a05160796698, and its checksum pair is
-#|h1:zbFlGlXEAKlwXpmvle3d8Oe3YnkKIK4xSRTd3sHPnBo= /
-#|h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=. Existing selected
-#|Blackfriday v2.1.0 has no go directive; exact go get newly materializes its
-#|module checksum h1:JIOH55/0cWyOuilr9/qlrm0BSXldqnqwMsf35Ld67mk= without changing
-#|its version.
-#|
-#|The v2.0.6...v2.0.7 release delta has 17 commits. The material production
-#|change fixes roff table rendering for long final-row cells; other production
-#|edits are package documentation and lint-comment formatting. Tests add the
-#|long-table regression and simplify an unused helper signature; CI, lint, README,
-#|and installation documentation are refreshed. The Go vulnerability module
-#|index has no go-md2man or Blackfriday entry.
+#|Regexp2 v1.12.0's observed proxy time is 2026-04-18T22:12:01Z. It declares
+#|Go 1.13, and its lightweight tag resolves to unsigned commit
+#|3d5df45b703801b3fe51eb3f5c0dd302e8b0d676. Its checksum pair is
+#|h1:0j4c5qQmnC6XOWNjP3PIXURXN2gWx76rd3KvgdPkCz8= /
+#|h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=. The 12-commit
+#|v1.8.1...v1.12.0 delta fixes lazy-loop stack corruption and termination,
+#|timeout false positives, runner text retention, and ECMAScript plus Singleline
+#|dot behavior; it adds single-letter Unicode property syntax, timeout test
+#|controls, and text marshaling, plus their regressions and documentation. The Go
+#|vulnerability module index has no regexp2 entry.
 #|
 #|# Role And Boundaries
 #|
-#|Reverify current go-md2man release metadata, latest stable tag and commit
+#|Reverify current regexp2 release metadata, latest stable tag and commit
 #|identity, module Go requirement, checksums, release changes, exact one-selection
-#|MVS closure, loaded-package absence, explicit-pin and tidy behavior, and
+#|MVS closure, loaded package/path evidence, explicit-pin and tidy behavior, and
 #|vulnerability information from primary Go module, repository, Go documentation,
 #|and Go vulnerability sources. Record why the selection is compatible with
 #|pinned Go 1.26.7, the retained Go 1.18 floor, Cobra v1.10.2, YAML v3.0.5,
-#|golangci-lint 2.12.2, GoReleaser 2.17.1, pflag v1.0.10, Uniseg v0.4.7,
-#|Colorable v0.1.15, and go-isatty v0.0.20.
+#|go-md2man v2.0.7, Blackfriday v2.1.0, golangci-lint 2.12.2, GoReleaser 2.17.1,
+#|pflag v1.0.10, Uniseg v0.4.7, Colorable v0.1.15, and go-isatty v0.0.20.
 #|
 #|Do not change production Go behavior, public Go API, CLI semantics, toolchain
 #|or main-module language declarations, Docker or release inputs, any dependency
-#|selection outside exact go-md2man v2.0.7, quality-tool versions, quality
+#|selection outside exact regexp2 v1.12.0, quality-tool versions, quality
 #|thresholds, baseline numeric debt, compatibility allowlists, acceptance or
 #|mutation populations, publishers, registries, credentials, inactive packaging,
-#|or P8 domain code. Keep Blackfriday selected at v2.1.0, Cobra at v1.10.2, YAML
-#|at v3.0.5, and the retained gopkg.in/yaml.v2 and gopkg.in/yaml.v3 selections;
-#|do not combine a source fix or another dependency group.
+#|or P8 domain code. Keep Cobra at v1.10.2, YAML at v3.0.5, go-md2man at v2.0.7,
+#|Blackfriday at v2.1.0, and retained gopkg.in/yaml.v2 and gopkg.in/yaml.v3
+#|selections; do not combine a source fix or another dependency group.
 #|
 #|Keep module/build caches, graph projections, vulnerability results, reports,
 #|generated artifacts, build contexts, schema-2 evidence, and audit output outside
@@ -1229,24 +1225,25 @@ exit 70
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher --check, and the P7/P8 checkpoint block before editing.
 #|Verify the accepted manifests. Read the rolling handover, this archive, the P7
-#|roadmap, go.mod/go.sum, go-md2man graph and loaded-package evidence, toolchain
-#|and baseline-reproduction contracts, compatibility, snapshot/Docker, quality,
-#|and audit contracts.
+#|roadmap, go.mod/go.sum, regexp2 graph and loaded-path evidence, toolchain and
+#|baseline-reproduction contracts, compatibility, snapshot/Docker, quality, and
+#|audit contracts.
 #|
 #|# Three Moves
 #|
 #|From clean external state, record the old module graph, selected versions,
 #|package population, checksums, go mod tidy -diff projection, build/test/lint
-#|result, public help, API/CLI reports, generated artifact contracts, and a
-#|vulnerability baseline. Reverify v2.0.7 against current proxy and repository
-#|evidence. Reproduce the retained one-selection closure exactly and confirm its
-#|Go 1.12 declaration preserves the Go 1.18 floor before editing.
+#|result, public help, API/CLI reports, generated artifact contracts, loaded
+#|regexp2 packages/path, and a vulnerability baseline. Reverify v1.12.0 against
+#|current proxy and repository evidence. Reproduce the retained one-selection
+#|closure exactly and confirm its Go 1.13 declaration preserves the Go 1.18 floor
+#|before editing.
 #|
 #|Only if exact and compatible, make one focused dependency-only implementation
 #|commit using exact Go 1.26.7 with
-#|go get github.com/cpuguy83/go-md2man/v2@v2.0.7; do not hand-edit dependency
-#|metadata and do not run tidy as the implementation command. Re-run focused
-#|dependency graph and loaded-package checks, pinned lint, complete
+#|go get github.com/dlclark/regexp2@v1.12.0; do not hand-edit dependency metadata
+#|and do not run tidy as the implementation command. Re-run focused dependency
+#|graph, loaded-path and Markdown/highlighting checks, pinned lint, complete
 #|tests/race/vet, API/CLI and entry/subprocess compatibility, launcher and Make
 #|contracts, complete preflight, host acceptance, fresh snapshot/Docker meta and
 #|acceptance, audit meta, focused and exact Q0-Q2 audits, the separate full audit,

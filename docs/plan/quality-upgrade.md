@@ -5993,29 +5993,89 @@ YAML v3.0.5 dependency group (2026-09-04):
   `1fbccda6eccc11fe9f3628a6dcad906d4d7fab920c7acccedf5c6d2bcf799b68`
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-The next bounded P7 group is selected indirect
-`github.com/cpuguy83/go-md2man/v2 v2.0.6` -> latest `v2.0.7`. The clean
-offline replay changes exactly that one selection, retains 234 modules and the
-exact 429-package population, grows the graph from 3,553 to 3,556 edges, and
-grows the historical tidy projection from 271 to 278 lines. Exact `go get`
-adds explicit indirect requirements for go-md2man v2.0.7 and its
-already-selected `github.com/russross/blackfriday/v2 v2.1.0`; Blackfriday's
-selection does not change. No loaded main-module package imports either
-module, so projected tidy removes both explicit requirements and their newly
-materialized checksum lines.
+Go-md2man v2.0.7 dependency group (2026-09-04):
 
-Go-md2man v2.0.7 declares Go 1.12, retains Blackfriday v2.1.0 with no `go`
-directive, and therefore preserves the Go 1.18 floor. Its lightweight tag is
-verified commit `061b6c7cbecd6752049221aa15b7a05160796698`, and checksum pair
-is `h1:zbFlGlXEAKlwXpmvle3d8Oe3YnkKIK4xSRTd3sHPnBo=` /
-`h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=`. Exact build, complete
+- Upgraded selected indirect `github.com/cpuguy83/go-md2man/v2 v2.0.6` to
+  latest v2.0.7 as an exact one-selection move. Current proxy and repository
+  evidence confirms the 2025-04-24 publication, lightweight tag at verified
+  commit `061b6c7cbecd6752049221aa15b7a05160796698`, Go 1.12 declaration, and
+  checksum pair `h1:zbFlGlXEAKlwXpmvle3d8Oe3YnkKIK4xSRTd3sHPnBo=` /
+  `h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=`. Existing selected
+  Blackfriday v2.1.0 has no `go` directive.
+- Both states retain exactly 234 selected modules and the byte-identical
+  429-package test population. Only go-md2man changes. Exact `go get` adds
+  explicit indirect requirements for go-md2man v2.0.7 and already-selected
+  Blackfriday v2.1.0, grows the graph 3,553 -> 3,556 edges, and newly records
+  Blackfriday's module checksum without moving its selection. The historical
+  tidy projection grows 271 -> 278 lines. No loaded main-module package imports
+  either module, so tidy would remove the two explicit requirements and their
+  newly materialized checksum lines; the projection was recorded, not applied.
+- The 17-commit delta fixes roff table rendering for long final-row cells, adds
+  its regression test, refreshes CI/lint/docs, and otherwise changes only
+  package documentation and lint-comment formatting.
+- Exact `go get github.com/cpuguy83/go-md2man/v2@v2.0.7` produced
+  dependency-only commit `55dc69dda20c4d8f96b6dbcdd70cfef76467cc85`, parent
+  `6fe18fe01326f77bee375d3f8834b44a0416907d`, and clean tree
+  `321e39594a4bbe0b7c6afda4e9e5a07cf395fe47`. Only `go.mod` and `go.sum`
+  changed with five insertions and no deletions. Cobra remains v1.10.2, YAML
+  remains v3.0.5, and both retained gopkg.in YAML selections do not move.
+- Independent implementation selection evidence is retained at
+  `/private/tmp/ply-p7-md2man-selection.6fe18fe.fBmfEU`. Its verified
+  44,219-entry manifest SHA-256 is
+  `77c1ec0a2fd1b60e4369d87c3c387efc39bcb1297cc6cf698fac6af3b42d6807`;
+  selection-summary SHA-256 is
+  `7c5cab15a7a0d813df60b176666fae4b9bd536c2f081566032509da18c1873dd`.
+- Commit-bound schema-2 evidence is retained at
+  `/private/tmp/ply-p7-md2man-quality-review.55dc69d.BdRjpS`. Its verified
+  22-entry manifest SHA-256 is
+  `af36ebc39220021cb78b7995f975d68c35b46b52e94dc854d8f5bce17e8fe6c5`;
+  manual evidence SHA-256 is
+  `e8b1e54604b073ea71d0bf2a568f0e69b60cd22ef90a530eb1cfa233d561c68f`,
+  and all six focused rows pass.
+- Exact `make quality` exits 0 at
+  `/private/tmp/ply-p7-md2man-quality-parent.55dc69d.7VciIk/quality-gate`.
+  Its verified 235,335-entry manifest SHA-256 is
+  `79765081255f37f2223a4cfa10b37e900cdb2842f3b60589cac985b747ad64ed`.
+  Q0-Q2 scorecard SHA-256
+  `798ab4be7e9642cd822bb855e5010f6477fa3cd3524c06422da2feef45643c71`
+  records 27/27 PASS at L2, 80/80 killed mutations, 8/8 mutation and 4/4
+  acceptance populations, and zero held, regressed, not-comparable, or dirty
+  counts.
+- The independent regression root is
+  `/private/tmp/ply-p7-md2man-regression-gate.55dc69d.bD0Kbx`. Its verified
+  68,729-entry manifest SHA-256 is
+  `bd07a6975b0a495c872bde02c15a3c745e5527768baaf4edded40362af072fa3`.
+  All 40 stages pass; regression-summary SHA-256 is
+  `e7b852b82883a12d37a1977f4d170dcb16f19520af5d4c05a5215aa9f80cba63`.
+  Full scorecard SHA-256
+  `ff12e563966050557bc2755e1e60541eebb8cef01cccc66db8cd0ea3b7e7d0b3`
+  exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+  Vulnerability populations remain exact 22/33/22.
+
+The next bounded P7 group is selected indirect
+`github.com/dlclark/regexp2 v1.8.1` -> latest `v1.12.0`. The clean offline
+replay changes exactly that one selection and retains 234 modules, 3,556 graph
+edges, and the exact 429-package test population. Exact `go get` replaces the
+existing indirect requirement and adds only the v1.12.0 module/checksum pair,
+while retaining the v1.8.1 checksum pair. The historical tidy projection grows
+278 -> 282 lines, retains the v1.12.0 requirement, and would remove the old
+v1.8.1 checksum pair.
+
+Regexp2 v1.12.0 declares Go 1.13 and preserves the Go 1.18 floor. Its
+lightweight tag resolves to unsigned commit
+`3d5df45b703801b3fe51eb3f5c0dd302e8b0d676`, and checksum pair is
+`h1:0j4c5qQmnC6XOWNjP3PIXURXN2gWx76rd3KvgdPkCz8=` /
+`h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=`. Regexp2 and
+regexp2/syntax are loaded through
+`plybuild/cmd -> go-term-markdown -> Chroma -> regexp2`. Exact build, complete
 tests, pinned lint, byte-identical help, identical API/CLI reports, artifact
 meta-contracts, and 22/33/22 vulnerability parity pass. The sealed selection
-root is `/private/tmp/ply-p7-next-selection.cfdcb37.LkLUsE`; its verified
-26,533-entry manifest SHA-256 is
-`527a0d1d869845326c4b3b6ba16dc6c6b8b5794728b4e56d50145db88e9e6ebc`,
+root is
+`/private/tmp/ply-p7-next-selection.55dc69d.8kz8Cw`; its verified 49,090-entry
+manifest SHA-256 is
+`a2d03742f02396ede46ac73a19b00191812d84cfcad2b416dcf1f19b460b3a10`,
 and selection-summary SHA-256 is
-`83a016e8807b8737cdf26895f382e67f8efaff4ae2371c7fccd5db5f55e15f9d`.
+`f5ee0c23f405f47fb6ae9627ae9a8faabc6a8112713c3691c9f8bcb95d6927e1`.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
