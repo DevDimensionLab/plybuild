@@ -5802,19 +5802,103 @@ Uniseg dependency group (2026-09-04):
   `8a3f113d91f5e3c4a227efed24e412ee9c1e8893bb25f83af0ffaa4377c19038`;
   it exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-The next bounded P7 group is indirect `github.com/mattn/go-colorable v0.1.13`
--> latest `v0.1.15` with its exact MVS companion
-`github.com/mattn/go-isatty v0.0.17` -> `v0.0.20`. The clean offline replay
-changes exactly those two selections while retaining 233 modules, 3,551 graph
-edges, and the exact 429-package population; the historical tidy projection
-grows from 244 to 252 lines. Colorable declares Go 1.18 and go-isatty declares
-Go 1.15. Exact Go 1.26.7 build, complete tests, pinned lint, and byte-identical
-help pass. Emoji v2.2.14 remains the smaller one-selection candidate but is
-rejected because it declares Go 1.21 and `go get` raises the main module's
-directive from 1.18 to 1.21; `gopkg.in/ini.v1 v1.67.3` changes three
-selections. Independent primary release, behavior, compatibility,
-vulnerability, and full quality review remain for the separate Colorable
-session.
+Colorable/go-isatty dependency group (2026-09-04):
+
+- Selected existing indirect `github.com/mattn/go-colorable v0.1.13` -> latest
+  `v0.1.15` with its exact MVS companion
+  `github.com/mattn/go-isatty v0.0.17` -> `v0.0.20`. Fresh Go proxy and
+  repository evidence confirms Colorable's 2026-05-29 publication,
+  lightweight tag at exact commit
+  `8bf39a204f13f0cfcf86ab9b297c3d6e0668e54a`, Go 1.18 declaration, and
+  checksum pair `h1:+u9SLTRGnXv73cEsnsmoZBom+dMU88B2M0aDcWy0/jY=` /
+  `h1:6LmQG8QLFO4G5z1gPvYEzlUgJ2wF+stgPZH1UqBm1s8=`. Go-isatty v0.0.20 has
+  exact tag commit `a7c02353c47bc4ec6b30dc9628154ae4fe760c11`, declares Go 1.15,
+  and has checksum pair `h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=` /
+  `h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=`.
+- Both states retain exactly 233 selected modules, 3,551 graph edges, and the
+  exact 429-package population. Only Colorable and go-isatty change; the
+  historical tidy projection grows from 244 to 252 lines. The caller chain is
+  `plybuild/cmd` -> `go-term-markdown` -> `fatih/color` -> `go-colorable`.
+  Existing behavior, help, API/CLI, and artifact contracts cover the indirect
+  boundary, so no production or test source contract was added.
+- Exact `go get github.com/mattn/go-colorable@v0.1.15` produced focused
+  implementation commit `33e187317c6c1be79ef8c5b64ddb2a0f8caec71f`, exact parent
+  `e1fd64e4a7bebd6dabf529675b1560172f12f1d5`, clean tree
+  `6942bd34879b9935382b44ffab682606cf5ef5c9`. Only `go.mod` and `go.sum`
+  changed; all behavior, API/CLI, toolchain, language-floor, distribution,
+  quality, packaging, publication, credential, and P8 contracts are unchanged.
+- Independent selection evidence is retained at
+  `/private/tmp/ply-p7-colorable-selection.e1fd64e.QlohU1`. Its verified
+  49,635-entry manifest SHA-256 is
+  `b8ec3adb51fc916820b300f0faf4ff0eddc7e1ae51a9f839b96ceed9c57cebb7`,
+  and selection-summary SHA-256 is
+  `484e11cb3c6929dfd0a50c050a49008df4ed3908133ae3d87a3a3839f783e07c`.
+- Commit-bound schema-2 evidence is retained at
+  `/private/tmp/ply-p7-colorable-quality-review.33e1873.eGDQR5`. Its verified
+  21-entry manifest SHA-256 is
+  `f6294878de4b3f19a8731b0b94485f8a203ab20137e37fd3e866f27a0afde24b`;
+  the manual evidence SHA-256 is
+  `cfbe47aa455636613ec5f03c4ede4a12a4169e2a0da9483cf6fb0519e9a3ce66`,
+  and all six focused receipts pass.
+- Exact `make quality` exits 0 at
+  `/private/tmp/ply-p7-colorable-quality-parent.33e1873.31b10h/quality-gate-retry3`.
+  Its verified 235,059-entry manifest SHA-256 is
+  `6695ee2f2a181c46fbcf953518c2fd9581902f3f3be28bd761602eecab0785ae`.
+  The Q0-Q2 scorecard SHA-256 is
+  `55cf7f1a4867f54bba31108f2d7ef104f1b0901b44a5ac29aea11e50aec007e6`:
+  all 27 rows pass at L2 with 80/80 killed mutations, 8/8 mutation and 4/4
+  acceptance populations, and zero held, regressed, not-comparable, or dirty
+  counts. Two earlier quality roots are retained as noncanonical: an initially
+  over-narrow PATH exposed the launcher signal-log race; the isolated contract
+  and the full corrected-PATH retry passed.
+- The independent 40-stage regression is retained at
+  `/private/tmp/ply-p7-colorable-regression-gate.33e1873.1Yb6le`; its verified
+  98,451-entry manifest SHA-256 is
+  `cdf2963affe5e2395ab8c7911efeaa525e4f39e700ede3945e484cfacb63802c`.
+  Selection, checksums, compatibility, lint, tests/race/vet, launcher and Make,
+  complete preflight, host and fresh snapshot/Docker acceptance, audit meta,
+  focused and Q0-Q2 audits, vulnerability equality, empty-HOME count-2, and
+  cleanliness pass. The full scorecard SHA-256 is
+  `c6e7a71ac8cf187654a83f043a3967d53f8e51035c69bf717909117cd7b8ff1b`;
+  it exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+  A sparse-checksum expansion from an aggregate coverage invocation is retained
+  as an external 208-line patch and was exactly reversed before every accepted
+  gate.
+
+Ini v1.67.3 closure decision (2026-09-04):
+
+- Rejected `gopkg.in/ini.v1 v1.67.0` -> latest `v1.67.3` before
+  implementation. Exact replay changes three selections: ini -> v1.67.3,
+  `github.com/stretchr/testify v1.8.1` -> v1.11.1, and
+  `github.com/stretchr/objx v0.5.0` -> v0.5.2. Objx v0.5.2 declares Go 1.20,
+  exceeding the retained Go 1.18 floor; passing Go 1.26.7 technical checks
+  cannot replace that compatibility decision.
+- The candidate retains 233 modules and the exact 429 packages, grows the graph
+  from 3,551 to 3,564 edges, and grows tidy from 252 to 267 lines. Build,
+  complete tests, pinned lint, byte-identical help, and exact 22/33/22
+  vulnerability parity pass. No tracked file changed.
+- The sealed decision root is
+  `/private/tmp/ply-p7-next-selection.33e1873.mRehC2`. Its verified
+  39,374-entry manifest SHA-256 is
+  `c7af82cbe2327de51dc93fcf48c61e65e6b38e5d51a3a7556c07d6d753016181`;
+  decision-summary SHA-256 is
+  `04081e0b5f0b3324e49ca321f5edf0a2be5b9b938bce31f68c30aabb89c8a90d`.
+
+The next bounded P7 group is direct `github.com/spf13/cobra v1.10.1` -> latest
+`v1.10.2` with the exact newly selected MVS companion
+`go.yaml.in/yaml/v3 v3.0.4`. The clean offline replay changes exactly those two
+selections, 233 -> 234 modules, 3,551 -> 3,552 edges, preserves the exact
+429-package population, and grows tidy from 252 to 254 lines. Cobra declares
+Go 1.15 and the YAML companion declares Go 1.16. Exact Go 1.26.7 build,
+complete tests, pinned lint, byte-identical help, identical API/CLI reports,
+and 22/33/22 vulnerability parity pass. The authoritative sealed selection
+root is `/private/tmp/ply-p7-next-cobra-selection.33e1873.ZPppZP`; its verified
+43,788-entry manifest SHA-256 is
+`d522c38eafcd59bd8b172233f06d79a6f32f2410f959e9474c0b8bd0fb8c7a38`,
+and selection-summary SHA-256 is
+`3bf4208b4b8d3fd1d300976274dc6e26f26322aec365554bc7c7fd0e4a377b85`.
+Independent primary evidence and full implementation quality review remain for
+the separate Cobra/YAML session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Colorable Dependency Closure
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T045040+0200-upgrade-colorable-closure`
 Created: `2026-09-04T04:50:40+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `d7e53634e1dd873f4c3804f14cc0bcb23fdf1e37c9a45f6f05cc6d3d0d945fb1`
 Previous: [2026-09-04T021635+0200-upgrade-uniseg-dependency.md](2026-09-04T021635+0200-upgrade-uniseg-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-04T065419+0200-upgrade-cobra-yaml-closure.md](2026-09-04T065419+0200-upgrade-cobra-yaml-closure.md)
+Outcome: Colorable v0.1.15 and exact MVS companion go-isatty v0.0.20 were independently reverified, implemented in dependency-only commit `33e187317c6c1be79ef8c5b64ddb2a0f8caec71f`, and passed the exact L2 quality gate plus the independent 40-stage regression with no retained worktree drift. Ini v1.67.3 was rejected because selected Objx v0.5.2 declares Go 1.20; the next compatible measured group is Cobra v1.10.2 with new YAML companion v3.0.4.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
