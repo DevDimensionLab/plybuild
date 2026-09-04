@@ -5365,7 +5365,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through accepted Google btree v1.1.3; Google go-cmp and
+dependency groups through accepted Google go-cmp v0.6.0; Hashicorp HCL and
 further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
@@ -6200,12 +6200,77 @@ Current queue decisions and next bounded P7 group (2026-09-04):
   and `9cca917b12dd761c58bf91652e78b3e999f55eeb1ffc39f9f3bbf56a52aef463`.
   Exact quality passes 21/21 stages, 27/27 rows at L2, and 80/80 mutations;
   full audit exits expected 1 only for Q3.1, Q3.3, Q3.4, and Q3.7.
-- Next, evaluate selected indirect `github.com/google/go-cmp v0.5.9` as one
-  module group. Preliminary proxy evidence identifies latest v0.7.0 at commit
-  `9b12f366a942ebc7254abc7f32ca05068b455fb7` with Go 1.21 and v0.6.0 at
-  commit `c3ad8435e7bef96af35732bc0789e5a2278c6d5f` with Go 1.13. Independently
-  reject latest if its floor is confirmed, then evaluate v0.6.0 as the
-  highest compatible fallback before any exact-selection implementation.
+- A go-cmp-session prerequisite replay corrected one historical btree evidence
+  claim: the btree regression manifest file retains its recorded digest and
+  24,197 entries, but 163 mutable cache/HOME files no longer replay after
+  preliminary version enumeration appended 161 module-cache `@v/list` files
+  and updated one sumdb latest record and one telemetry counter after sealing.
+  Its stable regression summary retains SHA-256
+  `f348bd0b9e0f68c698c43f466904b66c1c3db6eab5e783b14364aaf40b6b1ea2`.
+  The btree decision remains supported by the other three completely verified
+  manifests and was superseded for current regression claims by the freshly
+  sealed go-cmp gate below.
+- Reject latest indirect `github.com/google/go-cmp v0.7.0`. Independent Go
+  proxy, checksum-database, and upstream resolution binds it to lightweight
+  tag commit `9b12f366a942ebc7254abc7f32ca05068b455fb7`, published
+  2025-01-14T18:15:44Z, with module declaration `go 1.21` and checksum pair
+  `h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=` /
+  `h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=`. That declaration exceeds
+  the retained Go 1.18 compatibility floor, so latest was not selected.
+- Accept `github.com/google/go-cmp v0.5.9` -> v0.6.0 as the highest compatible
+  release in the same module group. The only higher listed release is rejected
+  v0.7.0. Version v0.6.0 resolves to lightweight tag commit
+  `c3ad8435e7bef96af35732bc0789e5a2278c6d5f`, published
+  2023-08-31T17:32:40Z, declares `go 1.13`, and has checksum pair
+  `h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=` /
+  `h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=`. Both releases have 48
+  proxy files byte-identical to their tag-commit archives. Both tags are
+  lightweight; GitHub reports valid commit signatures, while local commit
+  verification was unavailable because `gpg` is not installed. The primary
+  Go vulnerability module index has no go-cmp record.
+- The six-commit v0.5.9 -> v0.6.0 history removes purego fallbacks, exercises
+  Go 1.20, pins workflow inputs, adds identifier links, and introduces
+  `cmpopts.EquateComparable`. Both states retain 234 selected modules, 3,557
+  graph edges, 429 complete test packages, and five loaded go-cmp packages.
+  Exactly one selection and the matching main edge change. The loaded path is
+  `plybuild/cmd -> mvn-pom-mutator/pkg/pom -> go-cmp/cmp`; focused old/new
+  consumers pass at count 10. Tidy remains an unapplied 299 -> 308-line
+  projection whose only candidate-specific metadata is the version/checksum
+  replacement.
+- Exact `go get github.com/google/go-cmp@v0.6.0` produced dependency-only
+  commit `c314bcb440b5f94871d71a249bca7ae7f87d5543`, parent `cbdb0a9`, tree
+  `9a212b3`, changing only `go.mod` and `go.sum`. Candidate module complete
+  tests/race and repository build/tests/race/vet/lint pass. Help, API, and CLI
+  reports remain byte-identical. Vulnerability ID populations remain exactly
+  20 Darwin symbol, 30 Darwin module, and 20 Windows symbol.
+- Accepted go-cmp selection, review, exact-quality, and regression roots are
+  `/private/tmp/ply-p7-go-cmp-selection.cbdb0a9.kbzc4C`,
+  `/private/tmp/ply-p7-go-cmp-quality-review.c314bcb.XeWg4T`,
+  `/private/tmp/ply-p7-go-cmp-quality-parent.c314bcb.zxFKyw`, and
+  `/private/tmp/ply-p7-go-cmp-regression-gate.c314bcb-final.rMW0l5`. Their
+  fully verified manifest populations/SHA-256 values are respectively
+  29,812/`dcd18baaa45eb8ad59b268fa7c356164dabc5d4c9836423c3fd1c3aa6d0d1797`,
+  9,487/`24ede5a473b9ac9f47839b121d25e9a8d921369c5ba149bf42abd902b5271727`,
+  252,077/`6d8104b43fdcb838ec8c0955870798be38a3b4a1f9a7e73f22e683ee566a9f69`,
+  and 30,255/`00b736b53494a0c4f27ee7503ecef1c7c7bf74f00bdaab85f7afa9eab19ed3c5`.
+  Exact quality passes 21/21 stages, 27/27 Q0-Q2 rows at L2, 80/80 mutations,
+  all host/snapshot/Docker acceptance, and zero held, regressed,
+  not-comparable, or dirty counts. Independent preflight and regression pass;
+  full audit exits expected 1, never 2, only for Q3.1, Q3.3, Q3.4, and Q3.7.
+- During the first quality run, midnight cleanup removed standard-library
+  sources from the external SDK while leaving its binary intact. The same
+  official Go 1.26.7 archive was re-fetched, verified at SHA-256
+  `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`,
+  and overlaid at the mandated path; the binary still hashes to the pinned
+  `9da68c65...`, and the successful quality/regression runs used that restored
+  SDK. Recovery evidence is sealed at
+  `/private/tmp/ply-p7-go1.26.7-recovery.qvk4zs` with two-entry manifest
+  SHA-256 `1b30193f4f4811f2515223c53c004603afa0a4812b8a571a24c49b252122e83b`.
+- Next, evaluate selected indirect `github.com/hashicorp/hcl v1.0.0` as one
+  bounded module group. Resolve its latest release, declared Go floor, exact
+  source identity, closure, loaded behavior, and vulnerability data from
+  primary evidence before deciding whether any exact compatible selection is
+  justified.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Google Go-Cmp Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T231513+0200-evaluate-google-go-cmp-dependency`
 Created: `2026-09-04T23:15:13+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `503b852b2cbbaeb482ee1194002e441a5eb6e3472ed89cccf1e7baf45dd3789f`
 Previous: [2026-09-04T202725+0200-evaluate-google-btree-dependency.md](2026-09-04T202725+0200-evaluate-google-btree-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-05T011325+0200-evaluate-hashicorp-hcl-dependency.md](2026-09-05T011325+0200-evaluate-hashicorp-hcl-dependency.md)
+Outcome: rejected go-cmp v0.7.0 for its Go 1.21 floor and accepted exact v0.6.0 with a one-module closure and every quality contract passing
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
