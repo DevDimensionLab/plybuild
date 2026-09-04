@@ -5365,8 +5365,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move, terminal-pair,
-logrus, Cobra, and pflag dependency groups; further dependency groups remain
-queued.
+logrus, Cobra, and pflag dependency groups, plus the rejected Viper v1.16.0
+closure decision; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -5689,28 +5689,67 @@ Pflag dependency group (2026-09-04):
   scorecard SHA-256 is
   `4f72c988701326e4a21749306a6155fa849ac3c31ba4e0b293ec6a9f3f92bf08`.
 
-The next bounded P7 group is direct `github.com/spf13/viper v1.15.0` ->
-`v1.16.0` and its exact MVS closure. A current-tree external probe retains 234
-selected modules, grows graph edges from 3,551 to 3,561, changes 31 selected
-modules, adds only `github.com/google/s2a-go`, and preserves the exact
-429-package population. The tidy projection grows from 240 to 270 lines.
-Candidate build, complete tests, pinned lint, byte-identical help, and exact
-22/33/22 vulnerability populations pass. The verified selection root is
-`/private/tmp/ply-p7-next-viper-selection.360b2f3-final.oGxITF`, with
-40,078-entry manifest SHA-256
-`1390745861503e9f57169fff6054db637e14aa6f7ada9b708c9b9155879253a4`
-and selection-summary SHA-256
-`d3b2704feeab8883cbc67ab98d5aebdb880ee601fde8157aba4fc10ca1d340f5`.
+Viper v1.16.0 closure decision (2026-09-04):
 
-Viper v1.16.0 is the smallest next stable release and declares Go 1.17, but
-its closure selects `github.com/stretchr/testify v1.8.3`, whose module declares
-Go 1.20. The preferred Go 1.26.7 toolchain builds that closure while the main
-module can retain its `go 1.18` language declaration, but whether this remains
-truthful compatibility with the retained floor requires an explicit decision
-before implementation. Latest Viper v1.21.0 declares Go 1.23.0; already
-v1.17.0 widens the retained probe to 245 modules and 437 packages. Do not
-silently widen beyond the measured v1.16.0 closure or combine a language-floor
-change with it.
+- Rejected the direct `github.com/spf13/viper v1.15.0` -> `v1.16.0`
+  candidate before implementation. The official Go module reference defines a
+  module's `go` directive as the minimum Go version required to use it. P7's
+  established compatibility rule has selected dependency versions whose
+  module declarations do not exceed the retained `go 1.18` floor; pinned Go
+  1.26.7 build success is necessary but cannot replace that floor decision.
+- Independent exact-Go replay reproduced the retained closure byte-for-byte:
+  233 -> 234 selected modules, 3,551 -> 3,561 graph edges, exactly 31 changed
+  selections, only `github.com/google/s2a-go` added, the same exact 429-package
+  population, and a 240 -> 270-line historical tidy projection. Candidate
+  `go.mod`, `go.sum`, selected modules, graph, packages, and tidy projection
+  match the retained probe exactly.
+- Reading the target `go.mod` for every changed selection found a stronger
+  floor conflict than the earlier handoff singled out. Eleven selected target
+  modules declare Go 1.19 and `github.com/stretchr/testify v1.8.3` declares Go
+  1.20. The Go-1.19 population is `cloud.google.com/go`,
+  `cloud.google.com/go/compute`, `cloud.google.com/go/longrunning`,
+  `github.com/googleapis/enterprise-certificate-proxy`,
+  `github.com/googleapis/gax-go/v2`, `github.com/hashicorp/consul/api`,
+  `go.etcd.io/etcd/api/v3`, `go.etcd.io/etcd/client/pkg/v3`,
+  `go.etcd.io/etcd/client/v3`, `google.golang.org/api`, and
+  `google.golang.org/genproto` at their exact candidate versions.
+- Fresh primary evidence confirms Viper v1.16.0's verified annotated tag
+  `c19a006378aa5ee373af48ddee7fdf78d62c5c06`, peeled commit
+  `21a7fd828ed231bbe62068d6aafa5aa9f85dc79e`, 2023-05-30 release, Go 1.17
+  declaration, and checksum pair
+  `h1:rGGH0XDZhdUOryiDWjmIvUSWpbNqisK8Wk0Vyefw8hc=` /
+  `h1:yg78JgCJcbrQOvV9YLXgkLaZqUidkY9K+Dd1FofRzQg=`. Latest Viper remains
+  v1.21.0 and declares Go 1.23.0.
+- Exact Go 1.26.7 build, complete tests, pinned golangci-lint 2.12.2, public
+  help, API/CLI reports, module verification, toolchain and snapshot/Docker
+  meta-contracts all pass for old and candidate states. API and CLI report
+  SHA-256 values remain
+  `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+  and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+  These technical passes explain why no behavior regression was observed; they
+  do not erase the selected modules' declared minimum versions.
+- Fresh Go vulnerability data preserves exact 22/33/22 Darwin-symbol,
+  Darwin-module, and Windows-symbol ID populations. The primary module index
+  contains no Viper or Testify entry. No production, test, `go.mod`, `go.sum`,
+  API/CLI, toolchain, build/release, quality, baseline, acceptance/mutation,
+  packaging, publisher, registry, credential, or P8 file changed.
+- The sealed decision and next-group selection root is
+  `/private/tmp/ply-p7-viper-decision.360b2f3.Wdvj52`. Its verified
+  69,347-entry manifest SHA-256 is
+  `0b1e054f4fcfae3a630e5192603cb02f53d2bdd3b7623c3fe14bdb3b74eb757f`;
+  `decision-summary.json` SHA-256 is
+  `cd8cc895ca5979514e5e584b023ac70d9967cf4951ecf81ddb760267e10cbd7d`.
+
+The next bounded P7 group is indirect `github.com/rivo/uniseg v0.4.4` ->
+latest `v0.4.7`. The current-tree probe selects only that one module, retains
+233 selected modules, 3,551 graph edges, and the exact 429-package population,
+and grows the historical tidy projection from 240 to 244 lines. Version v0.4.7
+declares Go 1.18; exact Go 1.26.7 build, complete tests, pinned lint, and
+byte-identical help pass. Its checksum pair is
+`h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=` /
+`h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=`. Independent replay and
+primary release, behavior, compatibility, and vulnerability review remain for
+that separate dependency session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

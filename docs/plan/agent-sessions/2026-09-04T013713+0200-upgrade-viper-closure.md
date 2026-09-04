@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Viper Dependency Closure
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T013713+0200-upgrade-viper-closure`
 Created: `2026-09-04T01:37:13+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c4ea0273672360b60ab76be524e2a72d5352ce038964fd4fd8dde8d2d5993198`
 Previous: [2026-09-03T233249+0200-upgrade-pflag-dependency.md](2026-09-03T233249+0200-upgrade-pflag-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-04T021635+0200-upgrade-uniseg-dependency.md](2026-09-04T021635+0200-upgrade-uniseg-dependency.md)
+Outcome: Viper v1.16.0 was rejected before implementation because exact replay found 12 changed selections declaring a minimum Go version above the retained Go 1.18 floor: eleven declare Go 1.19 and Testify v1.8.3 declares Go 1.20. The replay otherwise matched all 31 selections and passed build, tests, lint, help, API/CLI, artifact-meta, module-verification, and 22/33/22 vulnerability-parity checks. No dependency metadata or production behavior changed; the sealed 69,347-entry decision root selects Uniseg v0.4.7 as the next measured one-selection group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
