@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-09-04, commit `d4f0538`.
+Last accepted quality checkpoint: 2026-09-05, commit `c314bcb`.
 
 ## Objective
 
@@ -5364,9 +5364,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the maintained-toolchain baseline move and completed
-dependency groups through accepted Google go-cmp v0.6.0; Hashicorp HCL and
-further dependency groups remain queued.
+Status: active after the maintained-toolchain baseline move, completed
+dependency groups through accepted Google go-cmp v0.6.0, and the rejected
+no-change Hashicorp HCL evaluation; inconshreveable/mousetrap and further
+dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6266,11 +6267,56 @@ Current queue decisions and next bounded P7 group (2026-09-04):
   SDK. Recovery evidence is sealed at
   `/private/tmp/ply-p7-go1.26.7-recovery.qvk4zs` with two-entry manifest
   SHA-256 `1b30193f4f4811f2515223c53c004603afa0a4812b8a571a24c49b252122e83b`.
-- Next, evaluate selected indirect `github.com/hashicorp/hcl v1.0.0` as one
-  bounded module group. Resolve its latest release, declared Go floor, exact
-  source identity, closure, loaded behavior, and vulnerability data from
-  primary evidence before deciding whether any exact compatible selection is
-  justified.
+- Evaluate selected indirect `github.com/hashicorp/hcl v1.0.0` with no
+  dependency change. The Go proxy's canonical `@latest` and `go list -m -u`
+  both retain stable v1.0.0; the latter has no `Update` field. Its annotated
+  unsigned tag object `5592d2526badd60c172ffa95c6a3b209bea9d1ee`
+  points to unsigned commit `8cb6e5b959231cc1119e43259c4a608f9c51a241`,
+  published 2018-08-26T00:51:36Z. The 196 proxy files are byte-identical to
+  that commit, the module has no `go` directive, and the sumdb pair is
+  `h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=` /
+  `h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=`.
+- Resolve all eight higher v1 strings as application-targeted prereleases:
+  `v1.0.1-vault` through `v1.0.1-vault-7` and
+  `v1.0.1-nomad-1`. All lack a `go` directive or declare Go 1.14/1.15 and
+  every proxy archive matches its upstream commit, but Go's stable-release
+  query does not select them. The original `v1.0.1-vault` tag is now absent;
+  its 196-file proxy source exactly identifies retained commit `809e678`.
+  Vault-7 is the highest string only when targeted prereleases are included;
+  its 21-commit branch adds Vault-specific unused-key, nested-JSON, and
+  duplicate-key behavior. Nomad-1 is a separate 25-commit targeted line.
+- Upstream HCL latest v2.24.0 is module `github.com/hashicorp/hcl/v2`, not an
+  update of the selected path. It resolves to commit `6b506809` and declares
+  Go 1.23.0, so it both requires an out-of-scope import/API migration and
+  exceeds the retained Go 1.18 floor.
+- Old and exact-v1.0.0 candidate projections are byte-identical: 234 selected
+  modules, 3,557 graph edges, 429 complete test packages, ten loaded HCL
+  packages, three main consumer packages, the same checksum pair, and the
+  same 308-line unapplied tidy projection. Exact
+  `go get github.com/hashicorp/hcl@v1.0.0` changes zero go.mod/go.sum lines.
+  The path is `plybuild/cmd -> viper -> viper/internal/encoding/hcl -> hcl`.
+  Viper's HCL codec and all three Ply consumers pass at count 10 in both
+  states. Darwin-symbol/Darwin-module/Windows-symbol vulnerability populations
+  independently remain exact and identical 20/30/20; the primary Go module
+  index contains no HCL v1 or v2 record.
+- Reject an HCL selection move before repository quality execution because
+  required complete module tests fail. Under exact Go 1.26.7 both
+  `go test ./...` and `go test -race ./...` exit 1 when default vet rejects
+  `hcl/parser/parser_test.go:243`: `%s` is applied to `*ast.LiteralType`.
+  Diagnostic `-vet=off` complete tests and race pass all 12 packages, proving
+  the failure is historical upstream test drift, but disabling the required
+  check is not an acceptance. No repository metadata or implementation commit
+  was made and the post-implementation gate was correctly not run.
+- Rejected/no-change HCL evidence is sealed at
+  `/private/tmp/ply-p7-hcl-selection.99f508d.CFvyqD`: its fully verified
+  21,427-entry manifest SHA-256 is
+  `ad2954c3ebcf8bfe40e5e1684fcfcf662610555e6ed113515750db1a91c1acff`,
+  and selection-summary SHA-256 is
+  `c20b0d6354c35adf0e05916610d03a93c0210bb613ae889250316bffc34132d9`.
+- Next, independently evaluate selected indirect
+  `github.com/inconshreveable/mousetrap v1.1.0` as one bounded P7 module
+  group. Resolve the canonical latest release, Go floor, source identity,
+  closure, loaded behavior, and vulnerability data before selecting anything.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

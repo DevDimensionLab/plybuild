@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-05T01:13:25+02:00
+Generated: 2026-09-05T01:38:47+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,161 +9,148 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base `master` at `5635d50`.
-- Latest implementation is dependency-only go-cmp commit
+- Latest implementation remains dependency-only go-cmp commit
   `c314bcb440b5f94871d71a249bca7ae7f87d5543`, exact parent
   `cbdb0a915d7d30bb6633cfbb2ccf0323aea1b77a`, clean tree
   `9a212b377cb08e7d6e3044fb6dae071058b6242b`.
-- The documentation handoff must have exact parent `c314bcb`; ordinary and
-  ignored status must be empty afterward. The answered go-cmp archive and the
-  Hashicorp HCL NEXT archive must link reciprocally.
-- Only `go.mod` and `go.sum` changed in the implementation. Production Go,
-  API/CLI, language/toolchain declarations, quality apparatus, Docker/release
-  inputs, packaging, publishers, and P8 code are unchanged.
+- The HCL evaluation made no dependency or production change. Its final
+  documentation handoff must have exact parent
+  `99f508d927047f3803e96d082efc15e2dd2422b7`; `go.mod` and `go.sum` remain
+  byte-identical to `c314bcb`. Ordinary and ignored status must be empty.
+- The answered HCL archive and the inconshreveable/mousetrap NEXT archive must
+  link reciprocally. Only the launcher's mutable header and prompt regions may
+  change during handoff.
 - No `.agent-task/current.md` or `.quality/manual-evidence.json` was created.
-  No push, merge, publication, release, stash, successor launch, retained
-  evidence/image deletion, or worktree removal occurred.
+  No push, merge, publication, release, stash, revert, retained evidence/image
+  deletion, successor launch, or worktree removal occurred.
 
-P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain and the
+P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain,
 completed dependency groups through accepted `github.com/google/go-cmp
-v0.6.0`. Latest go-cmp v0.7.0, Viper v1.16.0, Emoji v2.2.14, ini v1.67.3,
-fatih/color v1.19.0, fsnotify v1.10.1, and latest gomarkdown
-`v0.0.0-20260824154242-13c5cf49db8d` remain rejected for their recorded floor
-or loaded-behavior failures. The accepted gomarkdown fallback remains
-`v0.0.0-20260824151336-45814d58469f`. P8 remains queued.
+v0.6.0`, and the rejected/no-change Hashicorp HCL evaluation. Latest go-cmp
+v0.7.0, Viper v1.16.0, Emoji v2.2.14, ini v1.67.3, fatih/color v1.19.0,
+fsnotify v1.10.1, latest gomarkdown
+`v0.0.0-20260824154242-13c5cf49db8d`, and an HCL selection change remain
+rejected for their recorded floor, loaded-behavior, release-qualification, or
+self-test failures. P8 remains queued.
 
-Only the launcher's mutable header and prompt regions may change during a
-handoff. Keep caches, projections, reports, artifacts, build contexts, and
-audit evidence outside the worktree.
+## Rejected/No-Change Hashicorp HCL Group
 
-## Accepted Google Go-Cmp Group
+The canonical Go proxy `@latest`, `go list -m -versions`, and
+`go list -m -u` agree that stable `github.com/hashicorp/hcl v1.0.0` remains
+the selected module release; the update query contains no `Update` field.
+Its proxy publication and commit time are 2018-08-26T00:51:36Z. The annotated,
+unsigned tag object `5592d2526badd60c172ffa95c6a3b209bea9d1ee`, tagged at
+2018-08-26T01:00:46Z, points to unsigned commit
+`8cb6e5b959231cc1119e43259c4a608f9c51a241`. All 196 proxy files are
+byte-identical to that commit. The module has no `go` directive and therefore
+declares no floor above retained Go 1.18. Its sumdb pair is
+`h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=` /
+`h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=`.
 
-Latest v0.7.0 is rejected because its independently reproduced `go 1.21`
-declaration exceeds the retained Go 1.18 compatibility floor. Primary proxy,
-sumdb, and upstream evidence binds v0.7.0 to lightweight tag commit
-`9b12f366a942ebc7254abc7f32ca05068b455fb7`, published
-2025-01-14T18:15:44Z, with checksum pair
-`h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=` /
-`h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=`.
+Every higher v1 version string is an application-targeted prerelease. They are
+floor-compatible but are not eligible as the canonical stable candidate:
 
-Selected indirect go-cmp moved from v0.5.9 to v0.6.0, the highest compatible
-release because the only higher listed release is rejected v0.7.0. Version
-v0.6.0 resolves to lightweight tag commit
-`c3ad8435e7bef96af35732bc0789e5a2278c6d5f`, published
-2023-08-31T17:32:40Z, declares Go 1.13, and has checksum pair
-`h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=` /
-`h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=`. Both release archives
-contain 48 files byte-identical to their tag commits. Both tags are commit
-objects rather than annotated tags. GitHub records valid commit signatures;
-local verification could not run because `gpg` is absent. The primary Go
-vulnerability module index contains no go-cmp entry.
+| Version | Commit / UTC time | Go | Tag and commit signature | Proxy files and sumdb pair |
+| --- | --- | --- | --- | --- |
+| `v1.0.1-vault` | `809e678c39ec71ae0b37a792de60b7e10e571dfe`, 2020-10-15T18:49:41Z | none | original tag now absent; commit unsigned | 196 identical; `h1:UiJeEzCWAYdVaJr8Xo4lBkTozlW1+1yxVUnpbS1xVEk=` / `h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=` |
+| `v1.0.1-vault-2` | `4ecc8eea909656efc5215b9d0c5a4f82232065be`, 2021-05-04T18:33:52Z | 1.15 | lightweight; valid GitHub commit signature | 199 identical; `h1:j0lTHGBdaU13Pc3GaTCdWjmsT22X98bsHnA+ShzIOtg=` / `h1:XYhtn6ijBSAj6n4YqAaf7RBPS4I06AItNorpy+MoQNM=` |
+| `v1.0.1-vault-3` | `8a6d2ce4ce85ad6e2e8252089e7ba5fa9d7a6104`, 2021-06-11T21:31:12Z | 1.15 | lightweight; commit unsigned | 199 identical; `h1:V95v5KSTu6DB5huDSKiq4uAfILEuNigK/+qPET6H/Mg=` / `h1:XYhtn6ijBSAj6n4YqAaf7RBPS4I06AItNorpy+MoQNM=` |
+| `v1.0.1-vault-4` | `6e9815dfdafe4c1a7565b9ef07400890386a53ee`, 2022-10-26T14:49:49Z | 1.15 | lightweight; valid GitHub commit signature | 200 identical; `h1:G9AZNqjH1d5P/vey5/l7HFwkWVJl7vVbLu/zRMcsM4g=` / `h1:XYhtn6ijBSAj6n4YqAaf7RBPS4I06AItNorpy+MoQNM=` |
+| `v1.0.1-vault-5` | `e2a59886bba6f1fce980860c8206b8ec9ccd2d91`, 2022-10-13T20:27:02Z | 1.15 | lightweight; commit unsigned | 200 identical; `h1:kI3hhbbyzr4dldA8UdTb7ZlVVlI2DACdCfz31RPDgJM=` / `h1:XYhtn6ijBSAj6n4YqAaf7RBPS4I06AItNorpy+MoQNM=` |
+| `v1.0.1-vault-6` | `9371994b9b055f46e21011505707d1168771cac9`, 2024-10-30T17:53:12Z | 1.15 | lightweight; valid GitHub commit signature | 200 identical; `h1:qThxNRouu5cv9LCLZ7pY43TroykqN+Uc7fT3f7tyYh4=` / `h1:XYhtn6ijBSAj6n4YqAaf7RBPS4I06AItNorpy+MoQNM=` |
+| `v1.0.1-vault-7` | `02db4972906a1b43a46e2ffb0d2aae2c71875d94`, 2024-11-07T22:23:56Z | 1.15 | lightweight; valid GitHub commit signature | 201 identical; `h1:ag5OxFVy3QYTFTJODRzTKVZ6xvdfLLCA1cy/Y6xGI0I=` / `h1:XYhtn6ijBSAj6n4YqAaf7RBPS4I06AItNorpy+MoQNM=` |
+| `v1.0.1-nomad-1` | `955ab59100a7eae83a214b343f67e414fb90ddae`, 2025-06-19T15:11:11Z | 1.14 | annotated SSH-signed tag object `5f0d5fd9`, tagged 2025-06-20T07:14:50Z; GitHub validates tag and commit, local verification lacks an allowed-signers file | 203 identical; `h1:0hOV+/m12cRBAfvHpVOgGdM68XU7uTxGafEuUB2UES8=` / `h1:gwlu9+/P9MmKtYrMsHeFRZPXj2CTPm11TDnMeaRHS7g=` |
 
-The six-commit v0.5.9 -> v0.6.0 history removes purego fallbacks, adds Go 1.20
-testing, pins workflow inputs, uses identifier links, and adds
-`cmpopts.EquateComparable`. Both states select 234 modules, have 3,557 graph
-edges and 429 complete test packages, and load the same five go-cmp packages.
-Only the go-cmp selection and matching main edge change. The path is
-`plybuild/cmd -> mvn-pom-mutator/pkg/pom -> go-cmp/cmp`.
+The original `v1.0.1-vault` proxy archive identifies retained commit
+`809e678` exactly despite the deleted tag. Vault-7 is the highest semantic
+version only if these targeted prereleases are included. Its 21-commit branch
+adds Vault-specific unused-key position, nested-JSON, and duplicate-key
+behavior. Nomad-1 is a separate 25-commit targeted line with decode coercions,
+unused-key handling, `hasKey`, and cherry-picked Vault behavior. There is no
+stable v1 release after v1.0.0.
 
-Exact `go get github.com/google/go-cmp@v0.6.0` replaces the indirect
-requirement and adds the v0.6.0 checksum pair while retaining v0.5.9 sums. The
-299 -> 308-line tidy result remains an unapplied projection; comparing fully
-tidied projections isolates only the version and checksum pair. Candidate
-module complete tests/race, old and new Ply consumers at count 10, repository
-build/tests/race/vet, pinned lint, byte-identical help, identical API/CLI,
-launcher/Make/preflight, host/snapshot/Docker, audit, empty-HOME count-2, and
-clean-tree gates pass. Vulnerability ID sets remain exact 20/30/20 for Darwin
-symbol, Darwin module, and Windows symbol.
+Upstream's latest v2 release is v2.24.0 at commit
+`6b5068090eef06b1f127f61529db5ba0be7ed343`, published
+2025-07-07T13:00:56Z. It is module `github.com/hashicorp/hcl/v2`, declares Go
+1.23.0, and would require a production import/API migration. It is both
+outside this exact module group and above the retained Go 1.18 floor.
 
-The candidate module's optional `go vet ./...` emits seven diagnostics only in
-upstream test files (two deliberately malformed struct tags and five unkeyed
-internal test-proto/test-struct literals); its required complete module tests
-and race pass. The packaged mvn-pom-mutator v0.2.3 test has a pre-existing
-`Marshall` arity mismatch in both old and new states; the actual six-package
-Ply consumer population passes in both.
+Exact `go get github.com/hashicorp/hcl@v1.0.0` in the candidate archive is a
+zero-output, zero-diff operation. Old and candidate states retain 234 selected
+modules, 3,557 graph edges, 429 complete test packages, ten loaded HCL
+packages, three main consumer packages, and an identical 308-line unapplied
+tidy projection. No selection, edge, package, checksum, or tidy line differs.
+The loaded path is `plybuild/cmd -> viper ->
+viper/internal/encoding/hcl -> hcl`.
 
-## Accepted Evidence
+Viper's focused HCL codec package and Ply's three loaded consumer packages pass
+at count 10 in both states. Required HCL v1.0.0 complete self-tests do not:
+both `go test ./...` and `go test -race ./...` exit 1 under exact Go 1.26.7
+because default vet rejects `hcl/parser/parser_test.go:243` for formatting an
+`*ast.LiteralType` with `%s`. Diagnostic `-vet=off` tests and race pass all 12
+packages, so this is historical upstream test drift, but the mission forbids
+disabling the required self-test gate. Evaluation stopped before repository
+quality execution; no implementation commit or dependency metadata edit was
+made.
 
-- Selection root `/private/tmp/ply-p7-go-cmp-selection.cbdb0a9.kbzc4C`:
-  verified 29,812-entry manifest SHA-256
-  `dcd18baaa45eb8ad59b268fa7c356164dabc5d4c9836423c3fd1c3aa6d0d1797`;
-  selection-summary SHA-256
-  `5f76248b77f1451bfb3304b0857ba9464c3a5f75921ba6df26b750080c361ee1`.
-- Commit-bound schema-2 review
-  `/private/tmp/ply-p7-go-cmp-quality-review.c314bcb.XeWg4T`: verified
-  9,487-entry manifest SHA-256
-  `24ede5a473b9ac9f47839b121d25e9a8d921369c5ba149bf42abd902b5271727`;
-  manual-evidence SHA-256
-  `6f7a469bf4fa8da00a44570d4b7c669f64c5a31dbc116b4304c0604c505ba1ac`.
-  All six focused receipts pass; all 112 governed files and 258 subjects are
-  unchanged from the parent.
-- Exact `make quality` root
-  `/private/tmp/ply-p7-go-cmp-quality-parent.c314bcb.zxFKyw`: verified
-  252,077-entry manifest SHA-256
-  `6d8104b43fdcb838ec8c0955870798be38a3b4a1f9a7e73f22e683ee566a9f69`;
-  Q0-Q2 scorecard SHA-256
-  `6531ade31d4c504c304cd707cbab158e9433d487ec8fa96d05a8277d9dc149e1`.
-  Its exact 21-stage ledger exits 0 with 27/27 rows at L2, 80/80 mutations,
-  8/8 mutation and 4/4 acceptance populations, and zero held, regressed,
-  not-comparable, or dirty counts.
-- Independent regression root
-  `/private/tmp/ply-p7-go-cmp-regression-gate.c314bcb-final.rMW0l5`: verified
-  30,255-entry manifest SHA-256
-  `00b736b53494a0c4f27ee7503ecef1c7c7bf74f00bdaab85f7afa9eab19ed3c5`;
-  regression-summary SHA-256
-  `a27e5f4d00fa0f60d9246309e1485353cdb2aacecd4a3d80e0d3bf64efe2323e`.
-  It independently binds closure, module/consumer/repository gates, lint,
-  help/API/CLI, preflight, host acceptance, focused and exact audits,
-  20/30/20 vulnerabilities, empty-HOME count-2, and cleanliness. Full audit
-  exits expected 1, never 2, only for Q3.1, Q3.3, Q3.4, and Q3.7.
+Independent old/candidate govulncheck v1.7.0 scans preserve exact identical
+20 Darwin-symbol, 30 Darwin-module, and 20 Windows-symbol ID populations. The
+primary Go vulnerability module index contains no HCL v1 or v2 entry.
 
-The first exact-quality attempt is retained at
-`/private/tmp/ply-p7-go-cmp-quality-parent.c314bcb.n2kYFd`. Midnight external
-tmp cleanup removed the SDK's standard-library source files while leaving its
-binary and hash intact, so the run stopped during mutation meta-testing. The
-official Go 1.26.7 archive was re-fetched at exact SHA-256
-`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`
-and overlaid at the mandated path. Recovery evidence at
-`/private/tmp/ply-p7-go1.26.7-recovery.qvk4zs` has verified two-entry manifest
-SHA-256 `1b30193f4f4811f2515223c53c004603afa0a4812b8a571a24c49b252122e83b`.
+## Evidence And Tool Identity
 
-A prerequisite replay also corrects the prior handover: the btree regression
-manifest retains its recorded digest and 24,197 entries, but 163 mutable
-cache/HOME entries no longer verify after preliminary version enumeration
-mutated 161 `@v/list` files, one sumdb latest record, and one telemetry count.
-Stable regression-summary SHA-256
-`f348bd0b9e0f68c698c43f466904b66c1c3db6eab5e783b14364aaf40b6b1ea2`
-is unchanged. The other three btree manifests completely verify, and current
-regression claims are superseded by the fresh go-cmp evidence above.
-
-Tool identities remain Go 1.26.7 at
-`/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`, SHA-256
-`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
-golangci-lint 2.12.2
-`3ba856c13833c4cda2182eb71bdbc7f96ddad339a1cdda8c36f88bfb1e34bd6f`;
-GoReleaser 2.17.1
-`f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`;
-apidiff `0c55d9e385a57d6af9b69a9abd3b71d986123dbe82e687fcaecb99f9a0acba20`;
-and govulncheck v1.7.0
-`0db06024e71e82bd3e4444d57b757abf86fd4b7d0b08c1c21ca811597c953cd5`.
+- Rejected/no-change HCL evidence root
+  `/private/tmp/ply-p7-hcl-selection.99f508d.CFvyqD` has a fully verified
+  21,427-entry manifest SHA-256
+  `ad2954c3ebcf8bfe40e5e1684fcfcf662610555e6ed113515750db1a91c1acff`;
+  selection-summary SHA-256 is
+  `c20b0d6354c35adf0e05916610d03a93c0210bb613ae889250316bffc34132d9`.
+- All accepted prerequisites were freshly verified entry-by-entry before the
+  decision: two-entry toolchain recovery `1b30193f...e83b`, 29,812-entry
+  go-cmp selection `dcd18baa...1797`, 9,487-entry schema-2 review
+  `24ede5a4...1727`, 252,077-entry exact quality `6d8104b4...f69`, and
+  30,255-entry regression `00b736b5...3c5`. The accepted go-cmp exact-quality
+  scorecard remains `6531ade3...49e1`: 21 stages and all 27 Q0-Q2 rows pass at
+  L2, 80/80 mutations, all 8/8 mutation and 4/4 acceptance populations, and
+  zero held, regressed, not-comparable, or dirty counts.
+- Preserve the btree correction: its regression manifest retains the recorded
+  digest and 24,197 entries, but 163 mutable cache/HOME entries no longer
+  verify after later enumeration. Its stable regression summary is unchanged;
+  the other three btree manifests verify, and fresh go-cmp evidence supersedes
+  current regression claims.
+- Tool identities remain Go 1.26.7
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
+  golangci-lint 2.12.2
+  `3ba856c13833c4cda2182eb71bdbc7f96ddad339a1cdda8c36f88bfb1e34bd6f`,
+  GoReleaser 2.17.1
+  `f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`,
+  apidiff `0c55d9e385a57d6af9b69a9abd3b71d986123dbe82e687fcaecb99f9a0acba20`,
+  and govulncheck v1.7.0
+  `0db06024e71e82bd3e4444d57b757abf86fd4b7d0b08c1c21ca811597c953cd5`.
+- The first finalization contract run hit the previously observed nested
+  partial-raw-log signal-fixture flake and ended non-zero. Its immediate
+  complete rerun passed all 62 controls. Passing rerun evidence is sealed at
+  `/private/tmp/ply-p7-hcl-handoff-contract.99f508d` with a verified
+  three-entry manifest SHA-256
+  `ccab44fd1f574e34b5ab040a7d91295ca0b506b745f0a4b95b8fe5f613008043`.
 
 ## Next Objective
 
-Independently evaluate selected indirect `github.com/hashicorp/hcl v1.0.0`
-as exactly one bounded P7 module group. Resolve the current latest release and
-every potentially compatible release from fresh Go proxy, checksum-database,
-and upstream evidence. Do not assume a target version, Go floor, closure, or
-loaded status from secondary sources.
+Independently evaluate selected indirect
+`github.com/inconshreveable/mousetrap v1.1.0` as exactly one bounded P7 module
+group. Resolve the canonical latest release and every potentially compatible
+release from fresh Go proxy, checksum-database, upstream, and primary Go
+vulnerability evidence. Do not assume its latest version, Go floor, source
+identity, closure, loaded status, or behavior.
 
 Measure exact old/candidate selections, graph edges, complete package
-population, loaded packages and dependency path, checksums, exact-get diff,
-tidy projection, focused behavior if loaded, candidate module tests, repository
-quality, help/API/CLI identity, and vulnerability populations. Implement one
-exact selection only if it preserves the retained Go 1.18 floor, has a minimal
-explained closure, and passes every contract. Otherwise record rejection with
-no dependency metadata edit.
+population, checksums, exact-get diff, tidy projection, loaded packages/path,
+focused behavior when loaded, candidate module tests, repository quality,
+help/API/CLI identity, and vulnerability populations. Implement only an exact
+floor-compatible selection with an explained minimal closure and every gate
+passing; otherwise record rejection without editing dependency metadata.
 
 Warm caches from separate Git archives. Never use tidy as implementation or
 run `go mod download all` inside a measured tree. Stop before another module,
-behavior/source change, language/toolchain or quality-policy change,
-packaging, publication, or P8. Do not push, merge, publish, release, delete
-evidence, stash, revert, launch a successor, or remove the worktree.
+behavior/source changes, language/toolchain or quality-policy changes,
+packaging, publication, or P8. Keep all evidence outside the worktree.

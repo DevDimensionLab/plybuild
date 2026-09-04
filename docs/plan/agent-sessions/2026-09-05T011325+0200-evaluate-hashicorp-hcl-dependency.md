@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Hashicorp HCL Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-05T011325+0200-evaluate-hashicorp-hcl-dependency`
 Created: `2026-09-05T01:13:25+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `85aeb4b4c992fe99dbd78df28e99f1b3fa10390d5e592251074ea261e375a8bd`
 Previous: [2026-09-04T231513+0200-evaluate-google-go-cmp-dependency.md](2026-09-04T231513+0200-evaluate-google-go-cmp-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-05T013847+0200-evaluate-inconshreveable-mousetrap-dependency.md](2026-09-05T013847+0200-evaluate-inconshreveable-mousetrap-dependency.md)
+Outcome: retained canonical latest HCL v1.0.0 unchanged; rejected targeted prereleases and v2 migration, then stopped on the required module self-test failure
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
