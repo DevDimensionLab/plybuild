@@ -5884,21 +5884,72 @@ Ini v1.67.3 closure decision (2026-09-04):
   decision-summary SHA-256 is
   `04081e0b5f0b3324e49ca321f5edf0a2be5b9b938bce31f68c30aabb89c8a90d`.
 
-The next bounded P7 group is direct `github.com/spf13/cobra v1.10.1` -> latest
-`v1.10.2` with the exact newly selected MVS companion
-`go.yaml.in/yaml/v3 v3.0.4`. The clean offline replay changes exactly those two
-selections, 233 -> 234 modules, 3,551 -> 3,552 edges, preserves the exact
-429-package population, and grows tidy from 252 to 254 lines. Cobra declares
-Go 1.15 and the YAML companion declares Go 1.16. Exact Go 1.26.7 build,
-complete tests, pinned lint, byte-identical help, identical API/CLI reports,
-and 22/33/22 vulnerability parity pass. The authoritative sealed selection
-root is `/private/tmp/ply-p7-next-cobra-selection.33e1873.ZPppZP`; its verified
-43,788-entry manifest SHA-256 is
-`d522c38eafcd59bd8b172233f06d79a6f32f2410f959e9474c0b8bd0fb8c7a38`,
+Cobra/YAML dependency group (2026-09-04):
+
+- Upgraded direct `github.com/spf13/cobra v1.10.1` to latest `v1.10.2` with
+  newly selected exact MVS companion `go.yaml.in/yaml/v3 v3.0.4`. Independent
+  external replay changed exactly those two selections, moved 233 -> 234
+  modules and 3,551 -> 3,552 graph edges, retained the exact 429-package
+  population, and grew the historical tidy projection from 252 to 254 lines.
+- Current proxy and repository evidence retains Cobra v1.10.2 at lightweight
+  tag commit `88b30ab89da2d0d0abb153818746c5a2d30eccec`, Go 1.15, and checksum pair
+  `h1:DMTTonx5m65Ic0GOoRY2c16WCbHxOOw6xxezuLaBpcU=` /
+  `h1:7C1pvHqHw5A4vrJfjNwvOdzYu0Gml16OCs2GRiTUUS4=`. YAML v3.0.4 remains exact
+  tag commit `c3552c15f996075a7634df5159d9161c67bf3d76`, Go 1.16, and checksum pair
+  `h1:tfq32ie2Jv2UxXFdLJdh3jXuOzWiL1fo0bu/FbuKpbc=` /
+  `h1:DhzuOOF2ATzADvBadXxruRBLzYTpT36CKvDb3+aBEFg=`. YAML v3.0.5 became the
+  standalone latest release after the original handoff measurement, but did
+  not alter Cobra's bounded exact v3.0.4 MVS closure.
+- Exact `go get github.com/spf13/cobra@v1.10.2` produced dependency-only commit
+  `620226258841f3692dd918cca54094ad74ca5017`, parent `1f4cb3958768a2673d16b0812ab5fd5dfae055e0`,
+  and tree `51e0409a972e9bff20a0c3046063c8a595637a08`. Only `go.mod` and `go.sum`
+  changed; the retained `gopkg.in/yaml.v2 v2.4.0` and
+  `gopkg.in/yaml.v3 v3.0.1` selections did not move.
+- The independent selection root is
+  `/private/tmp/ply-p7-cobra-yaml-selection.1f4cb39.TwFCo3`; its verified
+  24,805-entry manifest SHA-256 is
+  `0eb9ffc0cb5ff418c7304cb41ca3b97f7d9d3c1d5d34898d1ef69f742c350626`,
+  and selection-summary SHA-256 is
+  `4fa616418c4a3cc4599ea408b959d7ad2a6f1ce217138cc4b66e5edfa0defe82`.
+- Commit-bound schema-2 review evidence is retained at
+  `/private/tmp/ply-p7-cobra-yaml-quality-review.6202262.lbyesK`; its verified
+  19-entry manifest SHA-256 is
+  `f282581202b89aaf40188203cb1463588665e14cd232f22e39c6c278fe0dbaff`,
+  and manual evidence SHA-256 is
+  `d217d09871a23a60fdf80aac74147ff39bfaf860279bec92a2ceac35593226a9`.
+- Exact `make quality` exits 0 at the accepted root
+  `/private/tmp/ply-p7-cobra-yaml-quality-parent.6202262.ITUpqp/quality-gate`.
+  Its verified 235,159-entry manifest SHA-256 is
+  `98d22ad621a2c44505cc472f087c7d89583ec73495b45161a06036a0de6127cc`;
+  scorecard SHA-256
+  `a262ae769245684cfa87650a1c68a46e6df567abe77dc91d594e8aad488429d6`
+  records 27/27 PASS at L2, 80/80 killed mutations, 8/8 mutation and 4/4
+  acceptance populations, and zero held, regressed, not-comparable, or dirty
+  counts.
+- The independent regression root is
+  `/private/tmp/ply-p7-cobra-yaml-regression-gate.6202262.EfnWY9`; its verified
+  58,127-entry manifest SHA-256 is
+  `2e17e4301037c8411c2fcc066f15635793aa112f06904fcda8d8ff9edb144077`.
+  All 40 stages pass. Full scorecard SHA-256
+  `f6146700f8f396dc3c34a3e0816d782b8e361e6765a154eb060295da0901a85c`
+  exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+  Vulnerability populations remain exact 22/33/22.
+
+The next bounded P7 group is selected indirect `go.yaml.in/yaml/v3 v3.0.4`
+-> latest `v3.0.5`. The clean offline replay changes exactly that one
+selection, retains 234 modules and the exact 429-package population, adds one
+main-module graph edge (3,552 -> 3,553), and grows the historical tidy
+projection from 254 to 271 lines. The main module loads neither version of the
+`go.yaml.in/yaml/v3` package; an explicit indirect pin is therefore required
+to retain v3.0.5 and projected tidy would remove it. YAML v3.0.5 declares Go
+1.16, so it preserves the Go 1.18 floor. Exact build, complete tests, pinned
+lint, byte-identical help, identical API/CLI reports, and 22/33/22
+vulnerability parity pass. The sealed selection root is
+`/private/tmp/ply-p7-next-yaml-selection.6202262.OIdBoh`; its verified
+25,510-entry manifest SHA-256 is
+`8875312d9aff958fc87dea9034a6f6a03dfd1e664048f327b8e79515b85b52ea`,
 and selection-summary SHA-256 is
-`3bf4208b4b8d3fd1d300976274dc6e26f26322aec365554bc7c7fd0e4a377b85`.
-Independent primary evidence and full implementation quality review remain for
-the separate Cobra/YAML session.
+`f6fd81b0286a60ed4ff89ce2945837d52c5c77db540a8ff88ebd9c6883235ac3`.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

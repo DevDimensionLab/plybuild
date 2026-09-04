@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-04T06:54:19+02:00
+Generated: 2026-09-04T08:37:43+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -11,12 +11,12 @@ session diary.
 - Branch: `codex/upgrade-quality`.
 - Base: `master` at `5635d50`.
 - Last P7 implementation commit:
-  `33e187317c6c1be79ef8c5b64ddb2a0f8caec71f`.
+  `620226258841f3692dd918cca54094ad74ca5017`.
 - Its exact parent is
-  `e1fd64e4a7bebd6dabf529675b1560172f12f1d5`; its clean tree is
-  `6942bd34879b9935382b44ffab682606cf5ef5c9`.
-- The Cobra/YAML handoff is the next commit after `33e1873`; require its exact
-  parent to be `33e187317c6c1be79ef8c5b64ddb2a0f8caec71f` and begin with empty
+  `1f4cb3958768a2673d16b0812ab5fd5dfae055e0`; its clean tree is
+  `51e0409a972e9bff20a0c3046063c8a595637a08`.
+- The YAML v3.0.5 handoff is the next commit after `6202262`; require its exact
+  parent to be `620226258841f3692dd918cca54094ad74ca5017` and begin with empty
   ordinary and ignored status.
 - No push, merge, publication, release, stash, successor launch, retained
   evidence or image deletion, or worktree removal occurred.
@@ -24,14 +24,14 @@ session diary.
 ## Continuity Checkpoint
 
 P2A-P6 are complete. P7 remains active after the maintained-toolchain move,
-terminal pair, logrus, Cobra v1.10.1 closure, pflag, Uniseg, and
-Colorable/go-isatty groups and the rejected Viper, Emoji, and ini candidates.
-P8 remains queued.
+terminal pair, logrus, Cobra v1.10.1 closure, pflag, Uniseg,
+Colorable/go-isatty, and Cobra v1.10.2/YAML v3.0.4 groups and the rejected
+Viper, Emoji, and ini candidates. P8 remains queued.
 
-The answered Colorable archive links reciprocally to exactly one NEXT archive
-for the measured Cobra v1.10.2/YAML v3.0.4 closure. Only the launcher's mutable
-header and prompt regions may change; its stable executable skeleton must
-remain byte-identical.
+The answered Cobra/YAML archive links reciprocally to exactly one NEXT archive
+for the measured YAML v3.0.5 selection. Only the launcher's mutable header and
+prompt regions may change; its stable executable skeleton must remain
+byte-identical.
 
 The tracked launcher/archive apparatus remains the task source. Never create
 `.agent-task/current.md` or `.quality/manual-evidence.json`. Keep downloaded
@@ -39,43 +39,44 @@ tools, module/build caches, graph projections, vulnerability output, generated
 artifacts, build contexts, schema-2 evidence, reports, and audit evidence
 outside the worktree.
 
-## Colorable Completion
+## Cobra/YAML Completion
 
-Existing indirect `github.com/mattn/go-colorable v0.1.13` moved to latest
-v0.1.15 with exact MVS companion `github.com/mattn/go-isatty v0.0.17` ->
-v0.0.20. Fresh primary evidence confirms Colorable's lightweight v0.1.15 tag
-at `8bf39a204f13f0cfcf86ab9b297c3d6e0668e54a`, Go 1.18 declaration, and
+Direct `github.com/spf13/cobra v1.10.1` moved to latest v1.10.2 with exact
+new MVS selection `go.yaml.in/yaml/v3 v3.0.4`. Fresh primary evidence confirms
+Cobra's lightweight v1.10.2 tag at
+`88b30ab89da2d0d0abb153818746c5a2d30eccec`, Go 1.15 declaration, and
 checksum pair:
 
-- module: `h1:+u9SLTRGnXv73cEsnsmoZBom+dMU88B2M0aDcWy0/jY=`;
-- go.mod: `h1:6LmQG8QLFO4G5z1gPvYEzlUgJ2wF+stgPZH1UqBm1s8=`.
+- module: `h1:DMTTonx5m65Ic0GOoRY2c16WCbHxOOw6xxezuLaBpcU=`;
+- go.mod: `h1:7C1pvHqHw5A4vrJfjNwvOdzYu0Gml16OCs2GRiTUUS4=`.
 
-Go-isatty v0.0.20 has lightweight tag commit
-`a7c02353c47bc4ec6b30dc9628154ae4fe760c11`, declares Go 1.15, and has
+YAML v3.0.4 has lightweight tag commit
+`c3552c15f996075a7634df5159d9161c67bf3d76`, declares Go 1.16, and has
 checksum pair:
 
-- module: `h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=`;
-- go.mod: `h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=`.
+- module: `h1:tfq32ie2Jv2UxXFdLJdh3jXuOzWiL1fo0bu/FbuKpbc=`;
+- go.mod: `h1:DhzuOOF2ATzADvBadXxruRBLzYTpT36CKvDb3+aBEFg=`.
 
-Both states retain 233 selected modules, 3,551 graph edges, and the exact
-429-package population. Only those two selections change; historical
-`go mod tidy -diff` grows from 244 to 252 lines. The caller chain remains
-`plybuild/cmd` -> `go-term-markdown` -> `fatih/color` -> `go-colorable`, and
-existing behavior/help/API/CLI/artifact contracts cover the indirect boundary.
+Independent replay changes exactly those two selections, moves 233 -> 234
+selected modules and 3,551 -> 3,552 graph edges, retains the exact 429-package
+population, and grows historical `go mod tidy -diff` from 252 to 254 lines.
+The main module remains Go 1.18. Current evidence shows YAML v3.0.5 is now the
+standalone latest release; this does not change Cobra v1.10.2's exact v3.0.4
+requirement or the implemented bounded closure.
 
-Exact `go get github.com/mattn/go-colorable@v0.1.15` produced implementation
-commit `33e187317c6c1be79ef8c5b64ddb2a0f8caec71f`. Only `go.mod` and `go.sum`
-changed. Production behavior, public API/CLI, toolchain and main-module
-language declarations, Docker/release inputs, quality tools and thresholds,
-numeric debt, compatibility allowlists, acceptance/mutation populations,
-packaging, publishers, registries, credentials, and P8 code did not change.
+Exact `go get github.com/spf13/cobra@v1.10.2` produced implementation commit
+`620226258841f3692dd918cca54094ad74ca5017`. Only `go.mod` and `go.sum`
+changed. The retained `gopkg.in/yaml.v2 v2.4.0` and
+`gopkg.in/yaml.v3 v3.0.1` selections, production behavior, public API/CLI,
+toolchain and language declarations, Docker/release inputs, quality apparatus,
+packaging, and P8 code did not change.
 
 Exact Go 1.26.7 build, focused callers, complete tests/race/vet, pinned lint,
-byte-identical public help, API/CLI and entry/subprocess compatibility,
-launcher/Make, complete preflight, host and fresh snapshot/Docker acceptance,
-audit meta, focused and Q0-Q2 audits, vulnerability parity, empty-HOME
-count-2, and final cleanliness all pass. Vulnerability sets remain exactly 22
-Darwin symbol, 33 Darwin module, and 22 Windows symbol IDs.
+byte-identical help, API/CLI and entry/subprocess compatibility, launcher/Make,
+complete preflight, host and fresh snapshot/Docker acceptance, audit meta,
+focused and Q0-Q2 audits, vulnerability parity, empty-HOME count-2, and final
+cleanliness all pass. Vulnerability sets remain exactly 22 Darwin symbol, 33
+Darwin module, and 22 Windows symbol IDs.
 
 ## Toolchain And Method
 
@@ -101,117 +102,99 @@ and govulncheck v1.7.0 at
 
 Warm fresh module caches from separate external Git archives. Never run
 `go mod download all` inside a measured old/candidate tree or use a real-tree
-download as a tidy surrogate. An aggregate coverage invocation can expand the
-sparse historical `go.sum`; use an exact readonly Go invocation for that check
-and retain any rejected projection outside the worktree.
+download as a tidy surrogate. Preserve the historical tidy projection as a
+measurement; do not apply it during a bounded dependency move.
 
 ## Accepted External Evidence
 
-The Colorable selection root is
-`/private/tmp/ply-p7-colorable-selection.e1fd64e.QlohU1`. Its verified
-49,635-entry manifest SHA-256 is
-`b8ec3adb51fc916820b300f0faf4ff0eddc7e1ae51a9f839b96ceed9c57cebb7`;
+The independent Cobra/YAML selection root is
+`/private/tmp/ply-p7-cobra-yaml-selection.1f4cb39.TwFCo3`. Its verified
+24,805-entry manifest SHA-256 is
+`0eb9ffc0cb5ff418c7304cb41ca3b97f7d9d3c1d5d34898d1ef69f742c350626`;
 selection-summary SHA-256 is
-`484e11cb3c6929dfd0a50c050a49008df4ed3908133ae3d87a3a3839f783e07c`.
+`4fa616418c4a3cc4599ea408b959d7ad2a6f1ce217138cc4b66e5edfa0defe82`.
 
 Commit-bound schema-2 review evidence is retained at
-`/private/tmp/ply-p7-colorable-quality-review.33e1873.eGDQR5`. Its verified
-21-entry manifest SHA-256 is
-`f6294878de4b3f19a8731b0b94485f8a203ab20137e37fd3e866f27a0afde24b`;
+`/private/tmp/ply-p7-cobra-yaml-quality-review.6202262.lbyesK`. Its verified
+19-entry manifest SHA-256 is
+`f282581202b89aaf40188203cb1463588665e14cd232f22e39c6c278fe0dbaff`;
 manual evidence SHA-256 is
-`cfbe47aa455636613ec5f03c4ede4a12a4169e2a0da9483cf6fb0519e9a3ce66`,
-and focused scorecard SHA-256 is
-`566261a3e2f6e0bf3910a77850a1977430282dd2bd56fd3290d688c177848a11`.
+`d217d09871a23a60fdf80aac74147ff39bfaf860279bec92a2ceac35593226a9`,
+and all six focused rows pass.
 
-The exact accepted quality root is
-`/private/tmp/ply-p7-colorable-quality-parent.33e1873.31b10h/quality-gate-retry3`.
-Its verified 235,059-entry manifest SHA-256 is
-`6695ee2f2a181c46fbcf953518c2fd9581902f3f3be28bd761602eecab0785ae`.
-Exact `make quality` exits 0 across the 21-stage ledger. The Q0-Q2 scorecard
-SHA-256 is
-`55cf7f1a4867f54bba31108f2d7ef104f1b0901b44a5ac29aea11e50aec007e6`:
-all 27 rows pass at L2 with valid evidence, 80/80 killed mutations, 8/8
-mutation and 4/4 acceptance populations, and zero held, regressed,
-not-comparable, or dirty counts.
-
-Two earlier quality output roots are retained as noncanonical. An over-narrow
-PATH forced the system Python and exposed the launcher signal-log race; the
-isolated 62-check launcher contract and the full corrected-PATH retry passed.
+The accepted quality root is
+`/private/tmp/ply-p7-cobra-yaml-quality-parent.6202262.ITUpqp/quality-gate`.
+Its verified 235,159-entry manifest SHA-256 is
+`98d22ad621a2c44505cc472f087c7d89583ec73495b45161a06036a0de6127cc`.
+Exact `make quality` exits 0. Its Q0-Q2 scorecard SHA-256 is
+`a262ae769245684cfa87650a1c68a46e6df567abe77dc91d594e8aad488429d6`:
+all 27 rows pass at L2 with 80/80 killed mutations, 8/8 mutation and 4/4
+acceptance populations, and zero held, regressed, not-comparable, or dirty
+counts.
 
 The independent regression root is
-`/private/tmp/ply-p7-colorable-regression-gate.33e1873.1Yb6le`. Its verified
-98,451-entry manifest SHA-256 is
-`cdf2963affe5e2395ab8c7911efeaa525e4f39e700ede3945e484cfacb63802c`.
+`/private/tmp/ply-p7-cobra-yaml-regression-gate.6202262.EfnWY9`. Its verified
+58,127-entry manifest SHA-256 is
+`2e17e4301037c8411c2fcc066f15635793aa112f06904fcda8d8ff9edb144077`.
 All 40 ordered stages pass. Its full scorecard SHA-256 is
-`c6e7a71ac8cf187654a83f043a3967d53f8e51035c69bf717909117cd7b8ff1b`;
-it exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7. The
-root retains the exact 208-line sparse-checksum incident patch and its clean
-readonly replay.
+`f6146700f8f396dc3c34a3e0816d782b8e361e6765a154eb060295da0901a85c`;
+it exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-## Rejected Ini Decision
+## Rejected Decisions
 
-`gopkg.in/ini.v1 v1.67.0` -> latest v1.67.3 is rejected before
-implementation. It selects Testify v1.11.1 and Objx v0.5.2; Objx declares Go
-1.20, exceeding the retained Go 1.18 floor. The technical candidate still
-builds and tests, passes pinned lint and byte-identical help, and retains
-22/33/22 vulnerability parity, but those passes do not replace the floor rule.
-
-The sealed decision root is
-`/private/tmp/ply-p7-next-selection.33e1873.mRehC2`. Its verified 39,374-entry
-manifest SHA-256 is
+Do not implement Viper v1.16.0, Emoji v2.2.14, or ini v1.67.3. Their measured
+closures select modules above the retained Go 1.18 floor. In particular, the
+ini decision root
+`/private/tmp/ply-p7-next-selection.33e1873.mRehC2` has verified 39,374-entry
+manifest SHA-256
 `c7af82cbe2327de51dc93fcf48c61e65e6b38e5d51a3a7556c07d6d753016181`;
-decision-summary SHA-256 is
-`04081e0b5f0b3324e49ca321f5edf0a2be5b9b938bce31f68c30aabb89c8a90d`.
+selected Objx v0.5.2 declares Go 1.20.
 
 ## Next Objective
 
-Independently reverify and, only if exact and compatible, upgrade direct
-`github.com/spf13/cobra v1.10.1` to latest v1.10.2 with newly selected exact
-MVS companion `go.yaml.in/yaml/v3 v3.0.4`. Do not combine a source fix, other
-dependency group, language-floor change, Viper/Emoji/ini retry, or P8 work.
+Independently reverify and, only if exact and compatible, upgrade selected
+indirect `go.yaml.in/yaml/v3 v3.0.4` to latest v3.0.5. Do not combine a source
+fix, another dependency group, language-floor change, rejected-candidate retry,
+or P8 work.
 
 The authoritative selection root is
-`/private/tmp/ply-p7-next-cobra-selection.33e1873.ZPppZP`. Its verified
-43,788-entry manifest SHA-256 is
-`d522c38eafcd59bd8b172233f06d79a6f32f2410f959e9474c0b8bd0fb8c7a38`;
+`/private/tmp/ply-p7-next-yaml-selection.6202262.OIdBoh`. Its verified
+25,510-entry manifest SHA-256 is
+`8875312d9aff958fc87dea9034a6f6a03dfd1e664048f327b8e79515b85b52ea`;
 selection-summary SHA-256 is
-`3bf4208b4b8d3fd1d300976274dc6e26f26322aec365554bc7c7fd0e4a377b85`.
+`f6fd81b0286a60ed4ff89ce2945837d52c5c77db540a8ff88ebd9c6883235ac3`.
 
-The clean offline replay changes exactly Cobra v1.10.1 -> v1.10.2 and adds
-YAML v3.0.4, moves 233 -> 234 modules and 3,551 -> 3,552 graph edges,
-preserves the exact 429-package population, and grows tidy from 252 to 254
-lines. Cobra declares Go 1.15; YAML declares Go 1.16; the main module remains
-Go 1.18. Exact build, complete tests, pinned lint, byte-identical help,
-identical API/CLI reports, and vulnerability parity pass.
+The clean offline replay changes exactly YAML v3.0.4 -> v3.0.5, retains 234
+modules and the exact 429 packages, and adds one explicit-pin edge, 3,552 ->
+3,553. Tidy grows 254 -> 271 lines and would remove the pin because no loaded
+main-module package imports `go.yaml.in/yaml/v3`; this known projection is not
+the implementation command. Build, complete tests, pinned lint,
+byte-identical help, identical API/CLI reports, and 22/33/22 vulnerability
+parity pass.
 
-Cobra's lightweight v1.10.2 tag is exact commit
-`88b30ab89da2d0d0abb153818746c5a2d30eccec`; its checksums are:
+YAML v3.0.5 was published at `2026-07-26T14:51:55Z`; its lightweight tag is
+unsigned commit `e16c7af9361b241fa02d91582fb59ce4954d8afc`, it declares Go 1.16,
+and its checksum pair is:
 
-- module: `h1:DMTTonx5m65Ic0GOoRY2c16WCbHxOOw6xxezuLaBpcU=`;
-- go.mod: `h1:7C1pvHqHw5A4vrJfjNwvOdzYu0Gml16OCs2GRiTUUS4=`.
+- module: `h1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=`;
+- go.mod: `h1:HVTZu1O7/Vkt2N+BFy8Zza+lnLsABggaTM2ZpNIGuKg=`.
 
-YAML v3.0.4 has exact tag commit
-`c3552c15f996075a7634df5159d9161c67bf3d76`; its checksums are:
-
-- module: `h1:tfq32ie2Jv2UxXFdLJdh3jXuOzWiL1fo0bu/FbuKpbc=`;
-- go.mod: `h1:DhzuOOF2ATzADvBadXxruRBLzYTpT36CKvDb3+aBEFg=`.
-
-The release delta migrates Cobra's YAML documentation dependency to the new
-module path, documents repeated flags, applies const-only refactors, and
-updates lint/CI. Independently reverify all primary evidence and direct Cobra
-callers before editing.
+The production diff is documentation-comment formatting only; module/test
+changes remove the test-only check dependency, port tests to standard testing,
+retract invalid module-path tags, and add CodeQL CI.
 
 ## Start And Stop
 
 Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 links, launcher `--check`, P7/P8 queue, implementation commit/tree, and every
 accepted manifest before editing. Read the active archive, this handover, the
-P7 roadmap, `go.mod`/`go.sum`, Cobra callers and tests, toolchain/baseline
-reproduction, compatibility, snapshot/Docker, quality, and audit contracts.
+P7 roadmap, `go.mod`/`go.sum`, YAML graph and loaded-package evidence,
+toolchain/baseline reproduction, compatibility, snapshot/Docker, quality, and
+audit contracts.
 
-Stop before any dependency outside the exact Cobra/YAML closure,
-behavior/API/CLI change, main-module language-floor change, quality-tool
-upgrade, rejected-candidate retry, P8 domain work, inactive packaging,
-publication, publisher/registry/credential change, or release. Do not push,
-merge, publish, release, delete retained evidence or images, stash, revert,
-launch a successor, or remove the worktree.
+Stop before any dependency outside exact YAML v3.0.5, behavior/API/CLI change,
+main-module language-floor change, quality-tool upgrade, rejected-candidate
+retry, P8 domain work, inactive packaging, publication,
+publisher/registry/credential change, or release. Do not push, merge, publish,
+release, delete retained evidence or images, stash, revert, launch a successor,
+or remove the worktree.

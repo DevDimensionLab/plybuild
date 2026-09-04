@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Cobra/YAML Dependency Closure
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T065419+0200-upgrade-cobra-yaml-closure`
 Created: `2026-09-04T06:54:19+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `58889b034aab39e17d13957317c0e56de0f9398b3860769ec323f3cdbb73ee9d`
 Previous: [2026-09-04T045040+0200-upgrade-colorable-closure.md](2026-09-04T045040+0200-upgrade-colorable-closure.md)
-Next: none
-Outcome: pending
+Next: [2026-09-04T083743+0200-upgrade-yaml-v3-dependency.md](2026-09-04T083743+0200-upgrade-yaml-v3-dependency.md)
+Outcome: Cobra v1.10.2 and exact MVS companion go.yaml.in/yaml/v3 v3.0.4 were independently reverified, implemented in dependency-only commit `620226258841f3692dd918cca54094ad74ca5017`, and passed exact L2 quality plus the independent 40-stage regression with no retained worktree drift. Current primary evidence showed YAML v3.0.5 is now the standalone latest release, and its separately sealed exact one-selection probe is the next compatible measured group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
