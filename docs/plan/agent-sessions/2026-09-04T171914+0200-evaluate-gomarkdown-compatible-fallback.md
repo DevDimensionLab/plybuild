@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Gomarkdown Compatible Fallback
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T171914+0200-evaluate-gomarkdown-compatible-fallback`
 Created: `2026-09-04T17:19:14+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `8b536f26e14e1584a27636e31460a0b9cb5942b94e4ad99884cdea4305020081`
 Previous: [2026-09-04T145138+0200-upgrade-gomarkdown-dependency.md](2026-09-04T145138+0200-upgrade-gomarkdown-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-04T202725+0200-evaluate-google-btree-dependency.md](2026-09-04T202725+0200-evaluate-google-btree-dependency.md)
+Outcome: accepted canonical fallback `v0.0.0-20260824151336-45814d58469f` in dependency-only commit `d4f0538`; exact closure, all 30 retained renderer passes, 20/30/20 vulnerability improvement, and every quality gate passed.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

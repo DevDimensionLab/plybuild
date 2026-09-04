@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-09-04, commit `cfdcb37`.
+Last measured checkpoint: 2026-09-04, commit `d4f0538`.
 
 ## Objective
 
@@ -5365,9 +5365,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through regexp2 v1.12.0, plus the rejected Viper, Emoji, ini,
-fatih/color, fsnotify, and latest-gomarkdown decisions; the pre-breaking
-gomarkdown fallback and further dependency groups remain queued.
+dependency groups through regexp2 v1.12.0 plus the accepted pre-breaking
+gomarkdown fallback; Google btree and further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6134,24 +6133,45 @@ Current queue decisions and next bounded P7 group (2026-09-04):
   cases panic with `Unknown node type *ast.ReferenceDefinition`.
 - Commit `d18ffa2a47071de47ab9ad4dd61f0a01158ff97a` deliberately adds reference
   definitions to the AST for round trip, while the retained consumer's type
-  switch panics on unknown nodes. Because this is a loaded user-visible path,
-  no dependency metadata was changed. Focused contract commit `8a6ef5f` now
-  makes reference-definition rendering executable while preserving the exact
-  282-line tidy projection and every dependency classification.
-- Exact `make quality` at `8a6ef5f` passes 27/27 Q0-Q2 rows at L2, 80/80
-  mutations, all host/snapshot/Docker acceptance, and zero exit-gate
-  regressions. Final current-tree graph, package, tidy, and vulnerability
-  populations remain 234/3,556/429, 282 lines, and 22/33/22.
-- The sealed decision replay is
-  `/private/tmp/ply-p7-gomarkdown-replay.1cf74aa.DA6bP5`, manifest SHA-256
-  `a1258b38e5ce00799d716b369b43e7d64f02d9b0562dba587e15b3662f7c02d6`.
-  Commit-bound quality and regression evidence is indexed in the rolling
-  handover.
-- Next, separately measure immediate pre-breaking gomarkdown commit
-  `45814d58469f9a462c899674ee58ca440b432dbf`. Resolve its canonical proxy
-  pseudoversion and require exact closure, all retained renderer passes, the
-  focused contract, Go-floor compatibility, and measured security improvement
-  before any exact-get implementation.
+  switch panics on unknown nodes. Focused contract commit `8a6ef5f` makes that
+  loaded reference-definition behavior executable.
+- Accept the immediate pre-breaking fallback as canonical pseudoversion
+  `v0.0.0-20260824151336-45814d58469f`, bound to unsigned commit
+  `45814d58469f9a462c899674ee58ca440b432dbf`, Go 1.12, and checksum pair
+  `h1:21LNG7BIMF2dePpJYpuNzDCaHakI3TYHtOmNRkrNlzA=` /
+  `h1:JDGcbDT52eL4fju3sZ4TeHGsQwhG9nbDV21aMyhwPoA=`. It is the immediate parent
+  of the breaking AST commit, remains below rejected latest, and contains the
+  fixed commits for GO-2023-2074, GO-2024-3205, and GO-2026-5208.
+- Old and fallback states retain 234 selected modules, 3,556 graph edges, 429
+  complete packages, and four loaded gomarkdown packages. Only gomarkdown and
+  the main edge change; tidy projects 282 -> 285 lines. All 30 previously
+  passing consumer renderer cases pass, including the five reference cases,
+  with the same four fixture failures and zero regressions. Vulnerability
+  populations improve exactly 22/33/22 -> 20/30/20 with no additions.
+- Exact `go get` produced dependency-only commit `d4f0538`, parent `18d67bb`,
+  changing only `go.mod` and `go.sum`. Exact `make quality` passes 27/27 Q0-Q2
+  rows at L2, 80/80 mutations, all host/snapshot/Docker acceptance, and zero
+  held, regressed, not-comparable, or dirty counts. Independent regression
+  passes every required gate; full audit exits expected 1 only for queued L3
+  rows.
+- Accepted decision, commit-review, exact-quality, and regression evidence is
+  sealed respectively at
+  `/private/tmp/ply-p7-gomarkdown-fallback-replay.18d67bb.U5kpjt`,
+  `/private/tmp/ply-p7-gomarkdown-fallback-quality-review.d4f0538.sBeoKD`,
+  `/private/tmp/ply-p7-gomarkdown-fallback-quality-parent.d4f0538-final.2kKFpS`,
+  and
+  `/private/tmp/ply-p7-gomarkdown-fallback-regression-gate.d4f0538.6YaNVS`.
+  Their final verified manifest SHA-256 values are
+  `b438197999acb18ad6955d66c5d38e0af92df8b0693ecba7445f5a960b1b1fa8`,
+  `cdd7691693373d726fdec2e954aacdc11bcae0bbffde3a471edd56c34de78ab6`,
+  `70ef46136c13b7e5276ac1ef1af62514013902e93c9e115551d863f0f3a8e40b`,
+  and `daba32728fe7cf75d594371d5e04f0be74101f3a38cd007aaf4e6a51210f8e4f`;
+  complete evidence identities are indexed in the rolling handover.
+- Next, separately evaluate selected indirect `github.com/google/btree v1.0.0`
+  against latest v1.1.3. Preliminary proxy evidence identifies v1.1.3 at
+  commit `aeba20f7a1e1315badec4eca4fdc9f754f5f880a` with Go 1.18; reproduce all
+  primary identity, closure, loaded-path, vulnerability, and quality evidence
+  before any exact-selection implementation.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
