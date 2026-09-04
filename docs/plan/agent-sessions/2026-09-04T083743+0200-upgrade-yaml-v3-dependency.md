@@ -1,13 +1,13 @@
 # Agent Session: Upgrade YAML v3 Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T083743+0200-upgrade-yaml-v3-dependency`
 Created: `2026-09-04T08:37:43+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `92d19b667ad07fc99476472976831e12cf99ace4f20a02114f8a540ec356fb5e`
 Previous: [2026-09-04T065419+0200-upgrade-cobra-yaml-closure.md](2026-09-04T065419+0200-upgrade-cobra-yaml-closure.md)
-Next: none
-Outcome: pending
+Next: [2026-09-04T105124+0200-upgrade-go-md2man-dependency.md](2026-09-04T105124+0200-upgrade-go-md2man-dependency.md)
+Outcome: Upgraded only selected indirect `go.yaml.in/yaml/v3` from v3.0.4 to v3.0.5 in dependency-only commit `cfdcb37`; all required selection, compatibility, quality, regression, artifact, vulnerability, and clean-tree gates passed, and P7 remains active for the measured go-md2man v2.0.7 group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

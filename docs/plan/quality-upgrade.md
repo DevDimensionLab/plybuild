@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last measured checkpoint: 2026-09-01, commit `16ecb67`.
+Last measured checkpoint: 2026-09-04, commit `cfdcb37`.
 
 ## Objective
 
@@ -5365,8 +5365,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move, terminal-pair,
-logrus, Cobra, pflag, and Uniseg dependency groups, plus the rejected Viper
-v1.16.0 closure decision; further dependency groups remain queued.
+logrus, Cobra, pflag, Uniseg, Colorable/go-isatty, Cobra/YAML, and YAML v3.0.5
+dependency groups, plus the rejected Viper, Emoji, and ini closure decisions;
+further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -5935,21 +5936,86 @@ Cobra/YAML dependency group (2026-09-04):
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
   Vulnerability populations remain exact 22/33/22.
 
-The next bounded P7 group is selected indirect `go.yaml.in/yaml/v3 v3.0.4`
--> latest `v3.0.5`. The clean offline replay changes exactly that one
-selection, retains 234 modules and the exact 429-package population, adds one
-main-module graph edge (3,552 -> 3,553), and grows the historical tidy
-projection from 254 to 271 lines. The main module loads neither version of the
-`go.yaml.in/yaml/v3` package; an explicit indirect pin is therefore required
-to retain v3.0.5 and projected tidy would remove it. YAML v3.0.5 declares Go
-1.16, so it preserves the Go 1.18 floor. Exact build, complete tests, pinned
-lint, byte-identical help, identical API/CLI reports, and 22/33/22
-vulnerability parity pass. The sealed selection root is
-`/private/tmp/ply-p7-next-yaml-selection.6202262.OIdBoh`; its verified
-25,510-entry manifest SHA-256 is
-`8875312d9aff958fc87dea9034a6f6a03dfd1e664048f327b8e79515b85b52ea`,
+YAML v3.0.5 dependency group (2026-09-04):
+
+- Upgraded selected indirect `go.yaml.in/yaml/v3 v3.0.4` to latest v3.0.5 as
+  an exact one-selection move. Current proxy and repository evidence confirms
+  the 2026-07-26 publication, lightweight unsigned tag at
+  `e16c7af9361b241fa02d91582fb59ce4954d8afc`, Go 1.16 declaration, and
+  checksum pair `h1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=` /
+  `h1:HVTZu1O7/Vkt2N+BFy8Zza+lnLsABggaTM2ZpNIGuKg=`. The 10-commit delta
+  changes production files only for documentation-comment formatting; it also
+  removes the test-only check dependency, ports tests to standard testing,
+  retracts invalid module-path tags, and adds CodeQL CI.
+- Both states retain exactly 234 selected modules and the byte-identical
+  429-package population. Only YAML changes. The explicit pin adds one graph
+  edge, 3,552 -> 3,553, and grows the historical tidy projection from 254 to
+  271 lines. No loaded main-module package imports `go.yaml.in/yaml/v3`, so
+  projected tidy removes the pin and its two checksum lines; the projection
+  was recorded rather than applied.
+- Exact `go get go.yaml.in/yaml/v3@v3.0.5` produced dependency-only commit
+  `cfdcb370e98ba4e4536f0bf08d5b1abbb01f1856`, parent
+  `fdd9986d55d0aee27679ccc3675710e03f0d1e1a`, clean tree
+  `7244802bfe8e229ab128c122c0b6cb1a49fc7729`. Only `go.mod` and `go.sum`
+  changed with three insertions and no deletions. Cobra remains v1.10.2, and
+  retained `gopkg.in/yaml.v2 v2.4.0` and `gopkg.in/yaml.v3 v3.0.1` do not
+  move.
+- Independent selection evidence is retained at
+  `/private/tmp/ply-p7-yaml-selection.fdd9986.cf5t7R`. Its verified
+  31,004-entry manifest SHA-256 is
+  `1274e8d593cc6dd526ef2c857168212204660653eb6045835ae7943cfc94d986`;
+  selection-summary SHA-256 is
+  `6dcd8a236217e7b620b7408a4d79270d36003e1364563ead6b875d361950825b`.
+- Commit-bound schema-2 evidence is retained at
+  `/private/tmp/ply-p7-yaml-quality-review.cfdcb37.3xOd0m`. Its verified
+  22-entry manifest SHA-256 is
+  `ea61323dafe61f94c4d60846817e4c9e7918a28bf086ce0bb8ea5cac01045dd0`;
+  manual evidence SHA-256 is
+  `19d5ea397a9db90479596f40db04ca3ab3932b245ccc8334eccb9dd3fdf4e818`,
+  and all six focused rows pass.
+- Exact `make quality` exits 0 at
+  `/private/tmp/ply-p7-yaml-quality-parent.cfdcb37.xxdcLh/quality-gate`. Its
+  verified 235,241-entry manifest SHA-256 is
+  `919b44aa5ec811e2df49dc7784d02c7f70820e52939e8b8545d8347859db0417`.
+  Q0-Q2 scorecard SHA-256
+  `9f8e6e70705a7c3d27456a78c8cdf7bf23f5d7ca47dbdfabb83371f15c886c95`
+  records 27/27 PASS at L2, 80/80 killed mutations, 8/8 mutation and 4/4
+  acceptance populations, and zero held, regressed, not-comparable, or dirty
+  counts.
+- The independent regression root is
+  `/private/tmp/ply-p7-yaml-regression-gate.cfdcb37.dISqmD`. Its verified
+  59,161-entry manifest SHA-256 is
+  `2f0206fcc142c17858347fd814ffbb4b996d20c3a3b70f9a335aa141c7cc3cdd`.
+  All 40 stages pass, vulnerability populations remain exact 22/33/22, and
+  regression-summary SHA-256 is
+  `8552e0df7ed87a8ad1a327b72e1967a3adb295039126edbf97a5f312e56ecd95`.
+  Full scorecard SHA-256
+  `1fbccda6eccc11fe9f3628a6dcad906d4d7fab920c7acccedf5c6d2bcf799b68`
+  exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+
+The next bounded P7 group is selected indirect
+`github.com/cpuguy83/go-md2man/v2 v2.0.6` -> latest `v2.0.7`. The clean
+offline replay changes exactly that one selection, retains 234 modules and the
+exact 429-package population, grows the graph from 3,553 to 3,556 edges, and
+grows the historical tidy projection from 271 to 278 lines. Exact `go get`
+adds explicit indirect requirements for go-md2man v2.0.7 and its
+already-selected `github.com/russross/blackfriday/v2 v2.1.0`; Blackfriday's
+selection does not change. No loaded main-module package imports either
+module, so projected tidy removes both explicit requirements and their newly
+materialized checksum lines.
+
+Go-md2man v2.0.7 declares Go 1.12, retains Blackfriday v2.1.0 with no `go`
+directive, and therefore preserves the Go 1.18 floor. Its lightweight tag is
+verified commit `061b6c7cbecd6752049221aa15b7a05160796698`, and checksum pair
+is `h1:zbFlGlXEAKlwXpmvle3d8Oe3YnkKIK4xSRTd3sHPnBo=` /
+`h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=`. Exact build, complete
+tests, pinned lint, byte-identical help, identical API/CLI reports, artifact
+meta-contracts, and 22/33/22 vulnerability parity pass. The sealed selection
+root is `/private/tmp/ply-p7-next-selection.cfdcb37.LkLUsE`; its verified
+26,533-entry manifest SHA-256 is
+`527a0d1d869845326c4b3b6ba16dc6c6b8b5794728b4e56d50145db88e9e6ebc`,
 and selection-summary SHA-256 is
-`f6fd81b0286a60ed4ff89ce2945837d52c5c77db540a8ff88ebd9c6883235ac3`.
+`83a016e8807b8737cdf26895f382e67f8efaff4ae2371c7fccd5db5f55e15f9d`.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
