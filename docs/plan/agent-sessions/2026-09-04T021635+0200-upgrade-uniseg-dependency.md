@@ -1,13 +1,13 @@
 # Agent Session: Upgrade Uniseg Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-04T021635+0200-upgrade-uniseg-dependency`
 Created: `2026-09-04T02:16:35+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `53f8d15f3a5a83cd96d030ece393ffb7d8fda50d5b62fa3b68f9d2cb96369472`
 Previous: [2026-09-04T013713+0200-upgrade-viper-closure.md](2026-09-04T013713+0200-upgrade-viper-closure.md)
-Next: none
-Outcome: pending
+Next: [2026-09-04T045040+0200-upgrade-colorable-closure.md](2026-09-04T045040+0200-upgrade-colorable-closure.md)
+Outcome: Uniseg v0.4.7 was independently confirmed as the latest stable release, exact one-selection move, Go 1.18-compatible dependency, and implemented at `a5ff9cf16d5daf2ed6a7578d23a859cfd73b5df3` with only `go.mod`/`go.sum` changes. Exact build, complete tests/race/vet, pinned lint, public help, API/CLI, launcher/Make, host/snapshot/Docker, audit, vulnerability-parity, and empty-HOME contracts pass; exact `make quality` passes all 27 Q0-Q2 rows at L2 with 80/80 killed mutations and 4/4 acceptance flows. The sealed selection, quality, and regression manifests contain 48,985, 234,985, and 98,323 entries. The next clean bounded replay selects Colorable v0.1.15 plus go-isatty v0.0.20 as the smallest compatible two-selection closure; Emoji v2.2.14 was rejected because it raises the main module directive to Go 1.21.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

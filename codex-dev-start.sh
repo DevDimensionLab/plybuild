@@ -1055,53 +1055,54 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-04T021635+0200-upgrade-uniseg-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T021635+0200-upgrade-uniseg-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T013713+0200-upgrade-viper-closure.md
+#|SESSION_ID=2026-09-04T045040+0200-upgrade-colorable-closure
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T045040+0200-upgrade-colorable-closure.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-04T021635+0200-upgrade-uniseg-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 with its next measured dependency group: upgrade existing indirect
-#|github.com/rivo/uniseg v0.4.4 to latest v0.4.7 as an exact one-selection move.
+#|github.com/mattn/go-colorable v0.1.13 to latest v0.1.15 with exact MVS companion
+#|github.com/mattn/go-isatty v0.0.17 to v0.0.20 as a two-selection move.
 #|Independently reverify the decision from primary evidence, preserve behavior and
 #|every quality contract, and finish with no unrelated drift.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. The Go 1.26.7 toolchain, terminal pair, logrus group,
-#|Cobra closure, and pflag patch are complete. Viper v1.16.0 was rejected before
-#|implementation because its exact closure violates the retained Go 1.18 floor.
-#|P7 remains active for dependency groups and P8 remains queued.
+#|Cobra closure, pflag patch, and Uniseg patch are complete. Viper v1.16.0 was
+#|rejected before implementation because its closure violates the retained Go
+#|1.18 floor. P7 remains active for dependency groups and P8 remains queued.
 #|
-#|This session may change only Uniseg's required go.mod/go.sum metadata, a focused
-#|executable contract if one is genuinely needed, and the roadmap record. Do not
-#|revisit Viper or raise the language floor in this group.
+#|This session may change only the exact Colorable/go-isatty closure's required
+#|go.mod/go.sum metadata, a focused executable contract if one is genuinely
+#|needed, and the roadmap record. Do not revisit Viper or Emoji, raise the
+#|language floor, or combine another dependency group.
 #|
-#|The current-tree external probe selects only Uniseg v0.4.7: both states retain
-#|233 selected modules, 3,551 graph edges, and the exact 429-package test
-#|population. The historical go mod tidy -diff projection grows from 240 to 244
-#|lines. V0.4.7 declares Go 1.18 and has checksum pair
-#|h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ= /
-#|h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=. Exact Go 1.26.7 build,
-#|complete tests, pinned lint, and byte-identical public help pass.
+#|The clean offline current-tree probe changes exactly two selections:
+#|github.com/mattn/go-colorable v0.1.13 -> v0.1.15 and
+#|github.com/mattn/go-isatty v0.0.17 -> v0.0.20. Both states retain 233 selected
+#|modules, 3,551 graph edges, and the exact 429-package population. The historical
+#|go mod tidy -diff projection grows from 244 to 252 lines. Colorable declares Go
+#|1.18 and go-isatty declares Go 1.15. Exact Go 1.26.7 build, complete tests,
+#|pinned lint, and byte-identical public help pass.
 #|
-#|This was the smallest compatible candidate in the bounded probe. Emoji v2.2.14
-#|also changes one selection but declares Go 1.21; colorable v0.1.15 changes two
-#|selections; and gopkg.in/ini.v1 v1.67.3 changes three. Stop and record the
-#|decision if independent replay changes any other selection, checksum, edge,
-#|package, or declared minimum Go version.
+#|Emoji v2.2.14 changes one selection but declares Go 1.21 and exact go get raises
+#|the main module directive from 1.18 to 1.21, so it is rejected under the
+#|retained floor. gopkg.in/ini.v1 v1.67.3 changes three selections. Stop and
+#|record the decision if independent replay changes any other selection,
+#|checksum, edge, package, or declared minimum Go version.
 #|
 #|# Measurements At Start
 #|
-#|The last P7 implementation commit remains
-#|360b2f3c792ca131d259f40852619f2840cefdf1, exact parent
-#|4f0cc642e9c45960b641133c32a0ffc6b1b3a94b, clean tree
-#|a1b941041f5ae685613dd44f4f2db20092cd472c. The Viper decision handoff is
-#|27dbc7819afdcf37c4c52cdf3cde2b5b042ba89d, exact parent 360b2f3.
-#|After this handoff, the continuity HEAD must have exact parent 27dbc78, and
-#|ordinary and ignored status must be empty.
+#|The last P7 implementation commit is
+#|a5ff9cf16d5daf2ed6a7578d23a859cfd73b5df3, exact parent
+#|5be563b7b8b09ec74d2aefeb32da3d80fbc16281, clean tree
+#|8c46c2d4a04780043080196b36b86722818aec97. After the Uniseg handoff, the
+#|continuity HEAD must have exact parent a5ff9cf, and ordinary and ignored status
+#|must be empty.
 #|
 #|The declared and verified toolchain remains Go 1.26.7. The retained official
 #|executable is
@@ -1111,58 +1112,82 @@ exit 70
 #|invokes literal go. Keep GOENV=off, GOWORK=off, GOTOOLCHAIN=local, and do not
 #|inject ambient GOFLAGS.
 #|
-#|The rejected Viper decision and Uniseg selection evidence is retained at
-#|/private/tmp/ply-p7-viper-decision.360b2f3.Wdvj52. Its verified 69,347-entry
+#|Retain golangci-lint 2.12.2 at
+#|/private/tmp/ply-http-gate.gzWxRY/bin/golangci-lint, SHA-256
+#|3ba856c13833c4cda2182eb71bdbc7f96ddad339a1cdda8c36f88bfb1e34bd6f;
+#|GoReleaser 2.17.1 at
+#|/private/tmp/ply-snapshot-probe.CiDxj0/tool/goreleaser, SHA-256
+#|f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c;
+#|apidiff at /private/tmp/ply-http-gate.gzWxRY/bin/apidiff, SHA-256
+#|0c55d9e385a57d6af9b69a9abd3b71d986123dbe82e687fcaecb99f9a0acba20;
+#|and govulncheck v1.7.0 at
+#|/private/tmp/ply-p7-terminal-selection.ctFhJk/tools/bin/govulncheck, SHA-256
+#|0db06024e71e82bd3e4444d57b757abf86fd4b7d0b08c1c21ca811597c953cd5.
+#|
+#|The accepted Uniseg selection root is
+#|/private/tmp/ply-p7-uniseg-selection.5be563b.sDPWuq. Its verified 48,985-entry
 #|manifest SHA-256 is
-#|0b1e054f4fcfae3a630e5192603cb02f53d2bdd3b7623c3fe14bdb3b74eb757f;
-#|decision-summary.json SHA-256 is
-#|cd8cc895ca5979514e5e584b023ac70d9967cf4951ecf81ddb760267e10cbd7d.
+#|f0d543dc54efeace23901edf108a919663e657d948965efc9665fd5d42242b6c;
+#|selection-summary.json SHA-256 is
+#|83621fbd0af20b47cbdaa3eb040b4e216dd675387d795379bb8aa32236efd6c0.
 #|
-#|The Viper replay matched exactly 31 changed selections, 233 -> 234 modules,
-#|3,551 -> 3,561 edges, 429 -> 429 packages, and 240 -> 270 tidy lines. It was
-#|rejected because eleven targets declare Go 1.19 and Testify v1.8.3 declares Go
-#|1.20. Its technical build/test/lint/help/API/CLI/artifact checks pass and its
-#|Darwin-symbol, Darwin-module, and Windows-symbol vulnerability ID populations
-#|remain exactly 22/33/22. Do not implement or re-probe Viper in this session.
-#|
-#|The independently replayed pflag selection root is
-#|/private/tmp/ply-p7-pflag-selection.4f0cc64.58RgL0. Read its incident note
-#|before relying on the original pre-cache manifest. Its authoritative final
-#|44,617-entry manifest SHA-256 is
-#|b64cad473c92a5551e997010f88243d46fafa2ddc65c11db5d2d6bb90786298c.
-#|
-#|The exact accepted pflag quality root is
-#|/private/tmp/ply-p7-pflag-quality-gate.360b2f3.1788472549.40415, with verified
-#|234,799-entry manifest SHA-256
-#|47971b2e6cf9399f085e233d9a264f9d22c2e5f45dd024375fbb8e151cbd36c6.
+#|The exact accepted Uniseg quality root is
+#|/private/tmp/ply-p7-uniseg-quality-parent-retry3.a5ff9cf.sNA3P4/quality-gate.
+#|Its verified 234,985-entry manifest SHA-256 is
+#|f3d5ed9f507d688effb66889aff69ff9160b35099035a3697bd62df0a7982f7e.
 #|Its Q0-Q2 scorecard SHA-256 is
-#|f50ee942007f4cf5b76b0d87f610469f9d95dc04c6363779e2d6e83a7c632934:
-#|all 27 criteria pass at L2, populations are 8/8 and 4/4, and held, regressed,
-#|not-comparable, and dirty counts are zero.
+#|b6accd036627e90713fe24e9507b0d80389915501514c2834c467ed0aca715af:
+#|exact make quality passes all 27 rows at L2, 80/80 mutations, 8/8 mutation and
+#|4/4 acceptance populations, with held, regressed, not-comparable, and dirty
+#|counts zero.
 #|
-#|The independent pflag regression root is
-#|/private/tmp/ply-p7-pflag-regression-gate.360b2f3.gb4Rvk, with verified
-#|92,211-entry manifest SHA-256
-#|ec5eb0c20975138fd96b4de3c10f855c0ceb11a5f1152039be2586025beec857.
-#|All 40 stages pass. Its full report exits 1 only for queued L3 rows Q3.1, Q3.3,
-#|Q3.4, and Q3.7; it is not a P7 dependency-group exit gate.
+#|The independent Uniseg regression root is
+#|/private/tmp/ply-p7-uniseg-regression-gate.a5ff9cf.W5MLDG. Its verified
+#|98,323-entry manifest SHA-256 is
+#|cd07dc2ff68317e08b1ce647546daff0e7c3cec9f09d591fea473e1e4a9a81dd.
+#|All 40 stages pass. Its full scorecard SHA-256 is
+#|8a3f113d91f5e3c4a227efed24e412ee9c1e8893bb25f83af0ffaa4377c19038;
+#|it exits 1 only for queued L3 rows Q3.1, Q3.3, Q3.4, and Q3.7 and is not a P7
+#|dependency-group exit gate. Vulnerability populations remain exactly 22/33/22.
+#|
+#|The authoritative clean Colorable selection root is
+#|/private/tmp/ply-p7-next-selection-final.a5ff9cf.qLM4XK. Its verified
+#|43,312-entry manifest SHA-256 is
+#|a57d6cafa1689638a6fb3e5fc35bb61543a705435d1a430a7f7aafb63ace9a5b;
+#|selection-summary.json SHA-256 is
+#|62cd4cc69082e19a9a7573053b480030f6b3b6e3a95d314f4c213ad8334dcb6e.
+#|Never use quarantined predecessor
+#|/private/tmp/ply-p7-next-selection.a5ff9cf.gmsAC0: its candidate tree was
+#|invalidated after in-tree go mod download all inflated go.sum and tidy output.
+#|
+#|Colorable v0.1.15's observed proxy time is 2026-05-29T14:40:24Z; it declares
+#|Go 1.18, its tag resolves to commit
+#|8bf39a204f13f0cfcf86ab9b297c3d6e0668e54a, and its checksum pair is
+#|h1:+u9SLTRGnXv73cEsnsmoZBom+dMU88B2M0aDcWy0/jY= /
+#|h1:6LmQG8QLFO4G5z1gPvYEzlUgJ2wF+stgPZH1UqBm1s8=.
+#|
+#|Go-isatty v0.0.20 declares Go 1.15, its tag resolves to commit
+#|a7c02353c47bc4ec6b30dc9628154ae4fe760c11, and its checksum pair is
+#|h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY= /
+#|h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=.
 #|
 #|# Role And Boundaries
 #|
-#|Reverify current Uniseg release metadata, latest stable tag and commit identity,
-#|module go requirement, checksums, release changes, exact one-module MVS
-#|selection, relevant callers and behavior, and vulnerability information from
-#|primary Go module, repository, Go documentation, and Go vulnerability sources.
-#|Record why the candidate is compatible with pinned Go 1.26.7, the retained Go
-#|1.18 floor, golangci-lint 2.12.2, GoReleaser 2.17.1, Cobra v1.10.1, and pflag
-#|v1.0.10.
+#|Reverify current Colorable and go-isatty release metadata, latest stable tags
+#|and commit identities, module go requirements, checksums, release changes,
+#|exact two-module MVS selection, relevant callers and behavior, and vulnerability
+#|information from primary Go module, repository, Go documentation, and Go
+#|vulnerability sources. Record why the closure is compatible with pinned Go
+#|1.26.7, the retained Go 1.18 floor, golangci-lint 2.12.2, GoReleaser 2.17.1,
+#|Cobra v1.10.1, pflag v1.0.10, and Uniseg v0.4.7.
 #|
 #|Do not change production Go behavior, public Go API, CLI semantics, toolchain or
 #|main-module language declarations, Docker or release inputs, any dependency
-#|outside exact Uniseg v0.4.7, quality-tool versions, quality thresholds, baseline
-#|numeric debt, compatibility allowlists, acceptance or mutation populations,
-#|publishers, registries, credentials, inactive packaging, or P8 domain code. Do
-#|not combine a source fix or another dependency group with this move.
+#|outside exact Colorable v0.1.15/go-isatty v0.0.20, quality-tool versions,
+#|quality thresholds, baseline numeric debt, compatibility allowlists,
+#|acceptance or mutation populations, publishers, registries, credentials,
+#|inactive packaging, or P8 domain code. Do not combine a source fix or another
+#|dependency group with this move.
 #|
 #|Keep module/build caches, graph projections, vulnerability results, reports,
 #|generated artifacts, build contexts, schema-2 evidence, and audit output
@@ -1176,7 +1201,7 @@ exit 70
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher --check, and the P7/P8 checkpoint block before editing.
 #|Verify the accepted manifests. Read the rolling handover, this archive, the P7
-#|roadmap, go.mod/go.sum, Uniseg callers and tests, toolchain and
+#|roadmap, go.mod/go.sum, Colorable callers and tests, toolchain and
 #|baseline-reproduction contracts, compatibility, snapshot/Docker, quality, and
 #|audit contracts.
 #|
@@ -1185,18 +1210,19 @@ exit 70
 #|From clean external state, record the old module graph, selected versions,
 #|package population, checksums, go mod tidy -diff projection, build/test/lint
 #|result, public help, API/CLI reports, generated artifact contracts, and a
-#|vulnerability baseline. Reverify v0.4.7 against current proxy and repository
-#|evidence. Reproduce the retained one-selection closure exactly and confirm that
-#|its declarations preserve the Go 1.18 floor before editing.
+#|vulnerability baseline. Reverify v0.1.15 and v0.0.20 against current proxy and
+#|repository evidence. Reproduce the retained two-selection closure exactly and
+#|confirm that both declarations preserve the Go 1.18 floor before editing.
 #|
 #|Only if exact and compatible, make one focused dependency-only implementation
-#|commit using exact Go 1.26.7 with go get github.com/rivo/uniseg@v0.4.7; do not
-#|hand-edit dependency metadata. Re-run focused callers and tests, pinned lint,
-#|complete tests/race/vet, API/CLI and entry/subprocess compatibility, launcher
-#|and Make contracts, complete preflight, host acceptance, fresh snapshot/Docker
-#|meta and acceptance, audit meta, focused and exact Q0-Q2 audits, the separate
-#|full audit, vulnerability comparison, and empty-HOME count-2. Refresh external
-#|schema-2 evidence when commit binding requires it.
+#|commit using exact Go 1.26.7 with
+#|go get github.com/mattn/go-colorable@v0.1.15; do not hand-edit dependency
+#|metadata. Re-run focused callers and tests, pinned lint, complete tests/race/vet,
+#|API/CLI and entry/subprocess compatibility, launcher and Make contracts,
+#|complete preflight, host acceptance, fresh snapshot/Docker meta and acceptance,
+#|audit meta, focused and exact Q0-Q2 audits, the separate full audit,
+#|vulnerability comparison, and empty-HOME count-2. Refresh external schema-2
+#|evidence when commit binding requires it.
 #|
 #|Require exact make quality exit 0 at L2 with all 27 Q0-Q2 rows present, 8/8
 #|mutation and 4/4 acceptance populations, and zero held, regressed,

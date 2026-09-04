@@ -5365,8 +5365,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move, terminal-pair,
-logrus, Cobra, and pflag dependency groups, plus the rejected Viper v1.16.0
-closure decision; further dependency groups remain queued.
+logrus, Cobra, pflag, and Uniseg dependency groups, plus the rejected Viper
+v1.16.0 closure decision; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -5740,16 +5740,81 @@ Viper v1.16.0 closure decision (2026-09-04):
   `decision-summary.json` SHA-256 is
   `cd8cc895ca5979514e5e584b023ac70d9967cf4951ecf81ddb760267e10cbd7d`.
 
-The next bounded P7 group is indirect `github.com/rivo/uniseg v0.4.4` ->
-latest `v0.4.7`. The current-tree probe selects only that one module, retains
-233 selected modules, 3,551 graph edges, and the exact 429-package population,
-and grows the historical tidy projection from 240 to 244 lines. Version v0.4.7
-declares Go 1.18; exact Go 1.26.7 build, complete tests, pinned lint, and
-byte-identical help pass. Its checksum pair is
-`h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=` /
-`h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=`. Independent replay and
-primary release, behavior, compatibility, and vulnerability review remain for
-that separate dependency session.
+Uniseg dependency group (2026-09-04):
+
+- Selected existing indirect `github.com/rivo/uniseg v0.4.4` -> latest
+  `v0.4.7` as an exact one-module move. Fresh Go proxy and repository evidence
+  confirms the 2024-02-08 module publication, lightweight tag at exact commit
+  `03509a98a092b522b2ff0de13e53513d18b3b837`, Go 1.18 declaration, and
+  checksum pair `h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=` /
+  `h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=`. The bounded changes cover
+  Unicode 15 data, segmentation and line-breaking corrections, East Asian
+  ambiguous-width configuration, transition/property-search improvements,
+  and the v0.4.7 variation-selector width correction.
+- Both states retain exactly 233 selected modules, 3,551 graph edges, and the
+  exact 429-package population. Only Uniseg changes. The historical tidy
+  projection grows from 240 to 244 lines. The caller chain remains
+  `plybuild/cmd` -> `go-term-markdown` -> `go-term-text` -> `go-runewidth` ->
+  `uniseg`; existing rendering, public help, API, CLI, and artifact contracts
+  fully cover the indirect behavior, so no focused source contract was needed.
+- The focused implementation is commit
+  `a5ff9cf16d5daf2ed6a7578d23a859cfd73b5df3`, exact parent
+  `5be563b7b8b09ec74d2aefeb32da3d80fbc16281`, clean tree
+  `8c46c2d4a04780043080196b36b86722818aec97`. Exact
+  `go get github.com/rivo/uniseg@v0.4.7` changed only `go.mod` and `go.sum`;
+  production behavior, public API/CLI, toolchain and main-module language
+  declarations, build/release inputs, quality contracts and populations,
+  packaging, publishers, registries, credentials, and P8 code did not change.
+- Independent selection evidence is retained at
+  `/private/tmp/ply-p7-uniseg-selection.5be563b.sDPWuq`. Its verified
+  48,985-entry manifest SHA-256 is
+  `f0d543dc54efeace23901edf108a919663e657d948965efc9665fd5d42242b6c`,
+  and selection-summary SHA-256 is
+  `83621fbd0af20b47cbdaa3eb040b4e216dd675387d795379bb8aa32236efd6c0`.
+  Old and candidate build, complete tests, pinned lint, byte-identical help,
+  API/CLI, artifact-meta, and exact 22/33/22 Darwin-symbol, Darwin-module, and
+  Windows-symbol vulnerability populations pass; the primary Go vulnerability
+  index has no Uniseg entry.
+- Commit-bound schema-2 evidence is retained at
+  `/private/tmp/ply-p7-uniseg-quality-review-retry3.a5ff9cf.zhM7ns`. Its
+  verified 15-entry manifest SHA-256 is
+  `bf1f6e38061fb2f380a85afe91b6eba912ac6a4d3f7e2f8ba2bbb102b391b5b3`,
+  canonical evidence SHA-256 is
+  `042cd5dcd67b110f23206da3aca58fedb18274a5776ab3ec23b1154e5292a6e3`,
+  and all six focused receipts pass.
+- Exact `make quality` exits 0 at
+  `/private/tmp/ply-p7-uniseg-quality-parent-retry3.a5ff9cf.sNA3P4/quality-gate`.
+  Its verified 234,985-entry manifest SHA-256 is
+  `f3d5ed9f507d688effb66889aff69ff9160b35099035a3697bd62df0a7982f7e`.
+  The exact 21-stage ledger passes; Q0-Q2 scorecard SHA-256
+  `b6accd036627e90713fe24e9507b0d80389915501514c2834c467ed0aca715af`
+  has all 27 rows at L2, valid schema-2 evidence, 80/80 killed mutations, 8/8
+  mutation and 4/4 acceptance populations, and zero held, regressed,
+  not-comparable, or dirty counts.
+- The independent 40-stage regression is retained at
+  `/private/tmp/ply-p7-uniseg-regression-gate.a5ff9cf.W5MLDG`; its verified
+  98,323-entry manifest SHA-256 is
+  `cd07dc2ff68317e08b1ce647546daff0e7c3cec9f09d591fea473e1e4a9a81dd`.
+  Selection, checksums, compatibility, lint, tests/race/vet, launcher and Make,
+  complete preflight, host and fresh snapshot/Docker acceptance, audit meta,
+  focused and Q0-Q2 audits, vulnerability equality, empty-HOME count-2, and
+  cleanliness pass. The separate full report SHA-256 is
+  `8a3f113d91f5e3c4a227efed24e412ee9c1e8893bb25f83af0ffaa4377c19038`;
+  it exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+
+The next bounded P7 group is indirect `github.com/mattn/go-colorable v0.1.13`
+-> latest `v0.1.15` with its exact MVS companion
+`github.com/mattn/go-isatty v0.0.17` -> `v0.0.20`. The clean offline replay
+changes exactly those two selections while retaining 233 modules, 3,551 graph
+edges, and the exact 429-package population; the historical tidy projection
+grows from 244 to 252 lines. Colorable declares Go 1.18 and go-isatty declares
+Go 1.15. Exact Go 1.26.7 build, complete tests, pinned lint, and byte-identical
+help pass. Emoji v2.2.14 remains the smaller one-selection candidate but is
+rejected because it declares Go 1.21 and `go get` raises the main module's
+directive from 1.18 to 1.21; `gopkg.in/ini.v1 v1.67.3` changes three
+selections. Independent primary release, behavior, compatibility,
+vulnerability, and full quality review remain for the separate Colorable
+session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
