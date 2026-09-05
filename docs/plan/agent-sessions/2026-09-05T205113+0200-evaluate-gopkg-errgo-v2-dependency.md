@@ -1,13 +1,13 @@
-# Agent Session: Evaluate Gopkg Check V1 Dependency
+# Agent Session: Evaluate Gopkg Errgo V2 Dependency
 
-Status: ANSWERED - HISTORY
-Session ID: `2026-09-05T200653+0200-evaluate-gopkg-check-v1-dependency`
-Created: `2026-09-05T20:06:53+02:00`
+Status: NEXT
+Session ID: `2026-09-05T205113+0200-evaluate-gopkg-errgo-v2-dependency`
+Created: `2026-09-05T20:51:13+02:00`
 Source: `codex-dev-start.sh`
-Prompt SHA-256: `03c8eb4bbe46e2e88624e3d748cad36c826a664be160a20c0364d0dccba5006e`
-Previous: [2026-09-05T192359+0200-evaluate-gopkg-yaml-v3-dependency.md](2026-09-05T192359+0200-evaluate-gopkg-yaml-v3-dependency.md)
-Next: [2026-09-05T205113+0200-evaluate-gopkg-errgo-v2-dependency.md](2026-09-05T205113+0200-evaluate-gopkg-errgo-v2-dependency.md)
-Outcome: canonical latest is the Go-1.18-floor-compatible pseudo-version `v1.0.0-20201130134442-10cb98267c6c`, but two independent module replays fail mandatory count-10 tests and vet; retained the selected version with no dependency metadata change and prepared the next bounded P7 group.
+Prompt SHA-256: `49e38de39ba21af5323ecb44d38b57227f5964ebc2d521a8a356125580adc916`
+Previous: [2026-09-05T200653+0200-evaluate-gopkg-check-v1-dependency.md](2026-09-05T200653+0200-evaluate-gopkg-check-v1-dependency.md)
+Next: none
+Outcome: pending
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -15,38 +15,38 @@ The block below is the byte-exact Codex prompt argument, including its terminal 
 # Mission
 
 Continue P7 by independently evaluating selected
-`gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15` as one bounded
-dependency group. Resolve canonical latest, release qualification, and the
-highest floor-compatible candidate from primary evidence. Implement one exact
-changed selection only if it preserves the retained Go 1.18 floor, has an
-explained minimal closure, and passes every quality contract.
+`gopkg.in/errgo.v2 v2.1.0` as one bounded dependency group. Resolve canonical
+latest, release qualification, and the highest floor-compatible candidate from
+primary evidence. Implement one exact changed selection only if it preserves
+the retained Go 1.18 floor, has an explained minimal closure, and passes every
+quality contract.
 
 # Authorized Roadmap
 
 P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain and
-completed dependency groups through retained canonical-latest
-`gopkg.in/yaml.v3 v3.0.1`. All earlier recorded rejections, no-change
-decisions, accepted closures, and evidence corrections remain final. Do not
-revisit them or combine another module group. P8 remains queued.
+completed dependency groups through rejected canonical-latest
+`gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c`. All earlier recorded
+rejections, no-change decisions, accepted closures, and evidence corrections
+remain final. Do not revisit them or combine another module group. P8 remains
+queued.
 
-The current MVS build list selects
-`gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15`. Treat its latest
-version, tag or pseudo-version qualification, Go declaration, closure, loaded
-population, consumer paths, source history, tests, and vulnerability effect as
-unknown until independently resolved. This session may change only gopkg
-Check v1's exact required go.mod/go.sum metadata, its minimal MVS closure, and
-the roadmap/handoff record. Do not change production Go, another dependency,
-language or toolchain declarations, quality apparatus, Docker/release inputs,
-packaging, publishers, or P8 code.
+The current MVS build list selects `gopkg.in/errgo.v2 v2.1.0`. Treat its
+latest version, tag or pseudo-version qualification, Go declaration, closure,
+loaded population, consumer paths, source history, tests, and vulnerability
+effect as unknown until independently resolved. This session may change only
+gopkg Errgo v2's exact required go.mod/go.sum metadata, its minimal MVS
+closure, and the roadmap/handoff record. Do not change production Go, another
+dependency, language or toolchain declarations, quality apparatus,
+Docker/release inputs, packaging, publishers, or P8 code.
 
 # Measurements At Start
 
 Latest implementation remains dependency-only cast commit
 `cf4fd4933251b2ca7844b6420fd3cf2a86f049a5`, exact parent
 `17f7277fd2512ba06db76d1acb0af5f8b623243c`, clean tree
-`485690c010cef3b02385d8f2471d3ef53611abe9`. The YAML v3 documentation
+`485690c010cef3b02385d8f2471d3ef53611abe9`. The Check v1 documentation
 handoff must have exact parent
-`cdb5b4ca02fa5db54efebf741d2b415608c053b2`. Relative to accepted go-cmp
+`a8e707ce125b6ecb72c203925f6978b09a85406f`. Relative to accepted go-cmp
 commit c314bcb, accepted metadata changes remain go-colorful v1.2.0 -> v1.4.1,
 go-runewidth v0.0.14 -> v0.0.17, go-toml/v2 v2.0.7 -> v2.2.2, and cast
 v1.5.0 -> v1.5.1, with their recorded minimal closures and exactly 15 added
@@ -69,23 +69,23 @@ manifest SHA-256
 Retain the verified golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and
 govulncheck v1.7.0 binaries and hashes recorded in the handover.
 
-YAML v3 no-change evidence is fully verified at
-`/private/tmp/ply-p7-yaml-v3-selection.cdb5b4c.bbbTdr`, 40,121 entries and
+Check v1 rejection evidence is fully verified at
+`/private/tmp/ply-p7-check-v1-selection.a8e707c.DD2k28`, 18,182 entries and
 manifest SHA-256
-`84bd12b7b4cbff806abcbff213b4b7bc5bac230a7371c3fe0b3e2def643ed741`;
+`d45958adc2d3be460e85b3f6e379053a8b011af7cd221d4026d9cb0e1bfd57df`;
 decision-summary SHA-256 is
-`95d5aa003b77880ecf72770ad66c061e0013dfd022fc222eb600860bc9a7799f`.
-V3.0.1 is canonical latest and the highest Go-1.18-floor-compatible release
-for exact path gopkg.in/yaml.v3. Exact get is a no-op; mandatory module vet
-fails identically with 32 legacy malformed struct tags after complete tests
-and focused loaded behavior pass, so v3.0.1 remains selected and dependency
-metadata is unchanged. Preserve all prior verified roots and the recorded
-go-colorful mutable telemetry, btree regression, cast whitespace-path, and
-source-archive normalization corrections.
+`93d0b2833dc78ea2cddb7ea0454713ef96a1ee1879d2ab38692d44bf9e8c7e51`.
+The canonical latest and highest Go-1.18-floor-compatible Check version is the
+pseudo-version `v1.0.0-20201130134442-10cb98267c6c`, but two independent
+candidate module replays fail mandatory count-10 tests and vet identically.
+The selected 2019 pseudo-version therefore remains and dependency metadata is
+unchanged. Preserve all prior verified roots and the recorded go-colorful
+mutable telemetry, btree regression, cast whitespace-path, source-archive
+normalization, and Check history-table corrections.
 
 # Role And Boundaries
 
-From fresh external archives and caches, resolve gopkg Check v1 versions
+From fresh external archives and caches, resolve gopkg Errgo v2 versions
 through the Go proxy, checksum database, authoritative gopkg metadata and
 upstream repository, and primary Go vulnerability data. Record exact tag and
 pseudo-version commits/times, module Go declarations and requirements,
@@ -102,10 +102,9 @@ compatibility from a modern build. Measure old versus candidate selected
 modules, graph edges, complete package population, checksums, loaded packages
 and paths, explicit exact-get diff, and `go mod tidy -diff`. Require an
 explained minimal selection/edge/checksum closure. Independently determine
-whether gopkg Check v1 is loaded by the main module, only by dependency tests,
+whether gopkg Errgo v2 is loaded by the main module, only by dependency tests,
 or not at all in the complete project population. If loaded, identify real
-consumers and exercise the actually used packages and symbols; do not infer a
-main-module consumer from either YAML module's declared test requirement.
+consumers and exercise the actually used packages and symbols.
 
 Also require candidate module complete tests, repeated tests, race, and vet;
 repository build, complete tests/race/vet, pinned lint, byte-identical public
@@ -126,20 +125,21 @@ and traces.
 Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 archive links, launcher `--check`, and the P7/P8 checkpoint before editing.
 Verify every accepted manifest. Read this archive, the rolling handover, P7 in
-the roadmap, go.mod/go.sum, the retained YAML v3 and YAML v2 decisions,
-rejected x/text, x/net, x/image, and gotenv decisions, retained
-jwalterweatherman decision, accepted cast decision and quality evidence,
-rejected afero decision, the accepted `go.yaml.in/yaml/v3` and Cobra/YAML
-closure decisions, prior bounded dependency decisions, and the toolchain,
-compatibility, snapshot/Docker, quality, baseline-reproduction, and audit
-contracts. Preserve every recorded manifest correction.
+the roadmap, go.mod/go.sum, the rejected Check decision, retained YAML v3 and
+YAML v2 decisions, rejected x/text, x/net, x/image, and gotenv decisions,
+retained jwalterweatherman decision, accepted cast decision and quality
+evidence, rejected afero decision, the accepted `go.yaml.in/yaml/v3` and
+Cobra/YAML closure decisions, prior bounded dependency decisions, and the
+toolchain, compatibility, snapshot/Docker, quality, baseline-reproduction, and
+audit contracts. Preserve every recorded manifest correction.
 
 # Three Moves
 
 Only if every decision gate passes and the selection changes, use exact Go
-1.26.7 and exact `go get gopkg.in/check.v1@<selected-version>` for one
+1.26.7 and exact `go get gopkg.in/errgo.v2@<selected-version>` for one
 dependency-only commit. Do not hand-edit module metadata and do not use tidy as
 implementation. Preserve every retained dependency selection, especially
+`gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15`,
 `gopkg.in/yaml.v2 v2.4.0`, `gopkg.in/yaml.v3 v3.0.1`, and
 `go.yaml.in/yaml/v3 v3.0.5`, language/toolchain declarations, production
 source, quality apparatus, and release input.
@@ -164,7 +164,7 @@ measured tree. Never create `.agent-task/current.md` or
 After the decision, rewrite the rolling handover and roadmap, answer this
 archive, create exactly one reciprocal NEXT archive for the next measured P7
 group, replace only launcher mutable regions, run launcher/handoff contracts,
-and make the normal `docs: prepare next agent session` commit. Do not implement
-that next group, launch a successor, push, merge, publish, release, stash,
-revert, delete retained evidence/images, or remove the worktree.
+and make the normal `docs: prepare next agent session` commit. Do not
+implement that next group, launch a successor, push, merge, publish, release,
+stash, revert, delete retained evidence/images, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->

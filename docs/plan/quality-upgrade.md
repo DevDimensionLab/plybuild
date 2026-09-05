@@ -7112,9 +7112,50 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `84bd12b7b4cbff806abcbff213b4b7bc5bac230a7371c3fe0b3e2def643ed741`,
   and decision-summary SHA-256 is
   `95d5aa003b77880ecf72770ad66c061e0013dfd022fc222eb600860bc9a7799f`.
-- Next, independently evaluate selected
-  `gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15` as one bounded P7
-  module group. Do not combine gopkg YAML, another dependency group, or P8.
+- Retain selected
+  `gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15` without dependency
+  metadata edits. Fresh proxy evidence exposes no listed stable or prerelease
+  semantic versions. Proxy `@latest` and exact Go resolution select
+  `v1.0.0-20201130134442-10cb98267c6c` at 2020-11-30T13:44:42Z. It is a
+  pseudo-version, not a stable release; there are no Git tags, retractions, or
+  GitHub Release objects. The candidate declares Go 1.11 and is canonical
+  latest and the highest exact-path version compatible with Go 1.18.
+- Candidate commit `10cb98267c6cb43ea9cd6793f29ff4089c306974`, tree
+  `b5ee34e90064a88d7614bf6f6714d32bfac33e66`, is the exact v1 head in both
+  fresh gopkg and GitHub clones. All seven resolved pseudo-version snapshots
+  match upstream Git sources. The repository is active and not a fork; its
+  separate `master` head is an older divergent 2014 line, not an upgrade
+  candidate. The candidate has no tag; GitHub reports its embedded commit
+  signature verified and valid, while local cryptographic verification was
+  unavailable because `gpg` is absent.
+- Exact projected `go get` advances Check and adds creack/pty v1.1.9 and
+  pkg/diff's 2021 pseudo-version: 234 -> 236 selected modules and 3,564 ->
+  3,574 graph edges. Complete packages remain 429. Four indirect requirements
+  and eight go.sum lines are projected, with no removals; all changed-closure
+  declarations are absent or at most Go 1.17. The unapplied tidy projection
+  grows from 332 to 353 lines. Project module verification passes.
+- Check loads in zero complete project packages in either state and has zero
+  repository imports. The `go mod why` path crosses `gopkg.in/yaml.v2.test`,
+  so this is a dependency-test requirement rather than a main-module consumer.
+- Two independent candidate module replays verify, list one package, and pass
+  count-1 and race tests, but both count-10 runs fail because global suite
+  registration accumulates to 16 suites rather than eight. Both vet runs also
+  fail on the same four unkeyed go/printer and go/ast composite literals. The
+  mandatory module stop rule rejects the candidate before downstream
+  repository, quality, snapshot/Docker, and audit gates. No dependency commit
+  was made.
+- Old and candidate govulncheck outputs and exact IDs remain byte-identical at
+  20/30/20 for Darwin symbol, Darwin module, and Windows symbol scans. The
+  fresh 1,392-entry primary index has no Check vulnerability record, finding,
+  or trace. Rejection evidence is sealed at
+  `/private/tmp/ply-p7-check-v1-selection.a8e707c.DD2k28`; its fully verified
+  18,182-entry manifest SHA-256 is
+  `d45958adc2d3be460e85b3f6e379053a8b011af7cd221d4026d9cb0e1bfd57df`,
+  and decision-summary SHA-256 is
+  `93d0b2833dc78ea2cddb7ea0454713ef96a1ee1879d2ab38692d44bf9e8c7e51`.
+- Next, independently evaluate selected `gopkg.in/errgo.v2 v2.1.0` as one
+  bounded P7 module group. Do not combine Check, gopkg YAML, another
+  dependency group, or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
