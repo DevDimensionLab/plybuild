@@ -5367,8 +5367,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 Status: active after the maintained-toolchain baseline move, completed
 dependency groups through accepted spf13/cast v1.5.1, and the recorded
 no-change or rejected HCL, mousetrap, properties, mapstructure, go-toml v1,
-Afero, and jwalterweatherman evaluations; further dependency groups remain
-queued.
+Afero, jwalterweatherman, and gotenv evaluations; further dependency groups
+remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6802,12 +6802,60 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `54040aefec38df7415f56da66af04d48c8256dd46ae6de8e06a7c4bbe5ce4d8e`,
   and decision-summary SHA-256 is
   `342330b73509caf414a406dda3a14c026bfc59512d09bf6393f710127974dc52`.
+- Retain selected indirect `github.com/subosito/gotenv v1.4.2` unchanged.
+  Fresh proxy evidence lists eleven stable releases through v1.6.0, no
+  prereleases or retractions, and no later major path. Proxy `@latest`, the
+  version list, and the signed upstream tag establish v1.6.0 as both canonical
+  latest stable and the highest stable release compatible with Go 1.18 by its
+  declaration. The repository is active, unarchived, undisabled, and not a
+  fork; six later master commits are unreleased, and current master declares
+  Go 1.22.
+- V1.6.0 is signed annotated tag object
+  `b1e4a564ab83bcd77e00d5687055911884986d98`, peeled to signed commit
+  `14a05352a5cf0f66fd7cbce114374f56065891f0` at
+  2023-08-15T12:05:45Z. Its checksum pair is
+  `h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8=` /
+  `h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=`. All 21 proxy files
+  match the exact tag commit; ZIP SHA-256 is
+  `142db3dd2328e744c157e85cf3291d027013b79f92a45984f860fe38bc0f1f8d`
+  and file-manifest SHA-256 is
+  `a0044f44e956b351d4482487488db8e95e5e9d3210a42524a50b1274b5bfc7c9`.
+- Exact v1.6.0 projection would move gotenv v1.4.2 -> v1.6.0,
+  `golang.org/x/text` v0.7.0 -> v0.12.0, `golang.org/x/mod`
+  v0.6.0-dev.0.20220419223038-86c51ed26bb4 -> v0.8.0, and
+  `golang.org/x/tools` v0.1.12 -> v0.6.0. Every selected declaration remains
+  Go 1.17 or Go 1.18.
+  Modules stay 234, graph edges rise 3,564 -> 3,568, complete packages rise
+  429 -> 434 through five x/text packages, and go.sum gains exactly the
+  gotenv and x/text checksum pairs, four lines. The unapplied tidy projection
+  changes 332 -> 335 lines. This is the explained minimal MVS closure.
+- Exactly one gotenv package loads through `plybuild/cmd -> spf13/viper ->
+  spf13/viper/internal/encoding/dotenv -> subosito/gotenv`; Viper's dotenv
+  codec calls `gotenv.StrictParse`. Ten-run focused Viper internal codec,
+  public dotenv read/write, and Ply `./cmd` behavior pass with normalized
+  old/candidate identity.
+- Reject v1.6.0 because its complete module tests fail `TestScanner` under
+  exact Go 1.26.7 at count 1, count 10, and race: trailing LF, CR, and CRLF
+  fixtures expect four scanner tokens but produce three. Verification and vet
+  pass. Selected v1.4.2 fails equivalently; the upstream correction exists
+  only on the unreleased Go-1.22 master line. The mandatory self-test stop rule
+  therefore forbids a dependency edit and makes downstream repository gates
+  inapplicable. A first attempt lacked its external GOTMPDIR; the canonical
+  replay created that directory and exposed the actual test failure.
+- Exact Darwin-symbol/Darwin-module/Windows-symbol vulnerability populations
+  remain identical at 20/30/20. The fresh 1,392-entry primary vulnerability
+  index has no gotenv record. Rejection evidence is sealed at
+  `/private/tmp/ply-p7-gotenv-selection.3a8cadc.Dai0IG`; its fully verified
+  48,662-entry manifest SHA-256 is
+  `ab2bd356b863d529085cff9b918d004aa2a03a121a7ea360a66767a2820cc88c`,
+  and decision-summary SHA-256 is
+  `014c050a3ccefd6fa501f4c5d04aded2ee93d02ad4039a9935d6f4d478c21e11`.
 - Next, independently evaluate selected indirect
-  `github.com/subosito/gotenv v1.4.2` as one bounded P7 module group. Resolve
-  canonical latest, highest Go-1.18-compatible release, source identity,
-  exact closure, loaded behavior, self-tests, and vulnerability data before
-  selecting anything. Do not combine jwalterweatherman, cast, afero, or
-  another module group.
+  `golang.org/x/image v0.5.0` as one bounded P7 module group. Resolve canonical
+  latest, highest Go-1.18-compatible release, source identity, exact closure,
+  loaded behavior, self-tests, and vulnerability data before selecting
+  anything. Do not combine gotenv, jwalterweatherman, cast, afero, or another
+  module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1,13 +1,13 @@
-# Agent Session: Evaluate Subosito Gotenv Dependency
+# Agent Session: Evaluate Golang X Image Dependency
 
-Status: ANSWERED - HISTORY
-Session ID: `2026-09-05T154129+0200-evaluate-subosito-gotenv-dependency`
-Created: `2026-09-05T15:41:29+02:00`
+Status: NEXT
+Session ID: `2026-09-05T161421+0200-evaluate-golang-x-image-dependency`
+Created: `2026-09-05T16:14:21+02:00`
 Source: `codex-dev-start.sh`
-Prompt SHA-256: `b2922b9a3e59dee6f645f4c2eea786b12d1c02fb21abcd9cdb383350ff6414ae`
-Previous: [2026-09-05T144625+0200-evaluate-spf13-jwalterweatherman-dependency.md](2026-09-05T144625+0200-evaluate-spf13-jwalterweatherman-dependency.md)
-Next: [2026-09-05T161421+0200-evaluate-golang-x-image-dependency.md](2026-09-05T161421+0200-evaluate-golang-x-image-dependency.md)
-Outcome: Rejected canonical latest and highest Go-1.18-compatible stable gotenv v1.6.0; retained v1.4.2 because complete candidate-module count-1, count-10, and race tests fail `TestScanner` under exact Go 1.26.7. Focused loaded behavior and exact 20/30/20 vulnerability identity pass, but the mandatory self-test stop rule prevented dependency metadata edits.
+Prompt SHA-256: `313360e5c973826fc386e424cf41feafabaac424fd69b1f448c0167c97aa1bcc`
+Previous: [2026-09-05T154129+0200-evaluate-subosito-gotenv-dependency.md](2026-09-05T154129+0200-evaluate-subosito-gotenv-dependency.md)
+Next: none
+Outcome: pending
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -15,33 +15,33 @@ The block below is the byte-exact Codex prompt argument, including its terminal 
 # Mission
 
 Continue P7 by independently evaluating selected indirect
-`github.com/subosito/gotenv v1.4.2` as one bounded dependency group. Resolve
-the canonical latest stable release and highest floor-compatible candidate
-from primary evidence. Implement one exact changed selection only if it
-preserves the retained Go 1.18 floor, has an explained minimal closure, and
-passes every quality contract.
+`golang.org/x/image v0.5.0` as one bounded dependency group. Resolve the
+canonical latest stable release and highest floor-compatible candidate from
+primary evidence. Implement one exact changed selection only if it preserves
+the retained Go 1.18 floor, has an explained minimal closure, and passes every
+quality contract.
 
 # Authorized Roadmap
 
 P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain and
 completed dependency groups through accepted spf13/cast v1.5.1, rejected
-afero v1.10.0, and retained canonical-latest jwalterweatherman v1.1.0. Go-cmp
-v0.7.0, Viper v1.16.0, Emoji v2.2.14, ini v1.67.3, fatih/color v1.19.0,
-fsnotify v1.10.1, latest gomarkdown
+afero v1.10.0 and gotenv v1.6.0, and retained canonical-latest
+jwalterweatherman v1.1.0. Go-cmp v0.7.0, Viper v1.16.0, Emoji v2.2.14, ini
+v1.67.3, fatih/color v1.19.0, fsnotify v1.10.1, latest gomarkdown
 `v0.0.0-20260824154242-13c5cf49db8d`, and HCL, mousetrap, properties,
-mapstructure, go-toml v1, afero, or jwalterweatherman changes remain rejected
-or unnecessary for their recorded floor, loaded-behavior,
+mapstructure, go-toml v1, afero, jwalterweatherman, or gotenv changes remain
+rejected or unnecessary for their recorded floor, loaded-behavior,
 release-qualification, self-test, exact-latest, or closure decisions. Do not
 revisit them or combine another module group. P8 remains queued.
 
-The current build list selects subosito/gotenv v1.4.2. Treat its latest
+The current build list selects golang.org/x/image v0.5.0. Treat its latest
 release, Go declaration, release qualification, closure, loaded population,
 consumer path, source history, and tests as unknown until independently
-resolved. This session may change only gotenv's exact required go.mod/go.sum
+resolved. This session may change only x/image's exact required go.mod/go.sum
 metadata, its minimal MVS closure, and the roadmap/handoff record. Do not
-change production Go, jwalterweatherman, cast, afero, another dependency,
-language/toolchain declarations, quality apparatus, Docker/release inputs,
-packaging, publishers, or P8 code.
+change production Go, gotenv, jwalterweatherman, cast, afero, another
+dependency, language/toolchain declarations, quality apparatus,
+Docker/release inputs, packaging, publishers, or P8 code.
 
 # Measurements At Start
 
@@ -50,7 +50,7 @@ Latest implementation remains dependency-only cast commit
 `17f7277fd2512ba06db76d1acb0af5f8b623243c`, clean tree
 `485690c010cef3b02385d8f2471d3ef53611abe9`. The documentation handoff
 carrying this archive must have exact parent
-`2dd8fdfc61d54d9327effad90242f1f05060fa42`. Relative to accepted go-cmp
+`3a8cadc24758c7a24fa6a429297d26ca29c311a9`. Relative to accepted go-cmp
 commit c314bcb, accepted metadata changes are go-colorful v1.2.0 -> v1.4.1,
 go-runewidth v0.0.14 -> v0.0.17, go-toml/v2 v2.0.7 -> v2.2.2, and cast
 v1.5.0 -> v1.5.1, with testify v1.9.0, objx v0.5.2, quicktest v1.14.4,
@@ -75,23 +75,29 @@ manifest SHA-256
 Retain the verified golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and
 govulncheck v1.7.0 binaries and hashes recorded in the handover.
 
+Gotenv rejection evidence is fully verified at
+`/private/tmp/ply-p7-gotenv-selection.3a8cadc.Dai0IG`, 48,662 entries and
+manifest SHA-256
+`ab2bd356b863d529085cff9b918d004aa2a03a121a7ea360a66767a2820cc88c`;
+decision-summary SHA-256 is
+`014c050a3ccefd6fa501f4c5d04aded2ee93d02ad4039a9935d6f4d478c21e11`.
+V1.6.0 is canonical latest and the highest stable declared Go-1.18-compatible
+release, and its focused loaded behavior and vulnerability identity pass, but
+complete candidate count-1/count-10/race module tests fail `TestScanner` under
+Go 1.26.7. The fix is only on unreleased Go-1.22 master, so v1.4.2 remains
+selected and dependency metadata is unchanged.
+
 Jwalterweatherman no-change evidence is fully verified at
 `/private/tmp/ply-p7-jwalterweatherman-selection.2dd8fdf.h4EKeQ`, 76,374
 entries and manifest SHA-256
 `54040aefec38df7415f56da66af04d48c8256dd46ae6de8e06a7c4bbe5ce4d8e`;
 decision-summary SHA-256 is
 `342330b73509caf414a406dda3a14c026bfc59512d09bf6393f710127974dc52`.
-V1.1.0 is canonical latest and highest stable floor-compatible, its exact get
-is a no-op with empty closure, one package loads through Viper, complete
-module and repository gates pass, and vulnerability identity is 20/30/20.
-
 Cast selection evidence remains fully verified at
 `/private/tmp/ply-p7-cast-selection.17f7277.9nRKpS`, 82,586 entries and
 manifest SHA-256
 `dfa699f75d0b222d7d64e8fd7a09d05306de98ef4ac5cbf6d253fd33b2dddac0`.
-Its review, exact-quality, and regression manifests remain fully verified at
-12/236,782/607 entries and the hashes recorded in the handover. Afero
-rejection evidence remains fully verified at
+Afero rejection evidence remains fully verified at
 `/private/tmp/ply-p7-afero-selection.5a46539.udvGSh`, 79,866 entries and
 manifest SHA-256
 `f0ad8ce41436a5f8bf48222106e79f57b32a9533b6a9a15b290615a54f162405`.
@@ -100,24 +106,24 @@ telemetry, btree regression, and cast whitespace-path corrections.
 
 # Role And Boundaries
 
-From fresh external archives and caches, resolve gotenv releases through the
-Go proxy, checksum database, upstream repository, and primary Go vulnerability
-data. Record exact tag commits/times, module Go declarations and requirements,
-checksum pairs, source identity, tag and commit signature status, relevant
-release history, and archived/deprecated status. Explicitly distinguish stable
-releases, prereleases, retractions, forks or later major paths, and unreleased
-upstream commits. Prove canonical latest and highest stable release compatible
-with Go 1.18 from declarations; do not infer compatibility from a modern
-toolchain build.
+From fresh external archives and caches, resolve x/image releases through the
+Go proxy, checksum database, authoritative upstream repository and mirror,
+and primary Go vulnerability data. Record exact tag commits/times, module Go
+declarations and requirements, checksum pairs, source identity, tag and commit
+signature status, relevant release history, and archived/deprecated status.
+Explicitly distinguish stable releases, prereleases, retractions, forks or
+later major paths, and unreleased upstream commits. Prove canonical latest and
+highest stable release compatible with Go 1.18 from declarations; do not infer
+compatibility from a modern toolchain build.
 
 Measure old versus candidate selected modules, graph edges, complete package
-population, checksums, loaded packages and path, explicit exact-get diff, and
+population, checksums, loaded packages and paths, explicit exact-get diff, and
 `go mod tidy -diff`. Require an explained minimal selection/edge/checksum
-closure. Independently prove whether gotenv is loaded; if it is, identify its
-real consumers and run focused environment/configuration behavior covering the
-actually used surface, in addition to candidate module complete tests,
-repository build, complete tests/race/vet, pinned lint, byte-identical public
-help, and identical API/CLI reports.
+closure. Independently prove whether x/image is loaded; if it is, identify its
+real consumers and run focused image/render behavior covering the actually
+used surface, in addition to candidate module complete tests, repository
+build, complete tests/race/vet, pinned lint, byte-identical public help, and
+identical API/CLI reports.
 
 Stop and record rejection without editing dependency metadata if canonical
 resolution, Go-floor compatibility, exact closure, source identity, module
@@ -131,24 +137,24 @@ commit. Measure the exact vulnerability population; do not assume parity.
 Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 archive links, launcher `--check`, and the P7/P8 checkpoint before editing.
 Verify every accepted manifest. Read this archive, the rolling handover, P7 in
-the roadmap, go.mod/go.sum, the retained jwalterweatherman decision, accepted
-cast decision and quality evidence, rejected afero decision, prior bounded
-dependency decisions, and the toolchain, compatibility, snapshot/Docker,
-quality, baseline-reproduction, and audit contracts. Preserve every recorded
-manifest correction.
+the roadmap, go.mod/go.sum, the rejected gotenv decision, retained
+jwalterweatherman decision, accepted cast decision and quality evidence,
+rejected afero decision, prior bounded dependency decisions, and the
+toolchain, compatibility, snapshot/Docker, quality, baseline-reproduction,
+and audit contracts. Preserve every recorded manifest correction.
 
 # Three Moves
 
 Only if all decision evidence passes and the selection changes, use exact Go
-1.26.7 and exact `go get github.com/subosito/gotenv@<selected-version>` for
-one dependency-only commit. Do not hand-edit module metadata and do not use
-tidy as implementation. Preserve every retained selection, including gotenv
-v1.4.2 until justified, jwalterweatherman v1.1.0, cast v1.5.1, afero v1.9.4,
-go-toml/v2 v2.2.2, go-toml v1.9.5, mapstructure v1.5.0, runewidth v0.0.17,
-properties v1.8.7, go-colorful v1.4.1, mousetrap v1.1.0, HCL v1.0.0, go-cmp
-v0.6.0, btree v1.1.3, gomarkdown fallback, regexp2 v1.12.0, Cobra v1.10.2,
-YAML v3.0.5, go-md2man v2.0.7, Blackfriday v2.1.0, pflag v1.0.10, Uniseg
-v0.4.7, Colorable v0.1.15, and go-isatty v0.0.20.
+1.26.7 and exact `go get golang.org/x/image@<selected-version>` for one
+dependency-only commit. Do not hand-edit module metadata and do not use tidy
+as implementation. Preserve every retained selection, including x/image
+v0.5.0 until justified, gotenv v1.4.2, jwalterweatherman v1.1.0, cast v1.5.1,
+afero v1.9.4, go-toml/v2 v2.2.2, go-toml v1.9.5, mapstructure v1.5.0,
+runewidth v0.0.17, properties v1.8.7, go-colorful v1.4.1, mousetrap v1.1.0,
+HCL v1.0.0, go-cmp v0.6.0, btree v1.1.3, gomarkdown fallback, regexp2
+v1.12.0, Cobra v1.10.2, YAML v3.0.1, go-md2man v2.0.7, Blackfriday v2.1.0,
+pflag v1.0.10, Uniseg v0.4.7, Colorable v0.1.15, and go-isatty v0.0.20.
 
 After a changed selection, re-run the complete P7 dependency gate: focused
 behavior, graph/path, tests/race/vet, pinned lint, help/API/CLI, launcher and
