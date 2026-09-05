@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Golang X Net Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-05T170519+0200-evaluate-golang-x-net-dependency`
 Created: `2026-09-05T17:05:19+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `8b0f151cc4c4ba3d8cbc149fd72b298dd0a7e48bada5278969ed1702dfa67c54`
 Previous: [2026-09-05T161421+0200-evaluate-golang-x-image-dependency.md](2026-09-05T161421+0200-evaluate-golang-x-image-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-05T175806+0200-evaluate-golang-x-text-dependency.md](2026-09-05T175806+0200-evaluate-golang-x-text-dependency.md)
+Outcome: rejected v0.25.0; retained v0.7.0 because mandatory complete module tests fail
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -153,3 +153,69 @@ and make the normal `docs: prepare next agent session` commit. Do not implement
 that next group, launch a successor, push, merge, publish, release, stash,
 revert, delete retained evidence/images, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Canonical latest stable is v0.58.0 at unsigned lightweight tag commit
+`acc78e0d2b2c855c0c4fbdcfe5f42a9e3d0f9778`, published
+2026-08-12T17:41:32Z and declaring Go 1.25.0. The proxy lists exactly 58
+stable semantic releases and no prereleases or retractions; the active module
+has no deprecation marker, later major path, nested module, or GitHub Release
+objects. Master is 22 commits later, unreleased, and declares Go 1.26.0.
+
+The highest stable candidate whose complete changed closure preserves the
+retained Go 1.18 floor is v0.25.0. Although x/net itself continues to declare
+Go 1.18 through v0.35.0, v0.26.0 is the first release whose x/text requirement
+selects x/tools pseudo-version
+`v0.21.1-0.20240508182429-e35e4ccd0d2d`, which declares Go 1.19. V0.25.0
+instead selects x/text v0.15.0, x/tools v0.6.0, x/mod v0.8.0, and x/crypto
+v0.23.0; every changed selection declares Go 1.18 or lower.
+
+V0.25.0 is unsigned lightweight tag commit
+`d27919b57fa8dd03198f85ca9e675e1a09babd7d` at
+2024-05-06T16:24:48Z. Its checksum pair is
+`h1:d/OCCoBEUq33pjydKrGQhw7IlUPI2Oylr+8qLx49kac=` /
+`h1:JkAGAh7GEvH74S6FOH42FLoXpXbE/aqXSrIQjXgsiwM=`. All 778 proxy files
+match the exact authoritative upstream tag; the proxy ZIP SHA-256 is
+`7fd8464681c3011736f2c75beb20f88fff553a17f4f574325bce5ca5dc1fcf83`.
+The authoritative repository and unarchived, undisabled, non-fork GitHub
+mirror have identical master and all 58 tag refs. All tags are lightweight
+commit refs without independent signatures, and relevant commits are unsigned.
+
+The exact projection changes x/net v0.7.0 -> v0.25.0 and x/text v0.7.0 ->
+v0.15.0 in go.mod and adds exactly those two checksum pairs. MVS also selects
+x/crypto v0.23.0, x/mod v0.8.0, and x/tools v0.6.0; existing x/sys v0.30.0
+and x/term v0.29.0 dominate the candidate's lower requirements. Modules and
+complete packages remain 234 and 429; graph edges change 3,564 -> 3,568
+through five removals and nine additions, and the unapplied tidy projection
+changes 332 -> 335 lines.
+
+Two x/net packages load: html and html/atom. The path is `plybuild/cmd ->
+go-term-markdown -> x/net/html`; the consumer calls `html.Parse` and walks
+nodes, node-type constants, and attributes. Both loaded packages and the Ply
+markdown contract pass at count 10 in both projections. The upstream consumer
+test reproduces the same pre-existing ANSI expected-text mismatch in both
+states with normalized-identical output, so there is no x/net behavior delta.
+
+The candidate is rejected. Under exact Go 1.26.7, complete module tests fail
+at count 1, count 10, and race because `route.TestRouteMessage` cannot create
+an AF_ROUTE raw socket in the measured Darwin sandbox and reports `operation
+not permitted`; count 10 produces exactly ten such diagnostics. Selected
+v0.7.0 fails the same route test, and the fatal socket behavior remains on
+unreleased master. Candidate vet and module verification pass, and its source
+remains unchanged, but the mandatory module self-test stop rule still forbids
+the dependency edit and all downstream candidate repository gates.
+
+The candidate leaves Darwin and Windows symbol populations identical at
+20/20, including the same nine symbol-reachable x/net IDs and traces. Its
+Darwin module population improves 30 -> 27 by removing GO-2023-1988,
+GO-2023-2102, and GO-2024-2687. That module-only improvement cannot override
+the failed quality contract. `go.mod` and `go.sum` remain unchanged and there
+is no implementation commit.
+
+Evidence is sealed at
+`/private/tmp/ply-p7-x-net-selection.e5ea7ae.cP57X8`; its fully verified
+71,887-entry manifest SHA-256 is
+`88e4be87483322792ad3da0064bcef4ced5ee21c52821bb1f80c143f80a3aaf1`.
+Decision-summary SHA-256 is
+`6e32698abcde67604e159488ba21f6e780fd61dfba2ed9299644b5f011940dff`.

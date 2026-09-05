@@ -1055,16 +1055,16 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-05T170519+0200-evaluate-golang-x-net-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T170519+0200-evaluate-golang-x-net-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T161421+0200-evaluate-golang-x-image-dependency.md
+#|SESSION_ID=2026-09-05T175806+0200-evaluate-golang-x-text-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T175806+0200-evaluate-golang-x-text-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T170519+0200-evaluate-golang-x-net-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected indirect
-#|`golang.org/x/net v0.7.0` as one bounded dependency group. Resolve the
+#|`golang.org/x/text v0.7.0` as one bounded dependency group. Resolve the
 #|canonical latest stable release and highest floor-compatible candidate from
 #|primary evidence. Implement one exact changed selection only if it preserves
 #|the retained Go 1.18 floor, has an explained minimal closure, and passes every
@@ -1073,16 +1073,15 @@ exit 70
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain and
-#|completed dependency groups through accepted spf13/cast v1.5.1, rejected
-#|afero v1.10.0, gotenv v1.6.0, and x/image v0.16.0, and retained
-#|canonical-latest jwalterweatherman v1.1.0. All earlier recorded rejections,
-#|no-change decisions, accepted closures, and evidence corrections remain final.
-#|Do not revisit them or combine another module group. P8 remains queued.
+#|completed dependency groups through retained x/net v0.7.0. All earlier
+#|recorded rejections, no-change decisions, accepted closures, and evidence
+#|corrections remain final. Do not revisit them or combine another module group.
+#|P8 remains queued.
 #|
-#|The current build list selects golang.org/x/net v0.7.0. Treat its latest
+#|The current build list selects golang.org/x/text v0.7.0. Treat its latest
 #|release, Go declaration, release qualification, closure, loaded population,
 #|consumer paths, source history, tests, and vulnerability effect as unknown
-#|until independently resolved. This session may change only x/net's exact
+#|until independently resolved. This session may change only x/text's exact
 #|required go.mod/go.sum metadata, its minimal MVS closure, and the roadmap/
 #|handoff record. Do not change production Go, another dependency, language or
 #|toolchain declarations, quality apparatus, Docker/release inputs, packaging,
@@ -1093,9 +1092,9 @@ exit 70
 #|Latest implementation remains dependency-only cast commit
 #|`cf4fd4933251b2ca7844b6420fd3cf2a86f049a5`, exact parent
 #|`17f7277fd2512ba06db76d1acb0af5f8b623243c`, clean tree
-#|`485690c010cef3b02385d8f2471d3ef53611abe9`. The x/image documentation
+#|`485690c010cef3b02385d8f2471d3ef53611abe9`. The x/net documentation
 #|handoff must have exact parent
-#|`9e9ef26ff356f9c1c2d051992eb92a10948ec807`. Relative to accepted go-cmp
+#|`e5ea7ae4ddb5bc4d58085ff3fcfe5b472e6951ce`. Relative to accepted go-cmp
 #|commit c314bcb, accepted metadata changes remain go-colorful v1.2.0 -> v1.4.1,
 #|go-runewidth v0.0.14 -> v0.0.17, go-toml/v2 v2.0.7 -> v2.2.2, and cast
 #|v1.5.0 -> v1.5.1, with their recorded minimal closures and exactly 15 added
@@ -1118,23 +1117,23 @@ exit 70
 #|Retain the verified golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and
 #|govulncheck v1.7.0 binaries and hashes recorded in the handover.
 #|
-#|X/image rejection evidence is fully verified at
-#|`/private/tmp/ply-p7-x-image-selection.9e9ef26.9J9x1F`, 52,533 entries and
+#|X/net rejection evidence is fully verified at
+#|`/private/tmp/ply-p7-x-net-selection.e5ea7ae.cP57X8`, 71,887 entries and
 #|manifest SHA-256
-#|`84972465aef5f19f888102c7991aadd67446146a7056658b006d005666bd82bf`;
+#|`88e4be87483322792ad3da0064bcef4ced5ee21c52821bb1f80c143f80a3aaf1`;
 #|decision-summary SHA-256 is
-#|`2b70234a63a199ab6cf11050212645162a78c4836aa9aafa4cb00dad764eb936`.
-#|V0.45.0 is canonical latest and v0.16.0 is the highest complete
-#|Go-1.18-floor-compatible release, but v0.16.0 complete tests and vet fail
-#|under Go 1.26.7. X/image v0.5.0 remains selected and dependency metadata is
+#|`6e32698abcde67604e159488ba21f6e780fd61dfba2ed9299644b5f011940dff`.
+#|V0.58.0 is canonical x/net latest and v0.25.0 is the highest complete
+#|Go-1.18-floor-compatible release, but v0.25.0 complete tests and race fail
+#|under Go 1.26.7. X/net v0.7.0 remains selected and dependency metadata is
 #|unchanged. Preserve all prior verified roots and the recorded go-colorful
 #|mutable telemetry, btree regression, and cast whitespace-path corrections.
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve x/net releases through the Go
-#|proxy, checksum database, authoritative upstream repository and mirror, and
-#|primary Go vulnerability data. Record exact tag commits/times, module Go
+#|From fresh external archives and caches, resolve x/text releases through the
+#|Go proxy, checksum database, authoritative upstream repository and mirror,
+#|and primary Go vulnerability data. Record exact tag commits/times, module Go
 #|declarations and requirements, checksum pairs, source identity, tag and commit
 #|signature status, relevant release history, and archived/deprecated status.
 #|Explicitly distinguish stable releases, prereleases, retractions, forks,
@@ -1145,7 +1144,7 @@ exit 70
 #|Measure old versus candidate selected modules, graph edges, complete package
 #|population, checksums, loaded packages and paths, explicit exact-get diff, and
 #|`go mod tidy -diff`. Require an explained minimal selection/edge/checksum
-#|closure. Independently prove whether x/net is loaded; if it is, identify its
+#|closure. Independently prove whether x/text is loaded; if it is, identify its
 #|real consumers and run focused behavior over the actually used packages and
 #|symbols. Also require candidate module complete tests, repository build,
 #|complete tests/race/vet, pinned lint, byte-identical public help, identical
@@ -1156,24 +1155,24 @@ exit 70
 #|self-tests, loaded behavior, or any repository quality contract fails. If the
 #|selected release is already the exact floor-compatible decision and exact get
 #|is a no-op, record that no-change decision without manufacturing a dependency
-#|commit. Do not assume vulnerability identity: x/net is present in current
-#|findings, so prove exact old/candidate IDs and traces.
+#|commit. Do not assume vulnerability identity; prove exact old/candidate IDs
+#|and traces.
 #|
 #|# Required Reading
 #|
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher `--check`, and the P7/P8 checkpoint before editing.
 #|Verify every accepted manifest. Read this archive, the rolling handover, P7 in
-#|the roadmap, go.mod/go.sum, the rejected x/image and gotenv decisions, retained
-#|jwalterweatherman decision, accepted cast decision and quality evidence,
-#|rejected afero decision, prior bounded dependency decisions, and the
+#|the roadmap, go.mod/go.sum, the rejected x/net, x/image, and gotenv decisions,
+#|retained jwalterweatherman decision, accepted cast decision and quality
+#|evidence, rejected afero decision, prior bounded dependency decisions, and the
 #|toolchain, compatibility, snapshot/Docker, quality, baseline-reproduction, and
 #|audit contracts. Preserve every recorded manifest correction.
 #|
 #|# Three Moves
 #|
 #|Only if every decision gate passes and the selection changes, use exact Go
-#|1.26.7 and exact `go get golang.org/x/net@<selected-version>` for one
+#|1.26.7 and exact `go get golang.org/x/text@<selected-version>` for one
 #|dependency-only commit. Do not hand-edit module metadata and do not use tidy as
 #|implementation. Preserve every retained dependency selection, language/
 #|toolchain declaration, production source, quality apparatus, and release input.

@@ -6905,12 +6905,64 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `84972465aef5f19f888102c7991aadd67446146a7056658b006d005666bd82bf`,
   and decision-summary SHA-256 is
   `2b70234a63a199ab6cf11050212645162a78c4836aa9aafa4cb00dad764eb936`.
-- Next, independently evaluate selected indirect `golang.org/x/net v0.7.0`
+- Reject selected indirect `golang.org/x/net v0.7.0` -> v0.25.0 even though
+  v0.25.0 is the highest stable release whose complete changed closure
+  preserves the retained Go 1.18 floor. Fresh proxy evidence enumerates 58
+  stable releases through canonical latest v0.58.0, with no prereleases,
+  retractions, deprecation marker, nested or later major path, or GitHub
+  Release objects. V0.58.0 declares Go 1.25.0. Releases through v0.35.0
+  directly declare at most Go 1.18, but v0.26.0 is the first whose x/text
+  requirement selects an x/tools pseudo-version declaring Go 1.19; v0.25.0's
+  x/text v0.15.0 closure instead selects Go-1.18 x/tools v0.6.0 and x/mod
+  v0.8.0. Twenty-two post-v0.58.0 master commits are unreleased and current
+  master declares Go 1.26.0.
+- Candidate v0.25.0 is lightweight unsigned tag commit
+  `d27919b57fa8dd03198f85ca9e675e1a09babd7d` at
+  2024-05-06T16:24:48Z. Its checksum pair is
+  `h1:d/OCCoBEUq33pjydKrGQhw7IlUPI2Oylr+8qLx49kac=` /
+  `h1:JkAGAh7GEvH74S6FOH42FLoXpXbE/aqXSrIQjXgsiwM=`. All 778 proxy files
+  match the exact authoritative upstream tag; ZIP SHA-256 is
+  `7fd8464681c3011736f2c75beb20f88fff553a17f4f574325bce5ca5dc1fcf83`.
+  The authoritative Go repository and unarchived, undisabled, non-fork GitHub
+  mirror have identical master and all 58 lightweight unsigned tag refs.
+- Exact projected get changes x/net v0.7.0 -> v0.25.0 and x/text v0.7.0 ->
+  v0.15.0 in go.mod, adds exactly their two checksum pairs, and selects
+  x/crypto v0.23.0, x/mod v0.8.0, and x/tools v0.6.0 while existing x/sys
+  v0.30.0 and x/term v0.29.0 dominate lower requirements. Modules and complete
+  packages remain 234 and 429, graph edges change 3,564 -> 3,568 through five
+  removals and nine additions, and the unapplied tidy projection changes 332
+  -> 335 lines. This is the explained minimal MVS selection/edge/checksum
+  closure.
+- Two x/net packages load through `plybuild/cmd -> go-term-markdown ->
+  x/net/html`. Both packages and the Ply markdown contract pass count-10 in
+  both projections with normalized-identical output. The upstream consumer
+  test reproduces the same pre-existing ANSI expected-text mismatch in both
+  states, so it exposes no x/net behavior delta.
+- Reject v0.25.0 because its required complete module tests fail under exact
+  Go 1.26.7 at count 1, count 10, and race: `route.TestRouteMessage` cannot
+  create an AF_ROUTE raw socket in the measured Darwin sandbox and reports
+  `operation not permitted`. Selected v0.7.0 fails the same route test, and
+  the fatal socket behavior remains on unreleased master. Candidate vet and
+  verification pass, but the explicit self-test stop rule forbids dependency
+  edits and makes downstream repository and post-implementation quality gates
+  inapplicable.
+- The projection preserves exact Darwin and Windows symbol populations at
+  20/20, including the same nine symbol-reachable x/net IDs and traces. Darwin
+  module findings improve 30 -> 27 by removing GO-2023-1988, GO-2023-2102,
+  and GO-2024-2687, but that module-only improvement does not override the
+  failed quality contract. No dependency metadata or implementation commit was
+  made. Rejection evidence is sealed at
+  `/private/tmp/ply-p7-x-net-selection.e5ea7ae.cP57X8`; its fully verified
+  71,887-entry manifest SHA-256 is
+  `88e4be87483322792ad3da0064bcef4ced5ee21c52821bb1f80c143f80a3aaf1`,
+  and decision-summary SHA-256 is
+  `6e32698abcde67604e159488ba21f6e780fd61dfba2ed9299644b5f011940dff`.
+- Next, independently evaluate selected indirect `golang.org/x/text v0.7.0`
   as one bounded P7 module group. Resolve canonical latest, highest
   Go-1.18-floor-compatible release, source identity, exact closure, loaded
   behavior, self-tests, and vulnerability data before selecting anything. Do
-  not combine x/image, gotenv, jwalterweatherman, cast, afero, or another
-  module group.
+  not combine x/net, x/image, gotenv, jwalterweatherman, cast, afero, or
+  another module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
