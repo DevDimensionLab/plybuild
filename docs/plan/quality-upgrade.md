@@ -5365,9 +5365,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move, completed
-dependency groups through accepted pelletier/go-toml/v2 v2.2.2, and the
-recorded no-change or rejected HCL, mousetrap, properties, mapstructure,
-go-toml v1, and Afero evaluations; further dependency groups remain queued.
+dependency groups through accepted spf13/cast v1.5.1, and the recorded
+no-change or rejected HCL, mousetrap, properties, mapstructure, go-toml v1,
+and Afero evaluations; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6696,11 +6696,70 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `f0ad8ce41436a5f8bf48222106e79f57b32a9533b6a9a15b290615a54f162405`,
   and decision-summary SHA-256 is
   `c3301a1c2b13f36956551ed1eb09b1a83bf2ac51cf236c6614f46eaf70ea65de`.
+- Accept selected indirect `github.com/spf13/cast v1.5.0` -> v1.5.1 as the
+  highest stable release compatible with the retained Go 1.18 floor. The Go
+  proxy lists 17 stable releases and no prereleases or retractions. V1.5.0 and
+  v1.5.1 declare Go 1.18; the immediately newer v1.6.0 declares Go 1.19.
+  Canonical latest v1.10.0 declares Go 1.21.0 and therefore exceeds the floor.
+- Candidate v1.5.1 is unsigned lightweight tag commit
+  `bbed5559a59db54120dda79106f85f9ec0afb038` at
+  2023-05-15T08:28:46Z and was published as a stable GitHub Release. Its
+  checksum pair is
+  `h1:R+kOtfhWQE6TVQzY+4D7wJLBgkdVasCEFxSUBYBYIlA=` /
+  `h1:b9PdjNptOpzXr7Rq1q9gJML/2cdGQAo69NKzQ10KN48=`. All 13 proxy files
+  match the tag commit byte-for-byte. Canonical latest v1.10.0 is annotated
+  tag object `3efe057bdf41dab273f8e65893fbcb89c1a4dc3b`, peeled commit
+  `fc73346bfc4e6597bc520fb6eea04360299e77d2`, with GitHub-verified tag and
+  commit signatures. The active upstream is neither archived nor a fork; no
+  later major module exists, while 32 post-v1.10.0 master commits are
+  unreleased.
+- Exact pinned get changes cast plus its minimal test-only MVS closure:
+  quicktest v1.14.3 -> v1.14.4, kr/pretty v0.3.0 -> v0.3.1, and
+  rogpeppe/go-internal v1.6.1 -> v1.9.0. Their declarations are Go 1.13,
+  Go 1.12, and Go 1.17. Existing go-cmp v0.6.0, kr/text v0.2.0, and pkg/diff
+  selections already dominate or retain the candidate requirements. Modules
+  remain 234, complete packages remain byte-identical at 429, graph edges
+  change 3,565 -> 3,564 because v1.5.1 drops cast's x/xerrors edge, and go.sum
+  adds exactly five lines. The unapplied tidy projection changes 321 -> 332
+  lines.
+- One cast package loads through `plybuild/cmd -> spf13/viper -> spf13/cast`.
+  Viper root plus its dotenv, ini, and javaproperties encoders use 17 cast
+  symbols. Ten fresh focused Viper runs, encoder count-10 tests, and Ply
+  `./cmd` count-10 tests pass in both states. Candidate complete count-1 and
+  count-10 tests, race, vet, and module verification pass for its sole package.
+- Dependency-only implementation commit
+  `cf4fd4933251b2ca7844b6420fd3cf2a86f049a5`, exact parent
+  `17f7277fd2512ba06db76d1acb0af5f8b623243c`, tree
+  `485690c010cef3b02385d8f2471d3ef53611abe9`, changes only `go.mod` and
+  `go.sum`. Repository build, tests/race/vet, Windows build, pinned lint, CLI
+  surface, launcher, byte-identical help/API/CLI, and empty-HOME count-2 pass.
+  Exact Darwin-symbol/Darwin-module/Windows-symbol vulnerability populations
+  remain identical at 20/30/20, and the primary Go vulnerability index has no
+  cast record.
+- Exact quality passes all 21 stages, all 27 Q0-Q2 rows at L2, both 80/80
+  mutation populations, host/snapshot/Docker acceptance, and zero held,
+  regressed, not-comparable, dirty, or publication counts. The independent
+  focused audit is 27/27 PASS; the full audit exits expected 1, never 2, only
+  for Q3.1, Q3.3, Q3.4, and Q3.7.
+- Selection, review, exact-quality, and regression evidence is sealed at
+  `/private/tmp/ply-p7-cast-selection.17f7277.9nRKpS`, its
+  `quality-review-final` child,
+  `/private/tmp/ply-p7-cast-exact-quality-final.cf4fd49.wlsG4F/output`, and
+  `/private/tmp/ply-p7-cast-regression-gate.cf4fd49.sAkB56`. Their fully
+  verified manifest populations/SHA-256 values are
+  82,586/`dfa699f75d0b222d7d64e8fd7a09d05306de98ef4ac5cbf6d253fd33b2dddac0`,
+  12/`850d40f319d13024275b35909e8ff84ce2f9c5ce5959cf8d707461a3b5e5d9ce`,
+  236,782/`b3d410a70d89e2176daf1a013f97d53e704ef3887f02d67bd6c2564ab0a6d02a`,
+  and 607/`97cafb6719f470ab7d057a603b522f0d10418deda2d997e6d5723883efd2e24a`.
+  Decision, quality, and regression summary SHA-256 values are
+  `13c7ab63019a891d66508638b6ade40155ffb340548f36a17e761b204da89c87`,
+  `c8c2bc454c816656297ab1622da50b534c84b090c0a2ddac6366f065cca9d89d`,
+  and `533ccdf2704153e7d4f467e3ceb75f932202a1367ec38dc1c3f8df51ec3a458f`.
 - Next, independently evaluate selected indirect
-  `github.com/spf13/cast v1.5.0` as one bounded P7 module group. Resolve
-  canonical latest, highest Go-1.18-compatible release, source identity,
-  exact closure, loaded behavior, self-tests, and vulnerability data before
-  selecting anything. Do not combine jwalterweatherman, gotenv, or another
+  `github.com/spf13/jwalterweatherman v1.1.0` as one bounded P7 module group.
+  Resolve canonical latest, highest Go-1.18-compatible release, source
+  identity, exact closure, loaded behavior, self-tests, and vulnerability data
+  before selecting anything. Do not combine gotenv, cast, afero, or another
   module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
