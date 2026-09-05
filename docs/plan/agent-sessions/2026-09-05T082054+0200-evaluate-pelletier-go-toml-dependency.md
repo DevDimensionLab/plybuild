@@ -1,16 +1,13 @@
-# Agent Session: Evaluate Mitchellh Mapstructure Dependency
+# Agent Session: Evaluate Pelletier Go-Toml Dependency
 
-Status: ANSWERED - HISTORY
-Session ID: `2026-09-05T073150+0200-evaluate-mitchellh-mapstructure-dependency`
-Created: `2026-09-05T07:31:50+02:00`
+Status: NEXT
+Session ID: `2026-09-05T082054+0200-evaluate-pelletier-go-toml-dependency`
+Created: `2026-09-05T08:20:54+02:00`
 Source: `codex-dev-start.sh`
-Prompt SHA-256: `6ab0bfcfb9d04e37fbc1500b0886bc5dec17f45be57220a45052e2686719560c`
-Previous: [2026-09-05T045441+0200-evaluate-mattn-go-runewidth-dependency.md](2026-09-05T045441+0200-evaluate-mattn-go-runewidth-dependency.md)
-Next: [2026-09-05T082054+0200-evaluate-pelletier-go-toml-dependency.md](2026-09-05T082054+0200-evaluate-pelletier-go-toml-dependency.md)
-Outcome: Retained canonical latest and highest Go-1.18-compatible
-  mapstructure v1.5.0 unchanged. Exact get was a zero-byte no-op with an empty
-  closure, loaded behavior and every decision contract passed, and no
-  dependency implementation commit was manufactured.
+Prompt SHA-256: `4c798d1f43ba0a47c0b607e84d65b1f029d6b65e1d50f2f8888de3212dd4d643`
+Previous: [2026-09-05T073150+0200-evaluate-mitchellh-mapstructure-dependency.md](2026-09-05T073150+0200-evaluate-mitchellh-mapstructure-dependency.md)
+Next: none
+Outcome: pending
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -18,43 +15,46 @@ The block below is the byte-exact Codex prompt argument, including its terminal 
 # Mission
 
 Continue P7 by independently evaluating selected indirect
-`github.com/mitchellh/mapstructure v1.5.0` as one bounded dependency group.
-Resolve the canonical latest release and highest floor-compatible candidate
-from primary evidence. Implement one exact changed selection only if it
-preserves the retained Go 1.18 floor, has an explained minimal closure, and
-passes every quality contract; do not manufacture a dependency commit when
-the exact selected release is already canonical latest.
+`github.com/pelletier/go-toml v1.9.5` as one bounded dependency group. Resolve
+the canonical latest release and highest floor-compatible candidate from
+primary evidence. Implement one exact changed selection only if it preserves
+the retained Go 1.18 floor, has an explained minimal closure, and passes every
+quality contract; do not manufacture a dependency commit when the exact
+selected release is already canonical latest.
 
 # Authorized Roadmap
 
 P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain,
 completed dependency groups through accepted go-runewidth v0.0.17, and the
-rejected/no-change HCL, mousetrap, and properties evaluations. Go-cmp v0.7.0,
-Viper v1.16.0, Emoji v2.2.14, ini v1.67.3, fatih/color v1.19.0, fsnotify
-v1.10.1, latest gomarkdown `v0.0.0-20260824154242-13c5cf49db8d`, and HCL,
-mousetrap, or properties selection changes remain rejected for their recorded
-floor, loaded-behavior, release-qualification, self-test, exact-latest, or
-closure decisions. Do not revisit them or combine another module group. P8
-remains queued.
+rejected/no-change HCL, mousetrap, properties, and mapstructure evaluations.
+Go-cmp v0.7.0, Viper v1.16.0, Emoji v2.2.14, ini v1.67.3, fatih/color v1.19.0,
+fsnotify v1.10.1, latest gomarkdown
+`v0.0.0-20260824154242-13c5cf49db8d`, and HCL, mousetrap, properties, or
+mapstructure selection changes remain rejected or unnecessary for their
+recorded floor, loaded-behavior, release-qualification, self-test,
+exact-latest, or closure decisions. Do not revisit them or combine another
+module group. P8 remains queued.
 
-The current build list selects mitchellh/mapstructure v1.5.0. Treat the target
+The current build list selects pelletier/go-toml v1.9.5. Treat the target
 version, latest release, Go declaration, closure, loaded package population,
 source history, and test status as unknown until independently resolved. This
-session may change only mapstructure's exact required go.mod/go.sum metadata
-and the roadmap/handoff record. Do not change production Go, another
-dependency, language/toolchain declarations, quality apparatus,
-Docker/release inputs, packaging, publishers, or P8 code.
+session may change only go-toml's exact required go.mod/go.sum metadata and the
+roadmap/handoff record. Do not change production Go, another dependency,
+language/toolchain declarations, quality apparatus, Docker/release inputs,
+packaging, publishers, or P8 code.
 
 # Measurements At Start
 
 Latest implementation is dependency-only go-runewidth commit
 `ca19dcd4da9320112e6c9f0c5db507ccbe8b88e5`, exact parent
 `5d0fa3ae0fff98784c349cc23e001018eb9637e1`, clean tree
-`273c9b635e988ddd686d6c83846f7320bb9e4e33`. Its documentation handoff commit
-must have exact parent ca19dcd. Relative to accepted go-cmp commit c314bcb,
-go.mod/go.sum change only go-colorful v1.2.0 -> v1.4.1 and go-runewidth
-v0.0.14 -> v0.0.17, adding exactly those two selected versions' checksum
-pairs. Ordinary and ignored status must be empty.
+`273c9b635e988ddd686d6c83846f7320bb9e4e33`. Mapstructure required no
+implementation commit; the current documentation handoff must have exact
+parent `f974b581baf36f40bb8fa31868371eb0db712faf`, whose exact parent is
+ca19dcd. Relative to accepted go-cmp commit c314bcb, go.mod/go.sum change only
+go-colorful v1.2.0 -> v1.4.1 and go-runewidth v0.0.14 -> v0.0.17, adding
+exactly those two selected versions' checksum pairs. Ordinary and ignored
+status must be empty.
 
 Current dependency measurements are 234 selected modules, 3,557 graph edges,
 429 native complete-test packages, a 313-line tidy projection, and exact
@@ -72,8 +72,19 @@ SHA-256
 Retain the verified golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and
 govulncheck v1.7.0 binaries and hashes recorded in the handover.
 
+No-change mapstructure evidence is fully verified at
+`/private/tmp/ply-p7-mapstructure-selection.f974b58.GbAMTJ`, with 46,352
+entries and manifest SHA-256
+`f15fbc74ed6efd7ee0b3c5ce91b0a9ded4104c5d363aca1272848ec5fca25ecf`.
+Its selection-summary SHA-256 is
+`8910174c8f8fa387a32cd49871dfbd37668ff4a2fbf1c51c2dae6fdc2612eff3`.
+It proves the original path's canonical latest and highest Go-1.18-compatible
+release are both selected v1.5.0, with an empty exact-get closure, passing
+loaded behavior and repository decision gates, and no implementation commit.
+Preserve mapstructure v1.5.0.
+
 Accepted go-runewidth selection, review, exact-quality, and regression
-evidence is fully verified at
+evidence remains fully verified at
 `/private/tmp/ply-p7-go-runewidth-selection.5d0fa3.dmbKoB`,
 `/private/tmp/ply-p7-go-runewidth-quality-review.ca19dcd.UgdZ2N`,
 `/private/tmp/ply-p7-go-runewidth-quality-final.ca19dcd.t6LExP`, and
@@ -83,30 +94,12 @@ evidence is fully verified at
 `f885b995dc6192cb7ef2d8c9241f93cb44a885deda7faec7e0415f68ce21d764`,
 `28fbbde41059dd806dfea5653f273a390b6b1fa2f60ebeec2e3d654cc792e2ed`,
 and `b83091c1c8a52ec2176c4c3fd7a4c3c5e456adf7a61ee2c6b6f7f97706eb4894`.
-Their stable summary SHA-256 values are
-`919632a255cbca3a4e0899fc3d0226bcff5c1afd484e22771f894534ace61362`,
-`13c16c8736779c320b78fe9b5ec4ef404b07ba013bd387652f7273e08ac3a74b`,
-`b5eebc7e4c89c3993453cc6456bb9587c47fd3aa1d30810527cc7fb9888c9159`,
-and `ec2ca15ba9624472480abacace094b73dff0348effe86ee900b764121c6b72fb`.
+Preserve go-runewidth v0.0.17 and the recorded external Python/buildx
+accommodations when a complete changed-selection gate requires them.
 
-That evidence proves canonical latest runewidth v0.0.29 declares Go 1.23,
-v0.0.18-v0.0.25 declare Go 1.20, and highest compatible v0.0.17 declares Go
-1.9. Exact get changed one selection, relabeled two version-bearing edges,
-retained uniseg v0.4.7, and added only the candidate checksum pair. All loaded
-behavior and quality contracts passed. Preserve go-runewidth v0.0.17.
-
-The successful runewidth quality gate used an external native Python
-dispatcher: `/usr/bin/python3 -S` only for generated `validate-events.py`,
-Homebrew Python otherwise, plus an external empty-HOME symlink to the verified
-Docker Desktop buildx plugin. The quality root records the dispatcher source,
-binary, and discarded environment-only attempts. Recreate these accommodations
-outside the worktree when required; do not alter the quality apparatus.
-
-Properties decision evidence remains
-`/private/tmp/ply-p7-properties-selection.469049f.iT6qcB`, fully verified at
-17,240 entries and manifest SHA-256
-`941e805f6edf4e7c4d07a8912dcf8e5203dd2cea48530aa3fe6995cb19da097f`.
-It rejects every selection change and retains v1.8.7 as unresolved floor debt.
+Properties decision evidence remains fully verified at
+`/private/tmp/ply-p7-properties-selection.469049f.iT6qcB`,
+17,240/`941e805f6edf4e7c4d07a8912dcf8e5203dd2cea48530aa3fe6995cb19da097f`.
 No-change mousetrap and rejected HCL evidence remain fully verified at
 29,283/`71f337b114d1383cd103ef53856a5e767d519eda0b5635e9598b26654a78a152`
 and 21,427/`ad2954c3ebcf8bfe40e5e1684fcfcf662610555e6ed113515750db1a91c1acff`.
@@ -115,21 +108,22 @@ regression-manifest correction.
 
 # Role And Boundaries
 
-From fresh external archives and caches, resolve mapstructure releases through
-the Go proxy, checksum database, and upstream repository. Record exact tag
+From fresh external archives and caches, resolve go-toml releases through the
+Go proxy, checksum database, and upstream repository. Record exact tag
 commits/times, module Go declarations, checksum pairs, source identity, tag
 and commit signature status, relevant release history, and primary Go
 vulnerability data. Prove which stable release is canonical latest and which
 release is highest compatible with Go 1.18. Distinguish stable releases,
 prereleases, retractions, module-path or repository lineage changes, and
-archived/deprecated status explicitly; do not infer compatibility from a
-successful modern-toolchain build.
+archived/deprecated status explicitly. In particular, do not treat a distinct
+`github.com/pelletier/go-toml/v2` module as an in-place v1 selection. Do not
+infer compatibility from a successful modern-toolchain build.
 
 Measure old versus candidate selected modules, graph edges, complete package
 population, checksums, loaded packages/path, explicit exact-get diff, and
 `go mod tidy -diff`. Require an explained minimal selection/edge/checksum
-closure. If mapstructure is loaded, run focused consumer behavior in addition
-to the candidate module's complete tests, repository build, complete
+closure. If go-toml is loaded, run focused consumer behavior in addition to
+the candidate module's complete tests, repository build, complete
 tests/race/vet, pinned lint, byte-identical public help, and identical API/CLI
 reports.
 
@@ -145,22 +139,24 @@ exact vulnerability population; do not assume parity.
 Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 archive links, launcher `--check`, and the P7/P8 checkpoint before editing.
 Verify every accepted manifest. Read this archive, the rolling handover, P7 in
-the roadmap, go.mod/go.sum, accepted runewidth evidence, properties decision
-evidence, accepted go-colorful evidence, mousetrap and HCL evidence, and the
-toolchain, compatibility, snapshot/Docker, quality, baseline-reproduction,
-and audit contracts. Preserve both manifest corrections.
+the roadmap, go.mod/go.sum, mapstructure decision evidence, accepted
+runewidth evidence, properties decision evidence, accepted go-colorful
+evidence, mousetrap and HCL evidence, and the toolchain, compatibility,
+snapshot/Docker, quality, baseline-reproduction, and audit contracts. Preserve
+both manifest corrections.
 
 # Three Moves
 
 Only if all decision evidence passes and the selection changes, use exact Go
 1.26.7 and exact
-`go get github.com/mitchellh/mapstructure@<selected-version>` for one
+`go get github.com/pelletier/go-toml@<selected-version>` for one
 dependency-only commit. Do not hand-edit module metadata and do not use tidy
-as implementation. Preserve every retained selection, including runewidth
-v0.0.17, properties v1.8.7, go-colorful v1.4.1, mousetrap v1.1.0, HCL v1.0.0,
-go-cmp v0.6.0, btree v1.1.3, gomarkdown fallback, regexp2 v1.12.0, Cobra
-v1.10.2, YAML v3.0.5, go-md2man v2.0.7, Blackfriday v2.1.0, pflag v1.0.10,
-Uniseg v0.4.7, Colorable v0.1.15, and go-isatty v0.0.20.
+as implementation. Preserve every retained selection, including mapstructure
+v1.5.0, runewidth v0.0.17, properties v1.8.7, go-colorful v1.4.1, mousetrap
+v1.1.0, HCL v1.0.0, go-cmp v0.6.0, btree v1.1.3, gomarkdown fallback,
+regexp2 v1.12.0, Cobra v1.10.2, YAML v3.0.5, go-md2man v2.0.7, Blackfriday
+v2.1.0, pflag v1.0.10, Uniseg v0.4.7, Colorable v0.1.15, and go-isatty
+v0.0.20.
 
 After a changed selection, re-run the complete P7 dependency gate: focused
 behavior when loaded, graph/path, tests/race/vet, pinned lint, help/API/CLI,

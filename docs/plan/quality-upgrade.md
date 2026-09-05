@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last accepted quality checkpoint: 2026-09-05, commit `dc4f27c`.
+Last accepted quality checkpoint: 2026-09-05, commit `ca19dcd`.
 
 ## Objective
 
@@ -5367,8 +5367,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 Status: active after the maintained-toolchain baseline move, completed
 dependency groups through accepted mattn/go-runewidth v0.0.17, and the
 rejected or no-change Hashicorp HCL, inconshreveable/mousetrap, and
-magiconair/properties evaluations; mitchellh/mapstructure and further
-dependency groups remain queued.
+magiconair/properties evaluations, plus the no-change mitchellh/mapstructure
+evaluation; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6496,10 +6496,61 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   15/`f885b995dc6192cb7ef2d8c9241f93cb44a885deda7faec7e0415f68ce21d764`,
   236,329/`28fbbde41059dd806dfea5653f273a390b6b1fa2f60ebeec2e3d654cc792e2ed`,
   and 4,888/`b83091c1c8a52ec2176c4c3fd7a4c3c5e456adf7a61ee2c6b6f7f97706eb4894`.
+- Retain selected indirect `github.com/mitchellh/mapstructure v1.5.0`
+  unchanged. The Go proxy lists exactly 17 stable releases from v1.0.0 through
+  v1.5.0; proxy `@latest` and `go list -m -u` both select v1.5.0, with no
+  `Update` field. There are no prereleases, retractions, original-repository
+  v2 tags, or GitHub Release objects. Releases through v1.1.2 have no `go`
+  directive and v1.2.0-v1.5.0 declare Go 1.14, so canonical latest is also the
+  highest stable release compatible with the retained Go 1.18 floor.
+- Version v1.5.0 is lightweight tag commit
+  `ab69d8d93410fce4361f4912bb1ff88110a81311` at
+  2022-04-20T22:31:31Z. GitHub verifies its commit signature; local
+  verification is unavailable without `gpg`, and the lightweight tag has no
+  tag object to sign. Its 13-file proxy archive is byte-identical to the tag
+  commit, and its checksum pair is
+  `h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=` /
+  `h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=`. The archived original
+  repository has 12 later untagged commits and an unreleased 1.5.1 changelog,
+  but neither qualifies as a stable release; the module has no formal
+  `Deprecated` marker.
+- The maintained fork's v1.6.0 is published from
+  `github.com/go-viper/mapstructure` while declaring the original module path,
+  so adopting it requires an explicit `replace` and is not a canonical
+  original-path update. `github.com/go-viper/mapstructure/v2 v2.5.0` is a
+  distinct module/import path requiring source migration. Neither lineage is
+  part of this bounded no-change group.
+- Exact `go get github.com/mitchellh/mapstructure@v1.5.0` exits 0 without
+  output and changes zero go.mod/go.sum bytes. Old and candidate states remain
+  byte-identical at 234 selected modules, 3,557 graph edges, 429 native
+  complete-test packages, five mapstructure checksum lines, and a 313-line
+  unapplied tidy projection. With no module requirements, the minimal
+  selection, edge, checksum, package, and metadata closure is empty.
+- One package loads through `plybuild/cmd -> viper -> mapstructure`. Viper's
+  focused unmarshalling tests pass in ten fresh processes in both states, its
+  source manifests remain unchanged, and the three Ply consumer packages pass
+  at count 10. Mapstructure complete tests, count-10 tests, race, and vet pass.
+  Repository build/tests/race/vet, Windows build, pinned lint, help/API/CLI
+  identity, CLI surface, and the full preflight pass. The final preflight has
+  all 80 mutation kills and 15 audit meta-controls; no post-implementation
+  quality gate was run because no selection changed.
+- Exact Darwin-symbol/Darwin-module/Windows-symbol vulnerability populations
+  remain 20/30/20 with identical ID sets. The primary Go vulnerability index
+  has no original mapstructure-path entry. Two records associated with the
+  maintained fork paths do not apply to the selected original module path.
+- No-change decision evidence is sealed at
+  `/private/tmp/ply-p7-mapstructure-selection.f974b58.GbAMTJ`; its fully
+  verified 46,352-entry manifest SHA-256 is
+  `f15fbc74ed6efd7ee0b3c5ce91b0a9ded4104c5d363aca1272848ec5fca25ecf`,
+  and selection-summary SHA-256 is
+  `8910174c8f8fa387a32cd49871dfbd37668ff4a2fbf1c51c2dae6fdc2612eff3`.
+  Dependency metadata remained byte-identical and no implementation commit
+  was manufactured.
 - Next, independently evaluate selected indirect
-  `github.com/mitchellh/mapstructure v1.5.0` as one bounded P7 module group.
-  Resolve canonical latest, Go floor, source identity, closure, loaded
-  behavior, self-tests, and vulnerability data before selecting anything.
+  `github.com/pelletier/go-toml v1.9.5` as one bounded P7 module group. Resolve
+  canonical latest, Go floor, repository/module-path lineage, source identity,
+  closure, loaded behavior, self-tests, and vulnerability data before
+  selecting anything.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
