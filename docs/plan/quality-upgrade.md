@@ -5365,10 +5365,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move, completed
-dependency groups through accepted lucasb-eyer/go-colorful v1.4.1, and the
+dependency groups through accepted mattn/go-runewidth v0.0.17, and the
 rejected or no-change Hashicorp HCL, inconshreveable/mousetrap, and
-magiconair/properties evaluations; mattn/go-runewidth and further dependency
-groups remain queued.
+magiconair/properties evaluations; mitchellh/mapstructure and further
+dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6121,7 +6121,7 @@ Regexp2 v1.12.0 dependency group (2026-09-04):
   `c95201c96297a198b7bec9b5a031443e42c0fe4be5f17a4d383362b9dce5f527`
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-Current queue decisions and next bounded P7 group (2026-09-04):
+Current queue decisions and next bounded P7 group (2026-09-05):
 
 - Reject `github.com/fatih/color v1.14.1` -> latest v1.19.0 because the latest
   module declares Go 1.25.0. Reject `github.com/fsnotify/fsnotify v1.6.0` ->
@@ -6447,10 +6447,59 @@ Current queue decisions and next bounded P7 group (2026-09-04):
   `941e805f6edf4e7c4d07a8912dcf8e5203dd2cea48530aa3fe6995cb19da097f`,
   and decision-summary SHA-256 is
   `23b8556153b7ca9d606d5156d50d7d7791b4978ec2368ac3171ef6370b4f2c2d`.
+- Accept selected indirect `github.com/mattn/go-runewidth v0.0.14` -> v0.0.17
+  as the highest release compatible with the retained Go 1.18 floor. The Go
+  proxy lists 29 stable tags through canonical latest v0.0.29, with no
+  prereleases, retractions, v1 path, or later default-branch commits. Releases
+  v0.0.1-v0.0.4 have no Go directive, v0.0.5-v0.0.17 declare Go 1.9,
+  v0.0.18-v0.0.25 declare Go 1.20, and v0.0.26-v0.0.29 declare Go 1.23.
+  Canonical latest and all 11 other releases above v0.0.17 therefore exceed
+  the floor.
+- Version v0.0.17 is lightweight tag commit
+  `94c0db1df07f7755a1e3e962becc01cb5fe8a086` at
+  2025-09-25T15:58:59Z. GitHub verifies its commit signature; local signature
+  verification is unavailable without `gpg`. Its 16-file proxy archive is
+  byte-identical to the tag commit, and its checksum pair is
+  `h1:78v8ZlW0bP43XfmAfPsdXcoNCelfMHsDmd/pkENfrjQ=` /
+  `h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=`. Canonical latest
+  v0.0.29 is lightweight tag commit
+  `218f489f6718aaf2c68285d71dfc363e13387075` at
+  2026-09-02T01:31:19Z and also has byte-identical proxy/tag source.
+- Exact `go get github.com/mattn/go-runewidth@v0.0.17` changes one selection,
+  retains 234 modules, 3,557 graph edges, and the byte-identical 429-package
+  complete-test population. The main edge and runewidth's unchanged
+  `rivo/uniseg v0.2.0` requirement edge are relabeled; MVS continues to select
+  uniseg v0.4.7. Go.sum adds only the v0.0.17 checksum pair while retaining
+  the historical pair. Tidy remains unapplied and projects 310 -> 313 lines.
+- One runewidth package loads through `plybuild/cmd -> go-term-markdown ->
+  go-term-text -> go-runewidth`; the direct consumer uses `StringWidth`,
+  `Truncate`, `FillRight`, and `RuneWidth`. Candidate complete tests/race/vet,
+  Windows test compilation, focused old/new consumer behavior, repository
+  build/tests/race/vet/lint, Windows build, help/API/CLI identity, and exact
+  vulnerability parity 20/30/20 all pass. The primary Go vulnerability module
+  index has no runewidth entry.
+- The dependency-only implementation is commit
+  `ca19dcd4da9320112e6c9f0c5db507ccbe8b88e5`, exact parent
+  `5d0fa3ae0fff98784c349cc23e001018eb9637e1`, tree
+  `273c9b635e988ddd686d6c83846f7320bb9e4e33`; it changes only `go.mod` and
+  `go.sum`. Exact quality passes 21/21 stages, all 27 Q0-Q2 rows at L2, 80/80
+  mutations, host/snapshot/Docker acceptance, and zero held, regressed,
+  not-comparable, or dirty counts. The full audit exits expected 1, never 2,
+  only for Q3.1, Q3.3, Q3.4, and Q3.7.
+- Selection, review, exact-quality, and regression evidence is sealed at
+  `/private/tmp/ply-p7-go-runewidth-selection.5d0fa3.dmbKoB`,
+  `/private/tmp/ply-p7-go-runewidth-quality-review.ca19dcd.UgdZ2N`,
+  `/private/tmp/ply-p7-go-runewidth-quality-final.ca19dcd.t6LExP`, and
+  `/private/tmp/ply-p7-go-runewidth-regression-gate.ca19dcd.O6Uxyq`. Their
+  fully verified manifest populations/SHA-256 values are
+  28,870/`2d6986055d24d4937dcbbaa8fa1e46da6a7bcc1e94f481125343284c96687193`,
+  15/`f885b995dc6192cb7ef2d8c9241f93cb44a885deda7faec7e0415f68ce21d764`,
+  236,329/`28fbbde41059dd806dfea5653f273a390b6b1fa2f60ebeec2e3d654cc792e2ed`,
+  and 4,888/`b83091c1c8a52ec2176c4c3fd7a4c3c5e456adf7a61ee2c6b6f7f97706eb4894`.
 - Next, independently evaluate selected indirect
-  `github.com/mattn/go-runewidth v0.0.14` as one bounded P7 module group.
+  `github.com/mitchellh/mapstructure v1.5.0` as one bounded P7 module group.
   Resolve canonical latest, Go floor, source identity, closure, loaded
-  behavior, and vulnerability data before selecting anything.
+  behavior, self-tests, and vulnerability data before selecting anything.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
