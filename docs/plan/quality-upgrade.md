@@ -5367,7 +5367,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 Status: active after the maintained-toolchain baseline move, completed
 dependency groups through accepted spf13/cast v1.5.1, and the recorded
 no-change or rejected HCL, mousetrap, properties, mapstructure, go-toml v1,
-and Afero evaluations; further dependency groups remain queued.
+Afero, and jwalterweatherman evaluations; further dependency groups remain
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6755,12 +6756,58 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `13c7ab63019a891d66508638b6ade40155ffb340548f36a17e761b204da89c87`,
   `c8c2bc454c816656297ab1622da50b534c84b090c0a2ddac6366f065cca9d89d`,
   and `533ccdf2704153e7d4f467e3ceb75f932202a1367ec38dc1c3f8df51ec3a458f`.
+- Retain selected indirect `github.com/spf13/jwalterweatherman v1.1.0`
+  unchanged. The Go proxy lists only stable v1.0.0 and v1.1.0, with no
+  prereleases or retractions; both omit a Go directive. Proxy `@latest`, exact
+  `go list -m -versions -retracted`, the lightweight tag, and the sole stable
+  GitHub Release agree on v1.1.0, so it is both canonical latest stable and
+  the highest stable release compatible with the retained Go 1.18 floor.
+- V1.1.0 is lightweight tag commit
+  `94f6ae3ed3bceceafa716478c5fbf8d29ca601a1` at
+  2018-10-28T14:53:47Z; GitHub verifies the commit signature and the tag has
+  no independent tag object. Its checksum pair is
+  `h1:ue6voC5bR5F8YxI5S67j9i582FU4Qvo2bmqnqMYADFk=` /
+  `h1:aNWZUN0dPAAO/Ljvb5BEdw96iTZ0EXowPYD95IqWIGo=`. All nine proxy files
+  match the exact tag commit; ZIP SHA-256 is
+  `43cc5f056caf66dc8225dca36637bfc18509521b103a69ca76fbc2b6519194a3`
+  and file-manifest SHA-256 is
+  `dd5824d06389cec49ebdfed59947ae4d96bf1e9ef0ced0bab30d7088820451ee`.
+- The active, unarchived, undisabled upstream is not a fork and has no later
+  major path. Master commit `91990e8269243f4f5d234f9c24e0a73c4a0df47f`
+  is three commits after v1.1.0; its proxy pseudo-version declares Go 1.20,
+  but that line is unreleased and excluded from stable selection. V1.0.0 is
+  an unsigned annotated tag over a GitHub-verified commit. Local signature
+  verification remains unavailable because `gpg` is absent.
+- Exact `go get github.com/spf13/jwalterweatherman@v1.1.0` changes zero
+  go.mod/go.sum bytes. Both projections are byte-identical at 234 modules,
+  3,564 graph edges, 429 complete packages, the same checksum pair, and the
+  same 332-line unapplied tidy diff. Jwalterweatherman's requirements on
+  go-spew v1.1.1 and go-difflib v1.0.0 remain selected; its testify v1.2.2
+  edge loses to selected v1.9.0. The minimal selection, edge, checksum, and
+  metadata closure is empty.
+- One package loads through `plybuild/cmd -> spf13/viper ->
+  spf13/jwalterweatherman`. Viper's root package uses the TRACE, DEBUG, INFO,
+  WARN, and ERROR loggers. Candidate module tests at count 1 and count 10,
+  race, vet, and verification pass; focused Viper read/merge/override/alias
+  behavior in ten fresh processes and Ply `./cmd` count-10 tests pass in both
+  states. Repository build, complete tests/race/vet, pinned lint, CLI surface,
+  byte-identical help/API/CLI, complete preflight, and empty-HOME count-2 pass.
+- Exact Darwin-symbol/Darwin-module/Windows-symbol vulnerability populations
+  remain identical at 20/30/20. The 1,392-entry primary vulnerability index
+  has no jwalterweatherman record. No dependency metadata or implementation
+  commit was made, so no post-implementation exact-quality run was required.
+- No-change evidence is sealed at
+  `/private/tmp/ply-p7-jwalterweatherman-selection.2dd8fdf.h4EKeQ`; its fully
+  verified 76,374-entry manifest SHA-256 is
+  `54040aefec38df7415f56da66af04d48c8256dd46ae6de8e06a7c4bbe5ce4d8e`,
+  and decision-summary SHA-256 is
+  `342330b73509caf414a406dda3a14c026bfc59512d09bf6393f710127974dc52`.
 - Next, independently evaluate selected indirect
-  `github.com/spf13/jwalterweatherman v1.1.0` as one bounded P7 module group.
-  Resolve canonical latest, highest Go-1.18-compatible release, source
-  identity, exact closure, loaded behavior, self-tests, and vulnerability data
-  before selecting anything. Do not combine gotenv, cast, afero, or another
-  module group.
+  `github.com/subosito/gotenv v1.4.2` as one bounded P7 module group. Resolve
+  canonical latest, highest Go-1.18-compatible release, source identity,
+  exact closure, loaded behavior, self-tests, and vulnerability data before
+  selecting anything. Do not combine jwalterweatherman, cast, afero, or
+  another module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
