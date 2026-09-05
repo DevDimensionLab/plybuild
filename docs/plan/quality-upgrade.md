@@ -1,6 +1,6 @@
 # Quality Upgrade Plan
 
-Last accepted quality checkpoint: 2026-09-05, commit `c314bcb`.
+Last accepted quality checkpoint: 2026-09-05, commit `dc4f27c`.
 
 ## Objective
 
@@ -5366,8 +5366,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 Status: active after the maintained-toolchain baseline move, completed
 dependency groups through accepted lucasb-eyer/go-colorful v1.4.1, and the
-rejected or no-change Hashicorp HCL and inconshreveable/mousetrap evaluations;
-magiconair/properties and further dependency groups remain queued.
+rejected or no-change Hashicorp HCL, inconshreveable/mousetrap, and
+magiconair/properties evaluations; mattn/go-runewidth and further dependency
+groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6389,8 +6390,65 @@ Current queue decisions and next bounded P7 group (2026-09-04):
   13/`6444e55370fb37a6c2c06c2c1c280b8fcbd34fc1f94f110a70bc7d067b05673d`,
   236,146/`924500cb4512fa9451cf218b119ce8969e32e7f02a67558807d067e3f41017a6`,
   and 19,011/`2cf393025cf7768ef90fbfa8c0faf378284c3521cb118220dd74ba6fc4735d0e`.
+- A properties-session prerequisite replay corrected one inherited
+  go-colorful evidence claim: the selection manifest retains its recorded
+  digest and 47,633 entries, but the single Go telemetry counter beneath its
+  retained HOME no longer matches after later Go commands updated it. The
+  other 47,632 entries verify. The stable selection summary retains SHA-256
+  `07467cdfd752a8ee9c64b1b6632370c8e0d75b6e3715090931ec8831b2080658`,
+  and the completely verified review, exact-quality, and regression roots
+  supersede that mutable selection entry for current acceptance claims.
+- Reject every selection change for indirect
+  `github.com/magiconair/properties v1.8.7` and retain that exact version as
+  documented unresolved Go-floor debt. Fresh proxy evidence lists exactly 34
+  stable releases, from v1.0.0 through unusual but ordinary same-major
+  v1.18.11. `@latest`, `go list -m -u`, the GitHub Release and tag, and the
+  default branch all resolve v1.18.11 at commit
+  `33f415127a06719be057e464f58f9885c30657aa`,
+  2026-07-23T07:36:47Z, with zero later commits. All 34 GitHub Release objects
+  are stable; there are no prerelease tags, retractions, v2 tags, or
+  major-path changes.
+- Releases through v1.8.1 have no Go directive, v1.8.2 through v1.8.6 declare
+  Go 1.13, and selected v1.8.7 through canonical latest v1.18.11 declare Go
+  1.19. Canonical latest and every higher release therefore exceed the
+  retained Go 1.18 floor. Highest compatible v1.8.6 is annotated tag object
+  `e97104ee21cdf9cc3ac33992fc829cdc3664d238`, peeled commit
+  `869a5592420f4ff6ebf74500b5c658b29d973172` at
+  2022-02-23T08:50:35Z and tag time 2022-02-23T08:51:39Z, with checksum pair
+  `h1:5ibWZ6iY0NctNGWo87LalDlEZ6R41TqbbDamhfG/Qzo=` /
+  `h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=`. Its 24-file proxy source
+  is byte-identical to the tag commit. GitHub reports the tag unverified for
+  `bad_email` and the commit signature valid; local verification lacks `gpg`.
+- Exact `go get github.com/magiconair/properties@v1.8.6` is not a bounded
+  one-module closure: Viper v1.15.0 requires properties v1.8.7, so the command
+  downgrades direct Viper to v1.14.0, changes 20 selected versions, and removes
+  one module. Modules become 234 -> 233; graph edges become 3,557 -> 3,558
+  through 68 removals and 69 additions; complete-test packages remain the
+  byte-identical 429. The go.mod projection changes properties and Viper,
+  go.sum remains byte-identical because both older checksum pairs already
+  exist, and tidy projects 310 -> 312 lines with a 163-line projection delta.
+  None of it was applied.
+- One properties package loads through `plybuild/cmd -> viper ->
+  viper/internal/encoding/javaproperties -> properties`; its codec uses
+  `NewProperties`, `WriteComment`, and `Load`. Writable Viper v1.15.0/v1.14.0
+  codec tests and three Ply consumer packages pass at count 10. Candidate
+  v1.8.6 complete tests and vet pass, but complete race fails twice because
+  `assert/TestPanicPanicsAndDoesNotPanic` expects its diagnostic at line 65
+  while race instrumentation reports line 66. Selected v1.8.7 reproduces the
+  same upstream self-test defect. These closure and self-test failures stop
+  selection before repository-wide or post-implementation quality gates.
+- Govulncheck v1.7.0 preserves exact old/candidate Darwin-symbol,
+  Darwin-module, and Windows-symbol ID populations 20/30/20. The primary Go
+  vulnerability module index contains no properties entry. No dependency
+  metadata or implementation commit was made.
+- Properties decision evidence is sealed at
+  `/private/tmp/ply-p7-properties-selection.469049f.iT6qcB`; its fully
+  verified 17,240-entry manifest SHA-256 is
+  `941e805f6edf4e7c4d07a8912dcf8e5203dd2cea48530aa3fe6995cb19da097f`,
+  and decision-summary SHA-256 is
+  `23b8556153b7ca9d606d5156d50d7d7791b4978ec2368ac3171ef6370b4f2c2d`.
 - Next, independently evaluate selected indirect
-  `github.com/magiconair/properties v1.8.7` as one bounded P7 module group.
+  `github.com/mattn/go-runewidth v0.0.14` as one bounded P7 module group.
   Resolve canonical latest, Go floor, source identity, closure, loaded
   behavior, and vulnerability data before selecting anything.
 
