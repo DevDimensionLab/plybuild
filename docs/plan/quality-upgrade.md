@@ -6546,11 +6546,64 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `8910174c8f8fa387a32cd49871dfbd37668ff4a2fbf1c51c2dae6fdc2612eff3`.
   Dependency metadata remained byte-identical and no implementation commit
   was manufactured.
+- Retain selected indirect `github.com/pelletier/go-toml v1.9.5` unchanged.
+  The v1 proxy lists exactly 28 stable releases from v0.1.0 through v1.9.5;
+  proxy `@latest`, exact `go list -m -versions -retracted`, `go list -m -u`,
+  the selected tag, and its stable GitHub Release agree on v1.9.5. There are
+  no v1 prereleases or retractions. Releases through v1.2.0 have no `go`
+  directive and v1.3.0-v1.9.5 declare Go 1.12, so selected v1.9.5 is both
+  canonical latest and the highest stable release compatible with Go 1.18.
+- V1.9.5 is lightweight tag commit
+  `fed1464066413075eac02cd4dc368b5221845541`, committed
+  2022-01-05T14:17:32Z and published as a stable GitHub Release
+  2022-04-21T23:21:51Z. The lightweight ref has no tag object or tag
+  signature. GitHub validates the embedded commit signature; local
+  verification is unavailable because `gpg` is absent. Its checksum pair is
+  `h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=` /
+  `h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=`. All 65 module-ZIP-eligible
+  files match the exact tag commit; Go correctly excludes six files belonging
+  to the nested benchmark module.
+- The repository remains active and unarchived for its default `v2` branch,
+  while `master` says v1 will receive no updates and recommends v2. The v1
+  module has no formal `Deprecated` marker. The only commit after v1.9.5 on
+  `master` changes that README notice; it is not a later v1 release.
+  `github.com/pelletier/go-toml/v2` is a distinct module and import path, not
+  an in-place v1 selection.
+- Exact `go get github.com/pelletier/go-toml@v1.9.5` exits 0 without output or
+  go.mod/go.sum changes. Old and candidate states remain byte-identical at 234
+  selected modules, 3,557 graph edges, 429 native complete-test packages,
+  three v1 checksum lines, and a 313-line unapplied tidy projection. V1.9.5
+  has zero requirements, so the exact selection, edge, checksum, package, and
+  metadata closure is empty.
+- No v1 package loads and `go mod why -m` says the main module does not need
+  it, so no focused loaded behavior applies. Five packages from the distinct
+  `/v2` module do load through Viper. V1.9.5 complete tests, count-10 tests,
+  and race pass across six packages. Standalone `go vet ./...` diagnoses 132
+  legacy unkeyed `Position` literals in query test files; this is not a
+  candidate regression because exact selection is unchanged, default complete
+  tests pass, and repository vet is clean.
+- Repository build, complete tests/race/vet, Windows build, pinned lint, CLI
+  surface, byte-identical help/API/CLI, empty-HOME count-2, and the final full
+  preflight pass. Two earlier preflights retain the established launcher
+  signal-fixture timing diagnostic; isolated direct and Make launcher suites
+  pass 62/62 before the final preflight passes all repository, 80 mutation,
+  and 15 audit-meta controls. No post-implementation quality run was required
+  because dependency metadata did not change.
+- Govulncheck v1.7.0 preserves exact and identical Darwin-symbol/
+  Darwin-module/Windows-symbol populations 20/30/20. The primary Go
+  vulnerability module index has no go-toml v1 or v2 entry. No dependency
+  implementation commit was manufactured. Decision evidence is sealed at
+  `/private/tmp/ply-p7-go-toml-selection.09cc40b.jGVQz6`, whose fully verified
+  37,719-entry manifest SHA-256 is
+  `e3e516511d60caf7d2004ee1feb29261ecc45b35339dac8e44d19f286606e1b8`;
+  selection-summary SHA-256 is
+  `85deac527b69ebbfd2608a970684b3f915563d48a538644f3da357961adc268e`.
 - Next, independently evaluate selected indirect
-  `github.com/pelletier/go-toml v1.9.5` as one bounded P7 module group. Resolve
-  canonical latest, Go floor, repository/module-path lineage, source identity,
-  closure, loaded behavior, self-tests, and vulnerability data before
-  selecting anything.
+  `github.com/pelletier/go-toml/v2 v2.0.7` as one bounded P7 module group.
+  Resolve canonical latest, highest Go-1.18-compatible release, source and
+  module lineage, exact closure, loaded behavior, self-tests, and vulnerability
+  data before selecting anything. Do not conflate the completed v1 decision
+  with the `/v2` module.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
