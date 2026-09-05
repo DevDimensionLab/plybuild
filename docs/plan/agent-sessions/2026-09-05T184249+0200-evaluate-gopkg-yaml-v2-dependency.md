@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Gopkg YAML V2 Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-05T184249+0200-evaluate-gopkg-yaml-v2-dependency`
 Created: `2026-09-05T18:42:49+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `95f2af80e2959df9a85224e05288d899fc09c71ba057925dddf04ef0472be0c4`
 Previous: [2026-09-05T175806+0200-evaluate-golang-x-text-dependency.md](2026-09-05T175806+0200-evaluate-golang-x-text-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-05T192359+0200-evaluate-gopkg-yaml-v3-dependency.md](2026-09-05T192359+0200-evaluate-gopkg-yaml-v3-dependency.md)
+Outcome: Retained canonical-latest and highest Go-1.18-floor-compatible `gopkg.in/yaml.v2 v2.4.0` without a dependency commit: exact get is a zero-change projection, while mandatory repeated module tests and vet fail identically in both states; sealed source, closure, consumer, and vulnerability evidence records the no-change stop decision and P7 remains active for the distinct `gopkg.in/yaml.v3 v3.0.1` group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -154,3 +154,87 @@ and make the normal `docs: prepare next agent session` commit. Do not implement
 that next group, launch a successor, push, merge, publish, release, stash,
 revert, delete retained evidence/images, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Retained selected `gopkg.in/yaml.v2 v2.4.0` without editing dependency
+metadata. Fresh primary evidence resolves v2.4.0 as both the canonical latest
+stable release for this exact module path and the highest stable release whose
+declarations preserve the retained Go 1.18 floor. Exact projected
+`go get gopkg.in/yaml.v2@v2.4.0` is a no-op. Independent old and candidate
+module replays then fail the mandatory count-10 and vet gates identically, so
+no dependency implementation commit was manufactured and downstream
+repository-wide candidate acceptance was inapplicable.
+
+The Go proxy enumerates exactly 14 stable releases, v2.0.0 through v2.4.0,
+with no prereleases or retractions. Exact `@latest` and `go list` resolve
+v2.4.0 at 2020-11-17T15:46:20Z. Its module declares Go 1.15 and requires
+`gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405`; every earlier release
+also has no declaration above Go 1.18. The checksum pair is
+`h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=` /
+`h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=`.
+
+Direct VCS resolution identifies unsigned commit
+`7649d4548cb53a614db133b2a8ac1f31859dda8c`, tree
+`32e8d4cd33ca7feab3e2b4081202299f7556af4e`, under lightweight tag v2.4.0.
+The tag has no separate object or signature, and GitHub records the commit as
+unsigned. All 24 proxy files are byte-identical to both the archived,
+undisabled, non-fork `go-yaml/yaml` tag and the matching `yaml/go-yaml`
+successor mirror tag. The proxy ZIP SHA-256 is
+`ede49e27c4cca6cdd2ec719aed8ea4d363710cceb3d411e7a786fbdec0d391fd`.
+The original v2 branch has no commit after v2.4.0 and publishes no GitHub
+Release object; the module has no formal deprecation marker despite its
+archived original repository.
+
+Later successor tags v2.4.1-v2.4.4 belong to the different module path
+`go.yaml.in/yaml/v2`; the latest is v2.4.4, and
+`gopkg.in/yaml.v2@v2.4.1` is an unknown revision. Likewise
+`gopkg.in/yaml.v3` v3.0.1, `go.yaml.in/yaml/v3` v3.0.5, and prerelease-only
+`go.yaml.in/yaml/v4` v4.0.0-rc.6 are distinct module paths or majors, not
+upgrade candidates for this group. The three commits from v2.3.0 to v2.4.0
+include the public `FutureLineWrap` behavior, a line-wrapping revert, Go 1.14
+CI, and Marshal documentation; unreleased successor work does not alter the
+canonical decision for this exact path.
+
+The exact-get projection changes zero go.mod or go.sum bytes, selections,
+edges, or checksums. Both states retain 234 selected modules, 3,564 graph
+edges, 429 complete loaded test packages, 1,031 go.sum lines, and the same
+332-line unapplied tidy diff. YAML v2's declared 2016 gocheck requirement is
+dominated by retained selected
+`gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15`, so the minimal changed
+MVS closure is empty. Project module verification passes in both projections.
+
+`gopkg.in/yaml.v2` is loaded as exactly one package. Its real path is
+`github.com/devdimensionlab/plybuild/pkg/config -> gopkg.in/yaml.v2`, where
+the config package calls `yaml.Marshal` and `yaml.Unmarshal` for local and
+cloud configuration. `go test ./pkg/config -count=10` passes in both states
+with normalized-identical output.
+
+The module itself verifies, lists, passes `go test ./... -count=1`, and passes
+`go test -race ./... -count=1`, with source remaining byte-identical. Both
+independent replays fail `go test ./... -count=10`: `S.TestLineWrapping` fails
+on iterations 2 through 10 because `yaml.FutureLineWrap()` irreversibly changes
+package-global behavior. Both also fail `go vet ./...` with the same 27 legacy
+malformed struct-tag diagnostics in `decode_test.go` and `encode_test.go`.
+Normalized repeated-test failures and vet output are identical old versus
+candidate. These failures activate the explicit module stop rule before
+repository build, complete repository tests/race/vet, lint, help/API/CLI,
+snapshot/Docker, quality, and audit gates.
+
+Govulncheck v1.7.0 preserves exact old/candidate Darwin-symbol,
+Darwin-module, and Windows-symbol populations at 20/30/20 with byte-identical
+ID sets. No scan contains a YAML v2 module finding or symbol trace. The fresh
+1,392-entry primary vulnerability index records GO-2020-0036,
+GO-2021-0061, and GO-2022-0956 for this module, fixed respectively in v2.2.8,
+v2.2.3, and v2.2.4; selected v2.4.0 is after every fix.
+
+Evidence is sealed at
+`/private/tmp/ply-p7-yaml-v2-selection.1969442.0BpgSy`. Its fully verified
+29,219-entry manifest SHA-256 is
+`8dd34cc54f56e4bb1370b2f7f1f124aa8b501a4dcca177effe4f6377c3919e14`;
+decision-summary SHA-256 is
+`61d8132e932d4613aea071c5f3d55a9a38c2873e2428011b83231611517885d6`.
+All 28 inherited manifests were independently verified before measurement,
+with the recorded go-colorful mutable telemetry, btree regression, and cast
+whitespace-path corrections preserved. `go.mod`, `go.sum`, production code,
+quality apparatus, and release inputs remain unchanged.

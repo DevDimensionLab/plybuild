@@ -1055,16 +1055,16 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-05T184249+0200-evaluate-gopkg-yaml-v2-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T184249+0200-evaluate-gopkg-yaml-v2-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T175806+0200-evaluate-golang-x-text-dependency.md
+#|SESSION_ID=2026-09-05T192359+0200-evaluate-gopkg-yaml-v3-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T192359+0200-evaluate-gopkg-yaml-v3-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T184249+0200-evaluate-gopkg-yaml-v2-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 by independently evaluating selected indirect
-#|`gopkg.in/yaml.v2 v2.4.0` as one bounded dependency group. Resolve the
+#|Continue P7 by independently evaluating selected
+#|`gopkg.in/yaml.v3 v3.0.1` as one bounded dependency group. Resolve the
 #|canonical latest stable release and highest floor-compatible candidate from
 #|primary evidence. Implement one exact changed selection only if it preserves
 #|the retained Go 1.18 floor, has an explained minimal closure, and passes every
@@ -1073,38 +1073,38 @@ exit 70
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain and
-#|completed dependency groups through retained x/text v0.7.0. All earlier
-#|recorded rejections, no-change decisions, accepted closures, and evidence
-#|corrections remain final. Do not revisit them or combine another module group.
-#|P8 remains queued.
+#|completed dependency groups through retained canonical-latest
+#|gopkg.in/yaml.v2 v2.4.0. All earlier recorded rejections, no-change decisions,
+#|accepted closures, and evidence corrections remain final. Do not revisit them
+#|or combine another module group. P8 remains queued.
 #|
-#|The current build list selects gopkg.in/yaml.v2 v2.4.0. Treat its latest
+#|The current build list selects gopkg.in/yaml.v3 v3.0.1. Treat its latest
 #|release, Go declaration, release qualification, closure, loaded population,
 #|consumer paths, source history, tests, and vulnerability effect as unknown
-#|until independently resolved. This session may change only yaml.v2's exact
-#|required go.mod/go.sum metadata, its minimal MVS closure, and the roadmap/
-#|handoff record. Do not change production Go, another dependency, language or
-#|toolchain declarations, quality apparatus, Docker/release inputs, packaging,
-#|publishers, or P8 code.
+#|until independently resolved. This session may change only gopkg YAML v3's
+#|exact required go.mod/go.sum metadata, its minimal MVS closure, and the
+#|roadmap/handoff record. Do not change production Go, another dependency,
+#|language or toolchain declarations, quality apparatus, Docker/release inputs,
+#|packaging, publishers, or P8 code.
 #|
 #|# Measurements At Start
 #|
 #|Latest implementation remains dependency-only cast commit
 #|`cf4fd4933251b2ca7844b6420fd3cf2a86f049a5`, exact parent
 #|`17f7277fd2512ba06db76d1acb0af5f8b623243c`, clean tree
-#|`485690c010cef3b02385d8f2471d3ef53611abe9`. The x/text documentation
+#|`485690c010cef3b02385d8f2471d3ef53611abe9`. The YAML v2 documentation
 #|handoff must have exact parent
-#|`6ab5945de5fef2ee6f7deff10f4bc51e94596b30`. Relative to accepted go-cmp
+#|`1969442891c30b5750da632032312cb1b96624e9`. Relative to accepted go-cmp
 #|commit c314bcb, accepted metadata changes remain go-colorful v1.2.0 -> v1.4.1,
 #|go-runewidth v0.0.14 -> v0.0.17, go-toml/v2 v2.0.7 -> v2.2.2, and cast
 #|v1.5.0 -> v1.5.1, with their recorded minimal closures and exactly 15 added
 #|checksum lines. Ordinary and ignored status must be empty.
 #|
 #|Current dependency measurements remain 234 selected modules, 3,564 graph
-#|edges, 429 native complete-test packages, a 332-line unapplied tidy projection,
-#|and exact Darwin-symbol/Darwin-module/Windows-symbol vulnerability populations
-#|20/30/20. The retained main module declares Go 1.18 and prefers toolchain Go
-#|1.26.7.
+#|edges, 429 native complete-test packages, 1,031 go.sum lines, a 332-line
+#|unapplied tidy projection, and exact Darwin-symbol/Darwin-module/Windows-symbol
+#|vulnerability populations 20/30/20. The retained main module declares Go 1.18
+#|and prefers toolchain Go 1.26.7.
 #|
 #|Use exact Go 1.26.7 at
 #|`/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`, SHA-256
@@ -1117,39 +1117,43 @@ exit 70
 #|Retain the verified golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and
 #|govulncheck v1.7.0 binaries and hashes recorded in the handover.
 #|
-#|X/text rejection evidence is fully verified at
-#|`/private/tmp/ply-p7-x-text-selection.6ab5945.3qn5Bj`, 82,629 entries and
+#|YAML v2 no-change evidence is fully verified at
+#|`/private/tmp/ply-p7-yaml-v2-selection.1969442.0BpgSy`, 29,219 entries and
 #|manifest SHA-256
-#|`48c872da4ab796ef1115003fcf0a226a07bf5791a163d36bc9c946c9d9f92ed6`;
+#|`8dd34cc54f56e4bb1370b2f7f1f124aa8b501a4dcca177effe4f6377c3919e14`;
 #|decision-summary SHA-256 is
-#|`50d6bee90ea7cea060e23400e820b1537742ec2167bee04f188070e2e5eb39c9`.
-#|V0.41.0 is canonical x/text latest and v0.15.0 is the highest complete
-#|Go-1.18-floor-compatible release, but v0.15.0 complete tests, race, and vet
-#|fail under Go 1.26.7. X/text v0.7.0 remains selected and dependency metadata
-#|is unchanged. Preserve all prior verified roots and the recorded go-colorful
-#|mutable telemetry, btree regression, and cast whitespace-path corrections.
+#|`61d8132e932d4613aea071c5f3d55a9a38c2873e2428011b83231611517885d6`.
+#|V2.4.0 is canonical latest and the highest Go-1.18-floor-compatible release
+#|for exact path gopkg.in/yaml.v2. Exact get is a no-op, and mandatory repeated
+#|module tests plus vet fail identically, so v2.4.0 remains selected and
+#|dependency metadata is unchanged. Preserve all prior verified roots and the
+#|recorded go-colorful mutable telemetry, btree regression, and cast
+#|whitespace-path corrections.
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve yaml.v2 releases through the
-#|Go proxy, checksum database, authoritative upstream repository and mirror,
-#|and primary Go vulnerability data. Record exact tag commits/times, module Go
-#|declarations and requirements, checksum pairs, source identity, tag and commit
-#|signature status, relevant release history, and archived/deprecated status.
-#|Explicitly distinguish stable releases, prereleases, retractions, forks,
-#|nested or later major paths including yaml.v3, and unreleased upstream commits.
+#|From fresh external archives and caches, resolve gopkg YAML v3 releases
+#|through the Go proxy, checksum database, authoritative upstream repository and
+#|successor mirror, and primary Go vulnerability data. Record exact tag
+#|commits/times, module Go declarations and requirements, checksum pairs, source
+#|identity, tag and commit signature status, relevant release history, and
+#|archived/deprecated status. Explicitly distinguish stable releases,
+#|prereleases, retractions, forks, the retained gopkg YAML v2 path, the already
+#|accepted `go.yaml.in/yaml/v3 v3.0.5` path, prerelease YAML v4, and unreleased
+#|upstream commits. Do not treat another path or major as an upgrade candidate
+#|for this group.
+#|
 #|Prove canonical latest and the highest stable release compatible with Go 1.18
 #|from declarations and complete changed closure; do not infer compatibility
-#|from a modern build or treat yaml.v3 as an upgrade candidate for this group.
-#|
-#|Measure old versus candidate selected modules, graph edges, complete package
-#|population, checksums, loaded packages and paths, explicit exact-get diff, and
-#|`go mod tidy -diff`. Require an explained minimal selection/edge/checksum
-#|closure. Independently prove whether yaml.v2 is loaded; if it is, identify its
-#|real consumers and run focused behavior over the actually used packages and
-#|symbols. Also require candidate module complete tests, repository build,
-#|complete tests/race/vet, pinned lint, byte-identical public help, identical
-#|API/CLI reports, and exact Darwin and Windows vulnerability populations.
+#|from a modern build. Measure old versus candidate selected modules, graph
+#|edges, complete package population, checksums, loaded packages and paths,
+#|explicit exact-get diff, and `go mod tidy -diff`. Require an explained minimal
+#|selection/edge/checksum closure. Independently prove whether gopkg YAML v3 is
+#|loaded; if it is, identify its real consumers and run focused behavior over
+#|the actually used packages and symbols. Also require candidate module complete
+#|tests, repository build, complete tests/race/vet, pinned lint, byte-identical
+#|public help, identical API/CLI reports, and exact Darwin and Windows
+#|vulnerability populations.
 #|
 #|Stop and record rejection without editing dependency metadata if canonical
 #|resolution, Go-floor compatibility, exact closure, source identity, module
@@ -1164,20 +1168,22 @@ exit 70
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher `--check`, and the P7/P8 checkpoint before editing.
 #|Verify every accepted manifest. Read this archive, the rolling handover, P7 in
-#|the roadmap, go.mod/go.sum, the rejected x/text, x/net, x/image, and gotenv
-#|decisions, retained jwalterweatherman decision, accepted cast decision and
-#|quality evidence, rejected afero decision, prior yaml.v3 and Cobra/YAML closure
-#|decisions, prior bounded dependency decisions, and the toolchain,
-#|compatibility, snapshot/Docker, quality, baseline-reproduction, and audit
-#|contracts. Preserve every recorded manifest correction.
+#|the roadmap, go.mod/go.sum, the retained YAML v2 and rejected x/text, x/net,
+#|x/image, and gotenv decisions, retained jwalterweatherman decision, accepted
+#|cast decision and quality evidence, rejected afero decision, the accepted
+#|`go.yaml.in/yaml/v3` and Cobra/YAML closure decisions, prior bounded dependency
+#|decisions, and the toolchain, compatibility, snapshot/Docker, quality,
+#|baseline-reproduction, and audit contracts. Preserve every recorded manifest
+#|correction.
 #|
 #|# Three Moves
 #|
 #|Only if every decision gate passes and the selection changes, use exact Go
-#|1.26.7 and exact `go get gopkg.in/yaml.v2@<selected-version>` for one
+#|1.26.7 and exact `go get gopkg.in/yaml.v3@<selected-version>` for one
 #|dependency-only commit. Do not hand-edit module metadata and do not use tidy as
-#|implementation. Preserve every retained dependency selection, language/
-#|toolchain declaration, production source, quality apparatus, and release input.
+#|implementation. Preserve every retained dependency selection, especially
+#|`gopkg.in/yaml.v2 v2.4.0` and `go.yaml.in/yaml/v3 v3.0.5`, language/toolchain
+#|declarations, production source, quality apparatus, and release input.
 #|
 #|After a changed selection, run the complete P7 dependency gate: focused
 #|behavior, graph/path, tests/race/vet, pinned lint, help/API/CLI, launcher and

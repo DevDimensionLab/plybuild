@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-05T18:42:49+02:00
+Generated: 2026-09-05T19:23:59+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -14,19 +14,19 @@ session diary.
   `17f7277fd2512ba06db76d1acb0af5f8b623243c`, clean tree
   `485690c010cef3b02385d8f2471d3ef53611abe9`. It changes only `go.mod` and
   `go.sum`.
-- The incoming x/text documentation session is commit
-  `6ab5945de5fef2ee6f7deff10f4bc51e94596b30`, exact parent
-  `e5ea7ae4ddb5bc4d58085ff3fcfe5b472e6951ce`, tree
-  `0b6b23569b9296c50085a084737f74debaf95e62`. This handoff must be its
-  direct child. The next dependency implementation, if any, must use the
-  resulting documentation commit as its exact parent.
+- The incoming YAML v2 documentation session is commit
+  `1969442891c30b5750da632032312cb1b96624e9`, exact parent
+  `6ab5945de5fef2ee6f7deff10f4bc51e94596b30`, tree
+  `4aec00f4704f56b26262ee0662afd3d20615c28d`. This handoff must be its direct
+  child. The next dependency implementation, if any, must use the resulting
+  documentation commit as its exact parent.
 - Relative to accepted go-cmp commit `c314bcb`, accepted dependency metadata
   moves remain go-colorful v1.2.0 -> v1.4.1, go-runewidth v0.0.14 -> v0.0.17,
   go-toml/v2 v2.0.7 -> v2.2.2, and cast v1.5.0 -> v1.5.1. Their minimal
   closures select testify v1.9.0, objx v0.5.2, quicktest v1.14.4, kr/pretty
   v0.3.1, and rogpeppe/go-internal v1.9.0. Those four accepted groups add
   exactly 15 checksum lines.
-- The answered x/text archive and sole NEXT `gopkg.in/yaml.v2` archive must
+- The answered YAML v2 archive and sole NEXT `gopkg.in/yaml.v3` archive must
   link reciprocally. Only the launcher's mutable header and prompt regions may
   change during handoff. Ordinary and ignored status must end empty.
 - No `.agent-task/current.md` or `.quality/manual-evidence.json` was created.
@@ -36,110 +36,110 @@ session diary.
 P2A-P6 are complete. P7 remains active after the maintained Go 1.26.7
 toolchain and completed dependency groups through accepted cast v1.5.1,
 rejected afero v1.10.0, retained canonical-latest jwalterweatherman v1.1.0,
-rejected gotenv v1.6.0, x/image v0.16.0, x/net v0.25.0, and x/text v0.15.0.
-Go-cmp v0.7.0, Viper v1.16.0, Emoji v2.2.14, ini v1.67.3, fatih/color
-v1.19.0, fsnotify v1.10.1, latest gomarkdown
-`v0.0.0-20260824154242-13c5cf49db8d`, HCL, mousetrap, properties,
-mapstructure, go-toml v1, afero, jwalterweatherman, gotenv, x/image, x/net, and
-x/text changes remain rejected or unnecessary for their recorded floor,
-loaded-behavior, release-qualification, self-test, exact-latest, or closure
-decisions. Do not revisit them. P8 remains queued.
+rejected gotenv v1.6.0, x/image v0.16.0, x/net v0.25.0, and x/text v0.15.0,
+and retained canonical-latest YAML v2 v2.4.0. Go-cmp v0.7.0, Viper v1.16.0,
+Emoji v2.2.14, ini v1.67.3, fatih/color v1.19.0, fsnotify v1.10.1, latest
+gomarkdown `v0.0.0-20260824154242-13c5cf49db8d`, HCL, mousetrap, properties,
+mapstructure, go-toml v1, afero, jwalterweatherman, gotenv, x/image, x/net,
+x/text, and YAML v2 changes remain rejected or unnecessary for their recorded
+floor, loaded-behavior, release-qualification, self-test, exact-latest, or
+closure decisions. Do not revisit them. P8 remains queued.
 
-## Rejected Golang X Text Group
+## Retained Gopkg YAML V2 Group
 
-Fresh Go proxy, checksum-database, authoritative Go Git, GitHub mirror, and
-primary Go vulnerability evidence enumerate exactly 49 stable semantic
-releases, v0.1.0 through v0.41.0, with no prereleases, retractions, formal
-deprecation marker, fork, archived or disabled repository, or nested/later
-major module path. Proxy `@latest` and exact `go list` resolve v0.41.0 at
-commit `acdba6655fd45cdb5ab73c9d6a8981333bd65a39`, published
-2026-08-11T15:22:47Z and declaring Go 1.25.0. The three historical GitHub
-Release objects are stable; later releases are proxy-listed authoritative
-tags. Master `f53c31601f90c1b840c0703c5537c3ce1e4b6f5c` is 12 commits later,
-declares Go 1.26.0, and is unreleased.
+Fresh Go proxy, checksum-database, gopkg metadata, original and successor Git
+repositories, GitHub API, and primary Go vulnerability evidence enumerate
+exactly 14 stable releases, v2.0.0 through v2.4.0, with no prereleases or
+retractions. Proxy `@latest` and exact `go list` resolve v2.4.0 at
+2020-11-17T15:46:20Z. It declares Go 1.15 and requires
+`gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405`. No earlier release
+declares above Go 1.18, so v2.4.0 is both canonical latest and the highest
+stable release compatible with the retained floor for this exact module path.
+Its checksum pair is `h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=` /
+`h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=`.
 
-V0.1.0-v0.3.2 have no Go declaration, v0.3.3-v0.3.6 declare Go 1.11,
-v0.3.7-v0.13.0 declare Go 1.17, v0.14.0-v0.22.0 declare Go 1.18,
-v0.23.0-v0.28.0 declare Go 1.23.0, v0.29.0-v0.34.0 declare Go 1.24.0, and
-v0.35.0-v0.41.0 declare Go 1.25.0. Direct declarations are insufficient:
-v0.16.0 first requires x/tools pseudo-version
-`v0.21.1-0.20240508182429-e35e4ccd0d2d`, which declares Go 1.19, and that
-requirement remains through v0.22.0. V0.15.0 instead requires x/tools v0.6.0,
-x/mod v0.8.0, and x/sys v0.5.0, all at Go 1.18 or lower. V0.15.0 is therefore
-the highest stable complete-closure-compatible candidate.
+V2.4.0 is lightweight tag commit
+`7649d4548cb53a614db133b2a8ac1f31859dda8c`, tree
+`32e8d4cd33ca7feab3e2b4081202299f7556af4e`. The tag has no separate tag
+object or signature, and the commit is unsigned. All 24 proxy files match the
+exact original `go-yaml/yaml` tag and successor `yaml/go-yaml` mirror tag;
+proxy ZIP SHA-256 is
+`ede49e27c4cca6cdd2ec719aed8ea4d363710cceb3d411e7a786fbdec0d391fd`.
+The original repository is archived but not disabled or a fork, has no commit
+after v2.4.0 on its v2 branch, publishes no GitHub Release objects, and places
+no formal deprecation marker on the module.
 
-Candidate v0.15.0 is unsigned lightweight tag commit
-`8d533a0c40adec778a7d09ac6c8aa640d3c883f4` at
-2024-04-15T18:14:38Z. Its checksum pair is
-`h1:h1V/4gjBv8v9cjcR6+AR5+/cIYK5N/WAgiv4xlsEtAk=` /
-`h1:18ZOQIKpY8NJVqYksKHtTdi31H5itFRjB5/qKTNYzSU=`. All 542 proxy files
-match the exact authoritative tag; ZIP SHA-256 is
-`13faee7e46c8a18c8a28f3eceebf15db6d724b9a108c3c0482a6d2e58ba73a73`.
-Selected v0.7.0 is unsigned lightweight tag commit
-`71a9c9afc4cd710b9412f7f99f0d8e35b10e488a` at
-2023-01-31T16:01:06Z. Its checksum pair is
-`h1:4BRB4x83lYWy72KwLD/qYDuTu7q9PjSagHvijDw7cLo=` /
-`h1:mrYo+phRRbMaCq/xk9113O4dZlRixOauAjOtrjsXDZ8=`; all 530 proxy files
-match, with ZIP SHA-256
-`4d017493c58addadf3c753056b921b47ae386a4cfd10eab2d90ed1252c6ba0e4`.
-The authoritative repository and GitHub mirror have identical master and all
-tag refs; relevant tags are lightweight and relevant commits are unsigned.
+Successor tags v2.4.1-v2.4.4 belong to different module path
+`go.yaml.in/yaml/v2`; `gopkg.in/yaml.v2@v2.4.1` is an unknown revision.
+`gopkg.in/yaml.v3` v3.0.1, `go.yaml.in/yaml/v3` v3.0.5, and prerelease-only
+`go.yaml.in/yaml/v4` v4.0.0-rc.6 are distinct module paths or majors and were
+not candidates. Relevant v2.3.0-v2.4.0 history contains the public
+`FutureLineWrap` change and line-wrap revert, Go 1.14 CI, and Marshal docs;
+unreleased successor history does not change the exact-path decision.
 
-Exact projected `go get golang.org/x/text@v0.15.0` changes only x/text in
-go.mod and adds exactly its checksum pair. MVS also moves x/mod from
-`v0.6.0-dev.0.20220419223038-86c51ed26bb4` to v0.8.0 and x/tools v0.1.12 to
-v0.6.0; x/sys v0.30.0 dominates the candidate's v0.5.0 requirement and x/sync
-remains v0.1.0. Modules stay 234, complete packages stay byte-identical at
-429, graph edges change 3,564 -> 3,567 through one removal and four additions,
-and the unapplied tidy projection changes 332 -> 333 lines. This is the
-explained minimal closure.
+Exact projected `go get gopkg.in/yaml.v2@v2.4.0` produces empty stdout/stderr
+and zero-byte go.mod/go.sum diffs. Both states retain 234 selected modules,
+3,564 graph edges, 429 complete packages, 1,031 go.sum lines, and an identical
+332-line unapplied tidy projection. Selected
+`gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15` already dominates YAML
+v2's declared 2016 pseudo-version, so the changed MVS closure has zero
+selections, edges, or checksums. Project module verification passes.
 
-Three x/text packages load: runes, transform, and unicode/norm. The real path
-is `plybuild/cmd -> spf13/viper -> spf13/afero -> x/text/runes`; Afero uses
-`transform.Chain`, normalization forms, rune removal, and `transform.String`.
-Loaded-package, Afero, and Ply cmd focused tests pass at count 10 in both
-projections with normalized-identical output.
+Exactly one YAML v2 package loads through
+`github.com/devdimensionlab/plybuild/pkg/config -> gopkg.in/yaml.v2`.
+`pkg/config` uses `yaml.Marshal` and `yaml.Unmarshal` for local and cloud
+configuration. Focused `go test ./pkg/config -count=10` passes in both states
+with normalized-identical output.
 
-Candidate source remains byte-identical and verification passes, but complete
-tests at count 1/count 10, race, and vet all fail under exact Go 1.26.7. Three
-stale Example identifiers fail vet, and message/pipeline panics in x/tools
-v0.6.0's SSA builder on a Go 1.26 range-over-function construct; repeated
-tests also expose `cases.TestShortBuffersAndOverflow` persistence failures.
-Standalone vet additionally reports 20 unkeyed literals, four unreachable
-statements, and one unused `currency.Unit.String` result. Selected v0.7.0
-reproduces the failure classes. Example fixes first ship in v0.18.0, whose
-closure already declares Go 1.19. The mandatory module stop rule rejects
-v0.15.0, retains v0.7.0, forbids metadata edits, and makes downstream
-repository gates inapplicable. No implementation commit was made.
+The module source remains byte-identical, verifies, lists, passes complete
+count-1 tests, and passes race count 1. Both independent old and no-op
+candidate replays fail count 10 with nine `S.TestLineWrapping` failures:
+`yaml.FutureLineWrap()` permanently changes package-global state after the
+first iteration. Both vet replays fail with exactly 27 identical legacy
+malformed struct-tag diagnostics in decode and encode tests. These mandatory
+module failures stop the group before repository-wide build, tests/race/vet,
+lint, help/API/CLI, snapshot/Docker, quality, and audit acceptance. No
+dependency metadata or implementation commit was made.
 
 Govulncheck v1.7.0 preserves exact Darwin-symbol/Darwin-module/Windows-symbol
-populations at 20/30/20. Both states have the same sole x/text module finding,
-GO-2026-5970, fixed in v0.39.0, and neither has an x/text symbol-reachable
-finding or trace. The fresh 1,392-entry primary index contains four x/text
-records; the other three were fixed before v0.7.0.
+populations at 20/30/20 with identical IDs and no YAML v2 module finding or
+symbol trace. The fresh 1,392-entry primary index contains exactly three YAML
+v2 records: GO-2020-0036 fixed in v2.2.8, GO-2021-0061 fixed in v2.2.3, and
+GO-2022-0956 fixed in v2.2.4. Selected v2.4.0 is after every fix.
 
-## X Text Evidence
+## YAML V2 Evidence
 
 - Selection evidence is sealed at
-  `/private/tmp/ply-p7-x-text-selection.6ab5945.3qn5Bj`. Its fully verified
-  82,629-entry manifest SHA-256 is
-  `48c872da4ab796ef1115003fcf0a226a07bf5791a163d36bc9c946c9d9f92ed6`;
+  `/private/tmp/ply-p7-yaml-v2-selection.1969442.0BpgSy`. Its fully verified
+  29,219-entry manifest SHA-256 is
+  `8dd34cc54f56e4bb1370b2f7f1f124aa8b501a4dcca177effe4f6377c3919e14`;
   decision-summary SHA-256 is
-  `50d6bee90ea7cea060e23400e820b1537742ec2167bee04f188070e2e5eb39c9`.
-- The manifest covers fresh proxy/sumdb/Git/GitHub history, all 49 releases and
-  declarations, upstream/mirror refs, exact source identity, release and
-  signature qualification, complete closure boundary probes, exact-get and
-  tidy diffs, selection/edge/package/loaded populations, consumer paths and
-  focused behavior, selected and candidate module tests, source-mutation
-  checks, and all vulnerability scans. Every entry was recomputed
+  `61d8132e932d4613aea071c5f3d55a9a38c2873e2428011b83231611517885d6`.
+- The manifest covers fresh proxy/sumdb/gopkg/Git/GitHub release history, all
+  14 releases and declarations, exact source identity, tag/commit signature
+  status, archive/deprecation state, related-path exclusion, exact-get and
+  tidy diffs, selection/edge/package/checksum populations, loaded consumers
+  and focused behavior, independent module test replays, source-mutation
+  checks, and exact primary vulnerability scans. Every entry was recomputed
   successfully after sealing.
 
 ## Inherited Evidence And Tool Identity
 
-- All 27 complete inherited manifest roots were independently verified at
-  session start, including the immediate x/image, gotenv, jwalterweatherman,
-  cast, go-toml/v2, go-toml v1, mapstructure, runewidth, properties,
-  mousetrap, HCL, go-colorful, btree, and toolchain roots recorded previously.
+- All 28 complete inherited manifest roots were independently verified at
+  session start, including immediate x/text plus x/net, x/image, gotenv,
+  jwalterweatherman, cast, afero, go-toml/v2, go-toml v1, mapstructure,
+  runewidth, properties, mousetrap, HCL, go-colorful, btree, and toolchain
+  roots. The verification table is sealed inside the YAML v2 evidence.
+- X/text rejection evidence remains fully verified at
+  `/private/tmp/ply-p7-x-text-selection.6ab5945.3qn5Bj`,
+  82,629/`48c872da4ab796ef1115003fcf0a226a07bf5791a163d36bc9c946c9d9f92ed6`;
+  decision summary is
+  `50d6bee90ea7cea060e23400e820b1537742ec2167bee04f188070e2e5eb39c9`.
+- X/net rejection evidence remains fully verified at
+  `/private/tmp/ply-p7-x-net-selection.e5ea7ae.cP57X8`,
+  71,887/`88e4be87483322792ad3da0064bcef4ced5ee21c52821bb1f80c143f80a3aaf1`;
+  decision summary is
+  `6e32698abcde67604e159488ba21f6e780fd61dfba2ed9299644b5f011940dff`.
 - X/image rejection evidence remains fully verified at
   `/private/tmp/ply-p7-x-image-selection.9e9ef26.9J9x1F`,
   52,533/`84972465aef5f19f888102c7991aadd67446146a7056658b006d005666bd82bf`;
@@ -161,7 +161,7 @@ records; the other three were fixed before v0.7.0.
   `850d40f319d13024275b35909e8ff84ce2f9c5ce5959cf8d707461a3b5e5d9ce`,
   `b3d410a70d89e2176daf1a013f97d53e704ef3887f02d67bd6c2564ab0a6d02a`,
   and `97cafb6719f470ab7d057a603b522f0d10418deda2d997e6d5723883efd2e24a`.
-  Preserve its NUL-delimited manifest correction for whitespace paths.
+  Preserve its NUL-delimited whitespace-path correction.
 - Afero rejection evidence remains fully verified at
   `/private/tmp/ply-p7-afero-selection.5a46539.udvGSh`,
   79,866/`f0ad8ce41436a5f8bf48222106e79f57b32a9533b6a9a15b290615a54f162405`.
@@ -172,8 +172,8 @@ records; the other three were fixed before v0.7.0.
   differs. Preserve the btree correction: its 24,197-entry regression manifest
   retains SHA-256
   `9cca917b12dd761c58bf91652e78b3e999f55eeb1ffc39f9f3bbf56a52aef463`
-  and exactly 163 previously recorded mutable cache/HOME mismatches still
-  reproduce; later evidence supersedes them.
+  and exactly 163 recorded mutable cache/HOME mismatches still reproduce;
+  later evidence supersedes them.
 - Recovery `/private/tmp/ply-p7-go1.26.7-recovery.qvk4zs` remains fully
   verified at two entries and manifest SHA-256
   `1b30193f4f4811f2515223c53c004603afa0a4812b8a571a24c49b252122e83b`.
@@ -189,18 +189,21 @@ records; the other three were fixed before v0.7.0.
 
 ## Next Objective
 
-Independently evaluate selected indirect `gopkg.in/yaml.v2 v2.4.0` as
-exactly one bounded P7 module group. Resolve canonical latest, every stable
-release that could satisfy the retained Go 1.18 floor through its complete
-changed closure, source identity, release qualification, requirements, loaded
-package population and behavior, module self-tests, and primary vulnerability
-data from fresh evidence before selecting anything.
+Independently evaluate selected `gopkg.in/yaml.v3 v3.0.1` as exactly one
+bounded P7 module group. Resolve canonical latest, every stable release that
+could satisfy the retained Go 1.18 floor through its complete changed closure,
+source identity, release qualification, requirements, loaded package
+population and behavior, module self-tests, and primary vulnerability data
+from fresh evidence before selecting anything.
 
-Measure exact old/candidate modules, graph edges, complete packages, checksums,
-exact-get diff, unapplied tidy projection, loaded paths and symbols, focused
-consumer behavior, repository quality, help/API/CLI identity, and exact Darwin
-and Windows vulnerability populations. Implement only an exact
-floor-compatible release with explained minimal closure and every gate
-passing; otherwise record rejection or no-change without dependency metadata
-edits. Do not combine x/text, x/net, x/image, gotenv, jwalterweatherman, cast,
-afero, yaml.v3, another dependency group, or P8.
+Treat the already accepted `go.yaml.in/yaml/v3 v3.0.5` decision as final and
+the path as distinct. Explicitly distinguish gopkg YAML v2, the successor
+`go.yaml.in/yaml/v3` path, prerelease YAML v4, forks, and unreleased commits;
+none is an upgrade candidate for the gopkg YAML v3 group. Measure exact
+old/candidate modules, edges, packages, checksums, exact-get and tidy diffs,
+loaded paths and symbols, focused consumer behavior, module and repository
+quality, help/API/CLI identity, and exact Darwin and Windows vulnerability
+populations. Implement only an exact floor-compatible changed release with an
+explained minimal closure and every gate passing; otherwise record rejection
+or no-change without dependency metadata edits. Do not combine YAML v2,
+go.yaml.in YAML v3, YAML v4, another dependency group, or P8.

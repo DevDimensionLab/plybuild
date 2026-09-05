@@ -7013,11 +7013,47 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `48c872da4ab796ef1115003fcf0a226a07bf5791a163d36bc9c946c9d9f92ed6`,
   and decision-summary SHA-256 is
   `50d6bee90ea7cea060e23400e820b1537742ec2167bee04f188070e2e5eb39c9`.
-- Next, independently evaluate selected indirect `gopkg.in/yaml.v2 v2.4.0`
-  as one bounded P7 module group. Resolve canonical latest, highest
-  Go-1.18-floor-compatible release, source identity, exact closure, loaded
-  behavior, self-tests, and vulnerability data before selecting anything. Do
-  not combine x/text, x/net, x/image, yaml.v3, or another module group.
+- Retain selected `gopkg.in/yaml.v2 v2.4.0` without dependency metadata
+  edits. Fresh proxy evidence enumerates exactly 14 stable releases through
+  canonical latest v2.4.0, with no prereleases or retractions. V2.4.0 declares
+  Go 1.15 and is also the highest stable release compatible with the retained
+  Go 1.18 floor for this exact module path. Its checksum pair is
+  `h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=` /
+  `h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=`.
+- V2.4.0 is lightweight unsigned tag commit
+  `7649d4548cb53a614db133b2a8ac1f31859dda8c` at
+  2020-11-17T15:46:20Z. All 24 proxy files match both the archived original
+  repository and active successor mirror; ZIP SHA-256 is
+  `ede49e27c4cca6cdd2ec719aed8ea4d363710cceb3d411e7a786fbdec0d391fd`.
+  Later v2.4.1-v2.4.4 tags use distinct module path `go.yaml.in/yaml/v2`, and
+  the v3/v4 paths are not candidates for this group.
+- Exact projected `go get gopkg.in/yaml.v2@v2.4.0` changes zero go.mod/go.sum
+  bytes, selections, edges, or checksums. Both states retain 234 modules,
+  3,564 edges, 429 complete packages, 1,031 checksum lines, and the same
+  332-line unapplied tidy projection. The retained later gocheck selection
+  dominates YAML v2's declared 2016 pseudo-version, so the changed closure is
+  empty. The sole loaded package is consumed by `pkg/config`, whose actual
+  Marshal/Unmarshal behavior passes count 10 with normalized-identical output.
+- The module verifies and passes count-1 and race tests, but independent old
+  and no-op-candidate replays both fail count 10 with nine persistent
+  `S.TestLineWrapping` failures after `FutureLineWrap` changes irreversible
+  global state. Vet also fails identically with 27 legacy malformed test
+  struct tags. The mandatory module stop rule therefore forbids an
+  implementation commit and makes downstream repository candidate gates
+  inapplicable.
+- Exact Darwin-symbol/Darwin-module/Windows-symbol vulnerability populations
+  remain 20/30/20 with identical IDs and no YAML v2 finding or trace. The
+  fresh primary index's three YAML v2 records are all fixed before v2.4.0.
+  No dependency commit was made. No-change evidence is sealed at
+  `/private/tmp/ply-p7-yaml-v2-selection.1969442.0BpgSy`; its fully verified
+  29,219-entry manifest SHA-256 is
+  `8dd34cc54f56e4bb1370b2f7f1f124aa8b501a4dcca177effe4f6377c3919e14`,
+  and decision-summary SHA-256 is
+  `61d8132e932d4613aea071c5f3d55a9a38c2873e2428011b83231611517885d6`.
+- Next, independently evaluate selected `gopkg.in/yaml.v3 v3.0.1` as
+  one bounded P7 module group. Treat the retained and already measured
+  `go.yaml.in/yaml/v3 v3.0.5` as a distinct path and final prior decision; do
+  not combine YAML v2, YAML v4, another module group, or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
