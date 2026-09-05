@@ -5365,9 +5365,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move, completed
-dependency groups through accepted Google go-cmp v0.6.0, and the rejected
-no-change Hashicorp HCL evaluation; inconshreveable/mousetrap and further
-dependency groups remain queued.
+dependency groups through accepted Google go-cmp v0.6.0, and the rejected or
+no-change Hashicorp HCL and inconshreveable/mousetrap evaluations;
+lucasb-eyer/go-colorful and further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6313,10 +6313,50 @@ Current queue decisions and next bounded P7 group (2026-09-04):
   `ad2954c3ebcf8bfe40e5e1684fcfcf662610555e6ed113515750db1a91c1acff`,
   and selection-summary SHA-256 is
   `c20b0d6354c35adf0e05916610d03a93c0210bb613ae889250316bffc34132d9`.
+- Retain selected indirect `github.com/inconshreveable/mousetrap v1.1.0`
+  unchanged. Fresh Go proxy and upstream evidence lists only stable v1.0.0,
+  v1.0.1, and v1.1.0; canonical `@latest`, `go list -m -u`, the default
+  branch, and the exact selected tag all resolve v1.1.0 at commit
+  `4e8053ee7ef85a6bd26368364a6d27f1641c1d21`, published
+  2022-11-27T22:01:53Z. It declares Go 1.18, has no requirements, and its
+  checksum pair is `h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=` /
+  `h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=`.
+- All three stable release archives are byte-identical to their upstream tag
+  commits. The tags are lightweight; v1.0.0 and v1.0.1 commits are unsigned,
+  while GitHub validates v1.1.0's embedded commit signature and local
+  verification lacks `gpg`. There are no prereleases, retract directives, v2
+  tags/module path, later default-branch commits, or other floor-compatible
+  candidates above v1.1.0. Noncanonical alias tags v1.0 and v1.1 point to the
+  exact v1.0.0 and v1.1.0 commits.
+- Exact `go get github.com/inconshreveable/mousetrap@v1.1.0` emits no output
+  and changes zero go.mod/go.sum bytes. Old and candidate states retain 234
+  modules, 3,557 graph edges, 429 native and 433 Windows complete-test
+  packages, identical checksum populations, and the same 308-line unapplied
+  tidy projection. With no module requirements, the minimal selection, edge,
+  checksum, and metadata closure is empty.
+- Mousetrap is not loaded on Darwin. Windows loads one package through
+  `plybuild/cmd -> cobra -> mousetrap`. Old and candidate Ply cmd consumers
+  pass at count 10, both states cross-build for windows/amd64, and writable
+  exact Cobra source passes all packages at count 10 and compiles its Windows
+  test binary. A direct read-only module-cache diagnostic fails only because a
+  Cobra test writes beside its source; the byte-identical writable replay
+  passes and leaves its source manifest unchanged.
+- Mousetrap's complete one-package tests, race, and vet pass, with no upstream
+  test files. Repository build, complete tests/race/vet, pinned lint, CLI
+  surface, and help/API/CLI identity pass. Vulnerability populations remain
+  exact and identical 20/30/20, and the primary Go vulnerability index has no
+  mousetrap entry. No dependency commit or post-implementation quality run was
+  made for the exact no-op selection.
+- No-change evidence is sealed at
+  `/private/tmp/ply-p7-mousetrap-selection.516ae39.PzdXjl`: its fully verified
+  29,283-entry manifest SHA-256 is
+  `71f337b114d1383cd103ef53856a5e767d519eda0b5635e9598b26654a78a152`,
+  and selection-summary SHA-256 is
+  `64371a02034a3265fa879330e05bcdb477c5c2560de16fa9e57c62e4a5c2e08a`.
 - Next, independently evaluate selected indirect
-  `github.com/inconshreveable/mousetrap v1.1.0` as one bounded P7 module
-  group. Resolve the canonical latest release, Go floor, source identity,
-  closure, loaded behavior, and vulnerability data before selecting anything.
+  `github.com/lucasb-eyer/go-colorful v1.2.0` as one bounded P7 module group.
+  Resolve the canonical latest release, Go floor, source identity, closure,
+  loaded behavior, and vulnerability data before selecting anything.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
