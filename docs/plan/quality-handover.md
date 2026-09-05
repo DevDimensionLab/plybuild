@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-05T02:09:20+02:00
+Generated: 2026-09-05T04:24:16+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,107 +9,113 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base `master` at `5635d50`.
-- Latest implementation remains dependency-only go-cmp commit
-  `c314bcb440b5f94871d71a249bca7ae7f87d5543`, exact parent
-  `cbdb0a915d7d30bb6633cfbb2ccf0323aea1b77a`, clean tree
-  `9a212b377cb08e7d6e3044fb6dae071058b6242b`.
-- The mousetrap evaluation made no dependency or production change. Its final
-  documentation handoff must have exact parent
-  `516ae39b7d8efd36e20d7fe07bc3c6a8d22dbaae`; `go.mod` and `go.sum` remain
-  byte-identical to `c314bcb`. Ordinary and ignored status must be empty.
-- The answered mousetrap archive and the lucasb-eyer/go-colorful NEXT archive
+- Latest implementation is dependency-only go-colorful commit
+  `dc4f27c0319c6f023b5750df2148219a4cb32e60`, exact parent
+  `f40b0322974eee388d5c064596826898e63f13ca`, clean tree
+  `a5f3282ed71f9e5557718d63e5ea8d23020c44e2`. It changes only `go.mod` and
+  `go.sum`.
+- The go-colorful documentation handoff commit must have exact parent dc4f27c.
+  Ordinary and ignored status must be empty. Relative to accepted go-cmp
+  commit c314bcb, dependency metadata changes only go-colorful v1.2.0 ->
+  v1.4.1 and adds its exact checksum pair.
+- The answered go-colorful archive and the magiconair/properties NEXT archive
   must link reciprocally. Only the launcher's mutable header and prompt regions
   may change during handoff.
 - No `.agent-task/current.md` or `.quality/manual-evidence.json` was created.
   No push, merge, publication, release, stash, revert, retained evidence/image
   deletion, successor launch, or worktree removal occurred.
 
-P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain,
-completed dependency groups through accepted `github.com/google/go-cmp
-v0.6.0`, and the rejected/no-change HCL and mousetrap evaluations. Latest
-go-cmp v0.7.0, Viper v1.16.0, Emoji v2.2.14, ini v1.67.3,
-fatih/color v1.19.0, fsnotify v1.10.1, latest gomarkdown
+P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain and
+completed dependency groups through accepted `github.com/lucasb-eyer/go-colorful
+v1.4.1`. The HCL and mousetrap no-change/rejection decisions remain closed.
+Go-cmp v0.7.0, Viper v1.16.0, Emoji v2.2.14, ini v1.67.3, fatih/color
+v1.19.0, fsnotify v1.10.1, latest gomarkdown
 `v0.0.0-20260824154242-13c5cf49db8d`, and HCL or mousetrap selection changes
 remain rejected for their recorded floor, loaded-behavior,
-release-qualification, self-test, or exact-latest decisions. P8 remains
-queued.
+release-qualification, self-test, or exact-latest decisions. P8 remains queued.
 
-## Accepted No-Change Mousetrap Group
+## Accepted Go-Colorful Group
 
-Fresh Go proxy, checksum-database, and upstream evidence agree that selected
-indirect `github.com/inconshreveable/mousetrap v1.1.0` is already the
-canonical latest stable module release and the highest release compatible with
-the retained Go 1.18 floor. The proxy lists exactly v1.0.0, v1.0.1, and
-v1.1.0; `@latest` and `go list -m -u` select v1.1.0 with no `Update` field.
-There are no listed prereleases, retract directives, v2 tags/module path, or
-commits after v1.1.0. Upstream's noncanonical v1.0 and v1.1 alias tags point to
-the exact v1.0.0 and v1.1.0 commits. GitHub Releases contains only an old v1.0
-alias object, so stable semver tags plus the Go proxy are the canonical module
-resolution.
+Fresh Go proxy, checksum-database, GitHub, and upstream Git evidence establish
+`github.com/lucasb-eyer/go-colorful v1.4.1` as both canonical latest stable and
+the highest release compatible with the retained Go 1.18 floor. The proxy
+lists exactly v1.0.1, v1.0.2, v1.0.3, v1.1.0, v1.2.0, v1.3.0, v1.4.0, and
+v1.4.1. `@latest`, `go list -m -u`, and the default branch all resolve v1.4.1,
+with zero later commits. There are no prerelease tags, retractions, v2 tags, or
+major-path changes. Noncanonical v0.9/v1.0 tags are historical only; all nine
+GitHub Release objects are stable, with no draft or prerelease objects.
 
 | Version | Commit / UTC time | Go | Tag and commit signature | Proxy source and sumdb pair |
 | --- | --- | --- | --- | --- |
-| `v1.0.0` | `76626ae9c91c4f2a10f34cad8ce83ea42c93bb75`, 2014-10-17T20:07:13Z | none | lightweight tag; commit unsigned | 5 files identical; `h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=` / `h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=` |
-| `v1.0.1` | `3a66f25f8779fad208598f21472174ef7b35c3ec`, 2022-08-07T15:49:23Z | 1.18 | lightweight tag; commit unsigned | 6 files identical; `h1:U3uMjPSQEBMNp1lFxmllqCPM6P5u/Xq7Pgzkat/bFNc=` / `h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=` |
-| `v1.1.0` | `4e8053ee7ef85a6bd26368364a6d27f1641c1d21`, 2022-11-27T22:01:53Z | 1.18 | lightweight tag; GitHub validates the commit signature, local verification lacks `gpg` | 5 files identical; `h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=` / `h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=` |
+| `v1.2.0` | `d2b05a0d83cca9d610425691c3253d5f36d0ad06`, 2021-01-28T03:22:51Z | 1.12 | lightweight tag; commit unsigned | 38 files identical; `h1:1nnpGOrhyZZuNyfu1QjKiUICQ74+3FNCN69Aj6K7nkY=` / `h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=` |
+| `v1.3.0` | `680f8257cbbd7f283eaf717de5ce105a6a741bd6`, 2025-09-08T14:15:45Z | 1.12 | lightweight tag; GitHub validates commit signature, local `gpg` unavailable | 43 files identical; `h1:2/yBRLdWBZKrf7gB40FoiKfAWYQ0lqNcbuQwVHXptag=` / same mod sum |
+| `v1.4.0` | `960803eeca7760b91ead14a54fabac75e3cfa5d8`, 2026-03-28T13:15:33Z | 1.12 | lightweight tag; commit unsigned | 45 files identical; `h1:UtrWVfLdarDgc44HcS7pYloGHJUjHV/4FwW4TvVgFr4=` / same mod sum |
+| `v1.4.1` | `315b48282c63bac7b48ba128d0c87b7f827b2285`, 2026-08-02T08:53:53Z | 1.12 | lightweight tag; commit unsigned | 45 files identical; `h1:1EO+WB73+EH8EVbzlrG3KLAfEypQWVHIBqlTf+2hNss=` / same mod sum |
 
-The three commits from v1.0.0 to v1.0.1 only expand the license and add the
-Go-1.18 module declaration. The four commits from v1.0.1 to v1.1.0 remove
-Go-1.3/1.4 legacy files, modernize build tags, and consolidate the Windows
-implementation; there are zero later default-branch commits.
+The 26 commits from v1.2.0 to v1.3.0 add color spaces, blends, distances,
+sorting, YAML support, HSV/HCL gray fixes, and faster strict Hex handling. The
+five commits to v1.4.0 add CSS Color 4 wide-gamut/D50 support and Stringer. The
+two commits to v1.4.1 correct the D50-to-D65 matrix. Each release has no module
+requirements, so exact `go get ...@v1.4.1` changes exactly one selection, the
+matching main edge, and two additive go.sum lines while retaining the old
+v1.2.0 pair. No other selected module, edge, or checksum changes.
 
-Exact `go get github.com/inconshreveable/mousetrap@v1.1.0` in a fresh
-candidate archive emits no output and changes zero `go.mod` or `go.sum` bytes.
-Old and candidate states retain byte-identical selections and populations: 234
-modules, 3,557 graph edges, 429 native complete-test packages, 433 Windows
-complete-test packages, the same four mousetrap checksum lines, and the same
-308-line unapplied tidy projection. Mousetrap v1.1.0 has no module
-requirements, so the exact minimal closure is empty: no selection, edge,
-checksum, or metadata line changes.
+Old and selected states both contain 234 selected modules, 3,557 graph edges,
+and 429 complete-test packages. Tidy is an unapplied 308 -> 310-line
+projection. One go-colorful package loads through `plybuild/cmd ->
+go-term-markdown -> ansimage -> go-colorful`; ansimage uses `MakeColor` and
+`Color.Hsv`. Parent/current cmd and ansimage consumers plus focused
+MakeColor/HSV tests pass at count 10.
 
-Mousetrap is not loaded on Darwin. Windows loads its one package directly from
-Cobra through `plybuild/cmd -> github.com/spf13/cobra ->
-github.com/inconshreveable/mousetrap`. Old and candidate Ply `cmd` consumers
-pass at count 10, both states cross-build all packages for windows/amd64, and
-an exact Cobra v1.10.2 source copy passes all packages at count 10 and compiles
-its Windows test binary. A diagnostic Cobra run directly from the read-only
-module cache fails because `TestDeadcodeElimination` ignores a failed source-
-directory `Mkdir`; the writable byte-identical source replay passes and leaves
-its manifest unchanged, so this is not a loaded-behavior failure.
-
-Mousetrap's complete one-package `go test`, race, and vet commands pass, though
-the module contains no test files. Repository build, complete tests, race, vet,
-pinned golangci-lint 2.12.2, CLI surface, byte-identical public help, and
-identical API/CLI reports pass. Help/API/CLI SHA-256 values remain respectively
+Go-colorful's seven-package complete tests and race pass under exact Go
+1.26.7. Standalone `go vet ./...` exits 1 only for five legacy unkeyed struct
+literals in `doc/colordist` and `doc/palettegens`; default test vet passes, as
+do repository build, complete tests/race/vet, and pinned golangci-lint 2.12.2.
+Public help and API/CLI reports remain byte-identical at SHA-256 values
 `ea32c45fa1b86fbe46c8a0cc244f37157201610ba6cb10a9bd80dfb11e9d3d47`,
 `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`,
 and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
-No dependency commit or post-implementation quality run was appropriate for
-the exact no-op selection.
 
-Independent old/candidate govulncheck v1.7.0 scans preserve exact identical 20
-Darwin-symbol, 30 Darwin-module, and 20 Windows-symbol ID populations. The
-fresh primary Go vulnerability module index contains no mousetrap entry.
+Exact `make quality` passes its ordered 21-stage ledger, all 27 Q0-Q2 rows at
+L2, 80/80 mutation kills, host 4/4, fresh snapshot and Docker acceptance, and
+valid six-receipt schema-2 evidence. Held, regressed, not-comparable, and dirty
+counts are zero. Independent regression repeats preflight, launcher/Make and
+audit meta-contracts, snapshot/Docker meta and acceptance, compatibility,
+empty-HOME count-2, and clean-tree gates. Its full audit exits expected 1,
+never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
+
+Independent govulncheck v1.7.0 scans preserve byte-identical ID populations:
+20 Darwin symbol, 30 Darwin module, and 20 Windows symbol. The fresh primary
+Go vulnerability module index contains no go-colorful entry.
 
 ## Evidence And Tool Identity
 
-- No-change mousetrap evidence root
-  `/private/tmp/ply-p7-mousetrap-selection.516ae39.PzdXjl` has a fully verified
-  29,283-entry manifest SHA-256
-  `71f337b114d1383cd103ef53856a5e767d519eda0b5635e9598b26654a78a152`;
+- Selection root `/private/tmp/ply-p7-go-colorful-selection.f40b032.KHS4f6`
+  has verified 47,633-entry manifest SHA-256
+  `a47facc21231accc5c2ed73980c9e3a7542538c6a41d7778de5cfbb410312adc`;
   selection-summary SHA-256 is
-  `64371a02034a3265fa879330e05bcdb477c5c2560de16fa9e57c62e4a5c2e08a`.
-- All accepted prerequisites were freshly verified entry-by-entry before the
-  decision: two-entry toolchain recovery `1b30193f...e83b`, 21,427-entry HCL
-  selection `ad2954c3...acff`, 29,812-entry go-cmp selection
-  `dcd18baa...1797`, 9,487-entry schema-2 review `24ede5a4...1727`,
-  252,077-entry exact quality `6d8104b4...f69`, and 30,255-entry regression
-  `00b736b5...3c5`.
-- Preserve the btree correction: its regression manifest retains the recorded
-  digest and 24,197 entries, but 163 mutable cache/HOME entries no longer
-  verify after later enumeration. Its stable regression summary is unchanged;
-  the other three btree manifests verify, and fresh go-cmp evidence supersedes
-  current regression claims.
+  `07467cdfd752a8ee9c64b1b6632370c8e0d75b6e3715090931ec8831b2080658`.
+- Commit-bound review root
+  `/private/tmp/ply-p7-go-colorful-quality-review.dc4f27c.gs9tGv` has verified
+  13-entry manifest SHA-256
+  `6444e55370fb37a6c2c06c2c1c280b8fcbd34fc1f94f110a70bc7d067b05673d`;
+  manual-evidence SHA-256 is
+  `21863ed3334d86e4b32a2bb97be47787cfda8726ac87f4a698bce35bf5911013`.
+- Exact-quality root `/private/tmp/ply-p7-go-colorful-quality-final.dc4f27c.B7eOLZ`
+  has verified 236,146-entry manifest SHA-256
+  `924500cb4512fa9451cf218b119ce8969e32e7f02a67558807d067e3f41017a6`;
+  Q0-Q2 scorecard SHA-256 is
+  `7ab6fc62901a6963244c46097155d95c72f4a909fbfbdf3b005cd6b0713a5fc1`.
+- Regression root
+  `/private/tmp/ply-p7-go-colorful-regression-gate.dc4f27c.X2Y4Aj` has verified
+  19,011-entry manifest SHA-256
+  `2cf393025cf7768ef90fbfa8c0faf378284c3521cb118220dd74ba6fc4735d0e`;
+  regression-summary SHA-256 is
+  `ac26683176a7ec40bf1da1a9324cbf648ebcd08708e0b343c5dbb008fa86a894`.
+- All inherited manifests were verified before the decision. Preserve the
+  btree correction: its regression manifest retains its recorded digest and
+  24,197 entries, but 163 mutable cache/HOME entries no longer verify; its
+  other three manifests verify, and fresh later evidence supersedes it.
 - Tool identities remain Go 1.26.7
   `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
   golangci-lint 2.12.2
@@ -123,11 +129,11 @@ fresh primary Go vulnerability module index contains no mousetrap entry.
 ## Next Objective
 
 Independently evaluate selected indirect
-`github.com/lucasb-eyer/go-colorful v1.2.0` as exactly one bounded P7 module
-group. Resolve the canonical latest release and every potentially compatible
-release from fresh Go proxy, checksum-database, upstream, and primary Go
-vulnerability evidence. Do not assume its latest version, Go floor, source
-identity, closure, loaded status, or behavior.
+`github.com/magiconair/properties v1.8.7` as exactly one bounded P7 module
+group. Resolve canonical latest and every potentially compatible release from
+fresh Go proxy, checksum-database, upstream, and primary Go vulnerability
+evidence. Treat latest, Go floor, source identity, closure, loaded status, and
+behavior as unknown.
 
 Measure exact old/candidate selections, graph edges, complete package
 population, checksums, exact-get diff, tidy projection, loaded packages/path,
@@ -135,7 +141,7 @@ focused behavior when loaded, candidate module tests, repository quality,
 help/API/CLI identity, and vulnerability populations. Implement only an exact
 floor-compatible selection with an explained minimal closure and every gate
 passing; otherwise record rejection without editing dependency metadata. Do
-not manufacture a dependency commit if v1.2.0 is already canonical latest.
+not manufacture a dependency commit if v1.8.7 is already canonical latest.
 
 Warm caches from separate Git archives. Never use tidy as implementation or
 run `go mod download all` inside a measured tree. Stop before another module,

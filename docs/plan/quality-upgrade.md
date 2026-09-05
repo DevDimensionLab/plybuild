@@ -5365,9 +5365,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move, completed
-dependency groups through accepted Google go-cmp v0.6.0, and the rejected or
-no-change Hashicorp HCL and inconshreveable/mousetrap evaluations;
-lucasb-eyer/go-colorful and further dependency groups remain queued.
+dependency groups through accepted lucasb-eyer/go-colorful v1.4.1, and the
+rejected or no-change Hashicorp HCL and inconshreveable/mousetrap evaluations;
+magiconair/properties and further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6353,10 +6353,46 @@ Current queue decisions and next bounded P7 group (2026-09-04):
   `71f337b114d1383cd103ef53856a5e767d519eda0b5635e9598b26654a78a152`,
   and selection-summary SHA-256 is
   `64371a02034a3265fa879330e05bcdb477c5c2560de16fa9e57c62e4a5c2e08a`.
+- Accept selected indirect `github.com/lucasb-eyer/go-colorful v1.2.0` ->
+  canonical latest and highest floor-compatible v1.4.1. The proxy lists eight
+  stable releases through v1.4.1, with no prerelease, retraction, or v2 path;
+  `@latest`, `go list -m -u`, and the default branch agree. Version v1.4.1 is
+  lightweight unsigned tag commit `315b48282c63bac7b48ba128d0c87b7f827b2285`
+  at 2026-08-02T08:53:53Z, declares Go 1.12, has no requirements, and has
+  checksum pair `h1:1EO+WB73+EH8EVbzlrG3KLAfEypQWVHIBqlTf+2hNss=` /
+  `h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=`. All 45 proxy files match
+  the exact upstream tag archive.
+- Old and selected states retain 234 modules, 3,557 graph edges, and 429
+  complete-test packages. Exactly one selection and one main edge change;
+  go.sum adds only the v1.4.1 pair while retaining v1.2.0. Tidy projects
+  308 -> 310 lines and remains unapplied. One package loads through
+  `plybuild/cmd -> go-term-markdown -> ansimage -> go-colorful`.
+- Candidate complete tests/race, focused MakeColor/HSV behavior, loaded
+  consumers, repository build/tests/race/vet/lint, help/API/CLI identity,
+  complete preflight, acceptance, audits, empty-HOME count-2, and clean-tree
+  gates pass. Standalone candidate vet reproduces five legacy unkeyed-literal
+  findings only in doc examples; default test vet and repository vet pass.
+  Vulnerability populations remain exact 20/30/20 with no new IDs.
+- Exact `go get github.com/lucasb-eyer/go-colorful@v1.4.1` produced
+  dependency-only commit `dc4f27c`, parent `f40b032`, tree `a5f3282`, changing
+  only `go.mod` and `go.sum`. Exact quality passes 21/21 stages, 27/27 Q0-Q2
+  rows at L2, 80/80 mutations, host/snapshot/Docker acceptance, and zero held,
+  regressed, not-comparable, or dirty counts. Full audit exits expected 1,
+  never 2, only for Q3.1, Q3.3, Q3.4, and Q3.7.
+- Accepted selection, review, exact-quality, and regression roots are
+  `/private/tmp/ply-p7-go-colorful-selection.f40b032.KHS4f6`,
+  `/private/tmp/ply-p7-go-colorful-quality-review.dc4f27c.gs9tGv`,
+  `/private/tmp/ply-p7-go-colorful-quality-final.dc4f27c.B7eOLZ`, and
+  `/private/tmp/ply-p7-go-colorful-regression-gate.dc4f27c.X2Y4Aj`. Their
+  verified manifest populations/SHA-256 values are
+  47,633/`a47facc21231accc5c2ed73980c9e3a7542538c6a41d7778de5cfbb410312adc`,
+  13/`6444e55370fb37a6c2c06c2c1c280b8fcbd34fc1f94f110a70bc7d067b05673d`,
+  236,146/`924500cb4512fa9451cf218b119ce8969e32e7f02a67558807d067e3f41017a6`,
+  and 19,011/`2cf393025cf7768ef90fbfa8c0faf378284c3521cb118220dd74ba6fc4735d0e`.
 - Next, independently evaluate selected indirect
-  `github.com/lucasb-eyer/go-colorful v1.2.0` as one bounded P7 module group.
-  Resolve the canonical latest release, Go floor, source identity, closure,
-  loaded behavior, and vulnerability data before selecting anything.
+  `github.com/magiconair/properties v1.8.7` as one bounded P7 module group.
+  Resolve canonical latest, Go floor, source identity, closure, loaded
+  behavior, and vulnerability data before selecting anything.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
