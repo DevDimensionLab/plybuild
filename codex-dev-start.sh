@@ -1055,46 +1055,47 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-05T221559+0200-evaluate-gopkg-resty-v1-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T221559+0200-evaluate-gopkg-resty-v1-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T205113+0200-evaluate-gopkg-errgo-v2-dependency.md
+#|SESSION_ID=2026-09-05T231214+0200-evaluate-gopkg-kingpin-v2-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T231214+0200-evaluate-gopkg-kingpin-v2-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T221559+0200-evaluate-gopkg-resty-v1-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected
-#|`gopkg.in/resty.v1 v1.12.0` as one bounded dependency group. Resolve canonical
-#|latest, release qualification, and the highest floor-compatible candidate from
-#|primary evidence. Implement one exact changed selection only if it preserves
-#|the retained Go 1.18 floor, has an explained minimal closure, and passes every
-#|quality contract.
+#|`gopkg.in/alecthomas/kingpin.v2 v2.2.6` as one bounded dependency group.
+#|Resolve canonical latest, release qualification, and the highest
+#|floor-compatible candidate from primary evidence. Implement one exact changed
+#|selection only if it preserves the retained Go 1.18 floor, has an explained
+#|minimal closure, and passes every quality contract.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain and
 #|completed dependency groups through retained canonical-latest
-#|`gopkg.in/errgo.v2 v2.1.0`. All earlier recorded rejections, no-change
+#|`gopkg.in/resty.v1 v1.12.0`. All earlier recorded rejections, no-change
 #|decisions, accepted closures, and evidence corrections remain final. Do not
 #|revisit them or combine another module group. P8 remains queued.
 #|
-#|The current MVS build list selects `gopkg.in/resty.v1 v1.12.0`. Treat its
-#|latest version, tag or pseudo-version qualification, Go declaration, closure,
-#|loaded population, consumer paths, source history, tests, and vulnerability
-#|effect as unknown until independently resolved. This session may change only
-#|gopkg Resty v1's exact required go.mod/go.sum metadata, its minimal MVS
-#|closure, and the roadmap/handoff record. Do not change production Go, another
-#|dependency, language or toolchain declarations, quality apparatus,
-#|Docker/release inputs, packaging, publishers, or P8 code.
+#|The current MVS build list selects
+#|`gopkg.in/alecthomas/kingpin.v2 v2.2.6`. Treat its latest version, tag or
+#|pseudo-version qualification, Go declaration, closure, loaded population,
+#|consumer paths, source history, tests, and vulnerability effect as unknown
+#|until independently resolved. This session may change only gopkg Kingpin v2's
+#|exact required go.mod/go.sum metadata, its minimal MVS closure, and the
+#|roadmap/handoff record. Do not change production Go, another dependency,
+#|language or toolchain declarations, quality apparatus, Docker/release inputs,
+#|packaging, publishers, or P8 code.
 #|
 #|# Measurements At Start
 #|
 #|Latest implementation remains dependency-only cast commit
 #|`cf4fd4933251b2ca7844b6420fd3cf2a86f049a5`, exact parent
 #|`17f7277fd2512ba06db76d1acb0af5f8b623243c`, clean tree
-#|`485690c010cef3b02385d8f2471d3ef53611abe9`. The Errgo v2 documentation
+#|`485690c010cef3b02385d8f2471d3ef53611abe9`. The Resty v1 documentation
 #|handoff must have exact parent
-#|`1899ff708ae165c43c283e97def420af2c11d108`. Relative to accepted go-cmp
+#|`a855007ace19f1fc96302000a013cd7d802408ea`. Relative to accepted go-cmp
 #|commit c314bcb, accepted metadata changes remain go-colorful v1.2.0 -> v1.4.1,
 #|go-runewidth v0.0.14 -> v0.0.17, go-toml/v2 v2.0.7 -> v2.2.2, and cast
 #|v1.5.0 -> v1.5.1, with their recorded minimal closures and exactly 15 added
@@ -1117,24 +1118,24 @@ exit 70
 #|Retain the verified golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and
 #|govulncheck v1.7.0 binaries and hashes recorded in the handover.
 #|
-#|Errgo v2 no-change evidence is fully verified at
-#|`/private/tmp/ply-p7-errgo-v2-selection.1899ff7.HoEmPo`, 152,333 entries and
+#|Resty v1 no-change evidence is fully verified at
+#|`/private/tmp/ply-p7-resty-v1-selection.a855007.Gg7QC9`, 110,457 entries and
 #|manifest SHA-256
-#|`e9a3c3b1b9c311a1dd96f1804167d57359c2af02615dde2ffb544690dac45ab2`;
+#|`72d739b05c507fab058737de6ab967b534e5fcdab1c9588582188532f1a926c2`;
 #|decision-summary SHA-256 is
-#|`aa8a30c6f9e261a5c29be3bd59d87cb96e5b07f85582b6f1d55a4f78fcf3a3ec`.
-#|Selected v2.1.0 is canonical latest and the highest qualified stable release
-#|compatible with Go 1.18. The resolvable later pseudo-version is an unreleased
-#|v2 branch head, while exact selected-version get only projects a redundant
-#|requirement and checksum without changing selection; dependency metadata
-#|therefore remains unchanged. Preserve all prior verified roots and the
-#|recorded go-colorful mutable telemetry, btree regression, cast whitespace-path,
-#|source-archive normalization, Check history-table, and Errgo preflight-runner
-#|corrections.
+#|`008b8b9396b58c93e696a5d495037ac974224149fce9b34badb6c7786723a109`.
+#|Selected v1.12.0 is canonical latest and the highest exact-path stable release
+#|compatible with Go 1.18 by declaration. Exact selected-version get only
+#|projects a redundant requirement and checksum, while the exact module suite
+#|fails six legacy net/http and net/url error-string assertions under Go 1.26.7;
+#|dependency metadata therefore remains unchanged. Preserve all prior verified
+#|roots and the recorded go-colorful mutable telemetry, btree regression, cast
+#|whitespace-path, source-archive normalization, Check history-table, Errgo
+#|preflight-runner, and Resty committed-projection/signal-fixture corrections.
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve gopkg Resty v1 versions
+#|From fresh external archives and caches, resolve gopkg Kingpin v2 versions
 #|through the Go proxy, checksum database, authoritative gopkg metadata and
 #|upstream repository, and primary Go vulnerability data. Record exact tag and
 #|pseudo-version commits/times, module Go declarations and requirements,
@@ -1152,9 +1153,9 @@ exit 70
 #|modules, graph edges, complete package population, checksums, loaded packages
 #|and paths, explicit exact-get diff, and `go mod tidy -diff`. Require an
 #|explained minimal selection/edge/checksum closure. Independently determine
-#|whether gopkg Resty v1 is loaded by the main module, only by dependency tests,
-#|or not at all in the complete project population. If loaded, identify real
-#|consumers and exercise the actually used packages and symbols.
+#|whether gopkg Kingpin v2 is loaded by the main module, only by dependency
+#|tests, or not at all in the complete project population. If loaded, identify
+#|real consumers and exercise the actually used packages and symbols.
 #|
 #|Also require candidate module complete tests, repeated tests, race, and vet;
 #|repository build, complete tests/race/vet, pinned lint, byte-identical public
@@ -1175,22 +1176,23 @@ exit 70
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher `--check`, and the P7/P8 checkpoint before editing.
 #|Verify every accepted manifest. Read this archive, the rolling handover, P7 in
-#|the roadmap, go.mod/go.sum, the retained Errgo decision, rejected Check
-#|decision, retained YAML v3 and YAML v2 decisions, rejected x/text, x/net,
-#|x/image, and gotenv decisions, retained jwalterweatherman decision, accepted
-#|cast decision and quality evidence, rejected afero decision, the accepted
-#|`go.yaml.in/yaml/v3` and Cobra/YAML closure decisions, prior bounded dependency
-#|decisions, and the toolchain, compatibility, snapshot/Docker, quality,
-#|baseline-reproduction, and audit contracts. Preserve every recorded manifest
-#|correction.
+#|the roadmap, go.mod/go.sum, the retained Resty and Errgo decisions, rejected
+#|Check decision, retained YAML v3 and YAML v2 decisions, rejected x/text,
+#|x/net, x/image, and gotenv decisions, retained jwalterweatherman decision,
+#|accepted cast decision and quality evidence, rejected afero decision, the
+#|accepted `go.yaml.in/yaml/v3` and Cobra/YAML closure decisions, prior bounded
+#|dependency decisions, and the toolchain, compatibility, snapshot/Docker,
+#|quality, baseline-reproduction, and audit contracts. Preserve every recorded
+#|manifest correction.
 #|
 #|# Three Moves
 #|
 #|Only if every decision gate passes and the selection changes, use exact Go
-#|1.26.7 and exact `go get gopkg.in/resty.v1@<selected-version>` for one
+#|1.26.7 and exact
+#|`go get gopkg.in/alecthomas/kingpin.v2@<selected-version>` for one
 #|dependency-only commit. Do not hand-edit module metadata and do not use tidy as
 #|implementation. Preserve every retained dependency selection, especially
-#|`gopkg.in/errgo.v2 v2.1.0`,
+#|`gopkg.in/resty.v1 v1.12.0`, `gopkg.in/errgo.v2 v2.1.0`,
 #|`gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15`,
 #|`gopkg.in/yaml.v2 v2.4.0`, `gopkg.in/yaml.v3 v3.0.1`, and
 #|`go.yaml.in/yaml/v3 v3.0.5`, language/toolchain declarations, production
@@ -1216,7 +1218,7 @@ exit 70
 #|After the decision, rewrite the rolling handover and roadmap, answer this
 #|archive, create exactly one reciprocal NEXT archive for the next measured P7
 #|group, replace only launcher mutable regions, run launcher/handoff contracts,
-#|and make the normal `docs: prepare next agent session` commit. Do not
-#|implement that next group, launch a successor, push, merge, publish, release,
-#|stash, revert, delete retained evidence/images, or remove the worktree.
+#|and make the normal `docs: prepare next agent session` commit. Do not implement
+#|that next group, launch a successor, push, merge, publish, release, stash,
+#|revert, delete retained evidence/images, or remove the worktree.
 # CODEX_MUTABLE_PROMPT_END

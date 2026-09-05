@@ -5364,11 +5364,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the maintained-toolchain baseline move, completed
-dependency groups through accepted spf13/cast v1.5.1, and the recorded
-no-change or rejected HCL, mousetrap, properties, mapstructure, go-toml v1,
-Afero, jwalterweatherman, and gotenv evaluations; further dependency groups
-remain queued.
+Status: active after the maintained-toolchain baseline move and completed
+dependency groups through retained canonical-latest
+`gopkg.in/resty.v1 v1.12.0`; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -7215,9 +7213,68 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `e9a3c3b1b9c311a1dd96f1804167d57359c2af02615dde2ffb544690dac45ab2`,
   and decision-summary SHA-256 is
   `aa8a30c6f9e261a5c29be3bd59d87cb96e5b07f85582b6f1d55a4f78fcf3a3ec`.
-- Next, independently evaluate selected `gopkg.in/resty.v1 v1.12.0` as one
-  bounded P7 module group. Do not combine Errgo, Check, gopkg YAML, another
-  dependency group, or P8.
+- Retain selected `gopkg.in/resty.v1 v1.12.0` without dependency metadata
+  edits. Fresh proxy evidence lists ten v1 semantic tags and resolves
+  `@latest`, `@v1`, `@master`, and the exact query to stable v1.12.0 at
+  2019-02-28T07:26:48Z, with no prerelease or retraction. V1.7.0 and v1.8.0
+  are listed but cannot be downloaded for this path because they declare
+  `github.com/go-resty/resty`; v1.0-v1.6 are non-canonical shorthand tags.
+  V1.12.0 is canonical latest and the highest exact-path stable release
+  compatible with the retained Go 1.18 floor by declaration.
+- Selected v1.12.0 is lightweight tag and signed commit
+  `fa5875c0caa5c260ab78acec5a244215a730247f`, tree
+  `5029acc2e860c8e9495d3b46fdc5d40d429808b8`. GitHub verifies the embedded
+  commit signature as valid; there is no separate tag object or tag
+  signature, and local verification is unavailable because `gpg` is absent.
+  Its checksum pair is `h1:CuXP0Pjfw9rOuY6EP+UvtNvt5DSqHpIxILZKT/quCZI=` /
+  `h1:mDo4pnntr5jdWRML875a/NmxYqAlA73dVijT2AXvQQo=`. The 30-file proxy
+  archive and exact upstream tag are byte-identical.
+- The upstream repository is enabled, unarchived, and not a fork. Its active
+  default branch is v3, while the v1 branch ends exactly at v1.12.0. A
+  pre-release v1 commit resolves only to the older unreleased pseudo-version
+  `v1.11.1-0.20190110224454-0ecc38d58bec`. V2.17.2 and v3.0.0-rc.3 use
+  different declared module paths and require Go 1.23; asking the v1 path for
+  their commits is rejected for module-path mismatch. They are not v1 upgrade
+  candidates.
+- V1.12.0 has no Go directive and requires only x/net's 2018 pseudo-version,
+  also without a Go directive. The project already selects x/net v0.7.0 at Go
+  1.17, so the changed-selection closure is empty and preserves Go 1.18 by
+  declaration.
+- Exact projected `go get gopkg.in/resty.v1@v1.12.0` exits zero without
+  changing any selected version. It only adds a redundant indirect
+  requirement, main-module graph edge, and full module checksum. Modules stay
+  234 and complete packages stay 429; graph edges project 3,564 -> 3,565,
+  go.sum 1,031 -> 1,032 lines, and the unapplied tidy diff 332 -> 344 lines.
+  That metadata-only pin is not an authorized selection change and was not
+  manufactured in the repository.
+- Resty loads in zero complete project packages in both states, repository Go
+  source has zero imports, and `go mod why -m` says the main module does not
+  need it. The only graph path is historical go.mod debt through
+  mvn-pom-mutator v0.2.3, whose source also has zero Resty imports.
+- The exact proxy module source verifies and does not mutate, and its
+  standalone two-module apparatus needs no test-only requirement. Count-1 and
+  full count-2 tests fail the same six legacy error-string assertions under Go
+  1.26.7; race reproduces those assertions without a data-race diagnostic,
+  while vet passes. The mandatory module stop rule rejects even the redundant
+  projection. Old and projected repository build/tests/race/vet, Windows
+  build, pinned lint, help/API/CLI identity, empty-HOME count-2, direct 62-check
+  launcher suite, and final preflight all pass. The final preflight passes 62
+  launcher checks, 80 mutation controls, and 15 audit meta-controls. No
+  dependency implementation or post-selection quality/snapshot/Docker run was
+  required.
+- Govulncheck v1.7.0 preserves byte-identical old/projected
+  Darwin-symbol/Darwin-module/Windows-symbol populations at 20/30/20. The
+  fresh 1,392-entry primary index has no exact `gopkg.in/resty.v1` record; its
+  only Resty entry is GO-2023-2328 for the alternate v2 module path. Retention
+  evidence is sealed at
+  `/private/tmp/ply-p7-resty-v1-selection.a855007.Gg7QC9`; its fully verified
+  110,457-entry manifest SHA-256 is
+  `72d739b05c507fab058737de6ab967b534e5fcdab1c9588582188532f1a926c2`,
+  and decision-summary SHA-256 is
+  `008b8b9396b58c93e696a5d495037ac974224149fce9b34badb6c7786723a109`.
+- Next, independently evaluate selected
+  `gopkg.in/alecthomas/kingpin.v2 v2.2.6` as one bounded P7 module group. Do
+  not combine Resty, Errgo, Check, gopkg YAML, another dependency group, or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
