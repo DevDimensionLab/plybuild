@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-05T20:51:13+02:00
+Generated: 2026-09-05T22:15:59+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -14,10 +14,10 @@ session diary.
   `17f7277fd2512ba06db76d1acb0af5f8b623243c`, clean tree
   `485690c010cef3b02385d8f2471d3ef53611abe9`. It changes only `go.mod` and
   `go.sum`.
-- The incoming Check v1 documentation session is commit
-  `a8e707ce125b6ecb72c203925f6978b09a85406f`, exact parent
-  `cdb5b4ca02fa5db54efebf741d2b415608c053b2`, tree
-  `cb258bc31914dc1e9fef76a756eb99a0f1da69be`. This handoff must be its
+- The incoming Errgo v2 documentation session is commit
+  `1899ff708ae165c43c283e97def420af2c11d108`, exact parent
+  `a8e707ce125b6ecb72c203925f6978b09a85406f`, tree
+  `46a0328a8e910132a35814cadc291a99f6c514b7`. This handoff must be its
   direct child. The next dependency implementation, if any, must use the
   resulting documentation commit as its exact parent.
 - Relative to accepted go-cmp commit `c314bcb`, accepted dependency metadata
@@ -26,9 +26,9 @@ session diary.
   closures select testify v1.9.0, objx v0.5.2, quicktest v1.14.4, kr/pretty
   v0.3.1, and rogpeppe/go-internal v1.9.0. Those four accepted groups add
   exactly 15 checksum lines.
-- The answered Check v1 archive and sole NEXT `gopkg.in/errgo.v2` archive
-  link reciprocally. Only the launcher's mutable header and prompt regions
-  changed during handoff. Ordinary and ignored status must end empty.
+- The answered Errgo v2 archive and sole NEXT `gopkg.in/resty.v1` archive link
+  reciprocally. Only the launcher's mutable header and prompt regions change
+  during handoff. Ordinary and ignored status must end empty.
 - No `.agent-task/current.md` or `.quality/manual-evidence.json` was created.
   No push, merge, publication, release, stash, revert, retained evidence/image
   deletion, successor launch, or worktree removal occurred.
@@ -37,130 +37,145 @@ P2A-P6 are complete. P7 remains active after the maintained Go 1.26.7
 toolchain and completed dependency groups through accepted cast v1.5.1,
 rejected afero v1.10.0, retained canonical-latest jwalterweatherman v1.1.0,
 rejected gotenv v1.6.0, x/image v0.16.0, x/net v0.25.0, x/text v0.15.0,
-retained canonical-latest YAML v2 v2.4.0 and YAML v3 v3.0.1, and rejected
+retained canonical-latest YAML v2 v2.4.0 and YAML v3 v3.0.1, rejected
 canonical-latest Check v1 pseudo-version
-`v1.0.0-20201130134442-10cb98267c6c`. All earlier recorded dependency
-decisions and evidence corrections remain final. Do not revisit them. P8
-remains queued.
+`v1.0.0-20201130134442-10cb98267c6c`, and retained canonical-latest Errgo v2
+v2.1.0. All earlier recorded dependency decisions and evidence corrections
+remain final. Do not revisit them. P8 remains queued.
 
-## Rejected Gopkg Check V1 Group
+## Retained Gopkg Errgo V2 Group
 
-Fresh Go proxy and checksum-database evidence shows an empty `@v/list`: this
-exact module path has no listed stable semantic-version or prerelease tags.
-Proxy `@latest`, exact `go list ...@latest`, and the authoritative gopkg
-`master` query all resolve
-`v1.0.0-20201130134442-10cb98267c6c` at
-2020-11-30T13:44:42Z. It is a pseudo-version, not a stable release. There are
-no Git tags, retractions, or GitHub Release objects; `@v1` has no matching
-version. The candidate is canonical latest and the highest qualified version
-compatible with the retained Go 1.18 floor.
+Fresh proxy evidence lists exactly three stable semantic versions: v2.0.0,
+v2.0.1, and v2.1.0. It contains no prerelease or retracted version. Proxy
+`@latest`, exact `go list -m -versions -retracted ...@latest`, `@v2`,
+`@master`, and authoritative gopkg source metadata all select v2.1.0 at
+2018-08-23T07:15:05Z. Selected v2.1.0 is therefore canonical latest and the
+highest qualified stable release compatible with the retained Go 1.18 floor.
 
-The selected pseudo-version
-`v1.0.0-20190902080502-41f04d3bba15` maps to commit
-`41f04d3bba152ddec2103e299fed053415705330`, tree
-`d293fcb19bdb3deacaf589ad37f4534d1342c8ae`, at
-2019-09-02T08:05:02Z. Its synthetic module file has no Go declaration. The
-candidate maps to commit
-`10cb98267c6cb43ea9cd6793f29ff4089c306974`, tree
-`b5ee34e90064a88d7614bf6f6714d32bfac33e66`, and declares Go 1.11 with
-only `github.com/kr/pretty v0.2.1`. Candidate checksums are
-`h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=` /
-`h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=`; selected checksums are
-`h1:YR8cESwS4TdDjEe65xsg0ogRM/Nc3DYOhEAlW+xobZo=` /
-`h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=`.
+The three releases use annotated, unsigned tags:
 
-Authoritative gopkg metadata maps `gopkg.in/check.v1` to
-`https://gopkg.in/check.v1` and source browsing to
-`github.com/go-check/check/tree/v1`. Fresh gopkg and GitHub clones have
-identical v1 histories and exact objects. All seven resolved pseudo-version
-snapshots match their upstream Git commits file-for-file. The 27-file
-candidate proxy ZIP has SHA-256
-`f555684e5c5dacc2850dddb345fef1b8f93f546b72685589789da6d2b062710e`.
-The GitHub repository is unarchived, enabled, and not a fork; its default v1
-branch is the candidate. GitHub's `master` head
-`163297374fe15df72fc217b2bdfabb5894c73059` is an older divergent 2014
-line, not an upgrade candidate. There is no module deprecation marker or
-README deprecation notice.
+- v2.0.0: tag `4c49f8a4dbfc9d09c2cab69965377f39e247e53a`, commit
+  `82cd8dd47e1c988e185c8c89d0d05aff1c3dac50` at
+  2018-08-18T17:56:26Z.
+- v2.0.1: tag `946adb7488b1a3af293c1ecaab3f83fb3d5a0807`, commit
+  `16491ea1e140f01d877d5daa06d9cebb81ca8cf1` at
+  2018-08-22T21:36:27Z.
+- v2.1.0: tag `635edbc13741bd819966931e8b599c690b4f074d`, commit
+  `f768c5ab0476c50e978b039312180859c10fe8c0`, tree
+  `cb540a0ae1ad20359a13e238d412878b955e6099`, at
+  2018-08-23T07:15:05Z.
 
-The candidate has no tag or tag signature. Its commit carries an embedded
-signature that GitHub reports as verified and valid; local cryptographic
-verification was unavailable because `gpg` is absent. The selected commit is
-unsigned. Exactly four commits separate selected from candidate: a temporary
-kr/pretty fork, documentation correction, `ioutil.TempDir` repair, and the
-candidate module/CI/Windows-test update that restores upstream kr/pretty. Net
-history changes seven files by +67/-16.
+GitHub reports all three peeled merge-commit signatures verified and valid;
+the tag objects carry no signatures, and local cryptographic verification was
+unavailable because `gpg` is absent. The selected checksum pair is
+`h1:0vLT13EuvQ0hNvakwLuFZ/jYrLp5F3kcWHXdRggjCE8=` /
+`h1:hNsd1EY+bozCKY1Ytp96fpM3vjJbqLJn88ws8XvfDNI=`. All three proxy archives
+match the exact upstream tag commits file-for-file. The v2.0.0, v2.0.1, and
+v2.1.0 proxy ZIP SHA-256 values are respectively
+`04f40f54a7f7c6d71a26bf69d6dc5db935bd11af7c5c6a824bd51bab70c05b4e`,
+`011b9480231acccf099b674348ae236f8fa8300244b708496688df76db3ae4d1`,
+and `6b8954819a20ec52982a206fd3eb94629ff53c5790aa77534e6d8daf7de01bee`.
 
-An exact external projection of
-`go get gopkg.in/check.v1@v1.0.0-20201130134442-10cb98267c6c` exits zero.
-It projects 234 -> 236 selected modules: Check advances, while
-`github.com/creack/pty v1.1.9` and
-`github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e` enter the build
-list. Ten graph edges are added, none removed, for 3,564 -> 3,574. Complete
-project packages remain exactly 429. The projection adds four indirect
-go.mod requirements for Check, already-selected kr/pretty v0.3.1, kr/text
-v0.2.0, and rogpeppe/go-internal v1.9.0, plus exactly eight go.sum lines.
-Those closure modules declare no Go version or Go 1.12, 1.13, 1.15, or 1.17,
-so the complete changed closure preserves Go 1.18. The unapplied tidy
-projection grows from 332 to 353 lines. Project module verification passes in
-both states.
+Authoritative gopkg metadata maps the exact module to
+`https://gopkg.in/errgo.v2` and source browsing to
+`github.com/go-errgo/errgo/tree/v2.1.0`. Fresh gopkg and GitHub clones share
+the same relevant tag, v2, and v1 objects. Gopkg synthesizes its `master` ref
+to the v2.1.0 commit, whereas GitHub's actual `master` is an older divergent
+2014 line; neither is a later candidate. The GitHub repository is enabled,
+unarchived, and not a fork, has no GitHub Release objects, and carries no
+module or README deprecation notice. Its v2 line is dormant after August 2018.
 
-Exact `go list -test -deps ./...` finds zero Check packages in either state,
-and repository source has zero Check imports. The complete package population
-is unchanged. `go mod why -m` crosses
-`pkg/config -> gopkg.in/yaml.v2 -> gopkg.in/yaml.v2.test ->
-gopkg.in/check.v1`; this is a dependency-test path, not a main-module
-consumer. Check is selected by dependency requirements but is not loaded by
-the complete native project population.
+Two v2 commits follow the selected release. Linear commit
+`28806950c76b10f5cff5bcaf2d6b5cddce8502a0` removes gocheck, and verified
+merge commit `81e25171e4fb5331d1f784276d93cb70a0a31475` rewrites the tests. Exact
+commit resolution produces
+`v2.1.1-0.20180823084306-81e25171e4fb`, with checksum pair
+`h1:/VNQHfUDtkG/Q76yWdItpo8Uzu5Cx16cYVzWU8PoqCY=` /
+`h1:e2+3YDPGA8XJ8Lk+bKAvy+3jAR1cSuuG8+hJ3GeqXI8=`. This is an unreleased
+pseudo-version, not a stable release and not the version selected by canonical
+proxy or gopkg resolution. It is excluded from the qualified candidate set.
 
-The candidate standalone module build list contains Check, kr/pretty v0.2.1,
-kr/text v0.1.0, and kr/pty v1.1.1, with no extra test-only requirements. Two
-independent source replays verify, list the sole package, and pass complete
-count-1 and race tests without source mutation. Both count-10 runs fail
-identically: retained suite registration state makes
-`EmbeddedS.TestMethod` observe true rather than false, then 16 suites run
-where eight are expected. Both vet runs also fail identically on four unkeyed
-`go/printer` and `go/ast` composite literals. These mandatory module
-failures reject the candidate and stop the group before repository
-build/tests/race/vet, pinned lint, help/API/CLI, snapshot/Docker, quality, and
-audit acceptance. No dependency metadata or implementation commit was made.
+V2.1.0 has no Go directive. It declares only kr/pretty v0.1.0 and Check's 2018
+pseudo-version, both of which omit Go declarations. The project already
+selects kr/pretty v0.3.1 at Go 1.12 and the retained 2019 Check pseudo-version
+with no Go directive; the selected go-internal v1.9.0 declares Go 1.17. The
+empty changed-selection closure therefore preserves Go 1.18 by declarations,
+not merely because tests run under a modern toolchain.
+
+An external exact `go get gopkg.in/errgo.v2@v2.1.0` exits zero, but selected
+module lists remain byte-identical at 234 entries. It only projects a redundant
+indirect main-module requirement, one main-to-Errgo graph edge, and the full
+v2.1.0 module checksum. Graph edges project 3,564 -> 3,565, go.sum lines
+1,031 -> 1,032, and the unapplied tidy diff 332 -> 344 lines; complete packages
+remain 429. Since no exact version selection changes, this redundant explicit
+pin is not an authorized implementation. Go.mod and go.sum remain unchanged
+and no dependency commit was manufactured.
+
+Exact `go list -test -deps -json ./...` finds zero Errgo packages in both
+states, repository Go source has zero Errgo imports, and `go mod why -m` says
+the main module does not need Errgo. The version is historical unloaded MVS
+graph debt contributed by an old go-internal v1.3.0 requirement edge, not a
+main-module or dependency-test consumer path.
+
+Two independent writable module replays from the proxy source and the exact
+upstream tag remain byte-identical, verify, list two packages, and pass
+count-1, count-10, race, and vet. Their standalone build list contains five
+modules and is test apparatus separate from the project closure. Old and
+projected repository build, complete tests/race/vet, Windows build, pinned
+lint, CLI surface, and public root/status/upgrade/build help pass with
+byte-identical output. Corrected API and CLI reports are byte-identical.
+Empty-HOME count-2 passes.
+
+The final uncontaminated full preflight exits zero with all 62 launcher checks,
+80 mutation controls, and 15 audit meta-controls passing. Several prior full
+runs retain the established primary or nested signal-fixture timing diagnostic;
+independent direct and Make launcher suites pass 62/62. A separate preflight
+attempt correctly reached the lint meta-suite but was contaminated by outer
+Make command-line tool overrides propagating through `MAKEFLAGS`; the final
+environment-only pinned-tool invocation removes that runner error. The first
+API compatibility attempts also failed closed only because the external
+historical v1.0.1 archive cache lacked go-isatty v0.0.16; after warming that
+separate archive, both corrected retries passed. No measured tree was used for
+`go mod download all`.
 
 Govulncheck v1.7.0 uses a primary database updated
-2026-09-02T19:12:04Z. Its fresh 1,392-entry module index has no Check record,
-finding, or trace. Old and projected-candidate outputs and exact ID sets are
+2026-09-02T19:12:04Z. The fresh 1,392-entry module index has no Errgo record,
+finding, or trace. Old and projected outputs and exact ID sets are
 byte-identical for Darwin symbol, Darwin module, and Windows symbol scans,
-preserving populations 20/30/20. They are also byte-identical to the retained
-YAML v3 evidence.
+preserving populations 20/30/20.
 
-## Check V1 Evidence
+## Errgo V2 Evidence
 
 - Selection evidence is sealed at
-  `/private/tmp/ply-p7-check-v1-selection.a8e707c.DD2k28`. Its fully verified
-  18,182-entry manifest SHA-256 is
-  `d45958adc2d3be460e85b3f6e379053a8b011af7cd221d4026d9cb0e1bfd57df`;
+  `/private/tmp/ply-p7-errgo-v2-selection.1899ff7.HoEmPo`. Its fully verified
+  152,333-entry manifest SHA-256 is
+  `e9a3c3b1b9c311a1dd96f1804167d57359c2af02615dde2ffb544690dac45ab2`;
   decision-summary SHA-256 is
-  `93d0b2833dc78ea2cddb7ea0454713ef96a1ee1879d2ab38692d44bf9e8c7e51`.
-- The manifest covers all 31 prerequisite-root verifications, fresh
-  proxy/sumdb/gopkg/Git/GitHub resolution, seven pseudo-version snapshots,
-  source and branch identity, signature/repository state, selected-to-latest
-  history, Go-floor declarations, exact-get/tidy and minimal closure diffs,
-  loaded-package and consumer classification, two independent candidate
-  module replays, source-mutation checks, and byte-identical primary
-  vulnerability scans. The final pseudo-version table records exact
-  `go list` times rather than the time-less `go mod download` JSON.
+  `aa8a30c6f9e261a5c29be3bd59d87cb96e5b07f85582b6f1d55a4f78fcf3a3ec`.
+- The manifest covers all 32 prerequisite-root verifications, fresh
+  proxy/sumdb/gopkg/Git/GitHub resolution, exact stable tags and later v2
+  commits, source and repository identity, signatures, Go-floor declarations,
+  exact-get/tidy and minimal projection diffs, loaded-population classification,
+  two independent module replays, old/projected repository gates,
+  compatibility/help identity, the complete preflight and empty-HOME gate,
+  and byte-identical primary vulnerability scans.
 
 ## Inherited Evidence And Tool Identity
 
-- All 31 prerequisite manifest roots were independently recomputed before
-  measurement: the 30 inherited roots recorded by YAML v3 and the YAML v3 root
-  itself. The exact PASS table is sealed in Check evidence.
-- YAML v3 no-change evidence remains fully verified at
-  `/private/tmp/ply-p7-yaml-v3-selection.cdb5b4c.bbbTdr`,
-  40,121/`84bd12b7b4cbff806abcbff213b4b7bc5bac230a7371c3fe0b3e2def643ed741`;
-  decision summary is
-  `95d5aa003b77880ecf72770ad66c061e0013dfd022fc222eb600860bc9a7799f`.
-- YAML v2, x/text, x/net, x/image, gotenv, and jwalterweatherman roots remain
-  fully verified at
-  29,219/`8dd34cc54f56e4bb1370b2f7f1f124aa8b501a4dcca177effe4f6377c3919e14`,
+- All 32 prerequisite manifest roots were independently recomputed before
+  measurement: the 31 inherited roots recorded by Check and the Check root
+  itself. The exact PASS table is sealed in Errgo evidence.
+- Check rejection evidence remains fully verified at
+  `/private/tmp/ply-p7-check-v1-selection.a8e707c.DD2k28`,
+  18,182/`d45958adc2d3be460e85b3f6e379053a8b011af7cd221d4026d9cb0e1bfd57df`;
+  its decision summary is
+  `93d0b2833dc78ea2cddb7ea0454713ef96a1ee1879d2ab38692d44bf9e8c7e51`.
+- YAML v3 and YAML v2 evidence remain fully verified at
+  40,121/`84bd12b7b4cbff806abcbff213b4b7bc5bac230a7371c3fe0b3e2def643ed741`
+  and
+  29,219/`8dd34cc54f56e4bb1370b2f7f1f124aa8b501a4dcca177effe4f6377c3919e14`.
+- X/text, x/net, x/image, gotenv, and jwalterweatherman evidence remain fully
+  verified at
   82,629/`48c872da4ab796ef1115003fcf0a226a07bf5791a163d36bc9c946c9d9f92ed6`,
   71,887/`88e4be87483322792ad3da0064bcef4ced5ee21c52821bb1f80c143f80a3aaf1`,
   52,533/`84972465aef5f19f888102c7991aadd67446146a7056658b006d005666bd82bf`,
@@ -174,17 +189,14 @@ YAML v3 evidence.
   and `97cafb6719f470ab7d057a603b522f0d10418deda2d997e6d5723883efd2e24a`.
   Preserve its NUL-delimited whitespace-path correction.
 - Afero rejection evidence remains fully verified at
-  `/private/tmp/ply-p7-afero-selection.5a46539.udvGSh`,
   79,866/`f0ad8ce41436a5f8bf48222106e79f57b32a9533b6a9a15b290615a54f162405`.
-- Preserve the go-colorful correction: its manifest retains 47,633 entries and
-  SHA-256
-  `a47facc21231accc5c2ed73980c9e3a7542538c6a41d7778de5cfbb410312adc`;
-  47,632 stable entries verify and exactly one mutable telemetry counter still
-  differs. Preserve the btree correction: its 24,197-entry regression manifest
-  retains SHA-256
-  `9cca917b12dd761c58bf91652e78b3e999f55eeb1ffc39f9f3bbf56a52aef463`
-  and exactly 163 recorded mutable cache/HOME mismatches still reproduce;
-  later evidence supersedes them.
+- Preserve the go-colorful correction: 47,632 stable entries pass and exactly
+  one mutable telemetry counter differs from its 47,633-entry manifest. Keep
+  manifest SHA-256
+  `a47facc21231accc5c2ed73980c9e3a7542538c6a41d7778de5cfbb410312adc`.
+  Preserve the btree correction: exactly 163 mutable cache/HOME paths differ
+  from its 24,197-entry manifest, whose SHA-256 is
+  `9cca917b12dd761c58bf91652e78b3e999f55eeb1ffc39f9f3bbf56a52aef463`.
 - Recovery `/private/tmp/ply-p7-go1.26.7-recovery.qvk4zs` remains fully
   verified at two entries and manifest SHA-256
   `1b30193f4f4811f2515223c53c004603afa0a4812b8a571a24c49b252122e83b`.
@@ -200,12 +212,13 @@ YAML v3 evidence.
 
 ## Next Objective
 
-Independently evaluate selected `gopkg.in/errgo.v2 v2.1.0` as exactly one
-bounded P7 module group. Resolve canonical latest, release and pseudo-version
-history, Go declarations and complete floor-compatible closure, exact source
-identity, signature and repository state, loaded package population and real
-consumers, module self-tests, and primary vulnerability data from fresh
-evidence before selecting anything.
+Independently evaluate selected `gopkg.in/resty.v1 v1.12.0` as exactly one
+bounded P7 module group. Resolve canonical latest, stable/prerelease and
+pseudo-version qualification, exact-path and alternate-path history, Go
+declarations and complete floor-compatible closure, source identity,
+signature and repository state, loaded package population and real consumers,
+module self-tests, and primary vulnerability data from fresh evidence before
+selecting anything.
 
 The current build list and graph measurements remain 234 selected modules,
 3,564 graph edges, 429 complete packages, 1,031 go.sum lines, a 332-line
@@ -214,9 +227,9 @@ Windows-symbol vulnerability populations. Use exact Go 1.26.7 with GOENV off,
 GOWORK off, GOTOOLCHAIN local, and no ambient GOFLAGS.
 
 Implement only an exact floor-compatible changed selection with an explained
-minimal closure and every applicable gate passing. If canonical latest is a
-pseudo-version, prove its authoritative commit/time and qualification rather
-than treating a branch head as a release. If exact selected is already the
-decision, record no-change without manufacturing a dependency commit. Stop on
-any mandatory failure. Do not revisit Check, either gopkg YAML group, the
-accepted `go.yaml.in/yaml/v3` group, another dependency, or P8.
+minimal closure and every applicable gate passing. If a later branch or module
+path exists, prove whether it qualifies for exact `gopkg.in/resty.v1` rather
+than treating it as an in-place release. If exact selected is already the
+decision, do not manufacture an explicit requirement or dependency commit.
+Stop on any mandatory failure. Do not revisit Errgo, Check, either gopkg YAML
+group, the accepted `go.yaml.in/yaml/v3` group, another dependency, or P8.

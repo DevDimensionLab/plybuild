@@ -7153,8 +7153,70 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `d45958adc2d3be460e85b3f6e379053a8b011af7cd221d4026d9cb0e1bfd57df`,
   and decision-summary SHA-256 is
   `93d0b2833dc78ea2cddb7ea0454713ef96a1ee1879d2ab38692d44bf9e8c7e51`.
-- Next, independently evaluate selected `gopkg.in/errgo.v2 v2.1.0` as one
-  bounded P7 module group. Do not combine Check, gopkg YAML, another
+- Retain selected `gopkg.in/errgo.v2 v2.1.0` without dependency metadata
+  edits. The Go proxy lists exactly three stable releases, v2.0.0, v2.0.1,
+  and v2.1.0, with no prereleases or retractions. Proxy `@latest`, exact
+  `go list ...@latest`, `@v2`, `@master`, and authoritative gopkg source
+  metadata resolve v2.1.0 at 2018-08-23T07:15:05Z. It is canonical latest
+  and the highest qualified stable release compatible with Go 1.18.
+- V2.1.0 is annotated unsigned tag object
+  `635edbc13741bd819966931e8b599c690b4f074d`, peeled merge commit
+  `f768c5ab0476c50e978b039312180859c10fe8c0`, tree
+  `cb540a0ae1ad20359a13e238d412878b955e6099`. GitHub reports the embedded
+  commit signature verified and valid; local cryptographic verification was
+  unavailable because `gpg` is absent. Its checksum pair is
+  `h1:0vLT13EuvQ0hNvakwLuFZ/jYrLp5F3kcWHXdRggjCE8=` /
+  `h1:hNsd1EY+bozCKY1Ytp96fpM3vjJbqLJn88ws8XvfDNI=`. The three proxy
+  archives match their exact tag commits byte-for-byte.
+- The upstream repository is enabled, unarchived, and not a fork, but the v2
+  line has had no commits since 2018. It publishes no GitHub Release objects
+  and carries no module deprecation marker. Two post-v2.1.0 v2-branch commits
+  remove gocheck and rewrite tests; exact commit resolution produces
+  `v2.1.1-0.20180823084306-81e25171e4fb`. That pseudo-version is an
+  unreleased branch head, not a stable release and not selected by proxy
+  `@latest`, `@master`, or authoritative gopkg metadata, so it is excluded
+  from the qualified candidate set.
+- V2.1.0 has no Go directive and declares only kr/pretty v0.1.0 and the 2018
+  Check pseudo-version. Existing MVS selections already dominate them with
+  kr/pretty v0.3.1 at Go 1.12 and the retained 2019 Check pseudo-version with
+  no Go directive; selected go-internal v1.9.0 declares Go 1.17. The empty
+  changed-selection closure therefore preserves the retained Go 1.18 floor
+  by declaration.
+- Exact projected `go get gopkg.in/errgo.v2@v2.1.0` exits zero but changes no
+  selected version: it only adds a redundant indirect main-module requirement,
+  its graph edge, and the already-selected module's full checksum. Modules
+  remain 234 and complete packages remain 429, while graph edges project
+  3,564 -> 3,565, go.sum 1,031 -> 1,032 lines, and the unapplied tidy diff
+  332 -> 344 lines. This metadata-only pin is not an authorized changed
+  selection and was not manufactured in the repository.
+- Errgo loads in zero complete project packages in either state, repository
+  source has zero Errgo imports, and `go mod why -m` says the main module does
+  not need it. It is historical unloaded MVS graph debt, selected through an
+  old go-internal requirement edge rather than a main or dependency-test
+  consumer path.
+- Two independent v2.1.0 replays from the proxy archive and exact upstream tag
+  verify without source mutation, list two packages, and pass count-1,
+  count-10, race, and vet. Their five-module standalone test apparatus is
+  separate from the unchanged project closure. Old and projected repository
+  build/tests/race/vet, Windows build, pinned lint, CLI surface, and
+  byte-identical help/API/CLI reports pass. Empty-HOME count-2 and the final
+  full preflight pass all 62 launcher, 80 mutation, and 15 audit-meta
+  controls. Earlier runs retain the established primary and nested launcher
+  signal-fixture timing diagnostics; direct and Make launcher suites pass
+  62/62. One outer Make command-line tool override contaminated a nested lint
+  meta-test before the corrected environment-only invocation passed.
+- Old and projected govulncheck v1.7.0 outputs and exact IDs remain
+  byte-identical at 20/30/20 for Darwin symbol, Darwin module, and Windows
+  symbol scans. The fresh 1,392-entry primary vulnerability index contains no
+  Errgo record, finding, or trace. No dependency implementation commit or
+  post-implementation quality run was required. No-change evidence is sealed
+  at `/private/tmp/ply-p7-errgo-v2-selection.1899ff7.HoEmPo`; its fully
+  verified 152,333-entry manifest SHA-256 is
+  `e9a3c3b1b9c311a1dd96f1804167d57359c2af02615dde2ffb544690dac45ab2`,
+  and decision-summary SHA-256 is
+  `aa8a30c6f9e261a5c29be3bd59d87cb96e5b07f85582b6f1d55a4f78fcf3a3ec`.
+- Next, independently evaluate selected `gopkg.in/resty.v1 v1.12.0` as one
+  bounded P7 module group. Do not combine Errgo, Check, gopkg YAML, another
   dependency group, or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
