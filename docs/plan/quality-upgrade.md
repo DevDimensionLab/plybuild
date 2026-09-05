@@ -6850,11 +6850,66 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `ab2bd356b863d529085cff9b918d004aa2a03a121a7ea360a66767a2820cc88c`,
   and decision-summary SHA-256 is
   `014c050a3ccefd6fa501f4c5d04aded2ee93d02ad4039a9935d6f4d478c21e11`.
-- Next, independently evaluate selected indirect
-  `golang.org/x/image v0.5.0` as one bounded P7 module group. Resolve canonical
-  latest, highest Go-1.18-compatible release, source identity, exact closure,
-  loaded behavior, self-tests, and vulnerability data before selecting
-  anything. Do not combine gotenv, jwalterweatherman, cast, afero, or another
+- Reject selected indirect `golang.org/x/image v0.5.0` -> v0.16.0 even though
+  v0.16.0 is the highest stable release whose complete changed closure
+  preserves the retained Go 1.18 floor. Fresh proxy evidence enumerates 45
+  stable semantic releases, v0.1.0 through canonical latest v0.45.0, with no
+  prereleases, retractions, deprecation marker, later major path, or GitHub
+  Release objects. V0.45.0 declares Go 1.25.0. Releases through v0.24.0
+  directly declare at most Go 1.18, but v0.17.0 is the first whose x/text
+  requirement selects an x/tools pseudo-version declaring Go 1.19; v0.16.0's
+  x/text v0.15.0 closure instead selects Go-1.18 x/tools v0.6.0 and x/mod
+  v0.8.0. One post-v0.45.0 master commit is unreleased and declares Go 1.26.0.
+- Candidate v0.16.0 is lightweight unsigned tag commit
+  `55c4ab6bd625a2e8433671ec9f9b6c46daddf2cf` at
+  2024-05-05T12:58:27Z. Its checksum pair is
+  `h1:9kloLAKhUufZhA12l5fwnx2NZW39/we1UhBesW433jw=` /
+  `h1:ugSZItdV4nOxyqp56HmXwH0Ry0nBCpjnZdpDaIHdoPs=`. All 253 proxy files
+  match the exact authoritative upstream tag; ZIP SHA-256 is
+  `2ccf3619375bf633937c1b72ccd9a426953aead2ec9b2ccb0ad39e089ea6ac8a`.
+  The authoritative Go repository and unarchived, undisabled, non-fork GitHub
+  mirror have identical master and all 45 tag refs. Every tag is a lightweight
+  commit ref with no independent tag signature; relevant commits are unsigned.
+- Exact projected get changes x/image v0.5.0 -> v0.16.0 and x/text v0.7.0 ->
+  v0.15.0 in go.mod, adds exactly their two checksum pairs, and selects x/mod
+  v0.8.0 and x/tools v0.6.0 while the pruned legacy graph exposes goldmark
+  v1.3.5 instead of v1.4.13. Existing x/sys v0.30.0 dominates v0.5.0. Modules
+  remain 234, complete packages remain byte-identical at 429, graph edges
+  change 3,564 -> 3,548 through 22 removals and six additions, and the
+  unapplied tidy projection changes 332 -> 381 lines. No module or package is
+  added; this is the explained minimal MVS selection/edge/checksum closure.
+- Eight x/image packages load through `plybuild/cmd -> go-term-markdown ->
+  pixterm/pkg/ansimage -> x/image/bmp`; ansimage blank-imports bmp, tiff, and
+  webp, and imaging imports bmp and tiff. All eight loaded decoder packages
+  pass count-10 in both projections with normalized-identical output. The
+  consumer image-render fixture reproduces the same retained gomarkdown
+  expected-text mismatch in both states and has normalized-identical output,
+  so it exposes no x/image behavior delta.
+- Reject v0.16.0 because its required complete module tests fail under exact
+  Go 1.26.7 at count 1, count 10, and race: `draw.TestScaleDown` rejects four
+  golden images after Go 1.26 changed JPEG decoding. Vet also fails with 80
+  unkeyed `basicfont.Range` literals. Selected v0.5.0 has the same failure
+  classes. Upstream's explicit JPEG-tolerance fix first appears in v0.32.0 and
+  its vet fix first appears in v0.34.0; both releases declare Go 1.24.0 and
+  cannot repair the floor-compatible line. The mandatory module self-test and
+  vet stop rules forbid dependency edits and make downstream repository and
+  post-implementation quality gates inapplicable.
+- A projected v0.16.0 would reduce exact Darwin-symbol/Darwin-module/
+  Windows-symbol vulnerability populations 20/30/20 -> 18/28/18 by removing
+  GO-2023-1989 and GO-2023-1990. The fresh 1,392-entry primary vulnerability
+  index has 13 x/image records. That improvement does not override a mandatory
+  gate failure. No dependency metadata or implementation commit was made.
+  Rejection evidence is sealed at
+  `/private/tmp/ply-p7-x-image-selection.9e9ef26.9J9x1F`; its fully verified
+  52,533-entry manifest SHA-256 is
+  `84972465aef5f19f888102c7991aadd67446146a7056658b006d005666bd82bf`,
+  and decision-summary SHA-256 is
+  `2b70234a63a199ab6cf11050212645162a78c4836aa9aafa4cb00dad764eb936`.
+- Next, independently evaluate selected indirect `golang.org/x/net v0.7.0`
+  as one bounded P7 module group. Resolve canonical latest, highest
+  Go-1.18-floor-compatible release, source identity, exact closure, loaded
+  behavior, self-tests, and vulnerability data before selecting anything. Do
+  not combine x/image, gotenv, jwalterweatherman, cast, afero, or another
   module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;

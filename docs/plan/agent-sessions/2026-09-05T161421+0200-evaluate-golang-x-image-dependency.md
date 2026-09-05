@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Golang X Image Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-05T161421+0200-evaluate-golang-x-image-dependency`
 Created: `2026-09-05T16:14:21+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `313360e5c973826fc386e424cf41feafabaac424fd69b1f448c0167c97aa1bcc`
 Previous: [2026-09-05T154129+0200-evaluate-subosito-gotenv-dependency.md](2026-09-05T154129+0200-evaluate-subosito-gotenv-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-05T170519+0200-evaluate-golang-x-net-dependency.md](2026-09-05T170519+0200-evaluate-golang-x-net-dependency.md)
+Outcome: rejected v0.16.0; retained v0.5.0 because mandatory module tests and vet fail
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -180,3 +180,66 @@ and make the normal `docs: prepare next agent session` commit. Do not implement
 that next group, launch a successor, push, merge, publish, release, stash,
 revert, delete retained evidence/images, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Canonical latest stable is v0.45.0 at unsigned lightweight tag commit
+`3ebddc7c54bd879f8d84d11db82892726f5192fd`, published
+2026-08-11T17:56:44Z and declaring Go 1.25.0. The proxy lists exactly 45
+stable semantic releases and no prereleases or retractions; the module has no
+deprecation marker or later major path, and the GitHub Releases API has no
+objects. One later master commit is unreleased and declares Go 1.26.0.
+
+The highest stable candidate whose complete changed closure preserves the
+retained Go 1.18 floor is v0.16.0. Although x/image itself continues to
+declare Go 1.18 through v0.24.0, v0.17.0 is the first release whose x/text
+requirement selects an x/tools pseudo-version declaring Go 1.19. V0.16.0
+instead requires x/text v0.15.0, which selects Go-1.18 x/tools v0.6.0 and
+x/mod v0.8.0.
+
+V0.16.0 is unsigned lightweight tag commit
+`55c4ab6bd625a2e8433671ec9f9b6c46daddf2cf` at
+2024-05-05T12:58:27Z. Its checksum pair is
+`h1:9kloLAKhUufZhA12l5fwnx2NZW39/we1UhBesW433jw=` /
+`h1:ugSZItdV4nOxyqp56HmXwH0Ry0nBCpjnZdpDaIHdoPs=`. All 253 proxy files
+match the exact authoritative upstream tag; the proxy ZIP SHA-256 is
+`2ccf3619375bf633937c1b72ccd9a426953aead2ec9b2ccb0ad39e089ea6ac8a`.
+The authoritative repository and unarchived, undisabled, non-fork GitHub
+mirror have identical master and all 45 tag refs. All tags are lightweight
+commit refs with no independent signature, and relevant commits are unsigned.
+
+The exact projection changes x/image v0.5.0 -> v0.16.0 and x/text v0.7.0 ->
+v0.15.0 in go.mod, adds exactly those two checksum pairs, selects x/mod v0.8.0
+and x/tools v0.6.0, and exposes goldmark v1.3.5 instead of v1.4.13 through the
+pruned legacy graph. Modules remain 234, complete packages remain 429, graph
+edges change 3,564 -> 3,548 through 22 removals and six additions, and the
+unapplied tidy projection changes 332 -> 381 lines. No module or package is
+added.
+
+Eight x/image packages load through `plybuild/cmd -> go-term-markdown ->
+pixterm/pkg/ansimage -> x/image/bmp`; the actual consumers register bmp, tiff,
+and webp decoders. All eight loaded packages pass count-10 in both projections
+with normalized-identical output. The consumer image-render fixture also has
+normalized-identical old/candidate output while reproducing the same retained
+gomarkdown expected-text mismatch.
+
+The candidate is rejected. Under exact Go 1.26.7, complete module tests fail
+at count 1, count 10, and race because `draw.TestScaleDown` rejects four golden
+images after Go 1.26 changed JPEG decoding. Vet independently fails on 80
+unkeyed `basicfont.Range` literals. Selected v0.5.0 has the same failure
+classes. Upstream's explicit JPEG-tolerance correction first ships in v0.32.0
+and the vet correction first ships in v0.34.0; both declare Go 1.24.0. The
+mandatory stop rule therefore prevented the dependency edit and all downstream
+candidate repository gates.
+
+V0.16.0 would reduce Darwin-symbol/Darwin-module/Windows-symbol vulnerability
+populations 20/30/20 -> 18/28/18 by removing GO-2023-1989 and GO-2023-1990,
+but that improvement cannot override the failed quality contract. `go.mod` and
+`go.sum` remain unchanged and there is no implementation commit.
+
+Evidence is sealed at
+`/private/tmp/ply-p7-x-image-selection.9e9ef26.9J9x1F`; its fully verified
+52,533-entry manifest SHA-256 is
+`84972465aef5f19f888102c7991aadd67446146a7056658b006d005666bd82bf`.
+Decision-summary SHA-256 is
+`2b70234a63a199ab6cf11050212645162a78c4836aa9aafa4cb00dad764eb936`.
