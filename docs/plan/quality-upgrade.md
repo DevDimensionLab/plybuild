@@ -5365,10 +5365,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move, completed
-dependency groups through accepted mattn/go-runewidth v0.0.17, and the
-rejected or no-change Hashicorp HCL, inconshreveable/mousetrap, and
-magiconair/properties evaluations, plus the no-change mitchellh/mapstructure
-evaluation; further dependency groups remain queued.
+dependency groups through accepted pelletier/go-toml/v2 v2.2.2, and the
+recorded no-change or rejected HCL, mousetrap, properties, mapstructure,
+go-toml v1, and Afero evaluations; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6649,11 +6648,60 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   8/`328672c0410e2bfffa058fdf5ec389f4c8640bd73caccde22603b0ad57c9b070`,
   236,599/`85f24a00baaf63d62bb6a3a07dc97bffcaa98b8fed1417b7d6f8425ba8d98d3d`,
   and 3,743/`9601ce867fe389eb1efca59b2ae578052ba9b48670d1112cef3dc66298026ec7`.
+- Reject selected indirect `github.com/spf13/afero v1.9.4` -> v1.10.0
+  despite v1.10.0 being the highest stable release compatible with the retained
+  Go 1.18 floor. The proxy lists 37 main-module versions, all stable, with no
+  prereleases, retractions, or formal deprecation markers. Releases through
+  v1.2.2 have no Go directive, v1.3.0-v1.8.2 declare Go 1.13,
+  v1.9.0-v1.10.0 declare Go 1.16, v1.11.0 declares Go 1.19, v1.12.0
+  declares Go 1.21, and v1.13.0-v1.15.0 declare Go 1.23.0. Canonical latest
+  v1.15.0 therefore exceeds the floor.
+- Candidate v1.10.0 is lightweight tag commit
+  `ee6eef77ef4a6c73b07a4bc070a9a2f076fd121e` at
+  2023-09-22T14:18:35Z. It has no tag object or tag signature, while GitHub
+  verifies its commit signature. Its checksum pair is
+  `h1:EaGW2JJh15aKOejeuJ+wpFSHnbd7GE6Wvp3TsNhb6LY=` /
+  `h1:UBogFpq8E9Hx+xc5CNTTEpTnuHVmXDwZcZcE1eb/UhQ=`; all 66 proxy files
+  match the exact tag commit. Canonical latest v1.15.0 is annotated tag object
+  `18d690e34969d06817fa791ccf69194ebd4a5e8d`, peeled commit
+  `399bb34ad9fd8a252ad1d8bfaef96279b66dc774`, with GitHub-verified tag
+  and commit signatures. The active upstream is neither archived nor a fork;
+  four gcsfs/sftpfs tags are nested modules, no v2 path exists, and 77 later
+  master commits are unreleased.
+- Projected exact get changes Afero plus x/crypto
+  `v0.0.0-20220525230936-793ad666bf5e` ->
+  `v0.0.0-20220722155217-630584e8d5aa`. Afero directly raises x/crypto,
+  whose candidate declares Go 1.17; x/net and x/text requirements remain
+  below retained selections. This minimal closure keeps 234 modules and the
+  byte-identical 429-package population, changes graph edges 3,565 -> 3,572,
+  and adds four checksum lines. The unapplied tidy projection changes
+  321 -> 323 lines.
+- Three Afero packages load through `plybuild/cmd -> spf13/viper ->
+  spf13/afero`. Focused Viper filesystem/configuration behavior, Ply
+  `./cmd`, and the candidate root package pass at count 10. Candidate
+  complete count-1 tests, race, and vet pass across seven packages.
+- Required complete count-10 module tests deterministically fail in tarfs
+  `TestRead` with 27 identical diagnostics. Selected v1.9.4 normalizes to
+  the exact failure; the test is byte-identical, dates to 2020 commit
+  `a4ea980f`, and passes in ten fresh count-1 processes. Although historical
+  rather than a candidate regression, it violates the explicit module
+  self-test stop rule. No dependency metadata or implementation commit was
+  made, and repository-wide candidate gates after the stop were not run.
+- Govulncheck v1.7.0 preserves exact and identical Darwin-symbol,
+  Darwin-module, and Windows-symbol ID populations 20/30/20. The primary Go
+  vulnerability index has no Afero record.
+- Rejection evidence is sealed at
+  `/private/tmp/ply-p7-afero-selection.5a46539.udvGSh`; its fully verified
+  79,866-entry manifest SHA-256 is
+  `f0ad8ce41436a5f8bf48222106e79f57b32a9533b6a9a15b290615a54f162405`,
+  and decision-summary SHA-256 is
+  `c3301a1c2b13f36956551ed1eb09b1a83bf2ac51cf236c6614f46eaf70ea65de`.
 - Next, independently evaluate selected indirect
-  `github.com/spf13/afero v1.9.4` as one bounded P7 module group. Resolve
+  `github.com/spf13/cast v1.5.0` as one bounded P7 module group. Resolve
   canonical latest, highest Go-1.18-compatible release, source identity,
   exact closure, loaded behavior, self-tests, and vulnerability data before
-  selecting anything. Do not combine cast or another module group.
+  selecting anything. Do not combine jwalterweatherman, gotenv, or another
+  module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
