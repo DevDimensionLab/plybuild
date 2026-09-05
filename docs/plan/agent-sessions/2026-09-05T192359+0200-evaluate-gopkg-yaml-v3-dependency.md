@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Gopkg YAML V3 Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-05T192359+0200-evaluate-gopkg-yaml-v3-dependency`
 Created: `2026-09-05T19:23:59+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `dc83dfd8e0e03a7022c71a863d5014fde1cc9c1d9aa7374fc9bea5c003adc1c6`
 Previous: [2026-09-05T184249+0200-evaluate-gopkg-yaml-v2-dependency.md](2026-09-05T184249+0200-evaluate-gopkg-yaml-v2-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-05T200653+0200-evaluate-gopkg-check-v1-dependency.md](2026-09-05T200653+0200-evaluate-gopkg-check-v1-dependency.md)
+Outcome: Retained canonical-latest and highest Go-1.18-floor-compatible `gopkg.in/yaml.v3 v3.0.1` without dependency metadata edits: exact get is a zero-change projection; repeated complete module tests and focused loaded behavior pass, but mandatory vet fails identically with 32 legacy malformed struct tags, so downstream repository gates and an implementation commit are inapplicable.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -160,3 +160,56 @@ and make the normal `docs: prepare next agent session` commit. Do not implement
 that next group, launch a successor, push, merge, publish, release, stash,
 revert, delete retained evidence/images, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Retained `gopkg.in/yaml.v3 v3.0.1` without dependency metadata edits or an
+implementation commit. Fresh Go proxy and checksum-database evidence contains
+exactly two stable releases, v3.0.0 and v3.0.1, with no prereleases or
+retractions. Both omit
+a `go` declaration and require only
+`gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405`, which also omits a Go
+declaration. V3.0.1 is therefore canonical latest and the highest stable
+release compatible with the retained Go 1.18 floor for this exact path. Its
+checksum pair is `h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=` and
+`h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=`.
+
+V3.0.1 is lightweight, unsigned tag commit
+`f6f7691b1fdeb513f56608cd2c32c51f8194bf51`, tree
+`1cb2e60a039c6b3cfdfbd33cc2d049bf68c7db00`, at
+2022-05-27T08:35:30Z. All 24 proxy files match the exact archived original
+`go-yaml/yaml` tag and active `yaml/go-yaml` successor mirror tag. The proxy
+ZIP SHA-256 is
+`aab8fbc4e6300ea08e6afe1caea18a21c90c79f489f52c53e2f20431f1a9a015`.
+The original branch has one later unreleased README-only commit marking the
+project unmaintained; neither that commit, distinct successor path
+`go.yaml.in/yaml/v3`, retained YAML v2, nor prerelease-only YAML v4 is an
+upgrade candidate for this group. The one-release delta adds nil-token parser
+guards and its regression. Primary GO-2022-0603 was fixed before v3.0.0.
+
+Exact projected `go get gopkg.in/yaml.v3@v3.0.1` exits zero with empty output
+and zero-byte go.mod/go.sum diffs. Old and candidate states retain 234 selected
+modules, 3,564 graph edges, 429 complete packages, 1,031 go.sum lines, and an
+identical 332-line unapplied tidy projection. Selected
+`gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15` already dominates the
+declared 2016 requirement, leaving zero changed selections, edges, or
+checksums.
+
+Exactly one package loads through `plybuild/cmd -> pkg/config ->
+gopkg.in/yaml.v3`. An external-only fixture exercised the real
+`GitCloudConfig.GlobalCloudConfig` / `yaml.Unmarshal` path ten times in both
+states with normalized-identical results. Repeated independent module runs
+verify and pass complete count-1, count-10, and race tests, but mandatory vet
+fails identically with 32 legacy malformed struct-tag diagnostics across
+decode, encode, and node tests. The stop rule therefore makes repository
+build, complete tests/race/vet, pinned lint, help/API/CLI, snapshot/Docker,
+quality, and audit acceptance inapplicable.
+
+Govulncheck v1.7.0 preserves byte-identical old/candidate
+Darwin-symbol/Darwin-module/Windows-symbol populations at 20/30/20 with no
+YAML v3 finding or trace. Evidence is sealed at
+`/private/tmp/ply-p7-yaml-v3-selection.cdb5b4c.bbbTdr`; its fully verified
+40,121-entry manifest SHA-256 is
+`84bd12b7b4cbff806abcbff213b4b7bc5bac230a7371c3fe0b3e2def643ed741`,
+and decision-summary SHA-256 is
+`95d5aa003b77880ecf72770ad66c061e0013dfd022fc222eb600860bc9a7799f`.

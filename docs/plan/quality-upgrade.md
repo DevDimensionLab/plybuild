@@ -7050,10 +7050,71 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `8dd34cc54f56e4bb1370b2f7f1f124aa8b501a4dcca177effe4f6377c3919e14`,
   and decision-summary SHA-256 is
   `61d8132e932d4613aea071c5f3d55a9a38c2873e2428011b83231611517885d6`.
-- Next, independently evaluate selected `gopkg.in/yaml.v3 v3.0.1` as
-  one bounded P7 module group. Treat the retained and already measured
-  `go.yaml.in/yaml/v3 v3.0.5` as a distinct path and final prior decision; do
-  not combine YAML v2, YAML v4, another module group, or P8.
+- Retain selected `gopkg.in/yaml.v3 v3.0.1` without dependency metadata
+  edits. Fresh Go proxy and checksum-database evidence enumerates exactly two
+  stable releases, v3.0.0 and v3.0.1, with no prereleases or retractions.
+  Both releases omit a `go` declaration and require only
+  `gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405`, which also omits a
+  Go declaration. V3.0.1 is therefore both canonical latest and the highest
+  stable release compatible with the retained Go 1.18 floor for this exact
+  module path; this conclusion comes from declarations and the empty changed
+  closure, not from its modern-toolchain test result. Its checksum pair is
+  `h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=` /
+  `h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=`.
+- V3.0.1 is lightweight unsigned tag commit
+  `f6f7691b1fdeb513f56608cd2c32c51f8194bf51`, tree
+  `1cb2e60a039c6b3cfdfbd33cc2d049bf68c7db00`, at
+  2022-05-27T08:35:30Z. All 24 proxy files match both the archived original
+  `go-yaml/yaml` tag and the active `yaml/go-yaml` successor mirror tag; the
+  proxy ZIP SHA-256 is
+  `aab8fbc4e6300ea08e6afe1caea18a21c90c79f489f52c53e2f20431f1a9a015`.
+  Both GitHub repositories report `fork: false`, while the successor describes
+  itself as the maintained YAML-org fork. The original v3 branch has exactly
+  one later unreleased README-only commit, which marks the archived project
+  unmaintained; the selected module has no formal deprecation marker and
+  neither repository publishes GitHub Release objects.
+- Successor tags v3.0.2-v3.0.5 belong to distinct module path
+  `go.yaml.in/yaml/v3`; that path retracts its invalid v3.0.0-v3.0.1 tags and
+  retains accepted v3.0.5. `gopkg.in/yaml.v2 v2.4.0` is a distinct retained
+  major, and `go.yaml.in/yaml/v4` has only v4.0.0-rc.1 through rc.6. None is
+  an upgrade candidate for the exact `gopkg.in/yaml.v3` group. Relevant
+  v3.0.0-v3.0.1 history is one commit adding nil-token parser guards and an
+  invalid-input regression; the GO-2022-0603 fix commit precedes v3.0.0.
+- Exact projected `go get gopkg.in/yaml.v3@v3.0.1` exits zero with empty
+  stdout/stderr and zero-byte go.mod/go.sum diffs. Both states retain 234
+  selected modules, 3,564 graph edges, 429 complete packages, 1,031 go.sum
+  lines, and an identical 332-line unapplied tidy projection. Selected
+  `gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15` already dominates
+  YAML v3's declared 2016 pseudo-version, so the minimal changed closure has
+  zero selections, edges, or checksums. Project module verification passes.
+- Exactly one YAML v3 package loads. Real paths include `plybuild/cmd ->
+  pkg/config -> gopkg.in/yaml.v3`; `cmd/tips.go` and `cmd/build_options.go`
+  call `GitCloudConfig.GlobalCloudConfig`, whose implementation uses
+  `yaml.Unmarshal`. An external-only focused fixture calls that production
+  path and validates decoded fields and `SourceFor`; ten old and candidate
+  repetitions pass with normalized-identical output.
+- The module source remains byte-identical, verifies, lists one package, and
+  passes complete count-1, count-10, and race tests in two independent old
+  and no-op-candidate replays. Mandatory vet fails reproducibly in both states
+  with exactly 32 identical legacy malformed struct-tag diagnostics across
+  decode, encode, and node tests. The stop rule therefore makes repository
+  build, complete tests/race/vet, pinned lint, help/API/CLI, snapshot/Docker,
+  quality, and audit acceptance inapplicable. No dependency implementation
+  commit was made.
+- Govulncheck v1.7.0 preserves byte-identical old/candidate
+  Darwin-symbol/Darwin-module/Windows-symbol populations at 20/30/20 with no
+  YAML v3 finding or trace. The fresh 1,392-entry primary index contains only
+  GO-2022-0603 for this module, fixed at
+  `v3.0.0-20220521103104-8f96da9f5d5e`; both stable releases follow that fix.
+  No-change evidence is sealed at
+  `/private/tmp/ply-p7-yaml-v3-selection.cdb5b4c.bbbTdr`; its fully verified
+  40,121-entry manifest SHA-256 is
+  `84bd12b7b4cbff806abcbff213b4b7bc5bac230a7371c3fe0b3e2def643ed741`,
+  and decision-summary SHA-256 is
+  `95d5aa003b77880ecf72770ad66c061e0013dfd022fc222eb600860bc9a7799f`.
+- Next, independently evaluate selected
+  `gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15` as one bounded P7
+  module group. Do not combine gopkg YAML, another dependency group, or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
