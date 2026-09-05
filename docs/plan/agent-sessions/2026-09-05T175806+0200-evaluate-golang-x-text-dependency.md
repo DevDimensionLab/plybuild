@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Golang X Text Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-05T175806+0200-evaluate-golang-x-text-dependency`
 Created: `2026-09-05T17:58:06+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `5c7043f310fa91685443274ba9f6be935da99021cbe88bedceff8a57486cd5ee`
 Previous: [2026-09-05T170519+0200-evaluate-golang-x-net-dependency.md](2026-09-05T170519+0200-evaluate-golang-x-net-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-05T184249+0200-evaluate-gopkg-yaml-v2-dependency.md](2026-09-05T184249+0200-evaluate-gopkg-yaml-v2-dependency.md)
+Outcome: rejected floor-compatible v0.15.0; retained v0.7.0 because mandatory module tests and vet fail
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -152,3 +152,93 @@ and make the normal `docs: prepare next agent session` commit. Do not implement
 that next group, launch a successor, push, merge, publish, release, stash,
 revert, delete retained evidence/images, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Rejected `golang.org/x/text v0.15.0` and retained selected v0.7.0 without
+editing dependency metadata. Fresh primary evidence resolves v0.41.0 as the
+canonical latest stable release and v0.15.0 as the highest stable release
+whose complete changed closure preserves the retained Go 1.18 floor. The
+candidate then fails the mandatory complete module test and vet stop gates
+under exact Go 1.26.7, so repository-wide candidate gates and an implementation
+commit are inapplicable.
+
+The Go proxy enumerates 49 stable semantic releases from v0.1.0 through
+v0.41.0, with no prereleases or retractions. V0.41.0 is authoritative tag
+commit `acdba6655fd45cdb5ab73c9d6a8981333bd65a39` at
+2026-08-11T15:22:47Z and declares Go 1.25.0. Releases v0.14.0-v0.22.0 directly
+declare Go 1.18, but v0.16.0 first requires x/tools pseudo-version
+`v0.21.1-0.20240508182429-e35e4ccd0d2d`, which declares Go 1.19; that
+above-floor requirement remains through v0.22.0. V0.23.0 and later directly
+declare above Go 1.18. V0.15.0 instead requires x/tools v0.6.0, x/mod v0.8.0,
+and x/sys v0.5.0, all declaring Go 1.18 or lower. It is therefore the complete
+closure boundary, not merely the highest directly compatible declaration.
+
+V0.15.0 is unsigned lightweight tag commit
+`8d533a0c40adec778a7d09ac6c8aa640d3c883f4` at
+2024-04-15T18:14:38Z. Its checksum pair is
+`h1:h1V/4gjBv8v9cjcR6+AR5+/cIYK5N/WAgiv4xlsEtAk=` /
+`h1:18ZOQIKpY8NJVqYksKHtTdi31H5itFRjB5/qKTNYzSU=`. All 542 proxy files
+match the exact authoritative tag; ZIP SHA-256 is
+`13faee7e46c8a18c8a28f3eceebf15db6d724b9a108c3c0482a6d2e58ba73a73`.
+Selected v0.7.0 is unsigned lightweight tag commit
+`71a9c9afc4cd710b9412f7f99f0d8e35b10e488a` at
+2023-01-31T16:01:06Z. Its checksum pair is
+`h1:4BRB4x83lYWy72KwLD/qYDuTu7q9PjSagHvijDw7cLo=` /
+`h1:mrYo+phRRbMaCq/xk9113O4dZlRixOauAjOtrjsXDZ8=`; all 530 proxy files
+match, with ZIP SHA-256
+`4d017493c58addadf3c753056b921b47ae386a4cfd10eab2d90ed1252c6ba0e4`.
+The authoritative Go repository and unarchived, undisabled, non-fork GitHub
+mirror have identical master and all tag refs. No nested or later major module
+path exists. The three historical GitHub Release objects are stable; higher
+releases are qualified by proxy and matching authoritative tags. Master
+`f53c31601f90c1b840c0703c5537c3ce1e4b6f5c` is 12 commits beyond v0.41.0,
+declares Go 1.26.0, and is unreleased.
+
+Exact projected `go get golang.org/x/text@v0.15.0` changes only x/text in
+go.mod and adds exactly the candidate checksum pair. MVS additionally changes
+x/mod from pseudo-version `v0.6.0-dev.0.20220419223038-86c51ed26bb4` to
+v0.8.0 and x/tools v0.1.12 to v0.6.0; selected x/sys v0.30.0 dominates the
+candidate's v0.5.0 requirement, and x/sync remains v0.1.0. Modules stay 234,
+complete loaded test packages stay byte-identical at 429, graph edges change
+3,564 -> 3,567 through one removal and four additions, go.sum projects 1,031
+-> 1,033 lines, and the unapplied tidy projection changes 332 -> 333 lines.
+This is the explained minimal selection, edge, checksum, and metadata closure.
+
+Three x/text packages load: `runes`, `transform`, and `unicode/norm`. The real
+path is `plybuild/cmd -> spf13/viper -> spf13/afero -> x/text/runes`; Afero
+constructs `transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)),
+norm.NFC)` and calls `transform.String`. Focused loaded-package, Afero, and Ply
+cmd tests pass at count 10 in both projections with normalized-identical
+output.
+
+Candidate source remains byte-identical and module verification passes, but
+complete `go test ./... -count=1`, `-count=10`, race, and vet all exit 1. The
+default and race runs reject three stale Example identifiers and the
+message/pipeline test panics in x/tools v0.6.0's SSA builder on a Go 1.26
+range-over-function construct. Repeated tests additionally expose persistent
+`cases.TestShortBuffersAndOverflow` failures. Vet reports the same three
+Example errors plus 20 unkeyed literals, four unreachable-code diagnostics,
+and one unused `currency.Unit.String` result. Selected v0.7.0 reproduces the
+same failure classes. The Example-name repair first ships in v0.18.0, whose
+closure already requires the Go-1.19 x/tools pseudo-version, so it cannot
+repair the retained floor line.
+
+Govulncheck v1.7.0 preserves exact old/candidate Darwin-symbol,
+Darwin-module, and Windows-symbol populations at 20/30/20. Both versions have
+the same sole x/text module finding, GO-2026-5970, fixed in v0.39.0; neither
+symbol scan has an x/text-reachable finding or trace. The fresh 1,392-entry
+primary index contains four x/text records, while the other three were fixed
+before v0.7.0. No vulnerability effect overrides the mandatory module gate.
+
+Evidence is sealed at
+`/private/tmp/ply-p7-x-text-selection.6ab5945.3qn5Bj`. Its fully verified
+82,629-entry manifest SHA-256 is
+`48c872da4ab796ef1115003fcf0a226a07bf5791a163d36bc9c946c9d9f92ed6`;
+decision-summary SHA-256 is
+`50d6bee90ea7cea060e23400e820b1537742ec2167bee04f188070e2e5eb39c9`.
+All 27 inherited manifests were independently verified before measurement,
+with the recorded go-colorful mutable telemetry, btree regression, and cast
+whitespace-path corrections preserved. `go.mod`, `go.sum`, production code,
+quality apparatus, and release inputs remain unchanged, and there is no
+dependency implementation commit.

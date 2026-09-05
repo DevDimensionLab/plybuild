@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-05T17:58:06+02:00
+Generated: 2026-09-05T18:42:49+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -14,10 +14,10 @@ session diary.
   `17f7277fd2512ba06db76d1acb0af5f8b623243c`, clean tree
   `485690c010cef3b02385d8f2471d3ef53611abe9`. It changes only `go.mod` and
   `go.sum`.
-- The incoming x/net documentation session is commit
-  `e5ea7ae4ddb5bc4d58085ff3fcfe5b472e6951ce`, exact parent
-  `9e9ef26ff356f9c1c2d051992eb92a10948ec807`, tree
-  `897b89bbf7a8094272e58a13f73c2c174cf844e3`. This handoff must be its
+- The incoming x/text documentation session is commit
+  `6ab5945de5fef2ee6f7deff10f4bc51e94596b30`, exact parent
+  `e5ea7ae4ddb5bc4d58085ff3fcfe5b472e6951ce`, tree
+  `0b6b23569b9296c50085a084737f74debaf95e62`. This handoff must be its
   direct child. The next dependency implementation, if any, must use the
   resulting documentation commit as its exact parent.
 - Relative to accepted go-cmp commit `c314bcb`, accepted dependency metadata
@@ -26,8 +26,8 @@ session diary.
   closures select testify v1.9.0, objx v0.5.2, quicktest v1.14.4, kr/pretty
   v0.3.1, and rogpeppe/go-internal v1.9.0. Those four accepted groups add
   exactly 15 checksum lines.
-- The answered x/net archive and sole NEXT `golang.org/x/text` archive link
-  reciprocally. Only the launcher's mutable header and prompt regions may
+- The answered x/text archive and sole NEXT `gopkg.in/yaml.v2` archive must
+  link reciprocally. Only the launcher's mutable header and prompt regions may
   change during handoff. Ordinary and ignored status must end empty.
 - No `.agent-task/current.md` or `.quality/manual-evidence.json` was created.
   No push, merge, publication, release, stash, revert, retained evidence/image
@@ -36,103 +36,97 @@ session diary.
 P2A-P6 are complete. P7 remains active after the maintained Go 1.26.7
 toolchain and completed dependency groups through accepted cast v1.5.1,
 rejected afero v1.10.0, retained canonical-latest jwalterweatherman v1.1.0,
-rejected gotenv v1.6.0, x/image v0.16.0, and x/net v0.25.0. Go-cmp v0.7.0,
-Viper v1.16.0, Emoji v2.2.14, ini v1.67.3, fatih/color v1.19.0,
-fsnotify v1.10.1, latest gomarkdown
+rejected gotenv v1.6.0, x/image v0.16.0, x/net v0.25.0, and x/text v0.15.0.
+Go-cmp v0.7.0, Viper v1.16.0, Emoji v2.2.14, ini v1.67.3, fatih/color
+v1.19.0, fsnotify v1.10.1, latest gomarkdown
 `v0.0.0-20260824154242-13c5cf49db8d`, HCL, mousetrap, properties,
-mapstructure, go-toml v1, afero, jwalterweatherman, gotenv, x/image, and x/net
-changes remain rejected or unnecessary for their recorded floor,
+mapstructure, go-toml v1, afero, jwalterweatherman, gotenv, x/image, x/net, and
+x/text changes remain rejected or unnecessary for their recorded floor,
 loaded-behavior, release-qualification, self-test, exact-latest, or closure
 decisions. Do not revisit them. P8 remains queued.
 
-## Rejected Golang X Net Group
+## Rejected Golang X Text Group
 
 Fresh Go proxy, checksum-database, authoritative Go Git, GitHub mirror, and
-primary Go vulnerability evidence enumerate exactly 58 stable semantic
-releases, v0.1.0 through v0.58.0, with no prereleases, retractions, formal
-deprecation marker, fork, archived or disabled repository, nested or later
-major module path, or GitHub Release objects. Proxy `@latest` and exact
-`go list` resolve v0.58.0 at commit
-`acc78e0d2b2c855c0c4fbdcfe5f42a9e3d0f9778`, published
-2026-08-12T17:41:32Z and declaring Go 1.25.0. Master commit
-`c23af1b9b8cc40d792e7ffd20aa02bfb8984a1f5` is 22 commits later, maps to
-pseudo-version `v0.58.1-0.20260904215552-c23af1b9b8cc`, declares Go 1.26.0,
-and is unreleased.
+primary Go vulnerability evidence enumerate exactly 49 stable semantic
+releases, v0.1.0 through v0.41.0, with no prereleases, retractions, formal
+deprecation marker, fork, archived or disabled repository, or nested/later
+major module path. Proxy `@latest` and exact `go list` resolve v0.41.0 at
+commit `acdba6655fd45cdb5ab73c9d6a8981333bd65a39`, published
+2026-08-11T15:22:47Z and declaring Go 1.25.0. The three historical GitHub
+Release objects are stable; later releases are proxy-listed authoritative
+tags. Master `f53c31601f90c1b840c0703c5537c3ce1e4b6f5c` is 12 commits later,
+declares Go 1.26.0, and is unreleased.
 
-V0.1.0-v0.17.0 declare Go 1.17, v0.18.0-v0.35.0 declare Go 1.18,
-v0.36.0-v0.43.0 declare Go 1.23.0, v0.44.0-v0.50.0 declare Go 1.24.0, and
-v0.51.0-v0.58.0 declare Go 1.25.0. The direct declaration alone is not the
-floor decision: v0.26.0 is the first release whose x/text requirement selects
-x/tools pseudo-version `v0.21.1-0.20240508182429-e35e4ccd0d2d`, which
-declares Go 1.19. Every later Go-1.18 x/net release through v0.35.0 retains
-that above-floor closure. V0.25.0 instead requires x/text v0.15.0, whose
-x/tools v0.6.0 and x/mod v0.8.0 requirements declare Go 1.18 or lower.
-V0.25.0 is therefore the highest stable candidate whose complete changed
-closure preserves the retained Go 1.18 floor.
+V0.1.0-v0.3.2 have no Go declaration, v0.3.3-v0.3.6 declare Go 1.11,
+v0.3.7-v0.13.0 declare Go 1.17, v0.14.0-v0.22.0 declare Go 1.18,
+v0.23.0-v0.28.0 declare Go 1.23.0, v0.29.0-v0.34.0 declare Go 1.24.0, and
+v0.35.0-v0.41.0 declare Go 1.25.0. Direct declarations are insufficient:
+v0.16.0 first requires x/tools pseudo-version
+`v0.21.1-0.20240508182429-e35e4ccd0d2d`, which declares Go 1.19, and that
+requirement remains through v0.22.0. V0.15.0 instead requires x/tools v0.6.0,
+x/mod v0.8.0, and x/sys v0.5.0, all at Go 1.18 or lower. V0.15.0 is therefore
+the highest stable complete-closure-compatible candidate.
 
-Candidate v0.25.0 is unsigned lightweight tag commit
-`d27919b57fa8dd03198f85ca9e675e1a09babd7d` at
-2024-05-06T16:24:48Z. Its checksum pair is
-`h1:d/OCCoBEUq33pjydKrGQhw7IlUPI2Oylr+8qLx49kac=` /
-`h1:JkAGAh7GEvH74S6FOH42FLoXpXbE/aqXSrIQjXgsiwM=`. All 778 proxy files
+Candidate v0.15.0 is unsigned lightweight tag commit
+`8d533a0c40adec778a7d09ac6c8aa640d3c883f4` at
+2024-04-15T18:14:38Z. Its checksum pair is
+`h1:h1V/4gjBv8v9cjcR6+AR5+/cIYK5N/WAgiv4xlsEtAk=` /
+`h1:18ZOQIKpY8NJVqYksKHtTdi31H5itFRjB5/qKTNYzSU=`. All 542 proxy files
 match the exact authoritative tag; ZIP SHA-256 is
-`7fd8464681c3011736f2c75beb20f88fff553a17f4f574325bce5ca5dc1fcf83`.
+`13faee7e46c8a18c8a28f3eceebf15db6d724b9a108c3c0482a6d2e58ba73a73`.
 Selected v0.7.0 is unsigned lightweight tag commit
-`8e2b117aee74f6b86c207a808b0255de45c0a18a` at
-2023-02-14T17:04:22Z and declares Go 1.17. Its checksum pair is
-`h1:rJrUqqhjsgNp7KqAIc25s9pZnjU7TUcSY7HcVZjdn1g=` /
-`h1:2Tu9+aMcznHK/AK1HMvgo6xiTLG5rD5rZLDS+rp2Bjs=`; all 667 proxy files
-match and ZIP SHA-256 is
-`060552064526a90ac9b0bdce2ba0ab34592decc9428d1441c3c9722f853cd290`.
-The Go repository and GitHub mirror have identical master and all 58 tag refs.
-Every tag is a lightweight commit ref without an independent tag signature;
-local Git and GitHub both report relevant commits unsigned.
+`71a9c9afc4cd710b9412f7f99f0d8e35b10e488a` at
+2023-01-31T16:01:06Z. Its checksum pair is
+`h1:4BRB4x83lYWy72KwLD/qYDuTu7q9PjSagHvijDw7cLo=` /
+`h1:mrYo+phRRbMaCq/xk9113O4dZlRixOauAjOtrjsXDZ8=`; all 530 proxy files
+match, with ZIP SHA-256
+`4d017493c58addadf3c753056b921b47ae386a4cfd10eab2d90ed1252c6ba0e4`.
+The authoritative repository and GitHub mirror have identical master and all
+tag refs; relevant tags are lightweight and relevant commits are unsigned.
 
-Exact projected `go get golang.org/x/net@v0.25.0` changes x/net v0.7.0 ->
-v0.25.0 and x/text v0.7.0 -> v0.15.0 in go.mod and adds exactly those two
-checksum pairs, four lines. MVS also moves x/crypto to v0.23.0, x/mod to
-v0.8.0, and x/tools to v0.6.0; existing x/sys v0.30.0 and x/term v0.29.0
-dominate the candidate's lower requirements. Every changed selection declares
-Go 1.18 or lower. Modules stay 234, complete packages stay byte-identical at
-429, graph edges change 3,564 -> 3,568 through five removals and nine
-additions, and the unapplied tidy projection changes 332 -> 335 lines. This is
-the explained minimal MVS selection, edge, checksum, and metadata closure.
+Exact projected `go get golang.org/x/text@v0.15.0` changes only x/text in
+go.mod and adds exactly its checksum pair. MVS also moves x/mod from
+`v0.6.0-dev.0.20220419223038-86c51ed26bb4` to v0.8.0 and x/tools v0.1.12 to
+v0.6.0; x/sys v0.30.0 dominates the candidate's v0.5.0 requirement and x/sync
+remains v0.1.0. Modules stay 234, complete packages stay byte-identical at
+429, graph edges change 3,564 -> 3,567 through one removal and four additions,
+and the unapplied tidy projection changes 332 -> 333 lines. This is the
+explained minimal closure.
 
-Two x/net packages load: html and html/atom. The path is `plybuild/cmd ->
-go-term-markdown -> x/net/html`; go-term-markdown calls `html.Parse` and
-walks `html.Node` values using node types and attributes. Both loaded
-packages and the Ply markdown rendering contract pass at count 10 in both
-projections with normalized-identical output. The upstream consumer's inline
-HTML test reproduces the same pre-existing ANSI expected-text mismatch in both
-states; it exposes no x/net behavior delta.
+Three x/text packages load: runes, transform, and unicode/norm. The real path
+is `plybuild/cmd -> spf13/viper -> spf13/afero -> x/text/runes`; Afero uses
+`transform.Chain`, normalization forms, rune removal, and `transform.String`.
+Loaded-package, Afero, and Ply cmd focused tests pass at count 10 in both
+projections with normalized-identical output.
 
-Candidate module verification and vet pass and its 778-file source remains
-unchanged, but mandatory complete tests fail under exact Go 1.26.7 at count 1,
-count 10, and race. `route.TestRouteMessage` cannot create an AF_ROUTE raw
-socket in the measured Darwin sandbox and reports `operation not permitted`;
-count 10 produces exactly ten such diagnostics. Selected v0.7.0 has the same
-route failure, and the test's fatal socket behavior remains unchanged on
-unreleased master. The explicit self-test stop rule still rejects v0.25.0,
-retains v0.7.0, forbids dependency metadata edits, and makes repository-wide
-candidate and post-implementation quality gates inapplicable. No dependency or
-implementation commit was made.
+Candidate source remains byte-identical and verification passes, but complete
+tests at count 1/count 10, race, and vet all fail under exact Go 1.26.7. Three
+stale Example identifiers fail vet, and message/pipeline panics in x/tools
+v0.6.0's SSA builder on a Go 1.26 range-over-function construct; repeated
+tests also expose `cases.TestShortBuffersAndOverflow` persistence failures.
+Standalone vet additionally reports 20 unkeyed literals, four unreachable
+statements, and one unused `currency.Unit.String` result. Selected v0.7.0
+reproduces the failure classes. Example fixes first ship in v0.18.0, whose
+closure already declares Go 1.19. The mandatory module stop rule rejects
+v0.15.0, retains v0.7.0, forbids metadata edits, and makes downstream
+repository gates inapplicable. No implementation commit was made.
 
-Govulncheck v1.7.0 preserves exact Darwin and Windows symbol populations at
-20/20, including the same nine symbol-reachable x/net IDs and traces. The
-Darwin module population improves 30 -> 27 by removing GO-2023-1988,
-GO-2023-2102, and GO-2024-2687. The fresh 1,392-entry primary index, last
-modified 2026-09-02T19:32:21Z, contains 30 x/net records. That module-only
-improvement cannot override mandatory module test failure.
+Govulncheck v1.7.0 preserves exact Darwin-symbol/Darwin-module/Windows-symbol
+populations at 20/30/20. Both states have the same sole x/text module finding,
+GO-2026-5970, fixed in v0.39.0, and neither has an x/text symbol-reachable
+finding or trace. The fresh 1,392-entry primary index contains four x/text
+records; the other three were fixed before v0.7.0.
 
-## X Net Evidence
+## X Text Evidence
 
 - Selection evidence is sealed at
-  `/private/tmp/ply-p7-x-net-selection.e5ea7ae.cP57X8`. Its fully verified
-  71,887-entry manifest SHA-256 is
-  `88e4be87483322792ad3da0064bcef4ced5ee21c52821bb1f80c143f80a3aaf1`;
+  `/private/tmp/ply-p7-x-text-selection.6ab5945.3qn5Bj`. Its fully verified
+  82,629-entry manifest SHA-256 is
+  `48c872da4ab796ef1115003fcf0a226a07bf5791a163d36bc9c946c9d9f92ed6`;
   decision-summary SHA-256 is
-  `6e32698abcde67604e159488ba21f6e780fd61dfba2ed9299644b5f011940dff`.
-- The manifest covers fresh proxy/sumdb/Git/GitHub history, all 58 releases and
+  `50d6bee90ea7cea060e23400e820b1537742ec2167bee04f188070e2e5eb39c9`.
+- The manifest covers fresh proxy/sumdb/Git/GitHub history, all 49 releases and
   declarations, upstream/mirror refs, exact source identity, release and
   signature qualification, complete closure boundary probes, exact-get and
   tidy diffs, selection/edge/package/loaded populations, consumer paths and
@@ -195,7 +189,7 @@ improvement cannot override mandatory module test failure.
 
 ## Next Objective
 
-Independently evaluate selected indirect `golang.org/x/text v0.7.0` as
+Independently evaluate selected indirect `gopkg.in/yaml.v2 v2.4.0` as
 exactly one bounded P7 module group. Resolve canonical latest, every stable
 release that could satisfy the retained Go 1.18 floor through its complete
 changed closure, source identity, release qualification, requirements, loaded
@@ -208,5 +202,5 @@ consumer behavior, repository quality, help/API/CLI identity, and exact Darwin
 and Windows vulnerability populations. Implement only an exact
 floor-compatible release with explained minimal closure and every gate
 passing; otherwise record rejection or no-change without dependency metadata
-edits. Do not combine x/net, x/image, gotenv, jwalterweatherman, cast, afero,
-another dependency group, or P8.
+edits. Do not combine x/text, x/net, x/image, gotenv, jwalterweatherman, cast,
+afero, yaml.v3, another dependency group, or P8.

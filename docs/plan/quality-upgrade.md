@@ -6957,12 +6957,67 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `88e4be87483322792ad3da0064bcef4ced5ee21c52821bb1f80c143f80a3aaf1`,
   and decision-summary SHA-256 is
   `6e32698abcde67604e159488ba21f6e780fd61dfba2ed9299644b5f011940dff`.
-- Next, independently evaluate selected indirect `golang.org/x/text v0.7.0`
+- Reject selected indirect `golang.org/x/text v0.7.0` -> v0.15.0 even though
+  v0.15.0 is the highest stable release whose complete changed closure
+  preserves the retained Go 1.18 floor. Fresh proxy evidence enumerates 49
+  stable releases through canonical latest v0.41.0, with no prereleases,
+  retractions, deprecation marker, fork, archive/disable state, or nested or
+  later major path. V0.41.0 declares Go 1.25.0. Releases v0.14.0-v0.22.0
+  directly declare Go 1.18, but v0.16.0 first requires x/tools pseudo-version
+  `v0.21.1-0.20240508182429-e35e4ccd0d2d`, which declares Go 1.19 and remains
+  required through v0.22.0. V0.15.0 instead requires x/tools v0.6.0, x/mod
+  v0.8.0, and x/sys v0.5.0, all at Go 1.18 or lower. Twelve post-v0.41.0
+  master commits are unreleased, and master declares Go 1.26.0.
+- Candidate v0.15.0 is lightweight unsigned tag commit
+  `8d533a0c40adec778a7d09ac6c8aa640d3c883f4` at
+  2024-04-15T18:14:38Z. Its checksum pair is
+  `h1:h1V/4gjBv8v9cjcR6+AR5+/cIYK5N/WAgiv4xlsEtAk=` /
+  `h1:18ZOQIKpY8NJVqYksKHtTdi31H5itFRjB5/qKTNYzSU=`. All 542 proxy files
+  match the authoritative tag; ZIP SHA-256 is
+  `13faee7e46c8a18c8a28f3eceebf15db6d724b9a108c3c0482a6d2e58ba73a73`.
+  Selected v0.7.0 is lightweight unsigned tag commit
+  `71a9c9afc4cd710b9412f7f99f0d8e35b10e488a` at
+  2023-01-31T16:01:06Z; all 530 proxy files match. Authoritative and mirror
+  master/tag refs are identical.
+- Exact projected get changes only x/text v0.7.0 -> v0.15.0 in go.mod, adds
+  exactly its two checksum lines, and changes MVS selections x/mod
+  `v0.6.0-dev.0.20220419223038-86c51ed26bb4` -> v0.8.0 and x/tools v0.1.12 ->
+  v0.6.0. Existing x/sys v0.30.0 dominates v0.5.0, and x/sync stays v0.1.0.
+  Modules and complete packages remain 234 and 429; graph edges change 3,564
+  -> 3,567 through one removal and four additions; go.sum projects 1,031 ->
+  1,033 lines; the unapplied tidy projection changes 332 -> 333 lines. This
+  is the explained minimal selection/edge/checksum closure.
+- Three x/text packages load through `plybuild/cmd -> spf13/viper ->
+  spf13/afero -> x/text/runes`: runes, transform, and unicode/norm. Afero uses
+  `transform.Chain`, normalization forms, rune removal, and `transform.String`.
+  Loaded-package, Afero, and Ply cmd focused tests pass count 10 in both
+  projections with normalized-identical output.
+- Reject v0.15.0 because complete module tests at count 1/count 10, race, and
+  vet all fail under exact Go 1.26.7. Three stale Example identifiers fail
+  vet, and message/pipeline panics in x/tools v0.6.0's SSA builder on a Go 1.26
+  range-over-function construct; repeated tests additionally expose
+  `cases.TestShortBuffersAndOverflow` persistence failures. Standalone vet
+  adds 20 unkeyed literals, four unreachable statements, and one unused
+  currency string result. Selected v0.7.0 reproduces the failure classes.
+  Example repairs first ship in v0.18.0, whose closure already declares Go
+  1.19. Verification passes and source is unchanged, but the mandatory module
+  gate forbids dependency edits and makes downstream repository and
+  post-implementation gates inapplicable.
+- Exact Darwin-symbol/Darwin-module/Windows-symbol vulnerability populations
+  remain 20/30/20. Both states have the same sole x/text module finding,
+  GO-2026-5970, fixed in v0.39.0; neither has an x/text symbol-reachable
+  finding or trace. No dependency metadata or implementation commit was made.
+  Rejection evidence is sealed at
+  `/private/tmp/ply-p7-x-text-selection.6ab5945.3qn5Bj`; its fully verified
+  82,629-entry manifest SHA-256 is
+  `48c872da4ab796ef1115003fcf0a226a07bf5791a163d36bc9c946c9d9f92ed6`,
+  and decision-summary SHA-256 is
+  `50d6bee90ea7cea060e23400e820b1537742ec2167bee04f188070e2e5eb39c9`.
+- Next, independently evaluate selected indirect `gopkg.in/yaml.v2 v2.4.0`
   as one bounded P7 module group. Resolve canonical latest, highest
   Go-1.18-floor-compatible release, source identity, exact closure, loaded
   behavior, self-tests, and vulnerability data before selecting anything. Do
-  not combine x/net, x/image, gotenv, jwalterweatherman, cast, afero, or
-  another module group.
+  not combine x/text, x/net, x/image, yaml.v3, or another module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
