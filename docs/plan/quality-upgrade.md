@@ -6598,12 +6598,62 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `e3e516511d60caf7d2004ee1feb29261ecc45b35339dac8e44d19f286606e1b8`;
   selection-summary SHA-256 is
   `85deac527b69ebbfd2608a970684b3f915563d48a538644f3da357961adc268e`.
+- Accept selected indirect `github.com/pelletier/go-toml/v2 v2.0.7` -> v2.2.2
+  as the highest stable release compatible with the retained Go 1.18 floor.
+  Fresh proxy and upstream evidence enumerates 33 semantic versions: 23
+  stable and ten prereleases, with no retractions. Canonical latest v2.4.3
+  declares Go 1.21.0 and is rejected; all 15 stable releases through v2.2.2
+  declare Go 1.16. The v1 module is a distinct path, the proxy has no v3
+  versions, and a non-semver GitHub prerelease named `latest` is not a module
+  version.
+- Candidate v2.2.2 is lightweight tag commit
+  `a3d5a0bb530b5206c728eed9cb57323061922bcb` at
+  2024-04-29T10:02:54Z. Its GitHub Release was published
+  2024-05-01T15:13:03Z. All 33 tags are lightweight refs with no tag object or
+  tag signature; GitHub verifies every embedded commit signature. All 97 files
+  in the candidate module ZIP match the tag commit byte-for-byte. Its checksum pair is
+  `h1:aYUidT7k73Pcl9nb2gScu7NSrKCSHIDE89b3+6Wq+LM=` /
+  `h1:1t835xjRzz80PqgE6HHgN2JOsmgYu/h4qDAS4n929Rs=`.
+- Exact pinned get changes go-toml/v2 v2.0.7 -> v2.2.2, testify v1.8.1 ->
+  v1.9.0, and objx v0.5.0 -> v0.5.2. V2.2.2 directly requires testify
+  v1.9.0, which requires objx v0.5.2; objx's v1.8.4 testify edge contributes
+  only its go.mod checksum under MVS. Modules remain 234, complete packages
+  remain 429, graph edges change 3,557 -> 3,565 through exactly six removed
+  and 14 added edges, and go.sum adds exactly six lines. The unapplied tidy
+  projection changes 313 -> 321 lines.
+- Five `/v2` packages load through `plybuild/cmd -> viper ->
+  viper/internal/encoding/toml -> pelletier/go-toml/v2`. Viper encode/decode
+  tests pass at count 10 in both states. Candidate complete tests at count 1
+  and count 10 and race pass across 16 packages. One standalone module-vet
+  malformed test-tag diagnostic is normalized-identical in v2.0.7 and v2.2.2
+  and dates to 2021 commit `0d20a845`; repository vet remains clean.
+- Dependency-only implementation commit
+  `8cce879d285f08a3f8710a1ea35358fb057a9bfc`, exact parent `34f1314`, tree
+  `8a88c3ff919b5275599d8461c1a176457997d2e7`, changes only `go.mod` and
+  `go.sum`. Exact quality passes 21/21 stages, all 27 Q0-Q2 rows at L2, 80/80
+  mutations, host/snapshot/Docker acceptance, and zero held, regressed,
+  not-comparable, or dirty counts. The full audit exits expected 1, never 2,
+  only for Q3.1, Q3.3, Q3.4, and Q3.7. Help/API/CLI identity and exact
+  20/30/20 vulnerability populations are preserved; the primary vulnerability
+  index has no go-toml record. During documentation handoff, two Make launcher
+  attempts reproduced the established nested signal-fixture timing diagnostic;
+  an isolated run and the final Make entry-point run pass all 62 controls.
+- Selection, review, exact-quality, and regression evidence is sealed at
+  `/private/tmp/ply-p7-go-toml-v2-selection-final.34f1314.gn2ns2`,
+  `/private/tmp/ply-p7-go-toml-v2-selection.34f1314.s0l6bA/quality-review-final`,
+  `/private/tmp/ply-p7-go-toml-v2-selection.34f1314.s0l6bA/exact-quality-final`,
+  and
+  `/private/tmp/ply-p7-go-toml-v2-selection.34f1314.s0l6bA/regression-gate-final`.
+  Their fully verified manifest populations/SHA-256 values are
+  17,093/`ce1a47d85cd2fa0ff3bde19c1953c0dc73914017145abe2f4c5a27c4cf685ff1`,
+  8/`328672c0410e2bfffa058fdf5ec389f4c8640bd73caccde22603b0ad57c9b070`,
+  236,599/`85f24a00baaf63d62bb6a3a07dc97bffcaa98b8fed1417b7d6f8425ba8d98d3d`,
+  and 3,743/`9601ce867fe389eb1efca59b2ae578052ba9b48670d1112cef3dc66298026ec7`.
 - Next, independently evaluate selected indirect
-  `github.com/pelletier/go-toml/v2 v2.0.7` as one bounded P7 module group.
-  Resolve canonical latest, highest Go-1.18-compatible release, source and
-  module lineage, exact closure, loaded behavior, self-tests, and vulnerability
-  data before selecting anything. Do not conflate the completed v1 decision
-  with the `/v2` module.
+  `github.com/spf13/afero v1.9.4` as one bounded P7 module group. Resolve
+  canonical latest, highest Go-1.18-compatible release, source identity,
+  exact closure, loaded behavior, self-tests, and vulnerability data before
+  selecting anything. Do not combine cast or another module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
