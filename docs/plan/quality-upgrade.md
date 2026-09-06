@@ -5365,8 +5365,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained canonical-latest
-`gopkg.in/resty.v1 v1.12.0`; further dependency groups remain queued.
+dependency groups through retained highest stable exact-path
+`gopkg.in/alecthomas/kingpin.v2 v2.2.6`; further dependency groups remain
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -7272,9 +7273,82 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `72d739b05c507fab058737de6ab967b534e5fcdab1c9588582188532f1a926c2`,
   and decision-summary SHA-256 is
   `008b8b9396b58c93e696a5d495037ac974224149fce9b34badb6c7786723a109`.
+- Retain selected `gopkg.in/alecthomas/kingpin.v2 v2.2.6` without dependency
+  metadata edits. The Go proxy lists exactly 40 stable v2 semantic versions,
+  with no prereleases or retractions, and resolves `@latest`, `@v2`, and the
+  authoritative gopkg `@master` to v2.4.0 at 2023-09-30T22:59:49Z. V2.4.0
+  is therefore canonical latest as a stable tag, but it declares
+  `github.com/alecthomas/kingpin/v2`; exact gopkg-path `go get` rejects it.
+  V2.3.0 has an invalid non-`.v2` GitHub module declaration, and v2.3.1,
+  v2.3.2, and v2.4.0 use the alternate GitHub `/v2` path. Proxy module
+  metadata for the 36 stable tags through v2.2.6 declares the exact gopkg
+  path. Selected v2.2.6 is the highest qualified stable exact-path release and
+  imposes no declaration above the retained Go 1.18 floor.
+- Selected v2.2.6 is lightweight tag and unsigned commit
+  `947dcec5ba9c011838740e680966fd7087a71d0d`, tree
+  `7b5bf03129479f410ca39ea2647dd190bddee927`. Its checksum pair is
+  `h1:jMFz6MfLP0/4fUyZle81rXUoxOBFi19VUFKVDOQfozc=` /
+  `h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLkstjWtayDeSgw=`; proxy ZIP SHA-256 is
+  `638080591aefe7d2642f2575b627d534c692606f02ea54ba89f42db112ba8839`.
+  All 39 proxy files match the exact tag commit. All 40 v2 tags are
+  lightweight commit refs without tag signatures; local OpenPGP status is
+  `N` for every tag commit. GitHub reports v2.2.6 unsigned and v2.4.0's
+  commit signature valid.
+- Exact-path pseudo-versions at pre-module commit `c2ca6a1e4f86`, module
+  conversion commit `102f372a17d4`, and divergent `v3-unstable` head
+  `95d230a53780` resolve and download, but are unreleased commits rather than
+  stable candidates; the last is also below the selected semantic line.
+  Current GitHub master `177e1b9ba430` resolves to unreleased
+  `v2.4.1-0.20260824075000-177e1b9ba430` on the alternate module path and is
+  rejected by exact gopkg-path get. The unarchived, undisabled, non-fork
+  repository now says `CONTRIBUTIONS ONLY` and names the GitHub `/v2` module
+  as current stable; the exact gopkg module itself has no deprecation marker.
+- Exact projected
+  `go get gopkg.in/alecthomas/kingpin.v2@v2.2.6` changes no selected version.
+  It only adds redundant indirect requirements on the already-selected
+  template, units, and Kingpin modules, their three main-module graph edges,
+  and their three existing full checksums. Modules remain 234 and complete
+  packages remain 429; graph edges project 3,564 -> 3,567, go.sum lines
+  1,031 -> 1,034, and the unapplied tidy diff 332 -> 353 lines. The changed
+  selection closure is empty, so this metadata-only projection is not an
+  authorized implementation and was not manufactured in the repository.
+- Kingpin loads in zero complete project packages, has zero repository Go
+  imports, and `go mod why -m` says the main module does not need it. It is
+  historical graph debt through old Prometheus tsdb/common requirements,
+  reached from mvn-pom-mutator rather than a loaded project consumer path.
+- The exact proxy source and upstream tag remain source-identical after test.
+  Their separate seven-module test apparatus is not part of project MVS.
+  Count-1, ten fresh count-1 processes, race, and vet pass, but both exact
+  sources fail `go test ./... -count=10`: repetitions 2-10 fail
+  `TestRequiredArgWithEnvarMissingErrors` and
+  `TestRequiredWithEnvarMissingErrors`, 18 failures total, because sibling
+  tests leave `TEST_ARG_ENVAR` and `TEST_ENVAR` set in process-global state.
+  The mandatory repeated module-suite gate therefore independently rejects
+  even the redundant exact-selected projection.
+- Old and projected repository verification, build, complete tests/race/vet,
+  Windows build, pinned lint, CLI surface, API/CLI reports, and public help
+  pass or remain byte-identical. Empty-HOME count-2 passes. A corrected clean
+  committed projection and external compatibility reports produce a zero-exit
+  full preflight with all 62 launcher controls, 80/80 killed mutants, and 15
+  audit meta-controls. Five aggregate attempts and one isolated attempt retain
+  the established signal-retention timing failure; a later attempt also
+  proved why compatibility reports must stay external before the unchanged
+  corrected run passed. Changed-selection quality, snapshot/Docker, and
+  focused/full audits remain inapplicable because no selection changed and the
+  mandatory module gate failed.
+- Govulncheck v1.7.0 preserves byte-identical old/projected outputs and exact
+  Darwin-symbol/Darwin-module/Windows-symbol ID populations at 20/30/20. The
+  fresh 1,392-entry primary index has no Kingpin record, finding, or trace.
+  No-change evidence is sealed at
+  `/private/tmp/ply-p7-kingpin-v2-selection.c440130.2WGm6X`; its fully verified
+  97,185-entry manifest SHA-256 is
+  `ce50700fe0df4e208ce1a679d7ef8c9b97fdca45398843d392351673fa70837c`,
+  and decision-summary SHA-256 is
+  `d9080ecc8983da371aacfe1ef234a1290e7e577738c4b5dc9d99078365bba54f`.
 - Next, independently evaluate selected
-  `gopkg.in/alecthomas/kingpin.v2 v2.2.6` as one bounded P7 module group. Do
-  not combine Resty, Errgo, Check, gopkg YAML, another dependency group, or P8.
+  `github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4` as one
+  bounded P7 module group. Do not combine Kingpin, Resty, another dependency
+  group, or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
