@@ -1,13 +1,60 @@
 # Agent Session: Evaluate Alecthomas Units Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-06T044730+0200-evaluate-alecthomas-units-dependency`
 Created: `2026-09-06T04:47:30+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `51f4ef4a19545cf62549532d78addbceb5b809689b569e857c3ef2352c283686`
 Previous: [2026-09-05T231214+0200-evaluate-gopkg-kingpin-v2-dependency.md](2026-09-05T231214+0200-evaluate-gopkg-kingpin-v2-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-06T150339+0200-evaluate-alecthomas-assert-dependency.md](2026-09-06T150339+0200-evaluate-alecthomas-assert-dependency.md)
+Outcome: Accepted canonical-latest `github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b`; its Go 1.15 declaration and already-selected Go 1.17 test requirement preserve the Go 1.18 floor, and its exact one-selection metadata change passed every quality contract.
+
+# Answer
+
+The Go proxy has no semantic-version or prerelease tags for this module path.
+Both proxy `@latest` and exact Go `@master` resolve the repository's default
+branch to unreleased pseudo-version
+`v0.0.0-20240927000941-0f3dac36c52b`, commit
+`0f3dac36c52b29c22285af9a6e6593035dadd74c` at
+2024-09-27T00:09:41Z. It is canonical latest, but is not a stable release.
+The enabled, unarchived, non-fork repository has no tags, releases,
+retractions, alternate module path, or deprecation marker. Newer non-default
+branch and unmerged pull-request commits were excluded. Proxy archives match
+the authoritative commits byte-for-byte, and GitHub verifies both selected
+commits' signatures.
+
+The candidate declares Go 1.15 and requires only already-selected
+`github.com/stretchr/testify v1.9.0`, which declares Go 1.17. The exact get
+therefore changes only Units, adds the main-to-Units and Units-to-testify graph
+edges, and adds the candidate checksum pair. Measurements move 234 -> 234
+modules, 3,564 -> 3,566 graph edges, 429 -> 429 complete packages, 1,031 ->
+1,033 go.sum lines, and 332 -> 341 unapplied tidy-diff lines. Units has zero
+loaded packages, imports, or consumer paths and remains historical unloaded
+MVS graph debt. Candidate proxy and upstream suites pass count-1, count-10,
+race, and vet. The old suite also passes after supplying its separately
+recorded test-only assert closure; that apparatus is not project MVS closure.
+
+Exact `go get` produced dependency-only commit
+`1c874fda104baa36c3a32aaef2d2d2be9689a942`, parent
+`ae5e731121c17338d08dba4c74a99a1c95a36c49`, tree
+`744d61deae7d7c3dc25fe1fd1e13a1fc94798981`, changing only `go.mod` and
+`go.sum`. Old, projected, and committed repository gates pass with identical
+help/API/CLI reports. Primary vulnerability evidence contains no Units record
+and preserves exact normalized 20/30/20 Darwin-symbol/Darwin-module/Windows-
+symbol populations. Exact `make quality` exits 0 with 27/27 Q0-Q2 rows at L2,
+80/80 killed mutations, all acceptance populations, and zero held, regressed,
+not-comparable, or dirty counts. The separate full audit exits expected 1,
+never 2, only for established queued Q3.1, Q3.3, Q3.4, and Q3.7.
+
+Selection evidence is sealed at
+`/private/tmp/ply-p7-units-selection.ae5e731.smI4xp`, 72,950 entries and
+manifest SHA-256
+`2cdb64e74a40304c86ef35f6b8e479c49190d4c2d0e6678770bee4e6486493ec`;
+decision-summary SHA-256 is
+`e30405aeac0eecf6356570f8a49677de1715ad9a7aee15e8efdc9739f55c4cd0`.
+Exact quality evidence is sealed at `/private/tmp/ply-p7-uq11`, 237,860
+entries and manifest SHA-256
+`e8b4fdc59ec12c42afa21286939a1a5ca28a4fef29c88655f73890b580564328`.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

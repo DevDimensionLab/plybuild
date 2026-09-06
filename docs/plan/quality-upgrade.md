@@ -5365,9 +5365,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained highest stable exact-path
-`gopkg.in/alecthomas/kingpin.v2 v2.2.6`; further dependency groups remain
-queued.
+dependency groups through accepted canonical-latest
+`github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b`; further
+dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -7345,10 +7345,50 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `ce50700fe0df4e208ce1a679d7ef8c9b97fdca45398843d392351673fa70837c`,
   and decision-summary SHA-256 is
   `d9080ecc8983da371aacfe1ef234a1290e7e577738c4b5dc9d99078365bba54f`.
-- Next, independently evaluate selected
-  `github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4` as one
-  bounded P7 module group. Do not combine Kingpin, Resty, another dependency
-  group, or P8.
+- Accept selected `github.com/alecthomas/units`
+  `v0.0.0-20190717042225-c3de453c63f4` -> canonical-latest
+  `v0.0.0-20240927000941-0f3dac36c52b`. The proxy lists no semantic or
+  prerelease tags; proxy `@latest` and exact Go `@master` agree on default-
+  branch commit `0f3dac36c52b29c22285af9a6e6593035dadd74c` at
+  2024-09-27T00:09:41Z. It is an unreleased pseudo-version, not a stable
+  release. The enabled, unarchived, non-fork repository has no tags, releases,
+  retractions, alternate path, or deprecation marker. A newer Renovate branch
+  and unmerged pull-request ref are not qualified exact-path latest versions.
+- Candidate `go.mod` declares Go 1.15 and requires only already-selected
+  testify v1.9.0 at Go 1.17. Proxy/upstream source identity is byte-exact;
+  both commits have valid GitHub signature verification. Candidate count-1,
+  count-10, race, and vet pass in both sources. The old source also passes
+  with its exact separately recorded test-only assert closure, which is not
+  project MVS closure.
+- Exact get changes one selection, adds only main -> Units and Units ->
+  already-selected testify graph edges, and adds the candidate checksum pair.
+  Measurements move 234 -> 234 selected modules, 3,564 -> 3,566 edges,
+  429 -> 429 packages, 1,031 -> 1,033 go.sum lines, and 332 -> 341 unapplied
+  tidy-diff lines. Units has zero loaded packages, imports, or consumer paths;
+  it is historical unloaded MVS graph debt.
+- Dependency-only commit `1c874fda104baa36c3a32aaef2d2d2be9689a942`,
+  exact parent `ae5e731121c17338d08dba4c74a99a1c95a36c49`, tree
+  `744d61deae7d7c3dc25fe1fd1e13a1fc94798981`, changes only `go.mod` and
+  `go.sum`. Repository build/tests/race/vet, Windows build, pinned lint,
+  empty-HOME count-2, and byte-identical help/API/CLI reports pass. Primary
+  vulnerability evidence has no Units record and preserves exact 20/30/20
+  populations and traces.
+- Exact `make quality` exits 0 at `/private/tmp/ply-p7-uq11`; its verified
+  237,860-entry manifest SHA-256 is
+  `e8b4fdc59ec12c42afa21286939a1a5ca28a4fef29c88655f73890b580564328`.
+  All 27 Q0-Q2 rows attain L2, 80/80 mutations are killed, host/snapshot/
+  Docker acceptance passes, and held, regressed, not-comparable, and dirty
+  counts are zero. Full audit exits expected 1, never 2, only for established
+  queued Q3.1, Q3.3, Q3.4, and Q3.7. Selection evidence is sealed at
+  `/private/tmp/ply-p7-units-selection.ae5e731.smI4xp`, 72,950 entries and
+  manifest SHA-256
+  `2cdb64e74a40304c86ef35f6b8e479c49190d4c2d0e6678770bee4e6486493ec`;
+  decision-summary SHA-256 is
+  `e30405aeac0eecf6356570f8a49677de1715ad9a7aee15e8efdc9739f55c4cd0`.
+- Next, independently evaluate selected `github.com/alecthomas/assert`
+  `v0.0.0-20170929043011-405dbfeb8e38`; the fresh survey reports v1.0.0.
+  Treat its qualification and closure as unknown and do not combine Units,
+  Kingpin, another dependency group, or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

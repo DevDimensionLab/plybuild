@@ -1055,57 +1055,55 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-06T044730+0200-evaluate-alecthomas-units-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-06T044730+0200-evaluate-alecthomas-units-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-05T231214+0200-evaluate-gopkg-kingpin-v2-dependency.md
+#|SESSION_ID=2026-09-06T150339+0200-evaluate-alecthomas-assert-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-06T150339+0200-evaluate-alecthomas-assert-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-06T044730+0200-evaluate-alecthomas-units-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected
-#|`github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4` as one
-#|bounded dependency group. Resolve canonical latest, release and pseudo-version
-#|qualification, and the highest floor-compatible candidate from primary
-#|evidence. Implement one exact changed selection only if it preserves the
-#|retained Go 1.18 floor, has an explained minimal closure, and passes every
-#|quality contract.
+#|`github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38` as one
+#|bounded dependency group. Resolve canonical latest, release qualification,
+#|and the highest floor-compatible candidate from primary evidence. Implement
+#|one exact changed selection only if it preserves the retained Go 1.18 floor,
+#|has an explained minimal closure, and passes every quality contract.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after the Go 1.26.7 toolchain and
-#|completed dependency groups through retained highest stable exact-path
-#|`gopkg.in/alecthomas/kingpin.v2 v2.2.6`. All earlier recorded rejections,
-#|no-change decisions, accepted closures, and evidence corrections remain final.
-#|Do not revisit them or combine another module group. P8 remains queued.
+#|completed dependency groups through accepted canonical-latest
+#|`github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b`. All earlier
+#|recorded rejections, no-change decisions, accepted closures, and evidence
+#|corrections remain final. Do not revisit them or combine another module group.
+#|P8 remains queued.
 #|
 #|The current MVS build list selects
-#|`github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4`. A fresh
-#|handoff survey reports update pseudo-version
-#|`v0.0.0-20240927000941-0f3dac36c52b`, but treat canonical latest, tag and
-#|pseudo-version qualification, Go declaration, closure, loaded population,
-#|consumer paths, source history, tests, and vulnerability effect as unknown
-#|until independently resolved. This session may change only alecthomas/units'
-#|exact required go.mod/go.sum metadata, its minimal MVS closure, and the
-#|roadmap/handoff record. Do not change production Go, another dependency,
-#|language or toolchain declarations, quality apparatus, Docker/release inputs,
-#|packaging, publishers, or P8 code.
+#|`github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38`. A fresh
+#|post-Units survey reports update `v1.0.0` at 2021-12-01T05:52:01Z, but treat
+#|canonical latest, tag and release qualification, Go declaration, closure,
+#|loaded population, consumer paths, source history, tests, and vulnerability
+#|effect as unknown until independently resolved. This session may change only
+#|alecthomas/assert's exact required go.mod/go.sum metadata, its minimal MVS
+#|closure, and the roadmap/handoff record. Do not change production Go, another
+#|dependency, language or toolchain declarations, quality apparatus, Docker/
+#|release inputs, packaging, publishers, or P8 code.
 #|
 #|# Measurements At Start
 #|
-#|Latest implementation remains dependency-only cast commit
-#|`cf4fd4933251b2ca7844b6420fd3cf2a86f049a5`, exact parent
-#|`17f7277fd2512ba06db76d1acb0af5f8b623243c`, clean tree
-#|`485690c010cef3b02385d8f2471d3ef53611abe9`. The Kingpin v2 documentation
-#|handoff must have exact parent
-#|`c44013020b1622cae0fdada815c445e311b7b86f`. Relative to accepted go-cmp
-#|commit c314bcb, accepted metadata changes remain go-colorful v1.2.0 -> v1.4.1,
-#|go-runewidth v0.0.14 -> v0.0.17, go-toml/v2 v2.0.7 -> v2.2.2, and cast
-#|v1.5.0 -> v1.5.1, with their recorded minimal closures and exactly 15 added
-#|checksum lines. Ordinary and ignored status must be empty.
+#|Latest implementation is dependency-only Units commit
+#|`1c874fda104baa36c3a32aaef2d2d2be9689a942`, exact parent
+#|`ae5e731121c17338d08dba4c74a99a1c95a36c49`, clean tree
+#|`744d61deae7d7c3dc25fe1fd1e13a1fc94798981`. The Units documentation handoff
+#|must be its direct child. Relative to accepted go-cmp commit c314bcb,
+#|accepted metadata changes are go-colorful v1.2.0 -> v1.4.1, go-runewidth
+#|v0.0.14 -> v0.0.17, go-toml/v2 v2.0.7 -> v2.2.2, cast v1.5.0 -> v1.5.1,
+#|and Units' 2019 -> 2024 pseudo-version, with recorded minimal closures and
+#|exactly 17 added checksum lines. Ordinary and ignored status must be empty.
 #|
-#|Current dependency measurements remain 234 selected modules, 3,564 graph
-#|edges, 429 native complete-test packages, 1,031 go.sum lines, a 332-line
+#|Current dependency measurements are 234 selected modules, 3,566 graph edges,
+#|429 native complete-test packages, 1,033 go.sum lines, a 341-line
 #|unapplied tidy projection, and exact Darwin-symbol/Darwin-module/Windows-symbol
 #|vulnerability populations 20/30/20. The retained main module declares Go 1.18
 #|and prefers toolchain Go 1.26.7.
@@ -1121,25 +1119,25 @@ exit 70
 #|Retain the verified golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and
 #|govulncheck v1.7.0 binaries and hashes recorded in the handover.
 #|
-#|Kingpin v2 no-change evidence is fully verified at
-#|`/private/tmp/ply-p7-kingpin-v2-selection.c440130.2WGm6X`, 97,185 entries and
+#|Units acceptance evidence is fully verified at
+#|`/private/tmp/ply-p7-units-selection.ae5e731.smI4xp`, 72,950 entries and
 #|manifest SHA-256
-#|`ce50700fe0df4e208ce1a679d7ef8c9b97fdca45398843d392351673fa70837c`;
+#|`2cdb64e74a40304c86ef35f6b8e479c49190d4c2d0e6678770bee4e6486493ec`;
 #|decision-summary SHA-256 is
-#|`d9080ecc8983da371aacfe1ef234a1290e7e577738c4b5dc9d99078365bba54f`.
-#|Proxy-latest stable v2.4.0 declares the alternate GitHub `/v2` path, while
-#|selected v2.2.6 is the highest stable exact-gopkg-path release compatible with
-#|Go 1.18. Exact selected-version get changes no selection and only projects
-#|three redundant requirements and checksums; its repeated module suite fails
-#|from process-global environment leakage, so dependency metadata remains
-#|unchanged. Preserve all prior verified roots and the recorded go-colorful
+#|`e30405aeac0eecf6356570f8a49677de1715ad9a7aee15e8efdc9739f55c4cd0`.
+#|Canonical latest is the unreleased default-branch pseudo-version, not a stable
+#|release. It declares Go 1.15 and requires already-selected testify v1.9.0 at
+#|Go 1.17. Its exact one-selection, two-edge, two-checksum closure passed module
+#|and repository gates, exact quality, acceptance, and 20/30/20 vulnerability
+#|identity. Preserve all prior verified roots and the recorded go-colorful
 #|mutable telemetry, btree regression, cast whitespace-path, source-archive
 #|normalization, Check history-table, Errgo preflight-runner, Resty committed-
-#|projection/signal-fixture, and Kingpin external-report corrections.
+#|projection/signal-fixture, Kingpin external-report, and Units launcher-timing
+#|corrections.
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve alecthomas/units versions
+#|From fresh external archives and caches, resolve alecthomas/assert versions
 #|through the Go proxy, checksum database, and authoritative upstream repository,
 #|plus primary Go vulnerability data. Record exact tag and pseudo-version
 #|commits/times, module Go declarations and requirements, checksum pairs, source
@@ -1156,7 +1154,7 @@ exit 70
 #|modules, graph edges, complete package population, checksums, loaded packages
 #|and paths, explicit exact-get diff, and `go mod tidy -diff`. Require an
 #|explained minimal selection/edge/checksum closure. Independently determine
-#|whether alecthomas/units is loaded by the main module, only by dependency
+#|whether alecthomas/assert is loaded by the main module, only by dependency
 #|tests, or not at all in the complete project population. If loaded, identify
 #|real consumers and exercise the actually used packages and symbols.
 #|
@@ -1192,9 +1190,10 @@ exit 70
 #|
 #|Only if every decision gate passes and the selection changes, use exact Go
 #|1.26.7 and exact
-#|`go get github.com/alecthomas/units@<selected-version>` for one dependency-only
+#|`go get github.com/alecthomas/assert@<selected-version>` for one dependency-only
 #|commit. Do not hand-edit module metadata and do not use tidy as implementation.
-#|Preserve every retained dependency selection, especially
+#|Preserve every retained dependency selection, especially accepted
+#|`github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b`,
 #|`gopkg.in/alecthomas/kingpin.v2 v2.2.6`, `gopkg.in/resty.v1 v1.12.0`,
 #|`gopkg.in/errgo.v2 v2.1.0`,
 #|`gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15`,
