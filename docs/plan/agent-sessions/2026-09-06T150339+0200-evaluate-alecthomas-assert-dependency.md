@@ -1,13 +1,83 @@
 # Agent Session: Evaluate Alecthomas Assert Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-06T150339+0200-evaluate-alecthomas-assert-dependency`
 Created: `2026-09-06T15:03:39+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `a81ae99c986ee2424abf9827e06a224fea964b57a38b834d0db00af9e16b94a5`
 Previous: [2026-09-06T044730+0200-evaluate-alecthomas-units-dependency.md](2026-09-06T044730+0200-evaluate-alecthomas-units-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-06T162839+0200-evaluate-alecthomas-repr-dependency.md](2026-09-06T162839+0200-evaluate-alecthomas-repr-dependency.md)
+Outcome: Accepted canonical-latest stable `github.com/alecthomas/assert v1.0.0`; its exact four-selection closure preserves the Go 1.18 floor and passed every quality contract.
+
+# Answer
+
+For the exact v1 module path, the Go proxy lists only stable tag `v1.0.0`.
+Proxy `@latest` and exact Go `@latest`, `@v1`, and `@master` all select it at
+commit `73444aca37e09619baa21040dad4527f857f9abb`, tree
+`d09edea32b1be9b1e73428797782d491949b50b7`, at
+2021-12-01T05:52:01Z. It is a lightweight, unsigned stable tag; there is no
+GitHub Release object. The repository is enabled, unarchived, and not a fork,
+with no v1 retraction or deprecation marker. Stable v2.11.0 and unreleased
+master pseudo-version `v2.11.1-0.20251014091832-afff49140ce5` belong to the
+distinct `github.com/alecthomas/assert/v2` path and are not v1 candidates.
+
+The old pseudo-version maps to unsigned commit
+`405dbfeb8e38effee6e723317226e93fff912d06`, tree
+`188d96b077666f551bf61f7d184486a7fa416e70`, at
+2017-09-29T04:30:11Z. Candidate v1.0.0 adds module/Hermit metadata but changes
+no production Go source. The old and candidate checksum pairs are
+`h1:smF2tmSOzy2Mm+0dGI2AIUHY+w0BUc+4tn40djz7+6U=` /
+`h1:r7bzyVFMNntcxPZXK3/+KdruV1H5KSlyVY0gc+NgInI=` and
+`h1:3XmGh/PSuLzDbK3W2gUbRXwgW5lqPkuqvRgeQ30FI5o=` /
+`h1:va/d2JC+M7F6s+80kl/R3G7FUiW6JzUO+hPhLyJ36ZY=`. Proxy ZIP SHA-256 values
+are `873d257170b1363142cbf5e16b49c6a21cccb3e4aaceb9d370c3b78b051a5663`
+and `be346d2847db5cfc7e40babb0b3b7062fa20e76af366652eb4f65710ea7d5fdc`.
+All old files match upstream; all 17 candidate regular files match after the
+documented Go-proxy omission of three tracked Hermit symlinks.
+
+V1.0.0 declares Go 1.17. Exact get advances assert, colour, repr, and go-diff;
+their declarations are absent, Go 1.15, and Go 1.12 respectively. Every
+additional requirement target was already selected and declares no more than
+Go 1.18. The complete minimal closure therefore preserves the retained floor.
+Measurements move 234 -> 234 modules, 3,566 -> 3,580 graph edges through 14
+additions and no removals, 429 -> 429 complete packages, 1,033 -> 1,041
+go.sum lines through four checksum pairs, and 341 -> 354 unapplied tidy-diff
+lines. The four changed modules load in zero old/new complete packages;
+repository imports are zero and `go mod why` says the main module does not
+need assert. The selection is historical unloaded MVS graph debt through
+go-term-markdown's old Chroma requirement, with no used package or symbol.
+
+Candidate proxy and exact upstream source independently pass verify, list,
+count-1, count-10, race, and vet without mutation. The one native package has
+no test files; `_example/example_test.go` is excluded by the Go `./...`
+pattern, and no separate test-only apparatus is needed. Old, candidate, and
+committed repository verify/build/tests/race/vet, Windows build, pinned lint,
+help, API, and CLI gates pass with byte-identical public outputs and reports.
+Primary vulnerability evidence contains no assert/closure record and preserves
+byte-identical 20/30/20 Darwin-symbol/Darwin-module/Windows-symbol IDs and
+normalized traces.
+
+Exact `go get github.com/alecthomas/assert@v1.0.0` produced dependency-only
+commit `0781fd6cdb625623c6d726743bf58352113d0ccb`, parent
+`8f24778c9ddafdbf42583595400093450e4112ec`, tree
+`690e939eaacc57af08868c7f86ce3fec5dbcf034`, changing only `go.mod` and
+`go.sum` with 12 insertions. Exact `make quality` exits 0 with all 27 Q0-Q2
+rows at L2, 80/80 mutations killed, fresh host/snapshot/Docker acceptance,
+and zero held, regressed, not-comparable, or dirty counts. Standalone audit
+meta, focused manual-evidence audit, and empty-HOME count-2 pass. The separate
+full audit exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and
+Q3.7.
+
+Selection evidence is sealed at
+`/private/tmp/ply-p7-assert-selection.8f24778.fEzhH8`, 46,700 entries and
+manifest SHA-256
+`072c8a42889b85e1fa86d0e5701db7f31f8840c255f06de5a7633403db621782`;
+decision-summary SHA-256 is
+`bb13fa01a123a32399806db46f7e61813e6549b7ca1c5a42c25a09254684d17f`.
+Exact quality evidence is sealed at
+`/private/tmp/ply-p7-assert-quality.0781fd6.q1`, 237,950 entries and manifest
+SHA-256
+`04b202f6084740762589a042c8847c2411da5a54ee6572d3fa54790c4a3301e1`.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

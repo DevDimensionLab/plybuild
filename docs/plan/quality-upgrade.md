@@ -7385,10 +7385,60 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `2cdb64e74a40304c86ef35f6b8e479c49190d4c2d0e6678770bee4e6486493ec`;
   decision-summary SHA-256 is
   `e30405aeac0eecf6356570f8a49677de1715ad9a7aee15e8efdc9739f55c4cd0`.
-- Next, independently evaluate selected `github.com/alecthomas/assert`
-  `v0.0.0-20170929043011-405dbfeb8e38`; the fresh survey reports v1.0.0.
-  Treat its qualification and closure as unknown and do not combine Units,
-  Kingpin, another dependency group, or P8.
+- Accept selected `github.com/alecthomas/assert`
+  `v0.0.0-20170929043011-405dbfeb8e38` -> canonical-latest stable v1.0.0.
+  The exact-path proxy lists only this stable release, and exact Go `@latest`,
+  `@v1`, and `@master` agree. It is lightweight tag and unsigned commit
+  `73444aca37e09619baa21040dad4527f857f9abb`, tree
+  `d09edea32b1be9b1e73428797782d491949b50b7`, at
+  2021-12-01T05:52:01Z. The enabled, unarchived, non-fork repository has no
+  v1 prerelease, retraction, deprecation marker, or GitHub Release object.
+  Stable v2.11.0 and a newer unreleased master pseudo-version belong to the
+  alternate `/v2` module path and are not exact-v1 candidates.
+- Candidate v1.0.0 declares Go 1.17 and requires colour v0.1.0, repr's 2021
+  pseudo-version, and go-diff v1.2.0 plus lower isatty/x/sys versions. Exact
+  get changes those four selections. Their selected declarations are absent,
+  Go 1.15, Go 1.12, Go 1.15, and Go 1.18 or lower, so the complete closure
+  preserves the retained Go 1.18 floor. All four source archives match exact
+  upstream commits after documented proxy normalization for tracked symlinks.
+  Assert v1.0.0 changes module/Hermit metadata but no production Go source
+  relative to the old pseudo-version.
+- The minimal closure keeps 234 modules and 429 packages, changes graph edges
+  3,566 -> 3,580 through 14 additions and no removals, adds exactly four
+  checksum pairs for go.sum 1,033 -> 1,041, and changes the unapplied tidy
+  projection 341 -> 354 lines. The changed modules load in zero old/new
+  complete packages; assert has no repository imports and `go mod why` says
+  the main module does not need it. It is historical unloaded graph debt
+  through go-term-markdown's old Chroma requirement.
+- Candidate proxy and upstream source pass verify/list/count-1/count-10/race/
+  vet without source mutation. The sole native package has no test files;
+  `_example` is excluded by `./...`, and no separate test-only apparatus is
+  needed. Old, projected, and committed repository build/tests/race/vet,
+  Windows build, pinned lint, empty-HOME count-2, and help/API/CLI contracts
+  pass with byte-identical outputs. Primary vulnerability evidence has no
+  assert/closure record and preserves exact 20/30/20 IDs and traces.
+- Exact get produced dependency-only commit
+  `0781fd6cdb625623c6d726743bf58352113d0ccb`, parent
+  `8f24778c9ddafdbf42583595400093450e4112ec`, tree
+  `690e939eaacc57af08868c7f86ce3fec5dbcf034`, changing only `go.mod` and
+  `go.sum`. Exact `make quality` exits 0 with all 27 Q0-Q2 rows at L2, 80/80
+  mutations killed, fresh host/snapshot/Docker acceptance, and zero held,
+  regressed, not-comparable, or dirty counts. Standalone audit meta and the
+  focused audit pass; full audit exits expected 1 only for queued Q3.1, Q3.3,
+  Q3.4, and Q3.7.
+- Assert selection evidence is sealed at
+  `/private/tmp/ply-p7-assert-selection.8f24778.fEzhH8`, 46,700 entries and
+  manifest SHA-256
+  `072c8a42889b85e1fa86d0e5701db7f31f8840c255f06de5a7633403db621782`;
+  decision-summary SHA-256 is
+  `bb13fa01a123a32399806db46f7e61813e6549b7ca1c5a42c25a09254684d17f`.
+  Exact quality evidence at `/private/tmp/ply-p7-assert-quality.0781fd6.q1`
+  has 237,950 entries and verified manifest SHA-256
+  `04b202f6084740762589a042c8847c2411da5a54ee6572d3fa54790c4a3301e1`.
+- Next, independently evaluate selected `github.com/alecthomas/repr`
+  `v0.0.0-20210801044451-80ca428c5142`; the fresh post-Assert survey reports
+  v0.5.4 at 2026-07-15T12:04:01Z. Treat its qualification and closure as
+  unknown and do not combine Assert, Units, another dependency group, or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

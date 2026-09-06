@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-06T15:03:39+02:00
+Generated: 2026-09-06T16:28:39+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,148 +9,172 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base `master` at `5635d50`.
-- Latest implementation is dependency-only Units commit
-  `1c874fda104baa36c3a32aaef2d2d2be9689a942`, exact parent
-  `ae5e731121c17338d08dba4c74a99a1c95a36c49`, clean tree
-  `744d61deae7d7c3dc25fe1fd1e13a1fc94798981`. It changes only `go.mod` and
+- Latest implementation is dependency-only Assert commit
+  `0781fd6cdb625623c6d726743bf58352113d0ccb`, exact parent
+  `8f24778c9ddafdbf42583595400093450e4112ec`, clean tree
+  `690e939eaacc57af08868c7f86ce3fec5dbcf034`. It changes only `go.mod` and
   `go.sum`. This documentation handoff must be its direct child; a next
   implementation, if any, must use that documentation commit as exact parent.
-- The answered Units archive and sole NEXT `github.com/alecthomas/assert`
+- The answered Assert archive and sole NEXT `github.com/alecthomas/repr`
   archive link reciprocally. Only launcher mutable regions change during
   handoff. Ordinary and ignored status must end empty.
 - Relative to accepted go-cmp commit `c314bcb`, accepted dependency metadata
   moves are go-colorful v1.2.0 -> v1.4.1, go-runewidth v0.0.14 -> v0.0.17,
-  go-toml/v2 v2.0.7 -> v2.2.2, cast v1.5.0 -> v1.5.1, and Units' 2019 ->
-  2024 pseudo-version. Their recorded minimal closures select testify
-  v1.9.0, objx v0.5.2, quicktest v1.14.4, kr/pretty v0.3.1, and
-  rogpeppe/go-internal v1.9.0, and add exactly 17 checksum lines.
+  go-toml/v2 v2.0.7 -> v2.2.2, cast v1.5.0 -> v1.5.1, Units' 2019 -> 2024
+  pseudo-version, Assert's old pseudo-version -> v1.0.0, colour's 2016
+  pseudo-version -> v0.1.0, repr's 2018 -> 2021 pseudo-version, and go-diff
+  v1.0.0 -> v1.2.0. Their recorded minimal closures add exactly 25 checksum
+  lines.
 - No `.agent-task/current.md` or `.quality/manual-evidence.json` was created.
   No push, merge, publication, release, stash, revert, retained evidence/image
   deletion, successor launch, or worktree removal occurred.
 
 P2A-P6 are complete. P7 remains active after Go 1.26.7 and bounded groups
-through accepted Units. All earlier accepted, rejected, and no-change
+through accepted Assert. All earlier accepted, rejected, and no-change
 decisions and every evidence correction remain final. P8 remains queued.
 
-## Accepted Alecthomas Units Group
+## Accepted Alecthomas Assert Group
 
-The Go proxy has no stable semantic-version or prerelease tags for
-`github.com/alecthomas/units`. Proxy `@latest`, exact Go `@latest`, and exact
-Go `@master` all resolve
-`v0.0.0-20240927000941-0f3dac36c52b`, commit
-`0f3dac36c52b29c22285af9a6e6593035dadd74c` at
-2024-09-27T00:09:41Z. This is the canonical latest unreleased default-branch
-pseudo-version, not a stable release. The selected old pseudo-version is
-`v0.0.0-20190717042225-c3de453c63f4`, commit
-`c3de453c63f4bdb4dadffab9805ec00426c505f7` at
-2019-07-17T04:22:25Z.
+The exact `github.com/alecthomas/assert` path has one proxy-listed stable tag,
+v1.0.0, and no exact-path prerelease. Proxy `@latest` and exact Go `@latest`,
+`@v1`, and `@master` all resolve v1.0.0 at
+2021-12-01T05:52:01Z. It is therefore canonical latest and the highest
+qualified stable exact-path release. Selected old pseudo-version
+`v0.0.0-20170929043011-405dbfeb8e38` maps to commit
+`405dbfeb8e38effee6e723317226e93fff912d06`, tree
+`188d96b077666f551bf61f7d184486a7fa416e70`, at
+2017-09-29T04:30:11Z. Candidate tag v1.0.0 is lightweight commit
+`73444aca37e09619baa21040dad4527f857f9abb`, tree
+`d09edea32b1be9b1e73428797782d491949b50b7`, at the reported proxy time.
+Both commits and the tag are unsigned.
 
-The authoritative repository is enabled, unarchived, and not a fork; default
-branch is `master`. It has no tags, GitHub releases, retractions, alternate
-module paths, or module deprecation. A newer `renovate/all-minor-patch` head
-resolves a 2026 pseudo-version but is an unreleased non-default branch; pull
-request head `7355547fc901` is unmerged and not proxy-resolvable. Neither is a
-qualified exact-path candidate.
-
-The old module declares only its module path. Candidate `go.mod` declares Go
-1.15 and requires `github.com/stretchr/testify v1.9.0`; the project already
-selects that module and it declares Go 1.17. The complete changed closure is
-therefore compatible with the retained Go 1.18 floor by declaration.
+The authoritative repository is enabled, unarchived, and not a fork, with
+default branch `master`. It has no GitHub Release objects, v1 retractions, or
+module deprecation marker. Stable v2.11.0 at 2024-09-17T06:12:02Z and master
+pseudo-version `v2.11.1-0.20251014091832-afff49140ce5` belong to distinct
+module path `github.com/alecthomas/assert/v2`; exact v1-path queries for v2
+tags, commits, and prereleases fail the semantic-import-version check. They are
+not v1 candidates. Relative to the selected commit, candidate v1.0.0 adds a
+license filename change and module/Hermit metadata but no production Go source
+change.
 
 Old checksum pair:
-`h1:Hs82Z41s6SdL1CELW+XaDYmOH4hkBN4/N9og/AsOv7E=` /
-`h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=`. Candidate pair:
-`h1:mimo19zliBX/vSQ6PWWSL9lK8qwHozUj03+zLoEB8O0=` /
-`h1:fvzegU4vN3H1qMT+8wDmzjAcDONcgo2/SZ/TyfdUOFs=`. Proxy ZIP SHA-256 values
-are `5f9f0ba0037b25179cf0a4bf52ab2c9981dbb366125faf8ed44beaf6a654dc5e`
-and `9a275dbb1454d52d2b868b990be424c7d31c0acf2c4a99850faf18ecb9f48b91`.
-All old eight and candidate ten proxy files match their exact upstream
-commits; source manifests are
-`1c1119e80d757ff028a0f7768dcfa9df181a31930519ac6f8e4f9c629f4c517b`
-and `a2579e87929e9f8da86788fcb05806a88204cb7084082ac345280dbb7f14e1c3`.
-GitHub reports valid signatures for both commits. There are no tag objects;
-local `%G?` is `N` and local signature verification cannot use the sandboxed
-OpenPGP home.
+`h1:smF2tmSOzy2Mm+0dGI2AIUHY+w0BUc+4tn40djz7+6U=` /
+`h1:r7bzyVFMNntcxPZXK3/+KdruV1H5KSlyVY0gc+NgInI=`. Candidate pair:
+`h1:3XmGh/PSuLzDbK3W2gUbRXwgW5lqPkuqvRgeQ30FI5o=` /
+`h1:va/d2JC+M7F6s+80kl/R3G7FUiW6JzUO+hPhLyJ36ZY=`. Proxy ZIP SHA-256 values
+are `873d257170b1363142cbf5e16b49c6a21cccb3e4aaceb9d370c3b78b051a5663`
+and `be346d2847db5cfc7e40babb0b3b7062fa20e76af366652eb4f65710ea7d5fdc`.
+All ten old files match upstream. All 17 candidate regular files match after
+normalizing the proxy's documented omission of three tracked Hermit symlinks;
+the equal normalized manifest SHA-256 is
+`3e4aa8146850de3d14cd63ac1640afb3f7da28d5a806cead0895521a3f8ca08d`.
 
-External exact get changes exactly Units. Modules stay 234, graph edges move
-3,564 -> 3,566 through main -> candidate and candidate -> already-selected
-testify v1.9.0, complete packages stay 429, and go.sum moves 1,031 -> 1,033
-with exactly the candidate checksum pair. The unapplied tidy projection moves
-332 -> 341 lines and was never used as implementation. Units loads in zero
-old/new complete packages; repository Go has zero imports and `go mod why`
-says the main module does not need it. It is historical unloaded MVS graph
-debt, not a main-package or dependency-test consumer.
+Candidate declares Go 1.17 and requires colour v0.1.0, repr pseudo-version
+`v0.0.0-20210801044451-80ca428c5142`, and go-diff v1.2.0, plus lower
+isatty/x/sys versions. Exact get advances those four selections. Colour has no
+Go declaration, repr declares Go 1.15, and go-diff declares Go 1.12. Existing
+selected requirement targets declare no more than Go 1.18, so the complete
+closure preserves the retained floor by declaration.
 
-Candidate proxy and upstream sources pass verify/list/count-1/count-10/race/
-vet and remain source-clean. The old source omits test requirements, so its
-exact external test-only apparatus adds assert through
-`go get github.com/stretchr/testify/assert@v1.9.0`, selecting testify v1.9.0,
-go-spew v1.1.1, go-difflib v1.0.0, and YAML v3 v3.0.1. Both old sources then
-pass the same suite and remain clean. This apparatus is not project MVS
-closure.
+The closure's exact source identities are lightweight unsigned colour tag
+commit `a1c6bd85eba7190e4d2959ecd15831d0a25b37b9`, unsigned repr pseudo-version
+commit `80ca428c51421b9f0ceedd9218af5e1068cd8153`, and annotated unsigned go-diff
+tag object `b292a3123758b064eeaa3a5aa86df1adca0f4401` peeling commit
+`0a651d56613f9de4bed8b9c4769b776ef168bfca`. Their proxy ZIP SHA-256 values
+are `74d51002731fa104943b62ee11fb61b14c517e75a4a3983bfb03976b6c75349b`,
+`e92498fa15fbef295ef530c6ae96d17f446e8f3403c583dd721c73b8da24174d`,
+and `da1accb73e9ac304a805eb59fba2c50d0089f9206a2574b8812af7e75e8ec105`.
+All regular files match exact upstream commits; repr normalization accounts
+for five tracked symlinks omitted by the proxy.
 
-Old, projected, and committed repository verification, build, complete tests/
-race/vet, Windows build, pinned lint, and API/CLI/help contracts pass; public
-help streams and reports are byte-identical. Empty-HOME count-2 passes. Primary
-govulncheck v1.7.0 data updated 2026-09-02T19:12:04Z contains 1,392 records and
-no Units record. Old/candidate exact IDs and normalized traces are identical,
-preserving 20/30/20 Darwin-symbol/Darwin-module/Windows-symbol populations.
+Exact get keeps 234 selected modules and 429 complete packages. Graph edges
+move 3,566 -> 3,580 through four main requirements, five Assert requirements,
+and five go-diff requirements, with no removal. Every requirement target was
+already selected, so there is no fifth changed selection or new module. Go.sum
+moves 1,033 -> 1,041 with exactly four checksum pairs; the unapplied tidy
+projection moves 341 -> 354 lines and was never used as implementation.
 
-Exact `go get` produced the implementation commit recorded above with three
-insertions. Exact `make quality` exits 0 at `/private/tmp/ply-p7-uq11`; its
-21-stage ledger attains L2 for all 27 Q0-Q2 rows with 80/80 mutations killed,
-8/8 mutation and 4/4 acceptance populations, valid manual evidence, passing
-host/snapshot/Docker acceptance, and zero held, regressed, not-comparable, or
-dirty counts. Q0-Q2 scorecard SHA-256 is
-`ec538e05ab0c0a202ae53458bb16b507c3c8877e3d6a99fe3aaa60b794df1a1b`.
-The fresh snapshot and Docker report SHA-256 values are
-`2da1b429b760563cca641133745c2453390363e9328654a216904c7c8fe53666`
-and `439cadfaa5a43310edb81b8d07310801a788d5f68ef7a7de9bae7d20bd934620`.
-The separate full audit exits expected 1, never 2, only for established queued
-Q3.1, Q3.3, Q3.4, and Q3.7; its scorecard SHA-256 is
-`860ed0e2077736e1eae14a38660bf11a0c178f847284eb12c31056e770b729bf`.
+Assert, colour, repr, and go-diff load in zero old/new complete packages and
+repository source imports none of them. `go mod why -m` says the main module
+does not need Assert. Its historical graph path is main -> go-term-markdown
+v0.1.4 -> Chroma v0.7.1 -> the old Assert pseudo-version. This is unloaded
+MVS graph debt, not a main-package or dependency-test consumer, so there are
+no actually used Assert packages or symbols to focus-test.
 
-Several retained aggregate attempts exposed the established launcher signal-
-retention timing fixture before preflight. No apparatus changed. Putting the
-already verified external Python 3.14 earlier in PATH made the report parser
-finish before that race; exact Go remained first among Go installations.
-Docker buildx discovery required operator HOME, followed by acceptance with a
-fresh empty Docker configuration.
+Candidate proxy and exact upstream source independently verify, list one
+native package, and pass count-1, count-10, race, and vet without mutation.
+That package has no native test files; `_example/example_test.go` is excluded
+by the Go `./...` rule. No separate test-only requirement apparatus is needed.
+Old, candidate, and committed repository verification, build, complete tests/
+race/vet, Windows build, pinned lint, and help/API/CLI contracts pass; public
+help streams and reports are byte-identical. Empty-HOME count-2 passes all 27
+packages. Primary govulncheck v1.7.0 data updated 2026-09-02T19:12:04Z has
+1,392 records and no Assert or closure record. Old/candidate exact IDs and
+normalized traces are byte-identical, preserving 20/30/20 Darwin-symbol/
+Darwin-module/Windows-symbol populations.
 
-## Units Evidence
+Exact `go get github.com/alecthomas/assert@v1.0.0` produced the implementation
+commit recorded above with 12 insertions. Exact `make quality` exits 0 at
+`/private/tmp/ply-p7-assert-quality.0781fd6.q1`; its 21-stage ledger attains L2
+for all 27 Q0-Q2 rows with 80/80 mutations killed, 8/8 mutation and 4/4
+acceptance populations, valid manual evidence, passing host/snapshot/Docker
+acceptance, and zero held, regressed, not-comparable, or dirty counts. Q0-Q2
+scorecard SHA-256 is
+`3904a989cb3857a3c07e9c55f0815865231dfef1393753ab906bc852ed366fb2`.
+Snapshot and Docker report SHA-256 values are
+`56b3d9b35d65e551ac705cf261da82363a65c8cc08b34bafa8f34287a0cdbe1d`
+and `f7961c8e122df69118deb368571ae34c9227da02eaf8f51de23a3744916d0d00`.
+Standalone audit meta and the six-row focused audit pass. The separate full
+audit exits expected 1, never 2, only for established queued Q3.1, Q3.3, Q3.4,
+and Q3.7; its scorecard SHA-256 is
+`ca4a8411d0ae57daed70c9a0dbddb73992e35eac10606c615a8604b79da3de56`.
+
+The first external API comparison lacked its independently warmed exact
+v1.0.1 compatibility base; the corrected fresh base archive and external
+cache passed old, candidate, and committed gates. The first supplemental
+audit-meta and empty-HOME invocations named an external TMPDIR before creating
+it; their setup-only diagnostics are retained, while corrected runs pass.
+Neither correction changed the repository or quality apparatus.
+
+## Assert Evidence
 
 - Selection evidence is sealed at
-  `/private/tmp/ply-p7-units-selection.ae5e731.smI4xp`. Its fully verified
-  72,950-entry manifest SHA-256 is
-  `2cdb64e74a40304c86ef35f6b8e479c49190d4c2d0e6678770bee4e6486493ec`;
+  `/private/tmp/ply-p7-assert-selection.8f24778.fEzhH8`. Its fully verified
+  46,700-entry manifest SHA-256 is
+  `072c8a42889b85e1fa86d0e5701db7f31f8840c255f06de5a7633403db621782`;
   decision-summary SHA-256 is
-  `e30405aeac0eecf6356570f8a49677de1715ad9a7aee15e8efdc9739f55c4cd0`.
-- Exact quality evidence at `/private/tmp/ply-p7-uq11` has 237,860 entries and
-  verified manifest SHA-256
-  `e8b4fdc59ec12c42afa21286939a1a5ca28a4fef29c88655f73890b580564328`.
+  `bb13fa01a123a32399806db46f7e61813e6549b7ca1c5a42c25a09254684d17f`.
+- Exact quality evidence at `/private/tmp/ply-p7-assert-quality.0781fd6.q1`
+  has 237,950 entries and verified manifest SHA-256
+  `04b202f6084740762589a042c8847c2411da5a54ee6572d3fa54790c4a3301e1`.
 - Schema-2 manual evidence SHA-256 is
-  `3bf267b1fe55ffba41e5d4024ceaa9a7fc8a2c8d713d00dcfc08af19f4743978`.
+  `fa33df10f95a2982137186339c7f5b586b3ec2a38d9f7500dcf8a8464004a5d2`.
   Its fresh governed-source digest covers 112 identical files and has SHA-256
-  `a716b4ddc8918db9bde0f912c317df394ed68f15d8396ec7c7b9ef3b2e89a0e6`.
+  `793dba73deb0c45bd9d2b6a8d29a4a19b1cc71993b7243229a056243224bd33b`.
 - The inherited 37-root verification table is clean and has SHA-256
   `8669ff369a82ee4dd93a56f005df16a1b9327bc3bd477ef1f10101872c32b2b8`.
   Preserve the recorded go-colorful mutable telemetry, btree mutable cache/
   HOME regression, cast NUL-delimited whitespace-path handling, source-
   archive normalization, Check history table, Errgo preflight runner, Resty
-  committed projection/signal fixture, and Kingpin external-report correction.
+  committed projection/signal fixture, Kingpin external-report correction,
+  Units launcher timing correction, and Assert external-cache/TMPDIR setup
+  corrections.
 
 ## Retained Decisions And Tools
 
-- Retain exact selections `gopkg.in/alecthomas/kingpin.v2 v2.2.6`,
-  `gopkg.in/resty.v1 v1.12.0`, `gopkg.in/errgo.v2 v2.1.0`,
+- Retain exact selections `github.com/alecthomas/assert v1.0.0`,
+  `github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b`,
+  `gopkg.in/alecthomas/kingpin.v2 v2.2.6`, `gopkg.in/resty.v1 v1.12.0`,
+  `gopkg.in/errgo.v2 v2.1.0`,
   `gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15`,
   `gopkg.in/yaml.v2 v2.4.0`, `gopkg.in/yaml.v3 v3.0.1`, and
   `go.yaml.in/yaml/v3 v3.0.5`. Preserve all other prior bounded decisions.
 - Kingpin, Resty, Errgo, Check, YAML v3, YAML v2, x/text, x/net, x/image,
   gotenv, and jwalterweatherman evidence roots remain verified at their exact
-  counts and manifest hashes recorded in their answered archives. Cast's
-  selection/review/quality/regression roots remain immutable. Do not revisit
-  them or reinterpret their corrections.
+  counts and manifest hashes recorded in their answered archives. Units and
+  Assert selection/quality roots remain immutable. Do not revisit them or
+  reinterpret their corrections.
 - Exact Go 1.26.7 remains at
   `/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`, SHA-256
   `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
@@ -169,21 +193,21 @@ fresh empty Docker configuration.
 
 ## Next Objective
 
-Independently evaluate selected `github.com/alecthomas/assert`
-`v0.0.0-20170929043011-405dbfeb8e38` as exactly one bounded P7 module group.
-The fresh post-Units survey reports v1.0.0 at 2021-12-01T05:52:01Z, but treat
+Independently evaluate selected `github.com/alecthomas/repr`
+`v0.0.0-20210801044451-80ca428c5142` as exactly one bounded P7 module group.
+The fresh post-Assert survey reports v0.5.4 at 2026-07-15T12:04:01Z, but treat
 canonical latest, release qualification, declarations, complete floor-
 compatible closure, source identity, signatures, repository state, loaded
 population, real consumers, self-tests, and vulnerability data as unknown
 until independently proved from primary evidence.
 
-Current measurements are 234 selected modules, 3,566 graph edges, 429 native
-complete-test packages, 1,033 go.sum lines, a 341-line unapplied tidy
+Current measurements are 234 selected modules, 3,580 graph edges, 429 native
+complete-test packages, 1,041 go.sum lines, a 354-line unapplied tidy
 projection, and exact 20/30/20 Darwin-symbol/Darwin-module/Windows-symbol
 vulnerability populations. The main module retains Go 1.18 and toolchain Go
 1.26.7.
 
 Implement only an exact floor-compatible changed selection with an explained
 minimal closure and every applicable gate passing. If selected is already the
-decision, do not manufacture a requirement or commit. Do not combine Assert,
-Units, Kingpin, another dependency, or P8.
+decision, do not manufacture a requirement or commit. Do not combine Repr,
+Assert, Units, another dependency, or P8.
