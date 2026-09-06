@@ -4,7 +4,7 @@ Status: NEXT
 Session ID: `2026-09-06T162839+0200-evaluate-alecthomas-repr-dependency`
 Created: `2026-09-06T16:28:39+02:00`
 Source: `codex-dev-start.sh`
-Prompt SHA-256: `51a2c79d9ec53a3c85f4716a1b882ab6f4c1a60e0f899dba6ead238f228ce69d`
+Prompt SHA-256: `dbbea1e22498de155459058b8ad88abd7a74e88a7ac2024848028e72e2268628`
 Previous: [2026-09-06T150339+0200-evaluate-alecthomas-assert-dependency.md](2026-09-06T150339+0200-evaluate-alecthomas-assert-dependency.md)
 Next: none
 Outcome: pending
@@ -60,19 +60,19 @@ tidy projection, and exact Darwin-symbol/Darwin-module/Windows-symbol
 vulnerability populations 20/30/20. The retained main module declares Go 1.18
 and prefers toolchain Go 1.26.7.
 
-Use exact Go 1.26.7 at
-`/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`, SHA-256
-`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
-Put its directory first in PATH, keep GOENV=off, GOWORK=off,
-GOTOOLCHAIN=local, and inject no ambient GOFLAGS. Recovery evidence at
-`/private/tmp/ply-p7-go1.26.7-recovery.qvk4zs` retains its verified two-entry
-manifest SHA-256
+Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT` and verify
+SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+The former `/private/tmp` toolchain and recovery roots were deliberately
+purged after the disk-space incident; their verified two-entry recovery
+manifest SHA-256 remains
 `1b30193f4f4811f2515223c53c004603afa0a4812b8a571a24c49b252122e83b`.
-Retain the verified golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and
-govulncheck v1.7.0 binaries and hashes recorded in the handover.
+Put the recreated directory first in PATH, keep GOENV=off, GOWORK=off,
+GOTOOLCHAIN=local, and inject no ambient GOFLAGS.
+Recreate golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and govulncheck
+v1.7.0 beneath scratch as needed and verify the hashes in the handover.
 
-Assert acceptance evidence is fully verified at
-`/private/tmp/ply-p7-assert-selection.8f24778.fEzhH8`, 46,700 entries and
+Assert acceptance evidence was fully verified before its external root was
+deliberately purged, with 46,700 entries and
 manifest SHA-256
 `072c8a42889b85e1fa86d0e5701db7f31f8840c255f06de5a7633403db621782`;
 decision-summary SHA-256 is
@@ -129,10 +129,12 @@ vulnerability identity; prove exact old/candidate IDs and traces.
 
 Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 archive links, launcher `--check`, and the P7/P8 checkpoint before editing.
-Verify every accepted manifest. Read this archive, the rolling handover, P7 in
-the roadmap, go.mod/go.sum, the accepted Assert and Units decisions, retained
-Kingpin, Resty, and Errgo decisions, rejected Check decision, retained YAML v3
-and YAML v2 decisions, rejected x/text, x/net, x/image, and gotenv decisions,
+Treat recorded manifest hashes as historical receipts and recreate only the
+evidence required for the current decision. Read this archive, the rolling
+handover, P7 in the roadmap, go.mod/go.sum, the accepted Assert and Units
+decisions, retained Kingpin, Resty, and Errgo decisions, rejected Check
+decision, retained YAML v3 and YAML v2 decisions, rejected x/text, x/net,
+x/image, and gotenv decisions,
 retained jwalterweatherman decision, accepted cast decision and quality
 evidence, rejected afero decision, the accepted `go.yaml.in/yaml/v3` and Cobra/
 YAML closure decisions, prior bounded dependency decisions, and the toolchain,
@@ -164,10 +166,16 @@ make quality must exit 0 with all 27 rows at L2 and zero held, regressed,
 not-comparable, or dirty counts. The full audit may exit 1 only for established
 queued L3 rows, never 2.
 
-Keep all caches, projections, reports, generated artifacts, build contexts,
-schema-2 evidence, and audit output outside the worktree. Warm caches from a
-separate external Git archive; never run `go mod download all` inside a
-measured tree. Never create `.agent-task/current.md` or
+Put every disposable cache, projection, report, generated artifact, build
+context, evidence tree, and audit output beneath
+`$CODEX_SESSION_SCRATCH_ROOT`; never create direct `/private/tmp/ply-*`
+roots. The launcher deletes this scratch tree after every turn, including
+failure and interruption. Warm caches only from a separate archive beneath
+that root and never run `go mod download all` inside a measured tree. Retain
+only compact decisions, digests, and receipts in tracked documents; recreate
+larger evidence when needed. Preserve the operator-authorized lifecycle
+cleanup changes already on HEAD and carry this bounded-scratch policy into
+every successor prompt. Never create `.agent-task/current.md` or
 `.quality/manual-evidence.json`.
 
 # Automatic Handoff
@@ -177,5 +185,5 @@ archive, create exactly one reciprocal NEXT archive for the next measured P7
 group, replace only launcher mutable regions, run launcher/handoff contracts,
 and make the normal `docs: prepare next agent session` commit. Do not implement
 that next group, launch a successor, push, merge, publish, release, stash,
-revert, delete retained evidence/images, or remove the worktree.
+revert, bypass scratch cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->

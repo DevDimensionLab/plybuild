@@ -68,13 +68,17 @@ from the repository root with:
 
 ```sh
 quality_root="$PWD/.quality"
-execution_repo="$(mktemp -d /private/tmp/ply-baseline-execution.XXXXXX)"
-structured_repo="$(mktemp -d /private/tmp/ply-baseline-structured.XXXXXX)"
-reproduction_home="$(mktemp -d /private/tmp/ply-baseline-home.XXXXXX)"
-audit_out="$(mktemp -d /private/tmp/ply-baseline-audit.XXXXXX)"
-audit_gocache="$(mktemp -d /private/tmp/ply-baseline-gocache.XXXXXX)"
-audit_gotmpdir="$(mktemp -d /private/tmp/ply-baseline-gotmp.XXXXXX)"
-baseline_gomodcache="$(mktemp -d /private/tmp/ply-baseline-gomodcache.XXXXXX)"
+scratch_root="${CODEX_SESSION_SCRATCH_ROOT:?run through codex-dev-start or set a disposable scratch root}"
+baseline_root="$(mktemp -d "$scratch_root/baseline-reproduction.XXXXXX")"
+execution_repo="$baseline_root/execution"
+structured_repo="$baseline_root/structured"
+reproduction_home="$baseline_root/home"
+audit_out="$baseline_root/audit"
+audit_gocache="$baseline_root/gocache"
+audit_gotmpdir="$baseline_root/gotmp"
+baseline_gomodcache="$baseline_root/gomodcache"
+mkdir "$execution_repo" "$structured_repo" "$reproduction_home" "$audit_out" \
+  "$audit_gocache" "$audit_gotmpdir" "$baseline_gomodcache"
 for baseline_repo in "$execution_repo" "$structured_repo"; do
   git clone --shared --no-checkout "$PWD" "$baseline_repo"
   git -C "$baseline_repo" checkout --detach 5635d50bd161a9a5aa81fc4332cc0c9d68885d08

@@ -6,7 +6,14 @@ unset CDPATH
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 work_root=$(mktemp -d "${TMPDIR:-/tmp}/ply-test-accept-snapshot.XXXXXX")
-trap 'rm -rf "$work_root"' EXIT
+cleanup_test_root() {
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$work_root"
+}
+trap cleanup_test_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 source "$repo_root/test/acceptance/meta-common.sh"
 fake_go="$work_root/fake-go"
 fake_goreleaser="$work_root/fake-goreleaser"
@@ -287,6 +294,9 @@ run_case() {
 		for flow in status upgrade build; do
 			grep -F "snapshot-verifier=$flow:PASS:artifact=$evidence_physical/source/dist/plybuild_darwin_arm64_v8.0/ply:behavioral-traces=" \
 				"$evidence/report.txt" >/dev/null
+		done
+		for transient in source home cache go-tmp tmp host-install; do
+			[[ ! -e "$evidence/$transient" && ! -L "$evidence/$transient" ]]
 		done
 	fi
 }

@@ -5,7 +5,14 @@ set -euo pipefail
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 script_under_test=${SCRIPT_UNDER_TEST:-"$repo_root/scripts/search-replace.sh"}
 temp_root=$(mktemp -d)
-trap 'rm -rf "$temp_root"' EXIT
+cleanup_temp_root() {
+	find "$temp_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$temp_root"
+}
+trap cleanup_temp_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 fail() {
 	printf 'search-replace meta-test: %s\n' "$*" >&2

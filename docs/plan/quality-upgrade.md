@@ -25,6 +25,9 @@ because the ratchet verdict says PASS.
 - Do not push, merge, or remove the worktree without explicit approval.
 - Follow `docs/design/agent-session-continuity.md` for task authority, prompt
   archives, restart staging, and dirty-worktree recovery.
+- Put all disposable agent/test state beneath `$CODEX_SESSION_SCRATCH_ROOT`.
+  Preserve only compact tracked decisions and digests; never create independent
+  retained `/private/tmp/ply-*` roots.
 
 The user has authorized the ordered roadmap through P8. The following block is
 machine-readable launcher state; keep the order and vocabulary exact.
@@ -39,6 +42,13 @@ P6|complete
 P7|active
 P8|queued
 <!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->
+
+On 2026-09-06, the operator removed accumulated reproducible scratch, audit,
+cache, and Ply Docker artifacts after they consumed roughly 763 GiB. All
+external evidence paths recorded later in this historical plan are receipts,
+not live retention requirements. Recreate current evidence only inside the
+launcher's bounded scratch tree; the launcher and individual heavy harnesses
+must clean it automatically on exit.
 
 ## Measured State
 
@@ -7481,7 +7491,7 @@ git status --short
 Run the count-2 hermetic test with an empty HOME and isolated writable state:
 
 ```sh
-root="$(mktemp -d /private/tmp/ply-hermetic.XXXXXX)"
+root="$(mktemp -d "${CODEX_SESSION_SCRATCH_ROOT:?}/hermetic.XXXXXX")"
 mkdir -p "$root/home" "$root/cache" "$root/tmp" "$root/config"
 modcache="$(go env GOMODCACHE)"
 HOME="$root/home" XDG_CONFIG_HOME="$root/config" \

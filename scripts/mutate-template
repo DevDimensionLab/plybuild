@@ -21,10 +21,14 @@ fail() {
 
 cleanup() {
 	if [[ -n ${work_root:-} && -d $work_root && $keep_work != 1 ]]; then
+		find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
 		rm -rf "$work_root"
 	fi
 }
-trap cleanup EXIT HUP INT TERM
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 [[ -f ${BASH_SOURCE[0]} && ! -L ${BASH_SOURCE[0]} && -x ${BASH_SOURCE[0]} ]] ||
 	fail 'harness must be a regular executable file'

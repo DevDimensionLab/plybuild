@@ -257,7 +257,7 @@ quality:
 				fail "required artifact stage is not a regular executable: $$script"; \
 		done; \
 	done; \
-	mkdir "$$output" "$$output/logs" "$$output/tmp" "$$output/mutations" \
+	mkdir "$$output" "$$output/logs" "$$output/tmp" \
 		"$$output/golangci-lint-cache" || \
 		fail 'cannot initialize fresh external quality output'; \
 	: >"$$output/stage-ledger.txt"
@@ -288,8 +288,7 @@ quality:
 	for name in $(PLY_QUALITY_MUTATIONS); do \
 		upper=$$(printf '%s' "$$name" | tr '[:lower:]-' '[:upper:]_'); \
 		log='$(QUALITY_OUTPUT_ROOT)/logs/mutation-'$$name'.log'; \
-		work='$(QUALITY_OUTPUT_ROOT)/mutations/'$$name; \
-		if ! env "MUTATION_$${upper}_KEEP_WORK=1" "MUTATION_$${upper}_WORK_ROOT=$$work" \
+		if ! env "MUTATION_$${upper}_KEEP_WORK=0" "MUTATION_$${upper}_WORK_ROOT=" \
 			TMPDIR='$(QUALITY_OUTPUT_ROOT)/tmp' GOCACHE='$(QUALITY_GOCACHE)' \
 			GOMODCACHE='$(QUALITY_GOMODCACHE)' '$(BASH)' "$(SCRIPTS_DIR)/mutate-$$name" >"$$log" 2>&1; then \
 			sed -n '1,240p' "$$log" >&2; exit 1; \
@@ -356,6 +355,15 @@ quality:
 	cmp -s "$$expected" '$(QUALITY_OUTPUT_ROOT)/stage-ledger.txt' || { \
 		printf '%s\n' 'quality: required stage population is missing, duplicated, or out of order' >&2; exit 1; \
 	}; \
+	for name in tmp mutations golangci-lint-cache; do \
+		path='$(QUALITY_OUTPUT_ROOT)/'$$name; \
+		[ ! -L "$$path" ] || { printf 'quality: refusing transient symlink: %s\n' "$$path" >&2; exit 1; }; \
+		if [ -d "$$path" ]; then \
+			find "$$path" -type d -exec chmod u+rwx {} + 2>/dev/null || \
+				{ printf 'quality: cannot make transient tree removable: %s\n' "$$path" >&2; exit 1; }; \
+			rm -rf "$$path" || { printf 'quality: cannot remove transient tree: %s\n' "$$path" >&2; exit 1; }; \
+		fi; \
+	done; \
 	printf 'quality: PASS (Q0-Q2 attained L2)\n'
 
 snapshot:

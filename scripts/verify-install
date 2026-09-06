@@ -8,7 +8,14 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 tmp_base=${TMPDIR:-/tmp}
 tmp_base=${tmp_base%/}
 work_root=$(mktemp -d "$tmp_base/ply-verify-install.XXXXXX")
-trap 'rm -rf "$work_root"' EXIT
+cleanup_temp_root() {
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$work_root"
+}
+trap cleanup_temp_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 log="$work_root/verdict.log"
 go_bin=${PLY_VERIFY_GO:-${GO:-go}}
 gobin="$work_root/missing-bin"

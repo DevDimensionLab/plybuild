@@ -76,14 +76,18 @@ archive count, and normalized stable-skeleton digest, then starts exactly one
 fresh process with these arguments:
 
 ```text
-codex exec -c service_tier="default" --sandbox workspace-write -C <repo> --json --output-last-message <external-path> <exact-prompt>
+codex exec --ephemeral -c service_tier="default" --sandbox workspace-write -C <repo> --json --output-last-message <external-path> <exact-prompt>
 ```
 
 It never uses `resume` or hands task authority to agent output. Before the first
 turn it creates one unique physical log directory beneath `TMPDIR` (or `/tmp`)
 and rejects a log root inside the worktree. Each fresh turn has its own session-
-named directory containing the byte-exact `events.jsonl`, Codex stderr, and the
-requested final-message path. The launcher prints the log root once and emits
+named directory containing the byte-exact `events.jsonl`, Codex stderr, the
+requested final-message path, and one isolated `scratch` directory. It exports
+that path as both `TMPDIR` and `CODEX_SESSION_SCRATCH_ROOT`; tasks put all
+disposable caches, archives, build contexts, reports, and evidence beneath it
+instead of creating independent `/private/tmp/ply-*` roots. The launcher prints
+the log root once and emits
 short progress records for thread start, commands, file changes, agent messages,
 and the terminal turn event. Event strings are printed only as `%s` data by the
 parser; no event field is sourced, evaluated, or executed.
@@ -93,8 +97,12 @@ successful stream has a non-empty population, exactly one `thread.started`, one
 `turn.started`, and one final `turn.completed`, with no event after that
 terminal. Invalid UTF-8/JSON, an unterminated final line, an empty stream,
 duplicate or contradictory terminals, `turn.failed`, or `error` makes the turn
-fail. The Codex process must independently exit zero. Child stderr and partial
-raw JSONL remain in the printed log directory for diagnosis.
+fail. The Codex process must independently exit zero. Scratch is deleted after
+every turn, including failed or interrupted turns, after restoring owner
+permissions on read-only directories. Successful completion also deletes the
+supervisor log root; failed and partial logs remain for diagnosis. `--ephemeral`
+prevents Codex from persisting an additional session rollout outside this
+lifecycle.
 
 Only after both process and stream succeed does the original parent re-snapshot
 the on-disk launcher and validate the full repository and archive contract. The
@@ -176,7 +184,7 @@ start and `--print-prompt` fail instead of replaying the answered task.
 
 | Premise | Evidence | Recheck | Consequence if false |
 | --- | --- | --- | --- |
-| A fresh non-interactive Codex turn accepts explicit working-directory, sandbox, JSONL, final-message, service-tier, and prompt values. | Measured 2026-08-24: local `codex-cli 0.149.0` exposes `exec`, `-C`, `--sandbox workspace-write`, `--json`, and `--output-last-message`; the [official non-interactive-mode documentation](https://learn.chatgpt.com/docs/non-interactive-mode) defines fresh `codex exec` and the JSONL turn events. | Recording `CODEX_BIN` asserts all eleven argument bytes and supplies characterized success/failure streams without invoking real Codex. | Stop before launch and repair the invocation or event contract. |
+| A fresh non-interactive Codex turn accepts explicit ephemeral, working-directory, sandbox, JSONL, final-message, service-tier, and prompt values. | Measured 2026-09-06: the [official non-interactive-mode documentation](https://learn.chatgpt.com/docs/non-interactive-mode) defines fresh `codex exec`, `--ephemeral`, and JSONL turn events. | Recording `CODEX_BIN` asserts all twelve argument bytes, the isolated scratch environment, and characterized success/failure streams without invoking real Codex. | Stop before launch and repair the invocation or lifecycle contract. |
 | Mutable task data can remain non-executable inside one script. | Contract test injects raw commands into each tail region, invokes the script, and observes that neither sentinel is created. | `/bin/bash test/codex_dev_start_test.sh`. | Stop startup and move data behind a verified execution boundary. |
 | One linked archive graph detects duplicate or lost handoffs. | Contract test exercises a second generation, duplicate `NEXT`, disconnected history, a cycle, missing predecessor, broken backlink, historical prompt drift, and `COMPLETE`. | `/bin/bash test/codex_dev_start_test.sh`. | Reject startup until the graph is repaired from Git history. |
 | Dirty recovery requires facts, not injected filenames. | Dirty fixture records the exact Codex argument and static stderr warning. | Compare clean, dirty, archived, and recorded prompt bytes. | Fail startup rather than insert raw status. |
@@ -217,7 +225,8 @@ launcher test itself has no network dependency.
   lifecycle evidence.
 - One successful process may authorize at most one fresh successor, and only
   through a clean committed reciprocal handoff.
-- Raw and partial turn logs remain outside the worktree.
+- Failed and partial turn logs remain outside the worktree; successful logs and
+  every turn's scratch tree are removed automatically.
 - Raw worktree data never becomes prompt input.
 - Every session leaves one accurate `NEXT` tail while authorized work remains.
 - `COMPLETE` is valid only when all authorized checkpoints are complete.

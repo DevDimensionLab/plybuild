@@ -132,6 +132,7 @@ def validate_docker_argv(argv):
 
     tag = required_environment("PLY_DOCKER_EXPECTED_TAG")
     context = required_environment("PLY_DOCKER_EXPECTED_CONTEXT")
+    run_id = required_environment("PLY_DOCKER_ACCEPTANCE_RUN_ID")
     image_id = os.environ.get("PLY_DOCKER_EXPECTED_IMAGE_ID", "")
     selected_context = required_environment("PLY_DOCKER_EXPECTED_CONTEXT_NAME")
     exact_queries = (
@@ -144,7 +145,10 @@ def validate_docker_argv(argv):
     )
     if argv in exact_queries:
         return
-    if argv == ["build", "--no-cache", "--tag", tag, context]:
+    if argv == [
+        "build", "--no-cache", "--force-rm", "--tag", tag,
+        "--build-arg", "PLY_ACCEPTANCE_RUN_ID=" + run_id, context,
+    ]:
         return
     if argv == ["image", "inspect", tag]:
         return
@@ -477,7 +481,11 @@ def validate_calls(args):
         raise DockerAcceptanceError("Docker call record population is empty")
     build = [value for value in calls if value["argv"][:1] == ["build"]]
     runs = [value for value in calls if value["argv"][:1] == ["run"]]
-    if len(build) != 1 or build[0]["argv"] != ["build", "--no-cache", "--tag", args.tag, args.context]:
+    expected_build = [
+        "build", "--no-cache", "--force-rm", "--tag", args.tag,
+        "--build-arg", "PLY_ACCEPTANCE_RUN_ID=" + args.run_id, args.context,
+    ]
+    if len(build) != 1 or build[0]["argv"] != expected_build:
         raise DockerAcceptanceError("Docker build did not run exactly once with accepted argv")
     if len(runs) != 10:
         raise DockerAcceptanceError("Docker run population is {}, expected 10".format(len(runs)))
@@ -535,7 +543,7 @@ def parser():
         runtime.add_argument("--" + name, required=True)
 
     calls = commands.add_parser("validate-calls")
-    for name in ("path", "tag", "context", "image-id", "output"):
+    for name in ("path", "tag", "context", "run-id", "image-id", "output"):
         calls.add_argument("--" + name, required=True)
 
     field_parser = commands.add_parser("field")

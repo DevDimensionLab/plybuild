@@ -6,7 +6,14 @@ unset CDPATH
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 work_root=$(mktemp -d "${TMPDIR:-/tmp}/ply-test-accept-docker.XXXXXX")
-trap 'rm -rf "$work_root"' EXIT
+cleanup_test_root() {
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$work_root"
+}
+trap cleanup_test_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 source "$repo_root/test/acceptance/meta-common.sh"
 fake_docker="$work_root/fake-docker"
 fake_go="$work_root/fake-go"
@@ -33,6 +40,7 @@ state=${PLY_FAKE_DOCKER_STATE:?}
 tag=${PLY_DOCKER_EXPECTED_TAG:-ply-acceptance-meta:bootstrap}
 image_id='sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 wrong_id='sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+builder_id='sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'
 
 image_json() {
 	local reference=$1
@@ -101,13 +109,18 @@ case "${1-} ${2-}" in
 	fi
 	;;
 'image ls')
-	if [[ -e "$state/retargeted" ]]; then
+	if [[ " $* " == *' --filter label=org.plyproject.acceptance-run='* ]]; then
+		[[ ! -e "$state/built" ]] || printf '%s\n' "$builder_id"
+	elif [[ -e "$state/retargeted" ]]; then
 		printf '%s\n' "$wrong_id"
 	elif [[ "$mode" == ambiguous-tag ]]; then
 		printf '%s\n%s\n' "$image_id" "$wrong_id"
 	else
 		printf '%s\n' "$image_id"
 	fi
+	;;
+'image rm')
+	printf '%s\n' "${@:4}" >>"$state/removed-images"
 	;;
 'history --no-trunc')
 	printf '%s\n' '{"CreatedBy":"ENTRYPOINT [\\\"/bin/ply\\\"]","ID":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'
@@ -161,7 +174,11 @@ GO ?= go
 install:
 	$(GO) install ./cmd/ply
 MAKEFILE
-	printf 'FROM scratch\n' >"$destination/Dockerfile"
+	printf '%s\n' \
+		'FROM scratch AS build' \
+		'ARG PLY_ACCEPTANCE_RUN_ID=unmanaged' \
+		'LABEL org.plyproject.acceptance-run=$PLY_ACCEPTANCE_RUN_ID' \
+		'FROM scratch' >"$destination/Dockerfile"
 	printf 'module example.invalid/docker-meta\n\ngo 1.18\n' >"$destination/go.mod"
 	printf 'package main\nfunc main() {}\n' >"$destination/cmd/ply/main.go"
 	cat >"$destination/scripts/verify-install" <<'VERIFY_INSTALL'
@@ -235,9 +252,19 @@ run_case() {
 		grep -Fqx 'docker-build-count=1' "$evidence/report.txt"
 		grep -Fqx 'docker-run-count=10' "$evidence/report.txt"
 		grep -Fqx 'publish-operations=0' "$evidence/report.txt"
+		grep -Fqx 'docker-artifacts-cleaned-on-exit=tag-and-labeled-builder' "$evidence/report.txt"
+		grep -Eq "^builder-cleanup-label=org\\.plyproject\\.acceptance-run=${commit:0:12}-[0-9]{8}t[0-9]{6}-[0-9]+$" \
+			"$evidence/report.txt"
 		grep -Fqx 'docker-acceptance: PASS' "$evidence/report.txt"
 		[[ $(grep -c '^docker-verifier=' "$evidence/report.txt") -eq 3 ]]
 		[[ -s "$evidence/evidence-manifest.sha256" && -s "$evidence/evidence-manifest-digest.txt" ]]
+		for transient in source runtime cache tmp docker-config buildx-config host-install \
+			source.tar source.tar.sha256; do
+			[[ ! -e "$evidence/$transient" && ! -L "$evidence/$transient" ]]
+		done
+		grep -Fqx "ply-acceptance-meta:${commit:0:12}" "$state/removed-images"
+		grep -Fqx 'sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd' \
+			"$state/removed-images"
 	fi
 }
 
@@ -252,6 +279,7 @@ proxy_rejects() {
 		PLY_DOCKER_EXPECTED_TAG='ply-acceptance-meta:expected' \
 		PLY_DOCKER_EXPECTED_CONTEXT='/private/tmp/expected-context' \
 		PLY_DOCKER_EXPECTED_CONTEXT_NAME='desktop-linux' \
+		PLY_DOCKER_ACCEPTANCE_RUN_ID='proxy-run' \
 		PLY_DOCKER_EXPECTED_IMAGE_ID='sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
 		PLY_FAKE_DOCKER_STATE="$fake_state" \
 		"$repo_root/test/acceptance/docker_acceptance.py" docker "$@"
@@ -261,6 +289,8 @@ acceptance_meta_expect_pass good run_case good default external yes
 acceptance_meta_expect_fail no-build run_case no-build default external no
 acceptance_meta_expect_fail no-run run_case no-run default external no
 acceptance_meta_expect_fail stale-image run_case stale-image default external no
+[[ ! -e "$work_root/case-5/state/removed-images" ]] ||
+	fail 'stale pre-existing image was removed during failed acceptance cleanup'
 acceptance_meta_expect_fail missing-image run_case missing-image default external no
 acceptance_meta_expect_fail ambiguous-image run_case ambiguous-image default external no
 acceptance_meta_expect_fail ambiguous-tag run_case ambiguous-tag default external no
@@ -287,6 +317,7 @@ acceptance_meta_expect_fail wrong-run-argv env \
 	PLY_DOCKER_EXPECTED_TAG='ply-acceptance-meta:expected' \
 	PLY_DOCKER_EXPECTED_CONTEXT='/private/tmp/expected-context' \
 	PLY_DOCKER_EXPECTED_CONTEXT_NAME='desktop-linux' \
+	PLY_DOCKER_ACCEPTANCE_RUN_ID='proxy-run' \
 	PLY_DOCKER_EXPECTED_IMAGE_ID='sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
 	PLY_FAKE_DOCKER_STATE="$fake_state" \
 	"$repo_root/test/acceptance/docker_acceptance.py" docker run --rm \

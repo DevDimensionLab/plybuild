@@ -92,15 +92,75 @@ daemon_record="$evidence_root/daemon.json"
 image_record="$evidence_root/image.json"
 image_file_record="$evidence_root/image-file.json"
 report="$evidence_root/report.txt"
+host_install_root="$evidence_root/host-install"
 mkdir "$source_root" "$logs_root" "$runtime_root" "$cache_root" "$tmp_root" \
 	"$docker_config" "$buildx_config" ||
 	fail 'cannot initialize external evidence directories'
 : >"$call_record"
 
-tag=${PLY_DOCKER_TAG:-"ply-acceptance:${commit:0:12}-$(date -u +%Y%m%dt%H%M%S)-$$"}
+acceptance_run_id="${commit:0:12}-$(date -u +%Y%m%dt%H%M%S)-$$"
+[[ "$acceptance_run_id" =~ ^[a-z0-9][a-z0-9._-]*$ ]] ||
+	fail 'acceptance run identity is malformed'
+builder_label="org.plyproject.acceptance-run=$acceptance_run_id"
+tag=${PLY_DOCKER_TAG:-"ply-acceptance:$acceptance_run_id"}
+tag_cleanup_authorized=no
 [[ "$tag" =~ ^[a-z0-9][a-z0-9._/-]*:[a-z0-9][a-z0-9._-]*$ ]] ||
 	fail 'image tag is malformed or not canonical lowercase'
 context_path="$source_root"
+
+cleanup_transient_tree() {
+	local path=$1
+	case "$path" in
+	"$evidence_root"/*) ;;
+	*) printf 'docker acceptance: refusing transient cleanup outside evidence root: %s\n' "$path" >&2; return 1 ;;
+	esac
+	[[ ! -L "$path" ]] || {
+		printf 'docker acceptance: refusing transient symlink cleanup: %s\n' "$path" >&2
+		return 1
+	}
+	if [[ -d "$path" ]]; then
+		find "$path" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+		rm -rf -- "$path"
+	elif [[ -f "$path" ]]; then
+		rm -f -- "$path"
+	fi
+}
+
+cleanup_docker_artifacts() {
+	local cidfile cid image
+	if [[ -d "$runtime_root" && ! -L "$runtime_root" ]]; then
+		while IFS= read -r -d '' cidfile; do
+			cid=$(tr -d '\r\n' <"$cidfile")
+			[[ "$cid" =~ ^[[:xdigit:]]{12,64}$ ]] || continue
+			"$docker_bin" container rm -f "$cid" >/dev/null 2>&1 || true
+		done < <(find "$runtime_root" -type f -name '*.cid' -print0 2>/dev/null)
+	fi
+	if [[ "$tag_cleanup_authorized" == yes ]]; then
+		"$docker_bin" image rm -f "$tag" >/dev/null 2>&1 || true
+	fi
+	while IFS= read -r image; do
+		[[ "$image" =~ ^sha256:[[:xdigit:]]{64}$ ]] || continue
+		"$docker_bin" image rm -f "$image" >/dev/null 2>&1 || true
+	done < <("$docker_bin" image ls --all --no-trunc --quiet \
+		--filter "label=$builder_label" 2>/dev/null || true)
+}
+
+cleanup_docker_acceptance() {
+	cleanup_docker_artifacts
+	cleanup_transient_tree "$source_root" || true
+	cleanup_transient_tree "$runtime_root" || true
+	cleanup_transient_tree "$cache_root" || true
+	cleanup_transient_tree "$tmp_root" || true
+	cleanup_transient_tree "$docker_config" || true
+	cleanup_transient_tree "$buildx_config" || true
+	cleanup_transient_tree "$host_install_root" || true
+	cleanup_transient_tree "$evidence_root/source.tar" || true
+	cleanup_transient_tree "$evidence_root/source.tar.sha256" || true
+}
+trap cleanup_docker_acceptance EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 selected_context=$($docker_bin context show 2>"$logs_root/context-bootstrap.stderr") ||
 	fail 'cannot identify the selected Docker context'
@@ -113,6 +173,7 @@ export PLY_DOCKER_EXPECTED_TAG="$tag"
 export PLY_DOCKER_EXPECTED_CONTEXT="$context_path"
 export PLY_DOCKER_EXPECTED_CONTEXT_NAME="$selected_context"
 export PLY_DOCKER_REPO_ROOT="$repo_root"
+export PLY_DOCKER_ACCEPTANCE_RUN_ID="$acceptance_run_id"
 
 docker_call() {
 	"$helper" docker "$@"
@@ -154,6 +215,10 @@ shasum -a 256 "$evidence_root/source.tar" >"$evidence_root/source.tar.sha256"
 tar -xf "$evidence_root/source.tar" -C "$source_root" || fail 'cannot materialize source archive'
 [[ -f "$source_root/Dockerfile" && ! -L "$source_root/Dockerfile" ]] ||
 	fail 'external context lacks a regular Dockerfile'
+[[ $(grep -Fxc 'ARG PLY_ACCEPTANCE_RUN_ID=unmanaged' "$source_root/Dockerfile") -eq 1 &&
+	$(grep -Fxc 'LABEL org.plyproject.acceptance-run=$PLY_ACCEPTANCE_RUN_ID' \
+		"$source_root/Dockerfile") -eq 1 ]] ||
+	fail 'Dockerfile lacks the exact run-scoped builder cleanup label contract'
 [[ ! -e "$source_root/dist" && ! -L "$source_root/dist" ]] ||
 	fail 'external context contains stale distribution output'
 find "$source_root" -type f -print | LC_ALL=C sort >"$evidence_root/context-files.txt"
@@ -165,15 +230,18 @@ docker_call image inspect "$tag" >"$logs_root/preexisting-image.stdout" \
 preexisting_exit=$?
 set -e
 [[ "$preexisting_exit" -ne 0 ]] || fail 'unique image tag already names a stale image'
+tag_cleanup_authorized=yes
 
 started=$(date +%s)
 printf '%s\n' "$started" >"$evidence_root/build-started-epoch.txt"
-printf 'docker build --no-cache --tag %q %q\n' "$tag" "$context_path" >"$evidence_root/build.argv"
+printf 'docker build --no-cache --force-rm --tag %q --build-arg %q %q\n' \
+	"$tag" "PLY_ACCEPTANCE_RUN_ID=$acceptance_run_id" "$context_path" >"$evidence_root/build.argv"
 printf '%s\n' \
 	'DOCKER_BUILDKIT=0' \
 	"DOCKER_CONFIG=$docker_config" \
 	"DOCKER_HOST=$endpoint" >"$evidence_root/build.environment"
-if ! docker_call build --no-cache --tag "$tag" "$context_path" \
+if ! docker_call build --no-cache --force-rm --tag "$tag" \
+	--build-arg "PLY_ACCEPTANCE_RUN_ID=$acceptance_run_id" "$context_path" \
 	>"$logs_root/docker-build.stdout" 2>"$logs_root/docker-build.stderr"; then
 	fail 'real non-publishing Docker build failed'
 fi
@@ -217,7 +285,6 @@ PLY_DOCKER_EXPECTED_CONTAINER_ID="$inspection_cid" docker_call container rm "$in
 "$helper" validate-image-file --path "$logs_root/image-file.stdout" --output "$image_file_record" ||
 	fail '/bin/ply is missing, symlinked, non-executable, empty, or undigested'
 
-host_install_root="$evidence_root/host-install"
 host_gobin="$host_install_root/missing-bin"
 host_artifact="$host_gobin/ply"
 mkdir "$host_install_root" || fail 'cannot initialize host-install evidence directory'
@@ -293,7 +360,8 @@ for verifier_name in "${selected_verifiers[@]}"; do
 done
 
 "$helper" validate-calls --path "$call_record" --tag "$tag" --context "$context_path" \
-	--image-id "$image_id" --output "$evidence_root/docker-call-summary.json" ||
+	--run-id "$acceptance_run_id" --image-id "$image_id" \
+	--output "$evidence_root/docker-call-summary.json" ||
 	fail 'Docker build/run population or non-publishing call contract is invalid'
 
 status_after=$(git -C "$repo_root" status --porcelain=v1 --ignored -uall) ||
@@ -318,7 +386,9 @@ docker_calls=$("$helper" field --path "$evidence_root/docker-call-summary.json" 
 	printf 'docker-context=%s\n' "$selected_context"
 	printf 'docker-endpoint=%s\n' "$endpoint"
 	printf 'builder-driver=docker\n'
-	printf 'build-command=docker build --no-cache --tag %s %s\n' "$tag" "$context_path"
+	printf 'builder-cleanup-label=%s\n' "$builder_label"
+	printf 'build-command=docker build --no-cache --force-rm --tag %s --build-arg PLY_ACCEPTANCE_RUN_ID=%s %s\n' \
+		"$tag" "$acceptance_run_id" "$context_path"
 	printf 'build-auth=anonymous-empty-config\n'
 	printf 'publish-operations=0\n'
 	printf 'image-tag=%s\n' "$tag"
@@ -344,9 +414,11 @@ docker_calls=$("$helper" field --path "$evidence_root/docker-call-summary.json" 
 	printf 'docker-call-count=%s\n' "$docker_calls"
 	printf 'docker-build-count=1\n'
 	printf 'docker-run-count=10\n'
+	printf 'docker-artifacts-cleaned-on-exit=tag-and-labeled-builder\n'
 	printf 'docker-acceptance: PASS\n'
 } >"$report"
 
+cleanup_docker_acceptance
 (
 	cd "$evidence_root"
 	find . \
@@ -358,4 +430,4 @@ docker_calls=$("$helper" field --path "$evidence_root/docker-call-summary.json" 
 
 sed -n '1,220p' "$report"
 printf 'evidence-manifest-sha256=%s\n' "$(awk '{print $1}' "$evidence_root/evidence-manifest-digest.txt")"
-printf 'docker evidence retained: %s\n' "$evidence_root"
+printf 'docker receipts retained; reproducible build state and Docker artifacts cleaned: %s\n' "$evidence_root"

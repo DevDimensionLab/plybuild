@@ -91,8 +91,38 @@ call_record="$evidence_root/goreleaser-call.json"
 tool_identity="$evidence_root/tool-identity.json"
 artifact_record="$evidence_root/artifact.json"
 report="$evidence_root/report.txt"
+host_install_root="$evidence_root/host-install"
 mkdir "$logs_root" "$home_root" "$cache_root" "$go_tmp_root" "$tmp_root" ||
 	fail 'cannot initialize external evidence directories'
+
+cleanup_transient_tree() {
+	local path=$1
+	case "$path" in
+	"$evidence_root"/*) ;;
+	*) printf 'snapshot acceptance: refusing transient cleanup outside evidence root: %s\n' "$path" >&2; return 1 ;;
+	esac
+	[[ ! -L "$path" ]] || {
+		printf 'snapshot acceptance: refusing transient symlink cleanup: %s\n' "$path" >&2
+		return 1
+	}
+	if [[ -d "$path" ]]; then
+		find "$path" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+		rm -rf "$path"
+	fi
+}
+
+cleanup_snapshot_transients() {
+	cleanup_transient_tree "$source_root" || true
+	cleanup_transient_tree "$home_root" || true
+	cleanup_transient_tree "$cache_root" || true
+	cleanup_transient_tree "$go_tmp_root" || true
+	cleanup_transient_tree "$tmp_root" || true
+	cleanup_transient_tree "$host_install_root" || true
+}
+trap cleanup_snapshot_transients EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 host_goos=$($go_bin env GOHOSTOS) || fail 'cannot determine host GOOS'
 host_goarch=$($go_bin env GOHOSTARCH) || fail 'cannot determine host GOARCH'
@@ -177,7 +207,6 @@ artifact_relative=$("$helper" field --path "$artifact_record" --field artifact.r
 artifact_target=$("$helper" field --path "$artifact_record" --field artifact.target) ||
 	fail 'cannot read selected artifact target'
 
-host_install_root="$evidence_root/host-install"
 host_gobin="$host_install_root/missing-bin"
 host_artifact="$host_gobin/ply"
 mkdir "$host_install_root" || fail 'cannot initialize host-install evidence directory'
@@ -285,5 +314,6 @@ tool_sha256=$("$helper" field --path "$tool_identity" --field tool_sha256)
 	printf 'snapshot-acceptance: PASS\n'
 } >"$report"
 
+cleanup_snapshot_transients
 sed -n '1,200p' "$report"
-printf 'snapshot evidence retained: %s\n' "$evidence_root"
+printf 'snapshot receipts retained; reproducible build state cleaned: %s\n' "$evidence_root"

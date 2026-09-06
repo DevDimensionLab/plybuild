@@ -6,7 +6,14 @@ export LC_ALL=C LANG=C
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 checker="$repo_root/scripts/check-api-compat.sh"
 temp_root=$(mktemp -d "${TMPDIR:-/tmp}/ply-api-compat-test.XXXXXX")
-trap 'rm -rf "$temp_root"' EXIT
+cleanup_temp_root() {
+	find "$temp_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$temp_root"
+}
+trap cleanup_temp_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 fake_repo="$temp_root/repo"
 fake_base="$temp_root/base"
 fake_bin="$temp_root/bin"

@@ -15,8 +15,17 @@ WORK="$(mktemp -d "${TMP_BASE%/}/test-ply-quality-audit.XXXXXX")"
 if [ "${QUALITY_TEST_KEEP_WORK:-no}" = "yes" ]; then
   printf 'quality meta-test work: %s\n' "$WORK"
 else
-  trap 'rm -rf "$WORK"' EXIT
+  cleanup_quality_test_work() {
+    find "$WORK" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+    rm -rf -- "$WORK"
+  }
+  trap cleanup_quality_test_work EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
 fi
+mkdir "$WORK/tmp"
+export TMPDIR="$WORK/tmp"
 
 fail() { printf 'FAIL: %s\n' "$1" >&2; exit 1; }
 ok() { printf '  %s\n' "$1"; }

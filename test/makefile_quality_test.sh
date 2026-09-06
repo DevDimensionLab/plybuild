@@ -6,7 +6,14 @@ unset CDPATH
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
 tmp_dir=$(mktemp -d)
-trap 'rm -rf "$tmp_dir"' EXIT
+cleanup_test_root() {
+	find "$tmp_dir" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$tmp_dir"
+}
+trap cleanup_test_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 makefile_under_test=${MAKEFILE_UNDER_TEST:-"$repo_root/Makefile"}
 fake_bin="$tmp_dir/bin"
@@ -70,6 +77,9 @@ done
 case "$target" in
 preflight)
 	[[ -d ${GOLANGCI_LINT_CACHE:-} ]] || exit 94
+	mkdir -p "$GOLANGCI_LINT_CACHE/read-only/child"
+	printf '%s\n' disposable >"$GOLANGCI_LINT_CACHE/read-only/child/sentinel"
+	chmod 0555 "$GOLANGCI_LINT_CACHE/read-only" "$GOLANGCI_LINT_CACHE/read-only/child"
 	;;
 acceptance)
 	printf '%s\n' \
@@ -154,14 +164,23 @@ EOF
 chmod +x "$fake_bin/quality-audit.sh"
 
 for name in "${mutation_names[@]}"; do
+	upper=$(printf '%s' "$name" | tr '[:lower:]-' '[:upper:]_')
 	cat >"$fake_scripts/test-mutate-$name" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' 'test-mutate-$name: PASS (T1-T10, declared=10 killed=10 survived=0 unusable=0)'
 EOF
-	cat >"$fake_scripts/mutate-$name" <<'EOF'
+	cat >"$fake_scripts/mutate-$name" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
+keep_var=MUTATION_${upper}_KEEP_WORK
+work_var=MUTATION_${upper}_WORK_ROOT
+[[ \${!keep_var:-} == 0 ]] || exit 95
+[[ -z \${!work_var:-} ]] || exit 96
+mkdir -p "\$TMPDIR/mutation-$name/read-only/child"
+printf '%s\n' disposable >"\$TMPDIR/mutation-$name/read-only/child/sentinel"
+chmod 0555 "\$TMPDIR/mutation-$name/read-only" \
+	"\$TMPDIR/mutation-$name/read-only/child"
 printf 'declared=10 killed=10 survived=0 unusable=0\n'
 EOF
 	chmod +x "$fake_scripts/test-mutate-$name" "$fake_scripts/mutate-$name"
@@ -227,6 +246,10 @@ if ! run_quality good good "$makefile_under_test" \
 fi
 grep -Fqx 'quality: PASS (Q0-Q2 attained L2)' "$tmp_dir/good.stdout" ||
 	fail 'complete population produced no terminal PASS'
+for transient in tmp mutations golangci-lint-cache; do
+	[[ ! -e "$tmp_dir/output-good/$transient" && ! -L "$tmp_dir/output-good/$transient" ]] ||
+		fail "quality retained transient tree: $transient"
+done
 
 expected_calls="$tmp_dir/expected-calls"
 {

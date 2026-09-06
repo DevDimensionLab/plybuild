@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-06T16:28:39+02:00
+Generated: 2026-09-06T20:17:39+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,12 +9,13 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base `master` at `5635d50`.
-- Latest implementation is dependency-only Assert commit
-  `0781fd6cdb625623c6d726743bf58352113d0ccb`, exact parent
-  `8f24778c9ddafdbf42583595400093450e4112ec`, clean tree
-  `690e939eaacc57af08868c7f86ce3fec5dbcf034`. It changes only `go.mod` and
-  `go.sum`. This documentation handoff must be its direct child; a next
-  implementation, if any, must use that documentation commit as exact parent.
+- Latest dependency implementation is Repr commit
+  `6f4d02eb9c86ec2df8a488a85ed973aababe1f38`, exact parent
+  `53475076e1c79f6d2181877e3238a1a5d389c246`, tree
+  `82e7b1f5c503659082207481b8339e8113e38c10`. It changes only `go.mod` and
+  `go.sum`. The operator-authorized lifecycle repair is layered on top before
+  the Repr decision handoff; preserve it and account for that ancestry when
+  finalizing the active session.
 - The answered Assert archive and sole NEXT `github.com/alecthomas/repr`
   archive link reciprocally. Only launcher mutable regions change during
   handoff. Ordinary and ignored status must end empty.
@@ -26,8 +27,24 @@ session diary.
   v1.0.0 -> v1.2.0. Their recorded minimal closures add exactly 25 checksum
   lines.
 - No `.agent-task/current.md` or `.quality/manual-evidence.json` was created.
-  No push, merge, publication, release, stash, revert, retained evidence/image
-  deletion, successor launch, or worktree removal occurred.
+  No push, merge, publication, release, stash, revert, successor launch, or
+  worktree removal occurred.
+
+## Operator Lifecycle Recovery
+
+On 2026-09-06, accumulated reproducible agent scratch, audit trees, Go caches,
+and Ply Docker layers had filled the data volume. The operator authorized their
+deletion and a lifecycle repair. Cleanup freed approximately 763 GiB, moving
+the data volume from 17 GiB free (99% used) to about 780 GiB free (13% used).
+Historical digests and decisions below remain records, but referenced external
+`/private/tmp/ply-*` evidence and tool roots were intentionally purged.
+
+Every successor must use `$CODEX_SESSION_SCRATCH_ROOT` for disposable state.
+The launcher now removes per-turn scratch on success, failure, and interruption,
+and removes supervisor logs after successful completion. Mutation workspaces,
+snapshot caches, Docker tags, run-labeled builder images, and acceptance
+containers clean themselves on exit. Preserve these operator-authorized
+lifecycle controls while completing the active Repr handoff.
 
 P2A-P6 are complete. P7 remains active after Go 1.26.7 and bounded groups
 through accepted Assert. All earlier accepted, rejected, and no-change
@@ -171,19 +188,17 @@ Neither correction changed the repository or quality apparatus.
   `gopkg.in/yaml.v2 v2.4.0`, `gopkg.in/yaml.v3 v3.0.1`, and
   `go.yaml.in/yaml/v3 v3.0.5`. Preserve all other prior bounded decisions.
 - Kingpin, Resty, Errgo, Check, YAML v3, YAML v2, x/text, x/net, x/image,
-  gotenv, and jwalterweatherman evidence roots remain verified at their exact
-  counts and manifest hashes recorded in their answered archives. Units and
-  Assert selection/quality roots remain immutable. Do not revisit them or
-  reinterpret their corrections.
-- Exact Go 1.26.7 remains at
-  `/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`, SHA-256
+  gotenv, jwalterweatherman, Units, and Assert records remain verified at their
+  exact counts and manifest hashes in their answered archives. Their external
+  roots were intentionally purged; do not reinterpret the recorded decisions.
+- Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, SHA-256
   `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
   Put its directory first in PATH, set GOENV=off, GOWORK=off,
-  GOTOOLCHAIN=local, and inject no ambient GOFLAGS. Recovery root
-  `/private/tmp/ply-p7-go1.26.7-recovery.qvk4zs` remains verified at two
-  entries and manifest SHA-256
+  GOTOOLCHAIN=local, and inject no ambient GOFLAGS. Its former recovery root
+  was purged after verification at two entries and manifest SHA-256
   `1b30193f4f4811f2515223c53c004603afa0a4812b8a571a24c49b252122e83b`.
-- Retain verified golangci-lint 2.12.2
+- Recreate the following tools beneath `$CODEX_SESSION_SCRATCH_ROOT` as needed
+  and verify their recorded hashes: golangci-lint 2.12.2
   `3ba856c13833c4cda2182eb71bdbc7f96ddad339a1cdda8c36f88bfb1e34bd6f`,
   GoReleaser 2.17.1
   `f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`,
@@ -193,13 +208,14 @@ Neither correction changed the repository or quality apparatus.
 
 ## Next Objective
 
-Independently evaluate selected `github.com/alecthomas/repr`
-`v0.0.0-20210801044451-80ca428c5142` as exactly one bounded P7 module group.
-The fresh post-Assert survey reports v0.5.4 at 2026-07-15T12:04:01Z, but treat
-canonical latest, release qualification, declarations, complete floor-
-compatible closure, source identity, signatures, repository state, loaded
-population, real consumers, self-tests, and vulnerability data as unknown
-until independently proved from primary evidence.
+Resume and independently re-verify the bounded `github.com/alecthomas/repr`
+decision underlying dependency-only commit `6f4d02e`. The prior disposable
+evidence was purged, so recreate only the evidence needed for this decision
+beneath `$CODEX_SESSION_SCRATCH_ROOT`. Treat canonical latest, release
+qualification, declarations, complete floor-compatible closure, source
+identity, signatures, repository state, loaded population, real consumers,
+self-tests, and vulnerability data as unknown until independently proved from
+primary evidence, then complete or reject the Repr handoff.
 
 Current measurements are 234 selected modules, 3,580 graph edges, 429 native
 complete-test packages, 1,041 go.sum lines, a 354-line unapplied tidy
@@ -207,7 +223,6 @@ projection, and exact 20/30/20 Darwin-symbol/Darwin-module/Windows-symbol
 vulnerability populations. The main module retains Go 1.18 and toolchain Go
 1.26.7.
 
-Implement only an exact floor-compatible changed selection with an explained
-minimal closure and every applicable gate passing. If selected is already the
-decision, do not manufacture a requirement or commit. Do not combine Repr,
-Assert, Units, another dependency, or P8.
+Retain the changed selection only if it is floor-compatible, has an explained
+minimal closure, and passes every applicable gate. Do not combine Repr, Assert,
+Units, another dependency, or P8.

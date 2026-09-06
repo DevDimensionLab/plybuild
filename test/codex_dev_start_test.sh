@@ -25,9 +25,18 @@ export GIT_CONFIG_COUNT=0
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 launcher="$repo_root/codex-dev-start.sh"
 temp_root=$(mktemp -d "${TMPDIR:-/tmp}/codex-dev-start-test.XXXXXX")
-trap 'rm -rf "$temp_root"' EXIT
+cleanup_temp_root() {
+	find "$temp_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$temp_root"
+}
+trap cleanup_temp_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+mkdir "$temp_root/runtime-tmp"
+export TMPDIR="$temp_root/runtime-tmp"
 
-expected_skeleton_sha256='4755da4dd8645ac890df241d329319a130ac5d778c0bd127061c9667afb2d484'
+expected_skeleton_sha256='39d94ef69e4827f7174b0085e3c669364e14b68c35f146108c40925ce844073f'
 pass_count=0
 nested_mode='no'
 environment_probe='no'
@@ -614,6 +623,18 @@ for argument in "$@"; do
 	fi
 	previous=$argument
 done
+: "${CODEX_SESSION_SCRATCH_ROOT:?}"
+[[ "${TMPDIR:?}" == "$CODEX_SESSION_SCRATCH_ROOT" ]] || exit 88
+[[ "$CODEX_SESSION_SCRATCH_ROOT" == /* && -d "$CODEX_SESSION_SCRATCH_ROOT" &&
+	! -L "$CODEX_SESSION_SCRATCH_ROOT" ]] || exit 89
+case "$CODEX_SESSION_SCRATCH_ROOT/" in
+"$worktree/"*) exit 90 ;;
+esac
+printf '%s\n' "$CODEX_SESSION_SCRATCH_ROOT" >"$call_dir/scratch-root"
+mkdir -p "$CODEX_SESSION_SCRATCH_ROOT/read-only-cache/child"
+printf '%s\n' disposable >"$CODEX_SESSION_SCRATCH_ROOT/read-only-cache/child/sentinel"
+chmod 0555 "$CODEX_SESSION_SCRATCH_ROOT/read-only-cache" \
+	"$CODEX_SESSION_SCRATCH_ROOT/read-only-cache/child"
 if [[ -n "${FAKE_CODEX_SCENARIO_DIR:-}" && -f "$FAKE_CODEX_SCENARIO_DIR/wait-$call_count" ]]; then
 	printf '%s\n' \
 		'{"type":"thread.started","thread_id":"recorded-signal-thread"}' \
@@ -838,6 +859,14 @@ assert_external_log_root() {
 	esac
 }
 
+assert_scratch_removed() {
+	local call_dir=$1
+	local scratch
+	scratch=$(cat "$call_dir/scratch-root")
+	[[ -n "$scratch" && ! -e "$scratch" && ! -L "$scratch" ]] ||
+		fail "turn scratch was not removed: $scratch"
+}
+
 "$launcher" --help >"$temp_root/help.stdout" 2>"$temp_root/help.stderr"
 assert_contains "$temp_root/help.stdout" 'Usage: codex-dev-start.sh'
 assert_contains "$temp_root/help.stdout" '--check'
@@ -901,20 +930,21 @@ CODEX_BIN="$fake_codex" FAKE_CODEX_RECORD_DIR="$record_dir" \
 start_status=$?
 set -e
 [[ "$start_status" -ne 0 ]] || fail 'successful event stream without a committed handoff passed'
-[[ $(cat "$record_dir/argc") -eq 11 ]] || fail 'Codex did not receive exactly eleven arguments'
+[[ $(cat "$record_dir/argc") -eq 12 ]] || fail 'Codex did not receive exactly twelve arguments'
 [[ $(cat "$record_dir/arg-1") == 'exec' ]] || fail 'first Codex argument is not exec'
-[[ $(cat "$record_dir/arg-2") == '-c' ]] || fail 'second Codex argument is not -c'
-[[ $(cat "$record_dir/arg-3") == 'service_tier="default"' ]] ||
+[[ $(cat "$record_dir/arg-2") == '--ephemeral' ]] || fail 'second Codex argument is not --ephemeral'
+[[ $(cat "$record_dir/arg-3") == '-c' ]] || fail 'third Codex argument is not -c'
+[[ $(cat "$record_dir/arg-4") == 'service_tier="default"' ]] ||
 	fail 'Codex service tier is not explicitly normal'
-[[ $(cat "$record_dir/arg-4") == '--sandbox' ]] || fail 'fourth Codex argument is not --sandbox'
-[[ $(cat "$record_dir/arg-5") == 'workspace-write' ]] || fail 'Codex sandbox is not workspace-write'
-[[ $(cat "$record_dir/arg-6") == '-C' ]] || fail 'sixth Codex argument is not -C'
-[[ $(cat "$record_dir/arg-7") == "$fixture_root" ]] || fail 'Codex worktree argument is wrong'
-[[ $(cat "$record_dir/arg-8") == '--json' ]] || fail 'eighth Codex argument is not --json'
-[[ $(cat "$record_dir/arg-9") == '--output-last-message' ]] ||
-	fail 'ninth Codex argument is not --output-last-message'
-[[ -n $(cat "$record_dir/arg-10") ]] || fail 'Codex final-message path is empty'
-cmp -s "$record_dir/arg-11" "$temp_root/archive-prompt" ||
+[[ $(cat "$record_dir/arg-5") == '--sandbox' ]] || fail 'fifth Codex argument is not --sandbox'
+[[ $(cat "$record_dir/arg-6") == 'workspace-write' ]] || fail 'Codex sandbox is not workspace-write'
+[[ $(cat "$record_dir/arg-7") == '-C' ]] || fail 'seventh Codex argument is not -C'
+[[ $(cat "$record_dir/arg-8") == "$fixture_root" ]] || fail 'Codex worktree argument is wrong'
+[[ $(cat "$record_dir/arg-9") == '--json' ]] || fail 'ninth Codex argument is not --json'
+[[ $(cat "$record_dir/arg-10") == '--output-last-message' ]] ||
+	fail 'tenth Codex argument is not --output-last-message'
+[[ -n $(cat "$record_dir/arg-11") ]] || fail 'Codex final-message path is empty'
+cmp -s "$record_dir/arg-12" "$temp_root/archive-prompt" ||
 	fail 'Codex argument differs from archived bytes, including terminal LF'
 [[ ! -s "$temp_root/start.stdout" ]] || fail 'launcher polluted Codex stdout'
 assert_contains "$temp_root/start.stderr" 'codex-dev-start: agent: handoff prepared; $(touch EVENT_TEXT_EXECUTED)'
@@ -926,6 +956,7 @@ cmp -s "$no_progress_scenario/events-1.jsonl" \
 	"$log_root/turn-001-$active_id/events.jsonl" ||
 	fail 'raw external JSONL log differs from the Codex event stream'
 [[ $(cat "$record_dir/call-count") -eq 1 ]] || fail 'no-progress failure started another turn'
+assert_scratch_removed "$record_dir/call-1"
 [[ ! -e "$fixture_root/EVENT_TEXT_EXECUTED" && ! -e "$fixture_root/EVENT_BACKTICK_EXECUTED" ]] ||
 	fail 'Codex event text was executed as shell input'
 pass 'non-interactive argv, progress, raw logs, data safety, and no-progress stop'
@@ -1044,16 +1075,15 @@ assert_contains "$temp_root/success-supervisor.stderr" \
 	"committed handoff validated: $active_id -> 2099-01-02T030405+0000-loop-next"
 assert_contains "$temp_root/success-supervisor.stderr" 'authorized roadmap COMPLETE'
 success_log_root=$(extract_supervisor_log_root "$temp_root/success-supervisor.stderr")
-assert_external_log_root "$success_log_root" "$successful_supervisor_root"
-cmp -s "$success_scenario/events-1.jsonl" \
-	"$success_log_root/turn-001-$active_id/events.jsonl" ||
-	fail 'first successful raw log was not preserved'
-cmp -s "$success_scenario/events-2.jsonl" \
-	"$success_log_root/turn-002-2099-01-02T030405+0000-loop-next/events.jsonl" ||
-	fail 'second successful raw log was not preserved'
+[[ -n "$success_log_root" && ! -e "$success_log_root" && ! -L "$success_log_root" ]] ||
+	fail 'successful supervisor logs were not removed'
+assert_contains "$temp_root/success-supervisor.stderr" \
+	'successful supervisor logs cleaned automatically'
+assert_scratch_removed "$success_record/call-1"
+assert_scratch_removed "$success_record/call-2"
 second_archive="$successful_supervisor_root/docs/plan/agent-sessions/2099-01-02T030405+0000-loop-next.md"
 extract_archive_prompt "$second_archive" >"$temp_root/second-supervised-prompt"
-cmp -s "$success_record/call-2/arg-11" "$temp_root/second-supervised-prompt" ||
+cmp -s "$success_record/call-2/arg-12" "$temp_root/second-supervised-prompt" ||
 	fail 'second fresh turn did not receive the committed NEXT prompt bytes'
 [[ ! -e "$successful_supervisor_root/EVENT_TEXT_EXECUTED" && \
 	! -e "$successful_supervisor_root/EVENT_BACKTICK_EXECUTED" ]] ||
@@ -1138,6 +1168,7 @@ assert_external_log_root "$signal_log_root" "$signal_root"
 	fail 'signal interruption did not retain the partial raw log'
 [[ -z $(git_at "$signal_root" status --porcelain=v1 --untracked-files=all) ]] ||
 	fail 'signal interruption mutated task authority'
+assert_scratch_removed "$signal_record/call-1"
 pass 'signal interruption stops the active child and preserves one partial log'
 
 real_git=$(command -v git)

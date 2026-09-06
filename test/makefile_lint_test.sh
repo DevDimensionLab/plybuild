@@ -4,7 +4,14 @@ set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 tmp_dir=$(mktemp -d)
-trap 'rm -rf "$tmp_dir"' EXIT
+cleanup_temp_root() {
+	find "$tmp_dir" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$tmp_dir"
+}
+trap cleanup_temp_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 makefile_under_test=${MAKEFILE_UNDER_TEST:-"$repo_root/Makefile"}
 config_under_test=${GOLANGCI_CONFIG_UNDER_TEST:-"$repo_root/.golangci.yml"}

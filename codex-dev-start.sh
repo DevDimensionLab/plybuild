@@ -19,6 +19,8 @@ Supervise fresh non-interactive Codex turns in normal service mode.
 
 CODEX_BIN may name an alternate Codex executable for contract tests.
 Raw JSONL and diagnostics are stored in a unique directory outside the worktree.
+Each turn receives an isolated scratch directory that is deleted automatically.
+Successful supervisor logs are deleted; failed or interrupted logs are retained.
 EOF
 }
 
@@ -602,12 +604,69 @@ validate_authorized_queue() {
 	fi
 }
 
+cleanup_active_scratch() {
+	local scratch=${ACTIVE_SCRATCH_ROOT:-}
+	local expected=${ACTIVE_TURN_DIR:-}
+	[[ -n "$scratch" ]] || return 0
+	if [[ -z "$expected" || "$scratch" != "$expected/scratch" ]]; then
+		printf '%s\n' 'codex-dev-start: refusing to clean an unrecognized scratch path' >&2
+		return 1
+	fi
+	if [[ -L "$scratch" || ( -e "$scratch" && ! -d "$scratch" ) ]]; then
+		printf '%s\n' 'codex-dev-start: refusing to clean a non-directory scratch path' >&2
+		return 1
+	fi
+	if [[ -d "$scratch" ]]; then
+		find "$scratch" -type d -exec chmod u+rwx {} + 2>/dev/null || {
+			printf '%s\n' 'codex-dev-start: could not make scratch directories removable' >&2
+			return 1
+		}
+		rm -rf -- "$scratch" || {
+			printf '%s\n' 'codex-dev-start: could not clean the active turn scratch directory' >&2
+			return 1
+		}
+	fi
+	ACTIVE_SCRATCH_ROOT=''
+	ACTIVE_TURN_DIR=''
+}
+
+cleanup_supervisor_log_root() {
+	local root=${SUPERVISOR_LOG_ROOT:-}
+	local parent=${SUPERVISOR_TMP_ROOT:-}
+	local prefix=${SUPERVISOR_LOG_PREFIX:-}
+	local basename
+	[[ -n "$root" ]] || return 0
+	basename=${root##*/}
+	if [[ -z "$parent" || -z "$prefix" || "${root%/*}" != "$parent" ||
+		"$basename" != "$prefix"* ]]; then
+		printf '%s\n' 'codex-dev-start: refusing to clean an unrecognized supervisor log path' >&2
+		return 1
+	fi
+	if [[ -L "$root" || ( -e "$root" && ! -d "$root" ) ]]; then
+		printf '%s\n' 'codex-dev-start: refusing to clean a non-directory supervisor log path' >&2
+		return 1
+	fi
+	if [[ -d "$root" ]]; then
+		find "$root" -type d -exec chmod u+rwx {} + 2>/dev/null || return 1
+		rm -rf -- "$root" || return 1
+	fi
+	SUPERVISOR_LOG_ROOT=''
+}
+
 cleanup_supervisor() {
+	cleanup_active_scratch || true
 	if [[ -n "${LAUNCHER_SOURCE:-}" ]]; then
 		rm -f "$LAUNCHER_SOURCE"
 	fi
 	if [[ -n "${ACTIVE_EVENT_FIFO:-}" ]]; then
 		rm -f "$ACTIVE_EVENT_FIFO"
+	fi
+	if [[ "${SUPERVISOR_COMPLETED:-no}" == 'yes' ]]; then
+		if cleanup_supervisor_log_root; then
+			printf '%s\n' 'codex-dev-start: successful supervisor logs cleaned automatically' >&2
+		else
+			printf '%s\n' 'codex-dev-start: successful supervisor log cleanup failed' >&2
+		fi
 	fi
 }
 
@@ -716,6 +775,8 @@ create_supervisor_log_root() {
 	esac
 	created=$(mktemp -d "$resolved_root/codex-dev-start.$SESSION_ID.XXXXXX") ||
 		die 'could not create external supervisor log directory'
+	SUPERVISOR_TMP_ROOT=$resolved_root
+	SUPERVISOR_LOG_PREFIX="codex-dev-start.$SESSION_ID."
 	SUPERVISOR_LOG_ROOT=$(cd -P "$created" && pwd) ||
 		die 'could not resolve external supervisor log directory'
 	case "$SUPERVISOR_LOG_ROOT/" in
@@ -830,6 +891,9 @@ run_codex_turn() {
 	turn_label=$(printf '%03d' "$turn_number")
 	turn_dir="$SUPERVISOR_LOG_ROOT/turn-$turn_label-$SESSION_ID"
 	mkdir "$turn_dir" || die 'could not create turn log directory'
+	ACTIVE_TURN_DIR=$turn_dir
+	ACTIVE_SCRATCH_ROOT="$turn_dir/scratch"
+	mkdir "$ACTIVE_SCRATCH_ROOT" || die 'could not create turn scratch directory'
 	raw_log="$turn_dir/events.jsonl"
 	child_stderr="$turn_dir/codex.stderr"
 	final_message="$turn_dir/final-message.txt"
@@ -839,7 +903,9 @@ run_codex_turn() {
 	printf 'codex-dev-start: starting session %s\n' "$SESSION_ID" >&2
 	"$PYTHON_EXECUTABLE" "$EVENT_PARSER_PATH" "$raw_log" <"$ACTIVE_EVENT_FIFO" &
 	ACTIVE_PARSER_PID=$!
-	"$CODEX_EXECUTABLE" exec -c "service_tier=\"$CODEX_SERVICE_TIER\"" \
+	TMPDIR="$ACTIVE_SCRATCH_ROOT" \
+		CODEX_SESSION_SCRATCH_ROOT="$ACTIVE_SCRATCH_ROOT" \
+		"$CODEX_EXECUTABLE" exec --ephemeral -c "service_tier=\"$CODEX_SERVICE_TIER\"" \
 		--sandbox workspace-write -C "$REPO_ROOT" --json \
 		--output-last-message "$final_message" "$SESSION_PROMPT" \
 		>"$ACTIVE_EVENT_FIFO" 2>"$child_stderr" &
@@ -860,6 +926,10 @@ run_codex_turn() {
 	set -e
 	rm -f "$ACTIVE_EVENT_FIFO"
 	ACTIVE_EVENT_FIFO=''
+	if ! cleanup_active_scratch; then
+		printf 'codex-dev-start: scratch cleanup failed; inspect %s\n' "$turn_dir" >&2
+		return 1
+	fi
 
 	if [[ "$SUPERVISOR_INTERRUPTED" == 'yes' ]]; then
 		printf 'codex-dev-start: interrupted; inspect %s\n' "$turn_dir" >&2
@@ -983,6 +1053,12 @@ main() {
 	ACTIVE_EVENT_FIFO=''
 	ACTIVE_CODEX_PID=''
 	ACTIVE_PARSER_PID=''
+	ACTIVE_TURN_DIR=''
+	ACTIVE_SCRATCH_ROOT=''
+	SUPERVISOR_LOG_ROOT=''
+	SUPERVISOR_TMP_ROOT=''
+	SUPERVISOR_LOG_PREFIX=''
+	SUPERVISOR_COMPLETED='no'
 	SUPERVISOR_INTERRUPTED='no'
 	trap cleanup_supervisor EXIT
 
@@ -1041,7 +1117,7 @@ main() {
 		set -e
 		case $progress_rc in
 		0) ;;
-		2) exit 0 ;;
+		2) SUPERVISOR_COMPLETED='yes'; exit 0 ;;
 		*) exit "$progress_rc" ;;
 		esac
 	done
@@ -1109,19 +1185,19 @@ exit 70
 #|vulnerability populations 20/30/20. The retained main module declares Go 1.18
 #|and prefers toolchain Go 1.26.7.
 #|
-#|Use exact Go 1.26.7 at
-#|`/private/tmp/ply-p7-toolchain-go1.26.7.GGMf8j/sdk/go/bin/go`, SHA-256
-#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
-#|Put its directory first in PATH, keep GOENV=off, GOWORK=off,
-#|GOTOOLCHAIN=local, and inject no ambient GOFLAGS. Recovery evidence at
-#|`/private/tmp/ply-p7-go1.26.7-recovery.qvk4zs` retains its verified two-entry
-#|manifest SHA-256
+#|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT` and verify
+#|SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+#|The former `/private/tmp` toolchain and recovery roots were deliberately
+#|purged after the disk-space incident; their verified two-entry recovery
+#|manifest SHA-256 remains
 #|`1b30193f4f4811f2515223c53c004603afa0a4812b8a571a24c49b252122e83b`.
-#|Retain the verified golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and
-#|govulncheck v1.7.0 binaries and hashes recorded in the handover.
+#|Put the recreated directory first in PATH, keep GOENV=off, GOWORK=off,
+#|GOTOOLCHAIN=local, and inject no ambient GOFLAGS.
+#|Recreate golangci-lint 2.12.2, GoReleaser 2.17.1, apidiff, and govulncheck
+#|v1.7.0 beneath scratch as needed and verify the hashes in the handover.
 #|
-#|Assert acceptance evidence is fully verified at
-#|`/private/tmp/ply-p7-assert-selection.8f24778.fEzhH8`, 46,700 entries and
+#|Assert acceptance evidence was fully verified before its external root was
+#|deliberately purged, with 46,700 entries and
 #|manifest SHA-256
 #|`072c8a42889b85e1fa86d0e5701db7f31f8840c255f06de5a7633403db621782`;
 #|decision-summary SHA-256 is
@@ -1178,10 +1254,12 @@ exit 70
 #|
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher `--check`, and the P7/P8 checkpoint before editing.
-#|Verify every accepted manifest. Read this archive, the rolling handover, P7 in
-#|the roadmap, go.mod/go.sum, the accepted Assert and Units decisions, retained
-#|Kingpin, Resty, and Errgo decisions, rejected Check decision, retained YAML v3
-#|and YAML v2 decisions, rejected x/text, x/net, x/image, and gotenv decisions,
+#|Treat recorded manifest hashes as historical receipts and recreate only the
+#|evidence required for the current decision. Read this archive, the rolling
+#|handover, P7 in the roadmap, go.mod/go.sum, the accepted Assert and Units
+#|decisions, retained Kingpin, Resty, and Errgo decisions, rejected Check
+#|decision, retained YAML v3 and YAML v2 decisions, rejected x/text, x/net,
+#|x/image, and gotenv decisions,
 #|retained jwalterweatherman decision, accepted cast decision and quality
 #|evidence, rejected afero decision, the accepted `go.yaml.in/yaml/v3` and Cobra/
 #|YAML closure decisions, prior bounded dependency decisions, and the toolchain,
@@ -1213,10 +1291,16 @@ exit 70
 #|not-comparable, or dirty counts. The full audit may exit 1 only for established
 #|queued L3 rows, never 2.
 #|
-#|Keep all caches, projections, reports, generated artifacts, build contexts,
-#|schema-2 evidence, and audit output outside the worktree. Warm caches from a
-#|separate external Git archive; never run `go mod download all` inside a
-#|measured tree. Never create `.agent-task/current.md` or
+#|Put every disposable cache, projection, report, generated artifact, build
+#|context, evidence tree, and audit output beneath
+#|`$CODEX_SESSION_SCRATCH_ROOT`; never create direct `/private/tmp/ply-*`
+#|roots. The launcher deletes this scratch tree after every turn, including
+#|failure and interruption. Warm caches only from a separate archive beneath
+#|that root and never run `go mod download all` inside a measured tree. Retain
+#|only compact decisions, digests, and receipts in tracked documents; recreate
+#|larger evidence when needed. Preserve the operator-authorized lifecycle
+#|cleanup changes already on HEAD and carry this bounded-scratch policy into
+#|every successor prompt. Never create `.agent-task/current.md` or
 #|`.quality/manual-evidence.json`.
 #|
 #|# Automatic Handoff
@@ -1226,5 +1310,5 @@ exit 70
 #|group, replace only launcher mutable regions, run launcher/handoff contracts,
 #|and make the normal `docs: prepare next agent session` commit. Do not implement
 #|that next group, launch a successor, push, merge, publish, release, stash,
-#|revert, delete retained evidence/images, or remove the worktree.
+#|revert, bypass scratch cleanup, or remove the worktree.
 # CODEX_MUTABLE_PROMPT_END

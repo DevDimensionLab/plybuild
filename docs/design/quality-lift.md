@@ -25,6 +25,22 @@ The scorecard is evidence, not a substitute for judgment. A criterion can be
 PASS because a ratchet held its baseline while substantial debt remains. The
 plan therefore records both the verdict and the underlying number.
 
+## Transient Artifact Lifecycle
+
+Quality evidence is reproducible and must not grow without a bound. Supervised
+agent work puts all disposable state beneath `CODEX_SESSION_SCRATCH_ROOT`, and
+the launcher removes that tree after every turn. `make quality` requests no
+retained mutation workspaces and removes its temporary, mutation, and lint
+cache trees after a successful run. Each mutation harness and snapshot/Docker
+acceptance script also removes its own transient caches on exit, including
+read-only directories.
+
+Docker acceptance gives each run a unique tag and builder-stage label. Its exit
+handler removes recorded containers, the tag, and only builder images carrying
+that exact run label. Compact reports, manifests, hashes, and tracked decisions
+are durable evidence; large source copies, toolchains, caches, build layers, and
+generated test trees are deliberately reproducible rather than retained.
+
 ## Decisions Not To Reopen
 
 - The target is a staged, honest L2 lift before broad modernization.

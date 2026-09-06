@@ -9,7 +9,15 @@ source "$repo_root/test/acceptance/common.sh"
 tmp_base=${TMPDIR:-/tmp}
 tmp_base=${tmp_base%/}
 work_root=$(mktemp -d "$tmp_base/ply-verify-upgrade.XXXXXX")
-trap 'acceptance_stop_server; rm -rf "$work_root"' EXIT
+cleanup_work_root() {
+	acceptance_stop_server
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$work_root"
+}
+trap cleanup_work_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 log="$work_root/verdict.log"
 artifact=${PLY_VERIFY_ARTIFACT:-"$work_root/bin/ply"}
 failures=0

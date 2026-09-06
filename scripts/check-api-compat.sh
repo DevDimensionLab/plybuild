@@ -42,7 +42,14 @@ module=$(awk '$1 == "module" { print $2; exit }' "$repo_root/go.mod")
 
 temp_root=$(mktemp -d "${TMPDIR:-/tmp}/ply-api-compat.XXXXXX") ||
 	fail 'could not create temporary compatibility workspace'
-trap 'rm -rf "$temp_root"' EXIT
+cleanup_temp_root() {
+	find "$temp_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$temp_root"
+}
+trap cleanup_temp_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 mkdir -p "$temp_root/base" "$temp_root/gocache"
 
 if [[ -n "${API_COMPAT_BASE_DIR:-}" ]]; then

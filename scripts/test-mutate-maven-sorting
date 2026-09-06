@@ -8,7 +8,14 @@ harness="$repo_root/scripts/mutate-maven-sorting"
 tmp_base=${TMPDIR:-/tmp}
 tmp_base=${tmp_base%/}
 work_root=$(mktemp -d "$tmp_base/ply-test-mutate-maven-sorting.XXXXXX")
-trap 'rm -rf "$work_root"' EXIT HUP INT TERM
+cleanup() {
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf "$work_root"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 fail() {
 	printf 'test-mutate-maven-sorting: %s\n' "$*" >&2
