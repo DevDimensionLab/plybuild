@@ -5375,9 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained canonical-latest Consul API pseudo-version
-`v0.0.0-20180202201655-eb2c6b5be1b6`; further dependency groups remain
-queued.
+dependency groups through retained Go Metrics v0.4.0; further dependency
+groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -7793,19 +7792,67 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `1dbe7063e72dade7bc31e9c8967da78a60ef97859b68562ffa1a07b75a0b3b0b`
   and decision-summary SHA-256 is
   `0f5413813a179949c2dbce2a029becfceb9f650f7a603ac8b19755c3f4d48733`.
+- Retain exact-path `github.com/armon/go-metrics v0.4.0` without dependency
+  metadata edits. The proxy lists 22 stable versions and no prereleases;
+  `@latest` and `@v0` resolve v0.6.1, while `@master` resolves unreleased
+  pseudo-version `v0.6.2-0.20260907064447-465585286d74`. Both declare Go
+  1.25.0 and `module github.com/hashicorp/go-metrics`, so neither is an exact-
+  path or retained-floor candidate. Proxy v0.4.2 is the first version with the
+  renamed declaration; it aliases v0.5.0 commit
+  `aee7470331bc2a027cb2711f759f6f527a557ed8`, is no longer a current tag, and
+  exact get rejects its path mismatch. The distinct HashiCorp path is a
+  migration, not an in-place update.
+- Highest exact-path candidate v0.4.1 is a stable GitHub Release at commit
+  `b6d5c860c07ef6eeec89f4a662c7b452dd4d0c93`, tree
+  `d582c4e222a01bfe89e45a22b64273970b2008a8`, dated
+  2022-09-08T12:00:52Z. Selected v0.4.0 is commit
+  `129ee86de65934631a7fdbeb8c5aa0ec08bfdb6c`, tree
+  `dc8cd4f53669534104e66bf06f5ebaaf26d6feb4`, dated
+  2022-05-25T15:01:32Z. Both lightweight tags have no tag-object signature;
+  both merge commits cryptographically verify with expired GitHub web-flow
+  fingerprint `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`. The sole retraction is
+  v0.3.11 for an undocumented metrics-sink breaking change.
+- Versions v0.4.0 and v0.4.1 both declare Go 1.12 and the same 11 requirements. The
+  candidate's complete standalone closure has 52 modules, four packages, and
+  a maximum explicit Go declaration of 1.12, preserving Go 1.18. All 31 proxy
+  files match the tag source. Candidate checksum pair is
+  `h1:hR91U9KYmb6bLBYLQjyM+3j+rcd/UhE+G78SFnF8gJA=` /
+  `h1:E6amYzXo6aW1tqzoZGT755KkbgrJsSdpwZ+3JqfkOG4=` and sumdb agrees.
+- Candidate qualification fails. Under exact Go 1.26.7, proxy and exact-tag
+  forms do not all pass even count-1 or race, both fail count-10 in flaky UDP
+  Statsite/DogStatsD tests, and both fail vet with 46 diagnostics: 29
+  `testing.T.Fatalf` calls from non-test goroutines, 12 unkeyed labels, one
+  copied lock, and four empty appends. Exact Go 1.18.10 builds and passes one
+  race run but reproduces count-10 failure and 44 vet diagnostics. Historical
+  selected Serf and Memberlist consumers compile and vet against v0.4.1 under
+  Go 1.18; focused coordinate and awareness tests pass repeated and race runs.
+  Neither consumer nor Go Metrics is loaded by Ply.
+- Exact candidate get changes only v0.4.0 -> v0.4.1, but also materializes
+  three indirect requirements, 14 graph edges, and four full checksum lines.
+  It projects 234 -> 234 modules, 3,581 -> 3,595 edges, 429 -> 429 packages,
+  41 -> 41 loaded modules, zero -> zero loaded Go Metrics packages, 1,045 ->
+  1,049 sum lines, and 361 -> 386 tidy-diff lines. Tidy removes all projected
+  metadata and restores the inherited v0.4.0 selection. Because module stop
+  rules fail, no dependency implementation commit or downstream quality claim
+  was made; accepted Circbuf measurements remain unchanged.
+- Fresh primary vulnerability data contains 1,392 records and no old- or new-
+  path Go Metrics record or trace. Original/candidate projections retain
+  identical 20-ID/22-trace Darwin and Windows reachable findings and 30
+  Darwin module IDs. Go Metrics evidence has 336 verified entries; manifest
+  SHA-256 is
+  `5afb2b5fb26824c5e4c1db7497b8a6e6dbd24bc20194df7ca7fc5f4385e0dde1`
+  and decision-summary SHA-256 is
+  `c5b47a2a7d6f881e7a5aad5895d197027556e238c683bca685f45fff3b3c0592`.
 - Next, independently evaluate selected exact-path
-  `github.com/armon/go-metrics v0.4.0` at 2022-05-25T15:01:32Z. It is selected
-  without an explicit `go.mod` requirement. The proxy lists 22 stable versions;
-  exact `@latest` and `@v0` resolve v0.6.1 at 2026-07-29T13:06:13Z with
-  `go 1.25.0`, while `@master` resolves unreleased
-  `v0.6.2-0.20260907064447-465585286d74`, also with Go 1.25. The GitHub
-  `armon/go-metrics` request resolves metadata for `hashicorp/go-metrics`,
-  reporting public, enabled, unarchived, non-fork status, default `master`, 20
-  branches, 21 tags, and 15 Releases. Treat redirect/source identity, release
-  qualification/signatures, retractions, version declarations, highest
-  Go-1.18-compatible complete closure, tests, consumers, and vulnerability
-  effect as unknown. Do not choose the Go-1.25 latest, guess a candidate, or
-  combine another group.
+  `github.com/armon/go-radix v1.0.0` at 2018-08-24T02:57:28Z. The exact proxy
+  stable list contains only v1.0.0; `@latest` and `@v1` resolve that selected
+  release, while `@master` resolves unreleased pseudo-version
+  `v1.0.1-0.20221118154546-54df44f2176c`. The public, enabled, unarchived,
+  non-fork repository reports default `master`, one branch, one tag, and zero
+  Releases. Treat canonical source identity, release qualification,
+  signatures, declarations, closure, tests, consumers, loaded behavior, and
+  vulnerability effect as unknown until independently proved. Do not combine
+  another module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

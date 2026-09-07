@@ -1,13 +1,111 @@
 # Agent Session: Evaluate Armon Go Metrics Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-07T223740+0200-evaluate-armon-go-metrics-dependency`
 Created: `2026-09-07T22:37:40+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `f19f50eeb838b06f48ed0678af2c1fe4563d3b2bf8a20364cdb312b06e822834`
 Previous: [2026-09-07T214638+0200-evaluate-armon-consul-api-dependency.md](2026-09-07T214638+0200-evaluate-armon-consul-api-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-07T234555+0200-evaluate-armon-go-radix-dependency.md](2026-09-07T234555+0200-evaluate-armon-go-radix-dependency.md)
+Outcome: Retained Go Metrics v0.4.0 without dependency edits; v0.4.1 is the
+  highest exact-path Go-1.18-compatible release but failed repeated module
+  tests and vet, while v0.4.2 and later declare the renamed HashiCorp path.
+
+# Answer
+
+Retain `github.com/armon/go-metrics v0.4.0` without adding dependency
+metadata. No dependency implementation commit was created.
+
+## Canonical Identity And Qualification
+
+The exact proxy contains 22 stable versions and no prereleases. Exact
+`@latest` and `@v0` resolve v0.6.1 at 2026-07-29T13:06:13Z; `@master` resolves
+unreleased pseudo-version `v0.6.2-0.20260907064447-465585286d74` at
+2026-09-07T06:44:47Z. Both declare Go 1.25.0 and
+`module github.com/hashicorp/go-metrics`, so neither is an exact-path or
+retained-floor candidate.
+
+The old repository URL redirects to authoritative public, enabled,
+unarchived, non-fork `hashicorp/go-metrics`, with default `master`, 20
+branches, 21 current tags, 15 stable GitHub Releases, and 263 default-branch
+commits. Proxy v0.4.2 is the first renamed module declaration and aliases
+v0.5.0 commit `aee7470331bc2a027cb2711f759f6f527a557ed8`; its alias tag is no
+longer present and it has no Release. Exact get rejects v0.4.2's module-path
+mismatch. The HashiCorp path is a migration, not an in-place exact-path update.
+
+Therefore v0.4.1 is the highest exact-path candidate. It is stable Release
+commit `b6d5c860c07ef6eeec89f4a662c7b452dd4d0c93`, tree
+`d582c4e222a01bfe89e45a22b64273970b2008a8`, at
+2022-09-08T12:00:52Z, directly after selected v0.4.0 commit
+`129ee86de65934631a7fdbeb8c5aa0ec08bfdb6c`, tree
+`dc8cd4f53669534104e66bf06f5ebaaf26d6feb4`. Both tags are lightweight and
+have no tag-object signature; both merge commits cryptographically verify
+with expired GitHub web-flow fingerprint
+`5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`. The sole retraction is v0.3.11
+for an undocumented metrics-sink interface break.
+
+Selected/candidate checksum pairs are
+`h1:yCQqn7dwca4ITXb+CbubHmedzaQYHhNhrEXLYUeEe8Q=` /
+`h1:E6amYzXo6aW1tqzoZGT755KkbgrJsSdpwZ+3JqfkOG4=` and
+`h1:hR91U9KYmb6bLBYLQjyM+3j+rcd/UhE+G78SFnF8gJA=` /
+`h1:E6amYzXo6aW1tqzoZGT755KkbgrJsSdpwZ+3JqfkOG4=`. Sumdb agrees. Each
+31-file proxy archive matches its Git tag. Version v0.4.1 changes only the Prometheus
+sink implementation and test: 86 insertions and four deletions.
+
+## Closure, Tests, And Consumers
+
+Both releases declare Go 1.12 and the same 11 requirements. Proxy and
+exact-tag forms select the same 52-module standalone closure and list four
+packages; the highest declared Go version anywhere in that closure is 1.12.
+The complete closure therefore preserves Go 1.18.
+
+Version v0.4.1 nevertheless fails mandatory qualification. Under exact Go 1.26.7,
+proxy and exact-tag forms verify/list, but do not both pass count-1 or race and
+both fail count-10 in flaky Statsite/DogStatsD UDP tests. Vet fails both forms
+with 46 substantive diagnostics: 29 non-test-goroutine `Fatalf` calls, 12
+unkeyed labels, one copied lock, and four empty appends. Exact Go 1.18.10
+builds and passes one race run but reproduces count-10 failure and 44 vet
+diagnostics. These dependency stop-rule failures reject the candidate.
+
+Viper v1.15.0 supplies selected v0.4.0, but does not import it. Go Metrics
+loads in zero Ply packages, Ply has no import, and `go mod why -m` says it is
+not needed. Selected Serf v0.10.1 and Memberlist v0.3.0 are real historical
+consumers. Their source covers labeled counters/timers/samples, labels,
+in-memory/Statsite/StatsD/fanout/global setup, gauges, counters, and timers.
+Both compile and vet against v0.4.1 under Go 1.18; focused coordinate and
+awareness tests pass count-10 and race. Full legacy suites separately hit
+Darwin loopback/test-harness limitations and are not represented as Ply
+behavior or candidate-module waivers.
+
+## Projection, Vulnerabilities, And Scope
+
+Exact candidate get selects v0.4.1 but also materializes three indirect
+requirements, 14 edges, and four full checksums. Measurements project 234 ->
+234 modules, 3,581 -> 3,595 edges, 429 -> 429 packages, 41 -> 41 loaded
+modules, zero -> zero loaded Metrics packages, 1,045 -> 1,049 sum lines, and
+361 -> 386 tidy-diff lines. Tidy removes every projected requirement and
+checksum and restores inherited v0.4.0. The 14 edges are the three main edges
+plus v0.4.1's 11 requirements; the four sums are the candidate pair and full
+sums for already-selected immutable-radix and golang-lru.
+
+Fresh govulncheck v1.7.0 used primary data updated
+2026-09-02T19:12:04Z. Its 1,392-record index has no old- or new-path Metrics
+record or trace. Original/candidate results are identical after normalization:
+20 IDs/22 traces for Darwin and Windows reachable symbols and 30 Darwin
+module IDs. Because dependency stop rules failed, downstream repository,
+snapshot/Docker, acceptance, and Q0-Q2 gates were inapplicable and were not
+claimed. The accepted Circbuf baseline remains unchanged.
+
+The sealed evidence manifest covers 336 entries at SHA-256
+`5afb2b5fb26824c5e4c1db7497b8a6e6dbd24bc20194df7ca7fc5f4385e0dde1`;
+decision-summary SHA-256 is
+`c5b47a2a7d6f881e7a5aad5895d197027556e238c683bca685f45fff3b3c0592`.
+Exact Go 1.26.7 retains binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+The initial Go-1.18 Xcode-resolver setup and invalid govulncheck module-mode
+syntax were superseded by direct SDK/clang runs and correct no-pattern
+`-scan=module` calls beneath session scratch; neither correction changed the
+repository or concealed a failure.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

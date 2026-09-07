@@ -1131,16 +1131,16 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-07T223740+0200-evaluate-armon-go-metrics-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T223740+0200-evaluate-armon-go-metrics-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T214638+0200-evaluate-armon-consul-api-dependency.md
+#|SESSION_ID=2026-09-07T234555+0200-evaluate-armon-go-radix-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T234555+0200-evaluate-armon-go-radix-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T223740+0200-evaluate-armon-go-metrics-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/armon/go-metrics v0.4.0` as one bounded dependency group. Resolve
+#|`github.com/armon/go-radix v1.0.0` as one bounded dependency group. Resolve
 #|canonical latest, authoritative source identity, release qualification,
 #|default-branch history, and the highest qualified Go-1.18-floor-compatible
 #|candidate from primary evidence. Make an exact dependency selection only if it
@@ -1150,25 +1150,28 @@ exit 70
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and bounded
-#|dependency decisions through retained canonical-latest Consul API pseudo-
-#|version `v0.0.0-20180202201655-eb2c6b5be1b6`. All earlier rejections,
-#|no-change decisions, accepted closures, and evidence corrections remain final.
-#|Do not revisit Consul API or combine another module group. P8 remains queued.
+#|dependency decisions through retained Go Metrics v0.4.0. All earlier
+#|rejections, no-change decisions, accepted closures, and evidence corrections
+#|remain final. Do not revisit Go Metrics or combine another module group. P8
+#|remains queued.
 #|
-#|Project MVS selects Go Metrics v0.4.0 at 2022-05-25T15:01:32Z although it is
-#|not an explicit `go.mod` requirement. A minimal post-Consul survey finds 22
-#|exact stable proxy versions. Exact Go `@latest` and `@v0` resolve v0.6.1 at
-#|2026-07-29T13:06:13Z with `go 1.25.0`, above the retained floor. Exact
-#|`@master` resolves unreleased pseudo-version
-#|`v0.6.2-0.20260907064447-465585286d74` at 2026-09-07T06:44:47Z, also with
-#|`go 1.25.0`. The GitHub request for `armon/go-metrics` currently resolves
-#|repository metadata for `hashicorp/go-metrics`, reporting public, enabled,
-#|unarchived, non-fork status, default branch `master`, 20 branches, 21 tags, and
-#|15 GitHub Releases. Treat the redirect and exact module source identity,
-#|release/tag/signature history, retractions, all version declarations, complete
-#|closures, tests, consumers, and vulnerability effect as unknown until
-#|independently proved. Do not select a Go-1.25 release or guess the highest
-#|Go-1.18-compatible candidate.
+#|Project MVS selects Go Radix v1.0.0 at 2018-08-24T02:57:28Z although it is not
+#|an explicit `go.mod` requirement. A minimal post-Metrics survey finds one
+#|exact stable proxy version. Exact Go `@latest` and `@v1` resolve the selected
+#|v1.0.0 with no exposed Go declaration. Exact `@master` resolves unreleased
+#|pseudo-version `v1.0.1-0.20221118154546-54df44f2176c` at
+#|2022-11-18T15:45:46Z, also with no exposed Go declaration. Do not infer floor
+#|compatibility from a missing directive or select an unreleased branch head
+#|without qualification.
+#|
+#|The public GitHub repository currently reports enabled, unarchived, non-fork
+#|status, default branch `master`, one branch, one tag, and zero GitHub Releases.
+#|Master is commit `54df44f2176c4a553657a4f0dbe6fdb108288be3`; tag v1.0.0 points to
+#|`1a2de0c21c94309923825da3df33a4381872c795`. Treat canonical source identity,
+#|tag and commit signatures, release/tag history, retractions, all version and
+#|branch declarations, complete closures, tests, consumers, loaded behavior,
+#|and vulnerability effect as unknown until independently proved. Explicitly
+#|distinguish a stable tag from a GitHub Release and an unreleased pseudo-version.
 #|
 #|# Measurements At Start
 #|
@@ -1176,58 +1179,32 @@ exit 70
 #|`3be2183ee310ccdc358ce4ed372c0785de25b88b`, exact parent
 #|`7a0ca4e2caba6d2fff20a9c169b181f9187b40dc`, tree
 #|`a51846840b5f252a30359530dfc950f811398431`, changing only `go.mod` and
-#|`go.sum`. The Consul API evaluation made no dependency commit. Operator-
-#|authorized lifecycle repair `f9f0f7669e635c8c7bb169aab816d0ebe1b16435`
+#|`go.sum`. The Consul API and Go Metrics evaluations made no dependency commit.
+#|Operator-authorized lifecycle repair `f9f0f7669e635c8c7bb169aab816d0ebe1b16435`
 #|remains intentionally between the earlier Repr implementation and direct-child
 #|Repr handoff. Preserve it.
 #|
-#|Consul API's exact stable proxy list is empty. Proxy and exact Go `@latest` and
-#|`@master` resolve the already-selected pseudo-version; exact `@v0` has no
-#|match. It is commit `eb2c6b5be1b66bab83016e0b05f01b8d5496ffbd`, tree
-#|`aeb2299aaf107d0823ce91f057798119b821e81b`, at
-#|2018-02-02T20:16:55Z. It is an unreleased pseudo-version, not a stable release.
-#|The exact path has no tags, GitHub Releases, prereleases, or retractions. Its
-#|GitHub web-flow commit signature is cryptographically valid for fingerprint
-#|`5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`, whose key is currently expired.
-#|The public repository is operationally unarchived but its README explicitly
-#|deprecates the source in favor of distinct module/import path
-#|`github.com/hashicorp/consul/api`; that path is a migration outside the exact-
-#|path decision, and its current v1.34.4 latest declares Go 1.26.
-#|
-#|The selected synthetic `go.mod` has no Go directive or requirements. Its
-#|complete declared minimal closure is Consul API alone and preserves Go 1.18.
-#|All 21 regular proxy files match the exact commit archive and Git tree. The
-#|checksum pair is
-#|`h1:G1bPvciwNyF7IUmKXNt9Ak3m6u9DE1rF+RmtIkBpVdA=` /
-#|`h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=`, independently confirmed by
-#|sum.golang.org.
-#|
-#|Proxy and exact-commit forms verify and list under exact Go 1.26.7, but their
-#|complete count-1, count-10, and race suites fail identically with 33, 330, and
-#|33 tests unable to connect to an external Consul agent at 127.0.0.1:8500. Vet
-#|also fails on two `testing.T.Fatalf` calls from non-test goroutines. Exact Go
-#|1.18.10 compiles the package but reproduces the test and vet failures. These
-#|are dependency stop-rule failures. A historical Crypt consumer and external
-#|Go-1.18 fixture exercise the actually used configuration, client, KV get/list/
-#|put, query, metadata, key, and value symbols; the fixture passes count-10,
-#|race, and vet. Consul API loads in zero Ply packages and Ply imports none of it.
-#|
-#|Exact selected-version get changes no selection. Its projection adds only a
-#|redundant indirect requirement, one main graph edge, and the full checksum;
-#|tidy removes all three. Accepted measurements therefore remain 234 selected
-#|modules, 3,581 graph edges, 429 native complete-test packages, 41 loaded
-#|modules, zero loaded Consul API packages, 1,045 `go.sum` lines, and a 361-line
-#|unapplied tidy projection. Relative to accepted go-cmp commit c314bcb,
-#|accepted metadata adds exactly 29 checksum lines. The main module retains Go
-#|1.18 and toolchain Go 1.26.7. Ordinary and ignored status must be empty.
-#|
-#|Fresh primary vulnerability evidence contains 1,392 module records and no
-#|Consul API record or trace. Unchanged/exact-get projections preserve exact
-#|20-ID/22-trace Darwin symbol, 30-ID Darwin module, and 20-ID/22-trace Windows
-#|symbol populations. Consul API's 315-entry evidence-manifest SHA-256 is
-#|`1dbe7063e72dade7bc31e9c8967da78a60ef97859b68562ffa1a07b75a0b3b0b`;
+#|Go Metrics remains selected at v0.4.0. V0.4.1 was the highest exact-path
+#|Go-1.18-compatible stable candidate, but its proxy and tag forms failed
+#|repeated module tests and vet. Proxy v0.4.2 and later declare distinct module
+#|path `github.com/hashicorp/go-metrics`; current v0.6.1 and master also declare
+#|Go 1.25.0. No dependency metadata was changed. Its 336-entry evidence-
+#|manifest SHA-256 is
+#|`5afb2b5fb26824c5e4c1db7497b8a6e6dbd24bc20194df7ca7fc5f4385e0dde1`;
 #|decision-summary SHA-256 is
-#|`0f5413813a179949c2dbce2a029becfceb9f650f7a603ac8b19755c3f4d48733`.
+#|`c5b47a2a7d6f881e7a5aad5895d197027556e238c683bca685f45fff3b3c0592`.
+#|
+#|Accepted measurements remain 234 selected modules, 3,581 graph edges, 429
+#|native complete-test packages, 41 loaded modules, 1,045 `go.sum` lines, and a
+#|361-line unapplied tidy projection. Relative to accepted go-cmp commit
+#|`c314bcb`, accepted metadata adds exactly 29 checksum lines. The main module
+#|retains Go 1.18 and toolchain Go 1.26.7. Ordinary and ignored status must be
+#|empty.
+#|
+#|Fresh primary vulnerability evidence contains 1,392 module records and no Go
+#|Metrics record or trace. Accepted projections retain exact 20-ID/22-trace
+#|Darwin symbol, 30-ID Darwin module, and 20-ID/22-trace Windows symbol
+#|populations.
 #|
 #|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
 #|SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
@@ -1244,21 +1221,23 @@ exit 70
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve every relevant Go Metrics v0
-#|version through the Go proxy and checksum database, the exact-path repository
-#|redirect and authoritative upstream repository, and primary Go vulnerability
-#|data. Record selected and candidate commits/times, module Go declarations and
-#|requirements, checksum pairs, source identity, tag and commit signatures,
-#|release history, archived/deprecated state, and retractions. Explicitly
-#|distinguish stable versions, prereleases, pseudo-versions, redirects, forks,
-#|alternate module paths, branch heads, and unreleased commits.
+#|From fresh external archives and caches, resolve every relevant Go Radix v1
+#|version through the Go proxy and checksum database, the exact-path repository,
+#|and primary Go vulnerability data. Record selected and candidate commits/times,
+#|module Go declarations and requirements, checksum pairs, source identity, tag
+#|and commit signatures, release history, archived/deprecated state, and
+#|retractions. Explicitly distinguish stable versions, prereleases, pseudo-
+#|versions, redirects, forks, alternate module paths, branch heads, and
+#|unreleased commits.
 #|
 #|Prove canonical latest and the highest qualified exact-path version compatible
 #|with Go 1.18 from declarations and the complete minimal closure, not from a
-#|single module's directive. Measure old versus candidate modules, graph edges,
-#|complete packages, checksums, loaded packages and paths, exact-get diff, and
-#|`go mod tidy -diff`. Explain every selection, edge, and checksum change.
-#|Identify real consumers and exercise the actually used symbols.
+#|single module's directive or the absence of one. Determine whether the branch
+#|head is a legitimate candidate despite lacking a release. Measure old versus
+#|candidate modules, graph edges, complete packages, checksums, loaded packages
+#|and paths, exact-get diff, and `go mod tidy -diff`. Explain every selection,
+#|edge, and checksum change. Identify real consumers and exercise the actually
+#|used symbols.
 #|
 #|Require candidate module complete, repeated, and race-enabled self-tests plus
 #|vet; repository verify/build, complete tests, race, vet, Windows build, pinned
@@ -1268,31 +1247,30 @@ exit 70
 #|
 #|Reject or retain without dependency edits if canonical qualification, source
 #|identity, floor compatibility, closure, module tests, loaded behavior, or any
-#|applicable quality contract fails. Do not select v0.6.1 merely because it is
-#|stable when its Go declaration exceeds the retained floor. Do not manufacture
-#|metadata when exact get changes no selected version. Record precise primary
-#|old/candidate vulnerability IDs and traces.
+#|applicable quality contract fails. Do not select `@master` merely because it is
+#|newer, and do not manufacture metadata when exact get changes no selected
+#|version. Record precise primary old/candidate vulnerability IDs and traces.
 #|
 #|# Required Reading
 #|
 #|Verify branch, clean ordinary and ignored status, exact ancestry, reciprocal
 #|archive history, `./codex-dev-start.sh --check`, and P7/P8 state before work.
 #|Read this archive, the rolling handover, P7 roadmap, `go.mod`, `go.sum`, the
-#|answered Consul API, Circbuf, Optional, Template, Colour, Chroma, Kong, Repr,
-#|Assert, and Units archives, retained Kingpin/Resty/Errgo/Check/YAML outcomes,
-#|and the toolchain, quality, baseline, compatibility, snapshot/Docker,
+#|answered Go Metrics, Consul API, Circbuf, Optional, Template, Colour, Chroma,
+#|Kong, Repr, Assert, and Units archives, retained Kingpin/Resty/Errgo/Check/YAML
+#|outcomes, and the toolchain, quality, baseline, compatibility, snapshot/Docker,
 #|acceptance, audit, and lifecycle contracts. Do not reopen earlier decisions.
 #|
 #|# Three Moves
 #|
 #|If and only if a qualified candidate changes the selected version and its
 #|complete minimal closure preserves Go 1.18, use exact Go 1.26.7 and exact
-#|`go get github.com/armon/go-metrics@<candidate>` for one dependency-only
-#|commit. Do not hand-edit metadata or use tidy as implementation. Preserve every
+#|`go get github.com/armon/go-radix@<candidate>` for one dependency-only commit.
+#|Do not hand-edit metadata or use tidy as implementation. Preserve every
 #|retained version, the toolchain declarations, production source, quality
 #|apparatus, and release inputs.
 #|
-#|If canonical qualification confirms v0.4.0 as the highest qualified selection,
+#|If canonical qualification confirms v1.0.0 as the highest qualified selection,
 #|or exact get changes no selection, retain it without adding a redundant direct
 #|or indirect requirement, main edge, or checksum solely for metadata. A no-
 #|change decision gets no dependency implementation commit.
@@ -1316,9 +1294,9 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the Go Metrics decision, rewrite the rolling handover and roadmap,
-#|answer this archive, create exactly one reciprocal NEXT archive for the next
-#|single P7 group, replace only launcher mutable regions, run launcher/handoff
+#|After the Go Radix decision, rewrite the rolling handover and roadmap, answer
+#|this archive, create exactly one reciprocal NEXT archive for the next single
+#|P7 group, replace only launcher mutable regions, run launcher/handoff
 #|contracts, and make the normal `docs: prepare next agent session` commit. Do
 #|not implement the next group, launch a successor, push, merge, publish,
 #|release, stash, revert, bypass cleanup, or remove the worktree.
