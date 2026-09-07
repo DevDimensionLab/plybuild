@@ -6130,7 +6130,7 @@ Regexp2 v1.12.0 dependency group (2026-09-04):
   `c95201c96297a198b7bec9b5a031443e42c0fe4be5f17a4d383362b9dce5f527`
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-Current queue decisions and next bounded P7 group (2026-09-05):
+Current queue decisions and next bounded P7 group (2026-09-07):
 
 - Reject `github.com/fatih/color v1.14.1` -> latest v1.19.0 because the latest
   module declares Go 1.25.0. Reject `github.com/fsnotify/fsnotify v1.6.0` ->
@@ -7616,16 +7616,59 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `6932da454c33f6580d12349122346e1441e7277c81264ed091c7322880132592`.
   Preserve the pre-module source-test apparatus, separately warmed v1.0.1
   compatibility cache, and scratch-only BSD-mktemp/preflight correction.
+- Retain selected exact-path
+  `github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751`
+  without a dependency edit. The exact proxy list has no stable or prerelease
+  version; `@latest` and `@master` select this default-branch pseudo-version at
+  2019-07-18T01:26:54Z, while `@v0` has no match. The public, enabled,
+  unarchived, non-fork repository has one branch, zero tags, zero Releases,
+  and no deprecation marker. The only newer source ref is a closed, unmerged
+  pull request. `/v2`, `/v3`, and gopkg.in alternate probes find no module.
+- Selected commit `fb15b899a75114aa79cc930e33c46b577cc664b1`, tree
+  `9658e953ba71f92dcf44f2d39cc5f90a27a0b88b`, is the master head. Its
+  embedded GitHub web-flow signature is valid and independently verifies with
+  fingerprint `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`; there is no tag signature.
+  All 22 proxy regular files match upstream. Selected ZIP SHA-256 is
+  `25e3be7192932d130d0af31ce5bcddae887647ba4afcfb32009c3b9b79dbbdb3`;
+  checksum pair is
+  `h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=` /
+  `h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=` and sumdb agrees.
+- Raw metadata declares only the exact module path, with no Go directive or
+  requirements. The complete declared closure is Template alone and cannot
+  raise Go 1.18. Go's implicit 1.16 version when the source is tested as a
+  main module is not an upstream declaration. The selected commit only adds
+  `go.mod` relative to the historical 2016 pseudo-version; source and tests
+  are unchanged.
+- Exact selected-version get changes no selection. It projects 234 -> 234
+  modules, 3,580 -> 3,581 edges, 429 -> 429 packages, 1,043 -> 1,044 sum
+  lines, and 356 -> 358 tidy-diff lines solely by adding a redundant indirect
+  requirement, a main edge, and the full checksum; tidy removes the
+  requirement. Template has zero loaded project packages and repository
+  imports, and `go mod why` says the main module does not need it. Its three
+  historical graph requests arrive through Prometheus common/tsdb modules.
+- Proxy and exact-commit sources independently verify/list and remain
+  unchanged. Mandatory count-1, count-10, and race-enabled complete tests fail
+  identically in `TestJSEscaping`: current `unicode.IsPrint` emits U+FDFF
+  literally while the old test expects an escape. Vet passes. This stop-rule
+  failure makes repository, compatibility, snapshot/Docker, quality, and audit
+  gates for a changed selection inapplicable, and no dependency implementation
+  commit was created.
+- Fresh primary vulnerability evidence has 1,392 module records and no
+  Template record or trace. Old/candidate exact findings and traces remain
+  identical at 20/30/20 Darwin-symbol/Darwin-module/Windows-symbol
+  populations. Template evidence has 1,702 verified entries; manifest SHA-256
+  is `2bfa08ca73085154ab5f0833814872efe481088703e6d7480edf1e2a40853068`,
+  and decision-summary SHA-256 is
+  `4acc26e68fa5ad432a44d64ade0d399464f9b07eb2c6244b29711e048ae24170`.
 - Next, independently evaluate selected exact-path
-  `github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751`.
-  Project MVS selects it without an explicit `go.mod` requirement. A fresh
-  post-Colour survey finds an empty stable proxy list; proxy `@latest` and
-  exact Go `@latest`/`@master` resolve the selected pseudo-version at
-  2019-07-18T01:26:54Z, exact `@v0` has no matching semantic version, and Go
-  reports no module Go declaration. Treat qualification, exact closure,
-  source/signatures, module tests, loaded population, and vulnerability effect
-  as unknown until independently proved. Do not combine Colour or another
-  group.
+  `github.com/antihax/optional v1.0.0`. It is selected without an explicit
+  `go.mod` requirement. The exact stable proxy list contains only v1.0.0;
+  `@latest` selects it at 2019-10-10T23:37:20Z with Go 1.13, while `@master`
+  selects unreleased pseudo-version
+  `v1.0.1-0.20220101210036-407d38fabb55` at 2022-01-01T21:00:36Z, also with
+  Go 1.13. Treat qualification, closure, source/signatures, module tests,
+  loaded population, and vulnerability effect as unknown. Do not treat the
+  newer branch head as a stable update or combine Template or another group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1,13 +1,119 @@
 # Agent Session: Evaluate Alecthomas Template Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-07T174802+0200-evaluate-alecthomas-template-dependency`
 Created: `2026-09-07T17:48:02+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c1a6d914757ff385753d34724978efacd0861ad7b19cf1b50344619922362837`
 Previous: [2026-09-07T164119+0200-evaluate-alecthomas-colour-dependency.md](2026-09-07T164119+0200-evaluate-alecthomas-colour-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-07T183413+0200-evaluate-antihax-optional-dependency.md](2026-09-07T183413+0200-evaluate-antihax-optional-dependency.md)
+Outcome: Retained selected pseudo-version `github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751` without dependency metadata edits: it is canonical latest and the highest exact-path Go-1.18-floor-compatible version, exact get changes no selected version, and its mandatory complete, repeated, and race-enabled self-tests fail under exact Go 1.26.7.
+
+# Answer
+
+Retain exact-path
+`github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751`
+without a dependency edit. The exact-path proxy list is empty: there are no
+stable versions or prereleases. Proxy `@latest` and exact Go `@latest` and
+`@master` all resolve the selected pseudo-version at
+2019-07-18T01:26:54Z, while exact `@v0` reports no matching version. There
+are no retractions. The selected pseudo-version is therefore canonical latest
+and the highest exact-path version compatible by declaration with Go 1.18,
+but it is neither a stable release nor quality-qualified under current tests.
+
+The authoritative public repository is enabled, unarchived, undisabled, and
+non-fork. It has one branch, zero tags, zero GitHub Releases, and 11 default-
+branch commits. `master` still points to selected commit
+`fb15b899a75114aa79cc930e33c46b577cc664b1`, tree
+`9658e953ba71f92dcf44f2d39cc5f90a27a0b88b`, at the pseudo-version time.
+The only newer fetched source ref is closed, unmerged Renovate pull request 8
+at `56c872bab4cb136e6659445e77c6934f09515a6e`; it is neither a branch head nor
+a release candidate. `/v2`, `/v3`, and `gopkg.in/alecthomas/template.v1`
+proxy probes resolve no alternate-path module. The module has no formal
+deprecation marker.
+
+There is no tag object or tag signature. GitHub reports the selected commit's
+embedded web-flow signature verified and valid; independent detached `gpgv`
+verification succeeds with fingerprint
+`5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`. Historical commit
+`a0175ee3bccc567396460bf5acd36800cb10c49c` is unsigned. The selected commit
+adds only the one-line `go.mod` relative to that 2016 commit; all production
+and test sources are unchanged.
+
+The selected checksum pair is
+`h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=` /
+`h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=`. The historical
+pseudo-version's pair is
+`h1:cAKDfWh5VpdgMhJosfJnn5/FoN2SRZ4p7fJNX58YPaU=` / the same `go.mod`
+checksum. Independent checksum-database lookups agree. Selected and old proxy
+ZIP SHA-256 values are respectively
+`25e3be7192932d130d0af31ce5bcddae887647ba4afcfb32009c3b9b79dbbdb3`
+and `86de3337a475e323a0fb54ef03386a4e495682201f42795bd7be646c05298692`.
+All 22 selected proxy regular files match the exact upstream commit; normalized
+manifest SHA-256 is
+`057c4c0d5af3039d317b83daee33c29ba753f4efd2afba9d0eb5003e6fb56cc7`.
+
+Raw selected metadata declares only
+`module github.com/alecthomas/template`: it has no `go` directive and no
+requirements. Its complete declared closure is the module alone and cannot
+raise the retained Go 1.18 floor. Go 1.26.7 assigns an implicit Go 1.16
+version only when treating this source as a main module for standalone tests;
+that default is not an upstream declaration. The module exposes two packages
+and has no test-only external requirement.
+
+Both the writable proxy source and exact upstream source verify and list, stay
+byte-identical after testing, and produce matching normalized results. Their
+mandatory `go test ./... -count=1`, `-count=10`, and
+`go test -race ./... -count=1` all exit 1; `go vet ./...` exits 0. Every test
+failure is `TestJSEscaping`: the suite expects U+FDFF escaped, while current
+`unicode.IsPrint` makes the implementation emit it literally. Count-1 and race
+normalized diagnostic SHA-256 is
+`5d9c2becd6177fcb0227e4d8052c7d55ade12e3d2fab24a125dea9169cffdeb5`;
+count-10 is
+`06b388a002e0f7e9891b8f3fa28023af002ab173cf2d29dcadbdc6eda87e56ef`.
+This mandatory module-self-test failure independently triggers the stop rule.
+
+An exact external selected-version get exits zero and changes no selected
+version. It projects 234 -> 234 modules, 3,580 -> 3,581 graph edges, 429 ->
+429 complete packages, 1,043 -> 1,044 `go.sum` lines, and 356 -> 358 tidy-diff
+lines. The only effects are a redundant main-to-Template edge, a redundant
+indirect `go.mod` requirement, and the selected full checksum; tidy removes
+the requirement while retaining the checksum. Manufacturing those metadata
+changes would not be a dependency upgrade, so none were applied.
+
+Template loads in zero complete project packages, repository Go source imports
+no Template path, and `go mod why -m` says the main module does not need it.
+Historical graph edges come from prometheus/tsdb v0.7.1 and prometheus/common
+v0.4.1 requesting the 2016 pseudo-version, plus prometheus/common v0.9.1
+requesting the selected pseudo-version; MVS selects the latter. There is no
+actual loaded consumer or used symbol to exercise.
+
+Fresh primary vulnerability data contains 1,392 module records and no exact
+Template record. Old/candidate findings and traces are identical: 20 Darwin
+symbol IDs with 22 events, 30 Darwin module IDs/events, and 20 Windows symbol
+IDs with 22 events. No trace contains Template. The symbol-population SHA-256
+is `6af41fbb70e40ba236b130660d73d80a445da5e671627f7b7be60965cf3b5445`;
+the module-population SHA-256 is
+`74d9329f7eed8610c52ea9d3aaf1f0bb3d0fcb5a04d605ad91bde3fd8674c908`.
+
+Exact Go 1.26.7 was recreated beneath scratch and its binary matches required
+SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+Fresh govulncheck v1.7.0 was built by that toolchain; its nonportable binary
+SHA-256 is
+`6c0e51a045c0ccefaea5e780d11a2680f9a6133e9ebc19d95993971607a22320`.
+Decision evidence has 1,702 verified entries. Evidence-manifest SHA-256 is
+`2bfa08ca73085154ab5f0833814872efe481088703e6d7480edf1e2a40853068`;
+decision-summary SHA-256 is
+`4acc26e68fa5ad432a44d64ade0d399464f9b07eb2c6244b29711e048ae24170`.
+Signature verification used a short scratch-local keyring after the normal
+user GnuPG home and long agent-socket path proved unsuitable; no repository
+state changed.
+
+Because the selected version is already canonical latest, exact get changes no
+selection, and mandatory module self-tests fail, repository build/test/race/
+vet, lint, help/API/CLI, preflight, snapshot/Docker, quality, and audit gates
+for a changed selection are inapplicable. No dependency implementation commit
+was created; all project measurements and retained decisions remain unchanged.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
