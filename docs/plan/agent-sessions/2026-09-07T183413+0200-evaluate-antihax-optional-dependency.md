@@ -1,13 +1,128 @@
 # Agent Session: Evaluate Antihax Optional Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-07T183413+0200-evaluate-antihax-optional-dependency`
 Created: `2026-09-07T18:34:13+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `4ccca27a6a4f5adabfd2d7cac70abbeb8c7e9926c94af46cd9cf670ae64dda7e`
 Previous: [2026-09-07T174802+0200-evaluate-alecthomas-template-dependency.md](2026-09-07T174802+0200-evaluate-alecthomas-template-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-07T194916+0200-evaluate-armon-circbuf-dependency.md](2026-09-07T194916+0200-evaluate-armon-circbuf-dependency.md)
+Outcome: Retained selected stable `github.com/antihax/optional v1.0.0` without dependency metadata edits: it is canonical latest and the highest stable exact-path Go-1.18-floor-compatible version; the later master pseudo-version is unreleased and changes no Go source, and exact selected-version get changes no selection.
+
+# Answer
+
+Retain exact-path `github.com/antihax/optional v1.0.0` without a dependency
+edit. The exact stable proxy list contains only v1.0.0, and exact Go
+`@latest`, `@v1`, and `@v1.0.0` select it at 2019-10-10T23:37:20Z. There are
+no prereleases or retractions. V1.0.0 is therefore canonical latest, the sole
+stable exact-path release, and the highest stable candidate compatible with
+the retained Go 1.18 floor.
+
+The authoritative repository is public, enabled, unarchived, and non-fork,
+with one branch, one tag, and one GitHub Release. The v1.0.0 release is named
+`Initial release`, is neither draft nor prerelease, and was published at
+2019-10-10T23:39:21Z. The lightweight tag points to commit
+`c3f0ba9c1a592b971d66b2787679af55b5c58f21`, tree
+`b9328a8aa4526004bb36928dbc136c3acb8eec3a`. A lightweight tag has no tag
+object or tag signature. The associated GitHub web-flow commit signature
+independently verifies with fingerprint
+`5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`.
+
+Exact `@master` instead resolves the unreleased pseudo-version
+`v1.0.1-0.20220101210036-407d38fabb55` at 2022-01-01T21:00:36Z, commit
+`407d38fabb5592e58b0841e8adb93edd65ee1319`, tree
+`3dffdae3ba5f11e0b140c2edd085e5d1a69df40d`. Its commit signature also
+independently verifies, but that does not qualify it as a stable release. The
+two commits after v1.0.0 add and update only `README.md`; all 21 Go files and
+`go.mod` are byte-identical. `/v2`, `/v3`, `gopkg.in`, and a plausible renamed
+repository path resolve no authoritative alternate module. The repository has
+14 downstream forks, but the canonical repository itself is not a fork.
+
+The v1.0.0 proxy ZIP SHA-256 is
+`15ab4d41bdbb72ee0ac63db616cdefc7671c79e13d0f73b58355a6a88219c97f`;
+its checksum pair is
+`h1:xK2lYat7ZLaVVcIuj82J8kIro4V6kDe0AUDFboUCwcg=` /
+`h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=`. The pseudo-version ZIP
+SHA-256 is
+`7a4fe848cb95f2bd6305266a9a35b515933cf4144436d865a2569b7f1a56d92d`;
+its source checksum is
+`h1:AAnkpz6e/6bV9pphv0Hj/13169F89gXw0O4kOduU1Gc=` and it shares the same
+`go.mod` checksum. Independent checksum-database lookups agree. All 23 stable
+proxy regular files match the exact tag, and all 24 pseudo-version files match
+the exact master archive. Their normalized manifest SHA-256 values are
+`66452eb1ab11bc7dc7bfe9237c47c430810d77633add3a4ef7304e1c2db48c38`
+and `916591eaf56bef23e0e97a616c3ecf5b73f7f01b1c502d319a808cf7acfb3b27`.
+
+Both versions declare Go 1.13 and no requirements. V1.0.0's complete declared
+closure is therefore the module alone and preserves Go 1.18. There are no
+test-only requirements. Writable proxy and exact-tag sources independently
+verify and list, remain unchanged after testing, and pass complete count-1,
+count-10, race-enabled tests, and vet. The sole package has no test files, so
+the receipts prove buildability and absence of failing upstream tests rather
+than upstream behavioral coverage.
+
+An exact external `go get github.com/antihax/optional@v1.0.0` exits zero but
+changes no selected module. Old/projected measurements are 234/234 modules,
+3,580/3,581 graph edges, 429/429 complete packages, 1,043/1,044 `go.sum`
+lines, and 356/358 unapplied tidy-diff lines. Module selections and package
+sets are identical. The projection only adds a redundant indirect requirement,
+one main-to-Optional graph edge, and the full v1.0.0 checksum; tidy removes the
+requirement. Manufacturing that metadata would not upgrade a dependency, so
+none was applied.
+
+The original graph has one Optional request:
+`github.com/grpc-ecosystem/grpc-gateway@v1.16.0 ->
+github.com/antihax/optional@v1.0.0`. Optional loads in zero project packages,
+Ply has no repository import, and `go mod why -m` says the main module does not
+need it. Grpc-gateway has four generated example clients that import Optional
+and use its Bool, Float64, Int32, Int64, Interface, String, and Time wrappers
+with `IsSet` and `Value`; those example packages are not loaded by Ply. A
+deliberately external Go-1.18 fixture exercises those seven wrappers plus
+`Default` and passes count-10, race, and vet. It is consumer evidence, not a
+claim that Ply executes Optional.
+
+Untouched and projected repository copies pass module verification, build,
+complete count-1/count-10/race tests, vet, Windows build, and pinned
+golangci-lint 2.12.2. API and CLI reports are byte-identical at SHA-256
+`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+Root, status, and upgrade help are byte-identical; compatibility against
+v1.0.1 and the CLI surface contract pass. A clean complete preflight passes
+all 62 launcher controls, distribution/lint/install/toolchain contracts,
+snapshot/Docker meta-contracts, mutation and verification meta-tests, and all
+15 quality-audit controls. Changed-selection host/snapshot/Docker/exact-quality
+runs are inapplicable because no selected version changed.
+
+Fresh primary vulnerability data was updated 2026-09-02T19:12:04Z and contains
+1,392 module records with no Optional record. Sorted old/projected IDs and
+traces are identical: 20 Darwin reachable-symbol IDs with 22 trace events, 30
+Darwin module IDs, and 20 Windows reachable-symbol IDs with 22 trace events.
+No finding or trace contains Optional. The reachable-symbol ID SHA-256 is
+`58889cc567e8def8340f36f3855fc510c3565677e81a81c517ff6cc115e4309b`;
+the reachable-trace SHA-256 is
+`f97e3357875d2ad04e8ae069770281375955495153cdfbd8763ab1f31b6e2190`;
+the Darwin module-ID SHA-256 is
+`be304d82c9db9981b650fd0effa3a214aed50b2ca1ba79b1ad3835212d6bcc3e`.
+
+Exact Go 1.26.7 was recreated beneath scratch. Its binary SHA-256 is
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
+the official archive SHA-256 is
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`.
+It remained first in PATH with GOENV=off, GOWORK=off, GOTOOLCHAIN=local, and no
+ambient GOFLAGS. The portable tool receipts remain intact; rebuilt apidiff and
+govulncheck hashes are nonportable while exact version metadata and functional
+gates pass. A separately warmed v1.0.1 cache, scratch-local GnuPG keyring, and
+BSD-mktemp adapter corrected runner setup only. Source-manifest, checksum-delta,
+and vulnerability-order corrections are explicitly recorded; none changed the
+repository.
+
+Decision evidence has 540 verified entries. Evidence-manifest SHA-256 is
+`345a29c62bfadf332f14aa234b1265a9dc9142739d212534d83ace531fb39afa`;
+decision-summary SHA-256 is
+`945b7ca8fe9d9faa605a6a80d8d416655925f95cd727071babf813bcd4caa27b`.
+No dependency implementation commit was created. Accepted metadata still adds
+exactly 27 checksum lines relative to accepted go-cmp commit c314bcb, and all
+retained selections and the lifecycle repair remain unchanged.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

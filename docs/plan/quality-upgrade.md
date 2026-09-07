@@ -7660,15 +7660,59 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   is `2bfa08ca73085154ab5f0833814872efe481088703e6d7480edf1e2a40853068`,
   and decision-summary SHA-256 is
   `4acc26e68fa5ad432a44d64ade0d399464f9b07eb2c6244b29711e048ae24170`.
+- Retain selected exact-path `github.com/antihax/optional v1.0.0` without a
+  dependency edit. It is the sole stable proxy version, canonical `@latest`,
+  and highest stable Go-1.18-floor-compatible candidate. The public, enabled,
+  unarchived, non-fork repository has one branch, one lightweight tag, and one
+  non-draft, non-prerelease GitHub Release. The tag is commit
+  `c3f0ba9c1a592b971d66b2787679af55b5c58f21`, tree
+  `b9328a8aa4526004bb36928dbc136c3acb8eec3a`, at
+  2019-10-10T23:37:20Z. The lightweight tag is unsigned; the associated
+  GitHub web-flow commit signature independently verifies with fingerprint
+  `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`.
+- Exact `@master` is only unreleased pseudo-version
+  `v1.0.1-0.20220101210036-407d38fabb55`, commit
+  `407d38fabb5592e58b0841e8adb93edd65ee1319`, tree
+  `3dffdae3ba5f11e0b140c2edd085e5d1a69df40d`, at
+  2022-01-01T21:00:36Z. Its two post-tag commits change only `README.md`; all
+  21 Go files and `go.mod` are identical to v1.0.0. There are no prereleases,
+  retractions, or authoritative `/v2`, `/v3`, gopkg.in, or renamed paths.
+- V1.0.0 declares Go 1.13 and has no requirements, so its complete declared
+  closure is Optional alone. Proxy and exact-tag forms match at all 23 regular
+  files and independently pass verify/list, complete count-1/count-10/race
+  tests, and vet without mutation. The package has no test files and no test-
+  only requirements. Its checksum pair is
+  `h1:xK2lYat7ZLaVVcIuj82J8kIro4V6kDe0AUDFboUCwcg=` /
+  `h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=` and sumdb agrees.
+- Exact selected-version get changes no selection. It projects 234 -> 234
+  modules, 3,580 -> 3,581 edges, 429 -> 429 packages, 1,043 -> 1,044 sum
+  lines, and 356 -> 358 tidy-diff lines only by adding a redundant indirect
+  requirement, main edge, and full checksum. Optional loads in zero project
+  packages, Ply has no import, and `go mod why` says the main module does not
+  need it. The original edge is grpc-gateway v1.16.0 -> Optional v1.0.0; its
+  generated examples and an external Go-1.18 fixture cover the seven wrapper
+  types and their used methods without mislabeling them as loaded Ply code.
+- Untouched/projected repository verify/build/count-1/count-10/race/vet,
+  Windows build, pinned lint, byte-identical help and API/CLI reports,
+  compatibility, CLI surface, and clean full preflight pass. Fresh primary
+  vulnerability evidence has no Optional record and preserves exact 20/30/20
+  old/projected IDs and traces. No dependency implementation commit was
+  created. Optional evidence has 540 verified entries; manifest SHA-256 is
+  `345a29c62bfadf332f14aa234b1265a9dc9142739d212534d83ace531fb39afa`,
+  and decision-summary SHA-256 is
+  `945b7ca8fe9d9faa605a6a80d8d416655925f95cd727071babf813bcd4caa27b`.
+  Preserve its compatibility-cache, source/signature, checksum-delta,
+  vulnerability-order, and scratch-local BSD-mktemp/preflight corrections.
 - Next, independently evaluate selected exact-path
-  `github.com/antihax/optional v1.0.0`. It is selected without an explicit
-  `go.mod` requirement. The exact stable proxy list contains only v1.0.0;
-  `@latest` selects it at 2019-10-10T23:37:20Z with Go 1.13, while `@master`
-  selects unreleased pseudo-version
-  `v1.0.1-0.20220101210036-407d38fabb55` at 2022-01-01T21:00:36Z, also with
-  Go 1.13. Treat qualification, closure, source/signatures, module tests,
-  loaded population, and vulnerability effect as unknown. Do not treat the
-  newer branch head as a stable update or combine Template or another group.
+  `github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e`. It is selected
+  without an explicit `go.mod` requirement. The exact stable proxy list is
+  empty; `@latest` and `@master` resolve newer pseudo-version
+  `v0.0.0-20190214190532-5111143e8da2` at 2019-02-14T19:05:32Z without a
+  reported Go declaration, while `@v0` has no match. The public, enabled,
+  unarchived, non-fork repository reports zero tags and zero Releases. Treat
+  qualification, closure, identity/signatures, module tests, loaded behavior,
+  and vulnerability effect as unknown. Do not call the pseudo-version stable
+  or combine Optional or another group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
