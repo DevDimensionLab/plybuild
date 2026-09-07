@@ -1,13 +1,117 @@
 # Agent Session: Evaluate Alecthomas Chroma Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-07T133322+0200-evaluate-alecthomas-chroma-dependency`
 Created: `2026-09-07T13:33:22+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `a7ff3e9fa68586cf4a197c44b39585798d189ccec160680d9a89ab80f495bae4`
 Previous: [2026-09-07T125545+0200-evaluate-alecthomas-kong-dependency.md](2026-09-07T125545+0200-evaluate-alecthomas-kong-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-07T164119+0200-evaluate-alecthomas-colour-dependency.md](2026-09-07T164119+0200-evaluate-alecthomas-colour-dependency.md)
+Outcome: Retained canonical-latest stable `github.com/alecthomas/chroma v0.10.0` without dependency metadata edits: exact selected-version get is a true no-op, while mandatory proxy/tag vet and the loaded consumer's project-MVS code-block golden contract fail reproducibly.
+
+# Answer
+
+The exact `github.com/alecthomas/chroma` proxy path lists 30 stable tags from
+v0.1.0 through v0.10.0, with no prerelease or retraction. Proxy `@latest` and
+exact Go `@latest`/`@v0` resolve canonical-latest stable v0.10.0 at
+2022-01-12T10:49:38Z. Its lightweight tag is unsigned commit
+`36bdd4b98823bd1d7be96767cde3dd575e60b406`, tree
+`d27058989b845352d49b45e7538f7b0004c8d651`, parent
+`b01c8fcab6f3d79534dadbc8fabd4c54cabaf4d8`. GitHub has a non-draft,
+non-prerelease Release object for v0.10.0; 26 of the 30 v0 tags have Release
+objects. The enabled, unarchived, undisabled, non-fork repository has no v0
+deprecation marker.
+
+Exact v0-path `@master` resolves the later unreleased pseudo-version
+`v0.10.1-0.20220126230913-d491f1b5c1d2`, unsigned commit
+`d491f1b5c1d2e20b85309ccf34fc778d950dc3f2`, tree
+`e5bcdbd2d1db14d16da0df023888dd0ba849f8fe`, at
+2022-01-26T23:09:13Z. The three post-v0.10.0 commits add a style, aliases, and
+helper scripts; they were never tagged as a v0 release. The next commit changes
+the module path to `github.com/alecthomas/chroma/v2`. The alternate `/v2`
+line has 38 stable releases and four v2.0.0 alphas; its canonical latest is
+v2.27.0 at unsigned lightweight-tag commit
+`a6d00fe2cdfc88da0b91396e577da16c75c9c7fb`, declaring Go 1.25. Current
+default-branch master instead declares the distinct `/v3` path and carries v3
+alpha tags. Neither the v0 pseudo-version, `/v2`, nor `/v3` is an in-place
+stable update of the selected exact path.
+
+Selected v0.10.0 declares Go 1.13 and requires regexp2 v1.4.0 plus the
+test-only testify v1.7.0 and indirect go-spew v1.1.1. Its standalone complete
+test graph selects eight modules across nine edges: testify also selects
+go-difflib v1.0.0, objx v0.1.0, YAML v3's 2020 pseudo-version, and Check's
+2016 pseudo-version. Only Chroma and testify declare a Go version, both 1.13;
+the rest have no Go directive. This complete standalone closure preserves the
+retained Go 1.18 floor. Project MVS already selects Chroma v0.10.0 and later
+regexp2/testify versions, so the changed-selection closure is empty.
+
+The selected checksum pair is
+`h1:7XDcGkCQopCNKjZHfYrNLraA+M7e0fMiJ/Mfikbfjek=` /
+`h1:jtJATyUxlIORhUOFNA9NZDWGAQ8wpxQQqNSB4rjA/1s=`; independent checksum-
+database lookup agrees. Its proxy ZIP SHA-256 is
+`beb07b996ee33bc052fe039c93d1c0726e61bcc4819ca39f7bf63304f2ae8c49`.
+All 696 proxy regular files match the exact tag commit. The proxy correctly
+omits eight regular files in nested `cmd/chroma` and `cmd/chromad` modules and
+seven tracked Hermit symlinks. The pseudo-version pair is
+`h1:Gg09t2u+C08At6TYucNrD3Cbaq97SUHax84BzQwRTgU=` / the same go.mod sum;
+its ZIP SHA-256 is
+`033bd0de6588cb5c9508b9ced1eb0a0620eb9861fc43a11843d416ca3e245d79`,
+and all 699 proxy regular files match its exact commit with the same justified
+nested-module and symlink omissions.
+
+Exact `go get github.com/alecthomas/chroma@v0.10.0` in an external clean
+replay exits zero and changes no byte, requirement, selected version, edge, or
+checksum. Old and replayed states are byte-identical at 234 selected modules,
+3,580 graph edges, 429 complete packages, and 1,043 go.sum lines. The
+unapplied `go mod tidy -diff` remains the same 356 lines. There is therefore no
+authorized dependency implementation to manufacture.
+
+Chroma is real loaded code rather than historical graph debt. Exactly 33
+Chroma packages load through `plybuild/cmd -> go-term-markdown -> chroma`, and
+`go mod why -m` confirms that path. Repository source has no direct Chroma
+import. Go-term-markdown imports Chroma, `formatters`, `lexers`, and `styles`
+and uses `Lexer`, `Coalesce`, `Formatter`, `lexers.Get`, `lexers.Analyse`,
+`lexers.Fallback`, `formatters.Fallback`, `formatters.TTY8`,
+`styles.Pygments`, `Lexer.Tokenise`, and `Formatter.Format` when rendering
+code blocks.
+
+The existing project Markdown reference-definition contract passes ten times.
+The direct consumer's focused `TestRender/codeblock` golden, however, fails
+all ten project-MVS repetitions: rendering completes, but selected Chroma
+v0.10.0 together with the project's selected color closure produces different
+ANSI intensity/color sequences and one-space code padding from the consumer's
+v0.7.1-era golden. Its 613-line failure report SHA-256 is
+`b6b6f24dcd9c1b97c9280e01b4277aa3614b5513e35bd8ad46e6cd7c9cea0d3c`.
+This is an independently exercised loaded-behavior stop condition, not an
+assertion that the alternate `/v2` path can replace v0 in place.
+
+Writable proxy and exact-tag sources independently verify, list the same 34
+packages, and pass complete count-1, count-10, and race tests without source
+mutation. Mandatory `go vet ./...` exits 1 in both with the same normalized
+7,175 diagnostics across 206 lexer files, all unkeyed
+`github.com/alecthomas/chroma.Rule` literals. The sorted diagnostic SHA-256 is
+`cbfbdc99bce5e357f83b20eec1a08644ddb86a16ed90f3a2c176cb501a68604e`.
+This second stop-rule failure makes downstream changed-selection lint,
+snapshot/Docker, exact-quality, and audit gates inapplicable.
+
+Fresh govulncheck v1.7.0, built with Go 1.26.7, reports primary data updated
+2026-09-02T19:12:04Z. Its 1,392-record primary module index has no Chroma
+record. Exact old/replay IDs and normalized traces are identical at 20 unique
+Darwin symbol IDs, 30 Darwin module IDs, and 20 unique Windows symbol IDs;
+there is no Chroma finding or trace. No dependency metadata or implementation
+commit was created.
+
+Decision evidence beneath the active scratch root has 4,335 verified entries.
+Evidence-manifest SHA-256 is
+`bbd6a41e0cff3248bacc2fef6630ed3679a3299484cb21446fc2841a39a742d5`;
+decision-summary SHA-256 is
+`476f926b06cd8fbfce8ac22c9e0ed1102c8f5c8f8e2070bcb1636a825225927f`.
+Exact Go 1.26.7 retained binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+The rebuilt govulncheck binary SHA-256
+`30e6f51fc7d968d10f0d789c82dce56ff0da880c7dfed7c82e08e6feaa554f24`
+is a nonportable receipt; its reported version, builder, database identity,
+and functional scans are the proof.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

@@ -1131,18 +1131,18 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-07T133322+0200-evaluate-alecthomas-chroma-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T133322+0200-evaluate-alecthomas-chroma-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T125545+0200-evaluate-alecthomas-kong-dependency.md
+#|SESSION_ID=2026-09-07T164119+0200-evaluate-alecthomas-colour-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T164119+0200-evaluate-alecthomas-colour-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T133322+0200-evaluate-alecthomas-chroma-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/alecthomas/chroma v0.10.0` as one bounded dependency group.
-#|Resolve canonical latest, release qualification, alternate-path history, and
-#|the highest Go-1.18-floor-compatible candidate from primary evidence. Make an
+#|`github.com/alecthomas/colour v0.1.0` as one bounded dependency group. Resolve
+#|canonical latest, release qualification, alternate-path history, and the
+#|highest Go-1.18-floor-compatible candidate from primary evidence. Make an
 #|exact dependency selection only if it changes a selected version, preserves
 #|the retained floor through the complete minimal closure, and passes every
 #|quality contract.
@@ -1150,20 +1150,17 @@ exit 70
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and bounded
-#|dependency decisions through rejected Kong v1.3.0. All earlier rejections,
+#|dependency decisions through retained Chroma v0.10.0. All earlier rejections,
 #|no-change decisions, accepted closures, and evidence corrections remain final.
-#|Do not revisit Kong or combine another module group. P8 remains queued.
+#|Do not revisit Chroma or combine another module group. P8 remains queued.
 #|
-#|The build list selects Chroma v0.10.0 as an indirect `go.mod` requirement. A
-#|fresh post-Kong survey says exact-path proxy `@latest` remains stable v0.10.0
-#|at 2022-01-12T10:49:38Z with Go 1.13, while exact `@master` resolves
-#|unreleased pseudo-version `v0.10.1-0.20220126230913-d491f1b5c1d2` at
-#|2022-01-26T23:09:13Z. Treat qualification, source identity, signatures,
-#|release history, alternate `/v2` lineage, closure, self-tests, and
-#|vulnerability effect as unknown until independently resolved. Thirty-three
-#|Chroma packages load through `plybuild/cmd -> go-term-markdown -> chroma`,
-#|while repository Go source has no direct Chroma import; treat those only as
-#|starting observations.
+#|The build list selects Colour v0.1.0 as an indirect `go.mod` requirement. A
+#|fresh post-Chroma survey finds only stable v0.1.0 in the exact-path proxy list.
+#|Proxy `@latest` and exact Go `@latest`, `@v0`, and `@master` all resolve
+#|v0.1.0 at 2019-11-01T02:47:59Z; Go reports no module Go declaration. Treat
+#|qualification, source identity, signatures, release and branch history,
+#|closure, self-tests, loaded consumers, actual symbols, and vulnerability
+#|effect as unknown until independently resolved.
 #|
 #|# Measurements At Start
 #|
@@ -1176,14 +1173,16 @@ exit 70
 #|that implementation and direct-child Repr handoff
 #|`342c7ece82eae3cd726aa658462089cfb876fbe0`. Preserve it.
 #|
-#|Kong v1.3.0 was rejected before implementation. Canonical latest v1.16.1 and
-#|every stable release from v1.4.0 declare Go 1.20. V1.3.0's complete closure
-#|preserves Go 1.18, but proxy and exact-tag sources both fail mandatory vet
-#|with the same 77 malformed-struct-tag diagnostics. No Kong metadata changed.
-#|Its 211-entry evidence manifest SHA-256 is
-#|`6148c409545f453a78ffdc3a0a10934b75e082c1681f2805c29c8253a23d01ae`;
+#|Chroma v0.10.0 was retained without dependency edits. It is the exact-path
+#|canonical latest stable release, and exact get is a byte-for-byte no-op with
+#|an empty changed-selection closure. Its complete standalone closure preserves
+#|Go 1.18, but proxy and exact-tag sources both fail mandatory vet with the same
+#|normalized 7,175 unkeyed-Rule-literal diagnostics across 206 lexer files. The
+#|loaded go-term-markdown code-block golden also fails all ten project-MVS
+#|repetitions. Chroma's 4,335-entry evidence-manifest SHA-256 is
+#|`bbd6a41e0cff3248bacc2fef6630ed3679a3299484cb21446fc2841a39a742d5`;
 #|decision-summary SHA-256 is
-#|`028c0fd0025a5f5de433b65d63a5258e18c6e959b440446e9834b03925f98b36`.
+#|`476f926b06cd8fbfce8ac22c9e0ed1102c8f5c8f8e2070bcb1636a825225927f`.
 #|
 #|Current measurements remain 234 selected modules, 3,580 graph edges, 429
 #|native complete-test packages, 1,043 go.sum lines, a 356-line unapplied tidy
@@ -1207,21 +1206,22 @@ exit 70
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve Chroma versions through the
+#|From fresh external archives and caches, resolve Colour versions through the
 #|Go proxy, checksum database, authoritative upstream repository, and primary Go
-#|vulnerability data. Record exact tag and pseudo-version commits/times, module
-#|Go declarations and requirements, checksum pairs, source identity, tag and
-#|commit signature status, release history, and archived/deprecated state.
-#|Explicitly distinguish stable tags, prereleases, pseudo-versions, retractions,
-#|forks, branch heads, the `/v2` module, and unreleased commits. Do not treat a
-#|pseudo-version or alternate module path as an in-place stable update.
+#|vulnerability data. Record exact tag and branch-head commits/times, module Go
+#|declarations and requirements, checksum pairs, source identity, tag and commit
+#|signature status, release history, and archived/deprecated state. Explicitly
+#|distinguish stable tags, prereleases, pseudo-versions, retractions, forks,
+#|alternate module paths, branch heads, and unreleased commits. Do not treat an
+#|unreleased commit or alternate module path as an in-place stable update.
 #|
 #|Prove canonical latest and the highest qualified exact-path version compatible
 #|with Go 1.18 from declarations and the complete closure. Measure old versus
 #|candidate modules, graph edges, complete packages, checksums, loaded packages
 #|and paths, explicit exact-get diff, and `go mod tidy -diff`. Explain every
 #|selection, edge, and checksum change. Identify real consumers and exercise the
-#|actually used Chroma packages and symbols, including renderer behavior.
+#|actually used Colour packages and symbols, including terminal renderer
+#|behavior where applicable.
 #|
 #|Require candidate module complete tests, repeated tests, race, and vet;
 #|repository build, complete tests/race/vet, pinned lint, byte-identical public
@@ -1230,7 +1230,7 @@ exit 70
 #|
 #|Stop and record rejection without dependency edits if canonical resolution,
 #|floor compatibility, exact closure, source identity, module self-tests, loaded
-#|behavior, or any repository quality contract fails. If selected v0.10.0 is
+#|behavior, or any repository quality contract fails. If selected v0.1.0 is
 #|already the exact floor-compatible decision and exact get changes no selected
 #|version, record no change without manufacturing metadata or a dependency
 #|commit. Prove exact old/candidate vulnerability IDs and traces.
@@ -1239,9 +1239,9 @@ exit 70
 #|
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher `--check`, and P7/P8 checkpoint before editing. Read
-#|this archive, rolling handover, P7 roadmap, go.mod/go.sum, answered Kong, Repr,
-#|Assert, and Units decisions, retained Kingpin/Resty/Errgo/YAML decisions,
-#|earlier accepted and rejected bounded dependencies, and toolchain,
+#|this archive, rolling handover, P7 roadmap, go.mod/go.sum, answered Chroma,
+#|Kong, Repr, Assert, and Units decisions, retained Kingpin/Resty/Errgo/YAML
+#|decisions, earlier accepted and rejected bounded dependencies, and toolchain,
 #|compatibility, snapshot/Docker, quality, baseline-reproduction, and audit
 #|contracts. Preserve every recorded manifest and setup correction.
 #|
@@ -1249,13 +1249,13 @@ exit 70
 #|
 #|Only if every decision gate passes and a version selection changes, use exact
 #|Go 1.26.7 and exact
-#|`go get github.com/alecthomas/chroma@<selected-version>` for one dependency-
+#|`go get github.com/alecthomas/colour@<selected-version>` for one dependency-
 #|only commit. Do not hand-edit metadata or use tidy as implementation. Preserve
 #|every retained selection, especially Repr v0.5.4, Assert v1.0.0, Units'
-#|2024 pseudo-version, the selected Kong pseudo-version, Kingpin v2.2.6, Resty
-#|v1.12.0, Errgo v2.1.0, Check's 2019 pseudo-version, all three retained YAML
-#|paths, language/toolchain declarations, production source, quality apparatus,
-#|and release input.
+#|2024 pseudo-version, Chroma v0.10.0, the selected Kong pseudo-version, Kingpin
+#|v2.2.6, Resty v1.12.0, Errgo v2.1.0, Check's 2019 pseudo-version, all three
+#|retained YAML paths, language/toolchain declarations, production source,
+#|quality apparatus, and release input.
 #|
 #|After a changed selection, run the complete P7 dependency gate: focused
 #|behavior, graph/path, tests/race/vet, pinned lint, help/API/CLI, launcher and

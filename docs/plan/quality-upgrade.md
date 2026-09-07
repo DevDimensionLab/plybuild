@@ -5375,8 +5375,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through accepted canonical-latest
-`github.com/alecthomas/repr v0.5.4`; further dependency groups remain queued.
+dependency groups through retained canonical-latest
+`github.com/alecthomas/chroma v0.10.0`; further dependency groups remain
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -7516,12 +7517,57 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `6148c409545f453a78ffdc3a0a10934b75e082c1681f2805c29c8253a23d01ae`,
   and decision-summary SHA-256 is
   `028c0fd0025a5f5de433b65d63a5258e18c6e959b440446e9834b03925f98b36`.
+- Retain selected exact-path `github.com/alecthomas/chroma v0.10.0`. The
+  proxy lists 30 stable v0 tags, no prerelease or retraction, and exact
+  `@latest`/`@v0` resolve selected v0.10.0 at 2022-01-12T10:49:38Z. It is a
+  lightweight tag at unsigned commit
+  `36bdd4b98823bd1d7be96767cde3dd575e60b406`, tree
+  `d27058989b845352d49b45e7538f7b0004c8d651`, and has a GitHub Release
+  object. Exact-path `@master` resolves only the later unreleased pseudo-
+  version `v0.10.1-0.20220126230913-d491f1b5c1d2`. The following commit
+  changes the module path to `/v2`; current `/v2` latest v2.27.0 declares Go
+  1.25, while current repository master is the distinct `/v3` alpha lineage.
+  Neither alternate module path is an in-place v0 update.
+- V0.10.0 declares Go 1.13. Its standalone test graph selects eight modules
+  across nine edges and has no declaration above Go 1.13. All 696 proxy
+  regular files match its exact tag; eight nested-module files and seven
+  tracked symlinks are correctly omitted. Its checksum pair is
+  `h1:7XDcGkCQopCNKjZHfYrNLraA+M7e0fMiJ/Mfikbfjek=` /
+  `h1:jtJATyUxlIORhUOFNA9NZDWGAQ8wpxQQqNSB4rjA/1s=` and proxy ZIP SHA-256 is
+  `beb07b996ee33bc052fe039c93d1c0726e61bcc4819ca39f7bf63304f2ae8c49`.
+- Exact selected-version get is a true no-op. Old and replay states remain
+  234 modules, 3,580 edges, 429 complete packages, 1,043 go.sum lines, and a
+  356-line unapplied tidy projection. The empty changed-selection closure
+  adds no version, edge, checksum, or Go-floor requirement, so no dependency
+  implementation was manufactured.
+- Exactly 33 Chroma packages load through `plybuild/cmd -> go-term-markdown ->
+  chroma`; repository source has no direct import. The consumer uses Chroma's
+  lexer selection/coalescing, tokenization, Pygments style, and fallback/TTY8
+  formatting symbols for code blocks. The project Markdown contract passes
+  ten times, but the direct consumer's v0.7.1-era code-block golden fails all
+  ten project-MVS repetitions because current selected Chroma/color output
+  changes ANSI intensity and padding.
+- Proxy and exact-tag sources independently pass verify, list, complete
+  count-1/count-10, and race without mutation. Mandatory vet fails in both
+  with the same normalized 7,175 unkeyed-`Rule` diagnostics across 206 files;
+  sorted diagnostic SHA-256 is
+  `cbfbdc99bce5e357f83b20eec1a08644ddb86a16ed90f3a2c176cb501a68604e`.
+  The module and loaded-behavior stop rules make changed-selection quality,
+  snapshot/Docker, and audit gates inapplicable.
+- Fresh primary vulnerability evidence has no Chroma record and preserves
+  exact old/replay 20/30/20 Darwin-symbol/Darwin-module/Windows-symbol IDs and
+  normalized traces. Chroma decision evidence has 4,335 verified entries;
+  manifest SHA-256 is
+  `bbd6a41e0cff3248bacc2fef6630ed3679a3299484cb21446fc2841a39a742d5`,
+  and decision-summary SHA-256 is
+  `476f926b06cd8fbfce8ac22c9e0ed1102c8f5c8f8e2070bcb1636a825225927f`.
 - Next, independently evaluate selected exact-path
-  `github.com/alecthomas/chroma v0.10.0`. A fresh post-Kong survey reports
-  exact-path stable latest v0.10.0 at 2022-01-12T10:49:38Z and newer master
-  pseudo-version `v0.10.1-0.20220126230913-d491f1b5c1d2`; qualification,
-  alternate-path history, module tests, and the 33 loaded packages remain
-  unknown until independently proved. Do not combine Kong or another group.
+  `github.com/alecthomas/colour v0.1.0`. A fresh post-Chroma survey reports
+  that proxy `@latest` and exact Go `@latest`/`@v0`/`@master` all resolve the
+  selected stable v0.1.0 at 2019-11-01T02:47:59Z; it has no Go declaration.
+  Treat qualification, exact closure, source/signatures, module tests, loaded
+  population, and vulnerability effect as unknown until independently proved.
+  Do not combine Chroma or another group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
