@@ -7481,10 +7481,47 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   and scratch-relative manifest corrections. Historical golangci-lint and
   govulncheck binary hashes are nonportable build receipts; pinned fresh
   binaries were independently obtained/rebuilt and passed every gate.
-- Next, independently evaluate selected `github.com/alecthomas/kong`
-  `v0.2.1-0.20190708041108-0548c6b1afae`; the fresh post-Repr survey reports
-  v1.16.1 at 2026-08-09T07:05:31Z. Treat its qualification and closure as
-  unknown and do not combine Repr, Assert, Units, another group, or P8.
+- Reject selected `github.com/alecthomas/kong`
+  `v0.2.1-0.20190708041108-0548c6b1afae` -> v1.3.0 even though v1.3.0 is the
+  highest stable release whose complete changed closure preserves the retained
+  Go 1.18 floor. The proxy lists 75 stable tags and no prerelease or
+  retraction. Canonical-latest v1.16.1 and every release from v1.4.0 declare
+  Go 1.20; newer master resolves only as unreleased Go-1.20 pseudo-version
+  `v1.16.2-0.20260828071222-a60008c6dae2`.
+- Candidate v1.3.0 is lightweight unsigned tag commit
+  `7bbb0b76ada1610f18cf71c54cca74209da88bd8`, tree
+  `96a61d79e4745b05738a01906c43a7b8e5820b5a`, at
+  2024-11-01T01:25:41Z. Its checksum pair is
+  `h1:YJKuU6/TV2XOBtymafSeuzDvLAFR8cYMZiXVNLhAO6g=` /
+  `h1:IDc8HyiouDdpdiEiY81iaEJM8rSIW6LzX8On4FCO0bE=`. All 64 proxy regular
+  files match the exact tag after accounting for five omitted Hermit symlinks
+  and the seven-file nested example module.
+- Exact projection adds assert/v2 v2.11.0 and gotextdiff v1.0.3 while accepted
+  Repr v0.5.4 dominates the candidate's v0.4.0 request. Their declarations are
+  Go 1.18, Go 1.16, and Go 1.18. Modules project 234 -> 236, graph edges 3,580
+  -> 3,584, complete packages remain 429, go.sum projects 1,043 -> 1,045 only
+  for Kong's checksum pair, and the unapplied tidy diff grows 356 -> 359 lines.
+  Kong remains absent from all complete packages and repository imports;
+  `go mod why` says the main module does not need it.
+- Proxy and exact-tag candidate sources independently verify and pass complete
+  count-1, count-10, and race tests without mutation. Mandatory vet fails in
+  both with byte-identical 77-line malformed-struct-tag diagnostics across
+  four test files. This stop-rule failure makes downstream repository,
+  snapshot/Docker, exact-quality, and audit gates inapplicable. No dependency
+  metadata or implementation commit was made.
+- Fresh primary vulnerability evidence has no Kong record and preserves exact
+  byte-identical old/candidate 20/30/20 Darwin-symbol/Darwin-module/Windows-
+  symbol IDs and traces. Kong decision evidence has 211 verified entries;
+  manifest SHA-256 is
+  `6148c409545f453a78ffdc3a0a10934b75e082c1681f2805c29c8253a23d01ae`,
+  and decision-summary SHA-256 is
+  `028c0fd0025a5f5de433b65d63a5258e18c6e959b440446e9834b03925f98b36`.
+- Next, independently evaluate selected exact-path
+  `github.com/alecthomas/chroma v0.10.0`. A fresh post-Kong survey reports
+  exact-path stable latest v0.10.0 at 2022-01-12T10:49:38Z and newer master
+  pseudo-version `v0.10.1-0.20220126230913-d491f1b5c1d2`; qualification,
+  alternate-path history, module tests, and the 33 loaded packages remain
+  unknown until independently proved. Do not combine Kong or another group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

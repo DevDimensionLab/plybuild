@@ -1,13 +1,105 @@
 # Agent Session: Evaluate Alecthomas Kong Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-07T125545+0200-evaluate-alecthomas-kong-dependency`
 Created: `2026-09-07T12:55:45+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `b40fae22339cbf01df6b8dd7be98e15ec82323d36da67ff5b34976035b3c5470`
 Previous: [2026-09-06T162839+0200-evaluate-alecthomas-repr-dependency.md](2026-09-06T162839+0200-evaluate-alecthomas-repr-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-07T133322+0200-evaluate-alecthomas-chroma-dependency.md](2026-09-07T133322+0200-evaluate-alecthomas-chroma-dependency.md)
+Outcome: Rejected highest Go-1.18-floor-compatible stable Kong v1.3.0 and retained the selected pseudo-version because mandatory candidate-module vet fails identically in proxy and exact-tag source; dependency metadata remains unchanged.
+
+# Answer
+
+The exact-path Go proxy lists 75 stable semantic tags from v0.1.0 through
+v1.16.1, with no prerelease or retraction. Proxy `@latest` and exact Go
+`@latest`/`@v1` resolve canonical-latest stable v1.16.1 at
+2026-08-09T07:05:31Z. Its lightweight tag is commit
+`0678fd30af8be8bae6dc9f9c6f143cc549450be2`, tree
+`250e0703356ebc561a781b385d4baf7de410e4d6`; GitHub verifies the embedded
+commit signature, while the lightweight tag has no independent tag object or
+signature. V1.16.1 declares Go 1.20 and therefore exceeds the retained Go 1.18
+floor. Current master is the newer unreleased pseudo-version
+`v1.16.2-0.20260828071222-a60008c6dae2`; it also declares Go 1.20 and is not a
+stable release or the exact-path latest selection.
+
+V1.3.0 is the highest stable release whose declaration and complete changed
+closure preserve Go 1.18. It is a lightweight tag at unsigned commit
+`7bbb0b76ada1610f18cf71c54cca74209da88bd8`, tree
+`96a61d79e4745b05738a01906c43a7b8e5820b5a`, parent
+`373692af87b177d48898c89ad53b6054f5b339bf`, published
+2024-11-01T01:25:41Z. V1.4.0 is the immediately newer stable release and the
+first to declare Go 1.20. The selected pseudo-version maps to unsigned commit
+`0548c6b1afaea7616098cec708d9bbf49eef2cd6`, tree
+`15a2da506ba84c893a3d6cae5e4cdf02f67dc5ac`, parent
+`33b8d2b19cff931184e23eff38c3a371948f527d`, at
+2019-07-08T04:11:08Z. The enabled, unarchived, undisabled, non-fork upstream
+uses default branch `master`, publishes no GitHub Release objects, has no
+alternate major module path or formal deprecation marker, and all 75 tags are
+lightweight commit refs.
+
+The old checksum pair is
+`h1:C4Q9m+oXOxcSWwYk9XzzafY2xAVAaeubZbUHJkw3PlY=` /
+`h1:+inYUSluD+p4L8KdviBSgzcqEjUQOfC5fQDRFuc36lI=`. Candidate v1.3.0's pair
+is `h1:YJKuU6/TV2XOBtymafSeuzDvLAFR8cYMZiXVNLhAO6g=` /
+`h1:IDc8HyiouDdpdiEiY81iaEJM8rSIW6LzX8On4FCO0bE=`; independent checksum-
+database lookup agrees. Old and candidate proxy ZIP SHA-256 values are
+`4292d9b6903d67f060d3bd57ffca0a4ebca359824ce2d32a512ac1b963fa3dc0`
+and `446c6e411b1291658281e3413476787fda86d9c8d8586d7e1f851d0b4f8943f3`.
+All 64 candidate proxy regular files match the exact tag commit. The proxy
+correctly omits five tracked Hermit symlinks and seven regular files beneath
+the nested `_examples/server` module.
+
+Candidate Kong declares Go 1.18 and requires assert/v2 v2.11.0, Repr v0.4.0,
+and gotextdiff v1.0.3. Assert/v2 declares Go 1.18 and in turn requests the same
+Repr and gotextdiff versions; gotextdiff declares Go 1.16. Existing accepted
+Repr v0.5.4 at Go 1.18 dominates v0.4.0. The complete changed closure is
+therefore Kong v1.3.0 plus newly selected assert/v2 v2.11.0 and gotextdiff
+v1.0.3, with no declaration above Go 1.18.
+
+Exact external replay projects 234 -> 236 selected modules and 3,580 -> 3,584
+graph edges while retaining the byte-identical 429-package complete-test
+population. Exactly three selections change: Kong advances and assert/v2 plus
+gotextdiff enter the build list. The four added graph lines are main -> Kong
+and Kong's three requirements; the historical Chroma v0.7.1 -> old-Kong node
+and that old node's five edges remain in the pruned graph. Go.sum grows 1,043
+-> 1,045 lines only for candidate Kong's checksum pair. The unapplied tidy
+projection grows 356 -> 359 lines and would remove the unused Kong pin and its
+pair; tidy was not used as implementation.
+
+Kong loads in zero old or candidate complete packages. Repository Go source
+has no Kong import, and `go mod why -m` says the main module does not need it.
+It is historical MVS graph debt, not a main-module or dependency-test
+consumer, so no used Kong package or symbol exists to focus-test.
+
+The candidate's standalone test apparatus contains four selected modules and
+six graph edges and remains separate from project MVS. Writable copies of the
+proxy archive and exact upstream tag each verify, list the sole package, and
+pass complete count-1, count-10, and race tests without source mutation.
+Mandatory `go vet ./...` exits 1 in both sources with byte-identical 77-line
+diagnostics: 54 malformed Kong struct tags in `help_test.go`, eight in
+`kong_test.go`, one in `resolver_test.go`, and 14 in `tag_test.go`. The
+diagnostic SHA-256 is
+`d9cfb57f6329a7a4034e6799b29830db482a77302ba4dc68f4759a047cf0c41e`.
+This candidate-module failure triggers the explicit stop rule, so repository-
+wide candidate, exact-quality, snapshot/Docker, and audit gates are
+inapplicable and no dependency implementation commit was made.
+
+Fresh govulncheck v1.7.0 reports primary data updated
+2026-09-02T19:12:04Z with 1,392 module records and no Kong record. Exact old
+and candidate IDs plus normalized traces are byte-identical at 20 Darwin
+symbol, 30 Darwin module, and 20 Windows symbol findings. Freshly rebuilt
+govulncheck's SHA-256 is
+`ac8675f248a7686f926eaf2ad000d0731f449b5da4ab7155862fa15bdcda0601`;
+like earlier differing builds, this is a nonportable receipt, while its
+reported version, Go 1.26.7 builder, database identity, and scans are the
+functional proof.
+
+Kong decision evidence has 211 verified entries. Evidence-manifest SHA-256 is
+`6148c409545f453a78ffdc3a0a10934b75e082c1681f2805c29c8253a23d01ae`;
+decision-summary SHA-256 is
+`028c0fd0025a5f5de433b65d63a5258e18c6e959b440446e9834b03925f98b36`.
+The real repository's `go.mod` and `go.sum` remained byte-identical.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
