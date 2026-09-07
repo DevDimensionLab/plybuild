@@ -7843,16 +7843,69 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `5afb2b5fb26824c5e4c1db7497b8a6e6dbd24bc20194df7ca7fc5f4385e0dde1`
   and decision-summary SHA-256 is
   `c5b47a2a7d6f881e7a5aad5895d197027556e238c683bca685f45fff3b3c0592`.
+- Retain exact-path `github.com/armon/go-radix v1.0.0` without dependency
+  metadata. The proxy lists only stable v1.0.0; exact `@latest` and `@v1`
+  resolve it at 2018-08-24T02:57:28Z. Exact `@master` resolves unreleased
+  pseudo-version `v1.0.1-0.20221118154546-54df44f2176c` at
+  2022-11-18T15:45:46Z. Go-import metadata identifies the public, enabled,
+  unarchived, non-fork exact-path repository, which has default `master`, one
+  branch, one lightweight tag, and zero GitHub Releases. Stable tag v1.0.0 is
+  release-qualified but is not a GitHub Release; master is neither.
+- Tag v1.0.0 identifies commit
+  `1a2de0c21c94309923825da3df33a4381872c795`, tree
+  `8c6d01daaee6076244d5f41247608c75a8ad4224`, parent
+  `7fddfc383310abc091d79a27f116d30cf0424032`. Its lightweight tag has no
+  tag-object signature; the commit verifies with fingerprint
+  `7A01BBD67E7E8ADD50E00714744E147AA52F5B0A`, while GitHub currently reports
+  `unknown_key`. Master merge commit
+  `54df44f2176c4a553657a4f0dbe6fdb108288be3`, tree
+  `87f38e748e5fc5c602ba3296793b25a782fbf02d`, has a GitHub-valid signature;
+  local cryptographic verification identifies expired web-flow fingerprint
+  `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`. Its ten post-release commits
+  change three files with 86 insertions and 13 deletions.
+- Selected/master checksum pairs are
+  `h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=` /
+  `h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=` and
+  `h1:651/eoCRnQ7YtSjAnSzRucrJz+3iGEFt+ysraELS81M=` with the same `go.mod`
+  checksum; sumdb agrees. Both seven-file proxy archives match their exact Git
+  sources. Neither declares a Go version or requirements, so each complete
+  minimal module closure is one module/one package. Proxy/exact-Git forms pass
+  count-1/count-10/race/vet under exact Go 1.26.7, and proxy forms pass under
+  exact Go 1.18.10; this execution, not missing directives, proves the floor.
+- Selected Mitchellh CLI v1.1.0 is the actual graph consumer and exercises
+  `New`, `Insert`, `Get`, `Walk`, `WalkPrefix`, and `LongestPrefix`; focused
+  consumer tests pass repeated/race/vet against stable and master. Serf only
+  records an indirect edge. Radix loads in zero Ply packages and `go mod why`
+  says the main module does not need it.
+- Exact selected-version get changes no selection and projects only a redundant
+  main requirement/edge and full checksum: 234 modules, 3,582 edges, 429
+  packages, 41 loaded modules, zero loaded Radix packages, 1,046 sum lines,
+  and 367 tidy-diff lines. Exact master get changes only the Radix selection
+  but similarly projects 3,582 edges and its two checksums, for 1,047 sum and
+  369 tidy-diff lines. Tidy removes either pin and restores inherited v1.0.0.
+  Master passes execution but is not release-qualified, so no projection was
+  applied and accepted measurements remain 234/3,581/429/41/1,045/361.
+- Baseline/master repository verify/build/count-1/count-10/race/vet,
+  Windows, pinned lint, help, API/CLI, complete corrected preflight, and
+  empty-HOME checks pass. Changed-selection-only quality and acceptance gates
+  are inapplicable and not claimed. Fresh primary vulnerability results have
+  no Radix record/trace and preserve identical 20-ID/22-trace Darwin and
+  Windows reachable findings plus 30 Darwin module IDs. Radix evidence has
+  390 verified entries; manifest SHA-256 is
+  `6be6b857e77c7097b402ea5f4fe0ce849e15382b7167a004448cd85d82926eaf`
+  and decision-summary SHA-256 is
+  `493e832f2d0e6456bb64462104e1bd5b80f4b6eb32d401b9b098acdd0dd95e6a`.
 - Next, independently evaluate selected exact-path
-  `github.com/armon/go-radix v1.0.0` at 2018-08-24T02:57:28Z. The exact proxy
-  stable list contains only v1.0.0; `@latest` and `@v1` resolve that selected
-  release, while `@master` resolves unreleased pseudo-version
-  `v1.0.1-0.20221118154546-54df44f2176c`. The public, enabled, unarchived,
-  non-fork repository reports default `master`, one branch, one tag, and zero
-  Releases. Treat canonical source identity, release qualification,
-  signatures, declarations, closure, tests, consumers, loaded behavior, and
-  vulnerability effect as unknown until independently proved. Do not combine
-  another module group.
+  `github.com/beorn7/perks v1.0.1` at 2019-07-31T12:00:54Z. The proxy lists
+  v1.0.0 and v1.0.1; exact `@latest`, `@v1`, and `@master` all resolve selected
+  v1.0.1, whose module declares Go 1.11. The public exact-path repository is
+  an enabled, unarchived fork of parent/source `bmizerany/perks`, with default
+  `master`, five branches, two tags, and zero GitHub Releases; master and tag
+  v1.0.1 identify `37c8de3658fcb183f997c4e13e8337516ab753e6`.
+  Independently prove canonical identity across the fork relationship,
+  release qualification, history, signatures, closure floor, tests,
+  consumers, projection, and vulnerability effect. Do not combine another
+  module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

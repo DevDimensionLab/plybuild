@@ -1131,47 +1131,48 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-07T234555+0200-evaluate-armon-go-radix-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T234555+0200-evaluate-armon-go-radix-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T223740+0200-evaluate-armon-go-metrics-dependency.md
+#|SESSION_ID=2026-09-08T005841+0200-evaluate-beorn7-perks-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T005841+0200-evaluate-beorn7-perks-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T234555+0200-evaluate-armon-go-radix-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/armon/go-radix v1.0.0` as one bounded dependency group. Resolve
-#|canonical latest, authoritative source identity, release qualification,
-#|default-branch history, and the highest qualified Go-1.18-floor-compatible
-#|candidate from primary evidence. Make an exact dependency selection only if it
-#|changes a selected version, preserves the retained floor through the complete
-#|minimal closure, and passes every quality contract.
+#|`github.com/beorn7/perks v1.0.1` as one bounded dependency group. Resolve
+#|canonical source identity across the exact-path fork and its parent, canonical
+#|latest, release qualification, default-branch history, and the highest
+#|qualified Go-1.18-floor-compatible candidate from primary evidence. Make an
+#|exact dependency selection only if it changes a selected version, preserves
+#|the retained floor through the complete minimal closure, and passes every
+#|quality contract.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and bounded
-#|dependency decisions through retained Go Metrics v0.4.0. All earlier
-#|rejections, no-change decisions, accepted closures, and evidence corrections
-#|remain final. Do not revisit Go Metrics or combine another module group. P8
-#|remains queued.
+#|dependency decisions through retained Go Radix v1.0.0. All earlier rejections,
+#|no-change decisions, accepted closures, and evidence corrections remain final.
+#|Do not revisit Go Radix or combine another module group. P8 remains queued.
 #|
-#|Project MVS selects Go Radix v1.0.0 at 2018-08-24T02:57:28Z although it is not
-#|an explicit `go.mod` requirement. A minimal post-Metrics survey finds one
-#|exact stable proxy version. Exact Go `@latest` and `@v1` resolve the selected
-#|v1.0.0 with no exposed Go declaration. Exact `@master` resolves unreleased
-#|pseudo-version `v1.0.1-0.20221118154546-54df44f2176c` at
-#|2022-11-18T15:45:46Z, also with no exposed Go declaration. Do not infer floor
-#|compatibility from a missing directive or select an unreleased branch head
-#|without qualification.
+#|Project MVS selects Perks v1.0.1 at 2019-07-31T12:00:54Z although it is not an
+#|explicit `go.mod` requirement. A minimal post-Radix survey finds exact stable
+#|proxy versions v1.0.0 and v1.0.1. Exact Go `@latest`, `@v1`, and `@master` all
+#|resolve selected v1.0.1; its proxy module declares Go 1.11. Do not infer the
+#|complete closure floor from this one directive or assume a selected latest
+#|version needs materialized metadata.
 #|
-#|The public GitHub repository currently reports enabled, unarchived, non-fork
-#|status, default branch `master`, one branch, one tag, and zero GitHub Releases.
-#|Master is commit `54df44f2176c4a553657a4f0dbe6fdb108288be3`; tag v1.0.0 points to
-#|`1a2de0c21c94309923825da3df33a4381872c795`. Treat canonical source identity,
-#|tag and commit signatures, release/tag history, retractions, all version and
-#|branch declarations, complete closures, tests, consumers, loaded behavior,
-#|and vulnerability effect as unknown until independently proved. Explicitly
-#|distinguish a stable tag from a GitHub Release and an unreleased pseudo-version.
+#|The public exact-path GitHub repository currently reports enabled, unarchived,
+#|fork status, default branch `master`, five branches, two tags, and zero GitHub
+#|Releases. It identifies `bmizerany/perks` as both parent and source. Exact-path
+#|master and tag v1.0.1 point to
+#|`37c8de3658fcb183f997c4e13e8337516ab753e6`; v1.0.0 points to
+#|`4b2b341e8d7715fae06375aa633dbb6e91b3fb46`. Treat canonical source identity,
+#|the fork/parent relationship, tag and commit signatures, release/tag history,
+#|retractions, all version and branch declarations, complete closures, tests,
+#|consumers, loaded behavior, and vulnerability effect as unknown until
+#|independently proved. Explicitly distinguish a stable tag from a GitHub
+#|Release and the exact module identity from repository ancestry.
 #|
 #|# Measurements At Start
 #|
@@ -1179,20 +1180,21 @@ exit 70
 #|`3be2183ee310ccdc358ce4ed372c0785de25b88b`, exact parent
 #|`7a0ca4e2caba6d2fff20a9c169b181f9187b40dc`, tree
 #|`a51846840b5f252a30359530dfc950f811398431`, changing only `go.mod` and
-#|`go.sum`. The Consul API and Go Metrics evaluations made no dependency commit.
-#|Operator-authorized lifecycle repair `f9f0f7669e635c8c7bb169aab816d0ebe1b16435`
-#|remains intentionally between the earlier Repr implementation and direct-child
-#|Repr handoff. Preserve it.
+#|`go.sum`. The Consul API, Go Metrics, and Go Radix evaluations made no
+#|dependency commit. Operator-authorized lifecycle repair
+#|`f9f0f7669e635c8c7bb169aab816d0ebe1b16435` remains intentionally between the
+#|earlier Repr implementation and direct-child Repr handoff. Preserve it.
 #|
-#|Go Metrics remains selected at v0.4.0. V0.4.1 was the highest exact-path
-#|Go-1.18-compatible stable candidate, but its proxy and tag forms failed
-#|repeated module tests and vet. Proxy v0.4.2 and later declare distinct module
-#|path `github.com/hashicorp/go-metrics`; current v0.6.1 and master also declare
-#|Go 1.25.0. No dependency metadata was changed. Its 336-entry evidence-
-#|manifest SHA-256 is
-#|`5afb2b5fb26824c5e4c1db7497b8a6e6dbd24bc20194df7ca7fc5f4385e0dde1`;
+#|Go Radix remains selected at v1.0.0, the sole stable exact-path proxy version
+#|and canonical `@latest`/`@v1`. Master pseudo-version
+#|`v1.0.1-0.20221118154546-54df44f2176c` passed module and consumer execution
+#|but is an unreleased branch head with no tag or GitHub Release, so it was not
+#|selected merely because it is newer. Exact selected-version get changed no
+#|selection and only projected redundant metadata, which was not applied. Go
+#|Radix evidence has 390 verified entries; manifest SHA-256 is
+#|`6be6b857e77c7097b402ea5f4fe0ce849e15382b7167a004448cd85d82926eaf`;
 #|decision-summary SHA-256 is
-#|`c5b47a2a7d6f881e7a5aad5895d197027556e238c683bca685f45fff3b3c0592`.
+#|`493e832f2d0e6456bb64462104e1bd5b80f4b6eb32d401b9b098acdd0dd95e6a`.
 #|
 #|Accepted measurements remain 234 selected modules, 3,581 graph edges, 429
 #|native complete-test packages, 41 loaded modules, 1,045 `go.sum` lines, and a
@@ -1202,7 +1204,7 @@ exit 70
 #|empty.
 #|
 #|Fresh primary vulnerability evidence contains 1,392 module records and no Go
-#|Metrics record or trace. Accepted projections retain exact 20-ID/22-trace
+#|Radix record or trace. Accepted projections retain exact 20-ID/22-trace
 #|Darwin symbol, 30-ID Darwin module, and 20-ID/22-trace Windows symbol
 #|populations.
 #|
@@ -1221,23 +1223,24 @@ exit 70
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve every relevant Go Radix v1
-#|version through the Go proxy and checksum database, the exact-path repository,
-#|and primary Go vulnerability data. Record selected and candidate commits/times,
+#|From fresh external archives and caches, resolve every relevant exact-path
+#|Perks v1 version through the Go proxy and checksum database, exact-path
+#|repository, its declared parent/source repositories, go-import metadata, and
+#|primary Go vulnerability data. Record selected and candidate commits/times,
 #|module Go declarations and requirements, checksum pairs, source identity, tag
-#|and commit signatures, release history, archived/deprecated state, and
+#|and commit signatures, release history, archived/deprecated status, and
 #|retractions. Explicitly distinguish stable versions, prereleases, pseudo-
 #|versions, redirects, forks, alternate module paths, branch heads, and
 #|unreleased commits.
 #|
 #|Prove canonical latest and the highest qualified exact-path version compatible
 #|with Go 1.18 from declarations and the complete minimal closure, not from a
-#|single module's directive or the absence of one. Determine whether the branch
-#|head is a legitimate candidate despite lacking a release. Measure old versus
-#|candidate modules, graph edges, complete packages, checksums, loaded packages
-#|and paths, exact-get diff, and `go mod tidy -diff`. Explain every selection,
-#|edge, and checksum change. Identify real consumers and exercise the actually
-#|used symbols.
+#|single module directive. Decide whether the exact-path fork is the canonical
+#|published source and whether parent history changes qualification. Measure old
+#|versus candidate modules, graph edges, complete packages, checksums, loaded
+#|packages and paths, exact-get diff, and `go mod tidy -diff`. Explain every
+#|selection, edge, and checksum change. Identify real consumers and exercise the
+#|actually used symbols.
 #|
 #|Require candidate module complete, repeated, and race-enabled self-tests plus
 #|vet; repository verify/build, complete tests, race, vet, Windows build, pinned
@@ -1247,30 +1250,31 @@ exit 70
 #|
 #|Reject or retain without dependency edits if canonical qualification, source
 #|identity, floor compatibility, closure, module tests, loaded behavior, or any
-#|applicable quality contract fails. Do not select `@master` merely because it is
-#|newer, and do not manufacture metadata when exact get changes no selected
-#|version. Record precise primary old/candidate vulnerability IDs and traces.
+#|applicable quality contract fails. Do not manufacture metadata when exact get
+#|changes no selected version. Record precise primary old/candidate
+#|vulnerability IDs and traces.
 #|
 #|# Required Reading
 #|
 #|Verify branch, clean ordinary and ignored status, exact ancestry, reciprocal
 #|archive history, `./codex-dev-start.sh --check`, and P7/P8 state before work.
 #|Read this archive, the rolling handover, P7 roadmap, `go.mod`, `go.sum`, the
-#|answered Go Metrics, Consul API, Circbuf, Optional, Template, Colour, Chroma,
-#|Kong, Repr, Assert, and Units archives, retained Kingpin/Resty/Errgo/Check/YAML
-#|outcomes, and the toolchain, quality, baseline, compatibility, snapshot/Docker,
-#|acceptance, audit, and lifecycle contracts. Do not reopen earlier decisions.
+#|answered Go Radix, Go Metrics, Consul API, Circbuf, Optional, Template, Colour,
+#|Chroma, Kong, Repr, Assert, and Units archives, retained
+#|Kingpin/Resty/Errgo/Check/YAML outcomes, and the toolchain, quality, baseline,
+#|compatibility, snapshot/Docker, acceptance, audit, and lifecycle contracts. Do
+#|not reopen earlier decisions.
 #|
 #|# Three Moves
 #|
 #|If and only if a qualified candidate changes the selected version and its
 #|complete minimal closure preserves Go 1.18, use exact Go 1.26.7 and exact
-#|`go get github.com/armon/go-radix@<candidate>` for one dependency-only commit.
+#|`go get github.com/beorn7/perks@<candidate>` for one dependency-only commit.
 #|Do not hand-edit metadata or use tidy as implementation. Preserve every
-#|retained version, the toolchain declarations, production source, quality
-#|apparatus, and release inputs.
+#|retained version, toolchain declaration, production source, quality apparatus,
+#|and release input.
 #|
-#|If canonical qualification confirms v1.0.0 as the highest qualified selection,
+#|If canonical qualification confirms v1.0.1 as the highest qualified selection,
 #|or exact get changes no selection, retain it without adding a redundant direct
 #|or indirect requirement, main edge, or checksum solely for metadata. A no-
 #|change decision gets no dependency implementation commit.
@@ -1294,10 +1298,10 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the Go Radix decision, rewrite the rolling handover and roadmap, answer
-#|this archive, create exactly one reciprocal NEXT archive for the next single
-#|P7 group, replace only launcher mutable regions, run launcher/handoff
-#|contracts, and make the normal `docs: prepare next agent session` commit. Do
-#|not implement the next group, launch a successor, push, merge, publish,
-#|release, stash, revert, bypass cleanup, or remove the worktree.
+#|After the Perks decision, rewrite the rolling handover and roadmap, answer this
+#|archive, create exactly one reciprocal NEXT archive for the next single P7
+#|group, replace only launcher mutable regions, run launcher/handoff contracts,
+#|and make the normal `docs: prepare next agent session` commit. Do not implement
+#|the next group, launch a successor, push, merge, publish, release, stash,
+#|revert, bypass cleanup, or remove the worktree.
 # CODEX_MUTABLE_PROMPT_END

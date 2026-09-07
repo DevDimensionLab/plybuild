@@ -1,13 +1,128 @@
 # Agent Session: Evaluate Armon Go Radix Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-07T234555+0200-evaluate-armon-go-radix-dependency`
 Created: `2026-09-07T23:45:55+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `cdf0e0ed88ada0236974a6cdd2e680a35aa4d7170b1d5dcd83ba5dbe4dcace4b`
 Previous: [2026-09-07T223740+0200-evaluate-armon-go-metrics-dependency.md](2026-09-07T223740+0200-evaluate-armon-go-metrics-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-08T005841+0200-evaluate-beorn7-perks-dependency.md](2026-09-08T005841+0200-evaluate-beorn7-perks-dependency.md)
+Outcome: Retained Go Radix v1.0.0 without dependency edits; it is the sole
+  stable exact-path version and canonical latest, while master is a tested but
+  unreleased pseudo-version with no tag or GitHub Release.
+
+# Answer
+
+Retain `github.com/armon/go-radix v1.0.0` without adding dependency metadata.
+No dependency implementation commit was created.
+
+## Canonical Identity And Qualification
+
+The exact Go proxy contains only stable v1.0.0. Exact `@latest` and `@v1`
+resolve that selected version at 2018-08-24T02:57:28Z. Exact `@master`
+resolves pseudo-version `v1.0.1-0.20221118154546-54df44f2176c` at
+2022-11-18T15:45:46Z. It is an unreleased branch head, not a semantic tag or
+GitHub Release.
+
+Go-import metadata identifies `https://github.com/armon/go-radix.git` as the
+canonical exact-path source. The public repository is enabled, unarchived,
+and non-fork, with default `master`, one branch, one lightweight tag, and zero
+GitHub Releases. Stable tag v1.0.0 identifies commit
+`1a2de0c21c94309923825da3df33a4381872c795`, tree
+`8c6d01daaee6076244d5f41247608c75a8ad4224`, parent
+`7fddfc383310abc091d79a27f116d30cf0424032`. A stable tag is release-qualified
+here even though the repository publishes no GitHub Release object.
+
+The lightweight tag has no tag-object signature. The tagged commit's OpenPGP
+signature verifies locally with fingerprint
+`7A01BBD67E7E8ADD50E00714744E147AA52F5B0A`; GitHub currently reports
+`unknown_key` rather than a verified identity binding. Master is merge commit
+`54df44f2176c4a553657a4f0dbe6fdb108288be3`, tree
+`87f38e748e5fc5c602ba3296793b25a782fbf02d`. GitHub reports its signature
+valid; local cryptographic verification identifies expired web-flow key
+fingerprint `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`.
+
+Version v1.0.0 is an ancestor of master. The ten later commits change only
+`.travis.yml`, `radix.go`, and `radix_test.go`, with 86 insertions and 13
+deletions. No proxy prereleases, alternate major paths, renamed authoritative
+paths, retractions, or deprecation declarations were found. Newer master code
+passes execution, but it has no authoritative release qualification and is
+not selected merely because it is newer. V1.0.0 therefore remains the highest
+qualified exact-path version.
+
+## Source, Closure, And Tests
+
+The selected module/checksum pair is
+`h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=` /
+`h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=`. The master pseudo-version
+pair is `h1:651/eoCRnQ7YtSjAnSzRucrJz+3iGEFt+ysraELS81M=` with the same
+`go.mod` checksum. Sumdb agrees. Proxy ZIP SHA-256 values are respectively
+`df93c816505baf12c3efe61328dc6f8fa42438f68f80b0b3725cae957d021c90`
+and `f261a1141112f65564cec8f652ef6abf1d654228275e4fec6220b98337667c13`.
+
+Each proxy ZIP's seven regular files match the corresponding exact Git
+archive byte-for-byte. Normalized manifest SHA-256 values are
+`f7801af436dc78ae44f1611f9160c6c37c3355ca3729c236c91f0fbd8834c518`
+and `18854160a6271e82a14e65bcc15d142d83b640f78b087186b095176c162a1895`.
+
+Neither form declares a Go version or requirements. Each complete minimal
+module closure contains only Go Radix and one package. Missing directives were
+not treated as compatibility proof: writable proxy and exact-Git forms pass
+verification/listing, count-1, count-10, race, and vet under exact Go 1.26.7;
+proxy forms also pass every gate under exact Go 1.18.10. The complete closures
+therefore preserve the retained Go 1.18 floor by direct execution.
+
+Selected `github.com/mitchellh/cli v1.1.0` is the actual graph consumer and
+uses `New`, `Insert`, `Get`, `Walk`, `WalkPrefix`, `LongestPrefix`, `Tree`, and
+`WalkFn`. Serf v0.9.6/v0.10.1 only declare Radix indirectly through CLI.
+Focused nested-command, help, autocomplete, and subcommand consumer tests pass
+count-1, count-10, race, and vet against both Radix versions. Go Radix loads in
+zero Ply packages; Ply has no source import and `go mod why -m` says it is not
+needed by the main module.
+
+## Projection, Quality, And Vulnerabilities
+
+Accepted measurements remain 234 selected modules, 3,581 graph edges, 429
+complete packages, 41 loaded modules, zero loaded Radix packages, 1,045
+`go.sum` lines, and 361 tidy-diff lines. Exact get of selected v1.0.0 changes
+no selection; it only projects a redundant indirect requirement, one main
+edge, and the full module checksum: 234/3,582/429/41/0, 1,046 sum lines, and
+367 tidy-diff lines. Tidy removes that materialized metadata.
+
+Exact get of master changes only Radix's selected version, but also adds an
+explicit main edge and its checksum pair: 234 modules, 3,582 edges, 429
+packages, 41 loaded modules, zero loaded Radix packages, 1,047 sum lines, and
+369 tidy-diff lines. Tidy removes the pin and pair and restores inherited
+v1.0.0. No projection was applied.
+
+Baseline and master projections pass repository verification/build, complete
+count-1/count-10/race tests, vet, Windows-amd64 build, and pinned
+golangci-lint 2.12.2. Root, status, upgrade, and build help are byte-identical.
+API and CLI reports are byte-identical at SHA-256
+`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+Corrected scratch-local preflight passes all 62 launcher controls, every
+distribution/lint/install/toolchain and script meta-contract, and all 15 audit
+controls. Empty-HOME count-2 passes.
+
+Fresh govulncheck v1.7.0 used primary data updated
+2026-09-02T19:12:04Z. The 1,392-record module index has no Go Radix entry or
+trace. Baseline/master results are byte-identical: 20 IDs/22 traces for Darwin
+and Windows reachable-symbol scans and 30 Darwin module IDs.
+
+Canonical qualification produced no changed selection. Consequently the
+changed-selection-only host/snapshot/Docker acceptance, exact `make quality`,
+focused/Q0-Q2/full audits, and dependency commit were inapplicable and are not
+claimed. Source-prefix normalization, historical compatibility-cache warming,
+reachable-trace filtering, and scratch-local BSD-mktemp/MAKEOVERRIDES runner
+corrections changed no repository file and concealed no failure.
+
+The sealed evidence manifest contains 390 verified entries and has SHA-256
+`6be6b857e77c7097b402ea5f4fe0ce849e15382b7167a004448cd85d82926eaf`;
+decision-summary SHA-256 is
+`493e832f2d0e6456bb64462104e1bd5b80f4b6eb32d401b9b098acdd0dd95e6a`.
+Exact Go 1.26.7 retained required binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
