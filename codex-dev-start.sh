@@ -1131,88 +1131,87 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-07T194916+0200-evaluate-armon-circbuf-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T194916+0200-evaluate-armon-circbuf-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T183413+0200-evaluate-antihax-optional-dependency.md
+#|SESSION_ID=2026-09-07T214638+0200-evaluate-armon-consul-api-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T214638+0200-evaluate-armon-consul-api-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T194916+0200-evaluate-armon-circbuf-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e` as one bounded
-#|dependency group. Resolve canonical latest, release qualification, default-
-#|branch history, and the highest Go-1.18-floor-compatible candidate from primary
-#|evidence. Make an exact dependency selection only if it changes a selected
-#|version, preserves the retained floor through the complete minimal closure,
-#|and passes every quality contract.
+#|`github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6` as one
+#|bounded dependency group. Resolve canonical latest, release qualification,
+#|default-branch history, and the highest Go-1.18-floor-compatible candidate
+#|from primary evidence. Make an exact dependency selection only if it changes a
+#|selected version, preserves the retained floor through the complete minimal
+#|closure, and passes every quality contract.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and bounded
-#|dependency decisions through retained Antihax Optional v1.0.0. All earlier
-#|rejections, no-change decisions, accepted closures, and evidence corrections
-#|remain final. Do not revisit Optional or combine another module group. P8
-#|remains queued.
+#|dependency decisions through accepted Circbuf pseudo-version
+#|`v0.0.0-20190214190532-5111143e8da2`. All earlier rejections, no-change
+#|decisions, accepted closures, and evidence corrections remain final. Do not
+#|revisit Circbuf or combine another module group. P8 remains queued.
 #|
-#|Project MVS selects Circbuf's 2015 pseudo-version although it is not an explicit
-#|`go.mod` requirement. A fresh post-Optional survey finds an empty exact stable
-#|proxy list. Proxy and exact Go `@latest` and `@master` resolve the newer
-#|pseudo-version `v0.0.0-20190214190532-5111143e8da2` at
-#|2019-02-14T19:05:32Z without a reported Go declaration; exact `@v0` has no
+#|Project MVS already selects Consul API's 2018 pseudo-version although it is not
+#|an explicit `go.mod` requirement. A minimal post-Circbuf survey finds an empty
+#|exact stable proxy list. Proxy and exact Go `@latest` and `@master` resolve the
+#|same selected pseudo-version at 2018-02-02T20:16:55Z; exact `@v0` has no
 #|matching version. The authoritative repository currently reports public,
-#|enabled, unarchived, non-fork status, default branch `master`, zero tags, and
-#|zero GitHub Releases. Treat canonical qualification, source identity,
+#|enabled, unarchived, non-fork status, default branch `master`, one branch, zero
+#|tags, and zero GitHub Releases. Treat canonical qualification, source identity,
 #|signatures, release and alternate-path history, complete closure, self-tests,
 #|loaded consumers, actual symbols, and vulnerability effect as unknown until
 #|independently resolved. Do not call an untagged pseudo-version a stable release.
 #|
 #|# Measurements At Start
 #|
-#|Latest dependency implementation remains Repr commit
-#|`6f4d02eb9c86ec2df8a488a85ed973aababe1f38`, exact parent
-#|`53475076e1c79f6d2181877e3238a1a5d389c246`, tree
-#|`82e7b1f5c503659082207481b8339e8113e38c10`, changing only `go.mod` and
+#|Latest dependency implementation is Circbuf commit
+#|`3be2183ee310ccdc358ce4ed372c0785de25b88b`, exact parent
+#|`7a0ca4e2caba6d2fff20a9c169b181f9187b40dc`, tree
+#|`a51846840b5f252a30359530dfc950f811398431`, changing only `go.mod` and
 #|`go.sum`. Operator-authorized lifecycle repair
 #|`f9f0f7669e635c8c7bb169aab816d0ebe1b16435` remains intentionally between
-#|that implementation and direct-child Repr handoff
-#|`342c7ece82eae3cd726aa658462089cfb876fbe0`. Preserve it.
+#|the earlier Repr implementation and direct-child Repr handoff. Preserve it.
 #|
-#|Optional v1.0.0 was retained without dependency edits. It is the exact path's
-#|sole stable release, canonical latest, and highest stable Go-1.18-floor-
-#|compatible version. Its lightweight tag resolves commit
-#|`c3f0ba9c1a592b971d66b2787679af55b5c58f21`, tree
-#|`b9328a8aa4526004bb36928dbc136c3acb8eec3a`, at
-#|2019-10-10T23:37:20Z. The later master pseudo-version
-#|`v1.0.1-0.20220101210036-407d38fabb55` is unreleased and changes only README
-#|material; every Go file and `go.mod` is identical. Both declare Go 1.13 with
-#|no requirements. The release's complete closure is Optional alone and passes
-#|complete, repeated, and race-enabled tests plus vet in both proxy and exact-tag
-#|forms, without source mutation.
+#|Circbuf advanced from 2015 pseudo-version
+#|`v0.0.0-20150827004946-bbbad097214e` to canonical latest and master-head
+#|`v0.0.0-20190214190532-5111143e8da2`, commit
+#|`5111143e8da2e98b4ea6a8f32b9065ea1821c191`, tree
+#|`2ab2d9cf2632ab7b549f7da7f081dbe868a697db`, at
+#|2019-02-14T19:05:32Z. It is an unreleased pseudo-version, not a stable release.
+#|The exact path has no stable or prerelease versions, tags, GitHub Releases,
+#|retractions, or authoritative alternate module path. The candidate adds only
+#|one `go.mod` line relative to the selected source; every Go source and test
+#|file is identical. It declares no Go version and no requirements, so its
+#|complete minimal closure is Circbuf alone and preserves Go 1.18.
 #|
-#|Exact selected-version get changes no module selection and only projects a
-#|redundant indirect requirement, main graph edge, and full checksum. Therefore
-#|no dependency implementation commit was created. Optional is unloaded; Ply has
-#|no import and `go mod why` says the main module does not need it. The historical
-#|grpc-gateway example consumer and an explicitly external Go-1.18 fixture cover
-#|the actually referenced wrapper types and methods. Untouched and projected
-#|repository verify/build/tests/race/vet, Windows build, pinned lint, help,
-#|API/CLI compatibility, CLI surface, and clean full preflight pass.
+#|Candidate proxy and exact-commit forms independently pass verify/list,
+#|count-1/count-10/race tests, and vet without mutation. Exact Go 1.18.10 also
+#|passes count-10/race/vet. Circbuf loads in zero Ply packages; the historical
+#|and selected Serf consumers plus an external Go-1.18 fixture exercise
+#|`NewBuffer`, `Write`, `TotalWritten`, `Size`, `String`, and `Bytes`.
 #|
-#|Optional's 540-entry evidence-manifest SHA-256 is
-#|`345a29c62bfadf332f14aa234b1265a9dc9142739d212534d83ace531fb39afa`;
+#|The exact get added one indirect requirement, one main graph edge, and the
+#|candidate checksum pair. Current accepted measurements are 234 selected
+#|modules, 3,581 graph edges, 429 native complete-test packages, 41 loaded
+#|modules, 1,045 `go.sum` lines, and a 361-line unapplied tidy projection. Tidy
+#|removes the explicit Circbuf pin and its two candidate checksum lines while
+#|leaving inherited debt unchanged. Relative to accepted go-cmp commit c314bcb,
+#|accepted metadata adds exactly 29 checksum lines. The main module retains Go
+#|1.18 and toolchain Go 1.26.7. Ordinary and ignored status must be empty.
+#|
+#|Circbuf's 430-entry evidence-manifest SHA-256 is
+#|`2684f8c269376320bcfca3404bfbf10c638c81753e6af36b5be59c4df2370d62`;
 #|decision-summary SHA-256 is
-#|`945b7ca8fe9d9faa605a6a80d8d416655925f95cd727071babf813bcd4caa27b`.
-#|Preserve its separately warmed v1.0.1 compatibility cache, exact source-
-#|manifest and vulnerability normalization, scratch-local GnuPG keyring and
-#|BSD-mktemp/preflight corrections. They changed no repository file.
-#|
-#|Current accepted measurements remain 234 selected modules, 3,580 graph edges,
-#|429 native complete-test packages, 1,043 `go.sum` lines, a 356-line unapplied
-#|tidy projection, and exact 20/30/20 Darwin-symbol/Darwin-module/Windows-symbol
-#|vulnerability populations. The main module retains Go 1.18 and toolchain Go
-#|1.26.7. Relative to accepted go-cmp commit c314bcb, accepted metadata adds
-#|exactly 27 checksum lines. Ordinary and ignored status must be empty.
+#|`17441163b7924e2cd61cb167b739562da7672fa5abfa10089da36ef906f07ff9`.
+#|Exact quality passed all 27 Q0-Q2 rows at L2 with 80/80 mutations killed and
+#|zero held, regressed, not-comparable, or dirty counts. Full audit exited 1 only
+#|for queued L3 rows Q3.1/Q3.3/Q3.4/Q3.7. Fresh primary vulnerability evidence
+#|has no Circbuf record or trace and preserves exact 20/30/20 Darwin-symbol/
+#|Darwin-module/Windows-symbol populations.
 #|
 #|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
 #|SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
@@ -1229,15 +1228,15 @@ exit 70
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve Circbuf versions through the
-#|Go proxy, checksum database, authoritative upstream repository, and primary Go
-#|vulnerability data. Record exact selected and candidate commits/times, module
-#|Go declarations and requirements, checksum pairs, source identity, tag and
-#|commit signature status, release history, and archived/deprecated state.
-#|Explicitly distinguish stable versions, prereleases, pseudo-versions,
-#|retractions, forks, alternate module paths, branch heads, and unreleased
-#|commits. Do not treat the newer pseudo-version as a stable release without
-#|authoritative release evidence.
+#|From fresh external archives and caches, resolve Consul API versions through
+#|the Go proxy, checksum database, authoritative upstream repository, and
+#|primary Go vulnerability data. Record exact selected and candidate commits/
+#|times, module Go declarations and requirements, checksum pairs, source
+#|identity, tag and commit signature status, release history, and archived/
+#|deprecated state. Explicitly distinguish stable versions, prereleases, pseudo-
+#|versions, retractions, forks, alternate module paths, branch heads, and
+#|unreleased commits. Do not treat the selected pseudo-version as a stable
+#|release without authoritative release evidence.
 #|
 #|Prove canonical latest and the highest qualified exact-path version compatible
 #|with Go 1.18 from declarations and the complete closure. Measure old versus
@@ -1264,19 +1263,24 @@ exit 70
 #|Verify branch, clean ordinary and ignored status, exact ancestry, reciprocal
 #|archive history, `./codex-dev-start.sh --check`, and P7/P8 state before work.
 #|Read this archive, the rolling handover, P7 roadmap, `go.mod`, `go.sum`, the
-#|answered Optional, Template, Colour, Chroma, Kong, Repr, Assert, and Units
-#|archives, retained Kingpin/Resty/Errgo/Check/YAML outcomes, and the toolchain,
-#|quality, baseline, compatibility, snapshot/Docker, acceptance, audit, and
-#|lifecycle contracts. Do not reopen earlier decisions.
+#|answered Circbuf, Optional, Template, Colour, Chroma, Kong, Repr, Assert, and
+#|Units archives, retained Kingpin/Resty/Errgo/Check/YAML outcomes, and the
+#|toolchain, quality, baseline, compatibility, snapshot/Docker, acceptance,
+#|audit, and lifecycle contracts. Do not reopen earlier decisions.
 #|
 #|# Three Moves
 #|
 #|If and only if a qualified candidate changes the selected version and its
 #|complete minimal closure preserves Go 1.18, use exact Go 1.26.7 and exact
-#|`go get github.com/armon/circbuf@<candidate>` for one dependency-only commit.
-#|Do not hand-edit metadata or use tidy as implementation. Preserve every
+#|`go get github.com/armon/consul-api@<candidate>` for one dependency-only
+#|commit. Do not hand-edit metadata or use tidy as implementation. Preserve every
 #|retained version, the toolchain declarations, production source, quality
 #|apparatus, and release inputs.
+#|
+#|If canonical qualification confirms the already-selected version and exact
+#|get changes no selection, retain it without adding a redundant direct or
+#|indirect requirement, main edge, or full checksum solely for metadata. A no-
+#|change decision gets no dependency implementation commit.
 #|
 #|After a changed selection, run the complete P7 dependency gate: module and
 #|consumer tests, graph/path/checksum/tidy explanation, repository verify/build/
@@ -1297,9 +1301,9 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the Circbuf decision, rewrite the rolling handover and roadmap, answer
-#|this archive, create exactly one reciprocal NEXT archive for the next single
-#|P7 group, replace only launcher mutable regions, run launcher/handoff
+#|After the Consul API decision, rewrite the rolling handover and roadmap,
+#|answer this archive, create exactly one reciprocal NEXT archive for the next
+#|single P7 group, replace only launcher mutable regions, run launcher/handoff
 #|contracts, and make the normal `docs: prepare next agent session` commit. Do
 #|not implement the next group, launch a successor, push, merge, publish,
 #|release, stash, revert, bypass cleanup, or remove the worktree.

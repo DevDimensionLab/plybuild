@@ -5375,8 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained canonical-latest
-`github.com/alecthomas/colour v0.1.0`; further dependency groups remain
+dependency groups through accepted canonical-latest Circbuf pseudo-version
+`v0.0.0-20190214190532-5111143e8da2`; further dependency groups remain
 queued.
 
 Toolchain baseline move (2026-09-01):
@@ -7703,16 +7703,61 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `945b7ca8fe9d9faa605a6a80d8d416655925f95cd727071babf813bcd4caa27b`.
   Preserve its compatibility-cache, source/signature, checksum-delta,
   vulnerability-order, and scratch-local BSD-mktemp/preflight corrections.
+- Advance exact-path `github.com/armon/circbuf` from selected pseudo-version
+  `v0.0.0-20150827004946-bbbad097214e` to canonical latest and master-head
+  pseudo-version `v0.0.0-20190214190532-5111143e8da2`. The exact stable list is
+  empty and the public, enabled, unarchived, non-fork repository has one
+  branch, nine commits, zero tags, and zero Releases. There are no
+  prereleases, retractions, deprecation markers, or authoritative alternate
+  module paths. This is an unreleased pseudo-version, not a stable release.
+- The old unsigned commit is
+  `bbbad097214e2918d8543d5201d12bfd7bca254d` at
+  2015-08-27T00:49:46Z. The candidate is commit
+  `5111143e8da2e98b4ea6a8f32b9065ea1821c191`, tree
+  `2ab2d9cf2632ab7b549f7da7f081dbe868a697db`, at
+  2019-02-14T19:05:32Z. Its GitHub web-flow signature independently verifies
+  with fingerprint
+  `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`; the key is currently expired.
+  The only source delta is a one-line `go.mod`; every Go source and test file
+  is identical.
+- Neither version declares a Go version or requirements. The candidate's
+  complete minimal closure is Circbuf alone and preserves Go 1.18. Proxy and
+  exact-commit forms independently pass verify/list, count-1/count-10/race
+  tests, and vet without mutation; exact Go 1.18.10 also passes count-10/race/
+  vet. Historical/current Serf consumers and an external Go-1.18 fixture cover
+  `NewBuffer`, `Write`, `TotalWritten`, `Size`, `String`, and `Bytes`. Circbuf
+  loads in zero Ply packages and `go mod why` says the main module does not
+  need it.
+- Exact candidate get changes only Circbuf's version and adds an indirect
+  requirement, one main graph edge, and the candidate checksum pair. Project
+  measurements change 234 -> 234 modules, 3,580 -> 3,581 edges, 429 -> 429
+  packages, 41 -> 41 loaded modules, 1,043 -> 1,045 sum lines, and 356 -> 361
+  tidy-diff lines. Tidy removes the explicit pin and its two checksum lines;
+  inherited debt is unchanged. Implementation commit is
+  `3be2183ee310ccdc358ce4ed372c0785de25b88b`, parent
+  `7a0ca4e2caba6d2fff20a9c169b181f9187b40dc`, tree
+  `a51846840b5f252a30359530dfc950f811398431`, changing only `go.mod` and
+  `go.sum`.
+- Candidate/repository/consumer, Windows, pinned-lint, help/API/CLI,
+  compatibility, preflight, host/snapshot/Docker, and empty-HOME gates pass.
+  Exact quality exits 0 with all 27 Q0-Q2 rows at L2, 80/80 mutations killed,
+  and zero held/regressed/not-comparable/dirty counts. Full audit exits 1 only
+  for queued L3 rows. Fresh primary vulnerability results have no Circbuf
+  record or trace and preserve exact 20/30/20 old/candidate populations.
+  Circbuf evidence has 430 verified entries; manifest SHA-256 is
+  `2684f8c269376320bcfca3404bfbf10c638c81753e6af36b5be59c4df2370d62`
+  and decision-summary SHA-256 is
+  `17441163b7924e2cd61cb167b739562da7672fa5abfa10089da36ef906f07ff9`.
 - Next, independently evaluate selected exact-path
-  `github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e`. It is selected
-  without an explicit `go.mod` requirement. The exact stable proxy list is
-  empty; `@latest` and `@master` resolve newer pseudo-version
-  `v0.0.0-20190214190532-5111143e8da2` at 2019-02-14T19:05:32Z without a
-  reported Go declaration, while `@v0` has no match. The public, enabled,
-  unarchived, non-fork repository reports zero tags and zero Releases. Treat
-  qualification, closure, identity/signatures, module tests, loaded behavior,
-  and vulnerability effect as unknown. Do not call the pseudo-version stable
-  or combine Optional or another group.
+  `github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6`. It is
+  selected without an explicit `go.mod` requirement. The exact stable proxy
+  list is empty; proxy and exact Go `@latest` and `@master` resolve the same
+  selected pseudo-version at 2018-02-02T20:16:55Z, while `@v0` has no match.
+  The public, enabled, unarchived, non-fork repository reports default branch
+  `master`, one branch, zero tags, and zero Releases. Treat qualification,
+  closure, identity/signatures, module tests, loaded behavior, and vulnerability
+  effect as unknown. Do not call the pseudo-version stable, manufacture
+  metadata for an unchanged selection, or combine Circbuf or another group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
