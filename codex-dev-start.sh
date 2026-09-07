@@ -1131,36 +1131,38 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-07T164119+0200-evaluate-alecthomas-colour-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T164119+0200-evaluate-alecthomas-colour-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T133322+0200-evaluate-alecthomas-chroma-dependency.md
+#|SESSION_ID=2026-09-07T174802+0200-evaluate-alecthomas-template-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T174802+0200-evaluate-alecthomas-template-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-07T164119+0200-evaluate-alecthomas-colour-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/alecthomas/colour v0.1.0` as one bounded dependency group. Resolve
-#|canonical latest, release qualification, alternate-path history, and the
-#|highest Go-1.18-floor-compatible candidate from primary evidence. Make an
-#|exact dependency selection only if it changes a selected version, preserves
-#|the retained floor through the complete minimal closure, and passes every
-#|quality contract.
+#|`github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751` as one
+#|bounded dependency group. Resolve canonical latest, release qualification,
+#|alternate-path history, and the highest Go-1.18-floor-compatible candidate
+#|from primary evidence. Make an exact dependency selection only if it changes
+#|a selected version, preserves the retained floor through the complete minimal
+#|closure, and passes every quality contract.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and bounded
-#|dependency decisions through retained Chroma v0.10.0. All earlier rejections,
+#|dependency decisions through retained Colour v0.1.0. All earlier rejections,
 #|no-change decisions, accepted closures, and evidence corrections remain final.
-#|Do not revisit Chroma or combine another module group. P8 remains queued.
+#|Do not revisit Colour or combine another module group. P8 remains queued.
 #|
-#|The build list selects Colour v0.1.0 as an indirect `go.mod` requirement. A
-#|fresh post-Chroma survey finds only stable v0.1.0 in the exact-path proxy list.
-#|Proxy `@latest` and exact Go `@latest`, `@v0`, and `@master` all resolve
-#|v0.1.0 at 2019-11-01T02:47:59Z; Go reports no module Go declaration. Treat
-#|qualification, source identity, signatures, release and branch history,
-#|closure, self-tests, loaded consumers, actual symbols, and vulnerability
-#|effect as unknown until independently resolved.
+#|Project MVS selects Template
+#|`v0.0.0-20190718012654-fb15b899a751`, although it is not an explicit
+#|`go.mod` requirement. A fresh post-Colour survey finds an empty exact-path
+#|stable proxy list. Proxy `@latest` and exact Go `@latest` and `@master` resolve
+#|the selected pseudo-version at 2019-07-18T01:26:54Z, while exact Go `@v0`
+#|reports no matching semantic version; Go reports no module Go declaration.
+#|Treat canonical qualification, source identity, signatures, release and
+#|branch history, closure, self-tests, loaded consumers, actual symbols, and
+#|vulnerability effect as unknown until independently resolved.
 #|
 #|# Measurements At Start
 #|
@@ -1173,16 +1175,17 @@ exit 70
 #|that implementation and direct-child Repr handoff
 #|`342c7ece82eae3cd726aa658462089cfb876fbe0`. Preserve it.
 #|
-#|Chroma v0.10.0 was retained without dependency edits. It is the exact-path
-#|canonical latest stable release, and exact get is a byte-for-byte no-op with
-#|an empty changed-selection closure. Its complete standalone closure preserves
-#|Go 1.18, but proxy and exact-tag sources both fail mandatory vet with the same
-#|normalized 7,175 unkeyed-Rule-literal diagnostics across 206 lexer files. The
-#|loaded go-term-markdown code-block golden also fails all ten project-MVS
-#|repetitions. Chroma's 4,335-entry evidence-manifest SHA-256 is
-#|`bbd6a41e0cff3248bacc2fef6630ed3679a3299484cb21446fc2841a39a742d5`;
+#|Colour v0.1.0 was retained without dependency edits. It is the sole exact-
+#|path stable tag and canonical latest; exact get is byte-for-byte unchanged
+#|with an empty changed-selection closure. Proxy and exact-tag sources match and
+#|pass complete count-1/count-10/race/vet. Colour has zero loaded project
+#|packages or repository imports, so an external direct fixture separately
+#|proved its formatter, stripper, forced ANSI, nonterminal TTY, string-printer,
+#|reset, underline, strikethrough, and escaped-caret behavior under project MVS.
+#|Colour's 322-entry evidence-manifest SHA-256 is
+#|`8277a8e7d5b4810a769547d2adbb5e0779d4e52c09b6b8e30c209383fc718543`;
 #|decision-summary SHA-256 is
-#|`476f926b06cd8fbfce8ac22c9e0ed1102c8f5c8f8e2070bcb1636a825225927f`.
+#|`6932da454c33f6580d12349122346e1441e7277c81264ed091c7322880132592`.
 #|
 #|Current measurements remain 234 selected modules, 3,580 graph edges, 429
 #|native complete-test packages, 1,043 go.sum lines, a 356-line unapplied tidy
@@ -1206,22 +1209,22 @@ exit 70
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve Colour versions through the
-#|Go proxy, checksum database, authoritative upstream repository, and primary Go
-#|vulnerability data. Record exact tag and branch-head commits/times, module Go
-#|declarations and requirements, checksum pairs, source identity, tag and commit
-#|signature status, release history, and archived/deprecated state. Explicitly
-#|distinguish stable tags, prereleases, pseudo-versions, retractions, forks,
-#|alternate module paths, branch heads, and unreleased commits. Do not treat an
-#|unreleased commit or alternate module path as an in-place stable update.
+#|From fresh external archives and caches, resolve Template versions through
+#|the Go proxy, checksum database, authoritative upstream repository, and
+#|primary Go vulnerability data. Record exact tag and branch-head commits/times,
+#|module Go declarations and requirements, checksum pairs, source identity, tag
+#|and commit signature status, release history, and archived/deprecated state.
+#|Explicitly distinguish stable tags, prereleases, pseudo-versions, retractions,
+#|forks, alternate module paths, branch heads, and unreleased commits. Do not
+#|treat an unreleased commit or alternate module path as an in-place stable
+#|update.
 #|
 #|Prove canonical latest and the highest qualified exact-path version compatible
 #|with Go 1.18 from declarations and the complete closure. Measure old versus
 #|candidate modules, graph edges, complete packages, checksums, loaded packages
 #|and paths, explicit exact-get diff, and `go mod tidy -diff`. Explain every
 #|selection, edge, and checksum change. Identify real consumers and exercise the
-#|actually used Colour packages and symbols, including terminal renderer
-#|behavior where applicable.
+#|actually used Template packages and symbols where applicable.
 #|
 #|Require candidate module complete tests, repeated tests, race, and vet;
 #|repository build, complete tests/race/vet, pinned lint, byte-identical public
@@ -1230,32 +1233,32 @@ exit 70
 #|
 #|Stop and record rejection without dependency edits if canonical resolution,
 #|floor compatibility, exact closure, source identity, module self-tests, loaded
-#|behavior, or any repository quality contract fails. If selected v0.1.0 is
-#|already the exact floor-compatible decision and exact get changes no selected
-#|version, record no change without manufacturing metadata or a dependency
-#|commit. Prove exact old/candidate vulnerability IDs and traces.
+#|behavior, or any repository quality contract fails. If the selected pseudo-
+#|version is already the exact floor-compatible decision and exact get changes
+#|no selected version, record no change without manufacturing metadata or a
+#|dependency commit. Prove exact old/candidate vulnerability IDs and traces.
 #|
 #|# Required Reading
 #|
 #|Confirm branch, exact ancestry, empty ordinary and ignored status, reciprocal
 #|archive links, launcher `--check`, and P7/P8 checkpoint before editing. Read
-#|this archive, rolling handover, P7 roadmap, go.mod/go.sum, answered Chroma,
-#|Kong, Repr, Assert, and Units decisions, retained Kingpin/Resty/Errgo/YAML
-#|decisions, earlier accepted and rejected bounded dependencies, and toolchain,
-#|compatibility, snapshot/Docker, quality, baseline-reproduction, and audit
-#|contracts. Preserve every recorded manifest and setup correction.
+#|this archive, rolling handover, P7 roadmap, go.mod/go.sum, answered Colour,
+#|Chroma, Kong, Repr, Assert, and Units decisions, retained Kingpin/Resty/Errgo/
+#|YAML decisions, earlier accepted and rejected bounded dependencies, and
+#|toolchain, compatibility, snapshot/Docker, quality, baseline-reproduction,
+#|and audit contracts. Preserve every recorded manifest and setup correction.
 #|
 #|# Three Moves
 #|
 #|Only if every decision gate passes and a version selection changes, use exact
 #|Go 1.26.7 and exact
-#|`go get github.com/alecthomas/colour@<selected-version>` for one dependency-
+#|`go get github.com/alecthomas/template@<selected-version>` for one dependency-
 #|only commit. Do not hand-edit metadata or use tidy as implementation. Preserve
-#|every retained selection, especially Repr v0.5.4, Assert v1.0.0, Units'
-#|2024 pseudo-version, Chroma v0.10.0, the selected Kong pseudo-version, Kingpin
-#|v2.2.6, Resty v1.12.0, Errgo v2.1.0, Check's 2019 pseudo-version, all three
-#|retained YAML paths, language/toolchain declarations, production source,
-#|quality apparatus, and release input.
+#|every retained selection, especially Repr v0.5.4, Assert v1.0.0, Units' 2024
+#|pseudo-version, Colour v0.1.0, Chroma v0.10.0, the selected Kong pseudo-
+#|version, Kingpin v2.2.6, Resty v1.12.0, Errgo v2.1.0, Check's 2019 pseudo-
+#|version, all three retained YAML paths, language/toolchain declarations,
+#|production source, quality apparatus, and release input.
 #|
 #|After a changed selection, run the complete P7 dependency gate: focused
 #|behavior, graph/path, tests/race/vet, pinned lint, help/API/CLI, launcher and

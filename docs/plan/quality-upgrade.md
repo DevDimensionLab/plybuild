@@ -5376,7 +5376,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 Status: active after the maintained-toolchain baseline move and completed
 dependency groups through retained canonical-latest
-`github.com/alecthomas/chroma v0.10.0`; further dependency groups remain
+`github.com/alecthomas/colour v0.1.0`; further dependency groups remain
 queued.
 
 Toolchain baseline move (2026-09-01):
@@ -7561,13 +7561,71 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   `bbd6a41e0cff3248bacc2fef6630ed3679a3299484cb21446fc2841a39a742d5`,
   and decision-summary SHA-256 is
   `476f926b06cd8fbfce8ac22c9e0ed1102c8f5c8f8e2070bcb1636a825225927f`.
+- Retain selected exact-path `github.com/alecthomas/colour v0.1.0`. It is the
+  only stable proxy version, and proxy `@latest` plus exact Go `@latest`,
+  `@v0`, `@master`, and `@v0.1.0` all resolve it at
+  2019-11-01T02:47:59Z. The lightweight tag is unsigned commit
+  `a1c6bd85eba7190e4d2959ecd15831d0a25b37b9`, tree
+  `ef4bddf202f91763747ee4828270fce2741373ca`, parent
+  `60882d9e27213e8552dcff6328914fe4c2b44bc9`. The public, enabled,
+  unarchived, undisabled, non-fork repository has one branch, one tag, 12
+  commits, no newer default-branch commit, and no GitHub Release object.
+  Stable qualification comes from the sole semver tag and proxy publication;
+  there is no prerelease, retraction, or authoritative alternate module path.
+- The historical pseudo-version
+  `v0.0.0-20160524082231-60882d9e2721` is the exact parent and not a newer
+  candidate. V0.1.0 adds `^S` strikethrough. Its checksum pair is
+  `h1:nOE9rJm6dsZ66RGWYSFrXw461ZIt9A6+nHgL7FRrDUk=` /
+  `h1:QO9JBoKquHd+jz9nshCh40fOfO+JzsoXy8qTHF68zU0=` and agrees with the
+  checksum database. Proxy ZIP SHA-256 is
+  `74d51002731fa104943b62ee11fb61b14c517e75a4a3983bfb03976b6c75349b`;
+  all five regular files match the exact tag without omission.
+- The upstream tag predates `go.mod`; proxy-synthesized metadata declares
+  only the exact path, with no Go version or requirements, so the declared
+  complete closure is Colour alone. Identical isolated Go-1.18 source-test
+  apparatus selects imported go-isatty v0.0.20 at Go 1.15 and x/sys v0.6.0
+  at Go 1.17. That apparatus is separate from project MVS, which already
+  selects go-isatty v0.0.20 and x/sys v0.30.0 at no more than Go 1.18.
+- Exact selected-version get is byte-identical. Old/candidate states remain
+  234 modules, 3,580 graph edges, 429 complete packages, 1,043 go.sum lines,
+  and a 356-line unapplied tidy projection. Module, graph, package, go.mod,
+  go.sum, and tidy diffs are empty; the changed-selection closure adds no
+  version, edge, checksum, or floor requirement. No dependency implementation
+  commit was created.
+- Colour loads in zero project packages, repository source has no Colour
+  import, and `go mod why` says the main module does not need it. Existing
+  edges are main -> Colour v0.1.0 and Assert v1.0.0 -> Colour v0.1.0; old
+  Chroma v0.7.1 requests the parent pseudo-version, which MVS already
+  upgrades. An explicitly external project-MVS fixture passes count-10/race/
+  vet for formatter, stripper, forced ANSI, nonterminal TTY, string-printer,
+  reset, underline, strikethrough, and escaped-caret behavior.
+- Proxy and exact-tag copies independently verify/list and pass complete
+  count-1/count-10/race/vet without source mutation. Repository verify/build/
+  tests/race/vet, Windows build, pinned lint, byte-identical public help and
+  API/CLI reports, API/CLI compatibility, and CLI surface pass. Full preflight
+  passes 62 launcher checks, distribution/lint/install/toolchain contracts,
+  snapshot/Docker meta-contracts, 80/80 mutations, verification meta-tests,
+  and 15 audit controls. Changed-selection host/snapshot/Docker/quality runs
+  are inapplicable because no selection changed.
+- Fresh primary vulnerability evidence has 1,392 module records and no Colour
+  record or trace. Old/candidate normalized findings and traces are identical
+  at exact 20/30/20 Darwin-symbol/Darwin-module/Windows-symbol populations.
+  Colour decision evidence has 322 verified entries; manifest SHA-256 is
+  `8277a8e7d5b4810a769547d2adbb5e0779d4e52c09b6b8e30c209383fc718543`,
+  and decision-summary SHA-256 is
+  `6932da454c33f6580d12349122346e1441e7277c81264ed091c7322880132592`.
+  Preserve the pre-module source-test apparatus, separately warmed v1.0.1
+  compatibility cache, and scratch-only BSD-mktemp/preflight correction.
 - Next, independently evaluate selected exact-path
-  `github.com/alecthomas/colour v0.1.0`. A fresh post-Chroma survey reports
-  that proxy `@latest` and exact Go `@latest`/`@v0`/`@master` all resolve the
-  selected stable v0.1.0 at 2019-11-01T02:47:59Z; it has no Go declaration.
-  Treat qualification, exact closure, source/signatures, module tests, loaded
-  population, and vulnerability effect as unknown until independently proved.
-  Do not combine Chroma or another group.
+  `github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751`.
+  Project MVS selects it without an explicit `go.mod` requirement. A fresh
+  post-Colour survey finds an empty stable proxy list; proxy `@latest` and
+  exact Go `@latest`/`@master` resolve the selected pseudo-version at
+  2019-07-18T01:26:54Z, exact `@v0` has no matching semantic version, and Go
+  reports no module Go declaration. Treat qualification, exact closure,
+  source/signatures, module tests, loaded population, and vulnerability effect
+  as unknown until independently proved. Do not combine Colour or another
+  group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
