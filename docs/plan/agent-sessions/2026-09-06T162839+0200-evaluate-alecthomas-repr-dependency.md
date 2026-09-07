@@ -1,13 +1,60 @@
 # Agent Session: Evaluate Alecthomas Repr Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-06T162839+0200-evaluate-alecthomas-repr-dependency`
 Created: `2026-09-06T16:28:39+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `dbbea1e22498de155459058b8ad88abd7a74e88a7ac2024848028e72e2268628`
 Previous: [2026-09-06T150339+0200-evaluate-alecthomas-assert-dependency.md](2026-09-06T150339+0200-evaluate-alecthomas-assert-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-07T125545+0200-evaluate-alecthomas-kong-dependency.md](2026-09-07T125545+0200-evaluate-alecthomas-kong-dependency.md)
+Outcome: Accepted canonical-latest stable `github.com/alecthomas/repr v0.5.4`; its one-selection, zero-new-edge closure preserves Go 1.18 and passed every quality contract.
+
+# Answer
+
+For the exact module path, the proxy lists ten stable tags from v0.1.0 through
+v0.5.4 and no prerelease. Proxy `@latest` and exact Go `@latest`, `@v0`, and
+`@master` all select v0.5.4 at 2026-07-15T12:04:01Z. It is a lightweight tag
+at unsigned commit `9b3680b9bb4e172c4fe539347ac5d0ddf5de0aa9`, tree
+`d5c923ba26338b41955d8fc02e88948c460777a0`. The active, unarchived, non-fork
+repository has no GitHub Release objects, retractions, deprecation marker,
+alternate module path, or v2 tags. A newer Renovate branch head resolves only
+as an unreleased pseudo-version and is not canonical latest.
+
+Candidate v0.5.4 declares Go 1.18 and has no requirements. The old selected
+pseudo-version declares Go 1.15 and also has none, so the complete changed
+closure is Repr alone and preserves the retained floor by declaration. Proxy,
+checksum-database, and exact upstream source identities agree after accounting
+for five tracked symlinks omitted from proxy ZIPs. Candidate checksum pair is
+`h1:OVP7JEcuzU9CCDsT6STCr3rg17oQfWILtPWd2EG0uN4=` /
+`h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=`.
+
+Exact get changes one version selection and relabels one existing main graph
+edge, with no new module or dependency edge. Measurements remain 234 modules,
+3,580 edges, and 429 packages; go.sum moves 1,041 -> 1,043 lines by adding
+only the candidate pair, and the unapplied tidy projection moves 354 -> 356
+lines. Repr appears in zero complete packages, repository source has no Repr
+import, and `go mod why` says the main module does not need it. It is unloaded
+historical MVS graph debt, including dependency tests.
+
+Candidate proxy and upstream trees separately pass verify, list, count-1,
+count-10, race, and vet with no source mutation or test-only apparatus.
+Repository verify/build/tests/race/vet, Windows build, pinned lint, empty-HOME
+count-2, byte-identical help/API/CLI, launcher/Make/preflight, host/snapshot/
+Docker, and exact quality contracts pass. All 27 Q0-Q2 rows attain L2, all
+80 mutations are killed, and held, regressed, not-comparable, and dirty counts
+are zero. Exact old/candidate vulnerability IDs and traces remain identical at
+20 Darwin-symbol, 30 Darwin-module, and 20 Windows-symbol findings.
+
+Exact Go 1.26.7 `go get github.com/alecthomas/repr@v0.5.4` produced
+dependency-only commit `6f4d02eb9c86ec2df8a488a85ed973aababe1f38`, parent
+`53475076e1c79f6d2181877e3238a1a5d389c246`, tree
+`82e7b1f5c503659082207481b8339e8113e38c10`, changing only `go.mod` and
+`go.sum`. Repr evidence has 447 verified entries; manifest SHA-256 is
+`aba1a6ac45d6b8a51a664e0d11f40ccccf82017240c91beaa59ec36866e26711`
+and decision-summary SHA-256 is
+`900e96c7001a89857ca7c16e1f2572ea0b90db9f2ab4d4e4e6a1c3153808bbcf`.
+The rolling handover records the scratch-only setup corrections and exact
+tool receipts.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

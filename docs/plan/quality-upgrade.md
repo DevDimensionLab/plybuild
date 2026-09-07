@@ -5376,8 +5376,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 Status: active after the maintained-toolchain baseline move and completed
 dependency groups through accepted canonical-latest
-`github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b`; further
-dependency groups remain queued.
+`github.com/alecthomas/repr v0.5.4`; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -7445,10 +7444,47 @@ Current queue decisions and next bounded P7 group (2026-09-05):
   Exact quality evidence at `/private/tmp/ply-p7-assert-quality.0781fd6.q1`
   has 237,950 entries and verified manifest SHA-256
   `04b202f6084740762589a042c8847c2411da5a54ee6572d3fa54790c4a3301e1`.
-- Next, independently evaluate selected `github.com/alecthomas/repr`
-  `v0.0.0-20210801044451-80ca428c5142`; the fresh post-Assert survey reports
-  v0.5.4 at 2026-07-15T12:04:01Z. Treat its qualification and closure as
-  unknown and do not combine Assert, Units, another dependency group, or P8.
+- Accept selected `github.com/alecthomas/repr`
+  `v0.0.0-20210801044451-80ca428c5142` -> canonical-latest stable v0.5.4.
+  Proxy `@latest` and exact Go `@latest`, `@v0`, and `@master` agree on
+  lightweight unsigned tag commit `9b3680b9bb4e172c4fe539347ac5d0ddf5de0aa9`,
+  tree `d5c923ba26338b41955d8fc02e88948c460777a0`, at
+  2026-07-15T12:04:01Z. The exact path has ten stable tags, no prerelease,
+  retraction, deprecation, alternate path, or GitHub Release object. A newer
+  Renovate head is an unreleased non-default-branch pseudo-version, not the
+  exact-path latest decision.
+- Candidate v0.5.4 declares Go 1.18 and has no requirements; the old version
+  declares Go 1.15 and also has none. Proxy/checksum-database identities agree,
+  and proxy/upstream regular files match after accounting for five tracked
+  symlinks omitted by the proxy. Both source forms pass verify, list, count-1,
+  count-10, race, and vet without mutation and need no test-only apparatus.
+- Exact get changes only Repr's selection and relabels one existing main graph
+  edge. Measurements remain 234 modules, 3,580 edges, and 429 packages;
+  go.sum moves 1,041 -> 1,043 with exactly the candidate checksum pair and the
+  unapplied tidy projection moves 354 -> 356 lines. Repr is absent from the
+  complete dependency-test population and repository imports; it is unloaded
+  historical MVS graph debt.
+- Dependency-only commit `6f4d02eb9c86ec2df8a488a85ed973aababe1f38`,
+  exact parent `53475076e1c79f6d2181877e3238a1a5d389c246`, tree
+  `82e7b1f5c503659082207481b8339e8113e38c10`, changes only `go.mod` and
+  `go.sum`. Repository build/tests/race/vet, Windows build, pinned lint,
+  empty-HOME count-2, help/API/CLI, launcher/Make/preflight, host/snapshot/
+  Docker, and exact Q0-Q2 quality gates pass. All 27 rows attain L2, 80/80
+  mutations are killed, and held, regressed, not-comparable, and dirty counts
+  are zero. Primary old/candidate vulnerability IDs and traces are identical
+  at exact 20/30/20 populations.
+- Repr evidence has 447 verified entries; manifest SHA-256 is
+  `aba1a6ac45d6b8a51a664e0d11f40ccccf82017240c91beaa59ec36866e26711`
+  and decision-summary SHA-256 is
+  `900e96c7001a89857ca7c16e1f2572ea0b90db9f2ab4d4e4e6a1c3153808bbcf`.
+  Preserve its separately warmed caches, BSD-mktemp adapter, Docker-config,
+  and scratch-relative manifest corrections. Historical golangci-lint and
+  govulncheck binary hashes are nonportable build receipts; pinned fresh
+  binaries were independently obtained/rebuilt and passed every gate.
+- Next, independently evaluate selected `github.com/alecthomas/kong`
+  `v0.2.1-0.20190708041108-0548c6b1afae`; the fresh post-Repr survey reports
+  v1.16.1 at 2026-08-09T07:05:31Z. Treat its qualification and closure as
+  unknown and do not combine Repr, Assert, Units, another group, or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
