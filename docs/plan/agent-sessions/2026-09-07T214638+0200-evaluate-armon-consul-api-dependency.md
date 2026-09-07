@@ -1,13 +1,191 @@
 # Agent Session: Evaluate Armon Consul API Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-07T214638+0200-evaluate-armon-consul-api-dependency`
 Created: `2026-09-07T21:46:38+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `45a46dd3188cfabbad82b9ff2bf7c6e295924f1ae11876d46ab479059b3f7760`
 Previous: [2026-09-07T194916+0200-evaluate-armon-circbuf-dependency.md](2026-09-07T194916+0200-evaluate-armon-circbuf-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-07T223740+0200-evaluate-armon-go-metrics-dependency.md](2026-09-07T223740+0200-evaluate-armon-go-metrics-dependency.md)
+Outcome: Retained the already-selected canonical-latest unreleased pseudo-version without dependency edits; exact get changed no selection and the module's repeated/race tests plus vet failed required gates.
+
+# Answer
+
+## Decision
+
+Retain exact-path `github.com/armon/consul-api` at selected pseudo-version
+`v0.0.0-20180202201655-eb2c6b5be1b6` without changing `go.mod` or `go.sum`.
+It is the canonical latest, `master` head, and highest exact-path version whose
+declarations preserve Go 1.18, but it is not a stable release and it does not
+qualify for a dependency change: exact get changes no selected version, and
+the module's complete repeated/race test and vet contracts fail. No dependency
+implementation commit was created.
+
+## Canonical Resolution, History, And Identity
+
+- The exact proxy version list is empty: there are zero published stable or
+  prerelease versions. Proxy and exact Go `@latest`, exact Go `@master`, and
+  the selected query all resolve
+  `v0.0.0-20180202201655-eb2c6b5be1b6` at
+  2018-02-02T20:16:55Z. Exact `@v0` has no matching versions. The synthetic
+  proxy `go.mod` has no retract directive. There are no tags, tag objects, tag
+  signatures, or GitHub Releases, so this remains an unreleased pseudo-version.
+- The authoritative `https://github.com/armon/consul-api` repository is public,
+  enabled, operationally unarchived, and non-fork. It has default branch
+  `master`, one branch, 46 commits, zero tags, and zero Releases. The sole
+  branch head is selected merge commit
+  `eb2c6b5be1b66bab83016e0b05f01b8d5496ffbd`, with parents
+  `dcfedd50ed5334f96adee43fc88518a4f095e15c` and
+  `f746cfef698c8f40b4b4ef0396be5984dcd7acbb`, tree
+  `aeb2299aaf107d0823ce91f057798119b821e81b`, and author/commit time
+  2018-02-02T12:16:55-08:00.
+- GitHub reports the commit signature verified/valid, verified at
+  2024-11-05T00:08:31Z. Independent verification finds a cryptographically
+  valid embedded GitHub web-flow signature for fingerprint
+  `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`; the key is now expired, so
+  current `git verify-commit` exits nonzero after emitting `VALIDSIG`,
+  `KEYEXPIRED`, and `EXPKEYSIG`. The official key file SHA-256 is
+  `6e8af687f60cf3f403151c8fb1b26e95e6f9e424ca60cc8f3787bd4466a3ef84`.
+- All 21 regular proxy ZIP files byte-match the exact GitHub commit archive and
+  Git tree. Both normalized source manifests have SHA-256
+  `358c1cfd7c63c682fc02e069ef0ab20f494bc44d9789e62ca39e62fc4026cbee`.
+  Proxy ZIP, proxy `go.mod`, and GitHub archive SHA-256 values are
+  `091b79667f16ae245785956c490fe05ee26970a89f8ecdbe858ae3510d725088`,
+  `5efec71e3cc865139136973305b438abc97908a545997521b7ed2aa48b1b4dd6`,
+  and `ba5e02e82cb70d6d7cb7970a8f81535df3266cfeae2b2d3b9e38de7ca2d76b4a`.
+- The checksum pair is
+  `h1:G1bPvciwNyF7IUmKXNt9Ak3m6u9DE1rF+RmtIkBpVdA=` /
+  `h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=`. Independent
+  sum.golang.org lookup agrees at tree 62473365.
+- The repository is unarchived but source-deprecated: its README directs users
+  to `github.com/hashicorp/consul/api`. That is a distinct module/import path
+  in the Consul monorepo, not an alternate exact-path version. Its current
+  latest v1.34.4 declares Go 1.26 and is outside this bounded decision; no
+  `/v2`, `/v3`, renamed, or gopkg.in exact-path continuation exists.
+
+## Floor, Closure, And Module Gates
+
+The selected source predates modules; its proxy-generated `go.mod` declares
+only `module github.com/armon/consul-api`, with no Go version and no
+requirements. Go therefore applies the historical implicit Go 1.16 module
+version, and the complete declared minimal closure is Consul API alone. It
+does not raise the retained Go 1.18 floor. Its standalone tests add no module
+requirements and remain separate from project MVS.
+
+Exact Go 1.26.7 proxy and exact-commit forms independently pass `go mod verify`
+and `go list`, remain unchanged, and fail identically:
+
+- count-1: exit 1, 33 failed tests;
+- count-10: exit 1, 330 failed tests;
+- race: exit 1, 33 failed tests; and
+- vet: exit 1 with `kv_test.go:187:4` and `kv_test.go:238:4` calling
+  `(*testing.T).Fatalf` from non-test goroutines.
+
+Every test failure is a refused connection to the required external Consul
+agent at `http://127.0.0.1:8500`. Normalized proxy/commit count-1, count-10,
+and race SHA-256 values are respectively
+`60095eb84d9f0d2d2e38ce8bf2de49a971879febe6b08c6e7de0b32f3b0ba052`,
+`15dc8ac4c780ebcfaab521cb89352c0c460b675dd5a199857df10e065da8862d`,
+and the same count-1 hash. Vet output SHA-256 is
+`59298258e3b1d6c8f9116b21ea14b5d2f8a1aa03e735e9b6e23036e6be6dfb67`.
+Exact Go 1.18.10 compiles the package, then reproduces the 33/330/33 failures
+and two vet diagnostics. These are candidate stop-rule failures, not hidden
+runner errors.
+
+## Project Projection And Consumers
+
+The original graph has one request for the module:
+`github.com/devdimensionlab/mvn-pom-mutator@v0.2.3` requests the selected
+version. That requester carries the requirement indirectly but its source does
+not import Consul API. Consul API loads in zero Ply packages, Ply has no source
+import, and `go mod why -m` says the main module does not need it.
+
+Exact selected-version get exits 0 but changes no selection. It projects:
+
+- selected modules 234 -> 234;
+- graph edges 3,581 -> 3,582, solely a redundant main-to-Consul edge;
+- complete-test packages 429 -> 429;
+- loaded modules 41 -> 41 and loaded Consul packages 0 -> 0;
+- `go.sum` lines 1,045 -> 1,046, solely the already-selected full checksum;
+  and
+- unapplied tidy diff 361 -> 363 lines.
+
+It also adds a redundant indirect `go.mod` requirement. Tidy removes that
+requirement, main edge, and full checksum while retaining the inherited
+go.mod checksum and all pre-existing debt. Accepted measurements and the exact
+29 checksum lines added relative to accepted go-cmp commit c314bcb therefore
+remain unchanged.
+
+The selected closure's historical real consumer is
+`github.com/xordataexchange/crypt@v0.0.3-0.20170626215501-b2862e3d0a77/backend/consul`.
+It uses `DefaultConfig`, `Config.Address`, `NewClient`, `Client.KV`, `KV.Get`,
+`KV.List`, `KV.Put`, `KVPair.Key`, `KVPair.Value`,
+`QueryOptions.WaitIndex`, and `QueryMeta.LastIndex`. An external Go-1.18
+fixture with a local HTTP test server exercises those exact configuration,
+client, KV, query, metadata, key, and value flows and passes count-10, race,
+and vet. This is consumer evidence, not a claim that Ply executes the module.
+
+## Vulnerabilities And Applicable Quality Scope
+
+Govulncheck v1.7.0, built with exact Go 1.26.7, queried primary data updated
+2026-09-02T19:12:04Z. The 1,392-entry module index has no Consul API record;
+none of the reachable traces contains Consul API. Original and exact-get
+projection results are byte-identical:
+
+- Darwin and Windows reachable-symbol IDs are
+  `GO-2023-1989`, `GO-2023-1990`, `GO-2024-2937`, `GO-2024-3333`,
+  `GO-2025-3595`, `GO-2026-4440`, `GO-2026-4441`, `GO-2026-4815`,
+  `GO-2026-4961`, `GO-2026-5025`, `GO-2026-5027`, `GO-2026-5028`,
+  `GO-2026-5029`, `GO-2026-5030`, `GO-2026-5031`, `GO-2026-5032`,
+  `GO-2026-5061`, `GO-2026-5062`, `GO-2026-5066`, and `GO-2026-6222`.
+  Each platform has 20 IDs and 22 traces; normalized SHA-256 is
+  `5bebff017082945899b65922b3262a8b91affcda7abfe2fade54dee439749dfe`.
+- Darwin module scanning adds `GO-2023-1988`, `GO-2023-2102`,
+  `GO-2024-2687`, `GO-2025-3503`, `GO-2026-4918`, `GO-2026-4962`,
+  `GO-2026-5024`, `GO-2026-5026`, `GO-2026-5942`, and `GO-2026-5970`,
+  for 30 exact IDs/findings. Normalized SHA-256 is
+  `f1cc7393d1a1d82da88379fceb830d926f8c1f0fe553e4af339e76ac6f7a1bc3`.
+- The 22 precise reachable traces comprise the 20 IDs above: TIFF decode
+  chains for 1989/1990/2937/4815/5032/5062/5066, HTML parse chains for
+  3333/3595/4440/4441/5025/5027/5028/5029/5030, WebP decode chains for
+  4961/5061, BMP decode for 5031, and VP8L-through-WebP decode for 6222. All
+  decode/parse chains continue through `image.Decode` or `html.Parse`,
+  ansimage/go-term-markdown/gomarkdown, Ply command initialization, Cobra, and
+  `cmd.ExecuteE`. The two additional traces are 4815 through
+  `tiff.ReadAt -> io.Read -> io.ReadAll -> getJsonWithAccessToken ->
+  GetJsonWithAccessToken`, and 5061 through
+  `webp.init -> ansimage.init -> go-term-markdown.init -> cmd.init`. The full
+  normalized trace objects are covered by the reachable summary hash above.
+
+Because no selected version changed, exact get manufactured only tidy-removable
+metadata, and the dependency module stop rule failed, downstream repository,
+snapshot/Docker, acceptance, and Q0-Q2 gates were inapplicable and were not
+claimed. The previously accepted Circbuf quality baseline remains unchanged.
+
+## Evidence And Corrections
+
+Exact Go 1.26.7 was recreated below session scratch; its archive SHA-256 is
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`
+and binary SHA-256 is
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+Go 1.18.10 archive/binary SHA-256 values are
+`718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade`
+and `f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`.
+GOENV/GOWORK/GOTOOLCHAIN remained off/off/local with no ambient GOFLAGS.
+Govulncheck's rebuilt v1.7.0 binary is a nonportable receipt at SHA-256
+`3d287f71f53e4dfaf03a7b9eb998ca7b3c8363f7db7dbc6c7dcf9f4162a394c1`.
+
+The first Go-1.18 CGO setup attempted an Xcode resolver cache outside scratch;
+it was superseded by final runs using the SDK and clang paths directly plus
+scratch-local TMPDIR/GOTMPDIR. Initial patterned module-mode govulncheck calls
+were invalid and superseded by correct no-pattern module scans. Concatenated
+JSON was decoded before filtering trace-bearing symbol findings. No correction
+mutated repository files or concealed a candidate failure.
+
+The sealed evidence tree has 315 verified entries. Evidence-manifest SHA-256
+is `1dbe7063e72dade7bc31e9c8967da78a60ef97859b68562ffa1a07b75a0b3b0b`;
+decision-summary SHA-256 is
+`0f5413813a179949c2dbce2a029becfceb9f650f7a603ac8b19755c3f4d48733`.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

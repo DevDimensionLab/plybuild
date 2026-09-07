@@ -5375,8 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through accepted canonical-latest Circbuf pseudo-version
-`v0.0.0-20190214190532-5111143e8da2`; further dependency groups remain
+dependency groups through retained canonical-latest Consul API pseudo-version
+`v0.0.0-20180202201655-eb2c6b5be1b6`; further dependency groups remain
 queued.
 
 Toolchain baseline move (2026-09-01):
@@ -7748,16 +7748,64 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `2684f8c269376320bcfca3404bfbf10c638c81753e6af36b5be59c4df2370d62`
   and decision-summary SHA-256 is
   `17441163b7924e2cd61cb167b739562da7672fa5abfa10089da36ef906f07ff9`.
+- Retain exact-path `github.com/armon/consul-api` at already-selected canonical
+  latest and `master` head pseudo-version
+  `v0.0.0-20180202201655-eb2c6b5be1b6`, commit
+  `eb2c6b5be1b66bab83016e0b05f01b8d5496ffbd`, tree
+  `aeb2299aaf107d0823ce91f057798119b821e81b`, at
+  2018-02-02T20:16:55Z. The exact stable proxy list is empty and `@v0` has no
+  match. The public, enabled, unarchived, non-fork repository has one branch,
+  46 commits, zero tags, and zero Releases. This is an unreleased pseudo-
+  version, not a stable release. Its GitHub web-flow commit signature is
+  cryptographically valid for fingerprint
+  `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`; the key is currently expired.
+- All 21 regular proxy files match the exact commit archive and Git tree at
+  normalized manifest SHA-256
+  `358c1cfd7c63c682fc02e069ef0ab20f494bc44d9789e62ca39e62fc4026cbee`.
+  The checksum pair is
+  `h1:G1bPvciwNyF7IUmKXNt9Ak3m6u9DE1rF+RmtIkBpVdA=` /
+  `h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=` and sumdb agrees. The
+  synthetic module declares neither a Go version nor requirements, so its
+  complete declared minimal closure is Consul API alone and preserves Go 1.18.
+  Its README explicitly deprecates this source for distinct path
+  `github.com/hashicorp/consul/api`; that is an out-of-scope migration whose
+  current v1.34.4 latest declares Go 1.26, not an exact-path upgrade.
+- Exact Go 1.26.7 proxy and commit forms verify/list but identically fail
+  complete count-1/count-10/race tests with 33/330/33 refused connections to
+  an external Consul agent at 127.0.0.1:8500. Vet also fails on two
+  `testing.T.Fatalf` calls from non-test goroutines. Exact Go 1.18.10 compiles
+  the package but reproduces those failures. A historical Crypt consumer and
+  external Go-1.18 HTTP fixture exercise the actual configuration, client, KV,
+  query, metadata, key, and value symbols; the fixture passes count-10/race/
+  vet. Consul API loads in zero Ply packages and Ply imports none of it.
+- Exact selected-version get changes no selection and projects only a redundant
+  indirect requirement, one main graph edge, and one full checksum, all removed
+  by tidy. No metadata or dependency implementation commit was created.
+  Accepted measurements remain 234 modules, 3,581 edges, 429 packages, 41
+  loaded modules, 1,045 sum lines, 361 tidy-diff lines, and exactly 29 added
+  checksum lines relative to accepted go-cmp commit c314bcb. Repository/full
+  quality gates were inapplicable after the no-change result and dependency
+  stop-rule failures.
+- Fresh primary vulnerability data has no Consul API record or trace and
+  preserves identical old/projected 20-ID/22-trace Darwin symbol, 30-ID Darwin
+  module, and 20-ID/22-trace Windows symbol populations. Consul API evidence
+  has 315 verified entries; manifest SHA-256 is
+  `1dbe7063e72dade7bc31e9c8967da78a60ef97859b68562ffa1a07b75a0b3b0b`
+  and decision-summary SHA-256 is
+  `0f5413813a179949c2dbce2a029becfceb9f650f7a603ac8b19755c3f4d48733`.
 - Next, independently evaluate selected exact-path
-  `github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6`. It is
-  selected without an explicit `go.mod` requirement. The exact stable proxy
-  list is empty; proxy and exact Go `@latest` and `@master` resolve the same
-  selected pseudo-version at 2018-02-02T20:16:55Z, while `@v0` has no match.
-  The public, enabled, unarchived, non-fork repository reports default branch
-  `master`, one branch, zero tags, and zero Releases. Treat qualification,
-  closure, identity/signatures, module tests, loaded behavior, and vulnerability
-  effect as unknown. Do not call the pseudo-version stable, manufacture
-  metadata for an unchanged selection, or combine Circbuf or another group.
+  `github.com/armon/go-metrics v0.4.0` at 2022-05-25T15:01:32Z. It is selected
+  without an explicit `go.mod` requirement. The proxy lists 22 stable versions;
+  exact `@latest` and `@v0` resolve v0.6.1 at 2026-07-29T13:06:13Z with
+  `go 1.25.0`, while `@master` resolves unreleased
+  `v0.6.2-0.20260907064447-465585286d74`, also with Go 1.25. The GitHub
+  `armon/go-metrics` request resolves metadata for `hashicorp/go-metrics`,
+  reporting public, enabled, unarchived, non-fork status, default `master`, 20
+  branches, 21 tags, and 15 Releases. Treat redirect/source identity, release
+  qualification/signatures, retractions, version declarations, highest
+  Go-1.18-compatible complete closure, tests, consumers, and vulnerability
+  effect as unknown. Do not choose the Go-1.25 latest, guess a candidate, or
+  combine another group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
