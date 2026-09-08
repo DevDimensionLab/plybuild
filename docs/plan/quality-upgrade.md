@@ -5375,8 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained Readline v1.5.1; further dependency groups
-remain queued.
+dependency groups through retained Ghodss YAML v1.0.0; further dependency
+groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -6129,7 +6129,7 @@ Regexp2 v1.12.0 dependency group (2026-09-04):
   `c95201c96297a198b7bec9b5a031443e42c0fe4be5f17a4d383362b9dce5f527`
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-Current queue decisions and next bounded P7 group (2026-09-08):
+Current queue decisions and next bounded P7 group (2026-09-09):
 
 - Reject `github.com/fatih/color v1.14.1` -> latest v1.19.0 because the latest
   module declares Go 1.25.0, and reject floor-compatible v1.16.0-v1.18.0
@@ -8345,15 +8345,58 @@ Current queue decisions and next bounded P7 group (2026-09-08):
   `e03b23b7a574cb7d4ec4213fc7a28d785fc5a70517a864a338fa64f227db11db`;
   decision-summary SHA-256 is
   `6ce37518efc54801eea666954aa6f850142909d99c347cad21d75aa408133a34`.
-- Next, independently evaluate exact-path `github.com/ghodss/yaml v1.0.0`.
-  The proxy's only version is selected/latest stable v1.0.0 at lightweight
-  tag commit `0ca9ea5df5451ffdf184b4428c902747c2c11cd7`, with checksum pair
+- Retain exact-path `github.com/ghodss/yaml v1.0.0` without a dependency edit.
+  Proxy and stable latest expose only v1.0.0. Its lightweight unsigned tag and
+  commit are `0ca9ea5df5451ffdf184b4428c902747c2c11cd7`, tree
+  `252e285a136d503d2913ad39cb3b1669b9a76999`, with checksum pair
   `h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=` /
-  `h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=`. Its module file has no
-  Go directive or requirements. It is MVS-selected only through
-  grpc-gateway v1.16.0, `go mod why -m` reports it unneeded, and no package is
-  loaded. Keep exact-path source closure and conversion behavior distinct
-  from grpc-gateway, project YAML libraries, and maintained successor paths.
+  `h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=`. Canonical Git source and
+  the seven-file proxy ZIP are byte-identical. There is no prerelease,
+  retraction, deprecation, redirect, or exact-path alternate stable release.
+- Current master `d8423dcdf3440d0a5baffc6f90a11e4128545620` is 16 commits after v1.0.0
+  but resolves only as unreleased
+  `v1.0.1-0.20220118164431-d8423dcdf344`; maintained `sigs.k8s.io/yaml` is a
+  distinct fork/module. Neither was substituted. Master is not a quality
+  upgrade under Go 1.26 because its native tests fail via a malformed example
+  vet error while the release's unreachable-code vet finding remains.
+- The otherwise empty release module file resolves a complete source/test
+  closure through `gopkg.in/yaml.v2 v2.4.0` and historical
+  `gopkg.in/check.v1`; it preserves Go 1.18 and its native tests pass exact Go
+  1.26.7 and contained Go 1.18.10. Release count-1, two count-10 repeats,
+  race, independent behavior/concurrency fixtures, and production cross-builds
+  pass both SDKs. Historical debt is explicit: vet reports one unreachable
+  return and the release test file does not compile on Linux/386 due to an
+  overflowing untyped MaxInt64, while the production package does compile.
+- V1.0.0 has no strict API. Duplicate YAML keys are last-wins, unknown struct
+  fields and later documents are ignored, integer/bool keys stringify,
+  composite/null keys fail, and JSON/YAML types, tags, aliases, and invalid
+  binary content lose information. Distinct keys `1` and `"1"` collide after
+  JSON stringification and the survivor is map-iteration-dependent. Master
+  strict APIs reject duplicates; unknown fields require a separate option.
+- Ghodss YAML exists only through grpc-gateway v1.16.0's declared edge;
+  `go mod why -m` reports it unneeded and no package is loaded. Retention keeps
+  project measurements at 234/3,583/429/41/197, 1,051 sum lines, and 383
+  tidy-diff lines. Exact selected `go get` would manufacture a redundant main
+  edge and source sum without loading a package, so it was not applied.
+- Project dependency, build/test/race/vet/lint, compatibility, CLI,
+  empty-HOME, complete preflight, 80/80 mutation, and 62-control launcher
+  gates pass. Fresh vulnerability populations remain 20 IDs/22 traces, 22
+  package findings, and 30 module findings with no Ghodss YAML record,
+  finding, or trace. The accepted 27/27 Q0-Q2 L2 scorecard remains
+  `dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
+  The 92-entry evidence manifest SHA-256 is
+  `cfb5bfcc497db42efebda5323b9e187aa63520192a7354631fd93391970bd771`;
+  decision-summary SHA-256 is
+  `724f7f2ac4394296cd36be360df90539deed1ecaf0b92386c6027b0f2c45f7b9`.
+- Next, independently evaluate historical root module
+  `github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1`. Its proxy list
+  is empty, selected commit is
+  `e6da0acd62b1b57ee2799d4d0a76a7d4514dc5bc`, and its synthesized module file
+  has no Go directive or requirements. Exact root-path latest
+  `v0.0.0-20260823155953-d41da22a9587` declares Go 1.19 and is provisionally
+  floor-ineligible. Keep this root module strictly separate from
+  `github.com/go-gl/glfw/v3.3/glfw`; resolve its Cgo/platform closure and
+  unneeded x/exp MVS ancestry without a graphics-stack migration.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

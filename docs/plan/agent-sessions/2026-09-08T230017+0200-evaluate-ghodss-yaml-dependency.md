@@ -1,13 +1,178 @@
 # Agent Session: Evaluate Ghodss YAML Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-08T230017+0200-evaluate-ghodss-yaml-dependency`
 Created: `2026-09-08T23:00:17+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `b5e5affb100636604c86f63e945cd5267a69dbd5e0f04c518115c65fd5d5b439`
 Previous: [2026-09-08T210923+0200-evaluate-fsnotify-fsnotify-dependency.md](2026-09-08T210923+0200-evaluate-fsnotify-fsnotify-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-09T002351+0200-evaluate-go-gl-glfw-dependency.md](2026-09-09T002351+0200-evaluate-go-gl-glfw-dependency.md)
+Outcome: Retained exact-path Ghodss YAML v1.0.0 without metadata changes; it is the sole stable release, preserves the Go 1.18 floor through its complete closure, is not loaded by Ply, and no unreleased or successor identity qualified as a replacement.
+
+## Answer
+
+### Decision And Exact Identity
+
+Retain exact-path `github.com/ghodss/yaml v1.0.0` without editing `go.mod` or
+`go.sum` and without manufacturing a dependency implementation commit. It is
+both selected and the only proxy-listed stable release. No higher stable or
+prerelease exists, and neither unreleased master nor the maintained distinct
+module `sigs.k8s.io/yaml` may be promoted into this exact path.
+
+Fresh proxy, checksum-database, go-import, Git, and GitHub evidence agrees:
+
+- proxy list: exactly `v1.0.0`; `@latest` time
+  `2017-03-27T23:54:44Z`;
+- sumdb source/mod pair
+  `h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=` /
+  `h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=`;
+- proxy ZIP SHA-256
+  `c3f295d23c02c0b35e4d3b29053586e737cf9642df9615da99c0bda9bbacc624`,
+  with all seven files byte-identical to the Git tag tree;
+- go-import repository `https://github.com/ghodss/yaml.git`;
+- lightweight unsigned tag and unsigned release commit
+  `0ca9ea5df5451ffdf184b4428c902747c2c11cd7`, tree
+  `252e285a136d503d2913ad39cb3b1669b9a76999`, parents
+  `04f313413ffd65ce25f2541bfd2b2ceec5c0908c` and
+  `a4f8cbd2fd05654d25f651b7e26d612ce3c98cc7`; and
+- one GitHub release, non-draft and non-prerelease, published
+  `2017-03-28T22:41:51Z` without assets.
+
+The canonical public repository is enabled, unarchived, non-fork, and
+defaults to `master`. The release is an ancestor of current master
+`d8423dcdf3440d0a5baffc6f90a11e4128545620`, tree
+`8df4d8facd33473e866d0f2e41e121c8732d5a6a`, parent
+`1e4101787d1907800b0200eb38faa0f5041d8ee6`. There are 16 post-release
+commits, but master resolves only as unreleased pseudo-version
+`v1.0.1-0.20220118164431-d8423dcdf344`; it is not an exact stable upgrade.
+There is no retraction, module deprecation, redirect, exact-path v2, or fork
+identity. `sigs.k8s.io/yaml @latest v1.6.0` is a separately maintained fork
+and module and was not substituted.
+
+### Complete Floor And Source Quality
+
+The v1.0.0 module file contains only `module github.com/ghodss/yaml`. Isolated
+resolution under exact Go 1.26.7 and contained Go 1.18.10 proves the minimal
+source closure is `gopkg.in/yaml.v2 v2.4.0`, which declares Go 1.15. Its own
+historical test closure adds
+`gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405`, with no Go directive
+or further requirements. Native tests for all three components pass under
+both SDKs when the historical test dependency is evaluated with Go 1.18
+language semantics. The full closure therefore preserves the Go 1.18 floor.
+
+The release package passes count-1, two independent count-10 runs, race, and
+production cross-builds for Darwin/amd64, Linux/amd64, Linux/386,
+Windows/amd64, and FreeBSD/amd64 under both SDKs. It is pure Go: no Cgo,
+assembly, generated files, examples, testdata, fuzz tests, or property tests.
+The release contains three Go files and one test file. Historical Travis CI
+covered Go 1.3 and 1.4 with only test/build; master later covered Go 1.9-1.16
+and has no current Actions workflow.
+
+Two historical upstream source/test defects remain explicit. `go vet` under
+both SDKs reports the unreachable return in `yaml.go`, and the v1.0.0 test
+file does not compile for Linux/386 because it passes untyped `math.MaxInt64`
+where `int` is required. The production package does compile for Linux/386,
+and the first post-release commit fixed that test. Unreleased master is not a
+quality upgrade: under Go 1.26 its native test command fails through vet
+because `ExampleUnknown` names no identifier, and explicit vet still reports
+the unreachable code. With no newer stable to select, these are retained,
+characterized historical source/test limitations rather than concealed
+candidate regressions.
+
+### API And Conversion Semantics
+
+V1.0.0 exports exactly `Marshal`, `Unmarshal`, `YAMLToJSON`, and
+`JSONToYAML`; it does not export `UnmarshalStrict`. Unreleased master changes
+Unmarshal to a variadic-options signature and adds `UnmarshalStrict`,
+`YAMLToJSONStrict`, `JSONOpt`, and `DisallowUnknownFields`. Master strict mode
+rejects duplicate keys, while unknown fields remain accepted unless the
+explicit disallow option is supplied.
+
+The release pipeline decodes YAML into interface values, recursively converts
+map keys and scalar values into JSON-compatible forms, then passes through
+`encoding/json`. Independent fixtures under both SDKs prove:
+
+- ordinary string, integer, and boolean keys convert; composite and null keys
+  return errors;
+- integer, boolean, null, float, YAML 1.1 boolean, tag, anchor, and alias
+  values convert as implemented;
+- duplicate keys are last-wins, unknown struct fields are ignored, and only
+  the first document of multi-document YAML is consumed;
+- JSON-tagged and embedded structs, interfaces, custom JSON marshalers and
+  unmarshalers, byte fields, scalar-to-string conversion, invalid inputs,
+  ordering, escaping, and wrapped error propagation behave consistently;
+- interface numbers become float64 after JSON unmarshal; JSONToYAML preserves
+  number text and sorts ordinary map output; JSON subset input is canonicalized
+  rather than passed through byte-for-byte;
+- JSONToYAML accepts YAML-superset input because it begins with yaml.Unmarshal;
+  and invalid `!!binary` bytes become Unicode replacement runes; and
+- the shared struct-field cache is race-clean in 100-by-100 concurrent use.
+
+Ordinary non-colliding conversion is deterministic, but the algorithm is
+intentionally lossy at YAML/JSON boundaries. Distinct YAML keys `1` and
+`"1"` both become JSON key `"1"`; repeated runs observe either surviving
+value because the collision is resolved during Go map iteration. Duplicate
+keys, tags, aliases, numeric types, later documents, and invalid binary bytes
+also lose YAML-specific information. These boundaries were characterized,
+not expanded into a replacement-library migration.
+
+### Project MVS, Gates, And Vulnerabilities
+
+The exact shortest declared graph ancestry is:
+
+`github.com/devdimensionlab/plybuild ->
+github.com/devdimensionlab/mvn-pom-mutator@v0.2.3 ->
+github.com/spf13/viper@v1.10.1 -> go.etcd.io/etcd/api/v3@v3.5.1 ->
+github.com/grpc-ecosystem/grpc-gateway@v1.16.0 ->
+github.com/ghodss/yaml@v1.0.0`.
+
+That is module-graph reachability, not package loading. `go mod why -m`
+reports the main module does not need Ghodss YAML, and no Ghodss package is in
+Ply's production or complete-test package graph. Ply directly imports
+`gopkg.in/yaml.v2` and `gopkg.in/yaml.v3`; those runtime choices are separate.
+
+Retention leaves the accepted project byte-exact at 234 modules, 3,583 graph
+edges, 429 complete-test entries, 41 loaded modules, 197 loaded module-backed
+packages, 1,051 `go.sum` lines, and 383 unapplied tidy-diff lines. The project
+records only the Ghodss go.mod sum. A disposable exact selected `go get`
+would add a redundant explicit indirect main edge and the unused source sum,
+raising graph edges to 3,584, sum lines to 1,052, and tidy projection to 388
+without loading a package. It was therefore not applied. A disposable master
+projection likewise loads no package, while adding an unreleased direct edge,
+two sums, and another declared YAML edge.
+
+Exact Go 1.26.7 project mod verification, build, count-1, count-10, race, vet,
+Windows/amd64 build, pinned golangci-lint 2.12.2, API/CLI compatibility,
+byte-identical root/status/upgrade/build help, empty-HOME count-2, and complete
+`make preflight` pass. All eight mutation families kill 80/80 mutants, the
+launcher contract passes all 62 controls, and the audit self-test passes all
+15 controls. Because the selection is unchanged, changed-selection-only
+snapshot, Docker, and exact quality/audit work was inapplicable. The accepted
+27/27 Q0-Q2 L2 scorecard remains
+`dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
+
+A supplemental contained-Go-1.18 project build passes. Its full project test
+diagnostic retains two pre-existing Darwin `pkg/shell` closed-file error-text
+differences. Because neither retained nor master loads a Ghodss package and
+their project source/package projections are identical, these inherited
+failures are not Ghodss selection effects.
+
+Fresh govulncheck v1.7.0 used the 1,392-record primary module index. Retained
+and master projections are identical: 20 IDs/22 reachable traces for Darwin
+and Windows symbol scans, 22 Darwin package findings, and 30 Darwin module
+findings. Ghodss YAML has no module record, package/symbol finding, or trace.
+
+The 92-entry selected evidence manifest verifies at SHA-256
+`cfb5bfcc497db42efebda5323b9e187aa63520192a7354631fd93391970bd771`.
+Decision-summary SHA-256 is
+`724f7f2ac4394296cd36be360df90539deed1ecaf0b92386c6027b0f2c45f7b9`.
+The worktree was clean before documentation handoff; no project metadata,
+runtime source, manual evidence, or next-group implementation was created.
+One superseded preflight invocation used the compatibility scripts' default
+ignored `target/compatibility` report location and was stopped by the later
+cleanliness guard. Those two generated JSON reports and their directories were
+removed immediately; the valid complete rerun routed all reports beneath
+session scratch and passed. The stopped attempt is not passing evidence.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

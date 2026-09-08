@@ -1131,62 +1131,71 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-08T230017+0200-evaluate-ghodss-yaml-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T230017+0200-evaluate-ghodss-yaml-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T210923+0200-evaluate-fsnotify-fsnotify-dependency.md
+#|SESSION_ID=2026-09-09T002351+0200-evaluate-go-gl-glfw-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T002351+0200-evaluate-go-gl-glfw-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T230017+0200-evaluate-ghodss-yaml-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/ghodss/yaml v1.0.0` as one bounded dependency group. Resolve its
-#|complete exact-path release and repository identity, full Go-floor closure,
-#|YAML-to-JSON behavior, historical and current maintenance state, actual
+#|`github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1` as one bounded
+#|dependency group. Resolve its complete root-module release and repository
+#|identity, full Go-floor closure, Cgo/native and platform behavior, actual
 #|project loading, exact MVS effects, and every applicable quality contract.
-#|Retain or select only an exact stable release whose complete minimal closure
-#|preserves Go 1.18 and whose relevant behavior passes every contract.
+#|Retain or select only an exact root-path version whose complete minimal
+#|closure preserves Go 1.18 and whose relevant behavior passes every contract.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and accepted
 #|Speakeasy v0.2.0, XXHash v2.3.0, and Fatih Color v1.15.0 moves. Crypt,
-#|OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, and Fsnotify
-#|remain retained. All earlier decisions and lifecycle ancestry are final. Do
-#|not revisit them or combine another dependency group. P8 remains queued.
+#|OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify, and
+#|Ghodss YAML remain retained. All earlier decisions and lifecycle ancestry are
+#|final. Do not revisit them or combine another dependency group. P8 remains
+#|queued.
 #|
-#|Project MVS selects Ghodss YAML only through the declared module edge
-#|`github.com/grpc-ecosystem/grpc-gateway v1.16.0 -> github.com/ghodss/yaml
-#|v1.0.0`. `go mod why -m github.com/ghodss/yaml` says the main module does not
-#|need it, and no Ghodss YAML package is present in Ply's loaded production or
-#|complete-test package graph. Keep the declared grpc-gateway edge, MVS
-#|selection, Ghodss YAML's own source closure, direct Ply YAML libraries, and
-#|runtime behavior distinct. Do not turn this into a grpc-gateway, etcd,
-#|OpenTelemetry, gopkg.in/yaml.v2, go.yaml.in/yaml/v3, serialization migration,
-#|or unrelated tidy review.
+#|Project MVS selects this historical root module through the declared edge
+#|`golang.org/x/exp v0.0.0-20191030013958-a1ab85dbe136 -> github.com/go-gl/glfw
+#|v0.0.0-20190409004039-e6da0acd62b1`. `go mod why -m github.com/go-gl/glfw`
+#|says the main module does not need it. Keep this exact root module distinct
+#|from the separately selected nested module
+#|`github.com/go-gl/glfw/v3.3/glfw`; do not combine, upgrade, remove, or audit
+#|that nested path, x/exp, Gio, graphics stacks, windowing libraries, or other
+#|dependency groups.
 #|
-#|A minimal post-Fsnotify survey finds one proxy version: stable selected and
-#|`@latest` v1.0.0, with proxy time 2017-03-27T23:54:44Z. Its lightweight tag is
-#|Git commit `0ca9ea5df5451ffdf184b4428c902747c2c11cd7`. The checksum pair is
-#|`h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=` /
-#|`h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=`. The project currently
-#|records only the go.mod checksum because the package is not loaded.
+#|A minimal post-Ghodss survey finds an empty proxy version list. Selected is
+#|the fetchable pseudo-version
+#|`v0.0.0-20190409004039-e6da0acd62b1`, with source/mod checksum pair
+#|`h1:QbL/5oDUmRBzO9/Z7Seo6zf912W/a6Sr4Eu0G/3Jho0=` /
+#|`h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=`. Its synthesized module
+#|file contains only `module github.com/go-gl/glfw`, without a Go directive or
+#|requirements. Selected commit is
+#|`e6da0acd62b1b57ee2799d4d0a76a7d4514dc5bc`, tree
+#|`17ab3d23b59cab5cffcafe1232da9c2af635a2a1`, parent
+#|`39f94f8075907c0c6524d2791e05d625627fe268`, unsigned, with commit time
+#|2019-04-09T00:40:39Z.
 #|
-#|The published module file contains only
-#|`module github.com/ghodss/yaml`: it has no `go` directive and no declared
-#|requirements. Do not infer complete Go 1.18 compatibility from that file.
-#|Resolve the imported source dependencies and minimal package/test closure
-#|under contained Go 1.18, while preserving project MVS as a separate result.
+#|Exact-path `@latest` is the newer pseudo-version
+#|`v0.0.0-20260823155953-d41da22a9587`, checksum pair
+#|`h1:OWknICoxrl3cDP3NtbCnTgntY+0CM5RNam8IXHK0NlU=` /
+#|`h1:fOxQgJvH6dIDHn5YOoXiNC8tUMMNuCgbMK2yZTlZVQA=`. Its module file declares
+#|Go 1.19, so it is provisionally ineligible for the retained Go 1.18 floor.
+#|Commit `d41da22a9587f777098f96d37014f6cdd35d1afb` is GitHub-verified, has tree
+#|`fcbf95c11882251c94a9ab80ab2205c1edfb7733`, parent
+#|`8fa725d95c7913e898bcb58962caa953fefb151a`, and time
+#|2026-08-23T15:59:53Z. Treat all incoming facts only as a survey to verify.
 #|
-#|Go-import metadata names `https://github.com/ghodss/yaml.git`. The public
-#|repository is enabled, unarchived, non-fork, and defaults to `master`; current
-#|master is `d8423dcdf3440d0a5baffc6f90a11e4128545620`, last pushed in 2023. Treat
-#|the incoming facts only as a survey to verify. Resolve tags, stable,
-#|prerelease, pseudo-version, proxy-absent, redirect, fork, alternate-path, and
-#|unreleased identities; release/tag/commit signatures; commit time, tree,
-#|parents and default-branch ancestry; repository status; deprecation and
-#|retractions. A newer repository commit or a maintained successor package is
-#|not an exact-path stable release and must not be substituted silently.
+#|Go-import metadata names `https://github.com/go-gl/glfw.git`. The public
+#|repository is enabled, unarchived, non-fork, defaults to `master`, and was
+#|pushed in 2026. Resolve the historical root module, repository tags and
+#|branches, proxy-absent stable/prerelease identities, pseudo-version ancestry,
+#|root-versus-nested module boundaries, signatures, commit time/tree/parents,
+#|default-branch ancestry, repository status, deprecation, retractions,
+#|redirects, forks, alternate paths, and any serious exact-root candidate. Do
+#|not silently promote a repository tag belonging to a nested module or a
+#|floor-ineligible unreleased commit.
 #|
 #|# Measurements At Start
 #|
@@ -1194,10 +1203,9 @@ exit 70
 #|`6ca672ef38688b7f6f505cf0cb273d07c4c2ba9a`, parent
 #|`d181fcd6c11fa147e0b44dd007598872875fc9e6`, and tree
 #|`9ba2fdc442553622028a4a8464536915d345510c`, changing only `go.mod` and
-#|`go.sum` with three insertions and one deletion. Fsnotify v1.6.0 was retained
-#|without a dependency implementation commit because every newer
-#|floor-compatible stable fails a native complete/repeat contract and v1.10.x
-#|requires Go 1.23.
+#|`go.sum` with three insertions and one deletion. Ghodss YAML v1.0.0 was
+#|retained without a dependency implementation commit because it is the only
+#|exact-path stable release; unreleased master was not substituted.
 #|
 #|Accepted project measurements remain 234 selected modules, 3,583 graph
 #|edges, 429 native complete-test entries, 41 loaded modules, 197 loaded
@@ -1208,20 +1216,20 @@ exit 70
 #|
 #|Fresh primary vulnerability data has 1,392 module records. Accepted
 #|populations remain 20 IDs/22 reachable traces for Darwin and Windows symbol
-#|scans, 22 Darwin package findings, and 30 Darwin module findings. Fsnotify has
-#|no record, finding, or trace. Do not attribute existing x/image/ansimage or
-#|other inherited findings to Ghodss YAML.
+#|scans, 22 Darwin package findings, and 30 Darwin module findings. Ghodss YAML
+#|has no record, finding, or trace. Do not attribute existing x/image/ansimage
+#|or other inherited findings to the root GLFW module.
 #|
 #|The unchanged accepted quality baseline has all 27 Q0-Q2 rows PASS at L2,
 #|with scorecard SHA-256
 #|`dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
-#|Fsnotify decision-summary SHA-256 is
-#|`6ce37518efc54801eea666954aa6f850142909d99c347cad21d75aa408133a34`;
-#|its 899-entry selected evidence manifest SHA-256 is
-#|`e03b23b7a574cb7d4ec4213fc7a28d785fc5a70517a864a338fa64f227db11db`.
+#|Ghodss YAML decision-summary SHA-256 is
+#|`724f7f2ac4394296cd36be360df90539deed1ecaf0b92386c6027b0f2c45f7b9`;
+#|its 92-entry selected evidence manifest SHA-256 is
+#|`cfb5bfcc497db42efebda5323b9e187aa63520192a7354631fd93391970bd771`.
 #|
-#|Read the answered Fsnotify archive and rolling handover for its complete
-#|release, OS watcher, test-flake, MVS, vulnerability, and evidence record.
+#|Read the answered Ghodss YAML archive and rolling handover for its complete
+#|release, conversion, closure, MVS, vulnerability, and evidence record.
 #|
 #|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
 #|SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
@@ -1237,66 +1245,67 @@ exit 70
 #|# Role And Boundaries
 #|
 #|From fresh external archives and caches, resolve the exact proxy, checksum
-#|database, go-import metadata, authoritative repository, tag ancestry,
-#|repository status, and primary Go vulnerability identity. Record the exact
-#|source/mod checksums, Git identity, release time, tree, parents, signature
-#|state, default-branch ancestry, deprecation, retractions, and all other tags
-#|or pseudo-versions that matter to the exact path.
+#|database, go-import metadata, authoritative repository, root-module history,
+#|and primary Go vulnerability identity. Record exact source/mod checksums, Git
+#|identity, timestamps, trees, parents, signature state, ancestry, repository
+#|status, deprecation/retraction state, and every tag or pseudo-version that
+#|matters to the exact root path.
 #|
-#|Prove the complete minimal module and package/test closure under exact Go
-#|1.26.7 and contained Go 1.18.10. Inspect every imported dependency rather
-#|than treating the absent root `go` directive as proof. Keep source-time
-#|dependency resolution separate from the project's already-selected graph.
+#|Prove complete minimal module and package/test closure under exact Go 1.26.7
+#|and contained Go 1.18.10. Inspect imported source and test dependencies rather
+#|than treating the synthesized root module file as floor proof. Keep isolated
+#|source-time resolution separate from the project's selected graph.
 #|
-#|Inspect exported `Marshal`, `Unmarshal`, `UnmarshalStrict`, `YAMLToJSON`, and
-#|`JSONToYAML` APIs and the actual conversion pipeline. Cover maps with string
-#|and non-string keys, integer/bool/null scalars, numbers, tags, anchors and
-#|aliases, duplicate keys, unknown fields, embedded/custom marshalers,
-#|JSON-tagged structs, interfaces, byte/string inputs, invalid YAML/JSON,
-#|multi-document input, ordering, escaping, and error propagation. Characterize
-#|lossy YAML-to-JSON behavior and strict-mode boundaries without expanding the
-#|task into a replacement-library migration.
+#|Inspect every root-module package and its public API, including versioned
+#|directories within that root module. Resolve Cgo directives, bundled C/header
+#|sources, generated bindings, callbacks, unsafe use, thread-affinity rules,
+#|init/terminate lifecycle, error propagation, concurrency, build tags,
+#|examples, testdata, fuzz/property coverage, and upstream CI. Characterize
+#|Darwin frameworks, Linux X11/Wayland or other system-library requirements,
+#|Windows behavior, unsupported targets, headless behavior, and which checks
+#|can truthfully run in the contained host. Do not hide native prerequisites or
+#|turn unavailable display/system libraries into a passing runtime claim.
 #|
-#|Inspect Cgo/native surface, generated files, examples, testdata, fuzz/property
-#|coverage, upstream CI coverage, and differences between v1.0.0 and unreleased
-#|master. Add independent fixtures for release-relevant conversion, strictness,
-#|errors, determinism, concurrency, and package/build coverage. Run source
-#|verification, package listing, native complete tests, two independent repeated
-#|passes, race where supported, vet, and relevant cross-builds under both SDKs.
+#|Add independent fixtures where useful for release-relevant package/build,
+#|constants/value behavior, pure-Go or native boundaries, errors, determinism,
+#|and concurrency. Run source verification, package listing, native complete
+#|tests, two independent repeats, race where supported, vet, and relevant
+#|cross-build or compile probes under both SDKs. Classify toolchain, OS,
+#|display-server, and system-library failures precisely.
 #|
 #|Prove exact project module/graph/package/checksum/tidy effects for selected
-#|v1.0.0 and any serious exact-path candidate in disposable trees. Explain why
-#|the selected module exists in MVS while no package is loaded. Any change
-#|outside the exact Ghodss YAML edge and its authorized MVS projection is a stop
-#|condition. Do not independently upgrade or remove grpc-gateway or YAML
-#|implementations.
+#|and every serious exact-root candidate in disposable trees. Explain why the
+#|root module exists in MVS while no package is loaded, and keep any nested
+#|v3.3 package loading separate. Any change outside the exact root GLFW edge
+#|and its authorized MVS projection is a stop condition.
 #|
-#|Compare old/candidate primary vulnerability results at module, package,
+#|Compare selected/candidate primary vulnerability results at module, package,
 #|symbol, and reachable-trace levels. Reject or retain if canonical identity,
-#|release qualification, complete floor, conversion semantics, concurrency,
-#|native tests, API, loading, MVS, or any applicable quality contract fails.
+#|release qualification, complete floor, native behavior, concurrency, tests,
+#|API, loading, MVS, or any applicable quality contract fails.
 #|
 #|# Required Reading
 #|
 #|At start, verify the feature branch, clean ordinary and ignored status,
 #|current ancestry, Fatih implementation identity, reciprocal archive history,
 #|P7/P8 state, and `./codex-dev-start.sh --check`. Read this archive, the
-#|answered Fsnotify archive, rolling handover, roadmap, `go.mod`, `go.sum`, and
-#|every referenced quality, compatibility, release, runner, evidence, and
+#|answered Ghodss YAML archive, rolling handover, roadmap, `go.mod`, `go.sum`,
+#|and every referenced quality, compatibility, release, runner, evidence, and
 #|lifecycle contract. Earlier outcomes are final.
 #|
 #|# Three Moves
 #|
-#|First, determine whether any exact-path stable release higher than selected
-#|v1.0.0 exists and independently qualifies. Do not promote an unreleased
-#|commit, redirect, fork, maintained successor, or alternate module path into an
-#|exact stable upgrade. If selected/latest v1.0.0 is the only qualified stable,
-#|retain it without hand-editing metadata or manufacturing a dependency commit.
+#|First, determine whether any qualified exact-root stable or pseudo-version
+#|higher than selected exists. Do not promote the distinct nested v3.3 module,
+#|a redirect, fork, alternate path, floor-ineligible commit, or repository tag
+#|that does not version the root module. If no higher exact-root candidate
+#|qualifies, retain selected without hand-editing metadata or manufacturing a
+#|dependency commit.
 #|
 #|For a changed selection, use exact Go 1.26.7 and exact `go get` for one
 #|dependency-only commit, never tidy as implementation, then run the complete
 #|P7 dependency gate. For an inert/retained selection, prove the no-change
-#|effect and run the applicable dependency, closure, project, compatibility,
+#|effect and run applicable dependency, closure, project, compatibility,
 #|vulnerability, empty-HOME, and cleanliness gates without rerunning
 #|changed-selection-only snapshot/Docker/audit work merely to manufacture
 #|activity. Exact changed-selection `make quality` must exit 0 with all 27
@@ -1311,7 +1320,7 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the Ghodss YAML decision, rewrite the rolling handover and roadmap,
+#|After the root GLFW decision, rewrite the rolling handover and roadmap,
 #|answer this archive, create exactly one reciprocal NEXT archive for the next
 #|single P7 group, replace only launcher mutable regions, run launcher/handoff
 #|contracts, and make the normal `docs: prepare next agent session` commit. Do
