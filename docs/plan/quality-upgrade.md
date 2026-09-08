@@ -8091,15 +8091,54 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `55c7090ab788c633f20666ba9d70e8f4d5f4bcb446b9e5ef8f530cd78e3b074a`
   and decision-summary SHA-256 is
   `f7f4ed0dd015d7d7da58141a48f63537b8552c34761c05bc90de5b3efa22564a`.
+- Accept exact-path `github.com/cespare/xxhash/v2 v2.3.0`, canonical latest,
+  in dependency-only commit
+  `e5d6252825d7a1822c01819b9144050f345a6ad4`, tree
+  `5213ba55981d77d7c8061312915e237e80d29af8`. Exact Go 1.26.7 `go get`
+  changes only XXHash v2.1.2 -> v2.3.0 and adds one `go.mod` requirement plus
+  the candidate checksum pair. The proxy lists six stable v2 releases, no
+  retractions or deprecation, and selected/latest declare Go 1.11. Every proxy
+  ZIP matches exact Git source. The public repository is enabled, unarchived,
+  non-fork, defaults to `main`, and has annotated unsigned tags but no GitHub
+  Release objects. Latest tag commit is
+  `998dce232f17418a7a5721ecf87ca714025a3243`; the only later main commit is a
+  CI-only update and was not selected.
+- Selected/candidate three-package closures pass verify/list/count-1/two
+  count-10/vet/pure-Go and supported root race tests under exact Go 1.26.7 and
+  Go 1.18.10. The dynamic non-race-plugin/race-host incompatibility is
+  invariant while normal repeated plugin tests pass. Known-vector, streaming,
+  marshal, and candidate seeded fixtures pass. Pinned apidiff finds only two
+  compatible seeded API additions. Darwin-arm64, Windows/Linux amd64 assembly,
+  pure-Go/appengine/non-gc fallbacks, cross-builds, and static Linux execution
+  all qualify. Historical grpc xDS `Sum64String` consumer tests pass under both
+  versions and SDKs; Ply itself loads no XXHash package.
+- The accepted project is 234 modules, 3,583 edges, 429 complete-test packages,
+  41 loaded modules, 197 loaded packages, 1,049 checksum lines, and 381
+  unapplied tidy lines. Only the main edge and v2.3.0 checksum pair differ;
+  tidy would remove the pin and restore inherited v2.1.2. Relative to accepted
+  go-cmp, `go.sum` adds 33 lines and removes zero. Project verify/build/
+  count-1/count-10/race/vet/Windows/pinned lint, help/API/CLI, offline replay,
+  and empty-HOME count-2 pass.
+- Exact `make quality` passes all 21 stages with 27/27 Q0-Q2 PASS at L2,
+  80/80 mutants killed, 4/4 acceptance, six valid manual receipts, and zero
+  held/regressed/not-comparable/dirty counts. Separate audit meta passes 15
+  controls; full audit exits 1 only for queued L3 Q3.1/Q3.3/Q3.4/Q3.7 and
+  attains L2. Fresh vulnerability results are invariant with no XXHash record
+  or trace. Evidence has 608 entries; manifest SHA-256 is
+  `6f57be6cbf177c6617ebf62e0eea7b38f6b3b41eb00873060e160ddf02f1cf34`
+  and decision-summary SHA-256 is
+  `4e2f0559dbefd98f22e8f1efe34a1e538ecb8e1dd2da0749af8478c88c0a1a20`.
 - Next, independently evaluate selected exact-path
-  `github.com/cespare/xxhash/v2 v2.1.2`. A minimal survey finds six exact v2
-  releases through canonical latest v2.3.0 at 2024-04-04T20:00:10Z. Both
-  selected and latest declare Go 1.11. Viper v1.10.1 and Sagikazarmark Crypt
-  v0.4.0 request selected, but Ply loads no XXHash package. The public,
-  enabled, unarchived, non-fork repository defaults to `main`; independently
-  prove its release/signature identity, architecture-specific implementations,
-  complete closure, consumers, project projection, and vulnerability effect
-  before considering one exact move.
+  `github.com/chzyer/logex v1.2.1`. It is already proxy `@latest` at
+  2022-04-24T13:13:51Z and declares Go 1.15. The proxy has v1.1.1 through
+  v1.1.10 plus v1.2.0/v1.2.1; repository v1.0/v1.1 tags are proxy-absent.
+  Readline v1.5.1 and chzyer/test v1.0.0 request selected, while Promptui and
+  historical pprof request v1.1.10. The public enabled/unarchived/non-fork
+  repository defaults to `master`; selected commit
+  `2f95bdde8c3c97bfbf6d016fcc410669a895b9e7` precedes five unreleased
+  test/CI-only commits. Verify complete release identity, closure, consumers,
+  projection, and vulnerability effect without selecting master or adding a
+  redundant pin.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
