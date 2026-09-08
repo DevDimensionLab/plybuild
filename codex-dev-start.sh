@@ -1131,78 +1131,80 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-08T153002+0200-evaluate-eliukblau-pixterm-ansimage-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T153002+0200-evaluate-eliukblau-pixterm-ansimage-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T141743+0200-evaluate-disintegration-imaging-dependency.md
+#|SESSION_ID=2026-09-08T170736+0200-evaluate-fatih-color-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T170736+0200-evaluate-fatih-color-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T153002+0200-evaluate-eliukblau-pixterm-ansimage-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/eliukblau/pixterm/pkg/ansimage
-#|v0.0.0-20191210081756-9fb6cf8c2f75` as one bounded dependency group. Resolve
-#|canonical latest despite the empty exact proxy list and failing `@latest`,
-#|authoritative nested-module and repository identity, complete Go-floor
-#|closure, terminal-image behavior, actual production consumers, exact MVS
-#|effects, and all applicable quality contracts. Make an exact dependency
-#|selection only if a higher qualified exact stable release changes the
-#|selection, preserves the retained Go 1.18 floor through the complete minimal
-#|closure, and passes every contract.
+#|`github.com/fatih/color v1.14.1` as one bounded dependency group. Resolve every
+#|relevant exact release through current stable v1.19.0, authoritative source
+#|and release identity, complete Go-floor closure, terminal-color behavior,
+#|actual production consumers, exact MVS effects, and all applicable quality
+#|contracts. Make an exact dependency selection only if the highest qualified
+#|stable release preserves the retained Go 1.18 floor through the complete
+#|minimal closure and passes every contract.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, accepted
 #|Speakeasy v0.2.0 and XXHash v2.3.0 moves, and retained Crypt, OpenCensus Proto,
-#|Logex, Readline, Fnmatch, and Imaging selections. All earlier acceptances,
-#|rejections, no-change decisions, evidence corrections, and lifecycle ancestry
-#|are final. Do not revisit Imaging, Fnmatch, Readline, Logex, XXHash,
-#|OpenCensus Proto, Crypt, or Speakeasy and do not combine another module group.
-#|P8 remains queued.
+#|Logex, Readline, Fnmatch, Imaging, and ansimage selections. All earlier
+#|acceptances, rejections, no-change decisions, evidence corrections, and
+#|lifecycle ancestry are final. Do not revisit ansimage, Imaging, Fnmatch,
+#|Readline, Logex, XXHash, OpenCensus Proto, Crypt, or Speakeasy and do not
+#|combine another module group. P8 remains queued.
 #|
-#|Ply loads ansimage in production through `plybuild/cmd ->
-#|github.com/MichaelMure/go-term-markdown ->
-#|github.com/eliukblau/pixterm/pkg/ansimage`. Markdown opens local or HTTP image
-#|readers, calls `NewScaledFromReader`, and renders terminal ANSI output.
-#|Ansimage uses Imaging `Resize`, `Fit`, and `Fill`, go-colorful, and registered
-#|x/image decoders. Keep the exact nested module's declared closure, project
-#|MVS's selected closure, loaded production/test packages, and actual Ply
-#|behavior distinct. Do not turn this into an Imaging, go-colorful, x/image,
-#|terminal-color, or unrelated tidy review.
+#|Ply loads Fatih Color in production through `plybuild/cmd ->
+#|github.com/MichaelMure/go-term-markdown -> github.com/fatih/color`.
+#|Go-term-markdown creates Sprint functions for green, high-green, bold-green,
+#|blue, blue-background italic, and red; it also branches on the package-global
+#|`color.NoColor`. Image destinations and malformed-image fallbacks use Blue.
+#|Keep Fatih Color's declared closure, project MVS's already-selected terminal
+#|support modules, loaded production/test packages, and actual Ply behavior
+#|distinct. Do not turn this into a go-colorable, go-isatty, x/sys, ansimage,
+#|terminal emulator, or unrelated tidy review.
 #|
-#|A minimal post-Imaging survey finds an empty exact proxy version list, while
-#|the selected pseudo-version remains fetchable with checksum pair
-#|`h1:vbix8DDQ/rfatfFr/8cf/sJfIL69i4BcZfjrVOxsMqk=` /
-#|`h1:0gZuvTO1ikSA5LtTI6E13LEOdWQNjIo5MTQOvrV0eFg=`. Exact `@latest` returns
-#|404 with “no matching versions”. The selected nested module declares exact
-#|path `github.com/eliukblau/pixterm/pkg/ansimage`, Go 1.13, Imaging v1.6.2,
-#|go-colorful v1.0.3, and x/image
-#|v0.0.0-20191206065243-da761ea9ff43. Independently resolve every relevant
-#|stable, prerelease, pseudo-version, proxy-absent tag, redirect, fork,
-#|alternate-path, nested-module, and unreleased identity, including deprecation
-#|and retractions.
+#|A minimal post-ansimage survey finds 22 exact proxy versions. Selected
+#|v1.14.1 is a stable GitHub Release and declares Go 1.17 with go-colorable
+#|v0.1.13, go-isatty v0.0.17, and x/sys v0.3.0. Its checksum pair is
+#|`h1:qfhVLaG5s+nCROl1zJsZRxFeYrHLqWroPOQ8BWiNb4w=` /
+#|`h1:2oHN61fhTpgcxD3TSWCgKDiH1+x4OiDVVGH8WlgGZGg=`. Selected tag commit is
+#|`3d5097c6b003cf3a784e670ddb79710cf46e9a07`.
 #|
-#|The public repository `github.com/eliukblau/pixterm` is currently enabled,
-#|unarchived, non-fork, and defaults to `master`. Selected unsigned commit
-#|`9fb6cf8c2f75275ebcd4ac8c30a0e26930d497f7`, tree
-#|`bdcdecab7b23ba3a6d18efd3ced9800826668031`, parent
-#|`be34e524a7d8fbf6ab827fd06f669ad4e50943b0`, dated
-#|2019-12-10T08:17:56Z, is also root-project stable Release/tag v1.3.0. Because
-#|the tag is not prefixed for the nested module, the exact module resolves it as
-#|the selected pseudo-version rather than v1.3.0.
+#|Stable v1.15.0, v1.16.0, v1.17.0, and v1.18.0 all declare Go 1.17. V1.18.0
+#|requires go-colorable v0.1.13, go-isatty v0.0.20, and x/sys v0.25.0; its tag
+#|commit is `1c8d8706604ee5fb9a464e5097ba113101828a75` and checksum pair is
+#|`h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=` /
+#|`h1:4FelSpRwEGDpQ12mAdzqdOukCy4u8WUtOY6lkT/6HfU=`. Treat v1.18.0 as the
+#|highest immediately visible floor-compatible candidate, not as prequalified.
 #|
-#|The selected commit is the only repository commit containing
-#|`pkg/ansimage/go.mod`. Its immediate successor
-#|`9f095995d66abbf03a06cea8e8e9b7cfd679e06c`, tree
-#|`ed6919823270b5ac3737c516ea8900c20bb4911e`, dated
-#|2019-12-15T12:16:17Z, removes the nested module in favor of one repository-root
-#|module. Root-project releases continue through v1.3.3 at current unsigned
-#|master `24a1aedad1a99b2177808bfd72b23e27318989f6`, tree
-#|`1e75a629c404807d2953ae70dd860d8f2c5f03ea`, dated
-#|2026-08-01T21:30:42Z; current root go.mod declares Go 1.25.0. Treat this as a
-#|minimal incoming survey to verify independently. Do not treat a root-project
-#|tag, the consolidated root module, or a later directory tree as an exact-path
-#|nested-module release without proving valid Go module identity.
+#|Exact `@latest` is stable v1.19.0, released 2026-03-20, at tag commit
+#|`ca25f6e17f118a5a259f3c2c0d395949d1103a5a`. It declares Go 1.25.0 and
+#|requires go-colorable v0.1.14, go-isatty v0.0.20, and x/sys v0.42.0. Its
+#|checksum pair is `h1:Zp3PiM21/9Ld6FzSKyL5c/BULoe/ONr9KlbYVOfG8+w=` /
+#|`h1:zNk67I0ZUT1bEGsSGyCZYZNrHuTkJJB+r6Q9VuMi0LE=`. V1.19.0 does not
+#|preserve the retained Go 1.18 floor and must not be selected. Still resolve
+#|its identity, change boundary, and release facts accurately.
+#|
+#|The public upstream `github.com/fatih/color` is currently enabled, unarchived,
+#|non-fork, and defaults to `main`; stable GitHub Releases continue through
+#|v1.19.0. Independently resolve stable, prerelease, pseudo-version,
+#|proxy-absent tag, redirect, fork, alternate-path, and unreleased identities,
+#|including deprecation, retractions, tag/commit signatures, commit times,
+#|trees, parents, repository status, and default-branch ancestry. Treat the
+#|incoming details only as a minimal survey to verify.
+#|
+#|Project MVS already selects go-colorable v0.1.15, go-isatty v0.0.20, and
+#|x/sys v0.30.0. These accepted selections are above or equal to v1.18.0's
+#|declared requirements and below v1.19.0's x/sys requirement. Prove exact old,
+#|v1.18.0, and ineligible v1.19.0 MVS effects in disposable trees without
+#|combining their dependency groups. A candidate that changes anything beyond
+#|the explained exact closure is a stop condition unless it remains strictly
+#|inside this group's authorized MVS projection.
 #|
 #|# Measurements At Start
 #|
@@ -1210,8 +1212,8 @@ exit 70
 #|`e5d6252825d7a1822c01819b9144050f345a6ad4`, exact parent
 #|`a23ce0f60ad65aac4f4800d6c095d911c0f4e754`, tree
 #|`5213ba55981d77d7c8061312915e237e80d29af8`, changing only `go.mod` and
-#|`go.sum` with three insertions. Imaging, Fnmatch, Readline, Logex, Crypt, and
-#|OpenCensus Proto remain retained without dependency edits.
+#|`go.sum` with three insertions. Ansimage, Imaging, Fnmatch, Readline, Logex,
+#|Crypt, and OpenCensus Proto remain retained without dependency edits.
 #|
 #|Accepted project measurements are 234 selected modules, 3,583 graph edges,
 #|429 native complete-test packages, 41 loaded modules, 197 loaded packages,
@@ -1220,15 +1222,18 @@ exit 70
 #|lines and removes zero. The main module retains Go 1.18 and toolchain Go
 #|1.26.7. Ordinary and ignored status must be empty.
 #|
-#|Fresh primary vulnerability data contains 1,392 module records and no Imaging
-#|record. Accepted current/no-op populations retain 20 IDs/22 reachable traces
-#|for Darwin and Windows symbol scans, 22 Darwin package IDs/findings, and 30
-#|Darwin module IDs/findings. Imaging evidence has 1,713 verified entries;
-#|manifest SHA-256 is
-#|`046746e0c4004d62ebac4838dac739ce37a0d4576a0fae3e5d1db987e4d47308`.
+#|Fresh primary vulnerability data contains 1,392 module records and no Fatih
+#|Color or ansimage record. Accepted current/no-op populations retain 20 IDs/22
+#|reachable traces for Darwin and Windows symbol scans, 22 Darwin package
+#|IDs/findings, and 30 Darwin module IDs/findings. Ansimage appears only as a
+#|call frame in 12 existing traces across 11 x/image IDs; do not misattribute
+#|those inherited findings to Fatih Color.
+#|
+#|Ansimage evidence has 73 verified entries; manifest SHA-256 is
+#|`95d6ca0ac0d767c94f78b3a0a5c32f1008cd2e7b05a3ffc5f639b9af021dd112`.
 #|Decision-summary SHA-256 is
-#|`507f403c1289ff6d698beffb31eea6c3a3c07835efcf5609d6bde475bb4cdc5e`.
-#|The authoritative Q0-Q2 scorecard SHA-256 is
+#|`3f39b1aa5f16d3a1b398ce329e4a73621931b09d3b191dd7c0bbadc5743de0ed`.
+#|The authoritative Q0-Q2 scorecard SHA-256 remains
 #|`579e5b135db2403904943bfe71c3ced987f59f30007cbdc0dec88a46d19b42aa`.
 #|
 #|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
@@ -1245,63 +1250,61 @@ exit 70
 #|# Role And Boundaries
 #|
 #|From fresh external archives and caches, resolve every relevant exact-path
-#|ansimage version or commit through the Go proxy and checksum database,
-#|authoritative repository, go-import metadata, upstream ancestry, nested-module
-#|history, and primary Go vulnerability data. Record commits and times, module
-#|declarations and requirements, checksum pairs, source identity, tag/commit
-#|signatures, root versus nested tag semantics, release/default-branch history,
-#|repository status, deprecation, and retractions. Distinguish exact nested
-#|module releases from root-module releases, prereleases, pseudo-versions,
-#|proxy-absent tags, redirects, forks, alternate paths, and unreleased heads.
+#|Fatih Color release through the Go proxy and checksum database, authoritative
+#|repository, go-import metadata, upstream ancestry, and primary Go
+#|vulnerability data. Record version order, module declarations and full
+#|requirements, checksum pairs, source identity, release/tag/commit signatures,
+#|commits, times, trees, parents, default-branch history, repository status,
+#|deprecation, and retractions. Distinguish stable releases, prereleases,
+#|pseudo-versions, proxy-absent tags, redirects, forks, alternate module paths,
+#|and unreleased heads.
 #|
-#|Prove canonical latest when `@latest` currently fails and whether any higher
-#|qualified exact stable candidate exists. Preserve Go 1.18 through the complete
-#|minimal module and package/test closure; do not infer the closure floor from
-#|only the selected Go 1.13 directive. Keep inherited Imaging, go-colorful, and
-#|x/image MVS effects inside closure measurement without independently upgrading
-#|those already separate dependency groups.
+#|Prove canonical latest and the highest qualified stable release that can
+#|preserve Go 1.18 through the complete minimal module and package/test closure.
+#|Do not infer the closure floor from Fatih Color's Go directive alone. Test
+#|v1.14.1 and every serious floor-compatible candidate with a contained Go 1.18
+#|SDK. Treat v1.19.0's Go 1.25 directive as an explicit incompatibility, not a
+#|reason to move the main module's retained floor.
 #|
-#|Inspect ansimage's exported API and reader/image constructors, scale modes,
-#|dimension calculation, dithering and no-dithering, alpha/background handling,
-#|ANSI/true-color/256-color output, terminal sizing, string/render methods,
-#|malformed-input, small/zero image, resource-bound, and supported-format
-#|behavior relevant to Ply. Inspect build tags, generated files, OS/architecture
-#|code, Cgo/native surface, examples, testdata, fuzz/property coverage, and
-#|release gaps. Add independent fixtures because the selected ansimage module
-#|has no native `_test.go` files.
+#|Inspect the exported API and semantics for attributes, colors, formatting,
+#|Sprint/Sprintf/Sprintln, Print/Fprint variants, output writers, enable/disable
+#|methods, format validation, `NoColor`, `Output`, `Error`, unrecognized
+#|parameters, empty/newline input, nested formatting, concurrency, and global
+#|state. Exercise TTY and non-TTY output plus `NO_COLOR`, `TERM=dumb`,
+#|`CLICOLOR`, and `CLICOLOR_FORCE` where supported by each exact release.
+#|Characterize Windows terminal support and all OS/build-tag branches without
+#|reviewing go-colorable, go-isatty, or x/sys as independent groups.
 #|
-#|Preserve and characterize the Imaging-session consumer finding precisely:
-#|selected ansimage no-dither `RenderExt` returns empty output for a
-#|two-pixel-high scaled image, while go-term-markdown reports the image rendered
-#|and emits only title/destination; four-pixel fixtures render normally. Decide
-#|whether this is invariant selected behavior, a qualified-candidate change, or
-#|a stop condition. Do not attribute it to Imaging.
+#|Inspect build tags, generated files, OS/architecture code, Cgo/native surface,
+#|examples, testdata, fuzz/property coverage, native suite gaps, and release
+#|changes from v1.14.1 through v1.18.0. Add independent fixtures for
+#|release-relevant output bytes, writer routing, terminal detection, environment
+#|precedence, concurrent use, malformed format input, and Markdown's actual
+#|consumer behavior.
 #|
-#|Run source verification, package listing, independent complete tests, two
+#|Run source verification, package listing, native complete tests, two
 #|independent repeated-test passes, race where supported, vet, and relevant
-#|cross-builds under exact Go 1.26.7 and a contained Go 1.18 SDK. Exercise the
-#|exact go-term-markdown -> ansimage production path for local/readers and all
-#|registered formats. Distinguish executable behavior from ansimage's absent
-#|native suite and from go-term-markdown's PTY/NO_COLOR-sensitive ANSI goldens
-#|and unrelated project-MVS Chroma golden drift.
+#|cross-builds under exact Go 1.26.7 and contained Go 1.18. Exercise the exact
+#|go-term-markdown production path and distinguish Fatih Color behavior from
+#|Markdown's PTY/NO_COLOR-sensitive ANSI goldens, ansimage's retained two-pixel
+#|gap, and unrelated project-MVS Chroma output.
 #|
 #|Measure selected modules, graph edges, native complete-test packages, loaded
-#|modules/packages, checksum lines, exact dependency paths, exact selected-get
-#|or candidate-get effects, and the unapplied tidy projection. Attribute every
-#|difference. Project every qualified exact selection in a disposable scratch
-#|tree and run repository verify, build, count-1/count-10/race/vet,
-#|Windows-amd64 build, pinned lint, byte-identical root/status/upgrade/build
-#|help, API/CLI compatibility and reports, and empty-HOME count-2 before
-#|deciding whether implementation is permissible.
+#|modules/packages, checksum lines, exact dependency paths, old/candidate get
+#|effects, and the unapplied tidy projection. Attribute every difference.
+#|Project every qualified exact stable selection in a disposable scratch tree
+#|and run repository verify, build, count-1/count-10/race/vet, Windows-amd64
+#|build, pinned lint, byte-identical root/status/upgrade/build help, API/CLI
+#|compatibility and reports, and empty-HOME count-2 before deciding whether
+#|implementation is permissible.
 #|
 #|Compare selected and candidate primary vulnerability results at module,
 #|package, symbol, and reachable-trace levels. Reject or retain if canonical
-#|identity, release qualification, complete closure floor, dependency behavior,
-#|small-image handling, platform/terminal behavior, API compatibility,
-#|production consumers, projection, or any quality contract fails. Do not
-#|upgrade to the consolidated root module, later root tag, or unreleased commit
-#|merely because it is newer, and do not remove the unchanged nested selection
-#|as a side effect of tidy.
+#|identity, release qualification, complete closure floor, terminal behavior,
+#|global-state/race behavior, native tests, platform support, API compatibility,
+#|production consumers, MVS projection, or any quality contract fails. Do not
+#|select Go-1.25-requiring v1.19.0, independently upgrade its support modules, or
+#|remove an unchanged selection as a side effect of tidy.
 #|
 #|# Required Reading
 #|
@@ -1309,27 +1312,30 @@ exit 70
 #|current ancestry, XXHash implementation commit identity, reciprocal archive
 #|history, P7/P8 state, and `./codex-dev-start.sh --check`. Read this archive,
 #|`docs/plan/quality-handover.md`, `docs/plan/quality-upgrade.md`, `go.mod`,
-#|`go.sum`, the answered Imaging, Fnmatch, Readline, Logex, XXHash, OpenCensus
-#|Proto, Crypt, and Speakeasy archives, the earlier dependency archives named in
-#|the handover, and every referenced quality, compatibility, release, runner,
-#|evidence, and lifecycle contract. Earlier outcomes are final.
+#|`go.sum`, the answered ansimage, Imaging, Fnmatch, Readline, Logex, XXHash,
+#|OpenCensus Proto, Crypt, and Speakeasy archives, the earlier terminal-support
+#|dependency archives named in the handover, and every referenced quality,
+#|compatibility, release, runner, evidence, and lifecycle contract. Earlier
+#|outcomes are final.
 #|
 #|# Three Moves
 #|
-#|If and only if a higher exact stable ansimage release is qualified and its
-#|complete minimal closure preserves Go 1.18, use exact Go 1.26.7 and exact
-#|`go get github.com/eliukblau/pixterm/pkg/ansimage@<qualified-version>` for one
-#|dependency-only commit. Do not hand-edit metadata, migrate import paths, or
-#|use tidy as implementation. Preserve every retained version, Go 1.18,
-#|toolchain Go 1.26.7, production source, quality apparatus, and release input.
-#|Stop instead of applying an unexplained multi-selection or module-path move.
+#|Select only the highest exact stable Fatih Color release that independently
+#|qualifies and whose complete minimal closure preserves Go 1.18. The incoming
+#|survey makes v1.18.0 the highest plausible candidate and disqualifies v1.19.0
+#|on its Go 1.25.0 directive. If v1.18.0 qualifies, use exact Go 1.26.7 and
+#|exact `go get github.com/fatih/color@v1.18.0` for one dependency-only commit.
+#|Do not hand-edit metadata or use tidy as implementation. Preserve every
+#|retained version, Go 1.18, toolchain Go 1.26.7, production source, quality
+#|apparatus, and release input. Stop instead of applying an unexplained
+#|multi-selection move.
 #|
-#|After a changed selection, run the complete P7 dependency gate: dependency and
-#|consumer tests; graph/path/checksum/tidy proof; repository verify/build/tests/
-#|race/vet/Windows/pinned lint; help/API/CLI; launcher and Make contracts;
-#|preflight; host plus fresh snapshot/Docker meta and acceptance; audit meta;
-#|focused and exact Q0-Q2 audits; separate full audit; vulnerability comparison;
-#|empty-HOME count-2; and final ordinary/ignored cleanliness. Exact
+#|After a changed selection, run the complete P7 dependency gate: dependency
+#|and consumer tests; graph/path/checksum/tidy proof; repository
+#|verify/build/tests/race/vet/Windows/pinned lint; help/API/CLI; launcher and Make
+#|contracts; preflight; host plus fresh snapshot/Docker meta and acceptance;
+#|audit meta; focused and exact Q0-Q2 audits; separate full audit; vulnerability
+#|comparison; empty-HOME count-2; and final ordinary/ignored cleanliness. Exact
 #|`make quality` must exit 0 with all 27 Q0-Q2 rows at L2 and zero held,
 #|regressed, not-comparable, or dirty counts. Full audit may exit 1 only for the
 #|established queued L3 rows, never 2.
@@ -1343,9 +1349,9 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the ansimage decision, rewrite the rolling handover and roadmap, answer
-#|this archive, create exactly one reciprocal NEXT archive for the next single
-#|P7 group, replace only launcher mutable regions, run launcher/handoff
+#|After the Fatih Color decision, rewrite the rolling handover and roadmap,
+#|answer this archive, create exactly one reciprocal NEXT archive for the next
+#|single P7 group, replace only launcher mutable regions, run launcher/handoff
 #|contracts, and make the normal `docs: prepare next agent session` commit. Do
 #|not implement the next group, launch a successor, push, merge, publish,
 #|release, stash, revert, bypass cleanup, or remove the worktree.

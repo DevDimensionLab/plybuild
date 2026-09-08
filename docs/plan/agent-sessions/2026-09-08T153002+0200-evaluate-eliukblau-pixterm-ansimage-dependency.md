@@ -1,13 +1,73 @@
 # Agent Session: Evaluate Eliukblau Pixterm Ansimage Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-08T153002+0200-evaluate-eliukblau-pixterm-ansimage-dependency`
 Created: `2026-09-08T15:30:02+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3202618e6930ca09e44599a1e5188c959a437cb059c44c824f4a289d67f1321e`
 Previous: [2026-09-08T141743+0200-evaluate-disintegration-imaging-dependency.md](2026-09-08T141743+0200-evaluate-disintegration-imaging-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-08T170736+0200-evaluate-fatih-color-dependency.md](2026-09-08T170736+0200-evaluate-fatih-color-dependency.md)
+Outcome: Retained exact nested ansimage pseudo-version without an edit; no exact nested stable release exists, the six later fetchable commits are unreleased pseudo-versions, and complete floor, behavior, consumer, MVS, project, and vulnerability checks passed unchanged while preserving the two-pixel render defect.
+
+## Answer
+
+Retain `github.com/eliukblau/pixterm/pkg/ansimage
+v0.0.0-20191210081756-9fb6cf8c2f75`; no dependency commit was made. The exact
+proxy list is empty and `@latest` fails because no correctly prefixed nested
+stable tag exists. Root v1.3.0 points at selected commit
+`9fb6cf8c2f75275ebcd4ac8c30a0e26930d497f7`, but an unprefixed root tag does
+not semantically version `pkg/ansimage`. Later root releases and the
+consolidated root module are different identities.
+
+The incoming “only commit containing `pkg/ansimage/go.mod`” claim required a
+correction. Selected is the only commit that adds that file, but six later
+side-branch or merge commits retain it and are fetchable as unreleased exact
+nested pseudo-versions. The `66ce7d8` pseudo changes only five comment URLs;
+the other five, including latest fetchable
+`v0.0.0-20191221044037-630511e42559`, preserve selected ansimage source
+byte-for-byte. None is a higher qualified exact stable release. Selected
+proxy/Git source is identical, all relevant tag/commit signatures are absent,
+and there is no deprecation or retraction.
+
+The complete exact declared closure contains five modules and tops out at Go
+1.13. Ansimage itself is one pure-Go file with no native `_test.go`, examples,
+testdata, fuzz/property tests, generated files, build tags, Cgo, assembly, or
+platform split. Independent fixtures under exact Go 1.26.7 and contained Go
+1.18.10 pass verify/list, count-1, two count-10 passes, race, vet, and five
+cross-target compilations. They cover every exported constructor and scale
+mode, alpha/background behavior, malformed and small images, non-zero bounds,
+render variants, and all six registered GIF/JPEG/PNG/BMP/TIFF/WebP formats.
+
+The prior two-pixel finding is invariant ansimage behavior, not Imaging drift:
+the no-dither loop starts at terminal row 1, so a two-pixel-high image renders
+empty and a four-pixel image renders only its second pair. Markdown still
+returns rendered and emits title/destination. Dither output omits its final
+aggregate row. Ansimage emits only ANSI 24-bit true color and does not inspect
+terminal size. Other selected gaps include incorrect positive non-zero-origin
+dimensions, unchecked zero/negative `SetMaxProcs`, no byte/pixel decode bound,
+and HTTP body/timeout limitations. The actual Markdown local/HTTP consumer
+path passes all formats, dithering modes, malformed input, repeats, race, vet,
+and cross-builds under both SDKs.
+
+Exact selected `go get` is byte-inert. Current/no-op measurements remain 234
+modules, 3,583 edges, 429 complete-test entries, 41 loaded modules, 197 loaded
+module-backed packages, 1,049 checksum lines, and a 381-line unapplied tidy
+projection. Project verify/build/count-1/count-10/race/vet/Windows, pinned
+lint, byte-identical help, API/CLI compatibility, acceptance, preflight,
+80/80 mutation controls, 15 audit controls, and empty-HOME count-2 pass.
+
+Fresh primary data retains 1,392 records and the exact accepted populations:
+20 IDs/22 reachable traces in Darwin and Windows symbol scans, 22 Darwin
+package findings, and 30 Darwin module findings. Ansimage has no direct record.
+It is correctly present as a call frame in 12 existing traces across 11
+x/image IDs because project MVS selects x/image v0.5.0; the exact nested
+module's declared 2019 closure has zero findings. Current/no-op results are
+identical and this group does not reopen x/image.
+
+Evidence has 73 verified entries. Manifest SHA-256 is
+`95d6ca0ac0d767c94f78b3a0a5c32f1008cd2e7b05a3ffc5f639b9af021dd112`;
+decision-summary SHA-256 is
+`3f39b1aa5f16d3a1b398ce329e4a73621931b09d3b191dd7c0bbadc5743de0ed`.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

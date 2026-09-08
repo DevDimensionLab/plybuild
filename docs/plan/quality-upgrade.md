@@ -8245,18 +8245,48 @@ Current queue decisions and next bounded P7 group (2026-09-08):
   is `046746e0c4004d62ebac4838dac739ce37a0d4576a0fae3e5d1db987e4d47308`
   and decision-summary SHA-256 is
   `507f403c1289ff6d698beffb31eea6c3a3c07835efcf5609d6bde475bb4cdc5e`.
-- Next, independently evaluate selected exact nested module
-  `github.com/eliukblau/pixterm/pkg/ansimage
-  v0.0.0-20191210081756-9fb6cf8c2f75`. Its exact proxy list is empty and
-  exact `@latest` returns 404, while the selected pseudo-version remains
-  fetchable. The selected commit is also unprefixed root-project Release/tag
-  v1.3.0 and the only commit containing `pkg/ansimage/go.mod`; its immediate
-  successor consolidates to a root module. Later root releases through v1.3.3
-  do not automatically version the nested exact path. Resolve that identity,
-  the absent native suite, terminal rendering and scale behavior, the actual
-  Markdown consumer, the two-pixel no-dither gap, full floor closure, exact
-  projection, and vulnerability effect without combining Imaging,
-  go-colorful, x/image, root-module migration, or tidy cleanup.
+- Retain exact nested module `github.com/eliukblau/pixterm/pkg/ansimage
+  v0.0.0-20191210081756-9fb6cf8c2f75` without a dependency edit. Its exact
+  proxy list is empty and exact `@latest` fails, but selected remains
+  fetchable with its checksum pair. Root-project v1.3.0 points at selected;
+  because the tag lacks the nested path prefix it does not create an exact
+  nested stable release. Later root releases and the consolidated root module
+  are different identities.
+- Correct the incoming history claim: selected is the only commit that adds
+  `pkg/ansimage/go.mod`, not the only commit containing it. Six later
+  side-branch/merge commits retain it and resolve only as unreleased nested
+  pseudo-versions. Five have selected source; one changes comment URLs only.
+  Latest fetchable `v0.0.0-20191221044037-630511e42559` is byte-identical to
+  selected. No higher qualified exact stable release exists.
+- The five-module closure tops out at Go 1.13. Ansimage is one pure-Go file
+  with no native tests. Independent constructor, format, scale, alpha,
+  malformed-input, render, and cross-platform fixtures pass exact Go 1.26.7
+  and Go 1.18.10, including the Markdown production path for six registered
+  formats. Output is 24-bit ANSI only and terminal size is caller-supplied.
+- Preserve selected render gaps: no-dither skips the first pixel pair, so a
+  two-pixel-high image emits no ANSI while Markdown still reports success;
+  four pixels render only the second pair. Dither omits its last aggregate
+  row. Non-zero origins, unchecked `SetMaxProcs`, unbounded decode/input, and
+  URL/consumer body lifetime remain historical selected behavior. They are
+  invariant in every fetchable later exact pseudo-version, not Imaging drift.
+- Exact selected get is inert. Project measurements remain
+  234/3,583/429/41/197 with 1,049 checksum lines and 381 tidy-diff lines;
+  project gates, compatibility hashes, preflight, 80/80 mutation controls,
+  acceptance, and empty-HOME tests pass. Fresh vulnerability totals remain
+  20-ID/22-trace symbol, 22 package, and 30 module findings. Ansimage has no
+  direct record but is a call frame in 12 existing traces across 11 x/image
+  IDs under project MVS; its declared 2019 closure has zero findings. Evidence
+  has 73 entries; manifest SHA-256 is
+  `95d6ca0ac0d767c94f78b3a0a5c32f1008cd2e7b05a3ffc5f639b9af021dd112`
+  and decision-summary SHA-256 is
+  `3f39b1aa5f16d3a1b398ce329e4a73621931b09d3b191dd7c0bbadc5743de0ed`.
+- Next, independently evaluate exact-path `github.com/fatih/color v1.14.1`.
+  The 22-version proxy list ends at stable v1.19.0, but latest declares Go
+  1.25.0 and is incompatible with the retained floor. V1.15.0-v1.18.0 declare
+  Go 1.17; v1.18.0 is the highest immediately visible floor-compatible stable
+  release but still requires complete closure, behavior, API, MVS, consumer,
+  and vulnerability qualification. Keep already-reviewed colorable, isatty,
+  x/sys, ansimage, and terminal support decisions distinct.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

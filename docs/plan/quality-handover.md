@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-08T15:30:02+02:00
+Generated: 2026-09-08T17:07:36+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -14,13 +14,13 @@ session diary.
   `a23ce0f60ad65aac4f4800d6c095d911c0f4e754`, tree
   `5213ba55981d77d7c8061312915e237e80d29af8`. It changes only `go.mod`
   and `go.sum` with three insertions.
-- Imaging, Fnmatch, Readline, Logex, OpenCensus Proto, and Crypt were retained
-  without implementation commits. Speakeasy v0.2.0 implementation
+- Ansimage, Imaging, Fnmatch, Readline, Logex, OpenCensus Proto, and Crypt were
+  retained without implementation commits. Speakeasy v0.2.0 implementation
   `41f9561f6ea2f5b6395c5c4d9bcc56a54533133a` remains an ancestor, as do
   Circbuf implementation `3be2183ee310ccdc358ce4ed372c0785de25b88b`
   and operator-authorized lifecycle repair
   `f9f0f7669e635c8c7bb169aab816d0ebe1b16435`.
-- The answered Imaging archive and sole NEXT ansimage archive link
+- The answered ansimage archive and sole NEXT Fatih Color archive link
   reciprocally. No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` was created. No push, merge, publication,
   release, stash, revert, successor launch, or worktree removal occurred.
@@ -29,132 +29,152 @@ session diary.
 
 P2A-P6 are complete. P7 remains active after exact Go 1.26.7, accepted
 Speakeasy v0.2.0 and XXHash v2.3.0 moves, and retained Crypt, OpenCensus Proto,
-Logex, Readline, Fnmatch, and Imaging selections. P8 remains queued. All
-earlier acceptances, rejections, no-change decisions, evidence corrections,
+Logex, Readline, Fnmatch, Imaging, and ansimage selections. P8 remains queued.
+All earlier acceptances, rejections, no-change decisions, evidence corrections,
 and lifecycle ancestry are final; do not reopen them or combine another group.
 
 Every disposable cache, projection, archive, source, report, generated
 artifact, evidence tree, and build context must remain beneath
-`$CODEX_SESSION_SCRATCH_ROOT`. Never create direct `/private/tmp/ply-*` roots,
-never run `go mod download all` in a measured tree, and preserve the launcher's
-scratch cleanup and reciprocal archive contract.
+`$CODEX_SESSION_SCRATCH_ROOT`. Never create direct `/private/tmp/ply-*`
+roots, never run `go mod download all` in a measured tree, and preserve the
+launcher's scratch cleanup and reciprocal archive contract.
 
-## Retained Imaging Group
+## Retained Ansimage Group
 
-Retain exact-path `github.com/disintegration/imaging v1.6.2` without editing
-dependency metadata. A fresh proxy list contains exactly 15 stable versions,
-v1.0.0 through v1.6.2, and exact `@latest` is selected v1.6.2 at
-2019-11-16T20:43:25Z. Its module declares the exact path, no Go directive, and
-`golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8`; it has no
-deprecation or retraction. Sumdb source/module hashes are
-`h1:w1LecBlG2Lnp8B3jk5zSuNqd7b4DXhcjwek1ei82L+c=` and
-`h1:44/5580QXChDfwIclfc/PCwrr44amcmDAg8hxG0Ewe4=`.
+Retain exact nested module
+`github.com/eliukblau/pixterm/pkg/ansimage
+v0.0.0-20191210081756-9fb6cf8c2f75` without editing dependency metadata. Its
+exact proxy list is empty; exact `@latest`, `@v0`, and `@v1` return 404
+with “no matching versions.” The selected pseudo-version remains fetchable
+with source/module hashes
+`h1:vbix8DDQ/rfatfFr/8cf/sJfIL69i4BcZfjrVOxsMqk=` and
+`h1:0gZuvTO1ikSA5LtTI6E13LEOdWQNjIo5MTQOvrV0eFg=`. It declares the exact
+path, Go 1.13, Imaging v1.6.2, go-colorful v1.0.3, and x/image
+`v0.0.0-20191206065243-da761ea9ff43`; there is no deprecation or retraction.
 
-All 15 proxy ZIPs match their exact Git tags. Selected ZIP SHA-256 is
-`2934e7bace3c8c0b1b4a07144197e8720b9ffbe922600e3a3c764f77792ac7c4`;
-the normalized 61-file source-manifest SHA-256 is
-`71fbee7ec7a3b983f75bd27e1cc91d95c67096e01492897f5f715f8644965d51`.
-Go-import metadata resolves to the public, enabled, unarchived, non-fork
-GitHub repository on `master`.
+Selected unsigned commit
+`9fb6cf8c2f75275ebcd4ac8c30a0e26930d497f7`, tree
+`bdcdecab7b23ba3a6d18efd3ced9800826668031`, parent
+`be34e524a7d8fbf6ab827fd06f669ad4e50943b0`, dated
+2019-12-10T08:17:56Z, is also the target of root-project stable Release and
+unsigned annotated tag v1.3.0. Because that tag is not prefixed
+`pkg/ansimage/`, it does not version the nested module; the exact path
+correctly resolves the commit only as the selected pseudo-version.
 
-Stable GitHub Release and lightweight tag v1.6.2 resolve to commit
-`acabd8315e63bfcaac97d52d68a7a0b88d2eea93`, tree
-`6584cbb2a26e4d38bfec8f2587633f234500810e`, with parents
-`9aab30e6aa535fe3337b489b76759ef97dfaf362` and
-`675e3c209ff3e9bbee22db0bffe990d3abace4ce`. The tag has no tag signature;
-the commit's embedded GitHub web-flow signature independently verifies with
-fingerprint `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`. Later master
-`d40f48ce0f098c53ab1fcd6e0e402da682262da5`, tree
-`cfae2d9af62546482831388535eb24023ceac298`, resolves only as unreleased
-`v1.6.3-0.20201218193011-d40f48ce0f09`; the later Dependabot branch is also
-an unreleased pseudo-version. Exact v1.6.3, v1.6.3-rc.1, and `/v2` do not
-exist. `gopkg.in/disintegration/imaging.v1@v1.5.0` is an alternate path. No
-higher exact stable release exists.
+The incoming statement that selected was the only repository commit containing
+`pkg/ansimage/go.mod` was false. It is the only commit that adds the file.
+Six later side-branch or merge commits still contain it and are fetchable as
+exact nested pseudo-versions:
 
-The complete standalone graph is Imaging, its x/image pseudo-version (Go
-1.12), and directive-free x/text v0.3.0. Loaded tests use Imaging plus
-x/image/bmp, ccitt, tiff/lzw, and tiff; x/text is graph-only. Pristine proxy
-and exact-Git source pass verify, listing, count-1, two count-10 passes, race,
-and vet under exact Go 1.26.7 and contained Go 1.18.10. Windows/amd64,
-Linux/amd64, Linux/arm64, FreeBSD/amd64, and js/wasm test builds pass under
-both SDKs, proving the complete Go 1.18 floor.
+- `v0.0.0-20191216152442-66ce7d8b90d7`, which changes five HTTP URLs in
+  comments to HTTPS and no behavior;
+- `v0.0.0-20191216153813-7fa2a5d29053`;
+- `v0.0.0-20191216175341-64e5dd02853a`;
+- `v0.0.0-20191221043440-fdd01950d74d`;
+- `v0.0.0-20191221043740-0b8ce46c8e11`; and
+- latest fetchable `v0.0.0-20191221044037-630511e42559`.
 
-Imaging is pure Go with no Cgo, assembly, generated files, build constraints,
-or platform-specific implementation. Its suite exposes 59 tests and 27
-benchmarks; one documentation example has no `Output` assertion and is not an
-executable example test. There are no fuzz or property tests. Native goldens
-cover exported I/O and transforms, five formats, JPEG EXIF orientations 0-8,
-filters, crop/composite, adjustments, and convolution. Independent fixtures
-add all five round trips, malformed and huge-header input, extension errors,
-alpha correctness, non-zero origins, invalid dimensions, and 100 seeded
-transform properties. All fixture repeat/race/vet checks pass under both SDKs.
-Imaging has no configurable decoded-pixel, byte, or reader limit; callers must
-bound input.
+The latter five preserve the selected ansimage subtree byte-for-byte. All six
+are unreleased pseudo-versions, not higher exact stable releases. Immediate
+successor `9f095995d66abbf03a06cea8e8e9b7cfd679e06c`, tree
+`ed6919823270b5ac3737c516ea8900c20bb4911e`, removes the nested module in
+favor of repository-root module `github.com/eliukblau/pixterm`. Later root
+releases v1.3.1-v1.3.3, current master
+`24a1aedad1a99b2177808bfd72b23e27318989f6`, its Go 1.25.0 root module,
+branches, forks, alternate paths, and redirects do not provide a stable release
+of the exact nested identity. Root v1.3.0-v1.3.2 tag objects and commits are
+unsigned; v1.3.3 is a lightweight unsigned tag. The public upstream is enabled,
+unarchived, non-fork, and defaults to protected `master`.
 
-Ply loads Imaging in production through `plybuild/cmd ->
-go-term-markdown -> pixterm/pkg/ansimage -> Imaging`. Markdown passes local or
-HTTP readers to ansimage; ansimage decodes through registered formats and
-calls Imaging `Resize`, `Fit`, or `Fill` with Lanczos. Project MVS selects
-x/image v0.5.0. Keep that selection, Imaging's older declared edge, the root
-indirect requirement, and loaded production behavior distinct. This group did
-not reopen x/image.
+Selected proxy and exact-Git source are byte-identical. The normalized
+three-file manifest SHA-256 is
+`0d7ed0f139e2f4397ba2028248dd08d2cb4749a29e44ab5d6b39535f771906f0`.
+The selected ZIP contains only `ansimage.go`, `go.mod`, and `go.sum`;
+there is no native test, example, fuzz/property suite, testdata, generated
+file, build constraint, Cgo, assembly, or OS/architecture implementation.
 
-Ansimage has no native `_test.go` files, so its native commands establish only
-compilation. The historical Markdown suite passes under both SDKs with a PTY
-and `NO_COLOR` unset; it has expected terminal-dependent ANSI golden failures
-otherwise and unrelated project-MVS Chroma golden drift. Independent
-41-module consumer fixtures have a highest Go 1.18 declaration and pass
-count-1, two count-10 passes, race, vet, and Windows compile under both SDKs.
-They exercise the exact production path for JPEG/PNG/GIF/TIFF/BMP, malformed
-input, and all three scale modes. They preserve one selected ansimage defect:
-no-dither `RenderExt` emits nothing for a two-pixel-high scaled image while
-Markdown reports it rendered; four-pixel fixtures render normally. This is
-not an Imaging defect or a basis for changing Imaging.
+The complete standalone closure is five modules: ansimage, Imaging,
+go-colorful, x/image, and graph-only x/text v0.3.0. Its highest declaration is
+Go 1.13. Eleven non-standard packages load: ansimage, Imaging, go-colorful,
+and x/image's BMP, CCITT, TIFF/LZW, TIFF, RIFF, VP8, VP8L, and WebP packages.
+Pristine source and independent fixtures pass verify/list, count-1, two
+count-10 passes, race, and vet under exact Go 1.26.7 and contained Go 1.18.10.
+Windows/amd64, Linux/amd64, Linux/arm64, FreeBSD/amd64, and js/wasm test
+compilation passes under both SDKs, proving the complete retained floor.
+
+Independent fixtures cover exported constructors from images, readers, files,
+and URLs; Resize/Fill/Fit; GIF/JPEG/PNG/BMP/TIFF/WebP; getters/setters;
+alpha/background compositing; malformed and small images; non-zero bounds;
+Go-code/background-disabled rendering; Draw/ClearTerminal; and URL status
+handling. Ansimage emits ANSI 24-bit true color only, has no 256-color mode,
+and does not discover terminal size. Ply passes the line width through
+go-term-markdown.
+
+The selected no-dither render loop begins at terminal row 1. A two-pixel-high
+image therefore renders empty; a four-pixel image renders only its second
+pixel pair. Markdown still reports the image rendered and emits only its
+title/destination in the two-pixel case. This is invariant ansimage behavior,
+not Imaging behavior, and the latest fetchable pseudo-version is
+source-identical. Dither rendering omits its final aggregate row; it groups 8x4
+source blocks and rejects sizes that produce fewer than two aggregate rows or
+columns. Positive non-zero image origins inflate dimensions by using
+`Bounds.Max` rather than `Dx/Dy`; negative origins fail bounds checks.
+`SetMaxProcs` accepts zero and negative values without validation. Unknown
+scale and dither modes panic.
+
+Ansimage has no configurable input-byte or decoded-pixel bound. Its own URL
+constructors use the default client without a timeout and do not close non-200
+bodies. Markdown uses a five-second HTTP client, but `renderImage` does not
+close successful local/HTTP readers and also leaves non-200 bodies open.
+Production-consumer fixtures nevertheless pass both SDKs, repeats, race, vet,
+and five cross-target builds while exercising the exact local and HTTP path,
+all six formats, all three dither modes, malformed input, and small images.
 
 ## Projection, Quality, And Vulnerability Measurements
 
-Accepted state remains 234 selected modules, 3,583 graph edges, 429 native
-complete-test packages, 41 loaded modules, 197 loaded module-backed packages,
+Exact selected ansimage `go get` is byte-inert and was not applied. Current
+and no-op states remain 234 selected modules, 3,583 graph edges, 429 native
+complete-test entries, 41 loaded modules, 197 loaded module-backed packages,
 1,049 `go.sum` lines, and a 381-line unapplied tidy projection. Relative to
-accepted go-cmp commit `c314bcb`, metadata adds exactly 33 checksum lines and
-removes zero. Main-module Go remains 1.18 and toolchain remains 1.26.7.
-
-Exact selected Imaging `go get` is entirely inert: it changes no requirement,
-selection, edge, checksum, tidy projection, or status. It was not applied.
-Non-mutating `go mod tidy -diff` reproduces the accepted 381-line unrelated
-cleanup while retaining Imaging and x/image selections.
+accepted go-cmp commit `c314bcb`, `go.sum` adds exactly 33 lines and
+removes zero. The main module remains Go 1.18 with toolchain Go 1.26.7.
 
 The unchanged project passes mod verify, build, count-1/count-10/race/vet,
-Windows-amd64 build, pinned lint, byte-identical root/status/upgrade/build
-help, API/CLI compatibility and reports, and empty-HOME count-2. API and CLI
-report SHA-256 values remain
-`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+Windows-amd64 build, pinned golangci-lint 2.12.2 with zero findings,
+byte-identical root/status/upgrade/build help, API/CLI compatibility,
+empty-HOME count-2, all four acceptance verifiers, preflight, 80/80 mutation
+controls, and 15/15 quality-audit controls. API and CLI report SHA-256 values
+remain `ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
 and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
-No changed stable selection exists, so the changed-selection-only full P7 gate
-was not invoked; the accepted XXHash quality result remains authoritative.
+No qualified changed selection exists, so the changed-selection-only full P7
+quality/snapshot/Docker gate was inapplicable; the accepted XXHash scorecard
+remains authoritative.
 
-Fresh vulnerability data has 1,392 module records and no Imaging record.
-Canonicalized current/no-op sets are identical: 20 IDs/22 reachable traces in
-Darwin and Windows symbol scans, 22 Darwin package IDs/findings, and 30 Darwin
-module IDs/findings. No Imaging module, package, symbol, or trace appears.
+Fresh govulncheck v1.7.0 used the 1,392-record primary database updated
+2026-09-02T19:12:04Z. Current/no-op sets are identical at 20 IDs/22 reachable
+traces for Darwin and Windows symbol scans, 22 Darwin package IDs/findings,
+and 30 Darwin module IDs/findings. Ansimage has no direct primary record. It
+is correctly present as a call frame in 12 existing traces across 11 x/image
+IDs because project MVS selects x/image v0.5.0; the exact nested module's
+declared 2019 x/image closure has zero findings. This session did not reopen
+or change x/image.
 
-Imaging evidence has 1,713 verified entries; manifest SHA-256 is
-`046746e0c4004d62ebac4838dac739ce37a0d4576a0fae3e5d1db987e4d47308`.
+Ansimage evidence has 73 verified entries; manifest SHA-256 is
+`95d6ca0ac0d767c94f78b3a0a5c32f1008cd2e7b05a3ffc5f639b9af021dd112`.
 Decision-summary SHA-256 is
-`507f403c1289ff6d698beffb31eea6c3a3c07835efcf5609d6bde475bb4cdc5e`.
+`3f39b1aa5f16d3a1b398ce329e4a73621931b09d3b191dd7c0bbadc5743de0ed`.
 
 ## Tools And Retained Decisions
 
 - Exact Go 1.26.7 binary/archive SHA-256 values are
   `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
   and `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`.
-  Exact Go 1.18.10 binary/archive values are
-  `f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`
-  and `718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade`.
-- Pinned golangci-lint 2.12.2 archive SHA-256 remains
+  Contained Go 1.18.10 binary SHA-256 is
+  `f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`.
+- Pinned golangci-lint 2.12.2 archive SHA-256 is
   `a9c54498731b3128f79e090be6110f3e5fffccc617b08142ed244d4126c73f29`.
-  Retained GoReleaser and apidiff receipts remain final; a scratch rebuild of
-  apidiff was used only for verified zero-diff function.
+  Retained GoReleaser and apidiff receipts remain final; the scratch apidiff
+  executable was independently verified by embedded module metadata.
 - Retain accepted XXHash v2.3.0 and Speakeasy v0.2.0 moves and every earlier
   exact decision. Answered archives remain authoritative detail.
 - Authoritative accepted Q0-Q2 scorecard SHA-256 remains
@@ -162,25 +182,28 @@ Decision-summary SHA-256 is
 
 ## Next Objective
 
-Independently evaluate selected exact-path
-`github.com/eliukblau/pixterm/pkg/ansimage
-v0.0.0-20191210081756-9fb6cf8c2f75` as the next single P7 group. The exact
-proxy list is empty and exact `@latest` returns 404, while the selected
-pseudo-version remains fetchable. It declares the exact nested path, Go 1.13,
-Imaging v1.6.2, go-colorful v1.0.3, and an x/image pseudo-version.
+Independently evaluate exact-path `github.com/fatih/color v1.14.1` as the
+next single P7 group. A minimal survey finds 22 proxy versions and stable
+`@latest` v1.19.0. Selected v1.14.1 declares Go 1.17 and requires
+go-colorable v0.1.13, go-isatty v0.0.17, and x/sys v0.3.0. V1.15.0-v1.18.0
+continue to declare Go 1.17; v1.18.0 requires colorable v0.1.13, isatty
+v0.0.20, and x/sys v0.25.0. Latest v1.19.0 declares Go 1.25.0 and therefore
+does not preserve the retained Go 1.18 floor.
 
-Selected unsigned commit `9fb6cf8c2f75275ebcd4ac8c30a0e26930d497f7`, tree
-`bdcdecab7b23ba3a6d18efd3ced9800826668031`, is also root-project Release/tag
-v1.3.0, but the unprefixed root tag does not version the nested module. It is
-the only commit containing `pkg/ansimage/go.mod`. Immediate successor
-`9f095995d66abbf03a06cea8e8e9b7cfd679e06c` consolidates to a root module.
-Root releases continue through v1.3.3 at master
-`24a1aedad1a99b2177808bfd72b23e27318989f6`, whose root go.mod declares Go
-1.25.0. Prove exact nested-module identity rather than treating later root
-tags or source directories as releases of the selected path.
+The enabled, unarchived, non-fork upstream defaults to `main`. Stable
+GitHub Releases continue through v1.19.0. Selected tag commit is
+`3d5097c6b003cf3a784e670ddb79710cf46e9a07`; v1.18.0 is
+`1c8d8706604ee5fb9a464e5097ba113101828a75`; v1.19.0 is
+`ca25f6e17f118a5a259f3c2c0d395949d1103a5a`. Project MVS already selects
+go-colorable v0.1.15, go-isatty v0.0.20, and x/sys v0.30.0. Keep those
+already-reviewed selections distinct rather than turning the group into their
+upgrade review.
 
-Preserve the actual Markdown production chain and characterize constructors,
-formats, scaling/dimension logic, dithering, ANSI colors, terminal sizing,
-alpha/background, malformed and small images, and the two-pixel no-dither gap.
-Do not combine Imaging, go-colorful, x/image, terminal behavior, root-module
-migration, or unrelated tidy cleanup.
+Ply loads Fatih Color through `plybuild/cmd -> go-term-markdown ->
+github.com/fatih/color`. Resolve release identity, complete floor closure,
+actual ANSI/TTY/environment behavior, concurrency and global state, exact MVS
+effects, API compatibility, consumers, and vulnerability parity. V1.18.0 is
+the highest immediately visible stable release whose own directive preserves
+Go 1.18, but its full closure and every contract still require independent
+qualification. Do not select v1.19.0, combine terminal-support dependencies,
+or apply unrelated tidy cleanup.
