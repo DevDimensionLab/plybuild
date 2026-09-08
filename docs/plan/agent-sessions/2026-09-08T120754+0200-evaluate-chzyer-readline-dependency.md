@@ -1,13 +1,127 @@
 # Agent Session: Evaluate Chzyer Readline Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-08T120754+0200-evaluate-chzyer-readline-dependency`
 Created: `2026-09-08T12:07:54+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `bab4255185a96b081ed86903c6b1572fe18edea6c831ea49cf7029738545d8b4`
 Previous: [2026-09-08T110936+0200-evaluate-chzyer-logex-dependency.md](2026-09-08T110936+0200-evaluate-chzyer-logex-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-08T132110+0200-evaluate-danwakefield-fnmatch-dependency.md](2026-09-08T132110+0200-evaluate-danwakefield-fnmatch-dependency.md)
+Outcome: Retained exact Readline v1.5.1; it is already canonical exact-path
+stable latest, so no dependency metadata or implementation commit was made.
+
+## Answer
+
+Retain exact-path `github.com/chzyer/readline v1.5.1`. The fresh proxy lists
+only v1.5.0 and v1.5.1, and exact `@latest` is the selected v1.5.1 at
+2022-07-15T12:48:48Z. Both releases declare the exact module path and Go
+1.15; neither is deprecated or retracted. Sumdb records the selected
+source/module pair as
+`h1:upd/6fQk4src78LMRzh5vItIt361/o4uq553V8B5sGI=` and
+`h1:Eh+b79XXUwfKfcPLepksvw2tcLE/Ct21YObkaSkeBlk=`. Its proxy ZIP SHA-256 is
+`ce25854a8beae5c20bdde840d5142e6fbd1f86f0e58442705b8fb21dfce48501`;
+the corrected 48-file normalized source-manifest SHA-256 is
+`983bc675215c194e1d126f58b44d3a6211f39eb3af5ce2ae1d06613768f501c5`,
+and proxy versus exact Git file/content differences are empty.
+
+Go-import metadata identifies `https://github.com/chzyer/readline.git`. The
+public repository is enabled, unarchived, non-fork, and defaults to `main`.
+Selected v1.5.1 is unsigned annotated tag object
+`704f339125f222987e1fde71641f3185f6eda206` targeting unsigned commit
+`7f93d88cd5ffa0e805d58d2f9fc3191be15ec668`, tree
+`d842017d1ed9d9fd529cce8e199c3a3a69e68e0c`, parent
+`8e4bd417b9169c9482a55f3faaeef208b5bf7eb4`. V1.5.0 is an unsigned
+lightweight tag. GitHub publishes a stable v1.5.0 Release but no v1.5.1
+Release; the exact proxy/tag identity still makes v1.5.1 the canonical stable
+Go-module release.
+
+Repository tags v1.0 through v1.4 are historical GitHub Releases/tags, not
+equivalent exact-path proxy releases. They omit the semver patch component,
+precede `go.mod`, and both their short and synthesized three-part spellings
+return proxy 404. Addressing their commits produces exact-path v0 pseudo-
+versions. Historical `gopkg.in/readline.v1` and
+`gopkg.in/chzyer/readline.v1` are distinct vanity module paths; no `/v2`
+module exists.
+
+Main `9dfc369f8652ba9013dadffd2d2efeada64fe44d`, tree
+`c0ed5f5684075d6df7c6e1eb34e15e567e11d3a2`, is three first-parent commits
+after v1.5.1 and resolves only as unreleased
+`v1.5.2-0.20250620033330-9dfc369f8652`. Primary evidence corrects its exact
+parent to `fcb4d7d9a9f653462a7adf557fb1f931f00391f2`; the incoming
+`fcb4d79af3fbe295b4cb6360e14b8c0b8337353f` value was not exact. The
+`dev_v2` branch is also only an unreleased v1.5.2 pseudo-version. Neither
+branch head qualifies as a stable selection.
+
+The complete selected closure is four modules. Readline, chzyer/test v1.0.0,
+and Logex v1.2.1 declare Go 1.15; selected x/sys declares Go 1.17. The closure
+therefore preserves the retained Go 1.18 floor. Readline is pure Go with no
+Cgo, assembly, or generated files. Its legacy build tags split Windows
+kernel32 console-mode/cursor/screen-buffer/syscall paths from Unix raw terminal
+handling, Linux and BSD ioctl constants, and the x/sys/unix AIX/Solaris path.
+Windows, Linux, Darwin, BSD, Solaris, and AIX cross-builds pass under contained
+Go 1.18.10 and exact Go 1.26.7.
+
+Proxy and exact-Git native suites each pass count-1, two independent count-10
+runs, and race under both SDKs with unchanged source manifests. Vet reports
+the same two historical naming/signature diagnostics in every matrix cell:
+`WriteTo(io.Writer) (int, error)` is not the conventional WriterTo signature,
+and `ReadRune() rune` is not the conventional RuneReader signature. These are
+selected public APIs, not test failures, source-integrity differences, or a
+higher-candidate regression, and they were not silently waived.
+
+The exact production path is `plybuild/cmd -> Promptui v0.9.0 -> Readline
+v1.5.1`. Promptui's `Prompt` and `Select` construct `readline.Config`, call
+`Config.Init`, `NewEx`, `SetListener`, `Readline`, `Write`, and `Close`; Select
+also uses `NewCancelableStdin`. This covers line editing, validation/search
+listeners, masking, cursor/screen output, Vim mode, and default completion.
+Promptui sets `HistoryLimit=-1` without a history file, so persistent history
+is disabled. Ply itself constructs `Promptui.Prompt` twice and does not
+construct `Select`. A fresh Promptui v0.9.0 projection selecting Readline
+v1.5.1 passes count-1, two count-10 runs, race, vet, and Windows build under
+both SDKs. Readline's chzyer/test -> Logex edge is dependency-test-only;
+Readline production does not import either package, preserving the final
+Logex decision.
+
+Accepted project measurements reproduce exactly: 234 selected modules, 3,583
+graph edges, 429 complete-test package entries, 41 loaded modules, 197 loaded
+module-backed packages, 1,049 `go.sum` lines, and a 381-line unapplied tidy
+projection. Relative to `c314bcb`, `go.sum` adds 33 and removes zero lines.
+Unlike the prior Logex probe, exact
+`go get github.com/chzyer/readline@v1.5.1` is wholly inert because the main
+module already has the indirect requirement: no requirement, selection, edge,
+checksum, tidy projection, or status changes.
+
+The clean no-op projection passes mod verify, build, count-1/count-10/race/
+vet, Windows-amd64 build, pinned golangci-lint 2.12.2, byte-identical root/
+status/upgrade/build help, API/CLI compatibility and reports, and empty-HOME
+count-2. API and CLI report SHA-256 values are
+`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+No changed stable selection exists, so the changed-selection-only exact
+`make quality`, snapshot/Docker acceptance, and dependency commit are
+inapplicable; the accepted XXHash result remains authoritative.
+
+Fresh govulncheck v1.7.0 used the 1,392-record primary database updated
+2026-09-02T19:12:04Z. It contains no Readline record. Current and no-op
+projections are identical: 20 IDs/22 reachable traces for Darwin and Windows
+symbol scans, 22 Darwin package IDs/findings, and 30 Darwin module
+IDs/findings. No Readline module, package, symbol, or trace appears.
+
+Four exploratory artifacts are explicitly superseded: a source-normalization
+probe chose an enclosing proxy directory before corrected explicit roots; an
+initial Promptui `go get` ran at the project root before corrected module-local
+projections; an initial cross-build ran at the project root before the explicit
+source matrix; and `go mod download all` changed only an early disposable
+clone before the clean final projection. None changed the feature worktree or
+supports the decision.
+
+The sealed evidence manifest covers 745 entries at SHA-256
+`8ab036d5f96a8d92ebf682ed0fef1d5f116621dff18d670bb200172581158a00`;
+decision-summary SHA-256 is
+`435eafc93ae6df466970eb1af57a8127e5f8c389863c82fffadec236ca6bbf8a`.
+Exact Go 1.26.7 and Go 1.18.10 binary/archive receipts reproduce the retained
+values. No dependency metadata, production source, quality apparatus, or
+release input changed.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

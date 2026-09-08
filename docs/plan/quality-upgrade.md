@@ -5375,7 +5375,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained Logex v1.2.1; further dependency groups
+dependency groups through retained Readline v1.5.1; further dependency groups
 remain queued.
 
 Toolchain baseline move (2026-09-01):
@@ -8160,16 +8160,48 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `aa33eeb8ea36b17f6830ae7f063fbe1c39ec9ac5d3c9e2417fa2fe844ceb8516`
   and decision-summary SHA-256 is
   `6720115c3316e14b89a3bedcb40a59faba4a4f898727051177a682bb1435b49d`.
+- Retain exact-path `github.com/chzyer/readline v1.5.1` without a dependency
+  edit. The exact proxy lists v1.5.0/v1.5.1 and selected is canonical stable
+  latest at 2022-07-15T12:48:48Z. Historical v1.0-v1.4 GitHub Releases/tags
+  lack patch components and `go.mod`; they are proxy-absent and resolve by
+  commit only as pseudo-versions. Distinct gopkg.in vanity paths and
+  unreleased main/dev_v2 pseudo-versions do not change the exact selection.
+- Selected is unsigned annotated tag object
+  `704f339125f222987e1fde71641f3185f6eda206` targeting unsigned commit
+  `7f93d88cd5ffa0e805d58d2f9fc3191be15ec668`. Main is three commits newer
+  but not released. Its exact parent is
+  `fcb4d7d9a9f653462a7adf557fb1f931f00391f2`, correcting the incoming
+  near-match. Proxy/Git source is byte-identical; the selected four-module
+  closure tops out at Go 1.17.
+- Readline's pure-Go Windows kernel32 and Unix/Linux/BSD/AIX/Solaris terminal
+  splits cross-build under Go 1.18.10 and 1.26.7. Native proxy/Git tests pass
+  count-1, two count-10 runs, and race under both. Vet's invariant nonstandard
+  `WriteTo` and `ReadRune` signatures are historical selected APIs, not test
+  failures or a candidate regression. V1.5.0 -> v1.5.1 has three compatible
+  API additions.
+- Ply's loaded production path is `plybuild/cmd -> Promptui v0.9.0 ->
+  Readline`; Ply uses Prompt twice, while Promptui also offers Select. Fresh
+  historical-consumer projections pass tests/race/vet/Windows under both SDKs.
+  Readline's chzyer/test -> Logex path is dependency-test-only. Exact selected
+  get is wholly inert, so project measurements remain 234 modules, 3,583
+  edges, 429 complete-test packages, 41 loaded modules, 197 loaded packages,
+  1,049 checksum lines, and 381 unapplied tidy lines. Project gates and the
+  established vulnerability populations pass unchanged with no Readline
+  record or trace. Evidence has 745 entries; manifest SHA-256 is
+  `8ab036d5f96a8d92ebf682ed0fef1d5f116621dff18d670bb200172581158a00`
+  and decision-summary SHA-256 is
+  `435eafc93ae6df466970eb1af57a8127e5f8c389863c82fffadec236ca6bbf8a`.
 - Next, independently evaluate selected exact-path
-  `github.com/chzyer/readline v1.5.1`. The exact proxy lists only v1.5.0 and
-  v1.5.1, with selected already `@latest` at 2022-07-15T12:48:48Z and
-  declaring Go 1.15. Short repository tags v1.0 through v1.4 are proxy-absent
-  and need precise release/module classification. Promptui v0.9.0 is Ply's
-  production consumer. The public enabled/unarchived/non-fork repository
-  defaults to `main`; selected precedes three unreleased commits and head
-  `9dfc369f8652ba9013dadffd2d2efeada64fe44d`. Verify tag object/signature,
-  exact closure, terminal/platform behavior, Promptui consumers, projection,
-  and vulnerability effect without selecting head or adding a redundant pin.
+  `github.com/danwakefield/fnmatch
+  v0.0.0-20160403171240-cbb64ac3d964`. Its exact proxy list is empty and
+  `@latest` is the selected pseudo-version; the synthesized module file has no
+  Go directive. The enabled/unarchived/non-fork repository defaults to master,
+  has no tags or GitHub Releases, and master equals selected unsigned commit
+  `cbb64ac3d964b81592e64f957ad53df015803288`. The main root requirement is
+  not needed by loaded packages; only a historical Chroma v0.7.1 graph edge
+  remains while MVS selects final Chroma v0.10.0. Establish canonical/upstream
+  identity, floor, matching behavior, consumers, projection, and vulnerability
+  effect without tidy cleanup or combining another group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
