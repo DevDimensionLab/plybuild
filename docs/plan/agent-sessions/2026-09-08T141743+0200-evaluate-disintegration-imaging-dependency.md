@@ -1,13 +1,137 @@
 # Agent Session: Evaluate Disintegration Imaging Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-08T141743+0200-evaluate-disintegration-imaging-dependency`
 Created: `2026-09-08T14:17:43+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `6016d94ee09144381bfa8ecea3bd6221aab2ea1fcfca90a6d352d6d5c1c25254`
 Previous: [2026-09-08T132110+0200-evaluate-danwakefield-fnmatch-dependency.md](2026-09-08T132110+0200-evaluate-danwakefield-fnmatch-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-08T153002+0200-evaluate-eliukblau-pixterm-ansimage-dependency.md](2026-09-08T153002+0200-evaluate-eliukblau-pixterm-ansimage-dependency.md)
+Outcome: Retained canonical-latest stable Imaging v1.6.2 without dependency
+edits; no higher exact stable release exists, the complete closure preserves
+Go 1.18, native and production-consumer behavior passes, and exact selected
+get is wholly inert.
+
+## Answer
+
+Retain exact-path `github.com/disintegration/imaging v1.6.2`. The fresh proxy
+list contains exactly 15 stable versions, v1.0.0 through v1.6.2, and exact
+`@latest` is selected v1.6.2 at 2019-11-16T20:43:25Z. Its module declares the
+exact path, no Go directive, and `golang.org/x/image
+v0.0.0-20191009234506-e7c1f5e7dbb8`; it has no deprecation or retraction.
+Sumdb records source
+`h1:w1LecBlG2Lnp8B3jk5zSuNqd7b4DXhcjwek1ei82L+c=` and module
+`h1:44/5580QXChDfwIclfc/PCwrr44amcmDAg8hxG0Ewe4=`. All 15 proxy ZIPs match
+their exact Git tags. Selected ZIP SHA-256 is
+`2934e7bace3c8c0b1b4a07144197e8720b9ffbe922600e3a3c764f77792ac7c4`;
+the normalized 61-file source-manifest SHA-256 is
+`71fbee7ec7a3b983f75bd27e1cc91d95c67096e01492897f5f715f8644965d51`.
+
+Live go-import metadata resolves to the public, enabled, unarchived, non-fork
+`github.com/disintegration/imaging` repository on `master`. Stable GitHub
+Release and lightweight tag v1.6.2 resolve to commit
+`acabd8315e63bfcaac97d52d68a7a0b88d2eea93`, tree
+`6584cbb2a26e4d38bfec8f2587633f234500810e`, with parents
+`9aab30e6aa535fe3337b489b76759ef97dfaf362` and
+`675e3c209ff3e9bbee22db0bffe990d3abace4ce`. The tag has no tag signature;
+the commit's embedded GitHub web-flow signature independently verifies with
+fingerprint `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`. Later master
+`d40f48ce0f098c53ab1fcd6e0e402da682262da5`, tree
+`cfae2d9af62546482831388535eb24023ceac298`, resolves only as unreleased
+`v1.6.3-0.20201218193011-d40f48ce0f09`. The later Dependabot branch resolves
+only as `v1.6.3-0.20230307023716-b23393d27e6d`. Exact v1.6.3, v1.6.3-rc.1,
+and `/v2` do not exist; `gopkg.in/disintegration/imaging.v1@v1.5.0` is an
+alternate path. No redirect, fork, tag, branch, or pseudo-version is a higher
+qualified exact stable release.
+
+The complete standalone graph is Imaging, its declared x/image
+pseudo-version, which declares Go 1.12 and requires x/text v0.3.0, and that
+directive-free x/text module. Loaded tests use Imaging plus x/image/bmp,
+ccitt, tiff/lzw, and tiff; x/text remains graph-only. Fresh pristine proxy and
+exact-Git sources pass verification, listing, count-1, two independent
+count-10 passes, race, and vet under exact Go 1.26.7 and contained Go 1.18.10.
+Windows/amd64, Linux/amd64, Linux/arm64, FreeBSD/amd64, and js/wasm test builds
+pass under both SDKs. This executes the complete floor closure rather than
+inferring compatibility from Imaging's directive-free module file.
+
+Imaging is pure Go with no Cgo, assembly, generated files, build constraints,
+or OS/architecture-specific implementation. The native suite exposes 59
+tests and 27 benchmarks. Its single documentation example has no `Output`
+assertion and is not an executable example test; no fuzz or property test
+exists. Native coverage includes exported I/O and transforms, five encoded
+formats, JPEG EXIF orientations 0-8, resize filters, crops, compositing,
+adjustments, convolution, and golden pixels. Independent fixtures add JPEG,
+PNG, GIF, TIFF, and BMP round trips, extension and malformed-input errors,
+huge PNG dimension rejection, alpha-aware resize/composite behavior,
+non-zero image origins, invalid dimensions, and 100 seeded transform
+properties. Fixture count-1, two count-10 passes, race, and vet pass under
+both SDKs. Imaging itself provides no configurable decoded-pixel, byte, or
+reader resource bound, so callers must bound input; the huge malformed header
+is rejected by the decoder without allocation failure.
+
+Ply loads Imaging in production through `plybuild/cmd ->
+github.com/MichaelMure/go-term-markdown ->
+github.com/eliukblau/pixterm/pkg/ansimage -> Imaging`. Ply calls
+`markdown.Render`; Markdown passes file or HTTP readers to ansimage; ansimage
+decodes through registered image decoders and calls Imaging `Resize`, `Fit`,
+or `Fill` with Lanczos. Imaging is a loaded production dependency, not a
+test-only package. Project MVS selects x/image v0.5.0; that selection,
+Imaging's older declared x/image edge, the root indirect Imaging requirement,
+and the loaded path remain distinct. This session neither selects nor reviews
+x/image.
+
+Ansimage has no native tests, so its count/repeat/race/vet passes establish
+compilation only. The historical go-term-markdown suite passes under both
+SDKs with a terminal PTY and ambient `NO_COLOR` removed; without that state
+its ANSI goldens fail. Under project MVS it additionally has unrelated Chroma
+syntax-color golden drift. Independent 41-module consumer fixtures have a
+highest Go 1.18 declaration and pass count-1, two count-10 passes, race, vet,
+and Windows/amd64 compile under both SDKs. They exercise the exact Markdown ->
+ansimage -> Imaging path for all five formats, malformed input, and all three
+ansimage scale modes. They also preserve one actual ansimage defect:
+no-dither `RenderExt` returns empty output for a two-pixel-high scaled image,
+while Markdown reports success and emits only title/destination. Four-pixel
+fixtures render normally. This is selected ansimage behavior, not an Imaging
+defect or evidence for an Imaging selection change.
+
+Exact `go get github.com/disintegration/imaging@v1.6.2` in a disposable clone
+is entirely inert and was not applied. Before and after remain 234 selected
+modules, 3,583 graph edges, 429 complete-test package objects, 41 loaded
+modules, 197 loaded module-backed package objects, and 1,049 `go.sum` lines.
+Relative to accepted go-cmp commit `c314bcb`, `go.sum` adds 33 and removes zero
+lines. Non-mutating `go mod tidy -diff` reproduces the accepted 381-line
+unrelated cleanup projection while retaining Imaging and x/image.
+
+The unchanged project passes mod verify, build, count-1/count-10/race/vet,
+Windows-amd64 build, pinned golangci-lint 2.12.2, byte-identical
+root/status/upgrade/build help, API/CLI compatibility and reports, and
+empty-HOME count-2. API and CLI report SHA-256 values remain
+`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+No changed qualified selection exists, so the changed-selection-only full P7
+quality/snapshot/Docker gate and dependency commit are inapplicable; the
+accepted XXHash scorecard remains authoritative.
+
+Fresh govulncheck v1.7.0 used the 1,392-record primary database updated
+2026-09-02T19:12:04Z, which has no Imaging record. Canonicalized current and
+no-op results are identical: 20 IDs/22 reachable traces for Darwin and
+Windows symbol scans, 22 Darwin package IDs/findings, and 30 Darwin module
+IDs/findings. No Imaging module, package, symbol, or trace appears.
+
+An exploratory exact download from an early scratch source copy caused Go
+tooling to add a directive only to that disposable copy; all final closure and
+native runs used fresh pristine proxy and Git copies. The first compatibility
+attempt also encountered an intentionally cold v1.0.1 base module cache; a
+scratch-only network listing warmed the exact required modules and the
+contractual offline rerun passed. Neither event touched the feature worktree
+or supports the decision.
+
+The sealed evidence manifest covers 1,713 entries at SHA-256
+`046746e0c4004d62ebac4838dac739ce37a0d4576a0fae3e5d1db987e4d47308`;
+decision-summary SHA-256 is
+`507f403c1289ff6d698beffb31eea6c3a3c07835efcf5609d6bde475bb4cdc5e`.
+No dependency metadata, production source, quality apparatus, or release
+input changed.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

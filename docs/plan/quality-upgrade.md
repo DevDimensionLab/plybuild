@@ -6129,7 +6129,7 @@ Regexp2 v1.12.0 dependency group (2026-09-04):
   `c95201c96297a198b7bec9b5a031443e42c0fe4be5f17a4d383362b9dce5f527`
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-Current queue decisions and next bounded P7 group (2026-09-07):
+Current queue decisions and next bounded P7 group (2026-09-08):
 
 - Reject `github.com/fatih/color v1.14.1` -> latest v1.19.0 because the latest
   module declares Go 1.25.0. Reject `github.com/fsnotify/fsnotify v1.6.0` ->
@@ -8219,18 +8219,44 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `97130774da6c5f883f1c8fd0afa8190490be6aa3f8c998af4deaa9b7c79d44f1`
   and decision-summary SHA-256 is
   `96f4a6d499ac460e99d3c4b7b9395b2ed826374d79fca4602e89c359b676eae1`.
-- Next, independently evaluate selected exact-path
-  `github.com/disintegration/imaging v1.6.2`. The exact proxy lists 15 stable
-  versions through selected/latest v1.6.2 at 2019-11-16T20:43:25Z. Selected
-  is a stable GitHub Release and lightweight tag at verified commit
-  `acabd8315e63bfcaac97d52d68a7a0b88d2eea93`; its module file has no Go
-  directive and requires an old x/image pseudo-version. Later master
-  `d40f48ce0f098c53ab1fcd6e0e402da682262da5` resolves only as unreleased
-  `v1.6.3-0.20201218193011-d40f48ce0f09`. Ply loads Imaging through
-  go-term-markdown -> pixterm/ansimage. Establish release identity, full floor,
-  native image behavior, production consumers, exact projection, and
-  vulnerability effect without selecting master, combining x/image, or tidy
-  cleanup.
+- Retain exact-path `github.com/disintegration/imaging v1.6.2` without a
+  dependency edit. Its 15-version exact proxy list ends at selected/latest
+  stable v1.6.2. The stable GitHub Release and lightweight tag resolve to
+  verified commit `acabd8315e63bfcaac97d52d68a7a0b88d2eea93`, while later
+  master resolves only as unreleased
+  `v1.6.3-0.20201218193011-d40f48ce0f09`. No higher exact stable release,
+  prerelease, redirect, fork, `/v2`, or alternate-path identity qualifies.
+- The complete standalone closure is Imaging, its declared x/image
+  pseudo-version, and x/text v0.3.0; proxy and exact-Git native suites,
+  repeated/race/vet checks, independent image/property fixtures, and five
+  cross-build targets pass under exact Go 1.26.7 and Go 1.18.10. Imaging is
+  pure Go and the closure preserves the retained floor. Its own resource API
+  does not cap input bytes or decoded pixels, so callers must bound input.
+- Ply loads Imaging through `plybuild/cmd -> go-term-markdown ->
+  pixterm/ansimage -> Imaging`. Independent consumer fixtures cover five image
+  formats, malformed data, and all scale modes under both SDKs. They also
+  preserve an ansimage-only two-pixel no-dither empty-output defect; this is
+  not an Imaging failure. Project MVS's x/image v0.5.0 selection remains
+  distinct and unchanged.
+- Exact selected Imaging get is inert. Project counts, 381-line tidy
+  projection, compatibility hashes, no-op quality checks, and 20-ID/22-trace
+  vulnerability populations remain unchanged; the primary 1,392-record index
+  has no Imaging record or trace. Evidence has 1,713 entries; manifest SHA-256
+  is `046746e0c4004d62ebac4838dac739ce37a0d4576a0fae3e5d1db987e4d47308`
+  and decision-summary SHA-256 is
+  `507f403c1289ff6d698beffb31eea6c3a3c07835efcf5609d6bde475bb4cdc5e`.
+- Next, independently evaluate selected exact nested module
+  `github.com/eliukblau/pixterm/pkg/ansimage
+  v0.0.0-20191210081756-9fb6cf8c2f75`. Its exact proxy list is empty and
+  exact `@latest` returns 404, while the selected pseudo-version remains
+  fetchable. The selected commit is also unprefixed root-project Release/tag
+  v1.3.0 and the only commit containing `pkg/ansimage/go.mod`; its immediate
+  successor consolidates to a root module. Later root releases through v1.3.3
+  do not automatically version the nested exact path. Resolve that identity,
+  the absent native suite, terminal rendering and scale behavior, the actual
+  Markdown consumer, the two-pixel no-dither gap, full floor closure, exact
+  projection, and vulnerability effect without combining Imaging,
+  go-colorful, x/image, root-module migration, or tidy cleanup.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
