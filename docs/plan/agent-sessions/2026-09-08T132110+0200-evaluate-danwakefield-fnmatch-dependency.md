@@ -1,13 +1,124 @@
 # Agent Session: Evaluate Danwakefield Fnmatch Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-08T132110+0200-evaluate-danwakefield-fnmatch-dependency`
 Created: `2026-09-08T13:21:10+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `1209a621bfdabf5da6d8a5016eb038e3b5f65d5c09a68d62a1ae91410e77a404`
 Previous: [2026-09-08T120754+0200-evaluate-chzyer-readline-dependency.md](2026-09-08T120754+0200-evaluate-chzyer-readline-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-08T141743+0200-evaluate-disintegration-imaging-dependency.md](2026-09-08T141743+0200-evaluate-disintegration-imaging-dependency.md)
+Outcome: Retained exact Fnmatch pseudo-version; it is canonical exact-path
+latest and no higher qualified stable release exists, so dependency metadata
+and implementation history remain unchanged.
+
+## Answer
+
+Retain exact-path `github.com/danwakefield/fnmatch
+v0.0.0-20160403171240-cbb64ac3d964`. A fresh exact proxy list is empty, and
+exact `@latest` is the selected pseudo-version at 2016-04-03T17:12:40Z. Its
+proxy-synthesized module file declares only
+`module github.com/danwakefield/fnmatch`: it has no Go directive,
+requirements, deprecation, or retractions. Sumdb independently records source
+`h1:y5HC9v93H5EPKqaS1UYVg1uYah5Xf51mBfIoWehClUQ=` and module
+`h1:Xd9hchkHSWYkEqJwUGisez3G1QY8Ryz0sdWrLPMGjLk=`. The proxy ZIP SHA-256 is
+`f601e8d25a43ed32e00851e1686a93b0175dadea8f4e32c8af2f1533f20736bc`;
+proxy and exact Git files match with normalized five-file source-manifest
+SHA-256 `8bedd8645805cd07f06541f956bbd16e7975fefbc23e58da308cc3e5a69420bb`.
+
+Live go-import metadata resolves the path to
+`https://github.com/danwakefield/fnmatch.git`. The public repository is
+enabled, unarchived, non-fork, and defaults to `master`. Selected and master
+are the same unsigned commit
+`cbb64ac3d964b81592e64f957ad53df015803288`, tree
+`e31339f278164c2b9c1c4c45d08fb964b3fcae0f`, parent
+`eb9738ef552dd59a56a5953a4de6216f70564908`. The complete master history has
+only four commits and the repository has no tags or GitHub Releases. The
+repository's 2023 `pushed_at` value is explained by unmerged PR #5, not by a
+source commit beyond the 2016 master head.
+
+The relevant open and closed PR heads are unmerged fork commits and return
+unknown revision when queried through the exact parent path. Gandarez fork
+tags v0.1.0/v0.1.1 declare `github.com/gandarez/fnmatch`; Slashid's later
+master declares `github.com/slashid/fnmatch` and Go 1.20; other forks and
+inspired modules likewise use alternate paths. The original kballard/lilyball
+gist and Daniel Wakefield's gist fork establish source ancestry, not module
+release identity. No redirect, fork tag, alternate path, prerelease, untagged
+commit, or PR head is a higher qualified exact stable release. Canonical
+latest therefore remains selected.
+
+The complete selected module closure is Fnmatch alone, and its production and
+test code imports only the standard library. It is one pure-Go package with no
+Cgo, assembly, generated files, build tags, or OS/architecture-specific
+source. Proxy and exact Git suites pass count-1, two independent count-10
+runs, and race under exact Go 1.26.7 and contained Go 1.18.10. Independent
+behavior fixtures also pass, as do Windows-amd64, Linux-amd64/arm64,
+FreeBSD-amd64, and js/wasm test builds under both SDKs. The complete source and
+test execution establishes the retained Go 1.18 floor; it is not inferred from
+the directive-free proxy module file.
+
+The exported API is `Match(pattern, s string, flags int) bool`, five flag
+constants, and two aliases. Independent fixtures cover rune-aware `?` and `*`,
+brackets/ranges/negation, escapes and trailing escapes, slash handling,
+Unicode case folding, leading-directory matches, malformed patterns, unknown
+flags, and period handling. `/` is the separator on every platform. The
+fixtures preserve the two documented BSD-derived period quirks and establish
+the actual selected behavior: `Match("*", "", FNM_PERIOD)` panics. Vet
+consistently reports the selected unreachable statement at `fnmatch.go:91`
+under both SDKs. Unmerged upstream PR #1 removes that statement, but its fork
+commit is not an exact-path release or version. These are historical release
+gaps, not evidence for a permissible upgrade.
+
+The only project graph edges are the main indirect Fnmatch requirement and
+historical `github.com/alecthomas/chroma v0.7.1 -> Fnmatch`. Chroma v0.7.1
+imports Fnmatch and calls `Match` for lexer filename globs; focused historical
+consumer fixtures, repeated runs, race, vet, and Windows builds qualify the
+Fnmatch path under both SDKs. Chroma v0.7.1's own two unkeyed-literal vet
+diagnostics are invariant historical Chroma debt. Project MVS selects the
+already-final Chroma v0.10.0, which uses `filepath.Match`, has no Fnmatch
+requirement or import, and loads no Fnmatch package. `go mod why -m` correctly
+says the main module does not need it. This decision does not reopen Chroma or
+convert the review into stale-requirement cleanup.
+
+Accepted project measurements reproduce exactly: 234 selected modules, 3,583
+graph edges, 429 complete-test packages, 41 loaded modules, 197 loaded
+module-backed packages, 1,049 `go.sum` lines, and a 381-line unapplied tidy
+projection. Relative to accepted go-cmp commit `c314bcb`, `go.sum` adds 33 and
+removes zero lines. Exact
+`go get github.com/danwakefield/fnmatch@v0.0.0-20160403171240-cbb64ac3d964`
+is wholly inert: the disposable projection has unchanged `go.mod` and
+`go.sum`, no selection/edge/checksum/tidy difference, and empty diff/status.
+It was not applied, and the root indirect requirement remains.
+
+The no-op project passes mod verify, build, count-1/count-10/race/vet,
+Windows-amd64 build, pinned golangci-lint 2.12.2, CLI surface, API/CLI
+compatibility reports, byte-identical root/status/upgrade/build help, and
+empty-HOME count-2. API and CLI report SHA-256 values are
+`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+No changed candidate exists, so the changed-selection-only exact
+`make quality`, snapshot/Docker acceptance, and dependency commit are
+inapplicable. The accepted XXHash scorecard remains authoritative.
+
+Fresh govulncheck v1.7.0 used the 1,392-record primary database updated
+2026-09-02T19:12:04Z; it contains no Fnmatch record. After canonicalizing the
+scanner's nondeterministic message order, current and no-op result sets are
+identical: 20 IDs/22 reachable traces for Darwin and Windows symbol scans, 22
+Darwin package IDs/findings, and 30 Darwin module IDs/findings. No Fnmatch
+module, package, symbol, or trace appears.
+
+Exact Go 1.26.7 and Go 1.18.10 binary/archive receipts reproduce the retained
+values. An interrupted resumed Go 1.18 archive, an initially incorrect
+recursive-period fixture expectation, an API cache-warming miss, an invalid
+module-mode govulncheck invocation with a package pattern, and non-authoritative
+Xcode cache noise are explicitly superseded by fresh downloads and corrected
+final runs. None touched the feature worktree or supports the decision.
+
+The sealed evidence manifest covers 72 entries at SHA-256
+`97130774da6c5f883f1c8fd0afa8190490be6aa3f8c998af4deaa9b7c79d44f1`;
+decision-summary SHA-256 is
+`96f4a6d499ac460e99d3c4b7b9395b2ed826374d79fca4602e89c359b676eae1`.
+No dependency metadata, production source, quality apparatus, or release input
+changed.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

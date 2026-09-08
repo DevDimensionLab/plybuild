@@ -8191,17 +8191,46 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `8ab036d5f96a8d92ebf682ed0fef1d5f116621dff18d670bb200172581158a00`
   and decision-summary SHA-256 is
   `435eafc93ae6df466970eb1af57a8127e5f8c389863c82fffadec236ca6bbf8a`.
+- Retain exact-path `github.com/danwakefield/fnmatch
+  v0.0.0-20160403171240-cbb64ac3d964` without a dependency edit. Its exact
+  proxy list is empty and `@latest` is the selected pseudo-version; the
+  synthesized module file declares the exact path but no Go directive or
+  requirements. Sumdb records source/module hashes
+  `h1:y5HC9v93H5EPKqaS1UYVg1uYah5Xf51mBfIoWehClUQ=` and
+  `h1:Xd9hchkHSWYkEqJwUGisez3G1QY8Ryz0sdWrLPMGjLk=`. Proxy and exact Git
+  source match at selected/master commit `cbb64ac3d964b81592e64f957ad53df015803288`.
+- The public enabled/unarchived/non-fork repository defaults to master, has no
+  tags or GitHub Releases, and contains only four master commits. Its later
+  activity timestamp comes from unmerged PR refs. Fork tags, PR commits,
+  inspired modules, and the original gist ancestry use alternate identities
+  or are unreleased; no higher exact stable candidate exists.
+- The standard-library-only, pure-Go one-module closure passes native tests,
+  two repeated passes, race, independent matching fixtures, and relevant
+  cross-builds under exact Go 1.26.7 and Go 1.18.10. This establishes the floor
+  without inferring it from the directive-free synthesized module file. Vet's
+  selected unreachable statement and the actual empty-string plus FNM_PERIOD
+  panic are historical release gaps; unmerged PR #1 is not selectable.
+- Only the root pin and historical Chroma v0.7.1 -> Fnmatch edge remain.
+  Chroma v0.7.1 consumer fixtures pass, but selected final Chroma v0.10.0 uses
+  `filepath.Match` and no Fnmatch package is loaded. Exact selected get is
+  inert. Project metrics, gates, compatibility reports, and vulnerability
+  populations remain unchanged, with no Fnmatch record or trace. Evidence has
+  72 entries; manifest SHA-256 is
+  `97130774da6c5f883f1c8fd0afa8190490be6aa3f8c998af4deaa9b7c79d44f1`
+  and decision-summary SHA-256 is
+  `96f4a6d499ac460e99d3c4b7b9395b2ed826374d79fca4602e89c359b676eae1`.
 - Next, independently evaluate selected exact-path
-  `github.com/danwakefield/fnmatch
-  v0.0.0-20160403171240-cbb64ac3d964`. Its exact proxy list is empty and
-  `@latest` is the selected pseudo-version; the synthesized module file has no
-  Go directive. The enabled/unarchived/non-fork repository defaults to master,
-  has no tags or GitHub Releases, and master equals selected unsigned commit
-  `cbb64ac3d964b81592e64f957ad53df015803288`. The main root requirement is
-  not needed by loaded packages; only a historical Chroma v0.7.1 graph edge
-  remains while MVS selects final Chroma v0.10.0. Establish canonical/upstream
-  identity, floor, matching behavior, consumers, projection, and vulnerability
-  effect without tidy cleanup or combining another group.
+  `github.com/disintegration/imaging v1.6.2`. The exact proxy lists 15 stable
+  versions through selected/latest v1.6.2 at 2019-11-16T20:43:25Z. Selected
+  is a stable GitHub Release and lightweight tag at verified commit
+  `acabd8315e63bfcaac97d52d68a7a0b88d2eea93`; its module file has no Go
+  directive and requires an old x/image pseudo-version. Later master
+  `d40f48ce0f098c53ab1fcd6e0e402da682262da5` resolves only as unreleased
+  `v1.6.3-0.20201218193011-d40f48ce0f09`. Ply loads Imaging through
+  go-term-markdown -> pixterm/ansimage. Establish release identity, full floor,
+  native image behavior, production consumers, exact projection, and
+  vulnerability effect without selecting master, combining x/image, or tidy
+  cleanup.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
