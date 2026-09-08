@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-08T21:09:23+02:00
+Generated: 2026-09-08T23:00:17+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,17 +9,18 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`.
-- The latest dependency implementation is exact Fatih Color v1.15.0 commit
-  `6ca672ef38688b7f6f505cf0cb273d07c4c2ba9a`, exact parent
+- The latest dependency implementation remains exact Fatih Color v1.15.0
+  commit `6ca672ef38688b7f6f505cf0cb273d07c4c2ba9a`, exact parent
   `d181fcd6c11fa147e0b44dd007598872875fc9e6`, and tree
-  `9ba2fdc442553622028a4a8464536915d345510c`. It changes only `go.mod`
-  and `go.sum` with three insertions and one deletion.
-- Exact XXHash v2.3.0 implementation
-  `e5d6252825d7a1822c01819b9144050f345a6ad4` remains an ancestor.
-  Ansimage, Imaging, Fnmatch, Readline, Logex, OpenCensus Proto, and Crypt
-  remain retained without dependency edits. Speakeasy v0.2.0 implementation
-  `41f9561f6ea2f5b6395c5c4d9bcc56a54533133a` remains an ancestor.
-- The answered Fatih Color archive and sole NEXT Fsnotify archive link
+  `9ba2fdc442553622028a4a8464536915d345510c`. It changes only `go.mod` and
+  `go.sum`, with three insertions and one deletion.
+- Fsnotify v1.6.0 was retained without a dependency implementation commit.
+  Exact XXHash v2.3.0 implementation `e5d6252825d7a1822c01819b9144050f345a6ad4`
+  and Speakeasy v0.2.0 implementation
+  `41f9561f6ea2f5b6395c5c4d9bcc56a54533133a` remain ancestors. Ansimage,
+  Imaging, Fnmatch, Readline, Logex, OpenCensus Proto, and Crypt remain
+  retained without dependency edits.
+- The answered Fsnotify archive and sole NEXT Ghodss YAML archive link
   reciprocally. No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` was created. No push, merge, publication,
   release, stash, revert, successor launch, or worktree removal occurred.
@@ -28,9 +29,9 @@ session diary.
 
 P2A-P6 are complete. P7 remains active after exact Go 1.26.7, accepted
 Speakeasy v0.2.0, XXHash v2.3.0, and Fatih Color v1.15.0 moves, and retained
-Crypt, OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, and ansimage
-selections. P8 remains queued. All earlier outcomes and lifecycle ancestry are
-final; do not reopen them or combine another module group.
+Crypt, OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, and
+Fsnotify selections. P8 remains queued. All earlier outcomes and lifecycle
+ancestry are final; do not reopen them or combine another module group.
 
 Every disposable cache, projection, archive, source, report, generated
 artifact, evidence tree, and build context must remain beneath
@@ -38,116 +39,120 @@ artifact, evidence tree, and build context must remain beneath
 roots, never run `go mod download all` in a measured tree, and preserve the
 launcher's scratch cleanup and reciprocal archive contract.
 
-## Fatih Color Decision
+## Fsnotify Decision
 
-Upgrade exact-path `github.com/fatih/color` from v1.14.1 to v1.15.0. This is
-the highest stable release that preserves the retained Go 1.18 floor through
-the complete closure and the actual go-term-markdown v0.1.4 byte contract.
-Exact `go get github.com/fatih/color@v1.15.0` under Go 1.26.7 made the one
-authorized selection change; no tidy result was applied.
+Retain exact-path `github.com/fsnotify/fsnotify v1.6.0`. Stable v1.9.0 is the
+highest release whose complete minimal closure preserves Go 1.18, but two
+independent complete Go 1.18 repeat suites fail intermittently on Darwin
+kqueue. V1.7.0 and v1.8.0 fail other native-suite contracts, and v1.10.x
+requires Go 1.23. No exact newer stable therefore passes every contract.
 
-The proxy exposes 22 exact versions and stable `@latest` v1.19.0. There are
-no exact prereleases, retractions, or module deprecation. Tags v0.1 and v1.2
-are proxy-absent. No fork, redirect, alternate module path, or pseudo-version
-supersedes the exact stable identity. The public upstream is enabled,
-unarchived, non-fork, and defaults to `main`; stable GitHub Releases continue
-through v1.19.0. Current unreleased main commit
-`820c6ebc21b0` resolves as
-`v1.19.1-0.20260723100257-820c6ebc21b0` and still declares Go 1.25.0.
+The proxy exposes 40 stable versions. Retracted v1.5.0 and v1.5.3 leave 38
+eligible exact versions; old leading-zero repository tags are proxy-absent.
+There is no prerelease or module deprecation. Go-import, proxy, sumdb, and Git
+all resolve the enabled, unarchived, non-fork upstream on default `main`.
+Every relevant tag is a main ancestor and proxy/Git sources are byte-identical.
 
-Qualified v1.15.0 is the stable Release and lightweight tag at Git commit
-`12126ed593697635c525b302836b292b657ea573`, tree
-`32a72bf4eadb9b453724ce4c1058abbc8339d405`, parents
-`c5d9a2b926758e9327c5c5161995487293034990` and
-`770038b843547612c49f296a3f5740869cbf97b1`, dated
-2023-03-12T11:25:03Z. GitHub reports a valid commit signature; the lightweight
-tag has no independent tag-object signature. Proxy, checksum database, and
-exact Git source agree. Its checksum pair is
-`h1:kOqh6YHBtK8aywxGerMG2Eq3H6Qgoqeo13Bk2Mv/nBs=` /
-`h1:0h5ZqXfHYED7Bhv2ZJamyIOUej9KtShiJESRwBDUSsw=`.
+Relevant release commits/trees are:
 
-V1.14.1 through v1.18.0 declare Go 1.17. Their complete minimal closures pass
-under contained Go 1.18.10 as well as exact Go 1.26.7; native count-1, two
-independent count-10 passes, race, vet, and relevant cross-builds pass. V1.19.0
-declares Go 1.25.0 and requires x/sys v0.42.0. Go 1.18 explicitly rejects its
-module syntax/floor, so it is ineligible rather than a reason to move Ply's
-retained language floor.
+- v1.6.0 `5f8c606accbcc6913853fe7e083ee461d181d88d` /
+  `566d47ec45f239dd7674a3f0ad54d40fe76c482e`;
+- v1.7.0 `cfc9c4f277ea6ec18de92444b31983b183deb4fb` /
+  `3af1f5b0f8a3c0e869fd2b2a6e662e5f68415dcd`;
+- v1.8.0 `a9bc2e01792f868516acf80817f7d7d7b3315409` /
+  `316db70673ed511404435ea2ca0843183b470561`;
+- v1.9.0 `ae0e7923765f64fb8061396db7edebb558cf6093` /
+  `e983f596e89398e1d512b70eca573328662dac46`;
+- v1.10.0 `8d01d7b9cbe0199e4a1e60fbd965fb05dbb42123` /
+  `82a0947703590aaaf9738eb6f6c57abca74e6f5c`; and
+- v1.10.1 `76b01a6e8f502187fecedea8b025e79e5a86085c` /
+  `372b850d90678bf373c51640f701212ba17332ae`.
 
-V1.16.0, v1.17.0, and v1.18.0 fail Ply's loaded production-consumer contract.
-The v1.16 reset change makes go-term-markdown's green-bold and
-blue-background-italic output end in `0;22m` and `0;23m` instead of `0m`.
-Twenty exact native renderer golden subtests fail at each of those releases.
-V1.15.0 preserves every Unix production byte and adds only Windows standard
-output initialization that enables processed and virtual-terminal output.
-That makes it the highest qualified stable, not merely a fallback chosen from
-the module directive.
+V1.6.0, v1.7.0, and v1.9.0 have annotated unsigned tags, and v1.8.0 is
+lightweight; their commits have GitHub-valid SSH signatures. V1.10.0/v1.10.1
+tag objects and commits have valid PGP signatures. Unreleased main resolves
+as `v1.10.2-0.20260511064106-20b1e15ef3c7` and still declares Go 1.23. No
+redirect, fork, alternate path, or pseudo-version outranks stable latest.
 
-Independent behavior fixtures characterize attributes, color methods,
-Sprint/Sprintf/Sprintln, Print/Fprint variants, custom output/error writers,
-enable/disable methods, malformed and unknown parameters, empty/newline and
-nested input, concurrency, and package globals. Non-TTY output, nonempty
-`NO_COLOR`, and `TERM=dumb` disable color; a TTY enables it. Empty `NO_COLOR`
-does not disable it. `CLICOLOR` and `CLICOLOR_FORCE` are ignored through the
-qualified releases. Immutable per-call Sprint use is race-safe; mutable Color
-objects and package-global `NoColor`, `Output`, and `Error` are not
-synchronized and remain caller-controlled shared state.
+Selected v1.6.0 declares Go 1.16 and x/sys
+`v0.0.0-20220908164124-27713097b956`; v1.7.0 declares Go 1.17 and x/sys
+v0.4.0; v1.8.0/v1.9.0 declare Go 1.17 and x/sys v0.13.0. All corresponding
+x/sys modules declare no higher than Go 1.17. V1.10.x declares Go 1.23, and
+contained Go 1.18 cannot load its test dependency on standard `slices`.
 
-Ply loads the package only through `plybuild/cmd -> go-term-markdown ->
-fatih/color`. Consumer probes cover all actual green, high-green, bold-green,
-blue, blue-background-italic, and red Sprint functions plus the `NoColor`
-branch, image destinations, malformed-image fallback, PTY, non-TTY,
-`NO_COLOR`, and dumb-terminal cases. Ansimage's retained two-pixel gap and
-project-MVS Chroma output are unrelated and unchanged.
+The v1.6.0-to-v1.9.0 API adds only compatible `NewBufferedWatcher`,
+`AddWith`, `WithBufferSize`, and `ErrClosed` symbols. `Op.Has` changes combined
+masks from all-bit to any-bit matching at v1.7; Viper uses only single masks.
+Independent fixtures cover event strings/masks, paths and symlinks,
+non-recursion, event types, blocked consumers, close/channel ordering,
+WatchList, errors, and concurrent Add/Remove. Corrected old/v1.9 fixtures pass
+count-1, two independent count-10 runs, race, and vet under both SDKs.
+
+Linux/inotify has kernel watch, instance, and overflow limits. Darwin/BSD
+kqueue consumes descriptors per watched object and scans directories. Windows
+uses ReadDirectoryChangesW with a 64-KiB default buffer, lacks chmod, and
+retains renamed watches. Illumos/Solaris use FEN; Solaris is not executed in
+upstream CI. Unsupported targets compile an error backend. There is no Cgo,
+assembly, or generated Go; v1.9's C file is an external kqueue diagnostic.
+
+V1.7's Go 1.18 count-10 suite raises descriptor limits, creates roughly
+58,000 watches, hits `EMFILE`, and cascades. V1.8 deterministically fails a
+2024-only `TestDiffMatch` in 2026 and separately observed a multiple-write
+timing miss. V1.9 passes count-1, vet, race, and Go 1.26 repeats, but two
+complete Go 1.18 count-10 runs fail `TestRace/add_and_remove_watches` with an
+unexpected kqueue `bad file descriptor`. Later isolated and full repeats pass,
+proving the fault intermittent. V1.9 already contains mitigation commit
+`0023e08`; its message calls the failure longstanding and explicitly says the
+change is incomplete. V1.10 has further kqueue descriptor-lifecycle fixes but
+is independently Go-1.23-only. Retries were not used to hide the failure.
+Selected v1.6's resource-heavy stress-suite debt remains characterized rather
+than misreported as clean.
+
+Ply's production path is `plybuild/cmd -> spf13/viper -> fsnotify`. Viper
+v1.15.0 full/focused-repeat/race/vet checks pass old and candidate under both
+SDKs. It watches the config parent directory and handles writes, creates,
+symlink replacements, removes, errors, rereads, and callbacks. Ply itself does
+not call WatchConfig or OnConfigChange.
 
 ## Projection, Quality, And Vulnerability Measurements
 
-Old, v1.15.0, and rejected v1.18.0 projections each select 234 modules, 3,583
-graph edges, 429 native complete-test entries, 41 loaded modules, and 197
-loaded module-backed packages. Project MVS continues to select go-colorable
-v0.1.15, go-isatty v0.0.20, and x/sys v0.30.0, all satisfying v1.15.0 and
-v1.18.0. The implementation changes only the main Color edge, replaces the
-version in `go.mod`, and adds the v1.15.0 checksum pair. `go.sum` has 1,051
-lines and the unapplied tidy projection has 383 lines. Relative to accepted
-go-cmp commit `c314bcb`, current metadata adds exactly 35 checksum lines and
+Retained metrics remain 234 modules, 3,583 graph edges, 429 native
+complete-test entries, 41 loaded modules, 197 loaded module-backed packages,
+1,051 checksum lines, and a 383-line unapplied tidy projection. Relative to
+accepted go-cmp commit `c314bcb`, metadata adds exactly 35 checksum lines and
 removes zero.
 
-The ineligible v1.19.0 projection selects 234 modules and 3,586 edges, raises
-the main language declaration to Go 1.25, raises x/sys to v0.42.0, produces
-1,053 checksum lines, and a 390-line tidy projection. Those effects were
-measured only in a disposable tree and were not applied.
+Exact old get is inert. A v1.9 projection changes only the main Fsnotify edge,
+adds its checksum pair, and keeps project x/sys v0.30.0. It has 430 test
+entries, 198 loaded packages, 1,053 sum lines, and 387 tidy-diff lines; the
+extra package is `fsnotify/internal`. V1.10.1 also moves main Go 1.18 to 1.23,
+has 3,585 graph edges, and a 391-line tidy projection. No projection or tidy
+result was applied.
 
-The implemented project passes mod verify, build, count-1/count-10/race/vet,
-Windows-amd64 build, pinned golangci-lint 2.12.2 with zero findings,
-byte-identical root/status/upgrade/build help, API/CLI compatibility,
-empty-HOME count-2, launcher and Make contracts, all acceptance verifiers,
-preflight, snapshot and Docker meta/acceptance, 80/80 mutation controls, and
-15/15 audit controls. Exact `make quality` exits 0 with all 27 Q0-Q2 rows PASS
-at L2, ratchet improved 7, and zero held, regressed, not-comparable, or dirty
-counts. Its scorecard SHA-256 is
+The retained projection passes mod verify, build, count-1/count-10/race/vet,
+Windows-amd64 build, pinned golangci-lint 2.12.2, byte-identical root/status/
+upgrade/build help, API/CLI compatibility, and empty-HOME count-2. Since the
+selection is unchanged, changed-selection-only snapshot, Docker, acceptance,
+audit, and exact quality work is inapplicable. The current tree retains the
+accepted 27/27 Q0-Q2 L2 scorecard
 `dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
-API and CLI report SHA-256 values are
-`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
-and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
-The separate full audit exits expected 1, never 2, only for queued Q3.1,
-Q3.3, Q3.4, and Q3.7; scorecard SHA-256 is
-`4c78e22a47215146a69247f011366c35294e3bb22a72170d2fb6b64dbbb93c76`.
 
-Fresh govulncheck v1.7.0 used the 1,392-record primary database. Old and
-v1.15.0 results are identical: 20 IDs/22 reachable traces for Darwin and
-Windows symbol scans, 22 Darwin package IDs/findings, and 30 Darwin module
-IDs/findings. Fatih Color has no module record, finding, or reachable frame.
-Ansimage remains only an inherited frame in 12 existing traces across 11
-x/image IDs; no finding is attributed to this group.
+Fresh govulncheck v1.7.0 used 1,392 primary module records. Old/candidate
+canonical populations are identical: 20 IDs/22 traces for Darwin and Windows
+symbol scans, 22 Darwin package findings, and 30 Darwin module findings.
+Fsnotify has no record, finding, or trace. Existing x/image/ansimage findings
+remain unrelated.
 
-Manual evidence SHA-256 is
-`8a7db24935910e748d3a5ed96c196be5c3a2d2c4d1bf764ce67c60def79e94c7`.
-The exact quality-gate subset has 125 entries with manifest SHA-256
-`3dc2a0c14464b09b4441b961c70c24abe085d436db3df4b8447df34f4efe5ab0`.
-The session decision-summary SHA-256 is
-`93a6e698e48fbcec2fc97d487de8a9a56c44a3ac2530feb28199c5c5d90d54f9`.
-The complete Fatih Color evidence has 69,681 verified entries; manifest
-SHA-256 is
-`44dd0309a9b6453c56a0d6d71818ce7a454abd416cce56eb464120d549024995`.
+The 899-entry selected session evidence verifies against manifest SHA-256
+`e03b23b7a574cb7d4ec4213fc7a28d785fc5a70517a864a338fa64f227db11db`.
+Decision-summary SHA-256 is
+`6ce37518efc54801eea666954aa6f850142909d99c347cad21d75aa408133a34`.
+
+One misdirected disposable `go get` briefly touched primary metadata before
+being detected. Exact original blobs were restored immediately, and ordinary
+and ignored status were proven empty before further measurement. Superseded
+malformed diagnostics and first-version fixture assumptions do not count as
+passing evidence.
 
 ## Tools And Retained Decisions
 
@@ -167,27 +172,18 @@ SHA-256 is
 
 ## Next Objective
 
-Independently evaluate exact-path `github.com/fsnotify/fsnotify v1.6.0` as the
-next single P7 group. A minimal survey finds 38 exact proxy versions and
-stable `@latest` v1.10.1. Selected v1.6.0 declares Go 1.16. Stable v1.7.0,
-v1.8.0, and v1.9.0 declare Go 1.17; v1.9.0 is therefore the highest
-immediately visible floor-compatible candidate, not yet a qualified release.
-V1.10.0 and v1.10.1 declare Go 1.23 and cannot preserve Ply's Go 1.18 floor.
+Independently evaluate exact-path `github.com/ghodss/yaml v1.0.0` as the next
+single P7 group. The proxy has only selected/latest stable v1.0.0, released
+2017-03-27 at lightweight tag commit
+`0ca9ea5df5451ffdf184b4428c902747c2c11cd7`, with checksum pair
+`h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=` /
+`h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=`. Its module file contains
+no `go` directive or requirements, so prove imported source/test closure
+rather than assuming a floor.
 
-Selected checksum pair is
-`h1:n+5WquG0fcWoWp6xPWfHdbskMCQaFnG6PfBrh1Ky4HY=` /
-`h1:sl3t1tCWJFWoRz9R8WJCbQihKKwmorjAbSClcnxKAGw=` at commit
-`5f8c606accbcc6913853fe7e083ee461d181d88d`. V1.9.0 has checksum pair
-`h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=` /
-`h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=` at commit
-`ae0e7923765f64fb8061396db7edebb558cf6093`. Latest v1.10.1 is at
-`76b01a6e8f502187fecedea8b025e79e5a86085c` with checksum pair
-`h1:b0/UzAf9yR5rhf3RPm9gf3ehBPpf0oZKIjtpKrx59Ho=` /
-`h1:TLheqan6HD6GBK6PrDWyDPBaEV8LspOxvPSjC+bVfgo=`.
-
-Ply loads Fsnotify through `plybuild/cmd -> spf13/viper -> fsnotify`. Resolve
-complete floor closure and exact operating-system watcher behavior, recursive
-and non-recursive watch semantics, event/error delivery, lifecycle and
-concurrency, limits, loaded consumer behavior, MVS, API, quality, and
-vulnerability effects. Keep x/sys and Viper as distinct dependency groups.
-Do not select a Go-1.23-requiring release or apply unrelated tidy cleanup.
+Project MVS selects it through the declared grpc-gateway v1.16.0 edge, but
+`go mod why -m` says Ply does not need it and no package is loaded. Keep that
+MVS-only selection separate from Ply's direct YAML libraries and from any
+maintained successor identity. Resolve current master
+`d8423dcdf3440d0a5baffc6f90a11e4128545620`, release ancestry, exact
+conversion semantics, tests, closure, projection, and vulnerability facts.

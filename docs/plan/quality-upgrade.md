@@ -6136,10 +6136,16 @@ Current queue decisions and next bounded P7 group (2026-09-08):
   because they break go-term-markdown v0.1.4's exact ANSI reset bytes. Accept
   v1.15.0 as the highest qualified stable release and implement it in exact
   dependency-only commit `6ca672e`.
-- Evaluate `github.com/fsnotify/fsnotify v1.6.0` next. Latest v1.10.1 declares
-  Go 1.23, but v1.7.0-v1.9.0 declare Go 1.17; v1.9.0 is the highest
-  immediately visible floor-compatible stable candidate and still requires
-  complete independent qualification.
+- Retain `github.com/fsnotify/fsnotify v1.6.0`. V1.7.0 fails its contained-Go
+  repeat suite on descriptor exhaustion, v1.8.0 has a deterministic 2024-only
+  native-test failure plus a multiple-write timing miss, and v1.9.0 has an
+  intermittent Darwin kqueue `bad file descriptor` failure in two independent
+  complete Go 1.18 repeats. V1.9.0 already contains an explicitly incomplete
+  mitigation; further v1.10 kqueue descriptor fixes require Go 1.23 and cannot
+  preserve Ply's retained floor.
+- Evaluate `github.com/ghodss/yaml v1.0.0` next. It is selected/latest and the
+  proxy's only version, has no `go` directive or declared requirements, and is
+  present only through grpc-gateway's MVS edge; no package is loaded by Ply.
 - Reject latest indirect `github.com/gomarkdown/markdown`
   `v0.0.0-20260824154242-13c5cf49db8d`. Its exact one-selection closure,
   Go 1.12 declaration, 234-module/3,556-edge/429-package population, and
@@ -8303,11 +8309,51 @@ Current queue decisions and next bounded P7 group (2026-09-08):
   `dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
   Old/candidate vulnerability populations remain 20 IDs/22 traces, 22 package
   findings, and 30 module findings, with no Fatih Color record or trace.
-- Next, independently evaluate exact-path `github.com/fsnotify/fsnotify
-  v1.6.0`. Stable v1.7.0-v1.9.0 declare Go 1.17, making v1.9.0 the highest
-  immediately visible floor-compatible candidate. Stable v1.10.0-v1.10.1
-  declare Go 1.23 and cannot be selected while retaining Go 1.18. Keep Viper
-  and x/sys as distinct groups.
+- Retain exact-path `github.com/fsnotify/fsnotify v1.6.0` without a dependency
+  edit. The proxy exposes 40 stable semantic versions; retracted v1.5.0 and
+  v1.5.3 leave the incoming 38 eligible versions. Proxy, sumdb, go-import,
+  exact Git source, stable release identities, signatures, and default-main
+  ancestry agree through v1.10.1.
+- V1.6.0-v1.9.0 complete minimal closures preserve Go 1.18. V1.7.0 fails its
+  contained-Go count-10 suite after raising descriptor limits and reaching
+  `EMFILE`; v1.8.0 fails a deterministic 2024-only test in 2026 and observes
+  a separate multiple-write miss; v1.9.0 fails two independent complete Go
+  1.18 repeats with an intermittent Darwin kqueue `bad file descriptor`.
+  Later passing focused/full repeats characterize intermittence and do not
+  erase it. Mitigation commit `0023e08` is already in v1.9.0 and explicitly
+  says it does not completely fix the longstanding problem. V1.10 has further
+  kqueue descriptor changes, but v1.10.0-v1.10.1 are floor-ineligible.
+- Viper full/focused/race/vet consumers and independent watcher lifecycle,
+  event, path, non-recursion, close, error, and concurrency fixtures pass old
+  and candidate under both SDKs. Ply does not invoke Viper WatchConfig.
+  Linux/inotify, Darwin/BSD kqueue, Windows, FEN, unsupported-target, pure-Go,
+  CI, API, MVS, platform-build, and descriptor/overflow differences are
+  separately characterized in the answered archive.
+- Retained project measurements remain 234 modules, 3,583 graph edges, 429
+  complete-test entries, 41 loaded modules, 197 loaded packages, 1,051 sum
+  lines, and 383 unapplied tidy-diff lines. V1.9.0 would add only
+  `fsnotify/internal`, two checksum lines, and the exact main edge while
+  retaining x/sys v0.30.0; v1.10.1 also moves main Go 1.18 to 1.23. No
+  projection was applied.
+- Project verify/build/count-1/count-10/race/vet/Windows/lint, compatibility,
+  byte-identical help, and empty-HOME checks pass. Changed-selection-only
+  quality work is inapplicable; the accepted 27/27 Q0-Q2 L2 scorecard remains
+  `dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
+  Fresh vulnerability populations remain 20 IDs/22 traces, 22 package
+  findings, and 30 module findings with no Fsnotify record, finding, or trace.
+  The 899-entry evidence manifest SHA-256 is
+  `e03b23b7a574cb7d4ec4213fc7a28d785fc5a70517a864a338fa64f227db11db`;
+  decision-summary SHA-256 is
+  `6ce37518efc54801eea666954aa6f850142909d99c347cad21d75aa408133a34`.
+- Next, independently evaluate exact-path `github.com/ghodss/yaml v1.0.0`.
+  The proxy's only version is selected/latest stable v1.0.0 at lightweight
+  tag commit `0ca9ea5df5451ffdf184b4428c902747c2c11cd7`, with checksum pair
+  `h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=` /
+  `h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=`. Its module file has no
+  Go directive or requirements. It is MVS-selected only through
+  grpc-gateway v1.16.0, `go mod why -m` reports it unneeded, and no package is
+  loaded. Keep exact-path source closure and conversion behavior distinct
+  from grpc-gateway, project YAML libraries, and maintained successor paths.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

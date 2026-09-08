@@ -1,13 +1,141 @@
 # Agent Session: Evaluate Fsnotify Fsnotify Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-08T210923+0200-evaluate-fsnotify-fsnotify-dependency`
 Created: `2026-09-08T21:09:23+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `b0aab51806035e0fb054a1a152cc8d93e8f981d358f073f9a32ee9f7e87a33e2`
 Previous: [2026-09-08T170736+0200-evaluate-fatih-color-dependency.md](2026-09-08T170736+0200-evaluate-fatih-color-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-08T230017+0200-evaluate-ghodss-yaml-dependency.md](2026-09-08T230017+0200-evaluate-ghodss-yaml-dependency.md)
+Outcome: Retained exact Fsnotify v1.6.0 without a dependency edit; v1.7.0 and v1.8.0 fail complete repeated/native suites, v1.9.0 has an intermittent Darwin kqueue bad-file-descriptor failure under contained Go 1.18, and v1.10.x requires Go 1.23.
+
+## Answer
+
+Retain exact-path `github.com/fsnotify/fsnotify v1.6.0`. No dependency
+implementation commit was made and neither `go.mod` nor `go.sum` changed.
+V1.9.0 is the highest stable release whose complete two-module closure
+preserves Go 1.18, but it fails the required repeated native-watcher contract.
+V1.10.0 and v1.10.1 declare Go 1.23 and are ineligible.
+
+The proxy exposes 40 stable semantic versions. Retracted v1.5.0 and v1.5.3
+account for the difference from the incoming 38 eligible versions. There are
+no proxy prereleases or module deprecation. Old leading-zero repository tags
+are proxy-absent. Go-import metadata, proxy origins, checksum database, and
+exact Git sources all resolve to the enabled, unarchived, non-fork
+`github.com/fsnotify/fsnotify` upstream, whose default branch is `main`.
+Every relevant tag is a main ancestor and each proxy ZIP is byte-identical to
+the corresponding Git source.
+
+Relevant stable identities are:
+
+- v1.6.0 commit `5f8c606accbcc6913853fe7e083ee461d181d88d`, tree
+  `566d47ec45f239dd7674a3f0ad54d40fe76c482e`, parent
+  `887858705e35407d7482aec89ebbbec5fc884d07`;
+- v1.7.0 commit `cfc9c4f277ea6ec18de92444b31983b183deb4fb`, tree
+  `3af1f5b0f8a3c0e869fd2b2a6e662e5f68415dcd`;
+- v1.8.0 commit `a9bc2e01792f868516acf80817f7d7d7b3315409`, tree
+  `316db70673ed511404435ea2ca0843183b470561`;
+- v1.9.0 commit `ae0e7923765f64fb8061396db7edebb558cf6093`, tree
+  `e983f596e89398e1d512b70eca573328662dac46`;
+- v1.10.0 commit `8d01d7b9cbe0199e4a1e60fbd965fb05dbb42123`, tree
+  `82a0947703590aaaf9738eb6f6c57abca74e6f5c`; and
+- latest v1.10.1 commit `76b01a6e8f502187fecedea8b025e79e5a86085c`,
+  tree `372b850d90678bf373c51640f701212ba17332ae`.
+
+V1.6.0, v1.7.0, and v1.9.0 have annotated unsigned tag objects; v1.8.0
+is lightweight. Their commits have GitHub-valid SSH signatures. V1.10.0 and
+v1.10.1 have valid PGP signatures on tag objects and commits. Unreleased main
+resolves as `v1.10.2-0.20260511064106-20b1e15ef3c7`, declares Go 1.23, and
+does not outrank stable latest. No redirect, fork, alternate module path, or
+relevant pseudo-version changes the selection.
+
+Selected v1.6.0 declares Go 1.16 and its sole requirement is x/sys
+`v0.0.0-20220908164124-27713097b956`. V1.7.0 declares Go 1.17 with x/sys
+v0.4.0; v1.8.0 and v1.9.0 declare Go 1.17 with x/sys v0.13.0. Those exact
+x/sys releases declare Go 1.17 or lower, so every v1.6.0-v1.9.0 complete
+minimal closure preserves Go 1.18. V1.10.x declares Go 1.23; contained Go
+1.18 additionally cannot load its test use of the standard `slices` package.
+All relevant releases retain the v1.5.3 accidental-publication and v1.5.0
+symlink-regression retractions.
+
+The compatible v1.6.0-to-v1.9.0 API additions are `NewBufferedWatcher`,
+`(*Watcher).AddWith`, `WithBufferSize`, and `ErrClosed`. From v1.7.0,
+`Op.Has` changes combined masks from all-bit to any-bit matching; Viper uses
+only single masks and is unaffected. Independent fixtures cover operation
+formatting, duplicate/cleaned/missing/file/directory/symlink paths,
+non-recursion, create/write/rename/remove/chmod, blocked consumers, close and
+channel ordering, WatchList, errors, and 400-way concurrent Add/Remove.
+Corrected fixtures pass count-1, two independent count-10 runs, race, and vet
+for old and v1.9.0 under Go 1.26.7 and Go 1.18.10.
+
+Linux uses inotify and exposes kernel watch/instance/queue limits and overflow.
+Darwin/BSD kqueue consumes descriptors per watched file/directory, scans
+directories, and has no corresponding overflow event. Windows uses
+ReadDirectoryChangesW, a default 64-KiB buffer and optional `WithBufferSize`,
+does not report chmod, and retains renamed watches. Illumos/Solaris use FEN;
+illumos is tested while Solaris is only documented as expected to work.
+Unsupported targets compile the library and return a constructor error.
+There is no Cgo, assembly, or generated Go surface; v1.9.0's one C file is a
+standalone kqueue diagnostic. Cross-builds do not claim foreign-kernel
+execution.
+
+V1.7.0 count-1 passes but its contained-Go-1.18 count-10 suite raises the
+descriptor soft limit, creates about 58,000 watches, reaches `EMFILE`, and
+cascades into later tests. V1.8.0 deterministically fails
+`internal/ztest.TestDiffMatch` because it hard-codes 2024 while the helper
+uses 2026; one Go 1.26 run also loses every expected multiple-write event.
+V1.9.0 count-1, vet, race, and two Go 1.26 count-10 runs pass, but two
+independent complete Go 1.18 count-10 runs fail
+`TestRace/add_and_remove_watches` with an unexpected kqueue `bad file
+descriptor`. Later isolated repeats and one later full repeat pass, proving
+intermittence rather than erasing it. V1.9.0 already contains mitigation
+commit `0023e08`; its own message calls the failure longstanding and says the
+change does not completely fix it. V1.10 has further kqueue descriptor
+lifecycle fixes but is independently Go-1.23-only. The rule forbidding hidden
+retries therefore rejects every newer floor-compatible stable release.
+Selected v1.6.0 retains its own characterized stress-suite resource debt
+rather than claiming that historical upstream suite is perfect.
+
+Ply's exact production path is `plybuild/cmd -> spf13/viper -> fsnotify`.
+Viper v1.15.0 full tests, two independent WatchConfig repeats, race, and vet
+pass with v1.6.0 and v1.9.0 under both SDKs. Viper watches a config's parent
+directory, handles Write/Create and symlink target replacement, re-reads,
+invokes its callback, stops after Remove, and relays errors. Ply itself never
+calls WatchConfig or OnConfigChange; initialization only selects/reads config
+and enables environment handling.
+
+Exact old get is inert. The v1.9.0 projection changes only the main Fsnotify
+edge and adds two checksum lines; project x/sys stays v0.30.0. It retains
+234 modules/3,583 edges/41 loaded modules but has 430 complete-test entries,
+198 loaded packages, 1,053 checksum lines, and a 387-line unapplied tidy
+projection because `fsnotify/internal` becomes loaded. The v1.10.1 projection
+also raises the main Go line to 1.23 and has 3,585 graph edges and a 391-line
+tidy projection, which is an explicit stop condition.
+
+The retained project remains at 234 modules, 3,583 edges, 429 complete-test
+entries, 41 loaded modules, 197 loaded packages, 1,051 checksum lines, and a
+383-line unapplied tidy projection. Its verify, build, count-1/count-10/race/
+vet, Windows build, pinned lint, byte-identical help, API/CLI compatibility,
+and empty-HOME count-2 checks pass. Because there is no changed selection,
+the changed-selection-only snapshot/Docker/audit/quality sequence is
+inapplicable; the unchanged tree retains Fatih's accepted 27/27 Q0-Q2 L2
+scorecard SHA-256
+`dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
+
+Fresh primary vulnerability sets are identical old/candidate: 20 IDs and 22
+reachable traces in Darwin and Windows symbol scans, 22 Darwin package
+findings, and 30 Darwin module findings. Fsnotify has no database record,
+finding, or trace. Existing x/image/ansimage findings are unrelated.
+
+One initially misdirected disposable `go get` briefly touched the primary
+metadata. It was caught immediately and restored byte-exactly before further
+measurement; ordinary and ignored status were then empty. Superseded malformed
+diagnostics and initial fixture assumptions are excluded from passing evidence.
+
+The 899-entry selected evidence manifest verifies at SHA-256
+`e03b23b7a574cb7d4ec4213fc7a28d785fc5a70517a864a338fa64f227db11db`;
+decision-summary SHA-256 is
+`6ce37518efc54801eea666954aa6f850142909d99c347cad21d75aa408133a34`.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
