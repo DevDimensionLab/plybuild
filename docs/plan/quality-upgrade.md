@@ -7943,17 +7943,67 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `aa77d2ab9cf676ecfb7ef544c1c5db76ecda86f580ff8ff8f03b8c78038677f0`
   and decision-summary SHA-256 is
   `6db4ca7260bde6b4affa48c62adb381bda20687f39f013c4b1cdc25397418754`.
-- Next, independently evaluate selected exact-path
-  `github.com/bgentry/speakeasy v0.1.0` at 2017-04-17T20:07:03Z. The proxy
-  lists v0.1.0 and v0.2.0; exact `@latest`, `@v0`, and `@master` resolve
-  v0.2.0 at 2022-09-10T01:20:23Z, commit
-  `760eaf8b681647364e7a400b856e0921248728a5`. Both proxy module files expose
-  only the exact path, so the complete closure floor is unproved. The enabled,
-  unarchived, non-fork repository has one branch, two tags, and one non-draft,
-  non-prerelease v0.2.0 GitHub Release published in 2024. Independently prove
-  identity, release/signature history, closure floor, tests, consumer terminal
-  behavior, projection, and vulnerability effect. Do not combine another
-  module group.
+- Advance exact-path `github.com/bgentry/speakeasy` from inherited v0.1.0 to
+  canonical stable latest/default-branch head v0.2.0. Exact `@latest`, `@v0`,
+  `@master`, tag, and public enabled/unarchived/non-fork repository master all
+  resolve commit `760eaf8b681647364e7a400b856e0921248728a5` at
+  2022-09-10T01:20:23Z. The lightweight tag has no tag-object signature; the
+  commit's GitHub web-flow signature verifies cryptographically. The sole
+  non-draft, non-prerelease GitHub Release was published much later, at
+  2024-06-27T20:45:36Z, and is explicitly distinct from tag/commit time.
+- Selected v0.1.0 is unsigned commit
+  `4aabc24848ce5fd31929f7d1e4ea74d3709c14cd` at
+  2017-04-17T20:07:03Z. Its signed annotated tag was created
+  2017-06-15T22:05:56Z and verifies with fingerprint
+  `757FD463E177A2F1CD1C89038B6EDBF713E83E69`; the key is now expired. Both
+  eight-file proxy archives match exact tag source and both sumdb pairs
+  verify. No prerelease, retraction, deprecation, `/v2` module, fork redirect,
+  or later default-branch commit exists.
+- Neither root module declares Go or requirements. The complete minimal closure
+  is nevertheless proved as one module/two packages using only the standard
+  library. Proxy and exact-Git forms of both versions pass verify/list,
+  count-1, two count-10 runs, race, and vet under exact Go 1.26.7 and Go
+  1.18.10. This execution, not missing directives, proves the retained floor.
+- Mitchellh CLI v1.1.0 is the real graph consumer and calls only
+  `speakeasy.Ask("")` through `BasicUi.AskSecret`. Its focused tests pass
+  repeated/race/vet under Go 1.18. A real scratch PTY fixture waits for ECHO
+  suppression before writing, proves the secret is absent from terminal
+  output, and verifies ECHO restoration for old and candidate versions.
+- Exact candidate get changes only Speakeasy v0.1.0 -> v0.2.0. Modules remain
+  234, complete packages 429, loaded modules 41, and loaded packages 197.
+  Graph edges grow 3,581 -> 3,582 only for the main candidate edge; `go.sum`
+  grows 1,045 -> 1,047 only for its pair; tidy projection grows 361 -> 371
+  lines and would remove the pin/pair and restore inherited v0.1.0. Speakeasy
+  loads in zero Ply packages and `go mod why` says the main module does not
+  need it.
+- Exact Go 1.26.7 get produced dependency-only commit
+  `41f9561f6ea2f5b6395c5c4d9bcc56a54533133a`, parent
+  `1f55aaa31280a4610ed66c1c37ddda953bfa6a8e`, tree
+  `a50d4f256fe742e472f1f7e9cf0589a596e971b0`, changing only `go.mod` and
+  `go.sum` with three insertions. Repository verify/build/count-1/count-10/
+  race/vet, Windows, pinned lint, byte-identical help/API/CLI, complete
+  preflight, host/fresh snapshot/fresh Docker acceptance, audit meta, focused
+  evidence, and empty-HOME count-2 all pass.
+- Exact `make quality` passes 21/21 stages, 27/27 Q0-Q2 rows at L2, 80/80
+  mutations, and zero held/regressed/not-comparable/dirty counts; scorecard
+  SHA-256 is
+  `48decac359a9ebab23e59c29680e63682ab6d1a65141d13911644143a8db2a01`.
+  Full audit exits expected 1 only for Q3.1/Q3.3/Q3.4/Q3.7. Fresh primary
+  vulnerability data has no Speakeasy record or trace and preserves exact
+  20-ID/22-trace Darwin and Windows reachable populations plus 30 Darwin
+  module IDs.
+- Speakeasy evidence has 459 verified entries; manifest SHA-256 is
+  `17bb756dfd0e81c39da3616f6f81edbcc59e299b295d422c1a701be603c02cc4`,
+  and decision-summary SHA-256 is
+  `d3d5678a31f494e194321951086ccdb7579c70f39a0b7cc311bc4f9c925666f0`.
+- Next, independently evaluate selected exact-path `github.com/bketelsen/crypt`
+  pseudo-version `v0.0.3-0.20200106085610-5cbc8cc4026c`. A minimal survey
+  finds stable v0.0.1 through v0.0.5 and exact `@latest`, `@v0`, and `@master`
+  at v0.0.5, 2021-10-08T10:39:19Z. Both roots declare Go 1.12, but v0.0.5
+  replaces old CoreOS etcd/Consul/2019 Google dependencies with a materially
+  newer closure. Independently prove canonical identity, release history,
+  complete closure floor, tests, consumer behavior, exact MVS effects, and
+  vulnerability parity without combining another dependency group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1131,82 +1131,76 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-08T023421+0200-evaluate-bgentry-speakeasy-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T023421+0200-evaluate-bgentry-speakeasy-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T005841+0200-evaluate-beorn7-perks-dependency.md
+#|SESSION_ID=2026-09-08T044755+0200-evaluate-bketelsen-crypt-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T044755+0200-evaluate-bketelsen-crypt-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T023421+0200-evaluate-bgentry-speakeasy-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/bgentry/speakeasy v0.1.0` as one bounded dependency group. Resolve
-#|canonical latest, authoritative source identity, release qualification,
-#|default-branch history, and the highest qualified Go-1.18-floor-compatible
-#|candidate from primary evidence. Make an exact dependency selection only if it
-#|changes a selected version, preserves the retained floor through the complete
-#|minimal closure, and passes every quality contract.
+#|`github.com/bketelsen/crypt v0.0.3-0.20200106085610-5cbc8cc4026c` as one
+#|bounded dependency group. Resolve canonical latest, authoritative source
+#|identity, release qualification, default-branch history, and the highest
+#|qualified Go-1.18-floor-compatible candidate from primary evidence. Make an
+#|exact dependency selection only if it changes a selected version, preserves
+#|the retained floor through the complete minimal closure, and passes every
+#|quality contract.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and bounded
-#|dependency decisions through retained Perks v1.0.1. All earlier rejections,
-#|no-change decisions, accepted closures, and evidence corrections remain final.
-#|Do not revisit Perks or combine another module group. P8 remains queued.
+#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and the accepted
+#|Speakeasy v0.2.0 dependency move. All earlier rejections, no-change decisions,
+#|accepted closures, and evidence corrections remain final. Do not revisit
+#|Speakeasy or combine another module group. P8 remains queued.
 #|
-#|Project MVS selects Speakeasy v0.1.0 at 2017-04-17T20:07:03Z although it is not
-#|an explicit `go.mod` requirement. A minimal post-Perks survey finds exact
-#|stable proxy versions v0.1.0 and v0.2.0. Exact Go `@latest`, `@v0`, and
-#|`@master` resolve v0.2.0 at 2022-09-10T01:20:23Z, commit
-#|`760eaf8b681647364e7a400b856e0921248728a5`. Both proxy module files declare
-#|only exact path `github.com/bgentry/speakeasy`, with no Go directive or
-#|requirements. Do not infer the complete closure floor from missing directives.
+#|Project MVS selects Crypt pseudo-version
+#|`v0.0.3-0.20200106085610-5cbc8cc4026c` at 2020-01-06T08:56:10Z through
+#|`github.com/devdimensionlab/mvn-pom-mutator v0.2.3`; it is not an explicit
+#|main-module requirement and is not loaded by Ply. A minimal post-Speakeasy
+#|survey finds stable proxy versions v0.0.1 through v0.0.5. Exact Go `@latest`,
+#|`@v0`, and `@master` resolve v0.0.5 at 2021-10-08T10:39:19Z. Treat source
+#|identity, commits, signatures, releases, branches, retractions, declarations,
+#|complete closures, tests, consumers, loaded behavior, project projection, and
+#|vulnerability effect as unknown until independently proved.
 #|
-#|The public exact-path GitHub repository currently reports enabled, unarchived,
-#|undisabled, non-fork status, default branch `master`, one branch, two tags, and
-#|one GitHub Release. Master and v0.2.0 point to
-#|`760eaf8b681647364e7a400b856e0921248728a5`; v0.1.0 points to
-#|`4aabc24848ce5fd31929f7d1e4ea74d3709c14cd`. The sole non-draft,
-#|non-prerelease GitHub Release is v0.2.0, published
-#|2024-06-27T20:45:36Z for the older tag. Treat canonical source identity, tag
-#|and commit signatures, release/tag history, retractions, all version and
-#|branch declarations, complete closures, tests, consumers, loaded behavior,
-#|and vulnerability effect as unknown until independently proved. Explicitly
-#|distinguish tag/commit time from GitHub Release publication time.
+#|The selected pseudo-version and v0.0.5 both declare exact path
+#|`github.com/bketelsen/crypt` and Go 1.12, but their requirements differ
+#|materially. Selected history requires the old CoreOS etcd/Consul API and 2019
+#|Google/crypto/grpc modules; v0.0.5 requires `go.etcd.io/etcd/client/v2
+#|v2.305.0`, Consul API v1.11.0, and newer 2021 Google/crypto/grpc modules. Do
+#|not infer the complete closure floor or a minimal MVS move from the root Go
+#|directive.
 #|
 #|# Measurements At Start
 #|
-#|Latest dependency implementation remains Circbuf commit
-#|`3be2183ee310ccdc358ce4ed372c0785de25b88b`, exact parent
-#|`7a0ca4e2caba6d2fff20a9c169b181f9187b40dc`, tree
-#|`a51846840b5f252a30359530dfc950f811398431`, changing only `go.mod` and
-#|`go.sum`. The Consul API, Go Metrics, Go Radix, and Perks evaluations made no
-#|dependency commit. Operator-authorized lifecycle repair
-#|`f9f0f7669e635c8c7bb169aab816d0ebe1b16435` remains intentionally between the
-#|earlier Repr implementation and direct-child Repr handoff. Preserve it.
+#|The Speakeasy dependency implementation is commit
+#|`41f9561f6ea2f5b6395c5c4d9bcc56a54533133a`, exact parent
+#|`1f55aaa31280a4610ed66c1c37ddda953bfa6a8e`, tree
+#|`a50d4f256fe742e472f1f7e9cf0589a596e971b0`, changing only `go.mod` and
+#|`go.sum` with three insertions. It selects exact stable latest/default-branch
+#|Speakeasy v0.2.0 and preserves Go 1.18 through its one-module closure.
 #|
-#|Perks remains selected at v1.0.1, the exact-path signed stable latest and
-#|default-branch tip. The enabled, unarchived exact-path repository is a fork,
-#|but go-import and proxy identity prove it is the canonical published
-#|`github.com/beorn7/perks` source; parent `github.com/bmizerany/perks` is a
-#|distinct path with divergent untagged history. Exact selected-version get
-#|changed no selection and only projected redundant metadata, which was not
-#|applied. Perks evidence has 477 verified entries; manifest SHA-256 is
-#|`aa77d2ab9cf676ecfb7ef544c1c5db76ecda86f580ff8ff8f03b8c78038677f0`;
-#|decision-summary SHA-256 is
-#|`6db4ca7260bde6b4affa48c62adb381bda20687f39f013c4b1cdc25397418754`.
+#|Accepted measurements are 234 selected modules, 3,582 graph edges, 429 native
+#|complete-test packages, 41 loaded modules, 197 loaded packages, 1,047
+#|`go.sum` lines, and a 371-line unapplied tidy projection. Relative to accepted
+#|go-cmp commit `c314bcb`, accepted metadata adds exactly 31 checksum lines. The
+#|main module retains Go 1.18 and toolchain Go 1.26.7. Ordinary and ignored
+#|status must be empty.
 #|
-#|Accepted measurements remain 234 selected modules, 3,581 graph edges, 429
-#|native complete-test packages, 41 loaded modules, 1,045 `go.sum` lines, and a
-#|361-line unapplied tidy projection. Relative to accepted go-cmp commit
-#|`c314bcb`, accepted metadata adds exactly 29 checksum lines. The main module
-#|retains Go 1.18 and toolchain Go 1.26.7. Ordinary and ignored status must be
-#|empty.
-#|
-#|Fresh primary vulnerability evidence contains 1,392 module records and no
-#|exact or parent Perks record. Accepted projections retain exact 20-ID/22-trace
-#|Darwin symbol, 30-ID Darwin module, and 20-ID/22-trace Windows symbol
+#|Fresh primary vulnerability data contains 1,392 module records and no
+#|Speakeasy record. Accepted old/candidate comparisons retain exact 20-ID/
+#|22-trace Darwin symbol, 30-ID Darwin module, and 20-ID/22-trace Windows symbol
 #|populations.
+#|
+#|Speakeasy evidence has 459 verified entries; manifest SHA-256 is
+#|`17bb756dfd0e81c39da3616f6f81edbcc59e299b295d422c1a701be603c02cc4`;
+#|decision-summary SHA-256 is
+#|`d3d5678a31f494e194321951086ccdb7579c70f39a0b7cc311bc4f9c925666f0`.
+#|Exact quality passed all 21 stages and 27 Q0-Q2 rows at L2; its scorecard
+#|SHA-256 is
+#|`48decac359a9ebab23e59c29680e63682ab6d1a65141d13911644143a8db2a01`.
 #|
 #|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
 #|SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
@@ -1218,64 +1212,57 @@ exit 70
 #|`f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`,
 #|and apidiff
 #|`0c55d9e385a57d6af9b69a9abd3b71d986123dbe82e687fcaecb99f9a0acba20`.
-#|Treat rebuilt tool hashes as nonportable receipts; prove versions and
-#|functionality.
 #|
 #|# Role And Boundaries
 #|
 #|From fresh external archives and caches, resolve every relevant exact-path
-#|Speakeasy v0 version through the Go proxy and checksum database, authoritative
+#|Crypt v0 version through the Go proxy and checksum database, authoritative
 #|repository, go-import metadata, and primary Go vulnerability data. Record
-#|selected and candidate commits/times, module Go declarations and requirements,
-#|checksum pairs, source identity, tag and commit signatures, release history,
-#|archived/deprecated status, and retractions. Explicitly distinguish stable
-#|versions, prereleases, pseudo-versions, redirects, forks, alternate module
-#|paths, branch heads, unreleased commits, and a delayed GitHub Release object.
+#|selected/candidate commits and times, module declarations and requirements,
+#|checksum pairs, source identity, tag and commit signatures, release and branch
+#|history, archive/deprecation status, and retractions. Distinguish stable tags,
+#|the selected prerelease-form pseudo-version, redirects, forks, alternate
+#|module paths, branch heads, and unreleased commits.
 #|
 #|Prove canonical latest and the highest qualified exact-path version compatible
-#|with Go 1.18 from declarations and the complete minimal closure, not from
-#|missing directives. Measure old versus candidate modules, graph edges,
-#|complete packages, checksums, loaded packages and paths, exact-get diff, and
-#|`go mod tidy -diff`. Explain every selection, edge, and checksum change.
-#|Identify real consumers and exercise the actually used symbols and terminal
-#|behavior without requiring an interactive user or leaking terminal state.
+#|with Go 1.18 from declarations and the complete minimal closure. Measure old
+#|versus candidate modules, graph edges, complete packages, checksums, loaded
+#|packages and paths, exact-get diff, and `go mod tidy -diff`. Explain every
+#|selection, edge, and checksum change; do not silently absorb another retained
+#|dependency decision into the Crypt group.
 #|
-#|Require candidate module complete, repeated, and race-enabled self-tests plus
-#|vet; repository verify/build, complete tests, race, vet, Windows build, pinned
-#|lint, byte-identical public help, API/CLI reports, and primary vulnerability
-#|identity. Preserve the retained Go 1.18 floor across the complete changed
-#|closure. Keep standalone test-only closure separate from project MVS.
+#|Identify the historical Crypt consumers and exercise the actually used
+#|configuration/client/backend symbols. Keep standalone test-only closure
+#|separate from project MVS. Require candidate module complete, repeated, and
+#|race-enabled self-tests plus vet; repository verify/build, complete tests,
+#|race, vet, Windows build, pinned lint, byte-identical public help, API/CLI
+#|reports, and primary vulnerability identity.
 #|
 #|Reject or retain without dependency edits if canonical qualification, source
-#|identity, floor compatibility, closure, module tests, loaded behavior, or any
-#|applicable quality contract fails. Do not manufacture metadata when exact get
-#|changes no selected version. Record precise primary old/candidate
-#|vulnerability IDs and traces.
+#|identity, floor compatibility, closure, module tests, consumer behavior, or
+#|any applicable quality contract fails. If exact selected-version get changes
+#|no selection, do not manufacture a direct or indirect requirement, main edge,
+#|or checksum solely for metadata.
 #|
 #|# Required Reading
 #|
 #|Verify branch, clean ordinary and ignored status, exact ancestry, reciprocal
 #|archive history, `./codex-dev-start.sh --check`, and P7/P8 state before work.
 #|Read this archive, the rolling handover, P7 roadmap, `go.mod`, `go.sum`, the
-#|answered Perks, Go Radix, Go Metrics, Consul API, Circbuf, Optional, Template,
-#|Colour, Chroma, Kong, Repr, Assert, and Units archives, retained
-#|Kingpin/Resty/Errgo/Check/YAML outcomes, and the toolchain, quality, baseline,
-#|compatibility, snapshot/Docker, acceptance, audit, and lifecycle contracts. Do
-#|not reopen earlier decisions.
+#|answered Speakeasy, Perks, Go Radix, Go Metrics, Consul API, and Circbuf
+#|archives, all earlier retained outcomes named by the handover, and the
+#|toolchain, quality, baseline, compatibility, snapshot/Docker, acceptance,
+#|audit, and lifecycle contracts. Do not reopen earlier decisions.
 #|
 #|# Three Moves
 #|
-#|If and only if v0.2.0 is qualified and its complete minimal closure preserves
-#|Go 1.18, use exact Go 1.26.7 and exact
-#|`go get github.com/bgentry/speakeasy@v0.2.0` for one dependency-only commit.
-#|Do not hand-edit metadata or use tidy as implementation. Preserve every
+#|If and only if a higher exact Crypt version is qualified and its complete
+#|minimal closure preserves Go 1.18, use exact Go 1.26.7 and exact
+#|`go get github.com/bketelsen/crypt@<qualified-version>` for one dependency-only
+#|commit. Do not hand-edit metadata or use tidy as implementation. Preserve every
 #|retained version, toolchain declaration, production source, quality apparatus,
-#|and release input.
-#|
-#|If v0.2.0 fails qualification, or exact get changes no selection, retain
-#|v0.1.0 without adding a redundant direct or indirect requirement, main edge,
-#|or checksum solely for metadata. A no-change decision gets no dependency
-#|implementation commit.
+#|and release input. Stop instead of applying an unexplained multi-selection
+#|move.
 #|
 #|After a changed selection, run the complete P7 dependency gate: module and
 #|consumer tests, graph/path/checksum/tidy explanation, repository verify/build/
@@ -1296,10 +1283,10 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the Speakeasy decision, rewrite the rolling handover and roadmap, answer
-#|this archive, create exactly one reciprocal NEXT archive for the next single
-#|P7 group, replace only launcher mutable regions, run launcher/handoff
-#|contracts, and make the normal `docs: prepare next agent session` commit. Do
-#|not implement the next group, launch a successor, push, merge, publish,
-#|release, stash, revert, bypass cleanup, or remove the worktree.
+#|After the Crypt decision, rewrite the rolling handover and roadmap, answer this
+#|archive, create exactly one reciprocal NEXT archive for the next single P7
+#|group, replace only launcher mutable regions, run launcher/handoff contracts,
+#|and make the normal `docs: prepare next agent session` commit. Do not implement
+#|the next group, launch a successor, push, merge, publish, release, stash,
+#|revert, bypass cleanup, or remove the worktree.
 # CODEX_MUTABLE_PROMPT_END
