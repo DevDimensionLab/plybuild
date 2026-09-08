@@ -1131,60 +1131,50 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-08T060123+0200-evaluate-census-opencensus-proto-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T060123+0200-evaluate-census-opencensus-proto-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T044755+0200-evaluate-bketelsen-crypt-dependency.md
+#|SESSION_ID=2026-09-08T074422+0200-evaluate-cespare-xxhash-v2-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T074422+0200-evaluate-cespare-xxhash-v2-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-08T060123+0200-evaluate-census-opencensus-proto-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/census-instrumentation/opencensus-proto v0.3.0` as one bounded
-#|dependency group. Resolve canonical latest, authoritative source identity,
-#|archive and release qualification, divergent default-branch history, and the
-#|highest qualified Go-1.18-floor-compatible candidate from primary evidence.
-#|Make an exact dependency selection only if it changes a selected version,
-#|preserves the retained floor through the complete minimal closure, and passes
-#|every quality contract.
+#|`github.com/cespare/xxhash/v2 v2.1.2` as one bounded dependency group.
+#|Resolve canonical latest, authoritative source identity, release qualification,
+#|complete Go-floor closure, native and historical-consumer behavior, exact MVS
+#|effects, and all applicable quality contracts. Make an exact dependency
+#|selection only if a higher exact stable version changes the selection,
+#|preserves the retained Go 1.18 floor through the complete minimal closure, and
+#|passes every contract.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, the accepted
-#|Speakeasy v0.2.0 dependency move, and the retained Bketelsen Crypt
-#|pseudo-version. All earlier rejections, no-change decisions, accepted
-#|closures, and evidence corrections remain final. Do not revisit Crypt or
-#|Speakeasy and do not combine another module group. P8 remains queued.
+#|Speakeasy v0.2.0 dependency move, and retained Crypt and OpenCensus Proto
+#|selections. All earlier acceptances, rejections, no-change decisions, evidence
+#|corrections, and lifecycle ancestry are final. Do not revisit OpenCensus Proto,
+#|Crypt, or Speakeasy and do not combine another module group. P8 remains queued.
 #|
-#|Project MVS selects OpenCensus Proto v0.3.0 through historical requirements
-#|including `github.com/spf13/viper v1.10.1` and
-#|`github.com/sagikazarmark/crypt v0.4.0`; it is not an explicit main-module
-#|requirement and no OpenCensus Proto package is loaded by Ply. A minimal
-#|post-Crypt survey finds stable proxy versions v0.0.1, v0.0.2, v0.1.0,
-#|v0.2.0, v0.2.1, v0.3.0, v0.4.0, and v0.4.1. Exact Go `@latest` and `@v0`
-#|resolve v0.4.1 at 2022-09-23T17:40:20Z, while exact `@master` resolves
-#|unreleased pseudo-version
-#|`v0.2.2-0.20230502190750-1664cc961550` at
-#|2023-05-02T19:07:50Z. Treat canonical release precedence and the split
-#|default-branch ancestry as facts to prove, not as interchangeable notions of
-#|latest.
+#|Project MVS selects XXHash v2.1.2 through historical requirements from
+#|`github.com/spf13/viper v1.10.1` and
+#|`github.com/sagikazarmark/crypt v0.4.0`. It is not an explicit main-module
+#|requirement, no XXHash package is loaded by Ply, and Ply has no direct import.
+#|A minimal post-OpenCensus survey finds exact proxy versions v2.0.0, v2.1.0,
+#|v2.1.1, v2.1.2, v2.2.0, and v2.3.0. Exact `@latest` is v2.3.0 at
+#|2024-04-04T20:00:10Z. Selected and latest both declare exact module path
+#|`github.com/cespare/xxhash/v2` and Go 1.11.
 #|
-#|The public canonical repository is currently archived, non-fork, and has
-#|default branch `master` at commit
-#|`1664cc961550be8f3058ddd29390350242f44f1f`. Stable v0.4.1 is commit
-#|`e53624a87b9b9b919147a9b4626c669a869ebb34` on the separate v0.4 release
-#|line; selected v0.3.0 is commit
-#|`4aa53e15cbf1a47c6e662018ef4587e12dd0c461`. Independently establish exact
-#|commit/tree/parent/times, tag topology, releases and signatures, archive and
-#|deprecation state, branch heads, ancestry, redirects, forks, and alternate
-#|module paths.
-#|
-#|Selected v0.3.0 declares only exact module path
-#|`github.com/census-instrumentation/opencensus-proto`, with no Go directive or
-#|requirements. Stable v0.4.1 declares Go 1.18 and requirements including
-#|grpc-gateway/v2 v2.11.3, gRPC v1.49.0, protobuf v1.28.1, and 2022 x/net,
-#|x/sys, x/text, and genproto modules. Do not infer the complete closure floor
-#|or a minimal MVS move from either root declaration.
+#|The public canonical repository is currently enabled, unarchived, non-fork,
+#|and has default branch `main`. Selected v2.1.2 is annotated tag object
+#|`7ae26c41ed6fb1f8a6c21e05eeff4d91b5e401c4` dereferencing commit
+#|`e7a6b52374f7e2abfb8abb27249d53a1997b09a7`. Latest v2.3.0 is annotated tag
+#|object `7438b35f14d771ee32d8bbcd9527d32a336e7dad` dereferencing commit
+#|`998dce232f17418a7a5721ecf87ca714025a3243`. Treat these as survey facts to
+#|verify independently; establish exact trees, parents, times, signatures,
+#|release objects, default-branch ancestry, redirects, forks, alternate module
+#|paths, deprecation, retractions, and any post-release commits from primary
+#|evidence.
 #|
 #|# Measurements At Start
 #|
@@ -1192,23 +1182,27 @@ exit 70
 #|`41f9561f6ea2f5b6395c5c4d9bcc56a54533133a`, exact parent
 #|`1f55aaa31280a4610ed66c1c37ddda953bfa6a8e`, tree
 #|`a50d4f256fe742e472f1f7e9cf0589a596e971b0`, changing only `go.mod` and
-#|`go.sum` with three insertions. Crypt was retained without dependency edits.
+#|`go.sum` with three insertions. Crypt and OpenCensus Proto were retained
+#|without dependency edits.
 #|
-#|Accepted measurements remain 234 selected modules, 3,582 graph edges, 429
-#|native complete-test packages, 41 loaded modules, 197 loaded packages, 1,047
-#|`go.sum` lines, and a 371-line unapplied tidy projection. Relative to accepted
-#|go-cmp commit `c314bcb`, accepted metadata adds exactly 31 checksum lines. The
-#|main module retains Go 1.18 and toolchain Go 1.26.7. Ordinary and ignored
-#|status must be empty.
+#|Accepted project measurements remain 234 selected modules, 3,582 graph edges,
+#|429 native complete-test packages, 41 loaded modules, 197 loaded packages,
+#|1,047 `go.sum` lines, and a 371-line unapplied tidy projection. Relative to
+#|accepted go-cmp commit `c314bcb`, accepted metadata adds exactly 31 checksum
+#|lines. The main module retains Go 1.18 and toolchain Go 1.26.7. Ordinary and
+#|ignored status must be empty.
 #|
-#|Fresh primary vulnerability data contains 1,392 module records and no Crypt
-#|record. Accepted old/candidate comparisons retain exact 20-ID/22-trace Darwin
-#|symbol, 30-ID Darwin module, and 20-ID/22-trace Windows symbol populations.
-#|
-#|Crypt evidence has 10,694 verified entries; manifest SHA-256 is
-#|`e0320cf4ef063c83cee9a5131fdad9ceae8b90730502617ab48d2f16c759c93b`;
-#|decision-summary SHA-256 is
-#|`6356ad761738c8d9e664693a0c550bbe4305db500bf9198e567ef7a3e1d33a75`.
+#|Fresh primary vulnerability data contains 1,392 module records and no exact
+#|OpenCensus Proto record. Accepted comparisons retain 20 IDs/22 reachable
+#|traces for Darwin and Windows symbol scans and 30 Darwin module IDs.
+#|OpenCensus Proto evidence has 459,623 verified entries; manifest SHA-256 is
+#|`55c7090ab788c633f20666ba9d70e8f4d5f4bcb446b9e5ef8f530cd78e3b074a`.
+#|Decision-summary SHA-256 is
+#|`f7f4ed0dd015d7d7da58141a48f63537b8552c34761c05bc90de5b3efa22564a`.
+#|An initial scratch-only API/CLI warm used prohibited `go mod download all`;
+#|it touched no measured worktree and none of its results is retained as proof.
+#|Fresh exact-get/graph/package-list cache warming and the fully offline replay
+#|are the authoritative compatibility evidence.
 #|
 #|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
 #|SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
@@ -1224,42 +1218,42 @@ exit 70
 #|# Role And Boundaries
 #|
 #|From fresh external archives and caches, resolve every relevant exact-path
-#|OpenCensus Proto v0 version through the Go proxy and checksum database,
-#|authoritative repository, go-import metadata, and primary Go vulnerability
-#|data. Record selected/candidate commits and times, module declarations and
-#|requirements, checksum pairs, source identity, tag and commit signatures,
-#|release and branch history, repository archive/deprecation status, and
-#|retractions. Distinguish stable tags, redirects, forks, alternate module
-#|paths, the divergent default-branch pseudo-version, release-branch heads, and
-#|unreleased commits.
+#|XXHash v2 version through the Go proxy and checksum database, authoritative
+#|repository, go-import metadata, and primary Go vulnerability data. Record
+#|selected/candidate commits and times, module declarations and requirements,
+#|checksum pairs, source identity, tag and commit signatures, release/default-
+#|branch history, repository status, deprecation, and retractions. Distinguish
+#|stable releases, prereleases, redirects, forks, alternate module paths,
+#|unreleased branch heads, and the incompatible v1 module path.
 #|
-#|Prove canonical latest and the highest qualified candidate that preserves the
-#|Go 1.18 floor through the complete minimal module and package/test closure.
-#|Explain how a release newer by semantic version can lie outside default-branch
-#|ancestry, and qualify stable releases independently of the later master
-#|pseudo-version. Do not upgrade to an unreleased branch head merely because it
-#|is newer by commit time.
+#|Prove canonical latest and the highest qualified exact stable candidate that
+#|preserves Go 1.18 through the complete minimal module and package/test closure.
+#|Do not infer the closure floor from the root's Go 1.11 declaration. Inspect
+#|architecture-specific implementations, pure-Go fallbacks, assembly, generated
+#|files, and build tags. Prove behavior on supported Darwin-arm64 and
+#|Windows-amd64 paths and identify any other release-relevant architecture
+#|surface without expanding into another dependency group.
 #|
 #|Measure old and candidate selected modules, complete graph edges, native
 #|complete-test packages, loaded modules and packages, checksum lines, exact
 #|dependency paths, exact-get effects, and the unapplied tidy projection.
-#|Attribute every selection, edge, and checksum difference. Do not infer that a
-#|root candidate update is minimal merely because MVS already selects newer
-#|transitive modules, and do not combine another dependency group.
+#|Attribute every selection, edge, and checksum difference. If exact selected-
+#|version get changes no selected version, do not add a redundant requirement or
+#|checksum.
 #|
-#|Identify the historical Viper and Sagikazarmark Crypt consumers and the exact
-#|generated protobuf/gRPC packages and APIs they use. Exercise compatible
-#|marshal/unmarshal and service/client behavior where meaningful without
-#|inventing a Ply runtime path. Keep dependency-native generator/tool closures
-#|and historical consumer closure distinct from the project selection and
-#|loaded behavior.
+#|Identify the exact historical Viper/Crypt consumer chain and the XXHash
+#|packages, constructors, digest methods, checksum helpers, interfaces, and
+#|architecture paths it actually exercises. Use focused consumer and independent
+#|known-vector/streaming fixtures where meaningful without inventing a Ply
+#|runtime path. Keep dependency-native generator/tool closure, historical
+#|consumer closure, and Ply's unloaded project behavior distinct.
 #|
-#|Run dependency source verification, package listing, native complete tests,
-#|two independent repeated-test passes, race where supported, and vet under
-#|exact Go 1.26.7 and a contained Go 1.18 SDK. Treat generated-code vet findings,
-#|missing tests, archived status, split history, or incompatible generators
-#|precisely: establish whether each is a release disqualifier under the existing
-#|contracts rather than silently waiving it.
+#|Run source verification, package listing, native complete tests, two
+#|independent repeated-test passes, race where supported, vet, and relevant
+#|cross-builds under exact Go 1.26.7 and a contained Go 1.18 SDK. Treat assembly,
+#|missing tests, build tags, vet findings, flaky tests, release gaps, or checksum
+#|differences precisely; determine whether each is a release disqualifier under
+#|the retained contracts rather than silently waiving it.
 #|
 #|Project any qualified exact selection in a disposable worktree and run
 #|repository verify, build, count-1/count-10/race/vet, Windows-amd64 build,
@@ -1268,11 +1262,10 @@ exit 70
 #|implementation is permissible. Compare old and candidate primary
 #|vulnerability results at module, package, symbol, and reachable-trace levels.
 #|
-#|Reject or retain if canonical identity, archive/release qualification,
-#|complete closure floor, dependency tests, generated API compatibility,
-#|historical consumers, projection, or any quality contract fails. If exact
-#|selected-version get changes no selected version, do not add a redundant
-#|requirement or checksum.
+#|Reject or retain if canonical identity, release qualification, complete
+#|closure floor, dependency tests, platform implementation, API compatibility,
+#|historical consumers, projection, or any quality contract fails. Do not
+#|upgrade to an unreleased branch head merely because its commit time is newer.
 #|
 #|# Required Reading
 #|
@@ -1280,19 +1273,20 @@ exit 70
 #|current ancestry, Speakeasy implementation commit identity, reciprocal archive
 #|history, P7/P8 state, and `./codex-dev-start.sh --check`. Read this archive,
 #|`docs/plan/quality-handover.md`, `docs/plan/quality-upgrade.md`, `go.mod`,
-#|`go.sum`, the answered Crypt and Speakeasy archives, the earlier dependency
-#|archives named in the handover, and every referenced quality, compatibility,
-#|release, runner, evidence, and lifecycle contract. Earlier outcomes are final.
+#|`go.sum`, the answered OpenCensus Proto, Crypt, and Speakeasy archives, the
+#|earlier dependency archives named in the handover, and every referenced
+#|quality, compatibility, release, runner, evidence, and lifecycle contract.
+#|Earlier outcomes are final.
 #|
 #|# Three Moves
 #|
-#|If and only if a higher exact stable OpenCensus Proto version is qualified and
-#|its complete minimal closure preserves Go 1.18, use exact Go 1.26.7 and exact
-#|`go get github.com/census-instrumentation/opencensus-proto@<qualified-version>`
-#|for one dependency-only commit. Do not hand-edit metadata or use tidy as
-#|implementation. Preserve every retained version, the Go 1.18 directive,
-#|toolchain Go 1.26.7, production source, quality apparatus, and release input.
-#|Stop instead of applying an unexplained multi-selection move.
+#|If and only if a higher exact stable XXHash v2 version is qualified and its
+#|complete minimal closure preserves Go 1.18, use exact Go 1.26.7 and exact
+#|`go get github.com/cespare/xxhash/v2@<qualified-version>` for one dependency-
+#|only commit. Do not hand-edit metadata or use tidy as implementation. Preserve
+#|every retained version, the Go 1.18 directive, toolchain Go 1.26.7, production
+#|source, quality apparatus, and release input. Stop instead of applying an
+#|unexplained multi-selection move.
 #|
 #|After a changed selection, run the complete P7 dependency gate: dependency and
 #|consumer tests; graph/path/checksum/tidy proof; repository verify/build/tests/
@@ -1313,9 +1307,9 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the OpenCensus Proto decision, rewrite the rolling handover and roadmap,
-#|answer this archive, create exactly one reciprocal NEXT archive for the next
-#|single P7 group, replace only launcher mutable regions, run launcher/handoff
+#|After the XXHash v2 decision, rewrite the rolling handover and roadmap, answer
+#|this archive, create exactly one reciprocal NEXT archive for the next single
+#|P7 group, replace only launcher mutable regions, run launcher/handoff
 #|contracts, and make the normal `docs: prepare next agent session` commit. Do
 #|not implement the next group, launch a successor, push, merge, publish,
 #|release, stash, revert, bypass cleanup, or remove the worktree.

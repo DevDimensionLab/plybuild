@@ -5375,9 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained Crypt pseudo-version
-`v0.0.3-0.20200106085610-5cbc8cc4026c`; further dependency groups remain
-queued.
+dependency groups through retained OpenCensus Proto v0.3.0; further dependency
+groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -8047,15 +8046,60 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `e0320cf4ef063c83cee9a5131fdad9ceae8b90730502617ab48d2f16c759c93b`
   and decision-summary SHA-256 is
   `6356ad761738c8d9e664693a0c550bbe4305db500bf9198e567ef7a3e1d33a75`.
+- Retain exact-path `github.com/census-instrumentation/opencensus-proto` at
+  selected v0.3.0 without dependency metadata. Exact `@latest`/`@v0` are
+  stable v0.4.1 at 2022-09-23T17:40:20Z; archived repository `master` instead
+  resolves later unreleased `v0.2.2-0.20230502190750-1664cc961550` from the
+  divergent v0.2.1 line. Primary tag evidence corrects selected v0.3.0 to
+  commit `4aa53e15cbf1a47bc9087e6cfdca214c1eea4e89`, tree
+  `ea0ad81b63231a53d01a5c0c90afec09692d87fb`, at
+  2020-07-21T05:46:08Z. V0.4.1 is commit
+  `e53624a87b9b9b919147a9b4626c669a869ebb34` on the separate release line;
+  stable precedence and later default-branch commit time are not
+  interchangeable.
+- V0.4.1's complete standalone closure has 28 modules/64 edges and selects
+  genproto `9e6da59bd2fc`, whose Go 1.19 directive violates the retained floor.
+  V0.4.0's 36-module/208-edge closure preserves Go 1.18 but its committed
+  generated gateway code imports grpc-gateway/v2 while `go.mod` requires v1;
+  proxy and exact-Git package/test/race/vet gates fail under both Go SDKs.
+  V0.4.x also makes eight incompatible exported gateway-handler signature
+  changes versus v0.3.0. No higher stable release qualifies.
+- Selected v0.3.0's seven zero-test packages pass verify/list/count-1/two
+  count-10/race/vet in the accepted selected closure under Go 1.26.7 and
+  Go 1.18.10. A separate marshal/unmarshal and bufconn TraceService fixture
+  passes for v0.3.0/v0.4.1. Historical Viper v1.10.1 and Sagikazarmark Crypt
+  v0.4.0 reach only `gen-go/trace/v1` through Firestore/gRPC xDS/Envoy; their
+  focused tests and race pass for v0.3.0/v0.4.0/v0.4.1. Crypt's invariant
+  unkeyed-literal vet finding is its own historical debt.
+- Baseline remains 234 modules, 3,582 edges, 429 complete packages, 41 loaded
+  modules, 197 loaded packages, 1,047 checksum lines, and a 371-line tidy
+  projection. Exact selected get changes no selection and adds only a
+  redundant requirement/main edge/full checksum. V0.4.0 projects 234 modules,
+  3,591 edges, 1,049 checksum lines, and 377 tidy lines; only OpenCensus Proto
+  changes. V0.4.1 projects 235 modules because grpc-gateway/v2 enters MVS, with
+  the same edge/checksum/tidy totals. Neither projection was applied.
+- OpenCensus Proto is unloaded by Ply. The v0.4.0 project projection still
+  passes mod verify/build/count-1/count-10/race/vet, Windows, pinned lint,
+  byte-identical help/API/CLI, compatibility, CLI surface, and empty-HOME
+  count-2. Primary vulnerability results are invariant at 20-ID/22-trace
+  Darwin/Windows symbol, 22-ID Darwin package, and 30-ID Darwin module
+  populations, with no target record or trace. An initial prohibited
+  scratch-only `go mod download all` cache warm touched no measured worktree
+  and was superseded by a fresh exact-get/graph/package-list cache plus fully
+  offline compatibility replay. Evidence has 459,623 verified
+  entries; manifest SHA-256 is
+  `55c7090ab788c633f20666ba9d70e8f4d5f4bcb446b9e5ef8f530cd78e3b074a`
+  and decision-summary SHA-256 is
+  `f7f4ed0dd015d7d7da58141a48f63537b8552c34761c05bc90de5b3efa22564a`.
 - Next, independently evaluate selected exact-path
-  `github.com/census-instrumentation/opencensus-proto v0.3.0`. A minimal
-  survey finds stable v0.0.1 through v0.4.1, with exact `@latest` and `@v0` at
-  v0.4.1, 2022-09-23T17:40:20Z. Selected metadata has no Go directive or
-  requirements; v0.4.1 declares Go 1.18 and materially newer grpc-gateway/v2,
-  gRPC, protobuf, and x/* roots. The archived repository's default `master`
-  instead resolves a later unreleased, non-descendant pseudo-version based on
-  v0.2.1 history. Prove release/default-branch identity and the complete floor
-  before considering an exact one-module selection.
+  `github.com/cespare/xxhash/v2 v2.1.2`. A minimal survey finds six exact v2
+  releases through canonical latest v2.3.0 at 2024-04-04T20:00:10Z. Both
+  selected and latest declare Go 1.11. Viper v1.10.1 and Sagikazarmark Crypt
+  v0.4.0 request selected, but Ply loads no XXHash package. The public,
+  enabled, unarchived, non-fork repository defaults to `main`; independently
+  prove its release/signature identity, architecture-specific implementations,
+  complete closure, consumers, project projection, and vulnerability effect
+  before considering one exact move.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
