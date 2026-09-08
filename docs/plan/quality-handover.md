@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-08T04:47:55+02:00
+Generated: 2026-09-08T06:01:23+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,127 +9,131 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`.
-- Latest dependency implementation is Speakeasy commit
+- Crypt was retained without a dependency implementation commit. The latest
+  dependency implementation remains Speakeasy commit
   `41f9561f6ea2f5b6395c5c4d9bcc56a54533133a`, exact parent
   `1f55aaa31280a4610ed66c1c37ddda953bfa6a8e`, tree
-  `a50d4f256fe742e472f1f7e9cf0589a596e971b0`. It changes only `go.mod` and
-  `go.sum`, with three insertions. The next documentation handoff must have
-  this dependency commit as its exact parent.
+  `a50d4f256fe742e472f1f7e9cf0589a596e971b0`, changing only `go.mod` and
+  `go.sum` with three insertions. Its handoff is commit
+  `06edec90bed97f56b178df91364217c00e2778ac`.
 - Earlier Circbuf implementation
   `3be2183ee310ccdc358ce4ed372c0785de25b88b` and operator-authorized
-  lifecycle repair `f9f0f7669e635c8c7bb169aab816d0ebe1b16435` remain
-  ancestors. The lifecycle repair intentionally remains between the Repr
-  implementation and direct-child Repr handoff.
-- The answered Speakeasy archive and sole NEXT Crypt archive must link
+  lifecycle repair `f9f0f7669e635c8c7bb169aab816d0ebe1b16435` remain ancestors.
+- The answered Crypt archive and sole NEXT OpenCensus Proto archive must link
   reciprocally. No `.agent-task/current.md` or
   `.quality/manual-evidence.json` was created. No push, merge, publication,
   release, stash, revert, successor launch, or worktree removal occurred.
 
 ## Lifecycle And Retained Roadmap
 
-P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and the accepted
-Speakeasy v0.2.0 decision. P8 remains queued. All earlier acceptances,
-rejections, no-change decisions, evidence corrections, and lifecycle ancestry
-are final; do not reopen them or combine another group.
+P2A-P6 are complete. P7 remains active after exact Go 1.26.7, the accepted
+Speakeasy v0.2.0 move, and the retained Crypt pseudo-version. P8 remains
+queued. All earlier acceptances, rejections, no-change decisions, evidence
+corrections, and lifecycle ancestry are final; do not reopen them or combine
+another group.
 
-Every disposable cache, projection, archive, source, report, schema-2 document,
-generated artifact, evidence tree, and build context must remain beneath
-`$CODEX_SESSION_SCRATCH_ROOT`. Never create direct `/private/tmp/ply-*` roots,
-never run `go mod download all` in a measured tree, and preserve the launcher's
-scratch cleanup and exact reciprocal archive contract.
+Every disposable cache, projection, archive, source, report, schema-2
+document, generated artifact, evidence tree, and build context must remain
+beneath `$CODEX_SESSION_SCRATCH_ROOT`. Never create direct
+`/private/tmp/ply-*` roots, never run `go mod download all` in a measured
+tree, and preserve the launcher's scratch cleanup and exact reciprocal archive
+contract.
 
-## Accepted Speakeasy Group
+## Retained Bketelsen Crypt Group
 
-Select exact-path `github.com/bgentry/speakeasy v0.2.0`. The proxy lists only
-stable v0.1.0 and v0.2.0; exact `@latest`, `@v0`, `@master`, repository master,
-and tag v0.2.0 all resolve commit
-`760eaf8b681647364e7a400b856e0921248728a5` at
-2022-09-10T01:20:23Z. Go-import maps the path to the public, enabled,
-unarchived, undisabled, non-fork repository
-`https://github.com/bgentry/speakeasy.git`, whose default branch has no later
-commit. No prerelease, retraction, deprecation, or `/v2` module exists.
+Retain exact-path `github.com/bketelsen/crypt` at selected pseudo-version
+`v0.0.3-0.20200106085610-5cbc8cc4026c` without changing `go.mod` or
+`go.sum`. Stable v0.0.5 is canonical latest, default-branch head, and the
+highest stable version whose complete minimal closure preserves Go 1.18, but
+it is not quality-qualified: exact Go 1.26.7 and Go 1.18.10 report the same
+seven mandatory `go vet` failures. Stable v0.0.3 and v0.0.4 fail on those
+same unkeyed `backend.Response` literals. No higher stable Crypt v0 version
+passes every quality contract.
 
-Selected v0.1.0 is unsigned commit
-`4aabc24848ce5fd31929f7d1e4ea74d3709c14cd`, tree
-`4905bd85608c760d3ebf869da51b5740731c50b1`, at
-2017-04-17T20:07:03Z. Its signed annotated tag object
-`12abe455afa69a18b1098acb18b1f004a4a6c33c` has later tagger time
-2017-06-15T22:05:56Z and verifies with fingerprint
-`757FD463E177A2F1CD1C89038B6EDBF713E83E69`; the key is now expired.
+The exact proxy lists only v0.0.1 through v0.0.5. Exact `@latest`, `@v0`, and
+`@master` all resolve v0.0.5 at 2021-10-08T10:39:19Z. No version is retracted
+or deprecated. Go-import metadata maps the exact module path to the public,
+enabled, unarchived `https://github.com/bketelsen/crypt.git`. That repository
+is an exact-path fork of `xordataexchange/crypt`; the parent and later
+`github.com/sagikazarmark/crypt` are distinct source/module identities.
 
-Candidate v0.2.0 is a lightweight tag with no independent tag object, tagger
-time, or tag signature. Its commit has tree
-`b2198079290577be7ff0fb5732f778664e28fd64`, parent
-`a4057f540bab4628fbdc15a38dfbccdd34e6fa5d`, and a valid GitHub web-flow
-signature verified locally with expired fingerprint
-`5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`. The sole non-draft,
-non-prerelease GitHub Release was published 2024-06-27T20:45:36Z for that old
-2022 tag. Release publication time is distinct from commit/tag time.
+The canonical repository's default `master` is v0.0.5 commit
+`60c5f2086f0eae50f5275599096bcc6090d12cf8`, tree
+`19f405d906832661efa1d2129d163f8efff16560`, with no later default-branch
+commit. Its other 13 heads are feature or Dependabot branches, including
+unreleased 2023 work. All five tags are lightweight. GitHub Releases exist
+only for v0.0.3, v0.0.4, and v0.0.5 and are non-draft/non-prerelease.
 
-Both eight-file proxy ZIPs match their exact Git tag sources. Sumdb pairs are:
+The selected prerelease-form pseudo-version is untagged merge commit
+`5cbc8cc4026c0c1d3bf9c5d4e5a30398f99c99a9`, tree
+`55cf4568fd528c73254e6b1f03089d8a61bd39a5`, at
+2020-01-06T08:56:10Z. Selected plus v0.0.3, v0.0.4, and v0.0.5 commits carry
+GitHub web-flow signatures independently verified with fingerprint
+`5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`; the key is now expired.
+V0.0.1 and v0.0.2 commits are unsigned.
 
-- v0.1.0 source `h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=` and
-  module `h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=`;
-- v0.2.0 source `h1:tgObeVOf8WAvtuAX6DhJ4xks4CFNwPDZiqzGqIHE51E=` and
-  the same module hash.
+Every proxy ZIP matches exact Git source. Normalized manifest SHA-256 values
+for v0.0.1, v0.0.2, selected, v0.0.3, v0.0.4, and v0.0.5 are respectively
+`a9f8748b51390bfdedb38eee4c23c9e53c9f6809168ab64fb6c9a3f46c5b98d7`,
+`e0c379854d08d226f1bc592ad859d5cabe1fd2fedfc5012ff7b4bcdc6b422b6b`,
+`911a080413d659aedef61922bbbf77c6a0ddf7d5e4a387fde44578bec82c7959`,
+`d4318e058c2d911504b84f2e5512f05ccf241040fb3999195b29dbb694eb3938`,
+`8a616cc41db6134fd0bba0471a9fd7ad94b87f8464761c12ea8aa8dd3e20e8ed`,
+and `de3b02f2771c24908e9f55d09b6e8ff61752586beb73fec61c04c7b272585900`.
+Sumdb source/module pairs and archive hashes are in the answered archive.
 
-Neither root declares Go or requirements. The complete minimal closure is one
-module/two packages with only standard-library imports. Proxy and exact-Git
-forms of both versions pass verify/list, count-1, repeated count-10, race, and
-vet under exact Go 1.26.7 and Go 1.18.10. This execution, not missing
-directives, proves retained-floor compatibility.
+V0.0.3 onward, including selected, declare exact path and Go 1.12. V0.0.5's
+complete minimal closure contains 151 modules, 2,384 exact-Go graph edges,
+eight Crypt packages, and 426 package dependencies including tests. Its
+highest declared Go version is 1.17. The proxy and exact-Git candidate both
+pass verify, package listing, count-1, two count-10 runs, and race under exact
+Go 1.26.7; contained Go 1.18.10 count-1/count-10/race also pass. Vet alone is
+the decisive release-qualification failure.
 
-Selected Mitchellh CLI v1.1.0 is the actual consumer. `BasicUi.AskSecret`
-calls only `speakeasy.Ask("")`. Focused count-1/count-10/race and vet pass
-against both versions under Go 1.18. A scratch PTY probe waits for ECHO to turn
-off before sending a secret, proves the secret never appears in terminal
-output, and verifies ECHO restoration. The first immediate-write probe was a
-harness scheduling race and was superseded without repository changes.
+`github.com/devdimensionlab/mvn-pom-mutator v0.2.3` requests the selected
+pseudo-version but imports no Crypt package. Crypt is unloaded by Ply and
+`go mod why -m` reports that the main module does not need it. Historical
+Viper remote support is the real consumer: v1.7.x requests selected, v1.8.x
+requests v0.0.4, then v1.9.0 changes module identity. Viper v1.7.1's remote
+package compiles and vets against selected and v0.0.5; Crypt's mock-backed
+tests exercise standard/encrypted Set/Get/List/Watch manager behavior.
 
-## Selection, Quality, And Vulnerability Measurements
+## Projection, Quality, And Vulnerability Measurements
 
-Exact get changes only Speakeasy v0.1.0 -> v0.2.0. Accepted measurements are
-234 modules, 3,582 graph edges, 429 native complete-test packages, 41 loaded
-modules, 197 loaded packages, 1,047 `go.sum` lines, and a 371-line unapplied
-tidy projection. Relative to accepted go-cmp commit `c314bcb`, accepted
-metadata adds exactly 31 checksum lines.
+The accepted project remains 234 modules, 3,582 graph edges, 429 native
+complete-test packages, 41 loaded modules, 197 loaded packages, 1,047
+`go.sum` lines, and a 371-line unapplied tidy projection. Relative to accepted
+go-cmp commit `c314bcb`, accepted metadata still adds exactly 31 checksum
+lines.
 
-The only new edge is main -> Speakeasy v0.2.0. Mitchellh CLI v1.0.0/v1.1.0
-retain their v0.1.0 requests. The only new checksum lines are the candidate
-pair. Tidy removes the explicit candidate pin/pair, restores inherited v0.1.0,
-and retains all historical debt; it was never used as implementation.
-Speakeasy loads in zero Ply packages and `go mod why -m` says the main module
-does not need it.
+A v0.0.5 project projection changes only Crypt and has 234 modules, 3,700
+edges, 429 packages, 41 loaded modules, 197 loaded packages, 1,065 checksum
+lines, and a 461-line tidy projection. Its 18 checksum additions are the
+candidate pair plus 16 transitive module-file hashes. Tidy removes the
+explicit pin and candidate checksums and restores inherited selected Crypt.
+The projection passes project verify/build/count-1/count-10/race/vet,
+Windows-amd64 build, pinned lint, byte-identical help, API/CLI compatibility,
+and empty-HOME count-2, but none can override the dependency's own vet
+failure.
 
-Repository verify/build/count-1/count-10/race/vet, Windows-amd64 build, pinned
-golangci-lint 2.12.2, byte-identical root/status/upgrade/build help, API/CLI,
-all 62 launcher controls, Make and production-script contracts, complete
-preflight, host/fresh snapshot/fresh Docker acceptance, audit meta, focused
-manual audit, exact Q0-Q2 audit, expected full audit, and empty-HOME count-2
-pass. API/CLI hashes remain `ce39e1c...` and `955f1dda...`.
-
-Exact `make quality` exits 0 with 21/21 stages, 27/27 Q0-Q2 PASS at L2,
-80/80 killed mutations, and zero held/regressed/not-comparable/dirty counts.
-Q0-Q2 scorecard SHA-256 is
-`48decac359a9ebab23e59c29680e63682ab6d1a65141d13911644143a8db2a01`.
-Full audit exits expected 1, never 2, only for Q3.1, Q3.3, Q3.4, Q3.7;
-scorecard SHA-256 is
-`53f8d233daa28ad7c5777bc79c8fa46434ce9989fc0c15719ddd3614a2453c15`.
-Snapshot/Docker report hashes are `ceed704a...` and `11a03f09...`.
+An exact selected-version projection changes no selected module. It merely
+adds a redundant indirect root requirement, one main graph edge, and the
+selected source checksum: 234 modules, 3,583 edges, 1,048 checksum lines, and
+a 373-line tidy projection. It was not applied.
 
 Fresh govulncheck v1.7.0 uses primary data updated
-2026-09-02T19:12:04Z. The 1,392-record index has no Speakeasy module. Old and
-candidate results are identical: 20 IDs/22 traces for Darwin and Windows
-reachable symbols and 30 Darwin module IDs. Normalized reachable SHA-256 is
+2026-09-02T19:12:04Z. The 1,392-record module index contains no Crypt record.
+Old and candidate normalized results are identical: 20 IDs/22 reachable
+traces on Darwin and Windows and 30 Darwin module IDs. Crypt appears in no
+finding or trace. Both platforms' normalized reachable SHA-256 is
 `7757df547ed97c0b709bfe8cbbbf807356331727c870bdeb7f0602b1f393ba79`.
-Exact IDs and 22 endpoint traces are recorded in the answered archive.
 
-Speakeasy evidence contains 459 verified entries; manifest SHA-256 is
-`17bb756dfd0e81c39da3616f6f81edbcc59e299b295d422c1a701be603c02cc4`.
+Crypt evidence contains 10,694 verified entries; manifest SHA-256 is
+`e0320cf4ef063c83cee9a5131fdad9ceae8b90730502617ab48d2f16c759c93b`.
 Decision-summary SHA-256 is
-`d3d5678a31f494e194321951086ccdb7579c70f39a0b7cc311bc4f9c925666f0`.
+`6356ad761738c8d9e664693a0c550bbe4305db500bf9198e567ef7a3e1d33a75`.
 
-## Tools And Runner Corrections
+## Tools And Corrections
 
 - Exact Go 1.26.7 binary/archive SHA-256 values are
   `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
@@ -139,40 +143,39 @@ Decision-summary SHA-256 is
   and `718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade`.
 - Portable receipts remain golangci-lint 2.12.2 archive `a9c54498...`,
   GoReleaser 2.17.1 binary `f5f08a77...`, and apidiff `0c55d9e3...`.
-  Rebuilt binaries are nonportable; version/build metadata and functionality
-  are the proof.
-- Scratch-only corrections were exact historical compatibility graph warming,
-  external report routing, golangci cache relocation, BSD-`mktemp` adaptation,
-  cleared recursive Make overrides, vulnerability normalization, and terminal-
-  state-aware PTY timing. A known launcher partial-log timing probe flaked once;
-  an immediate standalone repeat and full preflight repeat passed all 62
-  controls. None changed repository source or concealed a candidate failure.
+- Scratch-only corrections were newline-safe GitHub signature extraction,
+  a writable historical-consumer replay, separate historical API cache
+  warming, evidence-directory-relative manifest verification, and
+  vulnerability return-code normalization. Initial superseded attempts are
+  retained in evidence; none changed repository source or concealed a
+  candidate failure.
 
 ## Retained Decisions
 
-Retain all earlier exact selections and outcomes, including Repr v0.5.4,
-Assert v1.0.0, Units pseudo-version `0f3dac36c52b`, Chroma v0.10.0, Colour
-v0.1.0, Template pseudo-version `fb15b899a751`, Optional v1.0.0, Circbuf
-pseudo-version `5111143e8da2`, Consul API `eb2c6b5be1b6`, Go Metrics v0.4.0,
-Go Radix v1.0.0, Perks v1.0.1, Kingpin v2.2.6, Resty v1.12.0, Errgo v2.1.0,
-Check pseudo-version `41f04d3bba15`, YAML v2.4.0/v3.0.1, and
-`go.yaml.in/yaml/v3 v3.0.5`. Preserve the accepted Kong pseudo-version and all
-other decisions recorded in the roadmap and answered archives.
+Retain the accepted Speakeasy v0.2.0 move and all earlier exact selections and
+outcomes, including Repr v0.5.4, Assert v1.0.0, Units pseudo-version
+`0f3dac36c52b`, Chroma v0.10.0, Colour v0.1.0, Template pseudo-version
+`fb15b899a751`, Optional v1.0.0, Circbuf pseudo-version `5111143e8da2`,
+Consul API `eb2c6b5be1b6`, Go Metrics v0.4.0, Go Radix v1.0.0, Perks v1.0.1,
+Kingpin v2.2.6, Resty v1.12.0, Errgo v2.1.0, Check pseudo-version
+`41f04d3bba15`, YAML v2.4.0/v3.0.1, and `go.yaml.in/yaml/v3 v3.0.5`.
+Preserve the accepted Kong pseudo-version and all other decisions recorded in
+the roadmap and answered archives.
 
 ## Next Objective
 
-Independently evaluate selected exact-path `github.com/bketelsen/crypt`
-pseudo-version `v0.0.3-0.20200106085610-5cbc8cc4026c` as the next single P7
-group. MVS selects it through `github.com/devdimensionlab/mvn-pom-mutator
-v0.2.3`; it is neither an explicit main requirement nor loaded by Ply.
+Independently evaluate selected exact-path
+`github.com/census-instrumentation/opencensus-proto v0.3.0` as the next single
+P7 group. The proxy lists stable v0.0.1 through v0.4.1; exact `@latest` and
+`@v0` resolve v0.4.1 at 2022-09-23T17:40:20Z, while exact `@master` resolves
+unreleased pseudo-version `v0.2.2-0.20230502190750-1664cc961550` because
+default-branch history split after the v0.4 release line. The canonical
+repository is public and archived.
 
-A minimal survey finds stable proxy versions v0.0.1 through v0.0.5. Exact
-`@latest`, `@v0`, and `@master` resolve v0.0.5 at
-2021-10-08T10:39:19Z. Both selected and latest roots declare exact path
-`github.com/bketelsen/crypt` and Go 1.12. Their requirements differ materially:
-v0.0.5 replaces the old CoreOS etcd/Consul and 2019 Google/crypto/grpc roots
-with `go.etcd.io/etcd/client/v2 v2.305.0`, Consul API v1.11.0, and newer 2021
-Google/crypto/grpc modules. Independently prove source and release identity,
-signatures, complete closure floor, tests, real consumers, projection, and
-vulnerability effect. Do not implement or combine another group until Crypt's
+Selected v0.3.0 declares only its module path. Stable v0.4.1 declares Go 1.18
+and materially newer grpc-gateway, gRPC, protobuf, x/net, x/sys, x/text, and
+genproto requirements. Independently prove the split release/default-branch
+history, archive and source identity, signatures, complete closure floor,
+tests, historical Viper and Sagikazarmark consumers, project projection, and
+vulnerability effect. Do not implement or combine another group until this
 bounded decision is complete.

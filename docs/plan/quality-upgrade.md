@@ -5375,8 +5375,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained Perks v1.0.1; further dependency groups
-remain queued.
+dependency groups through retained Crypt pseudo-version
+`v0.0.3-0.20200106085610-5cbc8cc4026c`; further dependency groups remain
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -7996,14 +7997,65 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `17bb756dfd0e81c39da3616f6f81edbcc59e299b295d422c1a701be603c02cc4`,
   and decision-summary SHA-256 is
   `d3d5678a31f494e194321951086ccdb7579c70f39a0b7cc311bc4f9c925666f0`.
-- Next, independently evaluate selected exact-path `github.com/bketelsen/crypt`
-  pseudo-version `v0.0.3-0.20200106085610-5cbc8cc4026c`. A minimal survey
-  finds stable v0.0.1 through v0.0.5 and exact `@latest`, `@v0`, and `@master`
-  at v0.0.5, 2021-10-08T10:39:19Z. Both roots declare Go 1.12, but v0.0.5
-  replaces old CoreOS etcd/Consul/2019 Google dependencies with a materially
-  newer closure. Independently prove canonical identity, release history,
-  complete closure floor, tests, consumer behavior, exact MVS effects, and
-  vulnerability parity without combining another dependency group.
+- Retain exact-path `github.com/bketelsen/crypt` at selected prerelease-form
+  pseudo-version `v0.0.3-0.20200106085610-5cbc8cc4026c` without dependency
+  metadata. The proxy lists stable v0.0.1 through v0.0.5; exact `@latest`,
+  `@v0`, `@master`, repository master, and tag v0.0.5 resolve commit
+  `60c5f2086f0eae50f5275599096bcc6090d12cf8` at
+  2021-10-08T10:39:19Z. The exact-path repository is an enabled, unarchived
+  fork of the distinct xordataexchange lineage. Master has no later commit;
+  its 13 other feature/Dependabot branches remain unreleased.
+- V0.0.3 through v0.0.5 have non-draft, non-prerelease GitHub Releases, but
+  all five tags are lightweight and have no tag signatures. The selected
+  pseudo-version plus v0.0.3/v0.0.4/v0.0.5 merge commits independently verify
+  GitHub web-flow signatures with expired fingerprint
+  `5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23`; v0.0.1/v0.0.2 commits are
+  unsigned. Every proxy archive matches its exact Git commit and all six
+  checksum pairs independently agree with sumdb.
+- V0.0.5 declares Go 1.12. Its complete closure selects 151 modules across
+  2,384 Go-1.26.7 graph edges, eight Crypt packages, and no declaration above
+  Go 1.17, so it preserves the retained Go 1.18 floor. Proxy and exact-Git
+  forms pass verify/list, count-1, two count-10 runs, and race tests under
+  exact Go 1.26.7; a fully contained Go-1.18.10 replay also passes. Mandatory
+  vet fails in both SDKs on the same seven unkeyed `backend.Response` literals
+  across mock, etcd, Consul, and Firestore backends. Stable v0.0.3 and v0.0.4
+  reproduce those seven diagnostics, so no stable version higher than the
+  selected pseudo-version qualifies.
+- Historical Viper v1.7.1's remote consumer compiles and vets against both
+  selected and v0.0.5. Its exact config-manager constructors plus
+  `ConfigManager`, `Response`, `Get`, and `Watch` are exercised by the
+  consumer compile and Crypt's mock-backed Set/Get/List/Watch tests. Crypt is
+  selected in Ply only through mvn-pom-mutator v0.2.3, whose source imports no
+  Crypt package. Ply loads zero Crypt packages and `go mod why` says the main
+  module does not need it.
+- Exact candidate get changes only Crypt. It projects 234/234 modules,
+  3,582/3,700 graph edges, 429/429 complete packages, 41/41 loaded modules,
+  197/197 loaded packages, 1,047/1,065 sum lines, and 371/461 tidy-diff lines.
+  The 118 new edges are candidate/transitive declarations; the 18 checksum
+  additions are its pair plus 16 transitive module hashes. Tidy removes the
+  pin and every candidate checksum, restoring the inherited pseudo-version.
+  Exact selected-version get adds only a redundant main edge, requirement, and
+  full checksum, all tidy-removable; neither projection was applied.
+- The candidate Ply projection passes verify/build/count-1/count-10/race/vet,
+  Windows, pinned lint, byte-identical public help, identical API/CLI reports,
+  compatibility, and empty-HOME count-2. Changed-selection quality and
+  acceptance remain inapplicable after the module stop rule. Fresh primary
+  vulnerability evidence has 1,392 records, no Crypt record/trace, and exact
+  old/candidate 20-ID/22-trace Darwin and Windows reachable populations plus
+  30 Darwin module IDs. Crypt evidence has 10,694 verified entries; manifest
+  SHA-256 is
+  `e0320cf4ef063c83cee9a5131fdad9ceae8b90730502617ab48d2f16c759c93b`
+  and decision-summary SHA-256 is
+  `6356ad761738c8d9e664693a0c550bbe4305db500bf9198e567ef7a3e1d33a75`.
+- Next, independently evaluate selected exact-path
+  `github.com/census-instrumentation/opencensus-proto v0.3.0`. A minimal
+  survey finds stable v0.0.1 through v0.4.1, with exact `@latest` and `@v0` at
+  v0.4.1, 2022-09-23T17:40:20Z. Selected metadata has no Go directive or
+  requirements; v0.4.1 declares Go 1.18 and materially newer grpc-gateway/v2,
+  gRPC, protobuf, and x/* roots. The archived repository's default `master`
+  instead resolves a later unreleased, non-descendant pseudo-version based on
+  v0.2.1 history. Prove release/default-branch identity and the complete floor
+  before considering an exact one-module selection.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
