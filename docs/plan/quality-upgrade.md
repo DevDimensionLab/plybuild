@@ -5375,8 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained Go Metrics v0.4.0; further dependency
-groups remain queued.
+dependency groups through retained Perks v1.0.1; further dependency groups
+remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -7895,16 +7895,64 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `6be6b857e77c7097b402ea5f4fe0ce849e15382b7167a004448cd85d82926eaf`
   and decision-summary SHA-256 is
   `493e832f2d0e6456bb64462104e1bd5b80f4b6eb32d401b9b098acdd0dd95e6a`.
+- Retain exact-path `github.com/beorn7/perks v1.0.1` without dependency
+  metadata. The exact proxy lists stable v1.0.0 and v1.0.1; exact `@latest`,
+  `@v1`, `@master`, the exact-path default branch, and tag v1.0.1 all resolve
+  selected commit `37c8de3658fcb183f997c4e13e8337516ab753e6` at
+  2019-07-31T12:00:54Z. No prerelease, retraction, deprecation, `/v2` module,
+  or later exact-path master commit exists.
+- Go-import identifies the enabled, unarchived exact-path fork as the
+  canonical published `github.com/beorn7/perks` source. Its GitHub
+  parent/source `bmizerany/perks` is repository ancestry, not module identity:
+  parent go-import declares distinct path `github.com/bmizerany/perks`, and
+  its untagged 2023 master is divergent and has no `go.mod`. The fork has five
+  branches, two signed annotated tags, and zero GitHub Releases; the parent
+  has three branches, zero tags, and zero Releases. A stable tag is not a
+  GitHub Release object.
+- Tag v1.0.0 targets unsigned commit
+  `4b2b341e8d7715fae06375aa633dbb6e91b3fb46` and verifies locally with
+  fingerprint `5C69F212D616C4340FA8DD8504ABA6153ADA0C25`; GitHub reports
+  `unknown_key`. Tag v1.0.1 targets unsigned commit
+  `37c8de3658fcb183f997c4e13e8337516ab753e6` and verifies locally with
+  fingerprint `A100A34F34DEC17EE5EEF14C851C3DA17D748D03`; GitHub reports valid.
+  V1.0.1 changes only `go.mod`, lowering its declaration from Go 1.12 to 1.11.
+- Both versions have no requirements, so each complete minimal closure is one
+  module/three packages and preserves Go 1.18. All 15 proxy files match the
+  corresponding exact tag. Final proxy/tag matrices pass verify/list,
+  count-1, repeated count-10, race, and vet under Go 1.26.7 and Go 1.18.10;
+  v1.0.1 also passes topk count-100. One earlier v1.0.0 count-10 run exposed a
+  non-reproduced TopK equal-count/map-order failure; it remains recorded.
+- Selected Prometheus client_golang v1.4.0 is the real consumer and uses
+  `quantile.Stream`, `NewTargeted`, `Insert`, `Count`, `Query`, and `Reset`.
+  Summary tests pass count-1/count-10/race under Go 1.18.10. Six historical
+  consumer test-vet int-to-string diagnostics are isolated and recorded;
+  mandatory Perks and project vet pass.
+- Exact selected-version get changes no selection and projects only a
+  redundant indirect requirement, main edge, and full checksum: accepted
+  234/3,581/429/41/1,045/361 becomes
+  234/3,582/429/41/1,046/370. Tidy removes those two metadata lines and
+  restores inherited selection. Perks loads in zero Ply packages and
+  `go mod why` says the main module does not need it. No projection or
+  dependency implementation commit was made.
+- Baseline/projected repository verification, build, complete count-1/
+  count-10/race tests, vet, Windows, pinned lint, public help, API/CLI,
+  corrected full preflight, and empty-HOME count-2 pass. Fresh primary data
+  has no exact or parent Perks record and preserves 20-ID/22-trace Darwin and
+  Windows reachable findings plus 30 Darwin module IDs. Perks evidence has
+  477 verified entries; manifest SHA-256 is
+  `aa77d2ab9cf676ecfb7ef544c1c5db76ecda86f580ff8ff8f03b8c78038677f0`
+  and decision-summary SHA-256 is
+  `6db4ca7260bde6b4affa48c62adb381bda20687f39f013c4b1cdc25397418754`.
 - Next, independently evaluate selected exact-path
-  `github.com/beorn7/perks v1.0.1` at 2019-07-31T12:00:54Z. The proxy lists
-  v1.0.0 and v1.0.1; exact `@latest`, `@v1`, and `@master` all resolve selected
-  v1.0.1, whose module declares Go 1.11. The public exact-path repository is
-  an enabled, unarchived fork of parent/source `bmizerany/perks`, with default
-  `master`, five branches, two tags, and zero GitHub Releases; master and tag
-  v1.0.1 identify `37c8de3658fcb183f997c4e13e8337516ab753e6`.
-  Independently prove canonical identity across the fork relationship,
-  release qualification, history, signatures, closure floor, tests,
-  consumers, projection, and vulnerability effect. Do not combine another
+  `github.com/bgentry/speakeasy v0.1.0` at 2017-04-17T20:07:03Z. The proxy
+  lists v0.1.0 and v0.2.0; exact `@latest`, `@v0`, and `@master` resolve
+  v0.2.0 at 2022-09-10T01:20:23Z, commit
+  `760eaf8b681647364e7a400b856e0921248728a5`. Both proxy module files expose
+  only the exact path, so the complete closure floor is unproved. The enabled,
+  unarchived, non-fork repository has one branch, two tags, and one non-draft,
+  non-prerelease v0.2.0 GitHub Release published in 2024. Independently prove
+  identity, release/signature history, closure floor, tests, consumer terminal
+  behavior, projection, and vulnerability effect. Do not combine another
   module group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;

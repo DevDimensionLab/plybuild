@@ -1,13 +1,171 @@
 # Agent Session: Evaluate Beorn7 Perks Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-08T005841+0200-evaluate-beorn7-perks-dependency`
 Created: `2026-09-08T00:58:41+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `85007d115e55d755724cc145e800f8dac7492b64df725fe83b2a16e551429e8a`
 Previous: [2026-09-07T234555+0200-evaluate-armon-go-radix-dependency.md](2026-09-07T234555+0200-evaluate-armon-go-radix-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-08T023421+0200-evaluate-bgentry-speakeasy-dependency.md](2026-09-08T023421+0200-evaluate-bgentry-speakeasy-dependency.md)
+Outcome: Retained Perks v1.0.1 without dependency edits; it is the canonical
+  exact-path stable latest, while repository ancestry points to a divergent
+  parent with a distinct module identity.
+
+# Answer
+
+Retain `github.com/beorn7/perks v1.0.1` without adding dependency metadata.
+No dependency implementation commit was created.
+
+## Canonical Identity And Release Qualification
+
+The exact proxy lists only stable v1.0.0 and v1.0.1, dated
+2019-04-14T22:11:40Z and 2019-07-31T12:00:54Z. Exact `@latest`, `@v1`,
+`@master`, the exact-path default branch, and tag v1.0.1 all resolve selected
+commit `37c8de3658fcb183f997c4e13e8337516ab753e6`. No proxy prerelease,
+retraction, deprecation, `/v2` module, later default-branch commit, or renamed
+authoritative exact path was found. V1.0.1 is therefore the canonical latest
+and highest release-qualified exact-path version.
+
+Go-import metadata maps `github.com/beorn7/perks` to
+`https://github.com/beorn7/perks.git`. GitHub reports that repository enabled,
+unarchived, undisabled, defaulting to `master`, and a fork whose parent and
+source are `bmizerany/perks`. The ancestry fact does not replace the published
+module identity: `github.com/bmizerany/perks` has its own go-import mapping and
+is a distinct module path. Its current untagged master
+`03f9df79da1edead2cdf5f8b4cf4d4f831d6e2d1` diverges from the exact-path
+fork after 2014, has no `go.mod`, and resolves parent pseudo-version
+`v0.0.0-20230307044200-03f9df79da1e`. Parent history does not produce an
+in-place exact-path candidate.
+
+The exact fork has five branches: `master`, `broken-but-fast`, `histo`,
+`opt/pool-for-sample`, and `test/error-calculation`. The two queryable named
+heads resolve old v0 pseudo-versions; the slash-named heads are 2014 Git refs,
+one ancestral and one divergent. None is a later v1 candidate. The parent has
+three branches and no tags. The fork has two tags and zero GitHub Releases;
+the parent has zero tags and zero Releases. A stable signed Git tag is not a
+GitHub Release object.
+
+Both exact tags are signed annotated objects, while their target commits are
+unsigned. Tag v1.0.0 object `4ded152d4a3e...` targets commit
+`4b2b341e8d7715fae06375aa633dbb6e91b3fb46`, tree
+`de22b44fded2eabaabd0ac413a3b04b44c8b3490`, parent
+`4cf9acfa...`. Local verification succeeds with fingerprint
+`5C69F212D616C4340FA8DD8504ABA6153ADA0C25`; GitHub reports `unknown_key`.
+Tag v1.0.1 object `c49ff274687...` targets commit
+`37c8de3658fcb183f997c4e13e8337516ab753e6`, tree
+`77aeb432cabb3c9b94297378a2fe7697c29a5a88`, parent
+`4b2b341e8d7715fae06375aa633dbb6e91b3fb46`. Local verification succeeds
+with fingerprint `A100A34F34DEC17EE5EEF14C851C3DA17D748D03`; GitHub reports the
+signature valid and verified. V1.0.1 changes only the `go.mod` Go declaration
+from 1.12 to 1.11.
+
+## Source, Closure, Tests, And Consumer
+
+V1.0.0 declares exact module path `github.com/beorn7/perks`, Go 1.12, and no
+requirements. V1.0.1 declares the same path, Go 1.11, and no requirements.
+Each complete minimal closure is one module and three packages, so neither can
+raise the retained Go 1.18 floor.
+
+V1.0.0's source/module checksum pair is
+`h1:HWo1m869IqiPhD389kmkxeTalrjNbbJTC8LXupb+sl0=` /
+`h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=`. V1.0.1's pair is
+`h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=` /
+`h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=`; sumdb agrees. Proxy
+ZIP SHA-256 values are
+`a7ec6164e31ea8e10c601abb9793753ec43cb218283b226800c134fb23cea409`
+and `25bd9e2d94aca770e6dbc1f53725f84f6af4432f631d35dd2c46f96ef0512f1a`.
+Every one of each archive's 15 regular files matches the corresponding exact
+tag. Normalized source-manifest hashes are
+`5e623be139334393e642a7e5e1096bb3616f4e21a787959d563a9bb4f55b1153`
+and `80fa7a8e5aa4189f70e1896740da50eab8d4ad61c5464adbc3a4574d0a141c2f`.
+
+Final writable proxy and exact-tag matrices for both releases pass
+verification/listing, count-1, two count-10 runs, race, vet, and source
+immutability under exact Go 1.26.7 and Go 1.18.10. V1.0.1 also passes focused
+`topk` count-100 in both forms and toolchains. An earlier v1.0.0 proxy
+Go-1.26.7 count-10 run failed once in `topk.TestTopK` at index 9 (`want "9",
+got "b"`). Four final matrices and count-100 stress did not reproduce it.
+Because TopK sorts only by count, equal-count/map-order nondeterminism is a
+plausible cause; the observation remains recorded and is not attributed to
+v1.0.1's go.mod-only delta.
+
+Selected `github.com/prometheus/client_golang v1.4.0` is the actual graph
+consumer. Its Summary imports only `perks/quantile` and uses `Stream`,
+`NewTargeted`, `Insert`, `Count`, `Query`, and `Reset`. Focused Summary tests
+pass count-1, count-10, and race under exact Go 1.18.10. Its separate
+standalone test closure contains 41 modules and 167 packages, with no declared
+Go version above 1.12. Default consumer test/vet is separately blocked by six
+historical int-to-string diagnostics in gauge, histogram, and Summary test
+formatting; execution with implicit test vet isolated passes. Mandatory Perks
+and project vet both pass.
+
+## Projection, Quality, And Vulnerabilities
+
+Accepted measurements remain 234 selected modules, 3,581 graph edges, 429
+complete-test packages, 41 loaded modules, zero loaded Perks packages, 1,045
+`go.sum` lines, and a 361-line tidy projection. Exact selected-version get
+changes no selection. It projects only a redundant indirect requirement, one
+main-to-Perks edge, and the full v1.0.1 checksum: 234/3,582/429/41/0, 1,046
+sum lines, and 370 tidy-diff lines. Tidy removes the two projected metadata
+lines and restores the inherited selection; the remaining 361 lines are the
+accepted historical debt. No projection was applied.
+
+The inherited requests are TSDB v0.7.1 -> old pseudo-version, client_golang
+v1.4.0 -> v1.0.1, client_golang v1.0.0 -> v1.0.0, and Prometheus common
+v0.4.1 -> old pseudo-version. Perks has no outgoing graph edges. It loads in
+no Ply package, Ply has no source import, and `go mod why -m` says the main
+module does not need Perks.
+
+Baseline and projected trees pass repository verification/build, complete
+count-1/count-10/race tests, vet, Windows-amd64 build, pinned golangci-lint
+2.12.2, empty-HOME count-2, and byte-identical root/status/upgrade/build help.
+API and CLI reports are byte-identical at SHA-256
+`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+Corrected preflight passes all 62 launcher controls, distribution/lint/install/
+toolchain and acceptance-script meta-contracts, 80/80 mutation-harness
+controls, and all 15 audit controls.
+
+Fresh govulncheck v1.7.0 used primary data updated
+2026-09-02T19:12:04Z. The 1,392-record module index contains neither exact
+nor parent Perks. Baseline/projected findings are byte-identical after
+normalization: Darwin and Windows each have 20 reachable IDs in 22 traces;
+the Darwin module scan has 30 IDs. Reachable IDs are `GO-2023-1989`,
+`GO-2023-1990`, `GO-2024-2937`, `GO-2024-3333`, `GO-2025-3595`,
+`GO-2026-4440`, `GO-2026-4441`, `GO-2026-4815`, `GO-2026-4961`,
+`GO-2026-5025`, `GO-2026-5027`, `GO-2026-5028`, `GO-2026-5029`,
+`GO-2026-5030`, `GO-2026-5031`, `GO-2026-5032`, `GO-2026-5061`,
+`GO-2026-5062`, `GO-2026-5066`, and `GO-2026-6222`.
+
+The 22 Darwin/Windows trace endpoints are exact across seven groups: seven
+`x/image/tiff.Decode -> cmd.ExecuteE` traces (15 frames), nine
+`x/net/html.Parse -> cmd.ExecuteE` traces (13), two
+`x/image/webp.Decode -> cmd.ExecuteE` traces (15), and one each for
+`x/image/bmp.Decode -> cmd.ExecuteE` (15),
+`x/image/vp8l.Decode -> cmd.ExecuteE` (17),
+`x/image/tiff.(*buffer).ReadAt -> pkg/http.GetJsonWithAccessToken` (5), and
+`x/image/webp.init -> cmd.init` (4). Normalized Darwin-symbol, Windows-symbol,
+and Darwin-module finding hashes are respectively
+`fcf9d449a455a00562126bca8b863b882ede61d7c087a967ac9694c30978c859`,
+`b7d80a548ee7476342d7a0bd2b0efd87524a5efa0c0da960e802c4e186fb3e8f`,
+and `390f7bf685e19fc5d10602da7e35394c97f8fd460fe40f92c4e6726c00627d29`.
+
+Canonical qualification produced no changed selection. Consequently the
+changed-selection-only host/snapshot/Docker acceptance, exact `make quality`,
+focused/Q0-Q2/full audits, and dependency commit were inapplicable and are not
+claimed. Exact Go 1.26.7 retained required binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+The sealed evidence manifest contains 477 verified entries and has SHA-256
+`aa77d2ab9cf676ecfb7ef544c1c5db76ecda86f580ff8ff8f03b8c78038677f0`;
+decision-summary SHA-256 is
+`6db4ca7260bde6b4affa48c62adb381bda20687f39f013c4b1cdc25397418754`.
+
+Scratch-only corrections remain explicit: initial environment and source-
+prefix fixes, a removed empty slash-branch query, vulnerability-order
+normalization, exact historical compatibility-cache warming, golangci cache
+relocation, BSD-mktemp adaptation, cleared recursive make overrides, and a
+200 ms signal-fixture scheduling shim after two raw-log readiness races. None
+changed a repository file or concealed a dependency failure.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
