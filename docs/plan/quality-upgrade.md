@@ -5375,8 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained OpenCensus Proto v0.3.0; further dependency
-groups remain queued.
+dependency groups through retained Logex v1.2.1; further dependency groups
+remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -8128,17 +8128,48 @@ Current queue decisions and next bounded P7 group (2026-09-07):
   `6f57be6cbf177c6617ebf62e0eea7b38f6b3b41eb00873060e160ddf02f1cf34`
   and decision-summary SHA-256 is
   `4e2f0559dbefd98f22e8f1efe34a1e538ecb8e1dd2da0749af8478c88c0a1a20`.
+- Retain exact-path `github.com/chzyer/logex v1.2.1` without a dependency edit.
+  The proxy lists v1.1.1 through v1.1.10 plus v1.2.0/v1.2.1, and selected is
+  already canonical stable latest at 2022-04-24T13:13:51Z. Short pre-module
+  Git tags v1.0/v1.1 are not equivalent proxy releases. Selected lightweight
+  tag/commit `2f95bdde8c3c97bfbf6d016fcc410669a895b9e7` is unsigned; the public,
+  enabled, unarchived, non-fork repository defaults to master. Its five newer
+  commits form only an unreleased pseudo-version, declare Go 1.21 at head, and
+  touch tests/CI/module/build input rather than production Go.
+- All twelve proxy archives byte-match exact Git tags; v1.2.1 is one pure-Go,
+  standard-library-only package declaring Go 1.15 with no platform-specific
+  files. Independent API, behavior, cross-build, floor, and consumer fixtures
+  pass under exact Go 1.26.7 and Go 1.18.10. The selected native `TestLogex`
+  has two stale caller-line expectations under both SDKs; unreleased commit
+  `3e09012` repairs only those tests. This recorded release gap and the absence
+  of a higher stable release preclude a changed selection, not continued MVS
+  retention.
+- The exact dependency-test path is Ply -> Promptui v0.9.0 -> Readline v1.5.1
+  -> Readline test -> chzyer/test v1.0.0 -> Logex. Ply loads no Logex package.
+  Readline's full/focused suites and targeted Logex calls pass; its two vet
+  warnings and chzyer/test's nil-comparison panic are invariant historical
+  consumer debt. Complete consumer closures top out at Go 1.17.
+- Current measurements remain 234 modules, 3,583 edges, 429 complete-test
+  packages, 41 loaded modules, 197 loaded packages, 1,049 checksum lines, and
+  381 unapplied tidy lines. Exact selected get adds only a redundant indirect
+  pin/main edge and no checksum, so it was not applied. Project gates and
+  current/replay help/API/CLI reports pass. Fresh vulnerability populations
+  remain 20-ID/22-trace Darwin/Windows symbol, 22-ID Darwin package, and
+  30-ID Darwin module, with no Logex record or trace. Evidence has 636 entries;
+  manifest SHA-256 is
+  `aa33eeb8ea36b17f6830ae7f063fbe1c39ec9ac5d3c9e2417fa2fe844ceb8516`
+  and decision-summary SHA-256 is
+  `6720115c3316e14b89a3bedcb40a59faba4a4f898727051177a682bb1435b49d`.
 - Next, independently evaluate selected exact-path
-  `github.com/chzyer/logex v1.2.1`. It is already proxy `@latest` at
-  2022-04-24T13:13:51Z and declares Go 1.15. The proxy has v1.1.1 through
-  v1.1.10 plus v1.2.0/v1.2.1; repository v1.0/v1.1 tags are proxy-absent.
-  Readline v1.5.1 and chzyer/test v1.0.0 request selected, while Promptui and
-  historical pprof request v1.1.10. The public enabled/unarchived/non-fork
-  repository defaults to `master`; selected commit
-  `2f95bdde8c3c97bfbf6d016fcc410669a895b9e7` precedes five unreleased
-  test/CI-only commits. Verify complete release identity, closure, consumers,
-  projection, and vulnerability effect without selecting master or adding a
-  redundant pin.
+  `github.com/chzyer/readline v1.5.1`. The exact proxy lists only v1.5.0 and
+  v1.5.1, with selected already `@latest` at 2022-07-15T12:48:48Z and
+  declaring Go 1.15. Short repository tags v1.0 through v1.4 are proxy-absent
+  and need precise release/module classification. Promptui v0.9.0 is Ply's
+  production consumer. The public enabled/unarchived/non-fork repository
+  defaults to `main`; selected precedes three unreleased commits and head
+  `9dfc369f8652ba9013dadffd2d2efeada64fe44d`. Verify tag object/signature,
+  exact closure, terminal/platform behavior, Promptui consumers, projection,
+  and vulnerability effect without selecting head or adding a redundant pin.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
