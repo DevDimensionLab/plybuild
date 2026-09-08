@@ -1,13 +1,104 @@
 # Agent Session: Evaluate Fatih Color Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-08T170736+0200-evaluate-fatih-color-dependency`
 Created: `2026-09-08T17:07:36+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `5ebbbb5df7479ead6003c4292090ba95ee8d821c6df6efcf6795a0a6c3ce35a3`
 Previous: [2026-09-08T153002+0200-evaluate-eliukblau-pixterm-ansimage-dependency.md](2026-09-08T153002+0200-evaluate-eliukblau-pixterm-ansimage-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-08T210923+0200-evaluate-fsnotify-fsnotify-dependency.md](2026-09-08T210923+0200-evaluate-fsnotify-fsnotify-dependency.md)
+Outcome: Upgraded exact Fatih Color v1.14.1 to highest qualified stable v1.15.0 in one dependency-only commit; v1.16.0-v1.18.0 fail the loaded Markdown ANSI-byte contract and v1.19.0 violates the retained Go 1.18 floor, while complete floor, MVS, project, quality, and vulnerability gates pass for v1.15.0.
+
+## Answer
+
+Upgrade `github.com/fatih/color` from v1.14.1 to exact v1.15.0. Exact Go
+1.26.7 `go get github.com/fatih/color@v1.15.0` produced dependency-only
+commit `6ca672ef38688b7f6f505cf0cb273d07c4c2ba9a`, parent
+`d181fcd6c11fa147e0b44dd007598872875fc9e6`, and tree
+`9ba2fdc442553622028a4a8464536915d345510c`. Only `go.mod` and `go.sum`
+changed, with three insertions and one deletion. No tidy output was applied.
+
+The 22-version exact proxy history ends at stable Release v1.19.0. Qualified
+v1.15.0 is the lightweight tag at Git commit
+`12126ed593697635c525b302836b292b657ea573`, tree
+`32a72bf4eadb9b453724ce4c1058abbc8339d405`, parents
+`c5d9a2b926758e9327c5c5161995487293034990` and
+`770038b843547612c49f296a3f5740869cbf97b1`, dated
+2023-03-12T11:25:03Z. GitHub verifies the commit signature; the lightweight
+tag has no tag-object signature. Proxy, checksum database, and Git source
+agree on checksum pair
+`h1:kOqh6YHBtK8aywxGerMG2Eq3H6Qgoqeo13Bk2Mv/nBs=` /
+`h1:0h5ZqXfHYED7Bhv2ZJamyIOUej9KtShiJESRwBDUSsw=`.
+
+No prerelease, retraction, deprecation, redirect, alternate module path, fork,
+or pseudo-version outranks that stable exact identity. The enabled,
+unarchived, non-fork upstream defaults to `main`; tags v0.1 and v1.2 are
+proxy-absent. Current unreleased main resolves as
+`v1.19.1-0.20260723100257-820c6ebc21b0` and declares Go 1.25.0.
+
+All releases v1.14.1-v1.18.0 declare Go 1.17 and their complete minimal
+closures pass native suites, two independent repeats, race, vet, and relevant
+cross-builds under exact Go 1.26.7 and contained Go 1.18.10. Latest v1.19.0
+declares Go 1.25.0 and requires x/sys v0.42.0; Go 1.18 explicitly rejects it,
+so it cannot qualify without violating Ply's retained floor.
+
+V1.16.0-v1.18.0 are floor-compatible but fail the actual production-consumer
+contract. Their reset change makes go-term-markdown v0.1.4 emit `0;22m` for
+green-bold and `0;23m` for blue-background-italic instead of the expected
+`0m`; 20 exact native renderer golden subtests fail for every such release.
+V1.15.0 is therefore the highest qualified stable. It preserves Unix consumer
+bytes and adds only Windows standard-output initialization for processed and
+virtual-terminal output.
+
+Independent fixtures cover the exported formatting, Sprint/Sprintf/Sprintln,
+Print/Fprint and writer-routing APIs, enable/disable methods, unknown and
+malformed parameters, empty/newline and nested input, TTY and non-TTY output,
+environment precedence, concurrency, and package globals. Nonempty
+`NO_COLOR` and `TERM=dumb` disable color; empty `NO_COLOR` does not.
+`CLICOLOR` and `CLICOLOR_FORCE` are ignored. Immutable per-call Sprint use is
+race-safe; mutable Color instances and package-global `NoColor`, `Output`, and
+`Error` remain unsynchronized shared state.
+
+Ply's exact path is `plybuild/cmd -> go-term-markdown -> fatih/color`.
+Consumer checks cover every actual green, high-green, bold-green, blue,
+blue-background-italic, and red function, `NoColor`, image destinations,
+malformed-image fallback, PTY, non-TTY, `NO_COLOR`, and dumb-terminal output.
+Ansimage's two-pixel gap and Chroma output are unchanged and unrelated.
+
+Old, qualified v1.15.0, and rejected v1.18.0 project states retain exactly 234
+modules, 3,583 graph edges, 429 complete-test entries, 41 loaded modules, and
+197 loaded packages. Existing MVS selections go-colorable v0.1.15, go-isatty
+v0.0.20, and x/sys v0.30.0 remain unchanged. The implemented state has 1,051
+`go.sum` lines and a 383-line unapplied tidy projection; relative to go-cmp
+commit `c314bcb`, it adds 35 checksum lines and removes zero. The disposable
+v1.19.0 projection alone moves the main Go line to 1.25 and x/sys to v0.42.0,
+confirming its ineligibility.
+
+All required repository, dependency, consumer, repeat, race, vet, Windows,
+pinned-lint, help, API/CLI, launcher, Make, preflight, host, snapshot, Docker,
+audit-meta, acceptance, vulnerability, and empty-HOME gates pass. Exact
+`make quality` exits 0 with 27/27 Q0-Q2 rows PASS at L2, 80/80 mutation
+controls, ratchet improved 7, and zero held, regressed, not-comparable, or
+dirty counts. Scorecard SHA-256 is
+`dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
+The separate full audit exits expected 1 only for queued Q3.1, Q3.3, Q3.4,
+and Q3.7; its scorecard SHA-256 is
+`4c78e22a47215146a69247f011366c35294e3bb22a72170d2fb6b64dbbb93c76`.
+
+Fresh primary vulnerability populations are identical before and after: 20
+IDs/22 reachable traces for Darwin and Windows symbol scans, 22 Darwin
+package findings, and 30 Darwin module findings. Fatih Color has no primary
+record, finding, or trace. The 12 inherited ansimage frames across 11 x/image
+IDs are unchanged and not attributed to this group.
+
+Manual-evidence SHA-256 is
+`8a7db24935910e748d3a5ed96c196be5c3a2d2c4d1bf764ce67c60def79e94c7`;
+the 125-entry quality subset manifest SHA-256 is
+`3dc2a0c14464b09b4441b961c70c24abe085d436db3df4b8447df34f4efe5ab0`;
+decision-summary SHA-256 is
+`93a6e698e48fbcec2fc97d487de8a9a56c44a3ac2530feb28199c5c5d90d54f9`.
+Complete session evidence has 69,681 verified entries; manifest SHA-256 is
+`44dd0309a9b6453c56a0d6d71818ce7a454abd416cce56eb464120d549024995`.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 

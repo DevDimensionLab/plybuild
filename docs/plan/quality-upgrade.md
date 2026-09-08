@@ -6132,9 +6132,14 @@ Regexp2 v1.12.0 dependency group (2026-09-04):
 Current queue decisions and next bounded P7 group (2026-09-08):
 
 - Reject `github.com/fatih/color v1.14.1` -> latest v1.19.0 because the latest
-  module declares Go 1.25.0. Reject `github.com/fsnotify/fsnotify v1.6.0` ->
-  latest v1.10.1 because it declares Go 1.23. Neither candidate was
-  implemented; both exceed the retained Go 1.18 floor.
+  module declares Go 1.25.0, and reject floor-compatible v1.16.0-v1.18.0
+  because they break go-term-markdown v0.1.4's exact ANSI reset bytes. Accept
+  v1.15.0 as the highest qualified stable release and implement it in exact
+  dependency-only commit `6ca672e`.
+- Evaluate `github.com/fsnotify/fsnotify v1.6.0` next. Latest v1.10.1 declares
+  Go 1.23, but v1.7.0-v1.9.0 declare Go 1.17; v1.9.0 is the highest
+  immediately visible floor-compatible stable candidate and still requires
+  complete independent qualification.
 - Reject latest indirect `github.com/gomarkdown/markdown`
   `v0.0.0-20260824154242-13c5cf49db8d`. Its exact one-selection closure,
   Go 1.12 declaration, 234-module/3,556-edge/429-package population, and
@@ -8280,13 +8285,29 @@ Current queue decisions and next bounded P7 group (2026-09-08):
   `95d6ca0ac0d767c94f78b3a0a5c32f1008cd2e7b05a3ffc5f639b9af021dd112`
   and decision-summary SHA-256 is
   `3f39b1aa5f16d3a1b398ce329e4a73621931b09d3b191dd7c0bbadc5743de0ed`.
-- Next, independently evaluate exact-path `github.com/fatih/color v1.14.1`.
-  The 22-version proxy list ends at stable v1.19.0, but latest declares Go
-  1.25.0 and is incompatible with the retained floor. V1.15.0-v1.18.0 declare
-  Go 1.17; v1.18.0 is the highest immediately visible floor-compatible stable
-  release but still requires complete closure, behavior, API, MVS, consumer,
-  and vulnerability qualification. Keep already-reviewed colorable, isatty,
-  x/sys, ansimage, and terminal support decisions distinct.
+- Upgrade exact-path `github.com/fatih/color v1.14.1` to highest qualified
+  stable v1.15.0. V1.14.1-v1.18.0 complete closures preserve Go 1.18, but
+  v1.16.0-v1.18.0 change green-bold and blue-background-italic reset bytes and
+  fail 20 exact go-term-markdown v0.1.4 golden subtests. Latest v1.19.0 is
+  independently ineligible because it declares Go 1.25.0.
+- Exact `go get github.com/fatih/color@v1.15.0` produced dependency-only
+  commit `6ca672ef38688b7f6f505cf0cb273d07c4c2ba9a`, changing only `go.mod`
+  and `go.sum`. Project MVS retains go-colorable v0.1.15, go-isatty v0.0.20,
+  and x/sys v0.30.0. Measurements are 234 modules, 3,583 edges, 429 complete
+  packages, 41 loaded modules, 197 loaded packages, 1,051 checksum lines, and
+  a 383-line unapplied tidy projection.
+- All dependency, consumer, repository, compatibility, lint, acceptance,
+  snapshot/Docker, audit-meta, vulnerability, and empty-HOME gates pass.
+  Exact `make quality` reports all 27 Q0-Q2 rows PASS at L2 with zero held,
+  regressed, not-comparable, or dirty counts; scorecard SHA-256 is
+  `dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
+  Old/candidate vulnerability populations remain 20 IDs/22 traces, 22 package
+  findings, and 30 module findings, with no Fatih Color record or trace.
+- Next, independently evaluate exact-path `github.com/fsnotify/fsnotify
+  v1.6.0`. Stable v1.7.0-v1.9.0 declare Go 1.17, making v1.9.0 the highest
+  immediately visible floor-compatible candidate. Stable v1.10.0-v1.10.1
+  declare Go 1.23 and cannot be selected while retaining Go 1.18. Keep Viper
+  and x/sys as distinct groups.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
