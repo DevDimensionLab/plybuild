@@ -8451,11 +8451,39 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   `ac964598ef5933db2136fb7797738ad5595c81d94e092cf0a58c7e4e9266e4b9`;
   decision-summary SHA-256 is
   `d72e3498eaafb37925188496a131d744d717b2de33cd4aaffeb62e57f7f88dc2`.
-- Next, independently evaluate exact-path `github.com/go-stack/stack v1.8.0`.
-  It is selected only through Prometheus TSDB/Common declarations and is not
-  needed by the main module. The initial survey exposes ten stable versions;
-  latest v1.8.1 declares Go 1.17 and is the first serious candidate. Keep all
-  Prometheus and other dependency groups outside this single-path review.
+- Upgrade exact-path `github.com/go-stack/stack v1.8.0` to highest stable
+  v1.8.1. The exact proxy exposes ten stable releases and no prereleases;
+  canonical go-import, proxy, sumdb, Git tag/release, tree, and default-master
+  identities agree. V1.8.1 declares Go 1.17, has no module requirements, and
+  preserves the complete Go 1.18 floor. Production, tests, examples, and
+  exported API are byte-identical to selected; only CI and `go.mod` changed.
+- Both releases pass source verification, native tests, two count-10 repeats,
+  race, vet, independent capture/format/marshal/trim/concurrency fixtures, and
+  24 cross-builds under exact Go 1.26.7 and contained Go 1.18.10. Their shared
+  `-trimpath` `TrimRuntime` failure is path-sensitive historical behavior,
+  not candidate regression, and no Go Stack package is loaded by Ply.
+- Exact `go get github.com/go-stack/stack@v1.8.1` produced dependency-only
+  commit `647d4fd71b226fbb1e916b4238b4c7ad87cd7975`, changing only `go.mod`
+  and `go.sum` with three insertions. Project measurements are 234 modules,
+  3,585 graph edges, 429 complete-test entries, 41 loaded modules, 197 loaded
+  module-backed packages, 1,055 checksum lines, and a 396-line unapplied tidy
+  projection. Relative to go-cmp commit `c314bcb`, sums are +39/-0.
+- Exact 21-stage `make quality` exits zero with 27/27 Q0-Q2 PASS at L2,
+  80/80 killed mutations, seven improvements, and zero held/regressed/
+  not-comparable/dirty counts. Scorecard SHA-256 is
+  `4e1e1b50c2d16666d18278efd0b9ded86df668503e32184c49a1024053dd227c`.
+  Fresh vulnerability populations remain 20 IDs/22 traces, 22 package
+  findings, and 30 module findings with no Go Stack record or trace. The
+  817-entry evidence manifest SHA-256 is
+  `e3edb91f49616d36c93ea08e85eeba8ce5730d3f61dea8b668b4da49405a8421`;
+  decision-summary SHA-256 is
+  `26fca7f6b5b683f4d16fb6b18a9aa88e412948ffde04c7d71764a1a94c077b72`.
+- Next, independently evaluate exact-path `github.com/godbus/dbus/v5 v5.0.4`.
+  It is selected only through `github.com/coreos/go-systemd/v22 v22.3.2`
+  and is not needed by the main module. The initial survey exposes eleven
+  stable versions through v5.2.2; v5.2.x declares Go 1.20 and is ineligible,
+  while v5.1.0 declares Go 1.12 and is the first serious candidate. Keep
+  go-systemd and all other dependency groups outside this single-path review.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1131,16 +1131,16 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-09T052020+0200-evaluate-go-stack-stack-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T052020+0200-evaluate-go-stack-stack-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T015029+0200-evaluate-go-logfmt-logfmt-dependency.md
+#|SESSION_ID=2026-09-09T082209+0200-evaluate-godbus-dbus-v5-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T082209+0200-evaluate-godbus-dbus-v5-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T052020+0200-evaluate-go-stack-stack-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/go-stack/stack v1.8.0` as one bounded dependency group. Resolve
+#|`github.com/godbus/dbus/v5 v5.0.4` as one bounded dependency group. Resolve
 #|its complete release and repository identity, full Go-floor closure, package
 #|behavior and public API, actual project loading, exact MVS effects, and every
 #|applicable quality contract. Retain or select only an exact-path version whose
@@ -1150,39 +1150,36 @@ exit 70
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and accepted
-#|Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, and Go Logfmt v0.6.0
-#|moves. Crypt, OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage,
-#|Fsnotify, Ghodss YAML, and historical root GLFW remain retained. All earlier
-#|decisions and lifecycle ancestry are final. Do not revisit them or combine
-#|another dependency group. P8 remains queued.
+#|Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0, and
+#|Go Stack v1.8.1 moves. Crypt, OpenCensus Proto, Logex, Readline, Fnmatch,
+#|Imaging, ansimage, Fsnotify, Ghodss YAML, and historical root GLFW remain
+#|retained. All earlier decisions and lifecycle ancestry are final. Do not
+#|revisit them or combine another dependency group. P8 remains queued.
 #|
-#|Project MVS selects Go Stack through the declared edges
-#|`github.com/prometheus/tsdb v0.7.1 -> github.com/go-stack/stack v1.8.0` and
-#|`github.com/prometheus/common v0.4.1 -> github.com/go-stack/stack v1.8.0`.
-#|`go mod why -m github.com/go-stack/stack` says the main module does not need
-#|it. Do not combine, upgrade, remove, or independently audit either Prometheus
-#|module or any other dependency group.
+#|Project MVS selects Godbus D-Bus v5 through the declared edge
+#|`github.com/coreos/go-systemd/v22 v22.3.2 -> github.com/godbus/dbus/v5
+#|v5.0.4`. `go mod why -m github.com/godbus/dbus/v5` says the main module
+#|does not need it. Do not combine, upgrade, remove, or independently audit
+#|go-systemd or any other dependency group.
 #|
-#|A minimal post-Logfmt survey finds ten proxy versions: v1.4.0, v1.5.0,
-#|v1.5.1, v1.5.2, v1.5.3, v1.5.4, v1.6.0, v1.7.0, selected v1.8.0, and
-#|v1.8.1. Selected's source/mod checksum pair is
-#|`h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=` /
-#|`h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=`. Its module file contains
-#|only `module github.com/go-stack/stack`, without a Go directive or
-#|requirements.
+#|A minimal post-Go-Stack survey finds eleven proxy versions: v5.0.0, v5.0.1,
+#|v5.0.2, v5.0.3, selected v5.0.4, v5.0.5, v5.0.6, v5.1.0, v5.2.0, v5.2.1,
+#|and v5.2.2, with no prereleases. Selected's source/mod checksum pair is
+#|`h1:9349emZab16e7zQvpmsbtjc18ykshndd8y2PG3sgJbA=` /
+#|`h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=`; it declares Go 1.12
+#|and has no requirements.
 #|
-#|Exact-path latest v1.8.1 has source/mod checksum pair
-#|`h1:ntEHSVwIt7PNXNpgPmVfMrNhLtgjlmnZha2kOpuRiDw=` /
-#|`h1:dcoOX6HbPZSZptuspn9bctJ+N/CnF5gGygcUP3XYfe4=`, declares Go 1.17, and is
-#|the initial highest serious candidate. Its proxy ZIP SHA-256 is
-#|`944a204d21ab7d745b980113706978737d51f2ac60addd2503782bc48259c0e8`.
-#|Annotated unsigned tag object `065fe02de4413f66fc553f43129a8e4372e9c54b`
-#|peels to commit `93c7c7e3550c72bc91dead1452a0020142e2a902`, tree
-#|`970d18b6c7c8b790ab52ddd5d82cbaee98261044`, parents
-#|`2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a` and
-#|`473edce91b111d1f6c7b946691b24af71f5a5b25`, at
-#|2021-08-18T18:48:21Z. Treat all incoming release facts only as a survey to
-#|verify.
+#|Latest v5.2.2 declares Go 1.20 and requires `golang.org/x/sys v0.27.0`, so
+#|it and v5.2.0-v5.2.1 are initially floor-ineligible. Highest initial serious
+#|candidate v5.1.0 declares Go 1.12, has no requirements, and has source/mod
+#|sums `h1:4KLkAxT3aOY8Li4FRJe/KvhoNFFxo0m6fNuFUO8QJUk=` /
+#|`h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=`. Its lightweight tag
+#|resolves to commit `e523abc905595cf17fb0001a7d77eaaddfaa216d`, tree
+#|`af2a399b7f6f0c3a62c435e15a488c46d3dbf536`, parents
+#|`b357b44b7ab3bf9e9b27c906fb31cb622b7a017e` and
+#|`2c3cf657d630429b62f481c930c754a818d98327`, at
+#|2022-02-27T11:53:47Z. Treat every incoming release fact only as a survey to
+#|verify, including the proxy's anomalous v5.0.0/v5.0.1 module-file responses.
 #|
 #|Resolve proxy, sumdb, go-import metadata, repository tags/releases/branches,
 #|signatures, commits, times, trees, parents, ancestry, repository status,
@@ -1193,36 +1190,36 @@ exit 70
 #|
 #|# Measurements At Start
 #|
-#|The latest dependency implementation is exact Go Logfmt v0.6.0 commit
-#|`3d4cfdbae0a67e757d37022be7eeedaf32c72772`, parent
-#|`f81dfd617a1f26211fd21213fbe96b8abd16d34f`, and tree
-#|`34a91aaedab07e855022c454a16000a079f0dbbd`, changing only `go.mod` and
+#|The latest dependency implementation is exact Go Stack v1.8.1 commit
+#|`647d4fd71b226fbb1e916b4238b4c7ad87cd7975`, parent
+#|`171ffd27ac9502c6018c31b2962a6163b2433a03`, and tree
+#|`7c54d59e484d197e7290bc0eec1281c75f614fcd`, changing only `go.mod` and
 #|`go.sum` with three insertions and no deletions.
 #|
-#|Accepted project measurements are 234 selected modules, 3,584 graph edges,
+#|Accepted project measurements are 234 selected modules, 3,585 graph edges,
 #|429 native complete-test entries, 41 loaded modules, 197 loaded module-backed
-#|packages, 1,053 `go.sum` lines, and a 392-line unapplied tidy projection.
-#|Relative to accepted go-cmp commit `c314bcb`, metadata adds exactly 37
+#|packages, 1,055 `go.sum` lines, and a 396-line unapplied tidy projection.
+#|Relative to accepted go-cmp commit `c314bcb`, metadata adds exactly 39
 #|checksum lines and removes zero. The main module retains Go 1.18 and toolchain
 #|Go 1.26.7.
 #|
 #|Fresh primary vulnerability data has 1,392 module records. Accepted
 #|populations remain 20 IDs/22 reachable traces for Darwin and Windows symbol
-#|scans, 22 Darwin package findings, and 30 Darwin module findings. Go Logfmt
-#|and historical kr/logfmt have no record, finding, or trace. Do not attribute
-#|inherited findings to Go Stack without exact evidence.
+#|scans, 22 Darwin package findings, and 30 Darwin module findings. Go Stack
+#|has no record, finding, or trace. Do not attribute inherited findings to
+#|Godbus without exact evidence.
 #|
 #|The accepted quality result has all 27 Q0-Q2 rows PASS at L2, with scorecard
 #|SHA-256
-#|`0cff5be4fb1609d296664f13a2de5567c7bdb8f574e61b6b05c0d92f44c4eb8f`.
-#|Go Logfmt decision-summary SHA-256 is
-#|`d72e3498eaafb37925188496a131d744d717b2de33cd4aaffeb62e57f7f88dc2`;
-#|its 595-entry selected evidence manifest SHA-256 is
-#|`ac964598ef5933db2136fb7797738ad5595c81d94e092cf0a58c7e4e9266e4b9`.
+#|`4e1e1b50c2d16666d18278efd0b9ded86df668503e32184c49a1024053dd227c`.
+#|Go Stack decision-summary SHA-256 is
+#|`26fca7f6b5b683f4d16fb6b18a9aa88e412948ffde04c7d71764a1a94c077b72`;
+#|its 817-entry selected-evidence manifest SHA-256 is
+#|`e3edb91f49616d36c93ea08e85eeba8ce5730d3f61dea8b668b4da49405a8421`.
 #|
-#|Read the answered Go Logfmt archive and rolling handover for its complete
+#|Read the answered Go Stack archive and rolling handover for its complete
 #|release, closure, API, MVS, vulnerability, quality, and evidence record. Do
-#|not reopen Go Logfmt, kr/logfmt, Prometheus, or earlier groups.
+#|not reopen Go Stack, Prometheus, go-systemd, or earlier groups.
 #|
 #|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
 #|SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
@@ -1249,26 +1246,28 @@ exit 70
 #|directive alone as floor proof. Keep isolated source-time resolution separate
 #|from the project's selected graph.
 #|
-#|Inspect every package and exported API. Characterize frame and stack capture,
-#|skip semantics, call-site/file/function resolution, formatting verbs and
-#|flags, trimming and package-name behavior, zero/invalid frames, marshaling,
-#|error and nil behavior, determinism, allocations, concurrency and reuse,
-#|compiler/runtime coupling, inlining sensitivity, build tags, generation,
-#|examples, testdata, fuzz/property coverage, and upstream CI. Check behavior
-#|through actual supported Go 1.18 and Go 1.26 compiler/runtime call stacks
-#|rather than assuming runtime metadata is stable.
+#|Inspect every package and exported API. Characterize connection and transport
+#|creation, session/system/bus-address discovery, authentication and negotiation,
+#|message encoding/decoding and signatures, variants, Unix file descriptors,
+#|object paths, names, match rules, exported objects, introspection, properties,
+#|signals, calls/replies/errors, context cancellation and deadlines, disconnect
+#|behavior, nil and invalid values, resource ownership, determinism, concurrency
+#|and reuse, build tags, platform-specific Unix/Windows transports, generation,
+#|examples, testdata, fuzz/property coverage, and upstream CI.
 #|
-#|Add independent fixtures where useful for capture depth, formatting,
-#|marshaling, zero values, determinism, concurrency, and compatibility. Run
-#|source verification, package listing, native complete tests, two independent
-#|repeats, race, vet, and meaningful cross-builds under both SDKs. Classify any
-#|toolchain, platform, resource, compiler-inlining, or test-design failure
-#|precisely.
+#|Add independent fixtures where useful for marshaling/signature validation,
+#|messages and variants, connection state, cancellation, match rules, exported
+#|method dispatch, signal delivery, invalid input, determinism, concurrency, and
+#|compatibility. Avoid relying on a host session/system bus when hermetic
+#|socket-pair or private-daemon coverage is possible. Run source verification,
+#|package listing, native complete tests, two independent repeats, race, vet,
+#|and meaningful cross-builds under both SDKs. Classify any toolchain, platform,
+#|resource, daemon, timing, or test-design failure precisely.
 #|
 #|Prove exact project module/graph/package/checksum/tidy effects for selected
-#|and every serious candidate in disposable trees. Explain why Go Stack exists
-#|in MVS while no package may be loaded, and preserve every unrelated module
-#|selection. Any change outside the exact Go Stack edge and its authorized MVS
+#|and every serious candidate in disposable trees. Explain why Godbus exists in
+#|MVS while no package may be loaded, and preserve every unrelated module
+#|selection. Any change outside the exact Godbus edge and its authorized MVS
 #|projection is a stop condition.
 #|
 #|Compare selected/candidate primary vulnerability results at module, package,
@@ -1279,9 +1278,9 @@ exit 70
 #|# Required Reading
 #|
 #|At start, verify the feature branch, clean ordinary and ignored status,
-#|current ancestry, Go Logfmt implementation identity, reciprocal archive
+#|current ancestry, Go Stack implementation identity, reciprocal archive
 #|history, P7/P8 state, and `./codex-dev-start.sh --check`. Read this archive,
-#|the answered Go Logfmt archive, rolling handover, roadmap, `go.mod`, `go.sum`,
+#|the answered Go Stack archive, rolling handover, roadmap, `go.mod`, `go.sum`,
 #|and every referenced quality, compatibility, release, runner, evidence, and
 #|lifecycle contract. Earlier outcomes are final.
 #|
@@ -1310,9 +1309,9 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the Go Stack decision, rewrite the rolling handover and roadmap, answer
-#|this archive, create exactly one reciprocal NEXT archive for the next single
-#|P7 group, replace only launcher mutable regions, run launcher/handoff
+#|After the Godbus D-Bus v5 decision, rewrite the rolling handover and roadmap,
+#|answer this archive, create exactly one reciprocal NEXT archive for the next
+#|single P7 group, replace only launcher mutable regions, run launcher/handoff
 #|contracts, and make the normal `docs: prepare next agent session` commit. Do
 #|not implement the next group, launch a successor, push, merge, publish,
 #|release, stash, revert, bypass cleanup, or remove the worktree.
