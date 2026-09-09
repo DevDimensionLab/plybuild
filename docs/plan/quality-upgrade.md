@@ -5375,7 +5375,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through accepted Golang Protobuf v1.5.3 plus retained Gogo
+dependency groups through accepted Google Martian v3.3.2 plus retained Gogo
 Protobuf v1.3.2; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
@@ -8605,13 +8605,48 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   the 677-entry evidence manifest and decision summary hash to
   `e4c81eed9a21f737f3a8427360908835b7f195f9981bd1be9a5bdbd953091449`
   and `3d606c0a6ca3f0cd523c4603de9ded354311d1ac6135c9f679ee58371d3ebc79`.
+- Upgrade exact-path `github.com/google/martian/v3 v3.2.1` to highest
+  API-compatible qualified stable v3.3.2. Canonical proxy, sumdb, go-import,
+  tagged Git, and the public archived non-fork repository agree. The proxy
+  exposes five stable v3 versions with no prerelease or retraction. Master
+  equals v3.3.3, and malformed `3.2`/`v3.2` tags do not version this module.
+  V3.3.3 is rejected because it removes exported `martian.Init` and the
+  inherited `cmd/marbl -v` flag.
+- Selected and candidate have byte-identical Go-1.11 module files and
+  37-module complete closures. Their 46-package, 428-entry Go-1.26.7 and
+  365-entry Go-1.18.10 test closures pass native tests, serial repeats, race,
+  production vet, commands, and 1,380 cross-build contexts. Apidiff is empty.
+  Independent modifier, context, HTTP proxy, MITM/CONNECT, HAR, malformed-I/O,
+  lifecycle, reuse, and concurrency fixtures pass both SDKs.
+- Retained qualifications include non-idempotent proxy close, unbounded MITM
+  certificate/HAR/gRPC input growth, single-read HTTP/2 preface forwarding,
+  permissive truncated terminal gRPC frames, malformed body-range slice panic,
+  and traffic-shape map nondeterminism. These are inherited by all serious
+  candidates and require caller input bounds and coordinated shutdown.
+- Exact Go 1.26.7 `go get github.com/google/martian/v3@v3.3.2` produced
+  dependency-only commit `4644476aef78e24d0c7e6a1140baba4c3226a1cc`, changing
+  only `go.mod` and `go.sum` with three insertions. It moves no unrelated
+  selection. Historical Cloud Go vertices explain selection despite negative
+  `go mod why` and zero loaded Martian packages. The project now has 234
+  modules, 3,597 graph edges, 429 complete-test entries, 41 loaded modules,
+  197 loaded module-backed packages, 1,063 sum lines, and a 418-line tidy
+  projection.
+- Fresh project vulnerability populations remain 30 module findings, 22
+  Darwin package findings, 23 Windows package findings, and 20 IDs/22 traces
+  on both symbol platforms, with no Martian record, finding, or trace. Exact
+  21-stage quality preserves 27/27 Q0-Q2 PASS at L2 and kills 80/80 mutants.
+  Scorecard SHA-256 is
+  `094a7668e43eb0a5b563bcd637b3b5a301e1bb5f5053903ad8934e2b2906ae7f`;
+  the 509-entry evidence manifest and decision summary hash to
+  `614921201697ce6f3accdf0c6e619c86ddb3502f23c3b03ee6314a2347a9a649`
+  and `374c235a5ebeeb7a97254e8eab57b3dc60224fc7f103611beceafff701f5756e`.
 - Next, independently evaluate exact-path
-  `github.com/google/martian/v3 v3.2.1`. Historical Cloud Go vertices supply
-  the selected declarations, `go mod why -m` is negative, and no Martian
-  package is loaded. The initial proxy survey exposes five stable versions
-  v3.0.0, v3.1.0, v3.2.1, v3.3.2, and latest v3.3.3; selected declares Go
-  1.11 and latest declares Go 1.18. Keep Cloud Go, Snappy, Protobuf, gRPC,
-  X/Net, and every other dependency group outside this single-path review.
+  `github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1`. Historical
+  Cloud Go v0.90.0 supplies the selected declaration, `go mod why -m` is
+  negative, and no PProf package is loaded. The proxy version list is empty;
+  current `@latest` declares Go 1.25.0 and is floor-ineligible. Keep Cloud Go,
+  Demangle, Readline, Logex, X/Sys, and every other dependency group outside
+  this single-path review.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

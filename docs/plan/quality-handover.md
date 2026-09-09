@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-09T18:31:55+02:00
+Generated: 2026-09-09T21:49:49+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,18 +9,19 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`.
-- The latest dependency implementation is Golang Snappy v1.0.0 commit
-  `372f8e988d9bb86a4f426ae6f953d2e8226c05fe`, parent
-  `838fcd3dff204535d42b3b4078041688ad6de40d`, tree
-  `044149546152b4ce44eb1189721b88f508ea9477`. It changes only `go.mod`
+- The latest dependency implementation is Google Martian v3.3.2 commit
+  `4644476aef78e24d0c7e6a1140baba4c3226a1cc`, parent
+  `8508a9d54f066985fb81ebd35fa31f45fa36da40`, tree
+  `f20d9b3817fe29af4876745d09c14e9cbcac9152`. It changes only `go.mod`
   and `go.sum`, with three insertions and no deletions.
-- Golang Protobuf v1.5.3 `6870e02`, Godbus D-Bus v5.1.0 `6472dce`, Go
-  Stack v1.8.1 `647d4fd`, Go Logfmt v0.6.0 `3d4cfd`, Fatih Color v1.15.0
-  `6ca672e`, XXHash v2.3.0 `e5d6252`, and Speakeasy v0.2.0 `41f9561`
-  remain ancestors. Gogo Protobuf v1.3.2 remains retained without a
-  dependency edit. All earlier P7 decisions are final.
-- The answered Golang Snappy archive and sole NEXT Google Martian v3 archive
-  link reciprocally. No `.agent-task/current.md` or repository
+- Golang Snappy v1.0.0 `372f8e9`, Golang Protobuf v1.5.3 `6870e02`,
+  Godbus D-Bus v5.1.0 `6472dce`, Go Stack v1.8.1 `647d4fd`, Go Logfmt
+  v0.6.0 `3d4cfd`, Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0
+  `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. Gogo
+  Protobuf v1.3.2 remains retained without a dependency edit. All earlier P7
+  decisions are final.
+- The answered Google Martian archive and sole NEXT Google PProf archive link
+  reciprocally. No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not push, merge, publish,
   release, stash, revert, launch a successor, bypass cleanup, or remove the
   worktree.
@@ -29,150 +30,142 @@ session diary.
 
 P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and accepted
 Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0,
-Go Stack v1.8.1, Godbus D-Bus v5.1.0, Golang Protobuf v1.5.3, and Golang
-Snappy v1.0.0 moves. Gogo Protobuf v1.3.2, Crypt, OpenCensus Proto, Logex,
-Readline, Fnmatch, Imaging, ansimage, Fsnotify, Ghodss YAML, and historical
-root GLFW remain retained. P8 remains queued. Do not reopen earlier groups or
-combine another dependency group.
+Go Stack v1.8.1, Godbus D-Bus v5.1.0, Golang Protobuf v1.5.3, Golang Snappy
+v1.0.0, and Google Martian v3.3.2 moves. Gogo Protobuf v1.3.2, Crypt,
+OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify,
+Ghodss YAML, and historical root GLFW remain retained. P8 remains queued. Do
+not reopen earlier groups or combine another dependency group.
 
 Keep every disposable cache, projection, source, report, generated artifact,
 evidence tree, and build context beneath `$CODEX_SESSION_SCRATCH_ROOT`.
 Never run `go mod download all` in a measured worktree or bypass launcher
 scratch cleanup.
 
-## Golang Snappy Decision And Identity
+## Google Martian Decision And Identity
 
-Upgrade exact-path `github.com/golang/snappy` from v0.0.3 to v1.0.0.
-V1.0.0 is the highest qualified stable exact-path release. The proxy exposes
-exactly five stable versions, v0.0.1-v0.0.4 and v1.0.0, with no prerelease.
-Go-import, proxy, sumdb, tagged Git, and GitHub agree on the exact public,
-enabled, unarchived, non-fork repository. There are no retractions,
-deprecation, redirects, or qualified alternate module paths. Forks,
-alternates, and the two commits newer than v1.0.0 on master were not promoted.
-V1.0.0 is the sole GitHub Release and is neither draft nor prerelease.
+Upgrade exact-path `github.com/google/martian/v3` from v3.2.1 to v3.3.2.
+V3.3.2 is the highest qualified stable exact-path release. The proxy exposes
+exactly v3.0.0, v3.1.0, v3.2.1, v3.3.2, and v3.3.3, with no prerelease,
+retraction, or deprecation. Proxy, sumdb, parent go-import metadata, tagged
+Git, and GitHub agree on public, non-fork, Apache-2.0 repository
+`https://github.com/google/martian`. It is archived, its default branch is
+`master`, and master equals v3.3.3. There are no newer unreleased commits or
+qualified alternate paths. Invalid tags/releases `3.2` and `v3.2` do not
+version the module.
 
-Candidate tags are lightweight, so no tag-object signatures exist. GitHub
-reports valid commit signatures for v0.0.3 and v1.0.0; v0.0.4 is unsigned.
-The serious candidates and ancestry are:
+V3 tags are lightweight and have no signed tag objects. GitHub reports valid
+commit signatures for the five exact v3 release commits. The serious
+candidates are:
 
-- V0.0.3: commit `674baa8c7fc30da5df3074a459494a7e6b427dff`, tree
-  `5bbf3ddf1162e96e96a3019f84811da0b2416ee8`, parents
-  `196ae77b8a26000fa30caa8b2b541e09674dbc43` and
-  `f81760ec4c9208e6e6866cf18e1888544fd2dbc9`, at 2020-11-03T22:46:00Z.
-- V0.0.4: commit `544b4180ac705b7605231d4a4550a1acb22a19fe`, tree
-  `e5a4c4cd6beb5307dd3c32ef56d78a2f6913fbcd`, parent
-  `0eaccd47634261995ecbb48b545add281213ff88`, at 2021-06-08T04:05:37Z.
-- V1.0.0: commit `43d5d4cd4e0e3390b0b645d5c3ef1187642403d8`, tree
-  `c6f19681f2ae79c2e55b6c6113e9b5ea183e3bcb`, parents
-  `fa5810519dcbfaa60974183cbe11c6c0d050a23d` and
-  `470b9ed42b44d6e57a1303611bc363992cfed65d`, at 2023-12-25T22:57:46Z.
-- Master: commit `9ae09f520e93143c782aa6088d18a5e300c69dd0`, tree
-  `33e272e7ac600aeb47984696311ee0f03902e0f1`, parents v1.0.0 and
-  `b6a66aa0e1517e1e9d255d6d6cc750d1a975b543`, at
-  2026-07-16T11:44:14Z, two commits after v1.0.0.
+- V3.2.1: commit `7e75073889cd2324f33b959c4fb4545440da046c`, tree
+  `b39ce198afdb87dadbac7e9ca36082ed5b8a043e`, parent
+  `19163e1b8984e2577ea366d8aa97f0f75c6f6ac6`, at
+  2021-05-19T22:06:43Z.
+- V3.3.2: commit `b41869697484173d2e936754152cd64e40a046d4`, tree
+  `a1680fb4f3f79b23ee2fde53a119d61841393f37`, parent
+  `8087be7bb3737e2de9a70007fbc0dc6c74c0fb1c`, at
+  2022-03-14T19:34:56Z.
+- V3.3.3: commit `0f7e6797a04da412118541344bbe0d65945e24c9`, tree
+  `0ad4a12b3b27833d80140eb0a54c2c1ba8d137b7`, parent
+  `d6ef5c8f4bee8c1322bdbeb59505bca21d5d5f0a`, at
+  2022-08-16T15:12:57Z.
 
-V1.0.0 source/mod sums are
-`h1:Oy607GVXHs7RtbggtPBnr2RmDArIsAefDwvrdWvRhGs=` /
-`h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=`. All candidates'
-module files contain only the exact module declaration, with no Go directive
-or requirements. Proxy and tagged-Git manifests agree byte-for-byte. Their
-SHA-256 identities for v0.0.3, v0.0.4, and v1.0.0 are
-`4573785efd0252fca4ec8e6c7fd03693ac733e86252ccd3cfd88884f2f221333`,
-`d9f61d5d1bbded9ff0b6a07879223b0b610268e5f58301af486d20d14732b311`,
-and `a35a0f797c8ef03c088161b93f2d0f4fb4c289909d30f10becca375ff5c9e5c7`.
+V3.3.2 source/mod sums are
+`h1:IqNFLAmvJOgVlpdEBiQbDc2EwKW77amAycfTuWKdfvw=` /
+`h1:oBOf6HBosgwRXnUGWUB05QECsc6uvmMiJ3+6W4l/CUk=`. Selected and
+candidate module files are byte-identical and declare Go 1.11. V3.3.3
+declares Go 1.18 and removes the generator module. Proxy and Git manifests are
+byte-identical for all releases; their ordered SHA-256 values are
+`4c092e2a900cf633c6b081e20eb42a692fe9ea14ba61407e856eff8a98f796ac`,
+`e37b2abf94dc9614c09f70a10be61d2c59b174f6a6b0f71aea614cee733abc6e`,
+`50b3e3cffa269e8fa34ebba7cd748a2f96ffccd97c7c50271767ba434736e03c`,
+`3f84285118e5c6daa8d19ea631505d04cd52be080bef1fd73f3a8345ec17fbe6`,
+and `5a08b12494eca88f9c98c3dbc096e4c997f37e76988c5f7cc0558c95fdbbf997`.
 
 ## Closure, API, Behavior, And Qualifications
 
-The complete standalone closure for every serious candidate is one module
-using only the standard library. It exposes the runtime package and
-`cmd/snappytool`. Complete test loading has 209 entries/four module-backed
-packages under Go 1.26.7 and 146/four under Go 1.18.10, so the actual closure
-preserves the Go 1.18 floor.
+Selected and v3.3.2 resolve 37-module standalone source-and-test closures;
+latest resolves 36. Complete test loading has 428 entries under Go 1.26.7 and
+365 under Go 1.18.10, including 215 module-backed entries and 46 Martian
+packages. Actual compilation and execution under contained Go 1.18.10 prove
+the complete Go floor.
 
-Apidiff reports only the compatible `Reader.ReadByte` addition from v0.0.3 to
-v0.0.4, no public change from v0.0.4 to v1.0.0, and no change from v1.0.0 to
-unreleased master. V0.0.4 fixes ARM64 assembler syntax and adds golden
-testdata. V1.0.0 changes README and ARM64 framing details without public API
-drift.
+The 46 packages cover HTTP proxying, request/response modifier chains,
+context and modifier groups, filters, headers, cookies, query/body/method
+modifiers, HAR, HTTP/2, gRPC, MITM TLS, traffic shaping, helpers, generated
+protocol code, and the proxy and marbl commands. Apidiff is empty from v3.2.1
+to v3.3.2. The candidate moves global flag parsing out of library
+`martian.Init` into the proxy command and recognizes wrapped
+`net.ErrClosed`, improving composability and shutdown handling. V3.3.3 adds
+`martian/log.Logger` and `SetLogger` but incompatibly removes exported
+`martian.Init` and inherited `cmd/marbl -v`, so latest is rejected.
 
-The runtime implements raw Snappy blocks and checksum-protected framed
-streams: literal/copy tags, masked CRC-32C, skippable chunks, rejection of
-unskippable and corrupt chunks, buffered read/write, reset, flush, close, and
-deterministic encoding. Framed reader resources are bounded to encoded and
-decoded buffers of roughly 76,494 and 65,536 bytes. Short/failing I/O errors
-propagate and become sticky where specified. Reader and Writer objects are
-mutable and not safe for concurrent reuse; independent instances are safe.
-AMD64/ARM64 use GC assembler unless `appengine` or `noasm` selects the pure-Go
-fallback.
+A 387-line independent fixture covers modifier chaining/filtering,
+headers/cookies/queries/bodies, context/session isolation, HTTP proxy
+lifecycle, MITM certificate SAN/organization/cache properties, opaque CONNECT
+passthrough, malformed traffic, HAR duplicate/orphan/export/reset/gzip,
+failing reads, and concurrency. Its behavior and Init-contract SHA-256 values
+are `d41342168319236bc936b4e4977db4460fd0c754195f955d1ad5342c8a21bd96`
+and `6262ef23586fd72e15f430ef8f2b0f83efe8dbba940864b13f40ec4d49404c10`.
+Candidate race count-10 passes under both SDKs.
 
-Every released candidate accepts a noncanonical overlong eight-byte raw length
-varint. Unreleased master reduces this to five bytes. Direct `Decode(nil,
-src)` also allocates the declared raw decoded size before validating the full
-body and can request up to `0xffffffff` bytes on 64-bit systems. Callers must
-therefore inspect `DecodedLen` and prebound hostile raw blocks. Framed decoding
-is bounded. This is the one retained resource qualification; no candidate
-otherwise fails corrupt/truncated/unsupported input, integer overflow,
-checksum, I/O, reset/flush/close, reuse, determinism, or concurrency behavior.
+Retained qualifications are explicit. Proxy close is not idempotent and does
+not own the listener; raw CONNECT copy loops can wait for peer shutdown.
+Response modifier errors become warnings, upstream failure becomes 502, and
+response write errors are logged. MITM uses RSA-2048, random serials, one
+reused leaf key, and an unbounded locked per-host certificate cache. HTTP/2
+preface forwarding uses one `Read`. gRPC frame length/decompression and HAR
+body/cache growth are not application-bounded; a truncated terminal gRPC frame
+can return nil. HAR exports are not deep copies. Malformed body ranges can
+panic through an out-of-bounds slice, and traffic-shape map iteration is
+nondeterministic. These are inherited across all serious releases; callers
+must bound hostile inputs and coordinate shutdown.
 
-The 354-line independent fixture covers raw/framed golden vectors, round
-trips, incompressible and highly compressible data, checksum failures,
-skippable/unskippable chunks, malformed/truncated/oversized input,
-short/failing I/O, flush/close/reset, buffer reuse, resources, determinism,
-and independent-instance concurrency. Fixture SHA-256 is
-`78196ceb64c56ed9c7fb34a0d61de434848ab1b2abe18ed9929a799935358e80`.
-Race count-20 passes every candidate under both SDKs.
-
-Module verification, package listing, native count-1, `noasm`, `appengine`,
-vet, two independent count-10 repeats, race, and command behavior pass for all
-three candidates under exact Go 1.26.7 and Go 1.18.10. All 108 compile-only
-cross-builds pass for Darwin AMD64/ARM64, Linux AMD64/ARM64/386, Windows
-AMD64, FreeBSD AMD64, and js/wasm, including fallback variants. V1.0.0 has 31
-tests, 38 benchmarks, no examples, and no native fuzz target. The release tree
-has no repository-owned test CI; GitHub currently exposes only managed
-dependency-graph and CodeQL workflows.
+Module verification, package listing, native tests with package vet disabled,
+two independent repeats, race, commands, production vet, and 1,380 cross-build
+contexts pass every serious candidate under both SDKs. Full vet reports only
+inherited test-only Fatalf-from-goroutine issues and a Go 1.26 RSA formatting
+finding. Saturated concurrent repeats expose only proxy startup timeouts and
+one traffic-shape sub-millisecond boundary miss; serial repeats pass. Upstream
+has 271 tests, one example, no benchmarks, and no native fuzz target.
 
 ## Project, Vulnerability, And Quality Measurements
 
-Google Martian v3.2.1 declared Snappy v0.0.3. MVS considered that requirement
-even though no loaded package imported Snappy, explaining the selected module
-alongside a negative `go mod why -m`. Exact v0.0.4 and v1.0.0 projections
-change only the Snappy selection and add a root edge plus two checksums;
-Martian's declared requirement remains v0.0.3. Every unrelated module
-selection is identical.
+Eight historical `cloud.google.com/go` graph vertices, v0.83.0, v0.84.0,
+v0.87.0, v0.90.0, v0.93.3, v0.94.1, v0.97.0, and v0.99.0, each declare
+Martian v3.2.1. Requirements of encountered old vertices remain graph edges
+even though MVS selects Cloud Go v0.105.0. This explains selection alongside a
+negative `go mod why -m` and zero loaded Martian packages. The exact root
+edge now selects v3.3.2 and changes no unrelated module selection.
 
-Current measurements are 234 modules, 3,590 graph edges, 429 complete-test
-entries, 41 loaded modules, 197 loaded module-backed packages, zero Snappy
-packages, 1,061 sum lines, and a 407-line unapplied tidy projection. Relative
-to accepted go-cmp commit `c314bcb`, sums are +45/-0. Main Go 1.18 and
-preferred toolchain Go 1.26.7 remain unchanged.
+Current measurements are 234 modules, 3,597 graph edges, 429 complete-test
+entries, 41 loaded modules, 197 loaded module-backed packages, zero Martian
+packages, 1,063 sum lines, and a 418-line unapplied tidy projection. Relative
+to accepted go-cmp commit `c314bcb`, sums are +47/-0. The v3.3.3 projection
+has 3,599 edges but identical loaded and checksum populations. Main Go 1.18
+and preferred toolchain Go 1.26.7 remain unchanged.
 
-Fresh vulnerability data contains 1,392 module records and no exact Snappy
-record. Direct v0.0.3/v0.0.4/v1.0.0 scans are zero at module, package, and
-symbol levels. Project results are identical across base and candidates: 30
-Darwin module findings, 22 Darwin package findings, 23 Windows package
-findings, and 20 IDs/22 reachable traces on Darwin and Windows, with no
-Snappy finding or trace.
+Fresh vulnerability data contains 1,392 module records and no Martian record.
+Direct candidate results are identical: 27 inherited module findings, 17
+inherited package findings, and five inherited IDs/81 traces; none belong to
+Martian. Project base/candidate populations are identical: 30 module
+findings, 22 Darwin package findings, 23 Windows package findings, and 20
+IDs/22 traces on both symbol platforms, with no Martian finding or trace.
 
-Exact Go 1.26.7 verification, package load, build, tests, two repeats, race,
-vet, empty-HOME, and Linux/Windows builds pass. The Go 1.18.10 projection
-removes only the toolchain line; verification, build, vet, cross-builds, and
-applicable repeats/race pass. Full count-1 retains only two accepted
-`pkg/shell` closed-file wording assertions; the other 26 packages and 31
-applicable shell tests pass repeated and race runs.
+Exact Go 1.26.7 verification, load, build, full tests, two repeats, race, vet,
+empty-HOME, and Linux/Windows builds pass. The Go 1.18.10 projection passes
+verification, load, build, vet, and cross-builds. Full tests retain only the
+two accepted `pkg/shell` closed-file error-wording assertions; the compatible
+population passes repeats and race.
 
-Exact 21-stage `make quality` exits zero with 27/27 Q0-Q2 PASS at L2, 80/80
-mutations killed, seven improvements, and zero held, regressed,
+The exact 21-stage `make quality` exits zero with 27/27 Q0-Q2 PASS at L2,
+80/80 mutations killed, seven improvements, and zero held, regressed,
 not-comparable, or dirty counts. Scorecard SHA-256 is
-`7320f432090c578973bcfe4abc8736ef68a83f492a5bd057922ec150ce2a03c5`.
-Superseded quality attempts exposed only an offline API-base cache miss and
-macOS `mktemp` sandbox placement; session-contained caches and a scratch-only
-shim corrected them. One accidental diagnostic `go mod download all` expanded
-`go.sum`; the expansion was reversed byte-exact before authoritative gates.
-
-The 677-entry selected-evidence manifest SHA-256 is
-`e4c81eed9a21f737f3a8427360908835b7f195f9981bd1be9a5bdbd953091449`;
+`094a7668e43eb0a5b563bcd637b3b5a301e1bb5f5053903ad8934e2b2906ae7f`.
+The 509-entry selected-evidence manifest SHA-256 is
+`614921201697ce6f3accdf0c6e619c86ddb3502f23c3b03ee6314a2347a9a649`;
 decision-summary SHA-256 is
-`3d606c0a6ca3f0cd523c4603de9ded354311d1ac6135c9f679ee58371d3ebc79`.
+`374c235a5ebeeb7a97254e8eab57b3dc60224fc7f103611beceafff701f5756e`.
 
 ## Tools
 
@@ -187,26 +180,28 @@ decision-summary SHA-256 is
   GoReleaser 2.17.1 binary SHA-256 is
   `f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`.
   Rebuilt apidiff has exact required module/version identity; govulncheck is
-  v1.7.0 with database update 2026-09-02T19:12:04Z.
+  v1.7.0.
 
 ## Next Objective
 
-Independently evaluate exact-path `github.com/google/martian/v3 v3.2.1` as
-the next single P7 group. Do not combine Cloud Go, Golang Snappy, Protobuf,
-gRPC, X/Net, or another dependency.
+Independently evaluate exact-path
+`github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1` as the next
+single P7 group. Do not combine Cloud Go, Demangle, Readline, Logex, X/Sys, or
+another dependency.
 
-The initial proxy survey exposes five stable versions: v3.0.0, v3.1.0,
-v3.2.1, v3.3.2, and v3.3.3. Selected v3.2.1 is dated
-2021-05-19T22:06:43Z, declares Go 1.11, and has source/mod sums
-`h1:d8MncMlErDFTwQGBK1xhv026j9kqhvw1Qv9IbWT1VLQ=` /
-`h1:oBOf6HBosgwRXnUGWUB05QECsc6uvmMiJ3+6W4l/CUk=`. Latest v3.3.3 is
-dated 2022-08-16T15:12:57Z, declares Go 1.18, and has source/mod sums
-`h1:DIhPTQrbPkgs2yJYdXU/eNACCG5DVQjySNRNlflZ9Fc=` /
-`h1:iEPrYcgCF7jA9OtScMFQyAlZZ4YXTKEtJ1E6RWzmBA0=`. Treat these only as
-incoming survey facts to verify.
+The selected pseudo-version exists through exact graph edge
+`cloud.google.com/go v0.90.0 -> github.com/google/pprof`, despite selected
+Cloud Go v0.105.0. `go mod why -m` is negative and no PProf package is
+loaded. The initial proxy list is empty. Selected is dated
+2021-07-20T18:47:32Z, declares Go 1.14, and has source/mod sums
+`h1:K6RDEckDVWvDI9JAJYCmNdQXq6neHJOYx3V6jnqNEec=` /
+`h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=`.
 
-The module graph contains v3.2.1 declarations from historical Cloud Go
-vertices v0.83.0, v0.84.0, v0.87.0, v0.90.0, v0.93.3, v0.94.1, v0.97.0,
-and v0.99.0, while the project selects Cloud Go v0.105.0. `go mod why -m` is
-negative and no Martian package is loaded. Resolve this MVS ancestry exactly,
-but do not independently audit or change Cloud Go.
+Proxy latest is `v0.0.0-20260906184651-6331bc6350fe`, dated
+2026-09-06T18:46:51Z at origin commit
+`6331bc6350fe55a6fec2957299e0581dd7510e36`, with source/mod sums
+`h1:QAinXoAFJdGQYztXn3VpFey7KCwpedbZ/EkzbplQ0cY=` /
+`h1:jl5iWTm0/hd5PjEYEOuwAJ57L/CibdZfrqZ5XA5GrCk=`. Its Go 1.25.0
+directive is floor-ineligible. Treat every survey fact as incoming evidence to
+verify, and do not infer permission to choose an arbitrary pseudo-version from
+the repository's lack of semver tags.
