@@ -8577,12 +8577,41 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   the 327-entry evidence manifest and decision summary hash to
   `5d116bb51bfea923778db9b2d6c03bf6c7df2078d966398c5c71a81a68b60dc7`
   and `fec25073702fd5dd3d9ce18fd4aa9bf5b3d9a642bed32bdd690f421778bb324e`.
-- Next, independently evaluate exact-path `github.com/golang/snappy v0.0.3`.
-  Google Martian v3.2.1 supplies its only selected edge, `go mod why -m` is
-  negative, and no Snappy package is loaded. The initial proxy survey exposes
-  five stable releases v0.0.1-v0.0.4 and latest v1.0.0. Selected and latest
-  module files have no Go directive or requirements. Keep Martian and every
-  other dependency group outside this single-path review.
+- Upgrade exact-path `github.com/golang/snappy v0.0.3` to highest qualified
+  stable v1.0.0. Proxy, sumdb, go-import, tagged Git, and the public,
+  unarchived, non-fork repository agree; the five proxy versions are all
+  stable. V1.0.0 is the sole GitHub Release. The serious candidates have no
+  Go directive or requirements, their one-module standard-library-only
+  closures pass exact Go 1.26.7 and Go 1.18.10, and apidiff reports only the
+  compatible v0.0.4 `Reader.ReadByte` addition.
+- Raw/framed golden, checksum, malformed/truncated/oversized, short/failing
+  I/O, flush/close/reset, reuse, determinism, and concurrency fixtures pass
+  every serious candidate under both SDKs, as do native repeats, race, vet,
+  `noasm`/`appengine`, the command tool, and 108 cross-builds. All releases
+  can allocate the declared raw decoded length before validating the complete
+  block, so callers must prebound hostile raw inputs; framed decoding remains
+  bounded. No Snappy vulnerability finding or trace exists.
+- Exact Go 1.26.7 `go get github.com/golang/snappy@v1.0.0` produced
+  dependency-only commit `372f8e988d9bb86a4f426ae6f953d2e8226c05fe`, changing only
+  `go.mod` and `go.sum` with three insertions. It adds the exact root edge and
+  changes no other module selection. The project now has 234 modules, 3,590
+  graph edges, 429 complete-test entries, 41 loaded modules, 197 loaded
+  module-backed packages, zero Snappy packages, 1,061 sum lines, and a
+  407-line tidy projection.
+- Exact 21-stage quality preserves 27/27 Q0-Q2 PASS at L2, kills 80/80
+  mutants, and records seven improvements with zero held, regressed,
+  non-comparable, or dirty counts. Scorecard SHA-256 is
+  `7320f432090c578973bcfe4abc8736ef68a83f492a5bd057922ec150ce2a03c5`;
+  the 677-entry evidence manifest and decision summary hash to
+  `e4c81eed9a21f737f3a8427360908835b7f195f9981bd1be9a5bdbd953091449`
+  and `3d606c0a6ca3f0cd523c4603de9ded354311d1ac6135c9f679ee58371d3ebc79`.
+- Next, independently evaluate exact-path
+  `github.com/google/martian/v3 v3.2.1`. Historical Cloud Go vertices supply
+  the selected declarations, `go mod why -m` is negative, and no Martian
+  package is loaded. The initial proxy survey exposes five stable versions
+  v3.0.0, v3.1.0, v3.2.1, v3.3.2, and latest v3.3.3; selected declares Go
+  1.11 and latest declares Go 1.18. Keep Cloud Go, Snappy, Protobuf, gRPC,
+  X/Net, and every other dependency group outside this single-path review.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

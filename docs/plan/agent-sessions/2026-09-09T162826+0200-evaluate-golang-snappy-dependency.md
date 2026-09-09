@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Golang Snappy Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-09T162826+0200-evaluate-golang-snappy-dependency`
 Created: `2026-09-09T16:28:26+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `51ecc1f9b8e42db0ceee9ca8fe20251268cc72bb8d291b17dffeba90aac59a21`
 Previous: [2026-09-09T131438+0200-evaluate-golang-protobuf-dependency.md](2026-09-09T131438+0200-evaluate-golang-protobuf-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-09T183155+0200-evaluate-google-martian-v3-dependency.md](2026-09-09T183155+0200-evaluate-google-martian-v3-dependency.md)
+Outcome: Upgraded exact-path Golang Snappy from v0.0.3 to highest qualified stable v1.0.0 at dependency-only commit `372f8e9`; complete identity, Go-floor closure, API and behavior, MVS/loading, vulnerability, project, and exact quality contracts pass, with the hostile raw-decoder allocation limit documented.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -184,3 +184,139 @@ contracts, and make the normal `docs: prepare next agent session` commit. Do
 not implement the next group, launch a successor, push, merge, publish,
 release, stash, revert, bypass cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Upgrade exact-path `github.com/golang/snappy` from v0.0.3 to v1.0.0.
+V1.0.0 is the highest stable exact-path release whose complete minimal closure
+preserves Go 1.18 and whose applicable API, behavior, project, vulnerability,
+and quality contracts pass. Exact Go 1.26.7 `go get
+github.com/golang/snappy@v1.0.0` produced dependency-only commit
+`372f8e988d9bb86a4f426ae6f953d2e8226c05fe`, parent `838fcd3`, tree
+`044149546152b4ce44eb1189721b88f508ea9477`, changing only `go.mod` and
+`go.sum` with three insertions and no deletions.
+
+The proxy exposes exactly five stable releases, v0.0.1-v0.0.4 and v1.0.0,
+with no prerelease. Proxy, sumdb, go-import metadata, tagged Git, and GitHub
+agree on the exact public, enabled, unarchived, non-fork repository. There are
+no retractions, deprecation, redirects, or qualified alternate paths. Forks,
+alternate paths, and the two commits newer than v1.0.0 on master were not
+promoted. V1.0.0 is the repository's only GitHub Release; it is neither draft
+nor prerelease. Candidate tags are lightweight, so they have no signed tag
+objects. GitHub reports valid commit signatures for v0.0.3 and v1.0.0;
+v0.0.4's commit is unsigned. The v1.0.0 release was published
+2025-03-07T05:42:29Z.
+
+The serious candidates and ancestry are v0.0.3 commit
+`674baa8c7fc30da5df3074a459494a7e6b427dff`, tree
+`5bbf3ddf1162e96e96a3019f84811da0b2416ee8`, parents
+`196ae77b8a26000fa30caa8b2b541e09674dbc43` and
+`f81760ec4c9208e6e6866cf18e1888544fd2dbc9`, at 2020-11-03T22:46:00Z;
+v0.0.4 commit `544b4180ac705b7605231d4a4550a1acb22a19fe`, tree
+`e5a4c4cd6beb5307dd3c32ef56d78a2f6913fbcd`, parent
+`0eaccd47634261995ecbb48b545add281213ff88`, at 2021-06-08T04:05:37Z; and
+v1.0.0
+commit `43d5d4cd4e0e3390b0b645d5c3ef1187642403d8`, tree
+`c6f19681f2ae79c2e55b6c6113e9b5ea183e3bcb`, parents
+`fa5810519dcbfaa60974183cbe11c6c0d050a23d` and
+`470b9ed42b44d6e57a1303611bc363992cfed65d`, at 2023-12-25T22:57:46Z.
+Master is commit `9ae09f520e93143c782aa6088d18a5e300c69dd0`, tree
+`33e272e7ac600aeb47984696311ee0f03902e0f1`, with parents v1.0.0 and
+`b6a66aa0e1517e1e9d255d6d6cc750d1a975b543`, two commits after v1.0.0.
+Normalized proxy and tagged-Git manifests match byte-for-byte; their SHA-256
+identities are `4573785e...`, `d9f61d5d...`, and `a35a0f79...`.
+
+V1.0.0 source/mod sums are
+`h1:Oy607GVXHs7RtbggtPBnr2RmDArIsAefDwvrdWvRhGs=` and
+`h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=`. All serious candidates'
+module files contain only the exact module declaration, with no Go directive
+or requirements. Their complete standalone closure is one module using only
+the standard library. Complete test loading is 209 entries/four
+module-backed packages under Go 1.26.7 and 146/four under Go 1.18.10, proving
+the full candidate closure remains within the Go 1.18 floor.
+
+The module exposes runtime package `github.com/golang/snappy` and command
+`cmd/snappytool`. Apidiff reports the compatible addition of `Reader.ReadByte`
+from v0.0.3 to v0.0.4 and no public change from v0.0.4 to v1.0.0 or from
+v1.0.0 to unreleased master. V0.0.4 also fixes ARM64 assembler syntax and adds
+golden testdata; v1.0.0 changes README and ARM64 framing details without API
+drift.
+
+The runtime implements raw Snappy blocks and checksum-protected framed
+streams, including literal and copy tags, masked CRC-32C validation,
+skippable-chunk handling, rejection of unskippable/invalid chunks, buffered
+read/write, reset, flush, close, and deterministic encoding. Framed chunks
+bound encoded and decoded buffers to approximately 76,494 and 65,536 bytes.
+Short or failing I/O errors propagate and become sticky where appropriate.
+Reader and Writer instances are mutable and not safe for concurrent use;
+independent instances are safe. AMD64 and ARM64 use GC assembler unless
+`appengine` or `noasm` selects pure Go fallbacks.
+
+All released candidates accept a noncanonical overlong eight-byte raw decoded
+length varint; unreleased master tightens this to five bytes. More importantly,
+direct `Decode(nil, src)` allocates the declared raw decoded size before full
+body validation and can request up to `0xffffffff` bytes on 64-bit systems.
+This is a retained, documented resource contract: callers decoding hostile raw
+blocks must inspect `DecodedLen` and enforce an application limit first.
+Framed decoding is bounded as described above. No candidate otherwise failed
+malformed, truncated, checksum, unsupported-input, overflow, I/O, reset,
+flush, close, reuse, or concurrency contracts.
+
+The independent 354-line fixture SHA-256 is
+`78196ceb64c56ed9c7fb34a0d61de434848ab1b2abe18ed9929a799935358e80`.
+It covers raw and framed golden vectors, round trips, incompressible and highly
+compressible inputs, checksum failures, skippable and unskippable chunks,
+malformed/truncated/oversized inputs, short and failing I/O, flush/close/reset,
+buffer reuse, resource behavior, determinism, and independent-instance
+concurrency. Race count-20 passes for every candidate under both SDKs.
+
+Module verification, package listing, native count-1, `noasm`, `appengine`,
+vet, two independent count-10 repeats, race, and command behavior all pass for
+v0.0.3, v0.0.4, and v1.0.0 under exact Go 1.26.7 and contained Go 1.18.10.
+All 108 compile-only cross-builds pass across Darwin AMD64/ARM64, Linux
+AMD64/ARM64/386, Windows AMD64, FreeBSD AMD64, and js/wasm, including relevant
+fallback variants. V1.0.0 contains 31 tests, 38 benchmarks, no examples, and
+no native fuzz target. The release tree contains no repository-owned test CI;
+GitHub currently exposes only managed dependency-graph and CodeQL workflows.
+
+Google Martian v3.2.1's declared v0.0.3 requirement explained the prior MVS
+selection even though `go mod why -m` was negative and no Snappy package was
+loaded. Exact v0.0.4 and v1.0.0 projections preserve all 234 module selections
+except Snappy and add only the main root edge plus two checksums; Martian's
+declaration remains v0.0.3. The accepted project has 234 modules, 3,590 graph
+edges, 429 complete-test entries, 41 loaded modules, 197 loaded module-backed
+packages, zero Snappy packages, 1,061 sum lines, and a 407-line unapplied tidy
+projection. Relative to accepted go-cmp commit `c314bcb`, sums are +45/-0.
+Main Go 1.18 and preferred toolchain Go 1.26.7 remain unchanged.
+
+Fresh vulnerability data contains 1,392 module records and no exact Snappy
+record. Direct v0.0.3/v0.0.4/v1.0.0 module, package, and symbol scans are all
+zero. Project results are identical across base and candidates: 30 Darwin
+module findings, 22 Darwin package findings, 23 Windows package findings, and
+20 IDs/22 reachable traces on Darwin and Windows, with no Snappy finding or
+trace.
+
+Exact Go 1.26.7 project verification, listing, build, count-1, two independent
+count-10 repeats, race, vet, empty-HOME replay, and Linux/Windows builds pass.
+The Go 1.18.10 projection removes only the toolchain line; verification,
+listing, build, vet, cross-builds, and applicable repeat/race populations
+pass. Full count-1 has only the two accepted `pkg/shell` closed-file wording
+assertions; the other 26 packages and 31 applicable shell tests pass repeated
+and race runs.
+
+Canonical `make quality` passes its ordered 21-stage ledger, kills 80/80
+mutants, and records all 27 Q0-Q2 rows PASS at L2 with seven improvements and
+zero held, regressed, not-comparable, or dirty counts. Scorecard SHA-256 is
+`7320f432090c578973bcfe4abc8736ef68a83f492a5bd057922ec150ce2a03c5`.
+Superseded attempts exposed an offline API-base cache miss and macOS
+`mktemp` sandbox placement; both were corrected only in session-contained
+caches/tool shims. An accidental diagnostic `go mod download all` sum expansion
+was reversed byte-exact before the authoritative run; no unrelated repository
+change remains.
+
+The 677-entry selected-evidence manifest SHA-256 is
+`e4c81eed9a21f737f3a8427360908835b7f195f9981bd1be9a5bdbd953091449`;
+decision-summary SHA-256 is
+`3d606c0a6ca3f0cd523c4603de9ded354311d1ac6135c9f679ee58371d3ebc79`.
+Exact Go 1.26.7 and Go 1.18.10 binary/archive receipts are
+`9da68c65...`/`020a1e82...` and `f96ea900...`/`718b32cb...`.
