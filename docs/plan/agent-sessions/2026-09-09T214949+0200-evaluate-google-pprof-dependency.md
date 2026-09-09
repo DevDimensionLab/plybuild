@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Google PProf Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-09T214949+0200-evaluate-google-pprof-dependency`
 Created: `2026-09-09T21:49:49+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `908d0f711523a60fe3c06e9926ce542281f3128fde082a0881d90dc0a8ed5397`
 Previous: [2026-09-09T183155+0200-evaluate-google-martian-v3-dependency.md](2026-09-09T183155+0200-evaluate-google-martian-v3-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-09T232057+0200-evaluate-google-renameio-dependency.md](2026-09-09T232057+0200-evaluate-google-renameio-dependency.md)
+Outcome: Retained exact-path Google pprof at the selected 2021 pseudo-version without dependency metadata edits. No semver release exists; proxy latest is an unreleased protected-main head, requires Go 1.25.0, and is API-incompatible. Complete closure, behavior, MVS/loading, project, vulnerability, and applicable quality gates are resolved.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -191,3 +191,152 @@ contracts, and make the normal `docs: prepare next agent session` commit. Do
 not implement the next group, launch a successor, push, merge, publish,
 release, stash, revert, bypass cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Retain exact-path `github.com/google/pprof` at
+`v0.0.0-20210720184732-4bb14d4b1be1` without changing dependency metadata or
+manufacturing an implementation commit. The module proxy version list is
+empty, the repository has no tags or releases, and no later commit has a
+defensible release qualification. Proxy `@latest`,
+`v0.0.0-20260906184651-6331bc6350fe`, is merely the protected `main` branch
+head, declares Go 1.25.0, and incompatibly changes selected public API. It is
+therefore not selectable for the retained Go 1.18 floor.
+
+Proxy, sumdb, `go-import` metadata, Git, and GitHub resolve the module to the
+public, active, unarchived, non-fork Apache-2.0 repository
+`https://github.com/google/pprof`. Its only branch is protected `main`; no
+redirect, retraction, deprecation, alternate root module path, or qualified
+fork exists. The current repository also contains the separate nested
+`github.com/google/pprof/browsertests` test module, which is not an alternate
+path for the root module. GitHub reports valid commit signatures for selected
+and latest.
+
+Selected resolves to commit
+`4bb14d4b1be14417e47d0bbaf2bd4e188eda647f`, tree
+`94d5b610d24eee4637e1bb02a9598326db7edbd5`, parent
+`86eeefc3e4714e359ff19990b871874910636148`, at
+2021-07-20T18:47:32Z. Latest resolves to commit
+`6331bc6350fe55a6fec2957299e0581dd7510e36`, tree
+`70fc553307c8471558c9d4b8830efea94ab68735`, parent
+`d6c3cb2f37ec22719bbaf5eb031d9a46635cb5b2`, at
+2026-09-06T18:46:51Z. Selected is an ancestor of latest, with 237 intervening
+commits. Normalized proxy and Git manifests match exactly: selected has 214
+files and SHA-256
+`4344614ca6a1575f5ab8d45982fbd02534733fa73087dbcffa1b6637a22e3b06`;
+latest's 245 root-module files hash to
+`2fea39c1fed5aaecef93284693cbc208a27864c6046c7fd521a3b62687cb5ce9`.
+
+Selected source/mod sums are
+`h1:K6RDEckDVWvDI9JAJYCmNdQXq6neHJOYx3V6jnqNEec=` and
+`h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=`. It declares Go 1.14
+and requires the historical Readline, Logex, Test, Demangle, and X/Sys
+versions stated in the prompt. Its complete standalone graph contains six
+modules. Complete test loading has 260 entries under Go 1.26.7 and 196 under
+Go 1.18.10, with 40 module-backed entries and 38 pprof package/test variants
+under both SDKs. Only pprof, Readline, and Demangle load; Logex, Test, and
+X/Sys remain graph-only. Building and exercising imported sources and tests
+under contained Go 1.18.10 proves the closure floor.
+
+The 18 package directories comprise the pprof command, injectable `driver`
+API, `profile` model and codec, a legacy go-fuzz adapter, internal binary and
+object tooling, graph/measurement/report generation, local/remote fetching,
+symbolization, transport and web UI, plus embedded JavaScript/CSS packages.
+`profile/proto.go` is a handwritten protobuf-wire codec for
+`proto/profile.proto`, not generated `.pb.go` code. Exported profile behavior
+covers validation, gzip/uncompressed parsing and writing, copying,
+aggregation, normalization, scaling, merging, filtering, labels/tags/units,
+mapping/location/function identity, pruning, and proc-map parsing. Driver
+exports injectable writers, flags, fetchers, symbolizers, object tools/files,
+UI, mappings, frames, instructions, symbols, and HTTP-server arguments.
+
+The independent 153-line fixture validates compressed and uncompressed
+round trips, table pointer identity, mappings, locations, functions,
+sample/value types, values, string/numeric labels and units, relocated-map
+merge identity and summed samples, deep copying, filters, malformed/truncated
+profiles and gzip, validation failures, deterministic concurrent writes, and
+failing short output. It passes race count-10 under both SDKs and has SHA-256
+`3c15f63b822c49eb4cd58789410607467ab26a3cb0bcc90162c02b274a9521ab`.
+Built commands produce byte-identical top and DOT reports twice and across
+both SDKs, with SHA-256 values
+`0ee6392de3c786ced86fc0908b75c6ae34a75604e4375e10e99e3d9ea55d2afc`
+and `6e1b0492964398dfcf1f1a72d2abcb40ada803b1355f05d43ea2fd89b39e46e1`.
+Actual loopback HTTP fetching, gzip storage, local input, and isolated-HOME
+execution pass. Native object-tool fixture coverage substitutes for absent
+Graphviz and llvm-symbolizer host binaries.
+
+The selected source has 75 Go files, 26 test files, 116 `Test` functions,
+114 testdata files, one legacy go-fuzz corpus, and no native example,
+benchmark, or Go fuzz target. Complete native tests pass with package vet
+disabled, two independent process repeats pass, and race passes under both
+SDKs. Default `go test` and standalone vet expose the same inherited
+production `fmt.Fprintln` redundant-newline finding; Go 1.26 additionally
+finds two test-only loop-variable captures. Same-process count-2 exposes a
+test-design panic because `TestSymbolzAfterMerge` redefines global
+`flag.CommandLine`; independent repeats remain green. CGO-disabled Darwin,
+Linux, Windows, and FreeBSD builds pass. js/wasm alone fails in the historical
+Readline closure because that selected dependency has no JS implementation;
+it is classified as an unsupported platform, not a pprof regression.
+
+Selected retains explicit boundary qualifications. Parsers and non-200 HTTP
+error handling use whole-buffer reads without an application size limit, so
+callers must bound hostile compressed, protobuf, legacy, and response input.
+Concurrent remote chunk fetches are capped at 64, but aggregate memory remains
+profile-sized. The web server can bind a caller-supplied host, has no
+authentication or server read/write timeout, and must not be exposed as an
+untrusted service. Saved remote-profile files are not closed; `Profile.Write`
+discards deferred gzip-finalization errors. Driver flags, commands, and mode
+state are global and not reentrant. Profile encoding state is mutex-protected,
+but concurrent caller mutation is unsupported. Optional graph, browser,
+viewer, perf conversion, disassembly, and symbolization paths cross explicit
+filesystem, network, temporary-file, and subprocess boundaries.
+
+Latest source/mod sums are
+`h1:QAinXoAFJdGQYztXn3VpFey7KCwpedbZ/EkzbplQ0cY=` and
+`h1:jl5iWTm0/hd5PjEYEOuwAJ57L/CibdZfrqZ5XA5GrCk=`. Its Go 1.25.0
+directive cannot even be parsed by Go 1.18.10. Under Go 1.26.7 its six-module,
+16-package closure verifies and passes native tests and vet, and it fixes the
+selected gzip-close error and saved-file descriptor. Those improvements do
+not overcome its missing release qualification or floor. Pinned apidiff also
+reports incompatible `Profile.Aggregate` and `driver.ObjTool.Open` signature
+changes, removal of the exported d3 and d3flamegraph packages, and conversion
+of `svgpan.JSSource` from constant to variable, alongside compatible profile,
+mapping, line, frame, and label additions.
+
+Pprof remains selected in project MVS through this exact declaration chain:
+main -> `mvn-pom-mutator v0.2.3` -> `viper v1.10.1` -> Firestore v1.6.1 ->
+Cloud Go v0.97.0 -> GAX v2.1.0 -> Google API v0.54.0 -> Cloud Go v0.90.0 ->
+selected pprof. The graph retains requirements from encountered historical
+module vertices even though another path selects Cloud Go v0.105.0. Package
+loading traverses imports rather than every module-graph edge, explaining the
+negative `go mod why -m` and zero loaded pprof packages.
+
+The retained project stays at 234 modules, 3,597 graph edges, 429 complete-test
+entries, 41 loaded modules, 197 loaded module-backed entries, 1,063 sum lines,
+and a 418-line unapplied tidy projection. Exact latest would move only pprof,
+Demangle, and X/Sys selections, force the main Go line from 1.18 to 1.25.0,
+add six sum lines, and produce 234 modules, 3,605 edges, the same loaded
+population, and a 440-line tidy projection. This projection was discarded.
+
+Fresh vulnerability data has 1,393 module records, modified
+2026-09-09T17:56:34Z, and no exact pprof record. Direct selected and latest
+module, package, and symbol scans are all zero. Project base/latest results
+are identical: 30 module IDs, 22 Darwin package IDs, 23 Windows package IDs,
+and 20 IDs/22 reachable traces on both symbol platforms, with no pprof
+finding or trace.
+
+Exact Go 1.26.7 project verification, complete load, build, full tests, two
+independent repeats, race, vet, pinned lint, empty-HOME count-2, Linux/Windows
+builds, API/CLI compatibility, CLI surface, launcher contracts, and complete
+contained preflight pass. The Go 1.18.10 projection removes only the toolchain
+line; verification, loading, build, vet, cross-builds, 26-package repeats and
+race, and all 31 compatible shell tests pass. Full count-1 retains only the
+two accepted closed-file error-wording assertions. Because selection is
+inert, changed-selection quality is inapplicable; the accepted 27/27 Q0-Q2 L2
+scorecard remains
+`094a7668e43eb0a5b563bcd637b3b5a301e1bb5f5053903ad8934e2b2906ae7f`.
+
+The 188-entry selected-evidence manifest SHA-256 is
+`e6090a35f4f669bfff0eccf3b179def466dcbc18645ec61ed5d2e81f92e4f0f7`;
+decision-summary SHA-256 is
+`20804b312d90e5390df74dde4c1b252e68d8b1183897e7e562f2c8a133ac5d08`.

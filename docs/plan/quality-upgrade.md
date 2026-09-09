@@ -8640,13 +8640,47 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   the 509-entry evidence manifest and decision summary hash to
   `614921201697ce6f3accdf0c6e619c86ddb3502f23c3b03ee6314a2347a9a649`
   and `374c235a5ebeeb7a97254e8eab57b3dc60224fc7f103611beceafff701f5756e`.
+- Retain exact-path
+  `github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1` without a
+  dependency edit. Proxy, Git, and GitHub expose no tag or release. Proxy
+  latest is the protected `main` head, has no release qualification, declares
+  Go 1.25.0, and incompatibly changes `Profile.Aggregate`,
+  `driver.ObjTool.Open`, two exported embedded-asset packages, and a public
+  constant. Selected and latest proxy/Git manifests match their exact commits.
+- Selected's six-module, 18-package closure declares Go 1.14 and builds under
+  contained Go 1.18.10. Native tests with package vet disabled, independent
+  repeats, race, focused profile round-trip/merge/malformed/concurrency
+  fixtures, local/HTTP command flows, deterministic top/DOT reports, and
+  Darwin/Linux/Windows/FreeBSD builds pass both SDKs. Inherited qualifications
+  are whole-buffer input growth, unauthenticated timeout-free web serving,
+  lost gzip-close errors, an unclosed saved profile, global non-reentrant
+  driver state, one legacy vet warning, a count-2 global-flag test panic, and
+  unsupported js/wasm through historical Readline.
+- Historical Cloud Go v0.90.0 supplies pprof through the exact retained graph
+  chain even though MVS selects Cloud Go v0.105.0. `go mod why -m` remains
+  negative and no pprof package loads. The project stays at 234 modules,
+  3,597 edges, 429 complete-test entries, 41 loaded modules, 197 loaded
+  module-backed packages, 1,063 sum lines, and a 418-line tidy projection.
+  Exact latest would force main Go 1.25.0 and move only pprof, Demangle, and
+  X/Sys while leaving the loaded population unchanged.
+- Fresh direct vulnerability scans are zero and have no pprof record. Project
+  base/latest populations are identical at 30 module findings, 22 Darwin
+  package findings, 23 Windows package findings, and 20 IDs/22 traces per
+  symbol platform. Exact Go 1.26.7 project gates and complete contained
+  preflight pass; the Go 1.18.10 projection retains only the two accepted
+  shell error-wording differences. Changed-selection quality is inapplicable,
+  so accepted 27/27 Q0-Q2 L2 scorecard SHA-256 remains
+  `094a7668e43eb0a5b563bcd637b3b5a301e1bb5f5053903ad8934e2b2906ae7f`.
+  The 188-entry evidence manifest and decision summary hash to
+  `e6090a35f4f669bfff0eccf3b179def466dcbc18645ec61ed5d2e81f92e4f0f7`
+  and `20804b312d90e5390df74dde4c1b252e68d8b1183897e7e562f2c8a133ac5d08`.
 - Next, independently evaluate exact-path
-  `github.com/google/pprof v0.0.0-20210720184732-4bb14d4b1be1`. Historical
-  Cloud Go v0.90.0 supplies the selected declaration, `go mod why -m` is
-  negative, and no PProf package is loaded. The proxy version list is empty;
-  current `@latest` declares Go 1.25.0 and is floor-ineligible. Keep Cloud Go,
-  Demangle, Readline, Logex, X/Sys, and every other dependency group outside
-  this single-path review.
+  `github.com/google/renameio v0.1.0`. Three historical HTools vertices
+  declare selected, `go mod why -m` is negative, and no Renameio package is
+  loaded. The initial proxy list contains v0.1.0, v1.0.0, and v1.0.1; latest
+  v1.0.1 declares Go 1.13 with no requirements. Keep HTools, Crypt,
+  Firestore, Cloud Go, and every other dependency group outside this
+  single-path review.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
