@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Golang Protobuf Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-09T131438+0200-evaluate-golang-protobuf-dependency`
 Created: `2026-09-09T13:14:38+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `fca0510206da51b0f3e66d08ba3828b42f08cd73587c14510eb8ec113c9170e3`
 Previous: [2026-09-09T111920+0200-evaluate-gogo-protobuf-dependency.md](2026-09-09T111920+0200-evaluate-gogo-protobuf-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-09T162826+0200-evaluate-golang-snappy-dependency.md](2026-09-09T162826+0200-evaluate-golang-snappy-dependency.md)
+Outcome: Upgraded exact-path Golang Protobuf from v1.5.2 to highest qualified stable v1.5.3 at dependency-only commit `6870e02`; v1.5.4 was rejected for a public descriptor API removal, while complete identity, Go-floor, behavior, MVS/loading, vulnerability, and exact quality contracts pass for v1.5.3.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -185,3 +185,121 @@ contracts, and make the normal `docs: prepare next agent session` commit. Do
 not implement the next group, launch a successor, push, merge, publish,
 release, stash, revert, bypass cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Upgrade exact-path `github.com/golang/protobuf` from v1.5.2 to v1.5.3.
+V1.5.3 is the highest stable exact-path release whose complete minimal closure
+preserves Go 1.18 and whose applicable behavior and public API pass. Exact Go
+1.26.7 `go get github.com/golang/protobuf@v1.5.3` produced dependency-only
+commit `6870e029474b30ecd149d33b6c344c52cced384c`, parent `d1e076ba`, tree
+`f74214fe65e77543abf43f1ff459636572ce282d`, changing only `go.mod` and
+`go.sum` with three insertions and no deletions.
+
+The proxy lists exactly 22 versions: 18 stable releases from v1.0.0 through
+v1.5.4 and four v1.4.0 release candidates. Go-import metadata, proxy, sumdb,
+Git, and GitHub agree on the exact public, enabled, unarchived, non-fork
+repository. There are no retractions or redirects. The exact module and README
+are deprecated in favor of distinct successor path
+`google.golang.org/protobuf`; that successor, forks, alternate paths,
+prereleases, and unreleased master commits were not promoted.
+
+Candidate tags are lightweight and therefore have no signed tag objects;
+GitHub verifies the signed commits. The release ancestry is v1.5.2 commit
+`ae97035608a719c7a1c1c41bed0ae0744bdb0c6f`, tree
+`d5f27d9813f7fd9318cd2c502ffe08bed57c451b`, parent `af940030`, at
+2021-03-29T18:20:59Z; v1.5.3 commit
+`5d5e8c018a13017f9d5b8bf4fad64aaa42a87308`, tree
+`65ba39c63b7751b84b386c74f84d2f71c1b78a41`, parents `ae970356` and
+`37828f7c`, at 2021-09-16T00:37:10Z; and v1.5.4 commit
+`75de7c059e36b64f01d0dd234ff2fff404ec3374`, tree
+`49890db482e1da888cf22e4502cd742c36c1e92a`, parents `5d5e8c01` and
+`b7696c3f`, at 2024-03-06T06:45:40Z. Proxy and tagged-Git manifests agree,
+with SHA-256 identities `af276680...`, `c6c6cbfe...`, and `d7fce623...`.
+
+V1.5.3 retains Go 1.9, Go CMP v0.5.5, and Google Protobuf v1.26.0. Its
+source/mod sums are
+`h1:KhyjKVUg7Usr/dYsdSqoFveMYd5ko72D+zANwlG1mmg=` and
+`h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=`. V1.5.4 declares Go
+1.17 and moves Google Protobuf to v1.33.0, but apidiff finds the incompatible
+public removal
+`protoc-gen-go/descriptor.Default_FileOptions_PhpGenericServices`.
+V1.5.4 is therefore rejected. V1.5.3 has no public API change from v1.5.2;
+its focused behavior change accepts JSON `null` for `NullValue`.
+
+Each candidate exposes 21 packages, including two commands and five packages
+with tests. V1.5.2/v1.5.3 resolve four modules; complete test loading has
+219 entries/75 module-backed under Go 1.26.7 and 171/75 under Go 1.18.10.
+V1.5.4 has 226/81 and 178/81 respectively. All complete module floors are at
+most Go 1.11 for v1.5.2/v1.5.3 and Go 1.17 for v1.5.4. Module verification,
+package listing, two native count-10 repeats, race, production vet, command
+builds, and Linux, Windows, and js/wasm compilation pass for every candidate
+under both SDKs. Full upstream vet reports only historical unkeyed composite
+literals in test fixtures: 447 findings for v1.5.2 and 449 for v1.5.3/v1.5.4.
+Production-only vet passes. Initial cross-build execution produced the
+expected host exec-format error; corrected compile-only cross-builds pass.
+
+The runtime packages are APIv1 compatibility wrappers over APIv2 behavior,
+covering legacy generated-code wire contracts, descriptors and reflection,
+registrations, extensions, oneofs, maps, nullable and unknown fields,
+JSON/text and well-known types, deterministic marshaling, size, merge, clone,
+equality, and unknown discard. Global caches are synchronized, while global
+registration mutation is intended for generated initialization. Buffers and
+mutated messages are not safe for concurrent reuse. V1.5.2/v1.5.3 with Google
+Protobuf v1.26.0 have no general binary-decode recursion cap, so callers must
+bound hostile deeply nested messages; v1.5.4's v1.33.0 runtime adds a
+10,000-depth limit. Upstream CI covers Go 1.11-1.16 on Linux and macOS; there
+are no build tags or native fuzz/property corpus.
+
+The independent fixture's SHA-256 is
+`51f4b0343a10c5f65b7fff613b5df896f98a7698d06acdcdaf5576f930429718`.
+It covers golden wire bytes, APIv1/APIv2 bridging, round trips, size/merge/
+clone/equality, deterministic maps, extensions, oneofs, descriptors,
+reflection and global registration, timestamps and Any, JSON/text, unknown
+retention/discard, nil/zero values, malformed/truncated/overflow input,
+buffer reuse, and independent-message concurrency. Race count-20 passes under
+both SDKs for all candidates. V1.5.3 also passes under both SDKs against the
+project-selected Google Protobuf v1.28.1.
+
+Sixteen selected modules declare Golang Protobuf versions from v1.2.0 through
+v1.5.2. MVS considers those requirements even though no loaded package imports
+the module, which is why `go mod why -m` remains negative while the module is
+selected. The v1.5.3 projection changes only this selection; project-selected
+Google Protobuf remains v1.28.1 and every unrelated module is identical.
+V1.5.4 would additionally select Google Protobuf v1.33.0. The accepted project
+has 234 modules, 3,589 graph edges, 429 complete-test entries, 41 loaded
+modules, 197 loaded module-backed packages, zero Golang Protobuf packages,
+1,059 sum lines, and a 404-line unapplied tidy projection. Relative to
+accepted go-cmp commit `c314bcb`, sums are +43/-0. The main module remains Go
+1.18 with preferred toolchain Go 1.26.7.
+
+Fresh vulnerability data contains 1,392 module records and no record for this
+exact module. Direct selected/candidate module, package, and symbol scans all
+produce zero findings. Base, v1.5.3, and v1.5.4 project results are identical:
+30 Darwin module findings, 22 Darwin package findings, and 20 IDs/22 reachable
+traces for Darwin and Windows, with no Golang Protobuf finding or trace.
+
+Exact Go 1.26.7 project verification, build, count-1, two count-10 repeats,
+race, vet, pinned lint, offline loading, Linux/Windows builds, API/CLI
+compatibility, CLI surface, empty-HOME replay, host acceptance, and fresh
+snapshot/Docker acceptance pass. The Go 1.18.10 projection removes only the
+toolchain line; verification, build, vet, cross-builds, and applicable repeat/
+race populations pass. Full count-1 has only the two accepted `pkg/shell`
+closed-file wording assertions; the other 26 packages and 31 applicable shell
+tests pass repeated and race runs.
+
+Exact `make quality` passes its ordered 21-stage ledger, kills 80/80 mutants,
+and records all 27 Q0-Q2 rows PASS at L2 with zero held, regressed,
+not-comparable, or dirty counts. Scorecard SHA-256 is
+`65d833a10bb1cd6b48147d3446f8bc21ef3145cc9b9fc265d9ea2618d02a8807`.
+A Docker 29 nanosecond timestamp exposed the macOS Python 3.9
+`fromisoformat` limitation in one superseded run; the same metadata validates
+under physical Python 3.14, and isolated plus authoritative Docker contracts
+then pass completely. No repository workaround was introduced.
+
+The 327-entry selected-evidence manifest SHA-256 is
+`5d116bb51bfea923778db9b2d6c03bf6c7df2078d966398c5c71a81a68b60dc7`;
+decision-summary SHA-256 is
+`fec25073702fd5dd3d9ce18fd4aa9bf5b3d9a642bed32bdd690f421778bb324e`.
+Exact Go 1.26.7 and Go 1.18.10 binary/archive receipts are
+`9da68c65...`/`020a1e82...` and `f96ea900...`/`718b32cb...`.

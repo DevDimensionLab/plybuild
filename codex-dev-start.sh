@@ -1131,17 +1131,17 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-09T131438+0200-evaluate-golang-protobuf-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T131438+0200-evaluate-golang-protobuf-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T111920+0200-evaluate-gogo-protobuf-dependency.md
+#|SESSION_ID=2026-09-09T162826+0200-evaluate-golang-snappy-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T162826+0200-evaluate-golang-snappy-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T131438+0200-evaluate-golang-protobuf-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/golang/protobuf v1.5.2` as one bounded dependency group. Resolve
-#|its complete release and repository identity, full Go-floor closure, package
+#|`github.com/golang/snappy v0.0.3` as one bounded dependency group. Resolve its
+#|complete release and repository identity, full Go-floor closure, package
 #|behavior and public API, actual project loading, exact MVS effects, and every
 #|applicable quality contract. Retain or select only an exact-path version whose
 #|complete minimal closure preserves Go 1.18 and whose relevant behavior passes
@@ -1151,78 +1151,77 @@ exit 70
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and accepted
 #|Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0,
-#|Go Stack v1.8.1, and Godbus D-Bus v5.1.0 moves. Gogo Protobuf v1.3.2,
-#|Crypt, OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage,
-#|Fsnotify, Ghodss YAML, and historical root GLFW remain retained. All earlier
-#|decisions and lifecycle ancestry are final. Do not revisit them or combine
-#|another dependency group. P8 remains queued.
+#|Go Stack v1.8.1, Godbus D-Bus v5.1.0, and Golang Protobuf v1.5.3 moves.
+#|Gogo Protobuf v1.3.2, Crypt, OpenCensus Proto, Logex, Readline, Fnmatch,
+#|Imaging, ansimage, Fsnotify, Ghodss YAML, and historical root GLFW remain
+#|retained. All earlier decisions and lifecycle ancestry are final. Do not
+#|revisit them or combine another dependency group. P8 remains queued.
 #|
-#|Project MVS selects Golang Protobuf v1.5.2. Selected Viper v1.15.0, Google
-#|Martian v3.2.1, and protoc-gen-star v0.5.3 declare v1.5.2; thirteen other
-#|selected modules declare versions from v1.2.0 through v1.5.0. `go mod why -m
-#|github.com/golang/protobuf` says the main module does not need it, and the
-#|complete project package load contains no Golang Protobuf package. Do not
-#|combine, upgrade, remove, or independently audit any declaring module,
-#|`google.golang.org/protobuf`, Go CMP, or another dependency group. Candidate
-#|MVS movements caused by the exact Golang Protobuf edge remain in scope to
-#|measure, but not to broaden into independent audits.
+#|Project MVS selects Golang Snappy v0.0.3 through the declared edge
+#|`github.com/google/martian/v3 v3.2.1 -> github.com/golang/snappy v0.0.3`.
+#|`go mod why -m github.com/golang/snappy` says the main module does not need it,
+#|and the complete project package load contains no Snappy package. Do not
+#|combine, upgrade, remove, or independently audit Google Martian or another
+#|dependency group. Candidate MVS movements caused by the exact Snappy edge
+#|remain in scope to measure, but not to broaden into independent audits.
 #|
-#|A minimal post-Gogo survey finds 22 proxy versions: eighteen stable releases
-#|from v1.0.0 through latest v1.5.4 and four v1.4.0 release candidates.
-#|Selected v1.5.2 has source/mod sums
-#|`h1:ROPKBNFfQgOUMifHyP+KYbvpjbdoFNs+aK7DXlji0Tw=` /
-#|`h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=`, declares Go 1.9,
-#|and requires `github.com/google/go-cmp v0.5.5` plus
-#|`google.golang.org/protobuf v1.26.0`. Latest v1.5.4 is dated
-#|2024-03-06T06:45:40Z at commit
-#|`75de7c059e36b64f01d0dd234ff2fff404ec3374`, has source/mod sums
-#|`h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=` /
-#|`h1:lnTiLA8Wa4RWRcIUkrtSVa5nRhsEGBg48fD6rSs7xps=`, declares Go 1.17,
-#|requires Go CMP v0.5.5 and Google Protobuf v1.33.0, and marks the module
-#|deprecated in favor of `google.golang.org/protobuf`. Treat every incoming fact
-#|only as a survey to verify.
+#|A minimal post-Golang-Protobuf survey finds five proxy versions: v0.0.1,
+#|v0.0.2, selected v0.0.3, v0.0.4, and latest v1.0.0, with no prerelease.
+#|Selected v0.0.3 is dated 2020-11-03T22:46:00Z at verified commit
+#|`674baa8c7fc30da5df3074a459494a7e6b427dff`, tree
+#|`5bbf3ddf1162e96e96a3019f84811da0b2416ee8`, and has source/mod sums
+#|`h1:fHPg5GQYlCeLIPB9BZqMVR5nR9A+IM5zcgeTdjMYmLA=` /
+#|`h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=`. Latest v1.0.0 is
+#|dated 2023-12-25T22:57:46Z at verified commit
+#|`43d5d4cd4e0e3390b0b645d5c3ef1187642403d8`, tree
+#|`c6f19681f2ae79c2e55b6c6113e9b5ea183e3bcb`, and has source/mod sums
+#|`h1:Oy607GVXHs7RtbggtPBnr2RmDArIsAefDwvrdWvRhGs=` /
+#|`h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=`. Both module files
+#|contain only the exact module declaration, with no Go directive or
+#|requirements. Treat every incoming fact only as a survey to verify.
 #|
 #|Resolve proxy, sumdb, go-import metadata, repository tags/releases/branches,
 #|signatures, commits, times, trees, parents, ancestry, repository status,
-#|deprecation, retractions, redirects, forks, successor/alternate module paths,
-#|and every serious exact-path candidate. Do not silently promote a redirect,
-#|fork, alternate path, floor-ineligible release, prerelease, or tag that does
-#|not version this module.
+#|deprecation, retractions, redirects, forks, alternate module paths, and every
+#|serious exact-path candidate. The repository has newer unreleased master
+#|commits; do not silently promote an unreleased commit, redirect, fork,
+#|alternate path, floor-ineligible release, prerelease, or tag that does not
+#|version this module.
 #|
 #|# Measurements At Start
 #|
-#|The latest dependency implementation remains exact Godbus D-Bus v5.1.0
-#|commit `6472dce617eb80484ed022ae8a53cc350c8be6fe`, parent
-#|`262d97da7a6a50ecc1170bc1a2f33f02732c093e`, and tree
-#|`250d55d4c374958fc9fab703fa7faa931ea4d4f8`, changing only `go.mod` and
-#|`go.sum` with three insertions and no deletions. Gogo Protobuf v1.3.2 was
+#|The latest dependency implementation is exact Golang Protobuf v1.5.3 commit
+#|`6870e029474b30ecd149d33b6c344c52cced384c`, parent
+#|`d1e076ba35b267331286ca6264354f66c1b6941e`, and tree
+#|`f74214fe65e77543abf43f1ff459636572ce282d`, changing only `go.mod` and
+#|`go.sum` with three insertions and no deletions. Gogo Protobuf v1.3.2 remains
 #|retained without a dependency commit or metadata edit.
 #|
-#|Accepted project measurements remain 234 selected modules, 3,586 graph
-#|edges, 429 native complete-test entries, 41 loaded modules, 197 loaded
-#|module-backed packages, 1,057 `go.sum` lines, and a 400-line unapplied tidy
-#|projection. Relative to accepted go-cmp commit `c314bcb`, metadata adds
-#|exactly 41 checksum lines and removes zero. The main module retains Go 1.18
-#|and toolchain Go 1.26.7.
+#|Accepted project measurements are 234 selected modules, 3,589 graph edges,
+#|429 native complete-test entries, 41 loaded modules, 197 loaded module-backed
+#|packages, 1,059 `go.sum` lines, and a 404-line unapplied tidy projection.
+#|Relative to accepted go-cmp commit `c314bcb`, metadata adds exactly 43
+#|checksum lines and removes zero. The main module retains Go 1.18 and toolchain
+#|Go 1.26.7.
 #|
 #|Fresh primary vulnerability data has 1,392 module records. Accepted
 #|populations remain 20 IDs/22 reachable traces for Darwin and Windows symbol
-#|scans, 22 Darwin package findings, and 30 Darwin module findings. Gogo
-#|Protobuf v1.3.2 has no finding or trace; v1.3.1 is affected by GO-2021-0053.
-#|Do not attribute inherited findings to Golang Protobuf without exact evidence.
+#|scans, 22 Darwin package findings, and 30 Darwin module findings. Golang
+#|Protobuf has no finding or trace. Do not attribute inherited findings to
+#|Snappy without exact evidence.
 #|
-#|The accepted quality result remains all 27 Q0-Q2 rows PASS at L2, with
-#|scorecard SHA-256
-#|`1756c66aecfdd5c6d246c894d9a63630f39dc5dd789532c488e8a3ddbb247bcb`.
-#|Gogo Protobuf decision-summary SHA-256 is
-#|`964fa19e8793454bc1e1d2db71da02cf3a5cc7c4b706e0555ce46dc9b6a12deb`;
-#|its selected-evidence manifest identity is recorded in the answered Gogo
-#|archive and rolling handover.
+#|The accepted quality result is all 27 Q0-Q2 rows PASS at L2, with scorecard
+#|SHA-256
+#|`65d833a10bb1cd6b48147d3446f8bc21ef3145cc9b9fc265d9ea2618d02a8807`.
+#|Golang Protobuf decision-summary SHA-256 is
+#|`fec25073702fd5dd3d9ce18fd4aa9bf5b3d9a642bed32bdd690f421778bb324e`;
+#|its 327-entry selected-evidence manifest SHA-256 is
+#|`5d116bb51bfea923778db9b2d6c03bf6c7df2078d966398c5c71a81a68b60dc7`.
 #|
-#|Read the answered Gogo Protobuf archive and rolling handover for its complete
+#|Read the answered Golang Protobuf archive and rolling handover for its complete
 #|release, closure, API, behavior, MVS, vulnerability, quality, and evidence
-#|record. Do not reopen Gogo Protobuf, Viper, other declaring modules, Google
-#|Protobuf, Go CMP, or earlier groups.
+#|record. Do not reopen Golang Protobuf, Google Martian, Google Protobuf, Go CMP,
+#|or earlier groups.
 #|
 #|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
 #|SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
@@ -1240,33 +1239,33 @@ exit 70
 #|From fresh external archives and caches, prove the complete minimal module
 #|and package/test closure for selected and every serious candidate under exact
 #|Go 1.26.7 and contained Go 1.18.10. Inspect imported source and test
-#|dependencies rather than treating a Go directive alone as floor proof. Keep
+#|dependencies rather than treating an absent Go directive as floor proof. Keep
 #|isolated source-time resolution separate from the project's selected graph.
 #|
-#|Inspect every package and exported API. Characterize the legacy protobuf wire
-#|and generated-code contracts, bridging to the newer Google Protobuf runtime,
-#|descriptors and reflection, registration/global state, extensions, unknown
-#|fields, maps, oneofs, nullable values, well-known types, JSON/text behavior,
-#|deterministic serialization, size/merge/clone/equality/discard behavior,
-#|errors and invalid input, recursion/resource limits, concurrency and reuse,
-#|build tags, platform behavior, generators/plugins, examples, testdata,
-#|fuzz/property coverage, and upstream CI. Distinguish runtime libraries,
-#|compatibility wrappers, code-generation commands, and generated fixtures.
+#|Inspect every package and exported API. Characterize raw Snappy block and
+#|framed stream formats, literal and copy encoding/decoding, CRC-32C masking and
+#|validation, maximum decoded length and integer overflow, corrupt/truncated/
+#|unsupported input, reader and writer construction/reset/flush/close behavior,
+#|short reads/writes and error propagation, buffering, allocation and resource
+#|limits, determinism, concurrency and reuse, architecture-specific assembly,
+#|pure-Go fallbacks, build tags, platform behavior, command tools, examples,
+#|benchmarks, testdata, fuzz/property coverage, and upstream CI. Distinguish the
+#|runtime package from commands, generated assembly, and test fixtures.
 #|
-#|Add independent fixtures where useful for old/new runtime interoperability,
-#|golden wire compatibility, round-trips, deterministic maps, extensions and
-#|oneofs, descriptors and well-known types, malformed/truncated input, unknown
-#|fields, nil/zero values, concurrency, and compatibility with the selected
-#|project graph. Run source verification, package listing, native complete
-#|tests, two independent repeats, race, vet, and meaningful cross-builds under
-#|both SDKs. Classify every generator, toolchain, platform, resource, timing,
-#|or test-design failure precisely.
+#|Add independent fixtures where useful for raw and framed golden vectors,
+#|round trips, incompressible and highly compressible data, checksums, skippable
+#|and unskippable chunks, malformed/truncated/oversized input, short or failing
+#|I/O, flush/close/reset semantics, buffer reuse, concurrency, and compatibility
+#|with the selected project graph. Run source verification, package listing,
+#|native complete tests, two independent repeats, race, vet, and meaningful
+#|cross-builds under both SDKs. Classify every assembly, generator, toolchain,
+#|platform, resource, timing, or test-design failure precisely.
 #|
 #|Prove exact project module/graph/package/checksum/tidy effects for selected
-#|and every serious candidate in disposable trees. Explain why Golang Protobuf
-#|exists in MVS while no package is loaded, and preserve every unrelated module
-#|selection. Any change outside the exact Golang Protobuf edge and its necessary
-#|authorized MVS projection is a stop condition.
+#|and every serious candidate in disposable trees. Explain why Snappy exists in
+#|MVS while no package is loaded, and preserve every unrelated module selection.
+#|Any change outside the exact Snappy edge and its necessary authorized MVS
+#|projection is a stop condition.
 #|
 #|Compare selected/candidate primary vulnerability results at module, package,
 #|symbol, and reachable-trace levels. Reject or retain if canonical identity,
@@ -1278,9 +1277,9 @@ exit 70
 #|At start, verify the feature branch, clean ordinary and ignored status,
 #|current ancestry, latest dependency implementation identity, reciprocal
 #|archive history, P7/P8 state, and `./codex-dev-start.sh --check`. Read this
-#|archive, the answered Gogo archive, rolling handover, roadmap, `go.mod`,
-#|`go.sum`, and every referenced quality, compatibility, release, runner,
-#|evidence, and lifecycle contract. Earlier outcomes are final.
+#|archive, the answered Golang Protobuf archive, rolling handover, roadmap,
+#|`go.mod`, `go.sum`, and every referenced quality, compatibility, release,
+#|runner, evidence, and lifecycle contract. Earlier outcomes are final.
 #|
 #|# Three Moves
 #|
@@ -1303,7 +1302,7 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the Golang Protobuf decision, rewrite the rolling handover and roadmap,
+#|After the Golang Snappy decision, rewrite the rolling handover and roadmap,
 #|answer this archive, create exactly one reciprocal NEXT archive for the next
 #|single P7 group, replace only launcher mutable regions, run launcher/handoff
 #|contracts, and make the normal `docs: prepare next agent session` commit. Do

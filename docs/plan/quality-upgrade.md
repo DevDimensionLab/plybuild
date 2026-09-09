@@ -5375,7 +5375,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through accepted Godbus D-Bus v5.1.0 plus retained Gogo
+dependency groups through accepted Golang Protobuf v1.5.3 plus retained Gogo
 Protobuf v1.3.2; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
@@ -8546,14 +8546,43 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   `b92185ef4d63011df510369fb75a8f35a07d02f11c464efeedc6b0739d38f433`;
   decision-summary SHA-256 is
   `964fa19e8793454bc1e1d2db71da02cf3a5cc7c4b706e0555ce46dc9b6a12deb`.
-- Next, independently evaluate exact-path `github.com/golang/protobuf
-  v1.5.2`. MVS selects it through sixteen selected-module declarations, but
-  `go mod why -m` is negative and no package is loaded. The initial proxy
-  survey exposes 18 stable releases, four v1.4.0 release candidates, and
-  latest v1.5.4. Latest declares Go 1.17, requires
-  `google.golang.org/protobuf v1.33.0`, and deprecates this module in favor of
-  that successor path. Keep all declaring modules, the successor module, Go
-  CMP, and every other dependency group outside this single-path review.
+- Upgrade exact-path `github.com/golang/protobuf v1.5.2` to highest
+  qualified stable v1.5.3. The proxy exposes 18 stable releases and four
+  v1.4.0 release candidates. Canonical proxy, sumdb, go-import, tagged Git,
+  and public unarchived non-fork repository identities agree; the module is
+  deprecated in favor of distinct successor `google.golang.org/protobuf`.
+  V1.5.3 preserves Go 1.9 and Google Protobuf v1.26.0 and has no public API
+  change from v1.5.2. Latest v1.5.4 was rejected because it removes public
+  descriptor symbol `Default_FileOptions_PhpGenericServices`.
+- V1.5.3's complete four-module closure, 21 packages, native repeats, race,
+  production vet, commands, Linux/Windows/js-wasm builds, and independent
+  wire/APIv1-APIv2/descriptor/extension/oneof/JSON/text/invalid-input/
+  concurrency fixtures pass under exact Go 1.26.7 and Go 1.18.10. Full
+  upstream vet reports only unkeyed composite literals in historical test
+  fixtures. The inherited runtime has no general binary recursion cap, so
+  callers must bound hostile deeply nested messages.
+- Exact `go get github.com/golang/protobuf@v1.5.3` produced dependency-only
+  commit `6870e029474b30ecd149d33b6c344c52cced384c`, changing only `go.mod`
+  and `go.sum` with three insertions. It changes only that MVS selection;
+  Google Protobuf remains v1.28.1 and every unrelated module is identical.
+  The project now has 234 modules, 3,589 graph edges, 429 complete-test
+  entries, 41 loaded modules, 197 loaded module-backed packages, zero Golang
+  Protobuf packages, 1,059 sum lines, and a 404-line tidy projection.
+- Fresh direct scans contain no Golang Protobuf module, package, or symbol
+  finding, and project populations remain 30 Darwin module findings, 22
+  Darwin package findings, and 20 IDs/22 reachable traces on Darwin and
+  Windows. Exact 21-stage quality exits zero with 27/27 Q0-Q2 PASS at L2 and
+  80/80 mutants killed. Scorecard SHA-256 is
+  `65d833a10bb1cd6b48147d3446f8bc21ef3145cc9b9fc265d9ea2618d02a8807`;
+  the 327-entry evidence manifest and decision summary hash to
+  `5d116bb51bfea923778db9b2d6c03bf6c7df2078d966398c5c71a81a68b60dc7`
+  and `fec25073702fd5dd3d9ce18fd4aa9bf5b3d9a642bed32bdd690f421778bb324e`.
+- Next, independently evaluate exact-path `github.com/golang/snappy v0.0.3`.
+  Google Martian v3.2.1 supplies its only selected edge, `go mod why -m` is
+  negative, and no Snappy package is loaded. The initial proxy survey exposes
+  five stable releases v0.0.1-v0.0.4 and latest v1.0.0. Selected and latest
+  module files have no Go directive or requirements. Keep Martian and every
+  other dependency group outside this single-path review.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
