@@ -1131,16 +1131,16 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-09T015029+0200-evaluate-go-logfmt-logfmt-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T015029+0200-evaluate-go-logfmt-logfmt-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T002351+0200-evaluate-go-gl-glfw-dependency.md
+#|SESSION_ID=2026-09-09T052020+0200-evaluate-go-stack-stack-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T052020+0200-evaluate-go-stack-stack-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-09T015029+0200-evaluate-go-logfmt-logfmt-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
 #|Continue P7 by independently evaluating selected exact-path
-#|`github.com/go-logfmt/logfmt v0.4.0` as one bounded dependency group. Resolve
+#|`github.com/go-stack/stack v1.8.0` as one bounded dependency group. Resolve
 #|its complete release and repository identity, full Go-floor closure, package
 #|behavior and public API, actual project loading, exact MVS effects, and every
 #|applicable quality contract. Retain or select only an exact-path version whose
@@ -1150,86 +1150,87 @@ exit 70
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and accepted
-#|Speakeasy v0.2.0, XXHash v2.3.0, and Fatih Color v1.15.0 moves. Crypt,
-#|OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify,
-#|Ghodss YAML, and historical root GLFW remain retained. All earlier decisions
-#|and lifecycle ancestry are final. Do not revisit them or combine another
-#|dependency group. P8 remains queued.
+#|Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, and Go Logfmt v0.6.0
+#|moves. Crypt, OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage,
+#|Fsnotify, Ghodss YAML, and historical root GLFW remain retained. All earlier
+#|decisions and lifecycle ancestry are final. Do not revisit them or combine
+#|another dependency group. P8 remains queued.
 #|
-#|Project MVS selects Go Logfmt through the declared edges
-#|`github.com/prometheus/common v0.9.1 -> github.com/go-logfmt/logfmt v0.4.0`
-#|and `github.com/prometheus/tsdb v0.7.1 -> github.com/go-logfmt/logfmt v0.3.0`;
-#|MVS chooses v0.4.0. `go mod why -m github.com/go-logfmt/logfmt` says the main
-#|module does not need it. Do not combine, upgrade, remove, or independently
-#|audit Prometheus Common, Prometheus TSDB, `github.com/kr/logfmt`, or any other
-#|dependency group. Inspect `kr/logfmt` only to the extent required for the
-#|candidate's complete closure.
+#|Project MVS selects Go Stack through the declared edges
+#|`github.com/prometheus/tsdb v0.7.1 -> github.com/go-stack/stack v1.8.0` and
+#|`github.com/prometheus/common v0.4.1 -> github.com/go-stack/stack v1.8.0`.
+#|`go mod why -m github.com/go-stack/stack` says the main module does not need
+#|it. Do not combine, upgrade, remove, or independently audit either Prometheus
+#|module or any other dependency group.
 #|
-#|A minimal post-GLFW survey finds eight proxy versions: v0.1.0, v0.2.0,
-#|v0.3.0, selected v0.4.0, v0.5.0, v0.5.1, v0.6.0, and v0.6.1. Selected's
-#|source/mod checksum pair is
-#|`h1:MP4Eh7ZCb31lleYCFuwm0oe4/YGak+5l1vA2NOE80nA=` /
-#|`h1:3RMwSq7FuexP4Kalkev3ejPJsZTpXXBr9+V4qmtdjCk=`. Its module file contains
-#|no Go directive and requires
-#|`github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515`.
+#|A minimal post-Logfmt survey finds ten proxy versions: v1.4.0, v1.5.0,
+#|v1.5.1, v1.5.2, v1.5.3, v1.5.4, v1.6.0, v1.7.0, selected v1.8.0, and
+#|v1.8.1. Selected's source/mod checksum pair is
+#|`h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=` /
+#|`h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=`. Its module file contains
+#|only `module github.com/go-stack/stack`, without a Go directive or
+#|requirements.
 #|
-#|Exact-path latest v0.6.1 has source/mod checksum pair
-#|`h1:4hvbpePJKnIzH1B+8OR/JPbTx37NktoI9LE2QZBBkvE=` /
-#|`h1:EV2pOAQoZaT1ZXZbqDl5hrymndi4SY9ED9/z6CO0XAk=` and declares Go 1.21, so
-#|it is provisionally ineligible for the retained Go 1.18 floor. Its tag
-#|resolves to commit `804e98fff868b206344991c57a8182172e5ba41e` at
-#|2025-10-05T16:33:45Z. V0.6.0 declares Go 1.17 and is the initial highest
-#|serious candidate; v0.5.1 also declares Go 1.17 and v0.5.0 declares Go 1.13.
-#|Treat all incoming release facts only as a survey to verify.
+#|Exact-path latest v1.8.1 has source/mod checksum pair
+#|`h1:ntEHSVwIt7PNXNpgPmVfMrNhLtgjlmnZha2kOpuRiDw=` /
+#|`h1:dcoOX6HbPZSZptuspn9bctJ+N/CnF5gGygcUP3XYfe4=`, declares Go 1.17, and is
+#|the initial highest serious candidate. Its proxy ZIP SHA-256 is
+#|`944a204d21ab7d745b980113706978737d51f2ac60addd2503782bc48259c0e8`.
+#|Annotated unsigned tag object `065fe02de4413f66fc553f43129a8e4372e9c54b`
+#|peels to commit `93c7c7e3550c72bc91dead1452a0020142e2a902`, tree
+#|`970d18b6c7c8b790ab52ddd5d82cbaee98261044`, parents
+#|`2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a` and
+#|`473edce91b111d1f6c7b946691b24af71f5a5b25`, at
+#|2021-08-18T18:48:21Z. Treat all incoming release facts only as a survey to
+#|verify.
 #|
 #|Resolve proxy, sumdb, go-import metadata, repository tags/releases/branches,
 #|signatures, commits, times, trees, parents, ancestry, repository status,
 #|deprecation, retractions, redirects, forks, alternate module paths, and every
 #|serious exact-path candidate. Do not silently promote a redirect, fork,
-#|floor-ineligible version, or tag that does not version this module.
+#|alternate path, floor-ineligible release, or tag that does not version this
+#|module.
 #|
 #|# Measurements At Start
 #|
-#|The latest dependency implementation remains Fatih Color v1.15.0 commit
-#|`6ca672ef38688b7f6f505cf0cb273d07c4c2ba9a`, parent
-#|`d181fcd6c11fa147e0b44dd007598872875fc9e6`, and tree
-#|`9ba2fdc442553622028a4a8464536915d345510c`, changing only `go.mod` and
-#|`go.sum` with three insertions and one deletion. Root GLFW was retained
-#|without a dependency implementation commit.
+#|The latest dependency implementation is exact Go Logfmt v0.6.0 commit
+#|`3d4cfdbae0a67e757d37022be7eeedaf32c72772`, parent
+#|`f81dfd617a1f26211fd21213fbe96b8abd16d34f`, and tree
+#|`34a91aaedab07e855022c454a16000a079f0dbbd`, changing only `go.mod` and
+#|`go.sum` with three insertions and no deletions.
 #|
-#|Accepted project measurements remain 234 selected modules, 3,583 graph
-#|edges, 429 native complete-test entries, 41 loaded modules, 197 loaded
-#|module-backed packages, 1,051 `go.sum` lines, and a 383-line unapplied tidy
-#|projection. Relative to accepted go-cmp commit `c314bcb`, metadata adds
-#|exactly 35 checksum lines and removes zero. The main module retains Go 1.18
-#|and toolchain Go 1.26.7.
+#|Accepted project measurements are 234 selected modules, 3,584 graph edges,
+#|429 native complete-test entries, 41 loaded modules, 197 loaded module-backed
+#|packages, 1,053 `go.sum` lines, and a 392-line unapplied tidy projection.
+#|Relative to accepted go-cmp commit `c314bcb`, metadata adds exactly 37
+#|checksum lines and removes zero. The main module retains Go 1.18 and toolchain
+#|Go 1.26.7.
 #|
 #|Fresh primary vulnerability data has 1,392 module records. Accepted
 #|populations remain 20 IDs/22 reachable traces for Darwin and Windows symbol
-#|scans, 22 Darwin package findings, and 30 Darwin module findings. Root GLFW
-#|has no record, finding, or trace. Do not attribute inherited x/image/ansimage
-#|or other findings to Go Logfmt without exact evidence.
+#|scans, 22 Darwin package findings, and 30 Darwin module findings. Go Logfmt
+#|and historical kr/logfmt have no record, finding, or trace. Do not attribute
+#|inherited findings to Go Stack without exact evidence.
 #|
-#|The unchanged accepted quality baseline has all 27 Q0-Q2 rows PASS at L2,
-#|with scorecard SHA-256
-#|`dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
-#|Root GLFW decision-summary SHA-256 is
-#|`3e4009ecf940c8627c5fdbea7daa6ec94d100e70529a9bb3dbddb265a5143e4e`;
-#|its 220-entry selected evidence manifest SHA-256 is
-#|`73a24b7220ca0c8df778188840fdbb5ed31195b8509f4aa61916ca3931f8f696`.
+#|The accepted quality result has all 27 Q0-Q2 rows PASS at L2, with scorecard
+#|SHA-256
+#|`0cff5be4fb1609d296664f13a2de5567c7bdb8f574e61b6b05c0d92f44c4eb8f`.
+#|Go Logfmt decision-summary SHA-256 is
+#|`d72e3498eaafb37925188496a131d744d717b2de33cd4aaffeb62e57f7f88dc2`;
+#|its 595-entry selected evidence manifest SHA-256 is
+#|`ac964598ef5933db2136fb7797738ad5595c81d94e092cf0a58c7e4e9266e4b9`.
 #|
-#|Read the answered root GLFW archive and rolling handover for its complete
-#|release, native, closure, MVS, vulnerability, and evidence record. Its
-#|retained Cgo packages are unloaded; do not reopen GLFW, the nested v3.3
-#|module, x/exp, or graphics-stack scope.
+#|Read the answered Go Logfmt archive and rolling handover for its complete
+#|release, closure, API, MVS, vulnerability, quality, and evidence record. Do
+#|not reopen Go Logfmt, kr/logfmt, Prometheus, or earlier groups.
 #|
 #|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
 #|SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
 #|put it first in PATH, keep GOENV=off, GOWORK=off, GOTOOLCHAIN=local, and inject
 #|no ambient GOFLAGS. Recreate contained Go 1.18.10 and pinned tools beneath
-#|scratch as required. Portable receipts remain golangci-lint 2.12.2
+#|scratch as required. Portable receipts remain golangci-lint 2.12.2 archive
 #|`a9c54498731b3128f79e090be6110f3e5fffccc617b08142ed244d4126c73f29`,
-#|GoReleaser 2.17.1
+#|GoReleaser 2.17.1 binary
 #|`f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`,
 #|and apidiff
 #|`0c55d9e385a57d6af9b69a9abd3b71d986123dbe82e687fcaecb99f9a0acba20`.
@@ -1248,25 +1249,26 @@ exit 70
 #|directive alone as floor proof. Keep isolated source-time resolution separate
 #|from the project's selected graph.
 #|
-#|Inspect every package and exported API. Characterize encoder/decoder grammar,
-#|quoting and escaping, invalid input, partial writes, short reads/writes,
-#|buffering, allocation and size limits, numeric and Unicode behavior, error
-#|identity/offsets, streaming and record boundaries, marshaler interfaces,
-#|determinism, concurrency and reuse, build tags, generation, examples,
-#|testdata, fuzz/property coverage, and upstream CI. Inspect the historical
-#|`kr/logfmt` code used by selected rather than assuming its behavior.
+#|Inspect every package and exported API. Characterize frame and stack capture,
+#|skip semantics, call-site/file/function resolution, formatting verbs and
+#|flags, trimming and package-name behavior, zero/invalid frames, marshaling,
+#|error and nil behavior, determinism, allocations, concurrency and reuse,
+#|compiler/runtime coupling, inlining sensitivity, build tags, generation,
+#|examples, testdata, fuzz/property coverage, and upstream CI. Check behavior
+#|through actual supported Go 1.18 and Go 1.26 compiler/runtime call stacks
+#|rather than assuming runtime metadata is stable.
 #|
-#|Add independent fixtures where useful for release-relevant parsing,
-#|round-trips, malformed input, streaming, errors, partial I/O, determinism,
-#|concurrency, and compatibility. Run source verification, package listing,
-#|native complete tests, two independent repeats, race, vet, and meaningful
-#|cross-builds under both SDKs. Classify any toolchain, platform, resource, or
-#|test-design failure precisely.
+#|Add independent fixtures where useful for capture depth, formatting,
+#|marshaling, zero values, determinism, concurrency, and compatibility. Run
+#|source verification, package listing, native complete tests, two independent
+#|repeats, race, vet, and meaningful cross-builds under both SDKs. Classify any
+#|toolchain, platform, resource, compiler-inlining, or test-design failure
+#|precisely.
 #|
 #|Prove exact project module/graph/package/checksum/tidy effects for selected
-#|and every serious candidate in disposable trees. Explain why Go Logfmt exists
+#|and every serious candidate in disposable trees. Explain why Go Stack exists
 #|in MVS while no package may be loaded, and preserve every unrelated module
-#|selection. Any change outside the exact Go Logfmt edge and its authorized MVS
+#|selection. Any change outside the exact Go Stack edge and its authorized MVS
 #|projection is a stop condition.
 #|
 #|Compare selected/candidate primary vulnerability results at module, package,
@@ -1277,10 +1279,10 @@ exit 70
 #|# Required Reading
 #|
 #|At start, verify the feature branch, clean ordinary and ignored status,
-#|current ancestry, Fatih implementation identity, reciprocal archive history,
-#|P7/P8 state, and `./codex-dev-start.sh --check`. Read this archive, the
-#|answered root GLFW archive, rolling handover, roadmap, `go.mod`, `go.sum`, and
-#|every referenced quality, compatibility, release, runner, evidence, and
+#|current ancestry, Go Logfmt implementation identity, reciprocal archive
+#|history, P7/P8 state, and `./codex-dev-start.sh --check`. Read this archive,
+#|the answered Go Logfmt archive, rolling handover, roadmap, `go.mod`, `go.sum`,
+#|and every referenced quality, compatibility, release, runner, evidence, and
 #|lifecycle contract. Earlier outcomes are final.
 #|
 #|# Three Moves
@@ -1308,9 +1310,9 @@ exit 70
 #|
 #|# Automatic Handoff
 #|
-#|After the Go Logfmt decision, rewrite the rolling handover and roadmap,
-#|answer this archive, create exactly one reciprocal NEXT archive for the next
-#|single P7 group, replace only launcher mutable regions, run launcher/handoff
+#|After the Go Stack decision, rewrite the rolling handover and roadmap, answer
+#|this archive, create exactly one reciprocal NEXT archive for the next single
+#|P7 group, replace only launcher mutable regions, run launcher/handoff
 #|contracts, and make the normal `docs: prepare next agent session` commit. Do
 #|not implement the next group, launch a successor, push, merge, publish,
 #|release, stash, revert, bypass cleanup, or remove the worktree.

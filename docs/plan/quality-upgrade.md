@@ -5375,8 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through retained Ghodss YAML v1.0.0; further dependency
-groups remain queued.
+dependency groups through accepted Go Logfmt v0.6.0; further dependency groups
+remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -8418,13 +8418,44 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   `73a24b7220ca0c8df778188840fdbb5ed31195b8509f4aa61916ca3931f8f696`;
   decision-summary SHA-256 is
   `3e4009ecf940c8627c5fdbea7daa6ec94d100e70529a9bb3dbddb265a5143e4e`.
-- Next, independently evaluate exact-path `github.com/go-logfmt/logfmt
-  v0.4.0`. MVS selects it through Prometheus Common v0.9.1 while Prometheus
-  TSDB requests v0.3.0; `go mod why -m` says the main module does not need it.
-  The exact proxy exposes eight stable versions. Latest v0.6.1 declares Go
-  1.21 and is provisionally floor-ineligible, while v0.6.0 declares Go 1.17
-  and is the initial serious candidate. Keep the historical `kr/logfmt`
-  closure and all Prometheus groups strictly within dependency-boundary rules.
+- Upgrade exact-path `github.com/go-logfmt/logfmt v0.4.0` to highest qualified
+  stable v0.6.0. The exact proxy exposes eight stable releases and no
+  prereleases; canonical go-import, proxy, sumdb, Git tag/release, tree, and
+  default-main ancestry identities agree. Latest v0.6.1 declares Go 1.21 and
+  is ineligible. V0.6.0 declares Go 1.17, has no module requirements, and
+  preserves the retained Go 1.18 floor through its complete minimal closure.
+- Selected v0.4.0 alone requires historical `github.com/kr/logfmt`; its
+  closure and every serious go-logfmt candidate pass native tests, two
+  count-10 repeats, race, vet, source verification, independent behavior
+  fixtures, and applicable cross-builds under exact Go 1.26.7 and contained
+  Go 1.18.10. V0.6.0 adds only compatible `NewDecoderSize`. V0.6.1 fixes DEL
+  quoting/key validation, but v0.6.0 preserves selected behavior and the
+  project loads no go-logfmt package; the fix does not override the Go-floor
+  rejection.
+- Exact `go get github.com/go-logfmt/logfmt@v0.6.0` produced dependency-only
+  commit `3d4cfdbae0a67e757d37022be7eeedaf32c72772`, changing only `go.mod`
+  and `go.sum` with three insertions. Project measurements are 234 modules,
+  3,584 graph edges, 429 complete-test entries, 41 loaded modules, 197 loaded
+  module-backed packages, 1,053 checksum lines, and a 392-line unapplied tidy
+  projection. Relative to go-cmp commit `c314bcb`, sums are +37/-0. No
+  unrelated selection moved; historical kr/logfmt remains through TSDB.
+- Project dependency, build/test/repeat/race/vet/lint, Windows, compatibility,
+  launcher, Make, empty-HOME, snapshot, Docker, and vulnerability gates pass.
+  Exact `make quality` reports 27/27 Q0-Q2 PASS at L2, 80/80 killed mutations,
+  seven ratchet improvements, and zero held/regressed/not-comparable rows;
+  scorecard SHA-256 is
+  `0cff5be4fb1609d296664f13a2de5567c7bdb8f574e61b6b05c0d92f44c4eb8f`.
+  Fresh vulnerability populations remain 20 IDs/22 traces, 22 package
+  findings, and 30 module findings with no go-logfmt or kr/logfmt record,
+  finding, or trace. The 595-entry evidence manifest SHA-256 is
+  `ac964598ef5933db2136fb7797738ad5595c81d94e092cf0a58c7e4e9266e4b9`;
+  decision-summary SHA-256 is
+  `d72e3498eaafb37925188496a131d744d717b2de33cd4aaffeb62e57f7f88dc2`.
+- Next, independently evaluate exact-path `github.com/go-stack/stack v1.8.0`.
+  It is selected only through Prometheus TSDB/Common declarations and is not
+  needed by the main module. The initial survey exposes ten stable versions;
+  latest v1.8.1 declares Go 1.17 and is the first serious candidate. Keep all
+  Prometheus and other dependency groups outside this single-path review.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

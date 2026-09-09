@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Go Logfmt Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-09T015029+0200-evaluate-go-logfmt-logfmt-dependency`
 Created: `2026-09-09T01:50:29+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c7a9839231c97c3958b46ca61c448c59f625f27548b8c2d809c166e22637fa9c`
 Previous: [2026-09-09T002351+0200-evaluate-go-gl-glfw-dependency.md](2026-09-09T002351+0200-evaluate-go-gl-glfw-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-09T052020+0200-evaluate-go-stack-stack-dependency.md](2026-09-09T052020+0200-evaluate-go-stack-stack-dependency.md)
+Outcome: upgraded exact-path Go Logfmt from v0.4.0 to highest qualified stable v0.6.0
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -190,3 +190,148 @@ contracts, and make the normal `docs: prepare next agent session` commit. Do
 not implement the next group, launch a successor, push, merge, publish,
 release, stash, revert, bypass cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Upgrade exact-path `github.com/go-logfmt/logfmt` from MVS-selected v0.4.0 to
+v0.6.0. V0.6.0 is the highest qualified stable release whose complete minimal
+closure preserves the retained Go 1.18 floor and whose applicable behavior,
+API, project, vulnerability, and quality contracts pass. Latest v0.6.1 is not
+eligible because its module declares Go 1.21.
+
+### Release And Repository Identity
+
+Exact go-import metadata maps the module directly to
+`https://github.com/go-logfmt/logfmt.git`. The public upstream is enabled,
+unarchived, not disabled, not a fork, and has one current `main` branch. It
+contains no nested module, module deprecation, retraction, redirect, or
+exact-path alternate identity.
+
+The proxy exposes exactly eight stable versions and no prereleases: v0.1.0,
+v0.2.0, v0.3.0, v0.4.0, v0.5.0, v0.5.1, v0.6.0, and v0.6.1. All eight are
+annotated Git tags and non-draft, non-prerelease GitHub Releases whose peeled
+commits are ancestors of main. All tags and commits are unsigned. Proxy ZIPs
+v0.4.0-v0.6.1 byte-match their peeled Git trees, and sumdb confirms every
+evaluated source/module checksum pair.
+
+Qualified v0.6.0 has sums
+`h1:wGYYu3uicYdqXVgoYbvnkrPVXkuLM1p1ifugDMEdRi4=` /
+`h1:WYhtIu8zTZfxdn5+rREduYbwxfcBr/Vr6KEVveWlfTs=` and proxy ZIP SHA-256
+`a49c00cff30c02d9c09a4974ce91215bfe37f528a74f129576697869a1b8c630`.
+Its unsigned tag peels to commit
+`76262ea710c6213a336b12b0356fec81341935e1`, tree
+`53970738989e78890c85f821ca7541104d74cc8f`, parent
+`5a3c9dc1265bdc95f1f72c912b61bb013e197d7d`, with commit time
+2023-01-31T03:55:27Z, tag time 03:57:11Z, and release time 03:59:29Z.
+
+Latest v0.6.1 has the surveyed checksum pair and exact commit
+`804e98fff868b206344991c57a8182172e5ba41e`, tree
+`040cc290fec5fc95ec3436416b557e2a00d30389`, parent
+`e5396c6ee35145aead27da56e7921a7656f69624`, at
+2025-10-05T16:33:45Z. It is a real exact-path stable release, but its explicit
+Go 1.21 declaration excludes it from this project floor.
+
+### Closure, Tests, And API
+
+Selected v0.4.0 has no Go directive and requires only
+`github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515`. Historical kr/logfmt
+has no further non-standard module dependency. V0.5.0 declares Go 1.13;
+v0.5.1 and v0.6.0 declare Go 1.17 and have no requirements; v0.6.1 declares
+Go 1.21 and requires go-cmp v0.7.0. Imported source/test inspection confirms
+that v0.6.0's complete minimal closure preserves Go 1.18.
+
+The exact module is one pure-Go package with no cgo, production build tags,
+generation, or testdata. Its public API consists of the four sentinel errors,
+`MarshalKeyvals`, Decoder construction/scanning/accessors, Encoder
+construction/encoding/end/reset, `MarshalerError`, and `SyntaxError`. Apidiff
+finds no public change from v0.4.0 to v0.5.x; v0.6.0 adds only compatible
+`NewDecoderSize`.
+
+Selected, every serious candidate, and historical kr/logfmt pass source
+verification, native complete tests, two independent count-10 repeats, race,
+vet, and applicable Linux, Windows, Darwin, and FreeBSD cross-test builds under
+exact Go 1.26.7 and contained Go 1.18.10. Selected's build-tagged gofuzz entry
+builds under both SDKs, but combining the tag with the normal suite duplicates
+legacy package test names; this is a historical test-design conflict, not a
+production failure.
+
+Independent fixtures cover grammar, quoting and JSON-like escaping, Unicode,
+numeric handling, malformed inputs, sentinel/error identity and offsets,
+streaming and record boundaries, default and explicit scanner limits,
+marshaler precedence/errors, ordered deterministic round trips, odd key/value
+lists, validation-before-write behavior, partial and short I/O, reset/reuse,
+and independent-instance concurrency. Encoder and Decoder instances are
+stateful and unguarded; independent instances are race-safe, while sharing a
+mutable instance concurrently is unsupported.
+
+V0.6.1 fixes DEL U+007F handling: encoded values become quoted/escaped and
+keys reject DEL. Releases through v0.6.0 retain selected's raw-DEL behavior.
+Logfmt has no formal standard, v0.6.0 does not regress selected behavior, and
+Ply loads no package from the module, so the fix is recorded rather than
+converted into a new compatibility contract. The Go 1.21 floor independently
+rejects v0.6.1.
+
+### MVS And Project Effect
+
+Before implementation, Prometheus Common v0.9.1 requested v0.4.0 and
+Prometheus TSDB v0.7.1 requested v0.3.0, so MVS selected v0.4.0. `go mod why
+-m` says the main module does not need it. No go-logfmt or kr/logfmt package is
+loaded; both exist only because the graph preserves requirements of currently
+unused Prometheus roots.
+
+Exact Go 1.26.7 `go get github.com/go-logfmt/logfmt@v0.6.0` produced the sole
+dependency implementation commit
+`3d4cfdbae0a67e757d37022be7eeedaf32c72772`, parent
+`f81dfd617a1f26211fd21213fbe96b8abd16d34f`, tree
+`34a91aaedab07e855022c454a16000a079f0dbbd`. It changes only `go.mod` and
+`go.sum`, adding one indirect requirement and the exact source/mod sums: three
+insertions and no deletions. No tidy was used as implementation.
+
+The accepted project now has 234 selected modules, 3,584 graph edges, 429
+complete-test entries, 41 loaded modules, 197 loaded module-backed packages,
+1,053 checksum lines, and a 392-line unapplied tidy projection. Relative to
+go-cmp commit `c314bcb`, `go.sum` adds 37 lines and removes zero. No unrelated
+module selection changed. Historical kr/logfmt remains selected independently
+through Prometheus TSDB. The main module stays at Go 1.18 and toolchain Go
+1.26.7.
+
+### Vulnerability And Quality Results
+
+Fresh primary vulnerability data contains 1,392 module records and no
+go-logfmt record. Selected and v0.6.0 normalize identically: 30 Darwin module
+findings, 22 Darwin package findings, and 20 IDs/22 reachable traces for both
+Darwin and Windows symbol scans. Neither go-logfmt nor kr/logfmt appears in a
+module, package, symbol, or reachable-trace finding.
+
+All exact post-commit module verification, build, count-1, count-10 repeat,
+race, vet, offline dependency-list, Windows build, pinned lint, API/CLI
+compatibility, launcher, Make, preflight, and empty-HOME count-2 gates pass.
+API and CLI report hashes remain
+`ce39e1c47389f8a3b9699e0f6b165f974f2b0b0f8a3a1553c4b287e1ece005f4`
+and `955f1dda0de5d1e52f7ddc8368426bfe9a32b6e42716f1608428ca83dad645b2`.
+
+Exact changed-selection `make quality` exits zero with fresh preflight, 8/8
+mutation meta-stages, 80/80 killed mutations, host acceptance, GoReleaser
+snapshot acceptance, real Docker acceptance, and authoritative audit. All 27
+Q0-Q2 rows PASS at L2, manual evidence is valid with six receipts, and the
+ratchet has seven improvements with zero held, regressed, or not-comparable
+rows. Scorecard SHA-256 is
+`0cff5be4fb1609d296664f13a2de5567c7bdb8f574e61b6b05c0d92f44c4eb8f`.
+The separate full audit exits expected 1 only for queued Q3.1, Q3.3, Q3.4,
+and Q3.7; its scorecard SHA-256 is
+`736c6e7dbc2e55df075c8fc15d58e9331d138835d875350f2a12d619657b6c54`.
+
+Contained Go 1.18.10 project build and module verification pass. Its complete
+suite retains only two inherited `pkg/shell` assertions tied to that SDK's
+closed-pipe error wording; a clean rerun uses real Clang with zero stderr.
+Go Logfmt is unloaded and unrelated, so this is a pre-existing project
+cross-SDK assertion issue, not a dependency-floor failure.
+
+The 595-entry evidence manifest SHA-256 is
+`ac964598ef5933db2136fb7797738ad5595c81d94e092cf0a58c7e4e9266e4b9`;
+decision-summary SHA-256 is
+`d72e3498eaafb37925188496a131d744d717b2de33cd4aaffeb62e57f7f88dc2`;
+the 127-entry quality subset manifest SHA-256 is
+`e86964d24c081b3619c489f8cb42c813b3ddef1b11e64185d340dd33e672daf8`;
+manual-evidence SHA-256 is
+`6d0cee48eb3f835cd409fb57af985a06d3c2d443fc8f3e148722089386869346`.
