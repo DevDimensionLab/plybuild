@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-09T08:22:09+02:00
+Generated: 2026-09-09T11:19:20+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,128 +9,136 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`.
-- The latest dependency implementation is exact Go Stack v1.8.1 commit
-  `647d4fd71b226fbb1e916b4238b4c7ad87cd7975`, parent
-  `171ffd27ac9502c6018c31b2962a6163b2433a03`, tree
-  `7c54d59e484d197e7290bc0eec1281c75f614fcd`. It changes only `go.mod` and
-  `go.sum`, with three insertions and no deletions.
-- Go Logfmt v0.6.0 `3d4cfdbae0a67e757d37022be7eeedaf32c72772`,
-  Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0 `e5d6252`, and Speakeasy
-  v0.2.0 `41f9561` remain ancestors. All accepted or retained P7 decisions are
-  final and documented by their answered archives.
-- The answered Go Stack archive and sole NEXT Godbus D-Bus v5 archive must
-  link reciprocally. No `.agent-task/current.md` or repository
-  `.quality/manual-evidence.json` exists. Do not push, merge, publish, release,
-  stash, revert, launch a successor, bypass cleanup, or remove the worktree.
+- The latest dependency implementation is Godbus D-Bus v5.1.0 commit
+  `6472dce617eb80484ed022ae8a53cc350c8be6fe`, parent
+  `262d97da7a6a50ecc1170bc1a2f33f02732c093e`, tree
+  `250d55d4c374958fc9fab703fa7faa931ea4d4f8`. It changes only `go.mod`
+  and `go.sum`, with three insertions and no deletions.
+- Go Stack v1.8.1 `647d4fd71b226fbb1e916b4238b4c7ad87cd7975`,
+  Go Logfmt v0.6.0 `3d4cfdbae0a67e757d37022be7eeedaf32c72772`,
+  Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0 `e5d6252`, and
+  Speakeasy v0.2.0 `41f9561` remain ancestors. All accepted or retained P7
+  decisions are final and documented by their answered archives.
+- The answered Godbus archive and sole NEXT Gogo Protobuf archive must link
+  reciprocally. No `.agent-task/current.md` or repository
+  `.quality/manual-evidence.json` exists. Do not push, merge, publish,
+  release, stash, revert, launch a successor, bypass cleanup, or remove the
+  worktree.
 
 ## Lifecycle And Retained Roadmap
 
 P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and accepted
-Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0, and
-Go Stack v1.8.1 moves. Crypt, OpenCensus Proto, Logex, Readline, Fnmatch,
-Imaging, ansimage, Fsnotify, Ghodss YAML, and historical root GLFW remain
-retained. P8 remains queued. Do not reopen earlier groups or combine another
-dependency group.
+Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0,
+Go Stack v1.8.1, and Godbus D-Bus v5.1.0 moves. Crypt, OpenCensus Proto,
+Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify, Ghodss YAML, and
+historical root GLFW remain retained. P8 remains queued. Do not reopen earlier
+groups or combine another dependency group.
 
 Keep every disposable cache, projection, source, report, generated artifact,
-evidence tree, and build context beneath `$CODEX_SESSION_SCRATCH_ROOT`. Never
-create direct `/private/tmp/ply-*` roots, run `go mod download all` in a
-measured worktree, or bypass launcher scratch cleanup.
+evidence tree, and build context beneath `$CODEX_SESSION_SCRATCH_ROOT`.
+Never run `go mod download all` in a measured worktree or bypass launcher
+scratch cleanup.
 
-## Go Stack Decision
+## Godbus D-Bus v5 Decision
 
-Upgrade exact-path `github.com/go-stack/stack` from v1.8.0 to highest stable
-v1.8.1. It declares Go 1.17, has no module requirements, preserves the full Go
-1.18 floor, and passes every applicable contract. No redirect, fork, alternate
-path, floor-ineligible version, or unreleased commit was promoted.
+Upgrade exact-path `github.com/godbus/dbus/v5` from v5.0.4 to highest
+qualified stable v5.1.0. It declares Go 1.12, has no requirements, preserves
+the complete Go 1.18 floor, and passes every applicable contract. No redirect,
+fork, alternate module path, floor-ineligible release, or unreleased commit
+was promoted.
 
-The proxy exposes exactly ten stable versions, v1.4.0 through v1.8.1, and no
-prereleases. Go-import maps directly to the public, enabled, unarchived,
-non-fork `github.com/go-stack/stack` repository, whose default `master` is
-exactly v1.8.1. There are no retractions, deprecation notices, redirects, or
-nested exact-path modules. Historical `gopkg.in/stack.v0`,
-`gopkg.in/stack.v1`, and the `github.com/zhiyunliu/stack` fork remain distinct.
+The proxy lists eleven tags and no prereleases. V5.0.0 and v5.0.1 are invalid
+list-only `/v5` anomalies because those tags declare the pre-v5 module path;
+the valid exact-path population is v5.0.2 through v5.2.2. V5.2.0-v5.2.2
+declare Go 1.20 and require `golang.org/x/sys v0.27.0`; exact Go 1.18.10
+compilation fails on `strings.CutPrefix` and `unsafe.String`, so all three
+are floor-ineligible.
 
-Selected v1.8.0 sums are
-`h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=` /
-`h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=`. Qualified v1.8.1 sums are
-`h1:ntEHSVwIt7PNXNpgPmVfMrNhLtgjlmnZha2kOpuRiDw=` /
-`h1:dcoOX6HbPZSZptuspn9bctJ+N/CnF5gGygcUP3XYfe4=` and its proxy ZIP SHA-256
-is `944a204de02272c5718a6819f1f4f6d433a0ef50ca9e737154fceae742694477`.
-The incoming ZIP hash was wrong and was not accepted.
+Go-import, proxy, sumdb, Git, and GitHub resolve to the public enabled,
+unarchived, non-fork `github.com/godbus/dbus` repository with default
+`master`. There are no retractions, deprecation notices, redirects, or
+alternate nested v5 module. Historical pre-v5 paths remain distinct.
 
-V1.8.1's annotated unsigned tag object
-`065fe02de4413f66fc553f43129a8e4372e9c54b` peels to commit
-`93c7c7e3550c72bc91dead1452a0020142e2a902`, tree
-`970d18b6c7c8b790ab52ddd5d82cbaee98261044`, with parents
-`2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a` and
-`473edce91b111d1f6c7b946691b24af71f5a5b25`, at
-2021-08-18T18:48:21Z. Its release is non-draft and non-prerelease. Proxy ZIPs
-for selected and candidate byte-match their peeled Git trees and sumdb confirms
-their checksum pairs.
+V5.1.0 sums are
+`h1:4KLkAxT3aOY8Li4FRJe/KvhoNFFxo0m6fNuFUO8QJUk=` /
+`h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=`. Its lightweight tag
+resolves to signed merge commit
+`e523abc905595cf17fb0001a7d77eaaddfaa216d`, tree
+`af2a399b7f6f0c3a62c435e15a488c46d3dbf536`, parents
+`b357b44b7ab3bf9e9b27c906fb31cb622b7a017e` and
+`2c3cf657d630429b62f481c930c754a818d98327`, at
+2022-02-27T11:53:47Z. GitHub reports the commit signature valid. The proxy ZIP
+and tagged Git archive are byte-identical.
 
 ## Closure, API, Behavior, And Gates
 
-Both releases contain one pure-Go package and no external module requirement.
-Their complete package/test closures are standard-library-only: 79 entries on
-Go 1.18.10 and 125 on Go 1.26.7. Production, tests, examples, and exported API
-are byte-identical; v1.8.1 changes only CI declarations and adds `go 1.17`.
-The surface is `ErrNoFunc`, `Call`, `CallStack`, `Caller`, `Trace`, and their
-frame, PC, formatting, string, marshal, and trim methods.
+V5.0.4-v5.0.6 contain complete package/test closures of 102 entries under Go
+1.18.10 and 148 under Go 1.26.7. V5.1.0 has 103/149 entries. All use only the
+module itself, seven nonstandard closure entries, and three packages:
+`dbus`, `introspect`, and `prop`.
 
-Independent fixtures cover depth/skip, frame and PC resolution, formatting
-verbs and flags, marshal behavior, zero/nil/invalid values, trim semantics,
-determinism, concurrent read-only reuse, the 511-frame effective cap, and
-no-inline compilation. They pass both SDKs, repeats, and race. Native tests,
-two count-10 repeats, vet, source verification, package listing, and 24
-platform/architecture cross-test builds also pass both releases and SDKs.
+API diffs through v5.1.0 contain compatible additions only. The package covers
+connections and transports, bus discovery, authentication/negotiation,
+messages and signatures, variants, Unix FDs, paths and names, match rules,
+exported objects, introspection/properties, signals, calls/replies/errors,
+contexts/deadlines, and close state. V5.1.0 adds or inherits validation,
+FD-aware codec, no-autostart, property-introspection, address-escaping,
+invalid-message, cancellation, variant, and lifecycle fixes.
 
-Both releases retain one path-sensitive `go test -trimpath` limitation:
-relative runtime paths cannot match the package's empty captured runtime
-prefix, so `TrimRuntime` tests fail identically. This is unchanged
-compiler/path coupling in byte-identical, unloaded code, not a candidate
-regression. Values are immutable for concurrent reads, although callers can
-mutate the exported `CallStack` slice.
+Independent private-daemon fixtures exercise valid and invalid wire behavior,
+dispatch, match/signal delivery, cancellation/deadlines, disconnects,
+determinism, and concurrent reuse. V5.0.4-v5.0.6 incorrectly transmit an
+already-cancelled call; v5.1.0 does not. V5.1.0 fixtures pass two count-10
+repeats and race under both SDKs.
 
-Project module verification, build, native test, repeats, race, vet, offline
-listing, Windows build, pinned lint, API/CLI compatibility, launcher,
+Unmodified Linux tests pass both SDKs. Upstream Darwin tests omit a Darwin
+exclusion for their `execCommand` helper, while a source-preserving platform
+projection passes. Vet reports two test-only `Fatal`-from-goroutine
+findings. A nonce-TCP count-100 stress exposes an immediate-close timing panic
+on Go 1.18.10; formal repeats and race pass. Production cross-builds pass
+Darwin, Linux, Windows, NetBSD, and OpenBSD; FreeBSD/DragonFly Unix
+credentials require cgo. These are classified upstream test/platform/timing
+limitations, not loaded Ply behavior.
+
+Project module verification, build, count-1, two count-10 repeats, race, vet,
+offline listing, Windows build, pinned lint, API/CLI compatibility, launcher,
 empty-HOME, and contained-Go-1.18 gates pass. The Go 1.18 projection removes
-only the later toolchain line; both selections retain the same two inherited
-`pkg/shell` closed-file wording assertions.
+only the later toolchain line; its only test failures are the same two
+inherited `pkg/shell` closed-file wording assertions.
 
-Exact 21-stage `make quality` exits 0, including 80/80 killed mutations, host,
-snapshot, Docker, and audit acceptance. All 27 Q0-Q2 rows PASS at L2 with
-seven improved and zero held, regressed, not-comparable, or dirty counts.
+Exact 21-stage `make quality` exits 0, including 80/80 killed mutations,
+host, snapshot, Docker, and audit acceptance. All 27 Q0-Q2 rows PASS at L2
+with seven improved and zero held, regressed, not-comparable, or dirty counts.
 Scorecard SHA-256 is
-`4e1e1b50c2d16666d18278efd0b9ded86df668503e32184c49a1024053dd227c`.
-Full audit exits expected 1 only for queued Q3.1/Q3.3/Q3.4/Q3.7; its scorecard
-SHA-256 is
-`ea43aab34d28e513c92ba9210eb753071e46ecbc983671b7455bfa3bb3a74e0c`.
+`1756c66aecfdd5c6d246c894d9a63630f39dc5dd789532c488e8a3ddbb247bcb`.
+Full audit exits expected 1 only for queued Q3.1/Q3.3/Q3.4/Q3.7; its
+scorecard SHA-256 is
+`b2f36c83e3021f7280dbd26c5816cbc943ce102c1851a71f534bbd2ef669ac38`.
 
 ## Project And Vulnerability Measurements
 
-Prometheus TSDB v0.7.1 and Prometheus Common v0.4.1 each requested v1.8.0.
-No loaded package imports Go Stack and `go mod why -m` says the main module
-does not need it, but MVS retains those declared edges. The new exact root
-v1.8.1 edge changes no unrelated selection and loads no package.
+Go-systemd v22.3.2 declares v5.0.4. No loaded package imports Godbus and
+`go mod why -m` says the main module does not need it, but MVS retains that
+declared edge. The new exact root v5.1.0 edge selects the higher version,
+changes no unrelated selection, and loads no package.
 
-Current measurements are 234 selected modules, 3,585 graph edges, 429
+Current measurements are 234 selected modules, 3,586 graph edges, 429
 complete-test entries, 41 loaded modules, 197 loaded module-backed packages,
-1,055 `go.sum` lines, and a 396-line unapplied tidy projection. Relative to
-accepted go-cmp commit `c314bcb`, sums are +39/-0. Main Go 1.18 and toolchain
+1,057 `go.sum` lines, and a 400-line unapplied tidy projection. Relative to
+accepted go-cmp commit `c314bcb`, sums are +41/-0. Main Go 1.18 and toolchain
 Go 1.26.7 remain unchanged.
 
 Fresh primary vulnerability data has 1,392 module records. Selected and
 candidate normalize identically to 30 Darwin module findings, 22 Darwin
 package findings, and 20 IDs/22 reachable traces for Darwin and Windows
-symbol scans. Go Stack has no record, finding, symbol, or reachable trace.
+symbol scans. Godbus has no record, finding, symbol, or reachable trace.
 
 Decision-summary SHA-256 is
-`26fca7f6b5b683f4d16fb6b18a9aa88e412948ffde04c7d71764a1a94c077b72`;
-the 817-entry selected-evidence manifest SHA-256 is
-`e3edb91f49616d36c93ea08e85eeba8ce5730d3f61dea8b668b4da49405a8421`;
+`8973eda3a30a7a1ec4311178f4ee4c701ba114d53ff7454ab8e947f8fcd754d2`;
+the 576-entry selected-evidence manifest SHA-256 is
+`a665eda7b6763d2e4b0815fc19269ea3d1424eee65e19761ea897a13dd075ac9`;
 manual-evidence SHA-256 is
-`98ecb560fb335de466dc47a4f676fcaf918c431caaf2533d2275905b714dffa5`.
+`7d07ea50ec7b968fa8a506873d3c800e53ed0524712a4ad2c81fec57b9a26580`.
 
 ## Tools
 
@@ -148,15 +156,16 @@ manual-evidence SHA-256 is
 
 ## Next Objective
 
-Independently evaluate exact-path `github.com/godbus/dbus/v5 v5.0.4` as the
-next single P7 group. Do not combine `github.com/coreos/go-systemd/v22` or any
-other dependency group.
+Independently evaluate exact-path `github.com/gogo/protobuf v1.3.2` as the
+next single P7 group. Do not combine Viper, etcd, Prometheus, or any other
+dependency group.
 
-MVS selects v5.0.4 through go-systemd v22.3.2; `go mod why -m` says the main
-module does not need it. The initial proxy survey exposes eleven stable
-versions through v5.2.2 and no prereleases. V5.2.0-v5.2.2 declare Go 1.20 and
-are floor-ineligible. Highest initial serious candidate v5.1.0 declares Go
-1.12, has no requirements, and has source/mod sums
-`h1:4KLkAxT3aOY8Li4FRJe/KvhoNFFxo0m6fNuFUO8QJUk=` /
-`h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=`. Treat all of these only as
+MVS selects v1.3.2 through Viper v1.15.0 and etcd/api v3.5.1; older v1.1.1
+declarations remain through Prometheus TSDB/Common. `go mod why -m` says the
+main module does not need it. The initial proxy survey exposes eight stable
+versions, v1.0.0 through selected/latest v1.3.2, and no prereleases. V1.3.2
+declares Go 1.15 and requires historical indirect errcheck, gotool, and
+x/tools versions. Its source/mod sums are
+`h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=` /
+`h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=`. Treat these only as
 incoming survey facts to verify.

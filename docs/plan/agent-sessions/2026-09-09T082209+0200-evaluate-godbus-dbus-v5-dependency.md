@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Godbus D-Bus v5 Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-09T082209+0200-evaluate-godbus-dbus-v5-dependency`
 Created: `2026-09-09T08:22:09+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `608ae7845227f40ce4c246a4e76cf58585b7b2bff098a4fcb90584a6411e6dae`
 Previous: [2026-09-09T052020+0200-evaluate-go-stack-stack-dependency.md](2026-09-09T052020+0200-evaluate-go-stack-stack-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-09T111920+0200-evaluate-gogo-protobuf-dependency.md](2026-09-09T111920+0200-evaluate-gogo-protobuf-dependency.md)
+Outcome: Exact-path Godbus D-Bus v5 was upgraded from v5.0.4 to highest qualified stable v5.1.0 at dependency-only commit `6472dce`; complete identity, Go-floor, source/API/behavior, project MVS/loading, vulnerability, and quality gates pass, including exact 21-stage `make quality` at 27/27 Q0-Q2 PASS at L2.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -191,3 +191,72 @@ contracts, and make the normal `docs: prepare next agent session` commit. Do
 not implement the next group, launch a successor, push, merge, publish,
 release, stash, revert, bypass cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Upgrade exact-path `github.com/godbus/dbus/v5` from v5.0.4 to v5.1.0.
+V5.1.0 is the highest stable exact-path release whose complete minimal closure
+preserves Go 1.18 and whose applicable behavior passes. Exact Go 1.26.7
+`go get github.com/godbus/dbus/v5@v5.1.0` produced dependency-only commit
+`6472dce617eb80484ed022ae8a53cc350c8be6fe`, parent `262d97da`, tree
+`250d55d4c374958fc9fab703fa7faa931ea4d4f8`, changing only `go.mod` and
+`go.sum` with three insertions and no deletions.
+
+The proxy lists eleven tags and no prereleases. V5.0.0/v5.0.1 are list-only
+anomalies whose tags declare the pre-v5 module path, leaving nine valid
+exact-path releases. V5.2.x declares Go 1.20, requires x/sys v0.27.0, and
+fails exact Go 1.18.10 compilation on newer standard-library/unsafe APIs.
+V5.1.0 declares Go 1.12 with no requirements. Its source/mod sums are
+`h1:4KLkAxT3aOY8Li4FRJe/KvhoNFFxo0m6fNuFUO8QJUk=` and
+`h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=`.
+
+Canonical go-import, proxy, sumdb, Git, and GitHub identity agree on the
+public enabled, unarchived, non-fork `github.com/godbus/dbus` repository.
+V5.1.0 is a non-draft/non-prerelease lightweight tag at signed merge commit
+`e523abc905595cf17fb0001a7d77eaaddfaa216d`, tree
+`af2a399b7f6f0c3a62c435e15a488c46d3dbf536`, parents `b357b44` and
+`2c3cf65`, at 2022-02-27T11:53:47Z. There are no retractions, deprecation,
+redirect, or promoted alternate path; proxy ZIP and Git tree agree.
+
+V5.1.0 has three packages and a self-only closure: 103 entries under Go
+1.18.10 and 149 under Go 1.26.7. API diffs from v5.0.4 contain compatible
+additions only. Native Linux, normalized Darwin, private-daemon fixtures,
+two count-10 repeats, race, vet classification, and applicable cross-builds
+cover connections/transports, auth/negotiation, wire encoding, signatures,
+variants, FDs, paths/names, match rules, exports, introspection/properties,
+signals, calls/replies/errors, cancellation/deadlines, close state, invalid
+input, determinism, and concurrency under both SDKs. V5.1.0 fixes the
+candidate-observed transmission of an already-cancelled call.
+
+Recorded upstream qualifications are a Darwin test build-tag omission, two
+test-only vet findings, cgo requirements for FreeBSD/DragonFly credential
+transport, and a Go-1.18 nonce-TCP immediate-close count-100 stress panic.
+Formal repeats and race pass, and no Godbus package is loaded by Ply.
+
+MVS retains Godbus because go-systemd v22.3.2 declares v5.0.4; the exact root
+edge selects v5.1.0 while `go mod why -m` remains negative. No unrelated
+selection moved. Current measurements are 234 modules, 3,586 graph edges,
+429 complete-test entries, 41 loaded modules, 197 loaded module-backed
+packages, 1,057 sum lines, and a 400-line unapplied tidy projection.
+
+Fresh vulnerability data has 1,392 module records and no Godbus record.
+Selected/candidate results normalize identically to 30 Darwin module, 22
+Darwin package, and 20-ID/22-trace Darwin and Windows symbol populations,
+with no Godbus finding or trace.
+
+Post-commit verification, build, count-1, two count-10 repeats, race, vet,
+offline listing, Windows build, pinned lint, compatibility, launcher,
+empty-HOME, and contained-Go-1.18 gates completed. The Go 1.18 project
+projection verifies/builds and retains only the two accepted `pkg/shell`
+closed-file wording failures. Exact 21-stage `make quality` exits 0 with all
+27 Q0-Q2 rows PASS at L2, 80/80 killed mutations, and seven improvements
+with zero held/regressed/not-comparable/dirty results. Scorecard SHA-256 is
+`1756c66aecfdd5c6d246c894d9a63630f39dc5dd789532c488e8a3ddbb247bcb`.
+The full audit exits expected 1 for queued Q3.1/Q3.3/Q3.4/Q3.7 only.
+
+The external manual evidence SHA-256 is
+`7d07ea50ec7b968fa8a506873d3c800e53ed0524712a4ad2c81fec57b9a26580`.
+The 576-entry selected-evidence manifest SHA-256 is
+`a665eda7b6763d2e4b0815fc19269ea3d1424eee65e19761ea897a13dd075ac9`;
+decision-summary SHA-256 is
+`8973eda3a30a7a1ec4311178f4ee4c701ba114d53ff7454ab8e947f8fcd754d2`.

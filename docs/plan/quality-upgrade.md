@@ -8478,12 +8478,46 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   `e3edb91f49616d36c93ea08e85eeba8ce5730d3f61dea8b668b4da49405a8421`;
   decision-summary SHA-256 is
   `26fca7f6b5b683f4d16fb6b18a9aa88e412948ffde04c7d71764a1a94c077b72`.
-- Next, independently evaluate exact-path `github.com/godbus/dbus/v5 v5.0.4`.
-  It is selected only through `github.com/coreos/go-systemd/v22 v22.3.2`
-  and is not needed by the main module. The initial survey exposes eleven
-  stable versions through v5.2.2; v5.2.x declares Go 1.20 and is ineligible,
-  while v5.1.0 declares Go 1.12 and is the first serious candidate. Keep
-  go-systemd and all other dependency groups outside this single-path review.
+- Upgrade exact-path `github.com/godbus/dbus/v5 v5.0.4` to highest
+  qualified stable v5.1.0. The proxy lists eleven tags with no prereleases;
+  v5.0.0/v5.0.1 are invalid list-only `/v5` anomalies. Canonical go-import,
+  proxy, sumdb, Git, and GitHub identities agree. V5.2.x declares Go 1.20,
+  requires `golang.org/x/sys v0.27.0`, and fails exact Go 1.18.10 source
+  compilation; v5.1.0 declares Go 1.12, has no requirements, and preserves
+  the complete Go 1.18 floor.
+- V5.1.0 exposes only compatible API additions and passes private-daemon
+  authentication, message/variant/signature, export, match/signal,
+  cancellation/deadline, invalid-input, determinism, concurrency, repeat,
+  race, and applicable cross-platform fixtures under both SDKs. It fixes the
+  candidate-observed transmission of already-cancelled calls. Upstream retains
+  a Darwin test build-tag omission, two test-only vet findings, cgo
+  requirements on FreeBSD/DragonFly, and an immediate-close nonce-TCP stress
+  limitation on Go 1.18; formal suites and race pass.
+- Exact `go get github.com/godbus/dbus/v5@v5.1.0` produced dependency-only
+  commit `6472dce617eb80484ed022ae8a53cc350c8be6fe`, changing only
+  `go.mod` and `go.sum` with three insertions. Project measurements are
+  234 modules, 3,586 graph edges, 429 complete-test entries, 41 loaded
+  modules, 197 loaded module-backed packages, 1,057 checksum lines, and a
+  400-line unapplied tidy projection. Relative to go-cmp commit `c314bcb`,
+  sums are +41/-0. MVS retains the inherited go-systemd v5.0.4 edge, while
+  the exact root edge selects v5.1.0; no Godbus package is loaded and no
+  unrelated selection moved.
+- Exact 21-stage `make quality` exits zero with 27/27 Q0-Q2 PASS at L2,
+  80/80 killed mutations, seven improvements, and zero held/regressed/
+  not-comparable/dirty counts. Scorecard SHA-256 is
+  `1756c66aecfdd5c6d246c894d9a63630f39dc5dd789532c488e8a3ddbb247bcb`.
+  Fresh vulnerability populations remain 20 IDs/22 traces, 22 package
+  findings, and 30 module findings with no Godbus record or trace. The
+  576-entry evidence manifest SHA-256 is
+  `a665eda7b6763d2e4b0815fc19269ea3d1424eee65e19761ea897a13dd075ac9`;
+  decision-summary SHA-256 is
+  `8973eda3a30a7a1ec4311178f4ee4c701ba114d53ff7454ab8e947f8fcd754d2`.
+- Next, independently evaluate exact-path `github.com/gogo/protobuf v1.3.2`.
+  It is selected at its apparent latest stable release through Viper and
+  etcd/api, with older v1.1.1 declarations from Prometheus TSDB/Common, while
+  `go mod why -m` says it is not needed. The initial proxy survey exposes
+  eight stable versions and no prereleases. Keep all declaring modules and
+  every other dependency group outside this single-path review.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
