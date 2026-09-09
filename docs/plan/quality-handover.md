@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-09T00:23:51+02:00
+Generated: 2026-09-09T01:50:29+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -14,13 +14,13 @@ session diary.
   `d181fcd6c11fa147e0b44dd007598872875fc9e6`, and tree
   `9ba2fdc442553622028a4a8464536915d345510c`. It changes only `go.mod` and
   `go.sum`, with three insertions and one deletion.
-- Ghodss YAML v1.0.0 and Fsnotify v1.6.0 were retained without dependency
+- Root GLFW, Ghodss YAML, and Fsnotify were retained without dependency
   implementation commits. Exact XXHash v2.3.0 implementation
   `e5d6252825d7a1822c01819b9144050f345a6ad4` and Speakeasy v0.2.0
   implementation `41f9561f6ea2f5b6395c5c4d9bcc56a54533133a` remain ancestors.
   Ansimage, Imaging, Fnmatch, Readline, Logex, OpenCensus Proto, and Crypt
   remain retained without dependency edits.
-- The answered Ghodss YAML archive and sole NEXT root-GLFW archive link
+- The answered root-GLFW archive and sole NEXT Go Logfmt archive link
   reciprocally. No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` was created. No push, merge, publication,
   release, stash, revert, successor launch, or worktree removal occurred.
@@ -30,8 +30,9 @@ session diary.
 P2A-P6 are complete. P7 remains active after exact Go 1.26.7, accepted
 Speakeasy v0.2.0, XXHash v2.3.0, and Fatih Color v1.15.0 moves, and retained
 Crypt, OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify,
-and Ghodss YAML selections. P8 remains queued. Earlier outcomes and lifecycle
-ancestry are final; do not reopen them or combine another module group.
+Ghodss YAML, and root GLFW selections. P8 remains queued. Earlier outcomes and
+lifecycle ancestry are final; do not reopen them or combine another module
+group.
 
 Every disposable cache, projection, archive, source, report, generated
 artifact, evidence tree, and build context must remain beneath
@@ -39,115 +40,139 @@ artifact, evidence tree, and build context must remain beneath
 roots, never run `go mod download all` in a measured tree, and preserve the
 launcher's scratch cleanup and reciprocal archive contract.
 
-## Ghodss YAML Decision
+## Root GLFW Decision
 
-Retain exact-path `github.com/ghodss/yaml v1.0.0` without editing dependency
-metadata. The proxy exposes only v1.0.0, which is both selected and stable
-latest at `2017-03-27T23:54:44Z`. Its source/mod checksum pair is
-`h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=` /
-`h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=`; the proxy ZIP SHA-256 is
-`c3f295d23c02c0b35e4d3b29053586e737cf9642df9615da99c0bda9bbacc624`
-and matches the exact Git tag source.
+Retain exact-path `github.com/go-gl/glfw
+v0.0.0-20190409004039-e6da0acd62b1` without editing dependency metadata. The
+exact-root proxy list is empty and the repository has no root release tag.
+Its only tags, `v3.4/glfw/v0.1.0-pre.1` and
+`v3.4/glfw/v0.1.0-pre.2`, belong to a distinct nested module. There is no
+root retraction, deprecation, redirect, or alternate stable identity.
 
-V1.0.0 is a lightweight unsigned tag and unsigned commit
-`0ca9ea5df5451ffdf184b4428c902747c2c11cd7`, tree
-`252e285a136d503d2913ad39cb3b1669b9a76999`, with parents
-`04f313413ffd65ce25f2541bfd2b2ceec5c0908c` and
-`a4f8cbd2fd05654d25f651b7e26d612ce3c98cc7`. Go-import resolves the public,
-enabled, unarchived, non-fork `ghodss/yaml` repository on default `master`.
-There is one GitHub release and no prerelease, retraction, module deprecation,
-redirect, or exact-path alternate release.
+Selected source/mod sums are
+`h1:QbL/5oDUmRBzO9/Z7Seo6zf912W/a6Sr4Eu0G/3Jho0=` /
+`h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=`. Proxy ZIP SHA-256
+`96c694c42e7b866ea8e26dc48b612c4daa8582ce61fdeefbe92c1a4c46163169`
+matches all 227 repository-backed files. The extra proxy file is the
+synthesized requirement-free, directive-free root `go.mod`.
 
-Current master `d8423dcdf3440d0a5baffc6f90a11e4128545620`, tree
-`8df4d8facd33473e866d0f2e41e121c8732d5a6a`, parent
-`1e4101787d1907800b0200eb38faa0f5041d8ee6`, is 16 commits after v1.0.0 but
-resolves only as unreleased pseudo-version
-`v1.0.1-0.20220118164431-d8423dcdf344`. The maintained fork/module
-`sigs.k8s.io/yaml` is a distinct identity and was not substituted.
+Unsigned selected commit `e6da0acd62b1b57ee2799d4d0a76a7d4514dc5bc`, tree
+`17ab3d23b59cab5cffcafe1232da9c2af635a2a1`, parent
+`39f94f8075907c0c6524d2791e05d625627fe268`, has committer time
+`2019-04-09T00:40:39Z` and is on default `master` ancestry. Go-import resolves
+the public, enabled, unarchived, non-fork
+`https://github.com/go-gl/glfw.git` repository.
 
-The published module file contains no Go directive or requirements. Isolated
-source resolution adds `gopkg.in/yaml.v2 v2.4.0` at Go 1.15; its historical
-test closure adds
-`gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405`. The complete closure's
-native tests pass exact Go 1.26.7 and contained Go 1.18.10, so it preserves the
-floor.
+The last serious floor-compatible default-branch candidate is
+`v0.0.0-20240506104042-037f3cc74f2a`, Go 1.12, with sum pair
+`h1:FAC6eA052T8d4Lp5GR38Sxta8fnq//jjBGDtsT0TVAU=` /
+`h1:wyvWpaEu9B/VQiV1jsPs7Mha9I7yto/HqIBw197ZAzk=`. GitHub verifies merge
+commit `037f3cc74f2ab0b249928c4fc4b61e0f13befdb8`, tree
+`d16f4bb5267aa50bdb30ea99992c3e0a2381e5b7`, parents
+`a69d953ea14231b2f19998f0b434b6c1e6c6f710` and
+`23bba3a4c89646aa52826de643bfde2a8e4cfe98`, at
+`2024-05-06T10:40:42Z`. It fails complete Darwin/arm64 behavior.
 
-Release count-1, two independent count-10 passes, race, and production
-cross-builds for Darwin, Linux including 386, Windows, and FreeBSD pass both
-SDKs. The code is pure Go with no Cgo, assembly, generation, examples,
-testdata, fuzz, or property suite. Historical source/test debt is explicit:
-vet reports one unreachable return, and the release test file fails Linux/386
-compile because an untyped MaxInt64 overflows int. Production Linux/386
-builds, and the first post-release commit fixes the test. Unreleased master is
-not a better candidate: Go 1.26 native tests fail through a malformed example
-vet error, while the unreachable code remains.
+A later Go-1.12 pseudo-version from nested-v3.4 development is not a released
+or default root head and changes no root implementation. Its source/mod sums
+are `h1:QuL5wPRo3euHS1jVtTKoBWdPZjCg/4AvIvmL1sqd1go=` /
+`h1:wyvWpaEu9B/VQiV1jsPs7Mha9I7yto/HqIBw197ZAzk=`. Unsigned commit
+`fa5a0d0838962e92f7846982429caf1716bb46b2`, tree
+`e4defc2173880171b4b9ee2eea99df400a4b6aa9`, parent
+`3db5e4c7a5901ef58ab50842a938a7f228139301`, is timed
+`2026-02-27T15:11:18Z`. Exact latest
+`v0.0.0-20260823155953-d41da22a9587` declares Go 1.19 and is floor-ineligible.
+Its root packages are byte-identical to the rejected 2024 candidate. Correct
+the prior survey: latest tree is
+`fcbf95ef3a46826e0cbc29777b6f83d60265a57d` and parent is
+`8fa725040a18feef1098d802d2108effa73ea652`. The GitHub-verified commit time
+is `2026-08-23T15:59:53Z`.
 
-V1.0.0 exports Marshal, Unmarshal, YAMLToJSON, and JSONToYAML, but no strict
-API. Master adds options and strict conversion; duplicate keys then fail,
-while unknown fields require DisallowUnknownFields. Independent fixtures under
-both SDKs cover keys/scalars/numbers, tags, anchors/aliases, duplicates,
-unknown fields, embedded and custom marshalers, JSON tags, interfaces,
-byte/string handling, invalid inputs, multi-document input, ordering,
-escaping, error propagation, determinism, and concurrency.
+## Closure, Native Boundaries, And API
 
-The YAML-to-JSON pipeline is lossy: duplicate keys are last-wins, later YAML
-documents are ignored, numeric/interface types change, tags and aliases lose
-identity, and invalid binary bytes become replacement runes. Integer and
-boolean keys stringify, while composite/null keys fail. Distinct YAML keys
-`1` and `"1"` collapse to one JSON key and the surviving value depends on Go
-map iteration. Ordinary non-colliding conversion is deterministic. These are
-documented release boundaries, not a serialization-migration scope.
+The root module contains only Cgo packages `v3.0/glfw`, `v3.1/glfw`, and
+`v3.2/glfw`, with no non-standard-library module dependency. Both exact Go
+1.26.7 and contained Go 1.18.10 resolve the same closure. Selected has 46 Go
+and 172 C/Objective-C/header files, but no `_test.go`, example, testdata,
+fuzz, or property suite. The 2024 candidate's two testdata programs are not
+tests. Upstream CI never covered all three root packages; current workflows
+cover only nested v3.3/v3.4 modules.
 
-## Projection, Quality, And Vulnerability Measurements
+The three package APIs contain 104, 133, and 150 exported declarations. The
+2024 candidate changes no exported signature. V3.1/v3.2 install C-to-Go error
+and event callbacks, keep global callback state, use unsafe pointers, and rely
+on GLFW's OS-thread rules rather than independent locking. Callers must lock
+the main OS thread before `Init`; `Terminate`, event processing, and most
+window calls stay there. Contexts are calling-thread-affine, while
+`PostEmptyEvent` is the explicit secondary-thread wakeup.
 
-Ply selects Ghodss YAML only through:
+V3.0 requires an external GLFW 3.0 library. V3.1/v3.2 bundle native source.
+Darwin links Cocoa/OpenGL/IOKit/CoreVideo; Linux uses X11/OpenGL by default and
+v3.2 optionally Wayland/EGL/xkbcommon; Windows needs Win32 headers/libraries;
+FreeBSD needs X11/Wayland libraries and v3.2 pkg-config GLFW. OpenBSD/NetBSD
+have no supported native backend. `CGO_ENABLED=0` exposes no package on any
+tested target, so there is no pure-Go/headless fallback.
 
-`plybuild -> mvn-pom-mutator@v0.2.3 -> viper@v1.10.1 ->
-etcd/api/v3@v3.5.1 -> grpc-gateway@v1.16.0 -> ghodss/yaml@v1.0.0`.
+With the real Xcode compiler/SDK and scratch-provisioned official GLFW 3.0.4
+for v3.0, all packages pass Darwin/amd64 count-1, two count-10 repeats, and
+race under both SDKs. Candidate vet passes; selected vet reports possible
+`reflect.SliceHeader` misuse in v3.1/v3.2. Independent per-package value,
+error, determinism, concurrency, and v3.2 lifecycle fixtures pass. Importing
+all three historical packages into one binary is unsupported because their C
+and exported callback symbols collide.
 
-`go mod why -m` says the main module does not need it, and no Ghodss package
-is loaded in production or complete tests. Ply's direct yaml.v2/yaml.v3
-imports are separate. Retention preserves 234 modules, 3,583 graph edges, 429
-complete-test entries, 41 loaded modules, 197 loaded module-backed packages,
-1,051 checksum lines, and a 383-line unapplied tidy projection. Relative to
-accepted go-cmp commit `c314bcb`, metadata still adds exactly 35 checksum
-lines and removes zero.
+On Darwin/arm64, v3.0 and v3.2 pass, but default v3.1 fails selected and
+candidate under both SDKs because its Cgo directives select no client-library
+macro for arm64. A `gles2` compile probe is not a valid macOS runtime
+substitute. Cross-target package selection passes both SDKs, but actual
+Linux/Windows/FreeBSD compilation is not available in the contained Darwin
+host without target C compilers, headers, display stacks, and native
+libraries. No headless or cross-platform runtime pass was claimed.
 
-An exact selected `go get` is not truly inert: it would manufacture a
-redundant explicit main edge and add the unused source checksum, producing
-3,584 edges, 1,052 sum lines, and a 388-line tidy projection without loading
-a package. It was not applied. Master similarly loads no package and would
-add an unreleased explicit edge plus two checksums.
+## Project, Quality, And Vulnerability Measurements
 
-Project mod verify, build, count-1/count-10/race/vet, Windows-amd64 build,
-pinned golangci-lint 2.12.2, byte-identical core help, API/CLI compatibility,
-empty-HOME count-2, and complete preflight pass. Preflight includes all 62
-launcher controls, 80/80 killed mutants, and 15/15 audit self-test controls.
+Ply selects root GLFW only through:
+
+`golang.org/x/exp@v0.0.0-20191030013958-a1ab85dbe136 ->
+github.com/go-gl/glfw@v0.0.0-20190409004039-e6da0acd62b1`.
+
+`go mod why -m` says the main module does not need root GLFW. Neither root
+GLFW nor nested v3.3 packages are loaded. MVS nevertheless retains the root
+because x/exp's module graph declares it; nested module selection is a
+separate identity.
+
+Retention preserves 234 modules, 3,583 graph edges, 429 complete-test entries,
+41 loaded modules, 197 loaded module-backed packages, 1,051 sum lines, and a
+383-line unapplied tidy projection. Relative to accepted go-cmp commit
+`c314bcb`, sums remain exactly +35/-0. Exact selected `go get` would add only
+a redundant main edge and source sum, yielding 3,584 edges, 1,052 sums, and a
+389-line tidy projection. Candidate/latest projections change only root GLFW,
+retain all load counts, add two sums, and produce 392 tidy lines. None was
+applied.
+
+Project mod verify, build, count-1, two count-10 repeats, race, vet,
+Windows-amd64 build, pinned lint, byte-identical core help, API/CLI
+compatibility, empty-HOME count-2, and complete preflight pass. Preflight
+includes 62 launcher checks, 80/80 killed mutants, and 15/15 audit self-tests.
 Changed-selection-only snapshot, Docker, and exact quality work is
 inapplicable. The accepted 27/27 Q0-Q2 L2 scorecard remains
 `dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
 
-A supplemental contained-Go-1.18 project build passes. Full project tests
-retain two pre-existing Darwin `pkg/shell` closed-file error-text differences;
-Ghodss remains unloaded and retained/master project projections are identical,
-so those inherited diagnostics are not Ghodss effects.
+A supplemental contained-Go-1.18 project build passes after removing the
+newer toolchain directive in a disposable projection. Full tests retain two
+pre-existing Darwin `pkg/shell` closed-file error-text failures; GLFW is
+unloaded and unrelated.
 
-Fresh govulncheck v1.7.0 used 1,392 primary module records. Retained/master
-canonical populations are identical: 20 IDs/22 traces for Darwin and Windows
-symbol scans, 22 Darwin package findings, and 30 Darwin module findings.
-Ghodss YAML has no record, finding, or trace. Existing x/image/ansimage
-findings remain unrelated.
+Fresh govulncheck v1.7.0 used 1,392 primary records. Root and nested GLFW have
+no record, finding, or trace. Selected/candidate results normalize identically
+to 20 IDs/22 Darwin and Windows reachable traces, 22 Darwin package findings,
+and 30 Darwin module findings. Existing x/image/ansimage findings remain
+unrelated.
 
-The 92-entry selected evidence verifies against manifest SHA-256
-`cfb5bfcc497db42efebda5323b9e187aa63520192a7354631fd93391970bd771`.
-Decision-summary SHA-256 is
-`724f7f2ac4394296cd36be360df90539deed1ecaf0b92386c6027b0f2c45f7b9`.
-
-One stopped preflight attempt wrote its two compatibility JSON reports to the
-default ignored `target/compatibility` path. The cleanliness gate detected the
-artifact; both files and directories were removed immediately. The valid
-complete rerun routed all reports beneath session scratch and passed. The
-stopped run is excluded from passing evidence.
+The 220-entry selected evidence manifest SHA-256 is
+`73a24b7220ca0c8df778188840fdbb5ed31195b8509f4aa61916ca3931f8f696`;
+decision-summary SHA-256 is
+`3e4009ecf940c8627c5fdbea7daa6ec94d100e70529a9bb3dbddb265a5143e4e`.
 
 ## Tools And Retained Decisions
 
@@ -168,23 +193,20 @@ stopped run is excluded from passing evidence.
 
 ## Next Objective
 
-Independently evaluate the historical root module exact path
-`github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1` as the next single
-P7 group. Keep it strictly separate from the nested
-`github.com/go-gl/glfw/v3.3/glfw` module.
+Independently evaluate exact-path `github.com/go-logfmt/logfmt v0.4.0` as the
+next single P7 group. Do not combine Prometheus, `kr/logfmt`, or any other
+dependency group.
 
-The root proxy list is empty. Selected commit
-`e6da0acd62b1b57ee2799d4d0a76a7d4514dc5bc` has tree
-`17ab3d23b59cab5cffcafe1232da9c2af635a2a1`, parent
-`39f94f8075907c0c6524d2791e05d625627fe268`, and checksum pair
-`h1:QbL/5oDUmRBzO9/Z7Seo6zf912W/a6Sr4Eu0G/3Jho0=` /
-`h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=`. Its synthesized module
-file has no Go directive or requirements.
+MVS selects v0.4.0 through Prometheus Common v0.9.1 while Prometheus TSDB
+v0.7.1 requests v0.3.0; `go mod why -m` says the main module does not need
+Go Logfmt. The proxy exposes eight stable tags from v0.1.0 through v0.6.1.
+Selected v0.4.0 has checksum pair
+`h1:MP4Eh7ZCb31lleYCFuwm0oe4/YGak+5l1vA2NOE80nA=` /
+`h1:3RMwSq7FuexP4Kalkev3ejPJsZTpXXBr9+V4qmtdjCk=` and a directive-free module
+file requiring historical `github.com/kr/logfmt`.
 
-Exact-path latest is floor-ineligible Go-1.19 pseudo-version
-`v0.0.0-20260823155953-d41da22a9587`, full commit
-`d41da22a9587f777098f96d37014f6cdd35d1afb`. Project MVS reaches selected
-only through x/exp, but `go mod why -m` says it is unneeded. Resolve exact root
-release/pseudo ancestry, complete closure, Cgo and platform prerequisites,
-package loading, projections, tests, and vulnerability identity without
-combining the nested v3.3 module or any graphics-stack migration.
+Latest v0.6.1 declares Go 1.21 and is provisionally floor-ineligible. V0.6.0
+declares Go 1.17 and is the initial serious candidate; v0.5.1 also declares Go
+1.17 and v0.5.0 declares Go 1.13. Resolve complete release/repository identity,
+closure, behavior, API, loading, MVS, project gates, and vulnerability results
+without treating this survey as accepted evidence.

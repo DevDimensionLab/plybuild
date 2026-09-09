@@ -8388,15 +8388,43 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   `cfb5bfcc497db42efebda5323b9e187aa63520192a7354631fd93391970bd771`;
   decision-summary SHA-256 is
   `724f7f2ac4394296cd36be360df90539deed1ecaf0b92386c6027b0f2c45f7b9`.
-- Next, independently evaluate historical root module
-  `github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1`. Its proxy list
-  is empty, selected commit is
-  `e6da0acd62b1b57ee2799d4d0a76a7d4514dc5bc`, and its synthesized module file
-  has no Go directive or requirements. Exact root-path latest
-  `v0.0.0-20260823155953-d41da22a9587` declares Go 1.19 and is provisionally
-  floor-ineligible. Keep this root module strictly separate from
-  `github.com/go-gl/glfw/v3.3/glfw`; resolve its Cgo/platform closure and
-  unneeded x/exp MVS ancestry without a graphics-stack migration.
+- Retain exact historical root module `github.com/go-gl/glfw
+  v0.0.0-20190409004039-e6da0acd62b1` without a dependency edit. The root
+  proxy list and root release population are empty; both repository tags are
+  nested-v3.4 prereleases. Exact latest declares Go 1.19, while the last
+  Go-1.18-compatible default-branch candidate still fails default
+  Darwin/arm64 v3.1 compilation. The separately selected nested v3.3 module
+  remains untouched.
+- Selected has three Cgo-only packages and no non-standard-library module
+  closure or real upstream tests. With scratch-provisioned GLFW 3.0.4 for
+  v3.0, all packages pass Darwin/amd64 count-1, two count-10 repeats, and race
+  under both SDKs. V3.0/v3.2 pass arm64, but v3.1 selects no default client
+  library there; selected also retains two `reflect.SliceHeader` vet findings.
+  Linux/Windows/FreeBSD need target C toolchains and native libraries; no
+  pure-Go or headless fallback exists.
+- Retention preserves project measurements at 234 modules, 3,583 edges, 429
+  complete-test entries, 41 loaded modules, 197 loaded module-backed packages,
+  1,051 sum lines, and 383 tidy-diff lines. The root exists only through
+  x/exp's declaration; `go mod why` says it is unneeded and no GLFW package is
+  loaded. Exact selected `go get` would only add a redundant explicit edge and
+  source checksum, so it was not applied.
+- Project build/test/race/vet/lint, Windows build, compatibility, core help,
+  empty-HOME, 62-control launcher, 80/80 mutation, and 15-control audit-meta
+  gates pass. Fresh vulnerability populations remain 20 IDs/22 traces, 22
+  package findings, and 30 module findings with no GLFW record or trace. The
+  accepted 27/27 Q0-Q2 L2 scorecard remains
+  `dae9e51e26353f72d9026e1d6eecbef697bcfa3b06cdc1905164c6d20057dafb`.
+  The 220-entry evidence manifest SHA-256 is
+  `73a24b7220ca0c8df778188840fdbb5ed31195b8509f4aa61916ca3931f8f696`;
+  decision-summary SHA-256 is
+  `3e4009ecf940c8627c5fdbea7daa6ec94d100e70529a9bb3dbddb265a5143e4e`.
+- Next, independently evaluate exact-path `github.com/go-logfmt/logfmt
+  v0.4.0`. MVS selects it through Prometheus Common v0.9.1 while Prometheus
+  TSDB requests v0.3.0; `go mod why -m` says the main module does not need it.
+  The exact proxy exposes eight stable versions. Latest v0.6.1 declares Go
+  1.21 and is provisionally floor-ineligible, while v0.6.0 declares Go 1.17
+  and is the initial serious candidate. Keep the historical `kr/logfmt`
+  closure and all Prometheus groups strictly within dependency-boundary rules.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
