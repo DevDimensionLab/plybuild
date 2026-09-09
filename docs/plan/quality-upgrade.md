@@ -5375,8 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active after the maintained-toolchain baseline move and completed
-dependency groups through accepted Go Logfmt v0.6.0; further dependency groups
-remain queued.
+dependency groups through accepted Godbus D-Bus v5.1.0 plus retained Gogo
+Protobuf v1.3.2; further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -8512,12 +8512,48 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   `a665eda7b6763d2e4b0815fc19269ea3d1424eee65e19761ea897a13dd075ac9`;
   decision-summary SHA-256 is
   `8973eda3a30a7a1ec4311178f4ee4c701ba114d53ff7454ab8e947f8fcd754d2`.
-- Next, independently evaluate exact-path `github.com/gogo/protobuf v1.3.2`.
-  It is selected at its apparent latest stable release through Viper and
-  etcd/api, with older v1.1.1 declarations from Prometheus TSDB/Common, while
-  `go mod why -m` says it is not needed. The initial proxy survey exposes
-  eight stable versions and no prereleases. Keep all declaring modules and
-  every other dependency group outside this single-path review.
+- Retain exact-path `github.com/gogo/protobuf v1.3.2` without a dependency
+  edit. It is the canonical latest of eight stable releases, declares Go 1.15,
+  and its 12-module, 168-package closure preserves Go 1.18. Proxy, sumdb,
+  go-import, tagged Git, and public unarchived non-fork repository identities
+  agree; the 770-path proxy/Git manifests are byte-identical. Master is
+  deprecated and unreleased, while alternate forks/modules are not exact-path
+  candidates and have higher floors.
+- V1.3.2 is the first release fixed for GO-2021-0053. Direct v1.3.1 harnesses
+  produce exact module/package/symbol findings reaching the generated
+  unmarshal plugin; v1.3.2 and the project produce no Gogo finding or trace.
+  Public API is unchanged from v1.3.1. Independent golden-wire, round-trip,
+  deterministic map, extension/oneof, JSON/text, invalid-input, nil/resource,
+  buffer-reuse, and concurrency fixtures pass race count-20 under exact Go
+  1.26.7 and contained Go 1.18.10.
+- Recorded upstream qualifications are three omitted generator goldens plus
+  modern gofmt drift, randomized nil GoString output, one test-only vet
+  finding, and an inherited mixed binary/JSON marshal race on the same mutable
+  generated message. Corrected applicable suites, commands, vet, purego,
+  Linux, Windows, and js/wasm builds pass under both SDKs. No Gogo package is
+  loaded by Ply, and relevant independent-message/project behavior passes.
+- MVS retains v1.3.2 through Viper/etcd declarations even though `go mod why`
+  is negative. Exact selected `go get` would add only a redundant indirect
+  edge and source checksum without changing a selection, so it was not
+  applied. Project measurements remain 234 modules, 3,586 graph edges, 429
+  complete-test entries, 41 loaded modules, 197 loaded module-backed packages,
+  1,057 sum lines, and the accepted 400-line tidy projection. Project
+  build/test/repeat/race/vet/lint, compatibility, cross-build, empty-HOME,
+  Go-1.18, and launcher/Make contract components pass. The accepted 27/27
+  Q0-Q2 L2 scorecard remains
+  `1756c66aecfdd5c6d246c894d9a63630f39dc5dd789532c488e8a3ddbb247bcb`.
+  The 2,163-entry evidence manifest SHA-256 is
+  `b92185ef4d63011df510369fb75a8f35a07d02f11c464efeedc6b0739d38f433`;
+  decision-summary SHA-256 is
+  `964fa19e8793454bc1e1d2db71da02cf3a5cc7c4b706e0555ce46dc9b6a12deb`.
+- Next, independently evaluate exact-path `github.com/golang/protobuf
+  v1.5.2`. MVS selects it through sixteen selected-module declarations, but
+  `go mod why -m` is negative and no package is loaded. The initial proxy
+  survey exposes 18 stable releases, four v1.4.0 release candidates, and
+  latest v1.5.4. Latest declares Go 1.17, requires
+  `google.golang.org/protobuf v1.33.0`, and deprecates this module in favor of
+  that successor path. Keep all declaring modules, the successor module, Go
+  CMP, and every other dependency group outside this single-path review.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

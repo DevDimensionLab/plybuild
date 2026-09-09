@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Gogo Protobuf Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-09T111920+0200-evaluate-gogo-protobuf-dependency`
 Created: `2026-09-09T11:19:20+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `03a6e67e92d42850e7f3d6f32eefcd204a2a5a7de4360f27cb290d871b4746f6`
 Previous: [2026-09-09T082209+0200-evaluate-godbus-dbus-v5-dependency.md](2026-09-09T082209+0200-evaluate-godbus-dbus-v5-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-09T131438+0200-evaluate-golang-protobuf-dependency.md](2026-09-09T131438+0200-evaluate-golang-protobuf-dependency.md)
+Outcome: Retained canonical latest exact-path Gogo Protobuf v1.3.2 without a dependency edit; its complete Go floor, API/behavior, MVS/loading, vulnerability, and applicable project contracts were resolved, with precise upstream generator, randomized-test, vet, and mixed-shared-message race qualifications recorded.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -174,3 +174,90 @@ contracts, and make the normal `docs: prepare next agent session` commit.
 Do not implement the next group, launch a successor, push, merge, publish,
 release, stash, revert, bypass cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Retain exact-path `github.com/gogo/protobuf v1.3.2` without changing
+dependency metadata. It is the canonical latest and highest qualified stable
+release, its complete closure preserves Go 1.18, and the project loads no Gogo
+package. Exact selected `go get` would add only a redundant indirect root
+requirement and source checksum without changing any selected version, so no
+dependency commit was manufactured. The latest implementation therefore
+remains Godbus D-Bus v5.1.0 commit `6472dce617eb80484ed022ae8a53cc350c8be6fe`.
+
+The proxy contains exactly eight stable versions, v1.0.0 through v1.3.2, and
+no prereleases. Sumdb confirms selected source/mod sums
+`h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=` /
+`h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=`. V1.3.2 is a
+non-draft/non-prerelease lightweight unsigned tag at unsigned commit
+`b03c65ea87cdc3521ede29f62fe3ce239267c1bc`, tree
+`56a9801e7f0e1b7da577e89c8be36d978d243a49`, parent
+`550e88954e617545f49920b752c154d72abf1d8d`, dated
+2021-01-10T08:01:47Z. Proxy and tagged Git archives contain the same 770
+byte-identical paths and share manifest SHA-256
+`a259a75ae50454043cfbf66080ceda30be04fe2041bff5de3713eda48574dd5b`.
+
+Go-import, proxy, sumdb, Git, and GitHub agree on the public, enabled,
+unarchived, non-fork `github.com/gogo/protobuf` repository, default branch
+`master`. There are no retractions, redirects, or exact-path v2 releases.
+Release-era documentation sought new ownership and current master explicitly
+marks the project deprecated. Three postrelease master commits are unreleased.
+Cosmos gogoproto and PlanetScale vtprotobuf are distinct paths with floors
+above Go 1.18, not promotable exact-path candidates.
+
+V1.3.2 declares Go 1.15 and resolves 12 modules under both SDKs; every
+transitive Go directive is at most 1.15. It exposes 168 packages, including 12
+commands and 110 test packages. Complete test listing has 530 entries under
+Go 1.26.7 and 485 under Go 1.18.10. All 394 module-backed package entries are
+Gogo itself: the historical errcheck, gotool, and x/tools graph loads no
+external package. All generator commands and applicable Linux, Windows,
+js/wasm, and purego builds pass under both SDKs. Public API across all packages
+is unchanged from v1.3.1.
+
+The runtime and fixtures cover generated and reflective wire paths, size,
+merge, clone/equality, unknown retention/discard, extensions, custom values,
+maps, oneofs, nullable values, JSONPB/text, deterministic ordering,
+registration, well-known types, malformed/truncated/overflow input, nil/zero
+values, delimited size limits, reuse, and concurrency. Independent fixtures
+pass `-race -count=20` under both SDKs. The decoder has integer and size guards
+but no general recursion-depth limit, and global registration is intended for
+generated initialization rather than concurrent mutation.
+
+Four upstream qualifications are retained explicitly. Generator golden tests
+expect three ignored files absent from the release and observe modern gofmt
+drift under Go 1.26. Random GoString generation can render nil `*time.Time` as
+the invalid expression `<nil>`; seed 11 reproduces it. Vet finds a test-only
+`T.Fatal` call from a worker goroutine. Finally, `proto.TestRace` reproducibly
+finds an inherited race under both SDKs when binary sizing writes
+`XXX_sizecache` while JSON reflection reads the same mutable generated
+message. The remainder of the race suite and independent-message concurrency
+pass. None is a v1.3.2 regression or loaded Ply behavior.
+
+V1.3.2 is the first fixed release for GO-2021-0053/CVE-2021-3121: its exact
+tag commit adds the negative/overflowed generated-unmarshal skip bounds check.
+Direct v1.3.1 module/package/symbol scans each find the issue and the symbol
+trace reaches `(*unmarshal).Generate`; all three v1.3.2 levels are clean.
+Project populations remain 30 Darwin module findings, 22 Darwin package
+findings, and 20 IDs/22 reachable traces on Darwin and Windows, with no Gogo
+finding or trace.
+
+MVS retains v1.3.2 through Viper v1.15.0 and etcd/api v3.5.1 declarations;
+Prometheus TSDB/Common declare v1.1.1. `go mod why -m` remains negative and
+zero Gogo packages load. No unrelated selection moved. Current measurements
+remain 234 modules, 3,586 graph edges, 429 complete-test entries, 41 loaded
+modules, 197 loaded module-backed packages, 1,057 sum lines, +41/-0 sums since
+accepted go-cmp, and the accepted 400-line unapplied tidy projection.
+
+Exact Go 1.26.7 project verification, build, count-1, two count-10 repeats,
+race, vet, pinned lint, compatibility, offline load, Linux/Windows build,
+empty-HOME, and launcher/Make contract components pass. The read-only Go
+1.18.10 projection builds and passes applicable repeats/race/vet/cross-builds;
+only the two already accepted `pkg/shell` closed-file wording assertions fail.
+No changed-selection-only quality activity was manufactured. The accepted
+27/27 Q0-Q2 L2 scorecard remains
+`1756c66aecfdd5c6d246c894d9a63630f39dc5dd789532c488e8a3ddbb247bcb`.
+
+The 2,163-entry selected-evidence manifest SHA-256 is
+`b92185ef4d63011df510369fb75a8f35a07d02f11c464efeedc6b0739d38f433`;
+decision-summary SHA-256 is
+`964fa19e8793454bc1e1d2db71da02cf3a5cc7c4b706e0555ce46dc9b6a12deb`.
