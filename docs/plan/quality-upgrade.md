@@ -8707,13 +8707,47 @@ Current queue decisions and next bounded P7 group (2026-09-10):
   the 7,798-entry evidence manifest and decision summary hash to
   `4d4fd72b84786270f069b18934eb831d31ecc801e1d348e6e912f756fc114f84`
   and `07fcaace013997f5d4513de49c5a59b3359b7b270c4e6634b39729c8a45a6096`.
+- Upgrade exact-path `github.com/google/uuid v1.1.2` to highest qualified
+  stable v1.4.0. Proxy, sumdb, go-import, lightweight Git tags, thirteen
+  GitHub Releases, and the public active non-fork BSD-3-Clause repository
+  agree. All thirteen stable releases have one-package standard-library-only
+  closures with no Go directive or requirements and pass complete source/test
+  closure gates under exact Go 1.26.7 and contained Go 1.18.10.
+- Apidiff through v1.4.0 reports compatible additions only. Independent
+  parse/format, version/variant, v1/v2/v4, name-hash, entropy, clock sequence,
+  node identity, concurrency, pool, serialization, and SQL contracts pass
+  both SDKs. The upstream same-process repeat panic through v1.4.0 is a
+  classified test-order leak from a finite global random reader; independent
+  fresh-process repeats pass.
+- Reject v1.5.0 and v1.6.0 because their new UUIDv6 generator and `Time()`
+  extractor do not round trip under either SDK. V1.5.0 also duplicates fixed
+  input V7 values; v1.6.0 repairs V7 monotonicity but retains the V6 defect.
+  Master `53dda83` fixes V6 but is unreleased and was not promoted.
+- Exact Go 1.26.7 `go get github.com/google/uuid@v1.4.0` produced
+  dependency-only commit
+  `cf53bc64eeb69471d35c7536d196bf1da15f3973`, changing only `go.mod`
+  and `go.sum` with three insertions. Fourteen historical gRPC vertices
+  explain selection despite negative `go mod why` and zero loaded UUID
+  packages. The project now has 234 modules, 3,599 edges, 429 complete-test
+  entries, 41 loaded modules, 197 loaded module-backed packages, 1,067 sum
+  lines, and a 432-line tidy projection.
+- Fresh direct selected/candidate UUID vulnerability scans are zero and
+  project populations remain 30 module findings, 22 Darwin and 23 Windows
+  package findings, and 20 IDs/22 traces per symbol platform. Exact 21-stage
+  quality preserves 27/27 Q0-Q2 PASS at L2 and kills 80/80 mutants.
+  Scorecard SHA-256 is
+  `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`;
+  the 3,206-entry evidence manifest and decision summary hash to
+  `0796b997d528e8b9d25d35cbd90a04cc93bf89fbbb3cdacc27fcd46546d00c6d`
+  and `522b3fc0387507a9612daab87242625d2bfde7aabd74a45ebd24b058d883c31b`.
 - Next, independently evaluate exact-path
-  `github.com/google/uuid v1.1.2`. Fourteen historical gRPC vertices declare
-  selected; `go mod why -m` is negative and no UUID package loads. The
-  initial exact proxy list has 13 stable versions through v1.6.0, and both
-  selected and latest module files contain no Go directive or requirements.
-  Keep gRPC, Martian, and every other dependency group outside this
-  single-path review.
+  `github.com/googleapis/gax-go/v2 v2.7.0`. Viper v1.15.0 declares the
+  selected version, while historical Cloud Go and Google API vertices retain
+  lower requirements; `go mod why -m` is negative and no GAX package loads.
+  Selected declares Go 1.19, apparent last nearby floor-compatible v2.5.1
+  cannot defeat Viper's requirement by an exact root downgrade, and latest
+  v2.24.1 declares Go 1.25. Resolve this Go-floor boundary without changing
+  or independently auditing Viper or another group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
