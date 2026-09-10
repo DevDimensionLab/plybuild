@@ -6129,7 +6129,7 @@ Regexp2 v1.12.0 dependency group (2026-09-04):
   `c95201c96297a198b7bec9b5a031443e42c0fe4be5f17a4d383362b9dce5f527`
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-Current queue decisions and next bounded P7 group (2026-09-09):
+Current queue decisions and next bounded P7 group (2026-09-10):
 
 - Reject `github.com/fatih/color v1.14.1` -> latest v1.19.0 because the latest
   module declares Go 1.25.0, and reject floor-compatible v1.16.0-v1.18.0
@@ -8674,12 +8674,45 @@ Current queue decisions and next bounded P7 group (2026-09-09):
   The 188-entry evidence manifest and decision summary hash to
   `e6090a35f4f669bfff0eccf3b179def466dcbc18645ec61ed5d2e81f92e4f0f7`
   and `20804b312d90e5390df74dde4c1b252e68d8b1183897e7e562f2c8a133ac5d08`.
+- Upgrade exact-path `github.com/google/renameio v0.1.0` to the highest
+  qualified stable v1.0.1. Proxy, sumdb, go-import metadata, and tagged Git
+  agree on the public active non-fork repository. Root v2 tags instead
+  declare `github.com/google/renameio/v2`; they are not exact-path
+  candidates. All serious root releases have standard-library-only closures
+  compatible with Go 1.18, and apidiff finds only the compatible v1
+  `renameio/maybe` package addition.
+- Selected and v1.0.1 pass native verification, tests, repeats, race, vet, a
+  309-line atomic-write fixture under both SDKs, and all 48 production
+  cross-builds. V1.0.0 is rejected because `maybe` cannot compile on Windows;
+  v1.0.1 supplies the repaired non-atomic Windows fallback. The atomic API
+  syncs file content before close/rename but does not fsync the parent
+  directory, replaces symlinks and hard-link destinations rather than
+  preserving their inode identity, and is last-writer-wins for independent
+  concurrent writers.
+- Exact Go 1.26.7 `go get github.com/google/renameio@v1.0.1` produced
+  dependency-only commit `394ec36ac5cb6712640024f0a47af28bf3631906`,
+  changing only `go.mod` and `go.sum` with three insertions. Historical
+  HTools vertices explain MVS selection despite negative `go mod why` and
+  zero loaded Renameio packages. The project now has 234 modules, 3,598
+  edges, 429 complete-test entries, 41 loaded modules, 197 loaded
+  module-backed entries, 1,065 sum lines, and a 428-line tidy projection.
+- Fresh direct selected/v1.0.1 Renameio vulnerability scans are zero; v1.0.0
+  module/package scans are zero and its Windows symbol load hits the known
+  compile defect. Project base/v1.0.1 populations are identical at 30 module
+  findings, 22 Darwin and 23 Windows package findings, and 20 IDs/22 traces
+  per symbol platform. Exact 21-stage quality preserves 27/27 Q0-Q2 PASS at
+  L2 and kills 80/80 mutants.
+  Scorecard SHA-256 is
+  `6be51aec069011e99a80c2b5b5097bb79a67abe1c0078589ccd60198ab75c2ce`;
+  the 7,798-entry evidence manifest and decision summary hash to
+  `4d4fd72b84786270f069b18934eb831d31ecc801e1d348e6e912f756fc114f84`
+  and `07fcaace013997f5d4513de49c5a59b3359b7b270c4e6634b39729c8a45a6096`.
 - Next, independently evaluate exact-path
-  `github.com/google/renameio v0.1.0`. Three historical HTools vertices
-  declare selected, `go mod why -m` is negative, and no Renameio package is
-  loaded. The initial proxy list contains v0.1.0, v1.0.0, and v1.0.1; latest
-  v1.0.1 declares Go 1.13 with no requirements. Keep HTools, Crypt,
-  Firestore, Cloud Go, and every other dependency group outside this
+  `github.com/google/uuid v1.1.2`. Fourteen historical gRPC vertices declare
+  selected; `go mod why -m` is negative and no UUID package loads. The
+  initial exact proxy list has 13 stable versions through v1.6.0, and both
+  selected and latest module files contain no Go directive or requirements.
+  Keep gRPC, Martian, and every other dependency group outside this
   single-path review.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
