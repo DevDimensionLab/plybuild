@@ -6129,7 +6129,7 @@ Regexp2 v1.12.0 dependency group (2026-09-04):
   `c95201c96297a198b7bec9b5a031443e42c0fe4be5f17a4d383362b9dce5f527`
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-Current queue decisions and next bounded P7 group (2026-09-10):
+Current queue decisions and next bounded P7 group (2026-09-13):
 
 - Reject `github.com/fatih/color v1.14.1` -> latest v1.19.0 because the latest
   module declares Go 1.25.0, and reject floor-compatible v1.16.0-v1.18.0
@@ -8740,35 +8740,73 @@ Current queue decisions and next bounded P7 group (2026-09-10):
   the 3,206-entry evidence manifest and decision summary hash to
   `0796b997d528e8b9d25d35cbd90a04cc93bf89fbbb3cdacc27fcd46546d00c6d`
   and `522b3fc0387507a9612daab87242625d2bfde7aabd74a45ebd24b058d883c31b`.
+- Retain exact-path `github.com/googleapis/gax-go/v2 v2.7.0` without a
+  dependency edit under the two explicit 2026-09-12 product decisions. Fresh
+  proxy, sumdb, go-import, tagged Git, and the public active non-fork
+  repository agree. Of 42 v2-looking stable proxy tags, v2.0.0 does not
+  contain `v2/go.mod`; the other 41 exact-path releases are valid. No
+  redirect, alternate path, fork, deprecation, retraction, prerelease, or
+  arbitrary branch head qualifies as a better release.
+- V2.5.1 is the highest stable release declaring Go 1.18; every v2.6.0-or-
+  newer release declares at least Go 1.19, v2.12.5 declares Go 1.20, and
+  latest v2.24.1 declares Go 1.25. Six serious releases pass exact Go 1.26.7
+  verification, complete closure tests/repeats, race, vet, cross-builds, and
+  source identity checks. Deep selected/v2.5.1 gates also pass contained Go
+  1.18.10. V2.12.4/v2.12.5 fail technically in their gRPC generic-atomic
+  closure under Go 1.18, and latest is rejected by the parser. Technical
+  success does not erase selected's three Go 1.19 closure declarations; the
+  authorized inherited-floor exception remains necessary.
+- Selected exposes the `gax` retry/call/stream utilities and `apierror`.
+  Independent option-ordering, retry/no-retry, deadline/cancellation,
+  gRPC/HTTP conversion, backoff/timer, error-detail, header/content,
+  JSON-stream, nil/panic, concurrency, and platform contracts pass both SDKs.
+  Retained qualifications include mutable non-concurrent Retryer/Backoff,
+  package-global jitter, first-pause over-cap and negative-duration panic
+  boundaries, odd-header/nil-reader panics, and non-idempotent stream close.
+- `apierror.ParseError(err, false)` can construct an `APIError` whose required
+  `Error()` panics. Upstream repair `22c16e7bff` first shipped in v2.12.5,
+  whose Go 1.20 floor is ineligible. The authorized behavior exception is
+  bounded by the freshly revalidated zero-loaded-package invariant. If GAX is
+  loaded or directly imported later, the exception expires and that owning
+  checkpoint must stop for a fresh dependency and product decision before
+  merge.
+- Viper v1.15.0 supplies shortest path main -> Viper -> GAX v2.7.0, while
+  historical Cloud/Google/Viper/Crypt vertices declare v2.0.4-v2.1.1.
+  `go mod why -m` is negative and exactly zero GAX packages load. Exact
+  v2.5.1 would downgrade Viper and unrelated selections; later candidates
+  broadly upgrade unrelated selections, and latest raises the main Go line.
+  A redundant v2.7.0 root edge has no selection purpose. The unchanged project
+  stays at 234 modules, 3,599 edges, 429 complete-test entries, 41 loaded
+  modules, 197 module-backed packages, 1,067 sum lines, and a 432-line tidy
+  projection. Raw candidate module/edge/sum counts are 234/4,088/1,158 for
+  v2.5.1, 346/3,777/1,077 for explicit selected, 248/3,674/1,084 for
+  v2.12.5, and 260/3,763/1,106 for latest; corresponding tidied counts are
+  231/3,555/950, base-identical, 234/3,561/949, and 234/3,582/958, always
+  with zero loaded GAX packages.
+- Fresh primary vulnerability data has 1,398 module records and no exact GAX
+  advisory. Project populations remain 30 module findings, 22 Darwin and 23
+  Windows package findings, and 20 IDs/22 traces per symbol platform, with no
+  GAX occurrence. Direct selected-source scans record inherited reachable
+  `x/net` HTTP/2 and protobuf protojson findings; they do not enter the
+  unchanged project, but remain part of the future-loading stop condition.
+- Exact Go 1.26.7 project, compatibility, lint, empty-HOME, cross-build,
+  preflight, host/snapshot/Docker, mutation, and audit gates pass. Applicable
+  Go 1.18.10 gates pass with only the two accepted shell error-wording
+  differences. The unchanged authoritative scorecard remains 27/27 Q0-Q2
+  PASS at L2 with SHA-256
+  `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
+  The 863-entry selected-evidence manifest and decision summary hash to
+  `8b8ea0d9b842b8b3eecc1d7c7b8f8754c24662a74dd21d9d1cef0304bbd18b5b`
+  and `26a2a6a7ad4d06a2c059959d7eaf8df64ee9baeb1688c03927b08b1fd650bfe1`.
 - Next, independently evaluate exact-path
-  `github.com/googleapis/gax-go/v2 v2.7.0`. Viper v1.15.0 declares the
-  selected version, while historical Cloud Go and Google API vertices retain
-  lower requirements; `go mod why -m` is negative and no GAX package loads.
-  Selected declares Go 1.19, apparent last nearby floor-compatible v2.5.1
-  cannot defeat Viper's requirement by an exact root downgrade, and latest
-  v2.24.1 declares Go 1.25. Resolve this Go-floor boundary without changing
-  or independently auditing Viper or another group.
-- Product direction supplied 2026-09-12: retain the existing unloaded GAX
-  v2.7.0 selection as a bounded inherited Go-floor exception. Keep the main
-  module at Go 1.18; do not downgrade GAX, change or independently audit Viper
-  or another parent, raise the Go floor, add an explicit root GAX requirement,
-  or manufacture a dependency commit. Prior runs proved v2.5.1 is the highest
-  Go-1.18-declaring release, every v2.6.0-or-newer stable release declares at
-  least Go 1.19, an exact v2.5.1 request downgrades Viper and unrelated graph
-  selections, and no GAX package loads. Finish the remaining GAX
-  qualification and retain v2.7.0 without metadata changes if no separate
-  disqualifier appears; do not request this same floor decision again.
-- Additional product direction supplied 2026-09-12: accept selected GAX
-  v2.7.0's documented `apierror.ParseError(err, false)` panic as a bounded
-  behavior exception only while the complete project load contains zero GAX
-  packages. Upstream first fixed it in v2.12.5, which declares Go 1.20.
-  Revalidate and record zero loading in the final decision and handover. If
-  GAX becomes loaded or directly imported later, the exception expires and
-  the owning checkpoint must stop for a fresh dependency and product decision
-  before merge. Do not patch or replace GAX, add a root edge, change Viper or
-  another parent, raise the Go floor, or ask for this same behavior decision
-  again. Finish GAX qualification and retain v2.7.0 with no metadata change if
-  no further independent disqualifier exists.
+  `github.com/googleapis/google-cloud-go-testing
+  v0.0.0-20200911160855-bcd43fbb19e8`. Afero v1.9.4 declares selected and
+  supplies shortest path main -> Afero -> target; historical Afero v1.8.2
+  declares the same edge. `go mod why -m` is negative and zero target packages
+  load. The stable proxy list is empty; proxy latest is unreleased
+  `v0.0.0-20210719221736-1c9a4c676720`. Both module files declare Go 1.11.
+  Resolve repository/release qualification and do not promote an arbitrary
+  pseudo-version or broaden into Afero or Cloud client audits.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
