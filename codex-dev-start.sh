@@ -1145,7 +1145,8 @@ exit 70
 #|package behavior and public API, actual project loading, exact MVS effects,
 #|and every applicable quality contract. Retain or select only an exact-path
 #|version whose complete minimal closure preserves Go 1.18 and whose relevant
-#|behavior passes every contract.
+#|behavior passes every contract, except for the explicit bounded inherited
+#|GAX v2.7.0 floor exception authorized below.
 #|
 #|# Authorized Roadmap
 #|
@@ -1203,6 +1204,23 @@ exit 70
 #|as an inherited floor exception or whether the roadmap contract requires a
 #|stop for product direction. Do not manufacture a dependency commit for an
 #|inert decision.
+#|
+#|# Authorized Product Decision
+#|
+#|On 2026-09-12 the user explicitly selected option 1: retain the existing,
+#|unloaded GAX v2.7.0 selection as a bounded inherited Go-floor exception.
+#|Keep the main module's Go 1.18 floor and do not downgrade GAX, change or
+#|independently audit Viper or another parent, raise the Go floor, add an
+#|explicit root GAX requirement, or manufacture a dependency commit. The prior
+#|runs already proved that v2.5.1 is the highest Go-1.18-declaring release,
+#|that every v2.6.0-or-newer stable release declares at least Go 1.19, that an
+#|exact v2.5.1 request downgrades Viper and multiple unrelated graph
+#|selections, and that no GAX package loads in the project. Treat that
+#|specific floor conflict as resolved by product direction; do not stop or ask
+#|for the same decision again. Finish the remaining repository, release,
+#|closure, API, behavior, concurrency, platform, vulnerability, and applicable
+#|project qualification. Retain v2.7.0 without metadata changes if no separate
+#|disqualifying evidence appears. All other stop conditions remain in force.
 #|
 #|Resolve proxy, sumdb, go-import metadata, repository tags/releases/branches,
 #|signatures, commits, times, trees, parents, ancestry, repository status,
@@ -1324,9 +1342,9 @@ exit 70
 #|promote a redirect, fork, alternate path, floor-ineligible release,
 #|prerelease, non-versioning tag, or unreleased commit. If no higher release
 #|qualifies, retain selected without hand-editing metadata or manufacturing a
-#|dependency commit. If selected itself cannot satisfy the stated floor and no
-#|authorized exact-path MVS operation can select a qualified version, stop and
-#|request the product/roadmap decision rather than broadening scope.
+#|dependency commit. The GAX floor conflict and unavailable bounded downgrade
+#|are already proven; apply the authorized inherited exception above rather
+#|than stopping or requesting product direction again.
 #|
 #|For a changed selection, use exact Go 1.26.7 and exact `go get` for one
 #|dependency-only commit, never tidy as implementation, then run the complete

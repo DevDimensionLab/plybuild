@@ -8748,6 +8748,16 @@ Current queue decisions and next bounded P7 group (2026-09-10):
   cannot defeat Viper's requirement by an exact root downgrade, and latest
   v2.24.1 declares Go 1.25. Resolve this Go-floor boundary without changing
   or independently auditing Viper or another group.
+- Product direction supplied 2026-09-12: retain the existing unloaded GAX
+  v2.7.0 selection as a bounded inherited Go-floor exception. Keep the main
+  module at Go 1.18; do not downgrade GAX, change or independently audit Viper
+  or another parent, raise the Go floor, add an explicit root GAX requirement,
+  or manufacture a dependency commit. Prior runs proved v2.5.1 is the highest
+  Go-1.18-declaring release, every v2.6.0-or-newer stable release declares at
+  least Go 1.19, an exact v2.5.1 request downgrades Viper and unrelated graph
+  selections, and no GAX package loads. Finish the remaining GAX
+  qualification and retain v2.7.0 without metadata changes if no separate
+  disqualifier appears; do not request this same floor decision again.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

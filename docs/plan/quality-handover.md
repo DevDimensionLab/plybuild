@@ -39,6 +39,13 @@ OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify,
 Ghodss YAML, and historical root GLFW remain retained. P8 remains queued. Do
 not reopen earlier groups or combine another dependency group.
 
+On 2026-09-12 the user explicitly authorized the bounded inherited Go-floor
+exception for unloaded GAX v2.7.0. Keep the main-module Go 1.18 floor, retain
+GAX v2.7.0 without a dependency edit if its remaining qualification finds no
+separate disqualifier, and do not broaden into a GAX downgrade, Viper or
+parent-graph work, or a Go-floor increase. Do not ask for this same product
+decision again.
+
 Keep every disposable cache, projection, source, report, generated artifact,
 evidence tree, and build context beneath `$CODEX_SESSION_SCRATCH_ROOT`.
 Never run `go mod download all` in a measured worktree or bypass launcher
@@ -204,3 +211,10 @@ an exact root downgrade. Latest v2.24.1 is commit
 conflict without changing or independently auditing Viper. If no authorized
 exact-path selection can satisfy the floor, stop for product/roadmap
 direction rather than broadening scope.
+
+That direction is now supplied: use the 2026-09-12 bounded inherited-floor
+exception for unloaded v2.7.0. Finish the remaining repository, release,
+closure, API, behavior, concurrency, platform, vulnerability, and applicable
+project qualification. Preserve Go 1.18, Viper v1.15.0, the selected graph,
+and dependency metadata unless separate disqualifying evidence requires a
+new stop.
