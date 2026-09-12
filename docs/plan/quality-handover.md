@@ -46,6 +46,16 @@ separate disqualifier, and do not broaden into a GAX downgrade, Viper or
 parent-graph work, or a Go-floor increase. Do not ask for this same product
 decision again.
 
+The user also authorized the recommended bounded behavior exception for the
+known v2.7.0 `apierror.ParseError(err, false)` panic. It applies only while the
+complete project load contains zero GAX packages. Revalidate and record that
+invariant in the final decision and handover. If any GAX package becomes loaded
+or directly imported later, the exception expires and the owning checkpoint
+must stop for a fresh dependency and product decision before merge. Upstream
+first fixed the defect in v2.12.5, which declares Go 1.20. Do not patch or
+replace GAX, add a root edge, change Viper or another parent, raise the Go
+floor, or ask for this same behavior decision again.
+
 Keep every disposable cache, projection, source, report, generated artifact,
 evidence tree, and build context beneath `$CODEX_SESSION_SCRATCH_ROOT`.
 Never run `go mod download all` in a measured worktree or bypass launcher
@@ -216,5 +226,8 @@ That direction is now supplied: use the 2026-09-12 bounded inherited-floor
 exception for unloaded v2.7.0. Finish the remaining repository, release,
 closure, API, behavior, concurrency, platform, vulnerability, and applicable
 project qualification. Preserve Go 1.18, Viper v1.15.0, the selected graph,
-and dependency metadata unless separate disqualifying evidence requires a
-new stop.
+and dependency metadata. The documented `ParseError(err, false)` panic is
+also accepted only while the complete project load contains zero GAX packages;
+revalidate and record that invariant. If GAX becomes loaded or directly
+imported, stop for a fresh decision before merge. Any other independent
+disqualifying evidence still requires a new stop.

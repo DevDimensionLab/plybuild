@@ -8758,6 +8758,17 @@ Current queue decisions and next bounded P7 group (2026-09-10):
   selections, and no GAX package loads. Finish the remaining GAX
   qualification and retain v2.7.0 without metadata changes if no separate
   disqualifier appears; do not request this same floor decision again.
+- Additional product direction supplied 2026-09-12: accept selected GAX
+  v2.7.0's documented `apierror.ParseError(err, false)` panic as a bounded
+  behavior exception only while the complete project load contains zero GAX
+  packages. Upstream first fixed it in v2.12.5, which declares Go 1.20.
+  Revalidate and record zero loading in the final decision and handover. If
+  GAX becomes loaded or directly imported later, the exception expires and
+  the owning checkpoint must stop for a fresh dependency and product decision
+  before merge. Do not patch or replace GAX, add a root edge, change Viper or
+  another parent, raise the Go floor, or ask for this same behavior decision
+  again. Finish GAX qualification and retain v2.7.0 with no metadata change if
+  no further independent disqualifier exists.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

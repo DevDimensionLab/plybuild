@@ -4,7 +4,7 @@ Status: NEXT
 Session ID: `2026-09-10T054841+0200-evaluate-googleapis-gax-go-v2-dependency`
 Created: `2026-09-10T05:48:41+02:00`
 Source: `codex-dev-start.sh`
-Prompt SHA-256: `b97c1fcee29dd1b83b23ada7c9db928847138d22b625f4cd44a858c31567e9d1`
+Prompt SHA-256: `b426bd87e26f5e2466d791bb36bd401ae049cbdb190acc9025f40a84585582a1`
 Previous: [2026-09-10T015335+0200-evaluate-google-uuid-dependency.md](2026-09-10T015335+0200-evaluate-google-uuid-dependency.md)
 Next: none
 Outcome: pending
@@ -21,7 +21,7 @@ package behavior and public API, actual project loading, exact MVS effects,
 and every applicable quality contract. Retain or select only an exact-path
 version whose complete minimal closure preserves Go 1.18 and whose relevant
 behavior passes every contract, except for the explicit bounded inherited
-GAX v2.7.0 floor exception authorized below.
+GAX v2.7.0 floor and behavior exceptions authorized below.
 
 # Authorized Roadmap
 
@@ -94,8 +94,24 @@ selections, and that no GAX package loads in the project. Treat that
 specific floor conflict as resolved by product direction; do not stop or ask
 for the same decision again. Finish the remaining repository, release,
 closure, API, behavior, concurrency, platform, vulnerability, and applicable
-project qualification. Retain v2.7.0 without metadata changes if no separate
-disqualifying evidence appears. All other stop conditions remain in force.
+project qualification. Retain v2.7.0 without metadata changes subject to the
+separate bounded behavior decision below. All other stop conditions remain
+in force.
+
+On 2026-09-12 the user also explicitly authorized the recommended bounded
+behavior exception for the known unloaded v2.7.0
+`apierror.ParseError(err, false)` defect. Prior runs proved that a normal
+gRPC status can produce an `APIError` whose required `Error()` method panics,
+and that upstream first fixed this in v2.12.5, which declares Go 1.20. Accept
+this known behavior only while the complete project load contains zero GAX
+packages. Revalidate and record that zero-load invariant in the final
+decision and handover. If any GAX package becomes loaded or directly
+imported later, this exception expires and the owning checkpoint must stop
+for a fresh dependency and product decision before merge. Do not patch or
+replace GAX, add an explicit root edge, change Viper or another parent, raise
+the Go floor, or request this same behavior decision again. Finish
+qualification and retain v2.7.0 without metadata changes if no additional
+independent disqualifier appears.
 
 Resolve proxy, sumdb, go-import metadata, repository tags/releases/branches,
 signatures, commits, times, trees, parents, ancestry, repository status,
@@ -196,11 +212,12 @@ Any change outside the exact GAX edge and its necessary authorized MVS
 projection is a stop condition.
 
 Compare selected/candidate primary vulnerability results at module, package,
-symbol, and reachable-trace levels. Reject, retain, or stop if canonical
-identity, release qualification, complete floor, behavior, concurrency,
-timers/randomness, tests, API, loading, MVS, or any applicable quality
-contract fails. Do not treat absence from the loaded package set as permission
-to ignore source-time floor or closure evidence.
+symbol, and reachable-trace levels. Except for the two explicit GAX decisions
+above, reject, retain, or stop if canonical identity, release qualification,
+complete floor, behavior, concurrency, timers/randomness, tests, API, loading,
+MVS, or any applicable quality contract fails. Do not treat absence from the
+loaded package set as permission to ignore source-time floor or closure
+evidence.
 
 # Required Reading
 
@@ -219,7 +236,9 @@ prerelease, non-versioning tag, or unreleased commit. If no higher release
 qualifies, retain selected without hand-editing metadata or manufacturing a
 dependency commit. The GAX floor conflict and unavailable bounded downgrade
 are already proven; apply the authorized inherited exception above rather
-than stopping or requesting product direction again.
+than stopping or requesting product direction again. The documented
+`ParseError` panic is also accepted only under the zero-loaded-package
+invariant above; do not stop or request that decision again.
 
 For a changed selection, use exact Go 1.26.7 and exact `go get` for one
 dependency-only commit, never tidy as implementation, then run the complete
