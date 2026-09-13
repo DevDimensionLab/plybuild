@@ -8973,6 +8973,73 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   manufacture a dependency commit, or request the same decision again while
   the guards hold. Enterprise Certificate Proxy and GAX retain only their own
   separate guarded exceptions.
+- Stop exact-path `github.com/gorilla/websocket` for a fresh bounded product
+  decision without a dependency edit. Fresh proxy, sumdb, `go-import`, strict
+  Git, and GitHub evidence resolves the canonical public active unarchived
+  non-fork BSD-2-Clause repository and eleven proxy versions. Serious stable
+  releases are v1.4.2, v1.5.0, v1.5.1, and v1.5.3. GitHub marks v1.5.2 a
+  prerelease; the proxy preserves original commit `1bddf2e0`, while its forge
+  tag was overwritten to `9ec25ca` and unreleased main later retracts it.
+- V1.4.2, v1.5.0, and v1.5.3 declare Go 1.12 and have standard-library-only
+  complete minimal closures under exact Go 1.26.7 and Go 1.18.10. V1.5.1 and
+  v1.5.2 declare Go 1.20, add an `x/net` closure, and have broken default
+  vendor mode because their proxy zips retain `vendor/modules.txt` without the
+  vendored packages. V1.5.2 also imports Go-1.20-only
+  `http.NewResponseController` and fails Go 1.18 compilation. Thus v1.5.3 is
+  the highest stable floor-preserving release, but it is not behavior/security
+  qualified.
+- Fresh primary GO-2026-6278/GHSA-w67g-5rqw-f597 evidence says weak WebSocket
+  client-mask PRNG affects versions before v1.5.3 and labels v1.5.3 fixed.
+  Inspected release source contradicts that range: v1.5.3 explicitly reverts
+  `newMaskKey` to `math/rand`, and a seed-controlled independent fixture proves
+  repeatable mask keys. Security commit `d67f41855da42d7bccd9ef050c49f7e54e783b95`
+  switches to `crypto/rand` only after v1.5.3 on unreleased main. Original
+  proxy v1.5.2 contains that fix, but is prerelease and floor-ineligible. No
+  published exact-path stable release both preserves Go 1.18 and contains the
+  fix.
+- The reviewed govulncheck v1.8.0 snapshot updated
+  2026-09-10T14:48:42Z omits the unreviewed GO record, so it reports no target
+  occurrence. The primary index has 1,398 module records, Last-Modified
+  2026-09-10T16:28:28Z, and one affected selected module. Project
+  package/symbol/test-symbol/reachable target results are zero only because no
+  target package loads. Source evidence and the fresh primary record take
+  precedence over the reviewed-snapshot omission.
+- Every package, example, test, benchmark, generated/build-tag file, exported
+  API, and relevant connection boundary was inspected. The independent fixture
+  covers real handshake success/failure, headers/auth/cookies, origin and
+  subprotocol policy, proxy/TLS-visible paths, compression, fragmentation and
+  control-frame interleaving, malformed/oversized frames, close/deadline/error
+  behavior, prepared-message copying/concurrent reuse, pools, deterministic
+  masking, and cleanup under both SDKs. A repeated whole-source Go 1.26 race
+  selection finds an upstream cross-test lifecycle defect (`cstHandler` logs
+  after its test returns) in both v1.4.2 and v1.5.3; isolated supported-use
+  fixture race passes.
+- The sole incoming selected edge is direct mvn-pom-mutator v0.2.3;
+  `go mod why -m` is negative, repository source has no target import, and zero
+  target packages load. Exact v1.4.2/v1.5.0/v1.5.3 projections add a redundant
+  direct requirement but no unrelated selection and tidy byte-identically to
+  base. V1.5.1/v1.5.2 request unrelated `x/*` upgrades that remain after tidy.
+  The unchanged project stays at 234 modules, 3,599 edges, 429/197/41 load
+  entries/module-backed packages/loaded modules, 1,067 sum lines, and a
+  432-line tidy projection. `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+  and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- Exact Go 1.26.7 project verify/load/build/repeats/race/vet/lint/hermetic/
+  cross-build/API/CLI/full-preflight gates pass. Applicable Go 1.18.10 gates
+  retain only the two accepted `pkg/shell` wording failures. No metadata
+  changed; accepted quality remains 27/27 Q0-Q2 PASS at L2 with scorecard
+  `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
+  Selected evidence and decision-summary hashes are
+  `cc15144b88edbf330e1300dda430eead2419087883d97788edb7d781bb48b912`
+  and `4f36e9a15e7e17cf9a09b79ef4f875e2dbecbb7f171682d803aca9514e8d7f91`.
+- The next decision may: (1, recommended) retain exact inherited unloaded
+  v1.4.2 without metadata changes under a new exact-version/sole-edge/zero-load
+  security and test-design exception; (2) authorize a broader owning-parent
+  removal evaluation that explicitly reopens the final GopherJS edge guard; or
+  (3) authorize a maintained patch/fork/unreleased strategy with explicit
+  provenance, release, maintenance, and floor policy. Do not select v1.5.3
+  merely to silence the current advisory range; it retains the vulnerable
+  source behavior. Do not act until the user chooses.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
