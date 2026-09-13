@@ -22,44 +22,66 @@ session diary.
   v0.6.0 `3d4cfd`, Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0
   `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. All earlier
   dependency decisions are final and must not be reopened.
-- The Enterprise Certificate Proxy evaluation is a bounded product stop. Its
-  answered archive links to the sole NEXT product-decision archive. No
-  `.agent-task/current.md` or repository `.quality/manual-evidence.json`
+- The Enterprise Certificate Proxy evaluation is answered, and the user has
+  supplied option 1 with bounded exceptions in the sole NEXT decision archive.
+  No `.agent-task/current.md` or repository `.quality/manual-evidence.json`
   exists. Do not push, merge, publish, release, stash, revert, launch a
   successor, bypass cleanup, or remove the worktree.
 
 ## Lifecycle And Retained Roadmap
 
-P2A-P6 are complete. P7 is paused for a fresh Enterprise Certificate Proxy
-product decision after exact Go 1.26.7 and accepted Speakeasy v0.2.0, XXHash
-v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0, Go Stack v1.8.1, Godbus D-Bus
-v5.1.0, Golang Protobuf v1.5.3, Golang Snappy v1.0.0, Google Martian v3.3.2,
-Google Renameio v1.0.1, and Google UUID v1.4.0 moves. Google pprof
+P2A-P6 are complete. P7 is recording the user's bounded Enterprise Certificate
+Proxy option 1 decision after exact Go 1.26.7 and accepted Speakeasy v0.2.0,
+XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0, Go Stack v1.8.1,
+Godbus D-Bus v5.1.0, Golang Protobuf v1.5.3, Golang Snappy v1.0.0, Google
+Martian v3.3.2, Google Renameio v1.0.1, and Google UUID v1.4.0 moves. Google pprof
 `v0.0.0-20210720184732-4bb14d4b1be1`, Gogo Protobuf v1.3.2, Crypt,
 OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify,
 Ghodss YAML, historical root GLFW, Googleapis GAX Go v2 v2.7.0, and Google
 Cloud Go Testing `v0.0.0-20200911160855-bcd43fbb19e8` remain retained. P8
-remains queued. Do not start another dependency group until the product stop
-is resolved.
+remains queued. Do not start another dependency group until the decision is
+recorded in a committed handoff.
 
 The user's two 2026-09-12 GAX decisions remain final. V2.7.0 retains its
 inherited Go-1.19 floor exception and known
 `apierror.ParseError(err, false)` panic exception only while the complete
 project load contains zero GAX packages. If any GAX package becomes loaded or
 directly imported, the behavior exception expires and the owning checkpoint
-must stop for a fresh dependency and product decision. Do not apply either
-exception to Enterprise Certificate Proxy.
+must stop for a fresh dependency and product decision. Those GAX exceptions do
+not transfer to Enterprise Certificate Proxy, which now has its own separately
+bounded decision below.
 
 Keep every disposable cache, projection, source, report, generated artifact,
 evidence tree, and build context beneath `$CODEX_SESSION_SCRATCH_ROOT`. Never
 run `go mod download all` in a measured worktree or bypass launcher cleanup.
 
-## Enterprise Certificate Proxy Product Stop
+## Enterprise Certificate Proxy Product Decision
 
 There is no qualified, technically acceptable, in-scope exact-path release of
 `github.com/googleapis/enterprise-certificate-proxy` under the current Go 1.18
-and behavior contracts. Do not change `go.mod` or `go.sum` until the user makes
-a fresh product decision.
+and behavior contracts. On 2026-09-13 the user explicitly selected option 1
+with the recommended bounds: retain exact selected, unloaded v0.2.1 without a
+dependency edit. Keep the main Go 1.18 floor and accept v0.2.1's Go 1.19
+declaration only for this exact version and the unchanged inherited Viper
+v1.15.0 edge.
+
+The decision also accepts only the already documented v0.2.1 release,
+behavior, and safety findings: public-preview classification; lost executable
+bit and raw proxy-test failure; configuration and file-lifetime boundaries;
+unbounded signer/RPC waits; incomplete cleanup; error-string-dependent and
+non-idempotent close; nil/panic and aliasing boundaries; global-logger side
+effects; and the recorded unsafe C ABI boundaries. It does not accept a new or
+independently discovered defect.
+
+The exceptions remain valid only while the complete project load contains zero
+target packages and selected v0.2.1 plus its sole incoming Viper edge remain
+unchanged. Revalidate and record zero loading in the committed decision. Direct
+import or loading, runtime reachability, a target version or incoming-edge
+change, or a new vulnerability/advisory or independent disqualifier expires
+the exceptions and requires a fresh dependency and product decision before
+merge. Do not modify metadata, add a direct edge, patch or replace the target,
+downgrade or independently audit Viper/GAX, raise the Go floor, or ask for this
+same decision again while the invariants hold.
 
 The exact path resolves to the public, active, unarchived, non-fork Apache-2.0
 repository `https://github.com/googleapis/enterprise-certificate-proxy.git`.
@@ -197,17 +219,8 @@ and `276efebfe75500789ce6501630e8ecdb0dbbf8241ae20c74f57bccfbc348180c`.
 
 ## Next Objective
 
-Obtain an explicit fresh product decision before any implementation or another
-dependency audit. Present these bounded choices without choosing silently:
-
-1. Retain unloaded v0.2.1 by defining new Enterprise Certificate Proxy Go-1.19
-   and identified behavior/safety exceptions.
-2. Authorize a broader Viper/MVS dependency group and separately decide whether
-   public-preview v0.2.0's packaging, process-lifecycle, and C-ABI failures can
-   be risk-accepted.
-3. Authorize a different Viper/removal/Go-floor strategy that eliminates the
-   target or permits a later release, with a new bounded measurement plan.
-
-Until the user chooses and bounds one option, keep selected v0.2.1 unchanged,
-do not grant it an exception, do not change Viper or GAX, and do not start P8
-or another dependency group.
+Record the user's explicit option 1 decision without dependency implementation.
+Revalidate unchanged v0.2.1/Viper selection, negative `go mod why -m`, untouched
+metadata, and zero loaded target and GAX packages. Then answer the decision
+archive and prepare exactly one next bounded P7 dependency mission. Do not
+execute that successor mission in the decision-recording turn.

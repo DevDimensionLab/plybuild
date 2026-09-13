@@ -8876,11 +8876,22 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   The 562-entry evidence manifest and decision summary hash to
   `59868d9547ece628b950faf9200377108a0aab55fbbfab731d5f0b5fbcd10033`
   and `276efebfe75500789ce6501630e8ecdb0dbbf8241ae20c74f57bccfbc348180c`.
-- Product must now explicitly choose and bound one of: new Go-floor and safety
-  exceptions for retained unloaded v0.2.1; a broader Viper/MVS group plus
-  explicit v0.2.0 risk acceptance; or a different Viper/removal/Go-floor
-  strategy. Until then, keep metadata unchanged and do not start P8 or another
-  dependency group.
+- Product direction supplied 2026-09-13: the user explicitly selected option 1
+  with the recommended bounds. Retain exact selected, unloaded Enterprise
+  Certificate Proxy v0.2.1 without dependency metadata changes. Preserve the
+  main Go 1.18 floor and accept v0.2.1's Go 1.19 declaration only for this exact
+  version and unchanged inherited Viper v1.15.0 edge. Separately accept only the
+  already documented public-preview/release-packaging, configuration/file-
+  lifetime, process-lifecycle, close, nil/panic, aliasing, global-logger, and C
+  ABI behavior/safety findings. Revalidate and record zero loaded target
+  packages. Direct import/loading, runtime reachability, a target version or
+  incoming-edge change, or a new vulnerability/advisory or independent
+  disqualifier expires the exceptions and requires a fresh dependency/product
+  decision before merge. Do not add a root edge, patch/replace the target,
+  change or independently audit Viper/GAX, raise the Go floor, manufacture a
+  dependency commit, or request this same decision again while the invariants
+  hold. Record the decision, answer its archive, and prepare one next bounded
+  P7 mission without executing it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
