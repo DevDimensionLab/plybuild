@@ -4,7 +4,7 @@ Status: NEXT
 Session ID: `2026-09-13T172733+0200-decide-gopherjs-product-direction`
 Created: `2026-09-13T17:27:33+02:00`
 Source: `codex-dev-start.sh`
-Prompt SHA-256: `a37f3cc121fc9f9011b9b1654088323e7a13d91b6ee0efee36cc4a58ec41c27f`
+Prompt SHA-256: `45181d18e878ac425cb259204c50565c11ed47664d2cb20c8574d66c0c9db06d`
 Previous: [2026-09-13T140912+0200-evaluate-gopherjs-dependency.md](2026-09-13T140912+0200-evaluate-gopherjs-dependency.md)
 Next: none
 Outcome: pending
@@ -14,38 +14,47 @@ The block below is the byte-exact Codex prompt argument, including its terminal 
 <!-- CODEX_SESSION_PROMPT_BEGIN -->
 # Mission
 
-Continue P7 by obtaining and recording one explicit product direction for
-selected exact-path
-`github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1` after its
-bounded evaluation found no exact-path version that satisfies all existing
-release, Go 1.18, complete-closure, required-host, and behavior contracts.
-This is a decision move, not authorization to implement a dependency change,
-audit another group, or begin P8.
+Continue P7 only by recording the user's 2026-09-13 explicit selection of
+option 1 for exact-path
+`github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1`. Retain the
+exact selected, inherited, unloaded pseudo-version without dependency metadata
+changes under the bounded release, closure, compiler, command, and runtime
+exceptions below. Do not implement a dependency change, audit another group,
+or begin P8 in this decision-recording move.
 
 # Authorized Roadmap
 
-Choose exactly one direction; do not infer a choice.
+P2A-P6 and all earlier P7 dependency decisions remain final. Existing
+Enterprise Certificate Proxy and GAX exceptions remain separate under their
+own zero-load guards and do not transfer to GopherJS.
 
-1. **Retain selected unloaded (recommended).** Keep exact selected unchanged
-   and grant a new, non-transferable exception for its unqualified
-   pseudo-release, synthetic/incomplete modern source and test closure, and
-   known compiler/command/runtime incompatibility. The exception is valid only
-   while zero GopherJS packages load, the module remains runtime-unreachable,
-   its exact version and sole GoConvey v1.6.4 edge remain unchanged, and no new
-   advisory or independent disqualifier appears. Any invariant failure requires
-   a fresh dependency and product decision before merge.
-2. **Authorize a broader parent/removal evaluation.** Permit one future bounded
-   group covering the direct mvn-pom-mutator v0.2.3 -> GoConvey v1.6.4 ->
-   GopherJS chain, with the objective of eliminating the GopherJS edge. This
-   does not pre-approve any parent, selection, API, behavior, or metadata
-   change; that group must independently qualify and stop on unrelated effects.
-3. **Authorize a specified alternate strategy.** Explicitly name the permitted
-   Go-floor raise, prerelease, fork, replacement, or patched-source direction
-   and the behavior/MVS/API risk that may be considered. No unspecified floor,
-   parent, fork, direct edge, patch, or unrelated module movement is authorized.
+# Authorized Product Decision
 
-If the user does not explicitly select and bound one option, preserve the
-unchanged repository and continue the product stop.
+On 2026-09-13 the user explicitly selected option 1 with the recommended
+bounds: retain exact selected
+`gopherjs v0.0.0-20181017120253-0766667cb4d1` as an inherited, unloaded
+selection. Accept only the already documented unqualified pseudo-release,
+unsigned and untagged identity, proxy-synthesized module file, undeclared and
+incomplete modern source/test closure, missing vendored test package,
+post-floor modern resolution, and known compiler, command, and generated-
+runtime incompatibilities. This does not accept a new or independently
+discovered defect.
+
+Keep `go.mod` and `go.sum` unchanged. Do not add a direct GopherJS edge, select
+another target version, change mvn-pom-mutator or GoConvey, authorize a broader
+parent/removal evaluation, raise the Go floor, or select a prerelease, fork,
+replacement, patch, alternate module path, unrelated-module move, or dependency
+implementation commit.
+
+The exception is non-transferable and valid only while the complete project
+load contains zero GopherJS packages, the module remains runtime-unreachable,
+the exact selected pseudo-version and its sole incoming GoConvey v1.6.4 edge
+remain unchanged, and no new advisory or independent disqualifier appears.
+Revalidate and record those guards. Direct import or loading, runtime
+reachability, a version or incoming-edge change, or a new advisory or
+independent disqualifier expires the exception and requires a fresh dependency
+and product decision before merge. Do not stop or ask for this same GopherJS
+decision again while all guards hold.
 
 # Measurements At Start
 
@@ -114,12 +123,11 @@ v2.7.0 exceptions remain valid only under their own zero-load guard. Both
 targets remain at zero loaded packages. Do not reopen those decisions or
 transfer their exceptions to GopherJS.
 
-Do not add a direct GopherJS edge merely to alter MVS. Do not silently select a
-redirect, fork, alternate path, prerelease, non-versioning tag, unreleased
-branch, floor-ineligible version, patch, replacement, or parent change. Any
-implementation after a decision is a separate bounded mission and must prove
-its own exact source, closure, loading, MVS, vulnerability, compatibility, and
-quality effects.
+This is a decision-recording move, not a renewed technical audit or dependency
+implementation. The user has explicitly selected and bounded option 1; do not
+ask for that decision again or broaden it into parent, removal, direct-use,
+future-version, floor, prerelease, fork, replacement, patch, alternate-path, or
+unrelated-module authorization.
 
 # Required Reading
 
@@ -143,20 +151,19 @@ GoConvey edge, negative why result, zero GopherJS/ECP/GAX loaded packages,
 unchanged module hashes, and current primary advisory state. Reuse the completed
 technical audit; do not repeat or broaden it.
 
-Second, obtain one explicit option. If option 1 is selected, record its exact
-exception, guards, expiration triggers, and no-change result. If option 2 or 3
-is selected, record only the newly authorized future scope and constraints; do
-not execute that implementation in this decision move. Without an explicit
-choice, preserve the stop.
+Second, record the exact option 1 exception, accepted known findings, guards,
+expiration triggers, and no-change result in the roadmap and rolling handover.
+Retain the selected pseudo-version without a dependency or implementation
+commit.
 
-Third, answer this archive, rewrite the roadmap and rolling handover, and follow
-the lifecycle contract for exactly one next bounded authorized mission if the
-decision leaves work authorized. Do not execute the successor in this turn.
+Third, answer this archive and follow the lifecycle contract for exactly one
+next bounded P7 mission under the existing queue. Do not execute the successor
+mission in this turn.
 
 # Automatic Handoff
 
-After an explicit decision or continued product stop, follow the repository
-lifecycle contract. Do not implement the resulting dependency strategy, audit
-another dependency, launch a successor, push, merge, publish, release, stash,
-revert, bypass cleanup, or remove the worktree.
+After recording the decision, follow the repository lifecycle contract. Do not
+implement a dependency strategy, audit another dependency, launch a successor,
+push, merge, publish, release, stash, revert, bypass cleanup, or remove the
+worktree.
 <!-- CODEX_SESSION_PROMPT_END -->

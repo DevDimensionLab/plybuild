@@ -21,22 +21,24 @@ session diary.
   v0.6.0 `3d4cfd`, Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0
   `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. All earlier
   decisions are final.
-- The GopherJS evaluation is answered with a bounded product stop. The sole
-  NEXT archive asks for that product direction. No `.agent-task/current.md`
-  or repository `.quality/manual-evidence.json` exists. Do not execute the
-  decision's successor, push, merge, publish, release, stash, revert, bypass
-  cleanup, or remove the worktree.
+- The GopherJS evaluation is answered, and the user has supplied option 1 with
+  the recommended bounds in the sole NEXT decision archive. No
+  `.agent-task/current.md` or repository `.quality/manual-evidence.json`
+  exists. Do not execute the decision's successor, push, merge, publish,
+  release, stash, revert, bypass cleanup, or remove the worktree.
 
 ## Lifecycle And Retained Roadmap
 
-P2A-P6 are complete. P7 remains active. Exact Go 1.26.7 and the accepted
+P2A-P6 are complete. P7 is recording the user's bounded GopherJS option 1
+decision. Exact Go 1.26.7 and the accepted
 Speakeasy, XXHash, Fatih Color, Go Logfmt, Go Stack, Godbus D-Bus, Golang
 Protobuf, Golang Snappy, Google Martian, Google Renameio, and Google UUID
 moves remain final. Google pprof, Gogo Protobuf, Crypt, OpenCensus Proto,
 Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify, Ghodss YAML, historical
 root GLFW, Googleapis GAX Go v2 v2.7.0, Google Cloud Go Testing, and Enterprise
 Certificate Proxy v0.2.1 remain retained. P8 is queued. Do not combine another
-dependency with the GopherJS decision or begin P8.
+dependency with this decision or begin P8 before it is recorded in a committed
+handoff.
 
 The user's 2026-09-13 Enterprise Certificate Proxy option 1 decision remains
 final and separate. Exact v0.2.1 retains its bounded Go-1.19 floor and recorded
@@ -44,19 +46,43 @@ release/behavior/safety exceptions only while it has zero loaded packages,
 remains runtime-unreachable, and its exact version and sole Viper v1.15.0 edge
 remain unchanged without a new advisory or independent disqualifier. The two
 GAX exceptions likewise remain valid only for exact v2.7.0 while zero GAX
-packages load. This evaluation revalidated zero packages for both targets; do
-not transfer either exception to GopherJS.
+packages load. This evaluation revalidated zero packages for both targets.
+Those exceptions do not transfer to GopherJS, which now has its own separately
+bounded decision below.
 
 Keep every disposable cache, projection, source, report, generated artifact,
 evidence tree, runtime/tool installation, and build context beneath
 `$CODEX_SESSION_SCRATCH_ROOT`. Never run `go mod download all` in a measured
 worktree or bypass launcher cleanup.
 
-## GopherJS Product Stop
+## GopherJS Product Decision
 
 No qualified exact-path release satisfies the existing Go 1.18, release,
-complete-closure, host, and behavior contracts. Do not change
-`github.com/gopherjs/gopherjs` without a fresh bounded product decision.
+complete-closure, host, and behavior contracts. On 2026-09-13 the user
+explicitly selected option 1 with the recommended bounds: retain exact
+selected, inherited, unloaded
+`github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1`
+without a dependency edit.
+
+The decision accepts only the already documented unqualified pseudo-release,
+unsigned and untagged identity, proxy-synthesized module file, undeclared and
+incomplete modern source/test closure, missing vendored test package,
+post-floor modern resolution, and compiler, command, and generated-runtime
+incompatibilities. It does not accept a new or independently discovered
+defect. Do not add a direct target edge, select another version, change
+mvn-pom-mutator or GoConvey, authorize a broader parent/removal evaluation,
+raise the Go floor, or select a prerelease, fork, replacement, patch, alternate
+module path, unrelated-module move, or dependency implementation commit.
+
+The non-transferable exception remains valid only while the complete project
+load contains zero GopherJS packages, the module remains runtime-unreachable,
+and the exact selected pseudo-version and its sole incoming GoConvey v1.6.4
+edge remain unchanged without a new advisory or independent disqualifier.
+Revalidate and record those guards in the committed decision. Direct import or
+loading, runtime reachability, a version or incoming-edge change, or a new
+advisory or independent disqualifier expires the exception and requires a
+fresh dependency and product decision before merge. Do not ask for this same
+decision again while all guards hold.
 
 Fresh proxy, sumdb, `go-import`, strict Git, and GitHub evidence resolve the
 public, active, unarchived, non-fork BSD-2-Clause repository
@@ -252,13 +278,9 @@ Q0-Q2 PASS at L2 with scorecard SHA-256
   bare-`mktemp` wrapper, and tool paths supplied as environment variables so
   Make's negative contract tests can override them.
 
-The next bounded session must obtain one product direction. Recommended option
-1 retains exact selected GopherJS unchanged only under a new, non-transferable
-zero-load exception covering its unqualified pseudo-release, incomplete modern
-source/test closure, and known command/runtime incompatibility. Option 2 may
-authorize a broader `mvn-pom-mutator`/GoConvey parent or removal group to
-eliminate the edge. Option 3 may authorize a specified floor/prerelease/fork or
-patched-source strategy, including its broader MVS/API/behavior consequences.
-Revalidate the target's sole edge, negative why result, zero target/ECP/GAX
-loads, checksums, and fresh advisory state before recording a choice. Do not
-infer a choice or implement beyond the selected direction.
+The next bounded session must record the user's explicit option 1 decision
+without dependency implementation. Revalidate the exact selected version and
+sole GoConvey edge, negative why result, zero target/ECP/GAX loads, unchanged
+module hashes, and fresh advisory state. Then answer the decision archive and
+prepare exactly one next bounded P7 mission. Do not execute that successor in
+the decision-recording turn.

@@ -8939,11 +8939,25 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   failures. No metadata changed, so accepted quality remains 27/27 Q0-Q2 PASS
   at L2 with scorecard
   `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
-- Obtain one bounded GopherJS product direction next. The recommended choice is
-  to retain exact selected unchanged only under a new zero-load exception;
-  alternatives must explicitly authorize a broader parent/removal group or a
-  specified floor/prerelease/fork/patched-source strategy. Do not infer a
-  choice, combine another dependency, or begin P8.
+- Product direction supplied 2026-09-13: the user explicitly selected option 1
+  with the recommended bounds. Retain exact selected, inherited, unloaded
+  GopherJS `v0.0.0-20181017120253-0766667cb4d1` without dependency metadata
+  changes. Accept only its already documented unqualified pseudo-release,
+  unsigned/untagged identity, proxy-synthesized module file, incomplete modern
+  source/test closure, missing vendored test package, post-floor resolution,
+  and known compiler/command/generated-runtime incompatibilities. The exception
+  is non-transferable and valid only while zero GopherJS packages load, the
+  module remains runtime-unreachable, its exact version and sole GoConvey
+  v1.6.4 edge remain unchanged, and no new advisory or independent disqualifier
+  appears. Direct import/loading, runtime reachability, a version or incoming-
+  edge change, or a new advisory or independent disqualifier expires the
+  exception and requires a fresh dependency/product decision before merge. Do
+  not add a direct edge, change GopherJS, mvn-pom-mutator, or GoConvey, authorize
+  a broader parent/removal group, raise the Go floor, select a prerelease/fork/
+  replacement/patch/alternate path, move unrelated modules, manufacture a
+  dependency commit, or request this same decision again while the guards hold.
+  Record the decision, answer its archive, and prepare one next bounded P7
+  mission without executing it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
