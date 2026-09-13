@@ -1,13 +1,13 @@
 # Agent Session: Evaluate GopherJS Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-13T140912+0200-evaluate-gopherjs-dependency`
 Created: `2026-09-13T14:09:12+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `cafae78c8fb303ce0a48aaaf78c2be1065e7bb5e7374f1661db3aaf3727ce10a`
 Previous: [2026-09-13T122112+0200-decide-enterprise-certificate-proxy-product-direction.md](2026-09-13T122112+0200-decide-enterprise-certificate-proxy-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-13T172733+0200-decide-gopherjs-product-direction.md](2026-09-13T172733+0200-decide-gopherjs-product-direction.md)
+Outcome: blocked; no qualified exact-path version satisfies the existing contracts
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -179,3 +179,121 @@ handover and roadmap, answer this archive, and follow the repository lifecycle
 contract. Do not implement another dependency group, launch a successor, push,
 merge, publish, release, stash, revert, bypass cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+No exact-path GopherJS version qualifies under the existing release, Go 1.18,
+complete-closure, required-host, and behavior contracts. The project was left
+unchanged and this checkpoint stops for a fresh bounded product decision.
+
+Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves the public,
+active, unarchived, non-fork BSD-2-Clause repository
+`https://github.com/gopherjs/gopherjs.git`. The proxy exposes thirteen
+versions. V1.17.2, v1.20.0-v1.20.2, and v1.21.0 are stable GitHub releases;
+the v1.18/v1.19 beta lines remain semver prereleases despite GitHub's false
+prerelease boolean. Tags are lightweight and unsigned, while the newer merge
+commits have valid GitHub commit signatures. No retraction, deprecation,
+redirect, alternate module path, qualified fork, or released branch head
+changes that classification.
+
+Selected `v0.0.0-20181017120253-0766667cb4d1` is unsigned commit
+`0766667cb4d1cfb8d5fde1fe210ae41ead3cf589`, parent
+`1babbf986f6fcb1156d0646cdba5c4f81bc32849`, tree
+`dd58a45631ba0db649f1b0a69b403d92717bd7b3`, at
+2018-10-17T12:02:53Z. Its source/mod sums are
+`h1:EGx4pi6eqNxGaHF6qqu48+N2wcFQ5qg5FXgOdqsJ5d8=` and
+`h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=`. The proxy synthesizes a
+module file containing only the module path. Read-only resolution of its 16
+packages lacks twelve dependency providers, and the zip excludes the vendored
+test package. A modern synthesized closure selects post-Go-1.18 `x/tools`,
+still cannot load all tests, and the compiler deliberately fails outside Go
+1.11. Selected is neither a qualified release nor a complete modern closure.
+
+Highest floor-eligible stable v1.17.2 is unsigned commit
+`fcf8e05a6f4fe7573b43c6bc65c2d1166fbd48cd`, parent
+`3f8f90ca77315ddcfeb3fdae8db0262fcc86a758`, tree
+`1e5857086864288b4a1cb1158384437da435b59e`, with source/mod sums
+`h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=` and
+`h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=`. Its 157-module graph peaks
+at Go 1.17; actual production/test loading uses 29 external packages across 14
+modules and produces 308/238 complete-test entries under Go 1.26.7/1.18.10.
+V1.12.80 fails its exact Go-1.12 guard and old test closure. Beta3 preserves a
+Go 1.18 closure but is not stable. V1.20.2 and v1.21.0 declare Go 1.20/1.21.
+
+V1.17.2's command, build/compiler packages, native shims, `js`, `nosync`,
+internal helpers, generated assets, build constraints, examples, benchmarks,
+testdata, and tests were inspected. Its CLI supplies `build`, `install`,
+`doc`, `get`, `run`, `test`, `serve`, `version`, and `clean`; commands use
+GOPATH/module discovery, filesystem caches and outputs, subprocesses, Node,
+watchers, and a TCP server without contexts or timeouts. Browser filesystem,
+process, and network behavior comes from native shims; no browser executable
+was available, so browser behavior is source-characterized. Public session
+state mutates caller options and is not concurrency-safe; nil options panic,
+and `js`/`nosync` have intentional intrinsic and misuse panic boundaries.
+An independent two-test state fixture passes count-10/race under both SDKs.
+
+With exact Go 1.18.10 host, contained Go 1.17.9 target, Node 12.22.12, and the
+native syscall addon, the native packages and primary suite pass. The complete
+Go-repository compiler suite reproducibly reports 421 pass, 62 known failures,
+and seven unexpected Darwin/arm64 generated-program failures through
+`syscall/zsyscall_darwin_arm64.go` into unimplemented
+`internal/abi.FuncPCABI0`. A trivial generated program independently crashes
+at first formatted output, and `gopherjs test` crashes on the same path. Under
+required Go 1.26.7, v1.17.2 additionally panics on newer generic AST syntax
+and misparses the VERSION file. Its upstream vet/race scopes pass; whole-tree
+vet reports two intentionally unreachable test blocks.
+
+Linux-target JavaScript and version-3 source maps are byte-deterministic across
+two builds, and Node prints `sum=42 goos=linux goarch=js`; the Linux test
+binary nevertheless exits 140. Beta3's full Go 1.18.10 suite passes, but it is
+a prerelease and cannot link under Go 1.26.7 because
+`github.com/visualfc/goembed/parser` references removed private symbol
+`go/build.parseGoEmbed`. These are contract failures, not weakened or skipped
+gates.
+
+Pinned apidiff cannot export selected because of its Go-1.11 guard. It finds
+incompatible API changes from v1.17.2 to beta3, broad build/compiler removals
+and rewrites by v1.20.2, and another signature change at v1.21.0. Export data
+SHA-256 values for v1.17.2, beta3, v1.20.2, and v1.21.0 are
+`5e1e34cedd45d06bac2f99201a4e5ab027a0e102b5114b3e1604ec5fcb25c63a`,
+`8ec59b220fafb8216351b1acc220c754e3b51066892568675e8079a89e88d1af`,
+`ae9b4943d192ef7079a207a0addefd02a16615e7821777d2f7ea1b93ce8c9947`,
+and `3eb2a4567cec8df33769b95843dd92b4e5f862a09edb727eb65887bac5e16d5c`.
+
+The unchanged graph chain is main -> direct mvn-pom-mutator v0.2.3 ->
+GoConvey v1.6.4 -> selected GopherJS, and GoConvey supplies the only target
+edge. `go mod why -m` is negative. All 429 project test-load entries contain
+zero GopherJS, Enterprise Certificate Proxy, or GAX packages; 197 entries are
+module-backed across 41 loaded modules. The project remains 234 selected
+modules, 3,599 edges, 1,067 sum lines, and the established 432-line tidy
+projection. `go.mod`/`go.sum` remain byte-identical at
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` and
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+Disposable v1.17.2 and beta3 exact requests produce respectively
+239/3,627/1,080 and 238/3,626/1,080 module/edge/sum populations, retain zero
+target loading, and tidy byte-identically to the base projection. They change
+six and five selected module paths because a direct target request adds closure
+modules. V1.20.2 changes twelve paths and leaves five unrelated `x/*` upgrades
+after tidy. V1.21.0 changes thirteen paths, raises the main Go directive, and
+leaves six unrelated upgrades. Both modern raw projections also need broader
+checksum work before complete project loading. No candidate is an authorized
+target-only implementation.
+
+Fresh primary data contains 1,398 records, Last-Modified
+2026-09-10T16:28:28Z, scanner update 2026-09-10T14:48:42Z, and no exact
+GopherJS record. Exact-version OSV queries are zero for all serious candidates.
+V1.17.2 package scanning reports inherited GO-2025-4188 in Logrus and
+GO-2022-0493 in `x/sys/unix`; beta3 reports only GO-2025-4188. Neither has a
+reachable symbol or test-symbol trace. The unchanged project remains at 30
+module findings, 22 Darwin and 23 Windows package findings, and 20 IDs/22
+reachable traces on both symbol platforms, with no GopherJS occurrence.
+
+Exact Go 1.26.7 project verification/load/build, two independent native tests,
+race, vet, pinned lint, empty-HOME count-2, Linux/Windows builds, compatibility,
+and full preflight pass. The Go 1.18.10 projection removes only the unsupported
+toolchain line and passes its compatible repeats/race/vet/cross-builds, with
+only the two accepted shell closed-file wording failures in the full suite.
+No changed-selection quality run applies; accepted quality remains 27/27
+Q0-Q2 PASS at L2 with scorecard SHA-256
+`576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.

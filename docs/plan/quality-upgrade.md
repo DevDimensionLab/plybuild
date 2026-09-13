@@ -8895,9 +8895,55 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   before merge. Do not add a root edge, patch/replace the target, change or
   independently audit Viper/GAX, raise the Go floor, manufacture a dependency
   commit, or request this same decision again while the invariants hold.
-- Evaluate selected exact-path `github.com/gopherjs/gopherjs
-  v0.0.0-20181017120253-0766667cb4d1` next as one bounded P7 dependency group.
-  Do not combine another dependency or begin P8.
+- Stop exact-path `github.com/gopherjs/gopherjs` for a fresh bounded product
+  decision without a dependency edit. Fresh proxy, sumdb, go-import, strict
+  Git, and GitHub evidence resolves the public active non-fork BSD-2-Clause
+  repository and thirteen proxy versions. Selected is unsigned 2018 commit
+  `0766667cb4d1cfb8d5fde1fe210ae41ead3cf589`, not a tagged release, and its
+  proxy module file is synthetic. Stable v1.17.2 is the highest release whose
+  complete imported closure preserves Go 1.18; the v1.18 releases are semver
+  prereleases and stable v1.20/v1.21 releases raise the floor.
+- Reject selected because it has no declared closure, misses a vendored test
+  package in the module zip, resolves to post-floor tools under modern MVS,
+  cannot complete its tests, and deliberately fails compilation outside Go
+  1.11. V1.12.80 similarly requires Go 1.12. V1.17.2's 157-module graph peaks
+  at Go 1.17 and its actual production/test closure uses 29 external packages
+  across 14 modules, but complete testing under Go 1.18.10 reproducibly fails
+  seven Darwin/arm64 generated programs through unimplemented
+  `internal/abi.FuncPCABI0`. A trivial generated program crashes on first
+  output. Go 1.26.7 adds AST and VERSION-parser failures. Its supported vet and
+  race scopes pass, and Linux JS/source maps are deterministic, but those
+  partial passes do not qualify the release.
+- Reject v1.18.0-beta3 because it is a prerelease and its command cannot link
+  under required Go 1.26.7 through `go/build.parseGoEmbed`, despite a complete
+  Go 1.18.10 suite pass. Reject v1.20.2 and v1.21.0 as floor-ineligible.
+  Pinned apidiff also records incompatible build/compiler API changes between
+  each release line. Independent session-state fixtures prove nil panic and
+  caller-options mutation boundaries under both SDKs.
+- The target's only path is main -> direct mvn-pom-mutator v0.2.3 -> GoConvey
+  v1.6.4 -> selected. `go mod why -m` is negative and zero target packages
+  load. Disposable v1.17.2 and beta3 requests add closure modules but retain
+  zero target loading and tidy byte-identically back to the base selection.
+  V1.20.2/v1.21.0 alter unrelated `x/*` selections; v1.21.0 also raises the
+  main Go line. The unchanged project remains 234 modules, 3,599 edges,
+  429/197/41 complete-test/module-backed/loaded-module entries, 1,067 sum
+  lines, and the established 432-line tidy projection. ECP and GAX separately
+  remain at zero loaded packages.
+- Fresh primary data has 1,398 records and no exact GopherJS advisory. Direct
+  candidate package scans report inherited Logrus and `x/sys` advisories but
+  zero reachable symbol or test-symbol traces. Project populations remain 30
+  module findings, 22 Darwin and 23 Windows package findings, and 20 IDs/22
+  traces on both symbol platforms, with no target occurrence. Exact Go 1.26.7
+  project/repeat/race/vet/lint/cross-build/API/CLI/full-preflight gates pass;
+  the Go 1.18.10 projection retains only the two accepted shell wording
+  failures. No metadata changed, so accepted quality remains 27/27 Q0-Q2 PASS
+  at L2 with scorecard
+  `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
+- Obtain one bounded GopherJS product direction next. The recommended choice is
+  to retain exact selected unchanged only under a new zero-load exception;
+  alternatives must explicitly authorize a broader parent/removal group or a
+  specified floor/prerelease/fork/patched-source strategy. Do not infer a
+  choice, combine another dependency, or begin P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
