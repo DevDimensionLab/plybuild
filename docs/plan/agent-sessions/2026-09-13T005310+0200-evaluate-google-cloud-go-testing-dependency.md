@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Google Cloud Go Testing Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-13T005310+0200-evaluate-google-cloud-go-testing-dependency`
 Created: `2026-09-13T00:53:10+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `5170e6ae91da384631db67b2dc5281bc244146a255b43dae4d43f220421d3dbf`
 Previous: [2026-09-10T054841+0200-evaluate-googleapis-gax-go-v2-dependency.md](2026-09-10T054841+0200-evaluate-googleapis-gax-go-v2-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-13T041350+0200-evaluate-enterprise-certificate-proxy-dependency.md](2026-09-13T041350+0200-evaluate-enterprise-certificate-proxy-dependency.md)
+Outcome: Retained selected Google Cloud Go Testing pseudo-version without metadata changes; no qualified exact-path release exists, selected/latest code and API are identical, full source/test closure preserves Go 1.18, zero target or GAX packages load, and all applicable project quality contracts pass.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -218,3 +218,182 @@ launcher/handoff contracts, and make the normal
 launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Retain exact-path
+`github.com/googleapis/google-cloud-go-testing
+v0.0.0-20200911160855-bcd43fbb19e8` without changing `go.mod` or
+`go.sum` and without manufacturing a dependency commit. The repository has
+never published a qualified release, proxy latest is merely its final archived
+master-branch commit, and selected has no independent floor, behavior, API,
+loading, MVS, vulnerability, or quality disqualifier.
+
+Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves the public,
+Apache-2.0 repository
+`https://github.com/googleapis/google-cloud-go-testing`. GitHub marks it
+archived, not disabled and not a fork, with protected default branch `master`.
+It has zero tags and zero GitHub releases. `RELEASING.md` explicitly says the
+repository has no releases and consumers should use pseudo-versions. The
+stable proxy version list is empty. Therefore neither proxy `@latest`, an
+arbitrary branch head, nor either pseudo-version is independently qualified as
+a release.
+
+Selected is commit
+`bcd43fbb19e8d79524fce1b71f4a2145afbd6039`, parent
+`8e1d251e947d1de4242ca2a81eb1a39917bf6b38`, tree
+`44cc1490ddeb164a479884cd8beecc373b2ad60d`, dated
+2020-09-11T16:08:55Z, with subject `chore: add CODEOWNERS (#38)`. It is the
+tip of branch `bcb-to-fb`. Its source/mod sums are
+`h1:tlyzajkF3030q6M8SvmJSemC9DTHL/xaMa18b65+JM4=` /
+`h1:dvDLG8qkwmyD9a/MJJN3XJcT3xFxOKAvTZGvuZmac9g=`. Proxy latest
+`v0.0.0-20210719221736-1c9a4c676720` is commit
+`1c9a4c676720af1d2d964c1b2c866ee500300a15`, parent
+`1487aa9ec5b057debb42f236a1d1185f09f96804`, tree
+`e1733414a158ce2090bf6eb073c4c6af8dceee52`, dated
+2021-07-19T22:17:36Z, with subject `chore: archive project (#43)`. It is the
+tip of `master`; its sums are
+`h1:zC34cGQu69FG7qzJ3WiKW244WfhDC3xxYMeNOX2gtUQ=` /
+`h1:dvDLG8qkwmyD9a/MJJN3XJcT3xFxOKAvTZGvuZmac9g=`.
+
+Strict and full Git fsck pass. Selected is an ancestor of latest with exactly
+two intervening commits. GitHub verifies both commit signatures. Git and proxy source bytes
+match: selected has 37 files with manifest SHA-256
+`ac0e86d2adf82603aaf6d39a402f8869c2129dff810d773f6cad0dca9bcd661c`;
+latest has 38 files with manifest SHA-256
+`f6d9a5c0008cfd35eb2b621d13141245d91b378c421a95e9be0a72e351335ded`.
+The only selected-to-latest changes are archive/status wording in README and a
+new SECURITY.md. No Go source, module metadata, checksum, test, or CI behavior
+changed.
+
+Selected and latest declare Go 1.11 and identical requirements: Cloud Go
+v0.44.3, BigQuery v1.0.1, Datastore v1.0.0, Google API v0.9.0, plus build-tagged
+tool requirements. Under exact Go 1.26.7 each isolated graph has 36 modules
+and 337 edges, with 332 production and 359 test package entries. Under
+contained Go 1.18.10 each has 36 modules and 336 edges, with 270 production
+and 296 test entries. Both actually import 14 external modules and expose five
+runtime packages. The maximum Go directive in the imported production/test
+closure is 1.11; the maximum across the whole graph, including tools-only
+vertices, is 1.12. Complete minimal closure therefore preserves Go 1.18.
+
+The root package is documentation plus an example. Runtime packages are
+BigQuery `bqiface`, Datastore `dsiface`, Pub/Sub `psiface`, and Storage
+`stiface`. Their exported surface consists of adapters and interface/config
+shadows: BigQuery has `AdaptClient`, thirteen interfaces and seven wrapper
+structs; Datastore has `AdaptClient` and four interfaces; Pub/Sub has
+`AdaptClient`, `AdaptMessage`, five interfaces and `SubscriptionConfig`;
+Storage has `AdaptClient` and ten interfaces. Each interface embeds an
+unexported method to constrain production implementations to the supplied
+wrappers while still allowing fakes by embedding the interface. There are no
+runtime commands, benchmarks, fuzz/property targets, generated Go files, or
+testdata. `tools.go` is tools-build-tag-only. Upstream Kokoro uses Go 1.12 and
+runs lint, staticcheck, tidy checks, and race tests. Four live examples require
+`BQIFACE_PROJECT`, `DATASTORE_PROJECT_ID`, `PSIFACE_TOPIC`, or
+`STIFACE_BUCKET` and skip cleanly without credentials.
+
+All adapters are small value wrappers around embedded Cloud client pointers.
+Calls generally forward the exact context, arguments, callback, and upstream
+return values. Constructors given nil clients return non-nil typed interface
+values containing nil embedded pointers; most method calls then panic.
+Storage can construct bucket/object handles before an I/O method reaches the
+nil client and panics. Successful upstream nil pointers can likewise be
+wrapped as non-nil interfaces.
+
+BigQuery query/load/copy/extract config conversion is shallow: slices, maps,
+pointers, and nested values alias caller storage, and builder setters mutate
+the wrapped upstream object. `SetQueryConfig` deliberately preserves the
+embedded destination table when its shadow `Dst` is nil; `SetCopyConfig`
+appends all sources. Iterator/job/result wrappers frequently return nil result
+interfaces on error and wrap nil results on nil error. Metadata conversion
+panics for nil metadata or nil access entries. BigQuery copy and Storage
+copy/compose require the package's concrete wrappers and panic for otherwise
+valid external fakes.
+
+Datastore preserves transaction, commit, iterator, callback, context, and
+error identities; transaction/commit/run methods can return a wrapper along
+with a non-nil upstream error. Pub/Sub directly forwards message data and
+attributes without copying, so aliases are preserved. Ack/Nack/Get and
+subscription receive forward directly; Receive passes the exact context and
+wraps each message for the callback. Pub/Sub publish asserts its concrete
+message wrapper and panics for external or typed-nil alternatives. Storage
+builder setters and callback hooks mutate the embedded upstream builders and
+preserve upstream return/error behavior. Mutable builders and iterators are
+not promised safe for concurrent mutation; independent/read-only wrapper use
+passes race tests. The wrappers add no retry, clock, randomness, or network
+policy of their own; those remain properties of the pinned Cloud clients.
+
+Selected and latest produce byte-identical exported API blobs, SHA-256
+`1a9dbaa10ba5d79c1b207cd5acaefe6c1903c3ecceb868c2fe6d8605370a2e00`,
+and apidiff is empty in both directions. The independent 375-line behavior
+fixture, SHA-256
+`10bea668cbc7b6ec438f6fa15ff7b8681e6901ef4c4076f8909b052abe5d991c`,
+covers exact delegation and identities, config aliasing, concrete-assertion
+panics, nil and typed-nil boundaries, iterator paging, HTTP cancellation,
+Datastore callbacks, local Pub/Sub streaming through `pstest`, Storage
+builders, errors, and concurrent reuse. It passes native, count-10, race, and
+vet runs for both versions under both SDKs.
+
+The upstream source has three examples named `Example_AdaptClient`. Modern Go
+vet reports those suffixes as referring to missing identifiers. Exact Go
+1.26.7 default `go test` and standalone vet fail only for those names; exact
+Go 1.18.10 default tests pass but standalone vet reports the same defect.
+Runtime tests pass with vet disabled. Scratch-only renaming to
+`ExampleAdaptClient` makes default tests and vet pass for both versions and
+both SDKs without altering production source. This is a historical test-name
+defect, not a runtime or release-selection disqualifier. With that controlled
+correction, all production builds pass for Darwin/amd64, Linux/amd64,
+Linux/arm64, Windows/amd64, FreeBSD/amd64, and js/wasm; representative Linux
+and Windows test compilation also passes.
+
+Afero v1.9.4 supplies the only current incoming edge and shortest MVS path:
+main -> Afero v1.9.4 -> selected Google Cloud Go Testing. Historical Afero
+v1.8.2 declares the same selected pseudo-version. `go mod why -m` is negative,
+and the complete project load contains exactly zero target packages and zero
+GAX packages. A raw explicit selected request keeps 234 modules and all
+selections, raises graph edges from 3,599 to 3,605, and adds six source sums
+for the target's otherwise-pruned tools vertices. Both raw requests temporarily
+add explicit requirements for the target, BurntSushi TOML, `x/lint`, `x/mod`,
+`x/tools`, and `honnef.co/go/tools`. A raw latest request keeps 234 modules,
+changes only the target selection, raises edges to 3,612, and adds seven source
+sums. Neither
+changes the 429 complete-test entries, 41
+loaded modules, 197 loaded module-backed packages, target/GAX zero-load result,
+or application behavior.
+
+Normal tidy makes base, selected, and latest projections byte-identical in
+`go.mod` and `go.sum`, restores the Afero-selected pseudo-version, and measures
+234 modules, 3,557 graph edges, and 948 sum lines. The accepted unchanged
+project remains 234 modules, 3,599 edges, 429 complete-test entries, 41 loaded
+modules, 197 loaded module-backed packages, 1,067 sum lines, and a 432-line
+unapplied tidy projection. No unrelated module was selected, downgraded,
+upgraded, removed, or independently audited.
+
+Fresh primary vulnerability data contains 1,398 module records, index
+Last-Modified 2026-09-10T16:28:28Z, scanner DB update
+2026-09-10T14:48:42Z, and zero exact target records. Project populations stay
+at 30 module findings, 22 Darwin and 23 Windows package findings, and 20 IDs /
+22 reachable traces on each symbol platform, with no target or GAX occurrence.
+Direct selected/latest source-time scans are identical: 31 inherited module
+findings; 18 package findings across 16 IDs; 51 production traces and 66 test
+traces across three IDs. GO-2023-1571 and GO-2024-2687 affect old `x/net`
+HTTP/2, and GO-2026-6061 affects old gRPC transport. Target code appears only
+as caller frames; the affected modules are `x/net` and gRPC, so these findings
+are not attributed to Google Cloud Go Testing.
+
+Exact Go 1.26.7 project verify/load/build, count-1, two count-10 repeats, race,
+vet, pinned lint, empty-HOME count-2, Linux/Windows builds, API/CLI
+compatibility, complete preflight, 80/80 mutation controls, audits, and host,
+snapshot, and real Docker acceptance pass. Docker built once, ran ten
+containers, made 54 calls, and published zero times. The contained Go 1.18.10
+projection passes applicable corrected gates; the full project has only the
+two already accepted `pkg/shell` closed-file error-wording differences. The
+fresh independent quality run is 27/27 Q0-Q2 PASS at L2, seven improved, zero
+held/regressed/non-comparable/dirty, with scorecard SHA-256
+`a706ee72aa1483217bdcced30b36523da95841fb3874ef017645ffcf74051829`.
+Because dependency metadata is unchanged, the accepted scorecard remains
+`576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
+
+The 788-entry selected-evidence manifest SHA-256 is
+`34e3574d2ced8aef523df1607300134664907cf7634cb40f89c3f615a151f106`;
+decision-summary SHA-256 is
+`9652c69c7971189749d2fd4590dc39b49a11f6f159cb80c2287767251312db2a`.

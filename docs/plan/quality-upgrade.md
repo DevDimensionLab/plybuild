@@ -8798,15 +8798,51 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   The 863-entry selected-evidence manifest and decision summary hash to
   `8b8ea0d9b842b8b3eecc1d7c7b8f8754c24662a74dd21d9d1cef0304bbd18b5b`
   and `26a2a6a7ad4d06a2c059959d7eaf8df64ee9baeb1688c03927b08b1fd650bfe1`.
+- Retain exact-path `github.com/googleapis/google-cloud-go-testing
+  v0.0.0-20200911160855-bcd43fbb19e8` without a dependency edit. Fresh
+  proxy, sumdb, `go-import`, Git, and GitHub evidence resolves the public
+  archived non-fork repository. It has zero tags and releases, its release
+  document explicitly says it has no releases, and the stable proxy list is
+  empty. Selected is branch `bcb-to-fb` tip `bcd43fbb19e8`; proxy latest is
+  archived `master` tip `1c9a4c676720`. Strict fsck and ancestry pass.
+  Selected is two commits behind latest, and only README archive wording plus
+  SECURITY.md changed; proxy/Git manifests and module sums agree.
+- Selected/latest declare Go 1.11 and have identical requirements, source,
+  tests, and exported API. Their isolated closure contains 36 modules and
+  337/336 edges under Go 1.26.7/1.18.10. The imported production/test closure
+  uses 14 external modules, peaks at Go 1.11, and passes both SDKs; the whole
+  graph including tools peaks at Go 1.12. The five packages are root docs plus
+  BigQuery, Datastore, Pub/Sub, and Storage interface adapters. Independent
+  forwarding, context/callback, aliasing, iterator/stream, nil/panic,
+  concurrency, and platform fixtures pass. Three malformed upstream example
+  suffixes fail modern vet only; a scratch-only name correction makes default
+  tests/vet/cross-builds pass and does not affect runtime qualification.
+- Afero v1.9.4 supplies the sole current incoming edge and shortest path main
+  -> Afero -> selected; historical Afero v1.8.2 declares the same version.
+  `go mod why -m` is negative, and zero target or GAX packages load. Raw
+  selected/latest projections change no unrelated selection or loaded
+  population; both temporarily add the target and five tools requirements,
+  while tidy makes all projections byte-identical and restores selected.
+  Project measurements remain 234 modules, 3,599 edges, 429 complete-test
+  entries, 41 loaded modules, 197 module-backed packages, 1,067 sum lines, and
+  a 432-line tidy projection. Fresh primary data has no target advisory and
+  preserves project vulnerability populations. Exact project gates and a
+  fresh 27/27 Q0-Q2 L2 run pass; accepted scorecard remains
+  `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
+  The 788-entry evidence manifest and decision summary hash to
+  `34e3574d2ced8aef523df1607300134664907cf7634cb40f89c3f615a151f106`
+  and `9652c69c7971189749d2fd4590dc39b49a11f6f159cb80c2287767251312db2a`.
 - Next, independently evaluate exact-path
-  `github.com/googleapis/google-cloud-go-testing
-  v0.0.0-20200911160855-bcd43fbb19e8`. Afero v1.9.4 declares selected and
-  supplies shortest path main -> Afero -> target; historical Afero v1.8.2
-  declares the same edge. `go mod why -m` is negative and zero target packages
-  load. The stable proxy list is empty; proxy latest is unreleased
-  `v0.0.0-20210719221736-1c9a4c676720`. Both module files declare Go 1.11.
-  Resolve repository/release qualification and do not promote an arbitrary
-  pseudo-version or broaden into Afero or Cloud client audits.
+  `github.com/googleapis/enterprise-certificate-proxy v0.2.1`. Viper v1.15.0
+  supplies its only incoming edge; `go mod why -m` is negative and zero target
+  packages load. Selected v0.2.1 declares Go 1.19 without an inherited
+  exception. Of 29 stable proxy versions, v0.2.0 is the highest initially
+  declaration-eligible candidate at Go 1.18; v0.2.1 through v0.3.4 require Go
+  1.19 and later releases require Go 1.23 or newer. Resolve v0.2.0's complete
+  closure, identity, behavior, API, and exact MVS feasibility. If it cannot be
+  selected without changing Viper or another group, stop for a fresh product
+  decision rather than silently retaining the floor conflict or broadening the
+  checkpoint.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-13T00:53:10+02:00
+Generated: 2026-09-13T04:13:50+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -13,20 +13,21 @@ session diary.
   `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
   `b89afd4ec056133b1eefb5611f8f35c12c11824b`. It changes only `go.mod`
-  and `go.sum`, with three insertions and no deletions. GAX v2.7.0 was
-  retained without a dependency commit or metadata edit.
+  and `go.sum`, with three insertions and no deletions. Google Cloud Go
+  Testing and GAX v2.7.0 were retained without dependency commits or metadata
+  edits.
 - Google Renameio v1.0.1 `394ec36`, Google Martian v3.3.2 `4644476`,
   Golang Snappy v1.0.0 `372f8e9`, Golang Protobuf v1.5.3 `6870e02`,
   Godbus D-Bus v5.1.0 `6472dce`, Go Stack v1.8.1 `647d4fd`, Go Logfmt
   v0.6.0 `3d4cfd`, Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0
   `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. Google
-  pprof, Gogo Protobuf, and GAX remain retained without dependency edits. All
-  earlier P7 decisions are final.
-- The answered GAX archive and sole NEXT Google Cloud Go Testing archive link
-  reciprocally. No `.agent-task/current.md` or repository
-  `.quality/manual-evidence.json` exists. Do not push, merge, publish,
-  release, stash, revert, launch a successor, bypass cleanup, or remove the
-  worktree.
+  pprof, Gogo Protobuf, GAX, and Google Cloud Go Testing remain retained
+  without dependency edits. All earlier P7 decisions are final.
+- The answered Google Cloud Go Testing archive and sole NEXT Enterprise
+  Certificate Proxy archive link reciprocally. No `.agent-task/current.md` or
+  repository `.quality/manual-evidence.json` exists. Do not push, merge,
+  publish, release, stash, revert, launch a successor, bypass cleanup, or
+  remove the worktree.
 
 ## Lifecycle And Retained Roadmap
 
@@ -37,9 +38,10 @@ v1.0.0, Google Martian v3.3.2, Google Renameio v1.0.1, and Google UUID
 v1.4.0 moves. Google pprof
 `v0.0.0-20210720184732-4bb14d4b1be1`, Gogo Protobuf v1.3.2, Crypt,
 OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify,
-Ghodss YAML, historical root GLFW, and Googleapis GAX Go v2 v2.7.0 remain
-retained. P8 remains queued. Do not reopen earlier groups or combine another
-dependency group.
+Ghodss YAML, historical root GLFW, Googleapis GAX Go v2 v2.7.0, and Google
+Cloud Go Testing
+`v0.0.0-20200911160855-bcd43fbb19e8` remain retained. P8 remains queued.
+Do not reopen earlier groups or combine another dependency group.
 
 The user's two 2026-09-12 GAX decisions are final. Retain v2.7.0 as an
 inherited Go-floor exception and accept its known
@@ -48,137 +50,132 @@ contains zero GAX packages. If any GAX package becomes loaded or directly
 imported, the behavior exception expires and the owning checkpoint must stop
 for a fresh dependency and product decision before merge. Do not patch or
 replace GAX, add a root edge, change Viper or another parent, raise the Go
-floor, or ask for either decision again.
+floor, or apply the GAX exception to another module.
 
 Keep every disposable cache, projection, source, report, generated artifact,
 evidence tree, and build context beneath `$CODEX_SESSION_SCRATCH_ROOT`.
 Never run `go mod download all` in a measured worktree or bypass launcher
 scratch cleanup.
 
-## GAX Decision And Identity
+## Google Cloud Go Testing Decision And Identity
 
-Retain exact-path `github.com/googleapis/gax-go/v2 v2.7.0` without changing
-`go.mod` or `go.sum`. No higher qualified stable exact-path release preserves
-Go 1.18, and every exact root alternative violates the bounded MVS scope.
+Retain exact-path `github.com/googleapis/google-cloud-go-testing
+v0.0.0-20200911160855-bcd43fbb19e8` without changing `go.mod` or
+`go.sum`. No qualified exact-path release exists, proxy latest is an
+unreleased archived branch head, and selected has no independent
+disqualifier.
 
 Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence agrees on the public,
-active, unarchived, non-fork BSD-3-Clause repository
-`https://github.com/googleapis/gax-go` and exact `/v2` submodule. The proxy
-lists 42 v2-looking stable tags, but v2.0.0 lacks `v2/go.mod` and cannot
-version this path; 41 valid stable modules remain through v2.24.1. There is no
-deprecation, retraction, redirect, qualified fork, alternate-path release, or
-prerelease. Stable tags are lightweight and their commits are GitHub-
-verified. Main has three unreleased commits after latest and was not promoted.
+archived, non-disabled, non-fork Apache-2.0 repository
+`https://github.com/googleapis/google-cloud-go-testing`. It has zero tags and
+zero GitHub releases. `RELEASING.md` explicitly says there are no releases and
+consumers should use pseudo-versions. The stable proxy list is empty. There is
+no redirect, deprecation directive, retraction, alternate exact-path release,
+qualified fork, prerelease, or tag to promote.
 
-Selected v2.7.0 is commit
-`2592e2286ac291a2d9e7c06e1f31b3a6d772131c`, parent
-`9dbd96d59b9d54ceb7c025513aa8c1a9d727382f`, tree
-`f4e76bc2c50c9078de2e08237977a9f60b03934f`, at
-2022-11-02T20:02:53Z. Latest v2.24.1 is commit
-`269185f57eafcc619f159ffe8857eee6073e955e`, parent
-`d0623a1d3c843a64e85ad8b4d4ea37695a668868`, tree
-`57ab5ad8af3a8c6027ac9ae0b8b729f1a37c9b1c`, at
-2026-09-03T20:21:21Z. Selected/latest source/mod sums are
-`h1:IcsPKeInNvYi7eqSaDjiZqDDKu5rsmunY0Y1YupQSSQ=` /
-`h1:TEop28CZZQ2y+c0VxMUmu1lV+fQx57QpBWsYpwqHJx8=` and
-`h1:AtqTN21IXMMWo99LiEVAiBfNNQmO40d8xUfZI640mc0=` /
-`h1:bWeBei0NVwaNZKb2y1HUBS7gLXIF3/Tu3pq7j8D2Tb0=`. Strict fsck and
-release ancestry pass. Proxy/Git bytes match, including latest after
-documented module-zip LICENSE copying and mode normalization.
+Selected is branch `bcb-to-fb` tip commit
+`bcd43fbb19e8d79524fce1b71f4a2145afbd6039`, parent
+`8e1d251e947d1de4242ca2a81eb1a39917bf6b38`, tree
+`44cc1490ddeb164a479884cd8beecc373b2ad60d`, dated
+2020-09-11T16:08:55Z. Proxy latest is protected `master` tip
+`1c9a4c676720af1d2d964c1b2c866ee500300a15`, parent
+`1487aa9ec5b057debb42f236a1d1185f09f96804`, tree
+`e1733414a158ce2090bf6eb073c4c6af8dceee52`, dated
+2021-07-19T22:17:36Z. Selected/latest source/mod sums are
+`h1:tlyzajkF3030q6M8SvmJSemC9DTHL/xaMa18b65+JM4=` /
+`h1:dvDLG8qkwmyD9a/MJJN3XJcT3xFxOKAvTZGvuZmac9g=` and
+`h1:zC34cGQu69FG7qzJ3WiKW244WfhDC3xxYMeNOX2gtUQ=` / the same mod sum.
+Strict/full fsck and ancestry pass, and GitHub verifies both commit signatures.
+Selected is two commits behind latest;
+only README archive wording and SECURITY.md differ. Proxy/Git manifests match.
 
 ## Closure, API, Behavior, And Qualifications
 
-V2.5.1 is the last release declaring Go 1.18. Every v2.6.0-or-newer stable
-declares at least Go 1.19; v2.12.5 declares Go 1.20 and v2.24.1 declares Go
-1.25. Exact graph sizes for v2.5.1, v2.6.0, v2.7.0, v2.12.4, v2.12.5, and
-v2.24.1 are 89, 142, 84, 45, 46, and 178 modules; production/test package
-populations are 301/334, 301/334, 301/342, 301/345, 301/345, and 361/419.
-Selected's imported production/test closure contains 8/9 modules and three
-Go 1.19 declarations: GAX, Google API v0.102.0, and Genproto.
+Selected/latest module files are identical, declare Go 1.11, and require
+Cloud Go v0.44.3, BigQuery v1.0.1, Datastore v1.0.0, Google API v0.9.0,
+and tools-only vertices. Under Go 1.26.7 each isolated graph contains 36
+modules/337 edges and 332/359 production/test package entries. Under Go
+1.18.10 each has 36 modules/336 edges and 270/296 entries. The actual imported
+closure uses 14 external modules and five own runtime packages. Its maximum
+Go directive is 1.11; the whole graph including tools peaks at 1.12.
 
-All six serious versions pass exact Go 1.26.7 verification, native repeats,
-race, vet, six production cross-builds, and Linux/Windows test cross-builds.
-V2.5.1, v2.6.0, and v2.7.0 also load/test on Go 1.18.10; deep selected and
-v2.5.1 gates pass. V2.12.4/v2.12.5 fail on Go 1.18 in the gRPC generic-
-atomic closure and latest is parser-ineligible. Selected's build success does
-not erase the declared floors; it remains only through the authorized
-inherited exception.
+The root documentation package and `bqiface`, `dsiface`, `psiface`, and
+`stiface` expose adapters, constrained interfaces, and shallow config shadows
+for the pinned Cloud clients. There are no runtime commands, benchmarks, fuzz
+targets, generated Go files, or testdata; `tools.go` is build-tag-only. Four
+credentialed examples skip without their environment variables. Upstream
+Kokoro targeted Go 1.12 with lint/staticcheck/tidy/race checks.
 
-Selected has public runtime packages `gax` and `apierror`, internal helpers
-and generated protos, examples/testdata, and no command, benchmark, or fuzz
-target. Upstream Kokoro omits `apierror` from its root test command. Apidiff
-finds later compatible additions apart from the Version constant value;
-v2.5.1 removes selected API.
+Adapters are value wrappers around embedded client pointers and normally
+forward exact contexts, arguments, callbacks, errors, and results. Nil client
+constructors return non-nil interfaces with nil embedded pointers, and later
+calls generally panic. Successful nil upstream results can also become
+non-nil interface wrappers. BigQuery config conversion shallow-aliases caller
+data; several iterators drop results on error. Datastore can return wrappers
+with errors and preserves callback/context identity. Pub/Sub message data and
+attributes alias upstream storage, and Receive wraps messages while forwarding
+the exact context. Storage builder setters mutate the embedded builder.
+BigQuery copy, Pub/Sub publish, and Storage copy/compose assert concrete local
+wrappers and panic for otherwise valid external fakes or typed nils. Mutable
+builders/iterators are not concurrent-mutation safe; normal independent and
+read-only reuse passes race tests. The wrappers add no retry, clock,
+randomness, or network policy.
 
-`Invoke` applies later options last, calls once before checking cancellation,
-creates one retryer lazily, adapts gRPC/HTTP errors, and has no implicit
-timeout or attempt cap. Sleep is cancelable. `OnCodes` with selected gRPC does
-not classify `%w`-wrapped statuses; `OnHTTPCodes` recognizes wrapped HTTP
-errors. Backoff is mutable full jitter over global `math/rand`, can exceed Max
-on the first pause, panics for negative Initial, and caps overflow. Retryer/
-Backoff instances are not safe for concurrent sharing; fresh-per-Invoke
-concurrency passes.
+Selected/latest exported API blobs are identical, SHA-256
+`1a9dbaa10ba5d79c1b207cd5acaefe6c1903c3ecceb868c2fe6d8605370a2e00`,
+and apidiff is empty both ways. The independent 375-line contract fixture,
+SHA-256
+`10bea668cbc7b6ec438f6fa15ff7b8681e6901ef4c4076f8909b052abe5d991c`,
+covers forwarding, identity, aliasing, nil/panic boundaries, paging,
+cancellation, callbacks, local Pub/Sub streaming, builders, errors, and
+concurrency. It passes test, count-10 repeats, race, and vet under both SDKs.
 
-`APIError` preserves originals through `FromError`/`Unwrap`, parses standard
-details, retains unknown details, and exposes shallow detail/metadata views.
-Malformed detail payloads are ignored. Selected `ParseError(err, false)` can
-produce an `APIError` whose `Error()` panics. Repair commit `22c16e7bff` first
-shipped in v2.12.5, whose Go 1.20 floor is ineligible. This is the bounded
-zero-load behavior exception. Other inherited qualifications include odd-
-argument `XGoogHeader` panic, nil content-reader panic, at-most-512-byte
-content sniff/replay, non-concurrent ProtoJSONStream, and non-idempotent stream
-Close.
-
-The independent 499-line contract fixture SHA-256 is
-`884faf82e80a7589977fd613e767a990610ce0b9676e47043c9119525880bb5f`.
-It covers option order, retry/no-retry, cancellation/deadlines, error
-conversion/details/wrapping, backoff/timers, headers/content, stream
-lifecycle, malformed/nil/panic boundaries, and concurrent Invoke. Selected
-passes test, two count-10 repeats, race, and vet under both SDKs with the
-expected panic assertion; v2.12.5 passes on Go 1.26.7 with repaired behavior.
+Three upstream `Example_AdaptClient` names are malformed for modern vet. Raw
+Go 1.26.7 default tests/vet and Go 1.18.10 standalone vet report only this
+test-name defect; vet-disabled runtime tests pass. Scratch-only correction to
+`ExampleAdaptClient` makes default tests and vet pass under both SDKs. Corrected
+production cross-builds pass Darwin/amd64, Linux/amd64, Linux/arm64,
+Windows/amd64, FreeBSD/amd64, and js/wasm, with Linux/Windows test compilation.
+This historical example-name issue is not a runtime disqualifier.
 
 ## Project, Vulnerability, And Quality Measurements
 
-Viper v1.15.0 supplies shortest path main -> Viper -> GAX v2.7.0.
-Historical Cloud/Google/Viper/Crypt vertices retain v2.0.4-v2.1.1. MVS keeps
-these graph edges without a package import; `go mod why -m` is negative and
-exactly zero GAX packages load. Exact v2.5.1 downgrades Viper and many
-unrelated selections; v2.12.5/latest broadly upgrade unrelated selections,
-and latest raises the main Go line. A redundant selected-version root edge is
-pointless. Every projection keeps the loaded GAX count at zero.
+Afero v1.9.4 supplies the only current incoming edge and shortest path main ->
+Afero -> selected. Historical Afero v1.8.2 declares the same selected
+pseudo-version. `go mod why -m` is negative; zero target and zero GAX packages
+load. Raw explicit selected/latest requests change no loaded population or
+unrelated selection. Both temporarily add root requirements for the target and
+five tools vertices. Selected adds six pruned-tool source sums and raises edges
+to 3,605; latest changes only target, adds seven source sums, and raises edges
+to 3,612. Tidy makes base/selected/latest byte-identical, restores selected,
+and measures 234 modules/3,557 edges/948 sum lines.
 
-The unchanged project remains 234 modules, 3,599 edges, 429 complete-test
-entries, 41 loaded modules, 197 loaded module-backed packages, 1,067 sum
-lines, and a 432-line unapplied tidy projection. The main module stays Go
-1.18 with toolchain Go 1.26.7. Relative to go-cmp commit `c314bcb`, sums
-remain +51/-0.
+The unchanged accepted project remains 234 modules, 3,599 graph edges, 429
+complete-test entries, 41 loaded modules, 197 loaded module-backed packages,
+1,067 sum lines, and a 432-line unapplied tidy projection.
 
-Raw v2.5.1/explicit-v2.7.0/v2.12.5/latest projections measure module/edge/
-sum counts as 234/4,088/1,158, 346/3,777/1,077, 248/3,674/1,084, and
-260/3,763/1,106. All retain 429 packages, 41 loaded modules, 197 module-
-backed packages, and zero GAX packages. The base tidy control is
-234/3,557/948; tidied candidates are 231/3,555/950, byte-identical base,
-234/3,561/949, and 234/3,582/958. Their module-list/go.mod/go.sum deltas
-against base tidy are 136/19/22, 0/0/0, 29/13/24, and 85/58/128 lines.
-
-Fresh primary vulnerability data has 1,398 module records, index Last-
-Modified 2026-09-10T16:28:28Z, and no exact GAX record. Project populations
-remain 30 module findings, 22 Darwin and 23 Windows package findings, and 20
-IDs/22 traces per symbol platform, with no GAX occurrence. Direct selected-
-source scans record 24 module findings, 14 package findings/11 IDs, and 23
-traces/three IDs inherited from `x/net` HTTP/2 and protobuf protojson. These
-do not enter the unchanged project, but reinforce the future-loading stop.
+Fresh primary vulnerability data contains 1,398 module records, index
+Last-Modified 2026-09-10T16:28:28Z, scanner DB update
+2026-09-10T14:48:42Z, and no exact target advisory. Project populations remain
+30 module findings, 22 Darwin and 23 Windows package findings, and 20 IDs/22
+traces per symbol platform, with no target or GAX occurrence. Direct
+selected/latest scans are identical: 31 inherited module findings, 18 package
+findings/16 IDs, and 51 production or 66 test traces/three IDs. Those three
+IDs affect old `x/net` HTTP/2 and gRPC transport, not the target module.
 
 Exact Go 1.26.7 project verify/load/build, native tests, two repeats, race,
 vet, pinned lint, empty-HOME, Linux/Windows, compatibility, complete preflight,
 80/80 mutation controls, audits, host, snapshot, and real Docker acceptance
-pass. Applicable Go 1.18.10 gates pass with only the two accepted closed-file
-wording failures. The unchanged scorecard remains all 27 Q0-Q2 rows PASS at
-L2, seven improved, and zero held/regressed/non-comparable/dirty, SHA-256
+pass. Applicable Go 1.18.10 gates pass with only the two accepted shell
+closed-file wording differences. The fresh independent scorecard is 27/27
+Q0-Q2 PASS at L2, seven improved and zero held/regressed/non-comparable/dirty,
+SHA-256
+`a706ee72aa1483217bdcced30b36523da95841fb3874ef017645ffcf74051829`.
+Because metadata did not change, the accepted scorecard remains
 `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
-The 863-entry GAX evidence manifest and decision summary hash to
-`8b8ea0d9b842b8b3eecc1d7c7b8f8754c24662a74dd21d9d1cef0304bbd18b5b`
-and `26a2a6a7ad4d06a2c059959d7eaf8df64ee9baeb1688c03927b08b1fd650bfe1`.
+The 788-entry evidence manifest and decision summary hash to
+`34e3574d2ced8aef523df1607300134664907cf7634cb40f89c3f615a151f106`
+and `9652c69c7971189749d2fd4590dc39b49a11f6f159cb80c2287767251312db2a`.
 
 ## Tools
 
@@ -192,30 +189,32 @@ and `26a2a6a7ad4d06a2c059959d7eaf8df64ee9baeb1688c03927b08b1fd650bfe1`.
   `a9c54498731b3128f79e090be6110f3e5fffccc617b08142ed244d4126c73f29`.
   GoReleaser 2.17.1 binary SHA-256 is
   `f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`;
-  the accepted apidiff archive SHA-256 is
+  accepted apidiff archive SHA-256 is
   `0c55d9e385a57d6af9b69a9abd3b71d986123dbe82e687fcaecb99f9a0acba20`.
-  The apidiff mirror was HTTP 429 on final refresh; exact built source identity
-  is `golang.org/x/exp v0.0.0-20260709172345-9ea1abe57597` commit
-  `9ea1abe5759723e90ff9d6e93de05faedacb461a`.
+  The apidiff mirror refresh returned HTTP 429; exact pinned module source was
+  rebuilt from cache.
 - Complete preflight used a scratch-only bare-`mktemp` shim. Docker acceptance
-  used Buildx v0.33.0 and real Python 3.14.6 ahead of `/usr/bin/python3` for
-  timestamps with more than six fractional digits.
+  used scratch-discovered Buildx v0.33.0 and real Python 3.14.6 ahead of
+  `/usr/bin/python3` for long-fraction timestamps.
 
 ## Next Objective
 
 Independently evaluate exact-path
-`github.com/googleapis/google-cloud-go-testing
-v0.0.0-20200911160855-bcd43fbb19e8` as the next single P7 group. Do not
-combine Afero, Cloud Go, BigQuery, Datastore, Pub/Sub, Storage, Google API, or
-another group.
+`github.com/googleapis/enterprise-certificate-proxy v0.2.1` as the next
+single P7 group. Do not combine or independently audit Viper or another
+module.
 
-Afero v1.9.4 declares selected and supplies shortest path main -> Afero ->
-target; historical Afero v1.8.2 declares the same selected edge. `go mod why
--m` is negative and zero target packages load. The stable proxy list is empty.
-Proxy latest is `v0.0.0-20210719221736-1c9a4c676720`; selected/latest are
-dated 2020-09-11/2021-07-19, and both module files declare Go 1.11 with the
-same requirements. Resolve whether the repository has any qualified exact-
-path release; do not promote proxy latest or an arbitrary branch head merely
-because it is newer. If no newer release qualifies and no independent
-disqualifier exists, retain selected without metadata changes or a dependency
-commit.
+Viper v1.15.0 supplies the sole incoming edge and shortest path main -> Viper
+-> target. `go mod why -m` is negative and zero target packages load. A fresh
+proxy survey found 29 stable versions: selected v0.2.1 is tagged commit
+`80592736477602cc7992372d4280f819dc7e4cbf`, declares Go 1.19, and has no
+inherited floor exception. V0.1.0 and v0.2.0 declare Go 1.18; v0.2.1 through
+v0.3.4 declare Go 1.19; later releases require Go 1.23 or newer. Latest
+v0.3.22 is tagged commit `62d25fa2858321169ff476109479205309fa3a68`
+and declares Go 1.25.0/toolchain Go 1.26.5.
+
+Resolve the complete v0.2.0 closure, identity, API, behavior, and exact MVS
+feasibility. If the highest eligible release is sound but cannot be selected
+without changing Viper or another group, stop for a fresh bounded product
+decision. Do not silently retain the Go-1.19 target, invent an exception, add
+a replace/fork, or broaden the checkpoint.
