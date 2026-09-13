@@ -1,13 +1,13 @@
 # Agent Session: Decide GopherJS Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-13T172733+0200-decide-gopherjs-product-direction`
 Created: `2026-09-13T17:27:33+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `45181d18e878ac425cb259204c50565c11ed47664d2cb20c8574d66c0c9db06d`
 Previous: [2026-09-13T140912+0200-evaluate-gopherjs-dependency.md](2026-09-13T140912+0200-evaluate-gopherjs-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-13T230600+0200-evaluate-gorilla-websocket-dependency.md](2026-09-13T230600+0200-evaluate-gorilla-websocket-dependency.md)
+Outcome: Recorded the user's bounded option 1 decision, retained the exact inherited and unloaded GopherJS pseudo-version without metadata changes, revalidated every exception guard, and prepared the next bounded P7 group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -167,3 +167,60 @@ implement a dependency strategy, audit another dependency, launch a successor,
 push, merge, publish, release, stash, revert, bypass cleanup, or remove the
 worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user's 2026-09-13 option 1 selection and retained exact-path
+`github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1` as an
+inherited, unloaded module without changing `go.mod` or `go.sum` and without
+manufacturing a dependency or implementation commit.
+
+The decision accepts only the findings already established in the answered
+dependency evaluation: the unqualified pseudo-release; unsigned, untagged
+identity; proxy-synthesized module file; undeclared and incomplete modern
+source/test closure; absent vendored test package; post-floor modern
+resolution; and the recorded compiler, command, and generated-runtime
+incompatibilities. No new or independently discovered defect is accepted.
+
+Every guard was revalidated from clean decision HEAD `ae2a9d3` with a freshly
+unpacked exact Go 1.26.7 distribution whose archive and binary SHA-256 values
+are
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`
+and `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+It ran first in `PATH` with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient `GOFLAGS`.
+Project selection remains mvn-pom-mutator v0.2.3, GoConvey v1.6.4,
+GopherJS `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate
+Proxy v0.2.1, and GAX v2.7.0. The unchanged graph path is main -> direct
+mvn-pom-mutator v0.2.3 -> GoConvey v1.6.4 -> selected GopherJS, and the
+GoConvey edge is the target's sole incoming edge. `go mod why -m` remains
+negative, and repository Go source has zero direct target imports. Together
+with the zero package load below, this revalidates that GopherJS remains
+runtime-unreachable in the current project.
+
+The complete project test load remains 429 entries, including 197 module-
+backed packages across 41 loaded modules, with exactly zero GopherJS,
+Enterprise Certificate Proxy, or GAX packages. The project still selects 234
+modules with 3,599 graph edges. `go.mod` and `go.sum` remain byte-identical to
+clean decision HEAD at SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+`go.sum` remains 1,067 lines.
+
+Fresh primary vulnerability data still contains 1,398 module records, was
+last modified 2026-09-10T16:28:28Z, and contains no exact GopherJS record.
+No new advisory or independently observed disqualifier arose during this
+guard-only revalidation. The completed technical audit was not repeated or
+broadened.
+
+The non-transferable GopherJS exception remains valid only while the complete
+project load contains zero target packages, the module stays runtime-
+unreachable, exact selected
+`v0.0.0-20181017120253-0766667cb4d1` and its sole incoming GoConvey v1.6.4
+edge remain unchanged, and no new advisory or independent disqualifier
+appears. Direct import or loading, runtime reachability, a version or incoming-
+edge change, or a new advisory or independent disqualifier expires the
+exception and requires a fresh dependency and product decision before merge.
+The Enterprise Certificate Proxy and GAX exceptions remain separate under
+their own zero-load guards. Do not request this same GopherJS decision again
+while all guards hold.

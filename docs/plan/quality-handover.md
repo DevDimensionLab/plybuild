@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-13T17:27:33+02:00
+Generated: 2026-09-13T23:06:00+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -21,24 +21,24 @@ session diary.
   v0.6.0 `3d4cfd`, Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0
   `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. All earlier
   decisions are final.
-- The GopherJS evaluation is answered, and the user has supplied option 1 with
-  the recommended bounds in the sole NEXT decision archive. No
+- The GopherJS evaluation and bounded option 1 decision are answered. The sole
+  NEXT archive evaluates selected Gorilla WebSocket v1.4.2. No
   `.agent-task/current.md` or repository `.quality/manual-evidence.json`
-  exists. Do not execute the decision's successor, push, merge, publish,
+  exists. Do not execute that successor in this handoff, push, merge, publish,
   release, stash, revert, bypass cleanup, or remove the worktree.
 
 ## Lifecycle And Retained Roadmap
 
-P2A-P6 are complete. P7 is recording the user's bounded GopherJS option 1
-decision. Exact Go 1.26.7 and the accepted
+P2A-P6 are complete. P7 remains active after recording the user's bounded
+GopherJS option 1 decision. Exact Go 1.26.7 and the accepted
 Speakeasy, XXHash, Fatih Color, Go Logfmt, Go Stack, Godbus D-Bus, Golang
 Protobuf, Golang Snappy, Google Martian, Google Renameio, and Google UUID
 moves remain final. Google pprof, Gogo Protobuf, Crypt, OpenCensus Proto,
 Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify, Ghodss YAML, historical
 root GLFW, Googleapis GAX Go v2 v2.7.0, Google Cloud Go Testing, and Enterprise
-Certificate Proxy v0.2.1 remain retained. P8 is queued. Do not combine another
-dependency with this decision or begin P8 before it is recorded in a committed
-handoff.
+Certificate Proxy v0.2.1 remain retained. P8 is queued. The next bounded group
+is exact-path `github.com/gorilla/websocket v1.4.2`; do not combine it with
+another dependency or begin P8.
 
 The user's 2026-09-13 Enterprise Certificate Proxy option 1 decision remains
 final and separate. Exact v0.2.1 retains its bounded Go-1.19 floor and recorded
@@ -46,9 +46,9 @@ release/behavior/safety exceptions only while it has zero loaded packages,
 remains runtime-unreachable, and its exact version and sole Viper v1.15.0 edge
 remain unchanged without a new advisory or independent disqualifier. The two
 GAX exceptions likewise remain valid only for exact v2.7.0 while zero GAX
-packages load. This evaluation revalidated zero packages for both targets.
-Those exceptions do not transfer to GopherJS, which now has its own separately
-bounded decision below.
+packages load. The GopherJS decision guard revalidated zero packages for both
+targets. Those exceptions do not transfer to GopherJS, which has its own
+separately bounded decision below.
 
 Keep every disposable cache, projection, source, report, generated artifact,
 evidence tree, runtime/tool installation, and build context beneath
@@ -74,15 +74,29 @@ mvn-pom-mutator or GoConvey, authorize a broader parent/removal evaluation,
 raise the Go floor, or select a prerelease, fork, replacement, patch, alternate
 module path, unrelated-module move, or dependency implementation commit.
 
+The guards were revalidated from clean decision HEAD `ae2a9d3` with freshly
+unpacked exact Go 1.26.7 first in `PATH`, `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient `GOFLAGS`. The
+selected pseudo-version and sole incoming GoConvey v1.6.4 edge are unchanged;
+`go mod why -m` is negative; and repository source has zero direct GopherJS
+imports. The 429-entry complete test load retains 197 module-backed packages
+across 41 loaded modules with exactly zero GopherJS, Enterprise Certificate
+Proxy, or GAX packages, so GopherJS remains runtime-unreachable in the current
+project. Selection remains 234 modules and 3,599 edges.
+`go.mod` and `go.sum` are byte-identical at SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+`go.sum` remains 1,067 lines. Fresh primary data still contains 1,398 records,
+was last modified 2026-09-10T16:28:28Z, and has no exact GopherJS entry.
+
 The non-transferable exception remains valid only while the complete project
 load contains zero GopherJS packages, the module remains runtime-unreachable,
 and the exact selected pseudo-version and its sole incoming GoConvey v1.6.4
 edge remain unchanged without a new advisory or independent disqualifier.
-Revalidate and record those guards in the committed decision. Direct import or
-loading, runtime reachability, a version or incoming-edge change, or a new
-advisory or independent disqualifier expires the exception and requires a
-fresh dependency and product decision before merge. Do not ask for this same
-decision again while all guards hold.
+Direct import or loading, runtime reachability, a version or incoming-edge
+change, or a new advisory or independent disqualifier expires the exception
+and requires a fresh dependency and product decision before merge. Do not ask
+for this same decision again while all guards hold.
 
 Fresh proxy, sumdb, `go-import`, strict Git, and GitHub evidence resolve the
 public, active, unarchived, non-fork BSD-2-Clause repository
@@ -278,9 +292,12 @@ Q0-Q2 PASS at L2 with scorecard SHA-256
   bare-`mktemp` wrapper, and tool paths supplied as environment variables so
   Make's negative contract tests can override them.
 
-The next bounded session must record the user's explicit option 1 decision
-without dependency implementation. Revalidate the exact selected version and
-sole GoConvey edge, negative why result, zero target/ECP/GAX loads, unchanged
-module hashes, and fresh advisory state. Then answer the decision archive and
-prepare exactly one next bounded P7 mission. Do not execute that successor in
-the decision-recording turn.
+The next bounded session must independently evaluate selected exact-path
+`github.com/gorilla/websocket v1.4.2` as one P7 dependency group. Resolve its
+exact repository/release identity, complete Go-1.18 floor closure, package and
+connection behavior, exported API, actual project loading, exact MVS effects,
+vulnerability evidence, and all applicable quality contracts before retaining
+or selecting a qualified exact-path stable release. Preserve the GopherJS,
+Enterprise Certificate Proxy, and GAX guards and stop for a fresh bounded
+decision if any expires. Do not execute this successor during the GopherJS
+decision handoff.

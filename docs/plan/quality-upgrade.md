@@ -5374,9 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after recording the bounded Enterprise Certificate Proxy v0.2.1
-retention decision and the completed dependency groups through accepted Google
-UUID v1.4.0; P8 and further dependency groups remain queued.
+Status: active after recording the bounded GopherJS pseudo-version retention
+decision and the completed dependency groups through accepted Google UUID
+v1.4.0; P8 and further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -8939,25 +8939,40 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   failures. No metadata changed, so accepted quality remains 27/27 Q0-Q2 PASS
   at L2 with scorecard
   `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
-- Product direction supplied 2026-09-13: the user explicitly selected option 1
+- Product direction recorded 2026-09-13: the user explicitly selected option 1
   with the recommended bounds. Retain exact selected, inherited, unloaded
   GopherJS `v0.0.0-20181017120253-0766667cb4d1` without dependency metadata
   changes. Accept only its already documented unqualified pseudo-release,
   unsigned/untagged identity, proxy-synthesized module file, incomplete modern
   source/test closure, missing vendored test package, post-floor resolution,
-  and known compiler/command/generated-runtime incompatibilities. The exception
-  is non-transferable and valid only while zero GopherJS packages load, the
-  module remains runtime-unreachable, its exact version and sole GoConvey
-  v1.6.4 edge remain unchanged, and no new advisory or independent disqualifier
-  appears. Direct import/loading, runtime reachability, a version or incoming-
-  edge change, or a new advisory or independent disqualifier expires the
-  exception and requires a fresh dependency/product decision before merge. Do
-  not add a direct edge, change GopherJS, mvn-pom-mutator, or GoConvey, authorize
-  a broader parent/removal group, raise the Go floor, select a prerelease/fork/
-  replacement/patch/alternate path, move unrelated modules, manufacture a
-  dependency commit, or request this same decision again while the guards hold.
-  Record the decision, answer its archive, and prepare one next bounded P7
-  mission without executing it in the decision turn.
+  and known compiler/command/generated-runtime incompatibilities. No new or
+  independently discovered defect is accepted.
+- Every guard was revalidated from clean decision HEAD `ae2a9d3` with freshly
+  unpacked, hash-verified exact Go 1.26.7 first in `PATH`, `GOENV=off`,
+  `GOWORK=off`, `GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient
+  `GOFLAGS`. Selected GopherJS and its sole incoming GoConvey v1.6.4 edge are
+  unchanged; `go mod why -m` remains negative; repository source has zero
+  direct target imports; and the 429-entry complete test load has 197 module-
+  backed packages across 41 modules with zero GopherJS, Enterprise Certificate
+  Proxy, or GAX packages. GopherJS therefore remains runtime-unreachable in the
+  current project. Project selection remains 234 modules and 3,599 edges.
+  `go.mod` and `go.sum` remain unchanged at SHA-256
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+  and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+  `go.sum` remains 1,067 lines. Fresh primary data still has 1,398 records,
+  Last-Modified 2026-09-10T16:28:28Z, and no exact GopherJS entry.
+- The GopherJS exception is non-transferable and valid only while zero target
+  packages load, the module remains runtime-unreachable, its exact version and
+  sole GoConvey v1.6.4 edge remain unchanged, and no new advisory or independent
+  disqualifier appears. Direct import/loading, runtime reachability, a version
+  or incoming-edge change, or a new advisory or independent disqualifier
+  expires the exception and requires a fresh dependency/product decision
+  before merge. Do not add a direct edge, change GopherJS, mvn-pom-mutator, or
+  GoConvey, authorize a broader parent/removal group, raise the Go floor, select
+  a prerelease/fork/replacement/patch/alternate path, move unrelated modules,
+  manufacture a dependency commit, or request the same decision again while
+  the guards hold. Enterprise Certificate Proxy and GAX retain only their own
+  separate guarded exceptions.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
