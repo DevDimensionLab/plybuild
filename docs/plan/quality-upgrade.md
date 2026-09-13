@@ -5374,10 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: paused for a fresh Enterprise Certificate Proxy product decision after
-the maintained-toolchain baseline move and the completed dependency groups
-through accepted Google UUID v1.4.0; P8 and further dependency groups remain
-queued.
+Status: active after recording the bounded Enterprise Certificate Proxy v0.2.1
+retention decision and the completed dependency groups through accepted Google
+UUID v1.4.0; P8 and further dependency groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -8883,15 +8882,22 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   version and unchanged inherited Viper v1.15.0 edge. Separately accept only the
   already documented public-preview/release-packaging, configuration/file-
   lifetime, process-lifecycle, close, nil/panic, aliasing, global-logger, and C
-  ABI behavior/safety findings. Revalidate and record zero loaded target
-  packages. Direct import/loading, runtime reachability, a target version or
-  incoming-edge change, or a new vulnerability/advisory or independent
-  disqualifier expires the exceptions and requires a fresh dependency/product
-  decision before merge. Do not add a root edge, patch/replace the target,
-  change or independently audit Viper/GAX, raise the Go floor, manufacture a
-  dependency commit, or request this same decision again while the invariants
-  hold. Record the decision, answer its archive, and prepare one next bounded
-  P7 mission without executing it in the decision turn.
+  ABI behavior/safety findings. The invariant was revalidated from clean
+  decision HEAD `f671bc0`: selected v0.2.1 has exactly one incoming edge from
+  Viper v1.15.0, `go mod why -m` remains negative, and the 429-entry complete
+  test load contains zero target packages and zero GAX packages. `go.mod` and
+  `go.sum` remain unchanged, with SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+  and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Direct import/loading, runtime reachability, a target version or incoming-
+  edge change, or a new vulnerability/advisory or independent disqualifier
+  expires the exceptions and requires a fresh dependency/product decision
+  before merge. Do not add a root edge, patch/replace the target, change or
+  independently audit Viper/GAX, raise the Go floor, manufacture a dependency
+  commit, or request this same decision again while the invariants hold.
+- Evaluate selected exact-path `github.com/gopherjs/gopherjs
+  v0.0.0-20181017120253-0766667cb4d1` next as one bounded P7 dependency group.
+  Do not combine another dependency or begin P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

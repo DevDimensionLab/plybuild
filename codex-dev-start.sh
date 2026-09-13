@@ -1131,127 +1131,176 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-13T122112+0200-decide-enterprise-certificate-proxy-product-direction
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-13T122112+0200-decide-enterprise-certificate-proxy-product-direction.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-13T041350+0200-evaluate-enterprise-certificate-proxy-dependency.md
+#|SESSION_ID=2026-09-13T140912+0200-evaluate-gopherjs-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-13T140912+0200-evaluate-gopherjs-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-13T122112+0200-decide-enterprise-certificate-proxy-product-direction.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 only by recording the user's 2026-09-13 explicit selection of
-#|option 1 for `github.com/googleapis/enterprise-certificate-proxy`. Retain the
-#|exact selected, unloaded v0.2.1 without dependency metadata changes under the
-#|bounded floor, release, behavior, and safety exceptions below. Do not perform
-#|dependency implementation, change Viper or GAX, audit another dependency, or
-#|begin P8 in this decision-recording move.
+#|Continue P7 by independently evaluating selected exact-path
+#|`github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1` as one
+#|bounded dependency group. Resolve its repository and release identity,
+#|complete Go-floor closure, package and command behavior, exported API, actual
+#|project loading, exact MVS effects, vulnerability evidence, and every
+#|applicable quality contract. Retain or select only an exact-path version whose
+#|complete minimal source/test closure preserves Go 1.18 and whose relevant
+#|behavior passes every contract; otherwise stop for a fresh product decision.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P6 and all earlier P7 dependency outcomes are final. P7 is paused at this
-#|product stop; P8 and every other dependency group remain queued. The existing
-#|GAX v2.7.0 floor and behavior exceptions remain valid only for that exact
-#|selection while zero GAX packages load and do not transfer to this target or a
-#|different GAX release. Do not reopen earlier groups.
+#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and accepted
+#|Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0,
+#|Go Stack v1.8.1, Godbus D-Bus v5.1.0, Golang Protobuf v1.5.3, Golang Snappy
+#|v1.0.0, Google Martian v3.3.2, Google Renameio v1.0.1, and Google UUID
+#|v1.4.0 moves. Google pprof, Gogo Protobuf, Crypt, OpenCensus Proto, Logex,
+#|Readline, Fnmatch, Imaging, ansimage, Fsnotify, Ghodss YAML, historical root
+#|GLFW, Googleapis GAX Go v2 v2.7.0, Google Cloud Go Testing, and Enterprise
+#|Certificate Proxy v0.2.1 remain retained. All earlier decisions and lifecycle
+#|ancestry are final. Do not revisit them or combine another dependency group.
+#|P8 remains queued.
 #|
-#|# Authorized Product Decision
+#|The user's 2026-09-13 Enterprise Certificate Proxy option 1 decision is final.
+#|Exact v0.2.1 retains its bounded Go-1.19 floor and already documented release,
+#|behavior, and safety exceptions only while zero target packages load, the
+#|target remains runtime-unreachable, its exact version and sole incoming Viper
+#|v1.15.0 edge remain unchanged, and no new vulnerability/advisory or independent
+#|disqualifier appears. If any invariant fails, the owning checkpoint must stop
+#|for a fresh dependency and product decision before merge. Do not reopen that
+#|decision, modify its selection or edge, or transfer its exceptions to GopherJS.
 #|
-#|On 2026-09-13 the user explicitly selected option 1 with the recommended
-#|bounds: retain exact `enterprise-certificate-proxy v0.2.1` as an inherited,
-#|unloaded selection. Keep the main module's Go 1.18 floor and accept v0.2.1's
-#|Go 1.19 declaration only for this exact selected version and exact inherited
-#|Viper v1.15.0 edge. Do not change `go.mod` or `go.sum`, add a direct target
-#|edge, patch or replace the target, downgrade or independently audit Viper or
-#|GAX, raise the Go floor, or manufacture a dependency commit.
-#|
-#|The user separately accepts the known v0.2.1 release, behavior, and safety
-#|findings already recorded by the answered evaluation: public-preview release
-#|classification; the proxy zip's lost signer-fixture executable bit and raw
-#|test failure; configuration and file-lifetime boundaries; unbounded signer
-#|startup/RPC waits; incomplete failed-start cleanup; error-string-dependent,
-#|non-idempotent Close behavior; nil/panic and caller-aliasing boundaries; the
-#|process-global logger side effect; and the raw pointer/length, out-of-bounds,
-#|short-buffer, conflated-error, and uncaught-panic C ABI boundaries. This does
-#|not accept any new or independently discovered defect.
-#|
-#|These exceptions are valid only while the complete project load contains zero
-#|Enterprise Certificate Proxy packages and the selected version and sole
-#|incoming Viper edge remain unchanged. Revalidate and record that zero-load
-#|invariant in the final decision and handover. The exceptions expire if a
-#|target package becomes loaded or directly imported, its version or incoming
-#|edge changes, a new vulnerability/advisory or independent disqualifier
-#|appears, or the target becomes reachable runtime behavior. The owning
-#|checkpoint must then stop for a fresh dependency and product decision before
-#|merge. Existing GAX exceptions remain separate and retain their own zero-load
-#|guard. Do not stop or ask for this same Enterprise Certificate Proxy decision
-#|again if these invariants still hold.
+#|The two existing GAX v2.7.0 floor and behavior exceptions remain separate and
+#|valid only for that exact selection while zero GAX packages load. If GAX loads
+#|or is directly imported, stop for a fresh dependency and product decision
+#|before merge. Do not reopen GAX or transfer its exceptions to GopherJS.
 #|
 #|# Measurements At Start
 #|
-#|Selected v0.2.1 declares Go 1.19 and had no inherited exception before the
-#|authorized decision above. V0.2.0 is the highest exact-path tag with a complete
-#|minimal source/test closure preserving Go 1.18, but GitHub classifies it as a
-#|prerelease/public preview. Its proxy zip cannot pass its own tests without
-#|restoring a lost executable bit. Its client
-#|has unbounded signer startup/RPC waits, incomplete failed-start cleanup,
-#|error-string-dependent and non-idempotent Close behavior, typed-nil panics, and
-#|caller aliasing. Its C-shared ABI trusts raw pointer/length pairs, permits
-#|out-of-bounds access, conflates failures as zero, and allows invalid inputs to
-#|escape as uncaught Go panics. Selected v0.2.1 shares those boundaries and also
-#|can permanently discard the process-global logger.
+#|The latest dependency implementation remains exact Google UUID v1.4.0 commit
+#|`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+#|`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, and tree
+#|`b89afd4ec056133b1eefb5611f8f35c12c11824b`, changing only `go.mod` and
+#|`go.sum` with three insertions and no deletions. Enterprise Certificate Proxy,
+#|Google Cloud Go Testing, GAX, Google pprof, and Gogo Protobuf were retained
+#|without dependency implementation commits or metadata edits.
 #|
-#|Viper v1.15.0 supplies the only project edge to selected v0.2.1. `go mod why
-#|-m` is negative, and zero target packages load. An exact v0.2.0 request
-#|necessarily downgrades Viper to v1.14.0, GAX to v2.6.0, and changes 20 module
-#|selections total. Exact v0.1.0 is API-incompatible, downgrades Viper to v1.13.0,
-#|and disappears after tidy.
+#|The clean decision recording revalidated selected Enterprise Certificate Proxy
+#|v0.2.1, Viper v1.15.0, and GAX v2.7.0. Viper supplies the target's sole incoming
+#|edge; `go mod why -m` is negative; and the complete 429-entry project test load
+#|contains 197 module-backed packages across 41 loaded modules with zero
+#|Enterprise Certificate Proxy and zero GAX packages. Their exceptions remain
+#|bounded by those guards.
 #|
-#|No dependency metadata changed. The unchanged project remains 234 modules,
-#|3,599 graph edges, 429 complete-test entries, 197 module-backed packages, 41
-#|loaded modules, 1,067 sum lines, and a 432-line tidy projection. Target and GAX
-#|each remain unloaded. Accepted quality remains 27/27 Q0-Q2 PASS at L2. Fresh
-#|primary vulnerability data contains no target record, and direct serious-
-#|candidate scans are zero.
+#|The unchanged project has 234 selected modules, 3,599 graph edges, 429 complete-
+#|test entries, 197 module-backed packages, 41 loaded modules, 1,067 `go.sum`
+#|lines, and a 432-line unapplied tidy projection. `go.mod` and `go.sum` SHA-256
+#|values are
+#|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+#|and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+#|Accepted quality remains 27/27 Q0-Q2 PASS at L2 with scorecard SHA-256
+#|`576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
 #|
-#|The 562-entry selected-evidence manifest SHA-256 is
-#|`59868d9547ece628b950faf9200377108a0aab55fbbfab731d5f0b5fbcd10033`;
-#|decision-summary SHA-256 is
-#|`276efebfe75500789ce6501630e8ecdb0dbbf8241ae20c74f57bccfbc348180c`.
+#|Selected GopherJS is the exact pseudo-version
+#|`v0.0.0-20181017120253-0766667cb4d1`. Treat that as a starting selection, not
+#|proof of canonical repository, release qualification, ancestry, floor,
+#|loading, behavior, or suitability. Independently resolve its incoming graph
+#|paths, `go mod why -m` result, loaded-package population, and every serious
+#|exact-path candidate. Do not add a direct edge merely to alter MVS.
+#|
+#|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
+#|SHA-256
+#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
+#|put it first in PATH, keep `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`,
+#|and inject no ambient `GOFLAGS`. Recreate contained Go 1.18.10 and pinned tools
+#|beneath scratch as required. Portable receipts remain golangci-lint 2.12.2
+#|archive
+#|`a9c54498731b3128f79e090be6110f3e5fffccc617b08142ed244d4126c73f29`,
+#|GoReleaser 2.17.1 binary
+#|`f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`,
+#|and the recorded apidiff source archive receipt. Preserve the known apidiff
+#|archive reproducibility discrepancy and the Python 3.14 Docker timestamp
+#|control; neither is GopherJS evidence.
 #|
 #|# Role And Boundaries
 #|
-#|This is a decision-recording move, not a dependency implementation or renewed
-#|technical audit. The user has explicitly selected and bounded option 1; do not
-#|ask for that decision again or broaden it into Viper, GAX, unrelated-module,
-#|Go-floor, removal, direct-use, or future-version authorization.
+#|From fresh external archives and caches, resolve proxy, sumdb, go-import, Git,
+#|and forge evidence for the exact module path; tags, releases, branches,
+#|signatures, commits, parents, trees, ancestry, repository status, licenses,
+#|retractions, deprecations, redirects, forks, alternate paths, and every serious
+#|exact-path stable or pseudo-version candidate. Do not silently promote a
+#|redirect, fork, alternate path, prerelease, non-versioning tag, unreleased
+#|branch head, or floor-ineligible version.
+#|
+#|Prove the complete minimal production and test closure under exact Go 1.26.7
+#|and contained Go 1.18.10. Inspect imported source and test dependencies rather
+#|than treating a missing or old module directive as complete floor proof.
+#|Separate isolated source-time resolution from the project's selected MVS graph.
+#|
+#|Inspect every package, command, exported API, build tag, generated asset, and
+#|platform-specific file. Characterize compiler/transpiler inputs and outputs,
+#|JavaScript runtime and source-map behavior, filesystem and subprocess effects,
+#|environment/configuration discovery, module/GOPATH assumptions, error and exit
+#|behavior, determinism, nil and malformed inputs, aliasing, concurrency, and
+#|supported host/target combinations. Distinguish runtime code, commands,
+#|internal helpers, examples, benchmarks, testdata, generated content,
+#|fuzz/property coverage, external executables, network access, credentials,
+#|and upstream CI. Add independent fixtures where declarations and upstream tests
+#|do not establish the relevant contracts.
+#|
+#|Run source verification, package listing, native complete tests, two independent
+#|repeats, race and vet where semantically supported, and meaningful cross-build
+#|or generated-output checks under both SDKs. Classify every toolchain, Node/JS,
+#|browser, network, filesystem, subprocess, platform, resource, timeout, or test-
+#|design failure precisely; do not weaken a required contract silently.
+#|
+#|Prove exact project module, graph, package, checksum, tidy, API/CLI,
+#|compatibility, acceptance, and vulnerability effects for selected and every
+#|serious candidate in disposable trees. Compare primary vulnerability results
+#|at module, package, symbol, and reachable-trace levels. Preserve every unrelated
+#|selection. Any required parent or unrelated module change needs a fresh bounded
+#|decision rather than silent implementation.
 #|
 #|# Required Reading
 #|
-#|Read the answered Enterprise Certificate Proxy archive, rolling handover,
-#|roadmap, and the answered GAX archive. They contain the complete repository and
-#|release identity, floor closure, exported API, process, crypto, C ABI, exact
-#|MVS/loading, vulnerability, quality, tool-control, and existing-exception
-#|evidence. Verify the feature branch, lifecycle links, clean ordinary and
-#|ignored status, and `./codex-dev-start.sh --check` before recording a choice.
+#|At start, verify the feature branch, clean ordinary and ignored status,
+#|current ancestry, latest dependency implementation identity, reciprocal archive
+#|history, P7/P8 state, and `./codex-dev-start.sh --check`. Read this archive,
+#|the answered Enterprise Certificate Proxy decision and evaluation archives,
+#|the answered GAX archive, rolling handover, roadmap, `go.mod`, `go.sum`, and
+#|every referenced quality, compatibility, release, runner, evidence, and
+#|lifecycle contract. Earlier outcomes are final.
 #|
 #|# Three Moves
 #|
-#|First, verify from the clean current HEAD that v0.2.1 and its sole Viper edge
-#|remain selected, dependency metadata is untouched, `go mod why -m` remains
-#|negative, and zero target and GAX packages load. Reuse the completed audit;
-#|do not repeat the full dependency qualification.
+#|First, determine the highest qualified exact-path release whose complete
+#|minimal source/test closure preserves Go 1.18. Do not promote an unqualified or
+#|floor-ineligible identity. If no candidate satisfies the existing contracts,
+#|preserve evidence and stop for a fresh bounded product decision.
 #|
-#|Second, record the exact product decision, accepted known findings, invariant,
-#|expiration triggers, and future stop condition in the roadmap and rolling
-#|handover. Retain v0.2.1 without a dependency or implementation commit.
+#|Second, qualify selected and serious candidates across source, tests, API,
+#|behavior, loading, MVS, vulnerability, and project contracts. For an authorized
+#|changed selection, use exact Go 1.26.7 and exact `go get` for one dependency-
+#|only commit, never tidy as implementation, then run the complete P7 dependency
+#|gate. For a retained or blocked selection, prove the no-change effect and run
+#|all applicable gates without manufacturing activity. Full changed-selection
+#|quality must preserve 27/27 Q0-Q2 PASS at L2 with zero held, regressed, non-
+#|comparable, or dirty counts.
 #|
-#|Third, answer this decision archive and prepare one bounded next P7 mission
-#|under the existing queue. Do not execute that successor mission in this turn.
+#|Third, record the exact decision and evidence in the roadmap and rolling
+#|handover, answer this archive, and follow the lifecycle contract for one next
+#|bounded authorized mission. Do not execute the successor in this turn.
+#|
+#|Put every disposable cache, projection, source, report, generated artifact,
+#|evidence tree, runtime/tool installation, and build context beneath
+#|`$CODEX_SESSION_SCRATCH_ROOT`. Never run `go mod download all` in a measured
+#|worktree or create `.agent-task/current.md` or
+#|`.quality/manual-evidence.json`.
 #|
 #|# Automatic Handoff
 #|
-#|Follow the repository lifecycle contract after an explicit decision or a
-#|continued product stop. Do not perform the resulting implementation in this
-#|decision-recording move, launch a successor, push, merge, publish, release,
-#|stash, revert, bypass cleanup, or remove the worktree.
+#|After the GopherJS decision or bounded product stop, rewrite the rolling
+#|handover and roadmap, answer this archive, and follow the repository lifecycle
+#|contract. Do not implement another dependency group, launch a successor, push,
+#|merge, publish, release, stash, revert, bypass cleanup, or remove the worktree.
 # CODEX_MUTABLE_PROMPT_END

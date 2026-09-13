@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-13T12:21:12+02:00
+Generated: 2026-09-13T14:09:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -22,25 +22,27 @@ session diary.
   v0.6.0 `3d4cfd`, Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0
   `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. All earlier
   dependency decisions are final and must not be reopened.
-- The Enterprise Certificate Proxy evaluation is answered, and the user has
-  supplied option 1 with bounded exceptions in the sole NEXT decision archive.
-  No `.agent-task/current.md` or repository `.quality/manual-evidence.json`
-  exists. Do not push, merge, publish, release, stash, revert, launch a
-  successor, bypass cleanup, or remove the worktree.
+- The Enterprise Certificate Proxy evaluation and product decision are
+  answered. The user's bounded option 1 selection is recorded without a
+  dependency implementation or metadata commit. The sole NEXT archive is the
+  bounded GopherJS evaluation. No `.agent-task/current.md` or repository
+  `.quality/manual-evidence.json` exists. Do not push, merge, publish, release,
+  stash, revert, launch a successor, bypass cleanup, or remove the worktree.
 
 ## Lifecycle And Retained Roadmap
 
-P2A-P6 are complete. P7 is recording the user's bounded Enterprise Certificate
-Proxy option 1 decision after exact Go 1.26.7 and accepted Speakeasy v0.2.0,
-XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0, Go Stack v1.8.1,
-Godbus D-Bus v5.1.0, Golang Protobuf v1.5.3, Golang Snappy v1.0.0, Google
-Martian v3.3.2, Google Renameio v1.0.1, and Google UUID v1.4.0 moves. Google pprof
+P2A-P6 are complete. P7 is active after recording the user's bounded Enterprise
+Certificate Proxy option 1 decision and after exact Go 1.26.7 and accepted
+Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0, Go
+Stack v1.8.1, Godbus D-Bus v5.1.0, Golang Protobuf v1.5.3, Golang Snappy
+v1.0.0, Google Martian v3.3.2, Google Renameio v1.0.1, and Google UUID v1.4.0
+moves. Enterprise Certificate Proxy v0.2.1 and Google pprof
 `v0.0.0-20210720184732-4bb14d4b1be1`, Gogo Protobuf v1.3.2, Crypt,
 OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify,
 Ghodss YAML, historical root GLFW, Googleapis GAX Go v2 v2.7.0, and Google
 Cloud Go Testing `v0.0.0-20200911160855-bcd43fbb19e8` remain retained. P8
-remains queued. Do not start another dependency group until the decision is
-recorded in a committed handoff.
+remains queued. The next bounded P7 group is GopherJS; do not combine another
+dependency or start P8.
 
 The user's two 2026-09-12 GAX decisions remain final. V2.7.0 retains its
 inherited Go-1.19 floor exception and known
@@ -75,13 +77,19 @@ independently discovered defect.
 
 The exceptions remain valid only while the complete project load contains zero
 target packages and selected v0.2.1 plus its sole incoming Viper edge remain
-unchanged. Revalidate and record zero loading in the committed decision. Direct
-import or loading, runtime reachability, a target version or incoming-edge
-change, or a new vulnerability/advisory or independent disqualifier expires
-the exceptions and requires a fresh dependency and product decision before
-merge. Do not modify metadata, add a direct edge, patch or replace the target,
-downgrade or independently audit Viper/GAX, raise the Go floor, or ask for this
-same decision again while the invariants hold.
+unchanged. That invariant was revalidated from clean decision HEAD `f671bc0`:
+the sole incoming edge is Viper v1.15.0 -> v0.2.1, `go mod why -m` remains
+negative, and the 429-entry complete test load contains zero target packages.
+GAX v2.7.0 separately remains at zero loaded packages. `go.mod` and `go.sum`
+remain byte-identical to that HEAD, with SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Direct import or loading, runtime reachability, a target version or incoming-
+edge change, or a new vulnerability/advisory or independent disqualifier
+expires the exceptions and requires a fresh dependency and product decision
+before merge. Do not modify metadata, add a direct edge, patch or replace the
+target, downgrade or independently audit Viper/GAX, raise the Go floor, or ask
+for this same decision again while the invariants hold.
 
 The exact path resolves to the public, active, unarchived, non-fork Apache-2.0
 repository `https://github.com/googleapis/enterprise-certificate-proxy.git`.
@@ -219,8 +227,10 @@ and `276efebfe75500789ce6501630e8ecdb0dbbf8241ae20c74f57bccfbc348180c`.
 
 ## Next Objective
 
-Record the user's explicit option 1 decision without dependency implementation.
-Revalidate unchanged v0.2.1/Viper selection, negative `go mod why -m`, untouched
-metadata, and zero loaded target and GAX packages. Then answer the decision
-archive and prepare exactly one next bounded P7 dependency mission. Do not
-execute that successor mission in the decision-recording turn.
+Evaluate selected exact-path `github.com/gopherjs/gopherjs
+v0.0.0-20181017120253-0766667cb4d1` as the next single bounded P7 dependency
+group. Independently resolve its qualified release identity, complete Go-floor
+closure, package/command behavior and API, project loading and exact MVS
+effects, vulnerability evidence, and applicable quality contracts. Preserve
+the Enterprise Certificate Proxy and GAX zero-load guards, do not combine
+another dependency, and do not start P8.

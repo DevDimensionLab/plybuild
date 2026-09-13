@@ -1,13 +1,13 @@
 # Agent Session: Decide Enterprise Certificate Proxy Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-13T122112+0200-decide-enterprise-certificate-proxy-product-direction`
 Created: `2026-09-13T12:21:12+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `05da58d1df222345ae11a1fa73e1851fd756e262e4cda5829be7bd8e96882933`
 Previous: [2026-09-13T041350+0200-evaluate-enterprise-certificate-proxy-dependency.md](2026-09-13T041350+0200-evaluate-enterprise-certificate-proxy-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-13T140912+0200-evaluate-gopherjs-dependency.md](2026-09-13T140912+0200-evaluate-gopherjs-dependency.md)
+Outcome: Recorded the user's bounded option 1 decision, retained unloaded Enterprise Certificate Proxy v0.2.1 without metadata changes, revalidated its exact Viper edge and zero-load guard plus the separate GAX zero-load guard, and prepared the next bounded P7 group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -130,3 +130,48 @@ continued product stop. Do not perform the resulting implementation in this
 decision-recording move, launch a successor, push, merge, publish, release,
 stash, revert, bypass cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user's 2026-09-13 option 1 selection and retained exact-path
+`github.com/googleapis/enterprise-certificate-proxy v0.2.1` as an inherited,
+unloaded module without changing `go.mod` or `go.sum` and without manufacturing
+a dependency or implementation commit. The main module keeps its Go 1.18
+floor. The bounded floor exception accepts v0.2.1's Go 1.19 declaration only
+for this exact selection and its unchanged sole incoming Viper v1.15.0 edge.
+
+The decision separately accepts only the findings already established in the
+answered dependency evaluation: the public-preview release classification;
+the proxy zip's lost signer-fixture executable bit and raw test failure;
+configuration and file-lifetime boundaries; unbounded signer startup and RPC
+waits; incomplete failed-start cleanup; error-string-dependent,
+non-idempotent `Close`; nil/panic and caller-aliasing boundaries; the process-
+global logger side effect; and the raw pointer/length, out-of-bounds,
+short-buffer, conflated-error, and uncaught-panic C ABI boundaries. No new or
+independently discovered defect is accepted.
+
+The complete invariant was revalidated from clean decision HEAD `f671bc0` with
+exact Go 1.26.7, `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, and no ambient
+`GOFLAGS`. Project selection remains Enterprise Certificate Proxy v0.2.1,
+Viper v1.15.0, and GAX v2.7.0. The only incoming target edge is
+Viper v1.15.0 -> Enterprise Certificate Proxy v0.2.1. `go mod why -m` remains
+negative. The 429-entry complete test load still contains 197 module-backed
+packages across 41 loaded modules, with exactly zero Enterprise Certificate
+Proxy packages and exactly zero GAX packages.
+
+`go.mod` and `go.sum` are byte-identical to clean HEAD. Their SHA-256 values are
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+`go.sum` remains 1,067 lines. No direct target edge, patch, replacement, Viper
+or GAX change, Go-floor change, or dependency metadata change was made.
+
+The Enterprise Certificate Proxy exceptions remain valid only while zero
+target packages load, the target stays unreachable at runtime, selected
+v0.2.1 and its sole incoming Viper v1.15.0 edge remain unchanged, and no new
+vulnerability/advisory or independent disqualifier appears. Loading or directly
+importing a target package, runtime reachability, a target-version or incoming-
+edge change, or a new vulnerability/advisory or independent disqualifier
+expires the exceptions. The owning checkpoint must then stop for a fresh
+dependency and product decision before merge. The existing GAX v2.7.0
+exceptions remain separate under their own zero-load guard. Do not request the
+same Enterprise Certificate Proxy decision again while all invariants hold.
