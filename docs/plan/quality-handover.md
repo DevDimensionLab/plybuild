@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-13T04:13:50+02:00
+Generated: 2026-09-13T12:21:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -13,208 +13,201 @@ session diary.
   `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
   `b89afd4ec056133b1eefb5611f8f35c12c11824b`. It changes only `go.mod`
-  and `go.sum`, with three insertions and no deletions. Google Cloud Go
-  Testing and GAX v2.7.0 were retained without dependency commits or metadata
-  edits.
+  and `go.sum`, with three insertions and no deletions. Enterprise Certificate
+  Proxy, Google Cloud Go Testing, GAX v2.7.0, Google pprof, and Gogo Protobuf
+  have no dependency implementation or metadata commit.
 - Google Renameio v1.0.1 `394ec36`, Google Martian v3.3.2 `4644476`,
   Golang Snappy v1.0.0 `372f8e9`, Golang Protobuf v1.5.3 `6870e02`,
   Godbus D-Bus v5.1.0 `6472dce`, Go Stack v1.8.1 `647d4fd`, Go Logfmt
   v0.6.0 `3d4cfd`, Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0
-  `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. Google
-  pprof, Gogo Protobuf, GAX, and Google Cloud Go Testing remain retained
-  without dependency edits. All earlier P7 decisions are final.
-- The answered Google Cloud Go Testing archive and sole NEXT Enterprise
-  Certificate Proxy archive link reciprocally. No `.agent-task/current.md` or
-  repository `.quality/manual-evidence.json` exists. Do not push, merge,
-  publish, release, stash, revert, launch a successor, bypass cleanup, or
-  remove the worktree.
+  `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. All earlier
+  dependency decisions are final and must not be reopened.
+- The Enterprise Certificate Proxy evaluation is a bounded product stop. Its
+  answered archive links to the sole NEXT product-decision archive. No
+  `.agent-task/current.md` or repository `.quality/manual-evidence.json`
+  exists. Do not push, merge, publish, release, stash, revert, launch a
+  successor, bypass cleanup, or remove the worktree.
 
 ## Lifecycle And Retained Roadmap
 
-P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and accepted
-Speakeasy v0.2.0, XXHash v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0,
-Go Stack v1.8.1, Godbus D-Bus v5.1.0, Golang Protobuf v1.5.3, Golang Snappy
-v1.0.0, Google Martian v3.3.2, Google Renameio v1.0.1, and Google UUID
-v1.4.0 moves. Google pprof
+P2A-P6 are complete. P7 is paused for a fresh Enterprise Certificate Proxy
+product decision after exact Go 1.26.7 and accepted Speakeasy v0.2.0, XXHash
+v2.3.0, Fatih Color v1.15.0, Go Logfmt v0.6.0, Go Stack v1.8.1, Godbus D-Bus
+v5.1.0, Golang Protobuf v1.5.3, Golang Snappy v1.0.0, Google Martian v3.3.2,
+Google Renameio v1.0.1, and Google UUID v1.4.0 moves. Google pprof
 `v0.0.0-20210720184732-4bb14d4b1be1`, Gogo Protobuf v1.3.2, Crypt,
 OpenCensus Proto, Logex, Readline, Fnmatch, Imaging, ansimage, Fsnotify,
 Ghodss YAML, historical root GLFW, Googleapis GAX Go v2 v2.7.0, and Google
-Cloud Go Testing
-`v0.0.0-20200911160855-bcd43fbb19e8` remain retained. P8 remains queued.
-Do not reopen earlier groups or combine another dependency group.
+Cloud Go Testing `v0.0.0-20200911160855-bcd43fbb19e8` remain retained. P8
+remains queued. Do not start another dependency group until the product stop
+is resolved.
 
-The user's two 2026-09-12 GAX decisions are final. Retain v2.7.0 as an
-inherited Go-floor exception and accept its known
-`apierror.ParseError(err, false)` panic only while the complete project load
-contains zero GAX packages. If any GAX package becomes loaded or directly
-imported, the behavior exception expires and the owning checkpoint must stop
-for a fresh dependency and product decision before merge. Do not patch or
-replace GAX, add a root edge, change Viper or another parent, raise the Go
-floor, or apply the GAX exception to another module.
+The user's two 2026-09-12 GAX decisions remain final. V2.7.0 retains its
+inherited Go-1.19 floor exception and known
+`apierror.ParseError(err, false)` panic exception only while the complete
+project load contains zero GAX packages. If any GAX package becomes loaded or
+directly imported, the behavior exception expires and the owning checkpoint
+must stop for a fresh dependency and product decision. Do not apply either
+exception to Enterprise Certificate Proxy.
 
 Keep every disposable cache, projection, source, report, generated artifact,
-evidence tree, and build context beneath `$CODEX_SESSION_SCRATCH_ROOT`.
-Never run `go mod download all` in a measured worktree or bypass launcher
-scratch cleanup.
+evidence tree, and build context beneath `$CODEX_SESSION_SCRATCH_ROOT`. Never
+run `go mod download all` in a measured worktree or bypass launcher cleanup.
 
-## Google Cloud Go Testing Decision And Identity
+## Enterprise Certificate Proxy Product Stop
 
-Retain exact-path `github.com/googleapis/google-cloud-go-testing
-v0.0.0-20200911160855-bcd43fbb19e8` without changing `go.mod` or
-`go.sum`. No qualified exact-path release exists, proxy latest is an
-unreleased archived branch head, and selected has no independent
-disqualifier.
+There is no qualified, technically acceptable, in-scope exact-path release of
+`github.com/googleapis/enterprise-certificate-proxy` under the current Go 1.18
+and behavior contracts. Do not change `go.mod` or `go.sum` until the user makes
+a fresh product decision.
 
-Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence agrees on the public,
-archived, non-disabled, non-fork Apache-2.0 repository
-`https://github.com/googleapis/google-cloud-go-testing`. It has zero tags and
-zero GitHub releases. `RELEASING.md` explicitly says there are no releases and
-consumers should use pseudo-versions. The stable proxy list is empty. There is
-no redirect, deprecation directive, retraction, alternate exact-path release,
-qualified fork, prerelease, or tag to promote.
+The exact path resolves to the public, active, unarchived, non-fork Apache-2.0
+repository `https://github.com/googleapis/enterprise-certificate-proxy.git`.
+The proxy contains 29 stable-semver versions. Git tag `0.3.10` lacks the `v`
+prefix and does not version this module. GitHub release metadata marks v0.1.0,
+v0.2.0, v0.2.1, and v0.3.15 as prereleases even though their proxy versions
+have no semver prerelease suffix.
 
-Selected is branch `bcb-to-fb` tip commit
-`bcd43fbb19e8d79524fce1b71f4a2145afbd6039`, parent
-`8e1d251e947d1de4242ca2a81eb1a39917bf6b38`, tree
-`44cc1490ddeb164a479884cd8beecc373b2ad60d`, dated
-2020-09-11T16:08:55Z. Proxy latest is protected `master` tip
-`1c9a4c676720af1d2d964c1b2c866ee500300a15`, parent
-`1487aa9ec5b057debb42f236a1d1185f09f96804`, tree
-`e1733414a158ce2090bf6eb073c4c6af8dceee52`, dated
-2021-07-19T22:17:36Z. Selected/latest source/mod sums are
-`h1:tlyzajkF3030q6M8SvmJSemC9DTHL/xaMa18b65+JM4=` /
-`h1:dvDLG8qkwmyD9a/MJJN3XJcT3xFxOKAvTZGvuZmac9g=` and
-`h1:zC34cGQu69FG7qzJ3WiKW244WfhDC3xxYMeNOX2gtUQ=` / the same mod sum.
-Strict/full fsck and ancestry pass, and GitHub verifies both commit signatures.
-Selected is two commits behind latest;
-only README archive wording and SECURITY.md differ. Proxy/Git manifests match.
+Selected v0.2.1 is commit
+`80592736477602cc7992372d4280f819dc7e4cbf`, parent
+`bee115d4cb1a6e7db50513cbdcb000697b431169`, tree
+`d1d2b29329ca44130f6e3f333551b89d11648811`, dated
+2022-12-07T03:49:14Z. Its source/mod sums are
+`h1:RY7tHKZcRlk788d5WSo/e83gOyyy742E8GSs771ySpg=` and
+`h1:AwSRAtLfXpU5Nm3pW+v7rGDHp09LsPtGY9MduiEsR9k=`. Highest declaration-
+eligible v0.2.0 is commit `c5f65f94cd903cc16bba58964863229eb35ec41c`,
+tree `26607aaea8d3ebf96ab4f6f98041ed7ec5e149f5`, dated
+2022-09-28T23:03:15Z, with source/mod sums
+`h1:y8Yozv7SZtlU//QXbezB6QkpuE6jMD2/gfzk4AftXjs=` and
+`h1:8C0jb7/mgJe/9KK8Lm7X9ctZC2t60YyIpYEI16jx0Qg=`.
 
-## Closure, API, Behavior, And Qualifications
+Proxy latest v0.3.22 is commit
+`62d25fa2858321169ff476109479205309fa3a68`, dated
+2026-09-09T18:17:35Z, and current `main` equals it. Its source/mod sums are
+`h1:NU4XpII6jD+Dxcot94fqjE+AfJoE/lQP9q3faYGzC/c=` and
+`h1:L3D/IQExI6LqEjBdXcZQ1WluSgigQmSwBboFstVPM4w=`. It declares Go 1.25.0
+and toolchain Go 1.26.5 and is ineligible.
 
-Selected/latest module files are identical, declare Go 1.11, and require
-Cloud Go v0.44.3, BigQuery v1.0.1, Datastore v1.0.0, Google API v0.9.0,
-and tools-only vertices. Under Go 1.26.7 each isolated graph contains 36
-modules/337 edges and 332/359 production/test package entries. Under Go
-1.18.10 each has 36 modules/336 edges and 270/296 entries. The actual imported
-closure uses 14 external modules and five own runtime packages. Its maximum
-Go directive is 1.11; the whole graph including tools peaks at 1.12.
+## Floor, API, Behavior, And ABI Evidence
 
-The root documentation package and `bqiface`, `dsiface`, `psiface`, and
-`stiface` expose adapters, constrained interfaces, and shallow config shadows
-for the pinned Cloud clients. There are no runtime commands, benchmarks, fuzz
-targets, generated Go files, or testdata; `tools.go` is build-tag-only. Four
-credentialed examples skip without their environment variables. Upstream
-Kokoro targeted Go 1.12 with lint/staticcheck/tidy/race checks.
+V0.1.0 and v0.2.0 declare Go 1.18; v0.2.1 through v0.3.4 declare Go 1.19;
+all later releases declare Go 1.23 or newer. V0.1.0, v0.2.0, and v0.2.1 have
+no external module requirements, so their complete minimal production/test
+closure is the root module plus standard library. Under Go 1.26.7 the closure
+has 202 production and 221 complete-test entries; under Go 1.18.10 it has 137
+and 157. The four root-module packages are `client`, `client/util`, command
+`cshared`, and the internal test signer command. Repository platform signer
+submodules have independent `go.mod` files and are excluded from the root zip.
 
-Adapters are value wrappers around embedded client pointers and normally
-forward exact contexts, arguments, callbacks, errors, and results. Nil client
-constructors return non-nil interfaces with nil embedded pointers, and later
-calls generally panic. Successful nil upstream results can also become
-non-nil interface wrappers. BigQuery config conversion shallow-aliases caller
-data; several iterators drop results on error. Datastore can return wrappers
-with errors and preserves callback/context identity. Pub/Sub message data and
-attributes alias upstream storage, and Receive wraps messages while forwarding
-the exact context. Storage builder setters mutate the embedded builder.
-BigQuery copy, Pub/Sub publish, and Storage copy/compose assert concrete local
-wrappers and panic for otherwise valid external fakes or typed nils. Mutable
-builders/iterators are not concurrent-mutation safe; normal independent and
-read-only reuse passes race tests. The wrappers add no retry, clock,
-randomness, or network policy.
+V0.2.0 and v0.2.1 export identical Go APIs. V0.1.0 is an incompatible
+fallback because v0.2.0 removed `client/util.Libs.SignerBinary` and added
+`Libs.ECP`. Both v0.2 module zips lose the executable bit on
+`client/testdata/signer.sh`, so raw proxy tests fail under both SDKs with
+`permission denied`. A scratch-only mode correction makes upstream tests,
+two independent repeats, race, vet, native builds, and broad cross-builds
+pass; it characterizes source but does not repair release qualification.
 
-Selected/latest exported API blobs are identical, SHA-256
-`1a9dbaa10ba5d79c1b207cd5acaefe6c1903c3ecceb868c2fe6d8605370a2e00`,
-and apidiff is empty both ways. The independent 375-line contract fixture,
-SHA-256
-`10bea668cbc7b6ec438f6fa15ff7b8681e6901ef4c4076f8909b052abe5d991c`,
-covers forwarding, identity, aliasing, nil/panic boundaries, paging,
-cancellation, callbacks, local Pub/Sub streaming, builders, errors, and
-concurrency. It passes test, count-10 repeats, race, and vet under both SDKs.
+Configuration accepts an explicit path or platform gcloud default, does not
+expand environment variables or tilde, resolves relative signer paths from
+process cwd, accepts unknown and duplicate JSON fields, has no read-size cap,
+and does not close the opened config file. Client startup inherits cwd/env,
+passes only the config path argument, reserves stdin/stdout for gob net/rpc,
+and writes signer stderr to parent stderr. There is no context, deadline, or
+timeout. Startup and signing can block forever, and failed initialization does
+not close, kill, or wait for the child.
 
-Three upstream `Example_AdaptClient` names are malformed for modern vet. Raw
-Go 1.26.7 default tests/vet and Go 1.18.10 standalone vet report only this
-test-name defect; vet-disabled runtime tests pass. Scratch-only correction to
-`ExampleAdaptClient` makes default tests and vet pass under both SDKs. Corrected
-production cross-builds pass Darwin/amd64, Linux/amd64, Linux/arm64,
-Windows/amd64, FreeBSD/amd64, and js/wasm, with Linux/Windows test compilation.
-This historical example-name issue is not a runtime disqualifier.
+`Close` is non-idempotent. V0.2.0 relies on exact platform-dependent process
+and RPC error strings and can panic on nil errors; v0.2.1 retains exact RPC
+string and nil risks. Certificate chains alias internal mutable slices, typed-
+nil hash options panic, and nil receivers have panic boundaries. Concurrent
+successful signing passes a 32-call race fixture. V0.2.1 additionally sets the
+process-global Go logger to discard output when its logging variable is first
+unset and never restores it; upstream later removed that behavior because it
+suppressed unrelated application logging.
 
-## Project, Vulnerability, And Quality Measurements
+The C-shared ABI exports `GetCertPemForPython` and `SignForPython`. Valid calls
+work with caller-owned buffers under both SDKs, but the boundary trusts raw
+pointer/length pairs through `unsafe.Slice`, silently truncates short
+certificate buffers, conflates failures as status zero, and has no panic
+recovery. Isolated child probes show nil-positive and negative lengths escaping
+as uncaught Go panics; oversized lengths permit out-of-bounds access. Go
+1.18.10 native linking needs `-ldflags=-w` only because its Darwin debug output
+is incompatible with current Xcode `dsymutil`.
 
-Afero v1.9.4 supplies the only current incoming edge and shortest path main ->
-Afero -> selected. Historical Afero v1.8.2 declares the same selected
-pseudo-version. `go mod why -m` is negative; zero target and zero GAX packages
-load. Raw explicit selected/latest requests change no loaded population or
-unrelated selection. Both temporarily add root requirements for the target and
-five tools vertices. Selected adds six pruned-tool source sums and raises edges
-to 3,605; latest changes only target, adds seven source sums, and raises edges
-to 3,612. Tidy makes base/selected/latest byte-identical, restores selected,
-and measures 234 modules/3,557 edges/948 sum lines.
+## Project MVS, Vulnerability, And Quality
 
-The unchanged accepted project remains 234 modules, 3,599 graph edges, 429
-complete-test entries, 41 loaded modules, 197 loaded module-backed packages,
-1,067 sum lines, and a 432-line unapplied tidy projection.
+The unchanged project has 234 selected modules, 3,599 graph edges, 429 native
+complete-test entries, 197 module-backed packages, 41 loaded modules, 1,067
+`go.sum` lines, and a 432-line unapplied tidy projection. The sole target edge
+is Viper v1.15.0 -> Enterprise Certificate Proxy v0.2.1, reached from the main
+module's direct Viper edge. `go mod why -m` is negative and zero target packages
+load because MVS follows module requirements independently of package imports.
+GAX also remains at zero loaded packages.
+
+Exact `go get github.com/googleapis/enterprise-certificate-proxy@v0.2.0` in a
+disposable tree downgrades Viper v1.15.0 to v1.14.0, GAX v2.7.0 to v2.6.0,
+and changes 20 selections total: target, Viper, and 18 unrelated modules. The
+raw projection has 233 modules, 3,601 edges, unchanged 429/197/41 loading
+counts, 1,069 sum lines, and a 433-line tidy projection. Target and GAX remain
+unloaded. Tidy still leaves 21 selection differences from the base tidy
+control. Exact v0.1.0 downgrades Viper to v1.13.0 and tidy removes the target
+entirely. Neither request is an authorized target-only dependency move.
 
 Fresh primary vulnerability data contains 1,398 module records, index
 Last-Modified 2026-09-10T16:28:28Z, scanner DB update
-2026-09-10T14:48:42Z, and no exact target advisory. Project populations remain
-30 module findings, 22 Darwin and 23 Windows package findings, and 20 IDs/22
-traces per symbol platform, with no target or GAX occurrence. Direct
-selected/latest scans are identical: 31 inherited module findings, 18 package
-findings/16 IDs, and 51 production or 66 test traces/three IDs. Those three
-IDs affect old `x/net` HTTP/2 and gRPC transport, not the target module.
+2026-09-10T14:48:42Z, and no target record. Direct v0.1.0/v0.2.0/v0.2.1 scans
+have zero module, Darwin/Windows package, symbol, or test-symbol findings. The
+unchanged project and exact raw v0.2.0 projection match at 30 module findings,
+22 Darwin package findings, 23 Windows package findings, and 20 IDs/22
+reachable traces on both symbol platforms, with no target or GAX occurrence.
 
-Exact Go 1.26.7 project verify/load/build, native tests, two repeats, race,
-vet, pinned lint, empty-HOME, Linux/Windows, compatibility, complete preflight,
-80/80 mutation controls, audits, host, snapshot, and real Docker acceptance
-pass. Applicable Go 1.18.10 gates pass with only the two accepted shell
-closed-file wording differences. The fresh independent scorecard is 27/27
-Q0-Q2 PASS at L2, seven improved and zero held/regressed/non-comparable/dirty,
-SHA-256
-`a706ee72aa1483217bdcced30b36523da95841fb3874ef017645ffcf74051829`.
-Because metadata did not change, the accepted scorecard remains
+The unchanged exact Go 1.26.7 project passes verify/load/build, native tests,
+two count-10 repeats, race, vet, pinned lint, empty-HOME, Darwin/Linux/Windows
+build coverage, and authoritative full preflight. The Go 1.18.10 projection
+passes compatible gates with only the two already accepted `pkg/shell`
+closed-file wording failures. The disposable v0.2.0 MVS projection has the
+same result under both SDKs. No dependency metadata changed, so a changed-
+selection scorecard is inapplicable; accepted quality remains 27/27 Q0-Q2
+PASS at L2 with scorecard SHA-256
 `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
-The 788-entry evidence manifest and decision summary hash to
-`34e3574d2ced8aef523df1607300134664907cf7634cb40f89c3f615a151f106`
-and `9652c69c7971189749d2fd4590dc39b49a11f6f159cb80c2287767251312db2a`.
 
-## Tools
+The 562-entry selected-evidence manifest and decision summary hash to
+`59868d9547ece628b950faf9200377108a0aab55fbbfab731d5f0b5fbcd10033`
+and `276efebfe75500789ce6501630e8ecdb0dbbf8241ae20c74f57bccfbc348180c`.
+
+## Tools And Execution Controls
 
 - Exact Go 1.26.7 binary/archive SHA-256 values are
   `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
   and `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`.
-- Contained Go 1.18.10 binary/archive values are
+  Contained Go 1.18.10 values are
   `f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`
   and `718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade`.
-- Official golangci-lint 2.12.2 archive SHA-256 is
+- Official golangci-lint 2.12.2 reproduces archive SHA-256
   `a9c54498731b3128f79e090be6110f3e5fffccc617b08142ed244d4126c73f29`.
-  GoReleaser 2.17.1 binary SHA-256 is
-  `f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`;
-  accepted apidiff archive SHA-256 is
-  `0c55d9e385a57d6af9b69a9abd3b71d986123dbe82e687fcaecb99f9a0acba20`.
-  The apidiff mirror refresh returned HTTP 429; exact pinned module source was
-  rebuilt from cache.
-- Complete preflight used a scratch-only bare-`mktemp` shim. Docker acceptance
-  used scratch-discovered Buildx v0.33.0 and real Python 3.14.6 ahead of
-  `/usr/bin/python3` for long-fraction timestamps.
+  Pinned apidiff version `v0.0.0-20260709172345-9ea1abe57597` was rebuilt and
+  used successfully. Current proxy/GitHub source archives do not reproduce the
+  previously recorded apidiff archive digest `0c55d9e...`; keep this as an
+  external portable-receipt discrepancy.
+- Use `LC_ALL=C LANG=C` because the inherited `C.UTF-8` is unavailable and can
+  panic Perl/Go helpers. Complete preflight used scratch-only `make`/`mktemp`
+  wrappers so every bare temporary directory stayed below scratch. Keep real
+  Python 3.14 ahead of `/usr/bin/python3` for Docker timestamps with long
+  fractional seconds.
 
 ## Next Objective
 
-Independently evaluate exact-path
-`github.com/googleapis/enterprise-certificate-proxy v0.2.1` as the next
-single P7 group. Do not combine or independently audit Viper or another
-module.
+Obtain an explicit fresh product decision before any implementation or another
+dependency audit. Present these bounded choices without choosing silently:
 
-Viper v1.15.0 supplies the sole incoming edge and shortest path main -> Viper
--> target. `go mod why -m` is negative and zero target packages load. A fresh
-proxy survey found 29 stable versions: selected v0.2.1 is tagged commit
-`80592736477602cc7992372d4280f819dc7e4cbf`, declares Go 1.19, and has no
-inherited floor exception. V0.1.0 and v0.2.0 declare Go 1.18; v0.2.1 through
-v0.3.4 declare Go 1.19; later releases require Go 1.23 or newer. Latest
-v0.3.22 is tagged commit `62d25fa2858321169ff476109479205309fa3a68`
-and declares Go 1.25.0/toolchain Go 1.26.5.
+1. Retain unloaded v0.2.1 by defining new Enterprise Certificate Proxy Go-1.19
+   and identified behavior/safety exceptions.
+2. Authorize a broader Viper/MVS dependency group and separately decide whether
+   public-preview v0.2.0's packaging, process-lifecycle, and C-ABI failures can
+   be risk-accepted.
+3. Authorize a different Viper/removal/Go-floor strategy that eliminates the
+   target or permits a later release, with a new bounded measurement plan.
 
-Resolve the complete v0.2.0 closure, identity, API, behavior, and exact MVS
-feasibility. If the highest eligible release is sound but cannot be selected
-without changing Viper or another group, stop for a fresh bounded product
-decision. Do not silently retain the Go-1.19 target, invent an exception, add
-a replace/fork, or broaden the checkpoint.
+Until the user chooses and bounds one option, keep selected v0.2.1 unchanged,
+do not grant it an exception, do not change Viper or GAX, and do not start P8
+or another dependency group.

@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Enterprise Certificate Proxy Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-13T041350+0200-evaluate-enterprise-certificate-proxy-dependency`
 Created: `2026-09-13T04:13:50+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `72cfd252fdc1ebbe5642afa664924dc4f1114118dda60ecf9427707d3d05c4ff`
 Previous: [2026-09-13T005310+0200-evaluate-google-cloud-go-testing-dependency.md](2026-09-13T005310+0200-evaluate-google-cloud-go-testing-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-13T122112+0200-decide-enterprise-certificate-proxy-product-direction.md](2026-09-13T122112+0200-decide-enterprise-certificate-proxy-product-direction.md)
+Outcome: Stopped for a fresh product decision without metadata changes; v0.2.0 is the highest Go-1.18-closure candidate but is a public-preview release with packaging, process-lifecycle, and C-ABI failures, while exact MVS selection would downgrade Viper and change 18 unrelated modules; selected v0.2.1 remains unchanged but has no authorized Go-1.19 or behavior exception.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -228,3 +228,111 @@ repository lifecycle contract. Do not implement another dependency group,
 launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Stop P7 for a fresh Enterprise Certificate Proxy product decision. No
+qualified, technically acceptable, in-scope exact-path selection satisfies the
+current Go 1.18 and behavior contracts. `go.mod` and `go.sum` remain unchanged.
+
+Fresh proxy, sumdb, go-import, Git, and GitHub evidence resolves the public,
+active, unarchived, non-fork Apache-2.0 repository
+`https://github.com/googleapis/enterprise-certificate-proxy.git`. The proxy
+contains 29 stable-semver versions. Git tag `0.3.10` lacks the required `v`
+prefix and does not version this module. GitHub release metadata marks v0.1.0,
+v0.2.0, v0.2.1, and v0.3.15 as prereleases; v0.2.0 and v0.2.1 are explicitly
+named public-preview releases.
+
+Selected v0.2.1 is tagged commit
+`80592736477602cc7992372d4280f819dc7e4cbf`, parent
+`bee115d4cb1a6e7db50513cbdcb000697b431169`, tree
+`d1d2b29329ca44130f6e3f333551b89d11648811`, dated
+2022-12-07T03:49:14Z. Its source/mod sums reproduce
+`h1:RY7tHKZcRlk788d5WSo/e83gOyyy742E8GSs771ySpg=` and
+`h1:AwSRAtLfXpU5Nm3pW+v7rGDHp09LsPtGY9MduiEsR9k=`. Highest declaration-
+eligible v0.2.0 is tagged commit
+`c5f65f94cd903cc16bba58964863229eb35ec41c`, tree
+`26607aaea8d3ebf96ab4f6f98041ed7ec5e149f5`, dated
+2022-09-28T23:03:15Z, with source/mod sums
+`h1:y8Yozv7SZtlU//QXbezB6QkpuE6jMD2/gfzk4AftXjs=` and
+`h1:8C0jb7/mgJe/9KK8Lm7X9ctZC2t60YyIpYEI16jx0Qg=`. Latest v0.3.22 is
+tagged commit `62d25fa2858321169ff476109479205309fa3a68`, current main equals
+that tag, and it declares Go 1.25.0/toolchain Go 1.26.5.
+
+V0.1.0 and v0.2.0 declare Go 1.18; v0.2.1 through v0.3.4 declare Go 1.19;
+later releases declare Go 1.23 or newer. V0.1.0, v0.2.0, and v0.2.1 have no
+external requirements. Their complete minimal production/test closure is the
+root module plus standard library: 202/221 entries under Go 1.26.7 and 137/157
+under Go 1.18.10. Each root module contains `client`, `client/util`, command
+`cshared`, and the internal test signer command. Platform signer submodules in
+Git have their own modules and are correctly excluded from the root proxy zip.
+
+V0.2.0 and v0.2.1 have identical exported Go API. V0.1.0 is API-incompatible.
+The v0.2.0/v0.2.1 module zips store `client/testdata/signer.sh` without the Git
+executable bit, so fresh, unmodified proxy sources fail tests under both SDKs
+with `permission denied`. A scratch-only mode correction makes upstream tests,
+two count-10 repeats, race, vet, native builds, and meaningful cross-builds
+pass, but it is not a valid release repair.
+
+Independent configuration, signer, RPC, crypto, malformed-flow, lifecycle,
+concurrency, and C-shared fixtures characterized all packages and commands
+under both SDKs. Configuration has no input cap and leaks the open file;
+relative signer paths resolve from process cwd. Signer startup and RPC have no
+context, deadline, or timeout, and failed initialization can leave an unwaited
+child. Close is non-idempotent; v0.2.0 relies on platform-specific exact error
+strings and nil-unsafe paths, and v0.2.1 retains exact RPC-string/nil risks.
+Typed-nil hash options panic, and certificate-chain results alias internal
+storage. V0.2.1 also permanently discards the process-global logger on its
+default path. Thirty-two concurrent valid signs pass the race fixture.
+
+The C-shared ABI exports `GetCertPemForPython` and `SignForPython`. Valid calls
+and caller-owned buffers work, but the boundary trusts raw pointer/length pairs
+through `unsafe.Slice`, permits out-of-bounds access, silently truncates short
+certificate buffers, conflates failures as status zero, and has no panic
+recovery. Isolated invalid-input children exit nonzero with uncaught Go panics.
+
+The unchanged project has 234 selected modules, 3,599 graph edges, 429 native
+complete-test entries, 197 module-backed packages, 41 loaded modules, 1,067
+sum lines, and a 432-line tidy projection. The only target edge is Viper
+v1.15.0 -> selected v0.2.1. `go mod why -m` is negative and zero target or GAX
+packages load because MVS traverses module requirements independently of
+package imports.
+
+An exact disposable v0.2.0 request downgrades Viper to v1.14.0, GAX to v2.6.0,
+and changes 20 selections total: target, Viper, and 18 unrelated modules. Its
+raw measurements are 233 modules, 3,601 edges, unchanged 429/197/41 loading,
+1,069 sum lines, and a 433-line tidy projection; tidy still leaves 21 selection
+differences from base tidy. Exact v0.1.0 downgrades Viper to v1.13.0 and tidy
+removes the target. Both exceed the authorized dependency group.
+
+Fresh primary vulnerability data contains 1,398 module records, index
+Last-Modified 2026-09-10T16:28:28Z, scanner update
+2026-09-10T14:48:42Z, and no target record. Direct v0.1.0/v0.2.0/v0.2.1
+module, Darwin/Windows package, symbol, and test-symbol scans are zero. Base and
+the raw v0.2.0 project projection are identical at 30 module findings, 22
+Darwin and 23 Windows package findings, and 20 IDs/22 reachable traces per
+symbol platform, with no target or GAX occurrence.
+
+Exact Go 1.26.7 project verification, load/build, native tests, two repeats,
+race, vet, pinned lint, empty-HOME, cross-builds, and authoritative full
+preflight pass. Applicable Go 1.18.10 gates pass with only the two already
+accepted `pkg/shell` closed-file wording differences. No selection was applied,
+so changed-selection quality is inapplicable; accepted quality remains 27/27
+Q0-Q2 PASS at L2 with scorecard SHA-256
+`576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
+
+Exact Go 1.26.7 and Go 1.18.10 binaries reproduce their required hashes, and
+the golangci-lint archive reproduces its portable hash. Pinned apidiff was
+rebuilt and used successfully, but currently fetched proxy/GitHub source
+archives do not reproduce the previously recorded apidiff source-archive
+digest; this external portable-receipt discrepancy is retained explicitly.
+
+The 562-entry selected-evidence manifest SHA-256 is
+`59868d9547ece628b950faf9200377108a0aab55fbbfab731d5f0b5fbcd10033`;
+decision-summary SHA-256 is
+`276efebfe75500789ce6501630e8ecdb0dbbf8241ae20c74f57bccfbc348180c`.
+
+The fresh decision must explicitly bound one of three directions: grant new
+Go-floor and behavior/safety exceptions for retained unloaded v0.2.1;
+authorize a broader Viper/MVS group plus explicit v0.2.0 risk acceptance; or
+authorize a different Viper/removal/Go-floor strategy. None is inferred here.

@@ -5374,9 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the maintained-toolchain baseline move and completed
-dependency groups through accepted Google Martian v3.3.2 plus retained Gogo
-Protobuf v1.3.2; further dependency groups remain queued.
+Status: paused for a fresh Enterprise Certificate Proxy product decision after
+the maintained-toolchain baseline move and the completed dependency groups
+through accepted Google UUID v1.4.0; P8 and further dependency groups remain
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -8832,17 +8833,54 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   The 788-entry evidence manifest and decision summary hash to
   `34e3574d2ced8aef523df1607300134664907cf7634cb40f89c3f615a151f106`
   and `9652c69c7971189749d2fd4590dc39b49a11f6f159cb80c2287767251312db2a`.
-- Next, independently evaluate exact-path
-  `github.com/googleapis/enterprise-certificate-proxy v0.2.1`. Viper v1.15.0
-  supplies its only incoming edge; `go mod why -m` is negative and zero target
-  packages load. Selected v0.2.1 declares Go 1.19 without an inherited
-  exception. Of 29 stable proxy versions, v0.2.0 is the highest initially
-  declaration-eligible candidate at Go 1.18; v0.2.1 through v0.3.4 require Go
-  1.19 and later releases require Go 1.23 or newer. Resolve v0.2.0's complete
-  closure, identity, behavior, API, and exact MVS feasibility. If it cannot be
-  selected without changing Viper or another group, stop for a fresh product
-  decision rather than silently retaining the floor conflict or broadening the
-  checkpoint.
+- Stop Enterprise Certificate Proxy for a fresh product decision without a
+  dependency edit. Fresh exact-path proxy, sumdb, go-import, Git, and GitHub
+  evidence resolves the public active non-fork Apache-2.0 repository and 29
+  stable-semver versions. Git tag `0.3.10` lacks the required `v` and does not
+  version the module. GitHub marks v0.1.0, v0.2.0, v0.2.1, and v0.3.15 as
+  prereleases/public previews despite stable proxy version syntax.
+- V0.2.0 is the highest declaration-eligible tag. V0.1.0/v0.2.0 declare Go
+  1.18, v0.2.1-v0.3.4 declare Go 1.19, and later releases require Go 1.23 or
+  newer. V0.1.0/v0.2.0/v0.2.1 have standard-library-only minimal closures:
+  202/221 production/test entries under Go 1.26.7 and 137/157 under Go
+  1.18.10. Selected v0.2.1 cannot be retained under the current contract
+  because it has no Go-1.19 exception.
+- Authoritative v0.2.0/v0.2.1 module zips lose the executable bit on the
+  upstream signer shell fixture and fail raw tests under both SDKs. A scratch-
+  only mode correction makes tests, repeats, race, vet, native builds, and
+  broad cross-builds pass, but does not repair the release. V0.2.0 and v0.2.1
+  have identical exported Go API; v0.1.0 is API-incompatible.
+- Both v0.2 clients have unbounded signer startup/RPC waits, incomplete failed-
+  startup cleanup, non-idempotent close, caller aliasing, typed-nil panics, and
+  error-string-dependent lifecycle behavior. V0.2.1 additionally permanently
+  discards the process-global logger in its default path. The C ABI trusts raw
+  pointer/length pairs, permits out-of-bounds access, conflates errors as zero,
+  truncates short buffers, and lets invalid inputs escape as uncaught Go
+  panics. Independent valid-flow, malformed-flow, concurrency, process,
+  configuration, crypto, and C-shared characterization ran under both SDKs.
+- Viper v1.15.0 supplies the sole project edge to selected v0.2.1; the target
+  and GAX each have zero loaded packages. An exact v0.2.0 request necessarily
+  downgrades Viper to v1.14.0, GAX to v2.6.0, and changes 20 selections total.
+  Its raw projection is 233 modules/3,601 edges/1,069 sums with unchanged
+  429/197/41 package/module loading counts; tidy leaves 21 selection
+  differences from base tidy. V0.1.0 downgrades Viper to v1.13.0 and tidy
+  removes the target. These are not authorized target-only changes.
+- Fresh primary vulnerability data contains no target record. Direct serious-
+  candidate scans are zero; base and v0.2.0 project populations are identical
+  at 30 module findings, 22 Darwin and 23 Windows package findings, and 20
+  IDs/22 traces on both symbol platforms. Exact Go 1.26.7 project and preflight
+  gates pass; compatible Go 1.18.10 gates retain only the two accepted shell
+  wording failures. No metadata changed, so accepted quality remains 27/27
+  Q0-Q2 PASS at L2 with scorecard
+  `576c6e9f666d89adf533bb0e24503e966b9935d3e70183f7ddf52bad84b1edac`.
+  The 562-entry evidence manifest and decision summary hash to
+  `59868d9547ece628b950faf9200377108a0aab55fbbfab731d5f0b5fbcd10033`
+  and `276efebfe75500789ce6501630e8ecdb0dbbf8241ae20c74f57bccfbc348180c`.
+- Product must now explicitly choose and bound one of: new Go-floor and safety
+  exceptions for retained unloaded v0.2.1; a broader Viper/MVS group plus
+  explicit v0.2.0 risk acceptance; or a different Viper/removal/Go-floor
+  strategy. Until then, keep metadata unchanged and do not start P8 or another
+  dependency group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
