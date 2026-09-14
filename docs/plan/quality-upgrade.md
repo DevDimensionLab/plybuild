@@ -5374,7 +5374,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after recording the bounded Gorilla WebSocket v1.4.2 retention
+Status: active after recording the bounded gRPC middleware v1.0.0 retention
 decision and the completed dependency groups through accepted Google UUID
 v1.4.0; P8 and further dependency groups remain queued.
 
@@ -9127,7 +9127,7 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   decision-summary SHA-256 values are
   `bab1aa974f1182ba6d953831dcfccc0257b6f32f5064c477c68df170b7113b8e`
   and `a07237e54d3fac720966f6fc33767d6e98d61db6a2efc8a44de02f78316d3150`.
-- Product direction supplied 2026-09-14: the user explicitly selected option 1
+- Product direction recorded 2026-09-14: the user explicitly selected option 1
   with the recommended bounds. Retain exact selected, inherited, unloaded gRPC
   middleware v1.0.0 without dependency metadata changes. Accept only the
   already documented missing release module metadata/deterministic closure,
@@ -9144,9 +9144,36 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   another release, change mvn-pom-mutator or GoConvey, raise the Go floor,
   authorize a patch/replacement or parent/removal design, move unrelated
   selections, manufacture a dependency commit, transfer another exception, or
-  request this same decision again while the guards hold. Record the decision,
-  answer its archive, and prepare one next bounded P7 mission without executing
-  it in the decision turn.
+  request this same decision again while the guards hold.
+- Every gRPC middleware and pre-existing exception guard was revalidated from
+  clean decision HEAD `1444e88`, tree
+  `71824e9b30e68396630e6bf1aca15d70d2a0fb64`, with a freshly unpacked,
+  hash-verified exact Go 1.26.7 first in `PATH`, `GOENV=off`, `GOWORK=off`,
+  `GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient `GOFLAGS`.
+  Selected middleware v1.0.0 and its sole mvn-pom-mutator v0.2.3 edge remain
+  unchanged. Gorilla WebSocket retains its sole mvn-pom-mutator edge, GopherJS
+  its sole GoConvey v1.6.4 edge, and Enterprise Certificate Proxy and GAX their
+  Viper v1.15.0 edges. All five `go mod why -m` results remain negative,
+  repository source imports are zero, and the 429-entry complete test load has
+  197 module-backed packages across 41 modules with zero packages from every
+  guarded target. All remain runtime-unreachable.
+- The no-change project remains 234 modules, 3,599 graph edges, and 1,067 sum
+  lines. `go.mod` and `go.sum` remain byte-identical at SHA-256
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+  and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 module verification, build, count-1, race, and vet pass. The
+  62-control launcher lifecycle suite passes on an immediate unchanged rerun
+  after the first nested source-archive signal-retention probe hit the already
+  documented timing flake. Fresh primary vulnerability data remains byte-
+  identical at 1,398 records, index
+  SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+  and Last-Modified 2026-09-10T16:28:28Z. It has no exact middleware,
+  GopherJS, Enterprise Certificate Proxy, or GAX record; Gorilla retains only
+  GO-2020-0019 and selected-affecting unwithdrawn GO-2026-6278 at record
+  SHA-256
+  `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+  No new advisory or independent disqualifier appeared.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

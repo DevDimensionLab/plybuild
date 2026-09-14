@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-14T07:51:03+02:00
+Generated: 2026-09-14T11:27:08+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,41 +9,44 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The gRPC middleware
-  evaluation started from clean HEAD
-  `5a004294c40ebce9842d4b53478412be435a9510`, tree
-  `fd1abaeab1b25a5e2c27336fefcba0b901c09ddf`.
+  option 1 decision was revalidated from clean HEAD
+  `1444e88be20aa8b145c75d4006e30d2d49ac1c08`, tree
+  `71824e9b30e68396630e6bf1aca15d70d2a0fb64`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
   `b89afd4ec056133b1eefb5611f8f35c12c11824b`. It changes only `go.mod`
   and `go.sum`, with three insertions and no deletions. The gRPC middleware
-  evaluation has no dependency implementation or metadata commit.
+  evaluation and decision have no dependency implementation or metadata
+  commit.
 - Google Renameio v1.0.1 `394ec36`, Google Martian v3.3.2 `4644476`,
   Golang Snappy v1.0.0 `372f8e9`, Golang Protobuf v1.5.3 `6870e02`,
   Godbus D-Bus v5.1.0 `6472dce`, Go Stack v1.8.1 `647d4fd`, Go Logfmt
   v0.6.0 `3d4cfd`, Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0
   `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. All earlier
   outcomes and product decisions are final.
-- The gRPC middleware evaluation archive is answered. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-14T075103+0200-decide-grpc-ecosystem-go-grpc-middleware-product-direction.md`.
-  The user has supplied option 1 with the recommended bounds. Do not execute a
-  dependency change, another dependency group, or P8 in that turn.
+- The gRPC middleware evaluation and option 1 decision archives are answered.
+  The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-14T112708+0200-evaluate-grpc-ecosystem-go-grpc-prometheus-dependency.md`.
+  It evaluates only selected exact-path gRPC Prometheus v1.2.0 as the next
+  bounded P7 dependency group. Do not execute another dependency group or P8
+  in that turn.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not push, merge, publish, release,
   stash, revert, bypass cleanup, or remove the worktree.
 
 ## Lifecycle And Retained Decisions
 
-P2A-P6 are complete. P7 is recording the user's bounded gRPC middleware option
-1 decision. Exact Go 1.26.7 and the accepted
+P2A-P6 are complete. P7 remains active after the user's bounded gRPC middleware
+option 1 decision. Exact Go 1.26.7 and the accepted
 Speakeasy, XXHash, Fatih Color, Go Logfmt, Go Stack, Godbus D-Bus, Golang
 Protobuf, Golang Snappy, Google Martian, Google Renameio, and Google UUID moves
 remain final. Google pprof, Gogo Protobuf, Crypt, OpenCensus Proto, Logex,
 Readline, Fnmatch, Imaging, ansimage, Fsnotify, Ghodss YAML, historical root
 GLFW, Googleapis GAX Go v2 v2.7.0, Google Cloud Go Testing, Enterprise
-Certificate Proxy v0.2.1, exact selected GopherJS, and exact selected Gorilla
-WebSocket remain retained. P8 is queued. Do not combine another dependency or
-begin P8 before this decision is recorded in a committed handoff.
+Certificate Proxy v0.2.1, exact selected GopherJS, exact selected Gorilla
+WebSocket, and exact selected gRPC middleware remain retained. P8 is queued.
+Do not combine another dependency group or begin P8.
 
 The user's 2026-09-14 Gorilla WebSocket option 1 decision remains final. Exact
 `github.com/gorilla/websocket v1.4.2` retains only GO-2026-6278's documented
@@ -92,10 +95,10 @@ target-specific and non-transferable.
 The exception remains valid only while exact v1.0.0 and its sole incoming
 mvn-pom-mutator v0.2.3 edge remain unchanged, zero middleware packages load,
 the module remains runtime-unreachable, and no new advisory or independent
-disqualifier appears. Revalidate and record those guards in the committed
-decision. Direct import or loading, runtime reachability, a target version or
-incoming-edge change, or a new advisory or independent defect expires the
-exception and requires a fresh dependency and product decision before merge.
+disqualifier appears. Direct import or loading, runtime reachability, a target
+version or incoming-edge change, or a new advisory or independent defect
+expires the exception and requires a fresh dependency and product decision
+before merge.
 Do not add a direct edge, select v1.4.0 or another release, change
 mvn-pom-mutator or GoConvey, raise the Go floor, authorize a patch/replacement
 or parent/removal design, move unrelated selections, or manufacture a
@@ -246,12 +249,41 @@ The selected 560-file evidence manifest and decision summary hashes are
 `bab1aa974f1182ba6d953831dcfccc0257b6f32f5064c477c68df170b7113b8e`
 and `a07237e54d3fac720966f6fc33767d6e98d61db6a2efc8a44de02f78316d3150`.
 
+The decision-recording revalidation used a freshly unpacked exact Go 1.26.7
+archive and binary at SHA-256
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`
+and `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+Exact middleware v1.0.0 and its sole mvn-pom-mutator v0.2.3 edge remain
+unchanged. Gorilla WebSocket retains its sole mvn-pom-mutator edge, GopherJS
+its sole GoConvey v1.6.4 edge, and Enterprise Certificate Proxy and GAX their
+Viper v1.15.0 edges. All five guarded `go mod why -m` results are negative,
+repository Go source imports are zero, and the 429-entry load has 197
+module-backed packages across 41 modules with zero packages from every guarded
+target. All remain runtime-unreachable.
+
+The project remains 234 modules, 3,599 graph edges, and 1,067 sum lines;
+`go.mod` and `go.sum` retain their recorded hashes. Exact Go 1.26.7 module
+verification, build, full count-1 tests, full race tests, and vet pass. The
+62-control launcher lifecycle suite passes on an immediate unchanged rerun
+after its first nested source-archive signal-retention probe hit the already
+documented timing flake. Fresh primary vulnerability data is byte-identical at
+1,398 records, index SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+and Last-Modified 2026-09-10T16:28:28Z. There is no exact middleware,
+GopherJS, Enterprise Certificate Proxy, or GAX record. Gorilla retains only
+GO-2020-0019 and selected-affecting unwithdrawn GO-2026-6278 at record
+SHA-256
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+No new advisory or independent disqualifier appeared.
+
 ## Next Bounded Objective
 
-The next session must record the user's explicit option 1 decision without
-dependency implementation. Revalidate exact v1.0.0 and its sole
-mvn-pom-mutator edge, negative why result, zero middleware/Gorilla/GopherJS/
-ECP/GAX package loads, unchanged module hashes, runtime unreachability, and
-fresh advisory state. Then answer the decision archive and prepare exactly one
-next bounded P7 mission. Do not execute that successor in the decision-
-recording turn.
+The next session must independently evaluate selected exact-path
+`github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0` as one bounded P7
+dependency group. Resolve its exact repository and release identity, complete
+Go-1.18 floor closure, Prometheus collector/interceptor behavior, exported API,
+actual loading, MVS effects, vulnerability evidence, and every applicable
+quality contract before retaining or selecting a qualified exact-path stable
+release. Preserve the separate gRPC middleware, Gorilla WebSocket, GopherJS,
+Enterprise Certificate Proxy, and GAX guards and stop for the owning decision
+if any expires. Do not execute another group or begin P8.
