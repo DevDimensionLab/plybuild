@@ -5374,7 +5374,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after recording the bounded GopherJS pseudo-version retention
+Status: active after recording the bounded Gorilla WebSocket v1.4.2 retention
 decision and the completed dependency groups through accepted Google UUID
 v1.4.0; P8 and further dependency groups remain queued.
 
@@ -6129,7 +6129,7 @@ Regexp2 v1.12.0 dependency group (2026-09-04):
   `c95201c96297a198b7bec9b5a031443e42c0fe4be5f17a4d383362b9dce5f527`
   exits expected 1, never 2, only for queued Q3.1, Q3.3, Q3.4, and Q3.7.
 
-Current queue decisions and next bounded P7 group (2026-09-13):
+Current queue decisions and next bounded P7 group (2026-09-14):
 
 - Reject `github.com/fatih/color v1.14.1` -> latest v1.19.0 because the latest
   module declares Go 1.25.0, and reject floor-compatible v1.16.0-v1.18.0
@@ -9032,25 +9032,49 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   Selected evidence and decision-summary hashes are
   `cc15144b88edbf330e1300dda430eead2419087883d97788edb7d781bb48b912`
   and `4f36e9a15e7e17cf9a09b79ef4f875e2dbecbb7f171682d803aca9514e8d7f91`.
-- Product direction supplied 2026-09-14: the user explicitly selected option 1
+- Product direction recorded 2026-09-14: the user explicitly selected option 1
   with the recommended bounds. Retain exact selected, inherited, unloaded
   Gorilla WebSocket v1.4.2 without dependency metadata changes. Accept only
   GO-2026-6278's documented weak `math/rand` client-mask behavior and the
-  documented upstream full-source Go 1.26 cross-test lifecycle race. The
-  exception is non-transferable and valid only while exact v1.4.2 and its sole
-  mvn-pom-mutator v0.2.3 edge remain unchanged, zero target packages load, the
-  module remains runtime-unreachable, and no new advisory or independent
-  disqualifier appears. Direct import/loading, runtime reachability, a version
-  or incoming-edge change, or a new advisory or independent disqualifier
-  expires the exception and requires a fresh dependency/product decision
-  before merge. Do not add a direct edge, select v1.5.3 or another version to
-  silence the advisory range, change mvn-pom-mutator or GoConvey, reopen the
-  GopherJS edge guard, raise the Go floor, authorize a parent/removal group,
-  select a patch/fork/replacement/unreleased commit/alternate path, move
-  unrelated modules, manufacture a dependency commit, or request this same
-  decision again while the guards hold. Record the decision, answer its
-  archive, and prepare one next bounded P7 mission without executing it in the
-  decision turn.
+  documented upstream full-source Go 1.26 cross-test lifecycle race. No new or
+  independently discovered defect is accepted.
+- Every guard was revalidated from clean decision HEAD `778d578` with freshly
+  unpacked, hash-verified exact Go 1.26.7 first in `PATH`, `GOENV=off`,
+  `GOWORK=off`, `GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no
+  ambient `GOFLAGS`. Selected v1.4.2 and its sole incoming mvn-pom-mutator
+  v0.2.3 edge are unchanged; `go mod why -m` remains negative; repository
+  source has zero direct target imports; and the 429-entry complete test load
+  has 197 module-backed packages across 41 modules with zero Gorilla WebSocket,
+  GopherJS, Enterprise Certificate Proxy, or GAX packages. Gorilla WebSocket
+  therefore remains runtime-unreachable. Project selection remains 234 modules
+  and 3,599 edges. `go.mod` and `go.sum` remain unchanged at SHA-256
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+  and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+  `go.sum` remains 1,067 lines. Exact Go 1.26.7 module verification, build,
+  full count-1 tests, full race tests, vet, and the 62-control launcher
+  lifecycle suite pass.
+- Fresh primary data still has 1,398 records, index SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+  and Last-Modified 2026-09-10T16:28:28Z. Its exact module entry contains only
+  GO-2020-0019, fixed in v1.4.1, and selected-affecting GO-2026-6278. The
+  latter remains unwithdrawn with the same pre-v1.5.3 published boundary and
+  record SHA-256
+  `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+  No new advisory or independent disqualifier appeared.
+- The Gorilla WebSocket exception is non-transferable and valid only while
+  exact v1.4.2 and its sole mvn-pom-mutator v0.2.3 edge remain unchanged, zero
+  target packages load, the module remains runtime-unreachable, and no new
+  advisory or independent disqualifier appears. Direct import/loading, runtime
+  reachability, a version or incoming-edge change, or a new advisory or
+  independent disqualifier expires the exception and requires a fresh
+  dependency/product decision before merge. Do not add a direct edge, select
+  v1.5.3 or another version to silence the advisory range, change
+  mvn-pom-mutator or GoConvey, reopen the GopherJS edge guard, raise the Go
+  floor, authorize a parent/removal group, select a patch/fork/replacement/
+  unreleased commit/alternate path, move unrelated modules, manufacture a
+  dependency commit, or request this same decision again while the guards
+  hold. GopherJS, Enterprise Certificate Proxy, and GAX retain only their own
+  separate guarded exceptions.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

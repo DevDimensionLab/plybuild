@@ -1,13 +1,13 @@
 # Agent Session: Decide Gorilla WebSocket Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-14T001519+0200-decide-gorilla-websocket-product-direction`
 Created: `2026-09-14T00:15:19+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `9477119a4153363ab50f93e8cbf8f15cda0e05754b5933d60e142cee85f7f4a5`
 Previous: [2026-09-13T230600+0200-evaluate-gorilla-websocket-dependency.md](2026-09-13T230600+0200-evaluate-gorilla-websocket-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-14T062852+0200-evaluate-grpc-ecosystem-go-grpc-middleware-dependency.md](2026-09-14T062852+0200-evaluate-grpc-ecosystem-go-grpc-middleware-dependency.md)
+Outcome: Recorded the user's bounded option 1 decision, retained exact inherited and unloaded Gorilla WebSocket v1.4.2 without metadata changes, revalidated every exception guard, and prepared the next bounded P7 group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -159,3 +159,74 @@ local `docs: prepare next agent session` commit, and stop. Do not launch the
 successor, push, merge, publish, release, stash, revert, bypass cleanup, or
 remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user's 2026-09-14 option 1 selection and retained exact-path
+`github.com/gorilla/websocket v1.4.2` as an inherited, unloaded module without
+changing `go.mod` or `go.sum` and without manufacturing a dependency or
+implementation commit.
+
+The decision accepts only the two findings already established in the answered
+dependency evaluation: GO-2026-6278's weak `math/rand` WebSocket client-mask
+behavior and the upstream full-source Go 1.26 cross-test lifecycle race in
+which `cstHandler` logs after its owning test returns. No new or independently
+discovered defect is accepted.
+
+Every guard was revalidated from clean decision HEAD `778d578` with a freshly
+unpacked exact Go 1.26.7 distribution whose archive and binary SHA-256 values
+are
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`
+and `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+It ran first in `PATH` with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient `GOFLAGS`.
+Project selection remains Gorilla WebSocket v1.4.2, mvn-pom-mutator v0.2.3,
+GopherJS `v0.0.0-20181017120253-0766667cb4d1`, GoConvey v1.6.4,
+Enterprise Certificate Proxy v0.2.1, Viper v1.15.0, and GAX v2.7.0. The
+unchanged Gorilla graph path is main -> direct mvn-pom-mutator v0.2.3 ->
+selected v1.4.2, and the mvn-pom-mutator edge remains the target's sole
+incoming edge. `go mod why -m` remains negative, and repository Go source has
+zero direct target imports. Together with the zero package load below, this
+revalidates that Gorilla WebSocket remains runtime-unreachable in the current
+project.
+
+The complete project test load remains 429 entries, including 197 module-backed
+packages across 41 loaded modules, with exactly zero Gorilla WebSocket,
+GopherJS, Enterprise Certificate Proxy, or GAX packages. Their exact selected
+versions remain unchanged; GopherJS retains only its sole GoConvey v1.6.4 edge,
+and Enterprise Certificate Proxy retains only its sole Viper v1.15.0 edge.
+All four `go mod why -m` results remain negative, repository Go source has
+zero direct imports of all four targets, and the project still selects 234
+modules with 3,599 graph edges.
+
+`go.mod` and `go.sum` remain byte-identical to clean decision HEAD at
+SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+`go.sum` remains 1,067 lines. Exact Go 1.26.7 module verification, build,
+full count-1 tests, full race tests, vet, and the 62-control launcher lifecycle
+suite pass. No changed-selection scorecard run applies; the accepted 27/27
+Q0-Q2 PASS at L2 remains unchanged.
+
+Fresh primary vulnerability data still contains 1,398 module records, has
+index SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+and was last modified 2026-09-10T16:28:28Z. The exact module entry contains
+only GO-2020-0019, whose fixed boundary v1.4.1 excludes selected v1.4.2, and
+selected-affecting GO-2026-6278. The latter remains unwithdrawn at record
+SHA-256
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`
+with the same pre-v1.5.3 published range and GHSA alias. No new advisory or
+independently observed disqualifier arose during this guard-only revalidation;
+the completed technical audit was not repeated or broadened.
+
+The non-transferable Gorilla WebSocket exception remains valid only while exact
+selected v1.4.2 and its sole incoming mvn-pom-mutator v0.2.3 edge remain
+unchanged, the complete project load contains zero target packages, the module
+stays runtime-unreachable, and no new advisory or independent disqualifier
+appears. Direct import or loading, runtime reachability, a target version or
+incoming-edge change, or a new advisory or independent disqualifier expires
+the exception and requires a fresh dependency and product decision before
+merge. The GopherJS, Enterprise Certificate Proxy, and GAX exceptions remain
+separate under their own guards. Do not request this same Gorilla WebSocket
+decision again while all guards hold.
