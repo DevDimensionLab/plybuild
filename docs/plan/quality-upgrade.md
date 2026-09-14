@@ -5374,11 +5374,11 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active but stopped for a fresh bounded Hashicorp Consul API product
-decision after the recorded Gateway v1.16.0 retention and completed dependency
-groups through accepted Google UUID v1.4.0. Exact inherited Consul API v1.18.0
-remains unchanged and has no exception. P8 and further dependency groups remain
-queued.
+Status: active but stopped for a fresh bounded Hashicorp Consul SDK product
+decision after the recorded Consul API v1.18.0 retention and completed
+dependency groups through accepted Google UUID v1.4.0. Exact inherited Consul
+SDK v0.8.0 remains unchanged and has no exception. P8 and further dependency
+groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -9566,12 +9566,84 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   the latter's record SHA-256 remains
   `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
   No new advisory or independent disqualifier appeared.
-- The next bounded P7 group is selected exact-path
-  `github.com/hashicorp/consul/sdk v0.8.0`. A starting survey records one
-  exact selected-version incoming edge from the historical Consul API v1.12.0
-  graph vertex, a negative why result, zero repository imports, and zero loaded
-  SDK packages. Its independent evaluation is a separate successor mission and
-  was not begun in this decision-recording move.
+- Stop exact-path `github.com/hashicorp/consul/sdk` for a fresh bounded product
+  decision without changing dependency metadata. Fresh proxy, sumdb, Git, and
+  GitHub evidence resolves canonical public active unarchived non-fork
+  `https://github.com/hashicorp/consul.git`, module subdirectory `sdk`, and
+  MPL-2.0 candidate source. The proxy lists 35 entries: 30 stable releases and
+  five release candidates. Every proxy version maps to an exact `sdk/` Git tag;
+  serious tags are lightweight and have no GitHub Release object. Strict Git
+  verification passes. No redirect, fork, alternate path, different major
+  line, prerelease, non-versioning tag, or branch head was promoted.
+- Selected v0.8.0 is tag `sdk/v0.8.0`, commit
+  `b1ee900870b9f04377d64936d4af452a5799b72c`, parent
+  `a4a43460e51d66bc562fbea476844b6c13418543`, repository tree
+  `8e328b47681316d07b7abbd89dff743dfbf1293d`, SDK subtree
+  `dcbc915786cb1a668b9ca0f10bfd129b4526b4a8`, and proxy zip SHA-256
+  `cf29fff6c000ee67eda1b8cacec9648d06944e3cdbb80e2e22dc0165708974c6`.
+  Highest floor candidate v0.13.0 is commit
+  `e297e3e75e357c532ced05123a4e9b48f5419393`, parent
+  `5ce0132e9b13e9afa668ef7af91005ce2883f11f`, repository tree
+  `7cad367c383f5e93a20f641ad0e342d6dac9d405`, and SDK subtree
+  `7c45f4545bc9530db00fc92a15aaeecf84697216`.
+- All 30 stable declarations and complete imported closures were inspected.
+  V0.1.0 through v0.13.0 declare Go 1.12; v0.13.1 is the first Go 1.19
+  release. V0.13.0's complete production/test closure declares no higher than
+  Go 1.17 and runs under contained Go 1.18.10, so it is the highest real floor-
+  eligible candidate. Latest v0.18.2 declares Go 1.26.7. No floor-ineligible
+  release was promoted.
+- No stable floor-eligible candidate qualifies. Every v0.1.0-v0.13.0 release
+  implements the exported retry `Counter` with an equality-only stop, so a
+  negative `Count` never terminates. Selected v0.8.0 and highest-candidate
+  v0.13.0 independently reproduce retry attempts after a timer deadline and a
+  nil `Stop` panic; freeport duplicate returns and a zero-block panic; malformed
+  iptables UID/port/CIDR acceptance; and a `TempFile` descriptor that remains
+  writable after cleanup. Retry has no cancellation boundary, freeport uses
+  process-lifetime global state, and Linux iptables mutation is non-atomic and
+  loses wrapped error identity.
+- Selected test-server helpers also ignore their ready-timeout setting, use
+  HTTP without request contexts or client deadlines, leak successful service/
+  check response bodies, concatenate unescaped paths, and terminate callers
+  through `log.Fatal`. V0.8.0 contains an additional double-`Wait`/unbuffered-
+  goroutine cleanup defect. These are exact target behaviors, not inherited
+  closure or harness findings.
+- Both v0.8.0 and v0.13.0 expose `freeport`, `iptables`, `testutil`, and
+  `testutil/retry`; there are no commands, examples, benchmarks, fuzz targets,
+  testdata trees, generated files, cgo, embeds, or go:generate directives.
+  Exact source passes verify, build, vet, and production/test cross-builds under
+  exact Go 1.26.7 and Go 1.18.10. Darwin native tests require only a scratch
+  overlay for the managed sandbox's denied `/usr/sbin/sysctl`; with it both
+  candidates pass count-one, two count-ten repeats, and race under both SDKs.
+  Independent fixtures reproduce every listed defect under both SDKs.
+- Pinned API comparison finds incompatible testing-interface and token changes
+  from v0.8.0 to v0.13.0, only a compatible `R.Logf` addition through v0.13.1,
+  and numerous incompatible retry/testing/iptables changes through v0.18.2.
+- Selected v0.8.0 has exactly one selected-version incoming edge, from the
+  historical Consul API v1.12.0 graph vertex. Its why result is negative,
+  repository imports are zero, zero target packages occur in the 429-entry
+  complete project load, and it is runtime-unreachable. Disposable exact gets
+  retain zero load but manufacture a direct indirect root. V0.13.0 also adds
+  go-version; v0.13.1 exceeds the floor; latest raises the main Go declaration
+  and moves unrelated selections. Base and the first three candidate tidy
+  projections converge to selected v0.8.0 and the same base tidy result. No
+  projection was applied.
+- Fresh primary data remains 1,398 records at SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
+  and Last-Modified 2026-09-10T16:28:28Z, with no Consul SDK record. Exact OSV
+  queries for v0.8.0, v0.13.0, v0.13.1, and v0.18.2 are empty. Isolated older
+  closures contain only inherited x/sys findings: v0.8.0 has GO-2026-5024 and
+  GO-2022-0493, while v0.13.0/v0.13.1 have GO-2026-5024; no Darwin called
+  symbol is reached. Project scans are identical for every candidate with zero
+  target package, symbol, test-symbol, or reachable trace.
+- The unchanged project remains 234 modules, 3,599 edges, 429 complete-test
+  entries, 197 module-backed packages, 41 loaded modules, 1,067 sum lines, and
+  the recorded 432-line tidy projection. `go.mod`/`go.sum` SHA-256 remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 applicable gates pass, all earlier exception guards remain
+  valid, no dependency implementation was created, and accepted quality
+  remains 27/27 Q0-Q2 PASS at L2. P7 now requires an explicit Consul SDK
+  product direction before another dependency group or P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

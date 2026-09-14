@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-14T21:02:12+02:00
+Generated: 2026-09-14T21:55:34+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Consul API decision
-  was revalidated from clean HEAD
-  `474909583bfe6efbc5ae49b9ff1d68ec7402ee41`, parent
-  `0ae1c16a2f35f66e128d45309967fce654d2e904`, tree
-  `a4656d4ae2e772914a72c8a8dd3f6548bba2d88c`.
+  `codex/upgrade-quality`, base master at `5635d50`. The Consul SDK evaluation
+  began from clean HEAD
+  `19e0f4a2e36c654c9e1810b8f660cec2a29f22fb`, parent
+  `474909583bfe6efbc5ae49b9ff1d68ec7402ee41`, tree
+  `e1d077544884d461318861fb1d6aad72e8caa202`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +20,11 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The Consul API evaluation and decision archives are answered. The sole NEXT
-  archive is
-  `docs/plan/agent-sessions/2026-09-14T210212+0200-evaluate-hashicorp-consul-sdk-dependency.md`.
-  It authorizes only the bounded Hashicorp Consul SDK v0.8.0 evaluation; it
-  does not authorize reopening Consul API, combining another dependency group,
-  or beginning P8.
+- The Consul SDK evaluation archive is answered. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-14T215534+0200-decide-hashicorp-consul-sdk-product-direction.md`.
+  It authorizes only the bounded Hashicorp Consul SDK product decision; it does
+  not authorize implementing a choice, reopening Consul API, combining another
+  dependency group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -33,11 +32,11 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is active after the user's bounded Consul API option 1
-decision; the next group is Hashicorp Consul SDK v0.8.0 and P8 remains queued.
-Exact Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
-and all earlier outcomes are final. Do not combine dependency groups or begin
-P8.
+P2A-P6 are complete. P7 is active but stopped for a fresh bounded Hashicorp
+Consul SDK product decision after the user's Consul API option 1 decision. P8
+and further dependency groups remain queued. Exact Go 1.26.7, every accepted
+dependency move through Google UUID v1.4.0, and all earlier outcomes are final.
+Do not combine dependency groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -52,13 +51,13 @@ The gRPC Prometheus v1.2.0, gRPC middleware v1.0.0, Gorilla WebSocket v1.4.2,
 GopherJS `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy
 v0.2.1, and GAX v2.7.0 decisions remain separate under their exact-selection,
 selected-version incoming-edge, zero-load, runtime-unreachable, and no-new-
-finding guards. In this decision revalidation Consul API retained its sole
+finding guards. At SDK evaluation start Consul API retained its sole
 Viper v1.15.0 edge; Gateway retained exactly its two recorded incoming edges;
 gRPC Prometheus, gRPC middleware, and Gorilla retained their sole mvn-pom-
 mutator v0.2.3 edges; GopherJS retained its sole GoConvey v1.6.4 edge; and
 Enterprise Certificate Proxy and GAX retained their sole Viper v1.15.0 edges.
-All eight why results are negative, source imports are zero, target package
-loads are zero, and runtime unreachability remains intact.
+All nine why results, including Consul SDK, are negative; source imports and
+target package loads are zero, and runtime unreachability remains intact.
 
 Fresh primary data has no new exact record for those targets. Gorilla retains
 only its recorded entries, including unwithdrawn GO-2026-6278. Direct import or
@@ -198,6 +197,87 @@ unwithdrawn GO-2026-6278; the latter's record SHA-256 remains
 `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
 No new advisory or independent disqualifier appeared.
 
+## Hashicorp Consul SDK Evaluation Stop
+
+No exact-path stable `github.com/hashicorp/consul/sdk` release qualifies under
+the current Go 1.18 and behavior contracts. Selected v0.8.0 therefore remains
+unchanged and has no exception. P7 is stopped for an explicit product decision;
+do not infer retention from its zero-load state or transfer the Consul API
+exception.
+
+Fresh proxy, sumdb, Git, and GitHub evidence resolves the module to canonical
+public active unarchived non-fork `https://github.com/hashicorp/consul.git`,
+subdirectory `sdk`, with MPL-2.0 candidate source. The proxy lists 30 stable
+releases and five RCs; each has its exact `sdk/` Git tag. Serious tags are
+lightweight and have no GitHub Release object. Strict Git verification passes,
+and no redirect, fork, alternate path, major module line, prerelease, non-
+versioning tag, or branch head was promoted.
+
+Selected v0.8.0 is commit
+`b1ee900870b9f04377d64936d4af452a5799b72c`, parent
+`a4a43460e51d66bc562fbea476844b6c13418543`, repository tree
+`8e328b47681316d07b7abbd89dff743dfbf1293d`, and SDK subtree
+`dcbc915786cb1a668b9ca0f10bfd129b4526b4a8`; its proxy zip SHA-256 is
+`cf29fff6c000ee67eda1b8cacec9648d06944e3cdbb80e2e22dc0165708974c6`.
+Highest floor candidate v0.13.0 is commit
+`e297e3e75e357c532ced05123a4e9b48f5419393`, parent
+`5ce0132e9b13e9afa668ef7af91005ce2883f11f`, repository tree
+`7cad367c383f5e93a20f641ad0e342d6dac9d405`, and SDK subtree
+`7c45f4545bc9530db00fc92a15aaeecf84697216`.
+
+All 30 stable declarations were inspected. V0.1.0-v0.13.0 declare Go 1.12;
+v0.13.1 is the first Go 1.19 release. V0.13.0's complete imported source/test
+closure declares no higher than Go 1.17 and passes under contained Go 1.18.10,
+so it is the highest real floor-eligible candidate. Latest v0.18.2 declares Go
+1.26.7. Selected and highest candidates each resolve 19 modules under both Go
+lines. No floor-ineligible release was promoted.
+
+Every floor-eligible stable release fails: its exported retry `Counter` stops
+only when `count == Count`, so negative `Count` never terminates. Selected
+v0.8.0 and v0.13.0 also reproduce retry after a timer deadline, nil `Stop`
+panic, duplicate freeport returns, a zero-block allocator panic, malformed
+iptables input acceptance, and a writable descriptor after `TempFile` cleanup.
+Retry has no cancellation; freeport owns process-lifetime global state; Linux
+iptables mutation is non-atomic and loses wrapped error identity.
+
+Selected test-server helpers additionally ignore `ReadyTimeout`, use HTTP and
+subprocesses without contexts or deadlines, leak successful service/check
+response bodies, concatenate unescaped paths, and can terminate the caller
+through `log.Fatal`. V0.8.0 contains a double-`Wait`/unbuffered-goroutine
+cleanup defect. These behaviors were reproduced independently under both Go
+lines and are exact target defects.
+
+The source exposes `freeport`, `iptables`, `testutil`, and `testutil/retry` and
+no commands, examples, benchmarks, fuzz targets, testdata, generated files,
+cgo, embeds, or go:generate directives. Exact v0.8.0/v0.13.0 source passes
+verify, build, vet, and Darwin/Linux/Windows production/test cross-builds under
+Go 1.26.7 and Go 1.18.10. Native Darwin tests encounter only the managed
+sandbox's `/usr/sbin/sysctl` denial; a scratch overlay for that environmental
+probe makes count-one, two count-ten repeats, and race pass for both candidates
+and both Go lines. The overlay was not applied.
+
+Pinned API diff finds incompatible testing-interface and token changes from
+v0.8.0 to v0.13.0, only a compatible `R.Logf` addition to v0.13.1, and many
+incompatible retry/testing/iptables changes through v0.18.2.
+
+Selected v0.8.0 exists only through the historical Consul API v1.12.0 graph
+vertex, its sole exact selected-version incoming edge. Its why result is
+negative, source imports are zero, zero target packages occur in the complete
+load, and it is runtime-unreachable. Disposable exact gets keep zero load but
+manufacture a direct root. V0.13.0 also adds go-version; v0.13.1 exceeds the
+floor; latest raises the main Go declaration and moves unrelated selections.
+The base and first three candidate tidy projections converge to selected
+v0.8.0 and the same base tidy result. No projection was applied.
+
+Fresh primary data remains 1,398 records at SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
+and Last-Modified 2026-09-10T16:28:28Z, with no SDK record. Exact OSV queries
+for v0.8.0, v0.13.0, v0.13.1, and v0.18.2 are empty. Isolated older closures
+contain only inherited x/sys findings: v0.8.0 has GO-2026-5024 and
+GO-2022-0493; v0.13.0/v0.13.1 have GO-2026-5024. No Darwin called symbol is
+reached. Project scans remain identical with zero SDK package, symbol, test-
+symbol, or reachable-trace occurrence.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -230,10 +310,12 @@ metadata changed, accepted quality remains 27/27 Q0-Q2 PASS at L2, with its
 recorded scorecard SHA-256
 `04039eb917cc8aa674c093e866b8fbfb303ab562a28dcbaf2414dba1c9d01c3a`.
 
-The Consul decision's exact-Go no-change module verification, build, count-one
-test, race, vet, and launcher lifecycle gates pass. Because no source or
-dependency metadata changed, no changed-selection scorecard run applies and
-the accepted 27/27 Q0-Q2 L2 state remains unchanged.
+The SDK evaluation's exact-Go no-change module verification, build, count-one,
+two count-ten repeats, race, vet/lint, API/CLI compatibility, host and snapshot
+acceptance, empty-HOME count-two, four production cross-builds, audit meta-
+controls, and launcher lifecycle gates pass. Because no source or dependency
+metadata changed, no changed-selection scorecard run applies and accepted
+27/27 Q0-Q2 L2 remains unchanged.
 
 Full preflight's substantive stages pass; its nested launcher self-test hit
 the known signal-retention timing race. Docker buildx is now available at
@@ -253,11 +335,22 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate only exact-path `github.com/hashicorp/consul/sdk v0.8.0` as one
-bounded P7 group. A starting survey finds it selected through one exact-version
-edge from the historical Consul API v1.12.0 graph vertex, with negative why,
-zero repository imports, and zero loaded SDK packages. Independently resolve
-its repository/release identity, complete Go 1.18 floor closure, behavior, API,
-loading, MVS, vulnerability, and project qualification without transferring
-the Consul API exception, changing Viper, combining another group, or beginning
-P8.
+Record one explicit Consul SDK product direction; do not repeat the technical
+audit or implement the chosen option in the decision session:
+
+1. Recommended: retain exact selected, inherited, unloaded v0.8.0 without
+   metadata changes under a new SDK-specific exception accepting only the
+   completed findings. Require exact v0.8.0, the sole historical Consul API
+   v1.12.0 incoming edge, zero load, runtime unreachability, and no new advisory
+   or independent defect. Any guard change expires the decision.
+2. Authorize a separate parent/graph-removal investigation to eliminate the
+   historical Consul API v1.12.0 vertex and SDK selection. This reopens owning
+   dependency ancestry and must not be implemented in the decision session.
+3. Authorize a separate Go-floor and dependency modernization plan around a
+   newer SDK release. V0.13.0 still fails behavior qualification; v0.13.1 and
+   later exceed Go 1.18, and latest also moves unrelated selections. This is a
+   broader product/architecture choice, not a P7 point upgrade.
+
+Until the user chooses, do not add a direct SDK edge, select v0.13.0 or a newer
+release, change the historical parent, raise the Go floor, transfer the Consul
+API exception, implement another dependency group, or begin P8.
