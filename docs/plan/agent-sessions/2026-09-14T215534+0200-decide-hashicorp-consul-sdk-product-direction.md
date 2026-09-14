@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Consul SDK Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-14T215534+0200-decide-hashicorp-consul-sdk-product-direction`
 Created: `2026-09-14T21:55:34+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `ba29a645f8adef37d9be586b6e94ff1e3c17846c56e61bf625738ce4214e965d`
 Previous: [2026-09-14T210212+0200-evaluate-hashicorp-consul-sdk-dependency.md](2026-09-14T210212+0200-evaluate-hashicorp-consul-sdk-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-14T224709+0200-evaluate-hashicorp-errwrap-dependency.md](2026-09-14T224709+0200-evaluate-hashicorp-errwrap-dependency.md)
+Outcome: Recorded the user's bounded option 1 retention of exact inherited, unloaded Consul SDK v0.8.0; revalidated every guard without dependency metadata changes; and prepared the next bounded P7 dependency evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -188,3 +188,77 @@ and make the required local `docs: prepare next agent session` commit. Do not
 launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user's 2026-09-14 option 1 selection and retained exact-path
+`github.com/hashicorp/consul/sdk v0.8.0` as an inherited, unloaded module
+without changing `go.mod` or `go.sum` and without manufacturing a dependency
+implementation commit.
+
+The SDK-specific, non-transferable decision accepts only the findings already
+established in the answered evaluation: retry nontermination for negative
+count, post-deadline retry, nil-Stop panic and absent cancellation; freeport
+duplicate, zero-block, and process-global-state behavior; malformed and non-
+atomic iptables handling with lost wrapped error identity; writable descriptors
+after TempFile cleanup; the documented test-server timeout, context, deadline,
+response-body, path, log-fatal, and double-Wait defects; the recorded API
+incompatibilities; inherited closure-only x/sys findings; and related completed
+qualification findings. No new or independently discovered defect is accepted.
+
+Every guard was revalidated from clean decision HEAD
+`2346fcecd1f9f464697d51c3fa223b6709e84972`, parent
+`0f9204ef2a2f53cb53495c2302d16f0b36428d6d`, and tree
+`88ab43a3fc01557456853e8a11d2836818b52fcf`. The latest dependency
+implementation remains exact Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, and tree
+`b89afd4ec056133b1eefb5611f8f35c12c11824b`, changing only `go.mod` and
+`go.sum` with three insertions and no deletions.
+
+Project selection remains SDK v0.8.0, Consul API v1.18.0, Gateway v1.16.0,
+gRPC Prometheus v1.2.0, gRPC middleware v1.0.0, Gorilla WebSocket v1.4.2,
+GopherJS `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy
+v0.2.1, and GAX v2.7.0. SDK retains exactly one selected-version incoming edge,
+historical Consul API v1.12.0 -> SDK v0.8.0. Consul API retains its sole Viper
+v1.15.0 edge; Gateway retains its two etcd/api/v3 v3.5.1 and OTLP v0.7.0
+edges; and the earlier guarded targets retain their recorded sole mvn-pom-
+mutator v0.2.3, GoConvey v1.6.4, or Viper v1.15.0 edges.
+
+All nine `go mod why -m` results remain negative and repository Go source has
+zero imports of every guarded target. The complete project test load remains
+429 entries, including 197 module-backed packages across 41 loaded modules,
+with exactly zero packages from SDK or any earlier guarded target. The
+production load likewise contains zero guarded packages. Together with the
+unchanged selected-version edges, these facts revalidate that all nine targets
+remain runtime-unreachable. The project still selects 234 modules with 3,599
+graph edges.
+
+`go.mod` and `go.sum` remain byte-identical to clean decision HEAD at SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+`go.sum` remains 1,067 lines. The applicable exact-Go no-change module, build,
+test, race, vet, and launcher lifecycle gates pass. No changed-selection
+scorecard run applies; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+Fresh primary vulnerability data remains byte-identical at 1,398 module
+records, index SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+and Last-Modified 2026-09-10T16:28:28Z. It has no exact SDK or other new
+guarded-target record, and the exact SDK v0.8.0 OSV result remains empty.
+Gorilla retains only its recorded module entries, including selected-affecting
+GO-2026-6278; that record remains unwithdrawn at SHA-256
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`
+with its existing GHSA alias. No new advisory or independently observed
+disqualifier appeared during this guard-only revalidation; the completed
+technical audit was not repeated or broadened.
+
+The Consul SDK exception remains valid only while exact v0.8.0 and its sole
+historical Consul API v1.12.0 selected-version incoming edge remain unchanged,
+zero SDK packages load, the module remains runtime-unreachable, and no new
+advisory or independent disqualifier appears. Direct import or loading, runtime
+reachability, a target version or incoming-edge change, or a new advisory or
+independent defect expires the exception and requires a fresh Consul SDK
+dependency and product decision before merge. Every earlier exception remains
+separate under its own guards. Do not request this same Consul SDK decision
+again while all guards hold.

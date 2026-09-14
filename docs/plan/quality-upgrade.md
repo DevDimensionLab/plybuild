@@ -5374,11 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active but stopped for a fresh bounded Hashicorp Consul SDK product
-decision after the recorded Consul API v1.18.0 retention and completed
-dependency groups through accepted Google UUID v1.4.0. Exact inherited Consul
-SDK v0.8.0 remains unchanged and has no exception. P8 and further dependency
-groups remain queued.
+Status: active after the recorded Hashicorp Consul SDK v0.8.0 retention and
+completed dependency groups through accepted Google UUID v1.4.0. The next
+bounded group is exact-path `github.com/hashicorp/errwrap v1.0.0`. P8 remains
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -9658,9 +9657,38 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   or a later release, change or remove the historical parent, raise the Go
   floor, authorize dependency modernization, alter Viper, move unrelated
   modules, manufacture a dependency commit, transfer another exception, or
-  request this same decision again while the guards hold. Record the decision,
-  answer its archive, and prepare one next bounded P7 mission without executing
-  it in the decision turn.
+  request this same decision again while the guards hold.
+- The option 1 decision was recorded after guard-only revalidation from clean
+  decision HEAD `2346fcecd1f9f464697d51c3fa223b6709e84972`, parent
+  `0f9204ef2a2f53cb53495c2302d16f0b36428d6d`, and tree
+  `88ab43a3fc01557456853e8a11d2836818b52fcf`. Consul SDK remains exact
+  v0.8.0 through exactly one selected-version incoming edge from the historical
+  Consul API v1.12.0 graph vertex. Every earlier guarded selection also retains
+  its exact version and recorded selected-version incoming edge.
+- All nine guarded `go mod why -m` results remain negative, repository Go
+  source has zero guarded imports, and the unchanged 429-entry complete test
+  load has 197 module-backed packages across 41 modules with zero SDK or
+  earlier guarded-target packages. The production load also contains zero
+  guarded packages. All nine targets remain runtime-unreachable. The project
+  remains 234 selected modules, 3,599 graph edges, and 1,067 sum lines;
+  `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  No dependency implementation or metadata change was created.
+- Fresh primary vulnerability data remains byte-identical at 1,398 records,
+  index SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+  and Last-Modified 2026-09-10T16:28:28Z. It has no exact SDK or other new
+  guarded-target record. Exact SDK v0.8.0 OSV results remain empty. Gorilla
+  retains only its recorded module entries, including selected-affecting
+  GO-2026-6278; that record remains unwithdrawn at SHA-256
+  `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`
+  with its existing GHSA alias. No new advisory or independently observed
+  disqualifier appeared during the guard-only revalidation.
+- The next bounded P7 group is selected exact-path
+  `github.com/hashicorp/errwrap v1.0.0`. Its independent evaluation is a
+  separate successor mission; do not execute it in the Consul SDK decision
+  turn or combine it with another dependency group.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

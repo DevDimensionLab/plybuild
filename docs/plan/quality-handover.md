@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-14T21:55:34+02:00
+Generated: 2026-09-14T22:47:09+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Consul SDK evaluation
-  began from clean HEAD
-  `19e0f4a2e36c654c9e1810b8f660cec2a29f22fb`, parent
-  `474909583bfe6efbc5ae49b9ff1d68ec7402ee41`, tree
-  `e1d077544884d461318861fb1d6aad72e8caa202`.
+  `codex/upgrade-quality`, base master at `5635d50`. The Consul SDK decision
+  was revalidated from clean HEAD
+  `2346fcecd1f9f464697d51c3fa223b6709e84972`, parent
+  `0f9204ef2a2f53cb53495c2302d16f0b36428d6d`, tree
+  `88ab43a3fc01557456853e8a11d2836818b52fcf`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,11 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The Consul SDK evaluation archive is answered. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-14T215534+0200-decide-hashicorp-consul-sdk-product-direction.md`.
-  The user has supplied option 1 with the recommended bounds. It does not
-  authorize a dependency implementation, reopening Consul API, another
-  dependency group, or P8 in that turn.
+- The Consul SDK evaluation and decision archives are answered. The sole NEXT
+  archive is
+  `docs/plan/agent-sessions/2026-09-14T224709+0200-evaluate-hashicorp-errwrap-dependency.md`.
+  It authorizes only the bounded exact-path Hashicorp Errwrap v1.0.0
+  evaluation; it does not authorize reopening an earlier decision, combining
+  another dependency group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -32,12 +33,11 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is recording the user's bounded Consul SDK option 1
-decision after exact Go 1.26.7, every accepted dependency move through Google
-UUID v1.4.0, and all recorded retained-module decisions. P8 remains queued.
-Earlier outcomes and lifecycle ancestry are final. Do not combine another
-dependency group or begin P8 before this decision is recorded in a committed
-handoff.
+P2A-P6 are complete. P7 is active after the user's bounded Consul SDK option 1
+decision; the next group is exact-path Hashicorp Errwrap v1.0.0. Exact Go
+1.26.7, every accepted dependency move through Google UUID v1.4.0, and all
+recorded retained-module decisions are final. P8 remains queued. Do not combine
+dependency groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -65,7 +65,7 @@ only its recorded entries, including unwithdrawn GO-2026-6278. Direct import or
 loading, runtime reachability, a version or incoming-edge change, or a new
 advisory/independent defect expires the owning exception and requires its fresh
 decision. Do not change either Gateway parent, mvn-pom-mutator, GoConvey, or
-Viper; reopen an earlier choice; or transfer any exception to Consul SDK.
+Viper; reopen an earlier choice; or transfer any exception between targets.
 
 ## Hashicorp Consul API Product Decision
 
@@ -220,15 +220,14 @@ The exception remains valid only while exact v0.8.0 and its sole selected-
 version incoming edge from the historical Consul API v1.12.0 graph vertex
 remain unchanged, zero SDK packages load, the module remains runtime-
 unreachable, and no new advisory or independent disqualifier appears.
-Revalidate and record those guards in the committed decision. Direct import or
-loading, runtime reachability, a target version or incoming-edge change, or a
-new advisory or independent defect expires the exception and requires a fresh
-SDK dependency and product decision before merge. Do not add a direct edge,
-select v0.13.0 or a later release, change or remove the historical parent,
-raise the Go floor, authorize dependency modernization, alter Viper, move
-unrelated modules, or manufacture a dependency commit. Do not ask for this
-same decision again while all guards hold. All earlier exceptions remain
-separate.
+Direct import or loading, runtime reachability, a target version or incoming-
+edge change, or a new advisory or independent defect expires the exception and
+requires a fresh SDK dependency and product decision before merge. Do not add
+a direct edge, select v0.13.0 or a later release, change or remove the
+historical parent, raise the Go floor, authorize dependency modernization,
+alter Viper, move unrelated modules, or manufacture a dependency commit. Do
+not ask for this same decision again while all guards hold. All earlier
+exceptions remain separate.
 
 Fresh proxy, sumdb, Git, and GitHub evidence resolves the module to canonical
 public active unarchived non-fork `https://github.com/hashicorp/consul.git`,
@@ -303,6 +302,24 @@ GO-2022-0493; v0.13.0/v0.13.1 have GO-2026-5024. No Darwin called symbol is
 reached. Project scans remain identical with zero SDK package, symbol, test-
 symbol, or reachable-trace occurrence.
 
+The decision was recorded after guard-only revalidation from clean decision
+HEAD `2346fcecd1f9f464697d51c3fa223b6709e84972`. Consul SDK remains exact
+v0.8.0 through only the historical Consul API v1.12.0 graph edge; all nine
+guarded why results remain negative, repository source imports remain zero,
+and the 429-entry complete test load contains 197 module-backed packages across
+41 modules with zero guarded-target packages. The production load also has
+zero guarded-target packages. The project remains 234 selected modules and
+3,599 graph edges, so SDK and every earlier guarded target remain runtime-
+unreachable. No dependency implementation or metadata change was created.
+
+Fresh primary data remains byte-identical at 1,398 records and the recorded
+index SHA-256/Last-Modified values. SDK and every non-Gorilla guarded target
+retain no exact module record; the exact SDK v0.8.0 OSV result remains empty.
+Gorilla retains only its recorded module entries, including unwithdrawn
+GO-2026-6278; that record's SHA-256 remains
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+No new advisory or independent disqualifier appeared.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -342,6 +359,11 @@ controls, and launcher lifecycle gates pass. Because no source or dependency
 metadata changed, no changed-selection scorecard run applies and accepted
 27/27 Q0-Q2 L2 remains unchanged.
 
+The decision-recording session's exact-Go no-change module verification,
+build, count-one test, race, vet, and launcher lifecycle gates pass. No changed-
+selection scorecard applies, so accepted quality remains 27/27 Q0-Q2 PASS at
+L2.
+
 Full preflight's substantive stages pass; its nested launcher self-test hit
 the known signal-retention timing race. Docker buildx is now available at
 v0.33.0-desktop.1. Docker acceptance builds the image and completes the in-
@@ -360,10 +382,9 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-The next session must record the user's explicit option 1 decision without a
-dependency implementation. Revalidate exact v0.8.0 and its sole historical
-Consul API v1.12.0 incoming edge, negative why result, zero packages loaded
-from SDK and every earlier guarded target, unchanged module hashes, runtime
-unreachability, and fresh advisory state. Then answer the decision archive and
-prepare exactly one next bounded P7 mission. Do not execute that successor in
-the decision-recording turn.
+Evaluate only selected exact-path `github.com/hashicorp/errwrap v1.0.0` as one
+bounded P7 group. Independently resolve its repository and release identity,
+complete Go 1.18 floor closure, behavior, API, project loading, MVS effects,
+vulnerability state, and every applicable project qualification contract.
+Preserve the Consul SDK decision and all earlier guarded exceptions; do not
+combine another dependency group or begin P8.
