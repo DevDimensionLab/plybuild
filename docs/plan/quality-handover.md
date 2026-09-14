@@ -22,9 +22,9 @@ session diary.
   or metadata commit.
 - The Consul SDK evaluation archive is answered. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-14T215534+0200-decide-hashicorp-consul-sdk-product-direction.md`.
-  It authorizes only the bounded Hashicorp Consul SDK product decision; it does
-  not authorize implementing a choice, reopening Consul API, combining another
-  dependency group, or beginning P8.
+  The user has supplied option 1 with the recommended bounds. It does not
+  authorize a dependency implementation, reopening Consul API, another
+  dependency group, or P8 in that turn.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -32,11 +32,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is active but stopped for a fresh bounded Hashicorp
-Consul SDK product decision after the user's Consul API option 1 decision. P8
-and further dependency groups remain queued. Exact Go 1.26.7, every accepted
-dependency move through Google UUID v1.4.0, and all earlier outcomes are final.
-Do not combine dependency groups or begin P8.
+P2A-P6 are complete. P7 is recording the user's bounded Consul SDK option 1
+decision after exact Go 1.26.7, every accepted dependency move through Google
+UUID v1.4.0, and all recorded retained-module decisions. P8 remains queued.
+Earlier outcomes and lifecycle ancestry are final. Do not combine another
+dependency group or begin P8 before this decision is recorded in a committed
+handoff.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -197,13 +198,37 @@ unwithdrawn GO-2026-6278; the latter's record SHA-256 remains
 `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
 No new advisory or independent disqualifier appeared.
 
-## Hashicorp Consul SDK Evaluation Stop
+## Hashicorp Consul SDK Product Decision
 
 No exact-path stable `github.com/hashicorp/consul/sdk` release qualifies under
-the current Go 1.18 and behavior contracts. Selected v0.8.0 therefore remains
-unchanged and has no exception. P7 is stopped for an explicit product decision;
-do not infer retention from its zero-load state or transfer the Consul API
-exception.
+the current Go 1.18 and behavior contracts. On 2026-09-14 the user explicitly
+selected option 1 with the recommended bounds: retain exact selected,
+inherited, unloaded v0.8.0 without changing dependency metadata.
+
+The decision accepts only the completed target findings: retry nontermination
+for negative count, post-deadline retry, nil-Stop panic and absent cancellation;
+freeport duplicate, zero-block, and process-global-state behavior; malformed
+and non-atomic iptables handling with lost wrapped error identity; writable
+descriptors after TempFile cleanup; the documented test-server timeout,
+context, deadline, response-body, path, log-fatal, and double-Wait defects; the
+recorded API incompatibilities; inherited closure-only x/sys findings; and
+related completed qualification findings. It does not accept a new or
+independently discovered defect. The exception is SDK-specific and non-
+transferable.
+
+The exception remains valid only while exact v0.8.0 and its sole selected-
+version incoming edge from the historical Consul API v1.12.0 graph vertex
+remain unchanged, zero SDK packages load, the module remains runtime-
+unreachable, and no new advisory or independent disqualifier appears.
+Revalidate and record those guards in the committed decision. Direct import or
+loading, runtime reachability, a target version or incoming-edge change, or a
+new advisory or independent defect expires the exception and requires a fresh
+SDK dependency and product decision before merge. Do not add a direct edge,
+select v0.13.0 or a later release, change or remove the historical parent,
+raise the Go floor, authorize dependency modernization, alter Viper, move
+unrelated modules, or manufacture a dependency commit. Do not ask for this
+same decision again while all guards hold. All earlier exceptions remain
+separate.
 
 Fresh proxy, sumdb, Git, and GitHub evidence resolves the module to canonical
 public active unarchived non-fork `https://github.com/hashicorp/consul.git`,
@@ -335,22 +360,10 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Record one explicit Consul SDK product direction; do not repeat the technical
-audit or implement the chosen option in the decision session:
-
-1. Recommended: retain exact selected, inherited, unloaded v0.8.0 without
-   metadata changes under a new SDK-specific exception accepting only the
-   completed findings. Require exact v0.8.0, the sole historical Consul API
-   v1.12.0 incoming edge, zero load, runtime unreachability, and no new advisory
-   or independent defect. Any guard change expires the decision.
-2. Authorize a separate parent/graph-removal investigation to eliminate the
-   historical Consul API v1.12.0 vertex and SDK selection. This reopens owning
-   dependency ancestry and must not be implemented in the decision session.
-3. Authorize a separate Go-floor and dependency modernization plan around a
-   newer SDK release. V0.13.0 still fails behavior qualification; v0.13.1 and
-   later exceed Go 1.18, and latest also moves unrelated selections. This is a
-   broader product/architecture choice, not a P7 point upgrade.
-
-Until the user chooses, do not add a direct SDK edge, select v0.13.0 or a newer
-release, change the historical parent, raise the Go floor, transfer the Consul
-API exception, implement another dependency group, or begin P8.
+The next session must record the user's explicit option 1 decision without a
+dependency implementation. Revalidate exact v0.8.0 and its sole historical
+Consul API v1.12.0 incoming edge, negative why result, zero packages loaded
+from SDK and every earlier guarded target, unchanged module hashes, runtime
+unreachability, and fresh advisory state. Then answer the decision archive and
+prepare exactly one next bounded P7 mission. Do not execute that successor in
+the decision-recording turn.

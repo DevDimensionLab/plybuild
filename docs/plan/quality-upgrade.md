@@ -9642,8 +9642,25 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
   Exact Go 1.26.7 applicable gates pass, all earlier exception guards remain
   valid, no dependency implementation was created, and accepted quality
-  remains 27/27 Q0-Q2 PASS at L2. P7 now requires an explicit Consul SDK
-  product direction before another dependency group or P8.
+  remains 27/27 Q0-Q2 PASS at L2. Product direction supplied 2026-09-14: the
+  user explicitly selected option 1 with the recommended bounds. Retain exact
+  selected, inherited, unloaded Consul SDK v0.8.0 without dependency metadata
+  changes. Accept only the completed retry, freeport, iptables, TempFile, test-
+  server, API, inherited closure-only x/sys, and related qualification
+  findings. The exception is SDK-specific and non-transferable and remains
+  valid only while exact v0.8.0 and its sole selected-version incoming edge
+  from the historical Consul API v1.12.0 graph vertex remain unchanged, zero
+  SDK packages load, the module remains runtime-unreachable, and no new
+  advisory or independent disqualifier appears. Direct import/loading, runtime
+  reachability, a version or incoming-edge change, or a new advisory or
+  independent defect expires the exception and requires a fresh dependency/
+  product decision before merge. Do not add a direct SDK edge, select v0.13.0
+  or a later release, change or remove the historical parent, raise the Go
+  floor, authorize dependency modernization, alter Viper, move unrelated
+  modules, manufacture a dependency commit, transfer another exception, or
+  request this same decision again while the guards hold. Record the decision,
+  answer its archive, and prepare one next bounded P7 mission without executing
+  it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

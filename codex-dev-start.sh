@@ -1139,52 +1139,30 @@ exit 70
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Resolve the fresh bounded P7 product decision for selected exact-path
-#|`github.com/hashicorp/consul/sdk v0.8.0` after its completed independent
-#|evaluation found no qualified stable release that preserves the Go 1.18 floor.
-#|Present or record one explicit option with exact bounds. Do not repeat the
-#|technical audit, implement a choice, change dependency metadata, combine
-#|another dependency group, or begin P8 in this decision session.
+#|Continue P7 only by recording the user's 2026-09-14 explicit selection of
+#|option 1 for exact-path `github.com/hashicorp/consul/sdk`. Retain exact
+#|selected, inherited, unloaded v0.8.0 without dependency metadata changes under
+#|the bounded retry, freeport, iptables, TempFile, test-server, API, closure-
+#|vulnerability, and qualification exceptions below. Do not repeat the technical
+#|audit, implement a dependency change, evaluate another dependency group, or
+#|begin P8 in this decision-recording session.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P6 are complete. P7 is active but stopped for this Consul SDK decision
-#|after exact Go 1.26.7, every accepted dependency move through Google UUID
-#|v1.4.0, and all retained-module decisions through Consul API v1.18.0. P8 and
-#|further dependency groups remain queued. Earlier outcomes and lifecycle
-#|ancestry are final.
+#|P2A-P6 are complete. P7 remains active only for this Consul SDK product
+#|decision after exact Go 1.26.7, every accepted dependency move through Google
+#|UUID v1.4.0, and all retained-module decisions through Consul API v1.18.0. The
+#|user has explicitly chosen to retain exact v0.8.0 through the sole historical
+#|Consul API v1.12.0 graph edge while zero SDK packages load and the module
+#|remains runtime-unreachable. This session may record that one choice and
+#|prepare one bounded follow-up, but may not implement the choice or combine
+#|another dependency group. P8 remains queued.
 #|
-#|The Consul SDK evaluation found no exact-path stable release that satisfies
-#|both the current Go 1.18 floor and behavior contracts. Selected v0.8.0 remains
-#|inherited and unloaded without an exception. Do not infer retention from zero
-#|load or transfer the separate Consul API exception.
-#|
-#|The available bounded choices are:
-#|
-#|1. Recommended: retain exact selected, inherited, unloaded v0.8.0 without
-#|   changing `go.mod` or `go.sum`, under a new target-specific exception that
-#|   accepts only the completed SDK findings. Keep it valid only while exact
-#|   v0.8.0 and the sole selected-version incoming edge from the historical
-#|   Consul API v1.12.0 vertex remain unchanged, zero SDK packages load, the
-#|   module remains runtime-unreachable, and no new advisory or independently
-#|   discovered disqualifier appears. Direct import/loading, runtime
-#|   reachability, a version or incoming-edge change, or a new advisory or defect
-#|   must expire the exception and require a fresh SDK dependency/product
-#|   decision before merge.
-#|2. Authorize a new bounded parent/graph-removal investigation to eliminate the
-#|   historical Consul API v1.12.0 vertex and thereby the SDK selection. This
-#|   reopens owning ancestry and may affect other modules. Record the authority
-#|   and prepare that investigation, but do not implement it in this decision
-#|   session.
-#|3. Authorize a new bounded Go-floor and dependency-modernization plan around a
-#|   newer SDK line. V0.13.0 still fails behavior qualification; v0.13.1 and all
-#|   later releases exceed Go 1.18, while latest v0.18.2 declares Go 1.26.7 and
-#|   moves unrelated selections. Record the intended floor/architecture scope,
-#|   but do not implement it in this decision session.
-#|
-#|If the user has not explicitly selected an option, stop and request that
-#|choice. Do not manufacture authorization. If the user selects an option,
-#|record exactly that choice and its guards; do not broaden it.
+#|The completed Consul SDK evaluation found no exact-path stable release that
+#|satisfies both the current Go 1.18 floor and behavior contracts. The user's
+#|choice grants only the target-specific exception defined below; it does not
+#|transfer the Consul API exception or authorize a direct SDK edge, another SDK
+#|version, parent removal, a Go-floor change, or dependency modernization.
 #|
 #|The user's 2026-09-14 Consul API option 1 decision retains exact inherited,
 #|unloaded `github.com/hashicorp/consul/api v1.18.0` without metadata changes. It
@@ -1269,14 +1247,46 @@ exit 70
 #|Applicable exact-Go gates pass, all earlier exception guards remain valid, and
 #|accepted quality remains 27/27 Q0-Q2 PASS at L2.
 #|
+#|# Authorized Product Decision
+#|
+#|On 2026-09-14 the user explicitly selected option 1 with the recommended
+#|bounds: retain exact selected `github.com/hashicorp/consul/sdk v0.8.0` as an
+#|inherited, unloaded selection without changing `go.mod` or `go.sum`. Accept
+#|only the completed target findings: retry nontermination for negative count,
+#|post-deadline retry, nil-Stop panic and absent cancellation; freeport duplicate,
+#|zero-block, and process-global-state behavior; malformed and non-atomic
+#|iptables handling with lost wrapped error identity; writable descriptors after
+#|TempFile cleanup; the documented test-server timeout, context, deadline,
+#|response-body, path, log-fatal, and double-Wait defects; the recorded API
+#|incompatibilities; inherited closure-only x/sys findings; and related completed
+#|qualification findings. This does not accept a new or independently discovered
+#|defect.
+#|
+#|The exception is SDK-specific and non-transferable. It is valid only while
+#|exact v0.8.0 and its sole selected-version incoming edge from the historical
+#|Consul API v1.12.0 graph vertex remain unchanged, the complete project load
+#|contains zero SDK packages, the module remains runtime-unreachable, and no new
+#|advisory or independent disqualifier appears. Revalidate and record those
+#|guards. Direct import or loading, runtime reachability, a target version or
+#|incoming-edge change, or a new advisory or independent defect expires the
+#|exception and requires a fresh SDK dependency and product decision before
+#|merge.
+#|
+#|Do not add a direct SDK edge, select v0.13.0 or a later release, change or
+#|remove the historical parent, raise the Go floor, authorize dependency
+#|modernization, alter Viper, move unrelated modules, or manufacture a dependency
+#|implementation commit. The Consul API decision and every earlier exception
+#|remain separate. Do not stop or ask for this same Consul SDK decision again
+#|while all guards hold.
+#|
 #|# Role And Boundaries
 #|
 #|This is a decision-recording session, not a renewed audit or implementation.
-#|Reuse the answered evaluation. Do not add a direct SDK edge, select v0.13.0 or
-#|a later release, change the historical parent, raise the Go floor, alter Viper,
-#|move unrelated modules, implement another dependency group, or begin P8 unless
-#|the selected option explicitly authorizes a later bounded mission—and even
-#|then only prepare that mission here.
+#|The user has explicitly selected and bounded option 1. Reuse the answered
+#|evaluation; do not ask for the decision again or broaden it into direct use,
+#|another SDK version, parent removal, Go-floor or dependency modernization,
+#|Viper changes, unrelated-module authorization, another dependency group, or
+#|P8.
 #|
 #|# Required Reading
 #|
@@ -1288,13 +1298,13 @@ exit 70
 #|
 #|# Three Moves
 #|
-#|First, if no explicit user choice is present, present the three bounded options
-#|and stop for one. Second, after an explicit choice, revalidate only exact
-#|selection, incoming edge, negative why, zero target/guarded loads, module
-#|hashes, runtime unreachability, and current advisory state. Third, record the
-#|choice and exact expiry guards in roadmap/handover, answer this archive, and
-#|prepare exactly one reciprocal NEXT mission authorized by that choice without
-#|executing it.
+#|First, revalidate only exact selection, incoming edge, negative why, zero
+#|target and guarded package loads, module hashes, runtime unreachability, and
+#|current advisory state; reuse the completed audit and do not broaden it.
+#|Second, record the exact option 1 exception, accepted findings, guards, expiry
+#|triggers, and no-change result in the roadmap and rolling handover. Third,
+#|answer this archive and prepare exactly one reciprocal NEXT mission for the
+#|next bounded P7 group without executing it.
 #|
 #|# Automatic Handoff
 #|
