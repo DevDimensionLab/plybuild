@@ -9390,13 +9390,26 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   summary SHA-256 values are
   `873610fe31b0da11ba8e91bfd74665be47428ef60c1b589244324ff9b7dc13d7`
   and `b73b6153778b43978c2c81738c246d0823a6731a995068ed5c0f8409e0dee354`.
-- Preserve exact inherited, unloaded v1.16.0 and all dependency metadata
-  unchanged pending a fresh bounded product choice. No earlier exception
-  transfers. The next choice is limited to: (1) explicitly retain v1.16.0
-  under a new narrowly enumerated exception and exact-selection/two-parent/
-  zero-load/runtime-unreachable/no-new-finding guards; (2) authorize a separate
-  two-parent ownership decision; or (3) authorize a separate `/v2` architecture
-  and Go-floor decision. Do not infer or implement a choice.
+- Product direction supplied 2026-09-14: the user explicitly selected option 1
+  with its recommended bounds. Retain exact selected, inherited, unloaded gRPC
+  Gateway v1.16.0 without dependency metadata changes. Accept only the
+  documented universal discarded-cancel resource defect, native repeated-suite
+  global and test-state failures, eight inherited called/reachable
+  vulnerability IDs in the release-native closure, malformed-generator
+  diagnostic nondeterminism, and related recorded qualification findings. The
+  exception is target-specific and non-transferable and remains valid only
+  while exact v1.16.0 and both selected-version incoming edges from etcd/api/v3
+  v3.5.1 and OTLP v0.7.0 remain unchanged, zero target packages load, the module
+  remains runtime-unreachable, and no new advisory or independent disqualifier
+  appears. Direct import/loading, runtime reachability, a version or incoming-
+  edge change, or a new advisory or independent defect expires the exception
+  and requires a fresh dependency/product decision before merge. Do not add a
+  direct edge, select another v1 release, change either parent, move to `/v2`,
+  raise the Go floor, authorize parent-removal or architecture work, move
+  unrelated selections, manufacture a dependency commit, transfer another
+  exception, or request this same decision again while the guards hold. Record
+  the decision, answer its archive, and prepare one next bounded P7 mission
+  without executing it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

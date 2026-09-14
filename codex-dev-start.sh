@@ -1139,48 +1139,49 @@ exit 70
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 only by resolving the fresh bounded product decision for selected
-#|exact-path `github.com/grpc-ecosystem/grpc-gateway v1.16.0`. No exact-path
-#|stable release satisfies the existing qualification contracts. Present the
-#|three bounded options below, obtain an explicit user choice, and stop without
-#|implementing that choice. Do not evaluate another dependency group or begin
-#|P8.
+#|Continue P7 only by recording the user's 2026-09-14 explicit selection of
+#|option 1 for exact-path `github.com/grpc-ecosystem/grpc-gateway`. Retain exact
+#|selected, inherited, unloaded v1.16.0 without dependency metadata changes
+#|under the bounded resource, native-test, inherited-vulnerability, generator-
+#|diagnostic, and qualification exceptions below. Do not implement a dependency
+#|change, evaluate another dependency group, or begin P8 in this decision-
+#|recording move.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 and every earlier P7 outcome are final. P7 remains active only for this
-#|Gateway product choice; P8 remains queued. This session may request one
-#|explicit choice but may not record or implement it, change another dependency,
-#|or prepare a successor.
+#|Gateway product decision; P8 remains queued. This session may record the one
+#|explicit user choice and prepare one bounded follow-up, but may not implement
+#|the choice or combine another dependency group.
 #|
-#|# Decision Required
+#|# Authorized Product Decision
 #|
-#|Choose exactly one direction:
+#|On 2026-09-14 the user explicitly selected option 1 with its recommended
+#|bounds: retain exact selected
+#|`github.com/grpc-ecosystem/grpc-gateway v1.16.0` as an inherited, unloaded
+#|selection without changing `go.mod` or `go.sum`. Accept only the documented
+#|universal discarded-cancel resource defect, native repeated-suite global and
+#|test-state failures, eight inherited called/reachable vulnerability IDs in the
+#|release-native closure, malformed-generator diagnostic nondeterminism, and
+#|related recorded qualification findings. This does not accept a new or
+#|independently discovered defect.
 #|
-#|1. Retain exact inherited, unloaded v1.16.0 without dependency metadata
-#|   changes under a new target-specific exception. The exception would accept
-#|   only the documented universal discarded-cancel resource defect, native
-#|   repeated-suite global/test-state failures, eight inherited reachable
-#|   vulnerability IDs in the release-native closure, malformed-generator
-#|   diagnostic nondeterminism, and related recorded qualification findings.
-#|   This preserves the present graph and Go 1.18 floor but deliberately accepts
-#|   an unqualified dependency while it remains unloaded and unreachable.
-#|2. Authorize a separate bounded parent-ownership decision to remove or change
-#|   the two incoming edges from etcd/api/v3 v3.5.1 and OTLP v0.7.0. This does
-#|   not authorize either parent change now; it opens an independent graph and
-#|   product evaluation because either move may alter unrelated selections or
-#|   behavior.
-#|3. Authorize a separate architecture and toolchain-floor decision for the
-#|   different `github.com/grpc-ecosystem/grpc-gateway/v2` module path. This is
-#|   not an in-place upgrade: current `/v2` main requires Go 1.26 and conflicts
-#|   with the preserved Go 1.18 floor. No migration or floor change is authorized
-#|   in this decision turn.
+#|The exception is target-specific and non-transferable. It is valid only while
+#|exact v1.16.0 and both selected-version incoming edges from etcd/api/v3 v3.5.1
+#|and OTLP v0.7.0 remain unchanged, the complete project load contains zero
+#|Gateway packages, the module remains runtime-unreachable, and no new advisory
+#|or independent disqualifier appears. Revalidate and record those guards.
+#|Direct import or loading, runtime reachability, a target version or incoming-
+#|edge change, or a new advisory or independent defect expires the exception and
+#|requires a fresh dependency and product decision before merge.
 #|
-#|Recommend option 1 only if the user explicitly accepts its narrow exception
-#|and guards. Otherwise recommend option 2 as the route to eliminate the unused
-#|v1 selection without silently adopting a different major module path. Do not
-#|infer a choice from prior retained-module decisions; no earlier exception
-#|transfers to Gateway.
+#|Do not add a direct target edge, select v1.15.2 or another v1 release, change
+#|either parent, move to the different `/v2` module path, raise the Go floor,
+#|authorize parent-removal or architecture work, move unrelated selections, or
+#|manufacture a dependency implementation commit. Existing gRPC Prometheus,
+#|gRPC middleware, Gorilla WebSocket, GopherJS, Enterprise Certificate Proxy,
+#|and GAX exceptions remain separate. Do not stop or ask for this same Gateway
+#|decision again while all guards hold.
 #|
 #|# Measurements At Start
 #|
@@ -1249,9 +1250,11 @@ exit 70
 #|
 #|# Role And Boundaries
 #|
-#|This is a product-choice turn, not a renewed dependency audit, decision record,
-#|or implementation. Reuse the completed evidence. Do not infer authorization
-#|from prior retained-module decisions and do not change the repository.
+#|This is a decision-recording turn, not a renewed dependency audit or
+#|implementation. The user has explicitly selected and bounded option 1. Reuse
+#|the completed evidence; do not ask for the decision again or broaden it into
+#|direct use, another version, parent ownership/removal, `/v2`, a floor change,
+#|or unrelated-module authorization.
 #|
 #|# Guarded Decisions
 #|
@@ -1275,16 +1278,18 @@ exit 70
 #|
 #|# Three Moves
 #|
-#|First, present the three bounded options with the stated tradeoffs and
-#|recommendation. Second, request exactly one explicit user choice. Third, stop
-#|without recording or implementing a choice or preparing another session.
+#|First, revalidate only the unchanged exact selection, both incoming edges,
+#|negative why result, zero Gateway and guarded-target package loads, module
+#|hashes, runtime unreachability, and current advisory state. Reuse the completed
+#|audit; do not repeat or broaden it. Second, record the exact option 1 exception,
+#|accepted findings, guards, expiration triggers, and no-change result in the
+#|roadmap and rolling handover. Third, answer this archive and prepare one
+#|reciprocal NEXT mission for the next bounded P7 group without executing it.
 #|
 #|# Automatic Handoff
 #|
-#|This is a product-choice turn. First present the three options and request one
-#|explicit choice. Then stop. Do not record an exception, change dependency
-#|metadata, authorize work by implication, prepare a successor, or create a
-#|commit until the user supplies the decision in a later bounded instruction.
-#|Do not launch a successor, push, merge, publish, release, stash, revert, bypass
+#|After recording the decision, run the applicable no-change lifecycle gates and
+#|create the required local `docs: prepare next agent session` commit. Do not
+#|launch a successor, push, merge, publish, release, stash, revert, bypass
 #|cleanup, or remove the worktree.
 # CODEX_MUTABLE_PROMPT_END

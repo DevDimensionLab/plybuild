@@ -22,9 +22,9 @@ session diary.
   metadata commit.
 - The Gateway evaluation archive is answered. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-14T151903+0200-decide-grpc-ecosystem-grpc-gateway-product-direction.md`.
-  It authorizes only presentation and collection of one bounded product
-  choice; it does not authorize an exception, dependency edit, parent change,
-  `/v2` migration, Go-floor change, successor, or commit.
+  The user has supplied option 1 with the recommended bounds. It does not
+  authorize a dependency edit, parent change, `/v2` migration, Go-floor
+  change, or another dependency group in that turn.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -32,9 +32,11 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is active but stopped for the Gateway product choice;
-P8 remains queued. Exact Go 1.26.7, every accepted dependency move through
-Google UUID v1.4.0, and all earlier outcomes are final.
+P2A-P6 are complete. P7 is recording the user's bounded Gateway option 1
+decision; P8 remains queued. Exact Go 1.26.7, every accepted dependency move
+through Google UUID v1.4.0, and all earlier outcomes are final. Do not combine
+another dependency group or begin P8 before this decision is recorded in a
+committed handoff.
 
 The user's 2026-09-14 gRPC Prometheus option 1 decision retains exact
 `github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0` only under its documented
@@ -61,12 +63,32 @@ defect expires its exception and requires the owning decision. Do not change
 mvn-pom-mutator or GoConvey, reopen an earlier choice, or transfer any
 exception to Gateway.
 
-## gRPC Gateway Evaluation Stop
+## gRPC Gateway Product Decision
 
-No exact-path stable release qualifies. Preserve exact inherited, unloaded
-`github.com/grpc-ecosystem/grpc-gateway v1.16.0` and all dependency metadata
-unchanged until the user explicitly chooses one of the bounded directions in
-the NEXT archive.
+No exact-path stable release qualifies. On 2026-09-14 the user explicitly
+selected option 1 with its recommended bounds: retain exact selected,
+inherited, unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` without
+changing dependency metadata.
+
+The decision accepts only the documented universal discarded-cancel resource
+defect, native repeated-suite global and test-state failures, eight inherited
+called/reachable vulnerability IDs in the release-native closure, malformed-
+generator diagnostic nondeterminism, and related recorded qualification
+findings. It does not accept a new or independently discovered defect. The
+exception is target-specific and non-transferable.
+
+The exception remains valid only while exact v1.16.0 and both selected-version
+incoming edges from etcd/api/v3 v3.5.1 and OTLP v0.7.0 remain unchanged, zero
+Gateway packages load, the module remains runtime-unreachable, and no new
+advisory or independent disqualifier appears. Revalidate and record those
+guards in the committed decision. Direct import or loading, runtime
+reachability, a target version or incoming-edge change, or a new advisory or
+independent defect expires the exception and requires a fresh dependency and
+product decision before merge. Do not add a direct edge, select another v1
+release, change either parent, move to `/v2`, raise the Go floor, authorize
+parent-removal or architecture work, move unrelated selections, or manufacture
+a dependency commit. Do not ask for this same decision again while all guards
+hold. All earlier exceptions remain separate.
 
 Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves canonical
 public active unarchived non-fork BSD-3-Clause repository
@@ -192,18 +214,10 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Resolve only the Gateway product choice. Present three options and require an
-explicit selection:
-
-1. retain exact inherited, unloaded v1.16.0 under a new, narrowly enumerated,
-   target-specific exception and exact-selection/two-parent/zero-load/runtime-
-   unreachable/no-new-finding guards;
-2. authorize a separate bounded ownership decision for the two incoming parent
-   edges; or
-3. authorize a separate `/v2` architecture and Go-floor decision.
-
-Recommend option 1 only if the user explicitly accepts its known defects and
-guards; otherwise option 2 is the path toward removing the unused v1 module.
-Do not infer a choice from earlier retention decisions. The NEXT session must
-request the choice and stop; it may not record, implement, or hand off the
-choice until the user supplies it in a later bounded instruction.
+The next session must record the user's explicit option 1 decision without a
+dependency implementation. Revalidate exact v1.16.0 and both incoming parent
+edges, negative why result, zero packages loaded from Gateway and every earlier
+guarded target, unchanged module hashes, runtime unreachability, and fresh
+advisory state. Then answer the decision archive and prepare exactly one next
+bounded P7 mission. Do not execute that successor in the decision-recording
+turn.
