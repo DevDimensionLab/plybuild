@@ -5374,9 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after recording the bounded gRPC middleware v1.0.0 retention
-decision and the completed dependency groups through accepted Google UUID
-v1.4.0; P8 and further dependency groups remain queued.
+Status: active at the bounded gRPC Prometheus product stop after the completed
+dependency groups through accepted Google UUID v1.4.0 and the recorded gRPC
+middleware v1.0.0 retention decision; P8 and further dependency groups remain
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -9174,6 +9175,82 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   SHA-256
   `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
   No new advisory or independent disqualifier appeared.
+
+- Stop exact-path `github.com/grpc-ecosystem/go-grpc-prometheus` for a fresh
+  bounded product decision without changing dependency metadata. Fresh proxy,
+  sumdb, `go-import`, strict Git, and GitHub evidence resolves canonical
+  `https://github.com/grpc-ecosystem/go-grpc-prometheus.git`, a public archived
+  non-fork Apache-2.0 repository. The proxy exposes only stable v1.2.0. The
+  v1.0/v1.1 tags are not semantic module versions; the 27-commit-later master
+  and `draft-v2.0.0` branch are unreleased root-module identities. Master
+  deprecates the project in favor of the different maintained module path
+  `github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus`.
+- V1.2.0 is the signed annotated tag object
+  `502116f1a0a0c1140aab04fd3787489209b357d3`, commit
+  `c225b8c3b01faf2899099b768856a9e916e5087b`, tree
+  `5548a81e1bd9d5476b5b6d07ba43b0dca6f9c435`, released
+  2018-06-04T12:28:56Z. The 25-file proxy archive is byte-identical to Git;
+  strict Git verification passes and the Apache-2.0 license SHA-256 is
+  `332c4f0a1a657a8937ad0caf7a335a31ec72343821481e364d8894f568c8b010`.
+  The release contains 14 Go files/five packages/two tests/two generated files,
+  no benchmarks/fuzz/testdata/build-tag branches/cgo/embed, and no `go.mod` or
+  `go.sum`; the proxy synthesizes only the module declaration.
+- No complete deterministic release closure qualifies. Current source-time
+  resolution has 72 modules/135 edges, reaches Go 1.26 dependencies, and
+  cannot compile native tests after removal of `prometheus.Handler`; Go 1.18.10
+  cannot compile the modern closure. A 28-module historical reconstruction
+  from post-release master preserves Go 1.18 and passes build/vet/race/cross-
+  build, but uses metadata never present in the release and both SDKs' two
+  count-10 native repeats fail because server-stream tests inspect metrics
+  before an asynchronous server-handler update. The project-selected closure
+  builds production under both SDKs but reaches a Go 1.19 Genproto dependency
+  and its native tests also fail on the removed handler API.
+- The independent 379-line behavior fixture, SHA-256
+  `d6d2366bc2add1d9e7fac686de0b1b556a767841698599e061371ddab377058f`,
+  passes count-1, two count-10 repeats, race, vet, cancellation/deadline cases,
+  and 128-way supported concurrency under both SDKs. It proves that unary
+  client success omits received-message counting while errors increment it,
+  repeated terminal stream receives double-count handled metrics, and raw
+  cancellation/deadline errors preserve identity but classify as Unknown.
+  Abandoned streams/send failures/panics can leave started without handled;
+  init globally registers eight counter vectors; histogram enablement ignores
+  duplicate-registration errors; global enablement is unsynchronized; and nil
+  callback/options/descriptor/info/streamer boundaries panic. The unary defect
+  was fixed only after v1.2.0 on unreleased master.
+- Selected v1.2.0 has the sole incoming mvn-pom-mutator v0.2.3 edge. Its
+  `go mod why -m` is negative, source imports are zero, and zero target packages
+  occur in the 429-entry load, so it is runtime-unreachable. Exact disposable
+  `go get` nevertheless adds a direct root, grows the graph from
+  234/3,599/1,067 modules/edges/sum lines to 346/3,755/1,080, and changes four
+  unrelated existing selections: BigQuery, Datastore, Pub/Sub, and Envoy
+  control-plane. Loading stays unchanged; tidy converges byte-identically to
+  base and removes the root. No graph edit was authorized or applied.
+- Fresh primary vulnerability data has 1,398 records, index SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+  Last-Modified 2026-09-10T16:28:28Z, no exact target record, and an empty OSV
+  exact target/version response. Project scans remain 30 module findings,
+  22 package findings, and 20 called IDs/22 symbol traces with zero target
+  occurrence. Historical closure findings belong to inherited old Prometheus,
+  gRPC, and x/net paths rather than an exact target advisory.
+- The unchanged project remains 234 modules, 3,599 edges, 429 complete-test
+  entries, 197 module-backed packages, 41 loaded modules, 1,067 sum lines, and
+  a 432-line tidy projection. `go.mod`/`go.sum` SHA-256 remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 full preflight, repeats, race, vet, lint, hermetic, cross-
+  build, API/CLI, lifecycle, mutation, and audit-meta gates pass. Go 1.18.10
+  retains only the two accepted `pkg/shell` wording failures. Accepted quality
+  remains 27/27 Q0-Q2 PASS at L2. One final lifecycle rerun hit the already
+  documented nested source-archive signal-retention timing flake at control 51;
+  the immediate unchanged rerun passed all 62 controls. This is launcher test-
+  design/timing evidence, not a target failure. The 263-entry evidence manifest
+  and decision summary SHA-256 values are
+  `b0fede88c14009f0932c1cd6698cda3c2da1fd96acd4e14c7c10729543a83f61`
+  and `c5dfbf19a58b61f6ce0fba615bf0c6ba517dc3475eab524ddf2bc0fe3ae028be`.
+- The reciprocal NEXT archive asks the user to choose explicitly among
+  target-specific retained-risk acceptance, a parent/removal evaluation, or a
+  maintained replacement/patch program. None is authorized by this evaluation;
+  no gRPC Prometheus exception exists until the user records that choice.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
