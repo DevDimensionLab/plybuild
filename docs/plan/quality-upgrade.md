@@ -9076,6 +9076,64 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   hold. GopherJS, Enterprise Certificate Proxy, and GAX retain only their own
   separate guarded exceptions.
 
+- Stop exact-path `github.com/grpc-ecosystem/go-grpc-middleware` for a fresh
+  bounded product decision without changing dependency metadata. Fresh proxy,
+  sumdb, `go-import`, strict Git, and GitHub evidence resolves the canonical
+  public active unarchived non-fork Apache-2.0 repository and seven stable
+  exact-path releases, v1.0.0 through proxy-latest v1.4.0. Current main is the
+  different `/v2` module requiring Go 1.24; five post-v1.4.0 v1-branch commits
+  are unreleased and not candidates.
+- V1.4.0 is the highest stable release whose complete minimal production/test
+  closure preserves Go 1.18, but no stable release qualifies. Every v1 release
+  reproduces the same production retry cancellation defect under exact Go
+  1.26.7 and Go 1.18.10: an already-canceled parent with zero backoff still
+  reaches the invoker three times and returns Unavailable instead of Canceled.
+  Every release also discards the cancel function from per-call retry timeout
+  contexts; v1.1.0-v1.4.0 fail modern vet on that resource leak.
+- Selected v1.0.0 has no release `go.mod` or deterministic complete test
+  closure. V1.1.0-v1.2.1 suites fail on CN-only certificates without SANs;
+  v1.2.2 has a Go 1.26 retry-suite server-state race. V1.4.0 full repeated
+  suites panic when unclosed client work reaches a subtest-bound global logger,
+  and `logging/settable` incorrectly nests variadic arguments. V1.3.0 passes
+  repeats/race/cross-builds but retains the universal retry defects.
+- Pinned API comparison records selected-to-later protobuf/marshaller
+  incompatibilities and a v1.3.0-to-v1.4.0 change of all logging/kit public
+  logger types from `github.com/go-kit/kit/log` to `github.com/go-kit/log`.
+  Independent positive interceptor fixtures pass under both SDKs; separate
+  fixtures reproduce the universal cancellation defect and v1.4.0 logger
+  forwarding defect. Their SHA-256 values are
+  `17bf692b527e101a0a3048e3d8da13b559a414db85541fb6cf98e409c8d1ab76`
+  and `6c3d2ba53a405da762493a3a2db8480ff70a64cc1761a93f23bbc1116c3dd0c4`.
+- Selected v1.0.0 exists solely through mvn-pom-mutator v0.2.3;
+  `go mod why -m` is negative, source imports are zero, and zero target packages
+  load. Exact v1.4.0 `go get` keeps loading at zero but changes four unrelated
+  existing selections, adds 116 graph modules, and moves the graph from
+  234/3,599 to 350/3,784 modules/edges. Tidy returns byte-identically to the
+  base projection and restores inherited v1.0.0. Those unrelated MVS changes
+  require a separate authorization and were not applied.
+- Fresh primary vulnerability data has 1,398 records, index SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+  Last-Modified 2026-09-10T16:28:28Z, and no exact target record. Reviewed base
+  and v1.4.0 project scans are identical at 30 module findings, 22 package
+  findings, and 20 IDs/22 symbol traces, with zero target occurrence. Isolated
+  v1.4.0 inherits old gRPC/x/net findings through testing helpers; none is an
+  exact middleware advisory.
+- The unchanged project stays at 234 modules, 3,599 edges, 429 complete-test
+  entries, 197 module-backed packages, 41 loaded modules, 1,067 sum lines, and
+  a 432-line tidy projection. Exact Go 1.26.7 full preflight, repeats, race,
+  vet, lint, hermetic, cross-build, API, CLI, lifecycle, and audit controls pass;
+  Go 1.18.10 retains only the two accepted `pkg/shell` wording failures.
+  Accepted quality remains 27/27 Q0-Q2 PASS at L2. Evidence-manifest and
+  decision-summary SHA-256 values are
+  `bab1aa974f1182ba6d953831dcfccc0257b6f32f5064c477c68df170b7113b8e`
+  and `a07237e54d3fac720966f6fc33767d6e98d61db6a2efc8a44de02f78316d3150`.
+- The next bounded decision must choose among retaining exact inherited,
+  unloaded v1.0.0 under a new non-transferable target exception; authorizing a
+  separately bounded maintained patch/replacement; or authorizing a separately
+  bounded parent/removal redesign. Do not offer unpatched v1.4.0 as qualified,
+  change mvn-pom-mutator/GoConvey, transfer an earlier exception, manufacture a
+  dependency commit, or begin another dependency group before that decision.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
