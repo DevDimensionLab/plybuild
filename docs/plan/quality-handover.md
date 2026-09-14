@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-14T19:32:01+02:00
+Generated: 2026-09-14T21:02:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,10 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Consul API evaluation
-  began from clean HEAD `2e5954d98cf348f9e344ec93bb9592f8f57b6c63`,
-  parent `b9e4b64d00d5593bb1a9d45e4506e55fd6eeb1f4`, tree
-  `33faa8e73468f17aa3c8acb3384c138326a82486`.
+  `codex/upgrade-quality`, base master at `5635d50`. The Consul API decision
+  was revalidated from clean HEAD
+  `474909583bfe6efbc5ae49b9ff1d68ec7402ee41`, parent
+  `0ae1c16a2f35f66e128d45309967fce654d2e904`, tree
+  `a4656d4ae2e772914a72c8a8dd3f6548bba2d88c`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -19,11 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The Consul API evaluation archive is answered. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-14T193201+0200-decide-hashicorp-consul-api-product-direction.md`.
-  The user has supplied option 1 with the recommended bounds. It does not
-  authorize a dependency implementation, another dependency group, or P8 in
-  that turn.
+- The Consul API evaluation and decision archives are answered. The sole NEXT
+  archive is
+  `docs/plan/agent-sessions/2026-09-14T210212+0200-evaluate-hashicorp-consul-sdk-dependency.md`.
+  It authorizes only the bounded Hashicorp Consul SDK v0.8.0 evaluation; it
+  does not authorize reopening Consul API, combining another dependency group,
+  or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -31,12 +33,11 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is recording the user's bounded Consul API option 1
-decision after exact Go 1.26.7, every accepted dependency move through Google
-UUID v1.4.0, and all recorded retained-module decisions. P8 remains queued.
-Earlier outcomes and lifecycle ancestry are final. Do not combine another
-dependency group or begin P8 before this decision is recorded in a committed
-handoff.
+P2A-P6 are complete. P7 is active after the user's bounded Consul API option 1
+decision; the next group is Hashicorp Consul SDK v0.8.0 and P8 remains queued.
+Exact Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
+and all earlier outcomes are final. Do not combine dependency groups or begin
+P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -51,19 +52,20 @@ The gRPC Prometheus v1.2.0, gRPC middleware v1.0.0, Gorilla WebSocket v1.4.2,
 GopherJS `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy
 v0.2.1, and GAX v2.7.0 decisions remain separate under their exact-selection,
 selected-version incoming-edge, zero-load, runtime-unreachable, and no-new-
-finding guards. In this evaluation Gateway retained exactly its two recorded
-incoming edges; gRPC Prometheus, gRPC middleware, and Gorilla retained their
-sole mvn-pom-mutator v0.2.3 edges; GopherJS retained its sole GoConvey v1.6.4
-edge; and Enterprise Certificate Proxy and GAX retained their sole Viper
-v1.15.0 edges. All seven why results are negative, source imports are zero,
-target package loads are zero, and runtime unreachability remains intact.
+finding guards. In this decision revalidation Consul API retained its sole
+Viper v1.15.0 edge; Gateway retained exactly its two recorded incoming edges;
+gRPC Prometheus, gRPC middleware, and Gorilla retained their sole mvn-pom-
+mutator v0.2.3 edges; GopherJS retained its sole GoConvey v1.6.4 edge; and
+Enterprise Certificate Proxy and GAX retained their sole Viper v1.15.0 edges.
+All eight why results are negative, source imports are zero, target package
+loads are zero, and runtime unreachability remains intact.
 
 Fresh primary data has no new exact record for those targets. Gorilla retains
 only its recorded entries, including unwithdrawn GO-2026-6278. Direct import or
 loading, runtime reachability, a version or incoming-edge change, or a new
 advisory/independent defect expires the owning exception and requires its fresh
 decision. Do not change either Gateway parent, mvn-pom-mutator, GoConvey, or
-Viper; reopen an earlier choice; or transfer any exception to Consul API.
+Viper; reopen an earlier choice; or transfer any exception to Consul SDK.
 
 ## Hashicorp Consul API Product Decision
 
@@ -83,15 +85,14 @@ non-transferable.
 The exception remains valid only while exact v1.18.0 and its sole Viper v1.15.0
 selected-version incoming edge remain unchanged, zero Consul API packages load,
 the module remains runtime-unreachable, and no new advisory or independent
-disqualifier appears. Revalidate and record those guards in the committed
-decision. Direct import or loading, runtime reachability, a target version or
-incoming-edge change, or a new advisory or independent defect expires the
-exception and requires a fresh Consul API dependency and product decision
-before merge. Do not add a direct edge, select another v1 release, move to
-`/api/v2`, change Viper, raise the Go floor, authorize parent modernization or
-removal, replace the architecture, move unrelated selections, or manufacture a
-dependency commit. Do not ask for this same decision again while all guards
-hold. All earlier exceptions remain separate.
+disqualifier appears. Direct import or loading, runtime reachability, a target
+version or incoming-edge change, or a new advisory or independent defect
+expires the exception and requires a fresh Consul API dependency and product
+decision before merge. Do not add a direct edge, select another v1 release,
+move to `/api/v2`, change Viper, raise the Go floor, authorize parent
+modernization or removal, replace the architecture, move unrelated selections,
+or manufacture a dependency commit. Do not ask for this same decision again
+while all guards hold. All earlier exceptions remain separate.
 
 Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves canonical
 public active unarchived non-fork repository
@@ -181,6 +182,22 @@ inherited module-only GO-2026-5024 in old x/sys with no vulnerable package or
 called symbol; tests add inherited GO-2022-0603 in yaml.v3 and load that test
 package but reach no vulnerable symbol.
 
+The decision was recorded after guard-only revalidation from clean decision
+HEAD `474909583bfe6efbc5ae49b9ff1d68ec7402ee41`. Consul API remains exact
+v1.18.0 through only Viper v1.15.0; all eight guarded why results remain
+negative, repository source imports remain zero, and the 429-entry complete
+test load contains 197 module-backed packages across 41 modules with zero
+guarded-target packages. The project remains 234 selected modules and 3,599
+graph edges, so Consul API and every earlier guarded target remain runtime-
+unreachable. No dependency implementation was created.
+
+Fresh primary data remains byte-identical at 1,398 records and the recorded
+index SHA-256/Last-Modified values. Consul API and the six non-Gorilla earlier
+targets retain empty exact OSV responses. Gorilla retains only GO-2020-0019 and
+unwithdrawn GO-2026-6278; the latter's record SHA-256 remains
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+No new advisory or independent disqualifier appeared.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -213,6 +230,11 @@ metadata changed, accepted quality remains 27/27 Q0-Q2 PASS at L2, with its
 recorded scorecard SHA-256
 `04039eb917cc8aa674c093e866b8fbfb303ab562a28dcbaf2414dba1c9d01c3a`.
 
+The Consul decision's exact-Go no-change module verification, build, count-one
+test, race, vet, and launcher lifecycle gates pass. Because no source or
+dependency metadata changed, no changed-selection scorecard run applies and
+the accepted 27/27 Q0-Q2 L2 state remains unchanged.
+
 Full preflight's substantive stages pass; its nested launcher self-test hit
 the known signal-retention timing race. Docker buildx is now available at
 v0.33.0-desktop.1. Docker acceptance builds the image and completes the in-
@@ -231,10 +253,11 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-The next session must record the user's explicit option 1 decision without a
-dependency implementation. Revalidate exact v1.18.0 and its sole Viper v1.15.0
-incoming edge, negative why result, zero packages loaded from Consul API and
-every earlier guarded target, unchanged module hashes, runtime unreachability,
-and fresh advisory state. Then answer the decision archive and prepare exactly
-one next bounded P7 mission. Do not execute that successor in the decision-
-recording turn.
+Evaluate only exact-path `github.com/hashicorp/consul/sdk v0.8.0` as one
+bounded P7 group. A starting survey finds it selected through one exact-version
+edge from the historical Consul API v1.12.0 graph vertex, with negative why,
+zero repository imports, and zero loaded SDK packages. Independently resolve
+its repository/release identity, complete Go 1.18 floor closure, behavior, API,
+loading, MVS, vulnerability, and project qualification without transferring
+the Consul API exception, changing Viper, combining another group, or beginning
+P8.

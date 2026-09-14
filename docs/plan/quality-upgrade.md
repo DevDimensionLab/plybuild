@@ -9537,9 +9537,41 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   release, move to `/api/v2`, change Viper, raise the Go floor, authorize parent
   modernization/removal or replacement architecture work, move unrelated
   selections, manufacture a dependency commit, transfer another exception, or
-  request this same decision again while the guards hold. Record the decision,
-  answer its archive, and prepare one next bounded P7 mission without executing
-  it in the decision turn.
+  request this same decision again while the guards hold.
+- The Consul API option 1 decision was recorded from clean decision HEAD
+  `474909583bfe6efbc5ae49b9ff1d68ec7402ee41`, parent
+  `0ae1c16a2f35f66e128d45309967fce654d2e904`, and tree
+  `a4656d4ae2e772914a72c8a8dd3f6548bba2d88c`. Consul API remains exact
+  v1.18.0 through exactly one selected-version incoming edge from Viper
+  v1.15.0. Gateway and every earlier guarded selection also retain their exact
+  versions and recorded selected-version incoming edges.
+- All eight guarded `go mod why -m` results remain negative, repository Go
+  source has zero guarded imports, and the unchanged 429-entry complete test
+  load has 197 module-backed packages across 41 modules with zero Consul API or
+  earlier guarded-target packages. All eight targets remain runtime-
+  unreachable. The project remains 234 selected modules, 3,599 graph edges,
+  and 1,067 sum lines; `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 module verification, build, count-one tests, race, vet, and
+  the launcher lifecycle contract pass. No dependency implementation was
+  created, and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+- Fresh primary vulnerability data remains byte-identical at 1,398 records,
+  index SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+  and Last-Modified 2026-09-10T16:28:28Z. It has no exact Consul API, Gateway,
+  gRPC Prometheus, gRPC middleware, GopherJS, Enterprise Certificate Proxy, or
+  GAX record, and exact target/version OSV queries for those seven modules
+  remain empty. Gorilla retains only GO-2020-0019 and unwithdrawn GO-2026-6278;
+  the latter's record SHA-256 remains
+  `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+  No new advisory or independent disqualifier appeared.
+- The next bounded P7 group is selected exact-path
+  `github.com/hashicorp/consul/sdk v0.8.0`. A starting survey records one
+  exact selected-version incoming edge from the historical Consul API v1.12.0
+  graph vertex, a negative why result, zero repository imports, and zero loaded
+  SDK packages. Its independent evaluation is a separate successor mission and
+  was not begun in this decision-recording move.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

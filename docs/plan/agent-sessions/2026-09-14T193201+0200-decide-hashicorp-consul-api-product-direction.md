@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Consul API Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-14T193201+0200-decide-hashicorp-consul-api-product-direction`
 Created: `2026-09-14T19:32:01+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `bf5cbb42142253008c86ffc929bc8ea8a0d4f6ff3ca4186e18197ff18bee0930`
 Previous: [2026-09-14T180109+0200-evaluate-hashicorp-consul-api-dependency.md](2026-09-14T180109+0200-evaluate-hashicorp-consul-api-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-14T210212+0200-evaluate-hashicorp-consul-sdk-dependency.md](2026-09-14T210212+0200-evaluate-hashicorp-consul-sdk-dependency.md)
+Outcome: Recorded the user's bounded option 1 retention of exact inherited, unloaded Consul API v1.18.0; revalidated every guard without dependency metadata changes; and prepared the next bounded P7 dependency evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -184,3 +184,75 @@ gates and create the required local `docs: prepare next agent session` commit.
 Do not launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user's 2026-09-14 option 1 selection and retained exact-path
+`github.com/hashicorp/consul/api v1.18.0` as an inherited, unloaded module
+without changing `go.mod` or `go.sum` and without manufacturing a dependency
+implementation commit.
+
+The target-specific, non-transferable decision accepts only the findings
+already established in the answered evaluation: the non-standalone release
+closure, Go 1.26 Unix native-test link incompatibility, broken `consulent` test
+branch, expired TLS fixtures, silently discarded response-metadata errors,
+inherited closure-only vulnerability findings, documented nil/panic and
+mutation boundaries, and related completed qualification findings. No new or
+independently discovered defect is accepted.
+
+Every guard was revalidated from clean decision HEAD
+`474909583bfe6efbc5ae49b9ff1d68ec7402ee41`, parent
+`0ae1c16a2f35f66e128d45309967fce654d2e904`, and tree
+`a4656d4ae2e772914a72c8a8dd3f6548bba2d88c`. The latest dependency
+implementation remains exact Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, and tree
+`b89afd4ec056133b1eefb5611f8f35c12c11824b`, changing only `go.mod` and
+`go.sum` with three insertions and no deletions.
+
+Project selection remains Consul API v1.18.0, Gateway v1.16.0, gRPC
+Prometheus v1.2.0, gRPC middleware v1.0.0, Gorilla WebSocket v1.4.2,
+GopherJS `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy
+v0.2.1, and GAX v2.7.0. Consul API retains exactly one selected-version
+incoming edge, Viper v1.15.0 -> Consul API v1.18.0. Gateway retains exactly
+its two etcd/api/v3 v3.5.1 and OTLP v0.7.0 edges, and the earlier guarded
+targets retain their sole recorded mvn-pom-mutator v0.2.3, GoConvey v1.6.4,
+or Viper v1.15.0 edges. All eight `go mod why -m` results remain negative,
+and repository Go source has zero imports of every guarded target.
+
+The complete project test load remains 429 entries, including 197 module-
+backed packages across 41 loaded modules, with exactly zero packages from
+Consul API or any earlier guarded target. Together with the unchanged selected-
+version edges, negative why results, and zero source imports, this revalidates
+that all eight targets remain runtime-unreachable. The project still selects
+234 modules with 3,599 graph edges.
+
+`go.mod` and `go.sum` remain byte-identical to clean decision HEAD at SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+`go.sum` remains 1,067 lines. The applicable exact-Go no-change module, build,
+test, race, vet, and launcher lifecycle gates pass. No changed-selection
+scorecard run applies; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+Fresh primary vulnerability data remains byte-identical at 1,398 module
+records, index SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+and Last-Modified 2026-09-10T16:28:28Z. It has no exact Consul API, Gateway,
+gRPC Prometheus, gRPC middleware, GopherJS, Enterprise Certificate Proxy, or
+GAX record. Exact OSV target/version queries for those seven modules remain
+empty. Gorilla retains only GO-2020-0019 and the selected-affecting
+GO-2026-6278; the latter remains unwithdrawn at record SHA-256
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`
+with its existing GHSA alias. No new advisory or independently observed
+disqualifier appeared during this guard-only revalidation; the completed
+technical audit was not repeated or broadened.
+
+The Consul API exception remains valid only while exact v1.18.0 and its sole
+Viper v1.15.0 selected-version incoming edge remain unchanged, zero Consul API
+packages load, the module remains runtime-unreachable, and no new advisory or
+independent disqualifier appears. Direct import or loading, runtime
+reachability, a target version or incoming-edge change, or a new advisory or
+independent defect expires the exception and requires a fresh Consul API
+dependency and product decision before merge. Every earlier exception remains
+separate under its own guards. Do not request this same Consul API decision
+again while all guards hold.
