@@ -5374,10 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at the bounded gRPC Prometheus product stop after the completed
-dependency groups through accepted Google UUID v1.4.0 and the recorded gRPC
-middleware v1.0.0 retention decision; P8 and further dependency groups remain
-queued.
+Status: active after the recorded gRPC Prometheus v1.2.0 retention decision and
+the completed dependency groups through accepted Google UUID v1.4.0; the next
+bounded group is gRPC Gateway v1.16.0, while P8 and further dependency groups
+remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -9266,8 +9266,40 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   or GoConvey, raise the Go floor, authorize parent/removal or replacement/patch
   work, move unrelated selections, manufacture a dependency commit, transfer
   another exception, or request this same decision again while the guards hold.
-  Record the decision, answer its archive, and prepare one next bounded P7
-  mission without executing it in the decision turn.
+- The option 1 decision was recorded from clean decision HEAD `547460d`, tree
+  `c63bb971527dbe435f3878bb1b98311bbc49575f`, using a freshly unpacked,
+  hash-verified exact Go 1.26.7 distribution first in `PATH`, `GOENV=off`,
+  `GOWORK=off`, `GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient
+  `GOFLAGS`. Gating selections remain exact gRPC Prometheus v1.2.0, gRPC
+  middleware v1.0.0, Gorilla WebSocket v1.4.2, GopherJS
+  `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy v0.2.1,
+  and GAX v2.7.0. Each has exactly one incoming edge at its selected version:
+  the three gRPC/Gorilla targets from mvn-pom-mutator v0.2.3, GopherJS from
+  GoConvey v1.6.4, and the two Google targets from Viper v1.15.0.
+- All six `go mod why -m` results remain negative, repository Go source has
+  zero guarded imports, and the unchanged 429-entry complete test load has 197
+  module-backed packages across 41 modules with zero guarded target packages.
+  All six targets remain runtime-unreachable. The project remains 234 selected
+  modules, 3,599 graph edges, and 1,067 sum lines; `go.mod`/`go.sum` SHA-256
+  values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 module verification, build, count-1 tests, race, vet, and the
+  62-control launcher lifecycle suite pass. No dependency implementation was
+  created, and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+- Fresh primary vulnerability data remains byte-identical at 1,398 records,
+  index SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+  and Last-Modified 2026-09-10T16:28:28Z. It has no exact gRPC Prometheus,
+  gRPC middleware, GopherJS, Enterprise Certificate Proxy, or GAX record, and
+  their exact-version OSV queries remain empty. Gorilla retains only its
+  existing index records; selected-affecting GO-2026-6278 remains unwithdrawn
+  at SHA-256
+  `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+  No new advisory or independent disqualifier appeared. The next bounded P7
+  group is selected exact-path `github.com/grpc-ecosystem/grpc-gateway
+  v1.16.0`; its evaluation is a separate successor mission and was not begun
+  in this decision-recording move.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

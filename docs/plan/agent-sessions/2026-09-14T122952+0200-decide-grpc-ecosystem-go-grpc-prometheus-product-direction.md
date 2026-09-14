@@ -1,13 +1,13 @@
 # Agent Session: Decide gRPC Prometheus Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-14T122952+0200-decide-grpc-ecosystem-go-grpc-prometheus-product-direction`
 Created: `2026-09-14T12:29:52+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `026fa324c5248230f595a9f6409e1344c73a4f83ddf24b41596c7e8651ddaa37`
 Previous: [2026-09-14T112708+0200-evaluate-grpc-ecosystem-go-grpc-prometheus-dependency.md](2026-09-14T112708+0200-evaluate-grpc-ecosystem-go-grpc-prometheus-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-14T134759+0200-evaluate-grpc-ecosystem-grpc-gateway-dependency.md](2026-09-14T134759+0200-evaluate-grpc-ecosystem-grpc-gateway-dependency.md)
+Outcome: Recorded the user's bounded option 1 decision, retained exact inherited and unloaded gRPC Prometheus v1.2.0 without metadata changes, revalidated every exception guard, and prepared the next bounded P7 group.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -189,3 +189,76 @@ create the required local `docs: prepare next agent session` commit. Do not
 launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user's 2026-09-14 option 1 selection and retained exact-path
+`github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0` as an inherited,
+unloaded module without changing `go.mod` or `go.sum` and without manufacturing
+a dependency implementation commit.
+
+The target-specific, non-transferable decision accepts only the findings
+already established in the answered evaluation: the missing release module
+metadata and deterministic complete closure, asynchronous native stream-test
+failures, unary client received-message inversion, repeated terminal stream-
+receive counting, raw cancellation and deadline classification as Unknown,
+and the related recorded archived, global-state, lifecycle, and qualification
+findings. No new or independently discovered defect is accepted.
+
+Every guard was revalidated from clean decision HEAD `547460d63ae6eecce2212ce70a00f4b3a56e05c5`,
+tree `c63bb971527dbe435f3878bb1b98311bbc49575f`, with a freshly unpacked exact
+Go 1.26.7 distribution. Its archive and binary SHA-256 values are
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`
+and `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+It ran first in `PATH` with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient `GOFLAGS`.
+
+Project selection remains gRPC Prometheus v1.2.0, gRPC middleware v1.0.0,
+Gorilla WebSocket v1.4.2, GopherJS
+`v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy v0.2.1,
+GAX v2.7.0, mvn-pom-mutator v0.2.3, GoConvey v1.6.4, and Viper v1.15.0.
+The selected-version incoming edges remain mvn-pom-mutator v0.2.3 -> gRPC
+Prometheus v1.2.0, gRPC middleware v1.0.0, and Gorilla WebSocket v1.4.2;
+GoConvey v1.6.4 -> GopherJS; and Viper v1.15.0 -> Enterprise Certificate
+Proxy v0.2.1 and GAX v2.7.0. Each target has exactly one incoming edge at its
+selected version. All six `go mod why -m` results remain negative, and
+repository Go source has zero imports of every guarded target.
+
+The complete project test load remains 429 entries, including 197 module-
+backed packages across 41 loaded modules, with exactly zero packages from
+gRPC Prometheus, gRPC middleware, Gorilla WebSocket, GopherJS, Enterprise
+Certificate Proxy, or GAX. Together with the unchanged selected-version
+edges, negative why results, and zero source imports, this revalidates that all
+six guarded targets remain runtime-unreachable. The project still selects 234
+modules with 3,599 graph edges.
+
+`go.mod` and `go.sum` remain byte-identical to clean decision HEAD at SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+`go.sum` remains 1,067 lines. The applicable exact-Go no-change module,
+build, test, race, vet, and launcher lifecycle gates pass. No changed-selection
+scorecard run applies; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+Fresh primary vulnerability data remains byte-identical at 1,398 module
+records, index SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+and Last-Modified 2026-09-10T16:28:28Z. It has no exact gRPC Prometheus,
+gRPC middleware, GopherJS, Enterprise Certificate Proxy, or GAX record. Exact
+OSV target/version queries for those five modules remain empty. The Gorilla
+entry still contains only GO-2020-0019 and selected-affecting GO-2026-6278;
+the latter remains unwithdrawn at record SHA-256
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`
+with its existing GHSA alias and pre-v1.5.3 published boundary. No new advisory
+or independently observed disqualifier appeared during this guard-only
+revalidation; the completed technical audit was not repeated or broadened.
+
+The gRPC Prometheus exception remains valid only while exact v1.2.0 and its
+sole incoming mvn-pom-mutator v0.2.3 edge remain unchanged, zero target
+packages load, the module remains runtime-unreachable, and no new advisory or
+independent disqualifier appears. Direct import or loading, runtime
+reachability, a target version or incoming-edge change, or a new advisory or
+independent defect expires the exception and requires a fresh dependency and
+product decision before merge. The gRPC middleware, Gorilla WebSocket,
+GopherJS, Enterprise Certificate Proxy, and GAX exceptions remain separate
+under their own guards. Do not request this same gRPC Prometheus decision again
+while all guards hold.
