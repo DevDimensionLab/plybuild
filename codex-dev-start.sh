@@ -1139,14 +1139,13 @@ exit 70
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 only by obtaining and recording a fresh bounded product decision
-#|for exact-path `github.com/grpc-ecosystem/go-grpc-prometheus`. The completed
-#|evaluation found no exact-path stable release whose complete minimal source
-#|and test closure both preserves Go 1.18 and passes every existing behavior,
-#|test, API, MVS, and project contract. Present the three bounded options below
-#|and ask the user to choose one. Do not infer a choice, implement a dependency
+#|Continue P7 only by recording the user's 2026-09-14 explicit selection of
+#|option 1 for exact-path `github.com/grpc-ecosystem/go-grpc-prometheus`.
+#|Retain exact selected, inherited, unloaded v1.2.0 without dependency metadata
+#|changes under the bounded release-closure, stream-test, metric, lifecycle,
+#|archived, and global-state exceptions below. Do not implement a dependency
 #|change, reopen an earlier decision, evaluate another dependency group, or
-#|begin P8.
+#|begin P8 in this decision-recording move.
 #|
 #|# Authorized Roadmap
 #|
@@ -1155,40 +1154,37 @@ exit 70
 #|explicit user choice and prepare one bounded follow-up, but may not implement
 #|that choice or combine another dependency group.
 #|
-#|## Decision Required
+#|## Authorized Product Decision
 #|
-#|Option 1 (recommended): retain exact selected, inherited, unloaded v1.2.0
-#|without changing `go.mod` or `go.sum`, under a new target-specific exception.
-#|Accept only the documented missing release module metadata and deterministic
-#|complete closure, asynchronous native stream-test failures, unary client
-#|received-message inversion, repeated terminal stream-receive counting, raw
-#|cancellation/deadline classification as Unknown, and related archived/global-
-#|state and lifecycle qualification findings. The exception must be non-
-#|transferable and valid only while exact v1.2.0 and its sole mvn-pom-mutator
-#|v0.2.3 edge remain unchanged, zero target packages load, the module remains
+#|On 2026-09-14 the user explicitly selected option 1 with the recommended
+#|bounds: retain exact selected
+#|`github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0` as an inherited,
+#|unloaded selection without changing `go.mod` or `go.sum`. Accept only the
+#|already documented missing release module metadata and deterministic complete
+#|closure, asynchronous native stream-test failures, unary client received-
+#|message inversion, repeated terminal stream-receive counting, raw cancellation
+#|and deadline classification as Unknown, and related recorded archived, global-
+#|state, lifecycle, and qualification findings. This does not accept a new or
+#|independently discovered defect.
+#|
+#|The exception is target-specific and non-transferable. It is valid only while
+#|exact v1.2.0 and its sole incoming mvn-pom-mutator v0.2.3 edge remain unchanged,
+#|the complete project load contains zero target packages, the module remains
 #|runtime-unreachable, and no new advisory or independent disqualifier appears.
-#|Direct import/loading, runtime reachability, a version or incoming-edge change,
-#|or a new advisory/defect expires it.
+#|Revalidate and record those guards. Direct import or loading, runtime
+#|reachability, a target version or incoming-edge change, or a new advisory or
+#|independent defect expires the exception and requires a fresh dependency and
+#|product decision before merge.
 #|
-#|Option 2: authorize a separate bounded parent/removal evaluation centered on
-#|the sole incoming `github.com/devdimensionlab/mvn-pom-mutator v0.2.3` edge.
-#|That scope must independently own every resulting gRPC middleware, Gorilla
-#|WebSocket, gRPC Prometheus, parent, graph, compatibility, and project effect;
-#|it may not reuse or broaden any existing exception. Do not change the parent
-#|or graph in this decision turn.
-#|
-#|Option 3: authorize a separate maintained replacement or patch program. That
-#|scope must choose and own an exact source/release identity, preserve Go 1.18,
-#|repair the documented metric and stream-lifecycle defects, control registry
-#|and global state, and prove API, vulnerability, MVS, and full project gates.
-#|The maintained alternate module path, a fork, or a patched source tree is a
-#|different dependency/architecture decision and must not be silently promoted.
-#|Do not begin that design in this decision turn.
-#|
-#|Do not offer the unreleased master pseudo-version, the `draft-v2.0.0` branch,
-#|non-versioning tags v1.0/v1.1, or the different maintained
-#|`github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus` path as a
-#|qualified exact-path stable release.
+#|Do not add a direct target edge, select an unreleased master pseudo-version,
+#|the `draft-v2.0.0` branch, non-versioning tags v1.0/v1.1, or the different
+#|maintained `github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus`
+#|module path. Do not change mvn-pom-mutator or GoConvey, raise the Go floor,
+#|authorize a parent/removal evaluation or maintained replacement/patch program,
+#|move unrelated selections, or manufacture a dependency implementation commit.
+#|Existing gRPC middleware, Gorilla WebSocket, GopherJS, Enterprise Certificate
+#|Proxy, and GAX exceptions remain separate. Do not stop or ask for this same
+#|gRPC Prometheus decision again while all guards hold.
 #|
 #|# Measurements At Start
 #|
@@ -1277,10 +1273,11 @@ exit 70
 #|
 #|# Role And Boundaries
 #|
-#|This is a decision turn, not a renewed technical audit or dependency
-#|implementation. Present the three bounded options exactly enough for the user
-#|to choose; do not infer a choice, manufacture activity, or broaden the selected
-#|option beyond its documented consequences.
+#|This is a decision-recording turn, not a renewed technical audit or dependency
+#|implementation. The user has explicitly selected and bounded option 1; do not
+#|ask for that decision again, manufacture activity, or broaden it into direct
+#|use, another version, parent/removal, replacement/patch, floor, API, or
+#|unrelated-module authorization.
 #|
 #|## Guarded Decisions
 #|
@@ -1297,22 +1294,22 @@ exit 70
 #|ancestry, reciprocal archive history, latest dependency implementation, all
 #|guarded invariants, and `./codex-dev-start.sh --check`. Read this archive, the
 #|answered gRPC Prometheus evaluation, rolling handover, roadmap, `go.mod`,
-#|`go.sum`, and referenced contracts. This is a product-choice turn: present the
-#|options and stop until the user chooses.
+#|`go.sum`, and referenced contracts. This is a decision-recording turn; reuse
+#|the completed technical audit and do not ask the user to choose again.
 #|
 #|# Three Moves
 #|
 #|First, revalidate only the unchanged selection, sole incoming edge, negative
 #|why result, zero guarded package loads, runtime unreachability, module hashes,
 #|and current advisory state. Reuse the completed audit; do not repeat or broaden
-#|it. Second, present the three options and stop until the user makes an explicit
-#|choice. Third, after that choice arrives, record only the choice and its exact
-#|bounds, answer this archive, update the roadmap and rolling handover, and
-#|prepare one reciprocal NEXT mission without executing it.
+#|it. Second, record the exact option 1 exception, accepted known findings,
+#|guards, expiration triggers, and no-change result in the roadmap and rolling
+#|handover. Third, answer this archive and prepare one reciprocal NEXT mission
+#|for the next bounded P7 group without executing it.
 #|
 #|# Automatic Handoff
 #|
-#|After an explicit choice, run the applicable no-change lifecycle gates and
+#|After recording the decision, run the applicable no-change lifecycle gates and
 #|create the required local `docs: prepare next agent session` commit. Do not
 #|launch a successor, push, merge, publish, release, stash, revert, bypass
 #|cleanup, or remove the worktree.

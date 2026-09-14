@@ -21,18 +21,20 @@ session diary.
   metadata commit.
 - The gRPC Prometheus evaluation archive is answered. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-14T122952+0200-decide-grpc-ecosystem-go-grpc-prometheus-product-direction.md`.
-  It may obtain and record only one bounded product choice. Do not infer that
-  choice, implement it, evaluate another dependency group, or begin P8.
+  The user has supplied option 1 with the recommended bounds. Do not implement
+  a dependency change, evaluate another dependency group, or begin P8 in that
+  turn.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not push, merge, publish, release,
   stash, revert, bypass cleanup, or remove the worktree.
 
 ## Lifecycle And Retained Decisions
 
-P2A-P6 are complete. P7 remains active at the gRPC Prometheus product stop;
-P8 is queued. Exact Go 1.26.7, every accepted dependency move through Google
-UUID v1.4.0, and all earlier retained-module decisions remain final. Do not
-combine another dependency group or begin P8.
+P2A-P6 are complete. P7 is recording the user's bounded gRPC Prometheus option
+1 decision; P8 is queued. Exact Go 1.26.7, every accepted dependency move
+through Google UUID v1.4.0, and all earlier retained-module decisions remain
+final. Do not combine another dependency group or begin P8 before this decision
+is recorded in a committed handoff.
 
 The user's 2026-09-14 gRPC middleware option 1 decision is final. Exact
 `github.com/grpc-ecosystem/go-grpc-middleware v1.0.0` retains only its recorded
@@ -59,11 +61,34 @@ evidence tree, fixture, runtime/tool installation, and build context beneath
 `$CODEX_SESSION_SCRATCH_ROOT`. Never run `go mod download all` in a measured
 worktree or bypass launcher cleanup.
 
-## gRPC Prometheus Bounded Stop
+## gRPC Prometheus Product Decision
 
-No exact-path stable release qualifies. The project was left byte-identical
-and no target exception was created. The next session must obtain an explicit
-product choice before retention, graph removal, replacement, or patch work.
+No exact-path stable release qualifies. On 2026-09-14 the user explicitly
+selected option 1 with the recommended bounds: retain exact selected,
+inherited, unloaded `github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0`
+without changing dependency metadata.
+
+The decision accepts only the already documented missing release module
+metadata and deterministic complete closure, asynchronous native stream-test
+failures, unary client received-message inversion, repeated terminal stream-
+receive counting, raw cancellation and deadline classification as Unknown,
+and related recorded archived, global-state, lifecycle, and qualification
+findings. It does not accept a new or independently discovered defect. The
+exception is target-specific and non-transferable.
+
+The exception remains valid only while exact v1.2.0 and its sole incoming
+mvn-pom-mutator v0.2.3 edge remain unchanged, zero target packages load, the
+module remains runtime-unreachable, and no new advisory or independent
+disqualifier appears. Revalidate and record those guards in the committed
+decision. Direct import or loading, runtime reachability, a target version or
+incoming-edge change, or a new advisory or independent defect expires the
+exception and requires a fresh dependency and product decision before merge.
+Do not add a direct edge, select an unreleased master/draft/tag or different
+maintained module path, change mvn-pom-mutator or GoConvey, raise the Go floor,
+authorize parent/removal or replacement/patch work, move unrelated selections,
+or manufacture a dependency commit. Do not ask for this same decision again
+while all guards hold. Existing gRPC middleware, Gorilla WebSocket, GopherJS,
+Enterprise Certificate Proxy, and GAX exceptions remain separate.
 
 Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves canonical
 `https://github.com/grpc-ecosystem/go-grpc-prometheus.git`, public, archived,
@@ -174,16 +199,10 @@ and `c5dfbf19a58b61f6ce0fba615bf0c6ba517dc3475eab524ddf2bc0fe3ae028be`.
 
 ## Next Bounded Objective
 
-Present three choices and stop until the user explicitly selects one:
-
-1. Recommended: retain exact inherited unloaded v1.2.0 under a new target-
-   specific, non-transferable exception for only the documented closure, test,
-   metric, lifecycle, archived, and global-state findings, guarded by exact
-   version/sole edge/zero load/runtime unreachability/no new finding.
-2. Authorize a fresh parent/removal evaluation centered on mvn-pom-mutator
-   v0.2.3, owning all effects on middleware, Gorilla, Prometheus, and the graph.
-3. Authorize a maintained replacement/patch program with an exact owned source
-   identity, Go 1.18 floor, corrected behavior, and full compatibility gates.
-
-Do not record or implement a choice until the user supplies it. Do not execute
-another dependency group or begin P8.
+The next session must record the user's explicit option 1 decision without a
+dependency implementation. Revalidate exact v1.2.0 and its sole
+mvn-pom-mutator edge, negative why result, zero packages loaded from gRPC
+Prometheus and every earlier guarded target, unchanged module hashes, runtime
+unreachability, and fresh advisory state. Then answer the decision archive and
+prepare exactly one next bounded P7 mission. Do not execute that successor in
+the decision-recording turn.

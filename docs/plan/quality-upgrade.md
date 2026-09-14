@@ -9247,10 +9247,27 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   and decision summary SHA-256 values are
   `b0fede88c14009f0932c1cd6698cda3c2da1fd96acd4e14c7c10729543a83f61`
   and `c5dfbf19a58b61f6ce0fba615bf0c6ba517dc3475eab524ddf2bc0fe3ae028be`.
-- The reciprocal NEXT archive asks the user to choose explicitly among
-  target-specific retained-risk acceptance, a parent/removal evaluation, or a
-  maintained replacement/patch program. None is authorized by this evaluation;
-  no gRPC Prometheus exception exists until the user records that choice.
+- Product direction supplied 2026-09-14: the user explicitly selected option 1
+  with the recommended bounds. Retain exact selected, inherited, unloaded gRPC
+  Prometheus v1.2.0 without dependency metadata changes. Accept only the
+  already documented missing release module metadata and deterministic complete
+  closure, asynchronous native stream-test failures, unary client received-
+  message inversion, repeated terminal stream-receive counting, raw
+  cancellation/deadline classification as Unknown, and related archived,
+  global-state, lifecycle, and qualification findings. The exception is target-
+  specific and non-transferable and remains valid only while exact v1.2.0 and
+  its sole mvn-pom-mutator v0.2.3 edge remain unchanged, zero target packages
+  load, the module remains runtime-unreachable, and no new advisory or
+  independent disqualifier appears. Direct import/loading, runtime
+  reachability, a version or incoming-edge change, or a new advisory or
+  independent defect expires the exception and requires a fresh dependency/
+  product decision before merge. Do not add a direct edge, select an unreleased
+  master/draft/tag or different maintained module path, change mvn-pom-mutator
+  or GoConvey, raise the Go floor, authorize parent/removal or replacement/patch
+  work, move unrelated selections, manufacture a dependency commit, transfer
+  another exception, or request this same decision again while the guards hold.
+  Record the decision, answer its archive, and prepare one next bounded P7
+  mission without executing it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
