@@ -5374,10 +5374,11 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the recorded gRPC Gateway v1.16.0 retention decision and
-the completed dependency groups through accepted Google UUID v1.4.0; the next
-bounded group is Hashicorp Consul API v1.18.0, while P8 and further dependency
-groups remain queued.
+Status: active but stopped for a fresh bounded Hashicorp Consul API product
+decision after the recorded Gateway v1.16.0 retention and completed dependency
+groups through accepted Google UUID v1.4.0. Exact inherited Consul API v1.18.0
+remains unchanged and has no exception. P8 and further dependency groups remain
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -9441,6 +9442,85 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   group is selected exact-path `github.com/hashicorp/consul/api v1.18.0`; its
   evaluation is a separate successor mission and was not begun in this
   decision-recording move.
+
+- Stop exact-path `github.com/hashicorp/consul/api` for a fresh bounded product
+  decision without changing dependency metadata. Fresh proxy, sumdb,
+  `go-import`, Git, and GitHub evidence resolves canonical public active
+  unarchived non-fork `https://github.com/hashicorp/consul.git`, module
+  subdirectory `api`, and MPL-2.0 at selected source. The proxy lists 96 v1
+  entries: 84 stable and 12 prerelease/suffix entries. Selected v1.18.0 is
+  lightweight tag `api/v1.18.0`, commit
+  `13836d5ca84c71b35f201da06dd75f5ad6699c36`, parent
+  `18dffc51de5587f8fba5f188a636d1864bf2b98a`, repository tree
+  `1960701737d9ae23b0dc7d24a5087a4aa0541f83`, API subtree
+  `b088d6696716b2cb8b61c824299dca34cab203f4`, dated
+  2022-11-30T18:59:52Z with a verified commit signature. Proxy zip SHA-256 is
+  `0dc6cfca8c71b05b3ba859726378d2ee611c15304fc85c2c030e3366ee068062`;
+  proxy and Git source are byte-identical and sumdb agrees.
+- All 83 retrievable stable v1 go.mod files were inspected. V1.18.0 is the
+  highest exact-path stable release whose declaration and complete imported
+  closure preserve Go 1.18; v1.18.1 is the first Go 1.19 release. Latest
+  v1.34.5 declares Go 1.26.7 and has five incompatible API changes. The
+  distinct `/api/v2 v2.0.0` path declares Go 1.26 and is out of scope. No
+  redirect, mutated tag, prerelease, branch tip, alternate path, or major line
+  was promoted.
+- The selected release has 78 module files, 74 Go files, 40 production files,
+  34 test files, two packages, and 217 tests. Its module archive is not
+  standalone: go.mod replaces the SDK with `../sdk`, and native tests need 14
+  certificate fixtures from `../test/client_certs`. Exact tagged API, SDK, and
+  test subtrees resolve 56 modules under both SDKs; no imported module declares
+  above Go 1.17. Verification, production build, vet, and Darwin/Linux/Windows
+  production cross-builds pass under both SDKs, as do complete watch-package
+  count-one, two count-ten repeats, race, and test cross-compilation.
+- No stable candidate qualifies. Selected v1.18.0's root API test binary cannot
+  link on Darwin or Linux under exact Go 1.26.7 because old x/net references
+  `syscall.recvmsg`; v1.17.0 reproduces it. Its `consulent` test branch does
+  not compile under either SDK because two default constants are absent. Four
+  TLS tests fail with official Consul v1.14.2 because tagged certificates
+  expired in 2023, though the other 213 tests pass repeats/race. Every selected
+  response-metadata call site also discards parse errors, so malformed Consul
+  metadata headers are silently accepted with defaults.
+- The independent consumer fixture SHA-256 is
+  `40e09f7b5f6003da6baf17cb9aa45d60cf8319d53732559186f2aeb6e0c7a90d`.
+  It passes verify, count-one, two count-ten repeats, race, and vet under both
+  SDKs while covering configuration, request/options encoding, auth/token/TLS,
+  cancellation/deadline and error identity, no-retry behavior, cleanup,
+  malformed input, nil/panic boundaries, and concurrency. Pinned API diffs
+  show zero incompatibilities to adjacent v1.17.0/v1.18.1, while v1.34.5 has
+  five.
+- Selected v1.18.0 has the sole Viper v1.15.0 incoming edge. Its `go mod why
+  -m` result is negative, repository imports are zero, zero target packages
+  load, and it is runtime-unreachable. Exact disposable v1.18.0 `go get`
+  manufactures eight indirect roots and 26 sum lines but tidy removes them
+  byte-identically to base tidy. V1.17.0 downgrades Viper; v1.18.1 exceeds the
+  floor and upgrades x/net/x/text; v1.34.5 raises the main Go declaration and
+  moves unrelated selections. No projection was applied.
+- Fresh primary data remains 1,398 records at SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
+  and Last-Modified 2026-09-10T16:28:28Z, with no target record; exact OSV
+  queries for all serious candidates are empty. Base and selected project
+  scans are identical at 30 module, 22 package, and 20 called IDs with zero
+  target occurrence. The source production closure has inherited module-only
+  GO-2026-5024; its test closure adds GO-2022-0603 in a loaded yaml test package,
+  but neither closure reaches a vulnerable symbol.
+- The unchanged project remains 234 modules, 3,599 edges, 429 complete-test
+  entries, 197 module-backed packages, 41 loaded modules, 1,067 sum lines, and
+  the recorded 432-line tidy projection. `go.mod`/`go.sum` SHA-256 remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 applicable gates and the Go 1.18-compatible population pass;
+  Go 1.18 full runs retain only the two accepted shell wording assertions.
+  Accepted quality remains 27/27 Q0-Q2 PASS at L2. Buildx is now present, but
+  Docker acceptance reaches the known Python 3.14 timestamp-control failure
+  after building/testing the image. One completed-handoff lifecycle run passes
+  all 62 controls; three later final-text runs pass outer controls 1-50 and
+  reproduce only the known nested signal-log timing failure at control 51.
+  These are target-independent. All earlier guards remain valid.
+  The 9,780-entry evidence manifest and decision-summary SHA-256 values are
+  `966263870f7529dcdd4713eba204dc1a8a00e17901a5f702557467b3c79ac46e`
+  and `5957399af9cf4564b9864e4b6dea8c84e8912db3846e446c953345dadbddb08a`.
+  Preserve exact inherited v1.18.0 without granting an exception pending the
+  fresh product decision.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

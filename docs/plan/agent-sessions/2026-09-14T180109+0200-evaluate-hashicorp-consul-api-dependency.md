@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Hashicorp Consul API Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-14T180109+0200-evaluate-hashicorp-consul-api-dependency`
 Created: `2026-09-14T18:01:09+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `8eeffe8e08009da9f2654dbb59aa3a0d6c45ab7bea15d69b3091ce9058a5b75b`
 Previous: [2026-09-14T151903+0200-decide-grpc-ecosystem-grpc-gateway-product-direction.md](2026-09-14T151903+0200-decide-grpc-ecosystem-grpc-gateway-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-14T193201+0200-decide-hashicorp-consul-api-product-direction.md](2026-09-14T193201+0200-decide-hashicorp-consul-api-product-direction.md)
+Outcome: No exact-path stable release qualified; preserved exact inherited and unloaded v1.18.0 without metadata changes, recorded the complete evaluation, and stopped for a fresh bounded product decision.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -192,3 +192,140 @@ lifecycle contract. Do not implement another dependency group, launch a
 successor, push, merge, publish, release, stash, revert, bypass cleanup, or
 remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Stopped exact-path `github.com/hashicorp/consul/api` for a fresh bounded
+product decision without changing dependency metadata. V1.18.0 is the highest
+stable exact-path release whose complete imported closure preserves the Go
+1.18 floor, but it does not satisfy every qualification contract. No exception
+was granted and no dependency implementation commit was manufactured.
+
+Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves canonical
+public active unarchived non-fork repository
+`https://github.com/hashicorp/consul.git`, with module subdirectory `api` and
+MPL-2.0 at the selected source. The v1 proxy lists 96 entries: 84 stable exact-
+semver releases and 12 prerelease/suffix entries. Selected v1.18.0 is
+lightweight tag `api/v1.18.0`, commit
+`13836d5ca84c71b35f201da06dd75f5ad6699c36`, parent
+`18dffc51de5587f8fba5f188a636d1864bf2b98a`, repository tree
+`1960701737d9ae23b0dc7d24a5087a4aa0541f83`, API subtree
+`b088d6696716b2cb8b61c824299dca34cab203f4`, dated
+2022-11-30T18:59:52Z with a GitHub-verified commit signature. Its proxy zip
+SHA-256 is
+`0dc6cfca8c71b05b3ba859726378d2ee611c15304fc85c2c030e3366ee068062`;
+proxy and Git API sources are byte-identical, strict shallow Git verification
+passes, and sumdb source/mod sums are
+`h1:R7PPNzTCeN6VuQNDwwhZWJvzCtGSrNpJqfb22h3yH9g=` /
+`h1:owRRGJ9M5xReDC5nfT8FTJrNAPbT4NM6p/k+d03q2v4=`.
+
+All 83 retrievable stable v1 go.mod files were inspected. V1.0.0 through
+v1.18.0 declare Go 1.12; v1.18.1 through v1.31.0 declare Go 1.19 and later
+releases rise further. Latest v1.34.5 declares Go 1.26.7. Thus v1.18.0 is the
+highest declaration-eligible stable release and v1.18.1 is the first floor-
+ineligible release. The distinct `github.com/hashicorp/consul/api/v2 v2.0.0`
+path declares Go 1.26 and is outside this exact-path decision. Latest v1 also
+records retractions for mutated or invalid tags, including unavailable
+v1.21.2; no redirected, alternate, prerelease, branch-tip, or v2 identity was
+silently promoted.
+
+The selected release has 78 module files and 74 Go files: 40 production and 34
+tests across `api` and `watch`, with 217 tests, no examples, benchmarks, fuzz
+targets, commands, testdata, generated files, cgo, embeds, or go:generate
+directives. Its published go.mod declares Go 1.12 but replaces Consul SDK with
+`../sdk`, and tests require 14 certificate fixtures from
+`../test/client_certs`; the proxy module archive is therefore not standalone.
+Qualification used exact tagged API, SDK, and test-fixture subtrees.
+
+Both SDKs resolve 56 modules. Exact Go 1.26.7 has 154 graph edges, 206
+production entries, and 270 complete-test entries; Go 1.18.10 has 153 edges,
+144 production entries, and 207 complete-test entries. Fourteen production and
+33 test modules import, and no imported module declares above Go 1.17. Module
+verification, production build, vet, and darwin/amd64, linux/amd64,
+linux/arm64, and windows/amd64 production cross-builds pass under both SDKs.
+The watch package also passes test compilation, count-one, two independent
+count-ten repeats, and race under both SDKs.
+
+The independent disqualifiers are:
+
+- the root API test binary cannot link on Darwin or Linux under Go 1.26.7
+  because old `x/net/internal/socket` references `syscall.recvmsg`; adjacent
+  v1.17.0 reproduces the defect;
+- the `consulent` root test branch does not compile under either SDK because
+  `defaultNamespace` and `defaultPartition` exist only in the excluded
+  `!consulent` test file;
+- the release module is not independently testable because of its relative SDK
+  replacement and repository-external certificate fixtures;
+- with official Consul v1.14.2 and a scratch-only freeport sandbox shim, four
+  `TestAPI_ClientTLSOptions` cases fail because the tagged certificates expired
+  on 2023-11-01; the other 213 tests pass each repeated and race iteration and
+  no data race appears; and
+- every selected call site discards response-metadata parsing errors, so
+  malformed Consul index, cache, hash, and query-backend headers are silently
+  accepted with default metadata.
+
+The independent consumer fixture SHA-256 is
+`40e09f7b5f6003da6baf17cb9aa45d60cf8319d53732559186f2aeb6e0c7a90d`.
+It passes verify, count-one, two count-ten repeats, race, and vet under both
+SDKs. It covers configuration, paths and request/options encoding, auth/token/
+TLS inputs, cancellation/deadlines, error identity, no-retry behavior,
+cleanup, malformed JSON and metadata, nil/panic boundaries, invalid schemes/
+keys, and concurrent requests/header use. Pinned apidiff reports zero
+incompatible and one compatible change from v1.17.0 to v1.18.0, zero
+incompatible and seven compatible additions from v1.18.0 to v1.18.1, and five
+incompatible changes from v1.18.0 to v1.34.5.
+
+Selected v1.18.0 exists solely through Viper v1.15.0. `go mod why -m` is
+negative, repository imports are zero, zero target packages occur in the
+429-entry complete project load, and it is runtime-unreachable. Disposable
+exact `go get` projections all retain zero load: v1.17.0 downgrades Viper;
+v1.18.0 manufactures eight indirect roots and 26 sum lines before tidy removes
+them byte-identically to base tidy; v1.18.1 upgrades x/net and x/text while
+exceeding the floor; and v1.34.5 raises the main Go declaration, moves many
+unrelated selections, and has incompatible API. No projection was applied.
+
+Fresh primary vulnerability data remains 1,398 records at SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
+and Last-Modified 2026-09-10T16:28:28Z, with no Consul API module record.
+Exact OSV queries for v1.17.0, v1.18.0, v1.18.1, and v1.34.5 are empty. Base
+and selected project scans are identical at 30 module IDs, 22 package IDs, and
+20 called IDs with zero target occurrence. The consumer fixture has zero
+findings. The selected production closure has inherited module-only
+GO-2026-5024 in old x/sys with no loaded vulnerable package or called symbol;
+tests add inherited GO-2022-0603 in yaml.v3 and load that test package but call
+no vulnerable symbol.
+
+The unchanged project remains 234 modules, 3,599 edges, 429 complete-test
+entries, 197 module-backed packages, 41 loaded modules, 1,067 sum lines, and a
+432-line tidy projection. `go.mod`/`go.sum` SHA-256 remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Exact Go 1.26.7 verify, build, count-one, two count-ten repeats, race, vet,
+pinned lint, API/CLI compatibility, host and snapshot acceptance, empty-HOME
+count-two, and four production cross-builds pass. The Go 1.18 projection loads
+366 complete-test entries; its 26 unaffected packages pass two count-ten
+repeats and race, and vet plus host/four cross-builds pass. Full Go 1.18 runs
+retain only the two accepted Darwin shell closed-file wording assertions.
+
+All 15 audit meta-controls pass. A raw audit without the required external
+manual-evidence receipt exits 1 by contract and is not comparable to the
+accepted manual-evidence-adjusted 27/27 Q0-Q2 L2 state. No implementation or
+dependency metadata changed, so accepted quality remains unchanged. Full
+preflight's substantive stages pass, while its nested launcher test retains
+the known signal-retention timing race. One completed-handoff run passes all
+62 controls; three later final-text runs pass outer controls 1-50 and reproduce
+only that nested signal-log timing failure at control 51. Buildx is now present
+at v0.33.0-
+desktop.1; Docker acceptance builds and tests the image, then reproduces the
+known Python 3.14 nanosecond timestamp-control incompatibility. Neither is
+Consul API evidence.
+
+All previously guarded dependency exceptions revalidated unchanged; none
+transfers to Consul API. The 9,780-entry evidence manifest and decision-summary
+SHA-256 values are
+`966263870f7529dcdd4713eba204dc1a8a00e17901a5f702557467b3c79ac46e`
+and `5957399af9cf4564b9864e4b6dea8c84e8912db3846e446c953345dadbddb08a`.
+Preserve exact inherited, unloaded v1.18.0 and all metadata unchanged pending
+the next bounded decision; do not silently retain it under an exception,
+select another release, change Viper, move to `/v2`, patch or replace it, or
+raise the Go floor.

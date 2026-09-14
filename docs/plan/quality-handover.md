@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-14T18:01:09+02:00
+Generated: 2026-09-14T19:32:01+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,24 +8,21 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The gRPC Gateway decision
-  was revalidated from clean HEAD
-  `b9e4b64d00d5593bb1a9d45e4506e55fd6eeb1f4`, parent
-  `dee8460eaaa407061fdcabdd2b72be55c410b898`, tree
-  `a5a2d5d6d7dafd058b6df74142463fae112561f3`.
+  `codex/upgrade-quality`, base master at `5635d50`. The Consul API evaluation
+  began from clean HEAD `2e5954d98cf348f9e344ec93bb9592f8f57b6c63`,
+  parent `b9e4b64d00d5593bb1a9d45e4506e55fd6eeb1f4`, tree
+  `33faa8e73468f17aa3c8acb3384c138326a82486`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
   `b89afd4ec056133b1eefb5611f8f35c12c11824b`. It changes only `go.mod`
-  and `go.sum`, with three insertions and no deletions. Gateway and all
-  retained modules since Google UUID have no dependency implementation or
-  metadata commit.
-- The Gateway evaluation and decision archives are answered. The sole NEXT
-  archive is
-  `docs/plan/agent-sessions/2026-09-14T180109+0200-evaluate-hashicorp-consul-api-dependency.md`.
-  It authorizes only the bounded Hashicorp Consul API v1.18.0 evaluation; it
-  does not authorize reopening Gateway, combining another dependency group,
-  or beginning P8.
+  and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
+  and every retained group since Google UUID have no dependency implementation
+  or metadata commit.
+- The Consul API evaluation archive is answered. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-14T193201+0200-decide-hashicorp-consul-api-product-direction.md`.
+  It asks for one explicit bounded Consul API product choice and does not
+  authorize implementation, another dependency group, or P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -33,212 +30,192 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is active after the user's bounded Gateway option 1
-decision; the next group is Hashicorp Consul API v1.18.0 and P8 remains
-queued. Exact Go 1.26.7, every accepted dependency move through Google UUID
-v1.4.0, and all earlier outcomes are final. Do not combine dependency groups
-or begin P8.
+P2A-P6 are complete. P7 is stopped at the Consul API product decision after
+exact Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
+and all recorded retained-module decisions. P8 remains queued. Earlier
+outcomes and lifecycle ancestry are final.
 
-The user's 2026-09-14 gRPC Prometheus option 1 decision retains exact
-`github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0` only under its documented
-release-closure, native stream-test, metric counting/classification, archived,
-global-state, lifecycle, and qualification exceptions. The gRPC middleware
-option 1 decision separately retains exact
-`github.com/grpc-ecosystem/go-grpc-middleware v1.0.0` only under its recorded
-missing-release-metadata/deterministic-closure, TLS-test, retry cancellation/
-timer-resource, and qualification exceptions. Gorilla WebSocket v1.4.2,
+The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
+unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
+documented discarded-cancel resource defect, repeated-suite global/test-state
+failures, eight inherited called vulnerability IDs, malformed-generator
+diagnostic nondeterminism, and related completed qualification findings. It is
+valid only while exact v1.16.0 and both etcd/api/v3 v3.5.1 and OTLP v0.7.0
+incoming edges remain unchanged, zero packages load, the module remains
+runtime-unreachable, and no new advisory or independent defect appears.
+
+The gRPC Prometheus v1.2.0, gRPC middleware v1.0.0, Gorilla WebSocket v1.4.2,
 GopherJS `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy
-v0.2.1, and GAX v2.7.0 retain only their separate documented exceptions.
+v0.2.1, and GAX v2.7.0 decisions remain separate under their exact-selection,
+selected-version incoming-edge, zero-load, runtime-unreachable, and no-new-
+finding guards. In this evaluation Gateway retained exactly its two recorded
+incoming edges; gRPC Prometheus, gRPC middleware, and Gorilla retained their
+sole mvn-pom-mutator v0.2.3 edges; GopherJS retained its sole GoConvey v1.6.4
+edge; and Enterprise Certificate Proxy and GAX retained their sole Viper
+v1.15.0 edges. All seven why results are negative, source imports are zero,
+target package loads are zero, and runtime unreachability remains intact.
 
-All guards revalidated unchanged during the Gateway evaluation. gRPC
-Prometheus v1.2.0, gRPC middleware v1.0.0, and Gorilla WebSocket v1.4.2 each
-retain their sole selected-version incoming edge from mvn-pom-mutator v0.2.3;
-GopherJS retains its sole GoConvey v1.6.4 edge; Enterprise Certificate Proxy
-v0.2.1 and GAX v2.7.0 retain their sole Viper v1.15.0 edges. All six `go mod
-why -m` results are negative, source imports are zero, target package loads are
-zero, and all remain runtime-unreachable. Fresh primary data has no new exact
-record for those targets; Gorilla retains only its recorded entries, including
-unwithdrawn GO-2026-6278. A guarded target's direct import/loading, runtime
-reachability, version or incoming-edge change, or new advisory/independent
-defect expires its exception and requires the owning decision. Do not change
-mvn-pom-mutator or GoConvey, reopen an earlier choice, or transfer any
-exception to Gateway.
+Fresh primary data has no new exact record for those targets. Gorilla retains
+only its recorded entries, including unwithdrawn GO-2026-6278. Direct import or
+loading, runtime reachability, a version or incoming-edge change, or a new
+advisory/independent defect expires the owning exception and requires its fresh
+decision. Do not change either Gateway parent, mvn-pom-mutator, GoConvey, or
+Viper; reopen an earlier choice; or transfer any exception to Consul API.
 
-## gRPC Gateway Product Decision
+## Hashicorp Consul API Evaluation
 
-No exact-path stable release qualifies. On 2026-09-14 the user explicitly
-selected option 1 with its recommended bounds: retain exact selected,
-inherited, unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` without
-changing dependency metadata.
-
-The decision accepts only the documented universal discarded-cancel resource
-defect, native repeated-suite global and test-state failures, eight inherited
-called/reachable vulnerability IDs in the release-native closure, malformed-
-generator diagnostic nondeterminism, and related recorded qualification
-findings. It does not accept a new or independently discovered defect. The
-exception is target-specific and non-transferable.
-
-The exception remains valid only while exact v1.16.0 and both selected-version
-incoming edges from etcd/api/v3 v3.5.1 and OTLP v0.7.0 remain unchanged, zero
-Gateway packages load, the module remains runtime-unreachable, and no new
-advisory or independent disqualifier appears. Revalidate and record those
-guards in the committed decision. Direct import or loading, runtime
-reachability, a target version or incoming-edge change, or a new advisory or
-independent defect expires the exception and requires a fresh dependency and
-product decision before merge. Do not add a direct edge, select another v1
-release, change either parent, move to `/v2`, raise the Go floor, authorize
-parent-removal or architecture work, move unrelated selections, or manufacture
-a dependency commit. Do not ask for this same decision again while all guards
-hold. All earlier exceptions remain separate.
+No exact-path stable release qualifies. Exact selected
+`github.com/hashicorp/consul/api v1.18.0` remains inherited, unloaded, and
+unchanged pending an explicit product decision; this evaluation does not grant
+it an exception.
 
 Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves canonical
-public active unarchived non-fork BSD-3-Clause repository
-`https://github.com/grpc-ecosystem/grpc-gateway.git`. The proxy exposes 55
-versions: 53 stable and two prereleases. V1.16.0 is the latest exact-path
-stable release and is lightweight tag/commit
-`094a6fe78b3ca888297d090185cdf30f0e42e157`, parent
-`e0a026aeb20c3eb0f32cbfdc537c9966634895b9`, tree
-`2283b306f85e2b97858d8575954fa0db23db4b5d`, dated
-2020-10-28T10:29:51Z with a GitHub-verified commit signature. Its proxy zip
-SHA-256 is
-`377b03aef288b34ed894449d3ddba40d525dd7fb55de6e79045cdf499e7fe565`;
+public active unarchived non-fork repository
+`https://github.com/hashicorp/consul.git`, module subdirectory `api`, and
+MPL-2.0 at selected source. The v1 proxy lists 96 entries: 84 stable exact-
+semver releases and 12 prerelease/suffix entries. Selected v1.18.0 is
+lightweight tag `api/v1.18.0`, commit
+`13836d5ca84c71b35f201da06dd75f5ad6699c36`, parent
+`18dffc51de5587f8fba5f188a636d1864bf2b98a`, repository tree
+`1960701737d9ae23b0dc7d24a5087a4aa0541f83`, API subtree
+`b088d6696716b2cb8b61c824299dca34cab203f4`, SDK subtree
+`7c45f454d71c98d13e82a36c1eefb9d8762b9442`, dated
+2022-11-30T18:59:52Z with a GitHub-verified commit signature. The tag is
+unsigned and has no GitHub Release object. Proxy zip SHA-256 is
+`0dc6cfca8c71b05b3ba859726378d2ee611c15304fc85c2c030e3366ee068062`;
+proxy and Git source are byte-identical, strict Git verification passes, and
 sumdb source/mod sums are
-`h1:gmcG1KaJ57LophUzW0Hy8NmPhnMZb4M0+kPpLofRdBo=` /
-`h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=`. Proxy and Git source are
-byte-identical, strict Git verification passes, and license SHA-256 is
-`a15b1d1b168954c92ff7fb1620382418f7c72f4f4d251ee791d1098ad68ab0c4`.
-The later v1 branch is unreleased. Current main is the distinct
-`github.com/grpc-ecosystem/grpc-gateway/v2` module requiring Go 1.26 and is
-outside the exact-path decision.
+`h1:R7PPNzTCeN6VuQNDwwhZWJvzCtGSrNpJqfb22h3yH9g=` /
+`h1:owRRGJ9M5xReDC5nfT8FTJrNAPbT4NM6p/k+d03q2v4=`.
 
-V1.16.0 declares Go 1.14 and its complete isolated production/test closure
-preserves Go 1.18. Exact Go 1.26.7/Go 1.18.10 resolve 33 modules, 136/135 graph
-edges, 29 packages, 310/247 production entries, and 342/279 complete-test
-entries; 12 external modules load and no declared floor exceeds Go 1.14. The
-release has 348 files, 179 Go files, 32 native test files, 164 tests, six
-benchmarks, one old go-fuzz build-tag target, 30 generated files, four
-commands, no Go examples/testdata, and no cgo/embed/symlinks. Pinned v1.15.2
--> v1.16.0 API comparison has zero incompatible changes and nine compatible
-Swagger-option additions.
+All 83 retrievable stable v1 go.mod files were inspected. V1.0.0 through
+v1.18.0 declare Go 1.12; v1.18.1 through v1.31.0 declare Go 1.19 and later
+releases rise further. Latest v1.34.5 declares Go 1.26.7. V1.18.0 is therefore
+the highest declaration-eligible stable candidate; v1.18.1 is the first floor-
+ineligible one. The distinct `/api/v2 v2.0.0` path declares Go 1.26 and is out
+of scope. Latest v1 records mutated/invalid-tag retractions, including proxy-
+listed but unavailable v1.21.2. No redirect, alternate path, prerelease,
+branch head, or different major line was promoted.
 
-Native count-1, race, broad cross-builds, and targeted test compilation pass
-under both SDKs. Both independent count-10 repeats fail under both SDKs:
-codegenerator reuses a consumed buffer, runtime tests leak
-`DefaultContextTimeout`, and Swagger tests leak global flag state. Vet fails
-because production `runtime/context.go` discards the cancel from
-`context.WithTimeout`, leaking timer/context resources; two more findings are
-test-only `Fatalf` calls from goroutines. Every one of the 53 exact-path stable
-releases contains the production discarded-cancel defect. Adjacent v1.15.2
-reproduces the repeat and vet failures.
+The selected release has 78 module files and 74 Go files: 40 production and 34
+tests in `api` and `watch`, with 217 tests, no examples, benchmarks, fuzz
+targets, commands, testdata, generated files, cgo, embeds, or go:generate
+directives. Its published module is not standalone: go.mod replaces Consul SDK
+with `../sdk`, and tests read 14 certificate fixtures from
+`../test/client_certs`. Qualification used exact tagged API, SDK, and test
+subtrees.
 
-The independent runtime fixture SHA-256 is
-`8f097645c3f31bde4b6e4a1b7addd7f92473d89bfe2647862a676d0df3ad3d17`.
-It passes count-10 and race under both SDKs while preserving the source vet
-finding. It covers HTTP routing, verbs and path parameters; query reflection,
-filtering, and the package-global parser setter; JSON/proto/HTTP-body
-marshaling; metadata, binary headers, and malformed values; unary/streaming
-status and error translation; cancellation/deadlines; cleanup, concurrency,
-and nil/panic boundaries. Generator protocol output is deterministic within
-and across SDKs at gateway response SHA-256
-`ff0829e0e0d3a76ee14a72d0e3e3941b85be7e6d70f5159c91e5b022615dc28c`
-and Swagger response SHA-256
-`d4e950e6163c8769b44d574fe8350e74b5f35435144048433f0272808a79d85b`.
-Malformed generator input exits 255 but emits timestamped, stack-bearing
-nondeterministic diagnostics.
+Both SDKs resolve 56 modules. Exact Go 1.26.7 has 154 graph edges, 206
+production entries, and 270 complete-test entries; Go 1.18.10 has 153 edges,
+144 production entries, and 207 complete-test entries. Fourteen production
+and 33 test modules import, and none declares above Go 1.17. Verification,
+production build, vet, and darwin/amd64, linux/amd64, linux/arm64, and
+windows/amd64 production cross-builds pass under both SDKs. The watch package
+also passes test compilation, count-one, two count-ten repeats, and race under
+both SDKs.
 
-Selected v1.16.0 exists through exactly two selected-version incoming edges:
-etcd/api/v3 v3.5.1 and OTLP v0.7.0. `go mod why -m` is negative, project
-source imports are zero, and zero Gateway packages occur in the normal
-429-entry complete-test load, so it is runtime-unreachable. Exact disposable
-`go get v1.16.0` only adds a direct root/source checksum, leaves selection and
-234 modules unchanged, grows edges 3,599 -> 3,600 and sum lines 1,067 ->
-1,068, and leaves target loading zero; tidy removes the root. Exact v1.15.2
-instead cascades 234 -> 160 modules and 3,599 -> 2,247 edges, removes the
-direct mvn-pom-mutator requirement, and makes the project unloadable. No
-projection was applied.
+The selected release fails qualification independently:
 
-Fresh primary vulnerability data remains 1,398 records at SHA-256
-`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
-and Last-Modified 2026-09-10T16:28:28Z, with no exact Gateway record and an
-empty exact OSV response. Govulncheck v1.8.0 reports 33 inherited module IDs,
-17 imported-package IDs, and eight called/reachable IDs in both the v1.16.0
-production and test closures: GO-2020-0036, GO-2022-0956, GO-2023-1571,
-GO-2023-2153, GO-2024-2687, GO-2025-3372, GO-2026-4762, and GO-2026-6061.
-V1.15.2 is identical. The normal project scan remains 30 module IDs, 22
-package IDs, and 20 called IDs with zero Gateway occurrence because no target
-package loads.
+- its root API test binary cannot link on Darwin or Linux under Go 1.26.7
+  because old x/net references `syscall.recvmsg`; adjacent v1.17.0 reproduces
+  this failure;
+- its `consulent` root test branch does not compile under either SDK because
+  `defaultNamespace` and `defaultPartition` are absent;
+- its module archive is not independently testable because of the relative SDK
+  replacement and repository-external certificate fixtures;
+- four native TLS cases fail with official Consul v1.14.2 because the tagged
+  certificates expired on 2023-11-01; with a scratch-only sandbox freeport
+  shim the other 213 tests pass both repeats and race with no data race; and
+- all response-metadata call sites discard parsing errors, so malformed Consul
+  index/cache/hash/query-backend headers are silently accepted with defaults.
 
-The decision-recording revalidation used freshly unpacked exact Go 1.26.7
-archive/binary SHA-256 values
-`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
-`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
-Gateway remains selected at exact v1.16.0 through exactly the etcd/api/v3
-v3.5.1 and OTLP v0.7.0 incoming edges. Gateway and all six earlier guarded
-targets retain negative `go mod why -m` results, zero source imports, zero
-loaded packages, and runtime unreachability. Their exact selections and
-recorded incoming edges are unchanged.
+The independent consumer fixture SHA-256 is
+`40e09f7b5f6003da6baf17cb9aa45d60cf8319d53732559186f2aeb6e0c7a90d`.
+It passes verify, count-one, two count-ten repeats, race, and vet under both
+SDKs while covering configuration, request/options encoding, authentication,
+token/TLS inputs, cancellation/deadline and error identity, no-retry behavior,
+cleanup, malformed inputs, nil/panic boundaries, and concurrency. Pinned
+apidiff finds zero incompatible changes from v1.17.0 to v1.18.0 and v1.18.0 to
+v1.18.1, but five from v1.18.0 to v1.34.5.
 
-The refreshed primary index remains byte-identical at 1,398 records, SHA-256
+Selected v1.18.0 has exactly one selected-version incoming edge, from Viper
+v1.15.0. Its why result is negative, repository imports are zero, zero target
+packages occur in the 429-entry complete project load, and it is runtime-
+unreachable. Disposable exact `go get` effects retain zero load: v1.17.0
+downgrades Viper; v1.18.0 manufactures eight indirect roots and 26 sum lines
+before tidy removes them byte-identically to base; v1.18.1 exceeds the floor
+and upgrades x/net/x/text; v1.34.5 raises the main Go declaration and moves
+many unrelated selections. No projection was applied.
+
+Fresh primary vulnerability data remains 1,398 records, index SHA-256
 `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
-and Last-Modified 2026-09-10T16:28:28Z. Exact Gateway and five other non-
-Gorilla guarded-version OSV queries remain empty. Gorilla still has only its
-recorded entries; GO-2026-6278 remains unwithdrawn at SHA-256
-`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
-No new advisory or independent disqualifier appeared. The completed Gateway
-technical audit was not repeated or broadened.
+and Last-Modified 2026-09-10T16:28:28Z, with no Consul API record. Exact OSV
+queries for all serious candidates are empty. Base and selected project scans
+are identical at 30 module, 22 package, and 20 called IDs with zero target
+occurrence. The fixture has zero findings. The source production closure has
+inherited module-only GO-2026-5024 in old x/sys with no vulnerable package or
+called symbol; tests add inherited GO-2022-0603 in yaml.v3 and load that test
+package but reach no vulnerable symbol.
 
 ## Project And Quality State
 
-No dependency metadata changed. The project remains 234 modules, 3,599 edges,
-429 complete-test entries, 197 module-backed packages, 41 loaded modules,
-1,067 `go.sum` lines, and a 432-line tidy projection. `go.mod`/`go.sum`
-SHA-256 remain
+No dependency metadata changed. The project remains 234 modules, 3,599 graph
+edges, 429 complete-test entries, 197 module-backed packages, 41 loaded
+modules, 1,067 sum lines, and the recorded 432-line tidy projection. `go.mod`
+and `go.sum` SHA-256 remain
 `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
 `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
 
-Freshly unpacked exact Go 1.26.7 archive/binary SHA-256 values are
+Exact Go 1.26.7 archive/binary SHA-256 values are
 `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
-Exact Go 1.18.10 archive/binary values are
+Go 1.18.10 archive/binary values are
 `718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
 `f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`.
 Both ran first in `PATH` with `GOENV=off`, `GOWORK=off`,
 `GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient `GOFLAGS`.
 
-Exact Go 1.26.7 project verify, count-1, two count-10 repeats, race, vet,
-golangci-lint 2.12.2, empty-HOME count-2, Linux/Windows builds, and API/CLI
-compatibility pass. The Go 1.18.10 projection loads 366 complete-test entries;
-verify, vet, host/Linux/Windows builds, two compatible-package count-10 repeats,
-and compatible-package race pass. Full runs retain only the two accepted
-Darwin `pkg/shell` closed-file wording assertions.
+Exact Go 1.26.7 verify, build, count-one, two count-ten repeats, race, vet,
+golangci-lint 2.12.2, API/CLI compatibility, host and snapshot acceptance,
+empty-HOME count-two, and four production cross-builds pass. Go 1.18.10 loads
+366 complete-test entries; 26 unaffected packages pass two count-ten repeats
+and race, and vet plus host/four cross-builds pass. The full Go 1.18 suite
+retains only the two accepted Darwin `pkg/shell` closed-file wording failures.
 
-Focused quality remains 27/27 Q0-Q2 PASS at L2, scorecard SHA-256
-`04039eb917cc8aa674c093e866b8fbfb303ab562a28dcbaf2414dba1c9d01c3a`,
-with zero held/regressed/non-comparable and seven improved ratchet rows. All
-eight mutation meta-suites pass, all 80/80 live mutations are killed,
-host/snapshot acceptance pass, and all 15 audit meta-controls pass. Docker
-acceptance is unavailable because this host's Docker CLI lacks `buildx`. Two
-full quality-wrapper attempts and three nested lifecycle source-archive runs
-hit the known signal-retention timing assertion; direct evaluation-time
-50-control lifecycle runs and the final 62-check handoff contract pass, and
-every applicable quality stage passes independently. This is target-independent
-environment/test-design evidence. Preserve the known
-apidiff archive reproducibility discrepancy and Python 3.14 Docker timestamp
-control; neither is Gateway evidence.
+All 15 audit meta-controls pass. A raw audit without the required external
+manual-evidence receipt exits 1 by contract and is not comparable to the
+accepted manual-evidence-adjusted scorecard. Because no source or dependency
+metadata changed, accepted quality remains 27/27 Q0-Q2 PASS at L2, with its
+recorded scorecard SHA-256
+`04039eb917cc8aa674c093e866b8fbfb303ab562a28dcbaf2414dba1c9d01c3a`.
 
-The 7,701-entry external evidence manifest and decision-summary SHA-256 values
-are `873610fe31b0da11ba8e91bfd74665be47428ef60c1b589244324ff9b7dc13d7`
-and `b73b6153778b43978c2c81738c246d0823a6731a995068ed5c0f8409e0dee354`.
-All disposable evidence belongs beneath `$CODEX_SESSION_SCRATCH_ROOT`; never
+Full preflight's substantive stages pass; its nested launcher self-test hit
+the known signal-retention timing race. Docker buildx is now available at
+v0.33.0-desktop.1. Docker acceptance builds the image and completes the in-
+image suite, then reaches the preserved Python 3.14 nanosecond timestamp parser
+failure. These are target-independent harness/environment findings, not Consul
+API evidence. One completed-handoff lifecycle run passes all 62 controls;
+three later final-text runs pass outer controls 1-50 and reproduce only the
+known nested signal-log timing failure at control 51. Preserve the known
+apidiff archive reproducibility discrepancy.
+
+The 9,780-entry external evidence manifest and decision-summary SHA-256 values
+are `966263870f7529dcdd4713eba204dc1a8a00e17901a5f702557467b3c79ac46e`
+and `5957399af9cf4564b9864e4b6dea8c84e8912db3846e446c953345dadbddb08a`.
+All disposable evidence remains beneath `$CODEX_SESSION_SCRATCH_ROOT`; never
 run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Independently evaluate selected exact-path
-`github.com/hashicorp/consul/api v1.18.0` as the next bounded P7 group. Resolve
-its repository and release identity, complete Go-floor closure, package/API
-behavior, actual project loading, MVS effects, vulnerability evidence, and
-every applicable quality contract. Retain or select only a qualified exact-
-path stable release whose complete minimal source/test closure preserves Go
-1.18; otherwise stop for a fresh bounded product decision. Do not reopen
-Gateway, evaluate a second dependency group, or begin P8.
+Obtain one explicit product choice for Consul API:
+
+1. Retain exact inherited, unloaded v1.18.0 without metadata changes under a
+   target-specific exception for only the completed findings and strict exact-
+   selection, sole-Viper-edge, zero-load, runtime-unreachable, and no-new-
+   finding guards (recommended).
+2. Authorize a new coordinated parent/floor modernization plan that may change
+   Viper, raise the Go floor, and select a later v1 release.
+3. Authorize a new parent-removal or replacement architecture plan.
+
+Do not infer authorization, repeat the audit, implement a choice, evaluate a
+second dependency group, reopen an earlier decision, or begin P8.
