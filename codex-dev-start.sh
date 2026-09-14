@@ -1139,21 +1139,23 @@ exit 70
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 only by deciding product direction for exact-path
-#|`github.com/hashicorp/consul/api` after its completed bounded evaluation found
-#|no stable release that satisfies every existing qualification contract. Choose
-#|one option below, record its exact bounds, revalidate only the unchanged guards,
-#|and prepare one bounded successor. Do not repeat the technical audit, implement
-#|a dependency change, evaluate another dependency group, or begin P8 in this
-#|decision session.
+#|Continue P7 only by recording the user's 2026-09-14 explicit selection of
+#|option 1 for exact-path `github.com/hashicorp/consul/api`. Retain exact
+#|selected, inherited, unloaded v1.18.0 without dependency metadata changes
+#|under the bounded release-closure, native-test, TLS-fixture, response-metadata,
+#|closure-vulnerability, nil/panic, mutation, and qualification exceptions
+#|below. Do not repeat the technical audit, implement a dependency change,
+#|evaluate another dependency group, or begin P8 in this decision-recording
+#|session.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 and every earlier P7 outcome are final. P7 remains active only for this
-#|Consul API product decision; P8 remains queued. The selected project currently
-#|inherits exact v1.18.0 solely through Viper v1.15.0, loads zero Consul API
-#|packages, and is runtime-unreachable. No Consul API exception has yet been
-#|granted.
+#|Consul API product decision; P8 remains queued. The user has explicitly chosen
+#|to retain exact v1.18.0 solely through Viper v1.15.0 while zero Consul API
+#|packages load and the module remains runtime-unreachable. This session may
+#|record that one choice and prepare one bounded follow-up, but may not implement
+#|the choice or combine another dependency group.
 #|
 #|The user's Gateway option 1 decision and every earlier guarded decision remain
 #|final, target-specific, and non-transferable. Revalidate their exact selection,
@@ -1246,42 +1248,41 @@ exit 70
 #|are `966263870f7529dcdd4713eba204dc1a8a00e17901a5f702557467b3c79ac46e`
 #|and `5957399af9cf4564b9864e4b6dea8c84e8912db3846e446c953345dadbddb08a`.
 #|
-#|# Decision Required
+#|# Authorized Product Decision
 #|
-#|Choose exactly one bounded direction:
+#|On 2026-09-14 the user explicitly selected option 1 with the recommended
+#|bounds: retain exact selected `github.com/hashicorp/consul/api v1.18.0` as an
+#|inherited, unloaded selection without changing `go.mod` or `go.sum`. Accept
+#|only the documented non-standalone release closure, Go 1.26 Unix native-test
+#|link incompatibility, broken `consulent` test branch, expired TLS fixtures,
+#|silently discarded response-metadata errors, inherited closure-only
+#|vulnerability findings, documented nil/panic and mutation boundaries, and
+#|related completed qualification findings. This does not accept a new or
+#|independently discovered defect.
 #|
-#|1. **Retain exact inherited, unloaded v1.18.0 (recommended).** Make no
-#|   dependency metadata change. Accept only the documented non-standalone
-#|   release closure, Go 1.26 Unix native-test link incompatibility, broken
-#|   `consulent` test branch, expired TLS fixtures, silently discarded response-
-#|   metadata errors, inherited closure-only vulnerability findings, documented
-#|   nil/panic and mutation boundaries, and related completed qualification
-#|   findings. The exception is target-specific and non-transferable. It is valid
-#|   only while exact v1.18.0 and its sole Viper v1.15.0 incoming edge remain
-#|   unchanged, zero target packages load, the module remains runtime-
-#|   unreachable, and no new advisory or independent disqualifier appears.
-#|   Direct import/loading, runtime reachability, a target version or incoming-
-#|   edge change, or a new advisory/defect requires a fresh Consul API dependency
-#|   and product decision before merge.
-#|2. **Authorize coordinated parent and floor modernization.** Open a new bounded
-#|   plan that may change Viper, raise the retained Go floor, select a later v1
-#|   release, and address exported-API/MVS consequences. Do not implement those
-#|   changes in this decision session.
-#|3. **Authorize parent removal or replacement architecture work.** Open a new
-#|   bounded plan to remove or replace the Viper path that introduces Consul API.
-#|   Do not edit dependencies or architecture in this decision session.
+#|The exception is target-specific and non-transferable. It is valid only while
+#|exact v1.18.0 and its sole Viper v1.15.0 selected-version incoming edge remain
+#|unchanged, the complete project load contains zero Consul API packages, the
+#|module remains runtime-unreachable, and no new advisory or independent
+#|disqualifier appears. Revalidate and record those guards. Direct import or
+#|loading, runtime reachability, a target version or incoming-edge change, or a
+#|new advisory or independent defect expires the exception and requires a fresh
+#|Consul API dependency and product decision before merge.
 #|
-#|If the user does not select one option, stop with the choice open. Do not infer
-#|authorization from the current inherited selection.
+#|Do not add a direct target edge, select another v1 release, move to `/api/v2`,
+#|change Viper, raise the Go floor, authorize parent modernization/removal or
+#|replacement architecture work, move unrelated selections, or manufacture a
+#|dependency implementation commit. The Gateway decision and every earlier
+#|exception remain separate. Do not stop or ask for this same Consul API decision
+#|again while all guards hold.
 #|
 #|# Role And Boundaries
 #|
-#|This is a product-choice and decision-recording session, not a renewed audit or
-#|implementation. Reuse the completed evidence. Do not add a direct target edge,
-#|select another v1 release, move to `/v2`, change Viper, raise the Go floor,
-#|patch or replace the module, move unrelated selections, or manufacture a
-#|dependency implementation commit unless a later bounded implementation
-#|mission explicitly authorizes it.
+#|This is a decision-recording session, not a renewed audit or implementation.
+#|The user has explicitly selected and bounded option 1. Reuse the completed
+#|evidence; do not ask for the decision again or broaden it into direct use,
+#|another version, `/api/v2`, Viper or floor modernization, parent removal,
+#|replacement architecture, or unrelated-module authorization.
 #|
 #|# Required Reading
 #|
@@ -1293,12 +1294,13 @@ exit 70
 #|
 #|# Three Moves
 #|
-#|First, obtain one explicit option selection. Second, revalidate only the exact
-#|selection, incoming edge, negative why result, zero target and guarded package
-#|loads, module hashes, runtime unreachability, and current advisory state; then
-#|record the selected option, exceptions, guards, expiry triggers, and no-change
-#|result. Third, answer this archive and prepare exactly one reciprocal NEXT
-#|mission authorized by the chosen direction without executing it.
+#|First, revalidate only the exact selection, incoming edge, negative why result,
+#|zero target and guarded package loads, module hashes, runtime unreachability,
+#|and current advisory state; reuse the completed audit and do not broaden it.
+#|Second, record the exact option 1 exception, accepted findings, guards, expiry
+#|triggers, and no-change result in the roadmap and rolling handover. Third,
+#|answer this archive and prepare exactly one reciprocal NEXT mission for the
+#|next bounded P7 group without executing it.
 #|
 #|# Automatic Handoff
 #|

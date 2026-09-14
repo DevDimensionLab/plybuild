@@ -21,8 +21,9 @@ session diary.
   or metadata commit.
 - The Consul API evaluation archive is answered. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-14T193201+0200-decide-hashicorp-consul-api-product-direction.md`.
-  It asks for one explicit bounded Consul API product choice and does not
-  authorize implementation, another dependency group, or P8.
+  The user has supplied option 1 with the recommended bounds. It does not
+  authorize a dependency implementation, another dependency group, or P8 in
+  that turn.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -30,10 +31,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is stopped at the Consul API product decision after
-exact Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
-and all recorded retained-module decisions. P8 remains queued. Earlier
-outcomes and lifecycle ancestry are final.
+P2A-P6 are complete. P7 is recording the user's bounded Consul API option 1
+decision after exact Go 1.26.7, every accepted dependency move through Google
+UUID v1.4.0, and all recorded retained-module decisions. P8 remains queued.
+Earlier outcomes and lifecycle ancestry are final. Do not combine another
+dependency group or begin P8 before this decision is recorded in a committed
+handoff.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -62,12 +65,33 @@ advisory/independent defect expires the owning exception and requires its fresh
 decision. Do not change either Gateway parent, mvn-pom-mutator, GoConvey, or
 Viper; reopen an earlier choice; or transfer any exception to Consul API.
 
-## Hashicorp Consul API Evaluation
+## Hashicorp Consul API Product Decision
 
-No exact-path stable release qualifies. Exact selected
-`github.com/hashicorp/consul/api v1.18.0` remains inherited, unloaded, and
-unchanged pending an explicit product decision; this evaluation does not grant
-it an exception.
+No exact-path stable release qualifies. On 2026-09-14 the user explicitly
+selected option 1 with the recommended bounds: retain exact selected,
+inherited, unloaded `github.com/hashicorp/consul/api v1.18.0` without changing
+dependency metadata.
+
+The decision accepts only the documented non-standalone release closure, Go
+1.26 Unix native-test link incompatibility, broken `consulent` test branch,
+expired TLS fixtures, silently discarded response-metadata errors, inherited
+closure-only vulnerability findings, documented nil/panic and mutation
+boundaries, and related completed qualification findings. It does not accept a
+new or independently discovered defect. The exception is target-specific and
+non-transferable.
+
+The exception remains valid only while exact v1.18.0 and its sole Viper v1.15.0
+selected-version incoming edge remain unchanged, zero Consul API packages load,
+the module remains runtime-unreachable, and no new advisory or independent
+disqualifier appears. Revalidate and record those guards in the committed
+decision. Direct import or loading, runtime reachability, a target version or
+incoming-edge change, or a new advisory or independent defect expires the
+exception and requires a fresh Consul API dependency and product decision
+before merge. Do not add a direct edge, select another v1 release, move to
+`/api/v2`, change Viper, raise the Go floor, authorize parent modernization or
+removal, replace the architecture, move unrelated selections, or manufacture a
+dependency commit. Do not ask for this same decision again while all guards
+hold. All earlier exceptions remain separate.
 
 Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves canonical
 public active unarchived non-fork repository
@@ -207,15 +231,10 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Obtain one explicit product choice for Consul API:
-
-1. Retain exact inherited, unloaded v1.18.0 without metadata changes under a
-   target-specific exception for only the completed findings and strict exact-
-   selection, sole-Viper-edge, zero-load, runtime-unreachable, and no-new-
-   finding guards (recommended).
-2. Authorize a new coordinated parent/floor modernization plan that may change
-   Viper, raise the Go floor, and select a later v1 release.
-3. Authorize a new parent-removal or replacement architecture plan.
-
-Do not infer authorization, repeat the audit, implement a choice, evaluate a
-second dependency group, reopen an earlier decision, or begin P8.
+The next session must record the user's explicit option 1 decision without a
+dependency implementation. Revalidate exact v1.18.0 and its sole Viper v1.15.0
+incoming edge, negative why result, zero packages loaded from Consul API and
+every earlier guarded target, unchanged module hashes, runtime unreachability,
+and fresh advisory state. Then answer the decision archive and prepare exactly
+one next bounded P7 mission. Do not execute that successor in the decision-
+recording turn.

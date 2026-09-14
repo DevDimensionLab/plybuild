@@ -9519,8 +9519,27 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   The 9,780-entry evidence manifest and decision-summary SHA-256 values are
   `966263870f7529dcdd4713eba204dc1a8a00e17901a5f702557467b3c79ac46e`
   and `5957399af9cf4564b9864e4b6dea8c84e8912db3846e446c953345dadbddb08a`.
-  Preserve exact inherited v1.18.0 without granting an exception pending the
-  fresh product decision.
+  Product direction supplied 2026-09-14: the user explicitly selected option 1
+  with the recommended bounds. Retain exact selected, inherited, unloaded
+  Consul API v1.18.0 without dependency metadata changes. Accept only the
+  documented non-standalone release closure, Go 1.26 Unix native-test link
+  incompatibility, broken `consulent` test branch, expired TLS fixtures,
+  silently discarded response-metadata errors, inherited closure-only
+  vulnerability findings, documented nil/panic and mutation boundaries, and
+  related completed qualification findings. The exception is target-specific
+  and non-transferable and remains valid only while exact v1.18.0 and its sole
+  Viper v1.15.0 selected-version incoming edge remain unchanged, zero target
+  packages load, the module remains runtime-unreachable, and no new advisory or
+  independent disqualifier appears. Direct import/loading, runtime
+  reachability, a version or incoming-edge change, or a new advisory or
+  independent defect expires the exception and requires a fresh dependency/
+  product decision before merge. Do not add a direct edge, select another v1
+  release, move to `/api/v2`, change Viper, raise the Go floor, authorize parent
+  modernization/removal or replacement architecture work, move unrelated
+  selections, manufacture a dependency commit, transfer another exception, or
+  request this same decision again while the guards hold. Record the decision,
+  answer its archive, and prepare one next bounded P7 mission without executing
+  it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
