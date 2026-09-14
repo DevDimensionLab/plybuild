@@ -9032,14 +9032,25 @@ Current queue decisions and next bounded P7 group (2026-09-13):
   Selected evidence and decision-summary hashes are
   `cc15144b88edbf330e1300dda430eead2419087883d97788edb7d781bb48b912`
   and `4f36e9a15e7e17cf9a09b79ef4f875e2dbecbb7f171682d803aca9514e8d7f91`.
-- The next decision may: (1, recommended) retain exact inherited unloaded
-  v1.4.2 without metadata changes under a new exact-version/sole-edge/zero-load
-  security and test-design exception; (2) authorize a broader owning-parent
-  removal evaluation that explicitly reopens the final GopherJS edge guard; or
-  (3) authorize a maintained patch/fork/unreleased strategy with explicit
-  provenance, release, maintenance, and floor policy. Do not select v1.5.3
-  merely to silence the current advisory range; it retains the vulnerable
-  source behavior. Do not act until the user chooses.
+- Product direction supplied 2026-09-14: the user explicitly selected option 1
+  with the recommended bounds. Retain exact selected, inherited, unloaded
+  Gorilla WebSocket v1.4.2 without dependency metadata changes. Accept only
+  GO-2026-6278's documented weak `math/rand` client-mask behavior and the
+  documented upstream full-source Go 1.26 cross-test lifecycle race. The
+  exception is non-transferable and valid only while exact v1.4.2 and its sole
+  mvn-pom-mutator v0.2.3 edge remain unchanged, zero target packages load, the
+  module remains runtime-unreachable, and no new advisory or independent
+  disqualifier appears. Direct import/loading, runtime reachability, a version
+  or incoming-edge change, or a new advisory or independent disqualifier
+  expires the exception and requires a fresh dependency/product decision
+  before merge. Do not add a direct edge, select v1.5.3 or another version to
+  silence the advisory range, change mvn-pom-mutator or GoConvey, reopen the
+  GopherJS edge guard, raise the Go floor, authorize a parent/removal group,
+  select a patch/fork/replacement/unreleased commit/alternate path, move
+  unrelated modules, manufacture a dependency commit, or request this same
+  decision again while the guards hold. Record the decision, answer its
+  archive, and prepare one next bounded P7 mission without executing it in the
+  decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

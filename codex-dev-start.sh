@@ -1139,12 +1139,12 @@ exit 70
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 only by obtaining and then recording one bounded product decision
-#|for exact-path `github.com/gorilla/websocket`. The completed evaluation found
-#|no published exact-path stable release whose complete minimal source/test
-#|closure both preserves Go 1.18 and contains the client-mask security fix. Do
-#|not implement a dependency change, audit another group, or begin P8 until the
-#|user chooses one option below.
+#|Continue P7 only by recording the user's 2026-09-14 explicit selection of
+#|option 1 for exact-path `github.com/gorilla/websocket`. Retain exact selected,
+#|inherited, unloaded v1.4.2 without dependency metadata changes under the
+#|bounded security and upstream-test exceptions below. Do not implement a
+#|dependency change, audit another group, or begin P8 in this decision-recording
+#|move.
 #|
 #|# Authorized Roadmap
 #|
@@ -1152,6 +1152,32 @@ exit 70
 #|Gorilla product decision; P8 remains queued. This session may record one user
 #|choice and prepare one bounded follow-up, but may not implement that choice or
 #|combine another dependency group.
+#|
+#|# Authorized Product Decision
+#|
+#|On 2026-09-14 the user explicitly selected option 1 with the recommended
+#|bounds: retain exact selected `github.com/gorilla/websocket v1.4.2` as an
+#|inherited, unloaded selection without changing `go.mod` or `go.sum`. Accept
+#|only the already documented GO-2026-6278 weak `math/rand` WebSocket client-mask
+#|behavior and upstream full-source Go 1.26 cross-test lifecycle race. This does
+#|not accept any new or independently discovered defect.
+#|
+#|The exception is non-transferable and valid only while exact v1.4.2 and its
+#|sole incoming mvn-pom-mutator v0.2.3 edge remain unchanged, the complete
+#|project load contains zero Gorilla WebSocket packages, the module remains
+#|runtime-unreachable, and no new advisory or independent disqualifier appears.
+#|Revalidate and record those guards. Direct import or loading, runtime
+#|reachability, a target version or incoming-edge change, or a new advisory or
+#|independent disqualifier expires the exception and requires a fresh dependency
+#|and product decision before merge.
+#|
+#|Do not add a direct target edge, select v1.5.3 or another release merely to
+#|silence an advisory range, change mvn-pom-mutator or GoConvey, reopen the final
+#|GopherJS edge guard, raise the Go floor, authorize a parent/removal evaluation,
+#|or select a patch, fork, replacement, unreleased commit, alternate path,
+#|unrelated-module move, or dependency implementation commit. Existing GopherJS,
+#|Enterprise Certificate Proxy, and GAX exceptions remain separate. Do not stop
+#|or ask for this same Gorilla WebSocket decision again while all guards hold.
 #|
 #|# Measurements At Start
 #|
@@ -1210,26 +1236,11 @@ exit 70
 #|
 #|# Role And Boundaries
 #|
-#|1. Recommended: retain exact selected, inherited, unloaded v1.4.2 without
-#|   dependency metadata changes. Add a non-transferable exception accepting
-#|   only GO-2026-6278's weak `math/rand` client-mask behavior and the documented
-#|   upstream full-source Go 1.26 cross-test lifecycle race. The exception is
-#|   valid only while exact v1.4.2 and its sole mvn-pom-mutator v0.2.3 edge remain
-#|   unchanged, zero target packages load, it remains runtime-unreachable, and
-#|   no new advisory or independent disqualifier appears. Direct import/loading,
-#|   runtime reachability, a target version or incoming-edge change, or a new
-#|   advisory/independent disqualifier expires it and requires a fresh decision.
-#|2. Authorize a broader owning-parent/removal evaluation. This may change or
-#|   remove mvn-pom-mutator and therefore explicitly reopens the final GopherJS
-#|   incoming-edge guard. It is a new joint product boundary, not a Gorilla-only
-#|   dependency move.
-#|3. Authorize evaluation of a maintained patch, fork, replacement, or unreleased
-#|   exact commit. This requires a new provenance, release qualification,
-#|   long-term maintenance, vulnerability, API, MVS, and Go-floor policy before
-#|   any implementation.
-#|
-#|Ask the user to choose option 1, 2, or 3 if no choice accompanied this session.
-#|Do not infer acceptance from the recommended label.
+#|This is a decision-recording move, not a renewed technical audit or dependency
+#|implementation. The user has explicitly selected and bounded option 1; do not
+#|ask for that decision again or broaden it into direct use, another version,
+#|parent/removal, GopherJS-edge, floor, patch, fork, replacement, unreleased-
+#|commit, alternate-path, or unrelated-module authorization.
 #|
 #|## Guarded Decisions
 #|
@@ -1243,11 +1254,8 @@ exit 70
 #|packages load. Revalidate these guards before recording a choice and stop for
 #|a fresh owning decision if any expired.
 #|
-#|Do not silently select v1.5.3, add a root edge, change mvn-pom-mutator or
-#|GoConvey, raise the Go floor, transfer another dependency's exception, or make
-#|an implementation commit. Option 1 authorizes only a decision record and no
-#|dependency edit. Options 2 and 3 authorize only the newly bounded evaluation,
-#|not its implementation in the decision-recording turn.
+#|Option 1 authorizes only a decision record and no dependency edit. Do not
+#|transfer another dependency's exception or reopen an earlier decision.
 #|
 #|# Required Reading
 #|
@@ -1261,11 +1269,13 @@ exit 70
 #|
 #|# Three Moves
 #|
-#|First, obtain an explicit option 1, 2, or 3 selection without inferring consent.
-#|Second, revalidate the unchanged graph/load/guard facts and record exactly that
-#|decision without implementing it. Third, rewrite the roadmap and rolling
-#|handover, answer this archive, and prepare one reciprocal NEXT archive for the
-#|authorized bounded follow-up.
+#|First, revalidate only the unchanged exact selection, sole incoming edge,
+#|negative why result, zero Gorilla/GopherJS/ECP/GAX package loads, module hashes,
+#|runtime unreachability, and current advisory state. Reuse the completed audit;
+#|do not repeat or broaden it. Second, record the exact option 1 exception,
+#|accepted findings, guards, expiration triggers, and no-change result in the
+#|roadmap and rolling handover. Third, answer this archive and prepare one
+#|reciprocal NEXT archive for the next bounded P7 mission without executing it.
 #|
 #|# Automatic Handoff
 #|

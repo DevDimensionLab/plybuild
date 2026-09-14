@@ -24,21 +24,24 @@ session diary.
   v0.6.0 `3d4cfd`, Fatih Color v1.15.0 `6ca672e`, XXHash v2.3.0
   `e5d6252`, and Speakeasy v0.2.0 `41f9561` remain ancestors. All earlier
   outcomes and product decisions are final.
-- The Gorilla evaluation is answered with a bounded product stop. The sole
-  NEXT archive asks for the Gorilla product direction. Do not implement a
-  choice until the user answers it. No `.agent-task/current.md` or repository
-  `.quality/manual-evidence.json` exists. Do not push, merge, publish, release,
-  stash, revert, bypass cleanup, or remove the worktree.
+- The Gorilla evaluation is answered, and the user has supplied option 1 with
+  the recommended bounds in the sole NEXT decision archive. No
+  `.agent-task/current.md` or repository `.quality/manual-evidence.json`
+  exists. Do not execute the decision's successor, push, merge, publish,
+  release, stash, revert, bypass cleanup, or remove the worktree.
 
 ## Lifecycle And Retained Decisions
 
-P2A-P6 are complete. P7 remains active after exact Go 1.26.7 and the accepted
+P2A-P6 are complete. P7 is recording the user's bounded Gorilla WebSocket
+option 1 decision after exact Go 1.26.7 and the accepted
 Speakeasy, XXHash, Fatih Color, Go Logfmt, Go Stack, Godbus D-Bus, Golang
 Protobuf, Golang Snappy, Google Martian, Google Renameio, and Google UUID
 moves. Google pprof, Gogo Protobuf, Crypt, OpenCensus Proto, Logex, Readline,
 Fnmatch, Imaging, ansimage, Fsnotify, Ghodss YAML, historical root GLFW,
 Googleapis GAX Go v2 v2.7.0, Google Cloud Go Testing, Enterprise Certificate
-Proxy v0.2.1, and exact selected GopherJS remain retained. P8 is queued.
+Proxy v0.2.1, and exact selected GopherJS remain retained. P8 is queued. Do not
+combine another dependency or begin P8 before this decision is recorded in a
+committed handoff.
 
 The user's 2026-09-13 GopherJS option 1 decision remains final. Exact
 `github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1` retains
@@ -66,29 +69,33 @@ evidence tree, fixture, runtime/tool installation, and build context beneath
 `$CODEX_SESSION_SCRATCH_ROOT`. Never run `go mod download all` in a measured
 worktree or bypass launcher cleanup.
 
-## Gorilla WebSocket Decision
+## Gorilla WebSocket Product Decision
 
-Stop exact-path `github.com/gorilla/websocket` for a fresh bounded product
-decision without changing dependency metadata. No published exact-path stable
-release both preserves the project's Go 1.18 floor through the complete
-minimal production/test closure and contains the client-mask security fix.
+No published exact-path stable release both preserves the project's Go 1.18
+floor through the complete minimal production/test closure and contains the
+client-mask security fix. On 2026-09-14 the user explicitly selected option 1
+with the recommended bounds: retain exact selected, inherited, unloaded
+`github.com/gorilla/websocket v1.4.2` without a dependency edit.
 
-The recommended product option is to retain exact selected, inherited, unloaded
-v1.4.2 without metadata changes under a new non-transferable exception. That
-choice would explicitly accept only GO-2026-6278's weak `math/rand` client-mask
-behavior and the documented upstream full-source Go 1.26 cross-test lifecycle
-race, valid only while exact v1.4.2 and its sole mvn-pom-mutator v0.2.3 incoming
-edge remain unchanged, zero target packages load, the module remains runtime-
-unreachable, and no new advisory or independent disqualifier appears. The
-current evaluation does not grant that exception; the user must decide.
+The decision accepts only GO-2026-6278's already documented weak `math/rand`
+client-mask behavior and the documented upstream full-source Go 1.26
+cross-test lifecycle race. It does not accept a new or independently
+discovered defect. The exception is non-transferable and valid only while
+exact v1.4.2 and its sole mvn-pom-mutator v0.2.3 incoming edge remain
+unchanged, zero target packages load, the module remains runtime-unreachable,
+and no new advisory or independent disqualifier appears.
 
-The other bounded directions are a broader owning-parent/removal evaluation,
-which necessarily reopens the final GopherJS edge decision because
-mvn-pom-mutator is the direct parent, or a maintained patch/fork/unreleased
-strategy with explicit release, provenance, maintenance, and floor policy.
-Selecting v1.5.3 merely to make the current advisory range green is not a
-security fix: source and an independent deterministic fixture prove v1.5.3
-still generates masks with `math/rand`.
+Revalidate and record those guards in the committed decision. Direct import or
+loading, runtime reachability, a target version or incoming-edge change, or a
+new advisory or independent disqualifier expires the exception and requires a
+fresh dependency and product decision before merge. Do not add a direct edge,
+select v1.5.3 or another version merely to silence the advisory range, change
+mvn-pom-mutator or GoConvey, reopen the GopherJS edge guard, raise the Go floor,
+authorize a parent/removal evaluation, or select a patch, fork, replacement,
+unreleased commit, alternate path, unrelated-module move, or dependency
+implementation commit. Do not ask for this same decision again while all
+guards hold. Existing GopherJS, Enterprise Certificate Proxy, and GAX
+exceptions remain separate.
 
 ## Repository And Release Identity
 
@@ -343,11 +350,9 @@ the decision-summary SHA-256 is
   wrapper, and tool paths supplied through environment variables so negative
   Make controls can override them.
 
-The next bounded session must record one user choice only. Recommended option
-1 retains exact unloaded v1.4.2 with the narrow new security/source-test
-exception and no dependency edit. Option 2 authorizes a broader
-mvn-pom-mutator removal/parent evaluation and explicitly reopens the GopherJS
-edge guard. Option 3 authorizes evaluation of a maintained patch, fork, or
-unreleased commit under a new provenance/release/maintenance policy. Do not
-implement any option, audit another dependency, or begin P8 until the user
-chooses.
+The next bounded session must record the user's explicit option 1 decision
+without dependency implementation. Revalidate exact v1.4.2 and its sole
+mvn-pom-mutator edge, negative why result, zero Gorilla/GopherJS/ECP/GAX loads,
+unchanged module hashes, runtime unreachability, and fresh advisory state. Then
+answer the decision archive and prepare exactly one next bounded P7 mission.
+Do not execute that successor in the decision-recording turn.
