@@ -26,22 +26,24 @@ session diary.
   outcomes and product decisions are final.
 - The gRPC middleware evaluation archive is answered. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-14T075103+0200-decide-grpc-ecosystem-go-grpc-middleware-product-direction.md`.
-  It asks only for the fresh bounded product choice described below. Do not
-  execute a dependency change, another dependency group, or P8 in that turn.
+  The user has supplied option 1 with the recommended bounds. Do not execute a
+  dependency change, another dependency group, or P8 in that turn.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not push, merge, publish, release,
   stash, revert, bypass cleanup, or remove the worktree.
 
 ## Lifecycle And Retained Decisions
 
-P2A-P6 are complete. P7 remains active. Exact Go 1.26.7 and the accepted
+P2A-P6 are complete. P7 is recording the user's bounded gRPC middleware option
+1 decision. Exact Go 1.26.7 and the accepted
 Speakeasy, XXHash, Fatih Color, Go Logfmt, Go Stack, Godbus D-Bus, Golang
 Protobuf, Golang Snappy, Google Martian, Google Renameio, and Google UUID moves
 remain final. Google pprof, Gogo Protobuf, Crypt, OpenCensus Proto, Logex,
 Readline, Fnmatch, Imaging, ansimage, Fsnotify, Ghodss YAML, historical root
 GLFW, Googleapis GAX Go v2 v2.7.0, Google Cloud Go Testing, Enterprise
 Certificate Proxy v0.2.1, exact selected GopherJS, and exact selected Gorilla
-WebSocket remain retained. P8 is queued.
+WebSocket remain retained. P8 is queued. Do not combine another dependency or
+begin P8 before this decision is recorded in a committed handoff.
 
 The user's 2026-09-14 Gorilla WebSocket option 1 decision remains final. Exact
 `github.com/gorilla/websocket v1.4.2` retains only GO-2026-6278's documented
@@ -72,12 +74,34 @@ evidence tree, fixture, runtime/tool installation, and build context beneath
 `$CODEX_SESSION_SCRATCH_ROOT`. Never run `go mod download all` in a measured
 worktree or bypass launcher cleanup.
 
-## gRPC Middleware Decision Boundary
+## gRPC Middleware Product Decision
 
-Stop exact-path `github.com/grpc-ecosystem/go-grpc-middleware` for a fresh
-bounded product decision. No exact-path stable release passes every existing
-contract. No dependency metadata changed and no dependency implementation
-commit was created.
+No exact-path stable release passes every existing contract. On 2026-09-14 the
+user explicitly selected option 1 with the recommended bounds: retain exact
+selected, inherited, unloaded
+`github.com/grpc-ecosystem/go-grpc-middleware v1.0.0` without a dependency
+edit.
+
+The decision accepts only the already documented missing release module
+metadata and deterministic complete closure, TLS test-certificate failures in
+later candidates, universal retry cancellation and discarded-timer-cancel
+resource defects, and related recorded source/test qualification findings. It
+does not accept a new or independently discovered defect. The exception is
+target-specific and non-transferable.
+
+The exception remains valid only while exact v1.0.0 and its sole incoming
+mvn-pom-mutator v0.2.3 edge remain unchanged, zero middleware packages load,
+the module remains runtime-unreachable, and no new advisory or independent
+disqualifier appears. Revalidate and record those guards in the committed
+decision. Direct import or loading, runtime reachability, a target version or
+incoming-edge change, or a new advisory or independent defect expires the
+exception and requires a fresh dependency and product decision before merge.
+Do not add a direct edge, select v1.4.0 or another release, change
+mvn-pom-mutator or GoConvey, raise the Go floor, authorize a patch/replacement
+or parent/removal design, move unrelated selections, or manufacture a
+dependency commit. Do not ask for this same decision again while all guards
+hold. Existing Gorilla WebSocket, GopherJS, Enterprise Certificate Proxy, and
+GAX exceptions remain separate.
 
 Fresh proxy, sumdb, `go-import`, strict Git, and GitHub evidence resolves
 canonical `https://github.com/grpc-ecosystem/go-grpc-middleware.git`, a public,
@@ -222,26 +246,12 @@ The selected 560-file evidence manifest and decision summary hashes are
 `bab1aa974f1182ba6d953831dcfccc0257b6f32f5064c477c68df170b7113b8e`
 and `a07237e54d3fac720966f6fc33767d6e98d61db6a2efc8a44de02f78316d3150`.
 
-## Next Bounded Decision
+## Next Bounded Objective
 
-The next session must present these options and stop for the user's choice:
-
-1. Recommended: retain exact selected, inherited, unloaded v1.0.0 without
-   changing metadata under a new non-transferable target-specific exception.
-   Accept only the documented release-closure, TLS-test, retry cancellation/
-   timer-resource, and related source/test qualification findings. Guards are
-   exact v1.0.0, sole mvn-pom-mutator v0.2.3 edge, zero target loading,
-   runtime-unreachability, and no new advisory/independent disqualifier.
-2. Authorize a separately bounded maintained patch/replacement design. It must
-   preserve Go 1.18, repair cancellation and timer cleanup, repair the logger
-   defect if based on v1.3.0/v1.4.0, and explicitly own maintenance, identity,
-   API, vulnerability, and full project gates.
-3. Authorize a separately bounded parent/removal redesign centered on the sole
-   mvn-pom-mutator v0.2.3 edge, treating parent/GoConvey/graph effects as a new
-   dependency group.
-
-Do not offer unpatched v1.4.0 as qualified. It retains the universal retry
-defects, adds logger and repeat-suite defects, changes public logger APIs, and
-exact `go get` changes unrelated selections. Do not infer a choice, change
-mvn-pom-mutator or GoConvey, transfer an earlier exception, launch a successor,
-or begin P8.
+The next session must record the user's explicit option 1 decision without
+dependency implementation. Revalidate exact v1.0.0 and its sole
+mvn-pom-mutator edge, negative why result, zero middleware/Gorilla/GopherJS/
+ECP/GAX package loads, unchanged module hashes, runtime unreachability, and
+fresh advisory state. Then answer the decision archive and prepare exactly one
+next bounded P7 mission. Do not execute that successor in the decision-
+recording turn.

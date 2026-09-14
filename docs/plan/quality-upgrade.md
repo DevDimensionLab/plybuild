@@ -9127,12 +9127,26 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   decision-summary SHA-256 values are
   `bab1aa974f1182ba6d953831dcfccc0257b6f32f5064c477c68df170b7113b8e`
   and `a07237e54d3fac720966f6fc33767d6e98d61db6a2efc8a44de02f78316d3150`.
-- The next bounded decision must choose among retaining exact inherited,
-  unloaded v1.0.0 under a new non-transferable target exception; authorizing a
-  separately bounded maintained patch/replacement; or authorizing a separately
-  bounded parent/removal redesign. Do not offer unpatched v1.4.0 as qualified,
-  change mvn-pom-mutator/GoConvey, transfer an earlier exception, manufacture a
-  dependency commit, or begin another dependency group before that decision.
+- Product direction supplied 2026-09-14: the user explicitly selected option 1
+  with the recommended bounds. Retain exact selected, inherited, unloaded gRPC
+  middleware v1.0.0 without dependency metadata changes. Accept only the
+  already documented missing release module metadata/deterministic closure,
+  TLS test-certificate failures in later candidates, universal retry
+  cancellation and discarded-timer-cancel resource defects, and related
+  recorded source/test qualification findings. The exception is target-
+  specific and non-transferable and remains valid only while exact v1.0.0 and
+  its sole mvn-pom-mutator v0.2.3 edge remain unchanged, zero target packages
+  load, the module remains runtime-unreachable, and no new advisory or
+  independent disqualifier appears. Direct import/loading, runtime
+  reachability, a version or incoming-edge change, or a new advisory or
+  independent defect expires the exception and requires a fresh dependency/
+  product decision before merge. Do not add a direct edge, select v1.4.0 or
+  another release, change mvn-pom-mutator or GoConvey, raise the Go floor,
+  authorize a patch/replacement or parent/removal design, move unrelated
+  selections, manufacture a dependency commit, transfer another exception, or
+  request this same decision again while the guards hold. Record the decision,
+  answer its archive, and prepare one next bounded P7 mission without executing
+  it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
