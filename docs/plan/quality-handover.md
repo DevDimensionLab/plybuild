@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-14T22:47:09+02:00
+Generated: 2026-09-14T23:47:16+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,10 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Consul SDK decision
-  was revalidated from clean HEAD
-  `2346fcecd1f9f464697d51c3fa223b6709e84972`, parent
-  `0f9204ef2a2f53cb53495c2302d16f0b36428d6d`, tree
-  `88ab43a3fc01557456853e8a11d2836818b52fcf`.
+  `codex/upgrade-quality`, base master at `5635d50`. The Errwrap evaluation
+  began from clean HEAD `94a4ad292427754755374f887c766f6bfa72021e`,
+  parent `2346fcecd1f9f464697d51c3fa223b6709e84972`, tree
+  `ed6adadcc242ab335dbb60f37844f378a1a02f89`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +19,11 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The Consul SDK evaluation and decision archives are answered. The sole NEXT
-  archive is
-  `docs/plan/agent-sessions/2026-09-14T224709+0200-evaluate-hashicorp-errwrap-dependency.md`.
-  It authorizes only the bounded exact-path Hashicorp Errwrap v1.0.0
-  evaluation; it does not authorize reopening an earlier decision, combining
-  another dependency group, or beginning P8.
+- The Errwrap evaluation archive is answered. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-14T234716+0200-decide-hashicorp-errwrap-product-direction.md`.
+  It authorizes only a bounded product choice after no exact-path stable
+  Errwrap release qualified; it does not authorize implementation, reopening
+  an earlier decision, combining another dependency group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -33,11 +31,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is active after the user's bounded Consul SDK option 1
-decision; the next group is exact-path Hashicorp Errwrap v1.0.0. Exact Go
-1.26.7, every accepted dependency move through Google UUID v1.4.0, and all
-recorded retained-module decisions are final. P8 remains queued. Do not combine
-dependency groups or begin P8.
+P2A-P6 are complete. P7 is active but stopped for a bounded Hashicorp Errwrap
+product decision because neither stable release qualifies. Exact Go 1.26.7,
+every accepted dependency move through Google UUID v1.4.0, and all recorded
+retained-module decisions through Consul SDK v0.8.0 are final. Selected
+Errwrap v1.0.0 remains inherited and unchanged pending direction. P8 remains
+queued. Do not combine dependency groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -320,6 +319,90 @@ GO-2026-6278; that record's SHA-256 remains
 `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
 No new advisory or independent disqualifier appeared.
 
+## Hashicorp Errwrap Evaluation Stop
+
+No exact-path stable release qualifies. The proxy exposes only v1.0.0 and
+v1.1.0. Both have stdlib-only complete source/test closures with no Go
+directive and pass under contained Go 1.18.10, so v1.1.0 is the highest floor-
+eligible stable candidate. Canonical metadata resolves public active
+unarchived non-fork `https://github.com/hashicorp/errwrap`, MPL-2.0, no GitHub
+Release objects, no retractions or module deprecation, and no `/v2` line.
+Unreleased master now declares Go 1.24 and was not promoted.
+
+Selected v1.0.0 is lightweight tag/commit
+`8a6fb523712970c966eefc6b39ed2c5e74880354`, parent
+`d6c0cd88035724dd42e0f335ae30161c20575ecc`, tree
+`9863613ad8fe960290d1631d84ede660af5f0746`, dated
+2018-08-24T00:39:10Z, with proxy zip SHA-256
+`ccdf4c90f894d8a5fde4e79d5828c5d27a13e9f7ce3006dd72ce76e6e17cdeb2`.
+Its commit contains a PGP payload but GitHub reports `unknown_key`. V1.1.0 is
+lightweight tag/verified merge commit
+`7b00e5db719c64d14dd0caaacbd13e76254d02c0`, parents v1.0.0 and
+`96a78ad11c51762df122b738e6f4f30f58e03d8d`, tree
+`aefd62cf8e9549e154a65afb8b4524b7b6ed5f2e`, dated
+2020-07-14T15:51:01Z, with proxy zip SHA-256
+`209ae99bc039443e28e4d6bb66517d1756d9468b7578d31f1b63a28103d8e18c`.
+V1.0.0 is its ancestor. Proxy and Git source are byte-identical and strict Git
+verification passes. Sumdb source sums are
+`h1:hLrqtXhLNNiApEnnlnZBrrPHi3JYFw4JYHsiTfAzrGc=` and
+`h1:OxrO0bFjS2NK6ZaMyfRMIaByCoOUqmfzLLXGmPAQZ7w=`; both use mod sum
+`h1:YH+1FKiLX6mgECZlMWQKBywILFU/P0P8Iy1URd86jBQ=`.
+
+Each release contains exactly LICENSE, README, go.mod, one production Go file,
+and one test file: one package, no commands, examples, benchmarks, fuzz
+targets, testdata, generated files, build tags, platform branches, cgo, embeds,
+go:generate directives, symlinks, or external dependencies. Under exact Go
+1.26.7 and contained Go 1.18.10 both pass module verification, build, native
+count-one, two count-ten repeats, race, vet, and Darwin amd64, Linux
+amd64/arm64, Windows amd64, and js/wasm production/test cross-compilation.
+Pinned API diff finds the same exported `Contains`, `ContainsType`, `Get`,
+`GetAll`, `GetAllType`, `GetType`, `Walk`, `Wrap`, and `Wrapf` functions plus
+`WalkFunc` and `Wrapper` types in both releases. V1.1.0 adds the unlisted
+standard `Unwrap() error` method and deprecates `Wrapf`; public declarations
+have zero forward or reverse incompatibilities.
+
+Both stable candidates independently violate behavior contracts. Their
+exported type matching compares `reflect.Type.String()`, so distinct concrete
+types in different import paths with the same package/type spelling falsely
+match. Both also fail to walk the standard `Unwrap() []error` graph, including
+`errors.Join`, under Go 1.26.7; v1.0.0 additionally cannot interoperate through
+standard single-error unwrapping. Independent fixtures reproduce the concrete-
+type defect under both Go lines and the multi-error defect where supported.
+They also characterize deterministic formatting/order and identity, nil
+lookup, explicit nil outer-error and nil callback panics, error aliasing,
+isolated `WrappedErrors` result slices, custom child order, supported immutable
+concurrent reads, and allocation. No global state or resource ownership exists;
+recursive walking is unguarded against cycles.
+
+Selected v1.0.0 has exactly one selected-version incoming edge from
+`github.com/hashicorp/go-multierror v1.1.0`; a historical multierror v1.0.0
+edge also requests it. The shortest project graph path is main -> mvn-pom-
+mutator v0.2.3 -> historical Viper v1.10.1 -> Serf v0.9.6 -> go-multierror
+v1.1.0 -> Errwrap v1.0.0. Its why result is negative, repository imports are
+zero, and zero target packages occur in production or complete-test loads, so
+it is runtime-unreachable. Disposable exact v1.0.0 and v1.1.0 gets preserve
+234 modules, 429 complete-test entries, zero load, and every unrelated
+selection; they add only a direct root/one graph edge and respectively one or
+two checksum lines. All tidy projections converge to selected v1.0.0 and the
+base projection. Nothing was applied.
+
+Fresh primary vulnerability data remains 1,398 records at SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
+and Last-Modified 2026-09-10T16:28:28Z, with no Errwrap record. Exact candidate
+OSV responses are empty. Go 1.26.7 direct source scans report no module,
+package, symbol, or test-symbol finding. Go 1.18.10 source scans report only
+that legacy SDK's standard-library findings, not Errwrap. Base and v1.1.0
+project reports are byte-identical in all scan modes with zero target package,
+symbol, test-symbol, or reachable trace.
+
+The project remains unchanged. The fixture file-list receipt SHA-256 is
+`6eb0df6dedb99aaf6d00c9e3b9b9771543ed09f394aa8f509c0184eafc884765`;
+the 322-entry disposable evidence manifest SHA-256 is
+`181ef08a5ce2f8132d9bab9b080bb5cdfb53aedef14f0e87f0ad78e152853cc8`.
+No dependency implementation commit exists. A new Errwrap-specific exception,
+parent-edge removal, or broader replacement needs explicit bounded product
+direction; no earlier exception transfers.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -364,6 +447,19 @@ build, count-one test, race, vet, and launcher lifecycle gates pass. No changed-
 selection scorecard applies, so accepted quality remains 27/27 Q0-Q2 PASS at
 L2.
 
+The Errwrap evaluation's exact Go 1.26.7 module verification, build,
+count-one, two independent count-ten repeats, race, vet, pinned lint, API/CLI
+compatibility, host and snapshot acceptance, empty-HOME count-two, and four
+production cross-builds pass. Contained Go 1.18.10 loads 366 complete-test
+entries; 26 unaffected packages pass both count-ten repeats, race, and vet,
+while the full suite retains only the two accepted Darwin shell wording
+failures. All 15 audit meta-controls pass. The raw audit without external
+manual evidence is deliberately non-comparable; accepted quality remains
+27/27 Q0-Q2 PASS at L2. One preflight launcher invocation reproduced the known
+signal/log-retention timing race after all earlier stages passed; an immediate
+independent rerun passed all 62 controls. No changed-selection scorecard
+applies.
+
 Full preflight's substantive stages pass; its nested launcher self-test hit
 the known signal-retention timing race. Docker buildx is now available at
 v0.33.0-desktop.1. Docker acceptance builds the image and completes the in-
@@ -382,9 +478,13 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate only selected exact-path `github.com/hashicorp/errwrap v1.0.0` as one
-bounded P7 group. Independently resolve its repository and release identity,
-complete Go 1.18 floor closure, behavior, API, project loading, MVS effects,
-vulnerability state, and every applicable project qualification contract.
-Preserve the Consul SDK decision and all earlier guarded exceptions; do not
-combine another dependency group or begin P8.
+Obtain and record one bounded Hashicorp Errwrap product choice. Option 1
+(recommended) retains exact inherited, unloaded v1.0.0 without metadata
+changes under an Errwrap-specific exception for only the completed findings
+and guards it by exact version, the sole selected-version go-multierror v1.1.0
+edge, zero load, runtime unreachability, and no new finding. Option 2 authorizes
+a separately planned investigation to remove the historical parent chain.
+Option 3 authorizes a separately scoped replacement/modernization decision;
+v1.1.0 is not a qualified simple upgrade. The decision session must not
+implement any option, inspect another dependency group, or begin P8. Preserve
+the Consul SDK decision and every earlier guarded exception.

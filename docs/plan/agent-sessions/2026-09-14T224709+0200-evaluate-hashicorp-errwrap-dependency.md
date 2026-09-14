@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Hashicorp Errwrap Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-14T224709+0200-evaluate-hashicorp-errwrap-dependency`
 Created: `2026-09-14T22:47:09+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `1846cd70f1df8adf9cc72f76931128475271c1168dee69b3736fdaeab8b5b491`
 Previous: [2026-09-14T215534+0200-decide-hashicorp-consul-sdk-product-direction.md](2026-09-14T215534+0200-decide-hashicorp-consul-sdk-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-14T234716+0200-decide-hashicorp-errwrap-product-direction.md](2026-09-14T234716+0200-decide-hashicorp-errwrap-product-direction.md)
+Outcome: Completed exact-path Hashicorp Errwrap qualification; neither stable release satisfies the behavior contracts, so the unchanged project stops for a fresh bounded product decision.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -195,3 +195,98 @@ lifecycle contract. Do not implement another dependency group, launch a
 successor, push, merge, publish, release, stash, revert, bypass cleanup, or
 remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+No exact-path stable release qualifies. The only stable releases are v1.0.0
+and v1.1.0; both have complete stdlib-only source/test closures that preserve
+Go 1.18, making v1.1.0 the highest floor-eligible candidate. Both nevertheless
+violate the package's exported concrete-type matching promise because they
+compare `reflect.Type.String()`: different types in different import paths
+with the same package/type spelling falsely match. Both also fail to traverse
+standard `Unwrap() []error` graphs such as `errors.Join` under Go 1.26.7, and
+selected v1.0.0 additionally lacks standard single-error unwrapping. These
+independent target defects reproduce in contained fixtures; no earlier product
+exception transfers to Errwrap.
+
+Canonical proxy, sumdb, `go-import`, Git, and GitHub evidence resolves public,
+active, unarchived, non-fork `https://github.com/hashicorp/errwrap`, MPL-2.0,
+no GitHub Release objects, no retractions or module deprecation, and no `/v2`
+line. Selected v1.0.0 is lightweight tag/commit
+`8a6fb523712970c966eefc6b39ed2c5e74880354`, parent
+`d6c0cd88035724dd42e0f335ae30161c20575ecc`, tree
+`9863613ad8fe960290d1631d84ede660af5f0746`, dated
+2018-08-24T00:39:10Z. V1.1.0 is lightweight tag/verified merge commit
+`7b00e5db719c64d14dd0caaacbd13e76254d02c0`, parents v1.0.0 and
+`96a78ad11c51762df122b738e6f4f30f58e03d8d`, tree
+`aefd62cf8e9549e154a65afb8b4524b7b6ed5f2e`, dated
+2020-07-14T15:51:01Z. Proxy and Git bytes match, strict Git verification
+passes, and v1.0.0 is an ancestor of v1.1.0. Unreleased master declares Go
+1.24 and was not promoted.
+
+Each release has one package, one production file, one test file, and no
+commands, examples, benchmarks, fuzz targets, testdata, generated files,
+build-tag/platform variants, cgo, embeds, go:generate directives, symlinks, or
+non-stdlib dependencies. Both verify, build, pass native count-one, two
+count-ten repeats, race, vet, and production/test cross-compilation for Darwin
+amd64, Linux amd64/arm64, Windows amd64, and js/wasm under exact Go 1.26.7 and
+contained Go 1.18.10. Pinned API diff finds the same nine exported functions
+plus `WalkFunc` and `Wrapper` in both releases with no incompatible declaration
+change. V1.1.0 adds standard single-error unwrapping and deprecates `Wrapf`.
+
+The independent fixtures also characterize deterministic wrapping,
+formatting, outer-to-inner order, lookup identity, nil lookup, explicit nil
+outer-error and nil callback panics, error aliasing, isolated returned slices,
+custom child order, supported immutable concurrent reads, and allocation. The
+module has no global state or resources; recursion has no cycle guard.
+
+Selected v1.0.0 exists through exactly one selected-version incoming edge from
+`github.com/hashicorp/go-multierror v1.1.0`; a historical multierror v1.0.0
+edge also requests it. Its shortest graph path is main -> mvn-pom-mutator
+v0.2.3 -> historical Viper v1.10.1 -> Serf v0.9.6 -> go-multierror v1.1.0 ->
+Errwrap v1.0.0. Its why result is negative, repository imports are zero, and
+zero target packages occur in production or complete-test loads, so it is
+runtime-unreachable. Disposable exact gets preserve 234 modules, 429 complete-
+test entries, zero target load, and every unrelated selection; they manufacture
+only a direct root/one graph edge and respectively one or two checksum lines.
+All tidy projections converge to selected v1.0.0 and the base projection. No
+projection was applied.
+
+The disposable exact v1.0.0 get produces `go.mod`/`go.sum` SHA-256
+`bb556bf7d253eb791848db7d863669f60bc0bfe4965b33315f31f78f4f312702` /
+`fac428d90355fe794c00ed7cbd9140c6d1fc67b67f6b4c9fdda0b637a40c2a18`;
+v1.1.0 produces
+`e7af709fbeaadd1e32d7d75aae6c68c5a79bce7580296c8a0ddee609e9b15531` /
+`d3c5f9d9162f4fb81575902117b92ef7459be79c95d2af338005004367d8151c`.
+All three tidy projections have hashes
+`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+Exact Go 1.26.7 isolated closure measurement is one selected module, one
+synthetic graph edge, 44 production and 124 complete-test entries; Go 1.18.10
+is one module, zero graph edges, 27 production and 79 complete-test entries.
+Both have zero external module-backed packages.
+
+Fresh primary data remains 1,398 records at SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
+and Last-Modified 2026-09-10T16:28:28Z, with no Errwrap record. Exact candidate
+OSV responses are empty. Go 1.26.7 source scans have no module, package,
+symbol, or test-symbol findings; Go 1.18.10 reports only its old standard-
+library findings. Base and v1.1.0 project scans are byte-identical in every
+mode with zero target package, symbol, test-symbol, or reachable trace.
+
+The independent fixture file-list receipt SHA-256 is
+`6eb0df6dedb99aaf6d00c9e3b9b9771543ed09f394aa8f509c0184eafc884765`.
+The 322-entry disposable evidence manifest SHA-256 is
+`181ef08a5ce2f8132d9bab9b080bb5cdfb53aedef14f0e87f0ad78e152853cc8`.
+
+The project remains unchanged at 234 modules, 3,599 graph edges, 429 complete-
+test entries, 197 module-backed packages across 41 modules, 1,067 sum lines,
+and the recorded 432-line tidy projection. `go.mod` and `go.sum` SHA-256 remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Every earlier guard remains valid. Exact-Go applicable gates pass; contained
+Go 1.18 retains only the two accepted Darwin shell wording failures. One
+preflight launcher invocation reproduced the known signal/log-retention timing
+race, and its immediate independent rerun passed all 62 controls. Accepted
+quality remains 27/27 Q0-Q2 PASS at L2. No dependency implementation or
+metadata commit was created.

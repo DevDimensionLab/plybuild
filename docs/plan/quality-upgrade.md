@@ -5374,10 +5374,12 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the recorded Hashicorp Consul SDK v0.8.0 retention and
-completed dependency groups through accepted Google UUID v1.4.0. The next
-bounded group is exact-path `github.com/hashicorp/errwrap v1.0.0`. P8 remains
-queued.
+Status: active but stopped for a bounded Hashicorp Errwrap product decision.
+Completed dependency groups remain final through accepted Google UUID v1.4.0,
+and all recorded retained-module decisions remain guarded through Consul SDK
+v0.8.0. Selected inherited, unloaded `github.com/hashicorp/errwrap v1.0.0`
+remains unchanged because neither exact-path stable release qualifies. P8
+remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -9685,10 +9687,78 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`
   with its existing GHSA alias. No new advisory or independently observed
   disqualifier appeared during the guard-only revalidation.
-- The next bounded P7 group is selected exact-path
-  `github.com/hashicorp/errwrap v1.0.0`. Its independent evaluation is a
-  separate successor mission; do not execute it in the Consul SDK decision
-  turn or combine it with another dependency group.
+- The bounded exact-path Hashicorp Errwrap evaluation is complete. The proxy
+  exposes only stable v1.0.0 and v1.1.0, both with stdlib-only source/test
+  closures that preserve Go 1.18; v1.1.0 is therefore the highest floor-
+  eligible stable candidate. Canonical `go-import`, proxy, sumdb, Git, and
+  GitHub evidence resolves public, active, unarchived, non-fork
+  `https://github.com/hashicorp/errwrap`, MPL-2.0, no GitHub Release objects,
+  no retractions or module deprecation, and no `/v2` module line. V1.0.0 is
+  lightweight tag/commit
+  `8a6fb523712970c966eefc6b39ed2c5e74880354`, parent
+  `d6c0cd88035724dd42e0f335ae30161c20575ecc`, tree
+  `9863613ad8fe960290d1631d84ede660af5f0746`, dated
+  2018-08-24T00:39:10Z; its commit signature is not forge-verified. V1.1.0 is
+  lightweight tag/verified merge commit
+  `7b00e5db719c64d14dd0caaacbd13e76254d02c0`, parents v1.0.0 and
+  `96a78ad11c51762df122b738e6f4f30f58e03d8d`, tree
+  `aefd62cf8e9549e154a65afb8b4524b7b6ed5f2e`, dated
+  2020-07-14T15:51:01Z. Proxy and Git bytes match, strict Git verification
+  passes, and v1.0.0 is an ancestor of v1.1.0. Unreleased master now declares
+  Go 1.24 and is not a stable candidate.
+- Each release contains one package, one production file, one test file, and
+  no command, example, benchmark, fuzz target, testdata, generated file,
+  build-tag/platform branch, cgo, embed, go:generate directive, symlink, or
+  non-stdlib dependency. Both verify, build, pass native count-one, two
+  count-ten repeats, race, vet, and production/test cross-compilation for
+  Darwin amd64, Linux amd64/arm64, Windows amd64, and js/wasm under exact Go
+  1.26.7 and contained Go 1.18.10. Pinned API diff finds the same nine
+  exported functions plus `WalkFunc` and `Wrapper` in both releases with no
+  incompatible API change; v1.1.0 adds standard single-error `Unwrap` behavior
+  and deprecates `Wrapf` without changing the exported declaration set.
+- Neither stable release qualifies. The exported type-matching helpers compare
+  `reflect.Type.String()` rather than concrete type identity, so distinct
+  types with the same package/type spelling in different import paths falsely
+  match. Both releases also fail to traverse Go's standard `Unwrap() []error`
+  graph, including `errors.Join`, under Go 1.26.7; v1.0.0 additionally does not
+  expose its chain through standard `Unwrap() error`. Independent fixtures
+  reproduce these defects under both SDKs where applicable and characterize
+  deterministic formatting/order and identity, explicit nil outer-error and
+  nil callback panics, outer/inner aliasing, isolated returned slices,
+  supported immutable concurrent reads, and allocations. The module has no
+  global state or resource ownership; recursive walking has no cycle guard.
+- Selected v1.0.0 exists through exactly one selected-version incoming edge
+  from `github.com/hashicorp/go-multierror v1.1.0`; the graph also retains the
+  historical v1.0.0 parent edge. Its shortest path begins at
+  mvn-pom-mutator v0.2.3, passes historical Viper v1.10.1, Serf v0.9.6, and
+  go-multierror v1.1.0. `go mod why -m` is negative, repository imports are
+  zero, and zero target packages occur in either project load, so Errwrap is
+  runtime-unreachable. Disposable exact gets manufacture only a direct root
+  and target checksum rows: v1.0.0 retains 234 modules/429 complete-test
+  entries and adds one graph edge and one sum line; v1.1.0 does the same with
+  two sum lines. Both preserve every unrelated selection, remain unloaded,
+  and tidy back to selected v1.0.0 and the base projection. No projection was
+  applied.
+- Fresh primary vulnerability data remains 1,398 records at SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
+  and Last-Modified 2026-09-10T16:28:28Z, with no Errwrap record; exact
+  v1.0.0/v1.1.0 OSV responses are empty. Exact Go 1.26.7 source scans find no
+  module, package, symbol, or test-symbol vulnerability. Go 1.18.10 source
+  scans report only that SDK's old standard-library findings, not Errwrap.
+  Base and v1.1.0 project scans are byte-identical, with zero target occurrence
+  at module, package, symbol, test-symbol, or reachable-trace level. Earlier
+  guarded advisories remain unchanged.
+- The project remains byte-for-byte unchanged at 234 modules, 3,599 graph
+  edges, 429 complete-test entries, 197 module-backed packages across 41
+  loaded modules, 1,067 sum lines, and the recorded 432-line unapplied tidy
+  projection. `go.mod`/`go.sum` SHA-256 remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 applicable gates pass, contained Go 1.18.10 retains only its
+  two accepted Darwin shell wording failures, all nine earlier exception
+  guards remain valid, and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+  No dependency implementation was created. P7 must stop for a fresh bounded
+  Errwrap product decision; no exception from an earlier target transfers.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
