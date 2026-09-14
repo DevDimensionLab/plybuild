@@ -1,13 +1,13 @@
 # Agent Session: Evaluate gRPC Gateway Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-14T134759+0200-evaluate-grpc-ecosystem-grpc-gateway-dependency`
 Created: `2026-09-14T13:47:59+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `fec365fa1226d8279eb8218ce9d50d73a4d7cc16442104eb6a946e4aee70e974`
 Previous: [2026-09-14T122952+0200-decide-grpc-ecosystem-go-grpc-prometheus-product-direction.md](2026-09-14T122952+0200-decide-grpc-ecosystem-go-grpc-prometheus-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-14T151903+0200-decide-grpc-ecosystem-grpc-gateway-product-direction.md](2026-09-14T151903+0200-decide-grpc-ecosystem-grpc-gateway-product-direction.md)
+Outcome: No exact-path stable release qualified; preserved exact inherited and unloaded v1.16.0 without metadata changes, recorded the complete evaluation, and stopped for a fresh bounded product decision.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -190,3 +190,125 @@ handover and roadmap, answer this archive, and follow the repository lifecycle
 contract. Do not implement another dependency group, launch a successor, push,
 merge, publish, release, stash, revert, bypass cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Stopped exact-path `github.com/grpc-ecosystem/grpc-gateway` for a fresh
+bounded product decision without changing dependency metadata. No exact-path
+stable release satisfies the existing quality contracts, so no dependency
+implementation commit was manufactured.
+
+Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves canonical
+public active unarchived non-fork BSD-3-Clause repository
+`https://github.com/grpc-ecosystem/grpc-gateway.git`. The proxy exposes 55
+versions: 53 stable and two prereleases. V1.16.0 is the latest exact-path
+stable release and is lightweight tag/commit
+`094a6fe78b3ca888297d090185cdf30f0e42e157`, parent
+`e0a026aeb20c3eb0f32cbfdc537c9966634895b9`, tree
+`2283b306f85e2b97858d8575954fa0db23db4b5d`, dated
+2020-10-28T10:29:51Z with a GitHub-verified commit signature. Its proxy zip
+SHA-256 is
+`377b03aef288b34ed894449d3ddba40d525dd7fb55de6e79045cdf499e7fe565`;
+sumdb confirms source/mod sums
+`h1:gmcG1KaJ57LophUzW0Hy8NmPhnMZb4M0+kPpLofRdBo=` and
+`h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=`. Proxy and Git source are
+byte-identical, strict Git verification passes, and the license SHA-256 is
+`a15b1d1b168954c92ff7fb1620382418f7c72f4f4d251ee791d1098ad68ab0c4`.
+The later v1 branch tip is unreleased. Current main is the distinct
+`github.com/grpc-ecosystem/grpc-gateway/v2` module path, requires Go 1.26,
+and cannot be selected silently.
+
+V1.16.0 declares Go 1.14, and its complete isolated source/test closure
+preserves Go 1.18. Under exact Go 1.26.7/Go 1.18.10 it contains 33 modules,
+136/135 graph edges, 29 packages, 310/247 production entries, and 342/279
+complete-test entries; 12 external modules load and no module declares above
+Go 1.14. The release inventory is 348 files, 179 Go files, 32 native test
+files, 164 tests, six benchmarks, one old go-fuzz build-tag target, 30
+generated files, four commands, no Go examples or testdata directories, and
+no cgo, embeds, or symlinks. Pinned v1.15.2 -> v1.16.0 API comparison reports
+zero incompatible changes and nine compatible Swagger-option additions.
+
+Native count-1, race, and broad cross-build/test-compilation gates pass under
+both SDKs. Both independent complete count-10 repeats fail under both SDKs:
+codegenerator reuses a consumed buffer, runtime tests leak
+`DefaultContextTimeout`, and protoc-gen-swagger tests leak package-global flag
+state. Vet fails under both SDKs because production `runtime/context.go`
+discards the cancel returned by `context.WithTimeout`, leaking timer/context
+resources; two further vet findings are test-only `Fatalf` calls from
+goroutines. Every one of the 53 exact-path stable releases contains the
+production discarded-cancel defect. Serious adjacent v1.15.2 reproduces the
+repeat and vet failures.
+
+The independent scratch-only runtime fixture, SHA-256
+`8f097645c3f31bde4b6e4a1b7addd7f92473d89bfe2647862a676d0df3ad3d17`,
+passes count-10 and race under both SDKs while the source vet failure remains.
+It covers routing, methods and path parameters; query reflection, filtering,
+and the package-global parser setter; JSON/proto/HTTP-body marshaling;
+metadata, binary headers, and malformed values; unary and streaming status
+translation; cancellation/deadlines; cleanup, concurrency, and nil/panic
+boundaries. Generator protocol fixtures are byte-identical across repeats and
+SDKs: gateway response SHA-256
+`ff0829e0e0d3a76ee14a72d0e3e3941b85be7e6d70f5159c91e5b022615dc28c`
+and Swagger response SHA-256
+`d4e950e6163c8769b44d574fe8350e74b5f35435144048433f0272808a79d85b`.
+Malformed input exits 255 but emits timestamped, stack-bearing nondeterministic
+diagnostics.
+
+Selected v1.16.0 exists through exactly two selected-version incoming edges:
+`go.etcd.io/etcd/api/v3 v3.5.1` and
+`go.opentelemetry.io/proto/otlp v0.7.0`. `go mod why -m` is negative,
+repository source imports are zero, and the normal 429-entry complete project
+test load contains zero Gateway packages, so the module is
+runtime-unreachable. Exact disposable `go get v1.16.0` only manufactures a
+direct root and source checksum: selection and 234 modules remain unchanged,
+edges grow 3,599 -> 3,600, sum lines grow 1,067 -> 1,068, and target loading
+stays zero; tidy removes the direct root. Exact v1.15.2 instead causes an
+unrelated 234 -> 160 module and 3,599 -> 2,247 edge downgrade cascade,
+removes the direct mvn-pom-mutator requirement, and makes the project
+unloadable. Neither projection was applied.
+
+Fresh primary vulnerability data remains 1,398 records at SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
+and Last-Modified 2026-09-10T16:28:28Z, with no exact Gateway record and an
+empty exact OSV response. Govulncheck v1.8.0 reports 33 inherited module-level
+IDs, 17 imported-package IDs, and eight called/reachable IDs in both the
+native v1.16.0 production and test closures: GO-2020-0036, GO-2022-0956,
+GO-2023-1571, GO-2023-2153, GO-2024-2687, GO-2025-3372, GO-2026-4762, and
+GO-2026-6061. V1.15.2 is identical. Normal project scans remain 30 module
+IDs, 22 package IDs, and 20 called IDs with zero Gateway occurrence because no
+target package loads.
+
+The unchanged project remains 234 modules, 3,599 graph edges, 429
+complete-test entries, 197 module-backed packages, 41 loaded modules, 1,067
+sum lines, and a 432-line tidy projection. `go.mod`/`go.sum` SHA-256 remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Exact Go 1.26.7 verify, count-1, two count-10 repeats, race, vet, pinned lint,
+empty-HOME count-2, Linux/Windows builds, and API/CLI compatibility pass. The
+Go 1.18.10 projection loads 366 complete-test entries and passes verify, vet,
+host/Linux/Windows builds, two compatible-package count-10 repeats, and race;
+full runs retain only the two already accepted Darwin `pkg/shell` closed-file
+wording assertions.
+
+Focused quality remains 27/27 Q0-Q2 PASS at L2, scorecard SHA-256
+`04039eb917cc8aa674c093e866b8fbfb303ab562a28dcbaf2414dba1c9d01c3a`,
+with zero held, regressed, or non-comparable rows and seven improved rows. All
+eight mutation meta-suites pass, all 80/80 live mutations are killed,
+host/snapshot acceptance pass, and all 15 audit meta-controls pass. Docker
+acceptance is unavailable because this host's Docker CLI has no `buildx`.
+Two full quality-wrapper attempts and three nested lifecycle source-archive
+runs hit the known signal-retention timing assertion; direct evaluation-time
+lifecycle runs pass all 50 controls, the final handoff lifecycle contract
+passes all 62 checks, and every applicable quality stage passes independently.
+This is target-independent test-design/environment evidence, not a Gateway
+result.
+
+All previously guarded dependency exceptions revalidated unchanged; none
+transfers to Gateway. The 7,701-entry evidence manifest and decision-summary
+SHA-256 values are
+`873610fe31b0da11ba8e91bfd74665be47428ef60c1b589244324ff9b7dc13d7`
+and `b73b6153778b43978c2c81738c246d0823a6731a995068ed5c0f8409e0dee354`.
+Preserve exact inherited, unloaded v1.16.0 and all metadata unchanged pending
+the next bounded decision; do not silently retain it under an exception,
+select another v1 release, change either parent, migrate to `/v2`, patch or
+replace it, or raise the Go floor.

@@ -9301,6 +9301,103 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   v1.16.0`; its evaluation is a separate successor mission and was not begun
   in this decision-recording move.
 
+- Stop exact-path `github.com/grpc-ecosystem/grpc-gateway` for a fresh bounded
+  product decision without changing dependency metadata. Fresh proxy, sumdb,
+  `go-import`, strict Git, and GitHub evidence resolves the canonical public
+  active unarchived non-fork BSD-3-Clause repository and 55 proxy versions: 53
+  stable and two prereleases. V1.16.0 is the latest exact-path stable release,
+  lightweight tag/commit `094a6fe78b3ca888297d090185cdf30f0e42e157`,
+  parent `e0a026aeb20c3eb0f32cbfdc537c9966634895b9`, tree
+  `2283b306f85e2b97858d8575954fa0db23db4b5d`, dated
+  2020-10-28T10:29:51Z with a GitHub-verified commit signature. The proxy zip
+  SHA-256 is
+  `377b03aef288b34ed894449d3ddba40d525dd7fb55de6e79045cdf499e7fe565`;
+  proxy and Git sources are byte-identical, strict Git verification passes,
+  sumdb agrees, and the license SHA-256 is
+  `a15b1d1b168954c92ff7fb1620382418f7c72f4f4d251ee791d1098ad68ab0c4`.
+  The later v1 branch is unreleased. Current main is the different
+  `github.com/grpc-ecosystem/grpc-gateway/v2` module path, requires Go 1.26,
+  and is not an eligible exact-path candidate.
+- V1.16.0 declares Go 1.14 and its complete isolated production/test closure
+  preserves Go 1.18. Exact Go 1.26.7/Go 1.18.10 resolve 33 modules, 136/135
+  graph edges, 29 packages, 310/247 production entries, and 342/279
+  complete-test entries; 12 external modules load and the maximum declared
+  floor is Go 1.14. The release has 348 files, 179 Go files, 32 native test
+  files, 164 tests, six benchmarks, one old go-fuzz target, 30 generated files,
+  four commands, no Go examples/testdata, and no cgo/embed/symlinks. Pinned
+  v1.15.2 -> v1.16.0 API comparison has zero incompatible changes and nine
+  compatible Swagger-option additions.
+- Native count-1, race, broad cross-builds, and targeted test compilation pass
+  under both SDKs. Both independent count-10 repeats fail under both SDKs
+  because codegenerator reuses a consumed buffer and runtime/Swagger tests
+  leak package-global timeout/flag state. Vet fails because production
+  `runtime/context.go` discards the cancel from `context.WithTimeout`, leaking
+  timer/context resources; two additional findings are test-only `Fatalf`
+  calls from goroutines. Every one of the 53 stable exact-path releases
+  contains the production discarded-cancel defect. Adjacent serious candidate
+  v1.15.2 reproduces the repeat and vet failures, so no stable exact-path
+  release qualifies.
+- The independent runtime fixture SHA-256 is
+  `8f097645c3f31bde4b6e4a1b7addd7f92473d89bfe2647862a676d0df3ad3d17`.
+  It passes count-10 and race under both SDKs while the source vet defect
+  remains, and covers routing/path/method behavior, query handling and its
+  global parser setter, marshaling, metadata/binary headers, malformed input,
+  unary/stream/status translation, cancellation/deadlines, cleanup,
+  concurrency, and nil/panic boundaries. Generator protocol output is
+  byte-identical across repeats and SDKs at gateway response SHA-256
+  `ff0829e0e0d3a76ee14a72d0e3e3941b85be7e6d70f5159c91e5b022615dc28c`
+  and Swagger response SHA-256
+  `d4e950e6163c8769b44d574fe8350e74b5f35435144048433f0272808a79d85b`;
+  malformed input exits 255 with timestamped, stack-bearing nondeterministic
+  diagnostics.
+- Selected v1.16.0 has exactly two incoming selected-version edges: etcd/api/v3
+  v3.5.1 and OTLP v0.7.0. `go mod why -m` is negative, repository imports are
+  zero, and zero target packages occur in the 429-entry complete project load,
+  so it is runtime-unreachable. Exact disposable `go get v1.16.0` only adds a
+  direct root/source checksum, keeps 234 modules and v1.16.0 selected, grows
+  edges 3,599 -> 3,600 and sum lines 1,067 -> 1,068, and leaves loading zero;
+  tidy removes the root. Exact v1.15.2 instead cascades 234 -> 160 modules and
+  3,599 -> 2,247 edges, removes the direct mvn-pom-mutator requirement, and
+  makes the project unloadable. Neither projection was applied.
+- Fresh primary vulnerability data remains 1,398 records at SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`
+  and Last-Modified 2026-09-10T16:28:28Z, with no exact Gateway record and an
+  empty exact OSV response. Govulncheck v1.8.0 reports 33 inherited module IDs,
+  17 imported-package IDs, and eight called/reachable IDs in the v1.16.0
+  production and test closure: GO-2020-0036, GO-2022-0956, GO-2023-1571,
+  GO-2023-2153, GO-2024-2687, GO-2025-3372, GO-2026-4762, and GO-2026-6061.
+  V1.15.2 is identical. Normal project scans remain 30 module IDs, 22 package
+  IDs, and 20 called IDs with zero Gateway occurrence because no target package
+  loads.
+- The unchanged project remains 234 modules, 3,599 edges, 429 complete-test
+  entries, 197 module-backed packages, 41 loaded modules, 1,067 sum lines, and
+  a 432-line tidy projection. `go.mod`/`go.sum` SHA-256 remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 project verify, repeats, race, vet, lint, hermetic,
+  cross-build, and API/CLI gates pass. The Go 1.18.10 projection loads 366
+  complete-test entries and retains only the two accepted Darwin `pkg/shell`
+  closed-file wording assertions; every compatible package passes repeats and
+  race. Focused quality remains 27/27 Q0-Q2 PASS at L2 with scorecard SHA-256
+  `04039eb917cc8aa674c093e866b8fbfb303ab562a28dcbaf2414dba1c9d01c3a`,
+  zero held/regressed/non-comparable rows, and seven improved rows. All eight
+  mutation meta-suites, all 80/80 live kills, host/snapshot acceptance, and all
+  15 audit controls pass. Docker acceptance is unavailable because the host
+  Docker CLI lacks buildx. Full quality-wrapper/nested lifecycle runs retain
+  the known signal-retention timing race; the final handoff lifecycle contract
+  passes all 62 checks and every applicable quality stage passes independently.
+  The 7,701-entry evidence manifest and decision
+  summary SHA-256 values are
+  `873610fe31b0da11ba8e91bfd74665be47428ef60c1b589244324ff9b7dc13d7`
+  and `b73b6153778b43978c2c81738c246d0823a6731a995068ed5c0f8409e0dee354`.
+- Preserve exact inherited, unloaded v1.16.0 and all dependency metadata
+  unchanged pending a fresh bounded product choice. No earlier exception
+  transfers. The next choice is limited to: (1) explicitly retain v1.16.0
+  under a new narrowly enumerated exception and exact-selection/two-parent/
+  zero-load/runtime-unreachable/no-new-finding guards; (2) authorize a separate
+  two-parent ownership decision; or (3) authorize a separate `/v2` architecture
+  and Go-floor decision. Do not infer or implement a choice.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
