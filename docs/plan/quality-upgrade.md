@@ -5374,10 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the recorded gRPC Prometheus v1.2.0 retention decision and
+Status: active after the recorded gRPC Gateway v1.16.0 retention decision and
 the completed dependency groups through accepted Google UUID v1.4.0; the next
-bounded group is gRPC Gateway v1.16.0, while P8 and further dependency groups
-remain queued.
+bounded group is Hashicorp Consul API v1.18.0, while P8 and further dependency
+groups remain queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -9407,9 +9407,40 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   direct edge, select another v1 release, change either parent, move to `/v2`,
   raise the Go floor, authorize parent-removal or architecture work, move
   unrelated selections, manufacture a dependency commit, transfer another
-  exception, or request this same decision again while the guards hold. Record
-  the decision, answer its archive, and prepare one next bounded P7 mission
-  without executing it in the decision turn.
+  exception, or request this same decision again while the guards hold.
+- The Gateway option 1 decision was recorded from clean decision HEAD
+  `b9e4b64d00d5593bb1a9d45e4506e55fd6eeb1f4`, tree
+  `a5a2d5d6d7dafd058b6df74142463fae112561f3`, with a freshly unpacked,
+  hash-verified exact Go 1.26.7 distribution first in `PATH`, `GOENV=off`,
+  `GOWORK=off`, `GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient
+  `GOFLAGS`. Gateway remains exact v1.16.0 through exactly two selected-version
+  incoming edges from etcd/api/v3 v3.5.1 and OTLP v0.7.0. The earlier guarded
+  selections and their sole recorded mvn-pom-mutator v0.2.3, GoConvey v1.6.4,
+  or Viper v1.15.0 edges also remain exact.
+- All seven `go mod why -m` results remain negative, repository Go source has
+  zero guarded imports, and the unchanged 429-entry complete test load has 197
+  module-backed packages across 41 modules with zero Gateway or earlier
+  guarded-target packages. All seven targets remain runtime-unreachable. The
+  project remains 234 selected modules, 3,599 graph edges, and 1,067 sum lines;
+  `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 module verification, build, count-1 tests, race, vet, and the
+  launcher lifecycle contract pass. No dependency implementation was created,
+  and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+- Fresh primary vulnerability data remains byte-identical at 1,398 records,
+  index SHA-256
+  `cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+  and Last-Modified 2026-09-10T16:28:28Z. It has no exact Gateway, gRPC
+  Prometheus, gRPC middleware, GopherJS, Enterprise Certificate Proxy, or GAX
+  record, and exact target/version OSV queries for those six modules remain
+  empty. Gorilla retains only its existing entries; selected-affecting
+  GO-2026-6278 remains unwithdrawn at SHA-256
+  `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+  No new advisory or independent disqualifier appeared. The next bounded P7
+  group is selected exact-path `github.com/hashicorp/consul/api v1.18.0`; its
+  evaluation is a separate successor mission and was not begun in this
+  decision-recording move.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1,13 +1,13 @@
 # Agent Session: Decide gRPC Gateway Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-14T151903+0200-decide-grpc-ecosystem-grpc-gateway-product-direction`
 Created: `2026-09-14T15:19:03+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `1f395972cede9eeaf3535b491e6f7b77d0493d0ec093263ea61d8f75809be6de`
 Previous: [2026-09-14T134759+0200-evaluate-grpc-ecosystem-grpc-gateway-dependency.md](2026-09-14T134759+0200-evaluate-grpc-ecosystem-grpc-gateway-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-14T180109+0200-evaluate-hashicorp-consul-api-dependency.md](2026-09-14T180109+0200-evaluate-hashicorp-consul-api-dependency.md)
+Outcome: Recorded the user's bounded option 1 retention of exact inherited, unloaded Gateway v1.16.0; revalidated every guard without dependency metadata changes; and prepared the next bounded P7 dependency evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -168,3 +168,74 @@ create the required local `docs: prepare next agent session` commit. Do not
 launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, or remove the worktree.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user's 2026-09-14 option 1 selection and retained exact-path
+`github.com/grpc-ecosystem/grpc-gateway v1.16.0` as an inherited, unloaded
+module without changing `go.mod` or `go.sum` and without manufacturing a
+dependency implementation commit.
+
+The target-specific, non-transferable decision accepts only the findings
+already established in the answered evaluation: the universal production
+discarded-cancel timer/context resource defect, native repeated-suite consumed-
+buffer and package-global timeout/flag state failures, the eight inherited
+called/reachable vulnerability IDs in the release-native closure, malformed-
+generator diagnostic nondeterminism, and related recorded qualification
+findings. No new or independently discovered defect is accepted.
+
+Every guard was revalidated from clean decision HEAD
+`b9e4b64d00d5593bb1a9d45e4506e55fd6eeb1f4`, tree
+`a5a2d5d6d7dafd058b6df74142463fae112561f3`, with a freshly unpacked exact
+Go 1.26.7 distribution. Its archive and binary SHA-256 values are
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d`
+and `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+It ran first in `PATH` with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient `GOFLAGS`.
+
+Project selection remains Gateway v1.16.0, gRPC Prometheus v1.2.0, gRPC
+middleware v1.0.0, Gorilla WebSocket v1.4.2, GopherJS
+`v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy v0.2.1,
+and GAX v2.7.0. Gateway retains exactly two selected-version incoming edges:
+etcd/api/v3 v3.5.1 -> Gateway v1.16.0 and OTLP v0.7.0 -> Gateway v1.16.0.
+The earlier guarded targets retain their exact selected versions and sole
+recorded incoming edges from mvn-pom-mutator v0.2.3, GoConvey v1.6.4, or Viper
+v1.15.0. All seven `go mod why -m` results remain negative, and repository Go
+source has zero imports of every guarded target.
+
+The complete project test load remains 429 entries, including 197 module-
+backed packages across 41 loaded modules, with exactly zero packages from
+Gateway or any earlier guarded target. Together with the unchanged selected-
+version edges, negative why results, and zero source imports, this revalidates
+that all seven targets remain runtime-unreachable. The project still selects
+234 modules with 3,599 graph edges.
+
+`go.mod` and `go.sum` remain byte-identical to clean decision HEAD at SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`
+and `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+`go.sum` remains 1,067 lines. The applicable exact-Go no-change module, build,
+test, race, vet, and launcher lifecycle gates pass. No changed-selection
+scorecard run applies; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+Fresh primary vulnerability data remains byte-identical at 1,398 module
+records, index SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+and Last-Modified 2026-09-10T16:28:28Z. It has no exact Gateway, gRPC
+Prometheus, gRPC middleware, GopherJS, Enterprise Certificate Proxy, or GAX
+record. Exact OSV target/version queries for those six modules remain empty.
+Gorilla retains only GO-2020-0019 and the selected-affecting GO-2026-6278; the
+latter remains unwithdrawn at record SHA-256
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`
+with its existing GHSA alias. No new advisory or independently observed
+disqualifier appeared during this guard-only revalidation; the completed
+technical audit was not repeated or broadened.
+
+The Gateway exception remains valid only while exact v1.16.0 and both incoming
+etcd/api/v3 v3.5.1 and OTLP v0.7.0 edges remain unchanged, zero Gateway
+packages load, the module remains runtime-unreachable, and no new advisory or
+independent disqualifier appears. Direct import or loading, runtime
+reachability, a target version or incoming-edge change, or a new advisory or
+independent defect expires the exception and requires a fresh Gateway
+dependency and product decision before merge. Every earlier exception remains
+separate under its own guards. Do not request this same Gateway decision again
+while all guards hold.

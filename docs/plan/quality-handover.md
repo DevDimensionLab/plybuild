@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-14T15:19:03+02:00
+Generated: 2026-09-14T18:01:09+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The gRPC Gateway
-  evaluation began from clean HEAD
-  `5ad98f2c1eb987b153cfcb9078103c64233ea6c1`, parent
-  `547460d63ae6eecce2212ce70a00f4b3a56e05c5`, tree
-  `5ec9f74d91097b42cb16022e26488678932469c0`.
+  `codex/upgrade-quality`, base master at `5635d50`. The gRPC Gateway decision
+  was revalidated from clean HEAD
+  `b9e4b64d00d5593bb1a9d45e4506e55fd6eeb1f4`, parent
+  `dee8460eaaa407061fdcabdd2b72be55c410b898`, tree
+  `a5a2d5d6d7dafd058b6df74142463fae112561f3`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,11 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Gateway and all
   retained modules since Google UUID have no dependency implementation or
   metadata commit.
-- The Gateway evaluation archive is answered. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-14T151903+0200-decide-grpc-ecosystem-grpc-gateway-product-direction.md`.
-  The user has supplied option 1 with the recommended bounds. It does not
-  authorize a dependency edit, parent change, `/v2` migration, Go-floor
-  change, or another dependency group in that turn.
+- The Gateway evaluation and decision archives are answered. The sole NEXT
+  archive is
+  `docs/plan/agent-sessions/2026-09-14T180109+0200-evaluate-hashicorp-consul-api-dependency.md`.
+  It authorizes only the bounded Hashicorp Consul API v1.18.0 evaluation; it
+  does not authorize reopening Gateway, combining another dependency group,
+  or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -32,11 +33,11 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is recording the user's bounded Gateway option 1
-decision; P8 remains queued. Exact Go 1.26.7, every accepted dependency move
-through Google UUID v1.4.0, and all earlier outcomes are final. Do not combine
-another dependency group or begin P8 before this decision is recorded in a
-committed handoff.
+P2A-P6 are complete. P7 is active after the user's bounded Gateway option 1
+decision; the next group is Hashicorp Consul API v1.18.0 and P8 remains
+queued. Exact Go 1.26.7, every accepted dependency move through Google UUID
+v1.4.0, and all earlier outcomes are final. Do not combine dependency groups
+or begin P8.
 
 The user's 2026-09-14 gRPC Prometheus option 1 decision retains exact
 `github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0` only under its documented
@@ -167,6 +168,25 @@ V1.15.2 is identical. The normal project scan remains 30 module IDs, 22
 package IDs, and 20 called IDs with zero Gateway occurrence because no target
 package loads.
 
+The decision-recording revalidation used freshly unpacked exact Go 1.26.7
+archive/binary SHA-256 values
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+Gateway remains selected at exact v1.16.0 through exactly the etcd/api/v3
+v3.5.1 and OTLP v0.7.0 incoming edges. Gateway and all six earlier guarded
+targets retain negative `go mod why -m` results, zero source imports, zero
+loaded packages, and runtime unreachability. Their exact selections and
+recorded incoming edges are unchanged.
+
+The refreshed primary index remains byte-identical at 1,398 records, SHA-256
+`cde9b02ce42b801cbd683fb39c85b61acfbb3ea7cf896f95d4999003bed4fdbf`,
+and Last-Modified 2026-09-10T16:28:28Z. Exact Gateway and five other non-
+Gorilla guarded-version OSV queries remain empty. Gorilla still has only its
+recorded entries; GO-2026-6278 remains unwithdrawn at SHA-256
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+No new advisory or independent disqualifier appeared. The completed Gateway
+technical audit was not repeated or broadened.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 edges,
@@ -214,10 +234,11 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-The next session must record the user's explicit option 1 decision without a
-dependency implementation. Revalidate exact v1.16.0 and both incoming parent
-edges, negative why result, zero packages loaded from Gateway and every earlier
-guarded target, unchanged module hashes, runtime unreachability, and fresh
-advisory state. Then answer the decision archive and prepare exactly one next
-bounded P7 mission. Do not execute that successor in the decision-recording
-turn.
+Independently evaluate selected exact-path
+`github.com/hashicorp/consul/api v1.18.0` as the next bounded P7 group. Resolve
+its repository and release identity, complete Go-floor closure, package/API
+behavior, actual project loading, MVS effects, vulnerability evidence, and
+every applicable quality contract. Retain or select only a qualified exact-
+path stable release whose complete minimal source/test closure preserves Go
+1.18; otherwise stop for a fresh bounded product decision. Do not reopen
+Gateway, evaluate a second dependency group, or begin P8.
