@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-15T21:21:06+02:00
+Generated: 2026-09-15T22:29:45+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Errwrap option 1
-  decision was recorded after guard-only revalidation from clean decision HEAD
-  `f77cb8a75c6813b28656c85b654d17d7df464731`, parent
-  `a2f1bc98dc6b978d802d42f7c36bae96627bda33`, tree
-  `9dd5c04d0cc3cdebf482b831faef8809ea25643e`.
+  `codex/upgrade-quality`, base master at `5635d50`. The go-cleanhttp
+  evaluation began from clean handoff HEAD
+  `0d1d66480604da5b646c75593570b01ebec72dda`, parent
+  `f77cb8a75c6813b28656c85b654d17d7df464731`, tree
+  `46e8716418edbafc7095bb22b194ed79f67ffb83`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The Errwrap evaluation and decision archives are answered. The sole NEXT
-  archive is
-  `docs/plan/agent-sessions/2026-09-15T212106+0200-evaluate-hashicorp-go-cleanhttp-dependency.md`.
-  It authorizes only one bounded exact-path go-cleanhttp evaluation. It does
-  not authorize reopening Errwrap or an earlier decision, another dependency
-  group, or P8.
+- The go-cleanhttp evaluation archive and every earlier archive are answered.
+  The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-15T222945+0200-evaluate-hashicorp-go-hclog-dependency.md`.
+  It authorizes only one bounded exact-path go-hclog evaluation. It does not
+  authorize reopening go-cleanhttp, Errwrap, or an earlier decision, combining
+  another dependency group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -33,12 +33,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 continues with one bounded Hashicorp go-cleanhttp
-evaluation after the user's Errwrap option 1 decision was recorded. Exact Go
-1.26.7, every accepted dependency move through Google UUID v1.4.0, and all
-retained-module decisions through exact inherited, unloaded Errwrap v1.0.0
-are final under their target-specific guards. P8 remains queued. Do not
-combine dependency groups or begin P8.
+P2A-P6 are complete. P7 continues with one bounded Hashicorp go-hclog
+evaluation after qualified exact go-cleanhttp v0.5.2 was retained. Exact Go
+1.26.7, every accepted dependency move through Google UUID v1.4.0, qualified
+go-cleanhttp, and all retained-module decisions through exact inherited,
+unloaded Errwrap v1.0.0 are final under their target-specific guards. P8
+remains queued. Do not combine dependency groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -446,6 +446,78 @@ No dependency implementation or metadata change exists. Parent-edge removal
 and broader replacement remain unauthorized, and no earlier exception
 transfers.
 
+## Hashicorp Go Cleanhttp Decision
+
+Retain qualified exact selected `github.com/hashicorp/go-cleanhttp v0.5.2`
+without changing `go.mod` or `go.sum`. It is the highest exact-path stable
+release, its complete production/test closure preserves Go 1.18, and its
+source, API, behavior, tests, vulnerability evidence, and project effects pass
+the existing contracts. No exception or product-risk acceptance was required.
+
+Fresh canonical evidence resolves public active unarchived non-fork
+`https://github.com/hashicorp/go-cleanhttp.git`, MPL-2.0, and exactly stable
+v0.5.0, v0.5.1, and v0.5.2. V0.5.2 is both proxy `@latest` and the sole GitHub
+Release. There is no prerelease, `/v2` line, alternate path, redirect,
+retraction, or deprecation. Unreleased master declares Go 1.24 and was not
+promoted. The lightweight unsigned tags form linear ancestry through master.
+Selected v0.5.2 is commit
+`6d9e2ac5d828e5f8594b97f88c4bde14a67bb6d2`, parent
+`d3fcbee8e1810ecee4bdbf415f42f84cfd0e3361`, tree
+`c1160f09cedce00dc3ef7b06169ac45cad1c12e8`, dated
+2021-02-03T18:51:13Z. Its proxy zip SHA-256 is
+`e9f3dcfcb33172ba499b4f8e888169252d7f1e072082182124a6e2053523f7df`,
+and proxy and Git bytes agree.
+
+Every release is one standard-library-only package with three production Go
+files and one test file; no commands, examples, benchmarks, fuzz targets,
+testdata, generated files, build tags, platform branches, cgo, embeds,
+go:generate directives, or symlinks exist. V0.5.2 declares Go 1.13. Under
+exact Go 1.26.7 it resolves 184 production and 209 complete-test entries;
+contained Go 1.18.10 resolves 123 and 147. It passes verify, build, count-one,
+two count-ten repeats, race, vet, and six production/test cross-builds under
+both SDKs. V0.5.0/v0.5.1 pass build/vet/cross-builds but their own native
+tests consistently fail because they construct request URLs with raw control
+bytes rejected by current Go; v0.5.2 percent-encodes those test inputs.
+
+Pinned API exports are identical across all three releases. Independent
+fixtures cover exact transport defaults and fresh identity, client/transport
+aliasing, global state, printable and control paths, Unicode and invalid UTF-8,
+HTTP/1 transient versus pooled reuse, idle cleanup, HTTP/2, allocations, and
+supported immutable concurrency under both SDKs. A zero `HandlerInput.ErrStatus`
+is mutated to 400; the handler retains the caller pointer; later mutation
+changes behavior and concurrent mutation is unsupported. Nil request and nil
+next are no-ops. A non-nil request with nil URL and invalid nonzero status
+panic through standard-library preconditions. Pooled users own idle-resource
+cleanup. The fixture SHA-256 is
+`1b3aa948358fdbfd136041fc6c930ba904ff8bc6260bd915ea9af50f40dd73a2`.
+
+Selected v0.5.2 has three selected-version incoming edges: Viper v1.15.0,
+historical Viper v1.10.1, and `sagikazarmark/crypt v0.4.0`. The shortest path
+is main -> Viper v1.15.0 -> go-cleanhttp. Its why result is negative, source
+imports are zero, production and complete-test target loads are zero, and it
+is runtime-unreachable. A disposable exact v0.5.2 get adds only a direct
+indirect root edge and one checksum line while preserving all 234 modules,
+429 complete-test entries, every unrelated version, and zero target load; tidy
+returns to the base projection. V0.5.0/v0.5.1 exact gets instead force broad
+unrelated downgrades, remove mvn-pom-mutator, and make the project unloadable.
+No projection was applied.
+
+Fresh 1,399-record primary vulnerability data has no go-cleanhttp record, and
+all three exact OSV responses are empty. Go 1.26.7 isolated scans have no
+findings. Go 1.18.10 reports only its old standard-library findings; target
+frames call into that library but no advisory is assigned to go-cleanhttp.
+Base and disposable v0.5.2 project scans have identical normalized finding
+populations and zero target SBOM package, symbol, test-symbol, or reachable
+trace. The 412-entry evaluation manifest SHA-256 is
+`40b0a6fc11f4378aed62586bfc8bdd94bef33b0a0ba88051dff51912807137c1`.
+
+This qualified result remains final while exact v0.5.2 and all three incoming
+edges remain unchanged, zero target packages load, it stays runtime-
+unreachable, and no new advisory or independently disqualifying behavior
+appears. Direct import/loading, runtime reachability, a target version or
+incoming-edge change, or a new advisory/defect requires a fresh bounded
+go-cleanhttp decision. This guard transfers no earlier exception.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -503,6 +575,26 @@ signal/log-retention timing race after all earlier stages passed; an immediate
 independent rerun passed all 62 controls. No changed-selection scorecard
 applies.
 
+The go-cleanhttp evaluation's exact Go 1.26.7 module verification, build,
+count-one, two independent count-ten repeats, race, vet, pinned lint, API/CLI
+compatibility, host and snapshot acceptance, empty-HOME count-two, and four
+production cross-builds pass. All 17 production-script meta-tests and all 15
+quality-audit meta-controls pass. Contained Go 1.18.10 loads 366 complete-test
+entries; its 26 unaffected packages pass count-one, both count-ten repeats,
+race, and vet, while the full suite retains only the two accepted Darwin shell
+wording failures. Four production cross-builds pass under Go 1.18.10. No
+changed-selection scorecard applies, so accepted quality remains 27/27 Q0-Q2
+PASS at L2.
+
+Full preflight repeatedly reached passing API/CLI compatibility, build,
+count-one, vet, and pinned lint before reproducing the known outer or nested
+launcher signal/log-retention timing race. An independent launcher run passed
+all 62 controls on its sixth timing attempt, and the final post-handoff run
+passed all 62 on its second attempt. One legacy meta-test's bare
+`mktemp -d` selected an unwritable managed macOS temp root; a scratch-only
+command wrapper let the unchanged contract pass. These are known harness and
+managed-environment boundaries, not go-cleanhttp findings.
+
 Full preflight's substantive stages pass; its nested launcher self-test hit
 the known signal-retention timing race. Docker buildx is now available at
 v0.33.0-desktop.1. Docker acceptance builds the image and completes the in-
@@ -521,9 +613,10 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate only selected exact-path `github.com/hashicorp/go-cleanhttp v0.5.2`
-as one bounded P7 dependency group. Resolve its repository and release
-identity, complete Go-floor closure, behavior and API, actual project loading,
-MVS effects, vulnerability state, and applicable quality contracts before
-retaining or changing it. Preserve the Errwrap decision and every earlier
-separate exception. Do not combine another dependency group or begin P8.
+Evaluate only selected exact-path `github.com/hashicorp/go-hclog v1.2.0` as
+one bounded P7 dependency group. Resolve its repository and release identity,
+complete Go-floor closure, behavior and API, actual project loading, MVS
+effects, vulnerability state, and applicable quality contracts before
+retaining or changing it. Preserve qualified go-cleanhttp v0.5.2, the Errwrap
+decision, and every earlier separate exception. Do not combine another
+dependency group or begin P8.

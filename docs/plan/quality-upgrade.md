@@ -5374,8 +5374,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the next bounded Hashicorp go-cleanhttp dependency
-evaluation after recording the user's 2026-09-15 Errwrap option 1 decision.
+Status: active for the next bounded Hashicorp go-hclog dependency evaluation
+after retaining qualified exact Hashicorp go-cleanhttp v0.5.2.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 and all retained-module decisions remain guarded through exact inherited,
 unloaded `github.com/hashicorp/errwrap v1.0.0`. P8 remains queued.
@@ -9800,6 +9800,120 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   that record's SHA-256 remains
   `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
   No new advisory or independently observed defect appeared.
+
+- The bounded exact-path Hashicorp go-cleanhttp evaluation is complete. Retain
+  qualified exact selected `github.com/hashicorp/go-cleanhttp v0.5.2` without
+  changing dependency metadata. It is the highest exact-path stable release,
+  its complete minimal production/test closure preserves Go 1.18, and its
+  relevant source, API, behavior, tests, and project effects satisfy the
+  existing contracts. No exception or product-risk acceptance was needed.
+- Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves canonical
+  public active unarchived non-fork
+  `https://github.com/hashicorp/go-cleanhttp.git`, MPL-2.0, one protected
+  `master` branch, and exactly three stable versions: v0.5.0, v0.5.1, and
+  v0.5.2. V0.5.2 is the sole GitHub Release and proxy `@latest`, published
+  2021-02-03T18:51:13Z. There is no prerelease, `/v2` line, alternate module
+  path, redirect, retraction, deprecation, or qualified later stable identity.
+  Current unreleased master declares Go 1.24 and was not promoted.
+- The three release tags are lightweight, unsigned commit objects and form
+  linear ancestry v0.5.0 -> v0.5.1 -> v0.5.2 -> master. V0.5.0 is commit
+  `e8ab9daed8d1ddd2d3c4efba338fe2eeae2e4f18`, tree
+  `4e73aae6cb561e640cd9619ec84785d956638d1b`, and proxy zip SHA-256
+  `f5ca0da7f2432a3e961064529f0af8de1113b854bf239a880d16f89424538b44`.
+  V0.5.1 is commit `eda1e5db218aad1db63ca4642c8906b26bcf2744`, tree
+  `d7c6740e1c415649cbf335bed109358e84b7e552`, and zip SHA-256
+  `e3cc9964b0bc80c6156d6fb064abcb62ff8c00df8be8009b6f6d3aefc2776a23`.
+  Selected v0.5.2 is commit
+  `6d9e2ac5d828e5f8594b97f88c4bde14a67bb6d2`, parent
+  `d3fcbee8e1810ecee4bdbf415f42f84cfd0e3361`, tree
+  `c1160f09cedce00dc3ef7b06169ac45cad1c12e8`, and zip SHA-256
+  `e9f3dcfcb33172ba499b4f8e888169252d7f1e072082182124a6e2053523f7df`.
+  Proxy and Git release bytes agree exactly.
+- Every release contains exactly seven regular files, one package, three
+  production Go files, and one test file. There are no commands, examples,
+  benchmarks, fuzz targets, testdata, generated files, build tags, platform
+  branches, cgo, embeds, go:generate directives, symlinks, or non-standard-
+  library dependencies. V0.5.0/v0.5.1 have no Go directive and v0.5.2 declares
+  Go 1.13. Exact Go 1.26.7 resolves 184 production and 209 complete-test
+  entries; contained Go 1.18.10 resolves 123 and 147. The target is the sole
+  external selected module in each isolated closure.
+- Selected v0.5.2 passes verification, build, native count-one, two independent
+  count-ten repeats, race, vet, and production/test cross-builds for Darwin
+  amd64/arm64, Linux amd64/arm64, Windows amd64, and js/wasm under both SDKs.
+  V0.5.0/v0.5.1 pass build, vet, and every cross-build but reproducibly fail
+  count-one, both repeats, and race under both SDKs because their own tests put
+  raw LF, CR, and NUL bytes in request URLs; current Go rejects those URLs as
+  invalid. V0.5.2 percent-encodes those test inputs, retains v0.5.1's nil-
+  request/nil-next handler fix, and adds `ForceAttemptHTTP2`.
+- Pinned API comparison is identical in both directions across all releases:
+  `DefaultTransport`, `DefaultPooledTransport`, `DefaultClient`,
+  `DefaultPooledClient`, `PrintablePathCheckHandler`, and exported
+  `HandlerInput.ErrStatus`. All three export blobs have SHA-256
+  `e96e3d2d100e788eac2ba58bf3e1b07237bedfd3d2ab5969fca30da56b946c64`.
+- Independent fixtures under both SDKs verify fresh transport/client identity,
+  exact transport defaults, no package-owned global mutation, deterministic
+  printable/non-printable path routing, Unicode and decoded-control handling,
+  HTTP/1 keepalive disablement/reuse and idle cleanup, HTTP/2 negotiation,
+  immutable-handler concurrency, and allocations. They characterize the
+  supported boundaries: a zero `ErrStatus` is mutated to 400 at construction;
+  the handler retains that pointer; later caller mutation changes behavior and
+  concurrent mutation is unsupported; nil request and nil next are no-ops;
+  a non-nil request with nil URL and an invalid nonzero status panic through
+  standard-library preconditions; malformed UTF-8 path bytes become printable
+  replacement runes; pooled callers own idle-resource cleanup. The fixture
+  SHA-256 is
+  `1b3aa948358fdbfd136041fc6c930ba904ff8bc6260bd915ea9af50f40dd73a2`.
+  The open tuning discussion about `GOMAXPROCS+1` remains configurable through
+  the returned transport and is not a correctness disqualifier.
+- Selected v0.5.2 exists through three selected-version graph edges: Viper
+  v1.15.0, the historical Viper v1.10.1 vertex, and
+  `sagikazarmark/crypt v0.4.0`. Lower historical parents request v0.5.1 and
+  v0.5.0. The shortest path is main -> Viper v1.15.0 -> go-cleanhttp v0.5.2.
+  `go mod why -m` is negative, repository imports are zero, and production and
+  complete-test loads contain zero target packages, so it is runtime-
+  unreachable. An exact disposable v0.5.2 get preserves 234 modules, 429
+  complete-test entries, every unrelated selection, and zero load; it adds
+  only a direct indirect root edge and one source checksum line, yielding
+  3,600 edges and 1,068 sum lines. Its go.mod/go.sum SHA-256 pair is
+  `55698b6242da86f1e456b0dcf9cadc52f72f2b419500a6196c04b0117281b063` /
+  `e1b800f07e83f6d7b9e566da23d0de7841f65ccb9866fdd547b90214f0d88cd5`.
+  Tidy returns exactly to the base projection. No direct edge was added.
+- Exact disposable v0.5.0/v0.5.1 gets force broad unrelated downgrades, remove
+  the required mvn-pom-mutator root, and fail project package loading. They
+  leave only 182/180 total selected modules and 2,311/2,953 graph edges.
+  Their tidy results restore the missing parent but converge to a different
+  historical Viper projection. Those prohibited projections were not applied.
+- Fresh primary vulnerability data contains 1,399 records at SHA-256
+  `033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`
+  and Last-Modified 2026-09-15T18:54:35Z with no go-cleanhttp record. Exact OSV
+  responses for all three releases are empty. Go 1.26.7 isolated module,
+  package, symbol, and test-symbol scans have zero findings. Go 1.18.10 reports
+  only that old SDK's standard-library population: 89 IDs and respectively
+  90/154/186/335 finding paths; target frames in seven production IDs/32 paths
+  and 45 test IDs/178 paths call into the vulnerable standard library, but no
+  advisory is assigned to go-cleanhttp. Base and disposable v0.5.2 project
+  scans have identical normalized populations at 30 IDs and 30/52/74 Darwin
+  plus 75 Windows finding paths, with zero target SBOM package, symbol, test-
+  symbol, or reachable-trace occurrence.
+- The project remains byte-for-byte unchanged at 234 modules, 3,599 graph
+  edges, 429 complete-test entries, 197 module-backed packages across 41
+  loaded modules, 1,067 sum lines, and the recorded 432-line tidy projection.
+  `go.mod`/`go.sum` SHA-256 remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 applicable gates, all 17 script meta-tests, and all 15 audit
+  meta-controls pass. Contained Go 1.18.10 retains only the two accepted Darwin
+  shell wording failures. Accepted quality remains 27/27 Q0-Q2 PASS at L2,
+  and no dependency implementation or metadata commit was created. The 412-
+  entry source/evaluation evidence manifest SHA-256 is
+  `40b0a6fc11f4378aed62586bfc8bdd94bef33b0a0ba88051dff51912807137c1`.
+- Retain this qualified result while exact v0.5.2 and its three selected-
+  version incoming edges remain unchanged, zero target packages load, it stays
+  runtime-unreachable, and no new advisory or independently disqualifying
+  behavior appears. Direct import/loading, runtime reachability, a target
+  version or incoming-edge change, or a new advisory/defect requires a fresh
+  bounded go-cleanhttp decision. This guard is target-specific and transfers
+  no earlier exception.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
