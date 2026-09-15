@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-14T23:47:16+02:00
+Generated: 2026-09-15T21:21:06+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,10 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Errwrap evaluation
-  began from clean HEAD `94a4ad292427754755374f887c766f6bfa72021e`,
-  parent `2346fcecd1f9f464697d51c3fa223b6709e84972`, tree
-  `ed6adadcc242ab335dbb60f37844f378a1a02f89`.
+  `codex/upgrade-quality`, base master at `5635d50`. The Errwrap option 1
+  decision was recorded after guard-only revalidation from clean decision HEAD
+  `f77cb8a75c6813b28656c85b654d17d7df464731`, parent
+  `a2f1bc98dc6b978d802d42f7c36bae96627bda33`, tree
+  `9dd5c04d0cc3cdebf482b831faef8809ea25643e`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -19,11 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The Errwrap evaluation archive is answered. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-14T234716+0200-decide-hashicorp-errwrap-product-direction.md`.
-  The user has supplied option 1 with the recommended bounds on 2026-09-15.
-  It authorizes recording that choice, not dependency implementation,
-  reopening an earlier decision, another dependency group, or P8 in that turn.
+- The Errwrap evaluation and decision archives are answered. The sole NEXT
+  archive is
+  `docs/plan/agent-sessions/2026-09-15T212106+0200-evaluate-hashicorp-go-cleanhttp-dependency.md`.
+  It authorizes only one bounded exact-path go-cleanhttp evaluation. It does
+  not authorize reopening Errwrap or an earlier decision, another dependency
+  group, or P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -31,12 +33,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is recording the user's bounded Errwrap option 1
-decision. Exact Go 1.26.7, every accepted dependency move through Google UUID
-v1.4.0, and all recorded retained-module decisions through Consul SDK v0.8.0
-are final. Selected Errwrap v1.0.0 remains inherited and unchanged. P8 remains
-queued. Do not combine dependency groups or begin P8 before this decision is
-revalidated and recorded in a committed handoff.
+P2A-P6 are complete. P7 continues with one bounded Hashicorp go-cleanhttp
+evaluation after the user's Errwrap option 1 decision was recorded. Exact Go
+1.26.7, every accepted dependency move through Google UUID v1.4.0, and all
+retained-module decisions through exact inherited, unloaded Errwrap v1.0.0
+are final under their target-specific guards. P8 remains queued. Do not
+combine dependency groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -332,9 +334,9 @@ discovered defect. The exception is Errwrap-specific and non-transferable.
 It remains valid only while exact v1.0.0 and its sole selected-version incoming
 edge from `github.com/hashicorp/go-multierror v1.1.0` remain unchanged, zero
 Errwrap packages load, the module remains runtime-unreachable, and no new
-advisory or independent defect appears. Revalidate and record these guards in
-the committed decision. Direct import/loading, runtime reachability, a target
-version or incoming-edge change, or a new advisory or independent defect
+advisory or independent defect appears. Direct import/loading, runtime
+reachability, a target version or incoming-edge change, or a new advisory or
+independent defect
 expires the exception and requires a fresh Errwrap dependency and product
 decision before merge. Do not add a direct edge, select v1.1.0 or another
 version, remove or change the historical parent chain, change go-multierror,
@@ -421,10 +423,28 @@ The project remains unchanged. The fixture file-list receipt SHA-256 is
 `6eb0df6dedb99aaf6d00c9e3b9b9771543ed09f394aa8f509c0184eafc884765`;
 the 322-entry disposable evidence manifest SHA-256 is
 `181ef08a5ce2f8132d9bab9b080bb5cdfb53aedef14f0e87f0ad78e152853cc8`.
-No dependency implementation commit exists. The user's bounded Errwrap
-option 1 exception is supplied for guard-only revalidation and decision
-recording; parent-edge removal and broader replacement remain unauthorized,
-and no earlier exception transfers.
+The decision was recorded from clean decision HEAD
+`f77cb8a75c6813b28656c85b654d17d7df464731`. Exact v1.0.0 retains its sole
+selected-version go-multierror v1.1.0 incoming edge; the historical
+go-multierror v1.0.0 request also remains. All ten guarded versions and
+recorded incoming edges remain unchanged. All ten why results remain
+negative, repository Go source has zero guarded-path occurrences, and
+production and 429-entry complete-test loads contain zero guarded packages.
+The complete-test load retains 197 module-backed entries across 41 modules,
+so all guarded modules remain runtime-unreachable.
+
+Fresh primary vulnerability data now has 1,399 records at SHA-256
+`033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`
+and Last-Modified 2026-09-15T18:54:35Z. It has no Errwrap or other new
+guarded-target record. Exact Errwrap v1.0.0/v1.1.0 OSV results remain empty.
+Gorilla retains only GO-2020-0019 and unwithdrawn GO-2026-6278; that record's
+SHA-256 remains
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+No new advisory or independently observed defect appeared.
+
+No dependency implementation or metadata change exists. Parent-edge removal
+and broader replacement remain unauthorized, and no earlier exception
+transfers.
 
 ## Project And Quality State
 
@@ -465,10 +485,10 @@ controls, and launcher lifecycle gates pass. Because no source or dependency
 metadata changed, no changed-selection scorecard run applies and accepted
 27/27 Q0-Q2 L2 remains unchanged.
 
-The decision-recording session's exact-Go no-change module verification,
-build, count-one test, race, vet, and launcher lifecycle gates pass. No changed-
-selection scorecard applies, so accepted quality remains 27/27 Q0-Q2 PASS at
-L2.
+The Errwrap decision-recording session's exact Go 1.26.7 module verification,
+build, count-one tests, race tests, vet, and launcher lifecycle check pass. No
+changed-selection scorecard applies, so accepted quality remains 27/27 Q0-Q2
+PASS at L2.
 
 The Errwrap evaluation's exact Go 1.26.7 module verification, build,
 count-one, two independent count-ten repeats, race, vet, pinned lint, API/CLI
@@ -501,12 +521,9 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Record the user's explicit option 1 decision without a dependency
-implementation or renewed audit. Revalidate exact Errwrap v1.0.0 and its sole
-selected-version go-multierror v1.1.0 incoming edge, negative why result, zero
-Errwrap and earlier guarded package loads, project hashes, runtime
-unreachability, and fresh advisory state. Then record the exact exception and
-expiry guards, answer the decision archive, and prepare exactly one next
-bounded P7 mission without executing it in this turn. Preserve the Consul SDK
-decision and every earlier separate exception. Do not inspect another
-dependency group or begin P8 in the decision-recording session.
+Evaluate only selected exact-path `github.com/hashicorp/go-cleanhttp v0.5.2`
+as one bounded P7 dependency group. Resolve its repository and release
+identity, complete Go-floor closure, behavior and API, actual project loading,
+MVS effects, vulnerability state, and applicable quality contracts before
+retaining or changing it. Preserve the Errwrap decision and every earlier
+separate exception. Do not combine another dependency group or begin P8.

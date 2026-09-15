@@ -5374,13 +5374,11 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for guard-only recording of the user's 2026-09-15 bounded
-Hashicorp Errwrap option 1 decision.
+Status: active for the next bounded Hashicorp go-cleanhttp dependency
+evaluation after recording the user's 2026-09-15 Errwrap option 1 decision.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
-and all recorded retained-module decisions remain guarded through Consul SDK
-v0.8.0. Selected inherited, unloaded `github.com/hashicorp/errwrap v1.0.0`
-remains unchanged because neither exact-path stable release qualifies. P8
-remains queued.
+and all retained-module decisions remain guarded through exact inherited,
+unloaded `github.com/hashicorp/errwrap v1.0.0`. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -9758,8 +9756,8 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   Exact Go 1.26.7 applicable gates pass, contained Go 1.18.10 retains only its
   two accepted Darwin shell wording failures, all nine earlier exception
   guards remain valid, and accepted quality remains 27/27 Q0-Q2 PASS at L2.
-  No dependency implementation was created. Product direction supplied
-  2026-09-15: the user explicitly selected option 1 with the recommended
+  No dependency implementation was created. On 2026-09-15 the user explicitly
+  selected option 1 with the recommended
   bounds. Retain exact selected, inherited, unloaded Errwrap v1.0.0 without
   changing `go.mod` or `go.sum`. Accept only the completed concrete-type
   collision, absent standard single/multi-error traversal, nil/panic,
@@ -9776,9 +9774,32 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   mutator, raise the Go floor, authorize replacement or modernization, move
   unrelated selections, manufacture a dependency commit, transfer another
   exception, or request this same choice again while all guards hold.
-  Revalidate only the guards, record the decision, answer its archive, and
-  prepare one next bounded P7 mission without executing it in the decision
-  turn.
+  The decision was recorded after guard-only revalidation from clean decision
+  HEAD `f77cb8a75c6813b28656c85b654d17d7df464731`, parent
+  `a2f1bc98dc6b978d802d42f7c36bae96627bda33`, tree
+  `9dd5c04d0cc3cdebf482b831faef8809ea25643e`. Exact v1.0.0 retains its
+  sole selected-version go-multierror v1.1.0 incoming edge; the historical
+  go-multierror v1.0.0 request also remains. All ten guarded versions and
+  recorded incoming edges remain unchanged. All ten why results remain
+  negative, repository Go source has zero guarded-path occurrences, and
+  production and 429-entry complete-test loads have zero guarded packages.
+  The complete-test load retains 197 module-backed entries across 41 modules,
+  so all guarded modules remain runtime-unreachable.
+- Guard-only project measurements remain 234 selected modules, 3,599 graph
+  edges, and 1,067 sum lines. `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact Go 1.26.7 module verification, build, count-one tests, race tests, and
+  vet pass. The launcher lifecycle check recognizes the reciprocal successor.
+  No dependency implementation or metadata change was created.
+- Fresh primary vulnerability data now has 1,399 records at SHA-256
+  `033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`
+  and Last-Modified 2026-09-15T18:54:35Z. It has no Errwrap or other new
+  guarded-target record. Exact Errwrap v1.0.0/v1.1.0 OSV results remain
+  empty. Gorilla retains only GO-2020-0019 and unwithdrawn GO-2026-6278;
+  that record's SHA-256 remains
+  `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+  No new advisory or independently observed defect appeared.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

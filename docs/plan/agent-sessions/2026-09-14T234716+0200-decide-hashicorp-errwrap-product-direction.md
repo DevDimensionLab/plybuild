@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Errwrap Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-14T234716+0200-decide-hashicorp-errwrap-product-direction`
 Created: `2026-09-14T23:47:16+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3948644c2d85be123cf06ea7167366b78c21aeae3674bb1e09bf1d027db4e3fa`
 Previous: [2026-09-14T224709+0200-evaluate-hashicorp-errwrap-dependency.md](2026-09-14T224709+0200-evaluate-hashicorp-errwrap-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-15T212106+0200-evaluate-hashicorp-go-cleanhttp-dependency.md](2026-09-15T212106+0200-evaluate-hashicorp-go-cleanhttp-dependency.md)
+Outcome: Recorded the user's bounded option 1 decision to retain exact inherited, unloaded Errwrap v1.0.0 under target-specific guards without dependency metadata changes, then prepared the next bounded P7 mission.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -184,3 +184,62 @@ implement an option, launch a successor, push, merge, publish, release, stash,
 revert, bypass cleanup, remove the worktree, combine another dependency group,
 or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Session Outcome
+
+On 2026-09-15 the user explicitly selected option 1 with the recommended
+bounds. Exact selected `github.com/hashicorp/errwrap v1.0.0` remains inherited
+and unloaded without changing `go.mod` or `go.sum`. The Errwrap-specific,
+non-transferable exception accepts only the completed concrete-type collision,
+absent standard single/multi-error traversal, nil/panic, aliasing, allocation,
+recursion, API, and related qualification findings. It does not accept any new
+or independently discovered defect.
+
+Guard-only revalidation ran from clean decision HEAD
+`f77cb8a75c6813b28656c85b654d17d7df464731`, parent
+`a2f1bc98dc6b978d802d42f7c36bae96627bda33`, tree
+`9dd5c04d0cc3cdebf482b831faef8809ea25643e`, under exact Go 1.26.7 binary
+SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+Errwrap remains exact v1.0.0 through its sole selected-version incoming edge
+from `github.com/hashicorp/go-multierror v1.1.0`; the historical
+go-multierror v1.0.0 graph vertex also continues to request it. All ten
+guarded versions and recorded incoming edges remain unchanged. All ten
+`go mod why -m` results remain negative, repository Go source contains zero
+guarded-path occurrences, and production and complete-test loads contain zero
+guarded packages. The unchanged complete-test load has 429 entries, including
+197 module-backed entries across 41 loaded modules. All guarded modules remain
+runtime-unreachable.
+
+The project remains 234 selected modules, 3,599 graph edges, and 1,067
+`go.sum` lines. `go.mod` and `go.sum` retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+The latest dependency implementation remains exact Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
+`b89afd4ec056133b1eefb5611f8f35c12c11824b`. No dependency implementation
+or metadata change was created.
+
+Fresh primary vulnerability data now has 1,399 records at SHA-256
+`033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`
+and Last-Modified 2026-09-15T18:54:35Z. It has no Errwrap or other new
+guarded-target record. Exact Errwrap v1.0.0 and v1.1.0 OSV responses remain
+empty. Gorilla retains only GO-2020-0019 and unwithdrawn GO-2026-6278; the
+latter's record SHA-256 remains
+`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+No new advisory or independently observed defect appeared.
+
+The exception remains valid only while exact Errwrap v1.0.0 and its sole
+selected-version go-multierror v1.1.0 incoming edge remain unchanged, zero
+Errwrap packages load, the module remains runtime-unreachable, and no new
+advisory or independent defect appears. Direct import/loading, runtime
+reachability, a target version or incoming-edge change, or a new advisory or
+independent defect expires the exception and requires a fresh Errwrap
+dependency and product decision before merge. Every earlier exception remains
+separate. The reciprocal successor is the bounded Hashicorp go-cleanhttp
+evaluation; it was prepared but not executed.
+
+Exact Go 1.26.7 module verification, build, count-one tests, race tests, and
+vet pass. The launcher lifecycle check recognizes the reciprocal successor.
+No changed-selection scorecard applies, and accepted quality remains 27/27
+Q0-Q2 PASS at L2.
