@@ -4,7 +4,7 @@ Status: NEXT
 Session ID: `2026-09-14T234716+0200-decide-hashicorp-errwrap-product-direction`
 Created: `2026-09-14T23:47:16+02:00`
 Source: `codex-dev-start.sh`
-Prompt SHA-256: `e75158d2cb354449f9f1bcd12a0a7a7af44f957192a1e2d7454b8e4a0f7ba0a9`
+Prompt SHA-256: `3948644c2d85be123cf06ea7167366b78c21aeae3674bb1e09bf1d027db4e3fa`
 Previous: [2026-09-14T224709+0200-evaluate-hashicorp-errwrap-dependency.md](2026-09-14T224709+0200-evaluate-hashicorp-errwrap-dependency.md)
 Next: none
 Outcome: pending
@@ -14,20 +14,23 @@ The block below is the byte-exact Codex prompt argument, including its terminal 
 <!-- CODEX_SESSION_PROMPT_BEGIN -->
 # Mission
 
-Continue P7 only by obtaining and recording one bounded product decision for
-exact-path `github.com/hashicorp/errwrap`. The completed evaluation found no
-stable release that satisfies the existing behavior contracts. Present the
-three authorized choices below, recommend option 1, wait for an explicit user
-choice, and then record only that choice. Do not repeat the audit, implement an
-option, evaluate another dependency group, or begin P8.
+Continue P7 only by recording the user's 2026-09-15 explicit selection of
+option 1 for exact-path `github.com/hashicorp/errwrap`. Retain exact selected,
+inherited, unloaded v1.0.0 without dependency metadata changes under the
+Errwrap-specific exception below. Revalidate only the decision guards and
+record exactly this choice. Do not repeat the audit, implement a dependency
+change, evaluate another dependency group, or begin P8.
 
 # Authorized Roadmap
 
-P2A-P6 are complete. P7 is active but stopped at this Errwrap decision after
-exact Go 1.26.7, accepted dependency moves through Google UUID v1.4.0, and all
-recorded retained-module decisions through Consul SDK v0.8.0. All earlier
-outcomes and lifecycle ancestry are final. Selected inherited, unloaded
-Errwrap v1.0.0 remains unchanged. P8 remains queued.
+P2A-P6 are complete. P7 is recording the user's bounded Errwrap option 1
+decision after exact Go 1.26.7, accepted dependency moves through Google UUID
+v1.4.0, and all recorded retained-module decisions through Consul SDK v0.8.0.
+All earlier outcomes and lifecycle ancestry are final. The user has explicitly
+chosen to retain exact inherited, unloaded Errwrap v1.0.0 through its sole
+selected-version go-multierror v1.1.0 incoming edge. This session may record
+that choice and prepare one bounded follow-up, but may not implement a
+dependency change or combine another group. P8 remains queued.
 
 Every prior exception remains target-specific. Consul SDK v0.8.0, Consul API
 v1.18.0, Gateway v1.16.0, gRPC Prometheus v1.2.0, gRPC middleware v1.0.0,
@@ -116,35 +119,40 @@ complete-test entries, 197 module-backed packages across 41 loaded modules,
 Applicable gates pass, all earlier guards remain valid, and accepted quality
 remains 27/27 Q0-Q2 PASS at L2. No dependency implementation was created.
 
+# Authorized Product Decision
+
+On 2026-09-15 the user explicitly selected option 1 with the recommended
+bounds: retain exact selected `github.com/hashicorp/errwrap v1.0.0` as an
+inherited, unloaded selection without changing `go.mod` or `go.sum`. Accept
+only the completed concrete-type collision, absent standard single/multi-error
+traversal, nil/panic, aliasing, allocation, recursion, API, and related
+qualification findings. This does not accept a new or independently discovered
+defect.
+
+The exception is Errwrap-specific and non-transferable. It is valid only while
+exact v1.0.0 and its sole selected-version incoming edge from
+`github.com/hashicorp/go-multierror v1.1.0` remain unchanged, the complete
+project load contains zero Errwrap packages, the module remains runtime-
+unreachable, and no new advisory or independent defect appears. Revalidate
+and record these guards. Direct import/loading, runtime reachability, a target
+version or incoming-edge change, or a new advisory or independent defect
+expires the exception and requires a fresh Errwrap dependency and product
+decision before merge.
+
+Do not add a direct Errwrap edge, select v1.1.0 or another version, remove or
+change the historical parent chain, change go-multierror, Serf, Viper or
+mvn-pom-mutator, raise the Go floor, authorize replacement or modernization,
+move unrelated selections, or manufacture a dependency implementation commit.
+Do not stop or ask for this same Errwrap decision again while all guards hold.
+Preserve the Consul SDK decision and every earlier separate exception.
+
 # Role And Boundaries
 
-Present exactly these choices and wait for an explicit selection:
-
-1. Recommended: retain exact selected, inherited, unloaded Errwrap v1.0.0
-   without changing dependency metadata. Create an Errwrap-specific,
-   non-transferable exception accepting only the completed concrete-type
-   collision, absent standard single/multi-error traversal, nil/panic,
-   aliasing, allocation, recursion, API, and related qualification findings.
-   It is valid only while exact v1.0.0 and its sole selected-version incoming
-   edge from go-multierror v1.1.0 remain unchanged, zero Errwrap packages load,
-   the module remains runtime-unreachable, and no new advisory or independent
-   defect appears. Direct import/loading, runtime reachability, a version or
-   incoming-edge change, or a new advisory/defect expires it and requires a
-   fresh Errwrap dependency and product decision before merge.
-2. Authorize a new bounded planning/investigation mission to remove Errwrap by
-   eliminating or changing its historical parent chain. This may require
-   changes to go-multierror, Serf, historical Viper, mvn-pom-mutator, or their
-   architecture; identify exact scope before implementation and do not assume
-   authorization for unrelated selections or a Go-floor change.
-3. Authorize a new bounded replacement/modernization product mission. Define
-   desired standard-error semantics, API/behavior compatibility, parent and
-   architecture scope, and migration bounds before implementation. V1.1.0 is
-   not a qualified simple upgrade because it retains both independent defects.
-
-If the user has not explicitly chosen one option, stop and request the choice.
-Do not infer it from the recommendation. After a choice, record its exact
-bounds only; do not implement it in this session. A materially different
-direction requires a new bounded decision.
+This is a decision-recording session, not a renewed audit or implementation.
+The user has explicitly selected and bounded option 1. Reuse the completed
+evaluation; do not broaden the choice into direct use, another version,
+parent removal, replacement, modernization, a Go-floor change, unrelated-
+module authorization, another dependency group, or P8.
 
 # Required Reading
 
@@ -159,12 +167,14 @@ repeat or broaden it.
 
 # Three Moves
 
-First, revalidate only the decision guards and present the three choices if no
-guard expired. Second, after explicit user direction, record exactly that
-choice, accepted findings, expiry triggers, and no-change decision result in
-the roadmap and rolling handover. Third, answer this archive and prepare one
-bounded reciprocal NEXT mission consistent with the selected direction. Do
-not execute the successor.
+First, revalidate only exact selection, incoming edge, negative why, zero
+target and earlier guarded package loads, project hashes, runtime
+unreachability, and current advisory state; reuse the completed audit and do
+not broaden it. Stop for the owning decision if any guard expires. Second,
+record exactly the user's option 1 exception, accepted findings, expiry
+triggers, and no-change decision result in the roadmap and rolling handover.
+Third, answer this archive and prepare exactly one reciprocal NEXT mission
+for the next bounded P7 group without executing it.
 
 # Automatic Handoff
 

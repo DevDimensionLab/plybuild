@@ -5374,7 +5374,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active but stopped for a bounded Hashicorp Errwrap product decision.
+Status: active for guard-only recording of the user's 2026-09-15 bounded
+Hashicorp Errwrap option 1 decision.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 and all recorded retained-module decisions remain guarded through Consul SDK
 v0.8.0. Selected inherited, unloaded `github.com/hashicorp/errwrap v1.0.0`
@@ -9757,8 +9758,27 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   Exact Go 1.26.7 applicable gates pass, contained Go 1.18.10 retains only its
   two accepted Darwin shell wording failures, all nine earlier exception
   guards remain valid, and accepted quality remains 27/27 Q0-Q2 PASS at L2.
-  No dependency implementation was created. P7 must stop for a fresh bounded
-  Errwrap product decision; no exception from an earlier target transfers.
+  No dependency implementation was created. Product direction supplied
+  2026-09-15: the user explicitly selected option 1 with the recommended
+  bounds. Retain exact selected, inherited, unloaded Errwrap v1.0.0 without
+  changing `go.mod` or `go.sum`. Accept only the completed concrete-type
+  collision, absent standard single/multi-error traversal, nil/panic,
+  aliasing, allocation, recursion, API, and related qualification findings.
+  The exception is Errwrap-specific and non-transferable. It is valid only
+  while exact v1.0.0 and its sole selected-version incoming edge from
+  go-multierror v1.1.0 remain unchanged, zero Errwrap packages load, the module
+  remains runtime-unreachable, and no new advisory or independent defect
+  appears. Direct import/loading, runtime reachability, a version or incoming-
+  edge change, or a new advisory or independent defect expires the exception
+  and requires a fresh Errwrap dependency and product decision before merge.
+  Do not add a direct edge, select v1.1.0 or another version, remove or change
+  the historical parent chain, change go-multierror, Serf, Viper or mvn-pom-
+  mutator, raise the Go floor, authorize replacement or modernization, move
+  unrelated selections, manufacture a dependency commit, transfer another
+  exception, or request this same choice again while all guards hold.
+  Revalidate only the guards, record the decision, answer its archive, and
+  prepare one next bounded P7 mission without executing it in the decision
+  turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

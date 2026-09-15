@@ -21,9 +21,9 @@ session diary.
   or metadata commit.
 - The Errwrap evaluation archive is answered. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-14T234716+0200-decide-hashicorp-errwrap-product-direction.md`.
-  It authorizes only a bounded product choice after no exact-path stable
-  Errwrap release qualified; it does not authorize implementation, reopening
-  an earlier decision, combining another dependency group, or beginning P8.
+  The user has supplied option 1 with the recommended bounds on 2026-09-15.
+  It authorizes recording that choice, not dependency implementation,
+  reopening an earlier decision, another dependency group, or P8 in that turn.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -31,12 +31,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is active but stopped for a bounded Hashicorp Errwrap
-product decision because neither stable release qualifies. Exact Go 1.26.7,
-every accepted dependency move through Google UUID v1.4.0, and all recorded
-retained-module decisions through Consul SDK v0.8.0 are final. Selected
-Errwrap v1.0.0 remains inherited and unchanged pending direction. P8 remains
-queued. Do not combine dependency groups or begin P8.
+P2A-P6 are complete. P7 is recording the user's bounded Errwrap option 1
+decision. Exact Go 1.26.7, every accepted dependency move through Google UUID
+v1.4.0, and all recorded retained-module decisions through Consul SDK v0.8.0
+are final. Selected Errwrap v1.0.0 remains inherited and unchanged. P8 remains
+queued. Do not combine dependency groups or begin P8 before this decision is
+revalidated and recorded in a committed handoff.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -319,7 +319,29 @@ GO-2026-6278; that record's SHA-256 remains
 `bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
 No new advisory or independent disqualifier appeared.
 
-## Hashicorp Errwrap Evaluation Stop
+## Hashicorp Errwrap Product Decision
+
+On 2026-09-15 the user explicitly selected option 1 with the recommended
+bounds: retain exact selected, inherited, unloaded
+`github.com/hashicorp/errwrap v1.0.0` without changing `go.mod` or `go.sum`.
+Accept only the completed concrete-type collision, absent standard single/
+multi-error traversal, nil/panic, aliasing, allocation, recursion, API, and
+related qualification findings. This does not accept a new or independently
+discovered defect. The exception is Errwrap-specific and non-transferable.
+
+It remains valid only while exact v1.0.0 and its sole selected-version incoming
+edge from `github.com/hashicorp/go-multierror v1.1.0` remain unchanged, zero
+Errwrap packages load, the module remains runtime-unreachable, and no new
+advisory or independent defect appears. Revalidate and record these guards in
+the committed decision. Direct import/loading, runtime reachability, a target
+version or incoming-edge change, or a new advisory or independent defect
+expires the exception and requires a fresh Errwrap dependency and product
+decision before merge. Do not add a direct edge, select v1.1.0 or another
+version, remove or change the historical parent chain, change go-multierror,
+Serf, Viper or mvn-pom-mutator, raise the Go floor, authorize replacement or
+modernization, move unrelated selections, or manufacture a dependency commit.
+Do not ask for this same choice again while all guards hold. All earlier
+exceptions remain separate.
 
 No exact-path stable release qualifies. The proxy exposes only v1.0.0 and
 v1.1.0. Both have stdlib-only complete source/test closures with no Go
@@ -399,9 +421,10 @@ The project remains unchanged. The fixture file-list receipt SHA-256 is
 `6eb0df6dedb99aaf6d00c9e3b9b9771543ed09f394aa8f509c0184eafc884765`;
 the 322-entry disposable evidence manifest SHA-256 is
 `181ef08a5ce2f8132d9bab9b080bb5cdfb53aedef14f0e87f0ad78e152853cc8`.
-No dependency implementation commit exists. A new Errwrap-specific exception,
-parent-edge removal, or broader replacement needs explicit bounded product
-direction; no earlier exception transfers.
+No dependency implementation commit exists. The user's bounded Errwrap
+option 1 exception is supplied for guard-only revalidation and decision
+recording; parent-edge removal and broader replacement remain unauthorized,
+and no earlier exception transfers.
 
 ## Project And Quality State
 
@@ -478,13 +501,12 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Obtain and record one bounded Hashicorp Errwrap product choice. Option 1
-(recommended) retains exact inherited, unloaded v1.0.0 without metadata
-changes under an Errwrap-specific exception for only the completed findings
-and guards it by exact version, the sole selected-version go-multierror v1.1.0
-edge, zero load, runtime unreachability, and no new finding. Option 2 authorizes
-a separately planned investigation to remove the historical parent chain.
-Option 3 authorizes a separately scoped replacement/modernization decision;
-v1.1.0 is not a qualified simple upgrade. The decision session must not
-implement any option, inspect another dependency group, or begin P8. Preserve
-the Consul SDK decision and every earlier guarded exception.
+Record the user's explicit option 1 decision without a dependency
+implementation or renewed audit. Revalidate exact Errwrap v1.0.0 and its sole
+selected-version go-multierror v1.1.0 incoming edge, negative why result, zero
+Errwrap and earlier guarded package loads, project hashes, runtime
+unreachability, and fresh advisory state. Then record the exact exception and
+expiry guards, answer the decision archive, and prepare exactly one next
+bounded P7 mission without executing it in this turn. Preserve the Consul SDK
+decision and every earlier separate exception. Do not inspect another
+dependency group or begin P8 in the decision-recording session.
