@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-15T22:29:45+02:00
+Generated: 2026-09-15T23:43:09+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-cleanhttp
-  evaluation began from clean handoff HEAD
-  `0d1d66480604da5b646c75593570b01ebec72dda`, parent
-  `f77cb8a75c6813b28656c85b654d17d7df464731`, tree
-  `46e8716418edbafc7095bb22b194ed79f67ffb83`.
+  `codex/upgrade-quality`, base master at `5635d50`. The go-hclog evaluation
+  began from clean handoff HEAD
+  `452fffbd865dcae811fba3b02821cf7fd48f774c`, parent
+  `0d1d66480604da5b646c75593570b01ebec72dda`, tree
+  `4858e0dd3c216b772476058324a265aef0cb005a`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +20,10 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-cleanhttp evaluation archive and every earlier archive are answered.
-  The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-15T222945+0200-evaluate-hashicorp-go-hclog-dependency.md`.
-  It authorizes only one bounded exact-path go-hclog evaluation. It does not
-  authorize reopening go-cleanhttp, Errwrap, or an earlier decision, combining
-  another dependency group, or beginning P8.
+- The go-hclog evaluation archive and every earlier archive are answered. The
+  sole NEXT archive is `docs/plan/agent-sessions/2026-09-15T234309+0200-decide-hashicorp-go-hclog-product-direction.md`. It authorizes only the bounded go-hclog
+  product decision, requires one explicit user choice, and does not authorize
+  implementation, another dependency group, or P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -33,12 +31,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 continues with one bounded Hashicorp go-hclog
-evaluation after qualified exact go-cleanhttp v0.5.2 was retained. Exact Go
-1.26.7, every accepted dependency move through Google UUID v1.4.0, qualified
+P2A-P6 are complete. P7 is stopped at one bounded Hashicorp go-hclog product
+decision because no exact-path stable release qualifies. Exact Go 1.26.7,
+every accepted dependency move through Google UUID v1.4.0, qualified
 go-cleanhttp, and all retained-module decisions through exact inherited,
 unloaded Errwrap v1.0.0 are final under their target-specific guards. P8
-remains queued. Do not combine dependency groups or begin P8.
+remains queued. Do not infer the go-hclog choice, combine groups, or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -67,6 +65,102 @@ loading, runtime reachability, a version or incoming-edge change, or a new
 advisory/independent defect expires the owning exception and requires its fresh
 decision. Do not change either Gateway parent, mvn-pom-mutator, GoConvey, or
 Viper; reopen an earlier choice; or transfer any exception between targets.
+
+## Hashicorp go-hclog Evaluation And Decision Boundary
+
+No exact-path stable `github.com/hashicorp/go-hclog` release qualifies under
+the current behavior and compatibility contracts. The project remains
+byte-for-byte unchanged with inherited, unloaded v1.2.0 selected through the
+sole selected-version Viper v1.15.0 edge, but that physical state is not a
+qualification or accepted exception. P7 now stops for the bounded decision in
+the sole NEXT archive.
+
+Fresh identity evidence resolves canonical public active unarchived non-fork
+MIT repository `https://github.com/hashicorp/go-hclog.git`. The proxy lists 31
+stable releases from v0.7.0 through proxy `@latest` v1.6.3, with no retraction,
+module deprecation, redirect, or `/v2` line. Non-semver alias tags, nested
+`hclogvet` tags, branch `f-v2`, and unreleased Go-1.25 main were not promoted.
+Selected v1.2.0 is lightweight unsigned commit
+`b6b55671f4e5b82443139ee3e9f4417603c4cd72`, tree
+`45f0da0a3b7eb001522fc9891504cee03d951ef0`; latest v1.6.3 is commit
+`d12136aa2e51933c460084f5083b6d5bb9d41960`, tree
+`26c5c9247ad5b3a6f930ea2b1fc0a1ee532a7804`. Strict Git and proxy/Git byte
+verification pass.
+
+Every stable declares no more than Go 1.13. Imported selected/latest complete
+production/test closures declare no more than Go 1.17 and pass contained Go
+1.18.10. Serious releases contain one package, 12 production files, seven
+tests, Unix/Windows color branches, and one benchmark; no command, example,
+fuzz target, testdata, generated file, cgo, embed, generator, or symlink exists.
+Selected v1.2.0 through last-compatible v1.3.1, first-breaking v1.4.0, and
+latest v1.6.3 pass verification, native repeated/race/vet tests, and applicable
+cross-builds under both SDKs.
+
+Pinned API comparison finds v1.2.1/v1.2.2 identical to selected and
+v1.3.0/v1.3.1 compatible with only `LoggerOptions.ColorHeaderAndFields` added.
+V1.4.0 adds `Logger.GetLevel` to the public interface, an incompatible change
+retained through latest. V1.3.1 is the last API-compatible candidate.
+
+The 183-line independent fixture SHA-256 is
+`b62af8023aa4e9d2b84a20db69627992998bfa29e7c268832025b345dcf5bb26`.
+It directly proves five blockers in selected and every API-compatible patch:
+NaN silently drops a JSON record; caller `@message`/`@level` fields overwrite
+core metadata; absent-sink deregistration underflows the count and disables a
+later real sink; a self-deregistering sink deadlocks under the held registry
+mutex; and `SetDefault(nil)` violates the documented non-nil `FromContext`
+result. Source history preserves these implementations through latest. The
+latest-only 201-line extension SHA-256
+`15e4bc71cde744a69ee0cecc18cea1ec6730acb595a87f11ea3de6d92d2ebd02`
+also proves a `SyncParentLevel` concurrent level/epoch race under both SDKs.
+The fixtures separately characterize deterministic formatting/routing, exact
+reset errors, nil/panic and aliasing boundaries, allocations, immutable
+concurrency, and caller-owned output cleanup.
+
+Selecting v1.3.1 retains all five blockers. Selecting v1.4.0+ also breaks the
+public interface. Selecting v1.1.0 or lower forces an unauthorized Viper
+change; exact v1.1.0 downgrades Viper to v1.10.1. No candidate was applied.
+
+Selected v1.2.0 has one selected-version incoming edge from Viper v1.15.0.
+Historical Viper v1.10.1 and `sagikazarmark/crypt v0.4.0` request v1.0.0;
+historical Consul API v1.12.0 and Consul SDK v0.8.0 request v0.12.0. The why
+result is negative, source imports are zero, and production/complete-test loads
+contain zero target packages, so the module is runtime-unreachable. Disposable
+v1.2.0/v1.3.1/v1.4.0/v1.6.3 gets preserve 234 modules, every unrelated
+selection, 429 complete-test entries, and zero target load; they manufacture a
+direct root and checksums. Tidy restores selected v1.2.0 and the exact base
+projection. Nothing was applied.
+
+Fresh primary data remains 1,399 records at SHA-256
+`033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`
+and Last-Modified 2026-09-15T18:54:35Z with no go-hclog record. Exact serious
+OSV responses are empty. Selected has zero Go-1.26 source findings. V1.3.1+
+has only module-level GO-2026-5024 through old `x/sys`; the affected Windows
+package/symbol is not imported or called, and no target trace exists. Old-SDK
+source traces call vulnerable Go 1.18 standard library but assign no advisory
+to go-hclog. Project scans retain 30 IDs and zero target SBOM package, symbol,
+test-symbol, or reachable trace.
+
+The project remains 234 modules, 3,599 edges, 355 production entries, 429
+complete-test entries, 197 module-backed entries across 41 loaded modules,
+1,067 sum lines, and the 432-line tidy projection. `go.mod`/`go.sum` SHA-256
+remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Applicable project, API/CLI, lint, repeated/race/vet, empty-HOME, cross-build,
+host/snapshot acceptance, all 17 script meta-tests, 80/80 mutation kills, all
+15 audit controls, and an independent 62-control lifecycle run pass. Contained
+Go 1.18 retains only the two accepted Darwin shell wording failures. Full
+preflight alone reproduced the known nested signal-retention timing race.
+Accepted quality remains 27/27 Q0-Q2 PASS at L2. No dependency implementation
+or metadata commit was created. The 1,328-entry disposable evidence manifest
+SHA-256 is
+`e6647301b469e2c915ca07bd1f2b0f7856e6b55df75c76a350943cc780783a9f`.
+
+The next session must present exactly three choices: recommended guarded
+retention of exact inherited unloaded v1.2.0 with the completed findings;
+a separately scoped remediation study without implementation authority; or a
+P7 block. It must not infer a choice, qualify v1.3.1, promote v1.4.0+, downgrade
+Viper, add a direct edge, or implement a patch/fork/parent change.
 
 ## Hashicorp Consul API Product Decision
 

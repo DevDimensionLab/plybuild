@@ -1131,204 +1131,234 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-15T222945+0200-evaluate-hashicorp-go-hclog-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-15T222945+0200-evaluate-hashicorp-go-hclog-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-15T212106+0200-evaluate-hashicorp-go-cleanhttp-dependency.md
+#|SESSION_ID=2026-09-15T234309+0200-decide-hashicorp-go-hclog-product-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-15T234309+0200-decide-hashicorp-go-hclog-product-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-15T222945+0200-evaluate-hashicorp-go-hclog-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 by independently evaluating selected exact-path
-#|`github.com/hashicorp/go-hclog v1.2.0` as one bounded dependency group.
-#|Resolve its complete repository and release identity, Go-floor closure, package
-#|behavior and exported API, actual project loading, exact MVS effects,
-#|vulnerability evidence, and every applicable quality contract. Retain or
-#|select only a qualified exact-path stable release whose complete minimal
-#|source/test closure preserves Go 1.18 and whose relevant behavior passes every
-#|contract; otherwise stop for a fresh bounded product decision.
+#|Continue P7 only by obtaining and recording one bounded product decision for
+#|exact-path `github.com/hashicorp/go-hclog`. Reuse the completed evaluation: no
+#|exact-path stable release satisfies the existing behavior and compatibility
+#|contracts. Present the three authorized options below, wait for the user to
+#|select one, then record exactly that choice. Do not repeat the audit, implement
+#|a dependency change, evaluate another group, or begin P8.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
-#|dependency move through Google UUID v1.4.0, qualified exact go-cleanhttp
-#|v0.5.2, and all recorded retained-module decisions through Errwrap v1.0.0.
-#|All earlier outcomes and lifecycle ancestry are final. Evaluate only Hashicorp
-#|go-hclog in this session; do not reopen or combine another dependency group.
-#|P8 remains queued.
+#|P2A-P6 are complete. P7 is blocked only on this go-hclog product decision after
+#|exact Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
+#|qualified exact go-cleanhttp v0.5.2, and all retained-module decisions through
+#|Errwrap v1.0.0. Every earlier result and lifecycle ancestor is final. This
+#|session may record one explicit user choice and prepare one bounded follow-up;
+#|it may not implement that choice or combine another dependency group. P8
+#|remains queued.
 #|
-#|The qualified go-cleanhttp result retains exact selected, inherited, unloaded
-#|`github.com/hashicorp/go-cleanhttp v0.5.2` without dependency metadata changes.
-#|It is valid while exact v0.5.2 and all three selected-version incoming edges
-#|from Viper v1.15.0, historical Viper v1.10.1, and
-#|`sagikazarmark/crypt v0.4.0` remain unchanged, zero packages load, the module
-#|remains runtime-unreachable, and no new advisory or independently
-#|disqualifying behavior appears. Direct import/loading, runtime reachability, a
-#|target version or incoming-edge change, or a new advisory or defect requires a
-#|fresh go-cleanhttp dependency decision before merge. Revalidate these guards
-#|before work and stop for that owning decision if any fails. Do not transfer
-#|this qualification or any earlier exception to go-hclog.
+#|The completed evaluation left `go.mod` and `go.sum` unchanged. Exact selected
+#|`github.com/hashicorp/go-hclog v1.2.0` remains inherited only because Viper
+#|v1.15.0 requests it; this physical selection is not a qualification or risk
+#|acceptance. Do not add a direct edge merely to alter MVS.
 #|
-#|The user's 2026-09-15 Errwrap option 1 decision retains exact selected,
-#|inherited, unloaded `github.com/hashicorp/errwrap v1.0.0` without dependency
-#|metadata changes. It accepts only the completed concrete-type collision,
-#|absent standard single/multi-error traversal, nil/panic, aliasing, allocation,
-#|recursion, API, and related qualification findings. Its exception is Errwrap-
-#|specific and valid only while exact v1.0.0 and the sole selected-version
-#|go-multierror v1.1.0 incoming edge remain unchanged, zero Errwrap packages
-#|load, the module remains runtime-unreachable, and no new advisory or
-#|independent defect appears. Direct import/loading, runtime reachability, a
-#|target version or incoming-edge change, or a new advisory or independent
-#|defect requires a fresh Errwrap dependency and product decision before merge.
-#|Do not change its parent chain.
-#|
-#|The Consul SDK v0.8.0, Consul API v1.18.0, Gateway v1.16.0, gRPC Prometheus
-#|v1.2.0, gRPC middleware v1.0.0, Gorilla WebSocket v1.4.2, GopherJS
+#|The qualified go-cleanhttp v0.5.2 result and the Errwrap v1.0.0, Consul SDK
+#|v0.8.0, Consul API v1.18.0, Gateway v1.16.0, gRPC Prometheus v1.2.0, gRPC
+#|middleware v1.0.0, Gorilla WebSocket v1.4.2, GopherJS
 #|`v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy v0.2.1,
-#|and GAX v2.7.0 decisions remain final and separate under their exact-
-#|selection, recorded incoming-edge, zero-load, runtime-unreachable, and no-new-
-#|finding guards. Revalidate those guards and stop for the fresh owning decision
-#|if one expires. Do not change either Gateway parent, mvn-pom-mutator,
-#|GoConvey, Viper, the historical Consul API parent, go-multierror, Serf,
-#|`sagikazarmark/crypt`, or transfer an earlier exception.
+#|and GAX v2.7.0 decisions remain separate under their recorded exact-selection,
+#|incoming-edge, zero-load, runtime-unreachable, and no-new-finding guards.
+#|Revalidate those guards before recording a choice and stop for the owning
+#|decision if one expired. Do not transfer an earlier exception to go-hclog or
+#|change Viper, either Gateway parent, mvn-pom-mutator, GoConvey, historical
+#|Consul API, go-multierror, Serf, or `sagikazarmark/crypt`.
 #|
 #|# Measurements At Start
 #|
-#|The go-cleanhttp evaluation began from clean handoff HEAD
-#|`0d1d66480604da5b646c75593570b01ebec72dda`, parent
-#|`f77cb8a75c6813b28656c85b654d17d7df464731`, tree
-#|`46e8716418edbafc7095bb22b194ed79f67ffb83`. It retained qualified exact
-#|v0.5.2 without a dependency implementation or metadata commit. The latest
-#|dependency implementation remains exact Google UUID v1.4.0 commit
-#|`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
-#|`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
-#|`b89afd4ec056133b1eefb5611f8f35c12c11824b`.
+#|The completed evaluation began from clean handoff HEAD
+#|`452fffbd865dcae811fba3b02821cf7fd48f774c`, parent
+#|`0d1d66480604da5b646c75593570b01ebec72dda`, tree
+#|`4858e0dd3c216b772476058324a265aef0cb005a`. The latest dependency
+#|implementation remains exact Google UUID v1.4.0 commit
+#|`cf53bc64eeb69471d35c7536d196bf1da15f3973`. The evaluation made no source
+#|or dependency metadata change and prepared this decision-only handoff commit.
 #|
-#|Go-cleanhttp v0.5.2 is proxy `@latest`, its complete stdlib-only source/test
-#|closure preserves Go 1.18, and it passes source, native/repeated/race/vet,
-#|cross-build, API, behavior, and vulnerability qualification under exact Go
-#|1.26.7 and contained Go 1.18.10. Its why result is negative, repository source
-#|imports are zero, and production and complete-test loads contain zero target
-#|packages. The exact selected version exists through the three incoming edges
-#|listed above. Do not add a direct edge merely to alter MVS.
-#|
-#|Guard-only revalidation under exact Go 1.26.7 preserved all eleven guarded or
-#|qualified versions and recorded incoming edges. All eleven `go mod why -m`
-#|results remain negative, repository Go source contains zero guarded-path
-#|occurrences, and production and complete-test loads contain zero guarded
-#|packages. The project remains 234 selected modules, 3,599 graph edges, 429
-#|complete-test entries, 197 module-backed entries across 41 loaded modules,
-#|1,067 sum lines, and the recorded 432-line unapplied tidy projection. Its
-#|`go.mod`/`go.sum` SHA-256 values remain
+#|Base `go.mod` and `go.sum` SHA-256 values remain
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
-#|Accepted quality remains 27/27 Q0-Q2 PASS at L2.
+#|Accepted quality remains 27/27 Q0-Q2 PASS at L2. Verify the new handoff HEAD,
+#|parent, tree, and clean status at start rather than assuming their values.
+#|
+#|# Completed Evaluation
+#|
+#|Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves exact module
+#|path `github.com/hashicorp/go-hclog` to the public, active, unarchived, non-fork
+#|MIT repository `https://github.com/hashicorp/go-hclog.git`. The proxy exposes
+#|31 valid stable releases from v0.7.0 through v1.6.3. There are no retractions,
+#|module deprecation, redirect, `/v2` module, or qualified alternate path.
+#|Non-semver alias tags, nested `hclogvet` tags, branch `f-v2`, and unreleased
+#|main were not promoted. Current main declares Go 1.25.
+#|
+#|Selected v1.2.0 is lightweight unsigned tag/commit
+#|`b6b55671f4e5b82443139ee3e9f4417603c4cd72`, parents
+#|`81033451e6eb54da74139737d45a39b6412c7f34` and
+#|`fc772a82149bb181261310935e431f89667288c3`, tree
+#|`45f0da0a3b7eb001522fc9891504cee03d951ef0`, dated
+#|2022-03-03T03:51:25Z. Latest v1.6.3 is commit
+#|`d12136aa2e51933c460084f5083b6d5bb9d41960`, parents
+#|`5dbb615f9aa8587fce14c2ab180aa7369f0ee703` and
+#|`cb8687a9e2d8bab634ddff8412b3e03a7d60c068`, tree
+#|`26c5c9247ad5b3a6f930ea2b1fc0a1ee532a7804`, dated
+#|2024-04-01T20:03:54Z. Strict Git verification and proxy/Git byte comparison
+#|pass. V1.6.3 is proxy `@latest`.
+#|
+#|All valid releases declare no more than Go 1.13. Complete imported production
+#|and test closures for selected v1.2.0 and latest v1.6.3 declare no more than Go
+#|1.17 and execute under contained Go 1.18.10. Thus the full stable line is
+#|floor-eligible; the blocker is behavior and API qualification.
+#|
+#|Each serious v1 release has one root package, 12 production Go files, seven
+#|tests, only Unix/Windows color build branches, and one benchmark. There are no
+#|commands, examples, fuzz targets, testdata, generated files, cgo, embeds,
+#|`go:generate` directives, or symlinks. Selected, v1.2.1, v1.2.2, v1.3.0,
+#|v1.3.1, v1.4.0, and latest v1.6.3 verify, build, pass native count-one,
+#|repeated count-ten, race, and vet under exact Go 1.26.7 and Go 1.18.10.
+#|Selected/latest production and test cross-builds pass for Darwin AMD64, Linux
+#|AMD64/ARM64, Windows AMD64, and js/wasm under both SDKs.
+#|
+#|Pinned API comparison makes v1.3.1 the last API-compatible upgrade: v1.2.1 and
+#|v1.2.2 are identical to selected, while v1.3.0/v1.3.1 add only
+#|`LoggerOptions.ColorHeaderAndFields`. V1.4.0 adds `Logger.GetLevel`, an
+#|incompatible method addition to the exported interface; v1.4.0-v1.6.3 retain
+#|that break. Latest adds otherwise compatible options and `SupportsColor`.
+#|
+#|Independent fixtures characterize deterministic plain/JSON output, sorting,
+#|odd keys, stdlib adaptation, level routing, exact output-reset error identity,
+#|caller-owned output cleanup, nil/panic boundaries, aliasing, allocations, and
+#|supported immutable concurrent logging. Selected through v1.3.1 each fail the
+#|same five release-blocking contracts under both SDKs, and source history shows
+#|the same implementations through latest:
+#|
+#|1. JSON logging silently drops the complete record for unsupported values such
+#|   as NaN because only `json.UnsupportedTypeError` is recovered.
+#|2. Caller fields named `@message` or `@level` overwrite core JSON metadata.
+#|3. Deregistering an absent sink underflows the sink count and disables a later
+#|   real sink.
+#|4. Sink callbacks run while the registry mutex is held, so a sink that
+#|   deregisters itself deadlocks.
+#|5. `SetDefault(nil)` makes `Default` and `FromContext` return nil despite
+#|   `FromContext` documenting a guaranteed non-nil logger.
+#|
+#|Latest v1.6.3 also races when `SyncParentLevel` observes concurrent
+#|`SetLevel`/`GetLevel`: the race detector reports writes and reads of `level`,
+#|`setEpoch`, and `ownEpoch` under both SDKs. Other characterized boundaries are
+#|not blockers: `New`, `NewNullLogger`, and `NewSinkAdapter` accept nil options;
+#|`FromContext(nil)` and `FromStandardLogger` with nil options panic;
+#|`With(nil)` drops the unmatched value; `ImpliedArgs` and leveled-writer maps
+#|alias caller-visible state; reset preserves old output on flush error; and
+#|callers own output closure.
+#|
+#|No higher version fixes the five common defects. V1.3.1 therefore cannot be
+#|selected despite API compatibility, and v1.4.0 or later adds an independent
+#|public-interface break. Exact v1.1.0 or lower cannot replace selected without
+#|changing the owning parent: an exact v1.1.0 get downgrades Viper v1.15.0 to
+#|v1.10.1, while v0.9.2 additionally removes mvn-pom-mutator. Those parent moves
+#|are outside this dependency group.
+#|
+#|Selected v1.2.0 exists through exactly one selected-version edge from Viper
+#|v1.15.0. Historical Viper v1.10.1 and `sagikazarmark/crypt v0.4.0` request
+#|v1.0.0; historical Consul API v1.12.0 and Consul SDK v0.8.0 request v0.12.0.
+#|The shortest path is main -> Viper v1.15.0 -> go-hclog v1.2.0. `go mod why -m`
+#|is negative, repository Go imports are zero, and production and complete-test
+#|loads contain zero target packages, so go-hclog is runtime-unreachable.
+#|
+#|Disposable exact v1.2.0/v1.3.1/v1.4.0/v1.6.3 gets retain 234 modules, all
+#|unrelated selections, 355 production entries, 429 complete-test entries, and
+#|zero target load. They manufacture a direct indirect root and target checksum;
+#|later choices move only the target. Tidy removes the manufactured root and
+#|returns every projection to selected v1.2.0 and the same base projection. No
+#|projection was applied.
 #|
 #|Fresh primary vulnerability data has 1,399 records at SHA-256
 #|`033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`
-#|and Last-Modified 2026-09-15T18:54:35Z. It has no exact go-cleanhttp,
-#|Errwrap, or other new guarded-target record; exact go-cleanhttp
-#|v0.5.0/v0.5.1/v0.5.2 OSV responses are empty. Gorilla retains only
-#|GO-2020-0019 and unwithdrawn GO-2026-6278 at record SHA-256
-#|`bb7e1fb07bb85bab3169ecf4a108e25a61aeee50ed8175f7dd6f8134d9bfb228`.
+#|and Last-Modified 2026-09-15T18:54:35Z, with no go-hclog record. Exact OSV
+#|queries for v1.2.0, v1.3.1, v1.4.0, and v1.6.3 are empty. Selected v1.2.0 has
+#|zero Go 1.26.7 module/package/symbol/test-symbol findings. V1.3.1 and later
+#|carry module-only GO-2026-5024 through old `x/sys`; it affects
+#|`x/sys/windows.NewNTUnicodeString`, but scans contain no vulnerable-package,
+#|called-symbol, go-hclog, or reachable target trace. Go 1.18.10 scans report
+#|only the old SDK and that later closure module population; no advisory is
+#|assigned to go-hclog. The project retains its normalized 30 advisory IDs and
+#|zero target SBOM package, symbol, test-symbol, or reachable trace.
 #|
-#|A bounded queue survey identifies selected Hashicorp go-hclog v1.2.0 in the
-#|current build list. That selection is not proof of repository identity, release
-#|qualification, ancestry, floor, package loading, behavior, vulnerability
-#|state, or suitability. Resolve those facts independently and do not add a
-#|direct edge merely to alter MVS.
+#|The unchanged project remains 234 modules, 3,599 graph edges, 429 complete-test
+#|entries, 197 module-backed entries across 41 loaded modules, 1,067 sum lines,
+#|and a 432-line unapplied tidy projection. `go.mod` and `go.sum` SHA-256 remain
+#|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+#|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+#|Applicable Go 1.26.7 and contained Go 1.18.10 project gates pass; Go 1.18 keeps
+#|only the two accepted Darwin `pkg/shell` wording failures. Accepted quality
+#|remains 27/27 Q0-Q2 PASS at L2. No dependency implementation or metadata
+#|commit was created.
 #|
-#|Recreate exact Go 1.26.7 beneath `$CODEX_SESSION_SCRATCH_ROOT`, verify binary
-#|SHA-256
-#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
-#|put it first in `PATH`, keep `GOENV=off`, `GOWORK=off`,
-#|`GOTOOLCHAIN=local`, inject no ambient `GOFLAGS`, and use
-#|`LC_ALL=C LANG=C`. Recreate contained Go 1.18.10 and pinned tools beneath
-#|scratch as required. Portable receipts remain golangci-lint 2.12.2 archive
-#|`a9c54498731b3128f79e090be6110f3e5fffccc617b08142ed244d4126c73f29`
-#|and GoReleaser 2.17.1 binary
-#|`f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c`.
-#|Preserve the known apidiff archive reproducibility discrepancy, Python 3.14
-#|Docker timestamp control, managed bare-mktemp restriction, and nested launcher
-#|signal-retention timing race; none is Hashicorp go-hclog evidence.
+#|# Authorized Product Options
+#|
+#|Present these options without silently choosing one:
+#|
+#|1. **Retain exact v1.2.0 under a bounded exception (recommended).** Keep exact
+#|   inherited, unloaded v1.2.0 and the sole selected-version Viper v1.15.0 edge
+#|   without changing `go.mod` or `go.sum`. Accept only the five completed common
+#|   behavior findings, characterized nil/panic, aliasing, allocation,
+#|   concurrency, resource, API, closure-vulnerability, and related qualification
+#|   findings. The exception is go-hclog-specific and valid only while exact
+#|   v1.2.0 and that edge remain unchanged, zero target packages load, the module
+#|   remains runtime-unreachable, and no new advisory or independent defect
+#|   appears. Direct import/loading, runtime reachability, a target version or
+#|   incoming-edge change, or a new advisory or independent defect requires a
+#|   fresh go-hclog dependency and product decision before merge.
+#|2. **Authorize a separate remediation study.** Keep this session no-change and
+#|   prepare a new bounded mission to evaluate parent removal, an upstream patch,
+#|   fork, wrapper, or architecture replacement. This option does not itself
+#|   authorize implementation, a Viper change, direct target use, a Go-floor
+#|   change, or unrelated module movement.
+#|3. **Block P7.** Leave go-hclog unresolved and stop the upgrade before merge
+#|   until an exact-path stable release independently satisfies the contracts.
+#|
+#|Do not offer v1.3.1 as qualified, promote v1.4.0+, downgrade Viper, change or
+#|remove a parent, add a direct go-hclog edge, patch or fork source, raise the Go
+#|floor, alter another guarded dependency, or manufacture a dependency commit
+#|without a separately explicit choice and scope.
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve proxy, sumdb, `go-import`,
-#|Git, and forge evidence for the exact module path: tags, releases, branches,
-#|signatures, commits, parents, trees, times, ancestry, repository status,
-#|licenses, retractions, deprecations, redirects, forks, alternate paths, major
-#|module lines, and every serious exact-path stable candidate. Do not silently
-#|promote a redirect, fork, alternate path, different major module path,
-#|prerelease, non-versioning tag, unreleased branch head, or floor-ineligible
-#|release.
-#|
-#|Prove the complete minimal production and test closure under exact Go 1.26.7
-#|and contained Go 1.18.10. Inspect imported source and test dependencies rather
-#|than treating the module directive alone as floor proof. Separate isolated
-#|source-time resolution from the project's selected MVS graph and from every
-#|already-final guarded dependency decision.
-#|
-#|Inspect every package, command, exported API, example, benchmark, fuzz target,
-#|testdata, generated file, platform or build-tag branch, and applicable API and
-#|runtime boundary. Characterize deterministic behavior, errors and identity,
-#|nil/panic behavior, mutation and aliasing, allocation, concurrency, global
-#|state, resource cleanup, and malformed inputs. Distinguish tools, examples,
-#|optional packages, and test-only helpers from behavior actually loaded by this
-#|project.
-#|
-#|Add independent fixtures where useful for deterministic behavior, error
-#|identity, nil/panic boundaries, malformed inputs, mutation, aliasing, supported
-#|concurrency, resource cleanup, and selected-project consumers. Run source
-#|verification, package listing, native complete tests, two independent repeats,
-#|race, vet, and meaningful cross-builds under both SDKs. Classify every failure
-#|precisely.
-#|
-#|Prove exact project module, graph, package, checksum, tidy, API/CLI,
-#|compatibility, acceptance, and vulnerability effects for selected and every
-#|serious candidate in disposable trees. Explain why the target exists in MVS,
-#|whether a target package actually loads, and preserve every unrelated module
-#|selection. Any required parent, major-path, floor, architecture, or unrelated-
-#|module change needs a fresh bounded decision rather than silent
-#|implementation. Compare primary vulnerability results at module, package,
-#|symbol, test-symbol, and reachable-trace levels.
+#|This is a decision session, not a renewed audit or implementation. Ask for one
+#|explicit option selection if none was provided with the session invocation.
+#|Elapsed time is not approval. Once the user chooses, revalidate only exact
+#|selection, incoming edge, negative why, zero target and guarded package loads,
+#|project hashes, runtime unreachability, and current advisory state. Record the
+#|choice without broadening it.
 #|
 #|# Required Reading
 #|
 #|At start verify the feature branch, clean ordinary and ignored status, current
-#|ancestry, latest Google UUID dependency implementation identity, reciprocal
-#|archive history, P7/P8 state, every unchanged qualification/exception guard,
-#|and `./codex-dev-start.sh --check`. Read this archive, the answered
-#|go-cleanhttp evaluation, the Errwrap decision/evaluation, the Consul SDK and
-#|earlier guarded-decision archives, rolling handover, roadmap, `go.mod`,
-#|`go.sum`, and every referenced quality, compatibility, release, runner,
-#|evidence, and lifecycle contract. Earlier outcomes are final.
+#|ancestry, reciprocal archive history, latest Google UUID implementation
+#|identity, P7/P8 state, all guarded invariants, and
+#|`./codex-dev-start.sh --check`. Read this archive, the answered go-hclog
+#|evaluation, rolling handover, roadmap, `go.mod`, `go.sum`, and referenced
+#|lifecycle contracts. Reuse the completed audit.
 #|
 #|# Three Moves
 #|
-#|First, determine the highest qualified exact-path stable release whose complete
-#|minimal source/test closure preserves Go 1.18. Do not promote an unqualified or
-#|floor-ineligible identity. If no candidate satisfies the existing contracts,
-#|preserve the evidence and stop for a fresh bounded product decision.
-#|
-#|Second, qualify selected and serious candidates across source, tests, API,
-#|behavior, loading, MVS, vulnerability, and project contracts. For an authorized
-#|changed selection, use exact Go 1.26.7 and exact `go get` for one dependency-
-#|only commit, never tidy as implementation, then run the complete P7 dependency
-#|gate. For a retained or blocked selection, prove the no-change effect and run
-#|all applicable gates without manufacturing activity. Full changed-selection
-#|quality must preserve 27/27 Q0-Q2 PASS at L2 with zero held, regressed, non-
-#|comparable, or dirty counts.
-#|
-#|Third, update the roadmap and rolling handover with exact evidence, outcome,
-#|commit identity, limitations, and next boundary. Answer this archive and
-#|prepare one reciprocal NEXT mission only after the bounded outcome is coherent
-#|and committed. Do not execute the successor.
+#|First, revalidate only the bounded decision guards and present the three
+#|options. Second, wait for and record one explicit user selection, including
+#|its accepted findings, limits, and expiry triggers; do not infer approval.
+#|Third, answer this archive and prepare exactly one reciprocal NEXT mission
+#|consistent with the choice. Do not execute the successor.
 #|
 #|# Automatic Handoff
 #|
-#|After a completed coherent result, make the required local
-#|`docs: prepare next agent session` commit. Do not launch a successor, push,
-#|merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
-#|combine another dependency group, or begin P8.
+#|Only after an explicit choice, run applicable no-change lifecycle gates and
+#|make the required local `docs: prepare next agent session` commit. Do not
+#|implement an option, launch a successor, push, merge, publish, release, stash,
+#|revert, bypass cleanup, remove the worktree, combine another dependency group,
+#|or begin P8.
 # CODEX_MUTABLE_PROMPT_END

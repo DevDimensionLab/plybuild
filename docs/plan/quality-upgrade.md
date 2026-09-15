@@ -9915,6 +9915,69 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   bounded go-cleanhttp decision. This guard is target-specific and transfers
   no earlier exception.
 
+- The bounded exact-path Hashicorp go-hclog evaluation is complete and blocked:
+  no stable release satisfies the current behavior and compatibility contracts.
+  Exact selected v1.2.0 remains physically inherited from Viper v1.15.0 only
+  because no metadata was changed; it is not qualified or retained by
+  exception. P7 stops for the reciprocal product decision.
+- Canonical identity is public active unarchived non-fork MIT repository
+  `https://github.com/hashicorp/go-hclog.git`. The proxy exposes 31 stable
+  releases from v0.7.0 through `@latest` v1.6.3, no retraction, deprecation,
+  redirect, or `/v2` line. Selected v1.2.0 is commit
+  `b6b55671f4e5b82443139ee3e9f4417603c4cd72`, tree
+  `45f0da0a3b7eb001522fc9891504cee03d951ef0`; latest v1.6.3 is commit
+  `d12136aa2e51933c460084f5083b6d5bb9d41960`, tree
+  `26c5c9247ad5b3a6f930ea2b1fc0a1ee532a7804`. Proxy/Git source matches and
+  strict verification passes. Non-semver aliases, nested-module tags, branch
+  heads, and unreleased Go-1.25 main were not promoted.
+- Every stable release declares no more than Go 1.13. Imported selected/latest
+  source/test closures declare no more than Go 1.17 and execute under exact Go
+  1.26.7 and contained Go 1.18.10. Serious releases contain one package, 12
+  production files, seven tests, two platform color branches, and one
+  benchmark, with no commands, examples, fuzz, testdata, generated/cgo/embed/
+  generator files, or symlinks. Serious native repeated/race/vet and applicable
+  cross-build gates pass under both SDKs.
+- V1.3.1 is the last API-compatible candidate: v1.2.1/v1.2.2 are API-identical
+  to selected, and v1.3.0/v1.3.1 add only
+  `LoggerOptions.ColorHeaderAndFields`. V1.4.0+ incompatibly add
+  `Logger.GetLevel` to the exported interface.
+- The independent fixture SHA-256 is
+  `b62af8023aa4e9d2b84a20db69627992998bfa29e7c268832025b345dcf5bb26`.
+  Selected and every compatible patch fail five contracts under both SDKs:
+  NaN silently drops JSON records; caller fields overwrite `@message` and
+  `@level`; absent-sink deregistration underflows and disables a future sink;
+  self-deregistration deadlocks under the held sink mutex; and
+  `SetDefault(nil)` violates the documented non-nil `FromContext` result.
+  Source history retains all five through latest. Latest additionally races in
+  `SyncParentLevel` concurrent level/epoch access under both SDKs. Determinism,
+  routing, exact error identity, nil/panic, mutation/aliasing, allocations,
+  supported concurrency, and caller-owned cleanup were characterized.
+- Selected v1.2.0 has one selected-version Viper v1.15.0 edge; historical
+  requests are v1.0.0 and v0.12.0. Its why result is negative, repository Go
+  occurrences and target package loads are zero, and it is runtime-unreachable.
+  Disposable exact serious gets preserve 234 modules, every unrelated
+  selection, 429 complete-test entries, and zero load; tidy restores selected
+  and the exact base projection. Exact v1.1.0 forces Viper v1.15.0 -> v1.10.1,
+  so lower releases require a separate parent decision. No projection applied.
+- Fresh primary data remains 1,399 records at SHA-256
+  `033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`
+  and Last-Modified 2026-09-15T18:54:35Z with no target record; exact serious
+  OSV responses are empty. Selected has zero Go-1.26 source findings. V1.3.1+
+  has module-only GO-2026-5024 through old `x/sys` with no vulnerable package,
+  called symbol, target frame, or project reachability. Project scans retain 30
+  IDs and zero target occurrence.
+- The unchanged project remains 234 modules, 3,599 graph edges, 429 complete-
+  test entries, 197 module-backed entries across 41 loaded modules, 1,067 sum
+  lines, and the 432-line tidy projection. Exact module hashes remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Applicable Go-1.26/project/API/CLI/lint/acceptance/meta/audit controls pass;
+  Go 1.18 retains only the two accepted shell wording failures. An independent
+  lifecycle run passes 62/62; full preflight retains its known nested timing
+  race. Accepted quality remains 27/27 Q0-Q2 PASS at L2. The 1,328-entry
+  evidence manifest SHA-256 is
+  `e6647301b469e2c915ca07bd1f2b0f7856e6b55df75c76a350943cc780783a9f`.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
