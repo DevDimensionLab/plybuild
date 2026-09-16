@@ -5374,9 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after recording the user's 2026-09-16 bounded Hashicorp
-go-hclog option 1 decision; the next bounded group is selected exact-path
-`github.com/hashicorp/go-immutable-radix v1.3.1`.
+Status: active after completing the bounded exact-path Hashicorp
+go-immutable-radix evaluation; no stable release qualifies, so P7 is blocked
+only on the prepared product decision.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 and all retained-module decisions remain guarded through exact inherited,
 unloaded `github.com/hashicorp/go-hclog v1.2.0`. P8 remains queued.
@@ -10017,9 +10017,79 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   target except Gorilla have empty exact-version OSV responses; Gorilla retains
   only the recorded GO-2026-6278/GHSA-w67g-5rqw-f597 result and the primary
   index's existing GO-2020-0019 entry. No new advisory or independent defect
-  appeared. The next bounded P7 group is selected exact-path
-  `github.com/hashicorp/go-immutable-radix v1.3.1`; it was not evaluated in
-  this decision-recording session.
+  appeared. The following bounded exact-path go-immutable-radix evaluation
+  supersedes the former queue boundary without changing this decision.
+
+- The bounded exact-path Hashicorp go-immutable-radix evaluation is complete:
+  no stable release satisfies every behavior and current-API contract. Exact
+  selected v1.3.1 remains inherited and unloaded, but is not qualified or
+  accepted. No dependency metadata changed; P7 stops for the prepared bounded
+  product decision.
+- Canonical identity is public active unarchived non-fork MPL-2.0 repository
+  `https://github.com/hashicorp/go-immutable-radix.git`. The exact v1 proxy
+  exposes v1.0.0-v1.3.1, with v1.3.1 at `@latest`; there is no retraction,
+  module deprecation, redirect, or newer exact-path stable. V2 releases and
+  current master belong to distinct module path `/v2`. Selected v1.3.1 is
+  verified commit `49d1d02c49a783de548d1ba8ae8fde466a20b9e6`, parent
+  `f63f49c0b598a5ead21c5015fb4d08fe7e3c21ea`, tree
+  `b7c0058c779f65f8fb81f1db6e17023cbe8bfe0c`; proxy/Git bytes match.
+- All five releases omit a `go` directive and resolve the same minimal target,
+  production `golang-lru v0.5.0`, and test-only `go-uuid v1.0.0` closure. The
+  imported closure preserves Go 1.18. Every release passes verification,
+  build, count-one, two count-ten repeats, race, vet, and Darwin AMD64, Linux
+  AMD64/ARM64, Windows AMD64, and js/wasm production/test cross-compilation
+  under exact Go 1.26.7 and Go 1.18.10.
+- Selected source has one package, six production files, three tests, and no
+  command, example, benchmark, modern fuzz target, testdata, generated file,
+  platform/build-tag branch, cgo, embed, generator, or symlink. API additions
+  through v1.3.0 are compatible; v1.3.1 makes `ReverseIterator` non-comparable.
+  V1.0.0 lacks six current APIs and is not a compatible downgrade.
+- The behavior fixture SHA-256 is
+  `778d70a8c17156da17a0c6f32cf3f71b1b0033e4abb646d28516b4d3b089b32b`.
+  It passes deterministic ordering, CRUD/snapshots, prefix deletion,
+  transaction cloning, watch lifecycle, arbitrary-byte keys, immutable
+  concurrent reads, nil/panic, allocation, and aliasing checks under both
+  SDKs. Keys alias caller/internal byte storage and must remain immutable;
+  values retain caller identity. Transactions are not thread-safe; independent
+  clones are. Package watch/LRU resource boundaries are characterized.
+- The minimal blocker fixture SHA-256 is
+  `8e9476f3989e6ab4bed98ec99cc4409401b0d727982362b5de2374e4b92b6318`.
+  On an empty tree, missing `Iterator.SeekPrefix` followed by
+  `Iterator.SeekLowerBound` nil-dereferences and panics under both SDKs.
+  V1.1.0-v1.3.1 all fail and open upstream issue #50 records the defect.
+  V1.1.0-v1.3.0 also retain the older issue-#28 prefix-key panic; v1.0.0 lacks
+  the API and removes current exports. No exact-path stable release qualifies.
+- Selected v1.3.1 has selected-version incoming edges from Viper v1.15.0,
+  historical Viper v1.10.1, and `sagikazarmark/crypt v0.4.0`. Its why result
+  and source import search are negative and target package loads are zero, so
+  it is runtime-unreachable. A disposable v1.3.1 get preserves all 234
+  selections and zero load but manufactures target/golang-lru roots and two
+  checksum lines; tidy returns to the exact base projection. Exact
+  v1.0.0-v1.3.0 gets downgrade Viper to v1.9.0, move golang-lru, remove
+  mvn-pom-mutator, collapse the graph to 180 modules, and break project loads.
+  No projection was applied.
+- Fresh primary vulnerability data remains 1,399 records at SHA-256
+  `033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`
+  and Last-Modified 2026-09-15T18:54:35Z with no target record; all five exact
+  OSV responses are empty. Go 1.26.7 isolated scans are empty. Go 1.18.10
+  reports only old-SDK standard-library advisories. Project base and disposable
+  v1.3.1 scan populations are identical with zero target package, symbol,
+  test-symbol, or reachable trace.
+- All twelve guarded modules retain exact selections and incoming edges,
+  negative why results, zero repository imports and package loads, runtime
+  unreachability, and prior advisory state. The project remains 234 modules,
+  3,599 edges, 355 production entries, 429 complete-test entries, 197 module-
+  backed entries across 41 modules, 1,067 sum lines, and the 432-line tidy
+  projection. Module hashes remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Applicable exact-Go/project/API/CLI/lint/acceptance/meta/audit controls pass,
+  including all 17 script meta-tests and 80/80 mutation kills. Go 1.18 retains
+  only the two accepted shell wording failures. The known launcher signal/log
+  timing race remains target-independent; `--check` and launcher-auto pass.
+  Accepted quality remains 27/27 Q0-Q2 PASS at L2. The 435-entry evidence
+  manifest SHA-256 is
+  `8a30047f3bf22c7ad7e33974aee395c26dc5c10cbd37c9f6dd03daafc1e4b939`.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

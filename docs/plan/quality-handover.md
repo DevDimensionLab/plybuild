@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-16T21:01:29+02:00
+Generated: 2026-09-16T22:55:21+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-hclog decision
-  recording began from clean HEAD
-  `d536b6832a85123dc49cf4fbcf4876f4083458d4`, parent
-  `f7f3a65d645ce4ce4caf8d1ac3e1da77ccd19727`, tree
-  `cab76bf3e4948d54fdbf032ba0c4a788c7cafda7`.
+  `codex/upgrade-quality`, base master at `5635d50`. The
+  go-immutable-radix evaluation began from clean HEAD
+  `c30c70043847f1f4ed2f40c100ab3d5d6dc1bc6e`, parent
+  `7afe8f607fef3067c71d3cdd219041a97303dd20`, tree
+  `220a90e23a0bb33f3d98a511a012be8974d6c422`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,10 +20,10 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-hclog decision archive and every earlier archive are answered. The
-  sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-16T210129+0200-evaluate-hashicorp-go-immutable-radix-dependency.md`.
-  It authorizes only the next bounded P7 group and has not been executed.
+- The go-immutable-radix evaluation archive and every earlier archive are
+  answered. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-16T225521+0200-decide-hashicorp-go-immutable-radix-product-direction.md`.
+  It authorizes only the bounded product decision and has not been executed.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -32,12 +32,12 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 has recorded the user's bounded Hashicorp go-hclog
-option 1 decision because no exact-path stable release qualifies. Exact Go
-1.26.7, every accepted dependency move through Google UUID v1.4.0, qualified
-go-cleanhttp, and all retained-module decisions through exact inherited,
-unloaded go-hclog v1.2.0 are final under their target-specific guards. The
-next bounded group is selected exact-path Hashicorp go-immutable-radix v1.3.1.
-P8 remains queued. Do not combine groups or begin P8.
+option 1 decision. The bounded go-immutable-radix evaluation is now complete:
+no exact-path stable release qualifies, so P7 is blocked only on its prepared
+product decision. Exact Go 1.26.7, every accepted dependency move through
+Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
+through exact inherited, unloaded go-hclog v1.2.0 are final under their target-
+specific guards. P8 remains queued. Do not combine groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -52,20 +52,109 @@ The gRPC Prometheus v1.2.0, gRPC middleware v1.0.0, Gorilla WebSocket v1.4.2,
 GopherJS `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy
 v0.2.1, and GAX v2.7.0 decisions remain separate under their exact-selection,
 selected-version incoming-edge, zero-load, runtime-unreachable, and no-new-
-finding guards. At SDK evaluation start Consul API retained its sole
-Viper v1.15.0 edge; Gateway retained exactly its two recorded incoming edges;
+finding guards. At go-immutable-radix evaluation completion Consul API
+retained its sole Viper v1.15.0 edge; Gateway retained exactly its two
+recorded incoming edges;
 gRPC Prometheus, gRPC middleware, and Gorilla retained their sole mvn-pom-
 mutator v0.2.3 edges; GopherJS retained its sole GoConvey v1.6.4 edge; and
 Enterprise Certificate Proxy and GAX retained their sole Viper v1.15.0 edges.
 All earlier guarded why results are negative; source imports and target package
 loads are zero, and runtime unreachability remains intact.
 
-Fresh primary data has no new exact record for those targets. Gorilla retains
-only its recorded entries, including unwithdrawn GO-2026-6278. Direct import or
+Fresh primary data has no new exact record for those targets. All twelve why
+results remain negative, repository imports are zero, and production and
+complete-test loads contain zero guarded packages. Gorilla retains only its
+recorded entries, including unwithdrawn GO-2026-6278. Direct import or
 loading, runtime reachability, a version or incoming-edge change, or a new
 advisory/independent defect expires the owning exception and requires its fresh
 decision. Do not change either Gateway parent, mvn-pom-mutator, GoConvey, or
 Viper; reopen an earlier choice; or transfer any exception between targets.
+
+## Hashicorp Go Immutable Radix Evaluation
+
+No exact-path stable `github.com/hashicorp/go-immutable-radix` release
+qualifies under the current behavior and API contracts. Exact selected v1.3.1
+remains inherited, unloaded, and runtime-unreachable, but this evaluation did
+not accept it. No source or dependency metadata changed. The sole NEXT session
+offers guarded v1.3.1 retention, a separately scoped remediation study, or a
+P7 block; no option has been selected.
+
+Fresh identity evidence resolves public active unarchived non-fork MPL-2.0
+repository `https://github.com/hashicorp/go-immutable-radix.git`. The exact v1
+proxy exposes only v1.0.0-v1.3.1, with v1.3.1 at `@latest`; there is no
+retraction, module deprecation, redirect, or newer exact-path stable release.
+V2.0.0/v2.1.0 and current master belong to the distinct `/v2` module. Selected
+v1.3.1 is verified commit
+`49d1d02c49a783de548d1ba8ae8fde466a20b9e6`, parent
+`f63f49c0b598a5ead21c5015fb4d08fe7e3c21ea`, tree
+`b7c0058c779f65f8fb81f1db6e17023cbe8bfe0c`. Strict Git and proxy/Git byte
+verification pass for every v1 release.
+
+All five v1 releases omit a `go` directive and have the same three-module
+minimal closure: target, production `golang-lru v0.5.0`, and test-only
+`go-uuid v1.0.0`. Imported closure source preserves Go 1.18. Every release
+passes verification, build, native count-one, two count-ten repeats, race,
+vet, and Darwin AMD64, Linux AMD64/ARM64, Windows AMD64, and js/wasm
+production/test cross-compilation under exact Go 1.26.7 and Go 1.18.10.
+
+Selected source has one package, six production files, three tests, and no
+command, example, benchmark, modern fuzz target, testdata, generated file,
+platform/build-tag branch, cgo, embed, generator, or symlink. API additions
+through v1.3.0 are compatible; v1.3.1 makes `ReverseIterator` non-comparable.
+V1.0.0 lacks six current APIs and is not a compatible downgrade.
+
+The characterization fixture SHA-256 is
+`778d70a8c17156da17a0c6f32cf3f71b1b0033e4abb646d28516b4d3b089b32b`.
+It passes deterministic ordering, CRUD/snapshot, prefix deletion, transaction
+clone, watch lifecycle, arbitrary-byte key, immutable concurrent-read, nil/
+panic, allocation, and aliasing checks under both SDKs. Keys alias caller or
+internal storage and must not be mutated; values retain caller identity. Tree
+snapshots support concurrent reads, transactions are not thread-safe, cloned
+transactions are independent, and package-owned watch/LRU lifecycle is
+bounded. `Get` is allocation-free in the measured case; `Insert` allocates 16
+times under Go 1.26.7.
+
+The minimal failing fixture SHA-256 is
+`8e9476f3989e6ab4bed98ec99cc4409401b0d727982362b5de2374e4b92b6318`.
+On an empty tree, a missing `Iterator.SeekPrefix` followed by
+`Iterator.SeekLowerBound` on the same iterator nil-dereferences and panics
+under both SDKs. V1.1.0-v1.3.1 all fail; open upstream issue #50 reports the
+same defect. V1.1.0-v1.3.0 also retain the older issue-#28 prefix-key panic,
+while v1.0.0 lacks `SeekLowerBound` and current API. No stable candidate can
+therefore be selected without an explicit product exception.
+
+Selected v1.3.1 has selected-version edges from Viper v1.15.0, historical
+Viper v1.10.1, and `sagikazarmark/crypt v0.4.0`; lower go-metrics/memberlist
+requests are v1.0.0. Its why result and source-import search are negative, and
+the production/complete-test loads contain zero target packages. A disposable
+v1.3.1 get preserves all 234 selections and zero target load but manufactures
+two direct roots and two checksum lines; tidy returns to the exact base
+projection. Exact v1.0.0-v1.3.0 gets downgrade Viper to v1.9.0, move
+golang-lru, remove mvn-pom-mutator, collapse the graph to 180 modules, and
+break project loading. No projection was applied.
+
+Fresh primary data remains 1,399 records at SHA-256
+`033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`
+and Last-Modified 2026-09-15T18:54:35Z with no target record. Exact OSV
+responses for all five v1 releases are empty. Go 1.26.7 isolated scans are
+empty at module/package/symbol/test-symbol levels; Go 1.18.10 reports only its
+old standard-library advisories. Base and disposable-v1.3.1 project scan
+populations are identical and contain zero target package, symbol, test-
+symbol, or reachable trace.
+
+The project remains 234 modules, 3,599 graph edges, 355 production entries,
+429 complete-test entries, 197 module-backed entries across 41 loaded modules,
+1,067 sum lines, and the 432-line tidy projection. `go.mod`/`go.sum` SHA-256
+remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Applicable exact-Go/project/API/CLI/lint/acceptance/meta/audit controls pass,
+including all 17 script meta-tests and 80/80 mutation kills. Go 1.18 retains
+only the two accepted shell wording failures. The launcher lifecycle retained
+only its known signal/log timing race after controls 1-25; `--check` and
+launcher-auto pass. Accepted quality remains 27/27 Q0-Q2 PASS at L2. The 435-
+entry evidence manifest SHA-256 is
+`8a30047f3bf22c7ad7e33974aee395c26dc5c10cbd37c9f6dd03daafc1e4b939`.
 
 ## Hashicorp go-hclog Product Decision
 
@@ -743,12 +832,12 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Independently evaluate selected exact-path
-`github.com/hashicorp/go-immutable-radix v1.3.1` as one bounded P7 dependency
-group. Resolve repository/release identity, Go-floor closure, source, tests,
-API, behavior, project loading, MVS effects, vulnerability state, and every
-applicable quality contract. Retain or select only a qualified exact-path
-stable release whose complete minimal source/test closure preserves Go 1.18;
-otherwise stop for a fresh bounded product decision. Preserve the go-hclog
-exception, qualified go-cleanhttp, Errwrap, and every earlier target-specific
-decision. Do not evaluate a second group or begin P8.
+Obtain and record one explicit product decision for exact-path
+`github.com/hashicorp/go-immutable-radix`. Present only the three prepared
+options: retain exact inherited, unloaded v1.3.1 under a target-specific
+exception for the completed iterator-reseek panic and characterized findings;
+authorize a separate remediation study without implementation authority; or
+block P7. Revalidate only the decision guards, do not repeat the evaluation,
+and do not implement a choice in that session. Preserve the go-hclog exception,
+qualified go-cleanhttp, Errwrap, and every earlier target-specific decision.
+Do not evaluate another dependency group or begin P8.
