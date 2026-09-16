@@ -5374,8 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the next bounded Hashicorp go-hclog dependency evaluation
-after retaining qualified exact Hashicorp go-cleanhttp v0.5.2.
+Status: active for guard-only recording of the user's 2026-09-16 bounded
+Hashicorp go-hclog option 1 decision after retaining qualified exact Hashicorp
+go-cleanhttp v0.5.2.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 and all retained-module decisions remain guarded through exact inherited,
 unloaded `github.com/hashicorp/errwrap v1.0.0`. P8 remains queued.
@@ -9977,6 +9978,26 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   race. Accepted quality remains 27/27 Q0-Q2 PASS at L2. The 1,328-entry
   evidence manifest SHA-256 is
   `e6647301b469e2c915ca07bd1f2b0f7856e6b55df75c76a350943cc780783a9f`.
+  Product direction supplied 2026-09-16: the user explicitly selected option 1
+  with the recommended bounds. Retain exact selected, inherited, unloaded
+  go-hclog v1.2.0 without changing `go.mod` or `go.sum`. Accept only the five
+  completed common behavior findings, characterized nil/panic, aliasing,
+  allocation, concurrency, resource, API, closure-vulnerability, and related
+  qualification findings. The exception is go-hclog-specific and non-
+  transferable. It remains valid only while exact v1.2.0 and its sole selected-
+  version incoming edge from Viper v1.15.0 remain unchanged, zero go-hclog
+  packages load, the module remains runtime-unreachable, and no new advisory
+  or independent defect appears. Direct import/loading, runtime reachability,
+  a version or incoming-edge change, or a new advisory or independent defect
+  expires the exception and requires a fresh go-hclog dependency and product
+  decision before merge. Do not add a direct edge, select v1.3.1 or another
+  version, promote v1.4.0+, downgrade or otherwise change Viper, remove/change
+  a parent, patch/fork source, authorize a wrapper or replacement architecture,
+  raise the Go floor, move unrelated selections, alter another guarded
+  dependency, manufacture a dependency commit, transfer another exception, or
+  request this same choice again while all guards hold. Revalidate only the
+  guards, record the decision, answer its archive, and prepare one next bounded
+  P7 mission without executing it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

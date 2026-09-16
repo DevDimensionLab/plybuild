@@ -22,8 +22,9 @@ session diary.
   or metadata commit.
 - The go-hclog evaluation archive and every earlier archive are answered. The
   sole NEXT archive is `docs/plan/agent-sessions/2026-09-15T234309+0200-decide-hashicorp-go-hclog-product-direction.md`. It authorizes only the bounded go-hclog
-  product decision, requires one explicit user choice, and does not authorize
-  implementation, another dependency group, or P8.
+  product decision. The user supplied option 1 with the recommended bounds on
+  2026-09-16; this authorizes decision recording, not implementation, another
+  dependency group, or P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -31,12 +32,13 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is stopped at one bounded Hashicorp go-hclog product
-decision because no exact-path stable release qualifies. Exact Go 1.26.7,
-every accepted dependency move through Google UUID v1.4.0, qualified
+P2A-P6 are complete. P7 is recording the user's bounded Hashicorp go-hclog
+option 1 decision because no exact-path stable release qualifies. Exact Go
+1.26.7, every accepted dependency move through Google UUID v1.4.0, qualified
 go-cleanhttp, and all retained-module decisions through exact inherited,
 unloaded Errwrap v1.0.0 are final under their target-specific guards. P8
-remains queued. Do not infer the go-hclog choice, combine groups, or begin P8.
+remains queued. Do not combine groups or begin P8 before this decision is
+revalidated and recorded in a committed handoff.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -66,14 +68,30 @@ advisory/independent defect expires the owning exception and requires its fresh
 decision. Do not change either Gateway parent, mvn-pom-mutator, GoConvey, or
 Viper; reopen an earlier choice; or transfer any exception between targets.
 
-## Hashicorp go-hclog Evaluation And Decision Boundary
+## Hashicorp go-hclog Product Decision
 
 No exact-path stable `github.com/hashicorp/go-hclog` release qualifies under
-the current behavior and compatibility contracts. The project remains
-byte-for-byte unchanged with inherited, unloaded v1.2.0 selected through the
-sole selected-version Viper v1.15.0 edge, but that physical state is not a
-qualification or accepted exception. P7 now stops for the bounded decision in
-the sole NEXT archive.
+the current behavior and compatibility contracts. On 2026-09-16 the user
+explicitly selected option 1 with the recommended bounds: retain exact
+selected, inherited, unloaded v1.2.0 without changing `go.mod` or `go.sum`.
+Accept only the five completed common behavior findings, characterized nil/
+panic, aliasing, allocation, concurrency, resource, API, closure-vulnerability,
+and related qualification findings. This does not accept a new or independently
+discovered defect. The exception is go-hclog-specific and non-transferable.
+
+It remains valid only while exact v1.2.0 and its sole selected-version incoming
+edge from Viper v1.15.0 remain unchanged, zero go-hclog packages load, the
+module remains runtime-unreachable, and no new advisory or independent defect
+appears. Revalidate and record these guards in the committed decision. Direct
+import/loading, runtime reachability, a target version or incoming-edge change,
+or a new advisory or independent defect expires the exception and requires a
+fresh go-hclog dependency and product decision before merge. Do not add a
+direct edge, select v1.3.1 or another version, promote v1.4.0 or later,
+downgrade or otherwise change Viper, remove/change a parent, patch/fork source,
+authorize a wrapper or replacement architecture, raise the Go floor, move
+unrelated selections, alter another guarded dependency, or manufacture a
+dependency commit. Do not ask for this same choice again while all guards hold.
+All earlier decisions and exceptions remain separate.
 
 Fresh identity evidence resolves canonical public active unarchived non-fork
 MIT repository `https://github.com/hashicorp/go-hclog.git`. The proxy lists 31
@@ -156,11 +174,10 @@ or metadata commit was created. The 1,328-entry disposable evidence manifest
 SHA-256 is
 `e6647301b469e2c915ca07bd1f2b0f7856e6b55df75c76a350943cc780783a9f`.
 
-The next session must present exactly three choices: recommended guarded
-retention of exact inherited unloaded v1.2.0 with the completed findings;
-a separately scoped remediation study without implementation authority; or a
-P7 block. It must not infer a choice, qualify v1.3.1, promote v1.4.0+, downgrade
-Viper, add a direct edge, or implement a patch/fork/parent change.
+The user's bounded go-hclog option 1 exception is supplied for guard-only
+revalidation and decision recording. Remediation, parent changes, patching,
+forking, wrapping, replacement, and a P7 block remain unauthorized. No
+dependency implementation or metadata commit exists.
 
 ## Hashicorp Consul API Product Decision
 
@@ -707,10 +724,12 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate only selected exact-path `github.com/hashicorp/go-hclog v1.2.0` as
-one bounded P7 dependency group. Resolve its repository and release identity,
-complete Go-floor closure, behavior and API, actual project loading, MVS
-effects, vulnerability state, and applicable quality contracts before
-retaining or changing it. Preserve qualified go-cleanhttp v0.5.2, the Errwrap
-decision, and every earlier separate exception. Do not combine another
-dependency group or begin P8.
+Record the user's explicit option 1 decision without a dependency
+implementation or renewed audit. Revalidate exact go-hclog v1.2.0 and its sole
+selected-version Viper v1.15.0 incoming edge, negative why result, zero target
+and earlier guarded package loads, project hashes, runtime unreachability, and
+fresh advisory state. Then record the exact exception and expiry guards,
+answer the decision archive, and prepare exactly one next bounded P7 mission
+without executing it in this turn. Preserve qualified go-cleanhttp, the
+Errwrap decision, and every earlier separate exception. Do not inspect another
+dependency group or begin P8 in the decision-recording session.
