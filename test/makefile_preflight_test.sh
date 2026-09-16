@@ -103,9 +103,9 @@ if ! run_preflight "$complete_scripts" "$tmp_dir/complete-output"; then
 	sed -n '1,200p' "$tmp_dir/complete-output" >&2
 	fail 'complete population did not pass'
 fi
-if [[ $(wc -l <"$calls_file" | tr -d '[:space:]') -ne 17 ]]; then
+if [[ $(wc -l <"$calls_file" | tr -d '[:space:]') -ne 18 ]]; then
 	sed -n '1,200p' "$calls_file" >&2
-	fail 'complete preflight did not execute exactly 17 required calls'
+	fail 'complete preflight did not execute exactly 18 required calls'
 fi
 assert_once 'go <build> <./...>'
 assert_once 'go <test> <./...> <-count=1>'
@@ -114,6 +114,7 @@ assert_once 'lint <version> <--short>'
 assert_once 'lint <config> <verify> <--config> <.golangci.yml>'
 assert_once 'lint <run> <--config> <.golangci.yml> <--modules-download-mode=readonly> <./...>'
 assert_once "bash <$repo_root/test/codex_dev_start_test.sh>"
+assert_once "bash <$repo_root/test/codex_dev_auto_test.sh>"
 assert_once "bash <$repo_root/test/makefile_distribution_test.sh>"
 assert_once "bash <$repo_root/test/makefile_lint_test.sh>"
 assert_once "bash <$repo_root/test/makefile_install_test.sh>"

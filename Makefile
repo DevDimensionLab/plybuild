@@ -20,7 +20,7 @@ override PLY_QUALITY_MUTATIONS := cli-context config-cloud maven-sorting templat
 
 .DEFAULT_GOAL := all
 
-.PHONY: acceptance acceptance-docker acceptance-snapshot all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight quality release release-brew run snapshot test test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight test-quality test-toolchain upgrade
+.PHONY: acceptance acceptance-docker acceptance-snapshot all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight quality release release-brew run snapshot test test-agent-auto test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight test-quality test-toolchain upgrade
 
 build:
 	$(GO) build -o ply ./cmd/ply
@@ -40,12 +40,15 @@ install:
 run:
 	$(GO) run ./cmd/ply
 
-test: test-agent-start test-distribution test-lint test-preflight test-quality test-toolchain
+test: test-agent-auto test-agent-start test-distribution test-lint test-preflight test-quality test-toolchain
 	$(GO) test -v -cover ./...
 	bash test/makefile_install_test.sh
 
 test-agent-start:
 	$(BASH) test/codex_dev_start_test.sh
+
+test-agent-auto:
+	$(BASH) test/codex_dev_auto_test.sh
 
 test-distribution:
 	$(BASH) test/makefile_distribution_test.sh
@@ -129,6 +132,7 @@ preflight: compatibility
 	$(GO) vet ./...
 	$(MAKE) --no-print-directory -C "$(REPO_ROOT)" lint
 	$(BASH) "$(REPO_ROOT)/test/codex_dev_start_test.sh"
+	$(BASH) "$(REPO_ROOT)/test/codex_dev_auto_test.sh"
 	$(BASH) "$(REPO_ROOT)/test/makefile_distribution_test.sh"
 	$(BASH) "$(REPO_ROOT)/test/makefile_lint_test.sh"
 	$(BASH) "$(REPO_ROOT)/test/makefile_install_test.sh"

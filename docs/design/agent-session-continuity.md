@@ -174,6 +174,14 @@ session data and archives change only during session bootstrap or finalization,
 after a coherent implementation move is committed or an exact resumable state
 is recorded.
 
+An optional outer controller is defined in
+`docs/design/agent-auto-loop.md`. `codex-dev-auto.sh` runs this launcher, then
+uses a separate ephemeral decision turn to classify a stop as a verified
+completion, a narrowly authorized product choice, or a real blocker. It cannot
+weaken this launcher's archive, cleanliness, handoff, or completion contracts.
+Every automatic choice must be committed and independently revalidated before
+the outer controller starts another launcher process.
+
 If no authorized mission remains after P8, finalization answers the tail
 archive, leaves its `Next` value as `none`, and changes the launcher header to
 `COMPLETE`. The launcher rejects `COMPLETE` while the authorized queue contains
