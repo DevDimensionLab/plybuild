@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Go Hclog Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-15T234309+0200-decide-hashicorp-go-hclog-product-direction`
 Created: `2026-09-15T23:43:09+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `ee3dc3be4f941b895f7d136689c058251fa91f9c02e7c83606b5ccc9a207285b`
 Previous: [2026-09-15T222945+0200-evaluate-hashicorp-go-hclog-dependency.md](2026-09-15T222945+0200-evaluate-hashicorp-go-hclog-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-16T210129+0200-evaluate-hashicorp-go-immutable-radix-dependency.md](2026-09-16T210129+0200-evaluate-hashicorp-go-immutable-radix-dependency.md)
+Outcome: Recorded the user's bounded option 1 exception for exact inherited, unloaded go-hclog v1.2.0 after all decision guards passed; dependency metadata stayed unchanged and one next bounded P7 evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -240,3 +240,46 @@ implement an option, launch a successor, push, merge, publish, release, stash,
 revert, bypass cleanup, remove the worktree, combine another dependency group,
 or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user's 2026-09-16 option 1 choice exactly: retain selected
+`github.com/hashicorp/go-hclog v1.2.0` as an inherited, unloaded module without
+changing `go.mod` or `go.sum`. The exception accepts only the five completed
+common behavior findings and the completed nil/panic, aliasing, allocation,
+concurrency, resource, API, closure-vulnerability, and related qualification
+findings. It is go-hclog-specific and accepts no newly discovered defect.
+
+Guard-only revalidation from clean HEAD
+`d536b6832a85123dc49cf4fbcf4876f4083458d4`, parent
+`f7f3a65d645ce4ce4caf8d1ac3e1da77ccd19727`, tree
+`cab76bf3e4948d54fdbf032ba0c4a788c7cafda7`, passed under exact Go 1.26.7.
+Go-hclog remains exact v1.2.0 through only Viper v1.15.0 at the selected
+version. All 12 guarded modules retain their recorded selections and incoming
+edges, all 12 why results remain negative, repository imports remain zero, and
+the 355-entry production and 429-entry complete-test loads contain zero guarded
+packages. The project remains 234 modules, 3,599 graph edges, 197 module-backed
+complete-test entries across 41 modules, with unchanged `go.mod`/`go.sum`
+SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Runtime unreachability therefore remains intact.
+
+Fresh primary vulnerability data remains byte-identical at 1,399 records,
+SHA-256
+`033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`,
+and Last-Modified 2026-09-15T18:54:35Z. Exact go-hclog v1.2.0 and every guarded
+target except Gorilla have empty exact-version OSV results; Gorilla retains
+only the already-recorded GO-2026-6278/GHSA-w67g-5rqw-f597 result and existing
+GO-2020-0019 primary-index entry. No new advisory or independent defect
+appeared.
+
+The exception expires on direct import or loading, runtime reachability, a
+go-hclog version or incoming-edge change, or any new advisory or independent
+defect; expiry requires a fresh go-hclog dependency and product decision before
+merge. No dependency implementation or metadata commit was created. The sole
+successor is the bounded P7 evaluation of selected exact-path
+`github.com/hashicorp/go-immutable-radix v1.3.1`; it was prepared but not
+executed. Exact Go 1.26.7 module verification, build, count-one tests, race
+tests, vet, and the launcher lifecycle check pass; no changed-selection
+scorecard applies.

@@ -5374,12 +5374,12 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for guard-only recording of the user's 2026-09-16 bounded
-Hashicorp go-hclog option 1 decision after retaining qualified exact Hashicorp
-go-cleanhttp v0.5.2.
+Status: active after recording the user's 2026-09-16 bounded Hashicorp
+go-hclog option 1 decision; the next bounded group is selected exact-path
+`github.com/hashicorp/go-immutable-radix v1.3.1`.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 and all retained-module decisions remain guarded through exact inherited,
-unloaded `github.com/hashicorp/errwrap v1.0.0`. P8 remains queued.
+unloaded `github.com/hashicorp/go-hclog v1.2.0`. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -9916,11 +9916,11 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   bounded go-cleanhttp decision. This guard is target-specific and transfers
   no earlier exception.
 
-- The bounded exact-path Hashicorp go-hclog evaluation is complete and blocked:
-  no stable release satisfies the current behavior and compatibility contracts.
-  Exact selected v1.2.0 remains physically inherited from Viper v1.15.0 only
-  because no metadata was changed; it is not qualified or retained by
-  exception. P7 stops for the reciprocal product decision.
+- The bounded exact-path Hashicorp go-hclog evaluation is complete: no stable
+  release satisfies the current behavior and compatibility contracts. On
+  2026-09-16 the user explicitly selected option 1 with the recommended bounds,
+  retaining exact selected, inherited, unloaded v1.2.0 under the target-specific
+  exception recorded below. No dependency metadata changed.
 - Canonical identity is public active unarchived non-fork MIT repository
   `https://github.com/hashicorp/go-hclog.git`. The proxy exposes 31 stable
   releases from v0.7.0 through `@latest` v1.6.3, no retraction, deprecation,
@@ -9978,7 +9978,7 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   race. Accepted quality remains 27/27 Q0-Q2 PASS at L2. The 1,328-entry
   evidence manifest SHA-256 is
   `e6647301b469e2c915ca07bd1f2b0f7856e6b55df75c76a350943cc780783a9f`.
-  Product direction supplied 2026-09-16: the user explicitly selected option 1
+  Product direction recorded 2026-09-16: the user explicitly selected option 1
   with the recommended bounds. Retain exact selected, inherited, unloaded
   go-hclog v1.2.0 without changing `go.mod` or `go.sum`. Accept only the five
   completed common behavior findings, characterized nil/panic, aliasing,
@@ -9995,9 +9995,31 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   a parent, patch/fork source, authorize a wrapper or replacement architecture,
   raise the Go floor, move unrelated selections, alter another guarded
   dependency, manufacture a dependency commit, transfer another exception, or
-  request this same choice again while all guards hold. Revalidate only the
-  guards, record the decision, answer its archive, and prepare one next bounded
-  P7 mission without executing it in the decision turn.
+  request this same choice again while all guards hold.
+- Guard-only decision revalidation from clean HEAD
+  `d536b6832a85123dc49cf4fbcf4876f4083458d4`, parent
+  `f7f3a65d645ce4ce4caf8d1ac3e1da77ccd19727`, tree
+  `cab76bf3e4948d54fdbf032ba0c4a788c7cafda7`, preserves exact go-hclog
+  v1.2.0 and its sole selected-version Viper v1.15.0 incoming edge. All 12
+  guarded modules retain their recorded selections and incoming edges, all 12
+  `go mod why -m` results remain negative, repository imports remain zero, and
+  the 355-entry production and 429-entry complete-test loads contain zero
+  guarded packages. The project remains 234 modules, 3,599 graph edges, 197
+  module-backed complete-test entries across 41 loaded modules, and exact
+  `go.mod`/`go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Runtime unreachability therefore remains intact.
+- Fresh primary vulnerability data remains byte-identical at 1,399 records,
+  SHA-256
+  `033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`,
+  and Last-Modified 2026-09-15T18:54:35Z. Go-hclog v1.2.0 and every guarded
+  target except Gorilla have empty exact-version OSV responses; Gorilla retains
+  only the recorded GO-2026-6278/GHSA-w67g-5rqw-f597 result and the primary
+  index's existing GO-2020-0019 entry. No new advisory or independent defect
+  appeared. The next bounded P7 group is selected exact-path
+  `github.com/hashicorp/go-immutable-radix v1.3.1`; it was not evaluated in
+  this decision-recording session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

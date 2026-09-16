@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-15T23:43:09+02:00
+Generated: 2026-09-16T21:01:29+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-hclog evaluation
-  began from clean handoff HEAD
-  `452fffbd865dcae811fba3b02821cf7fd48f774c`, parent
-  `0d1d66480604da5b646c75593570b01ebec72dda`, tree
-  `4858e0dd3c216b772476058324a265aef0cb005a`.
+  `codex/upgrade-quality`, base master at `5635d50`. The go-hclog decision
+  recording began from clean HEAD
+  `d536b6832a85123dc49cf4fbcf4876f4083458d4`, parent
+  `f7f3a65d645ce4ce4caf8d1ac3e1da77ccd19727`, tree
+  `cab76bf3e4948d54fdbf032ba0c4a788c7cafda7`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,11 +20,10 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-hclog evaluation archive and every earlier archive are answered. The
-  sole NEXT archive is `docs/plan/agent-sessions/2026-09-15T234309+0200-decide-hashicorp-go-hclog-product-direction.md`. It authorizes only the bounded go-hclog
-  product decision. The user supplied option 1 with the recommended bounds on
-  2026-09-16; this authorizes decision recording, not implementation, another
-  dependency group, or P8.
+- The go-hclog decision archive and every earlier archive are answered. The
+  sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-16T210129+0200-evaluate-hashicorp-go-immutable-radix-dependency.md`.
+  It authorizes only the next bounded P7 group and has not been executed.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -32,13 +31,13 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is recording the user's bounded Hashicorp go-hclog
+P2A-P6 are complete. P7 has recorded the user's bounded Hashicorp go-hclog
 option 1 decision because no exact-path stable release qualifies. Exact Go
 1.26.7, every accepted dependency move through Google UUID v1.4.0, qualified
 go-cleanhttp, and all retained-module decisions through exact inherited,
-unloaded Errwrap v1.0.0 are final under their target-specific guards. P8
-remains queued. Do not combine groups or begin P8 before this decision is
-revalidated and recorded in a committed handoff.
+unloaded go-hclog v1.2.0 are final under their target-specific guards. The
+next bounded group is selected exact-path Hashicorp go-immutable-radix v1.3.1.
+P8 remains queued. Do not combine groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -58,8 +57,8 @@ Viper v1.15.0 edge; Gateway retained exactly its two recorded incoming edges;
 gRPC Prometheus, gRPC middleware, and Gorilla retained their sole mvn-pom-
 mutator v0.2.3 edges; GopherJS retained its sole GoConvey v1.6.4 edge; and
 Enterprise Certificate Proxy and GAX retained their sole Viper v1.15.0 edges.
-All nine why results, including Consul SDK, are negative; source imports and
-target package loads are zero, and runtime unreachability remains intact.
+All earlier guarded why results are negative; source imports and target package
+loads are zero, and runtime unreachability remains intact.
 
 Fresh primary data has no new exact record for those targets. Gorilla retains
 only its recorded entries, including unwithdrawn GO-2026-6278. Direct import or
@@ -82,7 +81,7 @@ discovered defect. The exception is go-hclog-specific and non-transferable.
 It remains valid only while exact v1.2.0 and its sole selected-version incoming
 edge from Viper v1.15.0 remain unchanged, zero go-hclog packages load, the
 module remains runtime-unreachable, and no new advisory or independent defect
-appears. Revalidate and record these guards in the committed decision. Direct
+appears. Direct
 import/loading, runtime reachability, a target version or incoming-edge change,
 or a new advisory or independent defect expires the exception and requires a
 fresh go-hclog dependency and product decision before merge. Do not add a
@@ -174,10 +173,25 @@ or metadata commit was created. The 1,328-entry disposable evidence manifest
 SHA-256 is
 `e6647301b469e2c915ca07bd1f2b0f7856e6b55df75c76a350943cc780783a9f`.
 
-The user's bounded go-hclog option 1 exception is supplied for guard-only
-revalidation and decision recording. Remediation, parent changes, patching,
-forking, wrapping, replacement, and a P7 block remain unauthorized. No
-dependency implementation or metadata commit exists.
+The decision was recorded after guard-only revalidation from clean HEAD
+`d536b6832a85123dc49cf4fbcf4876f4083458d4`. Exact go-hclog v1.2.0 retains
+only its selected-version Viper v1.15.0 incoming edge. All 12 guarded module
+selections and recorded incoming edges remain unchanged; all 12 why results
+are negative; repository imports are zero; and the 355-entry production and
+429-entry complete-test loads contain zero guarded packages. The project
+retains 234 modules, 3,599 edges, 197 module-backed complete-test entries
+across 41 loaded modules, and the recorded module hashes, so go-hclog and every
+earlier guarded target remain runtime-unreachable.
+
+Fresh primary data remains byte-identical at 1,399 records, SHA-256
+`033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`,
+and Last-Modified 2026-09-15T18:54:35Z. Exact go-hclog v1.2.0 and every
+guarded target except Gorilla have empty exact-version OSV responses. Gorilla
+retains only its recorded GO-2026-6278/GHSA-w67g-5rqw-f597 exact-version
+result and existing GO-2020-0019 primary-index entry. No new advisory or
+independent defect appeared. Remediation, parent changes, patching, forking,
+wrapping, replacement, and a P7 block remain unauthorized. No dependency
+implementation or metadata commit exists.
 
 ## Hashicorp Consul API Product Decision
 
@@ -673,6 +687,11 @@ build, count-one tests, race tests, vet, and launcher lifecycle check pass. No
 changed-selection scorecard applies, so accepted quality remains 27/27 Q0-Q2
 PASS at L2.
 
+The go-hclog decision-recording session's exact Go 1.26.7 module verification,
+build, count-one tests, race tests, vet, and launcher lifecycle check pass. No
+source or dependency metadata changed, so no changed-selection scorecard
+applies and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
 The Errwrap evaluation's exact Go 1.26.7 module verification, build,
 count-one, two independent count-ten repeats, race, vet, pinned lint, API/CLI
 compatibility, host and snapshot acceptance, empty-HOME count-two, and four
@@ -724,12 +743,12 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Record the user's explicit option 1 decision without a dependency
-implementation or renewed audit. Revalidate exact go-hclog v1.2.0 and its sole
-selected-version Viper v1.15.0 incoming edge, negative why result, zero target
-and earlier guarded package loads, project hashes, runtime unreachability, and
-fresh advisory state. Then record the exact exception and expiry guards,
-answer the decision archive, and prepare exactly one next bounded P7 mission
-without executing it in this turn. Preserve qualified go-cleanhttp, the
-Errwrap decision, and every earlier separate exception. Do not inspect another
-dependency group or begin P8 in the decision-recording session.
+Independently evaluate selected exact-path
+`github.com/hashicorp/go-immutable-radix v1.3.1` as one bounded P7 dependency
+group. Resolve repository/release identity, Go-floor closure, source, tests,
+API, behavior, project loading, MVS effects, vulnerability state, and every
+applicable quality contract. Retain or select only a qualified exact-path
+stable release whose complete minimal source/test closure preserves Go 1.18;
+otherwise stop for a fresh bounded product decision. Preserve the go-hclog
+exception, qualified go-cleanhttp, Errwrap, and every earlier target-specific
+decision. Do not evaluate a second group or begin P8.
