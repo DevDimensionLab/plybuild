@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-16T23:15:28+02:00
+Generated: 2026-09-16T23:27:07+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -20,13 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-immutable-radix evaluation archive and every earlier archive are
+- The go-immutable-radix decision archive and every earlier archive are
   answered. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-16T225521+0200-decide-hashicorp-go-immutable-radix-product-direction.md`.
-  The user-authorized automatic controller selected option 1 with the
-  recommended bounds on 2026-09-16. This authorizes only decision recording,
-  not implementation, another dependency group, or P8; the active session has
-  not recorded the decision.
+  `docs/plan/agent-sessions/2026-09-16T232707+0200-evaluate-hashicorp-go-msgpack-dependency.md`.
+  It authorizes only one bounded exact-path go-msgpack evaluation. It does not
+  authorize reopening go-immutable-radix or an earlier decision, combining
+  another dependency group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -34,14 +33,13 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has recorded the user's bounded Hashicorp go-hclog
-option 1 decision and is recording the controller's user-authorized bounded
+P2A-P6 are complete. P7 has recorded the controller's user-authorized bounded
 go-immutable-radix option 1 decision because no exact-path stable release
 qualifies. Exact Go 1.26.7, every accepted dependency move through Google UUID
 v1.4.0, qualified go-cleanhttp, and all retained-module decisions through exact
-inherited, unloaded go-hclog v1.2.0 are final under their target-specific
-guards. P8 remains queued. Do not combine groups or begin P8 before this
-decision is revalidated and recorded in a committed handoff.
+inherited, unloaded go-immutable-radix v1.3.1 are final under their target-
+specific guards. P7 continues with one bounded go-msgpack evaluation. P8
+remains queued. Do not combine groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -90,7 +88,7 @@ It remains valid only while exact v1.3.1 and its three selected-version
 incoming edges from Viper v1.15.0, historical Viper v1.10.1, and
 `sagikazarmark/crypt v0.4.0` remain unchanged, zero target packages load, the
 module remains runtime-unreachable, and no new advisory or independent defect
-appears. Revalidate and record these guards in the committed decision. Direct
+appears. Direct
 import/loading, runtime reachability, a target version or incoming-edge change,
 or a new advisory or independent defect expires the exception and requires a
 fresh go-immutable-radix dependency and product decision before merge. Do not
@@ -176,6 +174,28 @@ only its known signal/log timing race after controls 1-25; `--check` and
 launcher-auto pass. Accepted quality remains 27/27 Q0-Q2 PASS at L2. The 435-
 entry evidence manifest SHA-256 is
 `8a30047f3bf22c7ad7e33974aee395c26dc5c10cbd37c9f6dd03daafc1e4b939`.
+
+The decision was recorded after guard-only revalidation from clean HEAD
+`7c6d298b71e723a335dc295a1dc42a9b3ead3c93`, parent
+`a3f71d8fa31e787fb85f6a3e2aed9d832d454493`, tree
+`951851771ba2ab15e1d786bbba635a529115b560`. Exact go-immutable-radix v1.3.1
+retains its three selected-version incoming edges. All 13 guarded module
+selections and recorded incoming edges remain unchanged; all 13 why results
+remain negative, repository imports remain zero, and the 355-entry production
+and 429-entry complete-test loads contain zero guarded packages. The project
+remains 234 modules, 3,599 graph edges, 197 module-backed complete-test entries
+across 41 modules, and the recorded module hashes, so go-immutable-radix and
+every earlier guarded target remain runtime-unreachable.
+
+Fresh primary data remains byte-identical at 1,399 records, SHA-256
+`033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`,
+and Last-Modified 2026-09-15T18:54:35Z. Exact go-immutable-radix v1.3.1 and
+every guarded target except Gorilla have empty exact-version OSV responses.
+Gorilla retains only its recorded GO-2026-6278/GHSA-w67g-5rqw-f597 exact-
+version result and existing GO-2020-0019 primary-index entry. No new advisory
+or independent defect appeared. Remediation, parent changes, patching,
+forking, wrapping, replacement, and a P7 block remain unauthorized. No
+dependency implementation or metadata commit exists.
 
 ## Hashicorp go-hclog Product Decision
 
@@ -802,6 +822,14 @@ build, count-one tests, race tests, vet, and launcher lifecycle check pass. No
 source or dependency metadata changed, so no changed-selection scorecard
 applies and accepted quality remains 27/27 Q0-Q2 PASS at L2.
 
+The go-immutable-radix decision-recording session's exact Go 1.26.7 module
+verification, build, count-one tests, race tests, vet, and launcher lifecycle
+check pass under the established mode-mask contract. No source or dependency
+metadata changed, so no changed-selection scorecard applies and accepted
+quality remains 27/27 Q0-Q2 PASS at L2. An initial inherited `umask 077` run
+reproduced only the already documented fixture-mode limitation before the
+canonical `umask 022` rerun passed.
+
 The Errwrap evaluation's exact Go 1.26.7 module verification, build,
 count-one, two independent count-ten repeats, race, vet, pinned lint, API/CLI
 compatibility, host and snapshot acceptance, empty-HOME count-two, and four
@@ -853,12 +881,13 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Record the controller's user-authorized option 1 decision for exact-path
-`github.com/hashicorp/go-immutable-radix`: retain exact inherited, unloaded
-v1.3.1 and its three incoming edges without source or dependency metadata
-changes under the target-specific exception above. Revalidate only the
-decision guards, do not repeat the evaluation, and do not implement the choice
-in that session. Preserve the go-hclog exception, qualified go-cleanhttp,
-Errwrap, and every earlier target-specific decision. Answer the active archive
-and prepare exactly one reciprocal NEXT mission for the next bounded P7 group;
-do not execute it or begin P8.
+Independently evaluate selected exact-path
+`github.com/hashicorp/go-msgpack v0.5.3` as one bounded P7 dependency group.
+Resolve repository/release identity, Go-floor closure, source, tests, API,
+behavior, project loading, MVS effects, vulnerability state, and every
+applicable quality contract. Retain or select only a qualified exact-path
+stable release whose complete minimal source/test closure preserves Go 1.18;
+otherwise stop for a fresh bounded product decision. Preserve the go-
+immutable-radix and go-hclog exceptions, qualified go-cleanhttp, Errwrap, and
+every earlier target-specific decision. Do not evaluate a second group or
+begin P8.

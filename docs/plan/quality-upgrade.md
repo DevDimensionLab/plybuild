@@ -5374,12 +5374,12 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for guard-only recording of the controller's user-authorized
-2026-09-16 bounded Hashicorp go-immutable-radix option 1 decision; no stable
-release qualifies.
+Status: active after recording the controller's user-authorized 2026-09-16
+bounded Hashicorp go-immutable-radix option 1 decision; the next bounded group
+is selected exact-path `github.com/hashicorp/go-msgpack v0.5.3`.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 and all retained-module decisions remain guarded through exact inherited,
-unloaded `github.com/hashicorp/go-hclog v1.2.0`. P8 remains queued.
+unloaded `github.com/hashicorp/go-immutable-radix v1.3.1`. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10090,7 +10090,7 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   Accepted quality remains 27/27 Q0-Q2 PASS at L2. The 435-entry evidence
   manifest SHA-256 is
   `8a30047f3bf22c7ad7e33974aee395c26dc5c10cbd37c9f6dd03daafc1e4b939`.
-  Product direction supplied 2026-09-16: the user-authorized automatic
+  Product direction recorded 2026-09-16: the user-authorized automatic
   controller explicitly selected option 1 with the recommended bounds. Retain
   exact selected, inherited, unloaded go-immutable-radix v1.3.1 without
   changing `go.mod` or `go.sum`. Accept only the completed empty-iterator
@@ -10109,9 +10109,32 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   parent, patch/fork source, authorize a wrapper or replacement architecture,
   raise the Go floor, move unrelated selections, alter another guarded
   dependency, manufacture a dependency commit, transfer another exception, or
-  request this same choice again while all guards hold. Revalidate only the
-  guards, record the decision, answer its archive, and prepare one next bounded
-  P7 mission without executing it in the decision turn.
+  request this same choice again while all guards hold.
+- Guard-only decision revalidation from clean HEAD
+  `7c6d298b71e723a335dc295a1dc42a9b3ead3c93`, parent
+  `a3f71d8fa31e787fb85f6a3e2aed9d832d454493`, tree
+  `951851771ba2ab15e1d786bbba635a529115b560`, preserves exact
+  go-immutable-radix v1.3.1 and its three selected-version incoming edges from
+  Viper v1.15.0, historical Viper v1.10.1, and
+  `sagikazarmark/crypt v0.4.0`. All 13 guarded modules retain their recorded
+  selections and incoming edges, all 13 `go mod why -m` results remain
+  negative, repository imports remain zero, and the 355-entry production and
+  429-entry complete-test loads contain zero guarded packages. The project
+  remains 234 modules, 3,599 graph edges, 197 module-backed complete-test
+  entries across 41 loaded modules, and exact `go.mod`/`go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Runtime unreachability therefore remains intact.
+- Fresh primary vulnerability data remains byte-identical at 1,399 records,
+  SHA-256
+  `033d823ed9fd985c165ae9e65500cda18910e17cf35126866a12d94bbc5a805f`,
+  and Last-Modified 2026-09-15T18:54:35Z. Go-immutable-radix v1.3.1 and every
+  guarded target except Gorilla have empty exact-version OSV responses;
+  Gorilla retains only the recorded GO-2026-6278/GHSA-w67g-5rqw-f597 result
+  and the primary index's existing GO-2020-0019 entry. No new advisory or
+  independent defect appeared. The next bounded P7 group is selected exact-
+  path `github.com/hashicorp/go-msgpack v0.5.3`; it was not evaluated in this
+  decision-recording session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
