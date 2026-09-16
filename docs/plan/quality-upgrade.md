@@ -5374,9 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after completing the bounded exact-path Hashicorp
-go-immutable-radix evaluation; no stable release qualifies, so P7 is blocked
-only on the prepared product decision.
+Status: active for guard-only recording of the controller's user-authorized
+2026-09-16 bounded Hashicorp go-immutable-radix option 1 decision; no stable
+release qualifies.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 and all retained-module decisions remain guarded through exact inherited,
 unloaded `github.com/hashicorp/go-hclog v1.2.0`. P8 remains queued.
@@ -10090,6 +10090,28 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   Accepted quality remains 27/27 Q0-Q2 PASS at L2. The 435-entry evidence
   manifest SHA-256 is
   `8a30047f3bf22c7ad7e33974aee395c26dc5c10cbd37c9f6dd03daafc1e4b939`.
+  Product direction supplied 2026-09-16: the user-authorized automatic
+  controller explicitly selected option 1 with the recommended bounds. Retain
+  exact selected, inherited, unloaded go-immutable-radix v1.3.1 without
+  changing `go.mod` or `go.sum`. Accept only the completed empty-iterator
+  reseek panic and the characterized API, nil/panic, key/value aliasing,
+  allocation, concurrency, global-state, resource, closure-vulnerability, and
+  related findings. The exception is go-immutable-radix-specific and non-
+  transferable. It remains valid only while exact v1.3.1 and its three
+  selected-version incoming edges from Viper v1.15.0, historical Viper
+  v1.10.1, and `sagikazarmark/crypt v0.4.0` remain unchanged, zero target
+  packages load, the module remains runtime-unreachable, and no new advisory
+  or independent defect appears. Direct import/loading, runtime reachability,
+  a version or incoming-edge change, or a new advisory or independent defect
+  expires the exception and requires a fresh go-immutable-radix dependency and
+  product decision before merge. Do not add a direct edge, select another v1
+  release, promote `/v2`, downgrade or otherwise change Viper, change/remove a
+  parent, patch/fork source, authorize a wrapper or replacement architecture,
+  raise the Go floor, move unrelated selections, alter another guarded
+  dependency, manufacture a dependency commit, transfer another exception, or
+  request this same choice again while all guards hold. Revalidate only the
+  guards, record the decision, answer its archive, and prepare one next bounded
+  P7 mission without executing it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

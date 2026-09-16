@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-16T22:55:21+02:00
+Generated: 2026-09-16T23:15:28+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -23,7 +23,10 @@ session diary.
 - The go-immutable-radix evaluation archive and every earlier archive are
   answered. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-16T225521+0200-decide-hashicorp-go-immutable-radix-product-direction.md`.
-  It authorizes only the bounded product decision and has not been executed.
+  The user-authorized automatic controller selected option 1 with the
+  recommended bounds on 2026-09-16. This authorizes only decision recording,
+  not implementation, another dependency group, or P8; the active session has
+  not recorded the decision.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -32,12 +35,13 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 has recorded the user's bounded Hashicorp go-hclog
-option 1 decision. The bounded go-immutable-radix evaluation is now complete:
-no exact-path stable release qualifies, so P7 is blocked only on its prepared
-product decision. Exact Go 1.26.7, every accepted dependency move through
-Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
-through exact inherited, unloaded go-hclog v1.2.0 are final under their target-
-specific guards. P8 remains queued. Do not combine groups or begin P8.
+option 1 decision and is recording the controller's user-authorized bounded
+go-immutable-radix option 1 decision because no exact-path stable release
+qualifies. Exact Go 1.26.7, every accepted dependency move through Google UUID
+v1.4.0, qualified go-cleanhttp, and all retained-module decisions through exact
+inherited, unloaded go-hclog v1.2.0 are final under their target-specific
+guards. P8 remains queued. Do not combine groups or begin P8 before this
+decision is revalidated and recorded in a committed handoff.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -73,11 +77,28 @@ Viper; reopen an earlier choice; or transfer any exception between targets.
 ## Hashicorp Go Immutable Radix Evaluation
 
 No exact-path stable `github.com/hashicorp/go-immutable-radix` release
-qualifies under the current behavior and API contracts. Exact selected v1.3.1
-remains inherited, unloaded, and runtime-unreachable, but this evaluation did
-not accept it. No source or dependency metadata changed. The sole NEXT session
-offers guarded v1.3.1 retention, a separately scoped remediation study, or a
-P7 block; no option has been selected.
+qualifies under the current behavior and API contracts. On 2026-09-16 the
+user-authorized automatic controller selected option 1 with the recommended
+bounds: retain exact selected, inherited, unloaded v1.3.1 without changing
+`go.mod` or `go.sum`. Accept only the completed empty-iterator reseek panic and
+the characterized API, nil/panic, key/value aliasing, allocation, concurrency,
+global-state, resource, closure-vulnerability, and related findings. This does
+not accept a new or independently discovered defect. The exception is
+go-immutable-radix-specific and non-transferable.
+
+It remains valid only while exact v1.3.1 and its three selected-version
+incoming edges from Viper v1.15.0, historical Viper v1.10.1, and
+`sagikazarmark/crypt v0.4.0` remain unchanged, zero target packages load, the
+module remains runtime-unreachable, and no new advisory or independent defect
+appears. Revalidate and record these guards in the committed decision. Direct
+import/loading, runtime reachability, a target version or incoming-edge change,
+or a new advisory or independent defect expires the exception and requires a
+fresh go-immutable-radix dependency and product decision before merge. Do not
+add a direct edge, select another v1 release, promote `/v2`, downgrade or
+otherwise change Viper, change/remove a parent, patch/fork source, authorize a
+wrapper or replacement architecture, raise the Go floor, move unrelated
+selections, alter another guarded dependency, or manufacture a dependency
+commit. Do not ask for this same choice again while all guards hold.
 
 Fresh identity evidence resolves public active unarchived non-fork MPL-2.0
 repository `https://github.com/hashicorp/go-immutable-radix.git`. The exact v1
@@ -832,12 +853,12 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Obtain and record one explicit product decision for exact-path
-`github.com/hashicorp/go-immutable-radix`. Present only the three prepared
-options: retain exact inherited, unloaded v1.3.1 under a target-specific
-exception for the completed iterator-reseek panic and characterized findings;
-authorize a separate remediation study without implementation authority; or
-block P7. Revalidate only the decision guards, do not repeat the evaluation,
-and do not implement a choice in that session. Preserve the go-hclog exception,
-qualified go-cleanhttp, Errwrap, and every earlier target-specific decision.
-Do not evaluate another dependency group or begin P8.
+Record the controller's user-authorized option 1 decision for exact-path
+`github.com/hashicorp/go-immutable-radix`: retain exact inherited, unloaded
+v1.3.1 and its three incoming edges without source or dependency metadata
+changes under the target-specific exception above. Revalidate only the
+decision guards, do not repeat the evaluation, and do not implement the choice
+in that session. Preserve the go-hclog exception, qualified go-cleanhttp,
+Errwrap, and every earlier target-specific decision. Answer the active archive
+and prepare exactly one reciprocal NEXT mission for the next bounded P7 group;
+do not execute it or begin P8.

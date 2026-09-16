@@ -4,7 +4,7 @@ Status: NEXT
 Session ID: `2026-09-16T225521+0200-decide-hashicorp-go-immutable-radix-product-direction`
 Created: `2026-09-16T22:55:21+02:00`
 Source: `codex-dev-start.sh`
-Prompt SHA-256: `9f509a81abe9619396f4cb3ef04cef30dfff167b4a40704580bf781ec9f6e234`
+Prompt SHA-256: `592bd0179c337ef84494ef31663b6cf4ae1c117a4020aecb90d1ba1501b7bdae`
 Previous: [2026-09-16T210129+0200-evaluate-hashicorp-go-immutable-radix-dependency.md](2026-09-16T210129+0200-evaluate-hashicorp-go-immutable-radix-dependency.md)
 Next: none
 Outcome: pending
@@ -14,22 +14,25 @@ The block below is the byte-exact Codex prompt argument, including its terminal 
 <!-- CODEX_SESSION_PROMPT_BEGIN -->
 # Mission
 
-Continue P7 only by obtaining and recording one bounded product decision for
-exact-path `github.com/hashicorp/go-immutable-radix`. Reuse the completed
-evaluation: no exact-path stable release satisfies every existing behavior and
-API contract. Present the three authorized options below, wait for the user to
-select one, then record exactly that choice. Do not repeat the audit, implement
-a dependency change, evaluate another group, or begin P8.
+Continue P7 only by recording the user-authorized automatic controller's
+2026-09-16 explicit selection of option 1 for exact-path
+`github.com/hashicorp/go-immutable-radix`. Retain exact selected, inherited,
+unloaded v1.3.1 without dependency metadata changes under the target-specific
+exception below. Revalidate only the decision guards and record exactly this
+choice. Do not repeat the audit, implement a dependency change, evaluate
+another group, or begin P8.
 
 # Authorized Roadmap
 
-P2A-P6 are complete. P7 is blocked only on this go-immutable-radix product
+P2A-P6 are complete. P7 is recording the bounded go-immutable-radix option 1
 decision after exact Go 1.26.7, every accepted dependency move through Google
 UUID v1.4.0, qualified exact go-cleanhttp v0.5.2, and all retained-module
 decisions through exact inherited, unloaded go-hclog v1.2.0. Every earlier
-result and lifecycle ancestor is final. This session may record one explicit
-user choice and prepare one bounded follow-up; it may not implement that choice
-or combine another dependency group. P8 remains queued.
+result and lifecycle ancestor is final. The user-authorized controller has
+explicitly chosen to retain exact inherited, unloaded go-immutable-radix
+v1.3.1 through its three selected-version incoming edges. This session may
+record that choice and prepare one bounded follow-up; it may not implement a
+dependency change or combine another group. P8 remains queued.
 
 The completed evaluation left `go.mod` and `go.sum` unchanged. Exact selected
 `github.com/hashicorp/go-immutable-radix v1.3.1` remains inherited through
@@ -43,7 +46,7 @@ Prometheus v1.2.0, gRPC middleware v1.0.0, Gorilla WebSocket v1.4.2, GopherJS
 `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy v0.2.1,
 and GAX v2.7.0 decisions remain separate under their recorded exact-selection,
 incoming-edge, zero-load, runtime-unreachable, and no-new-finding guards.
-Revalidate those guards before recording a choice and stop for the owning
+Revalidate those guards before recording the decision and stop for the owning
 decision if one expired. Do not transfer an earlier exception to
 go-immutable-radix or change Viper, either Gateway parent, mvn-pom-mutator,
 GoConvey, historical Consul API, go-multierror, Serf, or
@@ -179,45 +182,43 @@ signal/log-retention timing race after controls 1-25; `--check` passes. No
 changed-selection quality run applies, so accepted 27/27 Q0-Q2 PASS at L2
 remains authoritative. No dependency implementation or metadata commit exists.
 
-# Authorized Product Options
+# Authorized Product Decision
 
-Present these options without silently choosing one:
+On 2026-09-16 the user-authorized automatic controller explicitly selected
+option 1 with the recommended bounds: retain exact selected
+`github.com/hashicorp/go-immutable-radix v1.3.1` as an inherited, unloaded
+selection without changing `go.mod` or `go.sum`. Accept only the completed
+empty-iterator reseek panic and the characterized API, nil/panic, key/value
+aliasing, allocation, concurrency, global-state, resource, closure-
+vulnerability, and related findings. This does not accept a new or
+independently discovered defect.
 
-1. **Retain exact v1.3.1 under a bounded exception (recommended).** Keep exact
-   inherited, unloaded v1.3.1 and its three selected-version incoming edges
-   without changing `go.mod` or `go.sum`. Accept only the completed empty-
-   iterator reseek panic and the characterized API, nil/panic, key/value
-   aliasing, allocation, concurrency, global-state, resource, closure-
-   vulnerability, and related findings. The exception is
-   go-immutable-radix-specific and valid only while exact v1.3.1 and those
-   three edges remain unchanged, zero target packages load, the module remains
-   runtime-unreachable, and no new advisory or independent defect appears.
-   Direct import/loading, runtime reachability, a target version or incoming-
-   edge change, or a new advisory or independent defect requires a fresh
-   go-immutable-radix dependency and product decision before merge.
-2. **Authorize a separate remediation study.** Keep this session no-change and
-   prepare a new bounded mission to evaluate parent removal, an upstream patch,
-   fork, wrapper, architecture replacement, or migration to the distinct `/v2`
-   module. This option does not itself authorize implementation, a Viper or
-   parent change, direct target use, a Go-floor change, or unrelated module
-   movement.
-3. **Block P7.** Leave go-immutable-radix unresolved and stop the upgrade before
-   merge until an exact-path stable release independently satisfies the
-   contracts.
+The exception is go-immutable-radix-specific and non-transferable. It is valid
+only while exact v1.3.1 and its three selected-version incoming edges from
+Viper v1.15.0, historical Viper v1.10.1, and `sagikazarmark/crypt v0.4.0`
+remain unchanged, the complete project load contains zero target packages, the
+module remains runtime-unreachable, and no new advisory or independent defect
+appears. Revalidate and record these guards. Direct import or loading, runtime
+reachability, a target version or incoming-edge change, or a new advisory or
+independent defect expires the exception and requires a fresh
+go-immutable-radix dependency and product decision before merge.
 
-Do not offer another v1 release as qualified, promote `/v2`, downgrade Viper,
-change or remove a parent, add a direct target edge, patch or fork source,
-raise the Go floor, alter another guarded dependency, or manufacture a
-dependency commit without a separately explicit choice and scope.
+Do not add a direct target edge, select another v1 release, promote `/v2`,
+downgrade or otherwise change Viper, change or remove a parent, patch or fork
+source, authorize a wrapper or replacement architecture, raise the Go floor,
+move unrelated selections, alter another guarded dependency, or manufacture a
+dependency implementation commit. Do not stop or ask for this same
+go-immutable-radix decision again while all guards hold. Preserve the go-hclog
+exception and every earlier qualified result and target-specific decision.
 
 # Role And Boundaries
 
-This is a decision session, not a renewed audit or implementation. Ask for one
-explicit option selection if none was provided with the session invocation.
-Elapsed time is not approval. Once the user chooses, revalidate only exact
-selection, incoming edges, negative why, zero target and guarded package loads,
-project hashes, runtime unreachability, and current advisory state. Record the
-choice without broadening it.
+This is a decision-recording session, not a renewed audit or implementation.
+The user-authorized automatic controller has explicitly selected and bounded
+option 1. Reuse the completed evaluation; do not ask for the decision again or
+broaden it into direct use, another version, parent removal, patching, forking,
+wrapping, replacement, Viper changes, a Go-floor change, unrelated-module
+authorization, another dependency group, or P8.
 
 # Required Reading
 
@@ -231,15 +232,18 @@ completed audit.
 
 # Three Moves
 
-First, revalidate only the bounded decision guards and present the three
-options. Second, wait for and record one explicit user selection, including
-its accepted findings, limits, and expiry triggers; do not infer approval.
-Third, answer this archive and prepare exactly one reciprocal NEXT mission
-consistent with the choice. Do not execute the successor.
+First, revalidate only exact selection, incoming edges, negative why, zero
+target and earlier guarded package loads, project hashes, runtime
+unreachability, and current advisory state; reuse the completed audit and do
+not broaden it. Stop for the owning decision if any guard expires. Second,
+record exactly the controller's user-authorized option 1 exception, accepted
+findings, limits, expiry triggers, and no-change decision result in the roadmap
+and rolling handover. Third, answer this archive and prepare exactly one
+reciprocal NEXT mission for the next bounded P7 group without executing it.
 
 # Automatic Handoff
 
-Only after an explicit choice, run applicable no-change lifecycle gates and
+Only after guard revalidation, run applicable no-change lifecycle gates and
 make the required local `docs: prepare next agent session` commit. Do not
 implement an option, launch a successor, push, merge, publish, release, stash,
 revert, bypass cleanup, remove the worktree, combine another dependency group,
