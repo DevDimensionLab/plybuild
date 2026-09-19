@@ -5374,13 +5374,12 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active and blocked on the bounded Hashicorp go-retryablehttp product
-decision. Completed dependency groups remain final through accepted Google
-UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module decisions
-through exact inherited, unloaded `github.com/hashicorp/go-multierror
-v1.1.0`. The go-retryablehttp evaluation is complete; no exact-path stable
-release qualifies without a new target-specific risk acceptance or separately
-authorized Go-floor/API/guarded-selection work. P8 remains queued.
+Status: active. Completed dependency groups remain final through accepted
+Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module
+decisions through exact inherited, unloaded
+`github.com/hashicorp/go-retryablehttp v0.5.3`. Its bounded product decision
+accepted option 1 under target-specific guards. P7 continues only with the
+prepared exact-path go-rootcerts v1.0.2 evaluation. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10417,6 +10416,64 @@ Hashicorp go-retryablehttp evaluation and blocked product boundary
   unreachability, and no-new-advisory/defect guards hold. V0.7.7 instead needs
   separate Go-floor, exported-API, go-hclog, and color decisions; parent-chain
   remediation is a third separately scoped option. No decision is inferred.
+
+Hashicorp go-retryablehttp product decision (2026-09-19):
+
+- Authorized option 1 was selected exactly: retain exact selected, inherited,
+  unloaded `github.com/hashicorp/go-retryablehttp v0.5.3` without changing
+  `go.mod` or `go.sum`. The target-specific, non-transferable exception accepts
+  only GO-2024-2947/GHSA-v6v8-xj6m-xwqh and the independently reproduced
+  Basic-auth URL credential disclosure; the x509 unknown-authority,
+  unsupported-scheme, and redirect-limit permanent-retry classification
+  defects; final transport-error `errors.Is` identity loss; the test-only vet
+  defect; and the completed API, body, cancellation, status, backoff, hook,
+  nil/panic, mutation, aliasing, allocation, concurrency, global-state,
+  resource, MVS, vulnerability, and related findings. It accepts no new or
+  independently discovered defect.
+- Guard-only revalidation began from clean handoff HEAD
+  `a4c24f29e25eb21cc229cde674ffdacdecc78f38`, parent
+  `24b1f33671362309526328170e67e68aaf753a3a`, tree
+  `ccca83e0256147f7e51d14eb07a2fb2472e2aabe`, under exact Go 1.26.7 binary
+  SHA-256
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+  The handoff changed exactly the launcher, answered evaluation archive, new
+  decision archive, rolling handover, and roadmap; reciprocal archive history,
+  Google UUID implementation ancestry, and the launcher lifecycle check pass.
+- Go-retryablehttp remains exact v0.5.3 through the sole exact go-metrics
+  v0.3.10 request. All 15 earlier selections/requests plus the target guard
+  remain unchanged; all 16 why results are negative; repository imports are
+  zero; and the 355-entry production and 429-entry complete-test loads contain
+  zero guarded packages. The complete-test load retains 197 module-backed
+  entries across 41 modules, so every guarded module remains runtime-
+  unreachable.
+- The project remains 234 modules, 3,599 graph edges, 1,067 sum lines, and the
+  recorded 432-line unapplied tidy projection. `go.mod`/`go.sum` SHA-256 values
+  remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  No parent, Go-floor, API, source, or unrelated selection changed.
+- Fresh primary vulnerability data remains byte-identical at 1,402 records,
+  SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+  and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV remains empty for
+  14 earlier guards; Gorilla retains only its recorded finding; and exact
+  target v0.5.3 retains exactly its two accepted active identifiers. No new
+  advisory or independently observed defect appeared.
+- The exception remains valid only while exact v0.5.3 and the sole go-metrics
+  v0.3.10 request remain unchanged, no direct root or repository import is
+  added, production and complete-test target loads remain zero, runtime
+  unreachability and every earlier owning guard remain intact, and no new
+  target advisory or independent defect appears. Direct import/loading,
+  runtime reachability, a selection/request change, a new direct root, an
+  earlier guard change, or a new advisory or independent defect expires the
+  exception and requires the owning fresh dependency and product decision
+  before merge.
+- No dependency implementation or metadata commit was created. Exact Go
+  1.26.7 module verification, build, count-one tests, race tests, vet, and the
+  launcher lifecycle check pass; no changed-selection scorecard applies and
+  accepted quality remains 27/27 Q0-Q2 PASS at L2. P7 continues only with the
+  prepared bounded exact-path `github.com/hashicorp/go-rootcerts v1.0.2`
+  evaluation; it was not executed in this decision session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Go Retryablehttp Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-19T233605+0200-decide-hashicorp-go-retryablehttp-product-direction`
 Created: `2026-09-19T23:36:05+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `44be42e6416b561758e17861aeb5672d14f068c5d5ebb4cd46ac3a021d822a35`
 Previous: [2026-09-19T205837+0200-evaluate-hashicorp-go-retryablehttp-dependency.md](2026-09-19T205837+0200-evaluate-hashicorp-go-retryablehttp-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-19T235421+0200-evaluate-hashicorp-go-rootcerts-dependency.md](2026-09-19T235421+0200-evaluate-hashicorp-go-rootcerts-dependency.md)
+Outcome: Recorded authorized option 1 for exact inherited, unloaded go-retryablehttp v0.5.3 after every guard passed; the target-specific exception accepts only the completed advisory and behavior findings, dependency metadata stayed unchanged, and one bounded go-rootcerts evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -205,3 +205,79 @@ After a coherent explicit decision, make the required local
 merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
 combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded authorized option 1 exactly: retain selected
+`github.com/hashicorp/go-retryablehttp v0.5.3` as an inherited, unloaded
+module without changing `go.mod` or `go.sum`. This is a new
+go-retryablehttp-specific, non-transferable exception. It accepts only
+GO-2024-2947/GHSA-v6v8-xj6m-xwqh and the independently reproduced Basic-auth
+URL credential disclosure through client and package-level log/error paths;
+the x509 unknown-authority, unsupported-scheme, and redirect-limit permanent-
+retry classification defects; loss of final transport-error `errors.Is`
+identity; the test-only vet defect from `t.Fatalf` calls in non-test
+goroutines; and the completed exported-API, body replay and response
+ownership, cancellation/deadline, status, backoff, hook, nil/panic, mutation,
+aliasing, allocation, concurrency, global-state, resource, MVS,
+vulnerability, and related qualification findings. It accepts no new or
+independently discovered defect.
+
+Guard-only revalidation began from clean ordinary worktree state on branch
+`codex/upgrade-quality` at handoff HEAD
+`a4c24f29e25eb21cc229cde674ffdacdecc78f38`, parent
+`24b1f33671362309526328170e67e68aaf753a3a`, tree
+`ccca83e0256147f7e51d14eb07a2fb2472e2aabe`. That handoff changed exactly
+the launcher, answered go-retryablehttp evaluation archive, this then-NEXT
+decision archive, rolling handover, and roadmap. Its reciprocal archive
+links, Google UUID implementation ancestry, and launcher lifecycle check
+passed. The only ignored worktree entry observed around the checks was the
+generated `target/` directory; it was removed before the final clean handoff.
+
+Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+was used first in `PATH` with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, no ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and
+`umask 022`. Go-retryablehttp remains exact v0.5.3 through the sole exact
+request from `github.com/armon/go-metrics v0.3.10`. Its `go mod why -m`
+result remains negative, repository Go imports remain zero, and the 355-entry
+production and 429-entry complete-test loads contain zero target packages.
+The complete-test load retains 197 module-backed entries across 41 loaded
+modules, so the target remains runtime-unreachable.
+
+All 15 earlier guarded modules retain their exact selections and recorded
+incoming requests. All 16 target-plus-earlier `go mod why -m` results remain
+negative, repository Go imports remain zero, and production and complete-test
+loads contain zero guarded packages. The project remains 234 modules, 3,599
+graph edges, 1,067 `go.sum` lines, and the recorded 432-line unapplied tidy
+projection. `go.mod` and `go.sum` retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+No parent, Go-floor, exported API, or unrelated selection changed.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV queries remain empty
+for 14 earlier guards; Gorilla WebSocket v1.4.2 retains only its recorded
+GO-2026-6278/GHSA-w67g-5rqw-f597 result. Exact go-retryablehttp v0.5.3
+retains exactly GO-2024-2947 and GHSA-v6v8-xj6m-xwqh. All records remain
+active. No new advisory or independently observed defect appeared.
+
+The exception remains valid only while exact go-retryablehttp v0.5.3 and its
+sole go-metrics v0.3.10 request remain unchanged, no direct main-module edge
+or repository import is added, production and complete-test target loads
+remain zero, the module remains runtime-unreachable, every earlier guarded
+selection/request/load/advisory condition remains intact, and no new target
+advisory or independent defect appears. Direct import or loading, runtime
+reachability, a target version or incoming-request change, a new direct root,
+an earlier owning-guard change, or a new advisory or independent defect
+expires the exception and requires the owning fresh dependency and product
+decision before merge.
+
+No dependency implementation or metadata commit was created. Exact-Go module
+verification, build, count-one tests, race tests, vet, and the launcher
+lifecycle check pass; no changed-selection scorecard applies, and accepted
+quality remains 27/27 Q0-Q2 PASS at L2. The sole reciprocal successor is the
+bounded P7 evaluation of selected exact-path
+`github.com/hashicorp/go-rootcerts v1.0.2`; it was prepared but not executed.
