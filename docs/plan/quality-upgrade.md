@@ -10288,6 +10288,65 @@ Hashicorp go-multierror evaluation and blocked product boundary (2026-09-19):
   implementation and a fresh, separately sequenced Errwrap decision. No
   choice is inferred by this evaluation.
 
+Hashicorp go-multierror product decision (2026-09-19):
+
+- Authorized option 1 was selected exactly: retain exact selected, inherited,
+  unloaded `github.com/hashicorp/go-multierror v1.1.0` without changing
+  `go.mod` or `go.sum`. The go-multierror-specific, non-transferable exception
+  accepts only the completed `Prefix` `errors.Is`/`errors.As` identity loss,
+  typed-nil `WrappedErrors` panic, and completed API, formatting/order,
+  nil/panic, mutation, aliasing, allocation, concurrency, Group lifecycle,
+  resource/global-state, MVS, vulnerability, and related qualification
+  findings. It accepts no new or independently discovered defect.
+- Guard-only revalidation from clean HEAD
+  `a6dba3eee16d9c3c622fdc68c075aa45595c27cc`, parent
+  `ea7bc704e1160eca51b3b35d00411db28babcac8`, tree
+  `99c8ac8c6c063ec11cc66232af33f69d48c7e054`, passed under exact Go 1.26.7
+  binary SHA-256
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+  The prior handoff changed exactly the launcher, answered evaluation archive,
+  new decision archive, rolling handover, and roadmap; the ordinary and
+  ignored worktree status was clean and the reciprocal archive chain passed.
+- Go-multierror remains exact v1.1.0 through all six recorded requests: Serf
+  v0.9.6 requests v1.1.0; memberlist v0.1.3/v0.3.0, mitchellh/cli
+  v1.0.0/v1.1.0, and posener/complete v1.2.3 request v1.0.0. All 15 guarded
+  selections and recorded incoming edges remain unchanged, all 15 why results
+  remain negative, repository imports remain zero, and the 355-entry
+  production and 429-entry complete-test loads contain zero guarded packages.
+  The complete-test load retains 197 module-backed entries across 41 loaded
+  modules, so every guarded module remains runtime-unreachable.
+- The separate Errwrap decision remains intact: exact Errwrap v1.0.0 retains
+  its sole selected-version incoming edge from go-multierror v1.1.0; the
+  historical go-multierror v1.0.0 request remains; and no main-module Errwrap
+  root or new v1.1.1-to-Errwrap graph edge exists.
+- The project remains 234 modules, 3,599 graph edges, 1,067 sum lines, and the
+  recorded 432-line unapplied tidy projection. `go.mod`/`go.sum` SHA-256
+  values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- Fresh primary vulnerability data remains byte-identical at 1,402 records,
+  SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+  and Last-Modified 2026-09-17T17:29:18Z. Exact go-multierror v1.1.0 and every
+  guarded target except Gorilla retain empty exact-version OSV responses;
+  Gorilla retains only its recorded results. No new advisory or independently
+  observed defect appeared.
+- The exception remains valid only while exact v1.1.0 and all six incoming
+  requests remain unchanged, target imports and production/complete-test loads
+  remain zero, runtime unreachability remains intact, the separate Errwrap
+  v1.0.0 selection and selected-version edge remain unchanged without a new
+  root or v1.1.1 edge, and no new advisory or independent defect appears.
+  Direct import/loading, runtime reachability, a target version or request
+  change, an Errwrap-guard change, or a new advisory or independent defect
+  expires the exception and requires the owning fresh dependency and product
+  decision before merge.
+- No dependency implementation or metadata commit was created. Exact Go
+  1.26.7 module verification, build, count-one tests, race tests, vet, and the
+  launcher lifecycle check pass; no changed-selection scorecard applies and
+  accepted quality remains 27/27 Q0-Q2 PASS at L2. P7 continues only with the
+  prepared bounded exact-path go-retryablehttp v0.5.3 evaluation; it was not
+  executed in this decision session.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

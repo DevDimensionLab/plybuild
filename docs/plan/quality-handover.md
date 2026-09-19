@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-19T20:37:10+02:00
+Generated: 2026-09-19T20:58:37+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,10 +9,10 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The
-  go-multierror evaluation began from clean HEAD
-  `ea7bc704e1160eca51b3b35d00411db28babcac8`, parent
-  `69017090043510b4754e8e81feab762a8011fe90`, tree
-  `c2b8da74a6a6b637ea5c51f4a5b8b871ef0c1019`.
+  go-multierror decision recording began from clean handoff HEAD
+  `a6dba3eee16d9c3c622fdc68c075aa45595c27cc`, parent
+  `ea7bc704e1160eca51b3b35d00411db28babcac8`, tree
+  `99c8ac8c6c063ec11cc66232af33f69d48c7e054`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-multierror evaluation and every earlier archive are answered. The sole
+- The go-multierror decision and every earlier archive are answered. The sole
   NEXT archive is
-  `docs/plan/agent-sessions/2026-09-19T203710+0200-decide-hashicorp-go-multierror-product-direction.md`.
-  It authorizes only one bounded exact-path go-multierror product decision. It
-  does not authorize implementing a selection, reopening an earlier decision,
-  combining another dependency group, or beginning P8.
+  `docs/plan/agent-sessions/2026-09-19T205837+0200-evaluate-hashicorp-go-retryablehttp-dependency.md`.
+  It authorizes only one bounded exact-path go-retryablehttp evaluation. It
+  does not authorize reopening an earlier decision, combining another
+  dependency group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -35,9 +35,10 @@ session diary.
 
 P2A-P6 are complete. Exact Go 1.26.7, every accepted dependency move through
 Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
-through exact inherited, unloaded go-msgpack v0.5.3 are final under their
-target-specific guards. P7 is blocked on one bounded exact-path go-multierror
-product decision. P8 remains queued. Do not combine groups or begin P8.
+through exact inherited, unloaded go-multierror v1.1.0 are final under their
+target-specific guards. P7 continues with one bounded exact-path
+go-retryablehttp evaluation. P8 remains queued. Do not combine groups or begin
+P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -59,11 +60,14 @@ gRPC Prometheus, gRPC middleware, and Gorilla retained their sole mvn-pom-
 mutator v0.2.3 edges; GopherJS retained its sole GoConvey v1.6.4 edge; and
 Enterprise Certificate Proxy and GAX retained their sole Viper v1.15.0 edges.
 Go-msgpack retained its four requests from memberlist v0.1.3/v0.3.0 and Serf
-v0.8.2/v0.9.6.
+v0.8.2/v0.9.6. Go-multierror retained its six requests from Serf v0.9.6,
+memberlist v0.1.3/v0.3.0, mitchellh/cli v1.0.0/v1.1.0, and
+posener/complete v1.2.3; exact Errwrap v1.0.0 retained its selected-version
+go-multierror v1.1.0 edge.
 All earlier guarded why results are negative; source imports and target package
 loads are zero, and runtime unreachability remains intact.
 
-Fresh primary data has no new exact record for those targets. All 14 why
+Fresh primary data has no new exact record for those targets. All 15 why
 results remain negative, repository imports are zero, and production and
 complete-test loads contain zero guarded packages. Gorilla retains only its
 recorded entries, including unwithdrawn GO-2026-6278. Direct import or
@@ -875,7 +879,34 @@ retains only its recorded GO-2026-6278/GHSA-w67g-5rqw-f597 result and existing
 GO-2020-0019 primary-index entry. No new advisory or independent defect
 appeared. No dependency implementation or metadata commit exists.
 
-## Hashicorp Go Multierror Evaluation
+## Hashicorp Go Multierror Product Decision
+
+On 2026-09-19 the authorized option 1 was selected with the recommended
+bounds: retain exact selected, inherited, unloaded
+`github.com/hashicorp/go-multierror v1.1.0` without changing `go.mod` or
+`go.sum`. Accept only the completed `Prefix` `errors.Is`/`errors.As` identity
+loss, typed-nil `WrappedErrors` panic, and the characterized API,
+formatting/order, nil/panic, mutation, aliasing, allocation, concurrency,
+Group lifecycle, resource/global-state, MVS, vulnerability, and related
+findings. This accepts no new or independently discovered defect. The
+exception is go-multierror-specific and non-transferable.
+
+It remains valid only while exact v1.1.0 and all six requests remain
+unchanged: Serf v0.9.6 requests v1.1.0; memberlist v0.1.3/v0.3.0,
+mitchellh/cli v1.0.0/v1.1.0, and posener/complete v1.2.3 request v1.0.0.
+Repository imports and production/complete-test target loads must remain zero,
+the module must remain runtime-unreachable, and no new advisory or independent
+defect may appear. The separate Errwrap guard must remain intact at exact
+v1.0.0 with its sole selected-version go-multierror v1.1.0 incoming edge, no
+main-module Errwrap root, and no new v1.1.1-to-Errwrap edge. Direct import or
+loading, runtime reachability, a target version or incoming-request change, an
+Errwrap-guard change, or a new advisory or independent defect expires the
+exception and requires the owning fresh dependency and product decision before
+merge. Do not add a direct edge, change a parent, select v1.1.1, patch or fork
+source, authorize a wrapper or replacement architecture, raise the Go floor,
+move unrelated selections, alter another guarded dependency, or manufacture a
+dependency implementation commit. Do not ask for this same choice again while
+all guards hold.
 
 No exact-path stable `github.com/hashicorp/go-multierror` release qualifies
 under the existing behavior contract. The exact module resolves to Hashicorp's
@@ -924,8 +955,15 @@ clean-tree scorecard is 27/27 Q0-Q2 PASS at L2, SHA-256
 `f440896c323544637a5841a2115eb8cbedf94c020d29e665742bbcac20548207`.
 The 469-entry selected-evidence manifest SHA-256 is
 `7db323255b0c8361371237d1e3e7405e697e3ad7f53167678f756535dc66b7f3`.
-No source or dependency metadata changed. P7 stops for the sole prepared
-go-multierror product decision; physical v1.1.0 selection is not acceptance.
+No source or dependency metadata changed. Guard-only decision revalidation
+from clean HEAD `a6dba3eee16d9c3c622fdc68c075aa45595c27cc`, parent
+`ea7bc704e1160eca51b3b35d00411db28babcac8`, tree
+`99c8ac8c6c063ec11cc66232af33f69d48c7e054`, preserved exact v1.1.0, all six
+requests, the separate Errwrap edge, all 15 guarded selections and recorded
+incoming edges, 15 negative why results, zero repository imports, zero guarded
+production/complete-test loads, and runtime unreachability. Fresh advisory
+data and exact-version results remain byte-identical to the evaluation. No
+dependency implementation or metadata commit exists.
 
 ## Project And Quality State
 
@@ -1028,6 +1066,12 @@ check pass under the established mode-mask contract. No source or dependency
 metadata changed, so no changed-selection scorecard applies and accepted
 quality remains 27/27 Q0-Q2 PASS at L2.
 
+The go-multierror decision-recording session's exact Go 1.26.7 module
+verification, build, count-one tests, race tests, vet, and launcher lifecycle
+check pass under the established `umask 022` contract. No source or dependency
+metadata changed, so no changed-selection scorecard applies and accepted
+quality remains 27/27 Q0-Q2 PASS at L2.
+
 Full preflight repeatedly reached passing API/CLI compatibility, build,
 count-one, vet, and pinned lint before reproducing the known outer or nested
 launcher signal/log-retention timing race. An independent launcher run passed
@@ -1054,11 +1098,13 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Make one bounded product decision for exact-path
-`github.com/hashicorp/go-multierror`. No stable release qualifies because all
-retain Prefix error-identity loss; selected inherited v1.1.0 remains unloaded
-and runtime-unreachable but is not accepted. Choose exactly one recorded
-option without implementing it: recommended guarded retention of v1.1.0,
-separately sequenced v1.1.1 plus a fresh Errwrap decision and later
-implementation, or a separate remediation/architecture study. Preserve every
-earlier decision and do not evaluate another group or begin P8.
+Independently evaluate selected exact-path
+`github.com/hashicorp/go-retryablehttp v0.5.3` as one bounded P7 dependency
+group. Resolve repository/release identity, Go-floor closure, source, tests,
+API, behavior, project loading, MVS effects, vulnerability state, and every
+applicable quality contract. Retain or select only a qualified exact-path
+stable release whose complete minimal source/test closure preserves Go 1.18;
+otherwise stop for a fresh bounded product decision. Preserve the
+go-multierror, go-msgpack, go-immutable-radix, and go-hclog exceptions,
+qualified go-cleanhttp, and every earlier target-specific decision. Do not
+evaluate a second group or begin P8.

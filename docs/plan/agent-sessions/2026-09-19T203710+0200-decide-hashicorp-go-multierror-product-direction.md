@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Go Multierror Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-19T203710+0200-decide-hashicorp-go-multierror-product-direction`
 Created: `2026-09-19T20:37:10+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c7f749ee1d9725c10846fea7aafbc338ebad24effa01764e6621255b227708f1`
 Previous: [2026-09-19T190917+0200-evaluate-hashicorp-go-multierror-dependency.md](2026-09-19T190917+0200-evaluate-hashicorp-go-multierror-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-19T205837+0200-evaluate-hashicorp-go-retryablehttp-dependency.md](2026-09-19T205837+0200-evaluate-hashicorp-go-retryablehttp-dependency.md)
+Outcome: Recorded authorized option 1 for exact inherited, unloaded go-multierror v1.1.0 after every guard passed; dependency metadata stayed unchanged and one bounded go-retryablehttp evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -216,3 +216,70 @@ After a coherent explicit decision, make the required local
 merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
 combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded authorized option 1 exactly: retain selected
+`github.com/hashicorp/go-multierror v1.1.0` as an inherited, unloaded module
+without changing `go.mod` or `go.sum`. The go-multierror-specific,
+non-transferable exception accepts only the completed `Prefix` loss of
+`errors.Is`/`errors.As` identity, the typed-nil `WrappedErrors` panic, and the
+completed API, formatting/order, nil/panic, mutation, aliasing, allocation,
+concurrency, Group lifecycle, resource/global-state, MVS, vulnerability, and
+related qualification findings. It accepts no new or independently discovered
+defect.
+
+Guard-only revalidation ran from clean decision HEAD
+`a6dba3eee16d9c3c622fdc68c075aa45595c27cc`, parent
+`ea7bc704e1160eca51b3b35d00411db28babcac8`, tree
+`99c8ac8c6c063ec11cc66232af33f69d48c7e054`, under exact Go 1.26.7 binary
+SHA-256 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+The handoff commit changes exactly the launcher, the answered decision archive,
+the new reciprocal archive, the rolling handover, and the roadmap; its
+predecessor changed exactly the five recorded evaluation/handoff files.
+
+Go-multierror remains exact v1.1.0 through all six recorded requests: Serf
+v0.9.6 requests v1.1.0, while memberlist v0.1.3/v0.3.0, mitchellh/cli
+v1.0.0/v1.1.0, and posener/complete v1.2.3 request v1.0.0. All 15 guarded
+selections and recorded incoming edges remain unchanged. All 15
+`go mod why -m` results remain negative, repository Go imports remain zero,
+and the 355-entry production and 429-entry complete-test loads contain zero
+guarded packages. The complete-test load retains 197 module-backed entries
+across 41 loaded modules, so go-multierror and every earlier guarded target
+remain runtime-unreachable.
+
+The separate Errwrap guard remains intact: exact Errwrap v1.0.0 still has its
+sole selected-version incoming edge from go-multierror v1.1.0, the historical
+go-multierror v1.0.0 request remains, and no main-module Errwrap root or new
+v1.1.1-to-Errwrap edge exists. The project remains 234 selected modules, 3,599
+graph edges, and 1,067 `go.sum` lines. `go.mod` and `go.sum` retain SHA-256
+values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and Last-Modified 2026-09-17T17:29:18Z. Exact go-multierror v1.1.0 and every
+guarded target except Gorilla retain empty exact-version OSV responses.
+Gorilla retains only its recorded GO-2026-6278/GHSA-w67g-5rqw-f597 result and
+GO-2020-0019 primary-index entry. No new advisory or independently observed
+defect appeared.
+
+The exception remains valid only while exact go-multierror v1.1.0 and all six
+incoming requests remain unchanged, repository imports and production/
+complete-test target loads remain zero, the module remains runtime-
+unreachable, the separate Errwrap v1.0.0 selection and selected-version edge
+remain unchanged without a new direct root or v1.1.1 edge, and no new advisory
+or independent defect appears. Direct import/loading, runtime reachability, a
+target version or incoming-request change, an Errwrap-guard change, or a new
+advisory or independent defect expires the exception and requires the owning
+fresh dependency and product decision before merge.
+
+No dependency implementation or metadata commit was created. Exact Go 1.26.7
+module verification, build, count-one tests, race tests, vet, and the launcher
+lifecycle check pass under `umask 022`; no changed-selection scorecard applies,
+and accepted quality remains 27/27 Q0-Q2 PASS at L2. The sole reciprocal
+successor is the bounded P7 evaluation of selected exact-path
+`github.com/hashicorp/go-retryablehttp v0.5.3`; it was prepared but not
+executed.
