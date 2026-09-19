@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Go Msgpack Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-19T185300+0200-decide-hashicorp-go-msgpack-product-direction`
 Created: `2026-09-19T18:53:00+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `0d57e78496ee1264d1c8062357735b90ef371493f2e91c95600a56a0a6ca0629`
 Previous: [2026-09-16T232707+0200-evaluate-hashicorp-go-msgpack-dependency.md](2026-09-16T232707+0200-evaluate-hashicorp-go-msgpack-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-19T190917+0200-evaluate-hashicorp-go-multierror-dependency.md](2026-09-19T190917+0200-evaluate-hashicorp-go-multierror-dependency.md)
+Outcome: Recorded authorized option 1 for exact inherited, unloaded go-msgpack v0.5.3 after every guard passed; dependency metadata stayed unchanged and one bounded go-multierror evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -177,3 +177,49 @@ explicit choice, do not manufacture another handoff commit. Do not launch a
 successor, push, merge, publish, release, stash, revert, bypass cleanup, remove
 the worktree, combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded authorized option 1 exactly: retain selected
+`github.com/hashicorp/go-msgpack v0.5.3` as an inherited, unloaded module
+without changing `go.mod` or `go.sum`. The exception accepts only the completed
+map-update panic, pointer-`false` omission, malformed-build-comment/vet
+failure, upstream early-test-flag failure, and the completed API, nil/panic,
+byte-aliasing, allocation, concurrency, global-cache, resource, deterministic,
+malformed-input, error-identity, RPC-cleanup, vulnerability, and related
+qualification findings. It is go-msgpack-specific, non-transferable, and
+accepts no new or independently discovered defect.
+
+Guard-only revalidation from clean HEAD
+`69017090043510b4754e8e81feab762a8011fe90`, parent
+`13f63a2c7639e373b261ca74176955b2be6461b2`, tree
+`0db64c05ce2166f40821aeb296e10576124ed349`, passed under exact Go 1.26.7.
+Go-msgpack remains exact v0.5.3 through the four recorded requests from
+memberlist v0.1.3/v0.3.0 and Serf v0.8.2/v0.9.6. All 14 guarded selections
+and recorded incoming edges remain unchanged, all 14 `go mod why -m` results
+remain negative, repository imports remain zero, and the 355-entry production
+and 429-entry complete-test loads contain zero guarded packages. The project
+remains 234 modules, 3,599 graph edges, 197 module-backed complete-test entries
+across 41 loaded modules, with unchanged `go.mod`/`go.sum` SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Runtime unreachability therefore remains intact.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and Last-Modified 2026-09-17T17:29:18Z. Exact go-msgpack v0.5.3 and every
+guarded target except Gorilla have empty exact-version OSV results. Gorilla
+retains only the already-recorded GO-2026-6278/GHSA-w67g-5rqw-f597 result and
+existing GO-2020-0019 primary-index entry. No new advisory or independent
+defect appeared.
+
+The exception expires on direct import or loading, runtime reachability, a
+go-msgpack version or incoming-request change, or any new advisory or
+independent defect; expiry requires a fresh go-msgpack dependency and product
+decision before merge. No dependency implementation or metadata commit was
+created. Exact Go 1.26.7 module verification, build, count-one tests, race
+tests, vet, and the launcher lifecycle check pass under `umask 022`; no
+changed-selection scorecard applies. The sole successor is the bounded P7
+evaluation of selected exact-path `github.com/hashicorp/go-multierror v1.1.0`;
+it was prepared but not executed.

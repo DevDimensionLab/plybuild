@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-19T18:53:00+02:00
+Generated: 2026-09-19T19:09:17+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,10 +9,10 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The
-  go-msgpack evaluation began from clean HEAD
-  `13f63a2c7639e373b261ca74176955b2be6461b2`, parent
-  `7c6d298b71e723a335dc295a1dc42a9b3ead3c93`, tree
-  `f41cd4a30e079f22d691477800e24c6b2e206366`.
+  go-msgpack decision recording began from clean HEAD
+  `69017090043510b4754e8e81feab762a8011fe90`, parent
+  `13f63a2c7639e373b261ca74176955b2be6461b2`, tree
+  `0db64c05ce2166f40821aeb296e10576124ed349`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-msgpack evaluation and every earlier archive are answered. The sole
+- The go-msgpack decision and every earlier archive are answered. The sole
   NEXT archive is
-  `docs/plan/agent-sessions/2026-09-19T185300+0200-decide-hashicorp-go-msgpack-product-direction.md`.
-  It authorizes only one bounded go-msgpack product decision. It does not
-  authorize implementation, renewed audit, an earlier decision, another
-  dependency group, or P8.
+  `docs/plan/agent-sessions/2026-09-19T190917+0200-evaluate-hashicorp-go-multierror-dependency.md`.
+  It authorizes only one bounded exact-path go-multierror evaluation. It does
+  not authorize reopening go-msgpack or an earlier decision, combining another
+  dependency group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -35,10 +35,9 @@ session diary.
 
 P2A-P6 are complete. Exact Go 1.26.7, every accepted dependency move through
 Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
-through exact inherited, unloaded go-immutable-radix v1.3.1 are final under
-their target-specific guards. The bounded go-msgpack evaluation found no
-qualified exact-path stable release, so P7 is stopped at one product decision.
-P8 remains queued. Do not combine groups or begin P8.
+through exact inherited, unloaded go-msgpack v0.5.3 are final under their
+target-specific guards. P7 continues with one bounded exact-path go-multierror
+evaluation. P8 remains queued. Do not combine groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -53,16 +52,18 @@ The gRPC Prometheus v1.2.0, gRPC middleware v1.0.0, Gorilla WebSocket v1.4.2,
 GopherJS `v0.0.0-20181017120253-0766667cb4d1`, Enterprise Certificate Proxy
 v0.2.1, and GAX v2.7.0 decisions remain separate under their exact-selection,
 selected-version incoming-edge, zero-load, runtime-unreachable, and no-new-
-finding guards. At go-immutable-radix evaluation completion Consul API
+finding guards. At go-msgpack decision completion Consul API
 retained its sole Viper v1.15.0 edge; Gateway retained exactly its two
 recorded incoming edges;
 gRPC Prometheus, gRPC middleware, and Gorilla retained their sole mvn-pom-
 mutator v0.2.3 edges; GopherJS retained its sole GoConvey v1.6.4 edge; and
 Enterprise Certificate Proxy and GAX retained their sole Viper v1.15.0 edges.
+Go-msgpack retained its four requests from memberlist v0.1.3/v0.3.0 and Serf
+v0.8.2/v0.9.6.
 All earlier guarded why results are negative; source imports and target package
 loads are zero, and runtime unreachability remains intact.
 
-Fresh primary data has no new exact record for those targets. All 13 why
+Fresh primary data has no new exact record for those targets. All 14 why
 results remain negative, repository imports are zero, and production and
 complete-test loads contain zero guarded packages. Gorilla retains only its
 recorded entries, including unwithdrawn GO-2026-6278. Direct import or
@@ -772,13 +773,31 @@ appears. Direct import/loading, runtime reachability, a target version or
 incoming-edge change, or a new advisory/defect requires a fresh bounded
 go-cleanhttp decision. This guard transfers no earlier exception.
 
-## Hashicorp Go Msgpack Evaluation
+## Hashicorp Go Msgpack Product Decision
 
 No exact-path stable `github.com/hashicorp/go-msgpack` release qualifies.
-Selected inherited v0.5.3 remains only the physical MVS result; it is not
-accepted, and `go.mod`/`go.sum` are unchanged. P7 is stopped at the reciprocal
-bounded product decision offering guarded v0.5.3 retention, explicit v0.5.5
-exception/upgrade authorization, or a separately scoped remediation/block.
+On 2026-09-19 the authorized option 1 was selected with the recommended
+bounds: retain exact selected, inherited, unloaded v0.5.3 without changing
+`go.mod` or `go.sum`. Accept only the completed map-update panic, pointer-
+`false` omission, malformed-build-comment/vet failure, upstream early-test-
+flag failure, and the characterized API, nil/panic, byte aliasing, allocation,
+concurrency, global-cache, resource, deterministic, malformed-input, error-
+identity, RPC-cleanup, and vulnerability findings. This accepts no new or
+independently discovered defect. The exception is go-msgpack-specific and
+non-transferable.
+
+It remains valid only while exact v0.5.3 and all four requests from memberlist
+v0.1.3/v0.3.0 and Serf v0.8.2/v0.9.6 remain unchanged, zero target packages
+load, the module remains runtime-unreachable, and no new advisory or
+independent defect appears. Direct import/loading, runtime reachability, a
+target version or incoming-request change, or a new advisory or independent
+defect expires the exception and requires a fresh go-msgpack dependency and
+product decision before merge. Do not add a direct edge, select v0.5.4 or
+v0.5.5, promote a retracted v1 release or `/v2`, change/remove a parent, patch
+or fork source, authorize a wrapper or replacement architecture, raise the Go
+floor, move unrelated selections, alter another guarded dependency, or
+manufacture a dependency implementation commit. Do not ask for this same
+choice again while all guards hold.
 
 The exact module resolves to Hashicorp's public active unarchived MIT fork of
 `ugorji/go`. Selected v0.5.3 is commit
@@ -832,6 +851,29 @@ remain intact. The 521-entry selected-evidence manifest and decision-summary
 SHA-256 values are
 `100fa819df480ac176571f5d4fe672afd582554c9feb1fa8d9acc0fb50dc6a76` /
 `ab9c6b901c5329970193713aad977605a52c38b8e725cb0372d4e3f770f75efd`.
+
+Guard-only decision revalidation from clean HEAD
+`69017090043510b4754e8e81feab762a8011fe90`, parent
+`13f63a2c7639e373b261ca74176955b2be6461b2`, tree
+`0db64c05ce2166f40821aeb296e10576124ed349`, preserves exact go-msgpack
+v0.5.3 and its four recorded incoming requests. All 14 guarded selections and
+recorded incoming edges remain unchanged; all 14 `go mod why -m` results are
+negative; repository imports remain zero; and the 355-entry production and
+429-entry complete-test loads contain zero guarded packages. The project
+remains 234 modules, 3,599 graph edges, 197 module-backed complete-test entries
+across 41 loaded modules, with unchanged `go.mod`/`go.sum` SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Runtime unreachability therefore remains intact.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and Last-Modified 2026-09-17T17:29:18Z. Exact go-msgpack v0.5.3 and every
+guarded target except Gorilla have empty exact-version OSV responses. Gorilla
+retains only its recorded GO-2026-6278/GHSA-w67g-5rqw-f597 result and existing
+GO-2020-0019 primary-index entry. No new advisory or independent defect
+appeared. No dependency implementation or metadata commit exists.
 
 ## Project And Quality State
 
@@ -928,6 +970,12 @@ and repository-local compatibility-report boundaries. Scratch-contained
 canonical reruns pass. No changed-selection scorecard applies; accepted
 quality remains 27/27 Q0-Q2 PASS at L2.
 
+The go-msgpack decision-recording session's exact Go 1.26.7 module
+verification, build, count-one tests, race tests, vet, and launcher lifecycle
+check pass under the established mode-mask contract. No source or dependency
+metadata changed, so no changed-selection scorecard applies and accepted
+quality remains 27/27 Q0-Q2 PASS at L2.
+
 Full preflight repeatedly reached passing API/CLI compatibility, build,
 count-one, vet, and pinned lint before reproducing the known outer or nested
 launcher signal/log-retention timing race. An independent launcher run passed
@@ -955,12 +1003,12 @@ run `go mod download all` in a measured worktree.
 
 ## Next Bounded Objective
 
-Make exactly one bounded product decision for exact-path go-msgpack after the
-completed evaluation found no qualifying stable release. The recommended
-minimal option is to retain inherited, unloaded v0.5.3 under a target-specific
-exception guarded by its exact four requests, zero load, runtime
-unreachability, and no new finding. Alternatives are an explicit separately
-implemented v0.5.5 exception/upgrade, or a separately scoped remediation/block.
-Do not infer acceptance, implement an option, reopen the audit, evaluate a
-second group, or begin P8 without the explicit decision required by the NEXT
-archive.
+Independently evaluate selected exact-path
+`github.com/hashicorp/go-multierror v1.1.0` as one bounded P7 dependency
+group. Resolve repository/release identity, Go-floor closure, source, tests,
+API, behavior, project loading, MVS effects, vulnerability state, and every
+applicable quality contract. Retain or select only a qualified exact-path
+stable release whose complete minimal source/test closure preserves Go 1.18;
+otherwise stop for a fresh bounded product decision. Preserve the go-msgpack,
+go-immutable-radix, and go-hclog exceptions, qualified go-cleanhttp, and every
+earlier target-specific decision. Do not evaluate a second group or begin P8.
