@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-19T20:58:37+02:00
+Generated: 2026-09-19T23:36:05+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,10 +9,10 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The
-  go-multierror decision recording began from clean handoff HEAD
-  `a6dba3eee16d9c3c622fdc68c075aa45595c27cc`, parent
-  `ea7bc704e1160eca51b3b35d00411db28babcac8`, tree
-  `99c8ac8c6c063ec11cc66232af33f69d48c7e054`.
+  go-retryablehttp evaluation recording began from clean handoff HEAD
+  `24b1f33671362309526328170e67e68aaf753a3a`, parent
+  `a6dba3eee16d9c3c622fdc68c075aa45595c27cc`, tree
+  `d00fe77d08624cb227aa61641b403ad42c9d4deb`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-multierror decision and every earlier archive are answered. The sole
+- The go-retryablehttp evaluation and every earlier archive are answered. The sole
   NEXT archive is
-  `docs/plan/agent-sessions/2026-09-19T205837+0200-evaluate-hashicorp-go-retryablehttp-dependency.md`.
-  It authorizes only one bounded exact-path go-retryablehttp evaluation. It
-  does not authorize reopening an earlier decision, combining another
-  dependency group, or beginning P8.
+  `docs/plan/agent-sessions/2026-09-19T233605+0200-decide-hashicorp-go-retryablehttp-product-direction.md`.
+  It authorizes only one bounded go-retryablehttp product decision. It does
+  not authorize implementation, reopening an earlier decision, combining
+  another dependency group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -36,9 +36,9 @@ session diary.
 P2A-P6 are complete. Exact Go 1.26.7, every accepted dependency move through
 Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
 through exact inherited, unloaded go-multierror v1.1.0 are final under their
-target-specific guards. P7 continues with one bounded exact-path
-go-retryablehttp evaluation. P8 remains queued. Do not combine groups or begin
-P8.
+target-specific guards. P7 is blocked only on the bounded go-retryablehttp
+product decision because no exact-path stable release qualifies. P8 remains
+queued. Do not combine groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -965,6 +965,91 @@ production/complete-test loads, and runtime unreachability. Fresh advisory
 data and exact-version results remain byte-identical to the evaluation. No
 dependency implementation or metadata commit exists.
 
+## Hashicorp Go Retryablehttp Evaluation
+
+No exact-path stable `github.com/hashicorp/go-retryablehttp` release qualifies
+under the combined Go-floor, vulnerability, API, behavior, and project
+contracts. Dependency metadata remains unchanged and P7 is blocked on the
+prepared target-specific product decision. Do not infer risk acceptance from
+the current physical selection or zero reachability.
+
+The exact path resolves to Hashicorp's public, active, unarchived, non-fork
+MPL-2.0 repository. The proxy exposes 23 stable releases from v0.5.0 through
+latest v0.7.8, with no prerelease, retraction, deprecation, redirect,
+alternate path, `/v2` line, or GitHub Release object. Current main is 17
+commits beyond v0.7.8 and unreleased. Proxy and Git manifests agree byte-for-
+byte for every release. Selected v0.5.3 is verified commit
+`357460732517ec3b57c05c51443296bdd6df1874`; last floor-compatible v0.7.5 is
+`4165cf8897205a879a06b20d1ed0a2a76fbb6a17`; first secure v0.7.7 contains
+fix commit `a99f07beb3c5faaa0a283617e6eb6bcf25f5049a`; latest v0.7.8 is
+`e1f5485fe84728709b857cb89e17088894c301d6`.
+
+V0.5.0-v0.6.2 have no `go` directive, v0.6.3-v0.7.5 declare Go 1.13,
+v0.7.6/v0.7.7 declare Go 1.19, and v0.7.8 declares Go 1.23. V0.7.5 is
+therefore the highest release preserving the declared Go 1.18 floor. Every
+floor-compatible release is affected by reviewed GO-2024-2947/
+GHSA-v6v8-xj6m-xwqh; first-fixed v0.7.7 is floor-ineligible. Actual Go 1.18
+compilation of later releases does not override their declared floor.
+
+Every release after selected v0.5.3 is export-incompatible because
+`Client.Logger` changes from `Logger` to `interface{}`. V0.7.5 is also the
+last release before `PrepareRetry`; v0.7.8 adds rate-limit linear-jitter
+backoff. All floor-compatible releases pass isolated Go 1.18.10 tests. Exact
+Go 1.26.7 v0.6.3-v0.7.5 upstream tests fail modern wrapped-x509 retry
+classification. Selected v0.5.3/v0.6.2 retain test-only vet failures from
+`t.Fatalf` in non-test goroutines. First-fixed v0.7.7 passes complete exact-Go
+native/repeated/race/vet and five cross-build targets.
+
+The behavior fixture SHA-256 is
+`cf4ceef2094699c773cc5a44afb90ed992d4ac3ae222a3ee27ff79d95bea1a1c`.
+Selected v0.5.3 fails x509 unknown-authority, unsupported-scheme, and redirect-
+limit permanent classification and loses final transport-error `errors.Is`
+identity. Body replay, retry and final response closing, cancellation,
+backoff/status, hook, nil/panic, mutation, aliasing, allocation, concurrency,
+global-client, and resource behavior are characterized. V0.7.5 passes the
+fixture but fails the actual modern-Go TLS branch.
+
+Fresh primary vulnerability data remains 1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+and Last-Modified 2026-09-17T17:29:18Z. Exact OSV results contain
+GO-2024-2947 and GHSA-v6v8-xj6m-xwqh for every v0.5.0-v0.7.6 release and are
+empty for v0.7.7/v0.7.8. The independent credential fixture SHA-256 is
+`2b15b5812d21c3f91f9279105923423f6fbb311568c56ec8d3651e91fd952bcb`;
+it reproduces exact Basic-auth URL disclosure through v0.7.6 and passes on
+v0.7.7/v0.7.8. Consumer module/package/symbol/test-symbol scans corroborate
+the affected and fixed ranges.
+
+Selected v0.5.3 exists solely because go-metrics v0.3.10 requests it. The
+shortest root path is main -> mvn-pom-mutator v0.2.3 -> historical Viper
+v1.10.1 -> go-metrics v0.3.10 -> target. Its why result and repository import
+search are negative; production and complete-test loads contain zero target
+packages, so it is runtime-unreachable. Disposable v0.5.3/v0.6.2/v0.7.5
+projections move no unrelated selection. V0.7.6/v0.7.7 additionally upgrade
+guarded go-hclog v1.2.0 to v1.6.3 and fatih/color v1.15.0 to v1.16.0;
+v0.7.8 also raises the main Go directive to 1.23. No projection was applied.
+
+All 15 earlier guards remain exact: their incoming edges are unchanged, every
+why/import result is negative, both package loads contain zero guarded
+packages, and fresh exact-version OSV results add nothing. Exact Go 1.26.7
+project verify/build/native/repeated/race/vet, pinned lint, API/CLI, empty-
+HOME, four cross-build, host/snapshot/Docker, all 17 script/meta, all 80
+mutation, and all 15 audit controls pass. The exact 21-stage result is 27/27
+Q0-Q2 PASS at L2 with zero held/regressed/non-comparable/dirty counts;
+scorecard SHA-256 is
+`de13154181ae319fd80a29a98df78535762d70c2c01438f9e3cb735c2f624e81`.
+The 547-entry complete-evidence manifest SHA-256 is
+`12f36165ac7c0ddb4a69a5e432c3b12ea57c977a9e6d7c7a338a359d36b4faa2`.
+
+The prepared decision recommends retaining exact inherited, unloaded v0.5.3
+under a new go-retryablehttp-specific exception bounded to the reviewed
+advisory, reproduced credential disclosure, completed behavior findings,
+exact selection and sole go-metrics request, zero imports/load, runtime
+unreachability, and no new advisory or independent defect. Alternative v0.7.7
+requires separately authorized Go-floor, exported-API, go-hclog, and color
+decisions before implementation. Parent-chain removal, upgrade, patch, fork,
+or replacement remains a third separately scoped option. No choice is inferred
+by the evaluation.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -995,7 +1080,7 @@ manual-evidence receipt exits 1 by contract and is not comparable to the
 accepted manual-evidence-adjusted scorecard. Because no source or dependency
 metadata changed, accepted quality remains 27/27 Q0-Q2 PASS at L2. The latest
 authoritative clean-tree scorecard SHA-256 is
-`f440896c323544637a5841a2115eb8cbedf94c020d29e665742bbcac20548207`.
+`de13154181ae319fd80a29a98df78535762d70c2c01438f9e3cb735c2f624e81`.
 
 The SDK evaluation's exact-Go no-change module verification, build, count-one,
 two count-ten repeats, race, vet/lint, API/CLI compatibility, host and snapshot
@@ -1091,20 +1176,23 @@ three later final-text runs pass outer controls 1-50 and reproduce only the
 known nested signal-log timing failure at control 51. Preserve the known
 apidiff archive reproducibility discrepancy.
 
-The current 469-entry selected-evidence manifest SHA-256 is
-`7db323255b0c8361371237d1e3e7405e697e3ad7f53167678f756535dc66b7f3`.
-All disposable evidence remains beneath `$CODEX_SESSION_SCRATCH_ROOT`; never
-run `go mod download all` in a measured worktree.
+The current 547-entry complete-evidence manifest SHA-256 is
+`12f36165ac7c0ddb4a69a5e432c3b12ea57c977a9e6d7c7a338a359d36b4faa2`.
+All disposable evaluation evidence remains beneath
+`$CODEX_SESSION_SCRATCH_ROOT`; quality evidence remains in its recorded
+external `/private/tmp` roots. Never retain a `go mod download all`
+projection in a measured worktree.
 
 ## Next Bounded Objective
 
-Independently evaluate selected exact-path
-`github.com/hashicorp/go-retryablehttp v0.5.3` as one bounded P7 dependency
-group. Resolve repository/release identity, Go-floor closure, source, tests,
-API, behavior, project loading, MVS effects, vulnerability state, and every
-applicable quality contract. Retain or select only a qualified exact-path
-stable release whose complete minimal source/test closure preserves Go 1.18;
-otherwise stop for a fresh bounded product decision. Preserve the
-go-multierror, go-msgpack, go-immutable-radix, and go-hclog exceptions,
-qualified go-cleanhttp, and every earlier target-specific decision. Do not
+Make exactly one bounded product decision for
+`github.com/hashicorp/go-retryablehttp`. No stable release qualifies: every
+Go-1.18-floor-compatible release is affected by GO-2024-2947, while first-
+fixed v0.7.7 declares Go 1.19, breaks selected exported API, and moves guarded
+go-hclog and fatih/color selections. Obtain or apply one explicit choice from
+the prepared archive without implementation. Option 1 is recommended: retain
+exact selected, inherited, unloaded v0.5.3 under a target-specific exception
+bounded to the completed advisory/behavior findings, exact selection and sole
+go-metrics v0.3.10 request, zero imports/load, runtime unreachability, and no
+new advisory or independent defect. Preserve every earlier decision. Do not
 evaluate a second group or begin P8.

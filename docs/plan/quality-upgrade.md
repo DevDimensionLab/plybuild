@@ -5374,11 +5374,13 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after the bounded Hashicorp go-msgpack option 1 decision.
-Completed dependency groups remain final through accepted Google UUID v1.4.0,
-and all retained-module decisions remain guarded through exact inherited,
-unloaded `github.com/hashicorp/go-msgpack v0.5.3`. The next bounded group is
-exact-path `github.com/hashicorp/go-multierror v1.1.0`. P8 remains queued.
+Status: active and blocked on the bounded Hashicorp go-retryablehttp product
+decision. Completed dependency groups remain final through accepted Google
+UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module decisions
+through exact inherited, unloaded `github.com/hashicorp/go-multierror
+v1.1.0`. The go-retryablehttp evaluation is complete; no exact-path stable
+release qualifies without a new target-specific risk acceptance or separately
+authorized Go-floor/API/guarded-selection work. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10346,6 +10348,75 @@ Hashicorp go-multierror product decision (2026-09-19):
   accepted quality remains 27/27 Q0-Q2 PASS at L2. P7 continues only with the
   prepared bounded exact-path go-retryablehttp v0.5.3 evaluation; it was not
   executed in this decision session.
+
+Hashicorp go-retryablehttp evaluation and blocked product boundary
+(2026-09-19):
+
+- Fresh exact-path identity evidence resolves Hashicorp's public, active,
+  unarchived, non-fork MPL-2.0 repository. The proxy exposes 23 stable releases
+  from v0.5.0 through latest v0.7.8, with no prerelease, retraction,
+  deprecation, redirect, alternate path, `/v2` line, or GitHub Release object.
+  Current main is 17 commits beyond v0.7.8 and remains unreleased. Proxy and
+  Git manifests agree for every release; relevant tags are unsigned.
+- Selected v0.5.3 is verified commit
+  `357460732517ec3b57c05c51443296bdd6df1874`. Last declared-floor-compatible
+  v0.7.5 is `4165cf8897205a879a06b20d1ed0a2a76fbb6a17`. First secure v0.7.7
+  contains fix commit `a99f07beb3c5faaa0a283617e6eb6bcf25f5049a`; latest v0.7.8 is
+  `e1f5485fe84728709b857cb89e17088894c301d6`.
+- V0.5.0-v0.6.2 have no `go` directive, v0.6.3-v0.7.5 declare Go 1.13,
+  v0.7.6/v0.7.7 declare Go 1.19, and v0.7.8 declares Go 1.23. V0.7.5 is the
+  highest release preserving the declared Go 1.18 floor. Every eligible
+  release is affected by reviewed GO-2024-2947/GHSA-v6v8-xj6m-xwqh; first-
+  fixed v0.7.7 is floor-ineligible. Actual Go 1.18 compilation of later
+  releases does not qualify their unsupported declared floor.
+- Every release after v0.5.3 is exported-API-incompatible because
+  `Client.Logger` changes from `Logger` to `interface{}`. Floor-compatible
+  releases pass contained Go 1.18.10 isolated tests. Exact Go 1.26.7
+  v0.6.3-v0.7.5 tests fail modern wrapped-x509 retry classification;
+  v0.5.3/v0.6.2 retain a test-only vet failure; v0.7.7 passes complete exact-
+  Go native/repeated/race/vet and five cross-build targets.
+- The behavior fixture SHA-256 is
+  `cf4ceef2094699c773cc5a44afb90ed992d4ac3ae222a3ee27ff79d95bea1a1c`.
+  Selected v0.5.3 fails x509 unknown-authority, unsupported-scheme, and
+  redirect-limit permanent classification and loses final transport-error
+  `errors.Is` identity. Body replay, response closing, cancellation,
+  status/backoff, hooks, nil/panic, mutation, aliasing, allocation,
+  concurrency, global client, and resource boundaries are characterized.
+- Fresh primary data retains 1,402 records at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  and Last-Modified 2026-09-17T17:29:18Z. Exact OSV results contain both
+  target IDs through v0.7.6 and are empty for v0.7.7/v0.7.8. The independent
+  credential-disclosure fixture SHA-256 is
+  `2b15b5812d21c3f91f9279105923423f6fbb311568c56ec8d3651e91fd952bcb`;
+  consumer module/package/symbol/test-symbol scans corroborate the affected
+  and fixed ranges.
+- Selected v0.5.3 exists solely through go-metrics v0.3.10. Its why/import
+  results are negative and production/complete-test loads contain zero target
+  packages, so it is runtime-unreachable. V0.5.3/v0.6.2/v0.7.5 projections
+  move no unrelated selection. V0.7.6/v0.7.7 also upgrade guarded go-hclog
+  v1.2.0 to v1.6.3 and fatih/color v1.15.0 to v1.16.0; v0.7.8 also raises
+  the main Go directive to 1.23. No projection was applied.
+- All 15 earlier guards remain exact and runtime-unreachable. The project
+  remains 234 modules, 3,599 graph edges, 355/429 package entries, 197 module-
+  backed complete-test entries across 41 modules, and 1,067 sum lines.
+  `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- Exact Go project, compatibility, lint, cross-build, host/snapshot/Docker,
+  all 17 script/meta, all 80 mutation, and all 15 audit controls pass. The
+  authoritative exact 21-stage result is 27/27 Q0-Q2 PASS at L2 with zero
+  held/regressed/non-comparable/dirty counts; scorecard SHA-256 is
+  `de13154181ae319fd80a29a98df78535762d70c2c01438f9e3cb735c2f624e81`.
+  The 547-entry complete-evidence manifest SHA-256 is
+  `12f36165ac7c0ddb4a69a5e432c3b12ea57c977a9e6d7c7a338a359d36b4faa2`.
+- No stable release qualifies. P7 is blocked on the prepared bounded product
+  decision. Option 1 is recommended: retain exact inherited, unloaded v0.5.3
+  under a new target-specific exception accepting only the completed advisory,
+  credential-disclosure, behavior, API, MVS, and related findings while exact
+  selection and the sole go-metrics request, zero imports/load, runtime
+  unreachability, and no-new-advisory/defect guards hold. V0.7.7 instead needs
+  separate Go-floor, exported-API, go-hclog, and color decisions; parent-chain
+  remediation is a third separately scoped option. No decision is inferred.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
