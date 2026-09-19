@@ -5374,9 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after recording the controller's user-authorized 2026-09-16
-bounded Hashicorp go-immutable-radix option 1 decision; the next bounded group
-is selected exact-path `github.com/hashicorp/go-msgpack v0.5.3`.
+Status: active but stopped for the bounded Hashicorp go-msgpack product
+decision after its completed evaluation found no qualified exact-path stable
+release.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 and all retained-module decisions remain guarded through exact inherited,
 unloaded `github.com/hashicorp/go-immutable-radix v1.3.1`. P8 remains queued.
@@ -10132,9 +10132,64 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   guarded target except Gorilla have empty exact-version OSV responses;
   Gorilla retains only the recorded GO-2026-6278/GHSA-w67g-5rqw-f597 result
   and the primary index's existing GO-2020-0019 entry. No new advisory or
-  independent defect appeared. The next bounded P7 group is selected exact-
-  path `github.com/hashicorp/go-msgpack v0.5.3`; it was not evaluated in this
-  decision-recording session.
+  independent defect appeared.
+- The bounded exact-path `github.com/hashicorp/go-msgpack` evaluation is
+  complete without a qualifying release or repository metadata change. Fresh
+  identity evidence resolves Hashicorp's public active unarchived MIT fork of
+  `ugorji/go`. Selected v0.5.3 is commit
+  `be3a5be7ee2202386d02936a19ae4fbde1c77800`, parents
+  `2e9170ac1d8fb32e1e645d8364e4d8f21b530bb3` and
+  `3cecd6b54d4f8710db6f370c02e007298827cd34`, tree
+  `92376aea28f7d767e816d4f24cc830bba62de0d0`. Highest non-retracted stable
+  v0.5.5 is commit `ad60660ecf9c5a1eae0ca32182ed72bab5807961`, tree
+  `51aaf54c47643758233939e0ef0f010610605846`. Strict Git verification passes
+  and proxy/Git bytes agree. V0.5.0-v0.5.2 expose no root package; v1.1.5 and
+  v1.1.6 are retracted after a compatibility-breaking upstream merge, v1.1.6
+  requires Go 1.19, and `/v2` is a distinct Go-1.24-or-later module.
+- V0.5.3-v0.5.5 have a standard-library-only complete source/test closure,
+  preserve Go 1.18, pass production/test cross-compilation under exact Go
+  1.26.7 and Go 1.18.10, and expose byte-identical API snapshots. All three
+  fail native count-one, two independent count-ten repeats, and race under
+  both SDKs because upstream test initialization calls `flag.Parse()` before
+  testing registers `-test.paniconexit0`. V0.5.3/v0.5.4 also fail vet on a
+  malformed legacy build comment; v0.5.5 fixes the comment but retains the
+  early parse. No candidate passes the complete-suite contract.
+- The independent behavior fixture SHA-256 is
+  `a788002acaf4eb5902c81e0c10d7c577ea1dd1b5ac873d2ce2f45e04969db864`.
+  Selected v0.5.3 panics while updating an existing map value and incorrectly
+  omits a non-nil pointer to `false`; v0.5.4 fixes the map panic, and v0.5.5
+  fixes both. V0.5.5 passes fixture native/repeated/race/vet gates under both
+  SDKs but its upstream suite remains blocked. Struct encoding is
+  deterministic; map encoding is not. Nil/panic, aliasing, allocation,
+  immutable-handle concurrency, protected global-cache, malformed-input,
+  unbounded decode-resource, error-identity, and RPC cleanup boundaries are
+  characterized.
+- Selected v0.5.3 has four exact incoming requests from memberlist
+  v0.1.3/v0.3.0 and Serf v0.8.2/v0.9.6. Its why result and repository import
+  search are negative; production and complete-test loads contain zero target
+  packages, so it is runtime-unreachable. Disposable exact
+  v0.5.3/v0.5.4/v0.5.5 gets preserve all 234 selections and every unrelated
+  version, manufacture only a direct indirect target root/one graph edge, and
+  retain zero load. Tidy removes the root and returns every copy to the base
+  projection. No projection was applied.
+- Fresh primary data now has 1,402 records at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+  Last-Modified 2026-09-17T17:29:18Z, with no go-msgpack record. Every serious
+  exact-version OSV response is empty. Go 1.26.7 isolated scans are empty; Go
+  1.18.10 reports only old-SDK standard-library advisories. Base and v0.5.5
+  project scan populations are identical with zero target trace. All 13 prior
+  guarded selections remain intact. The 521-entry evaluation manifest
+  SHA-256 is
+  `100fa819df480ac176571f5d4fe672afd582554c9feb1fa8d9acc0fb50dc6a76`.
+- Applicable exact-Go project verification, native/repeated/race/vet, pinned
+  lint, API/CLI, empty-HOME, four cross-build, host/snapshot/Docker acceptance,
+  full preflight, all 17 script meta-tests, 80/80 mutation kills, and all 15
+  audit controls pass. No changed-selection scorecard applies, so accepted
+  quality remains 27/27 Q0-Q2 PASS at L2. P7 now requires exactly one explicit
+  product choice: guarded no-change retention of inherited unloaded v0.5.3
+  (recommended), a separately implemented v0.5.5 exception/upgrade, or a
+  separately scoped remediation/block. Do not infer acceptance or implement a
+  choice in the decision-only session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
