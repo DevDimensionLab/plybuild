@@ -10234,6 +10234,60 @@ Current queue decisions and next bounded P7 group (2026-09-14):
   at L2. P7 continues only with the prepared bounded exact-path go-multierror
   evaluation; it was not executed in this decision session.
 
+Hashicorp go-multierror evaluation and blocked product boundary (2026-09-19):
+
+- The exact module resolves to Hashicorp's public, active, unarchived,
+  non-fork MPL-2.0 repository. The only exact-path stable releases are v1.0.0,
+  selected v1.1.0, and latest v1.1.1. There are no release objects,
+  retractions, deprecations, redirects, alternate module lines, or qualified
+  newer tags. Current main is unreleased and was not promoted. Proxy and
+  tagged-Git source bytes agree for every release.
+- All three candidates have one package and a complete minimal module closure
+  of the target plus exact `github.com/hashicorp/errwrap v1.0.0`. Imported
+  production and test source preserves Go 1.18. Each release passes source
+  verification, native count-one, two independent count-ten repeats, race,
+  vet, and five production/test cross-build targets under exact Go 1.26.7 and
+  contained Go 1.18.10.
+- V1.0.0 lacks `Group` and `(*Error).Unwrap`. V1.1.0 and v1.1.1 have no API
+  diff; v1.1.1 fixes only the v1.1.0 typed-nil `WrappedErrors` panic among the
+  independently characterized boundaries. Formatting/order, mutation,
+  aliasing, allocation, nil/panic behavior, ordinary error traversal,
+  concurrency, Group lifecycle, global state, and resource ownership are
+  recorded in the answered archive.
+- No stable release qualifies. `Prefix` delegates to Errwrap v1.0.0 and loses
+  standard error identity: under both SDKs v1.1.0 and v1.1.1 fail all three
+  independent assertions for `errors.Is` traversal through a prefixed plain
+  error and multierror member and `errors.As` traversal through a prefixed
+  member. V1.0.0 has the same design. Upstream issue 56 and unmerged PR 155
+  corroborate a `%w` repair, but no release contains it.
+- Selected inherited v1.1.0 has six requests: Serf v0.9.6 requests v1.1.0;
+  memberlist v0.1.3/v0.3.0, mitchellh/cli v1.0.0/v1.1.0, and
+  posener/complete v1.2.3 request v1.0.0. Its why result and repository import
+  search are negative, production and complete-test loads contain zero target
+  packages, and it is runtime-unreachable. All 14 earlier guards remain intact.
+- Disposable exact v1.1.0/v1.1.1 gets preserve all 234 selections and zero
+  target load but manufacture main-module Multierror and Errwrap roots.
+  V1.1.1 adds a new target-to-Errwrap graph edge, expiring the separate Errwrap
+  guard. Exact v1.0.0 removes mvn-pom-mutator and makes the project unloadable.
+  Tidy returns the viable projections to the base selection; none was applied.
+- Fresh 1,402-record primary vulnerability data has no target record. Exact
+  OSV results for all candidates and Go 1.26.7 isolated scans are empty. Go
+  1.18.10 reports only its old standard-library population. Base and v1.1.1
+  project scan outputs are byte-identical with zero target advisory or trace.
+- Every applicable no-change project gate passes, including full preflight,
+  all 17 script/meta stages, 80/80 mutation kills, host/snapshot/Docker
+  acceptance, and all 15 audit controls. The authoritative clean-tree result
+  is 27/27 Q0-Q2 PASS at L2 with a 469-entry selected-evidence manifest at
+  SHA-256
+  `7db323255b0c8361371237d1e3e7405e697e3ad7f53167678f756535dc66b7f3`.
+  No source or dependency metadata changed.
+- P7 is blocked on the prepared bounded go-multierror product decision. The
+  recommended option is to retain exact selected, inherited, unloaded v1.1.0
+  under a target-specific exception and exact selection/request/load/runtime/
+  advisory guards. An exact v1.1.1 choice would require a later dependency
+  implementation and a fresh, separately sequenced Errwrap decision. No
+  choice is inferred by this evaluation.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
