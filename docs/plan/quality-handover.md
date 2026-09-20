@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T20:15:36+02:00
+Generated: 2026-09-20T20:31:49+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,15 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The mdns evaluation began
+  `codex/upgrade-quality`, base master at `5635d50`. The mdns decision began
   from clean handoff HEAD
-  `b641b55ec01f18a79ecf57b8e5e866310dd44562`, parent
-  `961c48582ca568f0867d91e7781c6fa0b970dcea`, tree
-  `a7d492e85e9b8897d3d058af97b4801781f04bac`. That handoff changed exactly the
-  launcher, answered golang-lru decision archive, added the then-NEXT mdns
-  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal 223-archive history,
-  and launcher check passed before evaluation.
+  `9edb38c51e0067672e90224d8665bae580f92a05`, parent
+  `b641b55ec01f18a79ecf57b8e5e866310dd44562`, tree
+  `63a43a0d26649532e760560a9e114fea47feb8d1`. That handoff changed exactly the
+  launcher, answered mdns evaluation archive, added the then-NEXT mdns
+  decision archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal 224-archive history,
+  and launcher check passed before the decision.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -24,15 +24,15 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The mdns evaluation, golang-lru decision/evaluation, go.net decision/
-  evaluation, go-uuid decision/evaluation, and every earlier archive are
-  answered. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-20T201536+0200-decide-hashicorp-mdns-product-direction.md`.
-  It authorizes only one bounded product decision for selected exact-path
-  `github.com/hashicorp/mdns v1.0.4`, not implementation, another dependency
-  group, a guarded-parent or Go-floor change, or P8. The launcher check
-  validates the reciprocal 224-archive chain and byte-exact active prompt
-  before that successor begins.
+- The mdns decision/evaluation, golang-lru decision/evaluation, go.net
+  decision/evaluation, and every earlier archive are answered. The sole NEXT
+  archive is
+  `docs/plan/agent-sessions/2026-09-20T203149+0200-evaluate-hashicorp-memberlist-dependency.md`.
+  It authorizes only one bounded independent evaluation of selected exact-path
+  `github.com/hashicorp/memberlist v0.3.0`, not another dependency group, an
+  unqualified implementation, a guarded-parent or Go-floor change, or P8. The
+  launcher check validates the reciprocal 225-archive chain and byte-exact
+  active prompt before that successor begins.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -41,11 +41,46 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 has completed the bounded mdns v1.0.4 evaluation and
-is blocked on its prepared product decision. Exact Go 1.26.7,
+authorized its exact guarded retention; the bounded memberlist v0.3.0
+evaluation is prepared but not executed. Exact Go 1.26.7,
 every accepted dependency move through Google UUID v1.4.0, qualified
 go-cleanhttp, and all retained-module decisions through exact inherited,
-unloaded golang-lru v0.5.4 are final under their separate target-specific
+unloaded mdns v1.0.4 are final under their separate target-specific
 guards. P8 remains queued. Do not combine groups or begin P8.
+
+The authorized 2026-09-20 mdns option 1 decision retains exact selected,
+inherited, unloaded `github.com/hashicorp/mdns v1.0.4` without product source
+or dependency metadata changes. Its target-specific, non-transferable
+exception accepts only the completed exact-Go Darwin linker/test failure;
+Go-1.18 IPv6 multicast condition; unchecked wrapped ports; trailing-dot-only
+validation; caller IP/TXT and returned TXT aliasing; inconsistent records after
+exported-field mutation; nil service receiver, nil config, nil Zone, and
+internal UDP-address assertion panics; last-only complete-answer delivery from
+multi-entry packets; closed-result-channel panic and silent nil, unbuffered, or
+slow result-channel drops; requester-directed responses on the multicast path;
+caller `QueryParam` mutation; unsolicited-answer acceptance; timeout without
+context or cancellation; absent goroutine lifecycle joins; partial socket
+setup and resource cleanup; interface, route, hostname, DNS, process-global
+logging, and unsynchronized caller-owned config, Zone, and service-state
+boundaries; eight record allocations; and the recorded API, error, protocol,
+packet/channel, concurrency, platform, ownership, environment, MVS, and
+vulnerability findings. The vulnerability bounds include empty exact v1.0.4
+and project mdns results plus the recorded reachable DNS advisory in the
+historical v1.0.0/v1.0.1 closure. It accepts no new advisory or independently
+observed defect.
+
+The mdns exception remains valid only while exact selected v1.0.4, the exact
+Serf v0.9.6 -> mdns v1.0.4 and historical Serf v0.8.2 -> mdns v1.0.0
+requests, and the exact mdns v1.0.0 -> go.net v0.0.1 request remain unchanged;
+there is no direct root or repository import; production and complete-test
+target loads remain zero; runtime unreachability holds; every earlier guard
+remains intact; and no new advisory or independent defect appears. Any target/
+request/root/import/load/runtime, earlier-guard, or new-finding change expires
+the exception and requires the owning fresh decision. The exact-path
+remediation and Serf/graph-removal alternatives are not authorized; v1.0.5-
+v1.0.7, main, forks, alternate paths, parent changes, patches, a direct root,
+unrelated selection moves, and a Go-floor change remain unauthorized. No
+exception transfers.
 
 The authorized 2026-09-20 golang-lru option 1 decision retains exact selected,
 inherited, unloaded `github.com/hashicorp/golang-lru v0.5.4` without product
@@ -121,10 +156,13 @@ go-multierror v1.1.0 edge.
 All earlier guarded why results are negative; source imports and target package
 loads are zero, and runtime unreachability remains intact.
 
-Fresh primary data has no new exact record for those targets, go.net, or
-golang-lru. All 22 guarded why results through golang-lru remain negative,
+Fresh primary data has no new exact record for those targets, go.net,
+golang-lru, or mdns. All 23 guarded why results through mdns remain negative,
 repository Go imports are zero, and production and complete-test loads contain
-zero guarded packages. Gorilla
+zero guarded packages. The 23 selections retain 164 incoming graph edges with
+sorted snapshot SHA-256
+`f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`.
+Gorilla
 retains only its recorded entries, including unwithdrawn GO-2026-6278;
 go-retryablehttp retains only its two accepted identifiers. Direct import or
 loading, runtime reachability, a version or incoming-edge change, or a new
@@ -2062,9 +2100,31 @@ modules, 1,067 sums, the 432-line tidy projection, and unchanged module hashes.
 No source or metadata changed, no dependency commit exists, and accepted
 quality remains 27/27 Q0-Q2 PASS at L2.
 
-P7 is blocked on one prepared product decision: exact selected v1.0.4 guarded
-retention, separately authorized Go-1.18-compatible remediation, or separately
-authorized Serf/graph removal. It was prepared but not executed.
+Option 1 is explicitly authorized under the exact bounds recorded above:
+retain selected inherited, unloaded mdns v1.0.4 without changing product
+source, `go.mod`, or `go.sum`. The remediation and Serf/graph-removal
+alternatives are not authorized.
+
+Decision revalidation began from clean ordinary and ignored state at HEAD
+`9edb38c51e0067672e90224d8665bae580f92a05`, parent
+`b641b55ec01f18a79ecf57b8e5e866310dd44562`, tree
+`63a43a0d26649532e760560a9e114fea47feb8d1`. Its exact five-file handoff
+delta, reciprocal 224-archive chain, latest Google UUID implementation
+ancestry, exact Go 1.26.7 identity, and launcher check pass. Exact mdns v1.0.4,
+both incoming Serf requests, and the historical mdns-v1.0.0-to-go.net request
+remain unchanged. All 22 earlier guarded selections and 162 incoming edges
+remain exact; why/import/load results remain negative or zero. With mdns
+included, all 23 guarded selections and 164 incoming edges remain exact at
+snapshot SHA-256
+`f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records and
+the recorded SHA-256/Last-Modified values. Exact mdns v1.0.4 OSV and both
+GitHub advisory results remain empty; earlier results retain only the recorded
+Gorilla and go-retryablehttp pairs. No new advisory or independently observed
+defect appeared. No source or metadata changed, no dependency commit exists,
+and accepted quality remains 27/27 Q0-Q2 PASS at L2. P7 continues only with
+the prepared bounded memberlist v0.3.0 evaluation; it was not executed.
 
 ## Project And Quality State
 
@@ -2308,10 +2368,11 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Make exactly one bounded product decision for selected inherited, unloaded
-`github.com/hashicorp/mdns v1.0.4`: retain it under a target-specific exception
-accepting only the completed findings, authorize a separate Go-1.18-compatible
-exact-path remediation design, or authorize a separate Serf/graph-removal
-study. Record the chosen bounds and prepare its follow-up without implementing
-it. Do not combine options or another dependency group, change a guarded
-parent or Go floor, transfer an exception, or begin P8.
+Independently evaluate selected inherited, unloaded exact-path
+`github.com/hashicorp/memberlist v0.3.0` as one bounded P7 dependency group.
+Resolve its release identity, complete Go-1.18 source/test closure, API and
+behavior, vulnerability state, actual project loading, and exact MVS effects.
+Retain or select only a fully qualified exact-path stable release; otherwise
+stop for its fresh bounded product decision. Do not combine another dependency
+group, change a guarded parent or the Go floor, transfer an exception, or begin
+P8.

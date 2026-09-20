@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Mdns Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-20T201536+0200-decide-hashicorp-mdns-product-direction`
 Created: `2026-09-20T20:15:36+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c1627b13c98f7673dc5492bdce48d98d4135340321225886521241bb8499f409`
 Previous: [2026-09-20T192912+0200-evaluate-hashicorp-mdns-dependency.md](2026-09-20T192912+0200-evaluate-hashicorp-mdns-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T203149+0200-evaluate-hashicorp-memberlist-dependency.md](2026-09-20T203149+0200-evaluate-hashicorp-memberlist-dependency.md)
+Outcome: Authorized option 1 for exact inherited, unloaded mdns v1.0.4 after every guard passed; product source and dependency metadata stayed unchanged, and one bounded memberlist v0.3.0 evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -194,3 +194,99 @@ in this decision session. Do not execute the successor, push, merge, publish,
 release, stash, revert, bypass cleanup, remove the worktree, combine another
 dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 is explicitly authorized. Retain exact selected
+`github.com/hashicorp/mdns v1.0.4` as an inherited, unloaded module without
+changing product source, `go.mod`, or `go.sum`. This is an explicit bounded
+product decision for the verified zero-load graph, not an inference from
+physical selection. It avoids manufacturing a direct mdns/DNS root, moving
+unrelated graph selections, or changing the Go floor.
+
+The new mdns-specific, non-transferable exception accepts only the completed
+exact-Go Darwin test-link failure through old x/net's removed
+`syscall.recvmsg`; the Go-1.18 IPv6 multicast-routing test failure; unchecked
+wrapped ports; trailing-dot-only name validation; caller IP/TXT and returned
+TXT aliasing; inconsistent records after exported-field mutation; nil service
+receiver, nil config, nil Zone, and internal UDP-address assertion panics;
+last-only delivery from multi-entry packets; closed-result-channel panic;
+silent nil, unbuffered, or slow result-channel drops; requester-directed
+responses on the multicast path; caller `QueryParam` mutation; acceptance of
+unsolicited answers; timeout without context or cancellation; absent goroutine
+lifecycle joins; partial socket setup and resource cleanup; interface, route,
+hostname, and DNS dependencies; unsynchronized caller-owned config, Zone, and
+service state; process-global logging; eight record allocations; and the
+recorded API, error, protocol, packet/channel, concurrency, platform,
+ownership, environment, MVS, and vulnerability findings. The vulnerability
+bounds include the empty exact v1.0.4 and project mdns results and the recorded
+reachable DNS advisory in the historical v1.0.0/v1.0.1 closure. The exception
+accepts no new advisory or independently discovered defect.
+
+The exception remains valid only while exact selected v1.0.4, the exact
+`github.com/hashicorp/serf@v0.9.6 -> github.com/hashicorp/mdns@v1.0.4`
+request, the historical
+`github.com/hashicorp/serf@v0.8.2 -> github.com/hashicorp/mdns@v1.0.0`
+request, and the exact
+`github.com/hashicorp/mdns@v1.0.0 -> github.com/hashicorp/go.net@v0.0.1`
+request remain unchanged. It also requires no direct main-module root or
+repository Go import, zero production and complete-test target loads, runtime
+unreachability, every earlier owning guard remaining intact, and no new
+advisory or independent defect. Any target selection or recorded request
+change, direct root/import/load, runtime reachability, earlier-guard change, or
+new advisory or independent defect expires the exception and requires the
+owning fresh dependency and product decision before merge.
+
+The exact-path remediation and Serf/graph-removal alternatives are not
+authorized. V1.0.5, v1.0.6, v1.0.7, main, forks, alternate paths, direct
+roots, patches, parent changes, unrelated selection moves, and a Go-floor
+change remain unauthorized. No exception transfers to another target.
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at HEAD
+`9edb38c51e0067672e90224d8665bae580f92a05`, parent
+`b641b55ec01f18a79ecf57b8e5e866310dd44562`, tree
+`63a43a0d26649532e760560a9e114fea47feb8d1`. That handoff changed exactly the
+launcher, answered mdns evaluation archive, this then-NEXT decision archive,
+rolling handover, and roadmap. The evaluation handoff `b641b55`, parent
+`961c485`, tree `a7d492e`, retains its exact five-file delta. The reciprocal
+224-archive chain, latest Google UUID v1.4.0 implementation ancestry, and
+launcher check pass.
+
+Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+ran first in `PATH` with `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, no
+ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and `umask 022`. Mdns remains exact
+v1.0.4 through the recorded Serf requests, and the mdns-v1.0.0-to-go.net edge
+remains exact. It has no direct root, its `go mod why -m` result remains
+negative, repository Go imports remain zero, and the 355-entry production and
+429-entry complete-test closures contain zero target packages.
+
+All 22 earlier guarded selections and their 162 incoming edges remain exact;
+the sorted edge snapshot retains SHA-256
+`73b2f342ab8b1f5334afedead3c49cee97ee0177bf2413ea13d10f5d45995c63`.
+All 22 why results remain negative, repository Go imports remain zero, and
+production and complete-test loads contain zero guarded packages. The
+complete-test closure retains 197 module-backed entries across 41 loaded
+modules, so mdns and every earlier guarded target remain runtime-unreachable.
+The project remains 234 modules, 3,599 graph edges, 1,067 sum lines, and the
+432-line tidy projection. `go.mod` and `go.sum` retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+and exact module verification passes.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z, with no mdns record. Exact-version OSV
+results remain empty for mdns and every guarded target except the recorded
+Gorilla WebSocket GO-2026-6278/GHSA-w67g-5rqw-f597 and
+go-retryablehttp GO-2024-2947/GHSA-v6v8-xj6m-xwqh pairs. Both exact mdns
+GitHub advisory feeds remain empty. No new advisory or independently observed
+defect appeared.
+
+No dependency implementation or metadata commit was created. No changed-
+selection scorecard applies, and accepted quality remains 27/27 Q0-Q2 PASS at
+L2. The sole reciprocal successor is the bounded P7 evaluation of selected
+exact-path `github.com/hashicorp/memberlist v0.3.0`; it was prepared but not
+executed.

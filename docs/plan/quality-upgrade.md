@@ -5374,13 +5374,12 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: blocked on the prepared bounded product decision for selected exact-
-path `github.com/hashicorp/mdns v1.0.4` after its completed evaluation found
-no qualifying stable release.
+Status: active on the prepared bounded evaluation of selected exact-path
+`github.com/hashicorp/memberlist v0.3.0` after the mdns v1.0.4 product
+decision authorized exact guarded retention.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 qualified go-cleanhttp v0.5.2, and all retained-module decisions through exact
-inherited, unloaded `github.com/hashicorp/golang-lru v0.5.4`. P8 remains
-queued.
+inherited, unloaded `github.com/hashicorp/mdns v1.0.4`. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -11372,6 +11371,82 @@ Hashicorp mdns evaluation and blocked product boundary (2026-09-20):
   L2. P7 is blocked on one prepared mdns decision: exact v1.0.4 guarded
   retention, a separately authorized Go-1.18-compatible remediation, or a
   separately authorized Serf/graph-removal study. It was not executed.
+
+Hashicorp mdns product decision (2026-09-20):
+
+- Option 1 is explicitly authorized: retain exact selected, inherited,
+  unloaded `github.com/hashicorp/mdns v1.0.4` without changing product source,
+  `go.mod`, or `go.sum`. This is an explicit bounded product choice for the
+  verified zero-load graph, not an inference from physical selection. It
+  avoids manufacturing a direct mdns/DNS root, moving unrelated graph
+  selections, or changing the Go floor.
+- The new target-specific, non-transferable exception accepts only the
+  completed exact-Go Darwin test-link failure through old x/net's removed
+  `syscall.recvmsg`; the Go-1.18 IPv6 multicast-routing test failure; unchecked
+  wrapped ports; trailing-dot-only name validation; caller IP/TXT and returned
+  TXT aliasing; inconsistent records after exported-field mutation; nil
+  service receiver, nil config, nil Zone, and internal UDP-address assertion
+  panics; last-only multi-entry-packet delivery; closed-result-channel panic;
+  silent nil, unbuffered, and slow-channel drops; requester-directed multicast
+  responses; caller `QueryParam` mutation; unsolicited-answer acceptance;
+  timeout without context or cancellation; absent goroutine lifecycle joins;
+  partial socket setup and resource cleanup; interface, route, hostname, DNS,
+  process-global logging, and unsynchronized caller-owned-state boundaries;
+  eight record allocations; and the recorded API, error, protocol,
+  packet/channel, concurrency, platform, ownership, environment, MVS, and
+  vulnerability findings. The vulnerability bounds include empty exact
+  v1.0.4 and project mdns results and the recorded reachable DNS advisory in
+  the historical v1.0.0/v1.0.1 closure. It accepts no new advisory or
+  independently discovered defect.
+- The exception remains valid only while exact selected v1.0.4, the exact
+  Serf v0.9.6 -> mdns v1.0.4 request, the historical Serf v0.8.2 -> mdns
+  v1.0.0 request, and the exact mdns v1.0.0 -> go.net v0.0.1 request remain
+  unchanged. It additionally requires no direct main-module root or repository
+  Go import, zero production and complete-test target loads, runtime
+  unreachability, every earlier owning guard remaining intact, and no new
+  advisory or independent defect. A target selection or recorded request
+  change, direct root/import/load, runtime reachability, earlier-guard change,
+  or new advisory or independent defect expires the exception and requires
+  the owning fresh dependency and product decision before merge.
+- The exact-path remediation and Serf/graph-removal alternatives are not
+  authorized. V1.0.5-v1.0.7, main, forks, alternate paths, direct roots,
+  patches, parent changes, unrelated selection moves, and a Go-floor change
+  remain unauthorized. No exception transfers to another target.
+- Guard-only revalidation began from clean ordinary and ignored state at HEAD
+  `9edb38c51e0067672e90224d8665bae580f92a05`, parent
+  `b641b55ec01f18a79ecf57b8e5e866310dd44562`, tree
+  `63a43a0d26649532e760560a9e114fea47feb8d1`. Its exact five-file handoff
+  delta, reciprocal 224-archive chain, latest Google UUID implementation
+  ancestry, exact Go 1.26.7 binary identity, and launcher check pass.
+- Exact mdns v1.0.4, both incoming Serf requests, and the historical mdns-
+  v1.0.0-to-go.net request remain exact. Mdns has no direct root, its why
+  result is negative, repository Go imports are zero, and 355 production plus
+  429 complete-test entries contain zero target packages. All 22 earlier
+  guarded selections and their 162 incoming edges remain exact at recorded
+  snapshot SHA-256
+  `73b2f342ab8b1f5334afedead3c49cee97ee0177bf2413ea13d10f5d45995c63`;
+  their why/import/load results remain negative or zero. With mdns included,
+  23 guarded selections and 164 incoming edges retain snapshot SHA-256
+  `f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`.
+- The project remains 234 modules, 3,599 graph edges, 197 module-backed
+  complete-test entries across 41 loaded modules, 1,067 sum lines, and the
+  432-line tidy projection. `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact module verification passes; no product source, parent, dependency
+  metadata, direct root, Go floor, or unrelated selection changed.
+- Fresh primary vulnerability data remains byte-identical at 1,402 records,
+  SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+  Last-Modified 2026-09-17T17:29:18Z, with no mdns record. Exact-version OSV
+  remains empty except for the recorded Gorilla and go-retryablehttp pairs;
+  mdns v1.0.4 and both exact GitHub advisory feeds remain empty. No new
+  advisory or independently observed defect appeared.
+- No dependency implementation or metadata commit was created. No changed-
+  selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. P7 continues only with the prepared bounded evaluation of selected
+  exact-path `github.com/hashicorp/memberlist v0.3.0`; it was not executed in
+  this decision session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
