@@ -1139,22 +1139,26 @@ exit 70
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 only by making one bounded product decision for exact-path
-#|`github.com/hashicorp/go-syslog`. The completed independent evaluation found
-#|no exact-path stable release that preserves Go 1.18 and passes every
-#|qualification contract. Obtain or apply one explicit authorized choice from
-#|the options below, record its exact accepted findings and expiry guards, and
-#|stop. Do not repeat the audit, silently accept a defect, implement a dependency
-#|change, evaluate another dependency group, or begin P8.
+#|Continue P7 only by recording the user-authorized automatic controller's
+#|2026-09-20 explicit selection of option 1 for exact-path
+#|`github.com/hashicorp/go-syslog`. Retain exact selected, inherited, unloaded
+#|v1.0.0 without source or dependency metadata changes under the target-specific
+#|exception below. Revalidate only the decision guards and record exactly this
+#|choice. Do not repeat the audit, silently accept a new defect, implement a
+#|dependency change, evaluate another dependency group, or begin P8.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P6 are complete. P7 is blocked only on this go-syslog product decision
+#|P2A-P6 are complete. P7 is recording the bounded go-syslog option 1 decision
 #|after exact Go 1.26.7, every accepted dependency move through Google UUID
 #|v1.4.0, qualified go-cleanhttp v0.5.2, and all target-specific retained-module
 #|decisions through exact inherited, unloaded go-sockaddr v1.0.0. Every earlier
-#|outcome and lifecycle ancestor is final. Preserve every existing qualification
-#|or exception; none transfers to go-syslog. P8 remains queued.
+#|outcome and lifecycle ancestor is final. The user-authorized controller has
+#|explicitly chosen to retain exact inherited, unloaded go-syslog v1.0.0 through
+#|both exact Serf requests. Preserve every existing qualification or exception;
+#|none transfers to go-syslog. This session may record the choice and prepare one
+#|bounded follow-up; it may not implement a dependency change or combine another
+#|group. P8 remains queued.
 #|
 #|The evaluation left `go.mod` and `go.sum` unchanged. Exact selected
 #|`github.com/hashicorp/go-syslog v1.0.0` remains inherited, unloaded, and
@@ -1268,40 +1272,47 @@ exit 70
 #|timestamp, Make-variable, and launcher timing boundaries remain independent
 #|of go-syslog. No changed-selection scorecard applies.
 #|
-#|# Product Options
+#|# Authorized Product Decision
 #|
-#|1. Recommended: retain exact selected, inherited, unloaded v1.0.0 without
-#|   metadata changes under a new target-specific, non-transferable exception.
-#|   Accept only the completed constructor-availability, deadline-error,
-#|   priority-validation, newline-framing, API/behavior, platform, MVS,
-#|   vulnerability, and related recorded findings. Guard it on exact v1.0.0,
-#|   both exact Serf requests, no direct root or repository import, zero target
-#|   loads, runtime unreachability, every earlier guard, and no new advisory or
-#|   independent defect. Any change expires the exception and requires its
-#|   owning fresh decision.
-#|2. Keep P7 blocked and authorize a separate bounded design/implementation for
-#|   a maintained Go-1.18-compatible patch, fork, or replacement. That work must
-#|   repair all three disqualifiers, characterize migration/API and licensing
-#|   effects, and may not silently masquerade as an exact-path stable release.
-#|3. Keep P7 blocked and authorize a separate parent/graph-removal study for the
-#|   two Serf request paths. Any Serf, Viper, mvn-pom-mutator, Go-floor, or
-#|   unrelated selection movement belongs to that fresh scope and is not
-#|   authorized by this decision.
+#|On 2026-09-20 the user-authorized automatic controller explicitly selected
+#|option 1 with the recommended bounds: retain exact selected
+#|`github.com/hashicorp/go-syslog v1.0.0` as an inherited, unloaded selection
+#|without changing product source, `go.mod`, or `go.sum`. Accept only the
+#|completed constructor-availability, deadline-error, priority-validation,
+#|newline-framing, API/behavior, platform, MVS, vulnerability, and related
+#|recorded findings. This does not accept a new or independently discovered
+#|defect.
 #|
-#|If the user explicitly supplied a choice with this mission, apply exactly
-#|that choice. Otherwise request one explicit option and make no repository
-#|change. Do not infer option 1 merely from physical selection or zero runtime
-#|reachability.
+#|The exception is go-syslog-specific and non-transferable. It is valid only
+#|while exact v1.0.0 and both exact requests from Serf v0.8.2 and v0.9.6 remain
+#|unchanged, no direct main-module root or repository import is added, production
+#|and complete-test target loads remain zero, the module remains runtime-
+#|unreachable, every earlier guard remains intact, and no new advisory or
+#|independent defect appears. Revalidate and record these guards. Direct import
+#|or loading, runtime reachability, a target version or incoming-request change,
+#|a new direct root, an earlier owning-guard change, or a new advisory or
+#|independent defect expires the exception and requires the owning fresh
+#|dependency and product decision before merge.
+#|
+#|Do not change product source or dependency metadata, add a direct go-syslog
+#|edge, select an unreleased branch, change or remove either Serf parent, patch or
+#|fork source, authorize a wrapper or replacement architecture, raise the Go
+#|floor, move unrelated selections, alter another guarded dependency, or
+#|manufacture a dependency implementation commit. Do not stop or ask for this
+#|same go-syslog decision again while all guards hold. Preserve every earlier
+#|qualified result and target-specific decision.
 #|
 #|# Role And Boundaries
 #|
-#|This is a decision session, not a renewed audit or implementation. Reuse the
-#|completed evaluation. Revalidate only exact selection and incoming requests,
-#|negative why/imports, zero target and guarded package loads, project hashes,
-#|runtime unreachability, every earlier guard, and current advisory state. Stop
-#|for the owning decision if any guard changed. Do not broaden a choice into
-#|direct use, unlisted MVS movement, parent changes, patching, forking,
-#|replacement, a Go-floor change, another dependency group, or P8.
+#|This is a decision-recording session, not a renewed audit or implementation.
+#|The user-authorized automatic controller has explicitly selected and bounded
+#|option 1. Reuse the completed evaluation; do not ask for the decision again or
+#|broaden it into direct use, unlisted MVS movement, parent changes, patching,
+#|forking, wrapping, replacement, a Go-floor change, unrelated-module
+#|authorization, another dependency group, or P8. Revalidate only exact
+#|selection and incoming requests, negative why/imports, zero target and guarded
+#|package loads, project hashes, runtime unreachability, every earlier guard, and
+#|current advisory state. Stop for the owning decision if any guard changed.
 #|
 #|# Required Reading
 #|
@@ -1316,16 +1327,15 @@ exit 70
 #|# Three Moves
 #|
 #|First, revalidate the narrow guards and stop for the owning decision if any
-#|changed. Second, obtain or apply exactly one explicit choice above without
-#|implementation, record the accepted findings and precise expiry conditions,
-#|and preserve every unrelated selection. Third, update the roadmap and rolling
-#|handover, answer this archive, prepare exactly one reciprocal NEXT mission for
-#|the authorized bounded continuation, and commit the handoff. Do not execute
-#|the successor.
+#|changed. Second, record exactly the controller's user-authorized option 1
+#|exception, accepted findings, limits, expiry triggers, and no-change decision
+#|result in the roadmap and rolling handover; preserve every unrelated selection.
+#|Third, answer this archive, prepare exactly one reciprocal NEXT mission for the
+#|next bounded P7 group, and commit the handoff. Do not execute the successor.
 #|
 #|# Automatic Handoff
 #|
-#|After a coherent explicit decision, make the required local
+#|Only after guard revalidation, make the required local
 #|`docs: prepare next agent session` commit. Do not launch a successor, push,
 #|merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
 #|combine another dependency group, or begin P8.

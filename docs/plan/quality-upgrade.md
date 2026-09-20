@@ -5374,14 +5374,12 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active. Completed dependency groups remain final through accepted
+Status: active for guard-only recording of the controller's user-authorized
+2026-09-20 bounded Hashicorp go-syslog option 1 decision; no exact-path stable
+release qualifies. Completed dependency groups remain final through accepted
 Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module
 decisions through exact inherited, unloaded
-`github.com/hashicorp/go-sockaddr v1.0.0`. Its bounded product decision
-accepted option 1 under target-specific guards. The bounded go-syslog
-evaluation found no qualified exact-path stable release and left dependency
-metadata unchanged. P7 is blocked only on the prepared go-syslog product
-decision. P8 remains queued.
+`github.com/hashicorp/go-sockaddr v1.0.0`. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10788,13 +10786,32 @@ Hashicorp go-syslog evaluation and blocked product boundary (2026-09-20):
   canonical preflight, every script/meta population, 80/80 mutation kills,
   host/snapshot/Docker acceptance, and all 15 audit controls pass. No changed-
   selection scorecard applies; accepted quality remains 27/27 Q0-Q2 L2.
-- Dependency metadata remained unchanged. P7 is blocked on the sole prepared
-  go-syslog product decision. Recommended option 1 retains exact inherited,
-  unloaded v1.0.0 under a target-specific exception bounded to the completed
-  findings, exact version and both Serf requests, zero imports/load, runtime
-  unreachability, every earlier guard, and no new advisory or defect. A Go-
-  1.18-compatible patch/fork/replacement design and a Serf parent/graph-removal
-  study are separately scoped alternatives. No option was inferred.
+- Dependency metadata remained unchanged. Product direction supplied
+  2026-09-20: the user-authorized automatic controller explicitly selected
+  option 1 with the recommended bounds. Retain exact selected, inherited,
+  unloaded go-syslog v1.0.0 without changing product source, `go.mod`, or
+  `go.sum`. Accept only the completed constructor-availability, deadline-error,
+  priority-validation, newline-framing, API/behavior, platform, MVS,
+  vulnerability, and related recorded findings. The exception is go-syslog-
+  specific and non-transferable; it accepts no new or independently discovered
+  defect. It remains valid only while exact v1.0.0 and both exact requests from
+  Serf v0.8.2 and v0.9.6 remain unchanged, no direct main-module root or
+  repository import is added, production and complete-test target loads remain
+  zero, the module remains runtime-unreachable, every earlier guard remains
+  intact, and no new advisory or independent defect appears. Direct import or
+  loading, runtime reachability, a target version or incoming-request change, a
+  new direct root, an earlier owning-guard change, or a new advisory or
+  independent defect expires the exception and requires the owning fresh
+  dependency and product decision before merge. Do not change product source
+  or dependency metadata, add a direct edge, select an unreleased branch,
+  change or remove either Serf parent, patch or fork source, authorize a wrapper
+  or replacement architecture, raise the Go floor, move unrelated selections,
+  alter another guarded dependency, manufacture a dependency commit, transfer
+  another exception, or request this same choice again while all guards hold.
+  The Go-1.18-compatible patch/fork/replacement and Serf parent/graph-removal
+  alternatives were not authorized. Revalidate only the guards, record the
+  decision, answer its archive, and prepare one next bounded P7 mission without
+  executing it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

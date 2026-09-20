@@ -23,10 +23,11 @@ session diary.
 - The go-syslog evaluation, go-sockaddr decision, and every earlier archive
   are answered. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-20T145140+0200-decide-hashicorp-go-syslog-product-direction.md`.
-  It authorizes only one bounded go-syslog product decision. It does not
-  authorize repeating the evaluation, implementing a dependency change,
-  reopening an earlier decision, combining another dependency group, or
-  beginning P8.
+  The user-authorized automatic controller selected option 1 with the
+  recommended bounds on 2026-09-20. This authorizes only guard revalidation and
+  decision recording, not repeating the evaluation, implementing a dependency
+  or source change, reopening an earlier decision, combining another dependency
+  group, or beginning P8; the active session has not recorded the decision.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -34,12 +35,13 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. Exact Go 1.26.7, every accepted dependency move through
-Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
-through exact inherited, unloaded go-sockaddr v1.0.0 are final under their
-target-specific guards. P7 is blocked only on the prepared bounded go-syslog
-product decision after the completed evaluation found no qualified stable
-release. P8 remains queued. Do not combine groups or begin P8.
+P2A-P6 are complete. P7 is recording the controller's user-authorized bounded
+go-syslog option 1 decision because no exact-path stable release qualifies.
+Exact Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
+qualified go-cleanhttp, and all retained-module decisions through exact
+inherited, unloaded go-sockaddr v1.0.0 are final under their target-specific
+guards. P8 remains queued. Do not combine groups or begin P8 before this
+decision is revalidated and recorded in a committed handoff.
 
 The authorized 2026-09-20 go-sockaddr option 1 decision retains exact
 selected, inherited, unloaded `github.com/hashicorp/go-sockaddr v1.0.0`
@@ -1306,6 +1308,29 @@ not executed in this decision session.
 ## Hashicorp Go Syslog Evaluation
 
 No exact-path stable `github.com/hashicorp/go-syslog` release qualifies.
+On 2026-09-20 the user-authorized automatic controller selected option 1 with
+the recommended bounds: retain exact selected, inherited, unloaded v1.0.0
+without changing product source, `go.mod`, or `go.sum`. Accept only the
+completed constructor-availability, deadline-error, priority-validation,
+newline-framing, API/behavior, platform, MVS, vulnerability, and related
+recorded findings. This does not accept a new or independently discovered
+defect. The exception is go-syslog-specific and non-transferable.
+
+It remains valid only while exact v1.0.0 and both exact requests from Serf
+v0.8.2 and v0.9.6 remain unchanged, no direct main-module root or repository
+import is added, production and complete-test target loads remain zero, the
+module remains runtime-unreachable, every earlier guard remains intact, and no
+new advisory or independent defect appears. Revalidate and record these guards
+in the committed decision. Direct import/loading, runtime reachability, a
+target version or incoming-request change, a new direct root, an earlier
+owning-guard change, or a new advisory or independent defect expires the
+exception and requires the owning fresh dependency and product decision before
+merge. Do not change product source or dependency metadata, add a direct edge,
+select an unreleased branch, change/remove either Serf parent, patch/fork
+source, authorize a wrapper or replacement architecture, raise the Go floor,
+move unrelated selections, alter another guarded dependency, or manufacture a
+dependency commit. Do not ask for this same choice again while all guards hold.
+
 Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves Hashicorp's
 public active unarchived non-fork MIT repository. Exact v1.0.0 is the only
 proxy version and `@latest`; there is no other stable or prerelease version,
@@ -1376,13 +1401,12 @@ findings belong only to its standard library. Base and redundant-root project
 scans are identical at 30 module, 22 package, and 20 symbol/test-symbol IDs,
 with zero target package or trace occurrence.
 
-Dependency metadata remained unchanged. The prepared decision recommends
-retaining exact inherited, unloaded v1.0.0 under a new target-specific
-exception bounded to all completed findings, exact version and both Serf
-requests, no direct root/import/load, runtime unreachability, every earlier
-guard, and no new advisory or independent defect. Separately scoped patch/
-fork/replacement and parent-chain removal studies are alternatives. No choice
-was inferred by this evaluation.
+Dependency metadata remained unchanged. The controller-authorized choice
+retains exact inherited, unloaded v1.0.0 under the target-specific exception
+above. The separately scoped patch/fork/replacement and parent-chain removal
+alternatives were not authorized. The active decision session must revalidate
+the guards, record the accepted findings and expiry triggers, and stop without
+implementation.
 
 ## Project And Quality State
 
@@ -1584,11 +1608,11 @@ projection in a measured worktree.
 
 ## Next Bounded Objective
 
-Make exactly one bounded product decision for exact-path
-`github.com/hashicorp/go-syslog`. The completed evaluation found no qualified
-stable release and left dependency metadata unchanged. Obtain one explicit
-choice among guarded retention of exact inherited/unloaded v1.0.0, a
-separately scoped Go-1.18-compatible patch/fork/replacement design, or a
-separately scoped Serf parent/graph-removal study. Revalidate only the recorded
-guards; do not repeat the audit, infer acceptance from physical selection,
-implement a change, combine another dependency group, or begin P8.
+Record the controller's user-authorized option 1 decision for exact-path
+`github.com/hashicorp/go-syslog`: retain exact inherited, unloaded v1.0.0 and
+both exact Serf requests without product source or dependency metadata changes
+under the target-specific exception above. Revalidate only the recorded guards,
+do not repeat the evaluation, and do not implement the choice in that session.
+Preserve every earlier qualified result and target-specific decision. Answer
+the active archive and prepare exactly one reciprocal NEXT mission for the next
+bounded P7 group; do not execute it or begin P8.
