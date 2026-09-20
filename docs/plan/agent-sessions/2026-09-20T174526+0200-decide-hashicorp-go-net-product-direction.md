@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Go Net Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-20T174526+0200-decide-hashicorp-go-net-product-direction`
 Created: `2026-09-20T17:45:26+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `33c0f113bc92666202ece5160fc62b0dc8d0ee24cc9ff576a5fc23a158f1965d`
 Previous: [2026-09-20T171035+0200-evaluate-hashicorp-go-net-dependency.md](2026-09-20T171035+0200-evaluate-hashicorp-go-net-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T180252+0200-evaluate-hashicorp-golang-lru-dependency.md](2026-09-20T180252+0200-evaluate-hashicorp-golang-lru-dependency.md)
+Outcome: Authorized option 1 for exact inherited, unloaded go.net v0.0.1 after every guard passed; product source and dependency metadata stayed unchanged, and one bounded golang-lru evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -194,3 +194,79 @@ the explicit choice separately authorizes a later implementation commit. Do
 not launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, remove the worktree, combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 is explicitly authorized. Retain exact selected
+`github.com/hashicorp/go.net v0.0.1` as an inherited, unloaded module without
+changing product source, `go.mod`, or `go.sum`. The new go.net-specific,
+non-transferable exception accepts only the completed unresolved production
+and test closure; obsolete `code.google.com/p/go.net` and
+`code.google.com/p/go.text` imports; Linux-arm64 and `js/wasm` platform gaps;
+negative-limit and non-Hijacker panics; zero-limit blocking; SOCKS5 error-
+identity loss; `PerHost` caller-storage aliasing; unsynchronized process-
+global dialer registration; absent WebSocket context and timeout control;
+entropy-failure panic; peer-sized SPDY allocation; and the documented caller-
+owned connection, deadline, and resource, buffer-aliasing, static-table,
+allocation, non-concurrent-use, API, MVS, vulnerability, and related completed
+findings. It accepts no new or independently discovered defect.
+
+The exception remains valid only while exact v0.0.1 and its sole exact request
+from `github.com/hashicorp/mdns v1.0.0` remain unchanged, no direct main-module
+root or repository Go import is added, production and complete-test target
+loads remain zero, the module remains runtime-unreachable, all 20 earlier
+guards remain intact, and no new advisory or independent defect appears. A
+target version or mdns request change, direct root/import/load, runtime
+reachability, an earlier owning-guard change, or a new advisory or independent
+defect expires the exception and requires the owning fresh dependency and
+product decision before merge. The patch/fork/replacement and mdns parent/
+graph-removal alternatives are not authorized. No exception transfers to
+another target.
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at HEAD
+`fa9af5e9b168520f024da6f2049065ad186735b8`, parent
+`70867a4a7701f69cbc4551de3d4db53fd7d86fe2`, tree
+`53de66fc8ea39ffdfa68611677564af70f487f8e`. That handoff changed exactly the
+launcher, answered go.net evaluation archive, this then-NEXT decision archive,
+rolling handover, and roadmap. The evaluation handoff `70867a4`, parent
+`2774d4e`, tree `b97eb952`, retains its exact five-file delta. The reciprocal
+220-archive chain, latest Google UUID implementation ancestry, and launcher
+check pass.
+
+Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+ran first in `PATH` with `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, no
+ambient `GOFLAGS`, public proxy and sumdb, `LC_ALL=C`, `LANG=C`, and
+`umask 022`. Go.net remains exact v0.0.1 through only
+`github.com/hashicorp/mdns@v1.0.0 github.com/hashicorp/go.net@v0.0.1`.
+There is no direct root. Its `go mod why -m` result remains negative,
+repository Go imports remain zero, and the 355-entry production and 429-entry
+complete-test loads contain zero target packages.
+
+All 20 earlier guarded modules retain their exact selections and recorded
+requests. All 20 why results remain negative, repository Go imports remain
+zero, and production and complete-test loads contain zero guarded packages.
+The complete-test load retains 197 module-backed entries across 41 loaded
+modules, so go.net and every earlier guarded target remain runtime-
+unreachable. The project remains 234 modules, 3,599 graph edges, 1,067 sum
+lines, and the recorded 432-line tidy projection. `go.mod` and `go.sum` retain
+SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Exact module verification passes.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+with no go.net record. Exact-version OSV results remain empty for go.net and
+every guarded target except the recorded Gorilla WebSocket
+GO-2026-6278/GHSA-w67g-5rqw-f597 and go-retryablehttp
+GO-2024-2947/GHSA-v6v8-xj6m-xwqh pairs. Both exact go.net GitHub advisory
+feeds remain empty. No new advisory or independently observed defect appeared.
+
+No dependency implementation or metadata commit was created. No changed-
+selection scorecard applies, and accepted quality remains 27/27 Q0-Q2 PASS at
+L2. The sole reciprocal successor is the bounded P7 evaluation of selected
+exact-path `github.com/hashicorp/golang-lru v0.5.4`; it was prepared but not
+executed.
