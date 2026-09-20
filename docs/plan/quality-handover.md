@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T12:13:50+02:00
+Generated: 2026-09-20T13:33:16+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-rootcerts
-  decision recording began from clean handoff HEAD
-  `c530f7d8e39aa0181899d7cb2893f6a16555ebef`, parent
-  `888412a62d768cb11af6d9e132600cc4a34f0679`, tree
-  `e0eeec6c821ba393d8ab30751cf411296b8ec0f6`.
+  `codex/upgrade-quality`, base master at `5635d50`. The go-sockaddr
+  evaluation recording began from clean handoff HEAD
+  `a9289a1684e101399810bbec6294b62e4a41df92`, parent
+  `c530f7d8e39aa0181899d7cb2893f6a16555ebef`, tree
+  `13addaa0a9dbc39f9a4eb22cbb6b778e072cebd0`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-rootcerts decision and every earlier archive are answered. The sole
+- The go-sockaddr evaluation and every earlier archive are answered. The sole
   NEXT archive is
-  `docs/plan/agent-sessions/2026-09-20T121350+0200-evaluate-hashicorp-go-sockaddr-dependency.md`.
-  It authorizes only one bounded exact-path go-sockaddr evaluation. It does not
-  authorize reopening an earlier decision, combining another dependency
-  group, or beginning P8.
+  `docs/plan/agent-sessions/2026-09-20T133316+0200-decide-hashicorp-go-sockaddr-product-direction.md`.
+  It authorizes only one bounded go-sockaddr product decision. It does not
+  authorize audit repetition, dependency implementation, reopening an earlier
+  decision, combining another dependency group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -36,9 +36,9 @@ session diary.
 P2A-P6 are complete. Exact Go 1.26.7, every accepted dependency move through
 Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
 through exact inherited, unloaded go-rootcerts v1.0.2 are final under their
-target-specific guards. P7 continues only with the prepared bounded exact-path
-go-sockaddr v1.0.0 evaluation. P8 remains queued. Do not combine groups or
-begin P8.
+target-specific guards. No exact-path stable go-sockaddr release qualified;
+P7 is blocked only on the prepared bounded go-sockaddr product decision. P8
+remains queued. Do not combine groups or begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -67,9 +67,9 @@ go-multierror v1.1.0 edge.
 All earlier guarded why results are negative; source imports and target package
 loads are zero, and runtime unreachability remains intact.
 
-Fresh primary data has no new exact record for those targets. All 17 why
-results through go-rootcerts remain negative, repository imports are zero,
-and production and complete-test loads contain zero guarded packages. Gorilla
+Fresh primary data has no new exact record for those targets. All 18 why
+results through go-sockaddr remain negative, repository imports are zero, and
+production and complete-test loads contain zero guarded packages. Gorilla
 retains only its recorded entries, including unwithdrawn GO-2026-6278;
 go-retryablehttp retains only its two accepted identifiers. Direct import or
 loading, runtime reachability, a version or incoming-edge change, or a new
@@ -1175,6 +1175,85 @@ version or incoming-request change, a new direct root, an earlier owning-guard
 change, or a new advisory or independent defect. Expiry requires the owning
 fresh dependency and product decision before merge.
 
+## Hashicorp Go Sockaddr Evaluation
+
+No exact-path stable `github.com/hashicorp/go-sockaddr` release qualifies.
+The evaluation left `go.mod` and `go.sum` unchanged and prepared one bounded
+product decision. Recommended option 1 retains exact selected, inherited,
+unloaded v1.0.0 under a new target-specific exception. Option 2 authorizes a
+later exact v1.0.2 dependency-only implementation plus only its necessary
+wordwrap/columnize MVS movement. Option 3 keeps P7 blocked. No choice has been
+inferred or executed.
+
+Fresh identity evidence resolves Hashicorp's public active unarchived non-fork
+MPL-2.0 repository. The proxy exposes stable v1.0.0-v1.0.7 only; v1.0.7 is
+latest and the sole GitHub Release. There is no prerelease, retraction, module
+deprecation, redirect, alternate exact path, or `/v2` line. All tags are
+lightweight rather than signed tag objects. Current master is 63 commits past
+v1.0.7, declares Go 1.25, and is unreleased. Proxy and Git regular-file bytes
+agree; module zip rules omit the tracked nested vendor tree.
+
+Selected v1.0.0 is commit
+`a6a0d2df398f7e0e9f6e43f589c8b51cec0eb6b0`, parent
+`e92cdb5343bbaf42b0a596937ae0f382270d6759`, tree
+`9c45698e106164445d4361773979ea241c73f01a`. The floor-eligible v1.0.1,
+v1.0.2, and v1.0.3 commits are respectively
+`3aed17b5ee41761cc2b04f2a94c7107d428967e5`,
+`c7188e74f6acae5a989bdc959aa779f8b9f42faf`, and
+`21bd71244b1c754622d9dafb735b7b287c40d17e`. V1.0.7 is
+`b74dd36f318ed2ac4e01c93f02ef99739f454ed6`.
+
+V1.0.0-v1.0.3 omit a `go` directive. V1.0.4 declares Go 1.19.0 and
+v1.0.5-v1.0.7 declare Go 1.19, making them floor-ineligible. V1.0.1-v1.0.3
+have a 13-module graph and 11 actually imported external modules, all
+preserving Go 1.18. Selected v1.0.0 omits four command dependencies from its
+released module metadata; read-only listing, native tests, race, vet, command
+build, whole-module API export, and seven cross-target loads fail under both
+SDKs. V1.0.1-v1.0.3 repair closure and cross-load under both SDKs but retain
+native Darwin repeat/race failures, a Go 1.18 exported-template parse failure,
+and an unreachable-panic vet failure. V1.0.3 and later invert Windows
+PowerShell availability detection.
+
+Independent fixtures reproduce four defects in v1.0.0-v1.0.3 and v1.0.7
+under both SDKs: IPv6 `ContainsAddress` rejects an interior host; no-match
+interface helpers return empty output and nil error; all six exported
+attribute inventory functions expose mutable global slices and a targeted race
+reports a data race; and `Host()` exposes the package-global IPv6 host-mask
+backing array, allowing later addresses to be corrupted. Valid IPv4/IPv6/Unix,
+RFC, JSON, CLI, enumeration, copying/non-aliasing, allocation, error,
+nil/panic, global-state, route-command, environment, resource, and concurrency
+boundaries are otherwise characterized. The package starts no goroutines;
+default-route helpers execute platform commands without context or timeout.
+
+Root APIs remain identical from v1.0.0 through v1.0.3. V1.0.7 only adds
+compatible `ErrNoInterface` and `ErrNoRoute`. V1.0.1-v1.0.3 CLI smokes pass
+under both SDKs; v1.0.0 cannot build the command read-only.
+
+Selected v1.0.0 exists through exactly memberlist v0.1.3 and v0.3.0. Its why
+and repository import results are negative and both project loads contain zero
+target packages. A redundant v1.0.0 root adds one graph edge and checksum
+line. Exact v1.0.1-v1.0.3 projections produce 235 modules and 3,604 edges and
+also add `mitchellh/go-wordwrap v1.0.0` and upgrade unrelated
+`ryanuber/columnize` to v2.1.0+incompatible. V1.0.7 produces 243 modules,
+3,623 edges, and 19 module-line changes including guarded Errwrap. Every
+projection retains zero target load and converges to the common recorded tidy
+projection; none was applied.
+
+Fresh 1,402-record primary vulnerability data remains at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+and has no target record. Exact OSV and GitHub advisory responses are empty.
+Isolated module/package/symbol/test-symbol scans are empty, and base versus
+disposable v1.0.3 project results are identical with no target frame or trace.
+All 18 target-plus-earlier why results, imports, loads, runtime reachability,
+selections, incoming requests, and recorded advisory states retain their
+guards.
+
+V1.0.0 is disqualified by incomplete released closure plus the independent
+behavior/race defects. V1.0.1-v1.0.3 retain those defects, fail test/vet
+contracts, and move unrelated MVS selections; v1.0.3 adds the Windows defect.
+V1.0.4-v1.0.7 also violate the floor. Master is unreleased and requires Go
+1.25. No dependency implementation is authorized.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -1304,6 +1383,31 @@ lifecycle controls pass under the established `umask 022` contract. No source
 or dependency metadata changed, so no changed-selection scorecard applies and
 accepted quality remains 27/27 Q0-Q2 PASS at L2.
 
+The go-sockaddr evaluation's exact Go 1.26.7 module verification, build,
+count-one, two count-ten repeats, race, vet, pinned golangci-lint 2.12.2,
+API/CLI compatibility, empty-HOME count-two, four production cross-builds,
+host/snapshot/Docker acceptance, canonical full preflight, every script/meta
+population, all eight mutation meta-stages, 80/80 live mutation kills, and all
+15 audit meta-controls pass. Contained Go 1.18.10 resolves 366 complete-test
+entries; 26 unaffected packages pass count-one, both count-ten repeats, race,
+vet, and four cross-builds. The full floor suite retains only the two accepted
+Darwin shell wording failures. A raw clean-tree audit records 21 automated
+PASS, zero FAIL, and exactly six manual-evidence-bound UNMEASURABLE rows.
+
+An initial project build attempt reproduced only the managed default-cache
+restriction and passed with scratch-contained caches. The first compatibility
+run reproduced the documented cold offline API-base cache boundary and passed
+after exact v1.0.1 base warming. Concurrent acceptance correctly rejected
+transient repository activity; sequential host, snapshot, and Docker runs
+pass. Two preflight attempts passed all substantive stages before a command-
+line make variable leaked into the lint meta-test; the canonical environment-
+variable invocation with `MAKEOVERRIDES=` passes end to end. These are
+orchestration and known harness boundaries, not go-sockaddr evidence.
+After the handoff edit, the first launcher lifecycle replay reproduced the
+documented control-26 signal/log-retention timing race. An independent repeat
+passed all 62 controls, launcher-auto passed 24 assertions, and
+`./codex-dev-start.sh --check` passed.
+
 An initial compatibility run reproduced the documented cold offline API-base
 cache boundary. The first full-quality attempt reproduced the documented bare-
 `mktemp` managed-sandbox restriction. Scratch-contained cache warming and the
@@ -1325,12 +1429,12 @@ projection in a measured worktree.
 
 ## Next Bounded Objective
 
-Independently evaluate selected exact-path
-`github.com/hashicorp/go-sockaddr v1.0.0` as one bounded dependency group.
-Resolve repository and release identity, complete Go-floor closure, source,
-tests, exported API, behavior, project loading, MVS, vulnerability evidence,
-and every applicable quality contract. Retain or select only a qualified
-exact-path stable release preserving Go 1.18; otherwise stop for a fresh
-bounded product decision. Preserve the go-rootcerts exception and every
-earlier guarded outcome. Do not combine another dependency group, reopen an
-earlier decision, or begin P8.
+Make one bounded product decision for exact-path
+`github.com/hashicorp/go-sockaddr`. Choose explicit option 1 to retain exact
+inherited, unloaded v1.0.0 under the documented target-specific exception;
+option 2 to authorize a later exact v1.0.2 dependency-only implementation plus
+only its wordwrap/columnize MVS movement under an explicit exception; or option
+3 to keep P7 blocked. Revalidate only the narrow selection/request/import/load,
+runtime, project-hash, earlier-guard, and advisory conditions. Do not repeat
+the evaluation, implement a dependency change in the decision session, combine
+another group, reopen an earlier outcome, or begin P8.

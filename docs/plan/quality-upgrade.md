@@ -5378,8 +5378,9 @@ Status: active. Completed dependency groups remain final through accepted
 Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module
 decisions through exact inherited, unloaded
 `github.com/hashicorp/go-rootcerts v1.0.2`. Its bounded product decision
-accepted option 1 under target-specific guards. P7 continues only with the
-prepared exact-path go-sockaddr v1.0.0 evaluation. P8 remains queued.
+accepted option 1 under target-specific guards. No exact-path stable
+go-sockaddr release qualified, so P7 is blocked only on the prepared bounded
+go-sockaddr product decision. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10604,6 +10605,69 @@ Hashicorp go-rootcerts product decision (2026-09-20):
   only with the prepared bounded exact-path
   `github.com/hashicorp/go-sockaddr v1.0.0` evaluation; it was not executed in
   this decision session.
+
+Hashicorp go-sockaddr evaluation (2026-09-20):
+
+- No exact-path stable `github.com/hashicorp/go-sockaddr` release qualifies.
+  Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves the
+  public active unarchived non-fork MPL-2.0 Hashicorp repository and only
+  stable v1.0.0-v1.0.7. There is no prerelease, retraction, module
+  deprecation, redirect, alternate exact path, or `/v2` line. V1.0.7 is
+  latest and the sole GitHub Release; every version tag is lightweight.
+  Current master is 63 commits beyond v1.0.7, declares Go 1.25, and is not a
+  candidate. Proxy and Git regular-file bytes agree.
+- V1.0.0-v1.0.3 omit a `go` directive and are the only serious floor-eligible
+  releases. V1.0.4 declares Go 1.19.0 and v1.0.5-v1.0.7 declare Go 1.19.
+  V1.0.1-v1.0.3 have a complete 13-module graph and 11 actually imported
+  external modules whose source preserves Go 1.18. Selected v1.0.0 omits four
+  command dependencies from its released `go.mod`, so read-only listing,
+  native tests, race, vet, command build, whole-module API export, and all
+  seven cross-target loads fail under both SDKs.
+- V1.0.1-v1.0.3 load and cross-build under exact Go 1.26.7 and contained Go
+  1.18.10, but native repeats/race retain upstream Darwin interface, route,
+  and ordering failures; Go 1.18 cannot parse the exported
+  `HashiCorpDefault2016` template; and vet rejects every release's unreachable
+  panic. V1.0.3 and later additionally invert Windows PowerShell detection.
+- Independent fixtures under both SDKs reproduce four defects in v1.0.0-
+  v1.0.3 and v1.0.7: IPv6 `ContainsAddress` rejects an interior host; no-match
+  interface helpers return empty output with nil error; all six exported
+  attribute inventories expose mutable global slices and race; and `Host()`
+  exposes the global IPv6 host-mask backing array, allowing caller corruption
+  of later addresses. Valid address, Unix, RFC, JSON, CLI, enumeration,
+  copy/non-aliasing, allocation, error, nil/panic, global-state, environment,
+  command/resource, and concurrency boundaries are otherwise characterized.
+- Root exported APIs are identical through v1.0.3; v1.0.7 only adds compatible
+  error sentinels. V1.0.1-v1.0.3 command smokes pass under both SDKs, while
+  v1.0.0 cannot build the command read-only.
+- Selected v1.0.0 remains inherited through exactly memberlist v0.1.3 and
+  v0.3.0. Target why and import results are negative and both project loads
+  contain zero target packages. A redundant v1.0.0 root adds only one edge
+  and checksum line. Exact v1.0.1-v1.0.3 projections also add
+  `go-wordwrap v1.0.0` and upgrade unrelated `columnize` to
+  v2.1.0+incompatible; v1.0.7 moves 19 module lines including guarded Errwrap.
+  No projection was applied.
+- Fresh 1,402-record primary vulnerability data retains SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  with no target record. Exact OSV, GitHub advisory, and isolated
+  module/package/symbol/test-symbol scans are empty. Base and disposable
+  v1.0.3 project results are identical with no target trace. All 18 target-
+  plus-earlier guards remain negative/unloaded/runtime-unreachable with their
+  recorded advisory states.
+- Exact Go 1.26.7 project verification, build, repeats, race, vet, pinned
+  lint, API/CLI, empty-HOME, cross-builds, canonical preflight, all script/meta
+  populations, 80/80 live mutation kills, host/snapshot/Docker acceptance,
+  and all 15 audit meta-controls pass. Contained Go 1.18 has only the two
+  accepted Darwin shell wording failures; all 26 unaffected packages and
+  applicable gates pass. No changed-selection scorecard applies and accepted
+  quality remains 27/27 Q0-Q2 PASS at L2.
+- Dependency metadata remains unchanged. P7 is blocked on the sole prepared
+  go-sockaddr decision. Recommended option 1 retains exact inherited,
+  unloaded v1.0.0 under a new target-specific exception bounded to the
+  completed closure/behavior/race/vet/API/MVS/vulnerability findings, both
+  exact memberlist requests, no direct root, zero imports/load, runtime
+  unreachability, every earlier guard, and no new advisory or defect. Option 2
+  separately authorizes later exact v1.0.2 implementation plus only its
+  wordwrap/columnize MVS movement; option 3 keeps P7 blocked.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
