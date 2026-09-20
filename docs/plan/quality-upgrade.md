@@ -5374,10 +5374,11 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on one defensively narrowed retry of the bounded selected exact-
-path `github.com/hashicorp/memberlist v0.3.0` evaluation after its first attempt
-was stopped cleanly by a cybersecurity policy check and after the mdns v1.0.4
-product decision authorized exact guarded retention.
+Status: active but blocked on the prepared bounded product decision for
+affected selected exact-path `github.com/hashicorp/memberlist v0.3.0` after
+its defensive evaluation confirmed that no fixed stable release preserves Go
+1.18 and after the mdns v1.0.4 product decision authorized exact guarded
+retention.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 qualified go-cleanhttp v0.5.2, and all retained-module decisions through exact
 inherited, unloaded `github.com/hashicorp/mdns v1.0.4`. P8 remains queued.
@@ -11462,6 +11463,94 @@ Hashicorp mdns product decision (2026-09-20):
   unchanged and the successor must decide among a floor/fixed-line move,
   explicit target-specific retention, or a separately measured owning-parent
   or graph-removal study.
+
+Hashicorp memberlist defensive evaluation and blocked product boundary
+(2026-09-20):
+
+- No exact-path stable release qualifies. Primary HashiCorp advisory
+  `HCSEC-2026-18` and its published `CVE-2026-14362` CNA record confirm that
+  selected v0.3.0 is affected, releases through v0.5.4 are affected, and
+  v0.6.0 is first fixed. Current latest v0.7.0 is also fixed. Exact OSV and
+  GitHub feeds are still empty for the target and do not override the primary
+  vendor record. The defensive retry did not reproduce or assess
+  exploitability, run the advisory regression, craft packets/attack traffic,
+  scan hosts, inspect credentials, or test a security boundary.
+- The exact path resolves Hashicorp's public active unarchived non-fork
+  MPL-2.0 repository with 24 stable releases v0.1.0-v0.7.0. The suffix tag
+  v0.3.1-metrics-labels is a prerelease and was not promoted. There is no
+  retraction, deprecation, redirect, alternate major line, or qualifying
+  branch/fork. Serious tags are lightweight/unsigned and their commits are
+  GitHub-verified. Selected, last-affected, and fixed proxy archives match Git
+  byte-for-byte and sumdb verifies them.
+- Selected v0.3.0 is commit
+  `923f1b205dd4653f2ea35e1c9531088e52053aa0`, parent
+  `123f3fbfeacd70bbe467775ab563a2b87e8c5cd8`, tree
+  `5c0926d642da064035733e5a591214269c223805`, with proxy ZIP SHA-256
+  `77e9fd374266825d7875a21a099cd80675bf9c8d469290f79c0a41bccba9df30`.
+  First fixed v0.6.0 is commit
+  `371698b4dc493ecf2fc94c4383c75b2c9358f6c9`, parent
+  `0000b77c906dc53889a10de7a12fe4d146e84c50`, tree
+  `9009580c109364895d764539ede0498fc086254b`, proxy ZIP SHA-256
+  `b2c7ebd03f36b0dd22604e65b73b1e87ee1ce75eb36a333b1b6666b1f54497ff`.
+  Latest fixed v0.7.0 is commit
+  `4e3e17fc20e38ac48982ab6f65fec243fd139ef9`, tree
+  `1e2d57c8a19d11776ed294cd4692e91c6e43aac6`, proxy ZIP SHA-256
+  `a77ea0b0c1bc0120cdcaf5ba34b1e95971b566d05f9eba7ac36191aedd83ff4d`.
+- Static remediation identity is fix commit/v0.6.0
+  `371698b4dc493ecf2fc94c4383c75b2c9358f6c9`, which changes only `net.go`
+  and `net_test.go` by 67 insertions and one deletion. The email/binary patch
+  SHA-256 is
+  `f40e2a2034c07db2df2b2b76e76f09e3f67cca1289fe66a986d124a057cdb020`.
+  It is absent from v0.5.4 and retained by v0.6.0/v0.7.0.
+- No fixed release preserves the floor. Selected v0.3.0 declares Go 1.12 and
+  its closure preserves Go 1.18. V0.5.1-v0.5.3 declare Go 1.20, last affected
+  v0.5.4 declares Go 1.24.0, and fixed v0.6.0/v0.7.0 declare Go 1.25.0.
+  Both fixed closures load Go-1.24/Go-1.25 modules and Go 1.18.10 rejects
+  their directives. Exact Go 1.26.7 package listing, source/test and race
+  compilation without executing test bodies, vet, and relevant cross-builds
+  pass for both fixed releases. Selected v0.3.0 passes those compile/vet
+  controls under Go 1.18.10 but exact Go cannot link its root tests through
+  old x/net's removed `syscall.recvmsg` reference.
+- V0.3.0 is a library-only, no-source-build-tag module. Its exported root API
+  covers configuration/defaults and creation; member join/update/query/send/
+  leave/shutdown; node, transport, delegate/event, keyring, broadcast queue,
+  label, and logging abstractions. Static lifecycle review records background
+  listeners/tickers after `Create`, config and returned-node mutation rules,
+  delegate concurrency/blocking/borrowed-data rules, repeat-safe `Leave` and
+  `Shutdown`, the leave-after-shutdown and oversized-metadata panics, and the
+  difference between leave broadcast and shutdown teardown. `internal/retry`
+  is internal test support, there is no CLI, and the remediation commit changes
+  no exported declaration. Zero project import/load keeps this surface and
+  lifecycle out of the product runtime and API/CLI.
+- MVS selects v0.3.0 only through Serf v0.9.6; historical Serf v0.8.2 requests
+  v0.1.3. There is no direct root, target why/import/load results are negative
+  or zero, and the project remains 234 modules, 3,599 edges, 355 production
+  entries, 429 complete-test entries, 197 module-backed entries across 41
+  loaded modules, and 1,067 sums. A redundant v0.3.0 root changes no
+  selection and tidies to the common base projection.
+- A disposable v0.6.0 root raises the main directive to Go 1.25.0 and yields
+  259 modules, 3,743 edges, and 1,103 sums; it changes four guarded
+  selections. V0.7.0 yields 257 modules, 3,709 edges, and 1,095 sums and
+  changes five guarded selections. Both retain 355/429 project loads with zero
+  target packages, but project test/vet fails existing non-constant format
+  calls under the raised floor. Their tidy projections retain Go 1.25 and
+  non-base graph/hash results. Nothing was applied.
+- All 23 earlier guarded selections and 164 incoming edges remain exact at
+  snapshot SHA-256
+  `f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`;
+  all guarded why/import/load results remain negative or zero. Fresh primary
+  data remains 1,402 records at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
+  Earlier exact OSV state retains only the recorded Gorilla and
+  go-retryablehttp pairs. Base `go.mod`/`go.sum` hashes remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- No source or dependency metadata changed, no dependency commit exists, no
+  changed-selection scorecard applies, and accepted quality remains 27/27
+  Q0-Q2 PASS at L2. P7 is blocked on the one prepared memberlist product
+  decision among an integrated Go-1.25/fixed-line migration, explicit guarded
+  retention of affected but unloaded v0.3.0, or a separately measured Serf/
+  graph-removal study. That decision was not executed.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

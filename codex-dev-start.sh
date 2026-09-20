@@ -1131,208 +1131,194 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-20T203149+0200-evaluate-hashicorp-memberlist-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T203149+0200-evaluate-hashicorp-memberlist-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T201536+0200-decide-hashicorp-mdns-product-direction.md
+#|SESSION_ID=2026-09-20T224123+0200-decide-hashicorp-memberlist-product-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T224123+0200-decide-hashicorp-memberlist-product-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T203149+0200-evaluate-hashicorp-memberlist-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 by independently evaluating selected exact-path
-#|`github.com/hashicorp/memberlist v0.3.0` as one bounded dependency group.
-#|Resolve its complete repository and release identity, Go-floor closure,
-#|package behavior and exported API, actual project loading, exact MVS effects,
-#|vulnerability evidence, and every applicable quality contract. Retain or
-#|select only a qualified exact-path stable release whose complete minimal
-#|source/test closure preserves Go 1.18 and whose relevant behavior passes every
-#|contract; otherwise stop for a fresh bounded product decision.
+#|Continue P7 only by making one fresh bounded product decision for selected
+#|exact-path `github.com/hashicorp/memberlist v0.3.0`. Its defensive evaluation
+#|is complete: the selected release is affected by HCSEC-2026-18 /
+#|CVE-2026-14362, v0.6.0 is first fixed, and every fixed stable release requires
+#|Go 1.25. Choose exactly one option below, record its precise authorization and
+#|expiry bounds, and prepare one coherent successor without executing it. Do not
+#|repeat or extend the security investigation, reproduce the advisory, infer an
+#|exception from zero loading, implement before authorization, combine another
+#|dependency group, or begin P8.
 #|
-#|# Defensive Retry Scope
+#|# Defensive Decision Scope
 #|
-#|This is an authorized defensive software-supply-chain review of the user's
-#|local repository. A first attempt from clean HEAD
-#|`a1dee3a81a71e0e6656de09fef603b94cc135bab` was automatically stopped by a
-#|cybersecurity policy check after collecting public advisory and release facts;
-#|it made no tracked worktree change. Resume this same bounded session under the
-#|narrower rules below rather than restarting the broad investigation.
-#|
-#|Use only public release metadata, the public vendor advisory, static source and
-#|remediation-diff inspection, the project module graph, and ordinary existing
-#|build or test commands with non-adversarial inputs in disposable local trees.
-#|Do not create, reproduce, simulate, operationalize, or optimize an exploit or
-#|proof of concept. Do not craft malformed packets, generate custom attack
-#|traffic, scan or contact hosts, exercise production or non-public systems,
-#|inspect credentials or key material, or test a security boundary. Do not
-#|recreate the advisory's failure condition. If completing the decision would
-#|require any such activity, stop and record that limitation instead.
-#|
-#|The interrupted attempt retained these provisional facts for narrow
-#|confirmation: public vendor advisory `HCSEC-2026-18` / `CVE-2026-14362` reports
-#|all memberlist releases through v0.5.4 as affected; v0.6.0 is the first fixed
-#|release; and v0.6.0 declares Go 1.25. Confirm only the affected/fixed range,
-#|the candidate Go directive and source/test closure, and the static remediation
-#|identity from public primary material. Do not investigate exploitability. If
-#|confirmed, no fixed memberlist release preserves the project's Go 1.18 floor,
-#|so leave dependency metadata unchanged and prepare the bounded product
-#|decision. Treat missing temporary output from the interrupted attempt as a
-#|reason to recheck these few facts, not to repeat the broad evaluation.
+#|This is an authorized defensive software-supply-chain product decision for the
+#|user's local repository. Use only the completed public vendor/CNA facts,
+#|static remediation identity, release and module metadata, and project graph
+#|measurements recorded below. Do not create, reproduce, simulate,
+#|operationalize, or optimize an exploit or proof of concept. Do not craft
+#|packets or attack traffic, scan or contact hosts, exercise production or non-
+#|public systems, inspect credentials or key material, test a security boundary,
+#|or recreate the advisory's failure condition. No further exploitability or
+#|protocol-security analysis is needed for this choice.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
 #|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
-#|and all target-specific retained-module decisions through exact inherited,
+#|and every target-specific retained-module decision through exact inherited,
 #|unloaded mdns v1.0.4. Every earlier outcome and lifecycle ancestor is final.
-#|Evaluate only Hashicorp memberlist in this session; do not reopen or combine
-#|another dependency group. P8 remains queued.
+#|No earlier exception transfers to memberlist. Preserve every guarded selection
+#|and stop for its owning decision if any guard differs. P8 remains queued.
 #|
-#|The authorized 2026-09-20 mdns option 1 decision retains exact selected,
-#|inherited, unloaded `github.com/hashicorp/mdns v1.0.4` without product source
-#|or dependency metadata changes. Its target-specific, non-transferable
-#|exception accepts only the completed exact-Go linker/test, Go-1.18 IPv6,
-#|protocol, packet/channel, timeout/cancellation, lifecycle/resource, nil/panic,
-#|mutation/aliasing, concurrency, environment, allocation, API, MVS,
-#|vulnerability, and related recorded findings. It remains valid only while
-#|exact v1.0.4, the Serf-v0.9.6-to-v1.0.4 and historical
-#|Serf-v0.8.2-to-v1.0.0 requests, the mdns-v1.0.0-to-go.net-v0.0.1 request, no
-#|direct root or repository import, zero target loads, runtime unreachability,
-#|every earlier guard, and the no-new-advisory-or-defect condition remain exact.
-#|Any change requires the owning fresh decision.
-#|
-#|The golang-lru v0.5.4, go.net v0.0.1, go-uuid v1.0.1, go-syslog v1.0.0,
-#|go-sockaddr v1.0.0, go-rootcerts v1.0.2, go-retryablehttp v0.5.3,
-#|go-multierror v1.1.0, go-msgpack v0.5.3, go-immutable-radix v1.3.1,
-#|go-hclog v1.2.0, Errwrap v1.0.0, qualified go-cleanhttp v0.5.2, and every
-#|other recorded exception or qualification remain separate under their exact
-#|selection, incoming-request, zero-load, runtime-unreachable, and no-new-
-#|finding guards. Revalidate those guards and stop for the owning decision if
-#|any expires. No earlier exception transfers to memberlist. Do not change a
-#|guarded parent, the Go floor, or an unrelated module.
-#|
-#|Selected `github.com/hashicorp/memberlist v0.3.0` is inherited through the
-#|exact request from `github.com/hashicorp/serf v0.9.6`; historical Serf v0.8.2
-#|requests memberlist v0.1.3. The current repository import search and
-#|production and complete-test loads contain zero target packages, its why
-#|result is negative, and there is no direct main-module root. These queue
-#|observations and the physical MVS selection are not proof of repository
-#|identity, release qualification, ancestry, floor, behavior, vulnerability
-#|state, or suitability. Resolve them independently and do not add a direct
-#|edge merely to alter MVS.
+#|Selected memberlist v0.3.0 is inherited only through the exact request from
+#|Serf v0.9.6; historical Serf v0.8.2 requests memberlist v0.1.3. Memberlist has
+#|no direct root or repository Go import, its why result is negative, production
+#|and complete-test closures load zero target packages, and it is runtime-
+#|unreachable in this project. These facts bound present exposure but do not
+#|qualify the affected release or authorize retention.
 #|
 #|# Measurements At Start
 #|
-#|The mdns decision recording began from clean ordinary and ignored state at
-#|HEAD `9edb38c51e0067672e90224d8665bae580f92a05`, parent
-#|`b641b55ec01f18a79ecf57b8e5e866310dd44562`, tree
-#|`63a43a0d26649532e760560a9e114fea47feb8d1`. Verify the new handoff HEAD,
-#|parent, tree, exact changed-file set, clean ordinary and ignored status,
-#|reciprocal archive chain, latest Google UUID implementation ancestry, and
-#|`./codex-dev-start.sh --check` rather than assuming them.
+#|The defensive evaluation began from clean ordinary and ignored state at HEAD
+#|`8a292c9a10f25aeae5be9e30693a7ed27f91912d`, parent
+#|`a1dee3a81a71e0e6656de09fef603b94cc135bab`, tree
+#|`017eaba0cc14d1442f7bea5bb7648ca290438df2`. That commit changed exactly the
+#|launcher, memberlist evaluation archive, rolling handover, and roadmap. Its
+#|reciprocal 225-archive chain, latest Google UUID implementation ancestry, and
+#|launcher check passed. Exact Go 1.26.7 binary SHA-256 is
+#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+#|Verify the new handoff rather than assuming these facts.
 #|
-#|Guard-only decision revalidation under exact Go 1.26.7 preserved all 22
-#|earlier guarded selections and 162 incoming graph edges plus exact mdns
-#|v1.0.4 and its two incoming Serf requests; the mdns-v1.0.0-to-go.net request
-#|also remains exact. All guarded why results remain negative, repository
-#|imports are zero, and production and complete-test loads contain zero guarded
-#|packages. The project remains 234 modules, 3,599 graph
-#|edges, 355 production entries, 429 complete-test entries, 197 module-backed
-#|entries across 41 loaded modules, 1,067 sum lines, and the recorded 432-line
-#|unapplied tidy projection. Base `go.mod` and `go.sum` SHA-256 values remain
+#|The unchanged project has 234 modules, 3,599 graph edges, 355 production
+#|entries, 429 complete-test entries, 197 module-backed entries across 41 loaded
+#|modules, 1,067 sum lines, and the recorded 432-line tidy projection.
+#|`go.mod`/`go.sum` SHA-256 values are
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
-#|Accepted quality remains 27/27 Q0-Q2 PASS at L2.
+#|No dependency implementation or metadata commit exists; accepted quality
+#|remains 27/27 Q0-Q2 PASS at L2.
 #|
-#|Fresh primary vulnerability data remains 1,402 records at SHA-256
-#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
-#|and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV remains empty for
-#|mdns and every guarded target except the recorded Gorilla
-#|GO-2026-6278/GHSA-w67g-5rqw-f597 and go-retryablehttp
-#|GO-2024-2947/GHSA-v6v8-xj6m-xwqh pairs. Mdns's exact GitHub global and
-#|repository advisory queries remain empty. No new guarded advisory or
-#|independent defect appeared.
+#|# Completed Evaluation
 #|
-#|Use exact Go 1.26.7 binary SHA-256
-#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
-#|put it first in `PATH`, keep `GOENV=off`, `GOWORK=off`,
-#|`GOTOOLCHAIN=local`, inject no ambient `GOFLAGS`, use `LC_ALL=C LANG=C`, and
-#|run with `umask 022`. Recreate contained Go 1.18.10 and pinned tools beneath
-#|`$CODEX_SESSION_SCRATCH_ROOT` as required. Preserve the known apidiff archive
-#|reproducibility discrepancy, Python 3.14 Docker timestamp control, managed
-#|bare-`mktemp` restriction, Make-variable inheritance boundary, and nested
-#|launcher signal-retention timing race; none is memberlist evidence.
+#|Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves Hashicorp's
+#|public active unarchived non-fork MPL-2.0 repository. The exact path has 24
+#|stable releases v0.1.0-v0.7.0; v0.7.0 is latest. The suffix tag
+#|v0.3.1-metrics-labels is a prerelease. There is no retraction, module
+#|deprecation, redirect, alternate major line, or qualifying branch/fork.
+#|Inspected proxy archives match Git and sumdb verifies them. Serious tags are
+#|lightweight and unsigned while their commits are GitHub-verified.
+#|
+#|Selected v0.3.0 is verified commit
+#|`923f1b205dd4653f2ea35e1c9531088e52053aa0`, parent
+#|`123f3fbfeacd70bbe467775ab563a2b87e8c5cd8`, tree
+#|`5c0926d642da064035733e5a591214269c223805`, time
+#|2021-11-12T16:15:55-06:00. Its proxy ZIP SHA-256 is
+#|`77e9fd374266825d7875a21a099cd80675bf9c8d469290f79c0a41bccba9df30`;
+#|Git/proxy contents match and sumdb verifies it. It declares Go 1.12 and its
+#|complete imported closure preserves Go 1.18. Its Go-1.18 source/test and race
+#|compilations plus vet pass, but exact Go 1.26.7 cannot link its root test
+#|binary because old x/net references removed `syscall.recvmsg`.
+#|
+#|HashiCorp bulletin HCSEC-2026-18 states that memberlist through v0.5.4 is
+#|affected and v0.6.0 fixes CVE-2026-14362. The published HashiCorp CNA record
+#|also bounds affected versions below v0.6.0. Exact OSV and GitHub advisory
+#|feeds are still empty and do not override the primary vendor evidence. Static
+#|inspection identifies fix commit/v0.6.0
+#|`371698b4dc493ecf2fc94c4383c75b2c9358f6c9`, parent
+#|`0000b77c906dc53889a10de7a12fe4d146e84c50`, tree
+#|`9009580c109364895d764539ede0498fc086254b`. It changes only `net.go` and
+#|`net_test.go`; patch SHA-256 is
+#|`f40e2a2034c07db2df2b2b76e76f09e3f67cca1289fe66a986d124a057cdb020`.
+#|No advisory failure was dynamically reproduced.
+#|
+#|First fixed v0.6.0 and latest fixed v0.7.0 both declare Go 1.25.0. Their
+#|complete source/test closures load dependencies declaring Go 1.24-Go 1.25,
+#|and Go 1.18.10 rejects their directives before loading. Under exact Go 1.26.7
+#|both fixed releases pass complete package listing, source/test and race
+#|compilation without executing test bodies, vet, and applicable cross-
+#|compilation. Their existing security-regression test bodies were deliberately
+#|not executed.
+#|
+#|MVS selects v0.3.0 only through Serf v0.9.6, with the historical Serf
+#|v0.8.2-to-v0.1.3 request also exact. There is no direct root/import/load. A
+#|redundant v0.3.0 root changes no selection and tidy returns to the common base
+#|projection. Direct fixed roots are not isolated target moves: v0.6.0 raises
+#|the main Go directive to 1.25.0, yields 259 modules/3,743 edges/1,103 sums,
+#|and changes four guarded selections; v0.7.0 yields 257/3,709/1,095 and changes
+#|five guarded selections. Both preserve zero target load but make project
+#|tests/vet fail existing non-constant format calls under Go 1.25. Their tidy
+#|projections retain Go 1.25, dozens of selection-diff lines, and non-base
+#|hashes. No projection was applied.
+#|
+#|All 23 earlier guarded selections and 164 incoming edges remain exact at
+#|snapshot SHA-256
+#|`f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`.
+#|All guarded why/import/load results remain negative or zero. Fresh primary
+#|vulnerability data remains 1,402 records at SHA-256
+#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+#|with only the recorded Gorilla and go-retryablehttp exact-version pairs among
+#|earlier guards. No earlier guard expired.
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve proxy, sumdb, `go-import`,
-#|Git, and forge evidence for the exact module path: tags, releases, branches,
-#|signatures, commits, parents, trees, times, ancestry, repository status,
-#|licenses, retractions, deprecations, redirects, forks, alternate paths, major
-#|module lines, and every serious exact-path stable candidate. Do not silently
-#|promote a redirect, fork, alternate path, different major module path,
-#|prerelease, non-versioning tag, unreleased branch head, or floor-ineligible
-#|release.
+#|Choose exactly one:
 #|
-#|Prove the complete minimal production and test closure under exact Go 1.26.7
-#|and contained Go 1.18.10. Inspect imported source and test dependencies rather
-#|than treating the module directive alone as floor proof. Separate isolated
-#|source-time resolution from the project's selected MVS graph and from every
-#|already-final guarded dependency decision.
+#|1. Authorize a separate integrated Go-1.25/fixed-memberlist migration. The
+#|   latest fixed exact-path candidate is v0.7.0; v0.6.0 is first fixed. The
+#|   follow-up must choose and fully qualify one exact release, explicitly own
+#|   the Go-floor change, repair or decide the project's stricter-format
+#|   failures, obtain fresh owning decisions for every changed guarded module,
+#|   preserve API/CLI and runtime behavior, and pass complete source/test,
+#|   platform, MVS, vulnerability, and project gates before implementation can
+#|   be retained. This decision session must not edit the floor or metadata.
+#|2. Retain exact selected, inherited, unloaded memberlist v0.3.0 without
+#|   changing product source, `go.mod`, or `go.sum`, under a new target-specific,
+#|   non-transferable risk decision. This is the smallest current graph change
+#|   but explicitly accepts the primary vendor advisory and exact-Go test-link
+#|   failure only within the verified zero-load state. It must expire if exact
+#|   v0.3.0, either Serf request, direct root/import/load/runtime reachability,
+#|   an earlier guard, or the no-new-advisory-or-defect condition changes. It
+#|   must not be described as a qualified or secure release.
+#|3. Authorize a separate owning-parent/graph-removal study for exact Serf
+#|   v0.8.2/v0.9.6 and the request population that preserves memberlist. The
+#|   follow-up must independently measure every Serf upgrade, replacement, or
+#|   removal and all transitive API, behavior, MVS, guarded-edge, vulnerability,
+#|   and project effects. It may not change Serf, memberlist, or another guarded
+#|   module in this decision session.
 #|
-#|Inspect public source, packages, exported API, platform/build-tag branches, and
-#|ordinary runtime lifecycle only as needed for the dependency decision. Reuse
-#|the interrupted attempt's conclusions where recorded. Run existing upstream
-#|tests and non-adversarial compatibility checks without modifying them, plus
-#|source verification, package listing, race, vet, and meaningful cross-builds
-#|under both SDKs where still necessary. Do not add security-focused fixtures or
-#|custom network, packet, cryptographic, credential, malformed-input, fuzzing, or
-#|failure-condition tests. Do not expand ordinary functional review into a
-#|protocol-security assessment. Classify any ordinary build or test failure
-#|precisely.
-#|
-#|Prove exact project module, graph, package, checksum, tidy, API/CLI,
-#|compatibility, acceptance, and vulnerability effects for selected and every
-#|serious candidate in disposable trees. Explain why the target exists in MVS,
-#|whether a target package actually loads, and preserve every unrelated module
-#|selection. Any required parent, major-path, floor, architecture, or unrelated-
-#|module change needs a fresh bounded decision rather than silent
-#|implementation. For the advisory, record only public primary affected/fixed
-#|version facts, the fixed release's Go floor, the project's zero-load and
-#|runtime-unreachable state, and a static remediation-diff identity. Do not
-#|perform exploitability analysis, dynamic reproduction, or custom reachability
-#|testing.
+#|Do not combine options, manufacture a direct root, silently raise the floor,
+#|select v0.6.0/v0.7.0 without the integrated qualification, retain the affected
+#|release without an explicit product choice, patch source, promote a fork,
+#|branch, prerelease, or alternate path, change Serf or another parent, move an
+#|unrelated selection, transfer another exception, or implement anything before
+#|the choice is explicitly authorized. If none is acceptable, stop P7 explicitly
+#|without source or metadata changes.
 #|
 #|# Required Reading
 #|
-#|At start read this archive, the answered mdns decision and evaluation, the
-#|answered golang-lru decision and evaluation, the answered go.net decision and
-#|evaluation, rolling handover, roadmap, `go.mod`, and `go.sum`. Verify the
-#|recorded handoff identity, changed-file set, clean ordinary and ignored
-#|status, exact toolchain identity, reciprocal archive history, every guarded
-#|selection/request/load result, and `./codex-dev-start.sh --check`. Earlier
-#|outcomes are final.
+#|Read this archive, its answered memberlist evaluation, the answered mdns,
+#|golang-lru, and go.net decisions/evaluations, rolling handover, roadmap,
+#|`go.mod`, and `go.sum`. Verify branch, clean ordinary and ignored status,
+#|handoff HEAD/parent/tree and exact changed-file set, reciprocal archive chain,
+#|latest Google UUID implementation ancestry, exact Go identity, both
+#|memberlist/Serf requests and zero-load state, every earlier guarded selection/
+#|request/why/import/load condition, module hashes, vulnerability guards, and
+#|`./codex-dev-start.sh --check`. Earlier outcomes are final.
 #|
 #|# Three Moves
 #|
-#|First, narrowly confirm the retained public advisory range, first fixed
-#|release, Go-floor incompatibility, repository identity, project zero-load, and
-#|exact MVS facts without changing the worktree or reproducing the advisory.
-#|Second, if those provisional facts hold, leave metadata unchanged and prepare
-#|one bounded product decision comparing at least: raising the Go floor and
-#|selecting the fixed line; retaining exact unloaded v0.3.0 under an explicit
-#|target-specific risk decision; and removing or changing the owning parent
-#|edge in a separately measured study. Do not choose or implement an option in
-#|this session. Only if primary evidence disproves the provisional facts may a
-#|Go-1.18-compatible fixed exact-path stable candidate proceed through ordinary
-#|qualification. Third, update the roadmap and rolling handover, answer this
-#|archive, prepare exactly one reciprocal NEXT decision mission, and commit the
-#|handoff. Do not execute the successor.
+#|First, revalidate only the narrow decision guards and primary advisory record;
+#|do not repeat the evaluation or run security-focused tests. Second, choose and
+#|record exactly one product option with precise bounds; do not implement it in
+#|this decision session. Third, update the roadmap and rolling handover, answer
+#|this archive, prepare exactly one reciprocal NEXT mission matching the
+#|authorized choice, and commit the documentation-only handoff. Do not execute
+#|the successor.
 #|
 #|# Automatic Handoff
 #|
-#|After one coherent bounded outcome, make any separate dependency-only commit
-#|first if a qualified selection was implemented, then make the required local
-#|`docs: prepare next agent session` commit. Do not launch a successor, push,
-#|merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
-#|combine another dependency group, or begin P8.
+#|Make only the required local `docs: prepare next agent session` commit. Do not
+#|create a dependency implementation commit in this decision session. Do not
+#|launch a successor, push, merge, publish, release, stash, revert, bypass
+#|cleanup, remove the worktree, combine another dependency group, or begin P8.
 # CODEX_MUTABLE_PROMPT_END
