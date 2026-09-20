@@ -5377,10 +5377,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 Status: active. Completed dependency groups remain final through accepted
 Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module
 decisions through exact inherited, unloaded
-`github.com/hashicorp/go-rootcerts v1.0.2`. Its bounded product decision
-accepted option 1 under target-specific guards. No exact-path stable
-go-sockaddr release qualified, so P7 is blocked only on the prepared bounded
-go-sockaddr product decision. P8 remains queued.
+`github.com/hashicorp/go-sockaddr v1.0.0`. Its bounded product decision
+accepted option 1 under target-specific guards. P7 continues only with the
+prepared bounded go-syslog evaluation. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10660,14 +10659,62 @@ Hashicorp go-sockaddr evaluation (2026-09-20):
   accepted Darwin shell wording failures; all 26 unaffected packages and
   applicable gates pass. No changed-selection scorecard applies and accepted
   quality remains 27/27 Q0-Q2 PASS at L2.
-- Dependency metadata remains unchanged. P7 is blocked on the sole prepared
-  go-sockaddr decision. Recommended option 1 retains exact inherited,
-  unloaded v1.0.0 under a new target-specific exception bounded to the
-  completed closure/behavior/race/vet/API/MVS/vulnerability findings, both
-  exact memberlist requests, no direct root, zero imports/load, runtime
-  unreachability, every earlier guard, and no new advisory or defect. Option 2
-  separately authorizes later exact v1.0.2 implementation plus only its
-  wordwrap/columnize MVS movement; option 3 keeps P7 blocked.
+- Dependency metadata remained unchanged. The evaluation stopped on the sole
+  prepared go-sockaddr decision without inferring acceptance from physical
+  selection or zero reachability.
+
+Hashicorp go-sockaddr product decision (2026-09-20):
+
+- Authorized option 1 was selected exactly: retain exact selected, inherited,
+  unloaded `github.com/hashicorp/go-sockaddr v1.0.0` without changing
+  `go.mod` or `go.sum`. The new target-specific, non-transferable exception
+  accepts only the incomplete released module closure and command
+  unbuildability; the reproduced IPv6 containment, no-match nil-error,
+  mutable global-slice/race, and exposed IPv6 mask defects; the characterized
+  upstream Darwin, Go 1.18 template, vet, sorting, route-command, API/CLI,
+  nil/panic, mutation, aliasing, allocation, concurrency, global-state,
+  resource, environment, MVS, vulnerability, and related findings. No new or
+  independently discovered defect is accepted.
+- Guard-only revalidation from clean handoff HEAD
+  `5c957ce042e2c36589e0ec5f00fca5261ce76352`, parent
+  `a9289a1684e101399810bbec6294b62e4a41df92`, tree
+  `654abb0f7bf3261c0b2224f99d61ec968af826f2`, preserves exact v1.0.0 and
+  its two requests from memberlist v0.1.3/v0.3.0 with no direct root. All 18
+  target-plus-earlier why results remain negative, repository imports are
+  zero, and the 355-entry production and 429-entry complete-test loads contain
+  zero guarded packages. The complete-test load retains 197 module-backed
+  entries across 41 modules, so every guarded target remains runtime-
+  unreachable.
+- The project remains 234 modules, 3,599 graph edges, 1,067 sum lines, and the
+  recorded 432-line unapplied tidy projection. `go.mod`/`go.sum` SHA-256
+  values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  No parent, Go-floor, API, source, direct root, or unrelated selection
+  changed.
+- Fresh primary vulnerability data remains byte-identical at 1,402 records,
+  SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+  and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV remains empty for
+  go-sockaddr and every guarded target except Gorilla and go-retryablehttp,
+  which retain only their recorded accepted identifiers. The target GitHub
+  repository and exact global-advisory results remain empty. No new advisory
+  or independent defect appeared.
+- The exception remains valid only while exact v1.0.0 and both memberlist
+  requests remain unchanged, no direct root or repository import is added,
+  production and complete-test target loads remain zero, runtime
+  unreachability holds, every earlier selection/request/load/runtime/advisory
+  guard remains intact, and no new target advisory or independent defect
+  appears. Direct import/loading, runtime reachability, a version/request
+  change, a new direct root, an earlier owning-guard change, or a new advisory
+  or independent defect expires the exception and requires the owning fresh
+  dependency and product decision before merge.
+- No dependency implementation or metadata commit was created. Exact Go
+  1.26.7 module verification and applicable no-change project and launcher
+  gates pass; no changed-selection scorecard applies and accepted quality
+  remains 27/27 Q0-Q2 PASS at L2. P7 continues only with the prepared bounded
+  exact-path `github.com/hashicorp/go-syslog v1.0.0` evaluation; it was not
+  executed in this decision session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

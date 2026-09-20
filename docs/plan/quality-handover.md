@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T13:33:16+02:00
+Generated: 2026-09-20T13:53:11+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-sockaddr
-  evaluation recording began from clean handoff HEAD
-  `a9289a1684e101399810bbec6294b62e4a41df92`, parent
-  `c530f7d8e39aa0181899d7cb2893f6a16555ebef`, tree
-  `13addaa0a9dbc39f9a4eb22cbb6b778e072cebd0`.
+  `codex/upgrade-quality`, base master at `5635d50`. The go-sockaddr decision
+  recording began from clean handoff HEAD
+  `5c957ce042e2c36589e0ec5f00fca5261ce76352`, parent
+  `a9289a1684e101399810bbec6294b62e4a41df92`, tree
+  `654abb0f7bf3261c0b2224f99d61ec968af826f2`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +20,13 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-sockaddr evaluation and every earlier archive are answered. The sole
+- The go-sockaddr decision, its evaluation, and every earlier archive are
+  answered. The sole
   NEXT archive is
-  `docs/plan/agent-sessions/2026-09-20T133316+0200-decide-hashicorp-go-sockaddr-product-direction.md`.
-  It authorizes only one bounded go-sockaddr product decision. It does not
-  authorize audit repetition, dependency implementation, reopening an earlier
-  decision, combining another dependency group, or beginning P8.
+  `docs/plan/agent-sessions/2026-09-20T135311+0200-evaluate-hashicorp-go-syslog-dependency.md`.
+  It authorizes only one bounded go-syslog evaluation. It does not authorize
+  reopening an earlier decision, combining another dependency group, or
+  beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -35,10 +36,21 @@ session diary.
 
 P2A-P6 are complete. Exact Go 1.26.7, every accepted dependency move through
 Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
-through exact inherited, unloaded go-rootcerts v1.0.2 are final under their
-target-specific guards. No exact-path stable go-sockaddr release qualified;
-P7 is blocked only on the prepared bounded go-sockaddr product decision. P8
-remains queued. Do not combine groups or begin P8.
+through exact inherited, unloaded go-sockaddr v1.0.0 are final under their
+target-specific guards. P7 continues only with the prepared bounded go-syslog
+evaluation. P8 remains queued. Do not combine groups or begin P8.
+
+The authorized 2026-09-20 go-sockaddr option 1 decision retains exact
+selected, inherited, unloaded `github.com/hashicorp/go-sockaddr v1.0.0`
+without metadata changes. Its target-specific, non-transferable exception
+accepts only the incomplete released module closure and command
+unbuildability; the reproduced IPv6 containment, no-match nil-error, mutable
+global-slice/race, and exposed IPv6 mask defects; and the completed upstream
+test, vet, API/CLI, boundary, MVS, vulnerability, and related findings. It is
+valid only while exact v1.0.0 and both memberlist v0.1.3/v0.3.0 requests
+remain unchanged, no direct root or repository import is added, target loads
+remain zero, runtime unreachability holds, every earlier guard remains intact,
+and no new advisory or independent defect appears.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -1175,15 +1187,18 @@ version or incoming-request change, a new direct root, an earlier owning-guard
 change, or a new advisory or independent defect. Expiry requires the owning
 fresh dependency and product decision before merge.
 
-## Hashicorp Go Sockaddr Evaluation
+## Hashicorp Go Sockaddr Product Decision
 
 No exact-path stable `github.com/hashicorp/go-sockaddr` release qualifies.
-The evaluation left `go.mod` and `go.sum` unchanged and prepared one bounded
-product decision. Recommended option 1 retains exact selected, inherited,
-unloaded v1.0.0 under a new target-specific exception. Option 2 authorizes a
-later exact v1.0.2 dependency-only implementation plus only its necessary
-wordwrap/columnize MVS movement. Option 3 keeps P7 blocked. No choice has been
-inferred or executed.
+Authorized option 1 was selected exactly: retain exact selected, inherited,
+unloaded v1.0.0 without changing `go.mod` or `go.sum`. The new target-specific,
+non-transferable exception accepts only the incomplete released module closure
+and command unbuildability; the independently reproduced IPv6 containment,
+no-match nil-error, mutable global-slice/race, and exposed IPv6 mask defects;
+the characterized upstream Darwin, Go 1.18 template, vet, sorting,
+route-command, API/CLI, nil/panic, mutation, aliasing, allocation,
+concurrency, global-state, resource, environment, MVS, vulnerability, and
+related findings. It accepts no new or independently discovered defect.
 
 Fresh identity evidence resolves Hashicorp's public active unarchived non-fork
 MPL-2.0 repository. The proxy exposes stable v1.0.0-v1.0.7 only; v1.0.7 is
@@ -1252,7 +1267,40 @@ V1.0.0 is disqualified by incomplete released closure plus the independent
 behavior/race defects. V1.0.1-v1.0.3 retain those defects, fail test/vet
 contracts, and move unrelated MVS selections; v1.0.3 adds the Windows defect.
 V1.0.4-v1.0.7 also violate the floor. Master is unreleased and requires Go
-1.25. No dependency implementation is authorized.
+1.25. Option 1 does not qualify the release for direct or loaded use and does
+not authorize a dependency implementation.
+
+Guard-only revalidation began from clean ordinary and ignored state at handoff
+HEAD `5c957ce042e2c36589e0ec5f00fca5261ce76352`, parent
+`a9289a1684e101399810bbec6294b62e4a41df92`, tree
+`654abb0f7bf3261c0b2224f99d61ec968af826f2`. A freshly recreated official Go
+1.26.7 toolchain retained archive/binary SHA-256 values
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+Exact v1.0.0 retains both memberlist requests and no direct root. All 18
+guarded selections and requests remain exact; all 18 why results and
+repository import searches remain negative; and the 355-entry production and
+429-entry complete-test loads contain zero guarded packages. The complete-test
+load retains 197 module-backed entries across 41 modules, so every guarded
+target remains runtime-unreachable.
+
+The project remains 234 modules, 3,599 graph edges, 1,067 sum lines, and the
+recorded 432-line unapplied tidy projection. `go.mod`/`go.sum` SHA-256 values
+remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Fresh primary vulnerability data remains byte-identical at 1,402 records and
+the target exact-version OSV plus repository/global GitHub advisory results
+remain empty. Gorilla and go-retryablehttp retain only their already accepted
+identifiers. No new advisory or independently observed defect appeared.
+
+The exception expires on direct import/loading, runtime reachability, a target
+version or memberlist-request change, a new direct root, an earlier owning-
+guard change, or a new advisory or independent defect. Expiry requires the
+owning fresh dependency and product decision before merge. No dependency
+implementation or metadata commit exists. P7 continues only with the prepared
+bounded exact-path `github.com/hashicorp/go-syslog v1.0.0` evaluation; it was
+not executed in this decision session.
 
 ## Project And Quality State
 
@@ -1394,6 +1442,13 @@ vet, and four cross-builds. The full floor suite retains only the two accepted
 Darwin shell wording failures. A raw clean-tree audit records 21 automated
 PASS, zero FAIL, and exactly six manual-evidence-bound UNMEASURABLE rows.
 
+The go-sockaddr decision-recording session's freshly recreated exact Go
+1.26.7 toolchain passes module verification, build, count-one tests, race
+tests, and vet; all 62 launcher lifecycle controls also pass under the
+established `umask 022` contract. No source or dependency metadata changed,
+so no changed-selection scorecard applies and accepted quality remains 27/27
+Q0-Q2 PASS at L2.
+
 An initial project build attempt reproduced only the managed default-cache
 restriction and passed with scratch-contained caches. The first compatibility
 run reproduced the documented cold offline API-base cache boundary and passed
@@ -1429,12 +1484,12 @@ projection in a measured worktree.
 
 ## Next Bounded Objective
 
-Make one bounded product decision for exact-path
-`github.com/hashicorp/go-sockaddr`. Choose explicit option 1 to retain exact
-inherited, unloaded v1.0.0 under the documented target-specific exception;
-option 2 to authorize a later exact v1.0.2 dependency-only implementation plus
-only its wordwrap/columnize MVS movement under an explicit exception; or option
-3 to keep P7 blocked. Revalidate only the narrow selection/request/import/load,
-runtime, project-hash, earlier-guard, and advisory conditions. Do not repeat
-the evaluation, implement a dependency change in the decision session, combine
-another group, reopen an earlier outcome, or begin P8.
+Independently evaluate selected exact-path
+`github.com/hashicorp/go-syslog v1.0.0` as one bounded P7 dependency group.
+Resolve exact repository/release identity, complete Go-1.18-preserving source
+and test closure, package/API and syslog behavior, actual project loading,
+exact MVS effects, vulnerability state, and every applicable quality contract.
+Retain or select only a qualified exact-path stable release; otherwise leave
+metadata unchanged and stop for a bounded product decision. Preserve the new
+go-sockaddr exception and every earlier guard, do not combine another group,
+and do not begin P8.

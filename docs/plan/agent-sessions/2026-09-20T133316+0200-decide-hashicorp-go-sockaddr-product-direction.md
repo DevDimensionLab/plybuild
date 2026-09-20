@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Go Sockaddr Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-20T133316+0200-decide-hashicorp-go-sockaddr-product-direction`
 Created: `2026-09-20T13:33:16+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `52d3f0c26d8304a2a3e96c465867080c5d196f1889138ae0fa6939b24ae8fd85`
 Previous: [2026-09-20T121350+0200-evaluate-hashicorp-go-sockaddr-dependency.md](2026-09-20T121350+0200-evaluate-hashicorp-go-sockaddr-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T135311+0200-evaluate-hashicorp-go-syslog-dependency.md](2026-09-20T135311+0200-evaluate-hashicorp-go-syslog-dependency.md)
+Outcome: Recorded authorized option 1 for exact inherited, unloaded go-sockaddr v1.0.0 after every guard passed; the target-specific exception accepts only the completed closure, behavior, race, vet, boundary, MVS, vulnerability, and related findings, dependency metadata stayed unchanged, and one bounded go-syslog evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -205,3 +205,83 @@ After a coherent explicit decision, make the required local
 merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
 combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded authorized option 1 exactly: retain selected
+`github.com/hashicorp/go-sockaddr v1.0.0` as an inherited, unloaded module
+without changing `go.mod` or `go.sum`. This is a new go-sockaddr-specific,
+non-transferable exception. It accepts only the incomplete released module
+closure and resulting read-only command unbuildability; the independently
+reproduced IPv6 `ContainsAddress` failure, no-match nil-error behavior,
+mutable global attribute slices and their caller-mutation race, and exposed
+package-global IPv6 host-mask backing array; the characterized upstream
+Darwin interface, route-command, and sorting failures; the Go 1.18 exported-
+template parse failure; the unreachable-panic vet finding; and the completed
+API/CLI, nil/panic, mutation, aliasing, allocation, concurrency, global-state,
+resource, environment, MVS, vulnerability, and related qualification
+findings. It accepts no new or independently discovered defect.
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at handoff HEAD
+`5c957ce042e2c36589e0ec5f00fca5261ce76352`, parent
+`a9289a1684e101399810bbec6294b62e4a41df92`, tree
+`654abb0f7bf3261c0b2224f99d61ec968af826f2`. That handoff changed exactly
+the launcher, answered go-sockaddr evaluation archive, this then-NEXT
+decision archive, rolling handover, and roadmap. Its reciprocal archive chain,
+Google UUID implementation ancestry, and launcher check passed.
+
+A freshly downloaded official Go 1.26.7 archive and binary retained SHA-256
+values
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+The exact binary ran first in `PATH` with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, no ambient `GOFLAGS`, `GOPROXY` and `GOSUMDB` pinned to
+their public services, `LC_ALL=C`, `LANG=C`, and `umask 022`.
+
+Go-sockaddr remains exact v1.0.0 through exactly the two recorded requests
+from memberlist v0.1.3 and v0.3.0, with no direct main-module edge. Its
+`go mod why -m` result remains negative, repository Go imports remain zero,
+and the 355-entry production and 429-entry complete-test loads contain zero
+target packages. All 18 target-plus-earlier guarded modules retain their exact
+selections and recorded incoming requests. All 18 why results remain negative,
+repository imports remain zero, and production and complete-test loads contain
+zero guarded packages. The complete-test load retains 197 module-backed
+entries across 41 loaded modules, so go-sockaddr and every earlier guarded
+target remain runtime-unreachable.
+
+The project remains 234 modules, 3,599 graph edges, and 1,067 `go.sum` lines.
+`go.mod` and `go.sum` retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+No parent, Go-floor, exported API, source, direct root, or unrelated selection
+changed.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV responses remain
+empty for go-sockaddr v1.0.0 and every guarded target except Gorilla
+WebSocket v1.4.2 and go-retryablehttp v0.5.3. Gorilla retains only its
+recorded GO-2026-6278/GHSA-w67g-5rqw-f597 results; go-retryablehttp retains
+only its accepted GO-2024-2947/GHSA-v6v8-xj6m-xwqh results. Both the
+go-sockaddr repository advisory feed and exact GitHub global-advisory query
+remain empty. No new advisory or independently observed defect appeared.
+
+The exception remains valid only while exact go-sockaddr v1.0.0 and both
+memberlist v0.1.3/v0.3.0 requests remain unchanged, no direct main-module
+edge or repository import is added, production and complete-test target loads
+remain zero, the module remains runtime-unreachable, every earlier guarded
+selection, request, load, runtime, and advisory condition remains intact, and
+no new target advisory or independent defect appears. Direct import or
+loading, runtime reachability, a target version or incoming-request change, a
+new direct root, an earlier owning-guard change, or a new advisory or
+independent defect expires the exception and requires the owning fresh
+dependency and product decision before merge.
+
+No dependency implementation or metadata commit was created. Exact Go 1.26.7
+module verification and the applicable no-change project and launcher gates
+pass; no changed-selection scorecard applies, and accepted quality remains
+27/27 Q0-Q2 PASS at L2. The sole reciprocal successor is the bounded P7
+evaluation of selected exact-path `github.com/hashicorp/go-syslog v1.0.0`;
+it was prepared but not executed.
