@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Memberlist Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-20T224123+0200-decide-hashicorp-memberlist-product-direction`
 Created: `2026-09-20T22:41:23+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `0f109c3fe885a097e911e934c55bb6de7624d1a2605c49075e36c5750b5218b3`
 Previous: [2026-09-20T203149+0200-evaluate-hashicorp-memberlist-dependency.md](2026-09-20T203149+0200-evaluate-hashicorp-memberlist-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T230357+0200-study-hashicorp-serf-memberlist-removal.md](2026-09-20T230357+0200-study-hashicorp-serf-memberlist-removal.md)
+Outcome: Authorized option 3 after every guard passed: a separate measurement-only Serf/owning-graph removal study; memberlist, Serf, product source, the Go floor, and dependency metadata remain unchanged.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -197,3 +197,99 @@ create a dependency implementation commit in this decision session. Do not
 launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, remove the worktree, combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 3 is explicitly authorized. Prepare and perform one separate,
+measurement-only owning-parent and graph-removal study for the exact historical
+`github.com/hashicorp/serf v0.8.2` and `v0.9.6` graph vertices and the exact
+request population that preserves memberlist. The study must independently
+measure every serious Serf upgrade, replacement, and removal route and all
+transitive API, CLI, runtime-behavior, MVS, guarded-edge, Go-floor,
+vulnerability, build, test, platform, and project effects. It may recommend
+one later product direction, but it may not implement a Serf, memberlist,
+parent, guarded-module, product-source, `go.mod`, or `go.sum` change.
+
+This authorization is deliberately not option 2: it does not qualify, secure,
+or risk-accept selected memberlist v0.3.0, and zero loading is only the bounded
+current-exposure premise for a non-mutating study. It is also not option 1: it
+does not select v0.6.0 or v0.7.0, raise the Go floor, repair the project's
+stricter-format failures, or authorize any integrated migration. The study is
+the sole authorized successor and expires when its one coherent decision
+handoff is committed; any implementation still requires a fresh explicit
+owning decision.
+
+The authorization remains valid only while selected memberlist is exact
+v0.3.0; the exact Serf-v0.9.6-to-memberlist-v0.3.0 and historical
+Serf-v0.8.2-to-memberlist-v0.1.3 requests remain unchanged; selected Serf is
+exact v0.10.1; and the five recorded incoming Serf requests remain exact:
+Consul API v1.1.0 -> Serf v0.8.2; Consul API v1.12.0,
+`sagikazarmark/crypt v0.4.0`, and Viper v1.10.1 -> Serf v0.9.6; and Viper
+v1.15.0 -> Serf v0.10.1. It also requires no direct memberlist root or
+repository import, negative memberlist why, zero memberlist production and
+complete-test loads, runtime unreachability, all 23 earlier guarded selections
+and 164 incoming edges remaining exact, unchanged module hashes, and no new
+memberlist advisory, independently observed defect, fixed-version boundary, or
+Go-floor-compatible fixed stable release. Any target, Serf, or incoming-request
+change; direct root/import/load or runtime reachability; earlier owning-guard or
+module-hash change; or new advisory, independent defect, affected/fixed-range
+change, or floor-compatible fixed stable release expires this authorization
+and requires the owning fresh decision before further work.
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at HEAD
+`636e6b4f886ee15947c954deee70365c9eab1873`, parent
+`8a292c9a10f25aeae5be9e30693a7ed27f91912d`, tree
+`43dbc70674569af72990e06d1b16c38cda6f6dd7`. That handoff changed exactly
+the launcher, answered memberlist evaluation archive, this then-NEXT decision
+archive, rolling handover, and roadmap. The evaluation handoff `8a292c9`,
+parent `a1dee3a`, tree `017eaba`, retains its exact four-file defensive-scope
+delta. The reciprocal 226-archive chain, latest Google UUID v1.4.0
+implementation ancestry, and launcher check pass.
+
+Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+ran first in `PATH` with `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, no
+ambient `GOFLAGS`, `LC_ALL=C`, and `LANG=C`. MVS selects memberlist v0.3.0
+only through the Serf v0.9.6 request; historical Serf v0.8.2 still requests
+v0.1.3. There is no direct root, its `go mod why -m` result remains negative,
+repository Go imports remain zero, and the 355-entry production and 429-entry
+complete-test closures contain zero target packages. The project remains 234
+modules, 3,599 graph edges, 197 module-backed complete-test entries across 41
+loaded modules, 1,067 sum lines, and the 432-line tidy projection. Exact module
+verification passes.
+
+All 23 earlier guarded selections and their 164 incoming edges remain exact;
+the sorted incoming-edge snapshot retains SHA-256
+`f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`.
+All 24 target-plus-earlier why results are negative, repository imports are
+zero, and production and complete-test loads contain zero guarded packages.
+`go.mod` and `go.sum` retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+Fresh primary revalidation preserves the decision premise. HashiCorp bulletin
+HCSEC-2026-18 still identifies memberlist through v0.5.4 as affected and
+v0.6.0 as fixed. The published HashiCorp CNA record remains PUBLISHED, was last
+updated 2026-07-08T19:40:16.119Z, encodes an affected semver range below
+v0.6.0, and has response SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+The Go vulnerability module index remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV results remain empty for
+memberlist and every guarded target except the recorded Gorilla WebSocket
+GO-2026-6278/GHSA-w67g-5rqw-f597 and go-retryablehttp
+GO-2024-2947/GHSA-v6v8-xj6m-xwqh pairs. The lagging empty memberlist result
+does not override the primary records. No earlier guard expired.
+
+No product source, dependency metadata, parent, guarded selection, direct
+root, Go floor, or unrelated module changed; no dependency implementation
+commit was created. No changed-selection scorecard applies, and accepted
+quality remains 27/27 Q0-Q2 PASS at L2. The sole reciprocal successor is the
+authorized bounded Serf/owning-graph removal study; it was prepared but not
+executed. Final exact-Go module verification, build, canonical-`umask 022`
+count-one tests, race tests, vet, launcher check, and all 62 launcher lifecycle
+controls pass. Initial parallel test/race runs inherited `umask 077` and
+reproduced only the already-recorded fixture-mode assertions; the canonical
+reruns supersede them.
