@@ -1148,6 +1148,36 @@ exit 70
 #|source/test closure preserves Go 1.18 and whose relevant behavior passes every
 #|contract; otherwise stop for a fresh bounded product decision.
 #|
+#|# Defensive Retry Scope
+#|
+#|This is an authorized defensive software-supply-chain review of the user's
+#|local repository. A first attempt from clean HEAD
+#|`a1dee3a81a71e0e6656de09fef603b94cc135bab` was automatically stopped by a
+#|cybersecurity policy check after collecting public advisory and release facts;
+#|it made no tracked worktree change. Resume this same bounded session under the
+#|narrower rules below rather than restarting the broad investigation.
+#|
+#|Use only public release metadata, the public vendor advisory, static source and
+#|remediation-diff inspection, the project module graph, and ordinary existing
+#|build or test commands with non-adversarial inputs in disposable local trees.
+#|Do not create, reproduce, simulate, operationalize, or optimize an exploit or
+#|proof of concept. Do not craft malformed packets, generate custom attack
+#|traffic, scan or contact hosts, exercise production or non-public systems,
+#|inspect credentials or key material, or test a security boundary. Do not
+#|recreate the advisory's failure condition. If completing the decision would
+#|require any such activity, stop and record that limitation instead.
+#|
+#|The interrupted attempt retained these provisional facts for narrow
+#|confirmation: public vendor advisory `HCSEC-2026-18` / `CVE-2026-14362` reports
+#|all memberlist releases through v0.5.4 as affected; v0.6.0 is the first fixed
+#|release; and v0.6.0 declares Go 1.25. Confirm only the affected/fixed range,
+#|the candidate Go directive and source/test closure, and the static remediation
+#|identity from public primary material. Do not investigate exploitability. If
+#|confirmed, no fixed memberlist release preserves the project's Go 1.18 floor,
+#|so leave dependency metadata unchanged and prepare the bounded product
+#|decision. Treat missing temporary output from the interrupted attempt as a
+#|reason to recheck these few facts, not to repeat the broad evaluation.
+#|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
@@ -1249,18 +1279,16 @@ exit 70
 #|source-time resolution from the project's selected MVS graph and from every
 #|already-final guarded dependency decision.
 #|
-#|Inspect every package, command, exported API, example, benchmark, fuzz target,
-#|testdata, generated file, platform/build-tag branch, and applicable API and
-#|runtime boundary. Characterize membership and failure detection, gossip and
-#|push/pull behavior, UDP/TCP transport, encryption and keyring handling,
-#|address/interface selection, delegates and callbacks, event delivery,
-#|shutdown and goroutine lifecycle, timeouts and cancellation, packet parsing,
-#|malformed input, nil/panic and error identity, mutation and aliasing,
-#|allocation, concurrency, global state, resource cleanup, environment and
-#|platform behavior, and actual project consumers. Add independent fixtures
-#|where useful and run source verification, package listing, native complete
-#|tests, two independent repeats, race, vet, and meaningful cross-builds under
-#|both SDKs. Classify every failure precisely.
+#|Inspect public source, packages, exported API, platform/build-tag branches, and
+#|ordinary runtime lifecycle only as needed for the dependency decision. Reuse
+#|the interrupted attempt's conclusions where recorded. Run existing upstream
+#|tests and non-adversarial compatibility checks without modifying them, plus
+#|source verification, package listing, race, vet, and meaningful cross-builds
+#|under both SDKs where still necessary. Do not add security-focused fixtures or
+#|custom network, packet, cryptographic, credential, malformed-input, fuzzing, or
+#|failure-condition tests. Do not expand ordinary functional review into a
+#|protocol-security assessment. Classify any ordinary build or test failure
+#|precisely.
 #|
 #|Prove exact project module, graph, package, checksum, tidy, API/CLI,
 #|compatibility, acceptance, and vulnerability effects for selected and every
@@ -1268,8 +1296,11 @@ exit 70
 #|whether a target package actually loads, and preserve every unrelated module
 #|selection. Any required parent, major-path, floor, architecture, or unrelated-
 #|module change needs a fresh bounded decision rather than silent
-#|implementation. Compare primary vulnerability results at module, package,
-#|symbol, test-symbol, and reachable-trace levels.
+#|implementation. For the advisory, record only public primary affected/fixed
+#|version facts, the fixed release's Go floor, the project's zero-load and
+#|runtime-unreachable state, and a static remediation-diff identity. Do not
+#|perform exploitability analysis, dynamic reproduction, or custom reachability
+#|testing.
 #|
 #|# Required Reading
 #|
@@ -1283,15 +1314,19 @@ exit 70
 #|
 #|# Three Moves
 #|
-#|First, resolve memberlist identity, release line, source/test closure, API,
-#|behavior, vulnerability, load, and exact MVS facts without changing the
-#|worktree. Second, if and only if one exact-path stable release preserves Go
-#|1.18 and passes every applicable contract, implement that exact dependency-
-#|only selection and run the complete changed-selection gate; otherwise leave
-#|metadata unchanged and stop for a bounded product decision. Third, update the
-#|roadmap and rolling handover, answer this archive, prepare exactly one
-#|reciprocal NEXT mission for the authorized result, and commit the handoff. Do
-#|not execute the successor.
+#|First, narrowly confirm the retained public advisory range, first fixed
+#|release, Go-floor incompatibility, repository identity, project zero-load, and
+#|exact MVS facts without changing the worktree or reproducing the advisory.
+#|Second, if those provisional facts hold, leave metadata unchanged and prepare
+#|one bounded product decision comparing at least: raising the Go floor and
+#|selecting the fixed line; retaining exact unloaded v0.3.0 under an explicit
+#|target-specific risk decision; and removing or changing the owning parent
+#|edge in a separately measured study. Do not choose or implement an option in
+#|this session. Only if primary evidence disproves the provisional facts may a
+#|Go-1.18-compatible fixed exact-path stable candidate proceed through ordinary
+#|qualification. Third, update the roadmap and rolling handover, answer this
+#|archive, prepare exactly one reciprocal NEXT decision mission, and commit the
+#|handoff. Do not execute the successor.
 #|
 #|# Automatic Handoff
 #|

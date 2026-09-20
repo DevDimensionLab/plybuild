@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T20:31:49+02:00
+Generated: 2026-09-20T22:23:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -28,11 +28,18 @@ session diary.
   decision/evaluation, and every earlier archive are answered. The sole NEXT
   archive is
   `docs/plan/agent-sessions/2026-09-20T203149+0200-evaluate-hashicorp-memberlist-dependency.md`.
-  It authorizes only one bounded independent evaluation of selected exact-path
+  Its first execution attempt from clean HEAD `a1dee3a81a71e0e6656de09fef603b94cc135bab`
+  was automatically stopped by a cybersecurity policy check after public
+  advisory and release facts were collected; it made no tracked worktree
+  change. The same NEXT prompt is now defensively constrained to public
+  primary evidence, static remediation inspection, ordinary non-adversarial
+  tests, and a product-decision handoff. It prohibits exploit reproduction,
+  custom attack traffic, malformed-packet fixtures, scans, credential access,
+  and security-boundary testing. It still authorizes only selected exact-path
   `github.com/hashicorp/memberlist v0.3.0`, not another dependency group, an
   unqualified implementation, a guarded-parent or Go-floor change, or P8. The
-  launcher check validates the reciprocal 225-archive chain and byte-exact
-  active prompt before that successor begins.
+  launcher check must validate the reciprocal 225-archive chain and byte-exact
+  active prompt before the retry begins.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -41,12 +48,23 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 has completed the bounded mdns v1.0.4 evaluation and
-authorized its exact guarded retention; the bounded memberlist v0.3.0
-evaluation is prepared but not executed. Exact Go 1.26.7,
+authorized its exact guarded retention. The memberlist v0.3.0 evaluation was
+partially executed, stopped cleanly at the policy boundary, and is prepared
+for one defensively narrowed retry. Exact Go 1.26.7,
 every accepted dependency move through Google UUID v1.4.0, qualified
 go-cleanhttp, and all retained-module decisions through exact inherited,
 unloaded mdns v1.0.4 are final under their separate target-specific
 guards. P8 remains queued. Do not combine groups or begin P8.
+
+The interrupted memberlist attempt retained provisional public facts for
+narrow confirmation: HashiCorp advisory `HCSEC-2026-18` /
+`CVE-2026-14362` reports releases through v0.5.4 as affected, v0.6.0 as the
+first fixed release, and v0.6.0 declares Go 1.25. If primary evidence confirms
+those facts, no fixed exact-path release preserves the project's Go 1.18
+floor. The retry must not reproduce the advisory; it must leave metadata
+unchanged and prepare a bounded product decision between a floor/fixed-line
+move, explicit target-specific retention, and a separately measured owning-
+parent or graph-removal study.
 
 The authorized 2026-09-20 mdns option 1 decision retains exact selected,
 inherited, unloaded `github.com/hashicorp/mdns v1.0.4` without product source
@@ -2368,11 +2386,12 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Independently evaluate selected inherited, unloaded exact-path
-`github.com/hashicorp/memberlist v0.3.0` as one bounded P7 dependency group.
-Resolve its release identity, complete Go-1.18 source/test closure, API and
-behavior, vulnerability state, actual project loading, and exact MVS effects.
-Retain or select only a fully qualified exact-path stable release; otherwise
-stop for its fresh bounded product decision. Do not combine another dependency
-group, change a guarded parent or the Go floor, transfer an exception, or begin
-P8.
+Resume the same selected inherited, unloaded exact-path
+`github.com/hashicorp/memberlist v0.3.0` evaluation under its defensive retry
+scope. Narrowly confirm the public advisory's affected/fixed range, the first
+fixed release's Go floor and static remediation identity, repository identity,
+actual project zero-load, and exact MVS effects. Do not reproduce or assess
+exploitability. If the provisional facts hold, leave metadata unchanged and
+prepare the fresh bounded product decision; do not choose an option. Do not
+combine another dependency group, change a guarded parent or the Go floor,
+transfer an exception, or begin P8.

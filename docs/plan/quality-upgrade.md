@@ -5374,9 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on the prepared bounded evaluation of selected exact-path
-`github.com/hashicorp/memberlist v0.3.0` after the mdns v1.0.4 product
-decision authorized exact guarded retention.
+Status: active on one defensively narrowed retry of the bounded selected exact-
+path `github.com/hashicorp/memberlist v0.3.0` evaluation after its first attempt
+was stopped cleanly by a cybersecurity policy check and after the mdns v1.0.4
+product decision authorized exact guarded retention.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 qualified go-cleanhttp v0.5.2, and all retained-module decisions through exact
 inherited, unloaded `github.com/hashicorp/mdns v1.0.4`. P8 remains queued.
@@ -11447,6 +11448,20 @@ Hashicorp mdns product decision (2026-09-20):
   at L2. P7 continues only with the prepared bounded evaluation of selected
   exact-path `github.com/hashicorp/memberlist v0.3.0`; it was not executed in
   this decision session.
+- The first memberlist execution attempt began later from clean HEAD
+  `a1dee3a81a71e0e6656de09fef603b94cc135bab` and was automatically stopped by
+  a cybersecurity policy check without a tracked worktree change. It retained
+  provisional public evidence that HashiCorp advisory `HCSEC-2026-18` /
+  `CVE-2026-14362` affects releases through v0.5.4, v0.6.0 is the first fixed
+  release, and v0.6.0 declares Go 1.25. The active retry is restricted to
+  narrow primary-source confirmation, static remediation identity, ordinary
+  non-adversarial checks, and a product-decision handoff. It prohibits exploit
+  reproduction, custom attack traffic, malformed-packet fixtures, scans,
+  credential access, and security-boundary testing. If confirmed, no fixed
+  exact-path memberlist release preserves Go 1.18; dependency metadata remains
+  unchanged and the successor must decide among a floor/fixed-line move,
+  explicit target-specific retention, or a separately measured owning-parent
+  or graph-removal study.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
