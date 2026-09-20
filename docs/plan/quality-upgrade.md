@@ -5374,8 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded evaluation of selected exact-path
-`github.com/hashicorp/mdns v1.0.4` after the golang-lru product decision.
+Status: blocked on the prepared bounded product decision for selected exact-
+path `github.com/hashicorp/mdns v1.0.4` after its completed evaluation found
+no qualifying stable release.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 qualified go-cleanhttp v0.5.2, and all retained-module decisions through exact
 inherited, unloaded `github.com/hashicorp/golang-lru v0.5.4`. P8 remains
@@ -11299,6 +11300,78 @@ Hashicorp golang-lru product decision (2026-09-20):
   at L2. P7 continues only with the prepared bounded evaluation of selected
   exact-path `github.com/hashicorp/mdns v1.0.4`; it was not executed in this
   decision session.
+
+Hashicorp mdns evaluation and blocked product boundary (2026-09-20):
+
+- No exact-path stable release qualifies under the combined Go-1.18 floor,
+  complete source/test closure, API, behavior, and project contracts. The
+  exact path resolves Hashicorp's public active unarchived non-fork MIT
+  repository and eight stable releases v1.0.0-v1.0.7. There is no retraction,
+  deprecation, redirect, alternate major line, or qualifying fork/branch.
+  Every proxy archive matches Git and sumdb verifies it. Tags are lightweight
+  and unsigned; the tagged commits are GitHub-verified.
+- Selected v1.0.4 is commit
+  `f504e0b3c01cf50e077ab6805546fa95ed9f2933`, parent
+  `34dc81282184e8c94b4ed4312182d67b99827a5e`, tree
+  `50afb5c00de8ee437c229be31e0d0c5c0671f713`, time
+  2021-04-14T13:17:39-05:00. Its proxy ZIP SHA-256 is
+  `f7d04f484c5b398018385ad954a922b0d94d0cb26315780bf995bedede166704`;
+  Git/proxy bytes match and sumdb verifies it. It is an ancestor of
+  v1.0.5-v1.0.7 and main.
+- Selected contains one library package, three production files, two tests,
+  and no command, example, benchmark, fuzz target, testdata, generated file,
+  or build constraint. V1.0.0-v1.0.4 share its exported API; v1.0.5 adds
+  compatible address-family controls; v1.0.6/v1.0.7 add context, logger, and
+  IPv6-zone API.
+- V1.0.0 has a vulnerable DNS closure, real shutdown races, and a vet defect;
+  v1.0.1 retains the vet/vulnerability failures. V1.0.2-v1.0.4 preserve the
+  Go floor but exact Go 1.26.7 cannot link their Darwin tests through old
+  x/net's removed `syscall.recvmsg` reference; v1.0.3/v1.0.4 also fail native
+  Go 1.18.10 IPv6 multicast routing. V1.0.5 fixes that floor-SDK condition but
+  retains the exact-Go Darwin test-link failure. V1.0.6's loaded miekg/dns
+  closure requires Go 1.19. V1.0.7 declares Go 1.25, loads Go-1.24 modules,
+  and cannot compile under Go 1.18.
+- Independent fixture SHA-256
+  `73739d0dcb546dcb5f7edcdb645d9c964444543296f5f1d8e74f9da22011967f`
+  records unchecked wrapped ports, trailing-dot-only name validation, IP/TXT
+  aliasing, inconsistent records after exported-field mutation, nil panics,
+  last-only delivery for multi-entry packets, closed-channel panic, silent
+  slow/nil-channel drops, requester-directed multicast responses, caller
+  parameter mutation, unsolicited-answer acceptance, timeout without context,
+  no goroutine join, partial socket/resource and route dependencies,
+  unsynchronized caller-owned state, global logging/environment interaction,
+  eight record allocations, and the other completed API/error/concurrency/
+  ownership boundaries. Exact Go cannot link this fixture through the same
+  old-x/net defect; its Go-1.18 count-one, two repeats, and race runs pass.
+- MVS selects v1.0.4 only through Serf v0.9.6; historical Serf v0.8.2 requests
+  v1.0.0, which is also the sole request preserving guarded go.net v0.0.1.
+  Mdns has no direct root/import, its why result is negative, and zero target
+  packages load in 355 production or 429 complete-test entries. Direct
+  v1.0.0-v1.0.3 projections broadly collapse guarded selections and fail
+  project loading. V1.0.4/v1.0.5 manufacture target/DNS roots but tidy exactly
+  to the common base. V1.0.6/v1.0.7 move unrelated x modules; v1.0.7 also
+  raises the main Go directive to 1.25 and fails project test/race/vet through
+  stricter format checks. No projection was applied.
+- Fresh 1,402-record primary vulnerability data remains at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  with no mdns entry. Every exact stable OSV result and both selected GitHub
+  advisory feeds are empty. V1.0.0/v1.0.1 reach a DNS advisory; later target
+  closures have no called advisory. Base/v1.0.4/v1.0.5 project scans remain
+  30 module, 22 vulnerable-package, and 20 called/test-symbol IDs with no mdns
+  assignment. Later projections reduce counts only by moving unrelated x
+  modules.
+- All 22 earlier guarded selections, 162 incoming edges, negative why/import/
+  load results, runtime-unreachability conditions, and advisory states remain
+  exact. The base remains 234 modules, 3,599 edges, 355/429 load entries, 197
+  module-backed entries across 41 modules, 1,067 sums, and a 432-line tidy
+  projection. `go.mod`/`go.sum` hashes remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- No source or metadata changed, no dependency commit exists, and no changed-
+  selection scorecard applies. Accepted quality remains 27/27 Q0-Q2 PASS at
+  L2. P7 is blocked on one prepared mdns decision: exact v1.0.4 guarded
+  retention, a separately authorized Go-1.18-compatible remediation, or a
+  separately authorized Serf/graph-removal study. It was not executed.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

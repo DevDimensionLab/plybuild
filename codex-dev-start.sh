@@ -1131,22 +1131,21 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-20T192912+0200-evaluate-hashicorp-mdns-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T192912+0200-evaluate-hashicorp-mdns-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T190911+0200-decide-hashicorp-golang-lru-product-direction.md
+#|SESSION_ID=2026-09-20T201536+0200-decide-hashicorp-mdns-product-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T201536+0200-decide-hashicorp-mdns-product-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T192912+0200-evaluate-hashicorp-mdns-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 by independently evaluating selected exact-path
-#|`github.com/hashicorp/mdns v1.0.4` as one bounded dependency group. Resolve its
-#|complete repository and release identity, Go-floor closure, package behavior
-#|and exported API, actual project loading, exact MVS effects, vulnerability
-#|evidence, and every applicable quality contract. Retain or select only a
-#|qualified exact-path stable release whose complete minimal source/test closure
-#|preserves Go 1.18 and whose relevant behavior passes every contract; otherwise
-#|stop for a fresh bounded product decision.
+#|Continue P7 only by making one fresh bounded product decision for selected
+#|exact-path `github.com/hashicorp/mdns v1.0.4`. Its independent evaluation is
+#|complete and found no qualifying exact-path stable release. Choose exactly one
+#|option below, record its precise authorization and expiry bounds, and prepare
+#|one coherent follow-up without executing it. Do not repeat the audit, infer an
+#|exception from zero loading, implement before authorization, combine another
+#|dependency group, change the Go floor, or begin P8.
 #|
 #|# Authorized Roadmap
 #|
@@ -1154,147 +1153,169 @@ exit 70
 #|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
 #|and all target-specific retained-module decisions through exact inherited,
 #|unloaded golang-lru v0.5.4. Every earlier outcome and lifecycle ancestor is
-#|final. Evaluate only Hashicorp mdns in this session; do not reopen or combine
-#|another dependency group. P8 remains queued.
+#|final. No earlier exception transfers to mdns. Preserve every guarded
+#|selection and stop for its owning decision if any guard differs. P8 remains
+#|queued.
 #|
-#|The authorized 2026-09-20 golang-lru option 1 decision retains exact selected,
-#|inherited, unloaded `github.com/hashicorp/golang-lru v0.5.4` without product
-#|source or dependency metadata changes. Its target-specific, non-transferable
-#|exception accepts only the completed callback-under-lock reentrancy deadlock,
-#|callback-panic mutex poisoning, constructor and 2Q errors, negative-resize
-#|behavior, nil/zero-receiver and non-comparable-key panics, caller-identity
-#|aliasing, simplelru non-concurrent use, and the recorded API, behavior, MVS,
-#|vulnerability, allocation, resource, and related findings. It remains valid
-#|only while exact v0.5.4, all eighteen recorded incoming requests, no direct
-#|root or repository import, zero target loads, runtime unreachability, every
-#|earlier guard, and the no-new-advisory-or-defect condition remain exact. Any
-#|change requires the owning fresh decision.
-#|
-#|The go.net v0.0.1, go-uuid v1.0.1, go-syslog v1.0.0, go-sockaddr v1.0.0,
-#|go-rootcerts v1.0.2, go-retryablehttp v0.5.3, go-multierror v1.1.0,
-#|go-msgpack v0.5.3, go-immutable-radix v1.3.1, go-hclog v1.2.0, Errwrap
-#|v1.0.0, qualified go-cleanhttp v0.5.2, and every other recorded exception or
-#|qualification remain separate under their exact selection, incoming-request,
-#|zero-load, runtime-unreachable, and no-new-finding guards. Revalidate those
-#|guards and stop for the owning decision if any expires. No earlier exception
-#|transfers to mdns. Do not change a guarded parent, the Go floor, or an
-#|unrelated module.
-#|
-#|Selected `github.com/hashicorp/mdns v1.0.4` is inherited through the exact
-#|request from `github.com/hashicorp/serf v0.9.6`; historical Serf v0.8.2
-#|requests mdns v1.0.0. The current repository import search and production and
-#|complete-test loads contain zero target packages, its why result is negative,
-#|and there is no direct main-module root. These queue observations and the
-#|physical MVS selection are not proof of repository identity, release
-#|qualification, ancestry, floor, behavior, vulnerability state, or suitability.
-#|Resolve them independently and do not add a direct edge merely to alter MVS.
+#|Selected mdns v1.0.4 is inherited through the exact request from Serf v0.9.6;
+#|historical Serf v0.8.2 requests mdns v1.0.0. The latter is also the sole graph
+#|request preserving guarded go.net v0.0.1. Mdns has no direct main-module root
+#|or repository Go import, its why result is negative, production and complete-
+#|test closures load zero target packages, and it is runtime-unreachable in this
+#|project. These facts bound current exposure but do not qualify the release or
+#|authorize an exception.
 #|
 #|# Measurements At Start
 #|
-#|The golang-lru decision recording began from clean ordinary and ignored state
-#|at HEAD `961c48582ca568f0867d91e7781c6fa0b970dcea`, parent
-#|`f867a05fa1334c7e7fc0b774edc060e78a9be88d`, tree
-#|`716bf2f170c296836aa1903414c55ab4f5450109`. Verify the new handoff HEAD,
-#|parent, tree, exact changed-file set, clean ordinary and ignored status,
-#|reciprocal archive chain, latest Google UUID implementation ancestry, and
-#|`./codex-dev-start.sh --check` rather than assuming them.
+#|The evaluation began from clean ordinary and ignored state at HEAD
+#|`b641b55ec01f18a79ecf57b8e5e866310dd44562`, parent
+#|`961c48582ca568f0867d91e7781c6fa0b970dcea`, tree
+#|`a7d492e85e9b8897d3d058af97b4801781f04bac`. Its exact five-file delta,
+#|reciprocal 223-archive chain, latest Google UUID implementation ancestry, and
+#|launcher check passed. Exact Go 1.26.7 binary SHA-256 is
+#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+#|Verify the new handoff rather than assuming these facts.
 #|
-#|Guard-only decision revalidation under exact Go 1.26.7 preserved all 22
-#|guarded selections and recorded requests through exact golang-lru v0.5.4. All
-#|22 why results remain negative, repository imports are zero, and production
-#|and complete-test loads contain zero guarded packages. The project remains 234
-#|modules, 3,599 graph edges, 355 production entries, 429 complete-test entries,
-#|197 module-backed entries across 41 loaded modules, 1,067 sum lines, and the
-#|recorded 432-line unapplied tidy projection. Base `go.mod` and `go.sum`
-#|SHA-256 values remain
+#|The unchanged project has 234 modules, 3,599 graph edges, 355 production
+#|entries, 429 complete-test entries, 197 module-backed entries across 41 loaded
+#|modules, 1,067 sum lines, and a 432-line tidy projection. `go.mod`/`go.sum`
+#|SHA-256 values are
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
-#|Accepted quality remains 27/27 Q0-Q2 PASS at L2.
-#|
-#|Fresh primary vulnerability data remains 1,402 records at SHA-256
-#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
-#|and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV remains empty for
-#|20 guarded modules; Gorilla retains only its recorded
-#|GO-2026-6278/GHSA-w67g-5rqw-f597 pair, and go-retryablehttp retains exactly
-#|its accepted GO-2024-2947/GHSA-v6v8-xj6m-xwqh pair. Golang-lru's exact
-#|GitHub global and repository advisory queries remain empty. No new guarded
-#|advisory or independent defect appeared.
-#|
-#|Use exact Go 1.26.7 binary SHA-256
-#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`,
-#|put it first in `PATH`, keep `GOENV=off`, `GOWORK=off`,
-#|`GOTOOLCHAIN=local`, inject no ambient `GOFLAGS`, use `LC_ALL=C LANG=C`, and
-#|run with `umask 022`. Recreate contained Go 1.18.10 and pinned tools beneath
-#|`$CODEX_SESSION_SCRATCH_ROOT` as required. Preserve the known apidiff archive
-#|reproducibility discrepancy, Python 3.14 Docker timestamp control, managed
-#|bare-`mktemp` restriction, Make-variable inheritance boundary, and nested
-#|launcher signal-retention timing race; none is mdns evidence.
+#|No dependency implementation or metadata commit exists; accepted quality
+#|remains 27/27 Q0-Q2 PASS at L2.
 #|
 #|# Role And Boundaries
 #|
-#|From fresh external archives and caches, resolve proxy, sumdb, `go-import`,
-#|Git, and forge evidence for the exact module path: tags, releases, branches,
-#|signatures, commits, parents, trees, times, ancestry, repository status,
-#|licenses, retractions, deprecations, redirects, forks, alternate paths, major
-#|module lines, and every serious exact-path stable candidate. Do not silently
-#|promote a redirect, fork, alternate path, different major module path,
-#|prerelease, non-versioning tag, unreleased branch head, or floor-ineligible
-#|release.
+#|Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves Hashicorp's
+#|public active unarchived non-fork MIT repository. Exact-path stable releases
+#|are v1.0.0-v1.0.7; v1.0.7 is latest. There is no retraction, deprecation,
+#|redirect, alternate major module line, or qualifying branch/fork substitute.
+#|Every proxy archive matches Git and sumdb verifies it. All tags are
+#|lightweight and unsigned, while their commits are GitHub-verified.
 #|
-#|Prove the complete minimal production and test closure under exact Go 1.26.7
-#|and contained Go 1.18.10. Inspect imported source and test dependencies rather
-#|than treating the module directive alone as floor proof. Separate isolated
-#|source-time resolution from the project's selected MVS graph and from every
-#|already-final guarded dependency decision.
+#|Selected v1.0.4 is commit
+#|`f504e0b3c01cf50e077ab6805546fa95ed9f2933`, parent
+#|`34dc81282184e8c94b4ed4312182d67b99827a5e`, tree
+#|`50afb5c00de8ee437c229be31e0d0c5c0671f713`, time
+#|2021-04-14T13:17:39-05:00. It is an ancestor of v1.0.5-v1.0.7 and main.
+#|Its proxy ZIP SHA-256 is
+#|`f7d04f484c5b398018385ad954a922b0d94d0cb26315780bf995bedede166704`;
+#|Git/proxy contents match and sumdb verifies it.
 #|
-#|Inspect every package, command, exported API, example, benchmark, fuzz target,
-#|testdata, generated file, platform/build-tag branch, and applicable API and
-#|runtime boundary. Characterize multicast-DNS query and server behavior,
-#|address and interface selection, packet parsing and encoding, callback and
-#|channel behavior, cancellation and timeout handling, goroutine and shutdown
-#|lifecycle, socket and buffer ownership, malformed input, nil/panic and error
-#|identity, mutation and aliasing, allocation, concurrency, global state,
-#|resource cleanup, environment interaction, platform behavior, and actual
-#|project consumers. Add independent fixtures where useful and run source
-#|verification, package listing, native complete tests, two independent repeats,
-#|race, vet, and meaningful cross-builds under both SDKs. Classify every failure
-#|precisely.
+#|Selected contains one library package, three production files, two tests, and
+#|no command, example, benchmark, fuzz target, testdata, generated file, or build
+#|constraint. V1.0.0-v1.0.4 share the same API; v1.0.5 compatibly adds address-
+#|family controls; v1.0.6/v1.0.7 add context/logger/IPv6-zone surface.
 #|
-#|Prove exact project module, graph, package, checksum, tidy, API/CLI,
-#|compatibility, acceptance, and vulnerability effects for selected and every
-#|serious candidate in disposable trees. Explain why the target exists in MVS,
-#|whether a target package actually loads, and preserve every unrelated module
-#|selection. Any required parent, major-path, floor, architecture, or unrelated-
-#|module change needs a fresh bounded decision rather than silent
-#|implementation. Compare primary vulnerability results at module, package,
-#|symbol, test-symbol, and reachable-trace levels.
+#|No release passes the complete gate. V1.0.0 has a vulnerable DNS closure,
+#|real shutdown races, and a vet defect. V1.0.1 fixes the races but retains that
+#|vet and vulnerability failure. V1.0.2-v1.0.4 preserve Go 1.18 but exact Go
+#|1.26.7 cannot link their Darwin tests because old x/net references removed
+#|`syscall.recvmsg`; v1.0.3/v1.0.4 also fail native Go 1.18.10 tests when IPv6
+#|multicast routing is unavailable. V1.0.5 fixes that floor-SDK condition but
+#|retains the exact-Go Darwin test-link failure. V1.0.6 tests cleanly but its
+#|loaded miekg/dns closure requires Go 1.19. V1.0.7 declares Go 1.25, loads
+#|Go-1.24 dependencies, and cannot compile under Go 1.18.
+#|
+#|Independent fixture SHA-256
+#|`73739d0dcb546dcb5f7edcdb645d9c964444543296f5f1d8e74f9da22011967f`
+#|proves selected behavior. Accepting v1.0.4 would accept unchecked wrapped
+#|ports; weak trailing-dot-only name validation; caller IP/TXT and returned TXT
+#|aliasing; inconsistent records after exported-field mutation; nil receiver,
+#|nil config, and nil Zone panics; dropping all but the last complete answer in
+#|a multi-entry packet; panic on a closed result channel; silent drops for nil,
+#|unbuffered, or slow channels; direct requester responses even on the multicast
+#|path; caller QueryParam mutation; acceptance of unsolicited answers; timeout
+#|without context/cancellation; no goroutine lifecycle join; partial socket-
+#|setup/resource and interface/route dependencies; unsynchronized caller-owned
+#|config/zone/service data; process-global logging and hostname/DNS interaction;
+#|the internal UDP-address panic boundary; eight record allocations; and all
+#|recorded API, error, concurrency, platform, and ownership findings.
+#|
+#|The selected graph has only Serf v0.9.6 -> mdns v1.0.4 and historical Serf
+#|v0.8.2 -> mdns v1.0.0. Direct v1.0.0-v1.0.3 projections broadly downgrade or
+#|remove guarded selections and fail project loading. Direct v1.0.4/v1.0.5
+#|roots preserve loaded project packages but manufacture mdns/DNS roots; tidy
+#|removes them back to the common base. V1.0.6 moves unrelated x modules and
+#|has a non-base tidy projection. V1.0.7 additionally raises the main Go
+#|directive to 1.25 and makes project test/race/vet fail on stricter format
+#|checks. No projection was applied.
+#|
+#|Fresh 1,402-record primary vulnerability data has SHA-256
+#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+#|and no mdns entry. Every stable version's exact OSV result and both selected
+#|GitHub advisory feeds are empty. V1.0.0/v1.0.1 have a reachable DNS advisory;
+#|later target scans have no called target/closure ID. Base/v1.0.4/v1.0.5
+#|project scans remain 30 module, 22 vulnerable-package, and 20 called-symbol/
+#|test-symbol IDs with no mdns assignment or trace. V1.0.6/v1.0.7 reduce counts
+#|only by moving unrelated x modules.
+#|
+#|All 22 earlier guarded selections and their 162 incoming edges remain exact;
+#|all why/import/load results remain negative or zero. Exact OSV remains empty
+#|except for the recorded Gorilla and go-retryablehttp pairs. No earlier guard
+#|expired and no new advisory or independent guarded defect appeared.
+#|
+#|# Product Decision
+#|
+#|Choose exactly one:
+#|
+#|1. Retain exact selected, inherited, unloaded mdns v1.0.4 without changing
+#|   product source, `go.mod`, or `go.sum`, under a new target-specific, non-
+#|   transferable exception. This is the recommended bounded option for the
+#|   current zero-load graph because it avoids a manufactured direct root,
+#|   unrelated graph moves, and a Go-floor change. It must explicitly accept
+#|   only the complete linker/test, IPv6, protocol, packet/channel, timeout/
+#|   cancellation, lifecycle/resource, nil/panic, mutation/aliasing, concurrency,
+#|   environment, allocation, API, MVS, and vulnerability findings above. It
+#|   must expire if v1.0.4, either Serf request, the mdns-v1.0.0 -> go.net request,
+#|   direct root/import/load/runtime reachability, an earlier guard, or the no-
+#|   new-advisory-or-defect condition changes.
+#|2. Authorize a separate Go-1.18-compatible exact-path patch/fork/replacement
+#|   design. That follow-up must establish ownership/provenance; repair the
+#|   complete Darwin/source/test closure, IPv6 behavior, packet/result delivery,
+#|   multicast semantics, cancellation, lifecycle/resource cleanup, panic and
+#|   ownership boundaries while preserving required exported API and consumer
+#|   behavior; and qualify every platform, vulnerability, MVS, and project effect
+#|   before implementation may be retained. It may not silently select v1.0.5,
+#|   v1.0.6, v1.0.7, main, a fork, or an alternate path.
+#|3. Authorize a separate parent/graph-removal decision for exact Serf
+#|   v0.8.2/v0.9.6 and their request population. That follow-up must independently
+#|   qualify every Serf upgrade, replacement, or removal and all transitive API,
+#|   behavior, MVS, go.net-guard, and project effects. It may not change Serf,
+#|   mdns, go.net, or another guarded parent in this decision session.
+#|
+#|Do not combine options, manufacture a direct root, accept a floor-ineligible
+#|release, patch source, change Serf or another parent, raise the Go floor, move
+#|an unrelated selection, transfer another exception, or implement anything
+#|before the choice is explicitly authorized. If none is acceptable, stop P7
+#|explicitly without source or metadata changes.
 #|
 #|# Required Reading
 #|
-#|At start read this archive, the answered golang-lru decision and evaluation,
-#|the answered go.net decision and evaluation, rolling handover, roadmap,
-#|`go.mod`, and `go.sum`. Verify the recorded handoff identity, changed-file
-#|set, clean ordinary and ignored status, exact toolchain identity, reciprocal
-#|archive history, every guarded selection/request/load result, and
-#|`./codex-dev-start.sh --check`. Earlier outcomes are final.
+#|Read this archive, its answered mdns evaluation, the answered golang-lru and
+#|go.net decisions/evaluations, rolling handover, roadmap, `go.mod`, and
+#|`go.sum`. Verify branch, clean ordinary and ignored status, handoff HEAD/
+#|parent/tree and exact changed-file set, reciprocal archive chain, latest
+#|Google UUID implementation ancestry, exact Go identity, every guarded
+#|selection/request/why/import/load/advisory condition, unchanged project hashes
+#|and counts, mdns/Serf/go.net graph edges, and `./codex-dev-start.sh --check`.
+#|Earlier outcomes are final.
 #|
 #|# Three Moves
 #|
-#|First, resolve mdns identity, release line, source/test closure, API, behavior,
-#|vulnerability, load, and exact MVS facts without changing the worktree.
-#|Second, if and only if one exact-path stable release preserves Go 1.18 and
-#|passes every applicable contract, implement that exact dependency-only
-#|selection and run the complete changed-selection gate; otherwise leave
-#|metadata unchanged and stop for a bounded product decision. Third, update the
-#|roadmap and rolling handover, answer this archive, prepare exactly one
-#|reciprocal NEXT mission for the authorized result, and commit the handoff. Do
-#|not execute the successor.
+#|First, choose exactly one product option without repeating the completed
+#|evaluation. Second, record only that authorization and its guards and prepare
+#|the one matching successor without implementing it. Third, verify the
+#|reciprocal handoff and make the required documentation-only commit.
 #|
 #|# Automatic Handoff
 #|
-#|After one coherent bounded outcome, make any separate dependency-only commit
-#|first if a qualified selection was implemented, then make the required local
-#|`docs: prepare next agent session` commit. Do not launch a successor, push,
-#|merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
-#|combine another dependency group, or begin P8.
+#|Record exactly the chosen option and precise bounds in the roadmap and rolling
+#|handover, answer this archive, prepare exactly one reciprocal NEXT mission for
+#|that authorized direction, and make the required local
+#|`docs: prepare next agent session` commit. Do not create a dependency commit
+#|in this decision session. Do not execute the successor, push, merge, publish,
+#|release, stash, revert, bypass cleanup, remove the worktree, combine another
+#|dependency group, or begin P8.
 # CODEX_MUTABLE_PROMPT_END
