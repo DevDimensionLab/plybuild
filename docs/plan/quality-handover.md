@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T15:21:23+02:00
+Generated: 2026-09-20T16:39:25+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,17 +8,15 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. Go-syslog decision
-  recording began from clean controller-authorized HEAD
-  `37e05491d3a49fa2bb4f1be2f9be21c365b44884`, parent
-  `0a223a920e48d1f52ad69c21bc1af5b1b6ae6ffe`, tree
-  `65115211adcc75764f15f4d5093010b7ded45d1b`. The evaluation handoff is
-  `0a223a920e48d1f52ad69c21bc1af5b1b6ae6ffe`, parent
-  `2ee06f1db429101b908d764de8c37a9cd2989229`, tree
-  `d021d00160f9612697fc7bef3f5a04840767da3e`; it changed exactly the
-  launcher, answered evaluation archive, new decision archive, rolling
-  handover, and roadmap. The controller commit changed exactly the launcher,
-  decision archive, rolling handover, and roadmap.
+  `codex/upgrade-quality`, base master at `5635d50`. Go-uuid evaluation began
+  from clean handoff HEAD
+  `8604b5ea4a6a8f41f88e33f7ba8c3c0f4611fdbd`, parent
+  `37e05491d3a49fa2bb4f1be2f9be21c365b44884`, tree
+  `bd257ec7c89747c3c269241ba55fe3eba4a32858`. That handoff changed exactly
+  the launcher, answered go-syslog decision archive, then-NEXT go-uuid
+  evaluation archive, rolling handover, and roadmap. The go-syslog decision
+  recording began from clean controller-authorized HEAD `37e0549`, parent
+  `0a223a9`, tree `6511521`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -26,12 +24,14 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-syslog decision, evaluation, and every earlier archive are answered.
-  The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-20T152123+0200-evaluate-hashicorp-go-uuid-dependency.md`.
-  It authorizes only one bounded exact-path go-uuid evaluation. It does not
-  authorize repeating go-syslog, changing an earlier guarded module, combining
-  another dependency group, or beginning P8.
+- The go-uuid evaluation, go-syslog decision/evaluation, and every earlier
+  archive are answered. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-20T163925+0200-decide-hashicorp-go-uuid-product-direction.md`.
+  It authorizes only one bounded go-uuid product decision. It does not
+  authorize silently accepting findings, implementing a dependency/source
+  change, repeating an earlier group, combining another group, or beginning
+  P8. The launcher check validates the reciprocal 218-archive chain and
+  byte-exact active prompt.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -44,8 +44,10 @@ P2A-P6 are complete. The controller's user-authorized bounded go-syslog option
 every accepted dependency move through Google UUID v1.4.0, qualified
 go-cleanhttp, and all retained-module decisions through exact inherited,
 unloaded go-syslog v1.0.0 are final under their separate target-specific
-guards. P7 continues only with the prepared bounded go-uuid evaluation. P8
-remains queued. Do not combine groups or begin P8.
+guards. No exact-path stable go-uuid release qualifies; selected inherited,
+unloaded v1.0.1 remains unchanged and unqualified. P7 is blocked only on the
+prepared bounded go-uuid product decision. P8 remains queued. Do not combine
+groups or begin P8.
 
 The authorized 2026-09-20 go-sockaddr option 1 decision retains exact
 selected, inherited, unloaded `github.com/hashicorp/go-sockaddr v1.0.0`
@@ -1444,6 +1446,147 @@ were not authorized. No dependency implementation or metadata commit exists;
 no changed-selection scorecard applies, and accepted quality remains 27/27
 Q0-Q2 PASS at L2.
 
+## Hashicorp Go UUID Evaluation
+
+No exact-path stable `github.com/hashicorp/go-uuid` release qualifies. The
+selected exact inherited v1.0.1 remains unchanged and unqualified. No product
+source, `go.mod`, or `go.sum` changed, and no dependency implementation commit
+exists. P7 is blocked on the sole prepared product-decision archive.
+
+Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves Hashicorp's
+public active unarchived non-fork MPL-2.0 repository. The exact proxy exposes
+stable v1.0.0, v1.0.1, v1.0.2, and v1.0.3; v1.0.3 is latest. There is no
+prerelease, GitHub Release object, retraction, module deprecation, redirect,
+alternate exact path, or `/v2` module line. Ten branch heads and returned
+forks are not stable exact-path candidates.
+
+All tags are lightweight. V1.0.0 is verified-signed commit
+`de160f5c59f693fed329e73e291bb751fe4ea4dc`, tree
+`453b27e64e2d644f0671c8723c0f9dd8e43ae127`; v1.0.1 is unsigned commit
+`4f571afc59f3043a65f8fe6bf46d887b10a01d43`, parent v1.0.0, tree
+`ef50db991c26b953506884cab49165fa25dd7bca`; v1.0.2 is unsigned commit
+`6195a4f20692188e0a389def25559731d1e130f9`, tree
+`8816e60600c501a4313b2ff3e81ff92bd00be69f`; and v1.0.3 is unsigned commit
+`67cd70b3bc50aeab4f2a02f869573616871a9a2a`, parent v1.0.2, tree
+`3503fcc9c17dfa29bc601a50af54732413964dc2`. V1.0.3 changes only license
+copyright from v1.0.2. All six regular files in each proxy ZIP match Git and
+sumdb verifies all releases.
+
+Current master is verified commit
+`f405b577e09f44ce7e9b484af2911859f9dab5a6`, parents
+`0d2926b703e0aa37c0fefcb87c6578fbc206492a` and
+`7e01dd01f0d05f2f92cc9755b83b066b46f2c431`, tree
+`6440a80c2e8439d284fb19162f395e0256c4b76a`. It is 28 commits beyond
+v1.0.3, declares Go 1.18, and is unreleased. It retains the v1.0.2/v1.0.3 API
+but changes randomness error wrapping from `%v` to `%w`. No branch, fork,
+redirect, alternate path, or unreleased commit was promoted.
+
+Each stable release has one root package and no external module dependency;
+the inspected minimal production/test closure is the target plus standard
+library. Each contains `LICENSE`, `README.md`, `.travis.yml`, `go.mod`,
+`uuid.go`, and `uuid_test.go`; there are no commands, examples, fuzz targets,
+testdata, generated files, build-tag/platform branches, cgo, embeds, or Go
+generation. V1.0.0/v1.0.1 have one benchmark; v1.0.2/v1.0.3 have two. Every
+release passes source verification, package listing, count-one tests, two
+independent count-ten repeats, race, vet, and production/test compilation for
+Darwin amd64, Linux amd64/arm64, Windows amd64, and `js/wasm` under exact Go
+1.26.7 and contained Go 1.18.10.
+
+V1.0.0/v1.0.1 export `GenerateRandomBytes`, `GenerateUUID`, `FormatUUID`, and
+`ParseUUID`. V1.0.2/v1.0.3 compatibly add
+`GenerateRandomBytesWithReader` and `GenerateUUIDWithReader`; there is no
+v1.0.2-to-v1.0.3 or v1.0.3-to-master API change. The package intentionally
+formats random bytes as UUID text rather than setting RFC version/variant bits.
+
+Independent fixtures SHA-256
+`c2e61456d0cf65695c8a3b409cc9240da5d4941334223d5c6bc2f0bb304c843b`
+and
+`d192c87b504f65cf4bc68b48173cb38a8e9f82f861f32527d3d1a23996341727`
+characterize deterministic lowercase 8-4-4-4-12 formatting, uppercase input
+canonicalization, malformed length/hyphen/hex rejection, round trips, input
+immutability, parsed-output non-aliasing, zero-size non-nil output, random
+length/syntax/difference, deterministic readers, allocation, concurrency,
+nil/panic, globals, resources, and environment interaction. The package starts
+no goroutines, owns no persistent resources, reads no environment, and uses OS
+cryptographic randomness or a caller-owned reader. V1.0.3 measures six format,
+one parse, and one random-byte allocation under both SDKs.
+
+Every stable release loses the underlying randomness error identity through
+`%v`. On Go 1.18, v1.0.0/v1.0.1 return a newly formatted error that fails
+`errors.Is`; on Go 1.26 their `crypto/rand.Read` route terminates the process
+when a failing global reader is injected. V1.0.2/v1.0.3 call `io.ReadFull` in
+their reader APIs but retain `%v` identity loss under both SDKs. All stable
+releases also panic for negative byte counts despite returning an error. These
+are independent contract failures. Unreleased master passes both error-
+identity fixtures through `%w` but retains the negative-size panic.
+
+Project MVS selects inherited v1.0.1 through exactly six v1.0.1 requests from
+Consul API v1.1.0/v1.12.0, Consul SDK v0.1.1/v0.8.0, and Serf
+v0.8.2/v0.9.6. Go-immutable-radix v1.0.0/v1.3.1 additionally request v1.0.0.
+There is no direct root. The target why result, repository import search, and
+production/complete-test loads are zero. Direct v1.0.1 adds only one edge and
+one content sum. Direct v1.0.2/v1.0.3 change only target selection and add one
+edge. Tidy removes all manufactured roots and restores the byte-identical base
+projection. Direct v1.0.0 removes guarded mvn-pom-mutator v0.2.3, produces a
+95-line selection diff, and makes project loads fail. No projection was
+applied.
+
+Fresh primary vulnerability data contains 1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+and Last-Modified 2026-09-17T17:29:18Z, with no target entry. Exact OSV,
+repository advisory, and exact global GitHub advisory results are empty for
+all stable releases. Exact-Go isolated module/package/symbol/test-symbol scans
+are zero. Go 1.18 reachable findings belong only to its old standard library;
+the target appears only in caller frames. Base and v1.0.1/v1.0.2/v1.0.3
+project scans are identical at 30 module, 22 package, and 20 production/test-
+symbol IDs, with no target assignment or trace. Earlier guarded vulnerability
+states remain exact.
+
+Evaluation began from clean ordinary and ignored state at handoff HEAD
+`8604b5ea4a6a8f41f88e33f7ba8c3c0f4611fdbd`, parent
+`37e05491d3a49fa2bb4f1be2f9be21c365b44884`, tree
+`bd257ec7c89747c3c269241ba55fe3eba4a32858`. Exact Go 1.26.7 archive/binary
+SHA-256 values are
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
+fresh Go 1.18.10 Darwin-arm64 archive/binary values are
+`cdb49accf1e633a739e9fc1873ebac649ffb4ee6b88b80a66d7d94adcba055bd` /
+`f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`.
+
+All 20 target-plus-earlier guarded selections and requests remain exact; all
+20 why/import results are negative and both project loads contain zero guarded
+packages. The project remains 234 modules, 3,599 graph edges, 355 production
+entries, 429 complete-test entries, 197 module-backed entries across 41 loaded
+modules, 1,067 sum lines, and the recorded 432-line tidy projection.
+`go.mod`/`go.sum` SHA-256 values remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+The canonical exact-Go project gate passes module verification, build,
+count-one, two independent count-ten repeats, race, vet, pinned golangci-lint
+2.12.2, API/CLI compatibility, empty-HOME, four production cross-builds, full
+preflight, all 15 audit controls, all eight mutation meta-stages, 80/80 live
+mutation kills, and host/snapshot/Docker acceptance. The fresh clean-tree
+scorecard is 27/27 Q0-Q2 PASS at L2, SHA-256
+`62ee293e3c4253f4ed5c71df3c858a3db996636d0b6e968d8532b7fe2825ce99`,
+with exact 21-line ledger SHA-256
+`d512e5bc5a02c2c0737f189ab5480e8735b174729de36b993c26b3e0d66c267d`.
+An independent launcher run passes all 62 controls. Initial attempts reproduced
+only known cache, physical-tool-path, mode-mask, bare-`mktemp`, Make-variable,
+and nested-launcher timing boundaries; the scratch-contained canonical run
+passes and none is go-uuid evidence.
+
+The prepared decision offers exactly three directions. Recommended option 1
+retains exact inherited, unloaded v1.0.1 under a target-specific exception for
+only the completed error-identity, Go 1.26 fatal injected-reader, negative-size
+panic, non-RFC generation, API/behavior, MVS, vulnerability, and related
+findings, guarded by the exact version, all eight incoming requests, no direct
+root/import/load, runtime unreachability, every earlier guard, and no new
+finding. Option 2 authorizes only a separate Go-1.18-compatible patch/fork/
+replacement evaluation. Option 3 authorizes only a separate parent-chain
+removal study. Selecting v1.0.3 alone is not qualifying because it retains the
+blockers and needs a direct root that tidy removes.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -1457,7 +1600,7 @@ Exact Go 1.26.7 archive/binary SHA-256 values are
 `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
 Go 1.18.10 archive/binary values are
-`718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
+`cdb49accf1e633a739e9fc1873ebac649ffb4ee6b88b80a66d7d94adcba055bd` /
 `f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`.
 Both ran first in `PATH` with `GOENV=off`, `GOWORK=off`,
 `GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient `GOFLAGS`.
@@ -1474,7 +1617,7 @@ manual-evidence receipt exits 1 by contract and is not comparable to the
 accepted manual-evidence-adjusted scorecard. Because no source or dependency
 metadata changed, accepted quality remains 27/27 Q0-Q2 PASS at L2. The latest
 authoritative clean-tree scorecard SHA-256 is
-`de13154181ae319fd80a29a98df78535762d70c2c01438f9e3cb735c2f624e81`.
+`62ee293e3c4253f4ed5c71df3c858a3db996636d0b6e968d8532b7fe2825ce99`.
 
 The SDK evaluation's exact-Go no-change module verification, build, count-one,
 two count-ten repeats, race, vet/lint, API/CLI compatibility, host and snapshot
@@ -1641,23 +1784,24 @@ known apidiff archive reproducibility discrepancy, Python 3.14 Docker timestamp
 control, and launcher signal-retention timing race as environment/harness
 boundaries rather than go-rootcerts evidence.
 
-The latest accepted authoritative scorecard remains the predecessor 27/27
-Q0-Q2 L2 result at SHA-256
-`de13154181ae319fd80a29a98df78535762d70c2c01438f9e3cb735c2f624e81`.
-All disposable rootcerts evidence remains beneath
+The latest accepted authoritative clean-tree scorecard is the go-uuid
+evaluation's 27/27 Q0-Q2 L2 result at SHA-256
+`62ee293e3c4253f4ed5c71df3c858a3db996636d0b6e968d8532b7fe2825ce99`.
+Its exact 21-line stage ledger SHA-256 is
+`d512e5bc5a02c2c0737f189ab5480e8735b174729de36b993c26b3e0d66c267d`.
+All disposable go-uuid evidence remains beneath
 `$CODEX_SESSION_SCRATCH_ROOT`; prior accepted quality evidence remains in its
-recorded external `/private/tmp` roots. Never retain a `go mod download all`
-projection in a measured worktree.
+recorded external roots. Never retain a `go mod download all` projection in a
+measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate selected exact-path `github.com/hashicorp/go-uuid v1.0.1` as one
-bounded P7 group. Resolve its exact release/repository identity, complete
-source/test closure and Go floor, API/behavior contracts, actual project load,
-MVS effects, vulnerability state, and every applicable quality contract. The
-current selection is inherited through six exact v1.0.1 requests from Consul
-API v1.1.0/v1.12.0, Consul SDK v0.1.1/v0.8.0, and Serf v0.8.2/v0.9.6; both
-go-immutable-radix v1.0.0/v1.3.1 request v1.0.0. Current why/import and both
-load results are negative. Treat those as queue observations rather than
-qualification proof. Preserve the go-syslog decision and every earlier guard;
-do not combine another group or begin P8.
+Obtain and record exactly one bounded product decision for exact-path
+`github.com/hashicorp/go-uuid`. Recommended option 1 retains exact selected,
+inherited, unloaded v1.0.1 without source or metadata changes under the
+target-specific guards and accepted completed findings above. Option 2
+authorizes only a separate Go-1.18-compatible patch/fork/replacement
+evaluation. Option 3 authorizes only a separate parent-chain removal study.
+Do not silently accept findings, select v1.0.3 or unreleased master, implement
+a dependency/source change, transfer an earlier exception, combine another
+group, or begin P8.

@@ -5374,13 +5374,13 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active after recording the controller's user-authorized 2026-09-20
-bounded Hashicorp go-syslog option 1 decision; no exact-path stable release
-qualifies. Completed dependency groups remain final through accepted Google
-UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module decisions
-through exact inherited, unloaded `github.com/hashicorp/go-syslog v1.0.0`.
-The sole next group is the prepared bounded exact-path Hashicorp go-uuid
-evaluation. P8 remains queued.
+Status: active and blocked on the prepared bounded Hashicorp go-uuid product
+decision because no exact-path stable release qualifies. Completed dependency
+groups remain final through accepted Google UUID v1.4.0, qualified
+go-cleanhttp v0.5.2, and all retained-module decisions through exact inherited,
+unloaded `github.com/hashicorp/go-syslog v1.0.0`. Selected inherited
+`github.com/hashicorp/go-uuid v1.0.1` remains unchanged and unqualified. P8
+remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10850,6 +10850,103 @@ Hashicorp go-syslog evaluation and product decision (2026-09-20):
   at L2. P7 continues only with the prepared bounded evaluation of selected
   exact-path `github.com/hashicorp/go-uuid v1.0.1`; it was not executed in
   this decision session.
+
+Hashicorp go-uuid evaluation (2026-09-20):
+
+- No exact-path stable `github.com/hashicorp/go-uuid` release qualifies.
+  Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves
+  Hashicorp's public active unarchived non-fork MPL-2.0 repository. The proxy
+  exposes only stable v1.0.0, v1.0.1, v1.0.2, and v1.0.3; v1.0.3 is latest.
+  There is no prerelease, GitHub Release object, retraction, module
+  deprecation, redirect, alternate path, or `/v2` line. Ten branch heads and
+  returned forks are not stable exact-path candidates.
+- All four tags are lightweight. V1.0.0 is verified-signed commit
+  `de160f5c59f693fed329e73e291bb751fe4ea4dc`; v1.0.1, v1.0.2, and v1.0.3
+  are unsigned commits `4f571afc59f3043a65f8fe6bf46d887b10a01d43`,
+  `6195a4f20692188e0a389def25559731d1e130f9`, and
+  `67cd70b3bc50aeab4f2a02f869573616871a9a2a`. Their trees are respectively
+  `453b27e64e2d644f0671c8723c0f9dd8e43ae127`,
+  `ef50db991c26b953506884cab49165fa25dd7bca`,
+  `8816e60600c501a4313b2ff3e81ff92bd00be69f`, and
+  `3503fcc9c17dfa29bc601a50af54732413964dc2`. Proxy regular files match Git
+  and sumdb verifies every release. V1.0.3 changes only license copyright from
+  v1.0.2.
+- Current master `f405b577e09f44ce7e9b484af2911859f9dab5a6`, tree
+  `6440a80c2e8439d284fb19162f395e0256c4b76a`, is 28 commits past v1.0.3,
+  declares Go 1.18, and is unreleased. It changes randomness error formatting
+  from `%v` to `%w` but retains negative-size panic behavior. No branch, fork,
+  redirect, alternate path, or unreleased commit was promoted.
+- Each release contains one root package, no external module dependency, and
+  a complete minimal closure of target plus standard library. There are no
+  commands, examples, fuzz targets, testdata, generated files, build-tag
+  branches, cgo, or embeds. Under exact Go 1.26.7 and contained Go 1.18.10 all
+  stable releases pass source verification, listing, native count-one tests,
+  two independent count-ten repeats, race, vet, and production/test
+  cross-builds for Darwin amd64, Linux amd64/arm64, Windows amd64, and
+  `js/wasm`.
+- V1.0.0/v1.0.1 export four functions: random bytes, random UUID text,
+  formatting, and parsing. V1.0.2/v1.0.3 compatibly add two caller-reader
+  functions. Pinned API comparison finds no other change. The package is
+  intentionally random-byte UUID text rather than RFC UUID generation; it
+  does not set version or variant bits.
+- Independent fixtures SHA-256
+  `c2e61456d0cf65695c8a3b409cc9240da5d4941334223d5c6bc2f0bb304c843b`
+  and
+  `d192c87b504f65cf4bc68b48173cb38a8e9f82f861f32527d3d1a23996341727`
+  characterize formatting/parsing, validation, mutation/non-aliasing, random
+  behavior, caller-owned readers, allocation, concurrency, nil/panic, globals,
+  resources, and environment interaction under both SDKs. Non-blocking
+  repeats, race, and vet pass. V1.0.3 measures six format, one parse, and one
+  random-byte allocation under both SDKs.
+- Every stable release is disqualified by randomness-error identity loss:
+  errors are formatted with `%v`, so `errors.Is` cannot recover the cause.
+  Under Go 1.18, v1.0.0/v1.0.1 return the non-wrapping formatted error; under
+  Go 1.26 their `crypto/rand.Read` route fatally terminates the process for an
+  injected failing global reader. V1.0.2/v1.0.3 use `io.ReadFull` for their
+  reader APIs but retain `%v` identity loss under both SDKs. All stable
+  releases also panic for negative byte counts despite returning an error.
+  Unreleased master passes error-identity fixtures through `%w` but retains the
+  negative-size panic.
+- MVS selects inherited v1.0.1 through six exact requests from Consul API
+  v1.1.0/v1.12.0, Consul SDK v0.1.1/v0.8.0, and Serf v0.8.2/v0.9.6; both
+  go-immutable-radix v1.0.0/v1.3.1 request v1.0.0. Why/import and both target
+  loads are zero. Direct v1.0.1 adds only an edge and checksum; direct
+  v1.0.2/v1.0.3 change only target selection and add an edge. Tidy removes
+  every manufactured root and restores the exact base projection. Direct
+  v1.0.0 breaks a guarded selection by removing mvn-pom-mutator v0.2.3 and
+  makes loads fail. No projection was applied.
+- Fresh primary vulnerability data remains 1,402 records at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  with no target record. Exact OSV and repository/global GitHub advisory
+  queries are empty for every stable version. Exact-Go isolated scans are
+  empty; old-Go reachable findings belong only to its standard library. Base
+  and v1.0.1/v1.0.2/v1.0.3 project scans are identical, with zero target
+  assignment or trace. Earlier guarded findings remain exact.
+- The project remains 234 modules, 3,599 edges, 355 production entries, 429
+  complete-test entries, 197 module-backed entries across 41 loaded modules,
+  1,067 sum lines, and the 432-line unapplied tidy projection. All 20
+  target-plus-earlier guarded selections and requests remain exact; all 20
+  why/import results are negative and both loads contain zero guarded
+  packages. `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- The canonical exact-Go project gate passes verify, build, native/repeat/race/
+  vet/lint, API/CLI, empty-HOME, four cross-builds, full preflight, every
+  script/meta population, all eight mutation meta-stages with 80/80 kills,
+  host/snapshot/Docker acceptance, and all 15 audit controls. The fresh
+  clean-tree scorecard is 27/27 Q0-Q2 PASS at L2, SHA-256
+  `62ee293e3c4253f4ed5c71df3c858a3db996636d0b6e968d8532b7fe2825ce99`,
+  with the exact 21-line ledger. Documented cache, bare-`mktemp`, physical-tool,
+  Make-inheritance, mode-mask, and launcher-timing reproductions are harness
+  boundaries, not target findings.
+- No dependency implementation or metadata commit was created. P7 is blocked
+  on one prepared bounded go-uuid product decision: recommended option 1
+  retains exact inherited, unloaded v1.0.1 under a target-specific exception;
+  option 2 authorizes a separate Go-1.18-compatible patch/fork/replacement
+  evaluation; option 3 authorizes a separate parent-chain removal study.
+  Selecting v1.0.3 alone is not qualifying because it retains both behavior
+  blockers and requires a direct root that tidy removes. The decision was not
+  executed in this evaluation session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
