@@ -5374,13 +5374,12 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for guard-only recording of the controller's user-authorized
-2026-09-20 bounded Hashicorp go-uuid option 1 decision; no exact-path stable
-release qualifies. Completed dependency groups remain final through accepted
-Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module
-decisions through exact inherited, unloaded
-`github.com/hashicorp/go-syslog v1.0.0`. Selected inherited
-`github.com/hashicorp/go-uuid v1.0.1` remains unchanged. P8 remains queued.
+Status: active for the prepared bounded evaluation of selected exact-path
+`github.com/hashicorp/go.net v0.0.1` after recording the controller's user-
+authorized Hashicorp go-uuid option 1 decision. Completed dependency groups
+remain final through accepted Google UUID v1.4.0, qualified go-cleanhttp
+v0.5.2, and all retained-module decisions through exact inherited, unloaded
+`github.com/hashicorp/go-uuid v1.0.1`. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10968,6 +10967,42 @@ Hashicorp go-uuid evaluation (2026-09-20):
   alternatives were not authorized. Revalidate only the guards, record the
   decision, answer its archive, and prepare one next bounded P7 mission without
   executing it in the decision turn.
+- Guard-only decision revalidation began from clean ordinary and ignored state
+  at controller-authorized HEAD
+  `2774d4e54971b833c3eae3342ba158f21c1b139a`, parent
+  `44f5328e66718401ae8d2574d550acb7c420bec8`, tree
+  `a7657441d8b821f82f2ace8b1cb3165971c569df`. The preceding handoff retained
+  its exact five-file delta and the controller commit its exact four-file
+  delta; branch, ancestry, reciprocal 218-archive chain, latest Google UUID
+  implementation identity, clean status, and launcher check passed.
+- Exact Go 1.26.7 binary SHA-256
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+  ran first in `PATH` under the recorded environment. Go-uuid retains exact
+  v1.0.1 through all six exact v1.0.1 requests and both exact v1.0.0 requests,
+  no direct root, a negative why result, zero repository imports, and zero
+  production/test loads. All 20 guarded selections and requests remain exact;
+  all 20 why results, repository imports, and guarded loads remain zero. The
+  complete-test load retains 197 module-backed entries across 41 modules.
+- The project remains 234 modules, 3,599 graph edges, 355 production entries,
+  429 complete-test entries, and 1,067 sum lines. `go.mod`/`go.sum` retain
+  SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact module verification passes; no source, dependency metadata, parent,
+  Go-floor, direct-root, or unrelated selection changed.
+- Fresh primary vulnerability data remains byte-identical at 1,402 records,
+  SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+  and Last-Modified 2026-09-17T17:29:18Z. Exact OSV results remain empty for
+  go-uuid and every guard except the recorded Gorilla and go-retryablehttp
+  identifiers. Go-uuid's exact global GitHub and repository advisory feeds
+  remain empty. No new advisory or independently observed defect appeared.
+- The controller-authorized option 1 is recorded exactly under those guards.
+  No dependency implementation or metadata commit was created, no changed-
+  selection scorecard applies, and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. P7 continues only with the prepared bounded evaluation of selected
+  exact-path `github.com/hashicorp/go.net v0.0.1`; it was not executed in this
+  decision session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

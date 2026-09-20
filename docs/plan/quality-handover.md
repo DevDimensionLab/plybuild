@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T16:59:12+02:00
+Generated: 2026-09-20T17:10:35+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,17 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. Go-uuid evaluation began
-  from clean handoff HEAD
-  `8604b5ea4a6a8f41f88e33f7ba8c3c0f4611fdbd`, parent
-  `37e05491d3a49fa2bb4f1be2f9be21c365b44884`, tree
-  `bd257ec7c89747c3c269241ba55fe3eba4a32858`. That handoff changed exactly
-  the launcher, answered go-syslog decision archive, then-NEXT go-uuid
-  evaluation archive, rolling handover, and roadmap. The go-syslog decision
-  recording began from clean controller-authorized HEAD `37e0549`, parent
-  `0a223a9`, tree `6511521`.
+  `codex/upgrade-quality`, base master at `5635d50`. Go-uuid decision recording
+  began from clean controller-authorized HEAD
+  `2774d4e54971b833c3eae3342ba158f21c1b139a`, parent
+  `44f5328e66718401ae8d2574d550acb7c420bec8`, tree
+  `a7657441d8b821f82f2ace8b1cb3165971c569df`. The evaluation handoff
+  `44f5328e66718401ae8d2574d550acb7c420bec8`, parent
+  `8604b5ea4a6a8f41f88e33f7ba8c3c0f4611fdbd`, tree
+  `793694b5067cec2b3559f62c47523a1e945a9596`, changed exactly the launcher,
+  answered go-uuid evaluation archive, then-NEXT go-uuid decision archive,
+  rolling handover, and roadmap. The controller commit changed exactly the
+  launcher, go-uuid decision archive, rolling handover, and roadmap.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -24,16 +26,14 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-uuid evaluation, go-syslog decision/evaluation, and every earlier
-  archive are answered. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-20T163925+0200-decide-hashicorp-go-uuid-product-direction.md`.
-  The user-authorized automatic controller selected option 1 with the
-  recommended bounds on 2026-09-20. This authorizes only guard revalidation
-  and decision recording, not repeating the evaluation, implementing a
-  dependency or source change, reopening an earlier decision, combining
-  another group, or beginning P8; the active session has not recorded the
-  decision. The launcher check validates the reciprocal 218-archive chain and
-  byte-exact active prompt.
+- The go-uuid decision/evaluation, go-syslog decision/evaluation, and every
+  earlier archive are answered. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-20T171035+0200-evaluate-hashicorp-go-net-dependency.md`.
+  It authorizes only one independent bounded evaluation of selected exact-path
+  `github.com/hashicorp/go.net v0.0.1`, not reopening an earlier decision,
+  combining another group, changing a guarded parent or Go floor, or beginning
+  P8. The launcher check validates the reciprocal 219-archive chain and
+  byte-exact active prompt before that successor begins.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -41,14 +41,14 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is recording the controller's user-authorized bounded
-go-uuid option 1 decision because no exact-path stable release qualifies.
-Exact Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
-qualified go-cleanhttp, and all retained-module decisions through exact
-inherited, unloaded go-syslog v1.0.0 are final under their separate target-
-specific guards. Selected inherited, unloaded go-uuid v1.0.1 remains
-unchanged. P8 remains queued. Do not combine groups or begin P8 before this
-decision is revalidated and recorded in a committed handoff.
+P2A-P6 are complete. P7 has recorded the controller's user-authorized bounded
+go-uuid option 1 decision and continues only with the prepared go.net
+evaluation. Exact Go 1.26.7, every accepted dependency move through Google
+UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions through
+exact inherited, unloaded go-syslog v1.0.0 are final under their separate target-
+specific guards. Exact inherited, unloaded go-uuid v1.0.1 is retained under
+its own recorded exception. P8 remains queued. Do not combine groups or begin
+P8.
 
 The authorized 2026-09-20 go-sockaddr option 1 decision retains exact
 selected, inherited, unloaded `github.com/hashicorp/go-sockaddr v1.0.0`
@@ -1450,9 +1450,10 @@ Q0-Q2 PASS at L2.
 ## Hashicorp Go UUID Evaluation
 
 No exact-path stable `github.com/hashicorp/go-uuid` release qualifies. The
-selected exact inherited v1.0.1 remains unchanged and unqualified. No product
-source, `go.mod`, or `go.sum` changed, and no dependency implementation commit
-exists. On 2026-09-20 the user-authorized automatic controller selected option
+selected exact inherited v1.0.1 remains unchanged and is retained under the
+recorded exception below. No product source, `go.mod`, or `go.sum` changed,
+and no dependency implementation commit exists. On 2026-09-20 the user-
+authorized automatic controller selected option
 1 with the recommended bounds: retain exact selected, inherited, unloaded
 v1.0.1 without changing product source, `go.mod`, or `go.sum`. Accept only the
 completed randomness-error identity, Go 1.26 fatal injected-reader, negative-
@@ -1601,11 +1602,36 @@ only known cache, physical-tool-path, mode-mask, bare-`mktemp`, Make-variable,
 and nested-launcher timing boundaries; the scratch-contained canonical run
 passes and none is go-uuid evidence.
 
-The controller-authorized choice retains exact inherited, unloaded v1.0.1
-under the target-specific exception above. The separately scoped
-patch/fork/replacement and parent-chain removal alternatives were not
-authorized. The active decision session must revalidate the guards, record the
-accepted findings and expiry triggers, and stop without implementation.
+Guard-only decision revalidation began from clean ordinary and ignored state
+at controller-authorized HEAD `2774d4e54971b833c3eae3342ba158f21c1b139a`,
+parent `44f5328e66718401ae8d2574d550acb7c420bec8`, tree
+`a7657441d8b821f82f2ace8b1cb3165971c569df`. The preceding handoff and
+controller commits retain their exact five-file and four-file deltas. Branch,
+ancestry, reciprocal 218-archive chain, latest Google UUID implementation
+identity, clean status, and launcher lifecycle check passed before editing.
+
+Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+ran first in `PATH` under the recorded environment. Go-uuid retains exact
+v1.0.1, all six v1.0.1 requests, both v1.0.0 requests, no direct root, a
+negative why result, zero repository imports, and zero production/test loads.
+All 20 guarded selections and requests remain exact; all 20 why results are
+negative; guarded imports and both loads remain zero; and the complete-test
+load retains 197 module-backed entries across 41 modules. The project remains
+234 modules, 3,599 edges, 355 production entries, 429 complete-test entries,
+and 1,067 sum lines with exact `go.mod`/`go.sum` SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+Fresh primary data remains byte-identical at 1,402 records, SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and Last-Modified 2026-09-17T17:29:18Z. Exact OSV results remain empty except
+for the recorded Gorilla and go-retryablehttp identifiers; both exact go-uuid
+GitHub advisory feeds remain empty. No new advisory or independently observed
+defect appeared. The controller-authorized choice is recorded with its exact
+accepted findings, non-transferable limits, and expiry triggers. No dependency
+implementation or metadata commit exists, and the patch/fork/replacement and
+parent-chain removal alternatives remain unauthorized.
 
 ## Project And Quality State
 
@@ -1816,12 +1842,13 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Record the controller's user-authorized option 1 decision for exact-path
-`github.com/hashicorp/go-uuid`: retain exact inherited, unloaded v1.0.1 and
-all eight exact incoming requests without product source or dependency
-metadata changes under the target-specific exception above. Revalidate only
-the recorded guards, do not repeat the evaluation, and do not implement the
-choice in that session. Preserve every earlier qualified result and target-
-specific decision. Answer the active archive and prepare exactly one
-reciprocal NEXT mission for the next bounded P7 group; do not execute it or
+Independently evaluate selected exact-path
+`github.com/hashicorp/go.net v0.0.1` as one bounded P7 dependency group. It is
+inherited through the sole exact request from
+`github.com/hashicorp/mdns v1.0.0`, with no direct root, negative why/import
+results, and zero production or complete-test target loads. Resolve
+repository/release identity, complete Go 1.18 closure,
+behavior/API, exact MVS effects, vulnerability state, and all applicable
+quality contracts before retaining or changing it. Preserve the recorded
+go-uuid exception and every earlier guard; do not combine another group or
 begin P8.

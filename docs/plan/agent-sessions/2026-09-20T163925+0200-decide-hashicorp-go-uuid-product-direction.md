@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Go UUID Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-20T163925+0200-decide-hashicorp-go-uuid-product-direction`
 Created: `2026-09-20T16:39:25+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c2e32e320fd145aba954a7e9dde7676aea6a0156741398c2cf9470b77a35f078`
 Previous: [2026-09-20T152123+0200-evaluate-hashicorp-go-uuid-dependency.md](2026-09-20T152123+0200-evaluate-hashicorp-go-uuid-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T171035+0200-evaluate-hashicorp-go-net-dependency.md](2026-09-20T171035+0200-evaluate-hashicorp-go-net-dependency.md)
+Outcome: Recorded controller-authorized option 1 for exact inherited, unloaded go-uuid v1.0.1 after every guard passed; product source and dependency metadata stayed unchanged, and one bounded go.net evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -162,3 +162,78 @@ Only after guard revalidation, make only the required local
 launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, remove the worktree, combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user-authorized automatic controller's 2026-09-20 option 1
+choice exactly: retain selected `github.com/hashicorp/go-uuid v1.0.1` as an
+inherited, unloaded module without changing product source, `go.mod`, or
+`go.sum`. The new go-uuid-specific, non-transferable exception accepts only
+the completed randomness-error identity, Go 1.26 fatal injected-reader,
+negative-size panic, non-RFC generation, API/behavior, MVS, vulnerability,
+and related recorded findings. It accepts no new or independently discovered
+defect.
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at controller-authorized HEAD
+`2774d4e54971b833c3eae3342ba158f21c1b139a`, parent
+`44f5328e66718401ae8d2574d550acb7c420bec8`, tree
+`a7657441d8b821f82f2ace8b1cb3165971c569df`. The evaluation handoff
+`44f5328e66718401ae8d2574d550acb7c420bec8`, parent
+`8604b5ea4a6a8f41f88e33f7ba8c3c0f4611fdbd`, tree
+`793694b5067cec2b3559f62c47523a1e945a9596`, changed exactly the launcher,
+answered go-uuid evaluation archive, this then-NEXT decision archive, rolling
+handover, and roadmap. The controller commit changed exactly the launcher,
+this archive, rolling handover, and roadmap. The reciprocal 218-archive chain,
+latest Google UUID implementation ancestry, and launcher lifecycle check pass.
+
+Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+ran first in `PATH` with `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, no
+ambient `GOFLAGS`, public proxy and sumdb, `LC_ALL=C`, `LANG=C`, and
+`umask 022`. Go-uuid remains exact v1.0.1 through exactly six v1.0.1 requests
+from Consul API v1.1.0/v1.12.0, Consul SDK v0.1.1/v0.8.0, and Serf
+v0.8.2/v0.9.6, while go-immutable-radix v1.0.0/v1.3.1 retain both v1.0.0
+requests. There is no direct main-module root. The target `go mod why -m`
+result remains negative, repository Go imports remain zero, and the 355-entry
+production and 429-entry complete-test loads contain zero target packages.
+
+All 20 target-plus-earlier guarded modules retain their exact selections and
+recorded requests. All 20 why results remain negative, repository imports
+remain zero, and production and complete-test loads contain zero guarded
+packages. The complete-test load retains 197 module-backed entries across 41
+loaded modules, so go-uuid and every earlier guarded target remain runtime-
+unreachable. The project remains 234 modules, 3,599 graph edges, and 1,067
+`go.sum` lines. `go.mod` and `go.sum` retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Exact module verification passes. No parent, Go floor, product source, direct
+root, dependency metadata, or unrelated selection changed.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV results remain empty
+for go-uuid v1.0.1 and every guarded target except Gorilla WebSocket v1.4.2
+and go-retryablehttp v0.5.3. Gorilla retains only
+GO-2026-6278/GHSA-w67g-5rqw-f597; go-retryablehttp retains only
+GO-2024-2947/GHSA-v6v8-xj6m-xwqh. Both the exact go-uuid global GitHub
+advisory query and repository advisory feed remain empty. No new advisory or
+independently observed defect appeared.
+
+The exception remains valid only while exact go-uuid v1.0.1, all six exact
+v1.0.1 requests, and both exact v1.0.0 requests remain unchanged, no direct
+main-module root or repository import is added, production and complete-test
+target loads remain zero, the module remains runtime-unreachable, every
+earlier guarded selection, request, load, runtime, and advisory condition
+remains intact, and no new target advisory or independent defect appears.
+Direct import or loading, runtime reachability, a target version or incoming-
+request change, a new direct root, an earlier owning-guard change, or a new
+advisory or independent defect expires the exception and requires the owning
+fresh dependency and product decision before merge.
+
+No dependency implementation or metadata commit was created. No changed-
+selection scorecard applies, and accepted quality remains 27/27 Q0-Q2 PASS at
+L2. The sole reciprocal successor is the bounded P7 evaluation of selected
+exact-path `github.com/hashicorp/go.net v0.0.1`; it was prepared but not
+executed.
