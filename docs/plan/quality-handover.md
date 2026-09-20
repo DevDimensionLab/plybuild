@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T11:59:26+02:00
+Generated: 2026-09-20T12:13:50+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,10 +9,10 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The go-rootcerts
-  evaluation recording began from clean handoff HEAD
-  `888412a62d768cb11af6d9e132600cc4a34f0679`, parent
-  `a4c24f29e25eb21cc229cde674ffdacdecc78f38`, tree
-  `1892ece8798c3913cc46465cf12865281db20339`.
+  decision recording began from clean handoff HEAD
+  `c530f7d8e39aa0181899d7cb2893f6a16555ebef`, parent
+  `888412a62d768cb11af6d9e132600cc4a34f0679`, tree
+  `e0eeec6c821ba393d8ab30751cf411296b8ec0f6`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,12 +20,12 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-rootcerts evaluation and every earlier archive are answered. The sole
+- The go-rootcerts decision and every earlier archive are answered. The sole
   NEXT archive is
-  `docs/plan/agent-sessions/2026-09-20T115926+0200-decide-hashicorp-go-rootcerts-product-direction.md`.
-  It authorizes only one bounded go-rootcerts product decision. It does not
-  authorize implementation, reopening an earlier decision, combining another
-  dependency group, or beginning P8.
+  `docs/plan/agent-sessions/2026-09-20T121350+0200-evaluate-hashicorp-go-sockaddr-dependency.md`.
+  It authorizes only one bounded exact-path go-sockaddr evaluation. It does not
+  authorize reopening an earlier decision, combining another dependency
+  group, or beginning P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -35,10 +35,10 @@ session diary.
 
 P2A-P6 are complete. Exact Go 1.26.7, every accepted dependency move through
 Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
-through exact inherited, unloaded go-retryablehttp v0.5.3 are final under
-their target-specific guards. The go-rootcerts evaluation found no qualified
-stable release, so P7 is blocked only on the prepared target-specific product
-decision. P8 remains queued. Do not combine groups or begin P8.
+through exact inherited, unloaded go-rootcerts v1.0.2 are final under their
+target-specific guards. P7 continues only with the prepared bounded exact-path
+go-sockaddr v1.0.0 evaluation. P8 remains queued. Do not combine groups or
+begin P8.
 
 The user's 2026-09-14 Gateway option 1 decision retains exact inherited,
 unloaded `github.com/grpc-ecosystem/grpc-gateway v1.16.0` under only its
@@ -1089,12 +1089,18 @@ API, go-hclog, and color decisions before implementation. Parent-chain
 removal, upgrade, patch, fork, or replacement remains a separately scoped
 option.
 
-## Hashicorp Go Rootcerts Evaluation
+## Hashicorp Go Rootcerts Decision
 
 No exact-path stable `github.com/hashicorp/go-rootcerts` release qualifies.
-Dependency metadata remains unchanged and P7 is blocked on the prepared
-target-specific product decision. Do not infer risk acceptance from the
-current physical selection or zero reachability.
+Authorized option 1 retains exact selected, inherited, unloaded v1.0.2 without
+changing dependency metadata under a new target-specific, non-transferable
+exception. It accepts only the independently reproduced filesystem-error-
+identity loss; Darwin silent-empty system-root pool; proxy-archive symlink-
+fixture test failure; v1.0.2 `Config` comparability change; and the completed
+certificate-pool, PEM, file/path, precedence, system-root, environment,
+nil/panic, mutation, aliasing, allocation, concurrency, global-state, resource,
+API, MVS, vulnerability, and related findings. It accepts no new or
+independently discovered defect.
 
 Fresh exact-path metadata resolves Hashicorp's public, active, unarchived,
 non-fork MPL-2.0 repository. The proxy exposes exactly stable v1.0.0, v1.0.1,
@@ -1160,13 +1166,14 @@ shell wording failures; its 26 unaffected packages and applicable gates pass.
 No changed-selection scorecard applies, so accepted quality remains 27/27
 Q0-Q2 PASS at L2.
 
-The prepared decision recommends retaining exact inherited, unloaded v1.0.2
-under a new go-rootcerts-specific exception bounded to the completed error-
-identity, silent-empty-root, proxy-fixture, API, behavior, MVS, and related
-findings; exact selection and all five requests; zero imports/load; runtime
-unreachability; every earlier guard; and no new advisory or independent
-defect. Go-1.18-compatible patch/fork/replacement and parent-chain pruning are
-separately scoped alternatives. No choice is inferred by the evaluation.
+Guard-only revalidation preserves exact v1.0.2 and all five requests, all 17
+target-plus-earlier negative why/import/load results, and runtime
+unreachability. Fresh primary data remains byte-identical at 1,402 records and
+the target exact-version OSV and GitHub advisory results remain empty. The
+exception expires on direct import/loading, runtime reachability, a target
+version or incoming-request change, a new direct root, an earlier owning-guard
+change, or a new advisory or independent defect. Expiry requires the owning
+fresh dependency and product decision before merge.
 
 ## Project And Quality State
 
@@ -1291,6 +1298,12 @@ count-ten repeats, race, and vet, while host acceptance and four cross-builds
 pass. The full floor suite retains only the two accepted Darwin shell wording
 failures.
 
+The go-rootcerts decision-recording session's exact Go 1.26.7 module
+verification, build, count-one tests, race tests, vet, and all 62 launcher
+lifecycle controls pass under the established `umask 022` contract. No source
+or dependency metadata changed, so no changed-selection scorecard applies and
+accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
 An initial compatibility run reproduced the documented cold offline API-base
 cache boundary. The first full-quality attempt reproduced the documented bare-
 `mktemp` managed-sandbox restriction. Scratch-contained cache warming and the
@@ -1312,14 +1325,12 @@ projection in a measured worktree.
 
 ## Next Bounded Objective
 
-Make exactly one bounded product decision for exact-path
-`github.com/hashicorp/go-rootcerts`. Recommended option 1 retains exact
-selected, inherited, unloaded v1.0.2 under a new target-specific exception
-accepting only the completed filesystem-error-identity, Darwin silent-empty-
-root, proxy symlink-fixture, Config comparability, API/behavior/MVS, and
-related findings while exact selection and all five requests, zero imports/
-load, runtime unreachability, every earlier guard, and no-new-advisory/defect
-conditions hold. Alternatives are a separately implemented Go-1.18-compatible
-patch/fork/replacement or a separately scoped parent-chain pruning study. Do
-not infer a choice, implement it, evaluate another group, reopen an earlier
-decision, or begin P8.
+Independently evaluate selected exact-path
+`github.com/hashicorp/go-sockaddr v1.0.0` as one bounded dependency group.
+Resolve repository and release identity, complete Go-floor closure, source,
+tests, exported API, behavior, project loading, MVS, vulnerability evidence,
+and every applicable quality contract. Retain or select only a qualified
+exact-path stable release preserving Go 1.18; otherwise stop for a fresh
+bounded product decision. Preserve the go-rootcerts exception and every
+earlier guarded outcome. Do not combine another dependency group, reopen an
+earlier decision, or begin P8.

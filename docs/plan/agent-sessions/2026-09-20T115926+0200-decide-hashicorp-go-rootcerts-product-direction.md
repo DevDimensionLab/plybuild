@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Go Rootcerts Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-20T115926+0200-decide-hashicorp-go-rootcerts-product-direction`
 Created: `2026-09-20T11:59:26+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `80a19eb740097e5933af06a87545f1d2ab359da2ce1572d15c136bb3ed42adba`
 Previous: [2026-09-19T235421+0200-evaluate-hashicorp-go-rootcerts-dependency.md](2026-09-19T235421+0200-evaluate-hashicorp-go-rootcerts-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T121350+0200-evaluate-hashicorp-go-sockaddr-dependency.md](2026-09-20T121350+0200-evaluate-hashicorp-go-sockaddr-dependency.md)
+Outcome: Recorded authorized option 1 for exact inherited, unloaded go-rootcerts v1.0.2 after every guard passed; the target-specific exception accepts only the completed behavior, archive, API, MVS, vulnerability, and related findings, dependency metadata stayed unchanged, and one bounded go-sockaddr evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -195,3 +195,81 @@ After a coherent explicit decision, make the required local
 merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
 combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded authorized option 1 exactly: retain selected
+`github.com/hashicorp/go-rootcerts v1.0.2` as an inherited, unloaded module
+without changing `go.mod` or `go.sum`. This is a new go-rootcerts-specific,
+non-transferable exception. It accepts only the independently reproduced loss
+of underlying filesystem-error identity for file, path, and `ConfigureTLS`
+failures; the Darwin silent-empty system-root pool when successful keychain
+commands emit no PEM; the proxy-archive symlink-fixture test failure; the
+v1.0.2 `Config` comparability change; and the completed certificate-pool, PEM,
+file/path, precedence, system-root, environment, nil/panic, mutation, aliasing,
+allocation, concurrency, global-state, resource, API, MVS, vulnerability, and
+related qualification findings. It accepts no new or independently discovered
+defect.
+
+Guard-only revalidation began from a clean ordinary and ignored worktree on
+branch `codex/upgrade-quality` at handoff HEAD
+`c530f7d8e39aa0181899d7cb2893f6a16555ebef`, parent
+`888412a62d768cb11af6d9e132600cc4a34f0679`, tree
+`e0eeec6c821ba393d8ab30751cf411296b8ec0f6`. That handoff changed exactly
+the launcher, answered go-rootcerts evaluation archive, this then-NEXT
+decision archive, rolling handover, and roadmap. Its reciprocal archive
+links, Google UUID implementation ancestry, and launcher lifecycle check
+passed.
+
+Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+ran first in `PATH` with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, no ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and
+`umask 022`. Go-rootcerts remains exact v1.0.2 through all five recorded
+requests: Viper v1.15.0, historical Viper v1.10.1,
+`sagikazarmark/crypt v0.4.0`, and historical Consul API v1.12.0 request
+v1.0.2, while historical Consul API v1.1.0 requests v1.0.0. Its
+`go mod why -m` result remains negative, repository Go imports remain zero,
+and the 355-entry production and 429-entry complete-test loads contain zero
+target packages.
+
+All 16 earlier guarded modules retain their exact selections and recorded
+incoming requests. All 17 target-plus-earlier `go mod why -m` results remain
+negative, repository Go imports remain zero, and production and complete-test
+loads contain zero guarded packages. The complete-test load retains 197
+module-backed entries across 41 loaded modules, so go-rootcerts and every
+earlier guarded target remain runtime-unreachable. The project remains 234
+modules, 3,599 graph edges, and 1,067 `go.sum` lines. `go.mod` and `go.sum`
+retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+No parent, Go-floor, exported API, source, or unrelated selection changed.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV responses remain
+empty for go-rootcerts v1.0.2 and every guarded target except Gorilla
+WebSocket v1.4.2 and go-retryablehttp v0.5.3. Gorilla retains only its
+recorded GO-2026-6278/GHSA-w67g-5rqw-f597 results; go-retryablehttp retains
+only its accepted GO-2024-2947/GHSA-v6v8-xj6m-xwqh results. The go-rootcerts
+GitHub repository advisory feed remains empty. No new advisory or independently
+observed defect appeared.
+
+The exception remains valid only while exact go-rootcerts v1.0.2 and all five
+incoming requests and versions remain unchanged, no direct main-module edge or
+repository import is added, production and complete-test target loads remain
+zero, the module remains runtime-unreachable, every earlier guarded selection,
+request, load, runtime, and advisory condition remains intact, and no new
+target advisory or independent defect appears. Direct import or loading,
+runtime reachability, a target version or incoming-request change, a new direct
+root, an earlier owning-guard change, or a new advisory or independent defect
+expires the exception and requires the owning fresh dependency and product
+decision before merge.
+
+No dependency implementation or metadata commit was created. Exact Go 1.26.7
+module verification, build, count-one tests, race tests, vet, and the 62-control
+launcher lifecycle suite pass; no changed-selection scorecard applies, and
+accepted quality remains 27/27 Q0-Q2 PASS at L2. The sole reciprocal successor
+is the bounded P7 evaluation of selected exact-path
+`github.com/hashicorp/go-sockaddr v1.0.0`; it was prepared but not executed.
