@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Go Syslog Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-20T145140+0200-decide-hashicorp-go-syslog-product-direction`
 Created: `2026-09-20T14:51:40+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `69b4575a8633e48d7f6b549df29f1bc9b9c5c577eae6ae4c9639970fb9951496`
 Previous: [2026-09-20T135311+0200-evaluate-hashicorp-go-syslog-dependency.md](2026-09-20T135311+0200-evaluate-hashicorp-go-syslog-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T152123+0200-evaluate-hashicorp-go-uuid-dependency.md](2026-09-20T152123+0200-evaluate-hashicorp-go-uuid-dependency.md)
+Outcome: Recorded controller-authorized option 1 for exact inherited, unloaded go-syslog v1.0.0 after every guard passed; product source and dependency metadata stayed unchanged, and one bounded go-uuid evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -215,3 +215,77 @@ Only after guard revalidation, make the required local
 merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
 combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Recorded the user-authorized automatic controller's 2026-09-20 option 1
+choice exactly: retain selected `github.com/hashicorp/go-syslog v1.0.0` as an
+inherited, unloaded module without changing product source, `go.mod`, or
+`go.sum`. The new go-syslog-specific, non-transferable exception accepts only
+the completed constructor-availability, deadline-error, priority-validation,
+newline-framing, API/behavior, platform, MVS, vulnerability, and related
+qualification findings. It accepts no new or independently discovered defect.
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at controller-authorized HEAD
+`37e05491d3a49fa2bb4f1be2f9be21c365b44884`, parent
+`0a223a920e48d1f52ad69c21bc1af5b1b6ae6ffe`, tree
+`65115211adcc75764f15f4d5093010b7ded45d1b`. The evaluation handoff
+`0a223a920e48d1f52ad69c21bc1af5b1b6ae6ffe`, parent
+`2ee06f1db429101b908d764de8c37a9cd2989229`, tree
+`d021d00160f9612697fc7bef3f5a04840767da3e`, changed exactly the launcher,
+answered evaluation archive, this then-NEXT decision archive, rolling
+handover, and roadmap. The controller commit changed exactly the launcher,
+this archive, rolling handover, and roadmap. The reciprocal 216-archive chain,
+latest Google UUID implementation ancestry, and launcher lifecycle check pass.
+
+Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+ran first in `PATH` with `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, no
+ambient `GOFLAGS`, public proxy and sumdb, `LC_ALL=C`, `LANG=C`, and
+`umask 022`. Go-syslog remains exact v1.0.0 through exactly the two recorded
+requests from Serf v0.8.2 and v0.9.6, with no direct main-module root. Its
+`go mod why -m` result remains negative, repository Go imports remain zero,
+and the 355-entry production and 429-entry complete-test loads contain zero
+target packages.
+
+All 18 earlier guarded modules retain their exact selections and recorded
+incoming requests. All 19 target-plus-earlier why results remain negative,
+repository imports remain zero, and production and complete-test loads contain
+zero guarded packages. The complete-test load retains 197 module-backed
+entries across 41 loaded modules, so go-syslog and every earlier guarded
+target remain runtime-unreachable. The project remains 234 modules, 3,599
+graph edges, and 1,067 `go.sum` lines. `go.mod` and `go.sum` retain SHA-256
+values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Exact module verification passes. No parent, Go floor, source, direct root, or
+unrelated selection changed.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV results remain empty
+for go-syslog v1.0.0 and every guarded target except Gorilla WebSocket v1.4.2
+and go-retryablehttp v0.5.3. Gorilla retains only its recorded
+GO-2026-6278/GHSA-w67g-5rqw-f597 results; go-retryablehttp retains only its
+accepted GO-2024-2947/GHSA-v6v8-xj6m-xwqh results. Both the exact go-syslog
+global GitHub advisory query and repository advisory feed remain empty. No new
+advisory or independently observed defect appeared.
+
+The exception remains valid only while exact go-syslog v1.0.0 and both Serf
+v0.8.2/v0.9.6 requests remain unchanged, no direct main-module root or
+repository import is added, production and complete-test target loads remain
+zero, the module remains runtime-unreachable, every earlier guarded selection,
+request, load, runtime, and advisory condition remains intact, and no new
+target advisory or independent defect appears. Direct import or loading,
+runtime reachability, a target version or incoming-request change, a new
+direct root, an earlier owning-guard change, or a new advisory or independent
+defect expires the exception and requires the owning fresh dependency and
+product decision before merge.
+
+No dependency implementation or metadata commit was created. No changed-
+selection scorecard applies, and accepted quality remains 27/27 Q0-Q2 PASS at
+L2. The sole reciprocal successor is the bounded P7 evaluation of selected
+exact-path `github.com/hashicorp/go-uuid v1.0.1`; it was prepared but not
+executed.

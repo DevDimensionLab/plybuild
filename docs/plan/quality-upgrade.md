@@ -5374,12 +5374,13 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for guard-only recording of the controller's user-authorized
-2026-09-20 bounded Hashicorp go-syslog option 1 decision; no exact-path stable
-release qualifies. Completed dependency groups remain final through accepted
-Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module
-decisions through exact inherited, unloaded
-`github.com/hashicorp/go-sockaddr v1.0.0`. P8 remains queued.
+Status: active after recording the controller's user-authorized 2026-09-20
+bounded Hashicorp go-syslog option 1 decision; no exact-path stable release
+qualifies. Completed dependency groups remain final through accepted Google
+UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module decisions
+through exact inherited, unloaded `github.com/hashicorp/go-syslog v1.0.0`.
+The sole next group is the prepared bounded exact-path Hashicorp go-uuid
+evaluation. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10716,7 +10717,7 @@ Hashicorp go-sockaddr product decision (2026-09-20):
   exact-path `github.com/hashicorp/go-syslog v1.0.0` evaluation; it was not
   executed in this decision session.
 
-Hashicorp go-syslog evaluation and blocked product boundary (2026-09-20):
+Hashicorp go-syslog evaluation and product decision (2026-09-20):
 
 - No exact-path stable `github.com/hashicorp/go-syslog` release qualifies.
   Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves the public
@@ -10809,9 +10810,46 @@ Hashicorp go-syslog evaluation and blocked product boundary (2026-09-20):
   alter another guarded dependency, manufacture a dependency commit, transfer
   another exception, or request this same choice again while all guards hold.
   The Go-1.18-compatible patch/fork/replacement and Serf parent/graph-removal
-  alternatives were not authorized. Revalidate only the guards, record the
-  decision, answer its archive, and prepare one next bounded P7 mission without
-  executing it in the decision turn.
+  alternatives were not authorized.
+- Guard-only decision revalidation began from clean ordinary and ignored state
+  at controller-authorized HEAD
+  `37e05491d3a49fa2bb4f1be2f9be21c365b44884`, parent
+  `0a223a920e48d1f52ad69c21bc1af5b1b6ae6ffe`, tree
+  `65115211adcc75764f15f4d5093010b7ded45d1b`. The evaluation handoff
+  `0a223a9` has exact parent `2ee06f1`, tree `d021d00`, and the recorded
+  five-file change; the controller commit has the recorded four-file change.
+  The branch, clean ordinary/ignored status, reciprocal 216-archive chain,
+  launcher check, and exact Google UUID implementation ancestry pass.
+- Exact Go 1.26.7 binary SHA-256
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+  ran first in `PATH` with `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, no
+  ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and `umask 022`. Exact go-syslog
+  v1.0.0 retains both Serf v0.8.2/v0.9.6 requests and no direct root. All 19
+  guarded selections and recorded requests remain exact; all 19 why/import
+  results are negative; production and complete-test loads contain zero
+  guarded packages; and 197 module-backed complete-test entries remain across
+  41 loaded modules. Runtime unreachability therefore remains intact.
+- The project remains 234 modules, 3,599 graph edges, 355 production entries,
+  429 complete-test entries, 1,067 sum lines, and the recorded 432-line
+  unapplied tidy projection. `go.mod`/`go.sum` retain SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact module verification passes; no source, dependency metadata, parent,
+  Go-floor, direct-root, or unrelated selection changed.
+- Fresh primary vulnerability data remains byte-identical at 1,402 records,
+  SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+  and Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV remains empty for
+  go-syslog and every guarded target except Gorilla and go-retryablehttp,
+  which retain only their recorded accepted identifiers. Go-syslog's exact
+  global GitHub and repository advisory results remain empty. No new advisory
+  or independently observed defect appeared.
+- The controller-authorized option 1 is recorded exactly under those guards.
+  No dependency implementation or metadata commit was created, no changed-
+  selection scorecard applies, and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. P7 continues only with the prepared bounded evaluation of selected
+  exact-path `github.com/hashicorp/go-uuid v1.0.1`; it was not executed in
+  this decision session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
