@@ -11004,6 +11004,78 @@ Hashicorp go-uuid evaluation (2026-09-20):
   exact-path `github.com/hashicorp/go.net v0.0.1`; it was not executed in this
   decision session.
 
+Hashicorp go.net evaluation (2026-09-20):
+
+- No exact-path stable `github.com/hashicorp/go.net` release qualifies. Fresh
+  proxy, sumdb, `go-import`, Git, and GitHub evidence resolves Hashicorp's
+  public active unarchived non-fork BSD-3-Clause repository. V0.0.1 is the
+  only proxy version, only stable tag, and proxy latest; there is no
+  prerelease, GitHub Release, retraction, module deprecation, redirect,
+  alternate exact path, or `/v2` line. Branches and returned forks are not
+  stable candidates.
+- V0.0.1 is a lightweight tag at GitHub-verified commit
+  `afc3cb3a421746fc66dd55b09a270c750cf536ce`, parents
+  `104dcad90073cd8d1e6828b2af19185b60cf3e29` and
+  `b9a611abb799b370ad8aed695239fd086ae5a1fa`, tree
+  `0a681728dc14ccfa08d532e5a20e85280c2fdb04`, time
+  2019-01-18T17:37:16Z. Proxy ZIP SHA-256 is
+  `71564aa3cb6e2820ee31e4d9e264e4ed889c7916f958b2f54c6f3004d4fcd8d2`;
+  its regular files match Git and sumdb verifies both checksums. Current
+  master `b69938bb7c99c1b9deeece78cc99714a94ec933b` is four unreleased,
+  compliance-only commits later and retains the blockers.
+- The release contains 273 regular files, 204 Go files, 46 test files, and 16
+  packages spanning legacy context, dictionary, HTML/charset/IDNA/public-
+  suffix, IPv4/IPv6, listener limiting, proxy/SOCKS5, SPDY v3, and WebSocket
+  APIs. Build-ignored generators, generated tables/syscall files, examples,
+  benchmarks, testdata, and all platform branches were inventoried; there is
+  no release CLI or modern fuzz target.
+- V0.0.1 has only a module directive and no requirements. Its complete
+  production/test closure does not resolve under exact Go 1.26.7 or contained
+  Go 1.18.10: production html/charset code and context/html/ipv4/ipv6/
+  websocket tests retain obsolete `code.google.com/p/go.net` and
+  `code.google.com/p/go.text` imports. Whole-module listing, build, count-one,
+  two count-ten repeats, race, vet, and test-symbol scanning therefore fail
+  under both SDKs. The mdns-used ipv4/ipv6 production packages build and mdns
+  ordinary tests pass on Darwin, but target tests do not resolve and the
+  packages fail Linux arm64 and `js/wasm` cross-builds. No complete Go-1.18
+  source/test closure qualifies.
+- Independent fixture SHA-256
+  `46328fe4873c5266f6f8de9435dd96d105760401b20b54732dcbba858308d3d6`
+  passes count-ten and race under both SDKs while reproducing negative-limit
+  and non-Hijacker panics, caller-IP aliasing, process-global proxy
+  registration, and SOCKS5 error-identity loss. Source inspection also
+  records zero-limit blocking, unsynchronized global registration, absent
+  WebSocket context/timeouts, entropy panic, peer-sized SPDY allocation,
+  connection/deadline ownership, tokenizer aliasing, static-table age, and
+  platform-stub boundaries. These are decision inputs, not qualification.
+- MVS selects v0.0.1 only through exact mdns v1.0.0. There is no direct root,
+  why/import results are negative, and both loads contain zero target
+  packages. A disposable direct root changes no selected version or load and
+  adds only one edge plus the content checksum; tidy removes it. That zero-
+  load project projection passes verification, build, repeats, race, vet,
+  API/CLI compatibility, host acceptance, and supported cross-builds. No
+  projection was applied.
+- Fresh primary vulnerability data remains 1,402 records at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  with no target entry. Exact OSV and GitHub advisory feeds are empty. Exact-
+  Go production scans of ipv4/ipv6 are empty; old-Go findings belong only to
+  its standard library. Base and direct-root project scans remain identical at
+  30 module, 22 package, and 20 symbol/test-symbol IDs with no target trace.
+- All 20 earlier guarded selections, requests, negative why results, zero Go-
+  source imports, zero production/test loads, runtime-unreachability, and
+  advisory states remain exact. The base stays 234 modules, 3,599 edges, 355
+  production entries, 429 complete-test entries, 197 module-backed entries
+  across 41 modules, 1,067 sum lines, and a 432-line tidy projection.
+  `go.mod`/`go.sum` SHA-256 remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- Dependency metadata stayed unchanged. No changed-selection scorecard
+  applies and accepted quality remains 27/27 Q0-Q2 PASS at L2. P7 is blocked
+  on the single prepared bounded go.net product decision among guarded
+  retention, a separately authorized Go-1.18-compatible patch/fork/
+  replacement design, or a separately authorized mdns parent/graph-removal
+  decision. That decision was not executed in this evaluation session.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

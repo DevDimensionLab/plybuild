@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Hashicorp Go Net Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-20T171035+0200-evaluate-hashicorp-go-net-dependency`
 Created: `2026-09-20T17:10:35+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `cf9af1a851483f452e3b72c63971cd4e4bfbe8f43b7667d70bdc76e6a0e0508e`
 Previous: [2026-09-20T163925+0200-decide-hashicorp-go-uuid-product-direction.md](2026-09-20T163925+0200-decide-hashicorp-go-uuid-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T174526+0200-decide-hashicorp-go-net-product-direction.md](2026-09-20T174526+0200-decide-hashicorp-go-net-product-direction.md)
+Outcome: No exact-path stable go.net release qualified; dependency metadata stayed unchanged, and one bounded product decision was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -176,3 +176,87 @@ first if a qualified selection was implemented, then make the required local
 merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
 combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+No exact-path stable `github.com/hashicorp/go.net` release qualifies. V0.0.1
+is the only proxy version, only stable tag, and proxy latest. Its complete
+production and test closure fails to resolve under both exact Go 1.26.7 and
+contained Go 1.18.10 because production html/charset code and multiple test
+packages retain obsolete `code.google.com/p/go.net` and
+`code.google.com/p/go.text` imports. Whole-module listing, build, native tests,
+both count-ten repeats, race, vet, and complete test-symbol scanning therefore
+fail. The mdns-used ipv4/ipv6 production packages build and ordinary mdns
+tests pass on Darwin, but the target tests do not resolve and those packages
+fail Linux arm64 and `js/wasm` cross-builds. No dependency selection was
+implemented and `go.mod`/`go.sum` remain unchanged.
+
+Fresh identity evidence resolves Hashicorp's public active unarchived
+non-fork BSD-3-Clause repository. Lightweight tag v0.0.1 is commit
+`afc3cb3a421746fc66dd55b09a270c750cf536ce`, parents
+`104dcad90073cd8d1e6828b2af19185b60cf3e29` and
+`b9a611abb799b370ad8aed695239fd086ae5a1fa`, tree
+`0a681728dc14ccfa08d532e5a20e85280c2fdb04`, time
+2019-01-18T17:37:16Z, with GitHub valid verification. The proxy ZIP SHA-256 is
+`71564aa3cb6e2820ee31e4d9e264e4ed889c7916f958b2f54c6f3004d4fcd8d2`;
+its 273 regular files match Git byte-for-byte and sumdb verifies both module
+and go.mod hashes. There is no other stable/prerelease tag, GitHub Release,
+retraction, module deprecation, redirect, alternate exact path, or `/v2` line.
+Master `b69938bb7c99c1b9deeece78cc99714a94ec933b` is four unreleased compliance-
+only commits later and retains the release blockers; branches and forks were
+not promoted.
+
+All 16 packages, their exported APIs, build-ignored generators, generated
+tables/syscall files, examples, benchmarks, testdata, and platform branches
+were inventoried. Independent fixture SHA-256
+`46328fe4873c5266f6f8de9435dd96d105760401b20b54732dcbba858308d3d6`
+passes count-ten and race under both SDKs while reproducing negative-limit and
+non-Hijacker panics, `PerHost` caller-IP aliasing, process-global proxy
+registration, and SOCKS5 error-identity loss. Source inspection also records
+the unsynchronized global registry, zero-limit blocking, absent WebSocket
+context/timeouts, entropy panic, peer-sized SPDY allocation, connection/
+deadline ownership, tokenizer aliasing, static-table age, and platform stub
+boundaries. These findings are product-decision inputs, not a qualification.
+
+MVS retains v0.0.1 only through
+`github.com/hashicorp/mdns v1.0.0`. There is no direct root, the why result is
+negative, repository Go imports are zero, and production/complete-test loads
+contain zero target packages. A disposable direct root changes no selection
+or load, adds only one graph edge and the content sum, and is removed by tidy.
+That zero-load project projection passes verification, build, repeats, race,
+vet, API/CLI compatibility, host acceptance, and supported cross-builds. The
+base remains 234 modules, 3,599 edges, 355 production entries, 429 complete-
+test entries, 197 module-backed entries across 41 modules, 1,067 sum lines,
+and a 432-line tidy projection. Base `go.mod`/`go.sum` SHA-256 remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z, with no target record. Exact OSV and both
+GitHub advisory feeds are empty. Exact-Go production scans of ipv4/ipv6 are
+empty; old-SDK findings are Go 1.18.10 standard-library findings only. Base
+and direct-root project scans are identical at 30 module, 22 package, and 20
+production/test-symbol IDs, with no target assignment or trace. All 20 earlier
+guarded selections/requests, negative why results, zero imports/loads, runtime
+unreachability, and advisory states remain exact.
+
+Evaluation began from clean ordinary and ignored state at handoff HEAD
+`70867a4a7701f69cbc4551de3d4db53fd7d86fe2`, parent
+`2774d4e54971b833c3eae3342ba158f21c1b139a`, tree
+`b97eb952c930dd8baaa0c5e9313c811a6c52be52`, whose exact five-file delta,
+reciprocal 219-archive chain, latest Google UUID implementation ancestry, and
+launcher check passed. Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+ran first under the required environment; contained Go 1.18.10 binary SHA-256
+is `f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`.
+The initial disposable project attempt reproduced only the managed default-
+cache boundary, and the initial API comparison reproduced the documented cold
+offline v1.0.1 cache boundary; scratch-contained caches and exact baseline
+warming passed. Neither is go.net evidence.
+
+Because the sole stable release fails qualification, no dependency commit or
+changed-selection scorecard applies. Accepted project quality remains 27/27
+Q0-Q2 PASS at L2. P7 stops on the single prepared bounded go.net product
+decision; it was not executed in this evaluation session.

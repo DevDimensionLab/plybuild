@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T17:10:35+02:00
+Generated: 2026-09-20T17:45:26+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,17 +8,17 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. Go-uuid decision recording
-  began from clean controller-authorized HEAD
-  `2774d4e54971b833c3eae3342ba158f21c1b139a`, parent
-  `44f5328e66718401ae8d2574d550acb7c420bec8`, tree
-  `a7657441d8b821f82f2ace8b1cb3165971c569df`. The evaluation handoff
-  `44f5328e66718401ae8d2574d550acb7c420bec8`, parent
-  `8604b5ea4a6a8f41f88e33f7ba8c3c0f4611fdbd`, tree
-  `793694b5067cec2b3559f62c47523a1e945a9596`, changed exactly the launcher,
-  answered go-uuid evaluation archive, then-NEXT go-uuid decision archive,
-  rolling handover, and roadmap. The controller commit changed exactly the
-  launcher, go-uuid decision archive, rolling handover, and roadmap.
+  `codex/upgrade-quality`, base master at `5635d50`. Go.net evaluation began
+  from clean handoff HEAD
+  `70867a4a7701f69cbc4551de3d4db53fd7d86fe2`, parent
+  `2774d4e54971b833c3eae3342ba158f21c1b139a`, tree
+  `b97eb952c930dd8baaa0c5e9313c811a6c52be52`. That handoff changed exactly
+  the launcher, answered go-uuid decision archive, then-NEXT go.net evaluation
+  archive, rolling handover, and roadmap. Its controller parent `2774d4e`,
+  parent `44f5328e`, tree `a7657441`, changed exactly the launcher, go-uuid
+  decision archive, rolling handover, and roadmap. Ordinary and ignored status,
+  branch, ancestry, exact changed sets, reciprocal history, and launcher check
+  passed before evaluation.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -26,14 +26,14 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-uuid decision/evaluation, go-syslog decision/evaluation, and every
-  earlier archive are answered. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-20T171035+0200-evaluate-hashicorp-go-net-dependency.md`.
-  It authorizes only one independent bounded evaluation of selected exact-path
-  `github.com/hashicorp/go.net v0.0.1`, not reopening an earlier decision,
-  combining another group, changing a guarded parent or Go floor, or beginning
-  P8. The launcher check validates the reciprocal 219-archive chain and
-  byte-exact active prompt before that successor begins.
+- The go.net evaluation, go-uuid decision/evaluation, go-syslog decision/
+  evaluation, and every earlier archive are answered. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-20T174526+0200-decide-hashicorp-go-net-product-direction.md`.
+  It authorizes only one bounded product decision for exact-path
+  `github.com/hashicorp/go.net v0.0.1`, not renewed audit or implementation,
+  another dependency group, a guarded-parent or Go-floor change, or P8. The
+  launcher check validates the reciprocal 220-archive chain and byte-exact
+  active prompt before that successor begins.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -41,12 +41,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has recorded the controller's user-authorized bounded
-go-uuid option 1 decision and continues only with the prepared go.net
-evaluation. Exact Go 1.26.7, every accepted dependency move through Google
-UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions through
-exact inherited, unloaded go-syslog v1.0.0 are final under their separate target-
-specific guards. Exact inherited, unloaded go-uuid v1.0.1 is retained under
+P2A-P6 are complete. P7 has completed the go.net evaluation and stops only on
+its prepared bounded product decision. Exact Go 1.26.7, every accepted
+dependency move through Google UUID v1.4.0, qualified go-cleanhttp, and all
+retained-module decisions through exact inherited, unloaded go-syslog v1.0.0
+are final under their separate target-specific guards. Exact inherited,
+unloaded go-uuid v1.0.1 is retained under
 its own recorded exception. P8 remains queued. Do not combine groups or begin
 P8.
 
@@ -89,9 +89,9 @@ go-multierror v1.1.0 edge.
 All earlier guarded why results are negative; source imports and target package
 loads are zero, and runtime unreachability remains intact.
 
-Fresh primary data has no new exact record for those targets. All 18 why
-results through go-sockaddr remain negative, repository imports are zero, and
-production and complete-test loads contain zero guarded packages. Gorilla
+Fresh primary data has no new exact record for those targets or go.net. All 20
+why results through go-uuid remain negative, repository Go imports are zero,
+and production and complete-test loads contain zero guarded packages. Gorilla
 retains only its recorded entries, including unwithdrawn GO-2026-6278;
 go-retryablehttp retains only its two accepted identifiers. Direct import or
 loading, runtime reachability, a version or incoming-edge change, or a new
@@ -1633,6 +1633,154 @@ accepted findings, non-transferable limits, and expiry triggers. No dependency
 implementation or metadata commit exists, and the patch/fork/replacement and
 parent-chain removal alternatives remain unauthorized.
 
+## Hashicorp Go Net Evaluation
+
+No exact-path stable `github.com/hashicorp/go.net` release qualifies. Fresh
+proxy, sumdb, `go-import`, Git, and GitHub evidence resolves Hashicorp's public
+active unarchived non-fork BSD-3-Clause repository. V0.0.1 is the only proxy
+version, only stable tag, and proxy latest. There is no prerelease, GitHub
+Release, retraction, module deprecation, redirect, alternate exact path, or
+`/v2` line. Five branch heads and returned forks are not stable candidates.
+
+V0.0.1 is a lightweight tag at GitHub-verified merge commit
+`afc3cb3a421746fc66dd55b09a270c750cf536ce`, parents
+`104dcad90073cd8d1e6828b2af19185b60cf3e29` and
+`b9a611abb799b370ad8aed695239fd086ae5a1fa`, tree
+`0a681728dc14ccfa08d532e5a20e85280c2fdb04`, authored/committed
+2019-01-18T17:37:16Z. Proxy `.info`, `.mod`, and ZIP SHA-256 values are
+`43d75d36010d9b14e61832cb9ff47f4d8c236532bd69002faf3e9174a1303ffc`,
+`9f788c06cdc38f241d7ab6da80f075de30258a64e3bcf1185bb9982fbd629be8`,
+and `71564aa3cb6e2820ee31e4d9e264e4ed889c7916f958b2f54c6f3004d4fcd8d2`.
+The 273 proxy regular files match Git byte-for-byte; sumdb records module
+`h1:sNCoNyDEvN1xa+X0baata4RdcpKwcMS6DH+xwfqPgjw=` and go.mod
+`h1:hjKkEWcCURg++eb33jQU7oqQcI9XDCnUzHA0oac0k90=`. Current master
+`b69938bb7c99c1b9deeece78cc99714a94ec933b`, parent
+`9b8e7e59f356f5103a200ec867fa7f29e1bfc6e6`, tree
+`720ccea3eb284e51228b932d721b795cb7752aca`, is four unreleased compliance-
+only commits later; its 40-file/140-insertion diff adds headers and repository
+metadata without repairing release behavior or API.
+
+The release contains 204 Go files and 46 test files across 16 packages:
+context, dict, html, html/atom, html/charset, idna, internal/iana,
+internal/icmp, internal/nettest, ipv4, ipv6, netutil, proxy, publicsuffix,
+spdy, and websocket. Build-ignored generators, generated tables and platform
+syscall sources, two testdata trees, examples, benchmarks, and Darwin,
+DragonFly, FreeBSD, Linux, NetBSD, OpenBSD, Windows, Solaris, Plan 9, and Nacl
+branches were inventoried. There is no release CLI, modern fuzz target, cgo
+runtime path, embed, symlink, special file, or executable source artifact.
+The exported surface covers legacy context cancellation/deadlines, TCP
+dictionary access, HTML/tokenizer/DOM/charset/atom, IDNA/public suffix,
+IPv4/IPv6 connection/packet/raw socket controls, listener limiting, proxy/
+SOCKS5/per-host routing, SPDY v3 framing, and WebSocket client/server/codec.
+
+V0.0.1's go.mod has only its module directive. The complete production/test
+closure does not resolve under exact Go 1.26.7 or contained Go 1.18.10.
+Production html and html/charset import obsolete
+`code.google.com/p/go.net/html/atom`, `code.google.com/p/go.net/html`, and
+multiple `code.google.com/p/go.text` paths. Context, html, ipv4, ipv6, and
+websocket tests retain obsolete self-import paths. Whole-module package
+listing, build, count-one, two count-ten repeats, race, vet, and complete test-
+symbol vulnerability scanning fail under both SDKs for that source-time
+resolution defect. The mdns-used ipv4/ipv6 production packages build and mdns
+ordinary count-one and two count-ten runs pass on Darwin under both SDKs, but
+the target's own relevant tests do not resolve. Mdns race/vet failures are
+mdns's own server/test-state races and vet defects, not go.net findings.
+
+Relevant ipv4/ipv6 production packages cross-build under both SDKs for Darwin
+amd64/arm64, Linux amd64, Windows amd64, FreeBSD/NetBSD/OpenBSD/DragonFly/
+Solaris amd64, and Plan 9 amd64. They fail Linux arm64 because released build
+constraints provide syscall helpers only for Linux amd64/arm, and fail
+`js/wasm` for absent platform helpers. Whole-module cross-builds also fail on
+every platform through the obsolete production imports. The only stable
+release therefore has no complete minimal source/test closure preserving Go
+1.18 and is disqualified independently of runtime reachability.
+
+Source/API inspection records the networking, address, deadline, error,
+malformed-input, nil/panic, mutation, aliasing, allocation, concurrency,
+global-state, resource, and environment boundaries. `LimitListener` panics
+for negative limits and blocks all accepts at zero. WebSocket server handling
+uses an unchecked `http.Hijacker` assertion and panics on unsupported writers
+or hijack failures; dialing has no context/timeout and entropy failure panics.
+SOCKS5 reconstructs I/O errors as strings and loses `errors.Is` identity.
+`PerHost` retains caller-owned `net.IP`/`*net.IPNet` storage. Dialer-type
+registration uses an unsynchronized process-global map. SPDY allocates from
+peer-declared counts/lengths; HTML tokenizer byte results alias its internal
+buffer as documented; socket wrappers own or delegate caller connection,
+deadline, and close behavior; static generated protocol/public-suffix data is
+old; and platform stubs expose unsupported/no-op boundaries.
+
+Independent fixture SHA-256
+`46328fe4873c5266f6f8de9435dd96d105760401b20b54732dcbba858308d3d6`
+passes count-ten and race under both SDKs while reproducing negative-limit and
+non-Hijacker panics, caller-IP aliasing, process-global proxy registration,
+and SOCKS5 error-identity loss. Its go.mod SHA-256 is
+`a73469249b7c032e2be6b626453d6f24a14fc3c1cd03ff36a4a5ee4f57c1807d`.
+Those results characterize behavior but cannot overcome the broken closure.
+
+MVS selects v0.0.1 only through exact
+`github.com/hashicorp/mdns@v1.0.0 github.com/hashicorp/go.net@v0.0.1`.
+There is no direct root. The target why result is negative, repository Go
+imports are zero, and 355-entry production plus 429-entry complete-test loads
+contain zero target packages. A disposable direct v0.0.1 root adds only one
+main-module graph edge and the missing content sum; selected modules remain
+identical at 234, graph edges become 3,600, sum lines become 1,068, and both
+loads remain identical with zero target packages. Tidy removes the
+manufactured root; its candidate projection is 441 lines versus the base's
+recorded 432. No projection was applied.
+
+The direct-root disposable project passes exact-Go module verification,
+build, count-one, two independent count-ten repeats, race, vet, API/CLI
+compatibility after exact v1.0.1 cache warming, host acceptance, and Darwin
+amd64, Linux amd64/arm64, Windows amd64, and FreeBSD amd64 cross-builds.
+`js/wasm` retains the project's pre-existing chzyer/readline failure and is
+not a go.net result. The initial project attempt reproduced only the managed
+default-cache boundary, and the first API comparison reproduced the known cold
+offline base-cache boundary; scratch-contained caches passed. No changed-
+selection quality gate applies because nothing was retained. Accepted quality
+remains 27/27 Q0-Q2 PASS at L2.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z, with no target record. Exact-version OSV,
+repository advisory, and exact global GitHub advisory results are empty.
+Exact-Go module/package/symbol production scans of ipv4/ipv6 are empty; test-
+symbol and whole-module scans cannot load the obsolete imports. Go 1.18.10
+package scans report ten and symbol scans two old standard-library IDs only.
+Base and direct-root project scans are identical at 30 module, 22 package, and
+20 production/test-symbol IDs, with identical normalized ID hashes and zero
+target assignment or trace. Earlier guarded OSV state remains exact: only the
+recorded Gorilla and go-retryablehttp pairs are non-empty.
+
+Evaluation began from clean ordinary and ignored state at handoff HEAD
+`70867a4a7701f69cbc4551de3d4db53fd7d86fe2`, parent
+`2774d4e54971b833c3eae3342ba158f21c1b139a`, tree
+`b97eb952c930dd8baaa0c5e9313c811a6c52be52`. Exact Go 1.26.7 archive/binary
+SHA-256 values are
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
+fresh Go 1.18.10 archive/binary values are
+`718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
+`f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`.
+The exact SDK ran first under the required environment and `umask 022`.
+
+All 20 earlier guarded selections and recorded requests remain exact; all 20
+why results are negative, repository Go imports are zero, and production and
+complete-test loads contain zero guarded packages. The project remains 234
+modules, 3,599 graph edges, 355 production entries, 429 complete-test entries,
+197 module-backed entries across 41 loaded modules, 1,067 sum lines, and the
+432-line tidy projection. `go.mod`/`go.sum` SHA-256 values remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+No parent, direct root, source, dependency metadata, Go floor, or unrelated
+selection changed.
+
+No dependency implementation or metadata commit exists. P7 stops on one
+prepared go.net product decision among target-specific guarded retention, a
+separately authorized Go-1.18-compatible exact-path patch/fork/replacement
+design, or a separately authorized mdns parent/graph-removal decision. Do not
+infer retention from physical MVS selection or zero reachability.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -1646,7 +1794,7 @@ Exact Go 1.26.7 archive/binary SHA-256 values are
 `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
 `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
 Go 1.18.10 archive/binary values are
-`cdb49accf1e633a739e9fc1873ebac649ffb4ee6b88b80a66d7d94adcba055bd` /
+`718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
 `f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`.
 Both ran first in `PATH` with `GOENV=off`, `GOWORK=off`,
 `GOTOOLCHAIN=local`, `LC_ALL=C`, `LANG=C`, and no ambient `GOFLAGS`.
@@ -1798,6 +1946,17 @@ advisory state, module verification, and launcher/archive lifecycle check
 pass. No source or dependency metadata changed, so no changed-selection
 scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS at L2.
 
+The go.net evaluation's base project retains exact module verification and
+the accepted quality result. Its disposable redundant-root projection passes
+exact-Go build, count-one, two count-ten repeats, race, vet, API/CLI
+compatibility, host acceptance, and supported production cross-builds with
+zero target load and no selected-version change. The initial default-cache and
+cold offline v1.0.1 API-base failures passed after scratch containment and
+exact cache warming. The target module itself fails complete source/test
+resolution under both SDKs; that is the qualification blocker. No source or
+dependency metadata changed, no changed-selection scorecard applies, and
+accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
 Initial superseded project attempts reproduced only the known cold offline
 API-base cache, managed bare-`mktemp`, repository-local compatibility-report,
 and Make command-line-variable inheritance boundaries. Warming the exact
@@ -1835,20 +1994,18 @@ evaluation's 27/27 Q0-Q2 L2 result at SHA-256
 `62ee293e3c4253f4ed5c71df3c858a3db996636d0b6e968d8532b7fe2825ce99`.
 Its exact 21-line stage ledger SHA-256 is
 `d512e5bc5a02c2c0737f189ab5480e8735b174729de36b993c26b3e0d66c267d`.
-All disposable go-uuid evidence remains beneath
+All disposable go.net and go-uuid evidence remains beneath
 `$CODEX_SESSION_SCRATCH_ROOT`; prior accepted quality evidence remains in its
 recorded external roots. Never retain a `go mod download all` projection in a
 measured worktree.
 
 ## Next Bounded Objective
 
-Independently evaluate selected exact-path
-`github.com/hashicorp/go.net v0.0.1` as one bounded P7 dependency group. It is
-inherited through the sole exact request from
-`github.com/hashicorp/mdns v1.0.0`, with no direct root, negative why/import
-results, and zero production or complete-test target loads. Resolve
-repository/release identity, complete Go 1.18 closure,
-behavior/API, exact MVS effects, vulnerability state, and all applicable
-quality contracts before retaining or changing it. Preserve the recorded
-go-uuid exception and every earlier guard; do not combine another group or
-begin P8.
+Make exactly one fresh product decision for selected exact-path
+`github.com/hashicorp/go.net v0.0.1` after the completed evaluation found no
+qualifying stable release. Choose among a target-specific guarded retention
+exception, a separately authorized Go-1.18-compatible exact-path patch/fork/
+replacement design, or a separately authorized mdns parent/graph-removal
+decision. Do not infer retention from physical selection or zero reachability,
+repeat the audit, implement before authorization, combine another dependency
+group, change an earlier guard or the Go floor, or begin P8.
