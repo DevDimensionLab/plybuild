@@ -5374,9 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded evaluation of selected exact-path
-`github.com/hashicorp/golang-lru v0.5.4` after recording the authorized
-Hashicorp go.net option 1 decision. Completed dependency groups remain final
+Status: active for the prepared bounded product decision for selected
+exact-path `github.com/hashicorp/golang-lru v0.5.4` after its independent
+evaluation found no qualifying stable release. Completed dependency groups remain final
 through accepted Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all
 retained-module decisions through exact inherited, unloaded
 `github.com/hashicorp/go.net v0.0.1`. P8 remains queued.
@@ -11132,6 +11132,108 @@ Hashicorp go.net product decision (2026-09-20):
   at L2. P7 continues only with the prepared bounded evaluation of selected
   exact-path `github.com/hashicorp/golang-lru v0.5.4`; it was not executed in
   this decision session.
+
+Hashicorp golang-lru evaluation and blocked product boundary (2026-09-20):
+
+- No exact-path stable release qualifies. Fresh proxy, sumdb, `go-import`, Git,
+  and GitHub evidence resolves Hashicorp's public active unarchived non-fork
+  MPL-2.0 repository. Retrievable exact-path releases are v0.5.0-v0.5.4,
+  v0.6.0, v1.0.1, and v1.0.2. A stale v1.0.0 proxy-list entry has no
+  retrievable endpoint or Git tag. V1.0.2 is proxy latest and the final v0/v1
+  release. Current main is the distinct Go-1.19
+  `github.com/hashicorp/golang-lru/v2` module, with ARC also split to
+  `github.com/hashicorp/golang-lru/arc/v2`; neither alternate major path was
+  promoted. There is no retraction or module deprecation.
+- Selected v0.5.4 is a lightweight unsigned tag at commit
+  `14eae340515388ca95aa8e7b86f0de668e981f54`, parent
+  `7f827b33c0f158ec5dfbba01bb0b14a4541fd81d`, tree
+  `635407bf580448ac91cc1265a72cac484c273f21`, time
+  2020-01-16T13:29:26-05:00. Proxy ZIP SHA-256 is
+  `7b2a8b1739c858727fca497a6415323edb801dc97b8aca04f7bac4ab9fb5c66b`;
+  proxy and Git files match, and sumdb verifies it. V0.5.4 is an ancestor of
+  v0.6.0 and v1.0.2. Latest v1.0.2 is GitHub-verified commit
+  `a032ef5a154020ffc7a74ba73702f9c5d3ea11f2`, parent v0.6.0, tree
+  `ddabbfd3c054c45dccdc7c3a04378ea85eff781d`, time
+  2023-08-08T11:23:39Z; its lightweight tag is unsigned.
+- V0.5.4 contains two packages, six production Go files, four test files, 27
+  tests, and six benchmarks. It has no command, example, fuzz target,
+  testdata, generated file, build-tag/platform branch, cgo, embed, resource,
+  environment, network, process, or goroutine boundary. V0.6.0/v1.0.2 add one
+  standard-library-only ordinary testing helper file. V1.0.1 has no Go
+  package or test and is unusable.
+- Every sourceful release has a standard-library-only minimal closure and
+  passes verification, listing, build, count-one, two count-ten repeats, race,
+  and vet under exact Go 1.26.7 and contained Go 1.18.10. Selected v0.5.4,
+  v0.6.0, and v1.0.2 also pass production/test cross-compilation for Darwin,
+  Linux amd64/arm64, Windows, FreeBSD, and `js/wasm` under both SDKs. The
+  complete dependency closure preserves the Go 1.18 floor.
+- The root package exports synchronized Cache, 2Q, and ARC constructors and
+  operations; `simplelru` exports its explicitly non-thread-safe LRU,
+  interface, callback, and operations. Pinned API comparison proves
+  v0.5.0-v0.5.3 remove selected methods or signatures. V0.6.0/v1.0.2 add
+  only `DefaultEvictedBufferSize`, but changing `Cache` internals from an
+  interface to a pointer plus slices makes the exported type non-comparable.
+  Pinned apidiff and an independent `map[lru.Cache]bool` compile fixture prove
+  that v0.5.4 compiles while v0.6.0/v1.0.2 fail under both SDKs.
+- Independent fixture SHA-256
+  `891d2144f6d6adb7acba5788859eb992b7c0238bbff2806f0e9444dfdd93f73e`
+  characterizes LRU/2Q/ARC capacity, order, adaptation, resize, purge,
+  callbacks, aliasing, nil/panic inputs, allocation, and concurrency. Selected
+  v0.5.4 invokes user eviction callbacks while holding `Cache.lock`: callback
+  reentrancy through `Len` deadlocks, and callback panic escapes before unlock
+  and permanently poisons the mutex under both SDKs. V0.6.0/v1.0.2 invoke
+  callbacks after unlocking and pass those fixtures but fail API comparability.
+  Earlier releases already fail selected API compatibility.
+- Common boundaries are recorded: Get/update refresh recency while Peek/
+  Contains do not; caller key/value identity is retained; nil comparable keys
+  and nil values work; non-comparable keys and nil/zero receivers panic;
+  constructors reject nonpositive size; default `New2Q(1)` and zero ghost
+  capacity fail; and `simplelru.Resize(-1)` evicts everything, returns an
+  over-capacity count, retains negative capacity, and immediately evicts later
+  adds. Cache/2Q/ARC are synchronized, simplelru is not, Get/Peek allocate
+  zero, and there is no global mutable state or external resource ownership.
+- MVS selects v0.5.4 through eighteen exact graph edges: three v0.5.4 requests
+  from Viper v1.15.0/v1.10.1 and crypt v0.4.0; three v0.5.0 requests from
+  immutable-radix v1.0.0/v1.3.1 and OpenCensus v0.21.0; and twelve v0.5.1
+  requests from OpenCensus v0.22.0 plus the recorded historical Google API
+  versions. There is no direct root; why/import results are negative; and
+  production/complete-test loads contain zero target packages.
+- A disposable direct v0.5.4 root retains the selection and all 234 modules,
+  adds one graph edge and one sum line. Direct v0.6.0/v1.0.1/v1.0.2 roots
+  move only the target, retain 234 modules and 3,600 edges, and produce 1,069
+  sum lines. All retain 355 production and 429 complete-test entries with zero
+  target loads and no unrelated version move. Tidy removes every manufactured
+  root and returns exactly to common base projection hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+  No projection was applied.
+- Fresh primary vulnerability data remains 1,402 records at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  with no target record. Exact OSV and target GitHub advisory queries are
+  empty for every retrievable stable release. Exact-Go isolated scans are
+  empty; old-Go findings belong only to its standard library. Base and every
+  project projection are byte-identical at 30 module, 22 package, and 20
+  symbol/test-symbol IDs with no target assignment or trace.
+- All 21 prior guarded selections, requests, negative why results, zero
+  imports/loads, runtime-unreachability, and advisory states remain exact. The
+  base stays 234 modules, 3,599 edges, 355 production entries, 429 complete-
+  test entries, 197 module-backed entries across 41 modules, 1,067 sum lines,
+  and a 432-line tidy projection. Base `go.mod`/`go.sum` hashes remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- All four direct-root projections pass exact-Go verify, build, count-one, two
+  repeats, race, vet, API/CLI compatibility, host acceptance, and supported
+  project cross-builds. The unchanged base additionally passes pinned lint,
+  empty-HOME count-two, canonical full preflight, every script/meta pair, all
+  eight mutation meta-stages with 80/80 kills, host/snapshot/Docker acceptance,
+  and all audit meta-controls. The project retains its unrelated pre-existing
+  `js/wasm` chzyer/readline gap. No changed-selection scorecard applies and
+  accepted quality remains 27/27 Q0-Q2 PASS at L2.
+- No dependency implementation or metadata commit was created. P7 is blocked
+  on the single prepared golang-lru product decision among exact v0.5.4
+  guarded retention, a separately authorized Go-1.18-compatible exact-path
+  and API-preserving remediation design, or a separately authorized parent/
+  graph-removal study. That decision was not executed in this evaluation.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
