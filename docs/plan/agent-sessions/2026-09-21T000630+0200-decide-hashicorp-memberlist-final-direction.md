@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Memberlist Final Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-21T000630+0200-decide-hashicorp-memberlist-final-direction`
 Created: `2026-09-21T00:06:30+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `34e4a9a6a3982ab0efd3b4693148c71360865361aa4aad0564d71b4987d394a8`
 Previous: [2026-09-20T230357+0200-study-hashicorp-serf-memberlist-removal.md](2026-09-20T230357+0200-study-hashicorp-serf-memberlist-removal.md)
-Next: none
-Outcome: pending
+Next: [2026-09-21T004448+0200-integrate-go125-fixed-memberlist.md](2026-09-21T004448+0200-integrate-go125-fixed-memberlist.md)
+Outcome: Option 1 is authorized: one separate integrated Go-1.25/fixed-memberlist migration must choose and fully qualify exact v0.6.0 or v0.7.0, establish a supported tidy-stable selection, own every floor/format/guarded-graph change, and retain implementation only after all gates pass; affected v0.3.0 is not risk-accepted and no source or dependency metadata changed.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -184,3 +184,102 @@ create a dependency implementation commit, launch a successor, push, merge,
 publish, release, stash, revert, bypass cleanup, remove the worktree, combine
 another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+# Answer
+
+## Decision
+
+Option 1 is authorized. P7 may continue through exactly one separate integrated
+Go-1.25/fixed-memberlist migration. The successor must choose and fully qualify
+exact first-fixed `github.com/hashicorp/memberlist v0.6.0` or latest fixed
+`v0.7.0`, explicitly own raising the module compatibility floor from Go 1.18
+to Go 1.25.0, and durably select that fixed release through a supported,
+tidy-stable owning dependency relationship. This is not an exception for
+affected v0.3.0, and v0.3.0 remains affected, unqualified, and not secure.
+
+The migration may retain a focused implementation only after it has repaired
+or obtained a separate owning decision for the existing stricter-format
+failures, obtained a fresh owning decision for every changed guarded selection
+and incoming edge, preserved the product API, CLI, and runtime behavior, and
+passed the complete source/test, race, vet, platform, MVS, tidy, vulnerability,
+and quality gates. A manufactured direct root, unsupported replacement or
+version masquerade, fork, patch, or silent parent/POM redesign is not
+authorized. If no supported durable selection or fully passing integration is
+available, the successor must retain no projection and stop P7 for a fresh
+product decision; it must not fall back to implicit v0.3.0 retention.
+
+## Revalidated Decision Guards
+
+The decision began from clean ordinary and ignored state on branch
+`codex/upgrade-quality` at HEAD
+`e1ff4d49490ed94513d54807b5e19cebd6faaacc`, parent
+`36bf3a3f5a05594213e0ccd6f5c45a2e2f3bbf3a`, tree
+`5063148c562d6d298aa8555f52f7e56f14260dde`. That handoff changed exactly the
+launcher, answered Serf study archive, then-NEXT final-direction archive,
+rolling handover, and roadmap. Its reciprocal 228-archive chain, latest Google
+UUID implementation ancestry, and launcher check passed.
+
+Exact Go 1.26.7 remains byte-identical at SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+The unchanged project retains 234 modules, 3,599 graph edges, 355 production
+entries, 429 complete-test entries, 197 module-backed complete-test entries
+across 41 loaded modules, 1,067 sum lines, and a 432-line tidy projection.
+Exact module verification passes. `go.mod` and `go.sum` remain at SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` and
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+All 23 earlier guarded selections and 164 incoming edges remain exact at
+snapshot SHA-256
+`f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`.
+All 24 memberlist-plus-earlier `go mod why` results are negative, repository Go
+imports are zero, and production and complete-test closures load zero guarded
+modules. Selected Serf remains v0.10.1. The five incoming Serf requests remain
+exact, as do Serf v0.9.6 -> memberlist v0.3.0 and historical Serf v0.8.2 ->
+memberlist v0.1.3. Memberlist has no direct root, import, load, or runtime
+reachability.
+
+The PUBLISHED HashiCorp CNA response remains byte-identical at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`:
+memberlist below v0.6.0 is affected and v0.6.0 is first fixed. The primary Go
+vulnerability index remains 1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. Exact OSV remains empty for memberlist and
+all Serf candidates; earlier guarded results retain only the recorded Gorilla
+and go-retryablehttp pairs. Feed emptiness does not override the primary CNA
+record. No security evaluation, attack traffic, exploitability analysis, or
+boundary test was repeated.
+
+## Authorization And Expiry
+
+The authorization is non-transferable and valid only for the single reciprocal
+successor while its starting state matches every guard above, there is no new
+advisory or independently observed defect, the affected/fixed range is
+unchanged, and no Go-1.18-floor-compatible fixed stable route has appeared.
+Expected migration changes are permitted only when explicitly measured and
+owned by the integrated decision; any unexplained target, request, root,
+import, load, runtime, module-hash, earlier-guard, advisory, range, or route
+change expires the authorization before implementation is retained.
+
+The authorization expires after one coherent migration handoff. It authorizes
+neither P8 nor another dependency group. Failure to qualify one exact fixed
+release, a durable supported selection, the Go-floor integration, every
+changed guard, or every required gate leaves P7 stopped with no implementation
+retained and requires a fresh owning decision.
+
+This session changed only continuity documentation and the launcher handoff.
+It did not edit product source, `go.mod`, or `go.sum`; select a fixed release;
+raise the Go floor; change a parent or guarded module; risk-accept v0.3.0; or
+execute the successor.
+
+## Final Verification
+
+The new 229-archive reciprocal chain and byte-exact launcher/archive prompt
+mirror pass `./codex-dev-start.sh --check`. The launcher contract passes all 62
+controls; one initial nested run reproduced the already documented signal-log
+retention timing race, and the canonical rerun passed. Exact Go 1.26.7 module
+verification, count-one tests, race tests, and vet pass. All 15 quality-audit
+meta-controls pass with the exact Go 1.26.7 binary first on `PATH`; a diagnostic
+noncanonical run with the Homebrew Go 1.26.2 shim differed only in the expected
+recorded Go-version field and was not accepted. No source or dependency
+metadata changed, so no changed-selection scorecard applies and accepted
+quality remains 27/27 Q0-Q2 PASS at L2.

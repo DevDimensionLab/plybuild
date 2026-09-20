@@ -5374,15 +5374,18 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on the prepared final memberlist product decision. The
-authorized Serf/owning-graph study found neither request-population removal nor
-compatible Serf/parent modernization viable as a bounded remediation and
-recommends a separately authorized integrated fixed-memberlist migration over
-explicit affected-version risk acceptance. It did not make that decision,
-risk-accept v0.3.0, authorize the fixed line, or change source or metadata.
-Completed dependency groups remain final through accepted Google UUID v1.4.0,
-qualified go-cleanhttp v0.5.2, and all retained-module decisions through exact
-inherited, unloaded `github.com/hashicorp/mdns v1.0.4`. P8 remains queued.
+Status: active on the authorized separate integrated Go-1.25/fixed-memberlist
+migration. The final product decision chose migration option 1 after the
+Serf/owning-graph study found neither request-population removal nor compatible
+Serf/parent modernization viable as a bounded remediation. The successor must
+choose and fully qualify exact v0.6.0 or v0.7.0, establish a supported
+tidy-stable selection, explicitly own the floor/format integration and every
+changed guard, and pass all gates before retaining implementation. Affected
+v0.3.0 is not risk-accepted. No fixed release, source change, or dependency
+metadata change was selected in the decision session. Completed dependency
+groups remain final through accepted Google UUID v1.4.0, qualified
+go-cleanhttp v0.5.2, and all retained-module decisions through exact inherited,
+unloaded `github.com/hashicorp/mdns v1.0.4`. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -11672,6 +11675,69 @@ Hashicorp Serf/owning-graph removal study (2026-09-21):
   manual-evidence-bound UNMEASURABLE rows, and zero ratchet regressions; no
   changed-selection scorecard applies, so accepted quality remains 27/27
   Q0-Q2 PASS at L2.
+
+Hashicorp memberlist final product decision (2026-09-21):
+
+- Option 1 is explicitly authorized: perform exactly one separate integrated
+  Go-1.25/fixed-memberlist migration. The successor must choose and fully
+  qualify exact first-fixed v0.6.0 or latest fixed v0.7.0, establish the fixed
+  selection through a supported tidy-stable owning dependency relationship,
+  explicitly own raising the module floor from Go 1.18 to Go 1.25.0, and
+  repair or separately decide the existing stricter-format failures.
+- This is not an affected-version exception. Selected inherited v0.3.0 remains
+  affected, unqualified, and not secure. No direct root, replacement, version
+  masquerade, fork, patch, silent parent/POM redesign, unrelated dependency
+  modernization, or transfer of another exception is authorized. If no
+  supported durable selection or fully passing integration exists, the
+  successor must retain no projection and stop P7 for a fresh product decision.
+- Every changed guarded selection and incoming edge requires a measured fresh
+  owning decision. Before retaining implementation, the chosen candidate must
+  preserve project API/CLI/runtime behavior and pass complete source/test,
+  repeated-test, race, vet, lint, platform/floor, MVS, tidy, vulnerability,
+  acceptance, launcher/audit-control, and Q0-Q2 quality gates. Dependency and
+  behavior changes remain separated under the roadmap's normal commit rules.
+- Guard-only revalidation began from clean ordinary and ignored state at HEAD
+  `e1ff4d49490ed94513d54807b5e19cebd6faaacc`, parent
+  `36bf3a3f5a05594213e0ccd6f5c45a2e2f3bbf3a`, tree
+  `5063148c562d6d298aa8555f52f7e56f14260dde`. Its exact five-file predecessor
+  handoff, reciprocal 228-archive chain, latest Google UUID implementation
+  ancestry, exact Go 1.26.7 binary, and launcher check pass.
+- The unchanged base remains 234 modules, 3,599 edges, 355/429 load entries,
+  197 module-backed complete-test entries across 41 modules, 1,067 sum lines,
+  and a 432-line tidy projection. All 24 target-plus-earlier why results are
+  negative; repository imports and production/complete-test guarded loads are
+  zero. All 23 earlier guarded selections and 164 incoming edges retain
+  snapshot SHA-256
+  `f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`.
+  The exact five Serf requests and two historical Serf-to-memberlist requests
+  remain unchanged. `go.mod`/`go.sum` retain SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- Primary advisory identity is unchanged. The PUBLISHED HashiCorp CNA response
+  still marks memberlist below v0.6.0 affected and v0.6.0 first fixed at
+  SHA-256
+  `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+  The 1,402-record Go vulnerability index remains byte-identical at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+  Last-Modified 2026-09-17T17:29:18Z. Exact OSV remains empty for memberlist
+  and all Serf candidates; earlier guards retain only the recorded Gorilla and
+  go-retryablehttp pairs. No security investigation was repeated.
+- The authorization is non-transferable and requires this exact base, no new
+  advisory or independently observed defect, an unchanged affected/fixed
+  range, and no Go-1.18-floor-compatible fixed stable route. Expected migration
+  deltas are valid only when explicitly measured and owned; any unexplained
+  target, request, root, import, load, runtime, hash, guard, advisory, range,
+  or route change expires the authorization. It also expires after one
+  coherent migration handoff and authorizes neither another group nor P8.
+- The decision session changed only continuity documentation and the launcher
+  handoff. It did not edit source, `go.mod`, or `go.sum`; choose or select a
+  fixed release; raise the floor; change a parent or guarded module;
+  risk-accept v0.3.0; or execute the migration successor. Accepted quality
+  remains 27/27 Q0-Q2 PASS at L2. Final exact-Go module verification,
+  count-one tests, race tests, vet, all 62 launcher lifecycle controls, and all
+  15 audit meta-controls pass. The canonical reruns resolved only the already
+  documented launcher signal-log timing race and noncanonical Homebrew Go
+  1.26.2 path boundary; exact Go 1.26.7 reproduces the stored audit baseline.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
