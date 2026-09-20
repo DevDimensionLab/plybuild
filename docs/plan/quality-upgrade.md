@@ -5374,18 +5374,17 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on the authorized separate integrated Go-1.25/fixed-memberlist
-migration. The final product decision chose migration option 1 after the
-Serf/owning-graph study found neither request-population removal nor compatible
-Serf/parent modernization viable as a bounded remediation. The successor must
-choose and fully qualify exact v0.6.0 or v0.7.0, establish a supported
-tidy-stable selection, explicitly own the floor/format integration and every
-changed guard, and pass all gates before retaining implementation. Affected
-v0.3.0 is not risk-accepted. No fixed release, source change, or dependency
-metadata change was selected in the decision session. Completed dependency
-groups remain final through accepted Google UUID v1.4.0, qualified
-go-cleanhttp v0.5.2, and all retained-module decisions through exact inherited,
-unloaded `github.com/hashicorp/mdns v1.0.4`. P8 remains queued.
+Status: blocked on the fresh memberlist ownership product decision. The
+authorized integrated Go-1.25/fixed-memberlist migration preferred exact
+first-fixed v0.6.0 but found no genuine supported tidy-stable owner and
+retained no implementation. The only durable projection manufactured unused
+Serf CLI tool ownership and broad unrelated graph churn. Affected v0.3.0 is
+still selected, unqualified, and not risk-accepted. The successor must choose
+exactly one documentation-only direction: guarded affected-version retention,
+a separately scoped POM subsystem redesign, or stopping P7 unresolved.
+Completed dependency groups remain final through accepted Google UUID v1.4.0,
+qualified go-cleanhttp v0.5.2, and all retained-module decisions through exact
+inherited, unloaded `github.com/hashicorp/mdns v1.0.4`. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -11738,6 +11737,62 @@ Hashicorp memberlist final product decision (2026-09-21):
   15 audit meta-controls pass. The canonical reruns resolved only the already
   documented launcher signal-log timing race and noncanonical Homebrew Go
   1.26.2 path boundary; exact Go 1.26.7 reproduces the stored audit baseline.
+
+Integrated Go-1.25/fixed-memberlist migration outcome (2026-09-21):
+
+- Exact first-fixed memberlist v0.6.0 was preferred over latest fixed v0.7.0.
+  It is the primary-vendor first fixed release, avoids v0.7.0's additional
+  guarded move, and is reached through Serf v0.10.4 on Go 1.25 rather than
+  Serf v0.11.0's Go 1.26 floor and exported metrics-label change. No fixed
+  implementation qualified because the repository has no genuine supported
+  tidy-stable owner for either fixed release.
+- Direct memberlist and Serf roots remain removable by tidy; replacements are
+  unsupported version masquerading; excluding memberlist v0.3.0 selects
+  historical v0.1.3, and excluding both historical requests removes the
+  selected module instead of selecting v0.6.0. Memberlist has no command.
+  Blank, build-tag, test-only, or unused tool anchors would manufacture
+  ownership and are not remediation.
+- A disposable Go 1.25 `tool` declaration for
+  `github.com/hashicorp/serf/cmd/serf@v0.10.4` was the only syntactically
+  durable route. Tidy retained `go 1.25.0`, `toolchain go1.26.7`, exact Serf
+  v0.10.4, and memberlist v0.6.0. Its `go.mod`/`go.sum` SHA-256 values were
+  `88b9659119152f3e3d5e84a81be0685db27ee730c266a215743bc947cb4ef3a9` /
+  `37dcf9ce84bcd16012189132f37ac839c329d68eb1eca532343a81832f55d768`.
+  The repository does not invoke or otherwise need that CLI, so declaring it
+  solely to select memberlist is manufactured tool ownership.
+- The failed projection expanded the base to 261 modules and 3,826 graph
+  edges, with 1,031 sum lines. It removed 51 edges and added 278. Production
+  remained 355 entries, but complete-test entries fell from 429 to 402 and
+  module-backed entries from 197 to 170 across the same 41 loaded modules.
+  Serf, memberlist, and all earlier guarded packages remained absent from the
+  product closures; only the 270-package Serf tool closure made their why
+  results positive.
+- Six guarded selections moved: errwrap v1.1.0, go-multierror v1.1.1,
+  go-retryablehttp v0.7.7, go-sockaddr v1.0.7, golang-lru v1.0.2, and mdns
+  v1.0.7. Guarded incoming edges grew from 164 to 195 through 31 additions and
+  no removal, at candidate snapshot SHA-256
+  `bef5bb840a3f67db60fd3fdc2460cbd1dd4e10c70bf7da1065aabe1ec82f9616`.
+  The full selection delta also moved unrelated CLI, metrics, compression,
+  serialization, Prometheus, crypt, protobuf, terminal, and x/* modules.
+  This combines another dependency population with the remediation.
+- The candidate failed the genuine-owner and focused-change gates. No owning
+  decision was therefore granted for any candidate delta, and no Go-floor,
+  stricter-format, API/CLI, behavior, or implementation-only integration was
+  retained. The real `go.mod`/`go.sum`, source, all 23 guarded selections and
+  164 guarded edges, graph counts, closure counts, and toolchain remain exact.
+  No implementation commit exists.
+- Fresh CNA, Go-index, OSV, release-route, import/load, and all earlier guard
+  checks preserve the starting premise. Memberlist v0.3.0 remains affected,
+  unqualified, and not risk-accepted. Exact Go 1.26.7 module verification,
+  build, canonical count-one tests, race tests, and vet pass on the unchanged
+  tree. No changed-selection scorecard applies and accepted quality remains
+  27/27 Q0-Q2 PASS at L2.
+- The integrated migration authorization is exhausted. P7 is blocked on one
+  fresh documentation-only product decision: explicitly accept exact affected
+  unloaded v0.3.0 under new target-specific guards; authorize a separately
+  scoped POM subsystem redesign; or stop P7 unresolved. The decision may not
+  manufacture a dependency owner, implement its chosen option, combine
+  another group, or begin P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

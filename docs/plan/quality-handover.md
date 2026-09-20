@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T00:44:48+02:00
+Generated: 2026-09-21T01:25:27+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,15 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The final memberlist
-  direction decision began from clean handoff HEAD
-  `e1ff4d49490ed94513d54807b5e19cebd6faaacc`, parent
-  `36bf3a3f5a05594213e0ccd6f5c45a2e2f3bbf3a`, tree
-  `5063148c562d6d298aa8555f52f7e56f14260dde`. That commit changed exactly the
-  launcher, answered Serf study archive, then-NEXT final-direction archive,
-  rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 228-archive history, latest Google
-  UUID ancestry, and launcher check passed before the decision.
+  `codex/upgrade-quality`, base master at `5635d50`. The failed integrated
+  migration began from clean handoff HEAD
+  `7bb2629681b30b9b841f324f10b33f05690ff692`, parent
+  `e1ff4d49490ed94513d54807b5e19cebd6faaacc`, tree
+  `feb1073de931445bedd5272d9b9d4cf5541b577e`. That commit changed exactly the
+  launcher, answered Serf-study archive, final-direction archive, then-NEXT
+  integration archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal 229-archive history,
+  latest Google UUID ancestry, and launcher check passed before execution.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -24,16 +24,17 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The final direction decision, Serf study, memberlist decision/evaluation,
-  mdns decision/evaluation, golang-lru decision/evaluation, go.net decision/
-  evaluation, and every earlier archive are answered. Final direction chose
-  option 1 and explicitly authorized one separate integrated
-  Go-1.25/fixed-memberlist migration. Affected v0.3.0 was not risk-accepted.
-  The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T004448+0200-integrate-go125-fixed-memberlist.md`.
-  It must choose and fully qualify exact v0.6.0 or v0.7.0, establish a supported
-  tidy-stable owning selection, own the floor/format and every guarded-graph
-  change, and pass all gates before retaining implementation.
+- The integrated migration, final direction decision, Serf study, memberlist
+  decision/evaluation, mdns decision/evaluation, golang-lru decision/
+  evaluation, go.net decision/evaluation, and every earlier archive are
+  answered. The migration preferred exact first-fixed v0.6.0 but found no
+  genuine supported tidy-stable owner and retained no implementation.
+  Affected v0.3.0 remains selected and was not risk-accepted. The sole NEXT
+  archive is
+  `docs/plan/agent-sessions/2026-09-21T012527+0200-decide-memberlist-ownership-blocker.md`.
+  It must make exactly one documentation-only product decision among guarded
+  affected-version retention, a separately scoped POM subsystem redesign, or
+  stopping P7 unresolved.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -42,37 +43,27 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 has completed the memberlist defensive evaluation,
-its option-3 decision, the measurement-only Serf/owning-graph study, and the
-final direction decision. The study found neither removal nor compatible
-modernization viable as a bounded remediation. The final decision therefore
-authorized option 1: one separate integrated Go-1.25/fixed-memberlist
-migration. It did not risk-accept affected v0.3.0, select v0.6.0 or v0.7.0,
-raise the floor, or change source or metadata. Exact Go 1.26.7, every accepted
-dependency move through Google UUID v1.4.0, qualified go-cleanhttp, and all
-retained-module decisions through exact inherited, unloaded mdns v1.0.4 remain
-final under their separate target-specific guards. P8 remains queued. Do not
-combine groups or begin P8.
+its option-3 decision, the measurement-only Serf/owning-graph study, final
+direction decision, and one authorized integrated migration attempt. Exact
+v0.6.0 was preferred over v0.7.0, but no genuine supported tidy-stable owning
+relationship exists in this project. The attempt retained no source or
+dependency metadata and created no implementation commit. P7 is blocked on
+one fresh documentation-only product decision among explicit target-specific
+retention of affected unloaded v0.3.0, a separately scoped POM subsystem
+redesign, or stopping P7 unresolved. Exact Go 1.26.7, every accepted dependency
+move through Google UUID v1.4.0, qualified go-cleanhttp, and all retained-
+module decisions through exact inherited, unloaded mdns v1.0.4 remain final
+under their separate target-specific guards. P8 remains queued.
 
-The migration authorization is exact and non-transferable. Its successor must
-choose and fully qualify first-fixed memberlist v0.6.0 or latest fixed v0.7.0,
-durably maintain that choice through a supported tidy-stable owning dependency
-relationship, explicitly own raising the module compatibility floor from Go
-1.18 to Go 1.25.0, and repair only mechanically behavior-preserving stricter-
-format failures or stop for a separate owning decision. A manufactured direct
-root, replacement or version masquerade, fork, patch, silent parent removal,
-silent POM redesign, unrelated dependency modernization, and transfer of an
-existing exception remain unauthorized.
+The integrated migration authorization is expired and non-transferable.
+Direct memberlist and Serf roots are removed by tidy; replacements are version
+masquerading; exclusions do not select a fixed version; and unused blank,
+build-tag, test, or tool anchors manufacture ownership. The Serf CLI may not
+be declared as a tool solely to pin memberlist. The measured POM-parent removal
+remains a separate product redesign. Affected v0.3.0 remains unqualified and
+must not be called secure or silently retained under an exception.
 
-Every changed guarded selection and incoming edge requires a measured fresh
-owning decision. No implementation may be retained until the chosen candidate
-preserves project API/CLI/runtime behavior and passes complete source/test,
-repeated-test, race, vet, lint, platform/floor, MVS, tidy, vulnerability,
-acceptance, launcher/audit-control, and Q0-Q2 quality gates. If no supported
-durable selection or fully passing integration exists, the successor must
-retain no projection and stop P7 for a fresh product decision; it must not
-silently retain affected v0.3.0.
-
-The authorization remains valid only while the unchanged starting state is
+The fresh product decision is valid only while the unchanged starting state is
 exact: selected memberlist v0.3.0; selected Serf v0.10.1; the exact two
 historical Serf-to-memberlist requests and five incoming Serf requests; no
 direct memberlist root/import/load/runtime reachability; all 23 earlier guarded
@@ -80,23 +71,30 @@ selections and 164 incoming edges at snapshot SHA-256
 `f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`;
 the exact module hashes and counts; the primary affected/fixed record; no new
 advisory or independent defect; and no Go-1.18-floor-compatible fixed stable
-route. Expected migration deltas are permitted only when explicitly measured
-and owned. Any unexplained target, request, root, import, load, runtime, hash,
-guard, advisory, range, or route change expires the authorization. It also
-expires after one coherent migration handoff and authorizes neither another
+route. Any unexplained target, request, root, import, load, runtime, hash,
+guard, advisory, range, or route change requires investigation before a choice
+is made. The decision session authorizes documentation only, neither another
 dependency group nor P8.
 
-Final documentation-only verification passes: the reciprocal 229-archive
-chain and launcher/archive prompt mirror pass `./codex-dev-start.sh --check`,
-all 62 launcher lifecycle controls pass, exact Go 1.26.7 module verification,
-count-one tests, race tests, and vet pass, and all 15 audit meta-controls pass
-with the exact Go binary first on `PATH`. One initial nested launcher run
-reproduced the documented signal-log retention timing race before the canonical
-rerun passed. A diagnostic audit run through the noncanonical Homebrew Go
-1.26.2 shim differed only in the expected Go-version field; the exact-Go
-rerun reproduced the stored baseline and all 228 numeric debt leaves. No
+Final unchanged-tree exact Go 1.26.7 module verification, build, canonical
+count-one tests, race tests, and vet pass. The reciprocal 230-archive chain and
+launcher/archive prompt mirror pass `./codex-dev-start.sh --check`; all 62
+launcher lifecycle controls and all 15 quality-audit meta-controls pass. No
 changed-selection scorecard applies; accepted quality remains 27/27 Q0-Q2
 PASS at L2.
+
+The only syntactically tidy-stable candidate projection used Go 1.25's `tool`
+directive for `github.com/hashicorp/serf/cmd/serf@v0.10.4`. It retained exact
+Serf v0.10.4/memberlist v0.6.0 and toolchain go1.26.7, but the repository has
+no use for the Serf CLI. The tool closure alone contained 270 packages. The
+projection produced 261 modules, 3,826 edges, 1,031 sum lines, 355 production
+entries, 402 complete-test entries, and 170 module-backed complete-test
+entries across 41 modules. It removed 51 graph edges, added 278, moved six
+guarded selections, and added 31 guarded incoming edges. The guarded-edge
+snapshot became
+`bef5bb840a3f67db60fd3fdc2460cbd1dd4e10c70bf7da1065aabe1ec82f9616`.
+Because this was manufactured tool ownership plus unrelated graph churn, no
+delta was accepted and the disposable projection was discarded.
 
 Primary HashiCorp/CNA evidence confirms HCSEC-2026-18 / CVE-2026-14362:
 releases through v0.5.4 are affected and v0.6.0 is first fixed. Current latest
