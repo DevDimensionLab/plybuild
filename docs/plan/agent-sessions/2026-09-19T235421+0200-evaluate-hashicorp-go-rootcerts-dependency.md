@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Hashicorp Go Rootcerts Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-19T235421+0200-evaluate-hashicorp-go-rootcerts-dependency`
 Created: `2026-09-19T23:54:21+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c05529eedf4c44e43ea1a9e7eaba81e7fdb56b110781542abad6002107c1b86d`
 Previous: [2026-09-19T233605+0200-decide-hashicorp-go-retryablehttp-product-direction.md](2026-09-19T233605+0200-decide-hashicorp-go-retryablehttp-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T115926+0200-decide-hashicorp-go-rootcerts-product-direction.md](2026-09-20T115926+0200-decide-hashicorp-go-rootcerts-product-direction.md)
+Outcome: No exact-path stable release qualifies: v1.0.0, v1.0.1, and latest v1.0.2 all lose filesystem error identity and can silently return an empty Darwin system-root pool, while their proxy archives omit a tracked symlink fixture required by an upstream test; dependency metadata remains unchanged and P7 stops for the reciprocal product decision.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -180,3 +180,174 @@ After a completed coherent result, make the required local
 merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
 combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+The evaluation began clean on branch `codex/upgrade-quality` at handoff HEAD
+`888412a62d768cb11af6d9e132600cc4a34f0679`, parent
+`a4c24f29e25eb21cc229cde674ffdacdecc78f38`, tree
+`1892ece8798c3913cc46465cf12865281db20339`. The handoff changed exactly the
+launcher, answered go-retryablehttp decision archive, this then-NEXT archive,
+rolling handover, and roadmap. Ordinary and ignored status were empty; the
+reciprocal archive chain and `./codex-dev-start.sh --check` passed. The latest
+dependency implementation remains Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`.
+
+Fresh `go-import` metadata resolves the exact path to
+`https://github.com/hashicorp/go-rootcerts.git`. GitHub identifies a public,
+active, unarchived, enabled, non-fork MPL-2.0 repository with protected
+default branch `master`, 12 branches, and no GitHub Release objects. The Go
+proxy exposes exactly three stable versions, v1.0.0, v1.0.1, and latest
+v1.0.2. There is no prerelease, retraction, module deprecation, redirect,
+alternate exact path, or `/v2` line. Current master
+`95e2cf6a7dc27942f8dba98f69db96f2d3169efa` is 34 commits beyond v1.0.2;
+its pseudo-version declares Go 1.23 and is unreleased, so it is not promoted.
+
+Strict mirror verification passes. V1.0.0 is lightweight unsigned commit
+`63503fb4e1eca22f9ae0f90b49c5d5538a0e87eb`, tree
+`26bab66...`, dated 2019-01-18. V1.0.1 is lightweight unsigned commit
+`df8e78a645e18d56ed7bb9ae10ffb8174ab892e2`, tree `74bf9fa...`, dated
+2019-06-10. V1.0.2 is unsigned annotated tag object
+`dafef5a8f4d570697f148431a2004909428ca75b` over GitHub-verified commit
+`98fadc2a5ba2ad2a534a179b352ecdfd1f4259aa`, parents `df8e78a...` and
+`bc065...`, tree `7e2fd4...`, dated 2019-12-10. All tags are ancestors of
+master.
+
+Proxy-ZIP SHA-256 values for v1.0.0/v1.0.1/v1.0.2 are respectively
+`4393b0b9cd741e00de5624d5124cf054bf50c57231d4b1caff84c8a4d16c6a47`,
+`3f558b1a436ed6fb15872383545109227f9552bf5daa95583e9402bbd3a24fff`, and
+`864a48e642e87a273fb5ef60bb3575bd74a7090510f93143163fa6700be31948`.
+Sumdb identities are
+`h1:Rqb66Oo1X/eSV1x66xbDccZjhJigjg0+e82kpwzSwCI=`,
+`h1:DMo4fmknnz0E0evoNYnV48RjWndOsmd6OW+09R3cEP8=`, and
+`h1:jzhAVGtqPKbwpyCPELlgNWhE1znq+qwJtW5Oi2viEzc=`. V1.0.1/v1.0.2 share
+go.mod sum `h1:pqUvnprVnM5bf7AOirdbb01K4ccR319Vf4pU3K5EGc8=`. Proxy and Git bytes
+match for every regular file. Go module ZIP rules omit the two tracked
+`test-fixtures/capath-with-symlinks` symlinks, which is behaviorally material
+to the archived upstream test suite.
+
+### Go Floor, Source, Tests, And API
+
+V1.0.0 has no Go directive; v1.0.1/v1.0.2 declare Go 1.12. The complete
+minimal non-standard-library closure is target plus
+`github.com/mitchellh/go-homedir`: v1.0.0 selects homedir v1.0.0 and the later
+tags select v1.1.0. Homedir has no Go directive. Imported production and test
+source for all three candidates therefore preserves Go 1.18. Exact Go 1.26.7
+resolves 190 complete-test entries and contained Go 1.18.10 resolves 129;
+target and homedir are the only external modules.
+
+Each tag contains one library package with three production Go files, one
+documentation file, two test files, certificate testdata, and Darwin versus
+`!darwin` system-root branches. There are no commands, examples, benchmarks,
+fuzz targets, generated files, cgo, embeds, or generators. Tagged Git source
+for all three versions passes module verification, package listing, native
+count-one, two independent count-ten repeats, race, vet, and Darwin AMD64,
+Linux AMD64/ARM64, Windows AMD64, and js/wasm production/test builds under
+both SDKs. Testing directly from each proxy archive fails only
+`TestLoadCACertsFromDirWithSymlinks` because the standard module ZIP omitted
+the symlink fixture directory; tagged Git source passes the same test. This is
+a reproducible release-archive/test-fixture defect, not a production compile
+failure.
+
+Pinned `apidiff` finds no exported API change from v1.0.0 to v1.0.1. V1.0.2
+compatibly adds `AppendCertificate` and `Config.CACertificate`, but the added
+`[]byte` field makes `Config` non-comparable and is therefore an incompatible
+type-property change. Selected v1.0.2 exports `Config` plus `ConfigureTLS`,
+`LoadCACerts`, `LoadCAFile`, `AppendCertificate`, `LoadCAPath`, and
+`LoadSystemCAs`. There is no later stable API candidate.
+
+### Independent Behavior And Security
+
+The shared independent behavior fixture SHA-256 is
+`512a4a1df5b96659c975ca6863c8172832a37a4fe9038da015165b28cad1acd1`;
+the selected-only extension is
+`4f0c62af97695e5015db568558cf401e85d03d41efca8954e9d6c3f727d97768`.
+All applicable characterization tests pass under both SDKs: valid file/path
+pool construction, empty-directory behavior, CAFile/CACertificate/CAPath
+precedence, ConfigureTLS success and failure mutation, nil target handling,
+multi-certificate bundles, malformed and trailing data, caller-PEM mutation,
+x509 verification, allocations, concurrent loads, and resource release.
+
+All three stable releases fail the same error-identity contract.
+`LoadCAFile`, `LoadCAPath` through a dangling symlink, and `ConfigureTLS`
+stringify underlying I/O errors with `%s`; `errors.Is(err, fs.ErrNotExist)` is
+false. They also fail the Darwin system-root contract. When the three
+keychain commands return success with no PEM bytes, as reproduced with a
+fresh empty HOME in the managed Darwin environment, `LoadSystemCAs` returns a
+non-nil but empty `*x509.CertPool` and nil error. The source ignores the false
+result from `AppendCertsFromPEM`; the upstream Darwin test checks only the nil
+error and misses the empty trust result. Current master retains both defects.
+
+The package has no mutable globals. File and path functions create local
+pools; returned pools remain caller-mutable, while input PEM bytes do not
+alias the pool. `filepath.Walk` is lexical, follows symlinked files, aborts
+and discards the pool on a malformed or unreadable entry, and returns an empty
+pool for an empty directory. `ConfigureTLS` precedence is file, in-memory
+certificate, path, then system roots; a nil TLS target returns nil before
+validation. The Darwin-only homedir dependency adds its documented cached
+HOME/environment lookup, protected by a mutex.
+
+Fresh primary vulnerability data contains 1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+and Last-Modified 2026-09-17T17:29:18Z. It has no rootcerts record; exact OSV
+queries for all three tags and GitHub repository advisories are empty.
+Govulncheck v1.8.0 module, package, symbol, and test-symbol scans are empty for
+each isolated tag. Base and redundant-v1.0.2 project scans have identical
+finding sets at every level, with no target frame or reachable trace.
+
+### Project MVS And Quality Effects
+
+Selected v1.0.2 exists through five graph requests: Viper v1.15.0, historical
+Viper v1.10.1, `sagikazarmark/crypt v0.4.0`, and historical Consul API v1.12.0
+request v1.0.2; historical Consul API v1.1.0 requests v1.0.0. The shortest
+root path is main -> direct Viper v1.15.0 -> target. `go mod why -m` and the
+repository import search are negative; the 355-entry production and 429-entry
+complete-test loads contain zero target packages, so current target code is
+runtime-unreachable.
+
+The base remains 234 modules, 3,599 graph edges, 197 module-backed complete-
+test entries across 41 loaded modules, and 1,067 sum lines. A disposable exact
+v1.0.2 `go get` adds only a redundant main-module indirect edge, one graph
+edge, and the full source checksum; selections and loads are unchanged, and
+tidy converges byte-identically with the base projection. Exact v1.0.1 or
+v1.0.0 instead forces Viper v1.15.0 to v1.8.1, removes mvn-pom-mutator, drops
+the graph to 181 modules and approximately 2,553 edges, changes numerous
+earlier guarded selections, and makes project packages unloadable. No
+projection was applied.
+
+All 16 earlier guarded selections and recorded requests remain exact. Their
+why results and the target why result are negative; repository imports and
+both package loads contain zero guarded packages. Fresh exact-version OSV
+revalidation is empty except for Gorilla WebSocket's recorded
+GO-2026-6278/GHSA-w67g-5rqw-f597 and go-retryablehttp's recorded
+GO-2024-2947/GHSA-v6v8-xj6m-xwqh. No owning guard expired.
+
+Exact Go 1.26.7 project verification, build, count-one, two independent
+count-ten repeats, race, vet, pinned lint, API/CLI compatibility, empty-HOME,
+four cross-builds, host/snapshot/Docker acceptance, full preflight, all 17
+script/meta pairs, all eight mutation meta-stages, 80/80 live mutation kills,
+and all 15 audit meta-controls pass. The contained Go 1.18 projection removes
+only the unsupported toolchain line, resolves 366 complete-test entries, and
+reproduces only the two accepted Darwin `pkg/shell` closed-file wording
+failures; all 26 unaffected packages pass count-one, both count-ten repeats,
+race, and vet, while host acceptance and four cross-builds pass.
+
+The prior external manual evidence is correctly rejected as stale because it
+is commit-bound to `24b1f336...`, while this docs-only handoff began at
+`888412a...`. A changed-selection scorecard does not apply: production source,
+dependency metadata, and measured behavior remain unchanged. The accepted
+authoritative result therefore remains 27/27 Q0-Q2 PASS at L2, scorecard
+SHA-256
+`de13154181ae319fd80a29a98df78535762d70c2c01438f9e3cb735c2f624e81`,
+with zero held, regressed, non-comparable, or dirty counts. The initial cold
+offline API cache and bare-`mktemp` attempts were superseded by the established
+scratch cache and wrapper; they are known environment boundaries, not target
+findings.
+
+Final `go.mod` and `go.sum` SHA-256 values remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Because every stable release shares independently disqualifying behavior and
+the older tags also violate project graph guards, no release qualifies. The
+next bounded action is the prepared go-rootcerts product decision. P8 and
+every other dependency group remain untouched.

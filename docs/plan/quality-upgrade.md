@@ -5378,8 +5378,9 @@ Status: active. Completed dependency groups remain final through accepted
 Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module
 decisions through exact inherited, unloaded
 `github.com/hashicorp/go-retryablehttp v0.5.3`. Its bounded product decision
-accepted option 1 under target-specific guards. P7 continues only with the
-prepared exact-path go-rootcerts v1.0.2 evaluation. P8 remains queued.
+accepted option 1 under target-specific guards. The exact-path go-rootcerts
+evaluation found no qualified stable release. P7 is blocked only on its
+prepared bounded product decision. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10474,6 +10475,81 @@ Hashicorp go-retryablehttp product decision (2026-09-19):
   accepted quality remains 27/27 Q0-Q2 PASS at L2. P7 continues only with the
   prepared bounded exact-path `github.com/hashicorp/go-rootcerts v1.0.2`
   evaluation; it was not executed in this decision session.
+
+Hashicorp go-rootcerts evaluation and blocked product boundary (2026-09-20):
+
+- Fresh exact-path evidence resolves Hashicorp's public, active, unarchived,
+  non-fork MPL-2.0 repository. The proxy exposes exactly stable v1.0.0,
+  v1.0.1, and latest v1.0.2, with no prerelease, retraction, module
+  deprecation, redirect, alternate exact path, `/v2` line, or GitHub Release
+  object. Current master is 34 commits beyond v1.0.2; its unreleased
+  pseudo-version declares Go 1.23 and is not promoted.
+- V1.0.0 is unsigned commit
+  `63503fb4e1eca22f9ae0f90b49c5d5538a0e87eb`; v1.0.1 is unsigned commit
+  `df8e78a645e18d56ed7bb9ae10ffb8174ab892e2`; v1.0.2 is unsigned annotated
+  tag `dafef5a8f4d570697f148431a2004909428ca75b` over GitHub-verified commit
+  `98fadc2a5ba2ad2a534a179b352ecdfd1f4259aa`. Proxy-ZIP SHA-256 values are
+  `4393b0b9cd741e00de5624d5124cf054bf50c57231d4b1caff84c8a4d16c6a47`,
+  `3f558b1a436ed6fb15872383545109227f9552bf5daa95583e9402bbd3a24fff`, and
+  `864a48e642e87a273fb5ef60bb3575bd74a7090510f93143163fa6700be31948`.
+  Sumdb identities and every regular proxy/Git source byte agree. Standard Go
+  ZIP rules omit two tracked symlink fixtures.
+- V1.0.0 has no Go directive; v1.0.1/v1.0.2 declare Go 1.12. The complete
+  minimal closure adds only go-homedir v1.0.0 or v1.1.0, whose modules omit a
+  Go directive, so every stable candidate preserves Go 1.18. Tagged Git
+  sources pass verification, native/repeated/race/vet, and five cross-builds
+  under exact Go 1.26.7 and contained Go 1.18.10. Proxy-archive tests for all
+  three tags fail only the symlink-fixture test because the fixture directory
+  is absent.
+- Pinned API comparison finds no v1.0.0-to-v1.0.1 change. V1.0.2 adds
+  `AppendCertificate` and `Config.CACertificate`; its `[]byte` field makes
+  `Config` non-comparable. There is no later stable candidate.
+- Independent fixtures reproduce two disqualifying behaviors in every stable
+  release under both SDKs. File/path/ConfigureTLS errors stringify underlying
+  I/O causes with `%s`, losing `errors.Is` identity. Darwin system-root loading
+  can return a non-nil empty pool and nil error when successful keychain
+  commands emit no PEM because the false `AppendCertsFromPEM` result is
+  ignored. Upstream tests miss the empty-pool condition, and current master
+  retains both defects. Valid certificate construction, precedence, malformed
+  input, nil, mutation/aliasing, allocation, concurrency, resource, and global-
+  state behavior is otherwise characterized. Fixture SHA-256 values are
+  `512a4a1df5b96659c975ca6863c8172832a37a4fe9038da015165b28cad1acd1` and
+  `4f0c62af97695e5015db568558cf401e85d03d41efca8954e9d6c3f727d97768`.
+- Fresh 1,402-record primary vulnerability data remains at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  and Last-Modified 2026-09-17T17:29:18Z. Exact OSV, GitHub advisory, and
+  govulncheck module/package/symbol/test-symbol scans are empty for all three
+  tags. Base and redundant-v1.0.2 project scan finding sets are identical with
+  no target frame or reachable trace.
+- Selected v1.0.2 exists through requests from Viper v1.15.0, historical
+  Viper v1.10.1, `sagikazarmark/crypt v0.4.0`, and historical Consul API
+  v1.12.0; historical Consul API v1.1.0 requests v1.0.0. The target why and
+  repository import results are negative; both package loads contain zero
+  target packages. A redundant exact v1.0.2 root changes only one edge and one
+  checksum line before tidy converges to the base projection. V1.0.1/v1.0.0
+  instead force Viper v1.8.1, remove mvn-pom-mutator, disrupt guards, and make
+  project packages unloadable. No projection was applied.
+- The project remains 234 modules, 3,599 graph edges, 355 production and 429
+  complete-test entries, 197 module-backed complete-test entries across 41
+  modules, 1,067 sum lines, and the recorded 432-line tidy projection. All 16
+  earlier guards plus the target retain negative why/import/load results and
+  their exact advisory states. `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- Exact-Go project native/repeated/race/vet, lint, API/CLI, empty-HOME, cross-
+  build, full preflight, all 17 script/meta, all eight mutation meta-stages,
+  80/80 mutation kills, host/snapshot/Docker acceptance, and all 15 audit
+  controls pass. Contained Go 1.18 retains only the two accepted Darwin shell
+  wording failures; 26 unaffected packages and applicable gates pass. No
+  changed-selection scorecard applies, so accepted quality remains 27/27 Q0-
+  Q2 PASS at L2 with zero held/regressed/non-comparable/dirty counts.
+- No stable release qualifies. P7 is blocked on the prepared go-rootcerts
+  product decision. Recommended option 1 retains exact inherited, unloaded
+  v1.0.2 under a new target-specific exception bounded to the completed
+  behavior/archive/API findings, exact five requests, zero imports/load,
+  runtime unreachability, every earlier guard, and no new advisory or defect.
+  Patch/fork/replacement and parent-chain pruning are separately scoped
+  alternatives. No choice is inferred by this evaluation.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
