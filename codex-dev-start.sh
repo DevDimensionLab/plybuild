@@ -1131,88 +1131,51 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-20T230357+0200-study-hashicorp-serf-memberlist-removal
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T230357+0200-study-hashicorp-serf-memberlist-removal.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T224123+0200-decide-hashicorp-memberlist-product-direction.md
+#|SESSION_ID=2026-09-21T000630+0200-decide-hashicorp-memberlist-final-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-21T000630+0200-decide-hashicorp-memberlist-final-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-20T230357+0200-study-hashicorp-serf-memberlist-removal.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 only with the authorized measurement-only owning-parent and graph-
-#|removal study for the exact historical `github.com/hashicorp/serf v0.8.2` and
-#|`v0.9.6` graph vertices and the request population that preserves affected
-#|selected `github.com/hashicorp/memberlist v0.3.0`. Independently measure every
-#|serious Serf upgrade, replacement, and removal route and all transitive API,
-#|CLI, runtime-behavior, MVS, guarded-edge, Go-floor, vulnerability, build, test,
-#|platform, and project effects. Prepare one bounded product decision; do not
-#|implement a route, change Serf/memberlist/a parent/another guarded module, or
-#|begin P8.
+#|Continue P7 only by making one fresh bounded final product decision for
+#|affected selected `github.com/hashicorp/memberlist v0.3.0`. The authorized
+#|Serf/owning-graph study is complete and found neither request-population
+#|removal nor compatible Serf/parent modernization viable as a bounded
+#|dependency remediation. Choose exactly one of the two remaining options:
+#|authorize a separate integrated Go-1.25/fixed-memberlist migration, or
+#|explicitly risk-accept exact affected but unloaded memberlist v0.3.0 under
+#|target-specific expiry guards. Record one precise authorization and prepare
+#|one coherent successor without executing it. Do not implement, reopen the
+#|security investigation, combine another dependency group, or begin P8.
 #|
 #|# Authorized Roadmap
 #|
-#|The 2026-09-20 memberlist product decision explicitly authorized option 3
-#|only. It did not risk-accept, qualify, or describe memberlist v0.3.0 as secure;
-#|it did not authorize the Go-1.25/fixed-memberlist migration; and it did not
-#|authorize any source or dependency metadata change. Zero loading bounds the
-#|current exposure and authorizes this study, but is not itself an exception.
+#|P2A-P6 are complete. P7 remains active. Every accepted dependency move through
+#|Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and every retained-module
+#|decision through mdns v1.0.4 remains final under its own guards. The 2026-09-20
+#|memberlist decision authorized only the now-complete measurement study; that
+#|authorization expired with its documented handoff. It did not risk-accept
+#|memberlist, authorize the fixed line, change a parent, or change the Go floor.
+#|P8 remains queued.
 #|
-#|This study may use fresh public repository, release, module, advisory, API,
-#|and project-graph evidence plus ordinary non-adversarial build/test tools in
-#|disposable trees. It must independently establish the exact Serf repository,
-#|stable release population, selected/historical graph identities, request
-#|population, complete source/test closures, APIs, ordinary behavior, and every
-#|candidate projection needed to decide whether the memberlist-preserving graph
-#|can be removed or replaced. It may recommend exactly one later direction, but
-#|it may not retain an implementation or edit product source, `go.mod`, or
-#|`go.sum`.
-#|
-#|Do not repeat or extend the memberlist security investigation, reproduce
-#|HCSEC-2026-18 / CVE-2026-14362, execute its regression, craft packets or
-#|attack traffic, scan or contact hosts, exercise non-public systems, inspect
-#|credentials or key material, test a security boundary, or recreate the
-#|advisory failure condition. Use the completed affected/fixed range and static
-#|remediation identity only as decision constraints. Ordinary Serf behavior
-#|evaluation must use non-adversarial inputs and must stop if it would require
-#|security-focused testing.
-#|
-#|## Exact Authorization And Expiry Guards
-#|
-#|The authorization is valid only while selected memberlist remains exact
-#|v0.3.0; the exact Serf-v0.9.6-to-memberlist-v0.3.0 and historical
-#|Serf-v0.8.2-to-memberlist-v0.1.3 requests remain unchanged; selected Serf
-#|remains exact v0.10.1; and the five incoming Serf requests remain exact:
-#|Consul API v1.1.0 -> Serf v0.8.2; Consul API v1.12.0,
-#|`sagikazarmark/crypt v0.4.0`, and Viper v1.10.1 -> Serf v0.9.6; and Viper
-#|v1.15.0 -> Serf v0.10.1.
-#|
-#|It also requires no direct memberlist root or repository Go import, a negative
-#|memberlist why result, zero memberlist production and complete-test loads,
-#|runtime unreachability, all 23 earlier guarded selections and their 164
-#|incoming edges remaining exact, unchanged module hashes, and no new memberlist
-#|advisory, independently observed defect, affected/fixed boundary, or Go-1.18-
-#|compatible fixed stable release. Any target, Serf, or incoming-request change;
-#|direct root/import/load or runtime reachability; earlier owning-guard or module-
-#|hash change; or new advisory, independent defect, affected/fixed-range change,
-#|or floor-compatible fixed stable release expires this authorization. Stop for
-#|the owning fresh decision if any guard differs.
-#|
-#|The study authorization itself expires after one coherent documented study
-#|and reciprocal product-decision handoff. It grants no later implementation
-#|authority. Do not manufacture a direct root, patch source, promote a fork,
-#|branch, prerelease, pseudo-version, redirect, alternate module path, or
-#|different major line; silently raise the Go floor; transfer another exception;
-#|or combine an unrelated dependency group.
+#|Use the completed memberlist evaluation and Serf/owning-graph study as final.
+#|Do not reproduce HCSEC-2026-18 / CVE-2026-14362, execute its regression, craft
+#|packets or attack traffic, scan hosts, test a security boundary, inspect
+#|credentials, or perform further exploitability analysis. The primary
+#|HashiCorp/CNA affected/fixed range and static remediation identity are decision
+#|constraints only.
 #|
 #|# Measurements At Start
 #|
-#|Decision revalidation began from clean ordinary and ignored state on branch
+#|The completed study began from clean ordinary and ignored state on branch
 #|`codex/upgrade-quality` at HEAD
-#|`636e6b4f886ee15947c954deee70365c9eab1873`, parent
-#|`8a292c9a10f25aeae5be9e30693a7ed27f91912d`, tree
-#|`43dbc70674569af72990e06d1b16c38cda6f6dd7`. That handoff changed exactly
-#|the launcher, memberlist evaluation and decision archives, rolling handover,
-#|and roadmap. Its reciprocal 226-archive chain, latest Google UUID v1.4.0
+#|`36bf3a3f5a05594213e0ccd6f5c45a2e2f3bbf3a`, parent
+#|`636e6b4f886ee15947c954deee70365c9eab1873`, tree
+#|`76cc264732cd570e599d3620985d1492adb71b74`. That handoff changed exactly the
+#|launcher, memberlist decision archive, Serf study archive, rolling handover,
+#|and roadmap. Its reciprocal 227-archive chain, latest Google UUID
 #|implementation ancestry, and launcher check passed. Verify the new handoff
 #|rather than assuming these facts.
 #|
@@ -1230,81 +1193,114 @@ exit 70
 #|All 23 earlier guarded selections and 164 incoming edges remain exact at
 #|snapshot SHA-256
 #|`f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`.
-#|All 24 target-plus-earlier why results are negative, repository imports are
+#|All 24 memberlist-plus-earlier why results are negative, repository imports are
 #|zero, and production and complete-test closures load zero guarded packages.
-#|MVS selects memberlist v0.3.0 only through the Serf v0.9.6 request; historical
-#|Serf v0.8.2 still requests memberlist v0.1.3. Memberlist has no direct
-#|root/import/load.
+#|Selected Serf remains v0.10.1. MVS selects memberlist v0.3.0 only through the
+#|historical Serf v0.9.6 request; Serf v0.8.2 still requests memberlist v0.1.3.
 #|
-#|HashiCorp bulletin HCSEC-2026-18 and the PUBLISHED HashiCorp CNA record still
-#|bound affected memberlist below v0.6.0 and identify v0.6.0 as first fixed.
-#|The CNA response SHA-256 is
-#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
-#|Primary Go vulnerability data remains 1,402 records at SHA-256
+#|The PUBLISHED HashiCorp CNA response remains byte-identical at SHA-256
+#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`:
+#|memberlist below v0.6.0 is affected and v0.6.0 is first fixed. The primary Go
+#|vulnerability index remains 1,402 records at SHA-256
 #|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
-#|Last-Modified 2026-09-17T17:29:18Z. Exact-version OSV results remain empty for
-#|memberlist and every guard except the recorded Gorilla and
-#|go-retryablehttp pairs. These facts constrain the study; do not reopen the
-#|memberlist evaluation.
+#|Last-Modified 2026-09-17T17:29:18Z. Exact OSV remains empty for memberlist and
+#|all Serf candidates and does not override the primary record. Earlier guards
+#|retain only the recorded Gorilla and go-retryablehttp pairs.
+#|
+#|# Completed Owning-Graph Study
+#|
+#|The exact Serf repository is HashiCorp's public active unarchived non-fork
+#|MPL-2.0 repository. It has 37 stable exact-path releases v0.1.0-v0.11.0, one
+#|suffix prerelease, verified proxy/Git/sumdb identity, no retraction,
+#|deprecation, redirect, alternate major, or repository-supported replacement.
+#|Historical v0.8.2/v0.9.6 remain graph vertices because MVS selection does not
+#|erase their requirements. Five exact incoming requests are preserved through
+#|the direct Viper v1.15.0 root and the mvn-pom-mutator v0.2.3 -> Viper v1.10.1,
+#|Consul API v1.1.0/v1.12.0, and crypt paths.
+#|
+#|No fixed stable Serf release preserves the Go 1.18 floor. V0.10.1 is the
+#|highest compatible selected release but requests affected memberlist v0.5.0.
+#|V0.10.2 declares Go 1.19, its closure reaches Go 1.20, and it requests
+#|affected v0.5.2. First fixed tags v0.10.3/v0.10.4 declare Go 1.25.0, their
+#|closures reach Go 1.25, and they request memberlist v0.6.0. Latest v0.11.0
+#|declares/reaches Go 1.26 and requests memberlist v0.7.0. V0.11.0 also breaks
+#|the exported metrics-label type. Ordinary source/test, API/CLI, race, vet,
+#|cross-build, project, and vulnerability checks found no loaded project Serf
+#|or memberlist package and no route-specific advisory, but fixed direct roots
+#|raise the floor, change five guarded selections, and make project tests/race/
+#|vet fail existing stricter-format checks.
+#|
+#|A direct Serf root is not remediation: it makes Go read the selected Serf
+#|requirements and can raise memberlist, but tidy removes the manufactured root
+#|and restores Serf v0.10.1/memberlist v0.3.0. Replacing selected Serf does not
+#|rewrite historical requests. Replacing historical versions with v0.10.4
+#|selects fixed memberlist only through unsupported version masquerading, raises
+#|Go to 1.25, and materially expands the graph. No replacement is authorized.
+#|
+#|The sole owning parent, `github.com/devdimensionlab/mvn-pom-mutator v0.2.3`,
+#|is already latest stable and identical to default-branch head. Dropping it is
+#|the only measured route that removes historical Serf/memberlist: the graph
+#|falls from 234 modules/3,599 edges to 156/2,218 and loses 15 guarded selections
+#|and 91 guarded incoming edges. It also leaves 21 project source/test files
+#|without their POM model/parser/mutator API, so listing and compilation fail and
+#|tidy re-adds the parent. Inspected alternatives are non-drop-in migrations.
+#|That route is a separate POM subsystem redesign with many owning decisions,
+#|not a bounded dependency remediation.
+#|
+#|The study therefore found neither authorized removal nor compatible
+#|modernization viable. Its single recommendation is option 1 below, because it
+#|reaches a primary-vendor-fixed memberlist line; option 2 is the only remaining
+#|smaller alternative but explicitly accepts a known affected version. This
+#|recommendation is not authorization.
 #|
 #|# Role And Boundaries
 #|
-#|Resolve the complete exact-path Serf stable-release and repository identity:
-#|proxy/sumdb/`go-import`/Git/forge agreement, tags, commits, parents, trees,
-#|times, signatures, ancestry, repository status, license, retractions,
-#|deprecation, redirects, module lines, and serious candidates. Distinguish
-#|selected Serf v0.10.1 from historical v0.8.2/v0.9.6 graph vertices and explain
-#|why the latter retain memberlist requests despite MVS selecting v0.10.1.
+#|Choose exactly one:
 #|
-#|Independently inventory and verify the five incoming Serf requests and every
-#|root-to-request path that preserves them. For every serious exact Serf upgrade,
-#|replacement, or removal route, use disposable projections to measure selected
-#|modules, graph edges, sums, tidy behavior, Go directives and complete closure
-#|floors, loaded packages, direct/indirect roots, why/import state, and every
-#|changed guarded selection or incoming edge. Do not treat a redundant direct
-#|root as remediation. Any route requiring a Consul API, Viper, crypt, or other
-#|parent change must identify that ownership and all collateral changes; it may
-#|not silently apply them.
+#|1. Authorize a separate integrated Go-1.25/fixed-memberlist migration. The
+#|   follow-up must choose and fully qualify exact first-fixed v0.6.0 or latest
+#|   fixed v0.7.0; explicitly own the Go-floor change; repair or separately
+#|   decide the stricter-format failures; obtain fresh owning decisions for
+#|   every changed guarded selection and incoming edge; explain how the fixed
+#|   selection is durably maintained; preserve project API/CLI/runtime behavior;
+#|   and pass complete source/test, race, vet, platform, MVS, tidy,
+#|   vulnerability, and quality gates before any implementation is retained.
+#|   This decision session must not edit source, `go.mod`, or `go.sum`.
+#|2. Explicitly retain exact selected, inherited, unloaded memberlist v0.3.0
+#|   under a new target-specific non-transferable risk decision. State plainly
+#|   that it is affected and not qualified or secure. The exception must be
+#|   bounded by exact zero import/load/runtime reachability, exact Serf and
+#|   incoming-parent requests, every earlier guard and module hash, and no new
+#|   advisory, independently observed defect, range change, or floor-compatible
+#|   fixed stable route. It authorizes no direct root, parent/source change,
+#|   fork, patch, redirect, or transfer to another module.
 #|
-#|Inspect Serf packages, commands, exported API, actual project consumers,
-#|ordinary lifecycle and behavior, platform/build-tag branches, tests, and
-#|resource/concurrency boundaries only as needed to compare viable graph routes.
-#|Run source verification, complete package listing, ordinary upstream tests,
-#|repeats, race, vet, meaningful cross-builds, API/CLI comparison, project
-#|tests, vulnerability checks, and applicable quality gates for serious
-#|candidates under exact Go 1.26.7 and contained Go 1.18.10. Classify failures
-#|precisely. Do not execute memberlist security-regression tests or add security-
-#|focused fixtures.
-#|
-#|The output must compare the measured routes and prepare exactly one fresh
-#|bounded product decision. At minimum, distinguish: removal of the request
-#|population that preserves historical Serf/memberlist vertices; a compatible
-#|Serf/parent modernization route; and, only if neither is viable, the precise
-#|remaining choice between separately authorized fixed-memberlist integration
-#|and explicit affected-version risk acceptance. Do not choose or implement
-#|that later product decision in this study session.
+#|Do not combine options, revive the expired graph-removal study, manufacture a
+#|direct root, silently raise the floor, retain the affected release without an
+#|explicit decision, select or implement a fixed release in this decision
+#|session, patch or fork source, change a parent or guarded module, or transfer
+#|another exception. If neither option is acceptable, stop P7 explicitly.
 #|
 #|# Required Reading
 #|
-#|Read this archive, the answered memberlist decision and evaluation, the
-#|answered mdns, golang-lru, and go.net decisions/evaluations, the relevant
-#|answered Consul API and owning-parent records, rolling handover, roadmap,
-#|`go.mod`, and `go.sum`. Verify branch, clean ordinary and ignored status,
-#|handoff HEAD/parent/tree and exact changed-file set, reciprocal archive chain,
-#|latest Google UUID implementation ancestry, exact Go identity, all memberlist
-#|and Serf selections/requests, every earlier guarded selection/request/why/
-#|import/load condition, module hashes, vulnerability guards, and
-#|`./codex-dev-start.sh --check`. Earlier outcomes are final.
+#|Read this archive, its answered Serf study, answered memberlist decision and
+#|evaluation, relevant mdns/golang-lru/go.net and Consul/owning-parent records,
+#|rolling handover, roadmap, `go.mod`, and `go.sum`. Verify branch, clean ordinary
+#|and ignored state, handoff HEAD/parent/tree and exact changed-file set,
+#|reciprocal archive chain, latest Google UUID implementation ancestry, exact Go
+#|identity, selections and all five Serf requests, all 24 why/import/load guards,
+#|module hashes, vulnerability guards, and `./codex-dev-start.sh --check`.
+#|Earlier measurements and outcomes are final. If any guard differs, stop for a
+#|fresh owning investigation rather than choosing under stale premises.
 #|
 #|# Three Moves
 #|
-#|First, revalidate only the exact expiry guards and map the Serf/request
-#|population without changing the worktree. Second, perform the bounded owning-
-#|graph study in disposable trees and leave product source and dependency
-#|metadata unchanged. Third, answer this archive, update the roadmap and rolling
-#|handover, prepare exactly one reciprocal NEXT product-decision mission for the
-#|measured outcome, and commit the documentation-only handoff. Do not execute
-#|the successor.
+#|First, revalidate only the exact decision guards and primary advisory identity;
+#|do not repeat either evaluation. Second, choose and record exactly one option
+#|with precise authorization and expiry bounds; do not implement it. Third,
+#|update the roadmap and rolling handover, answer this archive, prepare exactly
+#|one reciprocal NEXT mission matching the choice, and commit the documentation-
+#|only handoff. Do not execute the successor.
 #|
 #|# Automatic Handoff
 #|

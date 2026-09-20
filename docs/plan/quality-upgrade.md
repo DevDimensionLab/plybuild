@@ -5374,11 +5374,12 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on the authorized measurement-only Serf/owning-graph removal
-study for affected selected exact-path `github.com/hashicorp/memberlist
-v0.3.0`. The memberlist decision selected option 3 after its defensive
-evaluation confirmed that no fixed stable release preserves Go 1.18. It did
-not risk-accept v0.3.0 or authorize the fixed line.
+Status: active on the prepared final memberlist product decision. The
+authorized Serf/owning-graph study found neither request-population removal nor
+compatible Serf/parent modernization viable as a bounded remediation and
+recommends a separately authorized integrated fixed-memberlist migration over
+explicit affected-version risk acceptance. It did not make that decision,
+risk-accept v0.3.0, authorize the fixed line, or change source or metadata.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
 qualified go-cleanhttp v0.5.2, and all retained-module decisions through exact
 inherited, unloaded `github.com/hashicorp/mdns v1.0.4`. P8 remains queued.
@@ -11617,6 +11618,60 @@ Hashicorp memberlist product decision (2026-09-20):
   lifecycle controls pass. Initial test/race runs inherited `umask 077` and
   reproduced only the known fixture-mode assertions before the canonical
   reruns passed.
+
+Hashicorp Serf/owning-graph removal study (2026-09-21):
+
+- Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves
+  HashiCorp's public active unarchived non-fork MPL-2.0 Serf repository. It has
+  37 stable exact-path releases v0.1.0-v0.11.0 plus one suffix prerelease, no
+  retraction, deprecation, redirect, alternate major, or supported
+  replacement. Serious proxy archives match Git except for correctly omitted
+  v0.8.x vendor trees, and sumdb verifies them. V0.8.2 is an annotated signed
+  tag with unknown-key forge verification; other serious tags are lightweight
+  with verified commits and form one ancestry.
+- The exact request population is owned by direct Viper v1.15.0 -> selected
+  Serf v0.10.1 and mvn-pom-mutator v0.2.3 paths through Viper v1.10.1, Consul
+  API v1.1.0/v1.12.0, and both crypt modules to historical Serf v0.8.2/v0.9.6.
+  MVS selection does not erase historical vertices. Viper's pruned v1.15.0
+  graph does not expose selected Serf's descendants, so historical v0.9.6
+  continues to select memberlist v0.3.0 and v0.8.2 records v0.1.3.
+- No fixed stable Serf release preserves the Go 1.18 closure floor. V0.10.1
+  requests affected memberlist v0.5.0 and closes at Go 1.17; v0.10.2 requests
+  affected v0.5.2 and closes at Go 1.20; v0.10.3/v0.10.4 request first-fixed
+  v0.6.0 and declare/close at Go 1.25; latest v0.11.0 requests v0.7.0,
+  declares/closes at Go 1.26, and incompatibly changes exported metrics-label
+  fields. Patch-line API/CLI behavior is otherwise measured and ordinary
+  source/test, race, vet, and cross-build failures are classified by obsolete
+  dependency, SDK, or contained platform boundary.
+- Disposable direct Serf roots select memberlist v0.5.0, v0.5.2, v0.6.0, or
+  v0.7.0 and produce up to 246 modules/3,652 edges/1,079 sums. V0.10.2+
+  changes five guarded selections. Fixed roots raise the main directive and
+  make project tests/race/vet fail existing Go-1.25 format checks. Tidy removes
+  every manufactured Serf root and restores selected v0.10.1/memberlist
+  v0.3.0, so no direct root is durable remediation. Replacements either leave
+  the historical selection intact or become unsupported version masquerading
+  with a raised floor and much larger graph.
+- Dropping mvn-pom-mutator is the only graph-removal projection. It removes
+  memberlist and historical Serf, reducing 234 modules/3,599 edges to
+  156/2,218, but also removes 15 guarded selections and 91 guarded incoming
+  edges. The project imports the parent POM model/parser/mutator API across 21
+  source/test files; listing and compilation fail and tidy re-adds v0.2.3.
+  V0.2.3 is already latest stable/default-branch head, and inspected
+  alternatives are non-drop-in subsystem migrations. Removal is therefore a
+  separate product redesign, not a bounded dependency remediation.
+- Exact vulnerability guards, all 24 negative why results, zero guarded
+  imports/loads, runtime unreachability, 23 guarded selections/164 edges,
+  module hashes, and 27/27 Q0-Q2 PASS at L2 remain unchanged. No source,
+  `go.mod`, or `go.sum` change was retained. Neither bounded removal nor
+  compatible modernization is viable. The sole prepared successor is a final
+  product decision between integrated fixed-memberlist migration and explicit
+  affected-version risk acceptance; the study recommends the fixed migration
+  but does not authorize or implement it. Final exact-Go verify/build/test/
+  race/vet, all 15 audit meta-controls, and all 62 launcher lifecycle controls
+  pass. A focused raw Q0-Q2 audit retains the expected 21 automated PASS, six
+  manual-evidence-bound UNMEASURABLE rows, and zero ratchet regressions; no
+  changed-selection scorecard applies, so accepted quality remains 27/27
+  Q0-Q2 PASS at L2.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

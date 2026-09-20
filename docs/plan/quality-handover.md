@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T23:03:57+02:00
+Generated: 2026-09-21T00:06:30+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,14 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The memberlist decision
-  revalidation began from clean handoff HEAD
-  `636e6b4f886ee15947c954deee70365c9eab1873`, parent
-  `8a292c9a10f25aeae5be9e30693a7ed27f91912d`, tree
-  `43dbc70674569af72990e06d1b16c38cda6f6dd7`. That commit changed exactly
-  the launcher, answered memberlist evaluation archive, then-NEXT memberlist
-  decision archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal 226-archive history,
-  latest Google UUID ancestry, and launcher check passed before the decision.
+  `codex/upgrade-quality`, base master at `5635d50`. The Serf study began from
+  clean handoff HEAD `36bf3a3f5a05594213e0ccd6f5c45a2e2f3bbf3a`, parent
+  `636e6b4f886ee15947c954deee70365c9eab1873`, tree
+  `76cc264732cd570e599d3620985d1492adb71b74`. That commit changed exactly the
+  launcher, answered memberlist decision archive, then-NEXT Serf study
+  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
+  ancestry, exact changed set, reciprocal 227-archive history, latest Google
+  UUID ancestry, and launcher check passed before the study.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -24,16 +23,15 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The memberlist decision/evaluation, mdns decision/evaluation, golang-lru
-  decision/evaluation, go.net decision/evaluation, and every earlier archive
-  are answered. Memberlist option 3 authorized only a separate measurement-
-  only Serf/owning-graph removal study. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-20T230357+0200-study-hashicorp-serf-memberlist-removal.md`.
-  It must independently measure every serious Serf upgrade, replacement, and
-  removal route and prepare one later product decision. It may not risk-accept
-  memberlist, select the fixed line, implement a route, change a parent or the
-  Go floor, repeat the security investigation, combine another group, or begin
-  P8.
+- The Serf study, memberlist decision/evaluation, mdns decision/evaluation,
+  golang-lru decision/evaluation, go.net decision/evaluation, and every earlier
+  archive are answered. The expired study authorization changed nothing. The
+  sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T000630+0200-decide-hashicorp-memberlist-final-direction.md`.
+  It must choose exactly one of a separately authorized integrated fixed-
+  memberlist migration or explicit target-specific affected-version risk
+  acceptance. The measured recommendation is the fixed migration, but no
+  choice or implementation has yet been authorized.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -41,11 +39,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the bounded memberlist v0.3.0 defensive
-evaluation and its fresh product decision. Option 3 authorizes only the
-prepared measurement-only Serf/owning-graph removal study; it does not
-risk-accept affected v0.3.0 or authorize the fixed line. Exact Go 1.26.7,
-every accepted dependency move through Google UUID v1.4.0, qualified
+P2A-P6 are complete. P7 has completed the memberlist defensive evaluation,
+its option-3 decision, and the authorized measurement-only Serf/owning-graph
+study. The study found neither removal nor compatible modernization viable as
+a bounded remediation and prepared the final memberlist direction decision.
+It did not risk-accept affected v0.3.0 or authorize the fixed line. Exact Go
+1.26.7, every accepted dependency move through Google UUID v1.4.0, qualified
 go-cleanhttp, and all retained-module decisions through exact inherited,
 unloaded mdns v1.0.4 remain final under their separate target-specific guards.
 P8 remains queued. Do not combine groups or begin P8.
@@ -60,26 +59,42 @@ did not reproduce or assess exploitability, run the advisory regression,
 craft traffic or malformed inputs, scan hosts, inspect credentials, or test a
 security boundary. Product and dependency metadata remain unchanged.
 
-The authorized 2026-09-20 memberlist option 3 decision permits one separate,
-measurement-only study of exact historical Serf v0.8.2/v0.9.6 and the request
-population that preserves memberlist. It requires independent measurement of
-every serious Serf upgrade, replacement, and removal route and all transitive
-API/CLI, behavior, MVS, guarded-edge, Go-floor, vulnerability, build, test,
-platform, and project effects. The study may prepare one later product
-decision but may not implement a route or change Serf, memberlist, a parent,
-another guarded module, product source, `go.mod`, or `go.sum`.
+The authorized 2026-09-20 memberlist option-3 study is complete and expired.
+Fresh repository evidence resolved 37 stable Serf releases through v0.11.0,
+one suffix prerelease, exact proxy/Git/sumdb identity, and no supported
+replacement. Historical v0.8.2/v0.9.6 remain because the mvn-pom-mutator
+v0.2.3 parent records five paths through Viper, Consul API, and crypt while
+MVS selection of v0.10.1 does not erase old requirements. V0.10.1 is the
+highest selected compatible release but requests affected memberlist v0.5.0;
+v0.10.2 reaches Go 1.20 and requests affected v0.5.2; fixed v0.10.3/v0.10.4
+require Go 1.25; latest v0.11.0 requires Go 1.26 and breaks the exported
+metrics-label type. No fixed stable Serf line preserves Go 1.18.
 
-The study authorization remains valid only while exact memberlist v0.3.0, the
-Serf-v0.9.6-to-v0.3.0 and historical Serf-v0.8.2-to-v0.1.3 requests,
-selected Serf v0.10.1, and the five incoming Serf requests remain exact:
-Consul API v1.1.0 -> Serf v0.8.2; Consul API v1.12.0, crypt v0.4.0, and Viper
-v1.10.1 -> Serf v0.9.6; and Viper v1.15.0 -> Serf v0.10.1. It additionally
-requires no direct memberlist root/import/load or runtime reachability, all 23
-earlier guards and 164 edges remaining exact, unchanged module hashes, and no
-new advisory/defect, affected/fixed boundary, or Go-1.18-compatible fixed
-stable release. Any difference expires the study authorization. It also
-expires after its one coherent documented handoff and grants no implementation
-authority. Memberlist v0.3.0 is not qualified, secure, or risk-accepted.
+Direct Serf roots are removed by tidy and restore v0.10.1/memberlist v0.3.0.
+Fixed direct roots also change five guarded selections, raise the floor, and
+make project tests/race/vet fail existing stricter-format checks. Replacements
+either leave the historical selection or become forbidden version
+masquerading. Dropping mvn-pom-mutator is the only graph-removal route: it
+reduces 234 modules/3,599 edges to 156/2,218 and removes memberlist, but also
+removes 15 guarded selections and 91 guarded incoming edges. The project
+imports its POM API across 21 files, so compilation fails and tidy re-adds it;
+there is no newer parent release or drop-in replacement. This is a separate
+POM subsystem redesign, not a bounded dependency remediation.
+
+The completed study recommends exactly one later direction: choose a
+separately authorized integrated Go-1.25/fixed-memberlist migration rather
+than explicit affected-version risk acceptance. It does not make that choice.
+The prepared decision must choose exactly one, define complete ownership and
+expiry bounds, and prepare one matching successor without implementation.
+Selected memberlist v0.3.0 remains affected, unqualified, and not
+risk-accepted.
+
+Final unchanged-project exact-Go module verification, build, count-one tests,
+race tests, and vet pass. All 15 audit meta-controls and all 62 launcher
+lifecycle controls pass. The focused raw Q0-Q2 audit has the expected 21
+automated PASS and six manual-evidence-bound UNMEASURABLE rows with zero
+ratchet regressions; no changed-selection scorecard applies, so the accepted
+manual-evidence-adjusted 27/27 Q0-Q2 PASS at L2 remains authoritative.
 
 The authorized 2026-09-20 mdns option 1 decision retains exact selected,
 inherited, unloaded `github.com/hashicorp/mdns v1.0.4` without product source
@@ -2318,9 +2333,10 @@ SHA-256
 Exact-version OSV remains empty except for the recorded Gorilla and
 go-retryablehttp pairs; the empty memberlist result does not override the
 primary records. No source or metadata changed, no dependency implementation
-commit exists, and accepted quality remains 27/27 Q0-Q2 PASS at L2. The sole
-prepared successor is the bounded Serf/owning-graph removal study; it was not
-executed. Exact-Go module verification, build, canonical-`umask 022`
+commit exists, and accepted quality remains 27/27 Q0-Q2 PASS at L2. That
+historical option-3 successor is now complete and superseded by the final
+memberlist direction decision described at the top of this handover. Exact-Go
+module verification, build, canonical-`umask 022`
 count-one tests, race tests, vet, launcher check, and all 62 launcher lifecycle
 controls pass. Initial test/race runs inherited `umask 077` and reproduced only
 the known fixture-mode assertions before the canonical reruns passed.
