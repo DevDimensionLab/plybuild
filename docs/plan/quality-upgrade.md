@@ -5374,13 +5374,13 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active and blocked on the prepared bounded Hashicorp go-uuid product
-decision because no exact-path stable release qualifies. Completed dependency
-groups remain final through accepted Google UUID v1.4.0, qualified
-go-cleanhttp v0.5.2, and all retained-module decisions through exact inherited,
-unloaded `github.com/hashicorp/go-syslog v1.0.0`. Selected inherited
-`github.com/hashicorp/go-uuid v1.0.1` remains unchanged and unqualified. P8
-remains queued.
+Status: active for guard-only recording of the controller's user-authorized
+2026-09-20 bounded Hashicorp go-uuid option 1 decision; no exact-path stable
+release qualifies. Completed dependency groups remain final through accepted
+Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module
+decisions through exact inherited, unloaded
+`github.com/hashicorp/go-syslog v1.0.0`. Selected inherited
+`github.com/hashicorp/go-uuid v1.0.1` remains unchanged. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10939,14 +10939,35 @@ Hashicorp go-uuid evaluation (2026-09-20):
   with the exact 21-line ledger. Documented cache, bare-`mktemp`, physical-tool,
   Make-inheritance, mode-mask, and launcher-timing reproductions are harness
   boundaries, not target findings.
-- No dependency implementation or metadata commit was created. P7 is blocked
-  on one prepared bounded go-uuid product decision: recommended option 1
-  retains exact inherited, unloaded v1.0.1 under a target-specific exception;
-  option 2 authorizes a separate Go-1.18-compatible patch/fork/replacement
-  evaluation; option 3 authorizes a separate parent-chain removal study.
-  Selecting v1.0.3 alone is not qualifying because it retains both behavior
-  blockers and requires a direct root that tidy removes. The decision was not
-  executed in this evaluation session.
+- No dependency implementation or metadata commit was created. Product
+  direction supplied 2026-09-20: the user-authorized automatic controller
+  explicitly selected option 1 with the recommended bounds. Retain exact
+  selected, inherited, unloaded go-uuid v1.0.1 without changing product
+  source, `go.mod`, or `go.sum`. Accept only the completed randomness-error
+  identity, Go 1.26 fatal injected-reader, negative-size panic, non-RFC
+  generation, API/behavior, MVS, vulnerability, and related recorded findings.
+  The exception is go-uuid-specific and non-transferable; it accepts no new or
+  independently discovered defect. It remains valid only while exact v1.0.1,
+  all six exact v1.0.1 requests from Consul API v1.1.0/v1.12.0, Consul SDK
+  v0.1.1/v0.8.0, and Serf v0.8.2/v0.9.6, and both exact v1.0.0 requests from
+  go-immutable-radix v1.0.0/v1.3.1 remain unchanged, no direct main-module
+  root or repository import is added, production and complete-test target
+  loads remain zero, the module remains runtime-unreachable, every earlier
+  guard remains intact, and no new advisory or independent defect appears.
+  Direct import or loading, runtime reachability, a target version or incoming-
+  request change, a new direct root, an earlier owning-guard change, or a new
+  advisory or independent defect expires the exception and requires the owning
+  fresh dependency and product decision before merge. Do not change product
+  source or dependency metadata, add a direct edge, select v1.0.3 or unreleased
+  master, change or remove any Consul API, Consul SDK, Serf, or go-immutable-
+  radix parent, patch or fork source, authorize a wrapper or replacement
+  architecture, raise the Go floor, move unrelated selections, alter another
+  guarded dependency, manufacture a dependency commit, transfer another
+  exception, or request this same choice again while all guards hold. The
+  Go-1.18-compatible patch/fork/replacement and parent-chain removal
+  alternatives were not authorized. Revalidate only the guards, record the
+  decision, answer its archive, and prepare one next bounded P7 mission without
+  executing it in the decision turn.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

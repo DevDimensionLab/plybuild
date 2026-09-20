@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T16:39:25+02:00
+Generated: 2026-09-20T16:59:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -27,10 +27,12 @@ session diary.
 - The go-uuid evaluation, go-syslog decision/evaluation, and every earlier
   archive are answered. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-20T163925+0200-decide-hashicorp-go-uuid-product-direction.md`.
-  It authorizes only one bounded go-uuid product decision. It does not
-  authorize silently accepting findings, implementing a dependency/source
-  change, repeating an earlier group, combining another group, or beginning
-  P8. The launcher check validates the reciprocal 218-archive chain and
+  The user-authorized automatic controller selected option 1 with the
+  recommended bounds on 2026-09-20. This authorizes only guard revalidation
+  and decision recording, not repeating the evaluation, implementing a
+  dependency or source change, reopening an earlier decision, combining
+  another group, or beginning P8; the active session has not recorded the
+  decision. The launcher check validates the reciprocal 218-archive chain and
   byte-exact active prompt.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
@@ -39,15 +41,14 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. The controller's user-authorized bounded go-syslog option
-1 decision is recorded under its target-specific guards. Exact Go 1.26.7,
-every accepted dependency move through Google UUID v1.4.0, qualified
-go-cleanhttp, and all retained-module decisions through exact inherited,
-unloaded go-syslog v1.0.0 are final under their separate target-specific
-guards. No exact-path stable go-uuid release qualifies; selected inherited,
-unloaded v1.0.1 remains unchanged and unqualified. P7 is blocked only on the
-prepared bounded go-uuid product decision. P8 remains queued. Do not combine
-groups or begin P8.
+P2A-P6 are complete. P7 is recording the controller's user-authorized bounded
+go-uuid option 1 decision because no exact-path stable release qualifies.
+Exact Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
+qualified go-cleanhttp, and all retained-module decisions through exact
+inherited, unloaded go-syslog v1.0.0 are final under their separate target-
+specific guards. Selected inherited, unloaded go-uuid v1.0.1 remains
+unchanged. P8 remains queued. Do not combine groups or begin P8 before this
+decision is revalidated and recorded in a committed handoff.
 
 The authorized 2026-09-20 go-sockaddr option 1 decision retains exact
 selected, inherited, unloaded `github.com/hashicorp/go-sockaddr v1.0.0`
@@ -1451,7 +1452,31 @@ Q0-Q2 PASS at L2.
 No exact-path stable `github.com/hashicorp/go-uuid` release qualifies. The
 selected exact inherited v1.0.1 remains unchanged and unqualified. No product
 source, `go.mod`, or `go.sum` changed, and no dependency implementation commit
-exists. P7 is blocked on the sole prepared product-decision archive.
+exists. On 2026-09-20 the user-authorized automatic controller selected option
+1 with the recommended bounds: retain exact selected, inherited, unloaded
+v1.0.1 without changing product source, `go.mod`, or `go.sum`. Accept only the
+completed randomness-error identity, Go 1.26 fatal injected-reader, negative-
+size panic, non-RFC generation, API/behavior, MVS, vulnerability, and related
+recorded findings. This accepts no new or independently discovered defect. The
+exception is go-uuid-specific and non-transferable.
+
+It remains valid only while exact v1.0.1, all six exact v1.0.1 requests from
+Consul API v1.1.0/v1.12.0, Consul SDK v0.1.1/v0.8.0, and Serf
+v0.8.2/v0.9.6, and both exact v1.0.0 requests from go-immutable-radix
+v1.0.0/v1.3.1 remain unchanged, no direct main-module root or repository
+import is added, production and complete-test target loads remain zero, the
+module remains runtime-unreachable, every earlier guard remains intact, and no
+new advisory or independent defect appears. Revalidate and record these guards
+in the committed decision. Direct import/loading, runtime reachability, a
+target version or incoming-request change, a new direct root, an earlier
+owning-guard change, or a new advisory or independent defect expires the
+exception and requires the owning fresh dependency and product decision before
+merge. Do not change product source or dependency metadata, add a direct edge,
+select v1.0.3 or unreleased master, change/remove a Consul API, Consul SDK,
+Serf, or go-immutable-radix parent, patch/fork source, authorize a wrapper or
+replacement architecture, raise the Go floor, move unrelated selections,
+alter another guarded dependency, or manufacture a dependency commit. Do not
+ask for this same choice again while all guards hold.
 
 Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves Hashicorp's
 public active unarchived non-fork MPL-2.0 repository. The exact proxy exposes
@@ -1576,16 +1601,11 @@ only known cache, physical-tool-path, mode-mask, bare-`mktemp`, Make-variable,
 and nested-launcher timing boundaries; the scratch-contained canonical run
 passes and none is go-uuid evidence.
 
-The prepared decision offers exactly three directions. Recommended option 1
-retains exact inherited, unloaded v1.0.1 under a target-specific exception for
-only the completed error-identity, Go 1.26 fatal injected-reader, negative-size
-panic, non-RFC generation, API/behavior, MVS, vulnerability, and related
-findings, guarded by the exact version, all eight incoming requests, no direct
-root/import/load, runtime unreachability, every earlier guard, and no new
-finding. Option 2 authorizes only a separate Go-1.18-compatible patch/fork/
-replacement evaluation. Option 3 authorizes only a separate parent-chain
-removal study. Selecting v1.0.3 alone is not qualifying because it retains the
-blockers and needs a direct root that tidy removes.
+The controller-authorized choice retains exact inherited, unloaded v1.0.1
+under the target-specific exception above. The separately scoped
+patch/fork/replacement and parent-chain removal alternatives were not
+authorized. The active decision session must revalidate the guards, record the
+accepted findings and expiry triggers, and stop without implementation.
 
 ## Project And Quality State
 
@@ -1796,12 +1816,12 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Obtain and record exactly one bounded product decision for exact-path
-`github.com/hashicorp/go-uuid`. Recommended option 1 retains exact selected,
-inherited, unloaded v1.0.1 without source or metadata changes under the
-target-specific guards and accepted completed findings above. Option 2
-authorizes only a separate Go-1.18-compatible patch/fork/replacement
-evaluation. Option 3 authorizes only a separate parent-chain removal study.
-Do not silently accept findings, select v1.0.3 or unreleased master, implement
-a dependency/source change, transfer an earlier exception, combine another
-group, or begin P8.
+Record the controller's user-authorized option 1 decision for exact-path
+`github.com/hashicorp/go-uuid`: retain exact inherited, unloaded v1.0.1 and
+all eight exact incoming requests without product source or dependency
+metadata changes under the target-specific exception above. Revalidate only
+the recorded guards, do not repeat the evaluation, and do not implement the
+choice in that session. Preserve every earlier qualified result and target-
+specific decision. Answer the active archive and prepare exactly one
+reciprocal NEXT mission for the next bounded P7 group; do not execute it or
+begin P8.
