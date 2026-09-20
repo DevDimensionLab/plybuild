@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T19:09:11+02:00
+Generated: 2026-09-20T19:29:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,16 +8,16 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The golang-lru evaluation
+  `codex/upgrade-quality`, base master at `5635d50`. The golang-lru decision
   began from clean handoff HEAD
-  `f867a05fa1334c7e7fc0b774edc060e78a9be88d`, parent
-  `fa9af5e9b168520f024da6f2049065ad186735b8`, tree
-  `cf389273ef952c0107541facf8671eee1c9b56ef`. That handoff changed exactly the
-  launcher, answered go.net decision archive, then-NEXT golang-lru evaluation
-  archive, rolling handover, and roadmap. Its go.net-decision parent `fa9af5e`,
-  parent `70867a4`, tree `53de66fc`, retains its exact five-file delta.
-  Ordinary and ignored status, branch, ancestry, exact changed sets,
-  reciprocal history, and launcher check passed before the evaluation.
+  `961c48582ca568f0867d91e7781c6fa0b970dcea`, parent
+  `f867a05fa1334c7e7fc0b774edc060e78a9be88d`, tree
+  `716bf2f170c296836aa1903414c55ab4f5450109`. That handoff changed exactly the
+  launcher, answered golang-lru evaluation archive, then-NEXT golang-lru
+  decision archive, rolling handover, and roadmap. Its evaluation parent
+  `f867a05`, parent `fa9af5e`, tree `cf389273`, retains its exact five-file
+  delta. Ordinary and ignored status, branch, ancestry, exact changed sets,
+  reciprocal history, and launcher check passed before the decision.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -25,15 +25,15 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The golang-lru evaluation, go.net decision/evaluation, go-uuid decision/
-  evaluation, and every earlier archive are answered. The sole NEXT
+- The golang-lru decision/evaluation, go.net decision/evaluation, go-uuid
+  decision/evaluation, and every earlier archive are answered. The sole NEXT
   archive is
-  `docs/plan/agent-sessions/2026-09-20T190911+0200-decide-hashicorp-golang-lru-product-direction.md`.
-  It authorizes only one bounded product decision for selected exact-path
-  `github.com/hashicorp/golang-lru v0.5.4`, not another dependency group,
-  implementation before authorization, a guarded-parent or Go-floor change,
-  or P8. The launcher check validates the reciprocal 222-archive chain and
-  byte-exact active prompt before that successor begins.
+  `docs/plan/agent-sessions/2026-09-20T192912+0200-evaluate-hashicorp-mdns-dependency.md`.
+  It authorizes only one bounded evaluation of selected exact-path
+  `github.com/hashicorp/mdns v1.0.4`, not another dependency group, an
+  unqualified selection, a guarded-parent or Go-floor change, or P8. The
+  launcher check validates the reciprocal 223-archive chain and byte-exact
+  active prompt before that successor begins.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -41,12 +41,29 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the bounded golang-lru evaluation and
-continues only with its prepared product decision. Exact Go 1.26.7, every
-accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
-and all retained-module decisions through exact inherited, unloaded go.net
-v0.0.1 are final under their separate target-specific guards. P8 remains
-queued. Do not combine groups or begin P8.
+P2A-P6 are complete. P7 has completed the bounded golang-lru product decision
+and continues only with the prepared mdns v1.0.4 evaluation. Exact Go 1.26.7,
+every accepted dependency move through Google UUID v1.4.0, qualified
+go-cleanhttp, and all retained-module decisions through exact inherited,
+unloaded golang-lru v0.5.4 are final under their separate target-specific
+guards. P8 remains queued. Do not combine groups or begin P8.
+
+The authorized 2026-09-20 golang-lru option 1 decision retains exact selected,
+inherited, unloaded `github.com/hashicorp/golang-lru v0.5.4` without product
+source or dependency metadata changes. Its target-specific, non-transferable
+exception accepts only the completed callback-under-lock reentrancy deadlock;
+callback-panic mutex poisoning; nonpositive-capacity constructor errors;
+default `New2Q(1)` and zero-ghost-ratio failures; negative Resize behavior;
+nil/zero-receiver and non-comparable-key panics; caller key/value identity and
+aliasing; simplelru non-concurrent use; and the recorded API, behavior, MVS,
+vulnerability, allocation, resource, and related completed findings. It
+accepts no new or independently discovered defect. It remains valid only
+while exact v0.5.4, all eighteen recorded requests, no direct root or
+repository import, zero target loads, runtime unreachability, every earlier
+guard, and the no-new-advisory-or-defect condition remain exact. Any target/
+request/root/import/load/runtime, earlier-guard, or new-finding change expires
+the exception and requires the owning fresh decision. The remediation and
+parent/graph-removal alternatives are not authorized.
 
 The authorized 2026-09-20 go.net option 1 decision retains exact selected,
 inherited, unloaded `github.com/hashicorp/go.net v0.0.1` without product
@@ -106,9 +123,9 @@ All earlier guarded why results are negative; source imports and target package
 loads are zero, and runtime unreachability remains intact.
 
 Fresh primary data has no new exact record for those targets, go.net, or
-golang-lru. All 21 guarded why results through go.net plus golang-lru's result
-remain negative, repository Go imports are zero, and production and complete-
-test loads contain zero guarded or golang-lru packages. Gorilla
+golang-lru. All 22 guarded why results through golang-lru remain negative,
+repository Go imports are zero, and production and complete-test loads contain
+zero guarded packages. Gorilla
 retains only its recorded entries, including unwithdrawn GO-2026-6278;
 go-retryablehttp retains only its two accepted identifiers. Direct import or
 loading, runtime reachability, a version or incoming-edge change, or a new
@@ -1821,7 +1838,7 @@ empty. No new advisory or independently observed defect appeared. No
 dependency implementation or metadata commit exists. P7 continues only with
 the prepared bounded golang-lru evaluation.
 
-## Hashicorp Golang LRU Evaluation
+## Hashicorp Golang LRU Evaluation And Product Decision
 
 No exact-path stable `github.com/hashicorp/golang-lru` release qualifies.
 Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves Hashicorp's
@@ -1938,8 +1955,39 @@ SHA-256 values remain
 `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
 No dependency implementation or metadata commit exists, so no changed-
 selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS at
-L2. P7 stops on the prepared bounded golang-lru product decision; it was not
-executed in the evaluation session.
+L2.
+
+Option 1 is explicitly authorized. Retain exact selected, inherited, unloaded
+golang-lru v0.5.4 without changing product source, `go.mod`, or `go.sum` under
+the target-specific exception recorded above. V0.6.0/v1.0.2's exported
+`Cache` comparability regression, the package-empty v1.0.1 release, v2 paths,
+main, forks, alternate paths, remediation, and parent/graph removal are not
+authorized.
+
+Decision revalidation began from clean ordinary and ignored state at HEAD
+`961c48582ca568f0867d91e7781c6fa0b970dcea`, parent
+`f867a05fa1334c7e7fc0b774edc060e78a9be88d`, tree
+`716bf2f170c296836aa1903414c55ab4f5450109`. Its exact five-file handoff
+delta, reciprocal 222-archive chain, latest Google UUID implementation
+ancestry, and launcher check pass. Exact Go 1.26.7 binary SHA-256 remains
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+
+Golang-lru remains exact v0.5.4 through all eighteen recorded requests, with
+no direct root, a negative why result, zero repository Go imports, zero
+production/test loads, and runtime unreachability. All 21 earlier guarded
+selections and recorded requests remain exact; all 22 target-plus-earlier why
+results, imports, and loads remain negative or zero. The project and module
+hashes retain the recorded values, exact module verification passes, and the
+tidy projection remains 432 lines.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+with no target record. Exact OSV remains empty except for the recorded Gorilla
+and go-retryablehttp pairs; both exact golang-lru GitHub advisory feeds remain
+empty. No new advisory or independently observed defect appeared. No
+dependency implementation or metadata commit exists. P7 continues only with
+the prepared bounded mdns v1.0.4 evaluation.
 
 ## Project And Quality State
 
@@ -2173,11 +2221,11 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Make one fresh bounded product decision for selected exact-path
-`github.com/hashicorp/golang-lru v0.5.4`. Choose exactly one of guarded
-retention under a new target-specific exception, a separately authorized
-Go-1.18-compatible exact-path remediation design that fixes callback locking
-while preserving exported `Cache` comparability, or a separately authorized
-parent/graph-removal study. Revalidate only the narrow decision guards; do not
-repeat the audit, implement before authorization, combine options or another
-dependency group, change a guarded parent or Go floor, or begin P8.
+Independently evaluate selected exact-path `github.com/hashicorp/mdns v1.0.4`
+as one bounded dependency group. Resolve its repository/release identity,
+complete Go-1.18 source/test closure, API and multicast-DNS behavior, exact
+MVS and project effects, vulnerability state, platform/resource/concurrency
+boundaries, and actual zero-load status. Retain or select only a qualified
+exact-path stable release; otherwise stop for a fresh bounded product
+decision. Do not combine another dependency group, change a guarded parent or
+Go floor, transfer an exception, or begin P8.

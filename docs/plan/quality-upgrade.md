@@ -5374,12 +5374,12 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded product decision for selected
-exact-path `github.com/hashicorp/golang-lru v0.5.4` after its independent
-evaluation found no qualifying stable release. Completed dependency groups remain final
-through accepted Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all
-retained-module decisions through exact inherited, unloaded
-`github.com/hashicorp/go.net v0.0.1`. P8 remains queued.
+Status: active for the prepared bounded evaluation of selected exact-path
+`github.com/hashicorp/mdns v1.0.4` after the golang-lru product decision.
+Completed dependency groups remain final through accepted Google UUID v1.4.0,
+qualified go-cleanhttp v0.5.2, and all retained-module decisions through exact
+inherited, unloaded `github.com/hashicorp/golang-lru v0.5.4`. P8 remains
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -11234,6 +11234,71 @@ Hashicorp golang-lru evaluation and blocked product boundary (2026-09-20):
   guarded retention, a separately authorized Go-1.18-compatible exact-path
   and API-preserving remediation design, or a separately authorized parent/
   graph-removal study. That decision was not executed in this evaluation.
+
+Hashicorp golang-lru product decision (2026-09-20):
+
+- Option 1 is explicitly authorized: retain exact selected, inherited,
+  unloaded `github.com/hashicorp/golang-lru v0.5.4` without changing product
+  source, `go.mod`, or `go.sum`. This bounded direction uses the verified
+  zero-load exposure while avoiding a manufactured direct root and the
+  exported `Cache` comparability regression in v0.6.0/v1.0.2; it is an
+  explicit product choice, not an inference from physical selection. The new
+  target-specific, non-transferable
+  exception accepts only the completed callback-under-lock reentrancy
+  deadlock; callback-panic mutex poisoning; nonpositive-capacity constructor
+  errors; default `New2Q(1)` and zero-ghost-ratio failures; negative
+  `simplelru.Resize` over-capacity counting, retained negative capacity, and
+  immediate later eviction; nil/zero-receiver and non-comparable-key panics;
+  caller key/value identity and aliasing; explicitly non-concurrent simplelru
+  use; and the recorded API, behavior, MVS, vulnerability, allocation,
+  resource, and related completed findings. It accepts no new or independently
+  discovered defect.
+- The exception remains valid only while exact v0.5.4 and all eighteen
+  recorded incoming requests remain unchanged: v0.5.4 from Viper v1.15.0,
+  historical Viper v1.10.1, and `sagikazarmark/crypt v0.4.0`; v0.5.0 from
+  go-immutable-radix v1.0.0/v1.3.1 and OpenCensus v0.21.0; and v0.5.1 from
+  OpenCensus v0.22.0 plus Google API v0.7.0-v0.9.0, v0.13.0-v0.15.0,
+  v0.17.0-v0.20.0, and v0.22.0. It also requires no direct root or repository
+  import, zero production and complete-test target loads, runtime
+  unreachability, every earlier guard remaining intact, and no new advisory or
+  independent defect. A target/request/root/import/load/runtime, earlier-
+  guard, or new-finding change expires the exception and requires the owning
+  fresh decision. The exact-path remediation and parent/graph-removal
+  alternatives are not authorized. V0.6.0/v1.0.2's exported `Cache`
+  comparability regression, the package-empty v1.0.1 release, v2 paths, main,
+  forks, and alternate paths remain unauthorized, and no exception transfers.
+- Decision revalidation began from clean ordinary and ignored state at HEAD
+  `961c48582ca568f0867d91e7781c6fa0b970dcea`, parent
+  `f867a05fa1334c7e7fc0b774edc060e78a9be88d`, tree
+  `716bf2f170c296836aa1903414c55ab4f5450109`. Its exact five-file handoff
+  delta, reciprocal 222-archive chain, latest Google UUID implementation
+  ancestry, and launcher check pass. Exact Go 1.26.7 binary SHA-256 remains
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+- Golang-lru remains exact v0.5.4 through all eighteen recorded requests. It
+  has no direct root, its why result is negative, repository Go imports are
+  zero, and the 355-entry production and 429-entry complete-test loads contain
+  zero target packages. All 21 earlier guarded selections and requests remain
+  exact; all 22 why results are negative; imports and guarded loads remain
+  zero; and every target remains runtime-unreachable.
+- The project remains 234 modules, 3,599 graph edges, 197 module-backed
+  complete-test entries across 41 loaded modules, 1,067 sum lines, and the
+  432-line tidy projection. `go.mod`/`go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact module verification passes; no product source, parent, dependency
+  metadata, direct root, Go floor, or unrelated selection changed.
+- Fresh primary vulnerability data remains byte-identical at 1,402 records,
+  SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+  with no target record. Exact-version OSV remains empty except for the
+  recorded Gorilla and go-retryablehttp pairs; both exact golang-lru GitHub
+  advisory feeds remain empty. No new advisory or independently observed
+  defect appeared.
+- No dependency implementation or metadata commit was created. No changed-
+  selection scorecard applies, and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. P7 continues only with the prepared bounded evaluation of selected
+  exact-path `github.com/hashicorp/mdns v1.0.4`; it was not executed in this
+  decision session.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

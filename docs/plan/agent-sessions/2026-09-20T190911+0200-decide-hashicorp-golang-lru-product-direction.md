@@ -1,13 +1,13 @@
 # Agent Session: Decide Hashicorp Golang LRU Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-20T190911+0200-decide-hashicorp-golang-lru-product-direction`
 Created: `2026-09-20T19:09:11+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `bebc1caad27fdf195999470a5d045ffa6fa92be3f04cbbe10c6f6da300a8a290`
 Previous: [2026-09-20T180252+0200-evaluate-hashicorp-golang-lru-dependency.md](2026-09-20T180252+0200-evaluate-hashicorp-golang-lru-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-20T192912+0200-evaluate-hashicorp-mdns-dependency.md](2026-09-20T192912+0200-evaluate-hashicorp-mdns-dependency.md)
+Outcome: Authorized option 1 for exact inherited, unloaded golang-lru v0.5.4 after every guard passed; product source and dependency metadata stayed unchanged, and one bounded mdns v1.0.4 evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -219,3 +219,85 @@ the explicit choice separately authorizes a later implementation commit. Do
 not launch a successor, push, merge, publish, release, stash, revert, bypass
 cleanup, remove the worktree, combine another dependency group, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 is explicitly authorized. Retain exact selected
+`github.com/hashicorp/golang-lru v0.5.4` as an inherited, unloaded module
+without changing product source, `go.mod`, or `go.sum`. This bounded direction
+uses the verified zero-load exposure while avoiding a manufactured direct root
+and the exported `Cache` comparability regression in v0.6.0/v1.0.2; it is an
+explicit product choice, not an inference from physical selection. The new
+golang-lru-specific, non-transferable exception accepts only the completed callback-
+under-lock reentrancy deadlock; callback-panic mutex poisoning; nonpositive-
+capacity constructor errors; the default `New2Q(1)` and zero-ghost-ratio
+failures; negative `simplelru.Resize` over-capacity counting, retained negative
+capacity, and immediate later eviction; nil and zero receiver and non-
+comparable-key panics; caller key/value identity and aliasing; explicitly non-
+concurrent simplelru use; and the recorded API, behavior, MVS, vulnerability,
+allocation, resource, and related completed findings. It accepts no new or
+independently discovered defect.
+
+The exception remains valid only while exact v0.5.4 and all eighteen recorded
+incoming requests remain unchanged: v0.5.4 from Viper v1.15.0, historical
+Viper v1.10.1, and `sagikazarmark/crypt v0.4.0`; v0.5.0 from
+go-immutable-radix v1.0.0/v1.3.1 and OpenCensus v0.21.0; and v0.5.1 from
+OpenCensus v0.22.0 and Google API v0.7.0-v0.9.0, v0.13.0-v0.15.0,
+v0.17.0-v0.20.0, and v0.22.0. It also requires no direct main-module root or
+repository Go import, zero production and complete-test target loads, runtime
+unreachability, every earlier guard remaining intact, and no new advisory or
+independent defect. A target version or incoming-request change, direct root/
+import/load, runtime reachability, earlier owning-guard change, or new advisory
+or independent defect expires the exception and requires the owning fresh
+dependency and product decision before merge. The exact-path remediation and
+parent/graph-removal alternatives are not authorized. V0.6.0, v1.0.2, the
+package-empty v1.0.1 release, v2 paths, main, forks, and alternate paths remain
+unauthorized, and no exception transfers to another target.
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at HEAD
+`961c48582ca568f0867d91e7781c6fa0b970dcea`, parent
+`f867a05fa1334c7e7fc0b774edc060e78a9be88d`, tree
+`716bf2f170c296836aa1903414c55ab4f5450109`. That handoff changed exactly the
+launcher, answered golang-lru evaluation archive, this then-NEXT decision
+archive, rolling handover, and roadmap. The evaluation handoff `f867a05`,
+parent `fa9af5e`, tree `cf389273`, retains its exact five-file delta. The
+reciprocal 222-archive chain, latest Google UUID v1.4.0 implementation
+ancestry, and launcher check pass.
+
+Exact Go 1.26.7 binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+ran first in `PATH` with `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, no
+ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and `umask 022`. Golang-lru remains
+exact v0.5.4 through all eighteen recorded requests. There is no direct root,
+its `go mod why -m` result remains negative, repository Go imports remain
+zero, and the 355-entry production and 429-entry complete-test loads contain
+zero target packages.
+
+All 21 earlier guarded modules retain their exact selections and recorded
+requests. All 22 target-plus-earlier why results remain negative, repository
+Go imports remain zero, and production and complete-test loads contain zero
+guarded packages. The complete-test load retains 197 module-backed entries
+across 41 loaded modules, so golang-lru and every earlier guarded target remain
+runtime-unreachable. The project remains 234 modules, 3,599 graph edges, 1,067
+sum lines, and the recorded 432-line tidy projection. `go.mod` and `go.sum`
+retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+Exact module verification passes.
+
+Fresh primary vulnerability data remains byte-identical at 1,402 records,
+SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z, with no golang-lru record. Exact-version
+OSV results remain empty for golang-lru and every guarded target except the
+recorded Gorilla WebSocket GO-2026-6278/GHSA-w67g-5rqw-f597 and
+go-retryablehttp GO-2024-2947/GHSA-v6v8-xj6m-xwqh pairs. Both exact target
+GitHub advisory feeds remain empty. No new advisory or independently observed
+defect appeared.
+
+No dependency implementation or metadata commit was created. No changed-
+selection scorecard applies, and accepted quality remains 27/27 Q0-Q2 PASS at
+L2. The sole reciprocal successor is the bounded P7 evaluation of selected
+exact-path `github.com/hashicorp/mdns v1.0.4`; it was prepared but not
+executed.
