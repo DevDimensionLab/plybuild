@@ -5378,8 +5378,10 @@ Status: active. Completed dependency groups remain final through accepted
 Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and all retained-module
 decisions through exact inherited, unloaded
 `github.com/hashicorp/go-sockaddr v1.0.0`. Its bounded product decision
-accepted option 1 under target-specific guards. P7 continues only with the
-prepared bounded go-syslog evaluation. P8 remains queued.
+accepted option 1 under target-specific guards. The bounded go-syslog
+evaluation found no qualified exact-path stable release and left dependency
+metadata unchanged. P7 is blocked only on the prepared go-syslog product
+decision. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -10715,6 +10717,84 @@ Hashicorp go-sockaddr product decision (2026-09-20):
   remains 27/27 Q0-Q2 PASS at L2. P7 continues only with the prepared bounded
   exact-path `github.com/hashicorp/go-syslog v1.0.0` evaluation; it was not
   executed in this decision session.
+
+Hashicorp go-syslog evaluation and blocked product boundary (2026-09-20):
+
+- No exact-path stable `github.com/hashicorp/go-syslog` release qualifies.
+  Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves the public
+  active unarchived non-fork MIT Hashicorp repository. Exact v1.0.0 is the only
+  proxy version and `@latest`; there is no other stable or prerelease version,
+  GitHub Release, retraction, module deprecation, redirect, alternate exact
+  path, or `/v2` line. Six branches and returned forks are not candidates.
+- V1.0.0 is a lightweight tag at verified signed commit
+  `8d1874e3e8d1862b74e0536851e218c4571066a5`, parent
+  `326bf4a7f709d263f964a6a96558676b103f3534`, tree
+  `a81f242fd29ca869a5c2fb666ff9e4dd7a0af570`. Proxy ZIP and `go.mod`
+  SHA-256 values are
+  `a0ca8b61ea365e9ecdca513b94f200aef3ff68b4c95d9dabc88ca25fcb33bce6` /
+  `628ea5197c3c1c9f1e04c7354d9323d12ccb79b1f8a851f817e3bd04f6828aa6`;
+  proxy and Git regular files match and sumdb verifies the release. Current
+  master `40240a543e78c0ccbdb437b470650ea7acaf3da8` is 48 commits beyond the
+  tag, declares Go 1.23.0, and is unreleased and floor-ineligible. Its exported
+  API is unchanged and it fixes only one of the three disqualifiers.
+- V1.0.0 has no `go` directive or external dependency; its complete minimal
+  production/test closure is target plus standard library and preserves Go
+  1.18. The release has one package, four production files, no native tests,
+  commands, examples, benchmarks, fuzz targets, testdata, generated files,
+  cgo, or embeds. Native verification, listing, repeats, race, vet, and
+  applicable cross-builds pass under exact Go 1.26.7 and Go 1.18.10. The
+  exported API comprises `Priority`, eight severity constants, `Syslogger`,
+  `NewLogger`, and `DialLogger`; there is no CLI and the v1.0.0-to-master API
+  diff is empty.
+- Independent fixture SHA-256
+  `6d9eb0b8fbfefc1556630519301609b6d343cb37ec2b3b5c46d6d6c2378d46d0`
+  passes behavior repeats, race, and vet under both SDKs. It characterizes
+  UDP/TCP formatting and priority, local Unix-daemon behavior, framing,
+  dial/write/close ownership, error identity, malformed input, nil/panic,
+  mutation/non-aliasing, allocation, concurrency, global state, resources,
+  and environment/network interaction. Embedded newlines pass through
+  verbatim and may create multiple newline-framed records.
+- Three independent defects disqualify the only release. External fixture
+  SHA-256
+  `b50b035d93a2244fbe575ee2d0dbb34ec1d70b9ca501bde3817f517781f8b58a`
+  cannot compile because `NewLogger` and `DialLogger` are absent on AIX and
+  `js/wasm` under both SDKs and on `wasip1/wasm` under Go 1.26.7, though the
+  package itself nominally builds there. `writeString` ignores a
+  `SetWriteDeadline` error, writes anyway, returns nil, loses error identity,
+  and defeats the blocking-avoidance guarantee. `DialLogger` accepts invalid
+  severity `Priority(8)` and silently maps it to `LOG_EMERG`. Both runtime
+  blockers reproduce under both SDKs; master fixes only the deadline error.
+- Selected v1.0.0 exists through exactly Serf v0.8.2 and v0.9.6. Its why and
+  import results are negative and both loads contain zero target packages. A
+  redundant root adds only one edge and checksum line, changes no selection or
+  load, and is removed by tidy; base and candidate projections converge byte-
+  identically. All 18 earlier guarded selections, requests, negative why/
+  imports, zero loads, runtime unreachability, and advisory states remain
+  exact. No projection was applied.
+- Fresh primary vulnerability data remains 1,402 records at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  with no target entry. Exact OSV and GitHub advisory queries are empty.
+  Exact-Go isolated scans have zero findings; old-SDK findings belong only to
+  its standard library. Base and redundant-root project scans are identical at
+  30 module, 22 package, and 20 symbol/test-symbol IDs, with zero target frame
+  or trace.
+- The project remains 234 modules, 3,599 edges, 355 production entries, 429
+  complete-test entries, 197 module-backed entries across 41 loaded modules,
+  1,067 sum lines, and the recorded 432-line tidy projection. `go.mod` and
+  `go.sum` SHA-256 values remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+  Exact-Go native/repeat/race/vet, lint, API/CLI, empty-HOME, cross-build,
+  canonical preflight, every script/meta population, 80/80 mutation kills,
+  host/snapshot/Docker acceptance, and all 15 audit controls pass. No changed-
+  selection scorecard applies; accepted quality remains 27/27 Q0-Q2 L2.
+- Dependency metadata remained unchanged. P7 is blocked on the sole prepared
+  go-syslog product decision. Recommended option 1 retains exact inherited,
+  unloaded v1.0.0 under a target-specific exception bounded to the completed
+  findings, exact version and both Serf requests, zero imports/load, runtime
+  unreachability, every earlier guard, and no new advisory or defect. A Go-
+  1.18-compatible patch/fork/replacement design and a Serf parent/graph-removal
+  study are separately scoped alternatives. No option was inferred.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

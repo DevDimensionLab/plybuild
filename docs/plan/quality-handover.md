@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-20T13:53:11+02:00
+Generated: 2026-09-20T14:51:40+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-sockaddr decision
+  `codex/upgrade-quality`, base master at `5635d50`. The go-syslog evaluation
   recording began from clean handoff HEAD
-  `5c957ce042e2c36589e0ec5f00fca5261ce76352`, parent
-  `a9289a1684e101399810bbec6294b62e4a41df92`, tree
-  `654abb0f7bf3261c0b2224f99d61ec968af826f2`.
+  `2ee06f1db429101b908d764de8c37a9cd2989229`, parent
+  `5c957ce042e2c36589e0ec5f00fca5261ce76352`, tree
+  `4c96957b3a4391d2379732962243f12f50928d95`.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -20,11 +20,11 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-sockaddr decision, its evaluation, and every earlier archive are
-  answered. The sole
-  NEXT archive is
-  `docs/plan/agent-sessions/2026-09-20T135311+0200-evaluate-hashicorp-go-syslog-dependency.md`.
-  It authorizes only one bounded go-syslog evaluation. It does not authorize
+- The go-syslog evaluation, go-sockaddr decision, and every earlier archive
+  are answered. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-20T145140+0200-decide-hashicorp-go-syslog-product-direction.md`.
+  It authorizes only one bounded go-syslog product decision. It does not
+  authorize repeating the evaluation, implementing a dependency change,
   reopening an earlier decision, combining another dependency group, or
   beginning P8.
 - No `.agent-task/current.md` or repository
@@ -37,8 +37,9 @@ session diary.
 P2A-P6 are complete. Exact Go 1.26.7, every accepted dependency move through
 Google UUID v1.4.0, qualified go-cleanhttp, and all retained-module decisions
 through exact inherited, unloaded go-sockaddr v1.0.0 are final under their
-target-specific guards. P7 continues only with the prepared bounded go-syslog
-evaluation. P8 remains queued. Do not combine groups or begin P8.
+target-specific guards. P7 is blocked only on the prepared bounded go-syslog
+product decision after the completed evaluation found no qualified stable
+release. P8 remains queued. Do not combine groups or begin P8.
 
 The authorized 2026-09-20 go-sockaddr option 1 decision retains exact
 selected, inherited, unloaded `github.com/hashicorp/go-sockaddr v1.0.0`
@@ -1302,6 +1303,87 @@ implementation or metadata commit exists. P7 continues only with the prepared
 bounded exact-path `github.com/hashicorp/go-syslog v1.0.0` evaluation; it was
 not executed in this decision session.
 
+## Hashicorp Go Syslog Evaluation
+
+No exact-path stable `github.com/hashicorp/go-syslog` release qualifies.
+Fresh proxy, sumdb, `go-import`, Git, and GitHub evidence resolves Hashicorp's
+public active unarchived non-fork MIT repository. Exact v1.0.0 is the only
+proxy version and `@latest`; there is no other stable or prerelease version,
+GitHub Release, retraction, module deprecation, redirect, alternate exact path,
+or `/v2` line. Six branch heads and returned forks are not exact-path stable
+candidates.
+
+V1.0.0 is a lightweight tag at verified signed commit
+`8d1874e3e8d1862b74e0536851e218c4571066a5`, parent
+`326bf4a7f709d263f964a6a96558676b103f3534`, tree
+`a81f242fd29ca869a5c2fb666ff9e4dd7a0af570`. Proxy ZIP and `go.mod`
+SHA-256 values are
+`a0ca8b61ea365e9ecdca513b94f200aef3ff68b4c95d9dabc88ca25fcb33bce6` /
+`628ea5197c3c1c9f1e04c7354d9323d12ccb79b1f8a851f817e3bd04f6828aa6`;
+all eight regular proxy files match Git and sumdb verifies both module and
+metadata. Current master is verified commit
+`40240a543e78c0ccbdb437b470650ea7acaf3da8`, 48 commits beyond the tag,
+declares Go 1.23.0, and is unreleased and floor-ineligible. Its exported API is
+unchanged; it fixes only the deadline-error defect and retains the other two
+disqualifiers.
+
+The release has no `go` directive or external dependency; its complete
+minimal production/test closure is target plus standard library and preserves
+Go 1.18. It contains one package, four production files, no native tests,
+commands, examples, benchmarks, fuzz targets, testdata, generated files, cgo,
+or embeds. Native verification, listing, repeats, race, vet, and applicable
+cross-builds pass under exact Go 1.26.7 and Go 1.18.10. The Darwin API exports
+`Priority`, eight severity constants, `Syslogger`, `NewLogger`, and
+`DialLogger`; there is no CLI and the pinned v1.0.0-to-master API diff is
+empty.
+
+Independent fixture SHA-256
+`6d9eb0b8fbfefc1556630519301609b6d343cb37ec2b3b5c46d6d6c2378d46d0`
+passes behavior repeats, race, and vet under both SDKs. It characterizes
+UDP/TCP priority and format, local Unix-daemon environment, framing,
+connection ownership, idempotent close and reconnect, error identity,
+nil/panic, buffer mutation/non-aliasing, allocation, concurrency, global
+state, resources, and network effects. Messages and tags transmit embedded
+newlines verbatim, so one call may carry multiple newline-framed records. The
+package starts no goroutines, has no mutable globals, reads process name,
+hostname and time, probes standard Unix syslog socket paths, and owns only its
+network connections.
+
+Three independent defects disqualify v1.0.0. First, external fixture SHA-256
+`b50b035d93a2244fbe575ee2d0dbb34ec1d70b9ca501bde3817f517781f8b58a`
+cannot compile because `NewLogger` and `DialLogger` are absent on AIX and
+`js/wasm` under both SDKs and `wasip1/wasm` under Go 1.26.7, despite the
+package itself nominally building there. Second, `writeString` ignores a
+`SetWriteDeadline` error, writes anyway, returns nil, loses the underlying
+error, and defeats its blocking-avoidance guarantee. Third, `DialLogger`
+accepts severity `Priority(8)` and silently maps it to `LOG_EMERG`. Both
+focused blockers reproduce under both SDKs; master fixes only the second.
+
+Selected v1.0.0 exists through exactly Serf v0.8.2 and v0.9.6. Its why result
+is negative, repository imports are zero, and both project loads contain zero
+target packages. A redundant root adds only one edge and checksum line,
+changes no selection or load, and is removed by tidy; base and candidate tidy
+projections converge byte-identically. The project therefore remains 234
+modules, 3,599 edges, 1,067 sum lines, and the recorded 432-line tidy
+projection. All 18 earlier guarded selections, requests, negative why/import
+results, zero loads, runtime unreachability, and advisory states remain exact.
+
+Fresh primary data remains 1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+with no target entry. Exact OSV, repository, and exact global GitHub advisory
+queries are empty. Exact-Go isolated scans have zero findings; old-SDK
+findings belong only to its standard library. Base and redundant-root project
+scans are identical at 30 module, 22 package, and 20 symbol/test-symbol IDs,
+with zero target package or trace occurrence.
+
+Dependency metadata remained unchanged. The prepared decision recommends
+retaining exact inherited, unloaded v1.0.0 under a new target-specific
+exception bounded to all completed findings, exact version and both Serf
+requests, no direct root/import/load, runtime unreachability, every earlier
+guard, and no new advisory or independent defect. Separately scoped patch/
+fork/replacement and parent-chain removal studies are alternatives. No choice
+was inferred by this evaluation.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -1449,6 +1531,24 @@ established `umask 022` contract. No source or dependency metadata changed,
 so no changed-selection scorecard applies and accepted quality remains 27/27
 Q0-Q2 PASS at L2.
 
+The go-syslog evaluation's exact Go 1.26.7 project module verification,
+build, count-one, two count-ten repeats, race, vet, pinned golangci-lint
+2.12.2, API/CLI compatibility, empty-HOME execution, four production cross-
+builds, canonical full preflight, every script/meta population, all eight
+mutation meta-stages with 80/80 kills, host acceptance, pinned GoReleaser
+snapshot acceptance, daemon-backed Docker acceptance under physical Python
+3.14.6, and all 15 audit controls pass. Both exact SDKs pass the target's
+minimal closure and independent applicable behavior/cross-build populations.
+No source or metadata changed, so no changed-selection scorecard applies and
+accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+Initial superseded project attempts reproduced only the known cold offline
+API-base cache, managed bare-`mktemp`, repository-local compatibility-report,
+and Make command-line-variable inheritance boundaries. Warming the exact
+v1.0.1 baseline, using the established scratch-only wrapper and report paths,
+and supplying tools through the environment produced the canonical passing
+run. These remain harness boundaries, not go-syslog findings.
+
 An initial project build attempt reproduced only the managed default-cache
 restriction and passed with scratch-contained caches. The first compatibility
 run reproduced the documented cold offline API-base cache boundary and passed
@@ -1484,12 +1584,11 @@ projection in a measured worktree.
 
 ## Next Bounded Objective
 
-Independently evaluate selected exact-path
-`github.com/hashicorp/go-syslog v1.0.0` as one bounded P7 dependency group.
-Resolve exact repository/release identity, complete Go-1.18-preserving source
-and test closure, package/API and syslog behavior, actual project loading,
-exact MVS effects, vulnerability state, and every applicable quality contract.
-Retain or select only a qualified exact-path stable release; otherwise leave
-metadata unchanged and stop for a bounded product decision. Preserve the new
-go-sockaddr exception and every earlier guard, do not combine another group,
-and do not begin P8.
+Make exactly one bounded product decision for exact-path
+`github.com/hashicorp/go-syslog`. The completed evaluation found no qualified
+stable release and left dependency metadata unchanged. Obtain one explicit
+choice among guarded retention of exact inherited/unloaded v1.0.0, a
+separately scoped Go-1.18-compatible patch/fork/replacement design, or a
+separately scoped Serf parent/graph-removal study. Revalidate only the recorded
+guards; do not repeat the audit, infer acceptance from physical selection,
+implement a change, combine another dependency group, or begin P8.
