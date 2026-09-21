@@ -1,13 +1,13 @@
 # Agent Session: Decide Kisielk Gotool Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-21T213548+0200-decide-kisielk-gotool-product-direction`
 Created: `2026-09-21T21:35:48+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `648ea770abab07d629e7fcf33232f6b9ecb0fcedcd7ed69f0093a1a89963e048`
 Previous: [2026-09-21T203338+0200-evaluate-kisielk-gotool-dependency.md](2026-09-21T203338+0200-evaluate-kisielk-gotool-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-21T222206+0200-evaluate-konsorten-go-windows-terminal-sequences-dependency.md](2026-09-21T222206+0200-evaluate-konsorten-go-windows-terminal-sequences-dependency.md)
+Outcome: Selected option 1: explicitly retained exact selected, inherited, unloaded gotool v1.0.0 as unqualified under a gotool-specific non-transferable exception, left product source and dependency metadata unchanged, and prepared one bounded go-windows-terminal-sequences evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -180,3 +180,136 @@ cleanup, remove the worktree, repeat completed fixtures, implement a parent or
 workaround, combine another dependency group, reopen earlier work, write
 outside the managed scratch root, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 was selected on 2026-09-21. Exact selected
+`github.com/kisielk/gotool v1.0.0` is explicitly retained as inherited and
+unloaded without changing product source, `go.mod`, or `go.sum`. It remains
+unqualified and is not described as secure. Its physical MVS selection,
+negative `go mod why` result, and zero loading bound current exposure but did
+not qualify or silently authorize it. No exact-path stable release satisfies
+the current module-aware package-pattern and lifecycle contracts.
+
+The gotool-specific, non-transferable exception accepts only the completed
+v1.0.0 module-pattern failure and upstream deprecation/module-support
+findings, plus the completed repository, archive, release, module, Go-floor,
+source, exported API, ordinary GOPATH/GOROOT behavior, caller ownership,
+mutable/global-state, filesystem/stderr, MVS, loading, project, vulnerability,
+and related evaluation findings. It accepts no uncharacterized behavior, new
+advisory, or independently discovered defect. It promotes no alternate path,
+fork, branch, prerelease, pseudo-version, replacement, direct root, or
+workaround and transfers no earlier dependency exception.
+
+This repository owns only the explicit decision to tolerate exact inherited
+and unloaded v1.0.0 in the verified graph. The exception remains valid only
+while every one of these facts remains exact:
+
+- selected exact path and version `github.com/kisielk/gotool v1.0.0`;
+- all four requests to exact v1.0.0 and their requester identities:
+  `github.com/gogo/protobuf@v1.3.2` and `honnef.co/go/tools` at
+  `v0.0.1-2019.2.3`, `v0.0.1-2020.1.3`, and `v0.0.1-2020.1.4`;
+- the genuine route from the main module through direct, imported, and loaded
+  `github.com/spf13/viper v1.15.0`, then unloaded
+  `github.com/gogo/protobuf v1.3.2`, to the target;
+- the three genuine historical routes beginning at direct
+  `github.com/devdimensionlab/mvn-pom-mutator v0.2.3`: through Crypt
+  v0.0.3-0.20200106085610-5cbc8cc4026c, Firestore v1.1.0, and Cloud Go
+  v0.46.3 to Honnef 2019.2.3; through
+  historical Viper v1.10.1, Cloud Go v0.99.0, Storage v1.10.0, and Cloud Go
+  v0.57.0 to Honnef 2020.1.3; and through that Viper/Cloud/Storage route plus
+  BigQuery v1.8.0 to Honnef 2020.1.4;
+- no direct gotool root, negative gotool and Gogo Protobuf why results, zero
+  repository imports, zero production or complete-test package loads for
+  gotool, Gogo Protobuf, and selected Honnef tools, and no gotool runtime
+  reachability;
+- 234 selected modules, 3,599 graph edges, 355 production entries, 429
+  complete-test entries, 197 module-backed complete-test entries across 41
+  loaded modules, 1,067 sum lines, and the exact 432-line tidy projection at
+  SHA-256
+  `3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`;
+- `go.mod` and `go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  and the common tidy-applied 52/948-line hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`;
+- the declared Go 1.18 floor and exact Go 1.26.7 archive/binary identities;
+- every earlier target-specific guard, with all 32 earlier guarded selections
+  exact, all 32 why results negative, guarded repository imports and loads
+  zero, and the 217 sorted incoming edges at SHA-256
+  `500c57a1b4ffbdf5bb1296ef4dcb1bd16dbae12e54b86664fd1f8a2481a6c0dd`;
+  and
+- no new gotool or closure advisory, independent finding, repository owner or
+  status change, exact-path stable release, requester or owner, qualified
+  release, genuine supported tidy-stable owner, or compatible genuine route
+  to a qualified release.
+
+Any target version/path, request, Gogo Protobuf, Honnef, Viper, Cloud,
+mvn-pom-mutator or other owner identity/route, root, import, load, runtime,
+graph, module-hash, tidy, Go-floor, earlier-guard, advisory, independent
+finding, repository/release/owner, qualification, or compatible-route change
+expires the exception and requires a fresh gotool dependency and product
+decision before merge. The decision authorizes no owning-parent study,
+workaround, direct target root, parent change, alternate path, product-source
+or dependency-metadata change, unrelated selection, or implementation.
+
+Guard-only revalidation began from clean ordinary and ignored state on branch
+`codex/upgrade-quality` at handoff HEAD
+`39ec39a1c8417addf0bbc0f2c180c1e375760440`, parent
+`3c4cc909927a959b9c1e547af0ad22b5dc8c30bd`, tree
+`213e99e9ca21a84a03d1fc48fe21161ca0e7d072`. That handoff changes exactly
+`codex-dev-start.sh`, the answered gotool evaluation archive, this then-NEXT
+decision archive, rolling handover, and roadmap. Its reciprocal 248-archive
+chain, sole NEXT state, launcher/archive prompt mirror, exact changed set, and
+latest Google UUID implementation ancestry passed.
+
+The latest dependency implementation remains exact Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
+`b89afd4ec056133b1eefb5611f8f35c12c11824b`, changing only `go.mod` and
+`go.sum`; it remains an ancestor of the handoff. A freshly unpacked official
+Go 1.26.7 archive and binary retained SHA-256 values
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+All guard commands used that binary with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, no ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and
+`umask 022`.
+
+The baseline counts, module hashes, tidy projection, all four target requests,
+and four genuine owner routes reproduce. All 32 earlier guarded selections
+remain exact; all target, Gogo, Honnef, and earlier guarded why results are
+negative; repository imports and production/complete-test loads are zero; and
+the exact 217-edge snapshot hash reproduces. Including gotool yields 33
+guarded selections and 221 incoming edges at SHA-256
+`dc3506a8e687d59a90e5711c347821b01672f8fa99ea060e494dadb505e320d5`.
+
+Fresh exact-path proxy and sumdb metadata still expose only v1.0.0. GitHub
+still reports the exact public, enabled, unarchived, non-fork MIT repository with
+one tag, no releases, and `master` at unsigned commit
+`80517062f582ea3340cd4baf70e86d539ae7d84d` and tree
+`f12b45b02a72aaa7d5d0c9c818509c4b9be4e9ec`. The module-support issue and
+maintainer deprecation guidance are unchanged. Exact target OSV and GitHub
+global/repository advisory results remain empty. Exact OSV across all 32
+earlier guarded selections retains only Gorilla WebSocket `GO-2026-6278` /
+`GHSA-w67g-5rqw-f597` and go-retryablehttp `GO-2024-2947` /
+`GHSA-v6v8-xj6m-xwqh`; x/mod v0.14.0 retains `GO-2026-6179` and
+`GO-2026-6180`. The Go vulnerability index remains 518,501 bytes and 1,402
+records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. The PUBLISHED 2,807-byte memberlist CNA
+response remains byte-exact at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+
+The completed gotool behavior fixtures and project direct-root projection were
+not repeated, option 2 was not run, and no source, dependency metadata,
+parent, toolchain declaration, or earlier guard changed. No changed-selection
+scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at L2. Final
+unchanged-project exact-Go module verification, build, count-one tests, race
+count-one tests, and vet pass. The reciprocal 249-archive chain, single NEXT
+state, launcher/archive prompt mirror, exact documentation-only changed set,
+and launcher check pass. Task-owned scratch evidence was removed with only
+the pre-existing session cache retained. The reciprocal successor linked
+above is the sole bounded evaluation of selected
+`github.com/konsorten/go-windows-terminal-sequences v1.0.1`; it was prepared
+but not executed. P8 remains queued.

@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T21:35:48+02:00
+Generated: 2026-09-21T22:22:06+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,12 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The gotool evaluation
+  `codex/upgrade-quality`, base master at `5635d50`. The gotool decision
   began from clean HEAD
-  `3c4cc909927a959b9c1e547af0ad22b5dc8c30bd`, parent
-  `3d7164061867345c2ce0a2477e46ae19e64388c6`, tree
-  `c8c41e5470411e896b892e4a58c2632126bc5e93`. That handoff changes exactly the
-  launcher, answered errcheck decision archive, then-NEXT gotool evaluation
+  `39ec39a1c8417addf0bbc0f2c180c1e375760440`, parent
+  `3c4cc909927a959b9c1e547af0ad22b5dc8c30bd`, tree
+  `213e99e9ca21a84a03d1fc48fe21161ca0e7d072`. That handoff changes exactly the
+  launcher, answered gotool evaluation archive, then-NEXT gotool decision
   archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed sets, reciprocal archive history,
   latest Google UUID ancestry, exact Go identity, module hashes, target and
@@ -25,24 +25,25 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The gotool evaluation, errcheck decision/evaluation, httprouter decision/evaluation, jtolds/gls
+- The gotool decision/evaluation, errcheck decision/evaluation, httprouter decision/evaluation, jtolds/gls
   decision/evaluation, go-junit-report decision/evaluation, json-iterator
   decision/evaluation, clockwork decision/evaluation, demangle decision/
   evaluation, strcase decision/evaluation, integrated memberlist migration,
   memberlist ownership/final-direction decisions, Serf study, memberlist
   evaluation, and every earlier archive are answered. Option 1 explicitly
-  retains exact inherited, unloaded errcheck v1.5.0, httprouter v1.2.0,
+  retains exact inherited, unloaded gotool v1.0.0, errcheck v1.5.0,
+  httprouter v1.2.0,
   jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1, json-iterator
   v1.1.12, and clockwork v0.1.0 under separate target-specific exceptions;
   none is qualified and no implementation was retained. Stable httprouter
   v1.3.0 qualifies but has no genuine supported tidy-stable project owner. The
   sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T213548+0200-decide-kisielk-gotool-product-direction.md`.
-  It records exactly one bounded product decision for selected exact-path
-  `github.com/kisielk/gotool v1.0.0`, which remains inherited, unloaded, and
-  unqualified. It must not repeat the completed evaluation, manufacture a
-  direct root or parent change, transfer another exception, combine another
-  group, write outside the managed scratch root, or begin P8.
+  `docs/plan/agent-sessions/2026-09-21T222206+0200-evaluate-konsorten-go-windows-terminal-sequences-dependency.md`.
+  It evaluates only selected exact-path
+  `github.com/konsorten/go-windows-terminal-sequences v1.0.1`. It must preserve
+  the gotool exception and every earlier decision, may not manufacture a
+  direct root or parent change, combine another group, write outside the
+  managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -50,16 +51,16 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 selected option 1 for errcheck: exact inherited,
-unloaded v1.5.0 is explicitly retained only under its errcheck-specific,
+P2A-P6 are complete. P7 selected option 1 for gotool: exact inherited,
+unloaded v1.0.0 is explicitly retained only under its gotool-specific,
 non-transferable exception and remains unqualified. Exact inherited/unloaded
-httprouter v1.2.0, jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
-json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
-own target-specific exceptions and are not qualified. Product source and
-dependency metadata remain unchanged. P7 continues only with the bounded
-kisielk/gotool v1.0.0 product decision after its evaluation found no
-qualified exact-path stable release and retained no projection or metadata
-change. Exact Go 1.26.7, every accepted dependency
+errcheck v1.5.0, httprouter v1.2.0, jtolds/gls v4.20.0+incompatible,
+go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 remain
+accepted only under their own target-specific exceptions and are not
+qualified. Product source and dependency metadata remain unchanged. P7
+continues only with the bounded evaluation of selected
+`github.com/konsorten/go-windows-terminal-sequences v1.0.1`. Exact Go 1.26.7,
+every accepted dependency
 move through Google UUID v1.4.0, qualified go-cleanhttp, and all earlier
 retained-module decisions remain final under separate guards. P8 remains
 queued.
@@ -126,6 +127,66 @@ target-specific exception, authorize exactly one later measurement-only
 request/owner study, or stop P7 unresolved. It may not repeat this evaluation,
 add a direct root, implement a parent change, transfer an exception, combine
 another group, or begin P8.
+
+## Kisielk Gotool Product Decision
+
+Option 1 was selected. Exact selected, inherited, unloaded
+`github.com/kisielk/gotool v1.0.0` is explicitly retained without changing
+product source, `go.mod`, or `go.sum`. It remains unqualified and is not
+described as secure. Physical selection, negative why, and zero loading bound
+current exposure but are neither qualification nor implicit authorization.
+
+The gotool-specific, non-transferable exception accepts only the completed
+module-pattern failure, upstream deprecation/module-support finding, and the
+completed repository, archive, release, module/Go-floor, source/API, ordinary
+GOPATH/GOROOT behavior, ownership/global-state, filesystem/stderr, MVS,
+loading, project, vulnerability, and related findings. It accepts no
+uncharacterized behavior, new advisory, or independent defect, promotes no
+alternate identity, direct root, or workaround, and transfers no exception.
+
+The exception is owned by exact v1.0.0; all four exact requests from Gogo
+Protobuf v1.3.2 and Honnef tools 2019.2.3/2020.1.3/2020.1.4; and the genuine
+Viper/Gogo and mvn-pom/Cloud/Storage/BigQuery/Honnef routes. Its guards require
+no direct root, negative target and Gogo why, zero target/Gogo/Honnef imports
+and production/complete-test loads, no target runtime reachability, exact
+graph/module/tidy/Go-floor state, and every earlier guard.
+
+It also requires no new gotool or closure advisory, independent finding,
+repository owner/status change, exact-path stable release, requester/owner,
+qualified release, supported tidy-stable owner, or compatible genuine route
+to a qualified release. Any target, request, owner identity/route, root,
+import, load, runtime, graph, module-hash, tidy, Go-floor, earlier-guard,
+advisory, finding, repository/release/owner, qualification, or route change
+expires the exception and requires a fresh gotool dependency and product
+decision before merge. It authorizes no owner study, workaround, direct root,
+parent/source/metadata change, alternate path, unrelated selection, or
+implementation.
+
+Guard-only revalidation preserved 234 modules, 3,599 graph edges, 355
+production and 429 complete-test entries, 197 module-backed complete-test
+entries across 41 modules, 1,067 sums, the exact real module hashes, the
+432-line tidy projection at
+`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`,
+all four requests and routes, and exact Go 1.26.7 identity. All 32 earlier
+guarded selections and negative why results remain exact, guarded imports and
+loads are zero, and the 217 incoming edges reproduce SHA-256
+`500c57a1b4ffbdf5bb1296ef4dcb1bd16dbae12e54b86664fd1f8a2481a6c0dd`.
+Including gotool gives 33 selections/221 edges at
+`dc3506a8e687d59a90e5711c347821b01672f8fa99ea060e494dadb505e320d5`.
+
+Fresh proxy/GitHub metadata retains sole v1.0.0, the active unarchived
+non-fork repository, one tag, no releases, and the unchanged master commit.
+Target OSV and GitHub results remain empty. Guard OSV retains only the
+recorded Gorilla/retryablehttp pairs; x/mod v0.14.0 retains GO-2026-6179 and
+GO-2026-6180; and the 1,402-record Go index and PUBLISHED memberlist CNA bytes
+remain exact. No behavior fixture, direct-root projection, or owner study was
+run.
+
+No dependency implementation or metadata commit was created. No changed-
+selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS at
+L2. P7 continues only with the prepared bounded evaluation of
+`github.com/konsorten/go-windows-terminal-sequences v1.0.1`; it was not
+executed. P8 remains queued.
 
 ## Kisielk Errcheck Evaluation
 
@@ -3652,12 +3713,22 @@ verification, build, count-one tests, race count-one tests, and vet pass. No
 source or dependency metadata changed, so no changed-selection scorecard
 applies and accepted quality remains 27/27 Q0-Q2 PASS at L2.
 
+The gotool decision revalidation reproduced the exact project/module/tidy,
+four-request/four-route, 32-selection/217-edge, why/import/load, exact-Go, and
+fresh advisory guards without repeating completed behavior fixtures or the
+completed direct-root project projection. No source or dependency metadata changed, so no changed-
+selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS at
+L2.
+
 ## Next Bounded Objective
 
-Record exactly one bounded product decision for selected exact-path
-`github.com/kisielk/gotool v1.0.0`: explicitly retain exact inherited,
-unloaded, unqualified v1.0.0 under a target-specific non-transferable
-exception; authorize exactly one later measurement-only study of one existing
-request/owner; or stop P7 unresolved. Do not repeat the completed evaluation,
-add a direct target root, implement a parent or product-source change, transfer
-an exception, combine another dependency group, or begin P8.
+Evaluate selected exact-path
+`github.com/konsorten/go-windows-terminal-sequences v1.0.1` as one bounded P7
+dependency group. Independently resolve its release/repository identity,
+complete Go 1.18 closure, ordinary Windows and non-Windows behavior, genuine
+historical Logrus ownership and loading, project effects, and vulnerability
+evidence. Select only a qualified exact-path stable release; otherwise leave
+source and dependency metadata unchanged and stop for one fresh product
+decision. Preserve the gotool exception and every earlier decision exactly.
+Do not manufacture a direct root or parent change, transfer an exception,
+combine another group, or begin P8.

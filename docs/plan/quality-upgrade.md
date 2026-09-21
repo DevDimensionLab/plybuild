@@ -5374,17 +5374,17 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: stopped for one bounded product decision for selected exact-path
-`github.com/kisielk/gotool v1.0.0` after its evaluation found no qualified
-stable release and retained no projection or metadata change. Option 1 explicitly retained exact
-inherited/unloaded errcheck v1.5.0. Exact inherited/unloaded httprouter v1.2.0,
-jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1, json-iterator v1.1.12,
-and clockwork v0.1.0 remain separately retained and unqualified under their
-own target-specific non-transferable exceptions. Earlier demangle, strcase,
-and affected/not-secure memberlist decisions remain separate under their own
-guards. Completed dependency groups remain final through accepted Google UUID
-v1.4.0 and qualified go-cleanhttp v0.5.2. Product source and dependency
-metadata remain unchanged. P8 remains queued.
+Status: active on one bounded evaluation of selected exact-path
+`github.com/konsorten/go-windows-terminal-sequences v1.0.1`. Option 1
+explicitly retained exact inherited/unloaded gotool v1.0.0 and errcheck
+v1.5.0 under separate target-specific non-transferable exceptions. Exact
+inherited/unloaded httprouter v1.2.0, jtolds/gls v4.20.0+incompatible,
+go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 remain
+separately retained and unqualified under their own exceptions. Earlier
+demangle, strcase, and affected/not-secure memberlist decisions remain
+separate under their own guards. Completed dependency groups remain final
+through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2.
+Product source and dependency metadata remain unchanged. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -12783,6 +12783,66 @@ Kisielk Gotool evaluation and product-decision boundary (2026-09-21):
   only study of one existing request/owner; or stop P7 unresolved. Do not
   repeat the evaluation, add a direct root, implement a parent/source change,
   transfer an exception, combine another group, or begin P8.
+
+Kisielk Gotool product decision (2026-09-21):
+
+- Option 1 was selected. Exact selected, inherited, unloaded
+  `github.com/kisielk/gotool v1.0.0` is explicitly retained without changing
+  product source, `go.mod`, or `go.sum`. It remains unqualified and is not
+  described as secure. Physical selection, negative why, and zero loading
+  bound current exposure but are neither qualification nor implicit
+  authorization.
+- The gotool-specific, non-transferable exception accepts only the completed
+  module-pattern failure, upstream deprecation/module-support finding, and the
+  completed repository/archive/release, module/Go-floor, source/API,
+  GOPATH/GOROOT behavior, ownership/global-state, filesystem/stderr, MVS/
+  loading, project, vulnerability, and related findings. It accepts no
+  uncharacterized behavior, new advisory, or independent defect, promotes no
+  alternate identity, direct root, or workaround, and transfers no exception.
+- Ownership is exact v1.0.0; all four requests from Gogo Protobuf v1.3.2 and
+  Honnef tools 2019.2.3/2020.1.3/2020.1.4; and the genuine Viper/Gogo and
+  mvn-pom/Cloud/Storage/BigQuery/Honnef routes. Guards require no direct root,
+  negative target/Gogo why, zero target/Gogo/Honnef imports and production/
+  complete-test loads, no target runtime reachability, exact graph/module/
+  tidy/Go-floor state, every earlier guard, and no new advisory, independent
+  finding, repository/release/owner, qualified release, supported tidy-stable
+  owner, or compatible genuine route to a qualified release.
+- Any target path/version, request, owner identity/route, root, import, load,
+  runtime, graph, module-hash, tidy, Go-floor, earlier-guard, advisory,
+  finding, repository/release/owner, qualification, or route change expires
+  the exception and requires a fresh gotool dependency and product decision
+  before merge. It authorizes no owner study, workaround, direct root, parent
+  or source/metadata change, alternate path, unrelated selection, or
+  implementation.
+- Guard-only revalidation preserved 234 modules, 3,599 edges, 355 production
+  and 429 complete-test entries, 197 module-backed complete-test entries
+  across 41 modules, 1,067 sums, exact real module hashes, and the 432-line
+  tidy projection at
+  `3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`.
+  All four requests/routes and exact Go identity reproduce. All 32 earlier
+  guarded selections and negative why results remain exact; guarded imports
+  and loads are zero; and 217 incoming edges reproduce SHA-256
+  `500c57a1b4ffbdf5bb1296ef4dcb1bd16dbae12e54b86664fd1f8a2481a6c0dd`.
+  Including gotool gives 33 selections/221 edges at
+  `dc3506a8e687d59a90e5711c347821b01672f8fa99ea060e494dadb505e320d5`.
+- Fresh proxy/GitHub metadata retains sole v1.0.0, the active unarchived
+  non-fork repository, one tag, no releases, and unchanged master. Target OSV
+  and GitHub results remain empty; guard OSV retains only the recorded
+  Gorilla/retryablehttp pairs; x/mod v0.14.0 retains GO-2026-6179 and
+  GO-2026-6180; and the 1,402-record Go index and PUBLISHED memberlist CNA
+  bytes remain exact. No behavior fixture, direct-root projection, or owner
+  study ran.
+- No dependency implementation or metadata commit was created. No changed-
+  selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. P7 continues only with the prepared bounded evaluation of selected
+  exact-path `github.com/konsorten/go-windows-terminal-sequences v1.0.1`.
+  Its current queue facts are two historical Logrus v1.2.0/v1.4.2 requests,
+  negative why, zero repository imports, zero production/complete-test loads,
+  and no runtime reachability; none is qualification. The successor must
+  independently verify every target/owner fact, preserve this exception and
+  every earlier guard, evaluate no other group, and stop for a fresh product
+  decision if no stable exact-path release qualifies or any guard changes.
+  It was prepared but not executed. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
