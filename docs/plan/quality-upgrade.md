@@ -11931,32 +11931,66 @@ Iancoleman strcase product decision (2026-09-21):
 - Direct roots, replacements, forks, patches, exclusions, version
   masquerading, unused anchors, parent changes, POM redesign, Go-floor or
   guarded-module changes, and P8 remain unauthorized. No exception transfers.
-  The sole prepared successor is the bounded evaluation of selected exact-path
-  `github.com/ianlancetaylor/demangle
-  v0.0.0-20200824232613-28f6c0f3b639`; it was not executed. Final exact-Go
-  verify/build/test/race/vet, launcher lifecycle, and audit meta-controls pass;
-  no changed-selection scorecard applies and accepted quality remains 27/27
-  Q0-Q2 PASS at L2.
-- The first demangle attempt later ran from clean HEAD `3e4354c` and was
-  automatically stopped at a policy boundary after generating deep/non-
-  ordinary parser inputs. It made no tracked change. Selected commit
-  `28f6c0f3b63983aaa99575ca3b693afff7996387` and examined current head
-  `83e58baca7248962d58657affe41b3b6f27ee423` both declare Go 1.13 with
-  standard-library-only closures and passed existing upstream tests, count-10
-  repeats, race, vet, and ordinary cross-builds under exact Go 1.26.7 and
-  contained Go 1.18.10. Static evidence found a public active non-fork
-  BSD-3-Clause repository with no tags or GitHub releases. Both examined
-  `c++filt` commands panic on an empty argument; this is retained evidence and
-  must not be reproduced.
-- The retry is restricted to public metadata/advisories, static source/API
-  inspection, existing upstream tests, ordinary valid examples, and normal
-  project graph/build commands. Generated malformed, empty, deep, oversized,
-  randomized, or adversarial inputs; fuzzing; stress/resource probes; crash
-  reproduction; and security analysis are prohibited. The escaped verified
-  task-owned `/private/tmp/demangle-eval.kAvT4V` tree consumed 2.4 GiB and was
-  removed completely during recovery. All new disposable work must remain
-  beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`, whose cleanup is owned by the
-  launcher.
+  Its bounded demangle successor was later executed under the defensive scope
+  below. Final exact-Go verify/build/test/race/vet, launcher lifecycle, and
+  audit meta-controls pass; no changed-selection scorecard applies and
+  accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+Ianlancetaylor demangle evaluation (2026-09-21):
+
+- No exact-path candidate qualifies. The active public unarchived non-fork
+  BSD-3-Clause repository has one `master` branch, no Git tags, no GitHub
+  Releases, no redirect or alternate major line, and no retraction or module
+  deprecation. Selected
+  `v0.0.0-20200824232613-28f6c0f3b639` is exact commit
+  `28f6c0f3b63983aaa99575ca3b693afff7996387`; current master/proxy `@latest`
+  is `v0.0.0-20260724033716-83e58baca724`, exact commit
+  `83e58baca7248962d58657affe41b3b6f27ee423`. Selected is 97 commits behind
+  current; proxy/Git files and sumdb identities agree.
+- Selected source has no `go.mod`; the proxy synthesizes only its module line.
+  Current declares Go 1.13. Both have standard-library-only closures and
+  preserve Go 1.18 under the completed upstream native/count-ten/race/vet and
+  ordinary cross-build checks on exact Go 1.26.7 and contained Go 1.18.10.
+  Static apidiff is incompatible because current changes `NoClones` from 2 to
+  3 and `Verbose` from 3 to 5; current also compatibly adds Rust demangling and
+  new C++/Rust API forms and options.
+- Ordinary upstream valid C++ behavior passes on both versions, and current's
+  Rust, stdin, and LLVM-style examples pass. Both commands retain unchecked
+  `doDemangle` indexing consistent with the already observed empty-argument
+  panic. That panic was not reproduced. No malformed, empty, deeply nested,
+  oversized, randomized, or adversarial input; fuzzing; stress/resource probe;
+  crash reproduction; or security/exploitability analysis was performed.
+- MVS selects the target only through thirteen historical Google pprof
+  requests: five request the 2018 version and eight, including selected pprof
+  `v0.0.0-20210720184732-4bb14d4b1be1`, request selected. Target why is
+  negative and repository imports and production/complete-test loads are zero.
+  All 25 earlier guarded selections and 167 incoming edges retain snapshot
+  SHA-256
+  `b6e0bcee17f83b0cc88a370c2f86a51c1872506b113075960c497bf420c48fc9`.
+- A disposable current direct root changed only demangle, retained 234 modules
+  and 355/429 project loads, added one graph edge and two checksum lines, and
+  passed verify/build/count-one/count-ten/race/vet, API/CLI, CLI surface, and
+  host acceptance. It manufactured ownership and changed earlier graph/module
+  guards. Tidy removed it, restored selected, and returned exact baseline
+  hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+  No source or dependency metadata changed and no projection was applied.
+- Fresh OSV, GitHub, Go-index, and isolated govulncheck evidence contains no
+  demangle finding. Base and disposable-current project scans are identical at
+  30/22/20/20 module/package/symbol/test-symbol findings and contain zero
+  target trace. The Go index remains 1,402 records at SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`;
+  guard OSV and memberlist CNA evidence remain exact.
+- Selected remains physically present but is not qualified or accepted. P7
+  stops for one documentation-only product decision: exact selected-version
+  retention under a demangle-specific non-transferable exception, one
+  separate measurement-only pprof owning-parent/request study, or an explicit
+  unresolved stop. The decision may not reproduce parser failures, add a
+  direct root, silently select current, implement a parent route, alter pprof
+  or an earlier guard, combine another group, reopen excluded work, or begin
+  P8. Every disposable used by the retry remained beneath the launcher's
+  managed `${CODEX_SESSION_SCRATCH_ROOT:?}` and must not be retained.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

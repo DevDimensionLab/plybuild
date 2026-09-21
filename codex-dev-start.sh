@@ -1131,198 +1131,223 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-21T025404+0200-evaluate-ianlancetaylor-demangle-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-21T025404+0200-evaluate-ianlancetaylor-demangle-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-21T022425+0200-decide-iancoleman-strcase-product-direction.md
+#|SESSION_ID=2026-09-21T113049+0200-decide-ianlancetaylor-demangle-product-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-21T113049+0200-decide-ianlancetaylor-demangle-product-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-21T025404+0200-evaluate-ianlancetaylor-demangle-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 by independently evaluating selected exact-path
-#|`github.com/ianlancetaylor/demangle
-#|v0.0.0-20200824232613-28f6c0f3b639` as one bounded dependency group.
-#|Resolve its complete repository and release/pseudo-version identity, Go-floor
-#|closure, exported API and demangling behavior, actual project loading, exact
-#|MVS effects, vulnerability evidence, and every applicable quality contract.
-#|Retain or select only a qualified exact-path version whose complete minimal
-#|source/test closure preserves Go 1.18 and whose relevant behavior passes every
-#|contract; otherwise stop for a fresh bounded product decision. Do not reopen
-#|strcase, protoc-gen-validate, memberlist, Serf, or POM work, combine another
-#|dependency group, or begin P8.
+#|Continue P7 only by making one bounded product decision for exact-path
+#|`github.com/ianlancetaylor/demangle`. The completed independent evaluation
+#|found no exact-path candidate that passes every applicable qualification
+#|contract and no genuine tidy-stable route to the current head. Choose exactly
+#|one direction below, record its ownership and expiry guards, and stop. Do not
+#|repeat parser testing, silently accept the recorded command panic, implement a
+#|dependency or parent change, evaluate another dependency group, reopen
+#|strcase/protoc-gen-validate/memberlist/Serf/POM work, or begin P8.
 #|
-#|# Defensive Retry Scope
+#|# Defensive Scope
 #|
-#|This is an ordinary defensive dependency-quality review of the user's local
-#|repository, not a security or abuse investigation. The first attempt from
-#|clean HEAD `3e4354cebb1d18d189cf7c173773b19103b32c57` was automatically
-#|stopped at a policy boundary after it began generating unusually deep and
-#|non-ordinary parser inputs. It made no tracked worktree change. Resume this
-#|same session under the narrower rules below instead of repeating the broad
-#|evaluation.
+#|This is a documentation-only product decision for an ordinary dependency-
+#|quality review. Reuse the completed public metadata, static API/source,
+#|existing-test, ordinary valid-example, project-graph, and advisory evidence.
+#|Do not generate, mutate, or test malformed, empty, deeply nested, oversized,
+#|randomized, or adversarial symbol inputs. Do not fuzz, stress, probe resource
+#|exhaustion, reproduce crashes, or perform security or exploitability analysis.
+#|The already observed empty-argument `c++filt` panic is final evidence; do not
+#|run it again.
 #|
-#|Use only public repository, proxy, sumdb, release, and advisory metadata;
-#|static source and API inspection; existing upstream tests; ordinary documented
-#|valid examples; and normal project graph/build commands. Do not generate,
-#|mutate, or test malformed, empty, deeply nested, oversized, randomized, or
-#|adversarial symbol inputs. Do not fuzz, stress, probe resource exhaustion,
-#|reproduce crashes, or perform security or exploitability analysis. The
-#|already observed empty-argument command panic is final evidence: record it
-#|without running it again. If a remaining conclusion would require prohibited
-#|testing, state that limitation and stop for the bounded product decision.
-#|
-#|Reuse these provisional results from the interrupted attempt: the selected
-#|commit `28f6c0f3b63983aaa99575ca3b693afff7996387` and examined current head
-#|`83e58baca7248962d58657affe41b3b6f27ee423` both declare Go 1.13 and have
-#|standard-library-only closures; both passed existing upstream tests, count-10
-#|repeats, race, and vet under exact Go 1.26.7 and contained Go 1.18.10, plus the
-#|completed ordinary cross-builds. Static repository inspection found a public,
-#|active, unarchived, non-fork BSD-3-Clause repository with no tags or GitHub
-#|releases. Both examined `c++filt` commands panic on an empty argument. Confirm
-#|only the exact current pseudo-version identity, static exported-API delta,
-#|ordinary valid-input behavior, public advisory state, and project/MVS effects
-#|still needed for the decision. Do not repeat completed closure or stress-style
-#|checks.
-#|
-#|Every disposable archive, clone, cache, tool, binary, report, and fixture must
-#|be created beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Never write directly to
-#|`/private/tmp`, `/tmp`, another external root, or a sibling of the managed
-#|scratch directory. If a nested directory is needed, use
-#|`mktemp -d "${CODEX_SESSION_SCRATCH_ROOT:?}/demangle.XXXXXX"`. The launcher
-#|owns automatic cleanup of that managed root. Before handoff, verify that no
-#|task-owned disposable path exists outside it; do not retain scratch evidence.
+#|Every disposable archive, cache, tool, report, and fixture must remain beneath
+#|`${CODEX_SESSION_SCRATCH_ROOT:?}`. Never write to `/private/tmp`, `/tmp`, a
+#|sibling of the managed root, or another external root. Verify containment and
+#|remove task-owned scratch evidence before handoff.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
-#|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
-#|and all target-specific retained-module decisions through exact selected,
-#|inherited and unloaded strcase v0.2.0. Every earlier outcome remains final
-#|under its own guards. P8 remains queued.
+#|P2A-P6 are complete. P7 is blocked only on this demangle decision after exact
+#|Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
+#|qualified go-cleanhttp v0.5.2, and all target-specific retained-module
+#|decisions through exact inherited unloaded strcase v0.2.0. Every earlier
+#|outcome is final under its own guards. P8 remains queued.
 #|
-#|The 2026-09-21 strcase option-1 decision explicitly retains exact v0.2.0
-#|without source or dependency metadata changes. V0.2.0 is not qualified. Its
-#|target-specific, non-transferable exception accepts only the completed
-#|concurrent acronym-map races/fatal crash, uppercase and Unicode/malformed
-#|conversion loss, permanent global acronym state, and the characterized API,
-#|digit, delimiter, allocation, MVS, vulnerability, and related findings. It is
-#|bounded by exact v0.2.0, the sole protoc-gen-validate v0.6.2 request, both
-#|historical incoming parent requests, no direct root/import/load/runtime
-#|reachability, exact graph/module/tidy and earlier guards, and no new finding,
-#|qualified stable release, genuine owner, or compatible route. Any change
-#|expires that decision and requires its fresh owning decision. No strcase or
-#|memberlist exception transfers to demangle.
-#|
-#|Selected demangle is currently inherited only through thirteen historical
-#|`github.com/google/pprof` requests. Selected pprof remains exact
-#|`v0.0.0-20210720184732-4bb14d4b1be1`, and its earlier evaluation retained that
-#|exact pseudo-version under its completed findings. Demangle has no direct root
-#|or repository Go import, its `go mod why -m` result is negative, and production
-#|and complete-test closures load zero target packages. These queue observations
-#|and physical MVS selection are not release qualification or authorization to
-#|retain the target. Resolve them independently and do not add a direct edge
-#|merely to alter MVS.
+#|The evaluation left product source, `go.mod`, and `go.sum` unchanged. Selected
+#|demangle remains exact
+#|`v0.0.0-20200824232613-28f6c0f3b639`, inherited only through thirteen
+#|historical `github.com/google/pprof` requests. Selected pprof remains exact
+#|`v0.0.0-20210720184732-4bb14d4b1be1`; its selected request points to the
+#|selected demangle pseudo-version. Demangle has negative `go mod why -m`, zero
+#|repository imports, zero production or complete-test package loads, and no
+#|runtime reachability. Physical MVS selection is not qualification or risk
+#|acceptance. No strcase, memberlist, or other exception transfers.
 #|
 #|# Measurements At Start
 #|
-#|The strcase decision began from clean ordinary and ignored state on branch
-#|`codex/upgrade-quality` at HEAD
-#|`5071025e1061015964c752dbd1004a07c72857c3`, parent
-#|`c0d76f12ae3c2f4b132406eabb3f16d2714ed6f6`, tree
-#|`f1625d3179abc6e4febe53203cae4fca71a5b57f`. That handoff changed exactly the
-#|launcher, answered strcase evaluation archive, then-NEXT strcase decision
-#|archive, rolling handover, and roadmap. Its reciprocal 232-archive chain,
-#|latest Google UUID implementation ancestry, and launcher check passed. Verify
-#|the new handoff rather than assuming these facts.
+#|The demangle evaluation began from clean ordinary and ignored state on branch
+#|`codex/upgrade-quality` at retry handoff HEAD
+#|`de47934efeb7527a91e49f3f5b62b012e42e51fb`, parent
+#|`3e4354cebb1d18d189cf7c173773b19103b32c57`, tree
+#|`d84a65675ad419d81272643395ed2be58a20acc9`. That handoff changed exactly the
+#|launcher, current demangle archive, rolling handover, roadmap, and session-
+#|continuity design record. Verify the new handoff, reciprocal archive chain,
+#|latest Google UUID implementation ancestry, exact Go identity, and launcher
+#|check.
 #|
-#|Exact Go 1.26.7 binary SHA-256 is
-#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
 #|The unchanged project has 234 modules, 3,599 graph edges, 355 production and
 #|429 complete-test entries, 197 module-backed complete-test entries across 41
-#|loaded modules, 1,067 sum lines, and a 432-line tidy projection. `go.mod` and
-#|`go.sum` SHA-256 values remain
+#|loaded modules, 1,067 sum lines, and the recorded 432-line tidy projection.
+#|`go.mod` and `go.sum` SHA-256 remain
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
-#|No dependency implementation or metadata commit exists after Google UUID;
-#|accepted quality remains 27/27 Q0-Q2 PASS at L2.
-#|
-#|With strcase included, all 25 guarded selections and their 167 incoming graph
-#|edges are exact at sorted snapshot SHA-256
-#|`b6e0bcee17f83b0cc88a370c2f86a51c1872506b113075960c497bf420c48fc9`.
-#|All 26 demangle-plus-guarded why results are negative; repository imports are
-#|zero; and production and complete-test closures load zero target or guarded
-#|packages. The thirteen demangle requests remain only the recorded Google pprof
-#|vertices; the selected request is
-#|`google/pprof@v0.0.0-20210720184732-4bb14d4b1be1 ->
-#|ianlancetaylor/demangle@v0.0.0-20200824232613-28f6c0f3b639`.
-#|
-#|Fresh primary memberlist evidence remains the byte-identical PUBLISHED
-#|HashiCorp CNA response at SHA-256
-#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
-#|with memberlist below v0.6.0 affected. The Go vulnerability index remains
-#|1,402 records at SHA-256
-#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
-#|Last-Modified 2026-09-17T17:29:18Z. Earlier exact-version results retain only
-#|the recorded Gorilla and go-retryablehttp pairs. Revalidate target and guard
-#|advisories without reopening completed strcase or memberlist work.
+#|All 25 earlier guarded selections and 167 incoming graph edges retain snapshot
+#|SHA-256
+#|`b6e0bcee17f83b0cc88a370c2f86a51c1872506b113075960c497bf420c48fc9`;
+#|all 26 demangle-plus-guarded why results are negative and guarded imports/loads
+#|are zero. Accepted quality remains 27/27 Q0-Q2 PASS at L2.
 #|
 #|# Role And Boundaries
 #|
-#|From fresh public archives and caches, resolve proxy, sumdb, `go-import`, Git,
-#|and forge evidence for the exact demangle module path: versions, tags,
-#|pseudo-versions, commits, ancestry, repository status, license, retractions,
-#|deprecation, redirects, alternate paths, major lines, and every serious
-#|exact-path candidate. Do not silently promote a fork, branch, prerelease,
-#|redirect, alternate path, version-masquerading replacement, or floor-
-#|ineligible candidate.
+#|This session owns only the explicit demangle product decision. It may document
+#|one of the three authorized directions and its exact expiry guards. It may not
+#|change product source or dependency metadata, repeat parser or crash testing,
+#|run the option-2 parent study, implement or imply a dependency route, alter
+#|pprof or an earlier decision, evaluate another dependency group, or begin P8.
 #|
-#|Treat the completed Go 1.26.7 and Go 1.18.10 source/test-closure, native-test,
-#|repeat, race, vet, and cross-build results as provisional evidence requiring
-#|only narrow consistency checks. Inspect packages, exported API, supported
-#|formats and options, examples, tests, generated files, build tags, platform
-#|branches, and actual project consumers statically. Any additional execution
-#|must use existing upstream tests or ordinary documented valid inputs only. Do
-#|not add independent parser fixtures or expand this dependency qualification
-#|into robustness, security, crash, resource-limit, or hostile-input research.
+#|# Completed Evaluation
 #|
-#|Measure exact project module, graph, package, checksum, tidy, API/CLI,
-#|compatibility, acceptance, and vulnerability effects in disposable trees.
-#|Explain why demangle exists in MVS and whether any package loads. Preserve
-#|strcase, memberlist, Google pprof, and every earlier guarded decision. A
-#|parent, Go-floor, unrelated-selection, or non-exact-path change requires its
-#|own fresh bounded decision; do not manufacture a direct dependency owner.
+#|The exact public module path resolves without redirect to the active,
+#|unarchived, non-fork BSD-3-Clause repository
+#|`https://github.com/ianlancetaylor/demangle.git`. It has one `master` branch,
+#|no Git tags, no GitHub Releases, no alternate major line, no retraction, and
+#|no module deprecation. The Go proxy version list is empty because there are no
+#|tagged releases.
+#|
+#|Selected pseudo-version
+#|`v0.0.0-20200824232613-28f6c0f3b639` resolves to commit
+#|`28f6c0f3b63983aaa99575ca3b693afff7996387`, parent
+#|`f3adf8b39d88a55cff0fe0d91c44b21b736a1e50`, tree
+#|`0863826af2134d5db72a94a5d53321f480a8c391`, at
+#|2020-08-24T16:26:13-07:00. Current `master` and proxy `@latest` resolve to
+#|`v0.0.0-20260724033716-83e58baca724`, commit
+#|`83e58baca7248962d58657affe41b3b6f27ee423`, parent
+#|`1ff4bf46051f549622e869748f127e43b90c45aa`, tree
+#|`c446d0757a8473c497f917fb2601d0f92af15ce7`, at
+#|2026-07-23T20:37:16-07:00. Selected is an ancestor 97 commits behind current;
+#|both commits are unsigned. Proxy/Git regular files are byte-identical and
+#|sumdb verifies both pseudo-versions.
+#|
+#|Selected Git source has no `go.mod`; the proxy synthesizes only the module
+#|line and does not declare Go 1.13. Current source declares Go 1.13. Both have
+#|standard-library-only closures and preserve Go 1.18 through the completed
+#|minimal source/test checks. Reused upstream-test evidence records native,
+#|count-10, race, vet, and ordinary cross-build passes under exact Go 1.26.7 and
+#|contained Go 1.18.10. No fuzz, stress, malformed-input, or crash test belongs
+#|to this decision.
+#|
+#|Static apidiff from selected to current is incompatible: exported option
+#|constant `NoClones` changes value 2 to 3 and `Verbose` changes value 3 to 5.
+#|Current also compatibly adds Rust demangling, ABI/tag/LLVM/length options, and
+#|new C++ AST forms. It retains the build-ignored `c++filt` command and adds CLI
+#|flags; the core library remains one package with no cgo, generated file,
+#|platform branch, or external resource. Both commands retain unchecked indexing
+#|of the argument in `doDemangle`, consistent with the already observed empty-
+#|argument panic. That panic was not reproduced.
+#|
+#|Ordinary upstream valid examples confirm both versions demangle
+#|`_ZNSaIcEC1ERKS_` to
+#|`std::allocator<char>::allocator(std::allocator<char> const&)`, and both `-p`
+#|forms omit the parameter list. Current additionally demangles upstream Rust
+#|sample `_RNvC1a4main` to `a::main`; its ordinary stdin and LLVM-style examples
+#|also pass. These results do not cure the recorded command defect or confer
+#|release identity.
+#|
+#|MVS selects the target only because thirteen historical pprof graph vertices
+#|request it; eight, including selected pprof, request the selected target and
+#|five request the older 2018 pseudo-version. A disposable current-head direct
+#|root upgrades only demangle, keeps 234 modules and all 355/429 load counts,
+#|adds one graph edge and two checksum lines, and passes verify/build, count-one,
+#|count-ten, race, vet, API/CLI compatibility, CLI surface, and all four host
+#|acceptance checks. It still loads no target package. The root is manufactured
+#|ownership: `go mod tidy` removes it, restores selected demangle, and returns
+#|exact base tidy SHA-256 values
+#|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+#|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+#|It also expires existing graph/module-hash guards. No projection was applied.
+#|
+#|Fresh exact-version OSV, GitHub global, repository advisory, Go-index, and
+#|govulncheck evidence contains no demangle advisory or trace for either
+#|pseudo-version. Isolated module/package/symbol/test-symbol scans are empty.
+#|Base and disposable-current project scans are identical at 30/22/20/20
+#|module/package/symbol/test-symbol findings and contain zero demangle trace.
+#|The Go index remains 1,402 records at SHA-256
+#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+#|Last-Modified 2026-09-17T17:29:18Z. Guard OSV results retain only the recorded
+#|Gorilla and go-retryablehttp pairs. The PUBLISHED memberlist CNA response
+#|remains byte-identical at SHA-256
+#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+#|
+#|# Required Product Decision
+#|
+#|Choose exactly one. Option 1 is recommended because the target is completely
+#|unloaded, no exact-path release exists, neither examined pseudo-version
+#|qualifies, and it preserves every parent and earlier guard:
+#|
+#|1. Explicitly retain exact selected, inherited, unloaded
+#|   `v0.0.0-20200824232613-28f6c0f3b639` without metadata changes under a
+#|   demangle-specific, non-transferable exception. Accept only the recorded
+#|   empty-argument `c++filt` panic, lack of tagged/release identity, and the
+#|   characterized C++ API/options/behavior, Go-floor, MVS, loading, advisory,
+#|   and related findings. Guard the exact selected pseudo-version, all thirteen
+#|   historical pprof requests, exact selected pprof, negative why/import/load
+#|   results, runtime unreachability, every earlier guard, and no new advisory,
+#|   independent defect, qualified exact-path release, genuine owner, or
+#|   compatible qualified route.
+#|2. Authorize exactly one separate measurement-only owning-parent/request-
+#|   population study. It may evaluate a compatible pprof modernization or
+#|   removal route and every API, behavior, Go-floor, graph, guarded-selection,
+#|   vulnerability, and project consequence. It may recommend a later route but
+#|   may not implement one, add a direct demangle root, or alter pprof or another
+#|   finalized guard without its fresh owning decision.
+#|3. Stop P7 explicitly with selected demangle unresolved and unaccepted.
+#|   Prepare no implementation or dependency-evaluation successor and do not
+#|   begin P8.
+#|
+#|If none is acceptable, choose option 3. Do not infer acceptance from zero
+#|loading, call either pseudo-version qualified, or silently select current.
 #|
 #|# Required Reading
 #|
-#|Read this archive, the answered strcase decision and evaluation, the answered
-#|memberlist ownership decision and migration/study/evaluation chain, the
-#|answered Google pprof evaluation, relevant retained-module records, rolling
-#|handover, roadmap, `go.mod`, and `go.sum`. Verify branch, clean ordinary and
-#|ignored state, handoff HEAD/parent/tree and changed set, reciprocal archive
-#|chain, latest Google UUID implementation ancestry, exact Go identity, all
-#|target/parent and guarded selection/request/why/import/load/advisory
-#|conditions, module hashes, and `./codex-dev-start.sh --check`. Earlier
-#|outcomes are final.
+#|Read this archive, its answered demangle evaluation, the answered strcase
+#|decision/evaluation, the answered pprof evaluation, the memberlist ownership
+#|decision and migration/study/evaluation chain, relevant retained-module
+#|records, rolling handover, roadmap, `go.mod`, and `go.sum`. Reuse the completed
+#|evaluation; revalidate only exact decision guards and fresh advisory identities
+#|needed for the choice.
 #|
 #|# Three Moves
 #|
-#|First, revalidate the starting guards and finish only the unresolved safe
-#|identity, static API, ordinary behavior, public advisory, loading, and exact
-#|MVS facts while reusing the completed evidence above. Second, account for the
-#|recorded empty-argument panic without reproducing it. If and only if one exact-
-#|path candidate preserves Go 1.18 and passes every applicable ordinary contract,
-#|implement that dependency-only selection and run the normal changed-selection
-#|gate; otherwise leave metadata unchanged and stop for one bounded product
-#|decision. Third, update the roadmap and rolling handover, answer this archive,
-#|prepare exactly one reciprocal NEXT mission for the authorized result, verify
-#|scratch containment, and commit the handoff without executing the successor.
+#|First, verify branch, clean ordinary and ignored state, handoff identity and
+#|changed set, reciprocal chain, exact Go identity, module hashes, target/parent
+#|requests, why/import/load state, every guarded selection/edge, memberlist CNA
+#|identity, and `./codex-dev-start.sh --check`. Stop if a premise changed.
+#|
+#|Second, choose and record exactly one option with explicit ownership and expiry
+#|bounds. This is documentation-only. Do not edit product source, `go.mod`, or
+#|`go.sum`; repeat parser or crash tests; run an owning-parent study; add a root;
+#|implement a workaround; alter pprof or another guard; or execute P8.
+#|
+#|Third, update the roadmap and rolling handover, answer this archive, and
+#|prepare exactly one reciprocal NEXT mission matching the decision, or a
+#|COMPLETE state if option 3 ends the authorized roadmap. Run applicable final
+#|checks, verify scratch containment, and make only the required local
+#|documentation handoff commit. Do not execute a successor.
 #|
 #|# Automatic Handoff
 #|
-#|After one coherent bounded outcome, make any separate dependency-only commit
-#|first if a qualified selection was implemented, then make the required local
-#|`docs: prepare next agent session` commit. Do not launch a successor, push,
-#|merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
-#|combine another dependency group, reopen strcase/protoc-gen-validate/
-#|memberlist/Serf/POM work, write outside the managed scratch root, or begin P8.
+#|Make only the required local `docs: prepare next agent session` commit. Do not
+#|create an implementation commit, launch a successor, push, merge, publish,
+#|release, stash, revert, bypass cleanup, remove the worktree, combine another
+#|dependency group, reopen strcase/protoc-gen-validate/memberlist/Serf/POM work,
+#|or begin P8.
 # CODEX_MUTABLE_PROMPT_END
