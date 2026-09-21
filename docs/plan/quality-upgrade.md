@@ -5374,7 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on the bounded ianlancetaylor/demangle dependency evaluation.
+Status: active on one defensively narrowed retry of the bounded
+ianlancetaylor/demangle dependency evaluation after its first attempt stopped
+cleanly at an automated policy boundary.
 The completed strcase evaluation found no exact-path stable release that
 passes every contract, and the option-1 product decision now explicitly
 retains exact selected, inherited and unloaded v0.2.0 under target-specific
@@ -11935,6 +11937,26 @@ Iancoleman strcase product decision (2026-09-21):
   verify/build/test/race/vet, launcher lifecycle, and audit meta-controls pass;
   no changed-selection scorecard applies and accepted quality remains 27/27
   Q0-Q2 PASS at L2.
+- The first demangle attempt later ran from clean HEAD `3e4354c` and was
+  automatically stopped at a policy boundary after generating deep/non-
+  ordinary parser inputs. It made no tracked change. Selected commit
+  `28f6c0f3b63983aaa99575ca3b693afff7996387` and examined current head
+  `83e58baca7248962d58657affe41b3b6f27ee423` both declare Go 1.13 with
+  standard-library-only closures and passed existing upstream tests, count-10
+  repeats, race, vet, and ordinary cross-builds under exact Go 1.26.7 and
+  contained Go 1.18.10. Static evidence found a public active non-fork
+  BSD-3-Clause repository with no tags or GitHub releases. Both examined
+  `c++filt` commands panic on an empty argument; this is retained evidence and
+  must not be reproduced.
+- The retry is restricted to public metadata/advisories, static source/API
+  inspection, existing upstream tests, ordinary valid examples, and normal
+  project graph/build commands. Generated malformed, empty, deep, oversized,
+  randomized, or adversarial inputs; fuzzing; stress/resource probes; crash
+  reproduction; and security analysis are prohibited. The escaped verified
+  task-owned `/private/tmp/demangle-eval.kAvT4V` tree consumed 2.4 GiB and was
+  removed completely during recovery. All new disposable work must remain
+  beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`, whose cleanup is owned by the
+  launcher.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1151,6 +1151,47 @@ exit 70
 #|strcase, protoc-gen-validate, memberlist, Serf, or POM work, combine another
 #|dependency group, or begin P8.
 #|
+#|# Defensive Retry Scope
+#|
+#|This is an ordinary defensive dependency-quality review of the user's local
+#|repository, not a security or abuse investigation. The first attempt from
+#|clean HEAD `3e4354cebb1d18d189cf7c173773b19103b32c57` was automatically
+#|stopped at a policy boundary after it began generating unusually deep and
+#|non-ordinary parser inputs. It made no tracked worktree change. Resume this
+#|same session under the narrower rules below instead of repeating the broad
+#|evaluation.
+#|
+#|Use only public repository, proxy, sumdb, release, and advisory metadata;
+#|static source and API inspection; existing upstream tests; ordinary documented
+#|valid examples; and normal project graph/build commands. Do not generate,
+#|mutate, or test malformed, empty, deeply nested, oversized, randomized, or
+#|adversarial symbol inputs. Do not fuzz, stress, probe resource exhaustion,
+#|reproduce crashes, or perform security or exploitability analysis. The
+#|already observed empty-argument command panic is final evidence: record it
+#|without running it again. If a remaining conclusion would require prohibited
+#|testing, state that limitation and stop for the bounded product decision.
+#|
+#|Reuse these provisional results from the interrupted attempt: the selected
+#|commit `28f6c0f3b63983aaa99575ca3b693afff7996387` and examined current head
+#|`83e58baca7248962d58657affe41b3b6f27ee423` both declare Go 1.13 and have
+#|standard-library-only closures; both passed existing upstream tests, count-10
+#|repeats, race, and vet under exact Go 1.26.7 and contained Go 1.18.10, plus the
+#|completed ordinary cross-builds. Static repository inspection found a public,
+#|active, unarchived, non-fork BSD-3-Clause repository with no tags or GitHub
+#|releases. Both examined `c++filt` commands panic on an empty argument. Confirm
+#|only the exact current pseudo-version identity, static exported-API delta,
+#|ordinary valid-input behavior, public advisory state, and project/MVS effects
+#|still needed for the decision. Do not repeat completed closure or stress-style
+#|checks.
+#|
+#|Every disposable archive, clone, cache, tool, binary, report, and fixture must
+#|be created beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Never write directly to
+#|`/private/tmp`, `/tmp`, another external root, or a sibling of the managed
+#|scratch directory. If a nested directory is needed, use
+#|`mktemp -d "${CODEX_SESSION_SCRATCH_ROOT:?}/demangle.XXXXXX"`. The launcher
+#|owns automatic cleanup of that managed root. Before handoff, verify that no
+#|task-owned disposable path exists outside it; do not retain scratch evidence.
+#|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
@@ -1235,15 +1276,14 @@ exit 70
 #|redirect, alternate path, version-masquerading replacement, or floor-
 #|ineligible candidate.
 #|
-#|Prove the complete minimal production and test closure under exact Go 1.26.7
-#|and contained Go 1.18.10. Inspect packages, exported API, supported symbol
-#|formats and options, malformed inputs, large bounded inputs,
-#|Unicode and byte handling, recursion/depth and allocation bounds, error/panic
-#|behavior, concurrency and global state, examples, tests, generated files,
-#|build tags, platform branches, and actual project consumers as applicable.
-#|Use bounded independent fixtures where useful. Run source verification,
-#|package listing, native tests and repeats, race, vet, meaningful cross-builds,
-#|API comparison, and vulnerability checks for serious candidates.
+#|Treat the completed Go 1.26.7 and Go 1.18.10 source/test-closure, native-test,
+#|repeat, race, vet, and cross-build results as provisional evidence requiring
+#|only narrow consistency checks. Inspect packages, exported API, supported
+#|formats and options, examples, tests, generated files, build tags, platform
+#|branches, and actual project consumers statically. Any additional execution
+#|must use existing upstream tests or ordinary documented valid inputs only. Do
+#|not add independent parser fixtures or expand this dependency qualification
+#|into robustness, security, crash, resource-limit, or hostile-input research.
 #|
 #|Measure exact project module, graph, package, checksum, tidy, API/CLI,
 #|compatibility, acceptance, and vulnerability effects in disposable trees.
@@ -1266,16 +1306,16 @@ exit 70
 #|
 #|# Three Moves
 #|
-#|First, revalidate every starting and expiry guard and independently resolve
-#|demangle identity, candidate population, closure, API, behavior,
-#|vulnerability, loading, and exact MVS facts without changing the real
-#|worktree. Second, if and only if one exact-path candidate preserves Go 1.18
-#|and passes every applicable contract, implement that exact dependency-only
-#|selection and run the complete changed-selection gate; otherwise leave
-#|metadata unchanged and stop for one bounded product decision. Third, update
-#|the roadmap and rolling handover, answer this archive, prepare exactly one
-#|reciprocal NEXT mission for the authorized result, and commit the handoff
-#|without executing the successor.
+#|First, revalidate the starting guards and finish only the unresolved safe
+#|identity, static API, ordinary behavior, public advisory, loading, and exact
+#|MVS facts while reusing the completed evidence above. Second, account for the
+#|recorded empty-argument panic without reproducing it. If and only if one exact-
+#|path candidate preserves Go 1.18 and passes every applicable ordinary contract,
+#|implement that dependency-only selection and run the normal changed-selection
+#|gate; otherwise leave metadata unchanged and stop for one bounded product
+#|decision. Third, update the roadmap and rolling handover, answer this archive,
+#|prepare exactly one reciprocal NEXT mission for the authorized result, verify
+#|scratch containment, and commit the handoff without executing the successor.
 #|
 #|# Automatic Handoff
 #|
@@ -1284,5 +1324,5 @@ exit 70
 #|`docs: prepare next agent session` commit. Do not launch a successor, push,
 #|merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
 #|combine another dependency group, reopen strcase/protoc-gen-validate/
-#|memberlist/Serf/POM work, or begin P8.
+#|memberlist/Serf/POM work, write outside the managed scratch root, or begin P8.
 # CODEX_MUTABLE_PROMPT_END

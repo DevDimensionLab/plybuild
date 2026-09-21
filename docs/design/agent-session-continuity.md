@@ -92,6 +92,15 @@ short progress records for thread start, commands, file changes, agent messages,
 and the terminal turn event. Event strings are printed only as `%s` data by the
 parser; no event field is sourced, evaluated, or executed.
 
+Scratch ownership is split deliberately: the task agent owns containment and
+must never create a direct `/private/tmp`, `/tmp`, or sibling scratch root; the
+launcher owns recursive cleanup of the exact managed scratch directory on
+success, failure, or interruption. The launcher must not guess at and delete
+unknown neighboring temporary paths because they may belong to another
+process. A discovered escape is a task-contract violation: preserve the small
+durable findings in the plan, remove only the verified task-owned path, and
+repair the next mission before restart.
+
 The embedded parser writes each raw input line before decoding it as JSON. A
 successful stream has a non-empty population, exactly one `thread.started`, one
 `turn.started`, and one final `turn.completed`, with no event after that

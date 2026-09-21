@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T02:54:04+02:00
+Generated: 2026-09-21T07:53:05+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -31,8 +31,13 @@ session diary.
   explicitly retains exact inherited and unloaded v0.2.0 under a target-
   specific non-transferable exception. The sole NEXT archive is
   `docs/plan/agent-sessions/2026-09-21T025404+0200-evaluate-ianlancetaylor-demangle-dependency.md`.
-  It must evaluate only selected exact-path ianlancetaylor/demangle as the next
-  bounded P7 dependency group.
+  Its first attempt from clean HEAD `3e4354cebb1d18d189cf7c173773b19103b32c57`
+  was automatically stopped at a policy boundary after generating deep/non-
+  ordinary parser inputs; it made no tracked change. The same session is now
+  defensively narrowed to public metadata, static inspection, existing tests,
+  ordinary valid examples, and normal project graph/build commands. It must
+  not generate malformed, empty, deep, oversized, randomized, or adversarial
+  inputs; fuzz, stress, reproduce crashes, or perform security analysis.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -46,10 +51,31 @@ selected v0.2.0 nor latest v0.3.0 passes every conversion/concurrency contract,
 and v0.3.0 has no genuine tidy-stable owner. No source or dependency metadata
 changed. Option 1 retains exact v0.2.0 only within its verified unloaded graph;
 this is an exception, not release qualification. P7 continues only with the
-bounded ianlancetaylor/demangle evaluation. Exact Go 1.26.7, every accepted
-dependency move through Google UUID v1.4.0, qualified go-cleanhttp, and all
-earlier retained-module decisions remain final under their separate guards.
-P8 remains queued.
+defensively narrowed ianlancetaylor/demangle evaluation. Exact Go 1.26.7,
+every accepted dependency move through Google UUID v1.4.0, qualified
+go-cleanhttp, and all earlier retained-module decisions remain final under
+their separate guards. P8 remains queued.
+
+The interrupted demangle attempt retained provisional ordinary dependency
+evidence. Selected commit `28f6c0f3b63983aaa99575ca3b693afff7996387`
+and examined current head `83e58baca7248962d58657affe41b3b6f27ee423`
+both declare Go 1.13 with standard-library-only closures. Both passed existing
+upstream tests, count-10 repeats, race, and vet under exact Go 1.26.7 and
+contained Go 1.18.10, plus ordinary cross-builds. The repository was public,
+active, unarchived, non-fork, BSD-3-Clause, and had no tags or GitHub releases.
+Both examined `c++filt` commands panic on an empty argument; that observation
+is final evidence and must not be reproduced. Remaining work is limited to
+exact current pseudo-version identity, static API delta, ordinary valid-input
+behavior, public advisory state, project/MVS effects, and the resulting
+qualification or product-decision handoff.
+
+The interrupted agent bypassed its managed scratch root and left the verified
+task-owned `/private/tmp/demangle-eval.kAvT4V` tree at 2.4 GiB. Recovery
+preserved the small durable findings above and removed that tree completely.
+The agent now explicitly owns containment of every disposable artifact beneath
+`${CODEX_SESSION_SCRATCH_ROOT:?}`; the launcher owns automatic cleanup of that
+exact root on success, failure, or interruption. Unknown neighboring temporary
+paths are never guessed at or deleted.
 
 The integrated migration authorization is expired and non-transferable.
 Direct memberlist and Serf roots are removed by tidy; replacements are version
@@ -2490,13 +2516,16 @@ bytes at SHA-256
 with memberlist below v0.6.0 affected. No completed evaluation or parent study
 was repeated.
 
-P7 continues only with the prepared bounded evaluation of selected exact-path
+P7 continues only with the defensively narrowed retry of selected exact-path
 `github.com/ianlancetaylor/demangle
 v0.0.0-20200824232613-28f6c0f3b639`. Its queue observations are negative why,
 zero repository imports/production loads/complete-test loads, and thirteen
 incoming historical Google pprof requests; those facts are not qualification.
-The successor must preserve every guard, evaluate only demangle, and stop for
-the owning fresh decision if any guard changes. P8 remains queued.
+It must reuse the completed closure/test/cross-build and recorded empty-
+argument findings, perform only the remaining safe checks, keep every
+disposable artifact under the managed session scratch root, and stop for the
+owning fresh decision if no candidate qualifies or any guard changes. P8
+remains queued.
 
 ## Project And Quality State
 
@@ -2740,13 +2769,14 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate selected exact-path `github.com/ianlancetaylor/demangle
+Resume the selected exact-path `github.com/ianlancetaylor/demangle
 v0.0.0-20200824232613-28f6c0f3b639` as one bounded P7 dependency group.
-Independently resolve its repository and candidate identity, Go-1.18-compatible
-source/test closure, API and demangling behavior, project loading and MVS
-ownership, vulnerability state, and all applicable quality contracts. Retain
-or select only a qualified exact-path candidate; otherwise stop for one bounded
-product decision. Preserve the strcase and memberlist exceptions and every
-earlier guard. Do not reopen strcase/protoc-gen-validate/memberlist/Serf/POM
-work, manufacture a direct owner, combine another dependency group, or begin
-P8.
+Reuse the completed identity, Go-1.18 closure, standard tests/repeats/race/vet,
+cross-build, and recorded empty-argument evidence. Finish only the exact
+current pseudo-version identity, static API delta, ordinary valid-input
+behavior, public advisory state, project loading, and MVS ownership needed for
+qualification. Do not generate hostile/non-ordinary inputs or reproduce the
+panic. Retain or select only a qualified exact-path candidate; otherwise stop
+for one bounded product decision. Preserve every guard, keep all disposable
+work beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`, and do not reopen completed
+groups, manufacture an owner, combine another group, or begin P8.
