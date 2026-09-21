@@ -5375,14 +5375,14 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active on one bounded evaluation of selected exact-path
-`github.com/jonboulle/clockwork v0.1.0` after the option-1 demangle product
-decision explicitly retained exact selected, inherited and unloaded
-`v0.0.0-20200824232613-28f6c0f3b639` under target-specific non-transferable
-guards without qualifying it or changing metadata. The earlier strcase and
-affected/not-secure memberlist option-1 decisions remain separate under their
-own exact guards. Completed dependency groups remain final through accepted
-Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and every retained-module
-decision through demangle. P8 remains queued.
+`github.com/json-iterator/go v1.1.12` after the option-1 clockwork product
+decision explicitly retained exact selected, inherited and unloaded v0.1.0
+under target-specific non-transferable guards without qualifying it or
+changing metadata. The earlier demangle, strcase, and affected/not-secure
+memberlist option-1 decisions remain separate under their own exact guards.
+Completed dependency groups remain final through accepted Google UUID v1.4.0,
+qualified go-cleanhttp v0.5.2, and every retained-module decision through
+clockwork. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -12109,11 +12109,68 @@ Jonboulle clockwork evaluation (2026-09-21):
   earlier decisions remain unchanged.
 - Product source and dependency metadata remain unchanged. No changed-
   selection gate applies and accepted quality remains 27/27 Q0-Q2 PASS at L2.
-  P7 stops for the sole reciprocal documentation-only clockwork decision:
-  target-specific guarded retention of exact unloaded v0.1.0, one separately
-  scoped measurement-only parent/request study, or an explicit unresolved
-  stop. Direct roots, v0.4.0/v0.5.0 selection, a floor raise, parent/POM or
-  earlier-guard changes, another dependency group, and P8 remain unauthorized.
+  The reciprocal documentation-only clockwork decision selected option 1 as
+  recorded below. Direct roots, v0.4.0/v0.5.0 selection, a floor raise,
+  parent/POM or earlier-guard changes, and P8 remain unauthorized.
+
+Jonboulle clockwork product decision (2026-09-21):
+
+- Option 1 is explicitly authorized. Retain exact selected, inherited,
+  unloaded `github.com/jonboulle/clockwork v0.1.0` without changing product
+  source, `go.mod`, or `go.sum`. This is a clockwork-specific,
+  non-transferable exception; v0.1.0 remains unqualified, and zero current
+  import/load/runtime reachability bounds exposure without itself qualifying
+  or silently authorizing the selection.
+- The exception accepts only the completed negative-duration fake-`After`
+  behavior, exact-count `BlockUntil` boundary, characterized API, scheduling,
+  blocking, concurrency, determinism, caller ownership, resource lifecycle,
+  Go-floor, MVS, loading, repeatability, vulnerability, and related findings,
+  plus the completed later-release ticker/context/API/Go-floor findings needed
+  to establish that no stable exact-path release qualifies. It accepts no
+  uncharacterized behavior, new advisory, or independently observed defect.
+  V0.4.0 and v0.5.0 remain unqualified and unselected.
+- Guard-only revalidation began from clean handoff HEAD `e5fd2d4`, parent
+  `bb38c46`, tree `9713362`. Its exact five-file changed set, reciprocal
+  236-archive chain, latest Google UUID implementation ancestry, exact
+  official Go 1.26.7 archive/binary identities, and launcher check passed.
+  The project remains 234 modules, 3,599 graph edges, 355/429 load entries,
+  197 module-backed complete-test entries across 41 modules, 1,067 sum lines,
+  and the exact 432-line tidy projection. `go.mod`/`go.sum` remain
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- MVS retains exactly the sole
+  `mvn-pom-mutator@v0.2.3 -> clockwork@v0.1.0` request. The parent remains
+  genuinely imported and its `pkg/pom` package loads; clockwork has no direct
+  root, negative why, zero repository imports, and zero production or
+  complete-test loads. All 27 clockwork-plus-earlier guarded why results are
+  negative. All 26 earlier selections and 180 incoming edges retain snapshot
+  SHA-256
+  `8f39e82800e0abf94ae419186614a2cf709759192aba2614603dbf578ef64121`;
+  including clockwork yields 27 selections and 181 incoming edges at
+  `09258fe1e7425eed2d927f8f0be20a60fa610098677e2f31a10b5b4153b35989`.
+- Fresh exact clockwork candidate OSV, GitHub global, and repository advisory
+  results remain empty. The 1,402-record Go index remains byte-identical at
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`;
+  guard OSV retains only the recorded Gorilla/go-retryablehttp pairs, and the
+  2,807-byte PUBLISHED memberlist CNA response remains exact at
+  `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+  No behavior failure, parent route, security, exploitability, fuzz, stress,
+  or resource-exhaustion work was repeated.
+- The exception remains valid only while exact v0.1.0; the sole exact parent
+  request and genuine parent ownership; no direct root/import/load/runtime
+  reachability; negative target why; the exact graph, module hashes, tidy
+  projection, and every earlier guard; and no new advisory, independent
+  defect, qualified stable release, genuine supported tidy-stable owner, or
+  compatible qualified route remain exact. Any target, request, parent, root,
+  import, load, runtime, graph, module-hash, tidy, earlier-guard, advisory,
+  finding, release, owner, or route change expires the exception and requires
+  a fresh clockwork dependency and product decision before merge. It
+  authorizes no parent/request study or workaround and transfers to no target.
+- P7 continues only with the reciprocal bounded evaluation of selected
+  `github.com/json-iterator/go v1.1.12`. That successor must preserve
+  clockwork and every earlier guard, evaluate only json-iterator, and stop for
+  a fresh owning decision if no exact-path stable release qualifies or any
+  guard changes. It authorizes neither a combined dependency group nor P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

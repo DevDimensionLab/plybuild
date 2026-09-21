@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T12:52:24+02:00
+Generated: 2026-09-21T13:24:33+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,14 +8,14 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The clockwork evaluation
+  `codex/upgrade-quality`, base master at `5635d50`. The clockwork decision
   began from clean handoff HEAD
-  `bb38c462f977e001b46b6b7deb4a6c30fd5931ee`, parent
-  `050c47a6892944d63d189c036ba71c98046a4995`, tree
-  `a6798b8fff776cf4fc61265453f0760e31aadd7c`. That commit changed exactly the
-  launcher, answered demangle decision archive, then-NEXT clockwork evaluation
+  `e5fd2d47f5e50ff46f3a42e7be6d0bc127720277`, parent
+  `bb38c462f977e001b46b6b7deb4a6c30fd5931ee`, tree
+  `9713362e0859760b9ba8b76038c938d8d68c08c2`. That commit changed exactly the
+  launcher, answered clockwork evaluation archive, then-NEXT clockwork decision
   archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 235-archive history, latest Google
+  ancestry, exact changed set, reciprocal 236-archive history, latest Google
   UUID ancestry, exact Go identity, and launcher check passed before execution.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
@@ -24,18 +24,17 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The clockwork evaluation, demangle decision/evaluation, strcase decision/
-  evaluation, integrated memberlist migration, memberlist ownership/final-
-  direction decisions, Serf study, memberlist evaluation, and every earlier
-  archive are answered. No exact-path clockwork release qualifies and no
+- The clockwork decision/evaluation, demangle decision/evaluation, strcase
+  decision/evaluation, integrated memberlist migration, memberlist ownership/
+  final-direction decisions, Serf study, memberlist evaluation, and every
+  earlier archive are answered. Option 1 explicitly retains exact inherited,
+  unloaded clockwork v0.1.0 under the target-specific exception below; no
   implementation was retained. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T125224+0200-decide-jonboulle-clockwork-product-direction.md`.
-  It makes only one documentation-only clockwork product decision among
-  guarded exact-v0.1.0 retention, a separate measurement-only parent/request
-  study, or an explicit unresolved stop. It may not repeat failures, add a
-  direct root, select v0.4.0/v0.5.0, raise the Go floor, alter
-  mvn-pom-mutator, transfer an exception, combine another group, write outside
-  the managed scratch root, or begin P8.
+  `docs/plan/agent-sessions/2026-09-21T132433+0200-evaluate-json-iterator-go-dependency.md`.
+  It independently evaluates only selected exact-path
+  `github.com/json-iterator/go v1.1.12`. It may not transfer an exception,
+  alter clockwork, mvn-pom-mutator, another guard, or the Go floor, combine
+  another group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -43,14 +42,41 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the clockwork evaluation after the
-demangle evaluation/option-1 decision, strcase decision, and final memberlist
-ownership decision. No exact-path clockwork release qualifies, no
-implementation was retained, and selected inherited/unloaded v0.1.0 remains
-unqualified and unaccepted pending the single bounded product decision. Exact
-Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
-qualified go-cleanhttp, and all earlier retained-module decisions remain final
-under their separate guards. P8 remains queued.
+P2A-P6 are complete. P7 has completed the clockwork evaluation and option-1
+product decision after the demangle evaluation/decision, strcase decision,
+and final memberlist ownership decision. No exact-path clockwork release
+qualifies and no implementation was retained. Exact inherited/unloaded v0.1.0
+is now explicitly accepted only under the target-specific exception below; it
+is not qualified. Exact Go 1.26.7, every accepted dependency move through
+Google UUID v1.4.0, qualified go-cleanhttp, and all earlier retained-module
+decisions remain final under their separate guards. P7 continues only with the
+prepared json-iterator evaluation; P8 remains queued.
+
+The clockwork option-1 decision retains exact selected, inherited and unloaded
+`github.com/jonboulle/clockwork v0.1.0` without changing product source,
+`go.mod`, or `go.sum`. It accepts only the completed negative-duration fake-
+`After` behavior, exact-count `BlockUntil` boundary, characterized API,
+scheduling, concurrency, determinism, caller ownership, lifecycle, Go-floor,
+MVS, loading, repeatability, vulnerability, and related findings, plus the
+completed later-release ticker/context/API/Go-floor findings needed to prove
+that no stable exact-path release qualifies. It accepts no uncharacterized
+behavior, new advisory, or independently observed defect. V0.1.0 remains
+unqualified; zero current loading bounds exposure but did not itself qualify
+or silently authorize the selection.
+
+The clockwork exception remains valid only while exact v0.1.0, the sole
+`mvn-pom-mutator@v0.2.3 -> clockwork@v0.1.0` request, the exact genuine parent
+and its positive import/load ownership, no direct target root/import/load/
+runtime reachability, negative target why, the exact graph/module/tidy state,
+every earlier guard, and no new advisory, independent defect, qualified exact-
+path stable release, genuine supported tidy-stable owner, or compatible
+qualified route remain exact. Any target, request, parent, root, import, load,
+runtime, graph, module-hash, tidy, earlier-guard, advisory, finding, release,
+owner, or route change expires the exception and requires its fresh owning
+decision before merge. Including clockwork, all 27 guarded selections and 181
+incoming edges retain sorted snapshot SHA-256
+`09258fe1e7425eed2d927f8f0be20a60fa610098677e2f31a10b5b4153b35989`.
+No exception transfers to json-iterator or another target.
 
 The demangle option-1 decision retains exact selected, inherited and unloaded
 `v0.0.0-20200824232613-28f6c0f3b639` without changing product source,
@@ -2700,14 +2726,28 @@ All 27 clockwork-plus-guarded why results are negative and guarded imports/
 loads remain zero. Project hashes, the 234/3,599/355/429/197/41/1,067 base,
 the 432-line tidy projection, and every earlier decision remain unchanged.
 
-Selected v0.1.0 remains stable, inherited, and unloaded but is not qualified
-or accepted. P7 stops for the sole documentation-only product decision:
-explicit target-specific guarded retention, one separate measurement-only
-parent/request study, or an unresolved stop. The decision may not repeat the
-failures, add a direct root, select v0.4.0/v0.5.0, raise the floor, alter
-mvn-pom-mutator or another guard, implement a POM route, combine another
-group, or begin P8. Every task-owned disposable stayed beneath the exact
-managed `${CODEX_SESSION_SCRATCH_ROOT:?}` and was removed before handoff.
+Selected v0.1.0 remains stable, inherited, and unloaded but is not qualified.
+The option-1 product decision explicitly accepts only that exact selection in
+the verified unloaded graph under the target-specific ownership and expiry
+guards at the top of this handover. It did not repeat the failures, add a
+direct root, select v0.4.0/v0.5.0, raise the floor, alter mvn-pom-mutator or
+another guard, implement a POM route, or begin P8. Guard-only revalidation
+started from clean HEAD `e5fd2d4`, parent `bb38c46`, tree `9713362`; its
+five-file handoff, reciprocal 236-archive chain, latest Google UUID ancestry,
+exact Go identity, module hashes, target request/parent, 27 negative guarded
+why results, zero guarded imports/loads, and launcher check passed.
+
+The exact official Go 1.26.7 archive/binary identities, 234/3,599/355/429/
+197/41/1,067 project state, 432-line tidy projection, and real module hashes
+remain exact. Fresh exact clockwork OSV and GitHub results remain empty; the
+1,402-record Go index, only recorded Gorilla and retryablehttp guard pairs,
+and 2,807-byte PUBLISHED memberlist CNA response remain byte-identical. The
+27-selection/181-edge guarded snapshot is
+`09258fe1e7425eed2d927f8f0be20a60fa610098677e2f31a10b5b4153b35989`.
+No completed behavior failure, parent/request route, security, exploitability,
+fuzz, stress, or resource-exhaustion work was repeated. Every task-owned
+disposable stayed beneath the exact managed `${CODEX_SESSION_SCRATCH_ROOT:?}`
+and was removed before handoff.
 
 ## Project And Quality State
 
@@ -2951,13 +2991,15 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Make exactly one documentation-only product decision for exact-path
-`github.com/jonboulle/clockwork`: explicitly retain exact selected inherited
-unloaded v0.1.0 under a target-specific non-transferable exception for only the
-completed findings; authorize one separate measurement-only owning-parent/
-request study; or stop P7 with clockwork unresolved and unaccepted. Reuse the
-completed evaluation and do not repeat behavior failures, add a direct root,
-select v0.4.0/v0.5.0, raise the Go floor, alter mvn-pom-mutator or an earlier
-guard, implement a parent/POM route, evaluate another dependency group, or
-begin P8. Keep every disposable beneath `${CODEX_SESSION_SCRATCH_ROOT:?}` and
-prepare only the reciprocal successor authorized by that decision.
+Independently evaluate selected exact-path
+`github.com/json-iterator/go v1.1.12` as one bounded P7 dependency group.
+Resolve its stable-release identity, complete Go-floor closure, exported API
+and ordinary JSON behavior, actual project loading and MVS ownership, exact
+project effects, vulnerability evidence, and applicable quality contracts.
+Retain or select only a qualified exact-path stable release preserving Go
+1.18; otherwise leave metadata unchanged and stop for one fresh bounded
+product decision. Preserve the clockwork exception and every earlier guard;
+do not manufacture a direct owner, change a parent or the Go floor, combine
+another dependency group, or begin P8. Keep every disposable beneath
+`${CODEX_SESSION_SCRATCH_ROOT:?}` and prepare only the reciprocal successor
+authorized by that evaluation.

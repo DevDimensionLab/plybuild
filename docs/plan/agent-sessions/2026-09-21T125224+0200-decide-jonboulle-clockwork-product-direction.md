@@ -1,13 +1,13 @@
 # Agent Session: Decide Jonboulle Clockwork Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-21T125224+0200-decide-jonboulle-clockwork-product-direction`
 Created: `2026-09-21T12:52:24+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `f84dc9fde3cf0a4b9cba085f2c1ab752473a1a529ba942d55117e205966161a8`
 Previous: [2026-09-21T120339+0200-evaluate-jonboulle-clockwork-dependency.md](2026-09-21T120339+0200-evaluate-jonboulle-clockwork-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-21T132433+0200-evaluate-json-iterator-go-dependency.md](2026-09-21T132433+0200-evaluate-json-iterator-go-dependency.md)
+Outcome: Option 1 explicitly retains exact selected, inherited, unloaded clockwork v0.1.0 under a clockwork-specific non-transferable exception with exact ownership and expiry guards; product and dependency metadata remain unchanged, and P7 continues only with the reciprocal bounded json-iterator evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -238,3 +238,151 @@ release, stash, revert, bypass cleanup, remove the worktree, combine another
 dependency group, reopen demangle/pprof/strcase/protoc-gen-validate/memberlist/
 Serf/POM work, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+# Answer
+
+## Decision
+
+Option 1 is explicitly authorized. Retain exact selected
+`github.com/jonboulle/clockwork v0.1.0` as an inherited, unloaded module
+without changing product source, `go.mod`, or `go.sum`. This is a new
+clockwork-specific, non-transferable exception. V0.1.0 is not qualified. Its
+zero current import, load, and runtime reachability bounds the accepted
+exposure; physical MVS selection did not itself authorize this decision.
+
+The exception accepts only the completed negative-duration fake-`After`
+behavior, exact-count `BlockUntil` boundary, and characterized API,
+scheduling, blocking, concurrency, determinism, caller ownership, resource
+lifecycle, Go-floor closure, MVS, loading, repeatability, vulnerability, and
+related findings. It also accepts only the completed later-release ticker,
+timer, context, API-compatibility, and Go-floor findings needed to establish
+that no stable exact-path release qualifies. It accepts no uncharacterized
+behavior, new advisory, or independently observed defect. V0.4.0 remains the
+highest Go-1.18-compatible stable release but is unqualified; v0.5.0 remains
+unqualified and unselected because it raises the floor to Go 1.21, breaks the
+exported fake-clock API, and retains completed lifecycle defects.
+
+A direct root, replacement, fork, patch, exclusion, version masquerade, blank
+or build-tag import, unused test/tool anchor, parent/request study, POM
+redesign, later-release selection, Go-floor raise, or transfer of the
+demangle, strcase, memberlist, or another exception is not authorized. This
+decision grants no product-source, dependency-metadata, toolchain, parent,
+guarded-module, quality-policy, or P8 change.
+
+## Revalidated Decision Guards
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at handoff HEAD
+`e5fd2d47f5e50ff46f3a42e7be6d0bc127720277`, parent
+`bb38c462f977e001b46b6b7deb4a6c30fd5931ee`, tree
+`9713362e0859760b9ba8b76038c938d8d68c08c2`. That handoff changed exactly
+`codex-dev-start.sh`, the answered clockwork evaluation archive, this then-NEXT
+decision archive, the rolling handover, and the roadmap. Its predecessor
+`bb38c46`, parent `050c47a`, tree `a6798b8`, retains the exact five-file
+demangle-decision handoff described by the mission. The reciprocal 236-archive
+chain, byte-exact launcher/archive prompt mirror, branch, ordinary and ignored
+cleanliness, latest Google UUID ancestry, and launcher check passed before
+editing.
+
+The latest dependency implementation remains exact Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
+`b89afd4ec056133b1eefb5611f8f35c12c11824b`. It changes only `go.mod` and
+`go.sum`, with three insertions and no deletions, is an ancestor of this
+handoff, and has no later dependency implementation or metadata successor.
+
+Freshly recreated official Go 1.26.7 retains archive/binary SHA-256 values
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+With that binary first on `PATH`, `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, no ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and
+`umask 022`, the unchanged project retains 234 modules, 3,599 graph edges,
+355 production entries, 429 complete-test entries, 197 module-backed
+complete-test entries across 41 loaded modules, and 1,067 sum lines. Exact
+module verification passes. Native `go mod tidy -diff` retains the 432-line
+projection at SHA-256
+`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`;
+its projected 52-line `go.mod` and 948-line `go.sum` retain SHA-256 values
+`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+The real `go.mod` and `go.sum` remain
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+MVS still selects v0.1.0 through one and only one graph edge:
+`github.com/devdimensionlab/mvn-pom-mutator@v0.2.3 ->
+github.com/jonboulle/clockwork@v0.1.0`. There is no direct target root. All 27
+clockwork-plus-earlier guarded `go mod why -m` results are negative;
+repository Go imports are zero; and production and complete-test closures load
+zero target or earlier guarded packages. The exact parent remains positively
+needed, and its `pkg/pom` package remains imported and loaded in both closures.
+Runtime unreachability therefore remains exact for clockwork without implying
+qualification.
+
+All 26 earlier guarded selections and their 180 incoming graph edges remain
+exact at sorted snapshot SHA-256
+`8f39e82800e0abf94ae419186614a2cf709759192aba2614603dbf578ef64121`.
+Including clockwork yields 27 guarded selections and 181 incoming edges at
+snapshot SHA-256
+`09258fe1e7425eed2d927f8f0be20a60fa610098677e2f31a10b5b4153b35989`.
+No demangle, pprof, strcase, memberlist, parent, or earlier guard expired.
+
+Fresh narrow advisory checks preserve the decision premise without repeating
+the completed behavior evaluation. Exact v0.1.0, v0.4.0, and v0.5.0 OSV,
+GitHub global, and repository advisory results remain empty. The Go
+vulnerability index remains byte-identical at 1,402 records, SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z, with no clockwork record. Exact guarded
+OSV results retain only Gorilla WebSocket GO-2026-6278/
+GHSA-w67g-5rqw-f597 and go-retryablehttp GO-2024-2947/
+GHSA-v6v8-xj6m-xwqh. The PUBLISHED HashiCorp CNA response for
+CVE-2026-14362 remains 2,807 bytes at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+updated 2026-07-08T19:40:16.119Z, with memberlist below v0.6.0 affected. No
+behavior failure, parent/request route, security, exploitability, fuzz,
+stress, or resource-exhaustion work was repeated.
+
+## Ownership, Expiry, And Successor Bounds
+
+This repository owns only the explicit decision to tolerate exact inherited
+clockwork v0.1.0 in the verified unloaded graph. The exception remains valid
+only while every fact above is exact: selected v0.1.0; the sole
+mvn-pom-mutator v0.2.3 request and exact parent identity; the parent's genuine
+import/load ownership; no direct target root, repository import, production or
+complete-test load, or runtime reachability; negative target why; the exact
+graph, module hashes, and tidy projection; all earlier guarded selections,
+edges, why/import/load conditions, advisories, and owner/route guards; and no
+new clockwork advisory, independently observed defect, qualified exact-path
+stable release, genuine supported tidy-stable owner, or compatible qualified
+route.
+
+Any target, request, parent, root, import, load, runtime, graph, module-hash,
+tidy, earlier-guard, advisory, finding, qualified-release, owner, or route
+change immediately expires this exception and requires a fresh clockwork
+dependency and product decision before merge. The exception authorizes no
+later workaround or owning-parent study and transfers to no other target.
+
+P7 may continue only with the reciprocal bounded evaluation of selected
+`github.com/json-iterator/go v1.1.12`, the next dependency group in the
+existing queue. The successor must preserve this exception and every earlier
+guard, evaluate only json-iterator, and stop for a fresh owning decision if no
+exact-path stable release qualifies or any guard changes. It authorizes
+neither a combined dependency group nor P8.
+
+## Final State
+
+This session changed only continuity documentation and the launcher handoff.
+It did not edit product source, `go.mod`, or `go.sum`; change clockwork,
+mvn-pom-mutator, another guarded module, the Go floor, or the toolchain;
+repeat a completed behavior failure; run the parent/request study; implement a
+workaround; evaluate json-iterator; or begin P8. No dependency implementation
+commit or changed-selection scorecard applies, and accepted quality remains
+27/27 Q0-Q2 PASS at L2.
+
+Exact Go 1.26.7 unchanged-tree verification, build, canonical count-one tests,
+race tests, and vet pass. The reciprocal archive chain and byte-exact
+launcher/archive prompt mirror pass `./codex-dev-start.sh --check`;
+`git diff --check` passes. Every task-owned cache, archive, report, clone, and
+fixture stayed beneath the exact managed session scratch root and was removed
+before handoff. The final handoff contains only the launcher and continuity
+documentation required for this decision and its one successor.
