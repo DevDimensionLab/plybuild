@@ -5374,15 +5374,16 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on one bounded evaluation of selected exact-path
-`github.com/kisielk/errcheck v1.5.0`. Exact inherited/unloaded httprouter
-v1.2.0, jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
+Status: blocked on one bounded product decision for selected exact-path
+`github.com/kisielk/errcheck v1.5.0` after no stable exact-path release
+qualified. Exact inherited/unloaded httprouter v1.2.0, jtolds/gls
+v4.20.0+incompatible, go-junit-report v0.9.1,
 json-iterator v1.1.12, and clockwork v0.1.0 remain separately retained and
 unqualified under their own target-specific non-transferable exceptions.
 Earlier demangle, strcase, and affected/not-secure memberlist decisions remain
 separate under their own guards. Completed dependency groups remain final
-through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2. P8
-remains queued.
+through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2. Product
+source and dependency metadata remain unchanged. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -12624,6 +12625,52 @@ Julienschmidt Httprouter product decision (2026-09-21):
   and every earlier guard, evaluate no other group, and stop for a fresh owning
   decision if no exact-path stable release qualifies or any guard changes. P8
   remains queued.
+
+Kisielk Errcheck evaluation and product-decision boundary (2026-09-21):
+
+- No exact-path stable release qualifies. Fresh identity evidence resolves
+  the public active unarchived non-fork MIT repository, 16 stable releases
+  v1.0.0-v1.20.0 plus excluded v1.5.0-alpha, one tag ancestry, matching
+  proxy/Git/sumdb content, and no redirect, retraction, deprecation,
+  replacement, `/v2` module, promoted fork, or later stable.
+- V1.8.0 is the highest stable release preserving Go 1.18. Selected v1.5.0
+  resolves a ten-module closure with directives at or below Go 1.14; v1.8.0
+  resolves six modules at or below Go 1.18. V1.9.0/v1.10.0 require Go 1.22.0
+  and v1.20.0 requires Go 1.25.0.
+- Selected v1.5.0 fails its Go 1.18.10 library test in the old go/packages
+  loader, fails ordinary exact-Go loading/analysis, and statically leaks every
+  diagnostic source file opened by `readfile`; v1.6.1 adds the missing close.
+  V1.6.1-v1.8.0 pass Go1.18 count one but fail exact-Go loading or x/tools
+  compilation. V1.9.0+ pass exact-Go count one but are floor-ineligible.
+- Every v1.6.1-and-later serious candidate fails count-ten/race-count-ten
+  because upstream tests retain a `t.TempDir()` loader closure in global state
+  and later iterations use the deleted directory. Ordinary v1.8/Go1.18 and
+  v1.9/exact-Go command fixtures otherwise agree on deterministic checking,
+  filtering, diagnostics, and exit behavior. Serious commands cross-build for
+  six ordinary targets on compatible SDKs.
+- MVS selects exact v1.5.0 only through gogo/protobuf v1.3.2 on the genuine
+  route from direct/imported/loaded Viper v1.15.0. Target why/import/
+  production-load/complete-test-load/runtime results are negative or zero;
+  gogo/protobuf also loads no package.
+- A disposable selected root manufactures three roots and tidy restores the
+  common baseline. V1.8.0 moves six unrelated x/* selections and does not
+  tidy-converge; v1.9.0 raises the project Go line. No projection or dependency
+  commit was retained. The project remains
+  234/3,599/355/429/197/41/1,067 with exact hashes and tidy projection. All 32
+  why/import/load guards are negative/zero; 217 incoming edges hash to
+  `500c57a1b4ffbdf5bb1296ef4dcb1bd16dbae12e54b86664fd1f8a2481a6c0dd`.
+- Exact/package OSV and GitHub target results are empty. Pinned govulncheck has
+  no errcheck package/symbol trace, but serious candidates' x/mod closures
+  carry GO-2026-6180 and GO-2026-6179. Base and direct-selected project
+  findings are identical at 30/22/20/20 without a target trace; earlier
+  advisory guards remain exact. No exploitability analysis occurred.
+- Product source and dependency metadata remain unchanged. P7 stops for one
+  reciprocal bounded product decision: explicitly retain inherited unloaded
+  unqualified v1.5.0 under a target-specific exception, authorize one
+  measurement-only gogo/protobuf owner/request study, or stop P7 unresolved.
+  It may not repeat fixtures, add a direct target root, implement a parent
+  change, transfer an exception, combine another group, or begin P8. Accepted
+  quality remains 27/27 Q0-Q2 PASS at L2.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T18:52:50+02:00
+Generated: 2026-09-21T20:01:44+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The httprouter decision
+  `codex/upgrade-quality`, base master at `5635d50`. The errcheck evaluation
   began from clean HEAD
-  `2e85c1ef047da2b5fcd696ac50b6481baf2f87eb`, parent
-  `cffd78bb7eaee0b2bddf20b6b46a0d0d48d88d45`, tree
-  `0a2a83f388d2a630583971916cbe65c3dac0afaf`. That handoff changes exactly the
-  launcher, answered httprouter evaluation archive, then-NEXT httprouter
-  decision archive, rolling handover, and roadmap. Ordinary and ignored
+  `531902844643fb3bf1bdeaaee411e0b4147316dd`, parent
+  `2e85c1ef047da2b5fcd696ac50b6481baf2f87eb`, tree
+  `b4320a51c4d8b26fd35409b43babbab4ff32e08f`. That handoff changes exactly the
+  launcher, answered httprouter decision archive, then-NEXT errcheck
+  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed sets, reciprocal archive history,
   latest Google UUID ancestry, exact Go identity, module hashes, target and
   earlier guards, fresh advisory identities, and launcher check passed.
@@ -36,12 +36,14 @@ session diary.
   go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 under
   separate target-specific exceptions; none is qualified and no implementation
   was retained. Stable httprouter v1.3.0 qualifies but has no genuine supported
-  tidy-stable project owner. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T185250+0200-evaluate-kisielk-errcheck-dependency.md`.
-  It evaluates only selected exact-path `github.com/kisielk/errcheck v1.5.0`.
-  It must preserve every retained decision and guard, may not manufacture a
-  direct root or parent change, combine another group, write outside the
-  managed scratch root, or begin P8.
+  tidy-stable project owner. The errcheck evaluation is now answered. The sole
+  NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T200144+0200-decide-kisielk-errcheck-product-direction.md`.
+  It chooses only one bounded product direction for selected exact-path
+  `github.com/kisielk/errcheck v1.5.0`. It must preserve every retained
+  decision and guard, may not repeat completed fixtures, manufacture a direct
+  root or parent change, combine another group, write outside the managed
+  scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -51,15 +53,82 @@ session diary.
 
 P2A-P6 are complete. P7 selected option 1 after the httprouter evaluation:
 exact inherited/unloaded v1.2.0 is explicitly retained only under its
-httprouter-specific, non-transferable exception and remains unqualified. P7
-now continues with one bounded evaluation of selected exact-path
-kisielk/errcheck v1.5.0. Product source and dependency metadata remain
-unchanged. Exact inherited/unloaded jtolds/gls v4.20.0+incompatible,
+httprouter-specific, non-transferable exception and remains unqualified. The
+errcheck evaluation found no qualified stable exact-path release and left
+product source and dependency metadata unchanged. P7 is blocked only on one
+bounded errcheck product decision. Exact inherited/unloaded jtolds/gls
+v4.20.0+incompatible,
 go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 remain
 accepted only under their own target-specific exceptions and are not
 qualified. Exact Go 1.26.7, every accepted dependency move through Google UUID
 v1.4.0, qualified go-cleanhttp, and all earlier retained-module decisions
 remain final under separate guards. P8 remains queued.
+
+## Kisielk Errcheck Evaluation
+
+No exact-path stable release qualifies. Fresh `go-import`, proxy, sumdb, Git,
+and GitHub evidence agrees on the public active unarchived non-fork MIT
+repository and 16 stable releases v1.0.0-v1.20.0 plus excluded
+v1.5.0-alpha. Stable lightweight tags form one ancestry and proxy/Git regular
+files agree. There is no redirect, retraction, deprecation, replacement,
+`/v2` module, fork promotion, or later stable; master is one workflow-only
+commit beyond v1.20.0.
+
+V1.0.0-v1.2.0 have no Go directive, v1.3.0-v1.6.3 declare Go 1.14,
+v1.7.0/v1.8.0 declare Go 1.18, v1.9.0/v1.10.0 declare Go 1.22.0, and v1.20.0
+declares Go 1.25.0. V1.8.0 is the highest Go-1.18-compatible release. Selected
+v1.5.0 resolves ten modules all at or below Go 1.14; v1.8.0 resolves six
+modules all at or below Go 1.18. Serious candidates cross-build their command
+for six ordinary targets on compatible SDKs.
+
+Selected v1.5.0 fails its Go 1.18.10 library test because its historical
+go/packages loader lacks required type data; exact Go 1.26.7 loader/type-data
+changes also prevent ordinary analysis. Static source inspection finds that
+its diagnostic `readfile` opens files without closing them; v1.6.1 adds the
+missing close. V1.6.1-v1.8.0 pass count one on Go 1.18.10 but fail exact Go
+through the old loader or x/tools token-layout assertion. V1.9.0+ pass exact-
+Go count one but raise the declared floor.
+
+Every v1.6.1-and-later serious candidate fails count-ten/race-count-ten after
+an upstream test stores a `t.TempDir()` closure in package-global loader state
+without restoring it, so later iterations use a deleted directory. The race
+detector reports no data race, but repeatability fails through latest. Bounded
+ordinary v1.8.0/Go1.18 and v1.9.0/exact-Go command checks otherwise agree on
+deterministic checking, filtering, diagnostics, and exit behavior. Caller-
+owned checker/exclusion collections and analyzer/default globals require
+external synchronization.
+
+MVS selects exact v1.5.0 only through
+`gogo/protobuf@v1.3.2 -> errcheck@v1.5.0`; the genuine shortest route begins
+at direct/imported/loaded Viper v1.15.0. Gogo/protobuf and errcheck both load
+zero production/complete-test packages. Errcheck has no direct root,
+repository import, or runtime reachability and has negative why.
+
+A disposable selected root changes no version but manufactures errcheck,
+x/mod, and x/tools roots; tidy restores the exact common baseline. V1.8.0
+necessarily moves six unrelated x/* selections and its tidy state retains
+x/net/x/text churn. V1.9.0 raises the main Go line to 1.22.0. No projection or
+dependency commit was retained. The unchanged project remains at
+234/3,599/355/429/197/41/1,067 with the exact real module hashes and 432-line
+tidy projection. Including errcheck, all 32 guards remain negative/zero and
+217 incoming edges hash to
+`500c57a1b4ffbdf5bb1296ef4dcb1bd16dbae12e54b86664fd1f8a2481a6c0dd`.
+
+Exact/package OSV and GitHub target results are empty. Pinned govulncheck
+v1.8.0 has no errcheck package/symbol trace, but every serious candidate's
+x/mod closure carries public GO-2026-6180 and GO-2026-6179. Base and direct
+selected project findings are identical at 30/22/20/20 without a target
+trace. Guard OSV still contains only the recorded Gorilla/retryablehttp pairs;
+the Go module index and memberlist CNA response remain byte-exact. No
+exploitability work occurred.
+
+Product source, dependency metadata, P8, and every prior decision remain
+unchanged. P7 stops for one reciprocal bounded product decision: explicitly
+retain exact inherited, unloaded, unqualified v1.5.0 under a target-specific
+exception; authorize one measurement-only gogo/protobuf owner/request study;
+or stop P7 unresolved. It may not repeat completed fixtures, add a direct
+target root, implement a parent change, transfer an exception, combine another
+group, or begin P8. Accepted quality remains 27/27 Q0-Q2 PASS at L2.
 
 ## Julienschmidt Httprouter Evaluation And Decision
 
@@ -3443,13 +3512,11 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate selected exact-path `github.com/kisielk/errcheck v1.5.0` as one
-bounded P7 dependency group. Independently resolve its repository and stable-
-release identity, complete Go 1.18 production/test closure, exported analyzer/
-command API and ordinary documented behavior, genuine MVS ownership and
-loading, project effects, and vulnerability evidence. Select only a qualified
-exact-path stable release; otherwise leave source and dependency metadata
-unchanged and stop for one fresh product decision. Preserve the httprouter
-exception and every earlier decision exactly. Do not manufacture a direct root
-or parent change, transfer an exception, combine another group, or begin P8.
-Keep every disposable beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.
+Choose exactly one bounded product direction for selected exact-path
+`github.com/kisielk/errcheck v1.5.0`: explicitly retain the inherited,
+unloaded, unqualified selection under an errcheck-specific non-transferable
+exception; authorize one measurement-only gogo/protobuf owner/request study;
+or stop P7 unresolved. Reuse the completed evaluation. Do not repeat fixtures,
+add a direct target root, implement a parent change, transfer an exception,
+combine another dependency group, or begin P8. Keep every disposable beneath
+`${CODEX_SESSION_SCRATCH_ROOT:?}`.
