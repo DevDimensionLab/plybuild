@@ -5374,9 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on one bounded evaluation of selected exact-path
-`github.com/jtolds/gls v4.20.0+incompatible` after the go-junit-report option-1
-decision. Exact inherited/unloaded go-junit-report v0.9.1, json-iterator
+Status: active on one bounded product decision for selected exact-path
+`github.com/jtolds/gls v4.20.0+incompatible` after its completed evaluation
+found no qualified stable release. Exact inherited/unloaded go-junit-report
+v0.9.1, json-iterator
 v1.1.12, and clockwork v0.1.0 remain separately retained and unqualified under
 their own target-specific non-transferable exceptions. Earlier demangle,
 strcase, and affected/not-secure memberlist decisions remain separate under
@@ -12386,6 +12387,60 @@ Jstemmer Go JUnit Report product decision (2026-09-21):
   exception and every earlier guard, evaluate no other group, and stop for a
   fresh owning decision if no exact-path stable release qualifies or any guard
   changes. P8 remains queued.
+
+Jtolds GLS evaluation (2026-09-21):
+
+- No exact-path stable release qualifies. Legacy unsuffixed exact path
+  `github.com/jtolds/gls` exposes only v4.2.0+incompatible,
+  v4.2.1+incompatible, and selected/latest v4.20.0+incompatible. The old
+  GitHub URL and `go-import` metadata redirect to canonical `jtolio/gls`, but
+  that alternate path was not promoted. There is no `/v4` module, later
+  stable release, prerelease, retraction, deprecation, replacement, or later
+  master commit. Tags are lightweight/unsigned; selected v4.20.0 is commit
+  `b4936e06046bbecbb94cae9c18127ebe510a2cb9`, tree
+  `21801a3091b3d1c1822c0621039366472633fafd`.
+- `+incompatible` records v4 tags on a legacy unsuffixed source tree with no
+  `go.mod`; the proxy synthesizes only `module github.com/jtolds/gls`.
+  Native closure is target plus standard library. Complete build-tag tidy
+  resolves the omitted JS import to GopherJS v1.21.0 across 18 modules; that
+  dependency declares Go 1.21, so release metadata does not preserve the Go
+  1.18 floor even though exact Go 1.18.10 compiles the js/wasm test binary.
+- V4.2.0 and v4.2.1 compile, vet, and cross-compile but fail their upstream
+  tests/examples under both exact Go 1.26.7 and contained Go 1.18.10 because
+  stack tags are optimized away. V4.20.0 adds `//go:noinline` marker guards
+  and passes upstream count-one/count-ten/race/vet under both SDKs. All three
+  cross-compile their test binaries for five native targets under both SDKs.
+- A bounded ordinary selected-release fixture passes value nesting/restoration,
+  panic cleanup, ordinary four-goroutine propagation/isolation, and unregister
+  behavior. Nested `SetValues` plus `gls.Go` deterministically returns the
+  restored outer value instead of the documented point-in-time inner value
+  because `getValues` aliases a live map until the child runs. Both SDKs
+  reproduce this at count-one/count-ten, and race count-ten reports the
+  parent restoration/child copy map race. This ordinary API/aliasing/
+  concurrency failure disqualifies v4.20.0.
+- MVS selects v4.20.0+incompatible only through goconvey v1.6.4, reached from
+  direct mvn-pom-mutator v0.2.3. GLS has no direct root/import/load/runtime
+  reachability and negative why. A disposable direct root adds only one graph
+  edge and one sum line, remains unloaded, passes project verify/build/tests/
+  race/vet, API/CLI/surface and host acceptance, and is removed by tidy back
+  to the exact baseline. No root or projection was retained.
+- Fresh exact/package OSV, GitHub global/repository, Go-index, and pinned
+  govulncheck module/package/symbol/test-symbol evidence is empty for every
+  candidate. Base/direct project scans remain identical at 30/22/20/20 with
+  no target trace. The 1,402-record index hash, only Gorilla/retryablehttp
+  guard pairs, PUBLISHED memberlist CNA bytes, all 29 earlier selections/213
+  edges, all 30 negative why results, zero guarded imports/loads, project
+  hashes/state, and every earlier decision remain exact.
+- Product source and dependency metadata remain unchanged. Final exact-Go
+  verify/build/count-one/race/vet, reciprocal launcher check, and scratch
+  cleanup pass. No changed-selection scorecard applies; accepted quality
+  remains 27/27 Q0-Q2 PASS at L2.
+- P7 stops for one reciprocal bounded product decision: explicitly retain
+  exact selected/unloaded v4.20.0+incompatible under a new target-specific
+  exception, authorize one measurement-only goconvey owning-parent/request
+  study, or stop P7 unresolved. It may not repeat the completed fixture, alter
+  goconvey/mvn-pom-mutator, select a lower release or alternate path, add a
+  direct root, transfer an exception, combine another group, or begin P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
