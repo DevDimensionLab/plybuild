@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T01:25:27+02:00
+Generated: 2026-09-21T01:47:47+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,15 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The failed integrated
-  migration began from clean handoff HEAD
-  `7bb2629681b30b9b841f324f10b33f05690ff692`, parent
-  `e1ff4d49490ed94513d54807b5e19cebd6faaacc`, tree
-  `feb1073de931445bedd5272d9b9d4cf5541b577e`. That commit changed exactly the
-  launcher, answered Serf-study archive, final-direction archive, then-NEXT
-  integration archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal 229-archive history,
-  latest Google UUID ancestry, and launcher check passed before execution.
+  `codex/upgrade-quality`, base master at `5635d50`. The memberlist ownership
+  decision began from clean handoff HEAD
+  `652baa8b615e533edc93f5abfe9052f8e9dc84c7`, parent
+  `7bb2629681b30b9b841f324f10b33f05690ff692`, tree
+  `464b394413fc32a6adf36cc1f0f5bb83489b0d6d`. That commit changed exactly the
+  launcher, answered integrated-migration archive, then-NEXT ownership-decision
+  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
+  ancestry, exact changed set, reciprocal 230-archive history, latest Google
+  UUID ancestry, and launcher check passed before execution.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -24,17 +24,17 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The integrated migration, final direction decision, Serf study, memberlist
-  decision/evaluation, mdns decision/evaluation, golang-lru decision/
-  evaluation, go.net decision/evaluation, and every earlier archive are
-  answered. The migration preferred exact first-fixed v0.6.0 but found no
-  genuine supported tidy-stable owner and retained no implementation.
-  Affected v0.3.0 remains selected and was not risk-accepted. The sole NEXT
-  archive is
-  `docs/plan/agent-sessions/2026-09-21T012527+0200-decide-memberlist-ownership-blocker.md`.
-  It must make exactly one documentation-only product decision among guarded
-  affected-version retention, a separately scoped POM subsystem redesign, or
-  stopping P7 unresolved.
+- The integrated migration, memberlist ownership decision, final direction
+  decision, Serf study, memberlist decision/evaluation, mdns decision/
+  evaluation, golang-lru decision/evaluation, go.net decision/evaluation, and
+  every earlier archive are answered. The migration preferred exact first-
+  fixed v0.6.0 but found no genuine supported tidy-stable owner and retained
+  no implementation. Option 1 now explicitly retains affected, not-secure,
+  inherited and unloaded v0.3.0 under exact non-transferable expiry guards.
+  The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T014747+0200-evaluate-iancoleman-strcase-dependency.md`.
+  It must evaluate only selected exact-path iancoleman/strcase v0.2.0 as the
+  next bounded P7 dependency group.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -44,40 +44,44 @@ session diary.
 
 P2A-P6 are complete. P7 has completed the memberlist defensive evaluation,
 its option-3 decision, the measurement-only Serf/owning-graph study, final
-direction decision, and one authorized integrated migration attempt. Exact
-v0.6.0 was preferred over v0.7.0, but no genuine supported tidy-stable owning
-relationship exists in this project. The attempt retained no source or
-dependency metadata and created no implementation commit. P7 is blocked on
-one fresh documentation-only product decision among explicit target-specific
-retention of affected unloaded v0.3.0, a separately scoped POM subsystem
-redesign, or stopping P7 unresolved. Exact Go 1.26.7, every accepted dependency
-move through Google UUID v1.4.0, qualified go-cleanhttp, and all retained-
-module decisions through exact inherited, unloaded mdns v1.0.4 remain final
-under their separate target-specific guards. P8 remains queued.
+direction decision, one authorized integrated migration attempt, and the
+fresh ownership decision. Exact v0.6.0 was preferred over v0.7.0, but no
+genuine supported tidy-stable owning relationship exists in this project.
+The attempt retained no source or dependency metadata and created no
+implementation commit. Option 1 explicitly retains affected, not-secure,
+inherited and unloaded v0.3.0 under target-specific expiry guards; this is a
+risk decision, not release qualification. P7 continues only with the bounded
+iancoleman/strcase v0.2.0 evaluation. Exact Go 1.26.7, every accepted
+dependency move through Google UUID v1.4.0, qualified go-cleanhttp, and all
+earlier retained-module decisions remain final under their separate guards.
+P8 remains queued.
 
 The integrated migration authorization is expired and non-transferable.
 Direct memberlist and Serf roots are removed by tidy; replacements are version
 masquerading; exclusions do not select a fixed version; and unused blank,
 build-tag, test, or tool anchors manufacture ownership. The Serf CLI may not
 be declared as a tool solely to pin memberlist. The measured POM-parent removal
-remains a separate product redesign. Affected v0.3.0 remains unqualified and
-must not be called secure or silently retained under an exception.
+remains an unauthorized separate product redesign. Affected v0.3.0 remains
+unqualified and must not be called secure; its retention is explicit only
+within the verified unloaded graph.
 
-The fresh product decision is valid only while the unchanged starting state is
-exact: selected memberlist v0.3.0; selected Serf v0.10.1; the exact two
-historical Serf-to-memberlist requests and five incoming Serf requests; no
-direct memberlist root/import/load/runtime reachability; all 23 earlier guarded
-selections and 164 incoming edges at snapshot SHA-256
-`f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`;
-the exact module hashes and counts; the primary affected/fixed record; no new
-advisory or independent defect; and no Go-1.18-floor-compatible fixed stable
-route. Any unexplained target, request, root, import, load, runtime, hash,
-guard, advisory, range, or route change requires investigation before a choice
-is made. The decision session authorizes documentation only, neither another
-dependency group nor P8.
+The memberlist decision remains valid only while the unchanged state is exact:
+selected memberlist v0.3.0; selected Serf v0.10.1; the exact two historical
+Serf-to-memberlist requests and five incoming Serf requests with their parent
+identities; no direct memberlist root/import/load/runtime reachability; the
+exact graph and module hashes; all earlier guards; the primary PUBLISHED CNA
+identity and affected-below-v0.6.0 range; and no new advisory, independently
+observed defect, real supported tidy-stable fixed owner, or compatible fixed
+route. Any target, request, parent, root, import, load, runtime, hash, guard,
+advisory, range, finding, owner, or route change immediately expires the
+decision and requires its fresh owning decision before merge. With memberlist
+included, all 24 guarded selections and 166 incoming edges retain sorted
+snapshot SHA-256
+`675ec82de2ae67ea293a2229d0a81c49e8523839951d03703c3be788e013dc54`.
+No exception transfers to strcase or another target.
 
 Final unchanged-tree exact Go 1.26.7 module verification, build, canonical
-count-one tests, race tests, and vet pass. The reciprocal 230-archive chain and
+count-one tests, race tests, and vet pass. The reciprocal 231-archive chain and
 launcher/archive prompt mirror pass `./codex-dev-start.sh --check`; all 62
 launcher lifecycle controls and all 15 quality-audit meta-controls pass. No
 changed-selection scorecard applies; accepted quality remains 27/27 Q0-Q2
@@ -128,13 +132,13 @@ imports its POM API across 21 files, so compilation fails and tidy re-adds it;
 there is no newer parent release or drop-in replacement. This is a separate
 POM subsystem redesign, not a bounded dependency remediation.
 
-The completed study recommends exactly one later direction: choose a
-separately authorized integrated Go-1.25/fixed-memberlist migration rather
-than explicit affected-version risk acceptance. It does not make that choice.
-The prepared decision must choose exactly one, define complete ownership and
-expiry bounds, and prepare one matching successor without implementation.
-Selected memberlist v0.3.0 remains affected, unqualified, and not
-risk-accepted.
+The completed study recommended a separately authorized integrated Go-1.25/
+fixed-memberlist migration over affected-version risk acceptance. The later
+decision authorized that migration, which then exhausted its scope without a
+genuine supported owner or retained implementation. The fresh ownership
+decision now explicitly accepts exact affected, not-secure, inherited and
+unloaded v0.3.0 only under the target-specific expiry guards at the top of
+this handover.
 
 Final unchanged-project exact-Go module verification, build, count-one tests,
 race tests, and vet pass. All 15 audit meta-controls and all 62 launcher
@@ -2630,13 +2634,11 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Execute exactly the authorized separate integrated Go-1.25/fixed-memberlist
-migration. Choose and fully qualify exact v0.6.0 or v0.7.0, establish a
-supported tidy-stable owning selection, explicitly own the Go-floor and
-stricter-format integration, obtain a fresh owning decision for every changed
-guarded selection and incoming edge, preserve project API/CLI/runtime behavior,
-and retain implementation only after every required gate passes. If no durable
-supported route or fully passing candidate exists, retain no projection and
-stop P7 for a fresh product decision. Do not risk-accept v0.3.0, reopen the
-completed security/Serf/POM-removal studies, manufacture a direct root, use a
-replacement/fork/patch, combine another dependency group, or begin P8.
+Evaluate selected exact-path `github.com/iancoleman/strcase v0.2.0` as one
+bounded P7 dependency group. Independently resolve its release/repository
+identity, Go-1.18-compatible source/test closure, API and conversion behavior,
+project loading and MVS ownership, vulnerability state, and all applicable
+quality contracts. Retain or select only a qualified exact-path stable release;
+otherwise stop for one bounded product decision. Preserve the memberlist risk
+decision and every earlier guard. Do not reopen memberlist/Serf/POM work,
+manufacture a direct owner, combine another dependency group, or begin P8.

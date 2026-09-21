@@ -1131,161 +1131,145 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-21T012527+0200-decide-memberlist-ownership-blocker
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-21T012527+0200-decide-memberlist-ownership-blocker.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-21T004448+0200-integrate-go125-fixed-memberlist.md
+#|SESSION_ID=2026-09-21T014747+0200-evaluate-iancoleman-strcase-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-21T014747+0200-evaluate-iancoleman-strcase-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-21T012527+0200-decide-memberlist-ownership-blocker.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 only by making one fresh product decision after the authorized
-#|integrated Go-1.25/fixed-memberlist migration found no genuine supported
-#|tidy-stable owner. Choose exactly one bounded direction: explicit guarded
-#|retention of affected unloaded memberlist v0.3.0; a separately scoped POM
-#|subsystem redesign intended to remove its owning graph; or stopping P7 with the
-#|known affected selection unresolved. Do not implement the chosen direction,
-#|revive the rejected projection, combine another dependency group, or begin P8.
+#|Continue P7 by independently evaluating selected exact-path
+#|`github.com/iancoleman/strcase v0.2.0` as one bounded dependency group.
+#|Resolve its complete repository and stable-release identity, Go-floor closure,
+#|exported API and behavior, actual project loading, exact MVS effects,
+#|vulnerability evidence, and every applicable quality contract. Retain or
+#|select only a qualified exact-path stable release whose complete minimal
+#|source/test closure preserves Go 1.18 and whose relevant behavior passes every
+#|contract; otherwise stop for a fresh bounded product decision. Do not reopen
+#|memberlist, Serf, or POM work, combine another dependency group, or begin P8.
 #|
 #|# Authorized Roadmap
 #|
-#|The integrated migration authorization is exhausted. First-fixed v0.6.0 was
-#|preferred over v0.7.0, but direct memberlist and Serf roots are removed by
-#|tidy, replacements are unsupported version masquerading, exclusions do not
-#|select a fixed version, and the only syntactically durable projection declares
-#|`github.com/hashicorp/serf/cmd/serf@v0.10.4` as a Go tool. This repository does
-#|not use that CLI. Adding it solely to pin memberlist would manufacture
-#|ownership and combine broad unrelated dependency changes with the remediation.
+#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
+#|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
+#|and all target-specific retained-module decisions through exact affected,
+#|inherited, unloaded memberlist v0.3.0. Every earlier outcome is final under
+#|its own guards. P8 remains queued.
 #|
-#|Do not treat Go's acceptance of a `tool` directive as project ownership. Do
-#|not reopen that route unless a separate independently real product requirement
-#|for the Serf CLI exists and is explicitly supplied. A build-tag, blank-import,
-#|test-only, or other unused anchor is likewise manufactured. Do not create a
-#|direct root, replacement, fork, patch, exclusion-based omission, or version
-#|masquerade. Do not silently remove or redesign the POM parent, and do not
-#|silently retain affected v0.3.0.
+#|The 2026-09-21 memberlist option 1 decision explicitly retains exact v0.3.0
+#|without source or dependency metadata changes. V0.3.0 remains affected by
+#|HCSEC-2026-18 / CVE-2026-14362 and is not secure. Its non-transferable risk
+#|decision is bounded by exact zero import/load/runtime reachability, selected
+#|Serf v0.10.1, both historical Serf-to-memberlist requests, all five incoming
+#|Serf requests and parent identities, the exact graph/module/advisory/range and
+#|earlier guards, and no new finding, real supported fixed owner, or compatible
+#|fixed route. Any change expires that decision and requires its fresh owning
+#|decision. The fixed migration, manufactured owner, direct root, replacement,
+#|fork, patch, exclusion, version masquerade, and POM redesign remain
+#|unauthorized. No memberlist exception transfers to strcase.
+#|
+#|Selected strcase v0.2.0 is inherited only through the exact request from
+#|`github.com/envoyproxy/protoc-gen-validate v0.6.2`. It has no direct root or
+#|repository Go import, its `go mod why -m` result is negative, and production
+#|and complete-test closures load zero target packages. These queue observations
+#|and physical MVS selection are not release qualification or authorization to
+#|retain the target. Resolve them independently and do not add a direct edge
+#|merely to alter MVS.
 #|
 #|# Measurements At Start
 #|
-#|The failed migration began from clean ordinary and ignored state on branch
+#|The memberlist decision began from clean ordinary and ignored state on branch
 #|`codex/upgrade-quality` at HEAD
-#|`7bb2629681b30b9b841f324f10b33f05690ff692`, parent
-#|`e1ff4d49490ed94513d54807b5e19cebd6faaacc`, tree
-#|`feb1073de931445bedd5272d9b9d4cf5541b577e`. Its handoff predecessor changed
-#|exactly the launcher, answered Serf-study archive, final-direction archive,
-#|then-NEXT integration archive, rolling handover, and roadmap. Verify the new
-#|handoff rather than assuming its branch, clean state, reciprocal archive
-#|chain, implementation ancestry, or launcher result.
+#|`652baa8b615e533edc93f5abfe9052f8e9dc84c7`, parent
+#|`7bb2629681b30b9b841f324f10b33f05690ff692`, tree
+#|`464b394413fc32a6adf36cc1f0f5bb83489b0d6d`. That handoff changed exactly
+#|the launcher, answered integrated-migration archive, then-NEXT memberlist
+#|decision archive, rolling handover, and roadmap. Its reciprocal 230-archive
+#|chain, latest Google UUID implementation ancestry, and launcher check passed.
+#|Verify the new handoff rather than assuming these facts.
 #|
-#|The retained base is unchanged: exact Go 1.26.7 binary SHA-256
-#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
-#|234 modules; 3,599 graph edges; 355 production and 429 complete-test entries;
-#|197 module-backed complete-test entries across 41 loaded modules; 1,067 sum
-#|lines; and a 432-line tidy projection. `go.mod`/`go.sum` SHA-256 values remain
+#|Exact Go 1.26.7 binary SHA-256 is
+#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+#|The unchanged project has 234 modules, 3,599 graph edges, 355 production
+#|entries, 429 complete-test entries, 197 module-backed complete-test entries
+#|across 41 loaded modules, 1,067 sum lines, and a 432-line tidy projection.
+#|`go.mod`/`go.sum` SHA-256 values are
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
-#|Accepted quality remains 27/27 Q0-Q2 PASS at L2.
+#|No dependency implementation or metadata commit exists after Google UUID;
+#|accepted quality remains 27/27 Q0-Q2 PASS at L2.
 #|
-#|All 23 earlier guarded selections and 164 incoming edges remain exact at
-#|snapshot SHA-256
-#|`f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`.
-#|All 24 target-plus-earlier why results are negative; repository imports and
-#|production/complete-test guarded loads are zero. Selected Serf is v0.10.1 and
-#|memberlist is v0.3.0. The five incoming Serf requests and both historical
-#|Serf-to-memberlist requests remain exact. Memberlist has no direct root,
-#|import, load, or runtime reachability.
+#|With memberlist included, all 24 guarded selections and their 166 incoming
+#|graph edges are exact at sorted snapshot SHA-256
+#|`675ec82de2ae67ea293a2229d0a81c49e8523839951d03703c3be788e013dc54`.
+#|All 25 strcase-plus-guarded why results are negative, repository imports are
+#|zero, and production and complete-test closures load zero target or guarded
+#|packages. The sole strcase request remains
+#|`envoyproxy/protoc-gen-validate@v0.6.2 -> iancoleman/strcase@v0.2.0`.
 #|
-#|The PUBLISHED HashiCorp CNA response remains byte-identical at SHA-256
-#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`:
-#|memberlist below v0.6.0 is affected and v0.6.0 is first fixed. The Go
-#|vulnerability module index remains 1,402 records at SHA-256
+#|Fresh primary memberlist evidence remains the byte-identical PUBLISHED
+#|HashiCorp CNA response at SHA-256
+#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+#|with memberlist below v0.6.0 affected and v0.6.0 first fixed. The recorded Go
+#|vulnerability index has 1,402 records at SHA-256
 #|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
-#|Last-Modified 2026-09-17T17:29:18Z. Exact OSV remains empty for memberlist and
-#|the Serf candidates; earlier guards retain only the recorded Gorilla and
-#|go-retryablehttp pairs. Empty secondary feeds do not override the primary CNA
-#|record.
-#|
-#|# Failed Projection To Reuse
-#|
-#|The disposable Go-tool projection retained Go 1.25.0, toolchain go1.26.7,
-#|Serf v0.10.4, and memberlist v0.6.0 across tidy, but it existed only because
-#|of the unused Serf CLI declaration. It produced 261 modules, 3,826 edges,
-#|1,031 sum lines, 355 production entries, 402 complete-test entries, and 170
-#|module-backed complete-test entries across 41 modules. Its tool closure alone
-#|contained 270 packages. It removed 51 graph edges, added 278, moved six
-#|guarded selections, and added 31 guarded incoming edges, yielding guarded
-#|snapshot SHA-256
-#|`bef5bb840a3f67db60fd3fdc2460cbd1dd4e10c70bf7da1065aabe1ec82f9616`.
-#|No delta was accepted and no projection or implementation commit was retained.
-#|
-#|The six moved guarded selections were errwrap v1.1.0, go-multierror v1.1.1,
-#|go-retryablehttp v0.7.7, go-sockaddr v1.0.7, golang-lru v1.0.2, and mdns
-#|v1.0.7. The broader selection churn included unrelated CLI, metrics,
-#|compression, serialization, Prometheus, crypt, protobuf, terminal, and x/*
-#|modules. Because the owner and focused-change gates failed first, no owning
-#|decision was granted for these changes and no Go-floor or stricter-format
-#|source integration was attempted.
-#|
-#|The completed memberlist evaluation, Serf/owning-graph study, candidate
-#|comparison, and failed owner qualification are final. Do not repeat release,
-#|security, exploitability, attack-traffic, host, credential, or security-
-#|boundary investigations. Revalidate only the exact decision guards and fresh
-#|primary advisory identity needed to choose under current premises.
+#|Last-Modified 2026-09-17T17:29:18Z. Earlier exact-version results retain only
+#|the recorded Gorilla and go-retryablehttp pairs. Revalidate target and guard
+#|advisories without reopening completed memberlist security work.
 #|
 #|# Role And Boundaries
 #|
-#|Choose exactly one:
+#|From fresh public archives and caches, resolve proxy, sumdb, `go-import`, Git,
+#|and forge evidence for the exact strcase module path: stable versions, tags,
+#|commits, ancestry, repository status, license, retractions, deprecation,
+#|redirects, alternate paths, major lines, and every serious exact-path stable
+#|candidate. Do not silently promote a fork, branch, prerelease, pseudo-version,
+#|redirect, alternate path, or different major line.
 #|
-#|1. Explicitly retain exact selected, inherited, unloaded memberlist v0.3.0
-#|   under a new target-specific, non-transferable affected-version risk
-#|   decision. State that v0.3.0 is affected and not secure. Bound the decision
-#|   by zero import/load/runtime reachability; exact Serf, parent, graph, module,
-#|   advisory, affected/fixed-range, and earlier-guard identities; and immediate
-#|   expiry on any changed guard, new finding, real fixed owner, or compatible
-#|   fixed route. Authorize no source, dependency, floor, parent, or P8 change.
-#|2. Authorize one separately scoped POM subsystem redesign successor. It must
-#|   preserve the public POM behavior used across the recorded 21 source/test
-#|   files while removing or replacing `mvn-pom-mutator v0.2.3`, measure every
-#|   API/CLI/runtime/fixture and dependency-graph consequence, make fresh owning
-#|   decisions for every guarded delta, and retain implementation only after its
-#|   own complete gates pass. This is a product redesign, not a memberlist pin or
-#|   permission to manufacture an owner.
-#|3. Stop P7 explicitly with selected v0.3.0 still affected, unresolved, and not
-#|   accepted. Prepare no implementation successor and do not start P8.
+#|Prove the complete minimal production and test closure under exact Go 1.26.7
+#|and contained Go 1.18.10. Inspect packages, exported API, case-conversion
+#|semantics, acronym/initialism and digit handling, Unicode and malformed UTF-8
+#|behavior, delimiters, empty and nil-adjacent inputs, allocation, concurrency,
+#|global state, examples, tests, generated files, build tags, and actual project
+#|consumers as applicable. Use independent fixtures where useful. Run source
+#|verification, package listing, native tests and repeats, race, vet, meaningful
+#|cross-builds, API comparison, and vulnerability checks for serious candidates.
 #|
-#|If none is acceptable, choose option 3. Do not combine options or reinterpret
-#|zero current loading as proof that the affected release is secure.
+#|Measure exact project module, graph, package, checksum, tidy, API/CLI,
+#|compatibility, acceptance, and vulnerability effects in disposable trees.
+#|Explain why strcase exists in MVS and whether any package loads. Preserve
+#|memberlist and every earlier guarded decision. A parent, Go-floor, major-path,
+#|or unrelated selection change requires its own fresh bounded decision; do not
+#|manufacture a direct root or dependency owner.
 #|
 #|# Required Reading
 #|
-#|Read this archive, its answered migration, final-direction decision, Serf
-#|study, memberlist decision/evaluation, relevant retained-module and POM
-#|ownership records, rolling handover, roadmap, `go.mod`, and `go.sum`. Reuse
-#|their final measurements and decisions; do not reopen completed studies.
+#|Read this archive, the answered memberlist ownership decision and its answered
+#|migration/study/evaluation chain, relevant retained-module records, rolling
+#|handover, roadmap, `go.mod`, and `go.sum`. Verify branch, clean ordinary and
+#|ignored state, handoff HEAD/parent/tree and changed set, reciprocal archive
+#|chain, latest Google UUID implementation ancestry, exact Go identity, all
+#|target and guarded selection/request/why/import/load/advisory conditions,
+#|module hashes, and `./codex-dev-start.sh --check`. Earlier outcomes are final.
 #|
 #|# Three Moves
 #|
-#|First, verify branch, clean ordinary and ignored state, handoff HEAD/parent/tree
-#|and changed set, reciprocal chain, latest Google UUID implementation ancestry,
-#|exact Go identity, retained graph/import/load guards, module hashes, fresh
-#|primary advisory identity, and `./codex-dev-start.sh --check`. Stop for
-#|investigation if any decision premise differs.
-#|
-#|Second, choose and record exactly one option with explicit ownership, expiry,
-#|and successor bounds. This is a documentation-only product decision. Do not
-#|edit product source, `go.mod`, or `go.sum`; run a migration; accept guarded
-#|selection changes; repair stricter-format calls; or execute a POM redesign.
-#|
-#|Third, update the roadmap and rolling handover, answer this archive, and
-#|prepare exactly one reciprocal NEXT mission matching the decision, or a
-#|COMPLETE state if option 3 ends the authorized roadmap. Run all applicable
-#|final checks and make only the required local documentation handoff commit.
-#|Do not execute the successor.
+#|First, revalidate every starting and expiry guard and independently resolve
+#|strcase identity, releases, closure, API, behavior, vulnerability, loading,
+#|and exact MVS facts without changing the real worktree. Second, if and only if
+#|one exact-path stable release preserves Go 1.18 and passes every applicable
+#|contract, implement that exact dependency-only selection and run the complete
+#|changed-selection gate; otherwise leave metadata unchanged and stop for one
+#|bounded product decision. Third, update the roadmap and rolling handover,
+#|answer this archive, prepare exactly one reciprocal NEXT mission for the
+#|authorized result, and commit the handoff without executing the successor.
 #|
 #|# Automatic Handoff
 #|
-#|Make only the required local `docs: prepare next agent session` commit. Do not
-#|create an implementation commit, launch a successor, push, merge, publish,
-#|release, stash, revert, bypass cleanup, remove the worktree, combine another
-#|dependency group, or begin P8.
+#|After one coherent bounded outcome, make any separate dependency-only commit
+#|first if a qualified selection was implemented, then make the required local
+#|`docs: prepare next agent session` commit. Do not launch a successor, push,
+#|merge, publish, release, stash, revert, bypass cleanup, remove the worktree,
+#|combine another dependency group, reopen memberlist/Serf/POM work, or begin P8.
 # CODEX_MUTABLE_PROMPT_END

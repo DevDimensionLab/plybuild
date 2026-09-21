@@ -5374,17 +5374,15 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: blocked on the fresh memberlist ownership product decision. The
+Status: active on the bounded iancoleman/strcase v0.2.0 evaluation. The
 authorized integrated Go-1.25/fixed-memberlist migration preferred exact
 first-fixed v0.6.0 but found no genuine supported tidy-stable owner and
-retained no implementation. The only durable projection manufactured unused
-Serf CLI tool ownership and broad unrelated graph churn. Affected v0.3.0 is
-still selected, unqualified, and not risk-accepted. The successor must choose
-exactly one documentation-only direction: guarded affected-version retention,
-a separately scoped POM subsystem redesign, or stopping P7 unresolved.
+retained no implementation. The fresh option-1 product decision explicitly
+retains affected, not-secure, inherited and unloaded memberlist v0.3.0 under
+target-specific expiry guards; it changes no source or dependency metadata.
 Completed dependency groups remain final through accepted Google UUID v1.4.0,
-qualified go-cleanhttp v0.5.2, and all retained-module decisions through exact
-inherited, unloaded `github.com/hashicorp/mdns v1.0.4`. P8 remains queued.
+qualified go-cleanhttp v0.5.2, and every retained-module decision through
+memberlist. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -11793,6 +11791,55 @@ Integrated Go-1.25/fixed-memberlist migration outcome (2026-09-21):
   scoped POM subsystem redesign; or stop P7 unresolved. The decision may not
   manufacture a dependency owner, implement its chosen option, combine
   another group, or begin P8.
+
+Hashicorp memberlist affected-version decision (2026-09-21):
+
+- Option 1 is explicitly authorized: retain exact selected, inherited,
+  unloaded `github.com/hashicorp/memberlist v0.3.0` without changing product
+  source, `go.mod`, or `go.sum`. V0.3.0 is affected by HCSEC-2026-18 /
+  CVE-2026-14362 and is not secure. Zero current import/load/runtime
+  reachability bounds this explicit risk decision; it does not qualify the
+  release or override the primary advisory.
+- The decision is target-specific and non-transferable. It remains valid only
+  while memberlist v0.3.0, selected Serf v0.10.1, both historical Serf-to-
+  memberlist requests, all five incoming Serf requests and their parent
+  identities, the exact graph and module hashes, no direct root/import/load/
+  runtime reachability, every earlier guard, the exact PUBLISHED HashiCorp CNA
+  identity and affected-below-v0.6.0 range, and the absence of a new advisory,
+  independent defect, real supported tidy-stable fixed owner, or compatible
+  fixed route all remain exact. Any difference immediately expires the
+  decision and requires a fresh owning memberlist decision before merge.
+- Guard revalidation began from clean HEAD `652baa8`, parent `7bb2629`, tree
+  `464b3944`. Its exact five-file handoff, reciprocal 230-archive chain, latest
+  Google UUID implementation ancestry, and launcher check passed. Exact Go
+  1.26.7 retains 234 modules, 3,599 edges, 355/429 load entries, 197 module-
+  backed complete-test entries across 41 modules, 1,067 sum lines, and the
+  432-line tidy projection. `go.mod`/`go.sum` retain SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- All 23 earlier guarded selections and 164 incoming edges retain snapshot
+  SHA-256
+  `f42304a43a7ade746c5c2bc238dfa9a6daec62594834fd5b606fdf245d44ea2e`;
+  all 24 target-plus-earlier why results remain negative and guarded imports/
+  loads remain zero. Including memberlist, 24 guarded selections and 166
+  incoming edges yield snapshot SHA-256
+  `675ec82de2ae67ea293a2229d0a81c49e8523839951d03703c3be788e013dc54`.
+- Fresh CNA bytes remain PUBLISHED and byte-identical at SHA-256
+  `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+  with memberlist below v0.6.0 affected and v0.6.0 first fixed. No security
+  investigation was repeated. Direct roots, the unused Serf CLI tool owner,
+  replacements, exclusions, forks, patches, version masquerading, POM
+  redesign, Go-floor change, guarded-module change, and P8 remain unauthorized.
+- P7 continues only with the reciprocal bounded evaluation of selected
+  `github.com/iancoleman/strcase v0.2.0`. It exists through the sole recorded
+  `envoyproxy/protoc-gen-validate v0.6.2` request, has negative why and zero
+  repository import/load state, and must be evaluated independently without
+  transferring the memberlist exception or combining another dependency group.
+- Final exact-Go module verification, build, canonical count-one tests, race,
+  and vet pass. The reciprocal 231-archive launcher check, all 62 launcher
+  lifecycle controls, and all 15 audit meta-controls pass. No changed-
+  selection scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at
+  L2.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
