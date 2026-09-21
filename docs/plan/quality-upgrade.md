@@ -5374,15 +5374,16 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on the bounded iancoleman/strcase v0.2.0 evaluation. The
-authorized integrated Go-1.25/fixed-memberlist migration preferred exact
-first-fixed v0.6.0 but found no genuine supported tidy-stable owner and
-retained no implementation. The fresh option-1 product decision explicitly
-retains affected, not-secure, inherited and unloaded memberlist v0.3.0 under
-target-specific expiry guards; it changes no source or dependency metadata.
-Completed dependency groups remain final through accepted Google UUID v1.4.0,
-qualified go-cleanhttp v0.5.2, and every retained-module decision through
-memberlist. P8 remains queued.
+Status: blocked on the bounded iancoleman/strcase product decision. The
+completed evaluation found no exact-path stable release that passes every
+contract: selected v0.2.0 has concurrent-map, uppercase, and Unicode defects;
+latest v0.3.0 retains Unicode loss, introduces an initialism regression, and
+has no genuine tidy-stable owner. No implementation was retained. The earlier
+option-1 decision continues to retain affected, not-secure, inherited and
+unloaded memberlist v0.3.0 under exact target-specific guards. Completed
+dependency groups remain final through accepted Google UUID v1.4.0, qualified
+go-cleanhttp v0.5.2, and every retained-module decision through memberlist.
+P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -11840,6 +11841,41 @@ Hashicorp memberlist affected-version decision (2026-09-21):
   lifecycle controls, and all 15 audit meta-controls pass. No changed-
   selection scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at
   L2.
+
+Iancoleman strcase evaluation (2026-09-21):
+
+- No exact-path stable release qualifies. Fresh public evidence resolves six
+  stable tags v0.1.0-v0.3.0 in the public unarchived non-fork MIT repository;
+  v0.3.0 is latest and master. There is no later commit, prerelease, alternate
+  major line, redirect, retraction, deprecation, or GitHub Release object.
+- Selected v0.2.0 and latest v0.3.0 both declare Go 1.16, have no module
+  dependencies, expose one library package and the same ten functions, and
+  preserve Go 1.18 through their complete minimal source/test closures. Both
+  pass upstream tests/repeats/race/vet and five cross-builds under exact Go
+  1.26.7 and Go 1.18.10; apidiff reports no exported API change.
+- Selected v0.2.0 fails the independent concurrent acronym contract with
+  read/write and write/write races followed by `fatal error: concurrent map
+  writes`. It also leaves all-uppercase input unchanged. Latest v0.3.0 fixes
+  both with `sync.Map` and new uppercase handling but regresses
+  `DBClusterParameterGroup` to `DbclusterParameterGroup`. Both releases'
+  camel functions silently discard Unicode and malformed bytes. Upstream
+  issue 40, issue 43, issue 39, and open PR 49 corroborate the findings.
+- MVS selects v0.2.0 solely through protoc-gen-validate v0.6.2; parent and
+  target why/import/load results are negative or zero. A disposable v0.3.0
+  root moves only strcase and passes project verify/build/test/race/vet,
+  API/CLI, and host acceptance, but it manufactures ownership, changes the
+  memberlist graph/module-hash guard, and tidy removes it and restores v0.2.0.
+  No source or dependency metadata changed.
+- Fresh Go-index, OSV, GitHub, and govulncheck evidence has no strcase finding.
+  All 24 guarded selections and 166 edges retain snapshot SHA-256
+  `675ec82de2ae67ea293a2229d0a81c49e8523839951d03703c3be788e013dc54`;
+  all 25 why results remain negative and guarded imports/loads stay zero. The
+  memberlist CNA evidence and every earlier guard remain exact.
+- Selected v0.2.0 is not qualified or accepted. P7 stops for one explicit
+  product decision: target-specific guarded v0.2.0 retention, a separate
+  measurement-only protoc-gen-validate owning-parent study, or stop unresolved.
+  The decision may not implement a route, add a root, change a guard, combine
+  another group, reopen memberlist/Serf/POM work, or begin P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

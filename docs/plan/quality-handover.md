@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T01:47:47+02:00
+Generated: 2026-09-21T02:24:25+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,14 +8,14 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The memberlist ownership
-  decision began from clean handoff HEAD
-  `652baa8b615e533edc93f5abfe9052f8e9dc84c7`, parent
-  `7bb2629681b30b9b841f324f10b33f05690ff692`, tree
-  `464b394413fc32a6adf36cc1f0f5bb83489b0d6d`. That commit changed exactly the
-  launcher, answered integrated-migration archive, then-NEXT ownership-decision
-  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 230-archive history, latest Google
+  `codex/upgrade-quality`, base master at `5635d50`. The strcase evaluation
+  began from clean handoff HEAD
+  `c0d76f12ae3c2f4b132406eabb3f16d2714ed6f6`, parent
+  `652baa8b615e533edc93f5abfe9052f8e9dc84c7`, tree
+  `0a21e0a3e6fff9eced4cdff241ac8c4b69bdc193`. That commit changed exactly the
+  launcher, answered memberlist ownership archive, then-NEXT strcase archive,
+  rolling handover, and roadmap. Ordinary and ignored status, branch,
+  ancestry, exact changed set, reciprocal 231-archive history, latest Google
   UUID ancestry, and launcher check passed before execution.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
@@ -24,17 +24,14 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The integrated migration, memberlist ownership decision, final direction
-  decision, Serf study, memberlist decision/evaluation, mdns decision/
-  evaluation, golang-lru decision/evaluation, go.net decision/evaluation, and
-  every earlier archive are answered. The migration preferred exact first-
-  fixed v0.6.0 but found no genuine supported tidy-stable owner and retained
-  no implementation. Option 1 now explicitly retains affected, not-secure,
-  inherited and unloaded v0.3.0 under exact non-transferable expiry guards.
-  The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T014747+0200-evaluate-iancoleman-strcase-dependency.md`.
-  It must evaluate only selected exact-path iancoleman/strcase v0.2.0 as the
-  next bounded P7 dependency group.
+- The strcase evaluation, integrated memberlist migration, memberlist
+  ownership/final-direction decisions, Serf study, memberlist evaluation, and
+  every earlier archive are answered. No strcase stable release qualifies:
+  selected v0.2.0 has concurrent-map, uppercase, and Unicode defects, while
+  latest v0.3.0 retains Unicode loss and introduces an initialism regression.
+  No implementation was retained. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T022425+0200-decide-iancoleman-strcase-product-direction.md`.
+  It must make only the bounded strcase product decision.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -42,16 +39,11 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the memberlist defensive evaluation,
-its option-3 decision, the measurement-only Serf/owning-graph study, final
-direction decision, one authorized integrated migration attempt, and the
-fresh ownership decision. Exact v0.6.0 was preferred over v0.7.0, but no
-genuine supported tidy-stable owning relationship exists in this project.
-The attempt retained no source or dependency metadata and created no
-implementation commit. Option 1 explicitly retains affected, not-secure,
-inherited and unloaded v0.3.0 under target-specific expiry guards; this is a
-risk decision, not release qualification. P7 continues only with the bounded
-iancoleman/strcase v0.2.0 evaluation. Exact Go 1.26.7, every accepted
+P2A-P6 are complete. P7 has completed the strcase evaluation after the final
+memberlist ownership decision. Neither selected v0.2.0 nor latest v0.3.0
+passes every conversion/concurrency contract, and v0.3.0 has no genuine
+tidy-stable owner. No source or dependency metadata changed. P7 is stopped on
+the bounded strcase product decision. Exact Go 1.26.7, every accepted
 dependency move through Google UUID v1.4.0, qualified go-cleanhttp, and all
 earlier retained-module decisions remain final under their separate guards.
 P8 remains queued.
@@ -80,8 +72,15 @@ snapshot SHA-256
 `675ec82de2ae67ea293a2229d0a81c49e8523839951d03703c3be788e013dc54`.
 No exception transfers to strcase or another target.
 
+Selected strcase v0.2.0 remains an unqualified physical MVS selection. It is
+requested only by protoc-gen-validate v0.6.2, has negative why and zero
+repository imports/production loads/complete-test loads, and is runtime-
+unreachable. No stable release qualifies, no direct root is authorized, and
+no exception has been granted. The sole next boundary is the explicit strcase
+product decision recorded below.
+
 Final unchanged-tree exact Go 1.26.7 module verification, build, canonical
-count-one tests, race tests, and vet pass. The reciprocal 231-archive chain and
+count-one tests, race tests, and vet pass. The reciprocal 232-archive chain and
 launcher/archive prompt mirror pass `./codex-dev-start.sh --check`; all 62
 launcher lifecycle controls and all 15 quality-audit meta-controls pass. No
 changed-selection scorecard applies; accepted quality remains 27/27 Q0-Q2
@@ -2392,6 +2391,61 @@ count-one tests, race tests, vet, launcher check, and all 62 launcher lifecycle
 controls pass. Initial test/race runs inherited `umask 077` and reproduced only
 the known fixture-mode assertions before the canonical reruns passed.
 
+## Iancoleman Strcase Evaluation
+
+No exact-path stable release qualifies. Public proxy, sumdb, `go-import`, Git,
+and GitHub evidence resolves six stable releases v0.1.0-v0.3.0 in the public,
+unarchived, non-fork MIT repository. Latest v0.3.0 is also master, with no
+later commit, prerelease, alternate major line, redirect, retraction,
+deprecation, or GitHub Release object. Serious v0.2.0/v0.3.0 proxy archives
+match their lightweight Git tags byte-for-byte and sumdb verifies them.
+
+Selected v0.2.0 is commit
+`a61ebb85b34d7b831590cd8fa7faafadc161a652`, parent
+`034d0996c18bec4c26e1eff5a43d648c9c4a4fc5`, tree
+`718ffbc4fb0ab44a0a7f30c5ff29d6cea4e5cd1a`. Latest v0.3.0 is commit
+`531aaa44de12ec166ceb71d9bdad7c8295e4235f`, parent
+`6ce6fd7ae2b10f78f2d5867a7ddce34084d6b814`, tree
+`ffeb3ea313d1c9297b4333e3b52938b88bcd3c37`. Both declare Go 1.16, have no
+module dependencies, expose one library package and the same ten functions,
+and preserve Go 1.18 across the complete minimal source/test closure.
+
+Both serious candidates pass source verification, upstream native count-one,
+two count-ten repeats, upstream race, vet, and five test cross-builds under
+exact Go 1.26.7 and Go 1.18.10. Pinned apidiff reports no exported API change.
+Independent ASCII, digit, delimiter, ignore, empty, malformed, allocation, and
+concurrency fixtures separate the blockers. V0.2.0's unsynchronized global
+acronym map races and terminates with `fatal error: concurrent map writes`; it
+also leaves all-uppercase input unchanged. V0.3.0 fixes both issues with
+`sync.Map` and new uppercase handling, but regresses
+`DBClusterParameterGroup` to `DbclusterParameterGroup`. Both camel converters
+silently drop Unicode and malformed bytes. Upstream issue 40, issue 43, issue
+39, and open PR 49 corroborate those completed findings.
+
+MVS selects v0.2.0 only because protoc-gen-validate v0.6.2 requests it. That
+parent is requested by Viper v1.10.1 and crypt v0.4.0 and imports strcase in
+three generator packages, but neither module loads. A disposable v0.3.0 root
+moves only strcase, retains 234 modules and 355/429 project loads, adds one
+graph edge and two sum lines, and passes project verify/build/test/race/vet,
+API/CLI compatibility, CLI surface, and host acceptance. It is manufactured
+ownership, changes the exact memberlist graph/module-hash guard, and tidy
+removes it and restores v0.2.0. No projection was applied.
+
+Fresh Go-index, OSV, GitHub, and govulncheck evidence contains no strcase
+advisory. All 24 earlier selections and 166 incoming edges retain snapshot
+SHA-256
+`675ec82de2ae67ea293a2229d0a81c49e8523839951d03703c3be788e013dc54`;
+all 25 strcase-plus-guarded why results remain negative and guarded imports/
+loads remain zero. Guard OSV results retain only the recorded Gorilla and
+go-retryablehttp pairs. The memberlist CNA response remains byte-identical at
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+
+Product source and dependency metadata remain unchanged; selected v0.2.0 is
+not qualified or accepted. P7 stops on the sole reciprocal decision among
+explicit target-specific v0.2.0 retention, a separate measurement-only
+protoc-gen-validate owning-parent study, or stopping unresolved. No decision
+has been made and P8 remains queued.
+
 ## Project And Quality State
 
 No dependency metadata changed. The project remains 234 modules, 3,599 graph
@@ -2634,11 +2688,10 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate selected exact-path `github.com/iancoleman/strcase v0.2.0` as one
-bounded P7 dependency group. Independently resolve its release/repository
-identity, Go-1.18-compatible source/test closure, API and conversion behavior,
-project loading and MVS ownership, vulnerability state, and all applicable
-quality contracts. Retain or select only a qualified exact-path stable release;
-otherwise stop for one bounded product decision. Preserve the memberlist risk
-decision and every earlier guard. Do not reopen memberlist/Serf/POM work,
-manufacture a direct owner, combine another dependency group, or begin P8.
+Make one bounded product decision for exact selected, inherited, unloaded and
+unqualified `github.com/iancoleman/strcase v0.2.0`: explicitly retain it under
+a target-specific exception; authorize one separate measurement-only
+protoc-gen-validate owning-parent/request study; or stop P7 unresolved. Do not
+repeat the evaluation, implement a route, manufacture a direct owner, change
+an earlier guard, combine another dependency group, reopen memberlist/Serf/POM
+work, or begin P8.
