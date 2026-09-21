@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T18:23:43+02:00
+Generated: 2026-09-21T18:52:50+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The httprouter evaluation
+  `codex/upgrade-quality`, base master at `5635d50`. The httprouter decision
   began from clean HEAD
-  `cffd78bb7eaee0b2bddf20b6b46a0d0d48d88d45`, parent
-  `ed0c8fd34461063f601a65117bc6da02109b407b`, tree
-  `464989d44ee9e9c9d10d9cdb33bd89d8e235796d`. That handoff changes exactly the
-  launcher, answered jtolds/gls decision archive, then-NEXT httprouter
-  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
+  `2e85c1ef047da2b5fcd696ac50b6481baf2f87eb`, parent
+  `cffd78bb7eaee0b2bddf20b6b46a0d0d48d88d45`, tree
+  `0a2a83f388d2a630583971916cbe65c3dac0afaf`. That handoff changes exactly the
+  launcher, answered httprouter evaluation archive, then-NEXT httprouter
+  decision archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed sets, reciprocal archive history,
   latest Google UUID ancestry, exact Go identity, module hashes, target and
   earlier guards, fresh advisory identities, and launcher check passed.
@@ -25,24 +25,23 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The httprouter evaluation, jtolds/gls decision/evaluation, go-junit-report
+- The httprouter decision/evaluation, jtolds/gls decision/evaluation, go-junit-report
   decision/evaluation,
   json-iterator decision/evaluation,
   clockwork decision/evaluation, demangle decision/evaluation, strcase
   decision/evaluation, integrated memberlist migration, memberlist ownership/
   final-direction decisions, Serf study, memberlist evaluation, and every
   earlier archive are answered. Option 1 explicitly retains exact inherited,
-  unloaded jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
-  json-iterator v1.1.12, and clockwork v0.1.0 under separate target-specific
-  exceptions; none is qualified and no implementation was retained. Stable
-  httprouter v1.3.0 qualifies, but no genuine owner can select it within the
-  authorized scope and selected v1.2.0 is unqualified. The sole NEXT archive
-  is
-  `docs/plan/agent-sessions/2026-09-21T182343+0200-decide-julienschmidt-httprouter-product-direction.md`.
-  It chooses only explicit guarded v1.2.0 retention, one measurement-only
-  owning-parent/request study, or an unresolved P7 stop. It may not repeat
-  completed fixtures, manufacture a direct root, implement a parent change,
-  combine another group, write outside the managed scratch root, or begin P8.
+  unloaded httprouter v1.2.0, jtolds/gls v4.20.0+incompatible,
+  go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 under
+  separate target-specific exceptions; none is qualified and no implementation
+  was retained. Stable httprouter v1.3.0 qualifies but has no genuine supported
+  tidy-stable project owner. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T185250+0200-evaluate-kisielk-errcheck-dependency.md`.
+  It evaluates only selected exact-path `github.com/kisielk/errcheck v1.5.0`.
+  It must preserve every retained decision and guard, may not manufacture a
+  direct root or parent change, combine another group, write outside the
+  managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -50,19 +49,19 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 is blocked on one bounded httprouter product decision.
-Stable exact-path v1.3.0 is qualified, but the only direct projection
-manufactures target ownership and tidy removes it; selected inherited/unloaded
-v1.2.0 remains unqualified because ordinary Unicode lookup tests fail.
-Product source and dependency metadata remain unchanged. Exact inherited/
-unloaded jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
-json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
-own target-specific exceptions and are not qualified. Exact Go 1.26.7, every
-accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
-and all earlier retained-module decisions remain final under separate guards.
-P8 remains queued.
+P2A-P6 are complete. P7 selected option 1 after the httprouter evaluation:
+exact inherited/unloaded v1.2.0 is explicitly retained only under its
+httprouter-specific, non-transferable exception and remains unqualified. P7
+now continues with one bounded evaluation of selected exact-path
+kisielk/errcheck v1.5.0. Product source and dependency metadata remain
+unchanged. Exact inherited/unloaded jtolds/gls v4.20.0+incompatible,
+go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 remain
+accepted only under their own target-specific exceptions and are not
+qualified. Exact Go 1.26.7, every accepted dependency move through Google UUID
+v1.4.0, qualified go-cleanhttp, and all earlier retained-module decisions
+remain final under separate guards. P8 remains queued.
 
-## Julienschmidt Httprouter Evaluation
+## Julienschmidt Httprouter Evaluation And Decision
 
 Stable exact-path v1.3.0 is the highest and only qualified release. Fresh
 `go-import` resolves without redirect to the public, active, unarchived,
@@ -122,21 +121,59 @@ go-retryablehttp guard pairs, PUBLISHED memberlist CNA bytes, all 30 earlier
 selections/214 edges, negative guarded why/import/load results, module hashes,
 tidy projection, and every earlier decision remain exact.
 
-P7 stops for the reciprocal bounded product decision. Option 1 recommends
-explicitly retaining exact inherited, unloaded, unqualified v1.2.0 under a
-target-specific non-transferable exception bounded by the completed findings,
-two requests, genuine owner route, zero loading, exact project/guard/advisory
-state, and absence of a new genuine route to qualified v1.3.0. Option 2 permits
-one measurement-only owning-parent/request study. Option 3 stops P7 unresolved.
-No option may repeat the completed fixtures, add a direct target root,
-implement a parent change in the decision turn, transfer another exception,
-or begin P8.
+Option 1 was selected. Exact selected, inherited, unloaded
+`github.com/julienschmidt/httprouter v1.2.0` is explicitly retained without
+changing product source, `go.mod`, or `go.sum`. It remains unqualified; zero
+loading bounds exposure but is neither qualification nor implicit
+authorization. Stable v1.3.0 remains qualified but unselected because no
+genuine supported tidy-stable project owner exists.
+
+The httprouter-specific, non-transferable exception accepts only the completed
+v1.2.0 Unicode lookup failure, v1.0.0/v1.1.0 redirect-test expectations,
+repository/archive/release/module/Go-floor, API/behavior, ownership/
+concurrency, MVS/loading, repeatability, project, vulnerability,
+qualified-v1.3.0, and related findings. It accepts no uncharacterized behavior,
+new advisory, or independently discovered defect and promotes no alternate
+path, branch, unreleased master, pseudo-version, replacement, or direct root.
+
+The exception is bounded by exact v1.2.0; both Prometheus common v0.9.1 and
+v0.4.1 requests and parent identities; the genuine direct/imported/loaded
+mvn-pom-mutator v0.2.3 -> Viper v1.10.1 -> go-metrics v0.3.10 ownership route;
+the historical client_golang v1.0.0 request; negative target why and no direct
+root/import/load/runtime reachability; exact graph/module/tidy/Go-floor and
+every earlier guard; and no new advisory, independent finding, release, owner,
+supported tidy-stable owner, or compatible genuine route to qualified v1.3.0.
+Any target version/path, request, parent, ownership, root, import, load,
+runtime, graph, module-hash, tidy, Go-floor, earlier-guard, advisory, finding,
+release, owner, or route change expires the exception and requires a fresh
+httprouter dependency and product decision before merge. It authorizes no
+parent study, workaround, direct root, alternate path, product-source or
+metadata change, unrelated selection, or implementation, and no exception
+transfers.
+
+Guard-only revalidation preserved the 234-module/3,599-edge/355-production/
+429-complete-test/197-module-backed/41-loaded-module baseline, 1,067 sum lines,
+real module hashes, 432-line tidy projection, exact Go 1.26.7 identity, both
+target requests and owner route, and earlier 30-selection/214-edge snapshot at
+`22407933faccf68294140b09ff535f552685bfed20e7e806b6e74d552c275014`.
+All 31 target-plus-earlier why results and guarded imports/loads remain zero;
+including httprouter yields 31 selections and 216 incoming edges at sorted
+snapshot SHA-256
+`a586cb138c690f082f0e2298fbc6872a06a11dd1e0301c38e86ea1bfd12944c2`.
+
+Fresh proxy metadata still exposes exactly v1.0.0-v1.3.0 and GitHub retains
+the public active unarchived non-fork repository. Exact OSV results for all
+four releases and GitHub global/repository target results remain empty. Exact
+OSV across all 31 guards retains only the recorded Gorilla/retryablehttp pairs.
+The 1,402-record Go-index and PUBLISHED memberlist CNA response retain their
+exact recorded hashes. The completed behavior fixtures were not repeated and
+no owning-parent study ran.
 
 Final unchanged-project exact-Go module verification, build, count-one tests,
-race tests, and vet pass. The reciprocal 244-archive chain, single NEXT state,
+race tests, and vet pass. The reciprocal 245-archive chain, single NEXT state,
 launcher/archive prompt mirror, and diff checks pass. No changed-selection
 scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at L2.
-Task-owned httprouter evidence was confined to
+Task-owned decision evidence was confined to
 `${CODEX_SESSION_SCRATCH_ROOT:?}` and removed before handoff.
 
 ## Jtolds GLS Evaluation And Decision
@@ -3406,13 +3443,13 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Make one documentation-only product decision for selected exact-path
-`github.com/julienschmidt/httprouter v1.2.0` using the completed evaluation.
-Choose exact guarded v1.2.0 retention, one measurement-only owning-parent/
-request study, or an explicit unresolved P7 stop. Stable v1.3.0 is qualified
-but has no genuine tidy-stable selection route; a direct indirect root is a
-prohibited manufactured owner. Preserve the jtolds/gls exception and every
-earlier decision exactly. Do not repeat completed fixtures, add a direct target
-root, implement a parent change, transfer an exception, evaluate another group
-in the decision turn, or begin P8. Keep every disposable beneath
-`${CODEX_SESSION_SCRATCH_ROOT:?}`.
+Evaluate selected exact-path `github.com/kisielk/errcheck v1.5.0` as one
+bounded P7 dependency group. Independently resolve its repository and stable-
+release identity, complete Go 1.18 production/test closure, exported analyzer/
+command API and ordinary documented behavior, genuine MVS ownership and
+loading, project effects, and vulnerability evidence. Select only a qualified
+exact-path stable release; otherwise leave source and dependency metadata
+unchanged and stop for one fresh product decision. Preserve the httprouter
+exception and every earlier decision exactly. Do not manufacture a direct root
+or parent change, transfer an exception, combine another group, or begin P8.
+Keep every disposable beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.

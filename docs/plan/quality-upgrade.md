@@ -5374,16 +5374,15 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: blocked on one bounded product decision for selected exact-path
-`github.com/julienschmidt/httprouter v1.2.0`. Stable v1.3.0 qualifies but has
-no authorized genuine selection route; selected v1.2.0 remains unqualified.
-Exact inherited/unloaded
-jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1, json-iterator v1.1.12,
-and clockwork v0.1.0 remain separately retained and unqualified under their
-own target-specific non-transferable exceptions. Earlier demangle, strcase,
-and affected/not-secure memberlist decisions remain separate under their own
-guards. Completed dependency groups remain final through accepted Google UUID
-v1.4.0 and qualified go-cleanhttp v0.5.2. P8 remains queued.
+Status: active on one bounded evaluation of selected exact-path
+`github.com/kisielk/errcheck v1.5.0`. Exact inherited/unloaded httprouter
+v1.2.0, jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
+json-iterator v1.1.12, and clockwork v0.1.0 remain separately retained and
+unqualified under their own target-specific non-transferable exceptions.
+Earlier demangle, strcase, and affected/not-secure memberlist decisions remain
+separate under their own guards. Completed dependency groups remain final
+through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2. P8
+remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -12560,6 +12559,71 @@ Julienschmidt Httprouter evaluation and blocked ownership boundary
   reciprocal 244-archive launcher validation, diff checks, and contained
   scratch cleanup pass. No changed-selection scorecard applies; accepted
   quality remains 27/27 Q0-Q2 PASS at L2.
+
+Julienschmidt Httprouter product decision (2026-09-21):
+
+- Option 1 was selected. Exact selected, inherited, unloaded
+  `github.com/julienschmidt/httprouter v1.2.0` is explicitly retained without
+  changing product source, `go.mod`, or `go.sum`. It remains unqualified; zero
+  loading bounds exposure but is neither qualification nor implicit
+  authorization. Stable v1.3.0 remains qualified but has no genuine supported
+  tidy-stable project owner.
+- The httprouter-specific, non-transferable exception accepts only the
+  completed v1.2.0 Unicode lookup failure, obsolete v1.0.0/v1.1.0 redirect-
+  test expectations, repository/archive/release/module/Go-floor, API/behavior,
+  ownership/concurrency, MVS/loading, repeatability, project, vulnerability,
+  qualified-v1.3.0, and related findings. It accepts no uncharacterized
+  behavior, new advisory, or independently discovered defect and promotes no
+  alternate path, branch, master, pseudo-version, replacement, or direct root.
+- The exception is owned by exact v1.2.0; both
+  `prometheus/common@v0.9.1 -> httprouter@v1.2.0` and
+  `prometheus/common@v0.4.1 -> httprouter@v1.2.0` requests and parent
+  identities; the genuine direct/imported/loaded mvn-pom-mutator v0.2.3 ->
+  Viper v1.10.1 -> go-metrics v0.3.10 route; and the historical
+  client_golang v1.0.0 request.
+- Its guards require no direct target root, negative target why, zero
+  repository imports, zero production/complete-test loads, no runtime
+  reachability, the exact 234-module/3,599-edge/1,067-sum and
+  355/429/197/41 load state, the exact real module hashes and 432-line tidy
+  projection, the declared Go 1.18 floor and exact Go 1.26.7 identity, every
+  earlier guard, and no new advisory, independent finding, release/owner
+  change, newly disqualifying v1.3.0 finding, genuine supported tidy-stable
+  owner, or compatible genuine route to qualified v1.3.0.
+- Any target, request, parent, ownership, root, import, load, runtime, graph,
+  module-hash, tidy, Go-floor, earlier-guard, advisory, finding, release,
+  owner, or route change expires the exception and requires its fresh owning
+  dependency and product decision before merge. The decision authorizes no
+  parent study, workaround, direct root, parent change, alternate path,
+  product-source/metadata change, unrelated selection, or implementation and
+  transfers no exception.
+- Guard-only revalidation from clean handoff HEAD `2e85c1e`, parent `cffd78b`,
+  tree `0a2a83f`, preserved the exact five-file handoff, reciprocal archive
+  chain, Google UUID implementation ancestry, exact Go 1.26.7 identity,
+  module hashes, both requests and owner route, and launcher check. All 31
+  target-plus-earlier why results and guarded imports/loads are zero. The
+  earlier 30-selection/214-edge snapshot remains exact at
+  `22407933faccf68294140b09ff535f552685bfed20e7e806b6e74d552c275014`;
+  including httprouter yields 31 selections/216 edges at
+  `a586cb138c690f082f0e2298fbc6872a06a11dd1e0301c38e86ea1bfd12944c2`.
+- Fresh proxy metadata still exposes exactly v1.0.0-v1.3.0, and the GitHub
+  repository remains public, active, unarchived, and non-fork. Exact OSV for
+  all four releases and GitHub global/repository target results remain empty.
+  OSV across all guards retains only the recorded Gorilla/retryablehttp pairs;
+  the 1,402-record Go-index and PUBLISHED memberlist CNA response remain byte-
+  exact. The completed behavior fixtures were not repeated and no option-2
+  owning-parent study ran.
+- Final unchanged-project exact-Go verify/build/count-one/race/vet, reciprocal
+  245-archive launcher validation, diff checks, and contained scratch cleanup
+  pass. No changed-selection scorecard applies; accepted quality remains
+  27/27 Q0-Q2 PASS at L2.
+- P7 continues only with the reciprocal bounded evaluation of selected exact-
+  path `github.com/kisielk/errcheck v1.5.0`. Its current queue facts are one
+  historical gogo/protobuf v1.3.2 request, negative why, zero repository
+  imports, zero production/complete-test loads, and no runtime reachability;
+  none is qualification. The evaluation must preserve the httprouter exception
+  and every earlier guard, evaluate no other group, and stop for a fresh owning
+  decision if no exact-path stable release qualifies or any guard changes. P8
+  remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
