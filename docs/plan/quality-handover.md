@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T14:32:49+02:00
+Generated: 2026-09-21T16:09:30+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,16 +8,16 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The json-iterator decision
-  began from clean handoff HEAD
-  `19c500237af16f658eb99951e56e042e0d3ea4ee`, parent
-  `80ea158a425503ea5c881c70a391b1bc23d5efbf`, tree
-  `9cec063e78719d2f806f4206cd5bae3b090a74d7`. That commit changed exactly the
-  launcher, answered json-iterator evaluation archive, then-NEXT json-iterator
-  decision archive, rolling handover, and roadmap. Ordinary and ignored status,
-  branch, ancestry, exact changed set, reciprocal 238-archive history, latest
-  Google UUID ancestry, exact Go identity, and launcher check passed before
-  execution.
+  `codex/upgrade-quality`, base master at `5635d50`. The go-junit-report
+  evaluation began from clean handoff HEAD
+  `5946d0958a1538bdea281bb66c59647d0e1a2824`, parent
+  `19c500237af16f658eb99951e56e042e0d3ea4ee`, tree
+  `dd70c74d68e652d0c5e8f1ab80d777c1809a28d6`. That commit changed exactly the
+  launcher, answered json-iterator decision archive, then-NEXT go-junit-report
+  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal 239-archive history,
+  latest Google UUID ancestry, exact Go identity, and launcher check passed
+  before execution.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -25,19 +25,21 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The json-iterator decision/evaluation, clockwork decision/evaluation, demangle
-  decision/evaluation, strcase
+- The go-junit-report evaluation, json-iterator decision/evaluation, clockwork
+  decision/evaluation, demangle decision/evaluation, strcase
   decision/evaluation, integrated memberlist migration, memberlist ownership/
   final-direction decisions, Serf study, memberlist evaluation, and every
   earlier archive are answered. Option 1 explicitly retains exact inherited,
   unloaded json-iterator v1.1.12 and clockwork v0.1.0 under separate target-
   specific exceptions; neither is qualified and no implementation was
-  retained. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T143249+0200-evaluate-jstemmer-go-junit-report-dependency.md`.
-  It independently evaluates only selected exact-path
-  `github.com/jstemmer/go-junit-report v0.9.1`. It may not transfer an
-  exception, alter json-iterator, another guard, or the Go floor, combine
-  another group, write outside the managed scratch root, or begin P8.
+  retained. No exact-path stable go-junit-report release qualifies and no
+  implementation was retained. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T160501+0200-decide-jstemmer-go-junit-report-product-direction.md`.
+  It makes only the bounded documentation decision for exact selected,
+  inherited, unloaded `github.com/jstemmer/go-junit-report v0.9.1`. It may not
+  repeat the writer-error fixture, implement a change, transfer an exception,
+  alter another guard or the Go floor, combine another group, write outside
+  the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -45,15 +47,16 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the bounded json-iterator evaluation and
-option-1 product decision after the clockwork and demangle decisions, strcase
-decision, and final memberlist ownership decision. No exact-path json-iterator
-stable release qualifies and no implementation was retained. Exact inherited/
-unloaded json-iterator v1.1.12 is explicitly accepted only under its target-
-specific exception and is not qualified. Exact Go 1.26.7, every accepted
-dependency move through Google UUID v1.4.0, qualified go-cleanhttp, and all
-earlier retained-module decisions remain final under separate guards. P7
-continues only with the prepared go-junit-report evaluation; P8 remains queued.
+P2A-P6 are complete. P7 has completed the bounded go-junit-report evaluation
+after the json-iterator, clockwork, and demangle decisions, strcase decision,
+and final memberlist ownership decision. No exact-path stable go-junit-report
+release qualifies and no implementation was retained. Selected inherited/
+unloaded v0.9.1 is neither qualified nor accepted. Exact inherited/unloaded
+json-iterator v1.1.12 remains accepted only under its target-specific exception
+and is not qualified. Exact Go 1.26.7, every accepted dependency move through
+Google UUID v1.4.0, qualified go-cleanhttp, and all earlier retained-module
+decisions remain final under separate guards. P7 stops only for the prepared
+go-junit-report product decision; P8 remains queued.
 
 The json-iterator option-1 decision retains exact selected, inherited, and
 unloaded `github.com/json-iterator/go v1.1.12` without changing product source,
@@ -2872,8 +2875,89 @@ all earlier guards, and fresh advisory identities without repeating behavior
 tests. Including json-iterator yields 28 guarded selections and 188 incoming
 edges at SHA-256
 `ca6a8b9d4a0d4aa5c6c436d9edeb27cf6d603e36e29edccef9bc2d9d1b81622e`.
-No source or dependency metadata changed. P7 continues only with the prepared
-go-junit-report evaluation; P8 remains queued.
+No source or dependency metadata changed. P7 continues only with the completed
+go-junit-report evaluation below and its prepared product decision; P8 remains
+queued.
+
+## Jstemmer Go JUnit Report Evaluation
+
+No exact-path stable `github.com/jstemmer/go-junit-report` release qualifies.
+Product source and dependency metadata remain unchanged; selected v0.9.1 is an
+inherited, unloaded MVS identity and was not accepted by this evaluation. P7
+stops for one bounded product decision.
+
+Fresh `go-import` resolves the exact path without redirect to public,
+unarchived, non-fork MIT repository `jstemmer/go-junit-report`. The exact-path
+proxy exposes exactly stable v0.9.0, v0.9.1, and v1.0.0 on one ancestry. There
+is no retraction, deprecation, replacement, redirect, or alternate exact path.
+All stable tags are annotated; the v0 tags are unsigned and GitHub verifies
+the v1.0.0 tag signature. Latest stable v1.0.0 is commit
+`16c7efad77dbe9cb51f1a8c896c652c8ecdaa20e`, tree
+`2cd81297935f0f139b09b32a7f47f60429208986`. Proxy archives are byte-identical
+to Git regular-file exports and sumdb identities agree. The two-commit-later
+v1 pseudo-version changes only tests/workflow. Current `master` declares the
+different valid `/v2` module; `/v2` beta/stable releases were not promoted.
+
+Every stable candidate is a one-module, standard-library-only production/test
+closure. All resolve and pass upstream count-one/count-ten, race count-ten,
+vet, build, and five-platform test cross-compilation under exact Go 1.26.7 and
+contained Go 1.18.10. Stable formatter/parser APIs are identical at 121
+normalized lines and SHA-256
+`5c30998c39101af592afa723b146a0f8b58831efb12d6171c40e57224eebb577`.
+Bounded command and library fixtures pass ordinary valid/failed/empty report
+XML, flags, stdin/stdout and exit semantics, parsing, coverage, benchmark,
+reader error, determinism, XML, and concurrent rendering. V1.0.0 adds only the
+`-version` command flag.
+
+Every stable release nevertheless fails the same exported output contract.
+`formatter.JUnitReportXML` wraps the destination in `bufio.Writer`, ignores
+errors from its writes and `Flush`, and returns nil. A small deterministic
+writer returning an ordinary write error therefore yields nil under both SDKs
+for v0.9.0, v0.9.1, and v1.0.0. This is an ordinary error/output resource-
+lifecycle defect, not security analysis. The unreleased v1 branch has no
+production change and retains it. There is no qualifying stable candidate.
+
+Static review found no build tags, platform branches, cgo, generated source,
+embed, symlink, actual example/benchmark/fuzz function, network, subprocess,
+or production filesystem boundary. Parsed reports own their strings/slices/
+maps; rendering allocates XML and a buffered writer and deterministically
+follows caller order. There is no mutable package-global runtime state beyond
+immutable regex/flag/version values or internal closeable resource. Callers
+own readers, writers, and command stdio.
+
+MVS selects v0.9.1 through 25 historical Cloud Go/storage requests. The target
+has no direct root, negative why, zero repository imports, zero production or
+complete-test loads, and no runtime reachability. A direct v0.9.1 projection
+yields 234 modules/3,600 edges/1,068 sum lines without changing selection; a
+direct v1.0.0 projection changes only the target and yields 234/3,600/1,069.
+Both remain unloaded. V1.0.0 preserves all earlier guarded selections/edges/
+why/import/load facts and passes project verification, build, repeated tests,
+race, vet, cross-builds, API/CLI gates, and all four host acceptance scripts.
+Tidy removes either manufactured root, restores v0.9.1, and returns the common
+baseline hashes
+`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+No genuine tidy-stable owner was identified and no projection was retained.
+
+Fresh stable/v1-pseudo OSV, GitHub global/repository, Go-index lookup, and
+pinned govulncheck v1.8.0 isolated module/package/symbol/test-symbol evidence
+is empty. Base and direct-v1.0.0 project streams remain byte-identical at
+30/22/20/20 with no target trace. The Go index remains 518,501 bytes and 1,402
+records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
+Guard OSV retains only the recorded Gorilla/retryablehttp pairs and the
+PUBLISHED memberlist CNA response remains 2,807 bytes at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+
+The project hashes, 234/3,599/355/429/197/41/1,067 baseline, 432-line tidy
+projection, all 28 earlier guarded selections/188 edges at SHA-256
+`ca6a8b9d4a0d4aa5c6c436d9edeb27cf6d603e36e29edccef9bc2d9d1b81622e`,
+negative guarded why/import/load results, and every earlier decision remain
+exact. Final exact-Go module verification, build, count-one, race, and vet
+pass with `umask 022`. A superseded attempt inherited `umask 077` and failed
+only three permission-mode fixtures; the canonical rerun corrected that
+harness condition. No changed-selection scorecard applies; accepted quality
+remains 27/27 Q0-Q2 PASS at L2.
 
 ## Project And Quality State
 
@@ -3118,13 +3202,13 @@ measured worktree.
 ## Next Bounded Objective
 
 Make exactly one documentation-only product decision for selected exact-path
-`github.com/json-iterator/go v1.1.12`: explicitly retain the inherited,
-unloaded selection under a json-iterator-specific non-transferable exception;
-authorize one separately scoped measurement-only owning-parent/request study;
-or stop P7 with json-iterator unresolved and unaccepted. Reuse the completed
-evaluation and do not repeat its behavior failures or randomized upstream
-package. Do not add a root, select a lower release or master, implement a
-workaround, alter Viper/crypt/etcd/Prometheus, transfer an earlier exception,
-combine another group, or begin P8. Keep every disposable beneath
+`github.com/jstemmer/go-junit-report v0.9.1`: explicitly retain the inherited,
+unloaded selection under a go-junit-report-specific non-transferable exception;
+authorize one separately scoped measurement-only Cloud Go/storage owning-
+parent/request study; or stop P7 with v0.9.1 unresolved and unaccepted. Reuse
+the completed evaluation and do not repeat its writer-error fixture. Do not add
+a root, promote a branch/pseudo-version, select `/v2`, implement a workaround,
+alter Cloud Go/storage or another guard, transfer an earlier exception, combine
+another group, or begin P8. Keep every disposable beneath
 `${CODEX_SESSION_SCRATCH_ROOT:?}` and prepare only the successor authorized by
 the explicit choice.

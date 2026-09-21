@@ -12284,6 +12284,54 @@ Json-iterator Go product decision (2026-09-21):
   stop for a fresh owning decision if no exact-path stable release qualifies or
   any guard changes. P8 remains queued.
 
+Jstemmer Go JUnit Report evaluation (2026-09-21):
+
+- No exact-path stable release qualifies. Fresh `go-import` resolves without
+  redirect to the public, unarchived, non-fork MIT repository. The exact-path
+  proxy exposes exactly stable v0.9.0, v0.9.1, and v1.0.0 on one ancestry with
+  annotated tags, no retraction/deprecation/replacement/alternate exact path,
+  byte-identical proxy/Git files, and matching sumdb identities. Latest stable
+  v1.0.0 is commit `16c7efad77dbe9cb51f1a8c896c652c8ecdaa20e`, tree
+  `2cd81297935f0f139b09b32a7f47f60429208986`; its tag signature is verified.
+  The later v1 pseudo changes only tests/workflow. Current master declares the
+  different `/v2` module path, whose releases were not promoted.
+- Every stable candidate is a one-module, standard-library-only closure that
+  resolves and passes upstream count-one/count-ten, race, vet, build, and five-
+  platform test cross-compilation under exact Go 1.26.7 and contained Go
+  1.18.10. Their exported parser/formatter APIs are identical. Bounded command
+  and library fixtures pass ordinary report/XML, flags, stdin/stdout, exit,
+  reader error, determinism, ownership, and concurrent-render behavior.
+- Every stable release fails the same exported output contract:
+  `formatter.JUnitReportXML` ignores errors from buffered writes and `Flush`
+  and returns nil. A small deterministic destination returning an ordinary
+  write error therefore produces nil under both SDKs for all three stable
+  releases. The unreleased v1 branch has no production change and retains the
+  defect. This ordinary error/resource-lifecycle failure disqualifies every
+  stable exact-path candidate.
+- MVS selects v0.9.1 through 25 historical Cloud Go/storage requests. It has
+  no direct root, negative why, zero source imports, zero production/complete-
+  test loads, and no runtime reachability. Direct v0.9.1 and v1.0.0 projections
+  yield 234 modules/3,600 edges and 1,068/1,069 sum lines respectively; v1.0.0
+  changes only the target selection, remains unloaded, preserves every earlier
+  guard, and passes project/API/CLI/acceptance gates. Tidy removes either
+  manufactured root and restores exact baseline v0.9.1 and projection hashes.
+  No genuine tidy-stable owner was identified; no projection was retained.
+- Fresh candidate OSV/GitHub/Go-index and isolated pinned govulncheck evidence
+  is empty. Base/direct-v1.0.0 project streams remain byte-identical at
+  30/22/20/20 with no target trace. The 1,402-record Go index, only recorded
+  Gorilla/retryablehttp guard pairs, PUBLISHED memberlist CNA bytes, all 28
+  guarded selections/188 edges, negative guarded why/import/load results,
+  project hashes/state, and every earlier decision remain exact.
+- Product source and dependency metadata remain unchanged. Final exact-Go
+  module verification, build, count-one, race, vet, reciprocal launcher check,
+  and scratch cleanup pass. No changed-selection scorecard applies; accepted
+  quality remains 27/27 Q0-Q2 PASS at L2. P7 stops for one reciprocal bounded
+  product decision: retain exact selected/unloaded v0.9.1 under a new target-
+  specific exception, authorize one measurement-only Cloud Go/storage owning-
+  parent/request study, or stop P7 unresolved. It may not add a direct root,
+  promote a branch/pseudo-version, select `/v2`, transfer an exception, combine
+  another dependency group, or begin P8.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
