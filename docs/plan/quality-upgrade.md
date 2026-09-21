@@ -5374,8 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the bounded evaluation of selected exact-path
-`github.com/kisielk/gotool v1.0.0` after option 1 explicitly retained exact
+Status: stopped for one bounded product decision for selected exact-path
+`github.com/kisielk/gotool v1.0.0` after its evaluation found no qualified
+stable release and retained no projection or metadata change. Option 1 explicitly retained exact
 inherited/unloaded errcheck v1.5.0. Exact inherited/unloaded httprouter v1.2.0,
 jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1, json-iterator v1.1.12,
 and clockwork v0.1.0 remain separately retained and unqualified under their
@@ -12733,6 +12734,55 @@ Kisielk Errcheck product decision (2026-09-21):
   exception and every earlier guard, evaluate no other group, and stop for a
   fresh product decision if no stable exact-path release qualifies or a guard
   changes. It was prepared but not executed. P8 remains queued.
+
+Kisielk Gotool evaluation and product-decision boundary (2026-09-21):
+
+- Fresh proxy, sumdb, go-import, Git, and GitHub evidence identifies v1.0.0 as
+  the only exact-path stable release. The sole tag, `master`, proxy `@latest`,
+  and public active unarchived non-fork MIT repository agree on commit
+  `80517062f582ea3340cd4baf70e86d539ae7d84d`. There is no later commit,
+  GitHub Release, retraction, replacement, redirect, `/v2` line, or qualified
+  alternate path/fork; the tag and commit are unsigned and proxy/Git regular
+  files are byte-identical.
+- Its two-package, standard-library-only closure has no declared Go floor and
+  passes exact Go 1.26.7 and contained Go 1.18.10 upstream tests, repeats,
+  race, vet, builds, supported cross-builds, and a bounded ordinary fixture.
+  The API is deterministic for read-only calls, but exposes mutable default
+  and BuildContext state requiring caller synchronization and reports
+  omissions through global stderr.
+- V1.0.0 fails the applicable module-aware package-pattern contract. In a
+  small ordinary two-module local-replace fixture, `go list` expands the
+  dependency module pattern while gotool returns no packages under both SDKs.
+  Upstream maintainers state that module support is not viable, recommend
+  `golang.org/x/tools/go/packages`, and say gotool can be considered
+  deprecated. With no other stable exact-path release, none qualifies.
+- Exact MVS ownership remains four v1.0.0 requests from Gogo Protobuf v1.3.2
+  and three historical Honnef tools versions. The shortest genuine route is
+  direct/imported/loaded Viper v1.15.0 through unloaded Gogo Protobuf v1.3.2.
+  Gotool has negative why, zero repository imports, zero production/complete-
+  test loads, and no runtime reachability; physical selection is not
+  qualification.
+- A disposable direct root changes no selection and only manufactures a main
+  requirement and source sum; exact-Go project verification passes and tidy
+  removes both. No projection or dependency commit was retained. The project
+  remains 234 modules, 3,599 edges, 355 production and 429 complete-test
+  entries, 197 module-backed complete-test entries across 41 modules, 1,067
+  sums, exact real module hashes, and the recorded 432-line tidy projection.
+  All 32 earlier why/import/load guards and 217 incoming edges remain exact.
+- Fresh exact/package OSV, GitHub, repository-advisory, index, and pinned
+  govulncheck evidence has no gotool finding or trace. Base and redundant-root
+  project populations are identical at 30/22/20/20; the earlier guard
+  advisories, index, and CNA evidence remain exact. No exploitability analysis
+  occurred.
+- Product source and dependency metadata remain unchanged; no changed-
+  selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. The final unchanged-project exact Go 1.26.7 module verification,
+  build, count-one tests, race count-one tests, and vet pass. P7 stops for one
+  reciprocal choice: explicitly retain inherited unloaded unqualified v1.0.0
+  under a target-specific exception; authorize exactly one later measurement-
+  only study of one existing request/owner; or stop P7 unresolved. Do not
+  repeat the evaluation, add a direct root, implement a parent/source change,
+  transfer an exception, combine another group, or begin P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

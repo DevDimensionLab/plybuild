@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T20:33:38+02:00
+Generated: 2026-09-21T21:35:48+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,12 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The errcheck decision
+  `codex/upgrade-quality`, base master at `5635d50`. The gotool evaluation
   began from clean HEAD
-  `3d7164061867345c2ce0a2477e46ae19e64388c6`, parent
-  `531902844643fb3bf1bdeaaee411e0b4147316dd`, tree
-  `add8103c40d221fa434cbee96553ad26ad9ccf89`. That handoff changes exactly the
-  launcher, answered errcheck evaluation archive, then-NEXT errcheck decision
+  `3c4cc909927a959b9c1e547af0ad22b5dc8c30bd`, parent
+  `3d7164061867345c2ce0a2477e46ae19e64388c6`, tree
+  `c8c41e5470411e896b892e4a58c2632126bc5e93`. That handoff changes exactly the
+  launcher, answered errcheck decision archive, then-NEXT gotool evaluation
   archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed sets, reciprocal archive history,
   latest Google UUID ancestry, exact Go identity, module hashes, target and
@@ -25,7 +25,7 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The errcheck decision/evaluation, httprouter decision/evaluation, jtolds/gls
+- The gotool evaluation, errcheck decision/evaluation, httprouter decision/evaluation, jtolds/gls
   decision/evaluation, go-junit-report decision/evaluation, json-iterator
   decision/evaluation, clockwork decision/evaluation, demangle decision/
   evaluation, strcase decision/evaluation, integrated memberlist migration,
@@ -37,11 +37,12 @@ session diary.
   none is qualified and no implementation was retained. Stable httprouter
   v1.3.0 qualifies but has no genuine supported tidy-stable project owner. The
   sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T203338+0200-evaluate-kisielk-gotool-dependency.md`.
-  It independently evaluates only selected exact-path
-  `github.com/kisielk/gotool v1.0.0`. It must preserve every retained decision
-  and guard, may not manufacture a direct root or parent change, combine
-  another group, write outside the managed scratch root, or begin P8.
+  `docs/plan/agent-sessions/2026-09-21T213548+0200-decide-kisielk-gotool-product-direction.md`.
+  It records exactly one bounded product decision for selected exact-path
+  `github.com/kisielk/gotool v1.0.0`, which remains inherited, unloaded, and
+  unqualified. It must not repeat the completed evaluation, manufacture a
+  direct root or parent change, transfer another exception, combine another
+  group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -56,10 +57,75 @@ httprouter v1.2.0, jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
 json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
 own target-specific exceptions and are not qualified. Product source and
 dependency metadata remain unchanged. P7 continues only with the bounded
-kisielk/gotool v1.0.0 evaluation. Exact Go 1.26.7, every accepted dependency
+kisielk/gotool v1.0.0 product decision after its evaluation found no
+qualified exact-path stable release and retained no projection or metadata
+change. Exact Go 1.26.7, every accepted dependency
 move through Google UUID v1.4.0, qualified go-cleanhttp, and all earlier
 retained-module decisions remain final under separate guards. P8 remains
 queued.
+
+## Kisielk Gotool Evaluation
+
+No exact-path stable release qualifies. Fresh proxy metadata exposes only
+v1.0.0, and proxy `@latest`, the sole lightweight Git tag, `master`, and the
+public active unarchived non-fork MIT GitHub repository all resolve exact
+commit `80517062f582ea3340cd4baf70e86d539ae7d84d`. The tag and commit are
+unsigned, GitHub has no Releases, and there is no later commit, retraction,
+replacement, redirect, `/v2` line, or promotable fork. Proxy and Git regular
+files agree byte for byte.
+
+The module has no Go directive or requirements and its two packages use only
+the standard library. Exact Go 1.26.7 and contained Go 1.18.10 both pass
+upstream count-one/count-ten/race-count-ten tests, vet, build, supported cross-
+builds, and the bounded ordinary behavior fixture. The small API exports a
+mutable `DefaultContext`, `Context`, its `ImportPaths` method, and package
+`ImportPaths`. Results and traversal maps are call-local and deterministic;
+the caller owns BuildContext slices/functions and must synchronize mutation,
+while warnings use process-global stderr. No cgo, generated source, examples,
+benchmarks, fuzz targets, testdata, network, subprocess, or closeable public
+resource exists.
+
+The sole stable release nevertheless fails the applicable ordinary module-
+aware package-pattern contract. In a bounded two-module local-replace fixture,
+the Go command expands `example.com/dependency/...` to its package under both
+SDKs, while gotool returns no packages and warns that the pattern matched
+nothing. Upstream maintainers likewise identify module support as not viable,
+recommend `golang.org/x/tools/go/packages`, and state that gotool can be
+considered deprecated. This current-module behavior and lifecycle boundary
+disqualify v1.0.0 independently of its passing GOPATH-era closure and tests.
+
+MVS selects v1.0.0 through exactly four requests: Gogo Protobuf v1.3.2 and
+three historical Honnef tools versions. The shortest genuine route begins at
+direct/imported/loaded Viper v1.15.0 and passes through unloaded Gogo Protobuf
+v1.3.2. Gotool, Gogo Protobuf, and the selected Honnef tools module load zero
+production or complete-test packages; gotool and Gogo Protobuf have negative
+why results, and gotool has no repository import or runtime reachability.
+
+A disposable direct root changes no selection, manufactures only a redundant
+main-module requirement and source sum, and increases graph/sum counts to
+3,600/1,068 while leaving loads unchanged. Its exact-Go verify/build/tests/
+race/vet pass; tidy removes the manufactured root and sum and restores the
+common 52-line/948-line tidy state. No projection or dependency commit was
+retained. The real project remains 234/3,599/355/429/197/41/1,067 with exact
+module hashes and the recorded 432-line tidy projection. All 32 earlier
+selection/why/import/load guards and 217 incoming edges remain exact.
+
+Fresh exact/package OSV, global GitHub, repository-advisory, index, and pinned
+govulncheck evidence has no gotool finding or trace. Base and redundant-root
+project findings are identical at 30/22/20/20. Earlier Gorilla and
+go-retryablehttp OSV pairs, x/mod v0.14.0 GO-2026-6180/GO-2026-6179, the
+1,402-record index, and the PUBLISHED memberlist CNA response remain exact.
+No exploitability work occurred.
+
+Product source and dependency metadata remain unchanged. There is no changed-
+selection gate or dependency implementation commit. The final unchanged-
+project exact Go 1.26.7 module verification, build, count-one tests, race
+count-one tests, and vet pass. P7 stops for one reciprocal bounded product
+decision: explicitly retain inherited unloaded unqualified v1.0.0 under a
+target-specific exception, authorize exactly one later measurement-only
+request/owner study, or stop P7 unresolved. It may not repeat this evaluation,
+add a direct root, implement a parent change, transfer an exception, combine
+another group, or begin P8.
 
 ## Kisielk Errcheck Evaluation
 
@@ -3581,13 +3647,17 @@ All disposable go.net and go-uuid evidence remains beneath
 recorded external roots. Never retain a `go mod download all` projection in a
 measured worktree.
 
+The gotool evaluation's final unchanged-project exact Go 1.26.7 module
+verification, build, count-one tests, race count-one tests, and vet pass. No
+source or dependency metadata changed, so no changed-selection scorecard
+applies and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
 ## Next Bounded Objective
 
-Independently evaluate selected exact-path
-`github.com/kisielk/gotool v1.0.0` as one bounded P7 dependency group. Resolve
-its exact release/repository identity, complete Go-floor closure, exported API
-and ordinary behavior, ownership/loading, MVS/project effects, and public
-advisory evidence. Preserve the errcheck exception and every earlier guard.
-Do not add a direct target root, implement a parent change, transfer an
-exception, combine another group, or begin P8. Keep every disposable beneath
-`${CODEX_SESSION_SCRATCH_ROOT:?}`.
+Record exactly one bounded product decision for selected exact-path
+`github.com/kisielk/gotool v1.0.0`: explicitly retain exact inherited,
+unloaded, unqualified v1.0.0 under a target-specific non-transferable
+exception; authorize exactly one later measurement-only study of one existing
+request/owner; or stop P7 unresolved. Do not repeat the completed evaluation,
+add a direct target root, implement a parent or product-source change, transfer
+an exception, combine another dependency group, or begin P8.
