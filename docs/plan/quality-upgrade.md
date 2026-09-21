@@ -5374,16 +5374,16 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: blocked on one bounded product decision for selected exact-path
-`github.com/kisielk/errcheck v1.5.0` after no stable exact-path release
-qualified. Exact inherited/unloaded httprouter v1.2.0, jtolds/gls
-v4.20.0+incompatible, go-junit-report v0.9.1,
-json-iterator v1.1.12, and clockwork v0.1.0 remain separately retained and
-unqualified under their own target-specific non-transferable exceptions.
-Earlier demangle, strcase, and affected/not-secure memberlist decisions remain
-separate under their own guards. Completed dependency groups remain final
-through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2. Product
-source and dependency metadata remain unchanged. P8 remains queued.
+Status: active for the bounded evaluation of selected exact-path
+`github.com/kisielk/gotool v1.0.0` after option 1 explicitly retained exact
+inherited/unloaded errcheck v1.5.0. Exact inherited/unloaded httprouter v1.2.0,
+jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1, json-iterator v1.1.12,
+and clockwork v0.1.0 remain separately retained and unqualified under their
+own target-specific non-transferable exceptions. Earlier demangle, strcase,
+and affected/not-secure memberlist decisions remain separate under their own
+guards. Completed dependency groups remain final through accepted Google UUID
+v1.4.0 and qualified go-cleanhttp v0.5.2. Product source and dependency
+metadata remain unchanged. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -12671,6 +12671,68 @@ Kisielk Errcheck evaluation and product-decision boundary (2026-09-21):
   It may not repeat fixtures, add a direct target root, implement a parent
   change, transfer an exception, combine another group, or begin P8. Accepted
   quality remains 27/27 Q0-Q2 PASS at L2.
+
+Kisielk Errcheck product decision (2026-09-21):
+
+- Option 1 was selected. Exact selected, inherited, unloaded
+  `github.com/kisielk/errcheck v1.5.0` is explicitly retained without changing
+  product source, `go.mod`, or `go.sum`. It remains unqualified and is not
+  described as secure. Zero loading bounds current exposure but is neither
+  qualification nor implicit authorization. No stable exact-path release
+  satisfies all Go-floor, exact-Go, repeatability, resource-ownership,
+  closure-advisory, and target-only-selection contracts.
+- The errcheck-specific, non-transferable exception accepts only the completed
+  v1.5.0 loader/test and source-close failures; later-release floor, exact-Go,
+  repeatability, and x/mod closure-advisory blockers; and completed repository,
+  archive, release, module, API/command, ownership/global-state, MVS/loading,
+  project, vulnerability, and related findings. It accepts no uncharacterized
+  behavior, new advisory, or independently discovered defect, promotes no
+  alternate identity or direct root, and transfers no other exception.
+- Ownership is exact v1.5.0; the sole
+  `gogo/protobuf@v1.3.2 -> errcheck@v1.5.0` request; and the genuine route from
+  direct/imported/loaded Viper v1.15.0 through unloaded Gogo Protobuf v1.3.2.
+  Guards require no direct root, negative errcheck and Gogo Protobuf why,
+  zero repository imports and production/complete-test loads, no target runtime
+  reachability, exact graph/module/tidy/Go-floor state, every earlier guard,
+  and no new advisory, independent finding, release, owner, qualified release,
+  supported tidy-stable owner, or compatible genuine qualified route.
+- Any target path/version, request, Gogo Protobuf/Viper identity or ownership,
+  root, import, load, runtime, graph, module-hash, tidy, Go-floor, earlier-
+  guard, advisory, finding, release, owner, qualification, or route change
+  expires the exception and requires a fresh errcheck dependency and product
+  decision before merge. It authorizes no parent study, workaround, direct
+  root, parent change, alternate path, product-source/metadata change,
+  unrelated selection, or implementation.
+- Guard-only revalidation preserved 234 modules, 3,599 edges, 355 production
+  and 429 complete-test entries, 197 module-backed complete-test entries across
+  41 modules, 1,067 sums, exact real module hashes, and the 432-line tidy
+  projection at
+  `3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`.
+  All 32 guarded selections and negative why results remain exact; guarded
+  imports and loads are zero; and 217 incoming edges reproduce SHA-256
+  `500c57a1b4ffbdf5bb1296ef4dcb1bd16dbae12e54b86664fd1f8a2481a6c0dd`.
+- Fresh proxy metadata retains 16 stable releases plus v1.5.0-alpha; GitHub
+  retains the active unarchived non-fork repository; exact/package OSV and
+  GitHub target results remain empty; guard OSV retains only the recorded
+  Gorilla/retryablehttp pairs; and x/mod v0.14.0 retains GO-2026-6180 and
+  GO-2026-6179. The 1,402-record Go index and PUBLISHED memberlist CNA bytes
+  remain exact. No completed fixture or option-2 owner study was run.
+- No dependency implementation or metadata commit was created. No changed-
+  selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. Final unchanged-project exact Go 1.26.7 module verification, build,
+  count-one tests, race count-one tests, and vet pass. The reciprocal
+  247-archive chain, sole NEXT state, launcher/archive prompt mirror, exact
+  documentation-only changed set, diff checks, and launcher check pass. Every
+  task-owned scratch artifact was contained beneath the managed session root
+  and removed; only its pre-existing launcher-owned Node compile cache remains.
+  P7 continues only with the prepared bounded evaluation of selected exact-
+  path `github.com/kisielk/gotool v1.0.0`. Current queue facts are four
+  historical requests, negative why, zero repository imports, zero production/
+  complete-test loads, and no runtime reachability; none is qualification.
+  The successor must independently verify them, preserve this errcheck
+  exception and every earlier guard, evaluate no other group, and stop for a
+  fresh product decision if no stable exact-path release qualifies or a guard
+  changes. It was prepared but not executed. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

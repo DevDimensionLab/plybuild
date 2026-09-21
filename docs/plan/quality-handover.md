@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T20:01:44+02:00
+Generated: 2026-09-21T20:33:38+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The errcheck evaluation
+  `codex/upgrade-quality`, base master at `5635d50`. The errcheck decision
   began from clean HEAD
-  `531902844643fb3bf1bdeaaee411e0b4147316dd`, parent
-  `2e85c1ef047da2b5fcd696ac50b6481baf2f87eb`, tree
-  `b4320a51c4d8b26fd35409b43babbab4ff32e08f`. That handoff changes exactly the
-  launcher, answered httprouter decision archive, then-NEXT errcheck
-  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
+  `3d7164061867345c2ce0a2477e46ae19e64388c6`, parent
+  `531902844643fb3bf1bdeaaee411e0b4147316dd`, tree
+  `add8103c40d221fa434cbee96553ad26ad9ccf89`. That handoff changes exactly the
+  launcher, answered errcheck evaluation archive, then-NEXT errcheck decision
+  archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed sets, reciprocal archive history,
   latest Google UUID ancestry, exact Go identity, module hashes, target and
   earlier guards, fresh advisory identities, and launcher check passed.
@@ -25,25 +25,23 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The httprouter decision/evaluation, jtolds/gls decision/evaluation, go-junit-report
-  decision/evaluation,
-  json-iterator decision/evaluation,
-  clockwork decision/evaluation, demangle decision/evaluation, strcase
-  decision/evaluation, integrated memberlist migration, memberlist ownership/
-  final-direction decisions, Serf study, memberlist evaluation, and every
-  earlier archive are answered. Option 1 explicitly retains exact inherited,
-  unloaded httprouter v1.2.0, jtolds/gls v4.20.0+incompatible,
-  go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 under
-  separate target-specific exceptions; none is qualified and no implementation
-  was retained. Stable httprouter v1.3.0 qualifies but has no genuine supported
-  tidy-stable project owner. The errcheck evaluation is now answered. The sole
-  NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T200144+0200-decide-kisielk-errcheck-product-direction.md`.
-  It chooses only one bounded product direction for selected exact-path
-  `github.com/kisielk/errcheck v1.5.0`. It must preserve every retained
-  decision and guard, may not repeat completed fixtures, manufacture a direct
-  root or parent change, combine another group, write outside the managed
-  scratch root, or begin P8.
+- The errcheck decision/evaluation, httprouter decision/evaluation, jtolds/gls
+  decision/evaluation, go-junit-report decision/evaluation, json-iterator
+  decision/evaluation, clockwork decision/evaluation, demangle decision/
+  evaluation, strcase decision/evaluation, integrated memberlist migration,
+  memberlist ownership/final-direction decisions, Serf study, memberlist
+  evaluation, and every earlier archive are answered. Option 1 explicitly
+  retains exact inherited, unloaded errcheck v1.5.0, httprouter v1.2.0,
+  jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1, json-iterator
+  v1.1.12, and clockwork v0.1.0 under separate target-specific exceptions;
+  none is qualified and no implementation was retained. Stable httprouter
+  v1.3.0 qualifies but has no genuine supported tidy-stable project owner. The
+  sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T203338+0200-evaluate-kisielk-gotool-dependency.md`.
+  It independently evaluates only selected exact-path
+  `github.com/kisielk/gotool v1.0.0`. It must preserve every retained decision
+  and guard, may not manufacture a direct root or parent change, combine
+  another group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -51,18 +49,17 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 selected option 1 after the httprouter evaluation:
-exact inherited/unloaded v1.2.0 is explicitly retained only under its
-httprouter-specific, non-transferable exception and remains unqualified. The
-errcheck evaluation found no qualified stable exact-path release and left
-product source and dependency metadata unchanged. P7 is blocked only on one
-bounded errcheck product decision. Exact inherited/unloaded jtolds/gls
-v4.20.0+incompatible,
-go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 remain
-accepted only under their own target-specific exceptions and are not
-qualified. Exact Go 1.26.7, every accepted dependency move through Google UUID
-v1.4.0, qualified go-cleanhttp, and all earlier retained-module decisions
-remain final under separate guards. P8 remains queued.
+P2A-P6 are complete. P7 selected option 1 for errcheck: exact inherited,
+unloaded v1.5.0 is explicitly retained only under its errcheck-specific,
+non-transferable exception and remains unqualified. Exact inherited/unloaded
+httprouter v1.2.0, jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
+json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
+own target-specific exceptions and are not qualified. Product source and
+dependency metadata remain unchanged. P7 continues only with the bounded
+kisielk/gotool v1.0.0 evaluation. Exact Go 1.26.7, every accepted dependency
+move through Google UUID v1.4.0, qualified go-cleanhttp, and all earlier
+retained-module decisions remain final under separate guards. P8 remains
+queued.
 
 ## Kisielk Errcheck Evaluation
 
@@ -129,6 +126,80 @@ exception; authorize one measurement-only gogo/protobuf owner/request study;
 or stop P7 unresolved. It may not repeat completed fixtures, add a direct
 target root, implement a parent change, transfer an exception, combine another
 group, or begin P8. Accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+## Kisielk Errcheck Product Decision
+
+Option 1 was selected. Exact selected, inherited, unloaded
+`github.com/kisielk/errcheck v1.5.0` is explicitly retained without changing
+product source, `go.mod`, or `go.sum`. It remains unqualified and is not
+described as secure. Zero loading bounds current exposure but is neither
+qualification nor implicit authorization. No stable exact-path release
+satisfies the simultaneous Go-floor, exact-Go, repeatability, resource-
+ownership, closure-advisory, and target-only-selection contracts.
+
+The errcheck-specific, non-transferable exception accepts only the completed
+selected loader/test and source-close failures; later-release Go-floor,
+exact-Go, repeatability, and x/mod closure-advisory blockers; and repository,
+archive, release, module, API, command, caller-ownership, mutable/global-state,
+MVS, loading, project, vulnerability, and related evaluation findings. It
+accepts no uncharacterized behavior, new advisory, or independently discovered
+defect, promotes no alternate identity or direct root, and transfers no other
+dependency exception.
+
+The exception is owned by exact v1.5.0; the sole
+`gogo/protobuf@v1.3.2 -> errcheck@v1.5.0` request; and the genuine route from
+direct, imported, and loaded Viper v1.15.0 through unloaded Gogo Protobuf
+v1.3.2. Its guards require no direct target root, negative errcheck and Gogo
+Protobuf why results, zero repository imports and production/complete-test
+loads for both modules, no target runtime reachability, exact graph/module/
+tidy/Go-floor state, and every earlier guard.
+
+It also requires no new errcheck or closure advisory, independent finding,
+exact-path stable release, owner, qualified release, supported tidy-stable
+owner, or compatible genuine route to a qualified release. Any target path or
+version, request, Gogo Protobuf/Viper identity or ownership, root, import,
+load, runtime, graph, module-hash, tidy, Go-floor, earlier-guard, advisory,
+finding, release, owner, qualification, or route change expires the exception
+and requires a fresh errcheck dependency and product decision before merge.
+The decision authorizes no parent study, workaround, direct root, parent
+change, alternate path, product-source/metadata change, unrelated selection,
+or implementation.
+
+Guard-only revalidation preserved 234 modules, 3,599 graph edges, 355
+production and 429 complete-test entries, 197 module-backed complete-test
+entries across 41 modules, 1,067 sums, the exact real module hashes, the
+432-line tidy projection at
+`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`,
+the target request and Viper route, and exact Go 1.26.7 identity. All 32
+guarded selections and negative why results remain exact, guarded imports and
+loads are zero, and the 217 incoming edges reproduce SHA-256
+`500c57a1b4ffbdf5bb1296ef4dcb1bd16dbae12e54b86664fd1f8a2481a6c0dd`.
+
+Fresh proxy metadata retains exactly 16 stable releases plus excluded
+v1.5.0-alpha; the repository remains active, unarchived, and non-fork. Exact/
+package OSV and GitHub target results remain empty. Guard OSV retains only the
+recorded Gorilla/retryablehttp pairs, and x/mod v0.14.0 retains GO-2026-6180
+and GO-2026-6179. The 1,402-record Go index and PUBLISHED memberlist CNA
+response retain their exact recorded hashes. No completed errcheck behavior
+fixture or option-2 owner study was run.
+
+No source or dependency metadata changed, no changed-selection scorecard
+applies, and accepted quality remains 27/27 Q0-Q2 PASS at L2. Final
+unchanged-project exact Go 1.26.7 module verification, build, count-one tests,
+race count-one tests, and vet pass. The reciprocal 247-archive chain, sole
+NEXT state, launcher/archive prompt mirror, exact documentation-only changed
+set, diff checks, and launcher check pass. Every task-owned scratch artifact
+was contained beneath the managed session root and removed; only its
+pre-existing launcher-owned Node compile cache remains. P7 continues only
+with the prepared bounded evaluation of selected exact-path
+`github.com/kisielk/gotool v1.0.0`. Current queue facts are exact v1.0.0,
+four historical incoming requests, negative why, zero repository imports,
+zero production/complete-test loads, and no runtime reachability; none is
+qualification. The successor must independently resolve every target and
+owner fact, preserve the errcheck exception and every earlier guard, evaluate
+no other group, and stop for a fresh product decision if no exact-path stable
+release qualifies or any guard changes. It was prepared but not executed. P8
+remains queued.
 
 ## Julienschmidt Httprouter Evaluation And Decision
 
@@ -3512,11 +3583,11 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Choose exactly one bounded product direction for selected exact-path
-`github.com/kisielk/errcheck v1.5.0`: explicitly retain the inherited,
-unloaded, unqualified selection under an errcheck-specific non-transferable
-exception; authorize one measurement-only gogo/protobuf owner/request study;
-or stop P7 unresolved. Reuse the completed evaluation. Do not repeat fixtures,
-add a direct target root, implement a parent change, transfer an exception,
-combine another dependency group, or begin P8. Keep every disposable beneath
+Independently evaluate selected exact-path
+`github.com/kisielk/gotool v1.0.0` as one bounded P7 dependency group. Resolve
+its exact release/repository identity, complete Go-floor closure, exported API
+and ordinary behavior, ownership/loading, MVS/project effects, and public
+advisory evidence. Preserve the errcheck exception and every earlier guard.
+Do not add a direct target root, implement a parent change, transfer an
+exception, combine another group, or begin P8. Keep every disposable beneath
 `${CODEX_SESSION_SCRATCH_ROOT:?}`.

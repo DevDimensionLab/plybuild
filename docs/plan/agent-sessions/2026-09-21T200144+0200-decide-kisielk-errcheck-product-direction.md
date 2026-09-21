@@ -1,13 +1,13 @@
 # Agent Session: Decide Kisielk Errcheck Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-21T200144+0200-decide-kisielk-errcheck-product-direction`
 Created: `2026-09-21T20:01:44+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `13bdf0c4add170fc6a4a44d97005d72da74acc5fd6d1b20a5c71de239cd0bd7f`
 Previous: [2026-09-21T185250+0200-evaluate-kisielk-errcheck-dependency.md](2026-09-21T185250+0200-evaluate-kisielk-errcheck-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-21T203338+0200-evaluate-kisielk-gotool-dependency.md](2026-09-21T203338+0200-evaluate-kisielk-gotool-dependency.md)
+Outcome: Selected option 1: explicitly retained exact selected, inherited, unloaded v1.5.0 under an errcheck-specific non-transferable exception, left product source and dependency metadata unchanged, and prepared one bounded kisielk/gotool evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -190,3 +190,120 @@ httprouter/jtolds/gls/go-junit-report/json-iterator/clockwork/mvn-pom-mutator/
 demangle/pprof/strcase/memberlist work, write outside the managed scratch root,
 or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 was selected on 2026-09-21. Exact selected
+`github.com/kisielk/errcheck v1.5.0` is explicitly retained as inherited and
+unloaded without changing product source, `go.mod`, or `go.sum`. It remains
+unqualified and is not described as secure. Zero loading bounds current
+exposure but did not qualify or silently authorize the selection. No stable
+exact-path release satisfies the simultaneous Go-floor, exact-Go,
+repeatability, resource-ownership, closure-advisory, and target-only-selection
+contracts.
+
+The errcheck-specific, non-transferable exception accepts only the completed
+selected-v1.5.0 loader/test and source-close failures; the later-release
+Go-floor, exact-Go, repeatability, and x/mod closure-advisory blockers; and the
+completed repository, archive, release, module, exported API, command,
+ownership, mutable/global-state, MVS, loading, project, vulnerability, and
+related evaluation findings. It accepts no uncharacterized behavior, new
+advisory, or independently discovered defect. It promotes no alternate path,
+fork, branch, prerelease, pseudo-version, replacement, direct root, or
+floor-ineligible release, and it transfers no earlier dependency exception.
+
+This repository owns only the explicit decision to tolerate exact inherited
+and unloaded v1.5.0 in the verified graph. The exception remains valid only
+while every one of these facts remains exact:
+
+- selected exact path and version `github.com/kisielk/errcheck v1.5.0`;
+- the sole selected-version request
+  `github.com/gogo/protobuf@v1.3.2 ->
+  github.com/kisielk/errcheck@v1.5.0`, including that exact parent identity;
+- the genuine shortest ownership route from the main module through direct,
+  imported, and loaded `github.com/spf13/viper v1.15.0`, then unloaded
+  `github.com/gogo/protobuf v1.3.2`, to the target;
+- no direct errcheck root, negative errcheck and Gogo Protobuf why results,
+  zero repository imports, zero production or complete-test package loads for
+  both modules, and no errcheck runtime reachability;
+- 234 selected modules, 3,599 graph edges, 355 production entries, 429
+  complete-test entries, 197 module-backed complete-test entries across 41
+  loaded modules, 1,067 sum lines, and the exact 432-line tidy projection at
+  SHA-256
+  `3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`;
+- `go.mod` and `go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+- the declared Go 1.18 floor and exact Go 1.26.7 toolchain identity;
+- every earlier target-specific guard, with all 32 guarded selections exact,
+  all 32 why results negative, guarded imports and loads zero, and the 217
+  sorted incoming edges at SHA-256
+  `500c57a1b4ffbdf5bb1296ef4dcb1bd16dbae12e54b86664fd1f8a2481a6c0dd`;
+  and
+- no new errcheck or closure advisory, independent finding, exact-path stable
+  release, owner, qualified release, genuine supported tidy-stable owner, or
+  compatible genuine route to a qualified release.
+
+Any target version/path, request, Gogo Protobuf or Viper identity/ownership,
+root, import, load, runtime, graph, module-hash, tidy, Go-floor, earlier-guard,
+advisory, independent finding, release, owner, qualification, or compatible-
+route change expires the exception and requires a fresh errcheck dependency
+and product decision before merge. The decision authorizes no owning-parent
+study, workaround, direct target root, parent change, alternate path, product-
+source or dependency-metadata change, unrelated selection, or implementation.
+
+Guard-only revalidation began from clean ordinary and ignored state on branch
+`codex/upgrade-quality` at handoff HEAD
+`3d7164061867345c2ce0a2477e46ae19e64388c6`, parent
+`531902844643fb3bf1bdeaaee411e0b4147316dd`, tree
+`add8103c40d221fa434cbee96553ad26ad9ccf89`. That handoff changes exactly
+`codex-dev-start.sh`, the answered errcheck evaluation archive, this then-NEXT
+decision archive, rolling handover, and roadmap. Its reciprocal 246-archive
+chain, sole NEXT state, launcher/archive prompt mirror, exact changed set, and
+launcher check passed.
+
+The latest dependency implementation remains exact Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
+`b89afd4ec056133b1eefb5611f8f35c12c11824b`, changing only `go.mod` and
+`go.sum`; it remains an ancestor of the handoff. A freshly unpacked official
+Go 1.26.7 archive and binary retained SHA-256 values
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+All guard commands used that binary with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, no ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and
+`umask 022`.
+
+The baseline counts, module hashes, tidy projection, exact target request, and
+genuine Viper ownership route reproduce. All 32 guarded selections remain
+exact; all 32 why results are negative; repository imports and production/
+complete-test loads are zero; and the exact 217-edge snapshot hash reproduces.
+
+Fresh proxy metadata still exposes exactly 16 stable releases plus excluded
+v1.5.0-alpha, and GitHub still reports the exact repository active,
+unarchived, and non-fork. Exact/package OSV and GitHub global/repository target
+results remain empty. Exact OSV across all 32 guarded selections retains only
+Gorilla WebSocket `GO-2026-6278` / `GHSA-w67g-5rqw-f597` and
+go-retryablehttp `GO-2024-2947` / `GHSA-v6v8-xj6m-xwqh`. X/mod v0.14.0 still
+reports `GO-2026-6180` and `GO-2026-6179`. The Go vulnerability index remains
+518,501 bytes and 1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. The PUBLISHED 2,807-byte memberlist CNA
+response remains byte-exact at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+
+The completed loader, repeatability, resource-close, and command fixtures were
+not repeated, option 2 was not run, and no source, dependency metadata,
+parent, toolchain declaration, or earlier guard changed. No changed-selection
+scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at L2. Final
+unchanged-project exact Go 1.26.7 module verification, build, count-one tests,
+race count-one tests, and vet pass. The reciprocal 247-archive chain, sole
+NEXT state, launcher/archive prompt mirror, exact documentation-only changed
+set, diff checks, and launcher check pass after the handoff edit. Every
+task-owned tool, cache, report, archive, and advisory snapshot was contained
+beneath the managed session scratch root and removed; only the pre-existing
+launcher-owned Node compile cache remains there.
+
+P7 continues only with the reciprocal bounded evaluation of the next selected
+queue item, `github.com/kisielk/gotool v1.0.0`, linked above. That successor
+was prepared but not executed. P8 remains queued.
