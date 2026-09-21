@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T17:39:46+02:00
+Generated: 2026-09-21T18:23:43+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,17 +8,16 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The jtolds/gls product
-  decision began from clean HEAD
-  `ed0c8fd34461063f601a65117bc6da02109b407b`, parent
-  `5dd19af0436917968bba1c25baca8a35a1b2e721`, tree
-  `702f0138c468a8ddbcb7356e510818f5be6b612a`. That handoff changes exactly the
-  launcher, answered jtolds/gls evaluation archive, then-NEXT jtolds/gls
-  decision archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal archive history,
+  `codex/upgrade-quality`, base master at `5635d50`. The httprouter evaluation
+  began from clean HEAD
+  `cffd78bb7eaee0b2bddf20b6b46a0d0d48d88d45`, parent
+  `ed0c8fd34461063f601a65117bc6da02109b407b`, tree
+  `464989d44ee9e9c9d10d9cdb33bd89d8e235796d`. That handoff changes exactly the
+  launcher, answered jtolds/gls decision archive, then-NEXT httprouter
+  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed sets, reciprocal archive history,
   latest Google UUID ancestry, exact Go identity, module hashes, target and
-  earlier guards, fresh advisory identities, and launcher check passed before
-  the decision.
+  earlier guards, fresh advisory identities, and launcher check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -26,7 +25,8 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The jtolds/gls decision/evaluation, go-junit-report decision/evaluation,
+- The httprouter evaluation, jtolds/gls decision/evaluation, go-junit-report
+  decision/evaluation,
   json-iterator decision/evaluation,
   clockwork decision/evaluation, demangle decision/evaluation, strcase
   decision/evaluation, integrated memberlist migration, memberlist ownership/
@@ -34,12 +34,14 @@ session diary.
   earlier archive are answered. Option 1 explicitly retains exact inherited,
   unloaded jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
   json-iterator v1.1.12, and clockwork v0.1.0 under separate target-specific
-  exceptions; none is qualified and no implementation was retained. The sole
-  NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T173946+0200-evaluate-julienschmidt-httprouter-dependency.md`.
-  It evaluates only selected exact-path
-  `github.com/julienschmidt/httprouter v1.2.0`. It must preserve every retained
-  decision and guard, may not manufacture a direct root or parent change,
+  exceptions; none is qualified and no implementation was retained. Stable
+  httprouter v1.3.0 qualifies, but no genuine owner can select it within the
+  authorized scope and selected v1.2.0 is unqualified. The sole NEXT archive
+  is
+  `docs/plan/agent-sessions/2026-09-21T182343+0200-decide-julienschmidt-httprouter-product-direction.md`.
+  It chooses only explicit guarded v1.2.0 retention, one measurement-only
+  owning-parent/request study, or an unresolved P7 stop. It may not repeat
+  completed fixtures, manufacture a direct root, implement a parent change,
   combine another group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
@@ -48,17 +50,94 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 selected option 1 after the jtolds/gls evaluation:
-exact inherited/unloaded v4.20.0+incompatible is explicitly retained only
-under its jtolds/gls-specific, non-transferable exception and remains
-unqualified. P7 now continues with one bounded evaluation of selected exact-
-path julienschmidt/httprouter v1.2.0. Product source and dependency metadata
-remain unchanged. Exact inherited/unloaded go-junit-report v0.9.1,
+P2A-P6 are complete. P7 is blocked on one bounded httprouter product decision.
+Stable exact-path v1.3.0 is qualified, but the only direct projection
+manufactures target ownership and tidy removes it; selected inherited/unloaded
+v1.2.0 remains unqualified because ordinary Unicode lookup tests fail.
+Product source and dependency metadata remain unchanged. Exact inherited/
+unloaded jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
 json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
 own target-specific exceptions and are not qualified. Exact Go 1.26.7, every
 accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
 P8 remains queued.
+
+## Julienschmidt Httprouter Evaluation
+
+Stable exact-path v1.3.0 is the highest and only qualified release. Fresh
+`go-import` resolves without redirect to the public, active, unarchived,
+non-fork BSD-3-Clause repository. The proxy and GitHub expose exactly stable
+v1.0.0-v1.3.0. Their lightweight unsigned tags form one ancestry; proxy/Git
+regular files and sumdb identities agree. There is no retraction, deprecation,
+replacement, `/v2` module, later stable, or prerelease. Alternate `gopkg.in`,
+branch, and unreleased-master identities were not promoted.
+
+Each release has one package and a standard-library-only complete production/
+test closure. V1.0.0-v1.2.0 use synthesized proxy module files; v1.3.0 declares
+the exact path and `go 1.7`. Both exact SDKs resolve all build-tag branches and
+compile test binaries for six targets. There are no commands, external module
+requirements, examples, fuzz targets, testdata, generated files, cgo, embeds,
+symlinks, subprocesses, or production external boundaries.
+
+V1.0.0/v1.1.0 fail old upstream not-found expectations because the default
+router redirects ordinary correctable paths. Selected v1.2.0 fails its own
+ordinary multibyte Unicode case-insensitive route tests under exact Go 1.26.7
+and Go 1.18.10 at count one and count ten. V1.3.0 fixes that behavior, empty
+registration paths, wildcard conflicts, parameter counts, and deterministic
+allowed methods. Its upstream count-one/repeats/race/vet pass under both SDKs.
+
+V1.3.0 is API-compatible with v1.2.0 and adds only `Router.GlobalOPTIONS`. A
+bounded ordinary fixture passes method registration/matching, named/catch-all
+params, lookup/context ownership, redirects and Unicode fixed paths,
+deterministic OPTIONS/405, custom hooks, in-memory file serving, cleaning,
+documented registration panics, and concurrent read-only serving under both
+SDKs. Lookup/context outputs are independently owned; request URL rewrites are
+the documented redirect/file-server boundary. Router/configuration mutation is
+unsynchronized caller-owned construction state; concurrent serving after
+construction is race-free.
+
+MVS selects exact v1.2.0 through Prometheus common v0.9.1 and historical
+v0.4.1 requests. The shortest genuine route is main -> direct/imported/loaded
+mvn-pom-mutator v0.2.3 -> Viper v1.10.1 -> go-metrics v0.3.10 -> Prometheus
+common v0.9.1 -> target; the historical v0.4.1 route passes through
+client_golang v1.0.0. Target why and repository imports are negative/zero, and
+production, complete-test, and runtime loads contain no target package.
+
+A disposable exact v1.3.0 get changes only target selection but necessarily
+adds a main-module indirect root. It retains 234 modules, yields 3,600 edges,
+355/429 loads, 197 module-backed complete-test entries across 41 modules, and
+1,069 sums, with every earlier guard exact and zero target load. Exact-Go
+verify/build/repeats/race/vet, API/CLI/surface, five project cross-builds, and
+all four host acceptance stages pass. Tidy removes the root and v1.3.0 sums,
+reselects inherited v1.2.0, and converges byte-for-byte with the common
+52/948-line projection. The direct edge is therefore a prohibited manufactured
+owner, no genuine supported tidy-stable owner was found, and no projection or
+dependency commit was retained.
+
+Fresh exact/package OSV, GitHub global/repository, and pinned govulncheck
+module/package/symbol/test-symbol evidence is empty for all four releases.
+Base and v1.3.0 project populations are identical at 30/22/20/20 without a
+target trace. The 1,402-record Go-index identity, only recorded Gorilla/
+go-retryablehttp guard pairs, PUBLISHED memberlist CNA bytes, all 30 earlier
+selections/214 edges, negative guarded why/import/load results, module hashes,
+tidy projection, and every earlier decision remain exact.
+
+P7 stops for the reciprocal bounded product decision. Option 1 recommends
+explicitly retaining exact inherited, unloaded, unqualified v1.2.0 under a
+target-specific non-transferable exception bounded by the completed findings,
+two requests, genuine owner route, zero loading, exact project/guard/advisory
+state, and absence of a new genuine route to qualified v1.3.0. Option 2 permits
+one measurement-only owning-parent/request study. Option 3 stops P7 unresolved.
+No option may repeat the completed fixtures, add a direct target root,
+implement a parent change in the decision turn, transfer another exception,
+or begin P8.
+
+Final unchanged-project exact-Go module verification, build, count-one tests,
+race tests, and vet pass. The reciprocal 244-archive chain, single NEXT state,
+launcher/archive prompt mirror, and diff checks pass. No changed-selection
+scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+Task-owned httprouter evidence was confined to
+`${CODEX_SESSION_SCRATCH_ROOT:?}` and removed before handoff.
 
 ## Jtolds GLS Evaluation And Decision
 
@@ -3327,13 +3406,13 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate selected exact-path `github.com/julienschmidt/httprouter v1.2.0` as
-one bounded P7 dependency group. Independently resolve its repository and
-stable-release identity, complete Go 1.18 production/test closure, exported
-HTTP-routing API and ordinary behavior, genuine MVS ownership and loading,
-project effects, and vulnerability evidence. Select only a qualified exact-
-path stable release; otherwise leave source and dependency metadata unchanged
-and stop for one fresh product decision. Preserve the jtolds/gls exception and
-every earlier decision exactly. Do not manufacture a direct root or parent
-change, transfer an exception, combine another group, or begin P8. Keep every
-disposable beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.
+Make one documentation-only product decision for selected exact-path
+`github.com/julienschmidt/httprouter v1.2.0` using the completed evaluation.
+Choose exact guarded v1.2.0 retention, one measurement-only owning-parent/
+request study, or an explicit unresolved P7 stop. Stable v1.3.0 is qualified
+but has no genuine tidy-stable selection route; a direct indirect root is a
+prohibited manufactured owner. Preserve the jtolds/gls exception and every
+earlier decision exactly. Do not repeat completed fixtures, add a direct target
+root, implement a parent change, transfer an exception, evaluate another group
+in the decision turn, or begin P8. Keep every disposable beneath
+`${CODEX_SESSION_SCRATCH_ROOT:?}`.

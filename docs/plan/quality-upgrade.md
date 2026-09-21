@@ -5374,8 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on one bounded evaluation of selected exact-path
-`github.com/julienschmidt/httprouter v1.2.0`. Exact inherited/unloaded
+Status: blocked on one bounded product decision for selected exact-path
+`github.com/julienschmidt/httprouter v1.2.0`. Stable v1.3.0 qualifies but has
+no authorized genuine selection route; selected v1.2.0 remains unqualified.
+Exact inherited/unloaded
 jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1, json-iterator v1.1.12,
 and clockwork v0.1.0 remain separately retained and unqualified under their
 own target-specific non-transferable exceptions. Earlier demangle, strcase,
@@ -12495,6 +12497,69 @@ Jtolds GLS product decision (2026-09-21):
   exception and every earlier guard, evaluate no other group, and stop for a
   fresh product decision if no exact-path stable release qualifies or any
   guard changes. P8 remains queued.
+
+Julienschmidt Httprouter evaluation and blocked ownership boundary
+(2026-09-21):
+
+- Stable exact-path v1.3.0 is the highest and only qualified release. Fresh
+  exact-path identity resolves the public active unarchived non-fork
+  BSD-3-Clause repository and exactly four stable releases v1.0.0-v1.3.0.
+  Their lightweight unsigned tags form one ancestry; proxy/Git/sumdb identity
+  agrees. There is no retraction, deprecation, replacement, `/v2` module,
+  later stable, or prerelease. Alternate `gopkg.in`, branch, and unreleased
+  master identities were not promoted.
+- Every release has one package and a standard-library-only complete closure.
+  V1.0.0-v1.2.0 use proxy-synthesized module files; v1.3.0 declares the exact
+  path and `go 1.7`. Exact Go 1.26.7 and Go 1.18.10 resolve all build-tag
+  branches and cross-compile test binaries for six targets. There are no
+  commands, external module requirements, examples, fuzz targets, testdata,
+  generated files, cgo, embeds, symlinks, subprocesses, or production
+  external boundaries.
+- V1.0.0/v1.1.0 fail obsolete upstream not-found expectations for ordinary
+  default redirects. Selected v1.2.0 fails its upstream multibyte Unicode
+  case-insensitive lookup tests under both SDKs at count one and count ten and
+  is unqualified. V1.3.0 fixes that behavior, empty registration paths,
+  wildcard conflicts, parameter counts, and deterministic allowed methods;
+  its upstream count-one/repeats/race/vet pass under both SDKs.
+- V1.3.0 is exported-API compatible with v1.2.0 and adds only
+  `Router.GlobalOPTIONS`. A bounded ordinary fixture passes registration,
+  matching, params, lookup/context ownership, redirects and Unicode fixed
+  paths, deterministic OPTIONS/405, hooks, in-memory file serving, cleaning,
+  documented panics, and concurrent read-only serving under both SDKs.
+  Callers must complete unsynchronized router/configuration mutation before
+  concurrent serving.
+- Baseline MVS selects v1.2.0 only from Prometheus common v0.9.1 and historical
+  v0.4.1 requests. The genuine shortest route begins at direct/imported/loaded
+  mvn-pom-mutator v0.2.3 through Viper v1.10.1, go-metrics v0.3.10, and common
+  v0.9.1. Target why/import/production/test/runtime loads are negative or
+  zero.
+- A disposable exact v1.3.0 get necessarily manufactures a main-module
+  indirect root. It changes only target selection, yields 234 modules/3,600
+  edges/1,069 sums while preserving 355/429/197/41 loads and every guard, and
+  passes exact-Go verify/build/repeats/race/vet, API/CLI/surface, five cross-
+  builds, and all four host acceptance stages. Tidy deletes the root and new
+  sums, reselects v1.2.0, and converges byte-for-byte with the common baseline
+  projection. No genuine supported tidy-stable v1.3.0 owner was found, so the
+  mission's direct-root prohibition prevents implementation. No projection
+  was retained and no dependency commit exists.
+- Fresh exact/package OSV, GitHub global/repository, Go-index, and pinned
+  govulncheck evidence is empty for every release. Base and v1.3.0 project
+  populations remain identical at 30/22/20/20 without a target trace. The
+  1,402-record index hash, only recorded Gorilla/retryablehttp guard pairs,
+  PUBLISHED memberlist CNA bytes, all 30 earlier selections/214 edges,
+  negative guarded why/import/load results, project hashes/state, and every
+  earlier decision remain exact.
+- Product source and dependency metadata remain unchanged. P7 stops for one
+  reciprocal bounded product decision: explicitly retain exact inherited,
+  unloaded, unqualified v1.2.0 under a target-specific exception; authorize
+  one measurement-only owning-parent/request study; or stop P7 unresolved.
+  It may not repeat the completed fixtures, add a direct target root,
+  implement a parent change, transfer an exception, combine another group, or
+  begin P8.
+- Final unchanged-project exact-Go verify/build/count-one/race/vet,
+  reciprocal 244-archive launcher validation, diff checks, and contained
+  scratch cleanup pass. No changed-selection scorecard applies; accepted
+  quality remains 27/27 Q0-Q2 PASS at L2.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
