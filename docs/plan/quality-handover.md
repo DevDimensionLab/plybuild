@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T12:03:39+02:00
+Generated: 2026-09-21T12:52:24+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,14 +8,14 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The demangle product
-  decision began from clean handoff HEAD
-  `050c47a6892944d63d189c036ba71c98046a4995`, parent
-  `de47934efeb7527a91e49f3f5b62b012e42e51fb`, tree
-  `fb1f0bd3758bca1d4d373b83772026563ee2fbcf`. That commit changed exactly the
-  launcher, answered demangle evaluation archive, then-NEXT demangle decision
+  `codex/upgrade-quality`, base master at `5635d50`. The clockwork evaluation
+  began from clean handoff HEAD
+  `bb38c462f977e001b46b6b7deb4a6c30fd5931ee`, parent
+  `050c47a6892944d63d189c036ba71c98046a4995`, tree
+  `a6798b8fff776cf4fc61265453f0760e31aadd7c`. That commit changed exactly the
+  launcher, answered demangle decision archive, then-NEXT clockwork evaluation
   archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 234-archive history, latest Google
+  ancestry, exact changed set, reciprocal 235-archive history, latest Google
   UUID ancestry, exact Go identity, and launcher check passed before execution.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
@@ -24,18 +24,18 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The demangle decision/evaluation, strcase decision/evaluation, integrated
-  memberlist migration, memberlist ownership/final-direction decisions, Serf
-  study, memberlist evaluation, and every earlier archive are answered. No
-  demangle exact-path candidate qualifies and no implementation was retained.
-  Option 1 now explicitly retains exact inherited and unloaded selected
-  demangle under a target-specific non-transferable exception. The sole NEXT
-  archive is
-  `docs/plan/agent-sessions/2026-09-21T120339+0200-evaluate-jonboulle-clockwork-dependency.md`.
-  It evaluates only exact-path `github.com/jonboulle/clockwork v0.1.0` as the
-  next bounded P7 group. It may not transfer an earlier exception, alter
-  demangle, pprof, mvn-pom-mutator, or another guard, combine another group,
-  write disposable evidence outside the managed scratch root, or begin P8.
+- The clockwork evaluation, demangle decision/evaluation, strcase decision/
+  evaluation, integrated memberlist migration, memberlist ownership/final-
+  direction decisions, Serf study, memberlist evaluation, and every earlier
+  archive are answered. No exact-path clockwork release qualifies and no
+  implementation was retained. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T125224+0200-decide-jonboulle-clockwork-product-direction.md`.
+  It makes only one documentation-only clockwork product decision among
+  guarded exact-v0.1.0 retention, a separate measurement-only parent/request
+  study, or an explicit unresolved stop. It may not repeat failures, add a
+  direct root, select v0.4.0/v0.5.0, raise the Go floor, alter
+  mvn-pom-mutator, transfer an exception, combine another group, write outside
+  the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -43,15 +43,14 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the demangle evaluation and option-1
-product decision after the strcase decision and final memberlist ownership
-decision. No exact-path demangle candidate qualifies, no implementation was
-retained, and exact selected inherited/unloaded demangle is now explicit only
-under its target-specific non-transferable exception. P7 continues with the
-single bounded clockwork evaluation. Exact Go 1.26.7, every accepted dependency
-move through Google UUID v1.4.0, qualified go-cleanhttp, and all earlier
-retained-module decisions remain final under their separate guards. P8 remains
-queued.
+P2A-P6 are complete. P7 has completed the clockwork evaluation after the
+demangle evaluation/option-1 decision, strcase decision, and final memberlist
+ownership decision. No exact-path clockwork release qualifies, no
+implementation was retained, and selected inherited/unloaded v0.1.0 remains
+unqualified and unaccepted pending the single bounded product decision. Exact
+Go 1.26.7, every accepted dependency move through Google UUID v1.4.0,
+qualified go-cleanhttp, and all earlier retained-module decisions remain final
+under their separate guards. P8 remains queued.
 
 The demangle option-1 decision retains exact selected, inherited and unloaded
 `v0.0.0-20200824232613-28f6c0f3b639` without changing product source,
@@ -2607,13 +2606,108 @@ and GitHub advisory results remain empty; the Go index, guard OSV pairs, and
 memberlist CNA identity remain exact. No parser, crash, parent-route, security,
 or exploitability work was repeated.
 
-P7 continues only with the bounded evaluation of selected exact-path
-`github.com/jonboulle/clockwork v0.1.0`. Current queue observations are its
-sole historical `mvn-pom-mutator v0.2.3` request, negative why, zero repository
-imports, and zero production/complete-test package loads. These observations
-are not qualification. The evaluation must preserve demangle, pprof, every
-earlier guard, the parent, and the Go floor; it may not manufacture ownership,
-combine another group, or begin P8.
+The bounded clockwork evaluation below is complete. It preserved demangle,
+pprof, every earlier guard, the parent, and the Go floor; manufactured no
+ownership; and stopped for the sole reciprocal product decision.
+
+## Jonboulle Clockwork Evaluation
+
+No exact-path stable release qualifies. Fresh `go-import` metadata resolves
+without redirect to the active, unarchived, non-fork Apache-2.0 repository.
+It has eight stable tags v0.1.0-v0.5.0 on one ancestry, no prerelease,
+retraction, deprecation, replacement, alternate exact path, or `/v2`/`/v3`
+module. Current `master` equals latest stable v0.5.0. Proxy/Git regular files
+and sumdb identities agree for all releases.
+
+Selected signed annotated v0.1.0 is commit
+`2eee05ed794112d45db504eb05aa693efd2b8b09`, tree
+`5c5480651ee9ae223f9e2162259193a749959ff0`; it has no GitHub Release object
+but is a genuine stable tag. Highest Go-1.18-compatible signed v0.4.0 is
+verified commit `606c48b92358fcca153952b56fb0d14d6845f84a`, tree
+`62a83ac76f920885df232b1810e130d90e1c163d`. Latest signed v0.5.0 is
+verified commit `6d8d032a18422c2e3ef651170a8a55012d1f704c`, tree
+`e779d8f8df5949f48661af79961cd1221aca4d3e`. The Apache-2.0 license is
+byte-identical across all eight releases.
+
+V0.1.0 has a synthesized module-only `go.mod`; v0.2.0-v0.3.0 declare Go 1.13
+and v0.4.0 declares Go 1.15. Their standard-library-only source/test module
+closures preserve Go 1.18 and pass upstream native/count-ten/race-count-ten/
+vet under exact Go 1.26.7 and contained Go 1.18.10. Serious candidates also
+cross-compile for linux/amd64, linux/arm64, windows/amd64, freebsd/amd64, and
+js/wasm. V0.5.0 declares Go 1.21 and imports `slices`, so contained Go 1.18.10
+cannot compile it. Its exact-Go count-one, race-count-one, and vet pass; a
+count-ten run exposes a scheduling-dependent upstream delivery-order test
+flaw caused by expecting a later event after documented one-slot ticker drops.
+
+The repository contains one library package and no command, cgo, generated
+source, build tag, platform branch, embedded/external resource, testdata,
+benchmark, fuzz target, or actual example function. Real clocks delegate to
+`time`. Fake clocks serialize clock/waiter state, sort expirations, use
+one-slot nonblocking channels, launch AfterFunc callbacks separately, and
+require caller ownership of Advance, Stop, Cancel, callbacks, and contexts.
+Positive timer/ticker/AfterFunc and 64-concurrent-waiter fixtures pass race
+count-ten under the eligible SDKs.
+
+Selected v0.1.0 fails ordinary parity: fake `After(-time.Second)` registers a
+waiter instead of firing immediately, and exact-count BlockUntil can miss a
+skipped count. V0.2.0-v0.3.0 add fake tickers without rejecting non-positive
+periods. Highest compatible v0.4.0 fails four deterministic contracts under
+both SDKs: Reset retains the old interval, appends a duplicate schedule,
+Reset-then-Stop still fires, and NewTicker/Reset accept non-positive values.
+V0.5.0 validates NewTicker and updates the reset period but still duplicates
+the schedule, still fires after Reset-then-Stop, and still accepts non-positive
+Reset values. Its context Err blocks before Done, Cancel retains the deadline
+timer as a fake-clock waiter, and parent DeadlineExceeded behavior contradicts
+its documentation.
+
+Pinned apidiff records interface-method additions from v0.1.0 through v0.4.0.
+V0.5.0 separately breaks the exported API by changing `FakeClock` from an
+interface to a struct pointer, changing both constructor return types, and
+expanding `Clock`; it compatibly adds Until and fake-clock deadline helpers.
+Neither those additions nor its behavior fixes overcome the Go 1.21 floor and
+remaining defects.
+
+MVS selects exact v0.1.0 solely through
+`github.com/devdimensionlab/mvn-pom-mutator@v0.2.3 ->
+github.com/jonboulle/clockwork@v0.1.0`. The POM parent is genuinely imported
+and loaded; clockwork has no direct root, negative why, zero repository
+imports, and zero production/complete-test loads. A disposable v0.4.0 root
+retains 234 modules, produces 3,600 graph edges and 1,069 sum lines, adds one
+target edge, retains zero target loads, and passes exact-Go project verify,
+build, count-one, race, and vet. Tidy removes the manufactured root, restores
+v0.1.0, and returns the common baseline tidy hashes
+`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+A disposable v0.5.0 root raises the main directive to Go 1.21 and yields
+234/3,602/1,069 while remaining unloaded; its exact-Go project gate passes,
+but the floor is unauthorized. Tidy removes its root and restores v0.1.0 while
+conservatively retaining Go 1.21. No projection was applied.
+
+Fresh v0.1.0/v0.4.0/v0.5.0 OSV, GitHub global/repository, Go-index lookup, and
+isolated govulncheck module/package/symbol/test-symbol evidence is empty. Base
+and both projections have identical normalized 30/22/20/20 project findings
+and no clockwork trace. The Go index remains 1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. Guard OSV retains only the recorded
+Gorilla and retryablehttp pairs. The PUBLISHED memberlist CNA response remains
+2,807 bytes at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+
+All 26 earlier guarded selections and 180 recorded incoming edges remain exact
+at snapshot SHA-256
+`8f39e82800e0abf94ae419186614a2cf709759192aba2614603dbf578ef64121`.
+All 27 clockwork-plus-guarded why results are negative and guarded imports/
+loads remain zero. Project hashes, the 234/3,599/355/429/197/41/1,067 base,
+the 432-line tidy projection, and every earlier decision remain unchanged.
+
+Selected v0.1.0 remains stable, inherited, and unloaded but is not qualified
+or accepted. P7 stops for the sole documentation-only product decision:
+explicit target-specific guarded retention, one separate measurement-only
+parent/request study, or an unresolved stop. The decision may not repeat the
+failures, add a direct root, select v0.4.0/v0.5.0, raise the floor, alter
+mvn-pom-mutator or another guard, implement a POM route, combine another
+group, or begin P8. Every task-owned disposable stayed beneath the exact
+managed `${CODEX_SESSION_SCRATCH_ROOT:?}` and was removed before handoff.
 
 ## Project And Quality State
 
@@ -2857,13 +2951,13 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Evaluate selected exact-path `github.com/jonboulle/clockwork v0.1.0` as one
-bounded P7 dependency group. Independently resolve repository/release identity,
-complete Go-floor closure, API and ordinary clock behavior, MVS/loading,
-vulnerability, and every applicable contract. Select only a qualified exact-
-path stable release preserving Go 1.18; otherwise leave metadata unchanged and
-stop for one fresh bounded product decision. Preserve the demangle exception,
-pprof, mvn-pom-mutator, and every earlier guard; do not combine another group or
-begin P8. Keep every disposable beneath
-`${CODEX_SESSION_SCRATCH_ROOT:?}` and prepare only the reciprocal successor
-authorized by that result.
+Make exactly one documentation-only product decision for exact-path
+`github.com/jonboulle/clockwork`: explicitly retain exact selected inherited
+unloaded v0.1.0 under a target-specific non-transferable exception for only the
+completed findings; authorize one separate measurement-only owning-parent/
+request study; or stop P7 with clockwork unresolved and unaccepted. Reuse the
+completed evaluation and do not repeat behavior failures, add a direct root,
+select v0.4.0/v0.5.0, raise the Go floor, alter mvn-pom-mutator or an earlier
+guard, implement a parent/POM route, evaluate another dependency group, or
+begin P8. Keep every disposable beneath `${CODEX_SESSION_SCRATCH_ROOT:?}` and
+prepare only the reciprocal successor authorized by that decision.

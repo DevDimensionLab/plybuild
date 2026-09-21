@@ -12052,6 +12052,69 @@ Ianlancetaylor demangle product decision (2026-09-21):
   pass. No dependency implementation or changed-selection scorecard applies;
   accepted quality remains 27/27 Q0-Q2 PASS at L2.
 
+Jonboulle clockwork evaluation (2026-09-21):
+
+- No exact-path stable release qualifies. The active public unarchived
+  non-fork Apache-2.0 repository exposes eight stable tags v0.1.0-v0.5.0 on
+  one linear ancestry, no prerelease, retraction, deprecation, replacement,
+  redirect, alternate path, or `/v2`/`/v3` module. Selected signed annotated
+  v0.1.0 is commit `2eee05ed794112d45db504eb05aa693efd2b8b09`;
+  highest Go-1.18-compatible signed v0.4.0 is commit
+  `606c48b92358fcca153952b56fb0d14d6845f84a`; latest/current signed v0.5.0
+  is commit `6d8d032a18422c2e3ef651170a8a55012d1f704c`. Proxy/Git regular
+  files and sumdb identities agree.
+- V0.1.0 has a synthesized module-only `go.mod`; v0.2.0-v0.3.0 declare Go
+  1.13 and v0.4.0 declares Go 1.15. Their standard-library-only source/test
+  closures preserve Go 1.18 and pass upstream native/repeat/race/vet checks
+  under exact Go 1.26.7 and contained Go 1.18.10. Serious versions also pass
+  linux/amd64, linux/arm64, windows/amd64, freebsd/amd64, and js/wasm cross-
+  compilation. V0.5.0 declares Go 1.21 and imports `slices`, so Go 1.18.10
+  cannot compile it.
+- The target is one library package with no command, cgo, generated file,
+  build tag, platform branch, external resource, testdata, benchmark, fuzz
+  target, or actual example function. V0.1.0 exports only the basic real/fake
+  clock surface; v0.2-v0.4 add ticker, context injection, timer/AfterFunc,
+  cancellable blocking, and reset. V0.5.0 incompatibly changes `FakeClock`
+  from interface to struct pointer and both constructor return types while
+  adding Until and fake-clock deadline contexts.
+- Selected v0.1.0 fails ordinary parity because fake `After` does not fire
+  immediately for negative durations; exact-count BlockUntil can also miss a
+  skipped waiter count. V0.2.0-v0.3.0 fake tickers do not reject non-positive
+  periods. Highest compatible v0.4.0 fails four deterministic contracts: reset
+  retains its old period, reset appends a duplicate schedule, Reset-then-Stop
+  still fires, and NewTicker/Reset accept non-positive values. V0.5.0 retains
+  the duplicate/Stop defect and Reset validation defect; its Context.Err
+  blocks before Done, Cancel retains its deadline waiter, and parent deadline
+  handling contradicts its documentation. Its count-ten upstream delivery-
+  order test also has a scheduling-dependent expectation incompatible with
+  documented one-slot ticker drops. Positive timer/ticker/AfterFunc and 64-
+  waiter race fixtures otherwise pass.
+- MVS selects exact v0.1.0 only through
+  `mvn-pom-mutator@v0.2.3 -> clockwork@v0.1.0`. The POM parent is genuinely
+  imported/loaded, but clockwork has no direct root, negative why, zero source
+  imports, and zero production/complete-test loads. A disposable v0.4.0 root
+  yields 234 modules/3,600 edges/1,069 sums; v0.5.0 yields
+  234/3,602/1,069 and raises the main directive to Go 1.21. Both remain
+  unloaded and pass the exact-Go project gate. Tidy removes either manufactured
+  root and restores selected v0.1.0; v0.4.0 returns common baseline tidy hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+- Fresh exact candidate OSV/GitHub feeds, Go-index lookup, and isolated
+  govulncheck module/package/symbol/test-symbol scans are empty. Base and both
+  projections have identical 30/22/20/20 project scan populations and no
+  clockwork trace. The 1,402-record Go index, only recorded Gorilla and
+  retryablehttp guard pairs, and PUBLISHED memberlist CNA bytes remain exact.
+  All 26 earlier guarded selections/180 recorded edges, 27 negative target-
+  plus-guarded why results, zero guarded imports/loads, project hashes, and
+  earlier decisions remain unchanged.
+- Product source and dependency metadata remain unchanged. No changed-
+  selection gate applies and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+  P7 stops for the sole reciprocal documentation-only clockwork decision:
+  target-specific guarded retention of exact unloaded v0.1.0, one separately
+  scoped measurement-only parent/request study, or an explicit unresolved
+  stop. Direct roots, v0.4.0/v0.5.0 selection, a floor raise, parent/POM or
+  earlier-guard changes, another dependency group, and P8 remain unauthorized.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
