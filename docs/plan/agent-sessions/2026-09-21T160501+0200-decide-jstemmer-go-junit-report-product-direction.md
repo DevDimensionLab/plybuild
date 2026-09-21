@@ -1,13 +1,13 @@
 # Agent Session: Decide Jstemmer Go JUnit Report Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-21T160501+0200-decide-jstemmer-go-junit-report-product-direction`
 Created: `2026-09-21T16:05:01+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `5736691c212e4c93b65e973ff505e92384a56c18bcb21df0a7ffd201c38ac915`
 Previous: [2026-09-21T143249+0200-evaluate-jstemmer-go-junit-report-dependency.md](2026-09-21T143249+0200-evaluate-jstemmer-go-junit-report-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-21T162538+0200-evaluate-jtolds-gls-dependency.md](2026-09-21T162538+0200-evaluate-jtolds-gls-dependency.md)
+Outcome: Selected option 1: explicitly retained exact inherited and unloaded v0.9.1 under a go-junit-report-specific non-transferable exception, left product and dependency metadata unchanged, and prepared one bounded jtolds/gls evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -204,3 +204,86 @@ release, stash, revert, bypass cleanup, remove the worktree, combine another
 dependency group, reopen json-iterator/clockwork/mvn-pom-mutator/demangle/
 pprof/strcase/memberlist work, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 was selected on 2026-09-21. Exact selected
+`github.com/jstemmer/go-junit-report v0.9.1` is explicitly retained as inherited
+and unloaded without changing product source, `go.mod`, or `go.sum`. The
+selection is not qualified. Zero loading bounds current exposure but did not
+qualify or silently authorize it.
+
+This go-junit-report-specific, non-transferable exception accepts only the
+completed ordinary destination-writer error, repository/archive, exact-path
+release and ancestry, exported parser/formatter API, command surface, bounded
+ordinary behavior, deterministic rendering, caller ownership, output
+resource-lifecycle, Go-floor, MVS, loading, repeatability, vulnerability, and
+related evaluation findings. It accepts no uncharacterized behavior, newly
+discovered defect, or future advisory. It does not promote the unreleased v1
+branch or a pseudo-version, select the different `/v2` module path, describe
+v0.9.1 as qualified, or transfer another target's exception.
+
+The exception remains valid only while all of these facts remain exact:
+
+- selected `github.com/jstemmer/go-junit-report v0.9.1`;
+- all 25 historical requests and their genuine parent identities:
+  `cloud.google.com/go@v0.38.0`, `@v0.44.1`, `@v0.44.2`, `@v0.44.3`,
+  `@v0.45.1`, `@v0.46.3`, and `@v0.50.0` request
+  `v0.0.0-20190106144839-af01ea7f8024`; `cloud.google.com/go@v0.52.0`,
+  `@v0.53.0`, `@v0.54.0`, `@v0.56.0`, `@v0.57.0`, `@v0.62.0`, `@v0.65.0`,
+  `@v0.72.0`, `@v0.74.0`, `@v0.75.0`, `@v0.78.0`, `@v0.79.0`, `@v0.81.0`,
+  `@v0.83.0`, `@v0.84.0`, `@v0.87.0`, and `@v0.90.0` plus
+  `cloud.google.com/go/storage@v1.5.0` request v0.9.1;
+- no direct target root, negative target why, zero repository imports, zero
+  production or complete-test package loads, and no runtime reachability;
+- 234 modules, 3,599 graph edges, 355 production entries, 429 complete-test
+  entries, 197 module-backed complete-test entries across 41 modules, 1,067
+  sum lines, and the exact 432-line tidy projection;
+- `go.mod`/`go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+- every earlier target-specific guard, including the 28-selection/188-edge
+  snapshot SHA-256
+  `ca6a8b9d4a0d4aa5c6c436d9edeb27cf6d603e36e29edccef9bc2d9d1b81622e`;
+- no new go-junit-report advisory or independently discovered defect, newly
+  qualified exact-path stable release, genuine supported tidy-stable owner, or
+  compatible qualified route.
+
+Any target, request, parent, ownership, root, import, load, runtime, graph,
+module-hash, tidy, earlier-guard, advisory, finding, release, owner, or route
+change expires the exception and requires a fresh go-junit-report dependency
+and product decision before merge. The decision authorizes no owning-parent
+study, direct root, workaround, parent change, Go-floor change, unrelated
+selection, or implementation.
+
+Guard-only revalidation began from clean handoff HEAD
+`efbe47116c0c56a5a0f7bbf67133d49312286846`, parent
+`5946d0958a1538bdea281bb66c59647d0e1a2824`, tree
+`ed26c4945de0f1be4ba20d46fbf94bb538a2a985`. Its exact five-file change,
+reciprocal 240-archive chain, latest Google UUID implementation ancestry, exact
+Go 1.26.7 identity with binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`, and
+launcher check passed. The 25 requests are unchanged; all 29 target-plus-
+earlier why results remain negative, repository imports and production/
+complete-test loads remain zero, and the earlier 188-edge snapshot reproduces
+its exact hash. Including go-junit-report now yields 29 guarded selections and
+213 incoming edges at sorted snapshot SHA-256
+`5d2a35a2961c04eb07dd927afc072e77f555d87c7317579ddda486bf128d2c93`.
+
+Fresh stable/v1-branch OSV and GitHub global/repository queries remain empty.
+The 1,402-record Go index remains byte-identical at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`;
+guard OSV retains only the recorded Gorilla/go-retryablehttp pairs, and the
+2,807-byte PUBLISHED memberlist CNA response remains exact at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+The 432-line tidy diff retains SHA-256
+`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`.
+
+The recorded writer-error fixture was not repeated, no option-2 study was run,
+and no source or dependency metadata changed. Final unchanged-project exact Go
+1.26.7 module verification, build, count-one tests, race tests, vet, reciprocal
+launcher/archive checks, and diff checks pass. Task-owned disposable evidence
+was confined to `${CODEX_SESSION_SCRATCH_ROOT:?}` and removed before handoff.
+P7 continues only with the reciprocal bounded evaluation of selected exact-path
+`github.com/jtolds/gls v4.20.0+incompatible`; that successor was prepared but
+not executed. P8 remains queued.

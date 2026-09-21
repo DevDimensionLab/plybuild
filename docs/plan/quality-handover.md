@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T16:09:30+02:00
+Generated: 2026-09-21T16:25:38+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,15 +9,16 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The go-junit-report
-  evaluation began from clean handoff HEAD
-  `5946d0958a1538bdea281bb66c59647d0e1a2824`, parent
-  `19c500237af16f658eb99951e56e042e0d3ea4ee`, tree
-  `dd70c74d68e652d0c5e8f1ab80d777c1809a28d6`. That commit changed exactly the
-  launcher, answered json-iterator decision archive, then-NEXT go-junit-report
-  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal 239-archive history,
-  latest Google UUID ancestry, exact Go identity, and launcher check passed
-  before execution.
+  decision began from clean handoff HEAD
+  `efbe47116c0c56a5a0f7bbf67133d49312286846`, parent
+  `5946d0958a1538bdea281bb66c59647d0e1a2824`, tree
+  `ed26c4945de0f1be4ba20d46fbf94bb538a2a985`. That commit changed exactly the
+  launcher, answered go-junit-report evaluation archive, then-NEXT go-junit-
+  report decision archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal 240-archive history,
+  latest Google UUID ancestry, exact Go identity, module hashes, target and
+  earlier guards, fresh advisory identities, and launcher check passed before
+  the decision.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -25,21 +26,19 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The go-junit-report evaluation, json-iterator decision/evaluation, clockwork
-  decision/evaluation, demangle decision/evaluation, strcase
+- The go-junit-report decision/evaluation, json-iterator decision/evaluation,
+  clockwork decision/evaluation, demangle decision/evaluation, strcase
   decision/evaluation, integrated memberlist migration, memberlist ownership/
   final-direction decisions, Serf study, memberlist evaluation, and every
   earlier archive are answered. Option 1 explicitly retains exact inherited,
-  unloaded json-iterator v1.1.12 and clockwork v0.1.0 under separate target-
-  specific exceptions; neither is qualified and no implementation was
-  retained. No exact-path stable go-junit-report release qualifies and no
+  unloaded go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0
+  under separate target-specific exceptions; none is qualified and no
   implementation was retained. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T160501+0200-decide-jstemmer-go-junit-report-product-direction.md`.
-  It makes only the bounded documentation decision for exact selected,
-  inherited, unloaded `github.com/jstemmer/go-junit-report v0.9.1`. It may not
-  repeat the writer-error fixture, implement a change, transfer an exception,
-  alter another guard or the Go floor, combine another group, write outside
-  the managed scratch root, or begin P8.
+  `docs/plan/agent-sessions/2026-09-21T162538+0200-evaluate-jtolds-gls-dependency.md`.
+  It evaluates only exact selected `github.com/jtolds/gls
+  v4.20.0+incompatible`. It may not alter goconvey or another parent, transfer
+  an exception, alter another guard or the Go floor, combine another group,
+  write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -47,16 +46,48 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the bounded go-junit-report evaluation
-after the json-iterator, clockwork, and demangle decisions, strcase decision,
-and final memberlist ownership decision. No exact-path stable go-junit-report
-release qualifies and no implementation was retained. Selected inherited/
-unloaded v0.9.1 is neither qualified nor accepted. Exact inherited/unloaded
-json-iterator v1.1.12 remains accepted only under its target-specific exception
-and is not qualified. Exact Go 1.26.7, every accepted dependency move through
-Google UUID v1.4.0, qualified go-cleanhttp, and all earlier retained-module
-decisions remain final under separate guards. P7 stops only for the prepared
-go-junit-report product decision; P8 remains queued.
+P2A-P6 are complete. P7 has selected option 1 for go-junit-report after its
+bounded evaluation: exact inherited/unloaded v0.9.1 is explicitly retained
+only under its target-specific non-transferable exception and is not
+qualified. Product source and dependency metadata remain unchanged. Exact
+inherited/unloaded json-iterator v1.1.12 remains accepted only under its own
+target-specific exception and is not qualified. Exact Go 1.26.7, every
+accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
+and all earlier retained-module decisions remain final under separate guards.
+P7 continues only with the prepared bounded jtolds/gls evaluation; P8 remains
+queued.
+
+The go-junit-report option-1 decision retains exact selected, inherited, and
+unloaded `github.com/jstemmer/go-junit-report v0.9.1` without changing product
+source, `go.mod`, or `go.sum`. It accepts only the completed ordinary
+destination-writer error, repository/archive and release identity, exported
+parser/formatter API, command surface, ordinary behavior, deterministic
+rendering, caller ownership, output resource-lifecycle, Go-floor, MVS,
+loading, repeatability, vulnerability, and related findings. It accepts no
+uncharacterized behavior, new advisory, or independent defect. V0.9.1 remains
+unqualified; zero current loading bounds exposure but did not itself qualify
+or silently authorize the selection.
+
+The go-junit-report exception remains valid only while exact v0.9.1; all 25
+historical Cloud Go/storage requests and genuine parent identities; no direct
+target root/import/load/runtime reachability; negative target why; the exact
+graph/module/tidy state and every earlier guard; and no new advisory,
+independent defect, qualified exact-path stable release, genuine supported
+tidy-stable owner, or compatible qualified route remain exact. Any target,
+request, parent, ownership, root, import, load, runtime, graph, module-hash,
+tidy, earlier-guard, advisory, finding, release, owner, or route change expires
+the exception and requires its fresh owning decision before merge. Including
+go-junit-report, all 29 guarded selections and 213 incoming edges retain sorted
+snapshot SHA-256
+`5d2a35a2961c04eb07dd927afc072e77f555d87c7317579ddda486bf128d2c93`.
+No exception transfers to jtolds/gls or another target.
+
+Final unchanged-project exact Go 1.26.7 module verification, build, canonical
+count-one tests, race tests, and vet pass. The reciprocal 241-archive chain,
+single NEXT state, launcher/archive prompt mirror, and diff checks pass. No
+changed-selection scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS
+at L2. Task-owned disposable evidence was confined to
+`${CODEX_SESSION_SCRATCH_ROOT:?}` and removed before handoff.
 
 The json-iterator option-1 decision retains exact selected, inherited, and
 unloaded `github.com/json-iterator/go v1.1.12` without changing product source,

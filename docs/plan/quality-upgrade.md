@@ -5374,15 +5374,14 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: blocked on one documentation-only product decision for exact selected,
-inherited and unloaded `github.com/json-iterator/go v1.1.12` after its bounded
-evaluation found no qualified exact-path stable release and retained no
-implementation. The option-1 clockwork decision and earlier demangle,
+Status: active on one bounded evaluation of selected exact-path
+`github.com/jtolds/gls v4.20.0+incompatible` after the go-junit-report option-1
+decision. Exact inherited/unloaded go-junit-report v0.9.1, json-iterator
+v1.1.12, and clockwork v0.1.0 remain separately retained and unqualified under
+their own target-specific non-transferable exceptions. Earlier demangle,
 strcase, and affected/not-secure memberlist decisions remain separate under
-their own target-specific non-transferable guards. Completed dependency groups
-remain final through accepted Google UUID v1.4.0, qualified go-cleanhttp
-v0.5.2, and every retained-module decision through clockwork. P8 remains
-queued.
+their own guards. Completed dependency groups remain final through accepted
+Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -12331,6 +12330,62 @@ Jstemmer Go JUnit Report evaluation (2026-09-21):
   parent/request study, or stop P7 unresolved. It may not add a direct root,
   promote a branch/pseudo-version, select `/v2`, transfer an exception, combine
   another dependency group, or begin P8.
+
+Jstemmer Go JUnit Report product decision (2026-09-21):
+
+- Selected option 1. Retain exact selected, inherited, unloaded
+  `github.com/jstemmer/go-junit-report v0.9.1` without changing product source,
+  `go.mod`, or `go.sum`. The selection is not qualified. Zero loading bounds
+  current exposure but did not qualify or silently authorize it.
+- The go-junit-report-specific, non-transferable exception accepts only the
+  completed ordinary destination-writer error, repository/archive and exact-
+  path release identity, exported parser/formatter API, command surface,
+  bounded ordinary behavior, deterministic rendering, caller ownership,
+  output resource-lifecycle, Go-floor, MVS, loading, repeatability,
+  vulnerability, and related findings. It accepts no uncharacterized behavior,
+  new advisory, or independently discovered defect; it does not promote the
+  unreleased v1 branch/pseudo-version, select `/v2`, or transfer another
+  exception.
+- The exception is owned by exact v0.9.1 and all 25 historical requests with
+  their genuine parent identities: Cloud Go v0.38.0, v0.44.1-v0.44.3,
+  v0.45.1, v0.46.3, and v0.50.0 request the older pseudo-version; Cloud Go
+  v0.52.0, v0.53.0, v0.54.0, v0.56.0, v0.57.0, v0.62.0, v0.65.0, v0.72.0,
+  v0.74.0, v0.75.0, v0.78.0, v0.79.0, v0.81.0, v0.83.0, v0.84.0, v0.87.0,
+  and v0.90.0 plus Cloud Storage v1.5.0 request v0.9.1.
+- Its guards require no direct root, negative target why, zero repository
+  imports, zero production/complete-test loads, no runtime reachability, the
+  exact 234-module/3,599-edge/1,067-sum and 355/429/197/41 load state, the
+  exact real module hashes and 432-line tidy projection, every earlier guard,
+  and no new advisory, independent defect, qualified exact-path stable release,
+  genuine supported tidy-stable owner, or compatible qualified route. Any
+  target, request, parent, ownership, root, import, load, runtime, graph,
+  module-hash, tidy, earlier-guard, advisory, finding, release, owner, or route
+  change expires the exception and requires its fresh owning decision before
+  merge.
+- Guard-only revalidation from clean handoff HEAD `efbe471`, parent `5946d09`,
+  tree `ed26c49`, preserved the exact five-file handoff, reciprocal archive
+  chain, Google UUID implementation ancestry, exact Go 1.26.7 identity, module
+  hashes, all 25 requests, and launcher check. All 29 target-plus-earlier why
+  results are negative and guarded imports/loads are zero. The earlier 28-
+  selection/188-edge snapshot remains exact at
+  `ca6a8b9d4a0d4aa5c6c436d9edeb27cf6d603e36e29edccef9bc2d9d1b81622e`;
+  including go-junit-report yields 29 selections/213 edges at
+  `5d2a35a2961c04eb07dd927afc072e77f555d87c7317579ddda486bf128d2c93`.
+- Fresh stable/v1-branch OSV and GitHub global/repository results remain empty.
+  The 1,402-record Go index remains byte-identical at
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`;
+  guard OSV retains only the recorded Gorilla/retryablehttp pairs, and the
+  2,807-byte PUBLISHED memberlist CNA response remains exact at
+  `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+  No behavior result was repeated and no option-2 study was run.
+- P7 continues only with the reciprocal bounded evaluation of selected exact-
+  path `github.com/jtolds/gls v4.20.0+incompatible`. Its current queue facts
+  are one historical goconvey v1.6.4 request, negative why, zero repository
+  imports, zero production/complete-test loads, and no runtime reachability;
+  none is qualification. The evaluation must preserve the go-junit-report
+  exception and every earlier guard, evaluate no other group, and stop for a
+  fresh owning decision if no exact-path stable release qualifies or any guard
+  changes. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
