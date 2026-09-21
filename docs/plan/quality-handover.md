@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T17:18:48+02:00
+Generated: 2026-09-21T17:39:46+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,17 +8,17 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The jtolds/gls evaluation
-  began from clean HEAD `5dd19af0436917968bba1c25baca8a35a1b2e721`, parent
-  `7f0b2c1e3506f3a7f3185e4730ba8140d22eaf99`, tree
-  `7e0aaa8e15096f58518863026acad52a053ca4c0`. That HEAD changes only the
-  launcher mutable-boundary blank line. The preceding go-junit-report decision
-  handoff `7f0b2c1e...`, parent `efbe471...`, changes exactly the launcher,
-  answered go-junit-report evaluation archive, then-NEXT decision archive,
-  rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed sets, reciprocal archive history, latest Google UUID
-  ancestry, exact Go identity, module hashes, target and earlier guards, fresh
-  advisory identities, and launcher check passed before the evaluation.
+  `codex/upgrade-quality`, base master at `5635d50`. The jtolds/gls product
+  decision began from clean HEAD
+  `ed0c8fd34461063f601a65117bc6da02109b407b`, parent
+  `5dd19af0436917968bba1c25baca8a35a1b2e721`, tree
+  `702f0138c468a8ddbcb7356e510818f5be6b612a`. That handoff changes exactly the
+  launcher, answered jtolds/gls evaluation archive, then-NEXT jtolds/gls
+  decision archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal archive history,
+  latest Google UUID ancestry, exact Go identity, module hashes, target and
+  earlier guards, fresh advisory identities, and launcher check passed before
+  the decision.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -26,21 +26,21 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The jtolds/gls evaluation, go-junit-report decision/evaluation,
+- The jtolds/gls decision/evaluation, go-junit-report decision/evaluation,
   json-iterator decision/evaluation,
   clockwork decision/evaluation, demangle decision/evaluation, strcase
   decision/evaluation, integrated memberlist migration, memberlist ownership/
   final-direction decisions, Serf study, memberlist evaluation, and every
   earlier archive are answered. Option 1 explicitly retains exact inherited,
-  unloaded go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0
-  under separate target-specific exceptions; none is qualified and no
-  implementation was retained. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T171848+0200-decide-jtolds-gls-product-direction.md`.
-  It makes exactly one documentation-only product decision for exact selected
-  `github.com/jtolds/gls v4.20.0+incompatible`. It may not repeat the behavior
-  fixture, alter goconvey or another parent, transfer an exception, change
-  source, metadata, another guard, or the Go floor, combine another group,
-  write outside the managed scratch root, or begin P8.
+  unloaded jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
+  json-iterator v1.1.12, and clockwork v0.1.0 under separate target-specific
+  exceptions; none is qualified and no implementation was retained. The sole
+  NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T173946+0200-evaluate-julienschmidt-httprouter-dependency.md`.
+  It evaluates only selected exact-path
+  `github.com/julienschmidt/httprouter v1.2.0`. It must preserve every retained
+  decision and guard, may not manufacture a direct root or parent change,
+  combine another group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -48,19 +48,19 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the jtolds/gls evaluation without a
-qualified stable release and now awaits its one bounded product decision. P7
-previously selected option 1 for go-junit-report after its
-bounded evaluation: exact inherited/unloaded v0.9.1 is explicitly retained
-only under its target-specific non-transferable exception and is not
-qualified. Product source and dependency metadata remain unchanged. Exact
-inherited/unloaded json-iterator v1.1.12 remains accepted only under its own
-target-specific exception and is not qualified. Exact Go 1.26.7, every
+P2A-P6 are complete. P7 selected option 1 after the jtolds/gls evaluation:
+exact inherited/unloaded v4.20.0+incompatible is explicitly retained only
+under its jtolds/gls-specific, non-transferable exception and remains
+unqualified. P7 now continues with one bounded evaluation of selected exact-
+path julienschmidt/httprouter v1.2.0. Product source and dependency metadata
+remain unchanged. Exact inherited/unloaded go-junit-report v0.9.1,
+json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
+own target-specific exceptions and are not qualified. Exact Go 1.26.7, every
 accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
 P8 remains queued.
 
-## Jtolds GLS Evaluation
+## Jtolds GLS Evaluation And Decision
 
 No exact-path stable release qualifies. The legacy unsuffixed exact path
 `github.com/jtolds/gls` exposes only v4.2.0+incompatible,
@@ -113,13 +113,44 @@ PUBLISHED memberlist CNA bytes, all 29 prior selections/213 incoming edges,
 all 30 negative why results, zero guarded imports/loads, project state and
 hashes, and every earlier decision remain exact.
 
-The decision options are exactly: (1) explicitly retain selected/inherited/
-unloaded v4.20.0+incompatible under a jtolds/gls-specific non-transferable
-exception while keeping it unqualified; (2) authorize one separate
-measurement-only goconvey owning-parent/request study with no implementation;
-or (3) stop P7 unresolved and unaccepted. No option may select a lower release
-or alternate path, add a direct root, change goconvey/mvn-pom-mutator, repeat
-the fixture, transfer an exception, combine another group, or begin P8.
+Option 1 was selected. Exact selected, inherited, unloaded
+`github.com/jtolds/gls v4.20.0+incompatible` is explicitly retained without
+changing product source, `go.mod`, or `go.sum`. It remains unqualified. The
+jtolds/gls-specific, non-transferable exception accepts only the completed
+repository/release/legacy-module, Go-floor/JS-closure, older-release upstream
+incompatibility, selected-release nested propagation/live-map alias and race,
+API/global-state/lifecycle, MVS/loading, repeatability, project,
+vulnerability, and related findings. It accepts no uncharacterized behavior,
+new advisory, or independently discovered defect and promotes no lower
+release, alternate path, fork, branch, pseudo-version, or replacement.
+
+The exception remains valid only while the selected path/version; sole
+`goconvey@v1.6.4 -> jtolds/gls@v4.20.0+incompatible` request; genuine direct,
+imported, loaded mvn-pom-mutator v0.2.3 ownership route; negative GLS and
+GoConvey why results; no direct GLS root/import/load/runtime reachability;
+exact graph/module/tidy/Go-floor and every earlier guard; and no new advisory,
+independent finding, release, owner, supported tidy-stable owner, or compatible
+qualified route remain exact. Any target version/path, request, GoConvey or
+mvn-pom-mutator ownership, root, import, load, runtime, graph, module-hash,
+tidy, Go-floor, earlier-guard, advisory, finding, release, owner, or route
+change expires the exception and requires a fresh jtolds/gls dependency and
+product decision before merge. It authorizes no parent study, workaround,
+direct root, alternate path, product-source or metadata change, unrelated
+selection, or implementation, and no exception transfers.
+
+Guard-only revalidation preserved the 234-module/3,599-edge/355-production/
+429-complete-test/197-module-backed/41-loaded-module baseline, 1,067 sum lines,
+real module hashes, 432-line tidy projection, exact Go 1.26.7 identity, sole
+GLS request and route, and earlier 29-selection/213-edge snapshot at
+`5d2a35a2961c04eb07dd927afc072e77f555d87c7317579ddda486bf128d2c93`.
+All 30 why results and guarded imports/loads remain zero; including GLS yields
+30 selections and 214 incoming edges at sorted snapshot SHA-256
+`22407933faccf68294140b09ff535f552685bfed20e7e806b6e74d552c275014`.
+Fresh target advisory and pinned govulncheck populations remain empty; base
+project findings remain 30/22/20/20 without a GLS trace. The Go index,
+Gorilla/retryablehttp guard pairs, and PUBLISHED memberlist CNA response retain
+their exact recorded identities. The completed behavior/race fixture was not
+repeated and no owning-parent study ran.
 
 The go-junit-report option-1 decision retains exact selected, inherited, and
 unloaded `github.com/jstemmer/go-junit-report v0.9.1` without changing product
@@ -147,7 +178,7 @@ snapshot SHA-256
 No exception transfers to jtolds/gls or another target.
 
 Final unchanged-project exact Go 1.26.7 module verification, build, canonical
-count-one tests, race tests, and vet pass. The reciprocal 242-archive chain,
+count-one tests, race tests, and vet pass. The reciprocal 243-archive chain,
 single NEXT state, launcher/archive prompt mirror, and diff checks pass. No
 changed-selection scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS
 at L2. Task-owned disposable evidence was confined to
@@ -3296,14 +3327,13 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Make exactly one documentation-only product decision for selected exact-path
-`github.com/jtolds/gls v4.20.0+incompatible`: explicitly retain the inherited,
-unloaded selection under a jtolds/gls-specific non-transferable exception;
-authorize one separately scoped measurement-only goconvey owning-parent/
-request study; or stop P7 with v4.20.0+incompatible unresolved and unaccepted.
-Reuse the completed evaluation and do not repeat its propagation/race fixture.
-Do not add a root, select a lower release or the alternate `jtolio/gls` path,
-implement a workaround, alter goconvey/mvn-pom-mutator or another guard,
-transfer an earlier exception, combine another group, or begin P8. Keep every
-disposable beneath `${CODEX_SESSION_SCRATCH_ROOT:?}` and prepare only the
-successor authorized by the explicit choice.
+Evaluate selected exact-path `github.com/julienschmidt/httprouter v1.2.0` as
+one bounded P7 dependency group. Independently resolve its repository and
+stable-release identity, complete Go 1.18 production/test closure, exported
+HTTP-routing API and ordinary behavior, genuine MVS ownership and loading,
+project effects, and vulnerability evidence. Select only a qualified exact-
+path stable release; otherwise leave source and dependency metadata unchanged
+and stop for one fresh product decision. Preserve the jtolds/gls exception and
+every earlier decision exactly. Do not manufacture a direct root or parent
+change, transfer an exception, combine another group, or begin P8. Keep every
+disposable beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.

@@ -5374,15 +5374,14 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on one bounded product decision for selected exact-path
-`github.com/jtolds/gls v4.20.0+incompatible` after its completed evaluation
-found no qualified stable release. Exact inherited/unloaded go-junit-report
-v0.9.1, json-iterator
-v1.1.12, and clockwork v0.1.0 remain separately retained and unqualified under
-their own target-specific non-transferable exceptions. Earlier demangle,
-strcase, and affected/not-secure memberlist decisions remain separate under
-their own guards. Completed dependency groups remain final through accepted
-Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2. P8 remains queued.
+Status: active on one bounded evaluation of selected exact-path
+`github.com/julienschmidt/httprouter v1.2.0`. Exact inherited/unloaded
+jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1, json-iterator v1.1.12,
+and clockwork v0.1.0 remain separately retained and unqualified under their
+own target-specific non-transferable exceptions. Earlier demangle, strcase,
+and affected/not-secure memberlist decisions remain separate under their own
+guards. Completed dependency groups remain final through accepted Google UUID
+v1.4.0 and qualified go-cleanhttp v0.5.2. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -12441,6 +12440,61 @@ Jtolds GLS evaluation (2026-09-21):
   study, or stop P7 unresolved. It may not repeat the completed fixture, alter
   goconvey/mvn-pom-mutator, select a lower release or alternate path, add a
   direct root, transfer an exception, combine another group, or begin P8.
+
+Jtolds GLS product decision (2026-09-21):
+
+- Option 1 was selected. Exact selected, inherited, unloaded
+  `github.com/jtolds/gls v4.20.0+incompatible` is explicitly retained without
+  changing product source, `go.mod`, or `go.sum`. It remains unqualified; zero
+  loading bounds exposure but is neither qualification nor implicit
+  authorization.
+- The jtolds/gls-specific, non-transferable exception accepts only the
+  completed repository/release/legacy-module, Go-floor/JS-closure,
+  older-release upstream incompatibility, selected-release nested
+  propagation/live-map alias and race, API/global-state/lifecycle,
+  MVS/loading, repeatability, project, vulnerability, and related findings.
+  It accepts no uncharacterized behavior, new advisory, or independent defect
+  and promotes no lower release, alternate path, fork, branch, pseudo-version,
+  or replacement.
+- The exception is bounded by exact path/version; the sole
+  `goconvey@v1.6.4 -> jtolds/gls@v4.20.0+incompatible` request and genuine
+  direct/imported/loaded mvn-pom-mutator v0.2.3 ownership route; negative GLS
+  and GoConvey why results; no direct target root/import/load/runtime
+  reachability; exact graph/module/tidy/Go-floor and earlier guards; and no new
+  advisory, independent finding, release, owner, supported tidy-stable owner,
+  or compatible qualified route. Any target version/path, request, ownership,
+  root, import, load, runtime, graph, module-hash, tidy, Go-floor,
+  earlier-guard, advisory, finding, release, owner, or route change expires
+  the exception and requires a fresh jtolds/gls dependency and product
+  decision before merge.
+- The decision authorizes no parent study, workaround, direct root, alternate
+  path, product-source or dependency-metadata change, unrelated selection, or
+  implementation. It transfers neither this nor another dependency exception.
+- Guard-only revalidation preserved the exact 234-module/3,599-edge/
+  355-production/429-complete-test/197-module-backed/41-loaded-module state,
+  1,067 sum lines, real module hashes, 432-line tidy projection, exact Go
+  1.26.7 identity, sole GLS request/route, and earlier 29-selection/213-edge
+  snapshot SHA-256
+  `5d2a35a2961c04eb07dd927afc072e77f555d87c7317579ddda486bf128d2c93`.
+  All 30 why results and guarded imports/loads remain zero. Including GLS gives
+  30 selections/214 incoming edges at sorted snapshot SHA-256
+  `22407933faccf68294140b09ff535f552685bfed20e7e806b6e74d552c275014`.
+- Fresh exact/package OSV, GitHub, and pinned govulncheck module/package/
+  symbol/test-symbol results remain empty. Base project findings remain
+  30/22/20/20 without a GLS trace. The exact Go-index, only recorded
+  Gorilla/retryablehttp guard pairs, and PUBLISHED memberlist CNA response
+  identities remain unchanged. The completed behavior/race fixture was not
+  repeated and no option-2 parent study ran.
+- Final unchanged-project exact-Go verification/build/count-one/race/vet,
+  reciprocal launcher/archive validation, diff checks, and scratch cleanup
+  pass. No changed-selection scorecard applies; accepted quality remains
+  27/27 Q0-Q2 PASS at L2.
+- P7 continues only with the reciprocal bounded evaluation of selected exact-
+  path `github.com/julienschmidt/httprouter v1.2.0`. It must independently
+  resolve the target's exact ownership and loading, preserve the jtolds/gls
+  exception and every earlier guard, evaluate no other group, and stop for a
+  fresh product decision if no exact-path stable release qualifies or any
+  guard changes. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
