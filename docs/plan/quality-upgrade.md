@@ -5374,15 +5374,15 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on one bounded evaluation of selected exact-path
-`github.com/json-iterator/go v1.1.12` after the option-1 clockwork product
-decision explicitly retained exact selected, inherited and unloaded v0.1.0
-under target-specific non-transferable guards without qualifying it or
-changing metadata. The earlier demangle, strcase, and affected/not-secure
-memberlist option-1 decisions remain separate under their own exact guards.
-Completed dependency groups remain final through accepted Google UUID v1.4.0,
-qualified go-cleanhttp v0.5.2, and every retained-module decision through
-clockwork. P8 remains queued.
+Status: blocked on one documentation-only product decision for exact selected,
+inherited and unloaded `github.com/json-iterator/go v1.1.12` after its bounded
+evaluation found no qualified exact-path stable release and retained no
+implementation. The option-1 clockwork decision and earlier demangle,
+strcase, and affected/not-secure memberlist decisions remain separate under
+their own target-specific non-transferable guards. Completed dependency groups
+remain final through accepted Google UUID v1.4.0, qualified go-cleanhttp
+v0.5.2, and every retained-module decision through clockwork. P8 remains
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -12171,6 +12171,67 @@ Jonboulle clockwork product decision (2026-09-21):
   clockwork and every earlier guard, evaluate only json-iterator, and stop for
   a fresh owning decision if no exact-path stable release qualifies or any
   guard changes. It authorizes neither a combined dependency group nor P8.
+
+Json-iterator Go evaluation (2026-09-21):
+
+- No exact-path stable release qualifies. Canonical MIT repository
+  `json-iterator/go` is a non-fork and now archived. The proxy exposes exactly
+  eight valid stable releases v1.1.5-v1.1.12 on one linear ancestry, no v2/v3
+  module, retraction, deprecation, replacement, or alternate exact path. Tags
+  are lightweight/unsigned. Selected/latest v1.1.12 is commit
+  `024077e996b048517130b21ea6bf12aa23055d3d`, tree
+  `fab0aaa4437b102ed0e2e1f6db945807c4e68318`; its 139-file proxy archive is
+  byte-identical to Git and sumdb identities agree. Master is an unreleased
+  seven-commit-later pseudo-version and is ineligible for stable promotion.
+- All stable minimal source/test closures preserve the Go 1.18 directive floor
+  and resolve under exact Go 1.26.7 and contained Go 1.18.10. Compile-only
+  tests pass both SDKs for v1.1.6-v1.1.12; v1.1.5 has an exact-Go misnamed-
+  example compile failure. Selected production packages cross-build under both
+  SDKs for Linux, Windows, and Darwin amd64. There is no command, cgo,
+  generated source, embed, testdata, symlink, or external resource.
+- The randomized `google/gofuzz`-based `type_tests` identified by the initial
+  broad run was excluded from qualification and not executed again. The nine
+  admissible packages pass count-one/count-ten/race under Go 1.18.10. Exact
+  Go fails those populations only at deterministic control-escape equality;
+  vet under both SDKs reports the same three duplicate tags in test fixtures.
+- V1.1.5-v1.1.6 accept non-finite floats without error. V1.1.7-v1.1.9 fail
+  exact-Go byte compatibility because standard `encoding/json` emits
+  `"\\b\\f"` while json-iterator emits `"\\u0008\\u000c"`. V1.1.10-v1.1.12
+  additionally encode an ordinary TextMarshaler string-alias map key as
+  `{"TEXT_key":"value"}` rather than standard `{"key":"value"}` under
+  both SDKs. Master fixes the map key but remains unreleased and retains the
+  escape failure. Both escape forms are valid JSON, but the advertised and
+  upstream-tested byte-compatibility contract fails.
+- Bounded ordinary fixtures otherwise pass the relevant struct, map,
+  interface, nil, raw/custom codec, number, validation, decoder/encoder,
+  iterator, and stream paths. Static review records documented token/indent
+  compatibility gaps, config-specific determinism/precision, borrowed buffer
+  lifetimes, unsafe reflection, retained pool buffers, and mutable unprotected
+  global codec/extension registration that must complete before concurrent
+  cached use. There is no closeable external resource.
+- Seven historical Viper, crypt, etcd client/v2, and Prometheus requests make
+  v1.1.12 the MVS maximum. Viper v1.15.0 is genuine/direct/imported/loaded;
+  json-iterator has no direct root, negative why, zero repository imports,
+  zero production/complete-test loads, and no runtime reachability. A direct
+  v1.1.12 projection yields 234 modules/3,602 edges/1,070 sums; master yields
+  234/3,607/1,071. Both remain unloaded. Tidy removes either manufactured root,
+  restores v1.1.12, and returns common baseline hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+- Fresh candidate OSV/GitHub/Go-index and isolated pinned govulncheck evidence
+  is empty. Base/direct-selected/master project streams remain identical at
+  30/22/20/20 with no target trace. The 1,402-record Go index, only recorded
+  Gorilla/retryablehttp guard pairs, PUBLISHED memberlist CNA bytes, all 27
+  guarded selections/181 edges, negative guarded why/import/load results,
+  project hashes/state, and prior decisions remain exact.
+- Product source and dependency metadata remain unchanged. Final exact-Go
+  module verification, build, count-one, race, vet, reciprocal launcher check,
+  and scratch cleanup pass. No changed-selection scorecard applies; accepted
+  quality remains 27/27 Q0-Q2 PASS at L2. P7 stops for one reciprocal bounded
+  product decision: retain exact selected/unloaded v1.1.12 under a new target-
+  specific exception, authorize one measurement-only owning-parent/request
+  study, or stop P7 unresolved. It may not alter a parent/guard, select master
+  or a lower release, add a direct root, transfer an exception, or begin P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
