@@ -1,13 +1,13 @@
 # Agent Session: Decide Iancoleman Strcase Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-21T022425+0200-decide-iancoleman-strcase-product-direction`
 Created: `2026-09-21T02:24:25+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3232414af1633ffad581a517c0ecbafeda1b24cbfb6ca48e6a11abb7f8fa481e`
 Previous: [2026-09-21T014747+0200-evaluate-iancoleman-strcase-dependency.md](2026-09-21T014747+0200-evaluate-iancoleman-strcase-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-21T025404+0200-evaluate-ianlancetaylor-demangle-dependency.md](2026-09-21T025404+0200-evaluate-ianlancetaylor-demangle-dependency.md)
+Outcome: Option 1 explicitly retains exact inherited and unloaded strcase v0.2.0 under a target-specific non-transferable exception for only the completed defects and findings; no source or dependency metadata changed, and the sole successor is the next bounded P7 dependency evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -177,3 +177,144 @@ create an implementation commit, launch a successor, push, merge, publish,
 release, stash, revert, bypass cleanup, remove the worktree, combine another
 dependency group, reopen memberlist/Serf/POM work, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+# Answer
+
+## Decision
+
+Option 1 is explicitly authorized. Retain exact selected
+`github.com/iancoleman/strcase v0.2.0` as an inherited, unloaded module without
+changing product source, `go.mod`, or `go.sum`. This is a new strcase-specific,
+non-transferable exception. V0.2.0 is not qualified. Its zero current import,
+load, and runtime reachability bounds the accepted exposure; physical MVS
+selection did not itself authorize this decision.
+
+The exception accepts only the completed unsynchronized process-global acronym
+map, its reproduced read/write and write/write races and `fatal error:
+concurrent map writes`, unchanged all-uppercase input, Unicode and malformed-
+byte loss in camel conversion, permanent acronym state, and the characterized
+API, acronym, initialism, digit, delimiter, ignore, allocation, MVS,
+vulnerability, and related findings recorded by the completed evaluation. It
+accepts no uncharacterized behavior, new advisory, or independently observed
+defect. Latest v0.3.0 remains unqualified because it retains Unicode/malformed-
+byte loss and introduces the recorded mixed-initialism regression.
+
+A direct root, replacement, fork, patch, exclusion, version masquerade, blank
+or build-tag import, unused test/tool anchor, parent change, POM redesign, or
+transfer of the memberlist or another exception is not authorized. This
+decision grants no product-source, dependency-metadata, Go-floor, toolchain,
+parent, guarded-module, quality-policy, or P8 change.
+
+## Revalidated Decision Guards
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at HEAD
+`5071025e1061015964c752dbd1004a07c72857c3`, parent
+`c0d76f12ae3c2f4b132406eabb3f16d2714ed6f6`, tree
+`f1625d3179abc6e4febe53203cae4fca71a5b57f`. That handoff changed exactly the
+launcher, answered strcase evaluation archive, this then-NEXT decision archive,
+rolling handover, and roadmap. Its predecessor `c0d76f1`, parent `652baa8`,
+tree `0a21e0a`, retains the exact five-file handoff described by the mission.
+The reciprocal 232-archive chain, byte-exact launcher/archive prompt mirror,
+latest Google UUID v1.4.0 implementation ancestry, and launcher check passed
+before editing.
+
+The latest dependency implementation remains exact Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
+`b89afd4ec056133b1eefb5611f8f35c12c11824b`. It changes only `go.mod` and
+`go.sum`, with three insertions and no deletions, is an ancestor of this
+handoff, and has no later dependency implementation or metadata successor.
+
+Exact Go 1.26.7 remains byte-identical at binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+With that binary first on `PATH`, `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, no ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and
+`umask 022`, the unchanged project retains 234 modules, 3,599 graph edges,
+355 production entries, 429 complete-test entries, 197 module-backed
+complete-test entries across 41 loaded modules, 1,067 sum lines, and the
+432-line tidy projection. Exact module verification passes. `go.mod` and
+`go.sum` retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+MVS still selects strcase v0.2.0 solely through
+`github.com/envoyproxy/protoc-gen-validate@v0.6.2 ->
+github.com/iancoleman/strcase@v0.2.0`. The exact two incoming parent requests
+remain `github.com/spf13/viper@v1.10.1 ->
+github.com/envoyproxy/protoc-gen-validate@v0.6.2` and
+`github.com/sagikazarmark/crypt@v0.4.0 ->
+github.com/envoyproxy/protoc-gen-validate@v0.6.2`. Selected Viper v1.15.0 and
+crypt v0.9.0 do not erase those historical graph vertices. There is no direct
+strcase root. All 25 strcase-plus-earlier guarded `go mod why -m` results are
+negative; protoc-gen-validate is independently negative; repository Go imports
+are zero; and production and complete-test closures load zero target, parent,
+or earlier guarded packages. Runtime unreachability therefore remains exact.
+
+All 24 earlier guarded selections and their 166 incoming graph edges remain
+exact at sorted snapshot SHA-256
+`675ec82de2ae67ea293a2229d0a81c49e8523839951d03703c3be788e013dc54`.
+Including this strcase decision, all 25 guarded selections and 167 incoming
+edges have snapshot SHA-256
+`b6e0bcee17f83b0cc88a370c2f86a51c1872506b113075960c497bf420c48fc9`.
+No memberlist or earlier guard expired.
+
+Fresh narrow identity checks preserve the decision premise without repeating
+the evaluation. The public proxy still exposes exactly v0.1.0-v0.3.0; master
+and v0.3.0 remain commit `531aaa44de12ec166ceb71d9bdad7c8295e4235f`;
+and selected v0.2.0 remains
+`a61ebb85b34d7b831590cd8fa7faafadc161a652`. Exact v0.2.0 and v0.3.0 OSV
+queries, GitHub global advisory queries, and the repository advisory query
+remain empty. The Go vulnerability index remains byte-identical at 1,402
+records, SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. The PUBLISHED HashiCorp CNA response for
+CVE-2026-14362 remains 2,807 bytes at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+record `67fedba0-ff2e-4543-ba5b-aa93e87718cc`, updated
+2026-07-08T19:40:16.119Z, with memberlist below v0.6.0 affected. No security,
+exploitability, behavior, or parent-route evaluation was repeated.
+
+## Ownership, Expiry, And Successor Bounds
+
+This repository owns only the explicit decision to tolerate exact inherited
+strcase v0.2.0 in the verified unloaded graph. The exception remains valid
+only while every fact above is exact: selected v0.2.0; the sole exact
+protoc-gen-validate v0.6.2 request; both historical incoming parent requests
+and their identities; no direct root, repository import, production or
+complete-test load, or runtime reachability; the exact graph, module hashes,
+and tidy projection; all earlier guarded selections, edges, why/import/load
+conditions, advisories, and owner/route guards; and no new strcase advisory,
+independently observed defect, qualified exact-path stable release, genuine
+supported tidy-stable owner, or compatible qualified route.
+
+Any target, request, parent, root, import, load, runtime, graph, module-hash,
+tidy, earlier-guard, advisory, finding, qualified-release, owner, or route
+change immediately expires this exception and requires a fresh strcase
+dependency and product decision before merge. The exception authorizes no
+later workaround or parent study and transfers to no other target.
+
+P7 may continue only with the reciprocal bounded evaluation of selected
+`github.com/ianlancetaylor/demangle
+v0.0.0-20200824232613-28f6c0f3b639`, the next unevaluated dependency after
+this decision. That successor must preserve this exception, memberlist, and
+every earlier guard, evaluate only demangle, and stop for the owning fresh
+decision if any guard changes. It is not a strcase or parent implementation
+successor and authorizes neither another combined dependency group nor P8.
+
+## Final State
+
+This session changed only continuity documentation and the launcher handoff.
+It did not edit product source, `go.mod`, or `go.sum`; change strcase, its
+parent population, memberlist, another guarded module, the Go floor, or the
+toolchain; run the owning-parent study; implement a workaround; or begin P8.
+No dependency implementation commit or changed-selection scorecard applies,
+and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+Exact Go 1.26.7 module verification, build, canonical count-one tests, race
+tests, and vet pass on the unchanged product tree. The reciprocal 233-archive
+chain and byte-exact launcher/archive prompt mirror pass
+`./codex-dev-start.sh --check`; the launcher lifecycle and quality-audit
+meta-controls pass. `git diff --check` passes, and the final handoff contains
+only the launcher and continuity documentation required for this decision and
+its one successor.

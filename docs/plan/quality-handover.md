@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T02:24:25+02:00
+Generated: 2026-09-21T02:54:04+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,14 +8,14 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The strcase evaluation
+  `codex/upgrade-quality`, base master at `5635d50`. The strcase decision
   began from clean handoff HEAD
-  `c0d76f12ae3c2f4b132406eabb3f16d2714ed6f6`, parent
-  `652baa8b615e533edc93f5abfe9052f8e9dc84c7`, tree
-  `0a21e0a3e6fff9eced4cdff241ac8c4b69bdc193`. That commit changed exactly the
-  launcher, answered memberlist ownership archive, then-NEXT strcase archive,
-  rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 231-archive history, latest Google
+  `5071025e1061015964c752dbd1004a07c72857c3`, parent
+  `c0d76f12ae3c2f4b132406eabb3f16d2714ed6f6`, tree
+  `f1625d3179abc6e4febe53203cae4fca71a5b57f`. That commit changed exactly the
+  launcher, answered strcase evaluation archive, then-NEXT strcase decision
+  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
+  ancestry, exact changed set, reciprocal 232-archive history, latest Google
   UUID ancestry, and launcher check passed before execution.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
@@ -24,14 +24,15 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The strcase evaluation, integrated memberlist migration, memberlist
-  ownership/final-direction decisions, Serf study, memberlist evaluation, and
-  every earlier archive are answered. No strcase stable release qualifies:
-  selected v0.2.0 has concurrent-map, uppercase, and Unicode defects, while
-  latest v0.3.0 retains Unicode loss and introduces an initialism regression.
-  No implementation was retained. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T022425+0200-decide-iancoleman-strcase-product-direction.md`.
-  It must make only the bounded strcase product decision.
+- The strcase decision/evaluation, integrated memberlist migration,
+  memberlist ownership/final-direction decisions, Serf study, memberlist
+  evaluation, and every earlier archive are answered. No strcase stable
+  release qualifies and no implementation was retained. Option 1 now
+  explicitly retains exact inherited and unloaded v0.2.0 under a target-
+  specific non-transferable exception. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T025404+0200-evaluate-ianlancetaylor-demangle-dependency.md`.
+  It must evaluate only selected exact-path ianlancetaylor/demangle as the next
+  bounded P7 dependency group.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -39,11 +40,13 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the strcase evaluation after the final
-memberlist ownership decision. Neither selected v0.2.0 nor latest v0.3.0
-passes every conversion/concurrency contract, and v0.3.0 has no genuine
-tidy-stable owner. No source or dependency metadata changed. P7 is stopped on
-the bounded strcase product decision. Exact Go 1.26.7, every accepted
+P2A-P6 are complete. P7 has completed the strcase evaluation and explicit
+product decision after the final memberlist ownership decision. Neither
+selected v0.2.0 nor latest v0.3.0 passes every conversion/concurrency contract,
+and v0.3.0 has no genuine tidy-stable owner. No source or dependency metadata
+changed. Option 1 retains exact v0.2.0 only within its verified unloaded graph;
+this is an exception, not release qualification. P7 continues only with the
+bounded ianlancetaylor/demangle evaluation. Exact Go 1.26.7, every accepted
 dependency move through Google UUID v1.4.0, qualified go-cleanhttp, and all
 earlier retained-module decisions remain final under their separate guards.
 P8 remains queued.
@@ -72,15 +75,29 @@ snapshot SHA-256
 `675ec82de2ae67ea293a2229d0a81c49e8523839951d03703c3be788e013dc54`.
 No exception transfers to strcase or another target.
 
-Selected strcase v0.2.0 remains an unqualified physical MVS selection. It is
-requested only by protoc-gen-validate v0.6.2, has negative why and zero
-repository imports/production loads/complete-test loads, and is runtime-
-unreachable. No stable release qualifies, no direct root is authorized, and
-no exception has been granted. The sole next boundary is the explicit strcase
-product decision recorded below.
+The strcase option-1 decision retains exact selected, inherited and unloaded
+v0.2.0 without source or dependency metadata changes. It accepts only the
+completed concurrent acronym-map races/fatal crash, all-uppercase and Unicode/
+malformed conversion loss, permanent global acronym state, and characterized
+API, digit, delimiter, allocation, MVS, vulnerability, and related findings.
+It is target-specific, non-transferable, and does not qualify v0.2.0.
+
+The strcase exception remains valid only while exact v0.2.0, the sole
+protoc-gen-validate v0.6.2 request, both historical incoming Viper v1.10.1 and
+crypt v0.4.0 parent requests, no direct root/import/load/runtime reachability,
+the exact graph/module/tidy state, every earlier guard, and no new advisory,
+independently observed defect, qualified exact-path stable release, genuine
+supported tidy-stable owner, or compatible qualified route remain exact. Any
+target, request, parent, root, import, load, runtime, graph, module-hash, tidy,
+earlier-guard, advisory, finding, release, owner, or route change expires the
+exception and requires its fresh owning decision before merge. Including
+strcase, all 25 guarded selections and 167 incoming edges retain sorted
+snapshot SHA-256
+`b6e0bcee17f83b0cc88a370c2f86a51c1872506b113075960c497bf420c48fc9`.
+No exception transfers to demangle or another target.
 
 Final unchanged-tree exact Go 1.26.7 module verification, build, canonical
-count-one tests, race tests, and vet pass. The reciprocal 232-archive chain and
+count-one tests, race tests, and vet pass. The reciprocal 233-archive chain and
 launcher/archive prompt mirror pass `./codex-dev-start.sh --check`; all 62
 launcher lifecycle controls and all 15 quality-audit meta-controls pass. No
 changed-selection scorecard applies; accepted quality remains 27/27 Q0-Q2
@@ -2391,7 +2408,7 @@ count-one tests, race tests, vet, launcher check, and all 62 launcher lifecycle
 controls pass. Initial test/race runs inherited `umask 077` and reproduced only
 the known fixture-mode assertions before the canonical reruns passed.
 
-## Iancoleman Strcase Evaluation
+## Iancoleman Strcase Evaluation And Product Decision
 
 No exact-path stable release qualifies. Public proxy, sumdb, `go-import`, Git,
 and GitHub evidence resolves six stable releases v0.1.0-v0.3.0 in the public,
@@ -2440,11 +2457,46 @@ loads remain zero. Guard OSV results retain only the recorded Gorilla and
 go-retryablehttp pairs. The memberlist CNA response remains byte-identical at
 `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
 
-Product source and dependency metadata remain unchanged; selected v0.2.0 is
-not qualified or accepted. P7 stops on the sole reciprocal decision among
-explicit target-specific v0.2.0 retention, a separate measurement-only
-protoc-gen-validate owning-parent study, or stopping unresolved. No decision
-has been made and P8 remains queued.
+Product source and dependency metadata remain unchanged. Option 1 explicitly
+retains selected v0.2.0 under the target-specific, non-transferable exception
+defined at the top of this handover. The decision accepts only the completed
+defects and characterized findings; v0.2.0 remains unqualified, and zero
+loading bounds exposure without qualifying the release.
+
+Guard-only decision revalidation began from clean HEAD `5071025`, parent
+`c0d76f1`, tree `f1625d3`. Its exact five-file handoff, reciprocal 232-archive
+chain, latest Google UUID implementation ancestry, exact Go 1.26.7 identity,
+and launcher check passed. The project remains 234 modules, 3,599 edges,
+355/429 load entries, 197 module-backed complete-test entries across 41
+modules, 1,067 sum lines, and the 432-line tidy projection. `go.mod`/`go.sum`
+retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+The sole target edge and both parent requests remain exact. All 25 strcase-
+plus-earlier guarded why results are negative; protoc-gen-validate is also
+negative; repository imports are zero; and production/complete-test closures
+load zero target, parent, or guarded packages. All 24 earlier selections and
+166 incoming edges retain snapshot SHA-256
+`675ec82de2ae67ea293a2229d0a81c49e8523839951d03703c3be788e013dc54`;
+including strcase yields 25 selections and 167 edges at
+`b6e0bcee17f83b0cc88a370c2f86a51c1872506b113075960c497bf420c48fc9`.
+
+Fresh narrow checks retain the same six public versions, v0.3.0 master, empty
+exact v0.2.0/v0.3.0 OSV and GitHub advisory results, and the byte-identical
+1,402-record Go index. The PUBLISHED memberlist CNA response remains 2,807
+bytes at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+with memberlist below v0.6.0 affected. No completed evaluation or parent study
+was repeated.
+
+P7 continues only with the prepared bounded evaluation of selected exact-path
+`github.com/ianlancetaylor/demangle
+v0.0.0-20200824232613-28f6c0f3b639`. Its queue observations are negative why,
+zero repository imports/production loads/complete-test loads, and thirteen
+incoming historical Google pprof requests; those facts are not qualification.
+The successor must preserve every guard, evaluate only demangle, and stop for
+the owning fresh decision if any guard changes. P8 remains queued.
 
 ## Project And Quality State
 
@@ -2688,10 +2740,13 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Make one bounded product decision for exact selected, inherited, unloaded and
-unqualified `github.com/iancoleman/strcase v0.2.0`: explicitly retain it under
-a target-specific exception; authorize one separate measurement-only
-protoc-gen-validate owning-parent/request study; or stop P7 unresolved. Do not
-repeat the evaluation, implement a route, manufacture a direct owner, change
-an earlier guard, combine another dependency group, reopen memberlist/Serf/POM
-work, or begin P8.
+Evaluate selected exact-path `github.com/ianlancetaylor/demangle
+v0.0.0-20200824232613-28f6c0f3b639` as one bounded P7 dependency group.
+Independently resolve its repository and candidate identity, Go-1.18-compatible
+source/test closure, API and demangling behavior, project loading and MVS
+ownership, vulnerability state, and all applicable quality contracts. Retain
+or select only a qualified exact-path candidate; otherwise stop for one bounded
+product decision. Preserve the strcase and memberlist exceptions and every
+earlier guard. Do not reopen strcase/protoc-gen-validate/memberlist/Serf/POM
+work, manufacture a direct owner, combine another dependency group, or begin
+P8.
