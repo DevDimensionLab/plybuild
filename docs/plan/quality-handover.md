@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T14:04:51+02:00
+Generated: 2026-09-21T14:32:49+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,16 +8,16 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The json-iterator
-  evaluation began from clean handoff HEAD
-  `80ea158a425503ea5c881c70a391b1bc23d5efbf`, parent
-  `e5fd2d47f5e50ff46f3a42e7be6d0bc127720277`, tree
-  `f9a3ad53b6898f5ad25d00677a2623aa81f67ddd`. That commit changed exactly the
-  launcher, answered clockwork decision archive, then-NEXT json-iterator
-  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal 237-archive history,
-  latest Google UUID ancestry, exact Go identity, and launcher check passed
-  before execution.
+  `codex/upgrade-quality`, base master at `5635d50`. The json-iterator decision
+  began from clean handoff HEAD
+  `19c500237af16f658eb99951e56e042e0d3ea4ee`, parent
+  `80ea158a425503ea5c881c70a391b1bc23d5efbf`, tree
+  `9cec063e78719d2f806f4206cd5bae3b090a74d7`. That commit changed exactly the
+  launcher, answered json-iterator evaluation archive, then-NEXT json-iterator
+  decision archive, rolling handover, and roadmap. Ordinary and ignored status,
+  branch, ancestry, exact changed set, reciprocal 238-archive history, latest
+  Google UUID ancestry, exact Go identity, and launcher check passed before
+  execution.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -25,19 +25,19 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The json-iterator evaluation, clockwork decision/evaluation, demangle
+- The json-iterator decision/evaluation, clockwork decision/evaluation, demangle
   decision/evaluation, strcase
   decision/evaluation, integrated memberlist migration, memberlist ownership/
   final-direction decisions, Serf study, memberlist evaluation, and every
   earlier archive are answered. Option 1 explicitly retains exact inherited,
-  unloaded clockwork v0.1.0 under the target-specific exception below; no
-  implementation was retained. No json-iterator stable release qualifies and
-  no implementation was retained. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T140451+0200-decide-json-iterator-go-product-direction.md`.
-  It owns only one documentation-only json-iterator product decision. It may
-  not repeat completed behavior evidence, transfer an exception, alter a
-  parent/guard or the Go floor, combine another group, write outside the
-  managed scratch root, or begin P8.
+  unloaded json-iterator v1.1.12 and clockwork v0.1.0 under separate target-
+  specific exceptions; neither is qualified and no implementation was
+  retained. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-21T143249+0200-evaluate-jstemmer-go-junit-report-dependency.md`.
+  It independently evaluates only selected exact-path
+  `github.com/jstemmer/go-junit-report v0.9.1`. It may not transfer an
+  exception, alter json-iterator, another guard, or the Go floor, combine
+  another group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -45,16 +45,39 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the bounded json-iterator evaluation
-after the clockwork evaluation and option-1 product decision, demangle
-evaluation/decision, strcase decision, and final memberlist ownership
-decision. No exact-path json-iterator stable release qualifies and no
-implementation was retained. Exact inherited/unloaded clockwork v0.1.0
-remains accepted only under its target-specific exception and is not
-qualified. Exact Go 1.26.7, every accepted dependency move through Google
-UUID v1.4.0, qualified go-cleanhttp, and all earlier retained-module decisions
-remain final under separate guards. P7 is stopped only for the prepared
-json-iterator product decision; P8 remains queued.
+P2A-P6 are complete. P7 has completed the bounded json-iterator evaluation and
+option-1 product decision after the clockwork and demangle decisions, strcase
+decision, and final memberlist ownership decision. No exact-path json-iterator
+stable release qualifies and no implementation was retained. Exact inherited/
+unloaded json-iterator v1.1.12 is explicitly accepted only under its target-
+specific exception and is not qualified. Exact Go 1.26.7, every accepted
+dependency move through Google UUID v1.4.0, qualified go-cleanhttp, and all
+earlier retained-module decisions remain final under separate guards. P7
+continues only with the prepared go-junit-report evaluation; P8 remains queued.
+
+The json-iterator option-1 decision retains exact selected, inherited, and
+unloaded `github.com/json-iterator/go v1.1.12` without changing product source,
+`go.mod`, or `go.sum`. It accepts only the completed map-key, control-escape,
+older non-finite-number, example/vet, repository/archive, API/global-state/
+buffer, Go-floor, MVS, loading, repeatability, vulnerability, and related
+findings. It accepts no uncharacterized behavior, new advisory, or independent
+defect. V1.1.12 remains unqualified; zero current loading bounds exposure but
+did not itself qualify or silently authorize the selection.
+
+The json-iterator exception remains valid only while exact v1.1.12; all seven
+historical requests and genuine parent identities; genuine direct/imported/
+loaded Viper v1.15.0 ownership without a loaded json-iterator package; no
+direct target root/import/load/runtime reachability; negative target why; the
+exact graph/module/tidy state and every earlier guard; and no new advisory,
+independent defect, qualified exact-path stable release, genuine supported
+tidy-stable owner, or compatible qualified route remain exact. Any target,
+request, parent, ownership, root, import, load, runtime, graph, module-hash,
+tidy, earlier-guard, advisory, finding, release, owner, or route change expires
+the exception and requires its fresh owning decision before merge. Including
+json-iterator, all 28 guarded selections and 188 incoming edges retain sorted
+snapshot SHA-256
+`ca6a8b9d4a0d4aa5c6c436d9edeb27cf6d603e36e29edccef9bc2d9d1b81622e`.
+No exception transfers to go-junit-report or another target.
 
 The clockwork option-1 decision retains exact selected, inherited and unloaded
 `github.com/jonboulle/clockwork v0.1.0` without changing product source,
@@ -2757,8 +2780,8 @@ and was removed before handoff.
 
 No exact-path stable `github.com/json-iterator/go` release qualifies. Product
 source and dependency metadata remain unchanged; selected v1.1.12 is not
-qualified or accepted by the evaluation. The reciprocal product-decision
-archive owns the only next action.
+qualified and was not accepted by the evaluation itself. The later option-1
+decision explicitly retains it only under the target-specific guard above.
 
 Fresh `go-import` resolves the exact module without redirect to canonical MIT
 repository `json-iterator/go`. It is a non-fork and is now archived. The Go
@@ -2842,6 +2865,15 @@ unchanged. Final exact-Go unchanged-tree module verification, build, count-one,
 race, and vet pass. No changed-selection scorecard applies; accepted quality
 remains 27/27 Q0-Q2 PASS at L2. Every task-owned disposable remained beneath
 the managed scratch root and was removed before handoff.
+
+The documentation-only decision revalidated the exact seven requests, genuine
+Viper ownership, target why/import/load/runtime state, module and tidy state,
+all earlier guards, and fresh advisory identities without repeating behavior
+tests. Including json-iterator yields 28 guarded selections and 188 incoming
+edges at SHA-256
+`ca6a8b9d4a0d4aa5c6c436d9edeb27cf6d603e36e29edccef9bc2d9d1b81622e`.
+No source or dependency metadata changed. P7 continues only with the prepared
+go-junit-report evaluation; P8 remains queued.
 
 ## Project And Quality State
 

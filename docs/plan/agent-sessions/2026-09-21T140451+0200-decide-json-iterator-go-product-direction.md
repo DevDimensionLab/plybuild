@@ -1,13 +1,13 @@
 # Agent Session: Decide Json-Iterator Go Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-21T140451+0200-decide-json-iterator-go-product-direction`
 Created: `2026-09-21T14:04:51+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `a42e3d185b9a8af3c56270e38dd8add278a6f1c220413ac2900dfda205148e8a`
 Previous: [2026-09-21T132433+0200-evaluate-json-iterator-go-dependency.md](2026-09-21T132433+0200-evaluate-json-iterator-go-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-21T143249+0200-evaluate-jstemmer-go-junit-report-dependency.md](2026-09-21T143249+0200-evaluate-jstemmer-go-junit-report-dependency.md)
+Outcome: Recorded bounded option 1: retain exact inherited, unloaded json-iterator v1.1.12 under a target-specific exception without product or dependency metadata changes, then prepared the next bounded P7 dependency evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -219,3 +219,87 @@ release, stash, revert, bypass cleanup, remove the worktree, combine another
 dependency group, reopen clockwork/mvn-pom-mutator/demangle/pprof/strcase/
 memberlist work, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 was selected on 2026-09-21. Exact selected
+`github.com/json-iterator/go v1.1.12` is explicitly retained as inherited and
+unloaded without changing product source, `go.mod`, or `go.sum`. The selection
+is not qualified. Zero loading bounds current exposure but did not qualify or
+silently authorize it.
+
+This json-iterator-specific, non-transferable exception accepts only the
+completed string-alias `encoding.TextMarshaler` map-key difference, exact-Go
+control-escape byte difference, older-release non-finite-number behavior,
+v1.1.5 example failure, upstream duplicate-tag vet reports, archived
+repository/release identity, documented prefix/indent and token gaps, borrowed
+iterator/stream buffers, unsafe reflection, mutable unprotected global
+registration, Go-floor, MVS, loading, repeatability, vulnerability, and related
+evaluation findings. It accepts no uncharacterized behavior, newly discovered
+defect, or future advisory. It does not describe v1.1.12 as qualified, promote
+unreleased master, authorize a lower release, or transfer any other target's
+exception.
+
+The exception remains valid only while all of these facts remain exact:
+
+- selected `github.com/json-iterator/go v1.1.12`;
+- the seven historical requests and their parent identities:
+  `github.com/bketelsen/crypt@v0.0.3-0.20200106085610-5cbc8cc4026c -> github.com/json-iterator/go@v1.1.6`,
+  `github.com/prometheus/client_golang@v1.0.0 -> github.com/json-iterator/go@v1.1.6`,
+  `github.com/prometheus/client_golang@v1.4.0 -> github.com/json-iterator/go@v1.1.9`,
+  `github.com/sagikazarmark/crypt@v0.4.0 -> github.com/json-iterator/go@v1.1.12`,
+  `github.com/spf13/viper@v1.10.1 -> github.com/json-iterator/go@v1.1.12`,
+  `github.com/spf13/viper@v1.15.0 -> github.com/json-iterator/go@v1.1.12`, and
+  `go.etcd.io/etcd/client/v2@v2.305.1 -> github.com/json-iterator/go@v1.1.11`;
+- genuine direct/imported/loaded Viper v1.15.0 ownership, with no loaded
+  json-iterator package;
+- no direct target root, negative target why, zero repository imports, zero
+  production or complete-test package loads, and no runtime reachability;
+- 234 modules, 3,599 graph edges, 355 production entries, 429 complete-test
+  entries, 197 module-backed complete-test entries across 41 modules, 1,067
+  sum lines, and the exact 432-line tidy projection;
+- `go.mod`/`go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`;
+- every earlier target-specific guard, including the 27-selection/181-edge
+  snapshot SHA-256
+  `09258fe1e7425eed2d927f8f0be20a60fa610098677e2f31a10b5b4153b35989`;
+- no new json-iterator advisory or independent defect, newly qualified exact-
+  path stable release, genuine supported tidy-stable owner, or compatible
+  qualified route.
+
+Any target, request, parent, ownership, root, import, load, runtime, graph,
+module-hash, tidy, earlier-guard, advisory, finding, release, owner, or route
+change expires the exception and requires a fresh json-iterator dependency and
+product decision before merge. The decision authorizes no owning-parent study,
+direct root, workaround, parent change, Go-floor change, unrelated selection,
+or implementation.
+
+Guard-only revalidation began from clean handoff HEAD
+`19c500237af16f658eb99951e56e042e0d3ea4ee`, parent
+`80ea158a425503ea5c881c70a391b1bc23d5efbf`, tree
+`9cec063e78719d2f806f4206cd5bae3b090a74d7`. Its exact five-file change,
+reciprocal archive chain, latest Google UUID implementation ancestry, exact Go
+1.26.7 identity with binary SHA-256
+`9da68d129981421d7494b6cec2db85a76bd7eb671658235e4912686346131fba`, and
+launcher check passed. The seven requests are unchanged;
+all 28 target-plus-earlier why results remain negative, repository imports and
+production/complete-test loads remain zero, and the earlier 181-edge snapshot
+reproduces its exact hash. Including json-iterator now yields 28 guarded
+selections and 188 incoming edges at sorted snapshot SHA-256
+`ca6a8b9d4a0d4aa5c6c436d9edeb27cf6d603e36e29edccef9bc2d9d1b81622e`.
+
+Fresh selected/master OSV and GitHub global/repository queries remain empty.
+The 1,402-record Go index remains byte-identical at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`;
+guard OSV retains only the recorded Gorilla/go-retryablehttp pairs, and the
+2,807-byte PUBLISHED memberlist CNA response remains exact at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+The 432-line tidy diff retains SHA-256
+`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`.
+
+No behavior result was repeated, no option-2 study was run, and no source or
+dependency metadata changed. P7 continues only with the reciprocal bounded
+evaluation of selected exact-path
+`github.com/jstemmer/go-junit-report v0.9.1`; that successor was prepared but
+not executed. P8 remains queued.

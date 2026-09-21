@@ -12233,6 +12233,57 @@ Json-iterator Go evaluation (2026-09-21):
   study, or stop P7 unresolved. It may not alter a parent/guard, select master
   or a lower release, add a direct root, transfer an exception, or begin P8.
 
+Json-iterator Go product decision (2026-09-21):
+
+- Selected option 1. Retain exact selected, inherited, unloaded
+  `github.com/json-iterator/go v1.1.12` without changing product source,
+  `go.mod`, or `go.sum`. The selection is not qualified. Zero loading bounds
+  current exposure but did not qualify or silently authorize it.
+- The json-iterator-specific, non-transferable exception accepts only the
+  completed map-key, control-escape, older non-finite-number, example/vet,
+  repository/archive, API/global-state/buffer, Go-floor, MVS, loading,
+  repeatability, vulnerability, and related evaluation findings. It accepts no
+  uncharacterized behavior, new advisory, or independently discovered defect;
+  it does not promote master, select a lower release, or transfer another
+  exception.
+- The exception is owned by exact v1.1.12 and all seven historical requests
+  with their parent identities: bketelsen crypt requests v1.1.6, Prometheus
+  v1.0.0 requests v1.1.6, Prometheus v1.4.0 requests v1.1.9, sagikazarmark
+  crypt and Viper v1.10.1/v1.15.0 request v1.1.12, and etcd client/v2
+  v2.305.1 requests v1.1.11. Viper v1.15.0 remains the genuine direct,
+  imported, and loaded project parent without loading a json-iterator package.
+- Its guards require no direct root, negative target why, zero repository
+  imports, zero production/complete-test loads, no runtime reachability, the
+  exact 234-module/3,599-edge/1,067-sum and 355/429/197/41 load state, the
+  exact real module hashes and 432-line tidy projection, every earlier guard,
+  and no new advisory, independent defect, qualified exact-path stable release,
+  genuine supported tidy-stable owner, or compatible qualified route. Any
+  target, request, parent, ownership, root, import, load, runtime, graph,
+  module-hash, tidy, earlier-guard, advisory, finding, release, owner, or route
+  change expires the exception and requires its fresh owning decision before
+  merge.
+- Guard-only revalidation from clean handoff HEAD `19c5002`, parent `80ea158`,
+  tree `9cec063`, preserved the exact five-file handoff, reciprocal archive
+  chain, Google UUID implementation ancestry, exact Go 1.26.7 identity, module
+  hashes, seven requests, and launcher check. All 28 target-plus-earlier why
+  results are negative and guarded imports/loads are zero. The earlier 27-
+  selection/181-edge snapshot remains exact at
+  `09258fe1e7425eed2d927f8f0be20a60fa610098677e2f31a10b5b4153b35989`;
+  including json-iterator yields 28 selections/188 edges at
+  `ca6a8b9d4a0d4aa5c6c436d9edeb27cf6d603e36e29edccef9bc2d9d1b81622e`.
+- Fresh selected/master OSV and GitHub global/repository results remain empty.
+  The 1,402-record Go index remains byte-identical at
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`;
+  guard OSV retains only the recorded Gorilla/retryablehttp pairs, and the
+  2,807-byte PUBLISHED memberlist CNA response remains exact at
+  `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+  No behavior result was repeated and no option-2 study was run.
+- P7 continues only with the reciprocal bounded evaluation of selected exact-
+  path `github.com/jstemmer/go-junit-report v0.9.1`. It must preserve the
+  json-iterator exception and every earlier guard, evaluate no other group, and
+  stop for a fresh owning decision if no exact-path stable release qualifies or
+  any guard changes. P8 remains queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
