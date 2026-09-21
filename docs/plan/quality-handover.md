@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-21T11:34:57+02:00
+Generated: 2026-09-21T12:03:39+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,15 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The defensively narrowed
-  demangle retry began from clean handoff HEAD
-  `de47934efeb7527a91e49f3f5b62b012e42e51fb`, parent
-  `3e4354cebb1d18d189cf7c173773b19103b32c57`, tree
-  `d84a65675ad419d81272643395ed2be58a20acc9`. That commit changed exactly the
-  launcher, current demangle archive, rolling handover, roadmap, and session-
-  continuity design record. Ordinary and ignored status, branch, ancestry,
-  exact changed set, reciprocal 233-archive history, latest Google UUID
-  ancestry, and launcher check passed before execution.
+  `codex/upgrade-quality`, base master at `5635d50`. The demangle product
+  decision began from clean handoff HEAD
+  `050c47a6892944d63d189c036ba71c98046a4995`, parent
+  `de47934efeb7527a91e49f3f5b62b012e42e51fb`, tree
+  `fb1f0bd3758bca1d4d373b83772026563ee2fbcf`. That commit changed exactly the
+  launcher, answered demangle evaluation archive, then-NEXT demangle decision
+  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
+  ancestry, exact changed set, reciprocal 234-archive history, latest Google
+  UUID ancestry, exact Go identity, and launcher check passed before execution.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -24,20 +24,18 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The demangle evaluation, strcase decision/evaluation, integrated memberlist migration,
-  memberlist ownership/final-direction decisions, Serf study, memberlist
-  evaluation, and every earlier archive are answered. No demangle exact-path
-  candidate qualifies and no implementation was retained. Product direction
-  now requires one bounded documentation-only decision. No strcase stable
-  release qualifies and no implementation was retained. Option 1 now
-  explicitly retains exact inherited and unloaded v0.2.0 under a target-
-  specific non-transferable exception. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-21T113049+0200-decide-ianlancetaylor-demangle-product-direction.md`.
-  It may choose exact selected-version retention under a target-specific
-  exception, authorize a separate measurement-only pprof ownership study, or
-  stop P7 unresolved. It may not repeat parser tests, reproduce the recorded
-  panic, change source or dependency metadata, manufacture a root, alter
-  pprof or another guard, combine another group, or begin P8.
+- The demangle decision/evaluation, strcase decision/evaluation, integrated
+  memberlist migration, memberlist ownership/final-direction decisions, Serf
+  study, memberlist evaluation, and every earlier archive are answered. No
+  demangle exact-path candidate qualifies and no implementation was retained.
+  Option 1 now explicitly retains exact inherited and unloaded selected
+  demangle under a target-specific non-transferable exception. The sole NEXT
+  archive is
+  `docs/plan/agent-sessions/2026-09-21T120339+0200-evaluate-jonboulle-clockwork-dependency.md`.
+  It evaluates only exact-path `github.com/jonboulle/clockwork v0.1.0` as the
+  next bounded P7 group. It may not transfer an earlier exception, alter
+  demangle, pprof, mvn-pom-mutator, or another guard, combine another group,
+  write disposable evidence outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -45,14 +43,39 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 has completed the demangle evaluation after the
-strcase decision and final memberlist ownership decision. No exact-path
-demangle candidate passes every applicable contract, and current has no
-genuine tidy-stable owner. No source or dependency metadata changed. P7 is
-blocked only on one bounded demangle product decision. Exact Go 1.26.7, every
-accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
-and all earlier retained-module decisions remain final under their separate
-guards. P8 remains queued.
+P2A-P6 are complete. P7 has completed the demangle evaluation and option-1
+product decision after the strcase decision and final memberlist ownership
+decision. No exact-path demangle candidate qualifies, no implementation was
+retained, and exact selected inherited/unloaded demangle is now explicit only
+under its target-specific non-transferable exception. P7 continues with the
+single bounded clockwork evaluation. Exact Go 1.26.7, every accepted dependency
+move through Google UUID v1.4.0, qualified go-cleanhttp, and all earlier
+retained-module decisions remain final under their separate guards. P8 remains
+queued.
+
+The demangle option-1 decision retains exact selected, inherited and unloaded
+`v0.0.0-20200824232613-28f6c0f3b639` without changing product source,
+`go.mod`, or `go.sum`. It accepts only the recorded empty-argument `c++filt`
+panic, lack of tagged/GitHub release identity, and the completed C++ API,
+option, behavior, Go-floor, command, MVS, loading, vulnerability, and related
+findings. It accepts no uncharacterized behavior, new advisory, or independent
+defect. Selected is not qualified; zero current loading bounds exposure but did
+not itself authorize the decision. Current
+`v0.0.0-20260724033716-83e58baca724` remains unqualified and unselected.
+
+The demangle exception remains valid only while the exact selected pseudo-
+version, all thirteen historical pprof requests, selected pprof
+`v0.0.0-20210720184732-4bb14d4b1be1` and its selected request, no direct root/
+import/load/runtime reachability, the exact graph/module/tidy state, every
+earlier guard, and no new advisory, independent defect, qualified exact-path
+release, genuine supported tidy-stable owner, or compatible qualified route
+remain exact. Any target, request, parent, pprof, root, import, load, runtime,
+graph, module-hash, tidy, earlier-guard, advisory, finding, release, owner, or
+route change expires the exception and requires its fresh owning decision
+before merge. Including demangle, all 26 guarded selections and 180 incoming
+edges retain sorted snapshot SHA-256
+`8f39e82800e0abf94ae419186614a2cf709759192aba2614603dbf578ef64121`.
+No exception transfers to clockwork or another target.
 
 Selected commit `28f6c0f3b63983aaa99575ca3b693afff7996387` has no source
 `go.mod`; the proxy synthesizes only its module line. Current head
@@ -118,14 +141,12 @@ snapshot SHA-256
 No exception transfers to demangle or another target.
 
 Final unchanged-tree exact Go 1.26.7 module verification, build, canonical
-count-one tests, race tests, and vet pass. The reciprocal 234-archive chain and
-launcher/archive prompt mirror pass `./codex-dev-start.sh --check`; all 62
-launcher lifecycle controls, all 24 launcher-auto assertions, and all 15
-quality-audit meta-controls pass. The first broader-environment audit replay
-reached T15 before its byte-for-byte baseline comparison differed; the
-canonical rerun with exact Go first on `PATH` and ambient Go target/flag
-overrides removed passed all 15 controls. No changed-selection scorecard
-applies; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+count-one tests, race tests, and vet pass. The reciprocal 235-archive chain and
+launcher/archive prompt mirror pass `./codex-dev-start.sh --check`. The prior
+evaluation's all 62 launcher lifecycle controls, all 24 launcher-auto
+assertions, and all 15 quality-audit meta-controls remain the latest applicable
+full meta evidence. No changed-selection scorecard applies; accepted quality
+remains 27/27 Q0-Q2 PASS at L2.
 
 The only syntactically tidy-stable candidate projection used Go 1.25's `tool`
 directive for `github.com/hashicorp/serf/cmd/serf@v0.10.4`. It retained exact
@@ -2575,12 +2596,24 @@ Guard OSV results retain only the recorded Gorilla and go-retryablehttp pairs;
 memberlist CNA bytes remain exact at
 `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
 
-The sole next task is the documentation-only demangle product decision. It
-may explicitly retain exact selected under a target-specific non-transferable
-exception, authorize a separate measurement-only pprof owner/request study,
-or stop P7 unresolved. It may not call selected qualified, silently select
-current, reproduce the panic, add a root, implement a parent route, alter an
-earlier guard, combine another group, or begin P8.
+The option-1 product decision explicitly retains exact selected, inherited and
+unloaded demangle under the target-specific, non-transferable exception at the
+top of this handover. Guard-only revalidation started from clean HEAD
+`050c47a`, parent `de47934`, tree `fb1f0bd`; its five-file handoff, reciprocal
+234-archive chain, latest Google UUID implementation ancestry, exact Go
+identity, module hashes, target/pprof requests, 26 negative target-plus-guarded
+why results, zero imports/loads, and launcher check passed. Fresh target OSV
+and GitHub advisory results remain empty; the Go index, guard OSV pairs, and
+memberlist CNA identity remain exact. No parser, crash, parent-route, security,
+or exploitability work was repeated.
+
+P7 continues only with the bounded evaluation of selected exact-path
+`github.com/jonboulle/clockwork v0.1.0`. Current queue observations are its
+sole historical `mvn-pom-mutator v0.2.3` request, negative why, zero repository
+imports, and zero production/complete-test package loads. These observations
+are not qualification. The evaluation must preserve demangle, pprof, every
+earlier guard, the parent, and the Go floor; it may not manufacture ownership,
+combine another group, or begin P8.
 
 ## Project And Quality State
 
@@ -2824,13 +2857,13 @@ measured worktree.
 
 ## Next Bounded Objective
 
-Make exactly one bounded documentation-only product decision for selected
-exact-path `github.com/ianlancetaylor/demangle
-v0.0.0-20200824232613-28f6c0f3b639`: guarded target-specific retention,
-authorization of one separate measurement-only pprof owner/request study, or
-an explicit unresolved P7 stop. Reuse the completed evaluation. Do not repeat
-parser/crash testing, change source or dependency metadata, manufacture a
-root, silently select current, alter pprof or another finalized guard, reopen
-completed groups, combine another dependency group, or begin P8. Keep every
-disposable beneath `${CODEX_SESSION_SCRATCH_ROOT:?}` and prepare only the
-reciprocal successor authorized by the chosen direction.
+Evaluate selected exact-path `github.com/jonboulle/clockwork v0.1.0` as one
+bounded P7 dependency group. Independently resolve repository/release identity,
+complete Go-floor closure, API and ordinary clock behavior, MVS/loading,
+vulnerability, and every applicable contract. Select only a qualified exact-
+path stable release preserving Go 1.18; otherwise leave metadata unchanged and
+stop for one fresh bounded product decision. Preserve the demangle exception,
+pprof, mvn-pom-mutator, and every earlier guard; do not combine another group or
+begin P8. Keep every disposable beneath
+`${CODEX_SESSION_SCRATCH_ROOT:?}` and prepare only the reciprocal successor
+authorized by that result.

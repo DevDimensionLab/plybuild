@@ -1,13 +1,13 @@
 # Agent Session: Decide Ianlancetaylor Demangle Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-21T113049+0200-decide-ianlancetaylor-demangle-product-direction`
 Created: `2026-09-21T11:30:49+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c50dd8b9a7047a2cd8d5a69e1346d87921e173af11b09e077efa06eaeb899286`
 Previous: [2026-09-21T025404+0200-evaluate-ianlancetaylor-demangle-dependency.md](2026-09-21T025404+0200-evaluate-ianlancetaylor-demangle-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-21T120339+0200-evaluate-jonboulle-clockwork-dependency.md](2026-09-21T120339+0200-evaluate-jonboulle-clockwork-dependency.md)
+Outcome: Option 1 explicitly retains exact inherited and unloaded demangle v0.0.0-20200824232613-28f6c0f3b639 under a target-specific non-transferable exception for only the completed command, release-identity, API, behavior, and related findings; no source or dependency metadata changed, and the sole successor is the next bounded P7 dependency evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -226,3 +226,148 @@ release, stash, revert, bypass cleanup, remove the worktree, combine another
 dependency group, reopen strcase/protoc-gen-validate/memberlist/Serf/POM work,
 or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+# Answer
+
+## Decision
+
+Option 1 is explicitly authorized. Retain exact selected
+`github.com/ianlancetaylor/demangle
+v0.0.0-20200824232613-28f6c0f3b639` as an inherited, unloaded module without
+changing product source, `go.mod`, or `go.sum`. This is a new demangle-specific,
+non-transferable exception. The selected pseudo-version is not qualified. Its
+zero current import, load, and runtime reachability bounds the accepted
+exposure; physical MVS selection did not itself authorize this decision.
+
+The exception accepts only the already observed empty-argument `c++filt`
+panic, the absence of a tagged or GitHub release identity, and the completed
+characterization of the selected C++ demangling API, options, behavior,
+Go-floor closure, command surface, MVS position, loading, vulnerability, and
+related findings. It accepts no uncharacterized behavior, new advisory, or
+independently observed defect. Current
+`v0.0.0-20260724033716-83e58baca724` remains unqualified and unselected because
+it is an unreleased branch-head pseudo-version, retains the recorded command
+panic, and incompatibly changes the exported `NoClones` and `Verbose` values.
+
+A direct root, replacement, fork, patch, exclusion, version masquerade, blank
+or build-tag import, unused test/tool anchor, pprof change, parent/request
+study, or transfer of the strcase, memberlist, or another exception is not
+authorized. This decision grants no product-source, dependency-metadata,
+Go-floor, toolchain, parent, guarded-module, quality-policy, or P8 change.
+
+## Revalidated Decision Guards
+
+Guard-only revalidation began from clean ordinary and ignored worktree state
+on branch `codex/upgrade-quality` at handoff HEAD
+`050c47a6892944d63d189c036ba71c98046a4995`, parent
+`de47934efeb7527a91e49f3f5b62b012e42e51fb`, tree
+`fb1f0bd3758bca1d4d373b83772026563ee2fbcf`. That handoff changed exactly
+`codex-dev-start.sh`, the answered demangle evaluation archive, this then-NEXT
+decision archive, the rolling handover, and the roadmap. Its predecessor
+`de47934`, parent `3e4354c`, tree `d84a656`, retains the defensive retry
+handoff described by the mission. The reciprocal 234-archive chain, byte-exact
+launcher/archive prompt mirror, and launcher check passed before editing.
+
+The latest dependency implementation remains exact Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
+`b89afd4ec056133b1eefb5611f8f35c12c11824b`. It changes only `go.mod` and
+`go.sum`, with three insertions and no deletions, is an ancestor of this
+handoff, and has no later dependency implementation or metadata successor.
+
+Exact Go 1.26.7 remains byte-identical at binary SHA-256
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+With that binary first on `PATH`, `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, no ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and
+`umask 022`, the unchanged project retains 234 modules, 3,599 graph edges,
+355 production entries, 429 complete-test entries, 197 module-backed
+complete-test entries across 41 loaded modules, 1,067 sum lines, and the
+432-line tidy projection. Exact module verification passes. `go.mod` and
+`go.sum` retain SHA-256 values
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+
+MVS still selects the target only through thirteen historical Google pprof
+requests: five request
+`v0.0.0-20181102032728-5e5cf60278f6` and eight request selected
+`v0.0.0-20200824232613-28f6c0f3b639`. Selected pprof remains exact
+`github.com/google/pprof
+v0.0.0-20210720184732-4bb14d4b1be1`, and its request remains
+`github.com/google/pprof@v0.0.0-20210720184732-4bb14d4b1be1 ->
+github.com/ianlancetaylor/demangle@v0.0.0-20200824232613-28f6c0f3b639`.
+There is no direct target root. All 26 demangle-plus-earlier guarded
+`go mod why -m` results are negative; pprof is independently negative;
+repository Go imports are zero; and production and complete-test closures load
+zero target, pprof, or earlier guarded packages. Runtime unreachability remains
+exact.
+
+All 25 earlier guarded selections and their 167 incoming graph edges remain
+exact at sorted snapshot SHA-256
+`b6e0bcee17f83b0cc88a370c2f86a51c1872506b113075960c497bf420c48fc9`.
+Including demangle yields 26 guarded selections and 180 incoming edges at
+snapshot SHA-256
+`8f39e82800e0abf94ae419186614a2cf709759192aba2614603dbf578ef64121`.
+No pprof, strcase, memberlist, or earlier guard expired.
+
+Fresh narrow identity checks preserve the decision premise without repeating
+the evaluation. Exact selected and current demangle OSV queries, GitHub global
+advisory queries, and the repository advisory query remain empty. The Go
+vulnerability index remains byte-identical at 1,402 records, SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. Guard OSV results retain only Gorilla
+WebSocket GO-2026-6278/GHSA-w67g-5rqw-f597 and go-retryablehttp
+GO-2024-2947/GHSA-v6v8-xj6m-xwqh. The PUBLISHED HashiCorp CNA response for
+CVE-2026-14362 remains 2,807 bytes at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+record `67fedba0-ff2e-4543-ba5b-aa93e87718cc`, updated
+2026-07-08T19:40:16.119Z, with memberlist below v0.6.0 affected. No parser,
+crash, security, exploitability, behavior, or parent-route evaluation was
+repeated.
+
+## Ownership, Expiry, And Successor Bounds
+
+This repository owns only the explicit decision to tolerate exact inherited
+demangle `v0.0.0-20200824232613-28f6c0f3b639` in the verified unloaded graph.
+The exception remains valid only while every fact above is exact: the selected
+pseudo-version; all thirteen historical pprof requests and their versions;
+selected pprof and its selected-version request; no direct root, repository
+import, production or complete-test load, or runtime reachability; the exact
+graph, module hashes, and tidy projection; all earlier guarded selections,
+edges, why/import/load conditions, advisories, and owner/route guards; and no
+new demangle advisory, independently observed defect, qualified exact-path
+release, genuine supported tidy-stable owner, or compatible qualified route.
+
+Any target, request, parent, pprof, root, import, load, runtime, graph,
+module-hash, tidy, earlier-guard, advisory, finding, qualified-release, owner,
+or route change immediately expires this exception and requires a fresh
+demangle dependency and product decision before merge. The exception
+authorizes no later workaround or owning-parent study and transfers to no
+other target.
+
+P7 may continue only with the reciprocal bounded evaluation of selected
+`github.com/jonboulle/clockwork v0.1.0`, the next unevaluated dependency after
+skipping the already-final mousetrap group. Current queue observations are one
+historical `github.com/devdimensionlab/mvn-pom-mutator v0.2.3` request,
+negative why, zero repository imports, and zero production or complete-test
+target loads. Those observations are not qualification. The successor must
+preserve this exception and every earlier guard, evaluate only clockwork, and
+stop for a fresh owning decision if no exact-path release qualifies or any
+guard changes. It authorizes neither another combined dependency group nor P8.
+
+## Final State
+
+This session changed only continuity documentation and the launcher handoff.
+It did not edit product source, `go.mod`, or `go.sum`; change demangle, pprof,
+another guarded module, the Go floor, or the toolchain; reproduce the recorded
+panic; run the owning-parent study; implement a workaround; or begin P8. No
+dependency implementation commit or changed-selection scorecard applies, and
+accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+Exact Go 1.26.7 module verification, build, canonical count-one tests, race
+tests, and vet pass on the unchanged product tree. The reciprocal archive
+chain and byte-exact launcher/archive prompt mirror pass
+`./codex-dev-start.sh --check`; applicable launcher and continuity controls
+pass. `git diff --check` passes, every task-owned cache stayed beneath the
+managed session scratch root and was removed, and the final handoff contains
+only the launcher and continuity documentation required for this decision and
+its one successor.

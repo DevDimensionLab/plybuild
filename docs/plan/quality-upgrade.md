@@ -5374,18 +5374,15 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on one defensively narrowed retry of the bounded
-ianlancetaylor/demangle dependency evaluation after its first attempt stopped
-cleanly at an automated policy boundary.
-The completed strcase evaluation found no exact-path stable release that
-passes every contract, and the option-1 product decision now explicitly
-retains exact selected, inherited and unloaded v0.2.0 under target-specific
-non-transferable guards without qualifying it or changing metadata. The
-earlier option-1 decision continues to retain affected, not-secure, inherited
-and unloaded memberlist v0.3.0 under its separate exact guards. Completed
-dependency groups remain final through accepted Google UUID v1.4.0, qualified
-go-cleanhttp v0.5.2, and every retained-module decision through strcase. P8
-remains queued.
+Status: active on one bounded evaluation of selected exact-path
+`github.com/jonboulle/clockwork v0.1.0` after the option-1 demangle product
+decision explicitly retained exact selected, inherited and unloaded
+`v0.0.0-20200824232613-28f6c0f3b639` under target-specific non-transferable
+guards without qualifying it or changing metadata. The earlier strcase and
+affected/not-secure memberlist option-1 decisions remain separate under their
+own exact guards. Completed dependency groups remain final through accepted
+Google UUID v1.4.0, qualified go-cleanhttp v0.5.2, and every retained-module
+decision through demangle. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -11991,6 +11988,69 @@ Ianlancetaylor demangle evaluation (2026-09-21):
   or an earlier guard, combine another group, reopen excluded work, or begin
   P8. Every disposable used by the retry remained beneath the launcher's
   managed `${CODEX_SESSION_SCRATCH_ROOT:?}` and must not be retained.
+
+Ianlancetaylor demangle product decision (2026-09-21):
+
+- Option 1 is explicitly authorized: retain exact selected, inherited and
+  unloaded `github.com/ianlancetaylor/demangle
+  v0.0.0-20200824232613-28f6c0f3b639` without changing product source,
+  `go.mod`, or `go.sum`. This is a demangle-specific, non-transferable
+  exception, not release qualification. Zero current import/load/runtime
+  reachability bounds the accepted exposure but did not itself authorize the
+  decision.
+- The exception accepts only the already observed empty-argument `c++filt`
+  panic, absence of tagged/GitHub release identity, and completed C++ API,
+  options, behavior, command, Go-floor, MVS, loading, vulnerability, and
+  related findings. It accepts no new advisory, independent defect, or
+  uncharacterized behavior. Current
+  `v0.0.0-20260724033716-83e58baca724` remains unqualified and unselected
+  because it is unreleased, retains the panic, and incompatibly changes the
+  exported `NoClones` and `Verbose` values.
+- The exception remains valid only while the exact selected pseudo-version,
+  all thirteen historical pprof requests, selected pprof
+  `v0.0.0-20210720184732-4bb14d4b1be1` and its selected request, no direct
+  root/import/load/runtime reachability, exact graph/module/tidy state, every
+  earlier guard, and no new advisory, independently observed defect, qualified
+  exact-path release, genuine supported tidy-stable owner, or compatible
+  qualified route remain exact. Any target, request, parent, pprof, root,
+  import, load, runtime, graph, module-hash, tidy, earlier-guard, advisory,
+  finding, release, owner, or route change expires the exception and requires
+  its fresh owning decision before merge. No exception transfers.
+- Guard-only revalidation began from clean HEAD `050c47a`, parent `de47934`,
+  tree `fb1f0bd`. Its exact five-file handoff, reciprocal 234-archive chain,
+  latest Google UUID implementation ancestry, exact Go 1.26.7 identity, and
+  launcher check passed. The unchanged project retains 234 modules, 3,599
+  edges, 355/429 load entries, 197 module-backed complete-test entries across
+  41 modules, 1,067 sum lines, and the 432-line tidy projection. `go.mod` and
+  `go.sum` retain SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+- All 26 demangle-plus-earlier guarded why results are negative; pprof is also
+  negative; repository imports are zero; and production/complete-test closures
+  load zero target, pprof, or guarded packages. All 25 earlier selections and
+  167 edges retain snapshot SHA-256
+  `b6e0bcee17f83b0cc88a370c2f86a51c1872506b113075960c497bf420c48fc9`;
+  including demangle yields 26 guarded selections and 180 incoming edges at
+  `8f39e82800e0abf94ae419186614a2cf709759192aba2614603dbf578ef64121`.
+- Fresh exact selected/current demangle OSV, GitHub global, and repository
+  advisory results remain empty. The Go index remains 1,402 records at
+  SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`;
+  guard OSV retains only the recorded Gorilla/go-retryablehttp pairs, and the
+  PUBLISHED memberlist CNA response remains 2,807 bytes at SHA-256
+  `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+  No parser, crash, parent-route, security, or exploitability work was
+  repeated.
+- P7 continues only with the reciprocal bounded evaluation of selected
+  `github.com/jonboulle/clockwork v0.1.0`. Current queue observations are one
+  historical `mvn-pom-mutator v0.2.3` request, negative why, zero repository
+  imports, and zero production/complete-test loads. They are not qualification.
+  The successor must preserve demangle, pprof, every earlier guard, the parent,
+  and the Go floor; it may not combine another group or begin P8.
+- Final exact-Go module verification, build, canonical count-one tests, race,
+  vet, reciprocal 235-archive launcher check, and scratch-containment cleanup
+  pass. No dependency implementation or changed-selection scorecard applies;
+  accepted quality remains 27/27 Q0-Q2 PASS at L2.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
