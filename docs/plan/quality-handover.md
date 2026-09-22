@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T07:18:43+02:00
+Generated: 2026-09-22T08:19:29+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,16 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The target decision began
-  from clean HEAD `f5d1d5de0197fead75749e749a9b9bf24b66f0bb`, parent
-  `12bb6d1a814b04adf4a897faefcbe32f730e9159`, tree
-  `f9e8c2e0abe5ac92358ab2282ab3c3e0ec9da701`. That handoff changes exactly
-  the launcher, answered target evaluation archive, then-NEXT target decision
-  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 250-archive history, latest Google
-  UUID ancestry, exact Go identity, module hashes, target and earlier guards,
-  fresh advisory identities, and launcher check passed.
+  `codex/upgrade-quality`, base master at `5635d50`. The kr/fs evaluation began
+  from clean HEAD `f12458f3e753abb2fe6b0420d345e3ef39b3af7f`, parent
+  `f5d1d5de0197fead75749e749a9b9bf24b66f0bb`, tree
+  `7d6cb2df56d735966ed27574c97d00cfceca218f`. That handoff changes exactly
+  the launcher, answered go-windows-terminal-sequences decision archive,
+  then-NEXT kr/fs evaluation archive, rolling handover, and roadmap. Ordinary
+  and ignored status, branch, ancestry, exact changed set, reciprocal
+  251-archive history, latest Google UUID ancestry, exact Go identity, module
+  hashes, target and earlier guards, fresh advisory identities, and launcher
+  check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -24,7 +25,8 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The target decision/evaluation, gotool decision/evaluation, errcheck decision/evaluation, httprouter decision/evaluation, jtolds/gls
+- The kr/fs evaluation, go-windows-terminal-sequences decision/evaluation,
+  gotool decision/evaluation, errcheck decision/evaluation, httprouter decision/evaluation, jtolds/gls
   decision/evaluation, go-junit-report decision/evaluation, json-iterator
   decision/evaluation, clockwork decision/evaluation, demangle decision/
   evaluation, strcase decision/evaluation, integrated memberlist migration,
@@ -37,13 +39,13 @@ session diary.
   v1.1.12, and clockwork v0.1.0 under separate target-specific exceptions;
   none is qualified and no implementation was retained. Stable httprouter
   v1.3.0 qualifies but has no genuine supported tidy-stable project owner. No
-  exact-path go-windows-terminal-sequences stable qualifies; source and
-  dependency metadata remain unchanged. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T071843+0200-evaluate-kr-fs-dependency.md`.
-  It evaluates only exact selected kr/fs v0.1.0. It must preserve the target
-  exception and every earlier decision, may not manufacture a direct root or
-  parent change, combine another group, write outside the managed scratch
-  root, or begin P8.
+  exact-path go-windows-terminal-sequences or kr/fs stable qualifies; source
+  and dependency metadata remain unchanged. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-22T081929+0200-decide-kr-fs-product-direction.md`.
+  It makes only the bounded kr/fs product decision. It must treat the completed
+  behavior evaluation as final, preserve every earlier decision, may not
+  manufacture a direct root or parent change, combine another group, write
+  outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -58,12 +60,88 @@ unloaded gotool v1.0.0, errcheck v1.5.0, httprouter v1.2.0,
 jtolds/gls v4.20.0+incompatible,
 go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 remain
 accepted only under their own target-specific exceptions and are not
-qualified. Product source and dependency metadata remain unchanged. P7
-continues only with the bounded evaluation of selected inherited/unloaded
-`github.com/kr/fs v0.1.0`. Exact Go 1.26.7, every accepted dependency
+qualified. No exact-path stable kr/fs release qualifies; selected inherited,
+unloaded v0.1.0 is not accepted or qualified. Product source and dependency
+metadata remain unchanged. P7 is blocked on its one prepared bounded kr/fs
+product decision. Exact Go 1.26.7, every accepted dependency
 move through Google UUID v1.4.0, qualified go-cleanhttp, and all earlier
 retained-module decisions remain final under separate guards. P8 remains
 queued.
+
+## Kr Fs Evaluation
+
+No exact-path stable release qualifies. The public proxy exposes only v0.1.0,
+whose module file names exact `github.com/kr/fs` with no Go directive,
+requirements, retractions, deprecation, or replacement. Exact go-import
+metadata resolves without redirect to the public enabled unarchived non-fork
+BSD-3-Clause `kr/fs` repository. Its sole annotated tag is unsigned, peels to
+commit `1455def202f6e05b95cc7bfc7e8ae67ae5141eba`, and matches `master`.
+There are no GitHub Releases.
+
+Default `main` is one unsigned README-only commit later and resolves only as
+pseudo-version `v0.1.1-0.20210218185759-c64b65e7619f`; all Go source is
+identical. Its recommendation of `kr.dev/walk` names an alternate module and
+repository. Exact `/v2` and `/v3` lines do not exist. Proxy and tagged Git
+regular files agree byte for byte; no branch, pseudo-version, fork, redirect,
+or alternate path was promoted.
+
+V0.1.0 is one standard-library-only package, preserves Go 1.18, and exports
+`FileSystem`, `Walker`, `Walk`, `WalkFS`, and Walker access/control methods.
+Both exact Go 1.26.7 and contained Go 1.18.10 pass upstream build, repeated
+tests/race, vet, supported cross-builds, and all non-disqualifying bounded
+behavior coverage. There is no cgo, generated source, global mutable state,
+network/subprocess boundary, or library-owned caller resource.
+
+The stable release nevertheless violates its documented ordinary behavior.
+`Walker` promises lexical-order traversal unconditionally. Internal `Walk`
+uses sorted `ioutil.ReadDir`, but exported `WalkFS` accepts any valid
+`FileSystem` and never sorts the returned entries. A bounded deterministic
+filesystem returning ordinary root entries `[b, a]` yields
+`[root, root/b, root/a]`, not promised `[root, root/a, root/b]`, under both
+SDKs. The README-only pseudo-version has identical source and the same defect.
+This disqualifier is independent of advisory results or current loading.
+
+MVS selects exact v0.1.0 through exactly two requests from SFTP v1.13.1 and
+v1.10.1. The current route is main -> direct Afero v1.9.4 -> SFTP v1.13.1 ->
+target. The historical route is main -> direct mvn-pom-mutator v0.2.3 ->
+Viper v1.10.1 -> Afero v1.6.0 -> SFTP v1.10.1 -> target. Both SFTP clients
+implement the target interface, call `WalkFS`, and preserve server reply order
+rather than sorting, so the failed contract is relevant to the real requester.
+Neither SFTP version loads in the project. Current Afero loads only root,
+`internal/common`, and `mem`, not its SFTP adapter.
+
+Target why is negative, repository imports and production/complete-test loads
+are zero, and there is no runtime reachability. Disposable stable and main-
+pseudo direct roots manufactured only one main edge and sums, preserved all
+loads, and were removed by tidy; the pseudo projection also restored inherited
+v0.1.0 because no genuine owner requests it. No projection or dependency
+commit was retained.
+
+The unchanged project remains 234/3,599/355/429/197/41/1,067 with exact
+module hashes and the recorded 432-line tidy projection. All 34 guarded
+selections and their 223 incoming edges retain SHA-256
+`8cb329e95dcd81165af873c9bb4f11c85f61f7d68f39794394ab16a49f5cddc6`;
+every guarded why is negative and imports/loads zero. Fresh exact OSV, GitHub,
+repository-advisory, and isolated govulncheck evidence has no target finding.
+Base and disposable project finding populations are identical. Earlier guard
+advisories, the exact 1,402-record Go index, and PUBLISHED memberlist CNA
+response remain unchanged. No security reproduction or exploitability work
+occurred.
+
+Product source and dependency metadata remain unchanged. No changed-selection
+scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at L2. Final
+exact-Go module verification, build, count-one tests, race count-one tests,
+and vet pass. The reciprocal 252-archive chain, sole NEXT state, launcher/
+archive prompt mirror, exact five-file documentation-only changed set, diff
+checks, launcher check, and all 62 launcher controls pass. Every task-owned
+scratch artifact was contained beneath the managed session root and removed;
+only its pre-existing launcher-owned Node compile cache remains. P7 stops for
+one reciprocal choice: explicitly retain selected, inherited, unloaded
+unqualified v0.1.0 under a target-specific exception; authorize one later
+measurement-only study of the current Afero v1.9.4 -> SFTP v1.13.1 owner/
+request route; or stop P7 unresolved. Do not repeat completed behavior, add a
+direct root, promote the pseudo-version or alternate path, implement a parent/
+source change, transfer an exception, combine another group, or begin P8.
 
 ## Konsorten Go Windows Terminal Sequences Evaluation
 
@@ -3865,13 +3943,21 @@ completed behavior evaluation, direct-root projection, or owner study. No
 source or dependency metadata changed, so no changed-selection scorecard
 applies and accepted quality remains 27/27 Q0-Q2 PASS at L2.
 
+The kr/fs evaluation's final unchanged-project exact Go 1.26.7 module
+verification, build, count-one tests, race count-one tests, and vet pass. The
+evaluation reproduced exact repository/release and source identities, both
+SDK closures, bounded ordinary filesystem behavior, both SFTP requests and
+genuine routes, 34-selection/223-edge why/import/load guards, disposable
+stable/pseudo project projections, exact tidy/module state, and fresh advisory
+evidence. No source or dependency metadata changed, so no changed-selection
+scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
 ## Next Bounded Objective
 
-Evaluate exact selected `github.com/kr/fs v0.1.0` as one bounded P7 dependency
-group. Independently resolve exact-path releases, Go-floor closure, ordinary
-filesystem behavior, both SFTP requests and genuine Afero/Viper/mvn-pom owner
-routes, loading, project effects, and advisory evidence. Implement only a
-qualified exact-path stable release that preserves Go 1.18 and every guard;
-otherwise leave metadata unchanged and stop for one bounded product decision.
-Do not add a direct root, change an owner, transfer an exception, combine
-another group, or begin P8.
+Make exactly one bounded product decision for selected, inherited, unloaded,
+unqualified `github.com/kr/fs v0.1.0`: retain it under a target-specific,
+non-transferable exception; authorize one later measurement-only study of the
+current Afero v1.9.4 -> SFTP v1.13.1 owner/request route; or stop P7 unresolved.
+Treat the completed behavior evaluation as final. Do not add a direct root,
+promote the pseudo-version or alternate path, change an owner/source/metadata,
+transfer an exception, combine another group, or begin P8.

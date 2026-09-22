@@ -5375,10 +5375,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: stopped for one bounded product decision about selected exact-path
-`github.com/konsorten/go-windows-terminal-sequences v1.0.1`; no exact-path
-stable release qualifies. Option 1
-explicitly retained exact inherited/unloaded gotool v1.0.0 and errcheck
-v1.5.0 under separate target-specific non-transferable exceptions. Exact
+`github.com/kr/fs v0.1.0`; no exact-path stable release qualifies. Option 1
+explicitly retained exact inherited/unloaded go-windows-terminal-sequences
+v1.0.1, gotool v1.0.0, and errcheck v1.5.0 under separate target-specific
+non-transferable exceptions. Exact
 inherited/unloaded httprouter v1.2.0, jtolds/gls v4.20.0+incompatible,
 go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 remain
 separately retained and unqualified under their own exceptions. Earlier
@@ -12964,6 +12964,68 @@ Konsorten Go Windows Terminal Sequences product decision (2026-09-22):
   exception and every earlier guard, evaluate no other group, and stop for a
   fresh product decision if no exact-path stable release qualifies or any
   guard changes. It was prepared but not executed. P8 remains queued.
+
+Kr Fs evaluation (2026-09-22):
+
+- No exact-path stable release qualifies. The proxy exposes only v0.1.0,
+  whose exact module file has no Go directive, requirements, retractions,
+  deprecation, or replacement. Exact go-import metadata resolves without
+  redirect to the public enabled unarchived non-fork BSD-3-Clause `kr/fs`
+  repository. Its sole annotated tag is unsigned, peels to commit
+  `1455def202f6e05b95cc7bfc7e8ae67ae5141eba`, and matches `master`; there
+  are no GitHub Releases.
+- Default `main` is one unsigned README-only commit later and resolves only as
+  `v0.1.1-0.20210218185759-c64b65e7619f`; all Go source is identical. Its
+  `kr.dev/walk` recommendation is a distinct unauthorized module path. Exact
+  `/v2` and `/v3` lines do not exist. Proxy and tag files agree byte for byte;
+  no pseudo-version, fork, redirect, alternate path, or replacement was
+  promoted.
+- V0.1.0 is one standard-library-only package, preserves Go 1.18, and exports
+  `FileSystem`, `Walker`, `Walk`, `WalkFS`, and Walker methods. Exact Go
+  1.26.7 and contained Go 1.18.10 pass upstream build/tests/repeated race/vet,
+  supported cross-builds, and all non-disqualifying bounded behavior coverage.
+- The stable release fails its documented ordinary behavior. `Walker`
+  promises lexical traversal unconditionally, but `WalkFS` never sorts a
+  caller filesystem's `ReadDir` result. A bounded filesystem returning
+  ordinary root entries `[b, a]` yields `[root, root/b, root/a]`, not
+  `[root, root/a, root/b]`, under both SDKs. The main pseudo-version has the
+  same source and defect. No fuzzing, stress, adversarial path generation,
+  security reproduction, or exploitability work occurred.
+- MVS selects v0.1.0 through exact requests from SFTP v1.13.1 and v1.10.1.
+  The current route is main -> direct Afero v1.9.4 -> SFTP v1.13.1 -> target;
+  the historical route is main -> direct mvn-pom-mutator v0.2.3 -> Viper
+  v1.10.1 -> Afero v1.6.0 -> SFTP v1.10.1 -> target. Both SFTP clients
+  implement the target interface, call `WalkFS`, and preserve server reply
+  order. Neither loads in this project; current Afero loads no SFTP adapter.
+- Target why is negative, repository imports and production/complete-test
+  loads are zero, and there is no runtime reachability. Disposable stable and
+  pseudo direct roots manufactured only one main edge and sums, preserved all
+  loads, and were removed by tidy; pseudo tidy restored inherited v0.1.0. No
+  direct root, projection, owner change, or dependency commit was retained.
+- The project remains 234/3,599/355/429/197/41/1,067 with exact module hashes
+  and the recorded 432-line tidy projection. All 34 guarded selections and
+  their 223 incoming edges retain SHA-256
+  `8cb329e95dcd81165af873c9bb4f11c85f61f7d68f39794394ab16a49f5cddc6`;
+  every guarded why remains negative and imports/loads zero.
+- Fresh exact OSV/GitHub/repository-advisory and isolated govulncheck evidence
+  has no target finding. Base and disposable project finding populations are
+  identical. Earlier guard advisories, the exact 1,402-record Go index, and
+  PUBLISHED memberlist CNA response remain unchanged. Advisory absence is not
+  qualification.
+- Product source and dependency metadata remain unchanged. No changed-
+  selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. Final exact-Go verify/build/count-one/race/vet pass. P7 stops for one
+  reciprocal product choice after the reciprocal 252-archive chain, sole NEXT
+  state, launcher/archive prompt mirror, exact five-file documentation-only
+  changed set, diff checks, launcher check, and all 62 launcher controls pass.
+  Every task-owned scratch artifact was contained beneath the managed session
+  root and removed; only its pre-existing launcher-owned Node compile cache
+  remains. The choice is: retain exact inherited/unloaded unqualified v0.1.0
+  under a target-specific exception; authorize one later measurement-only
+  study of the current Afero v1.9.4 -> SFTP v1.13.1 owner/request route; or
+  stop P7 unresolved. Do not repeat completed behavior, add a direct root,
+  promote the pseudo-version or alternate path, change a parent/source/
+  metadata, transfer an exception, combine another group, or begin P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
