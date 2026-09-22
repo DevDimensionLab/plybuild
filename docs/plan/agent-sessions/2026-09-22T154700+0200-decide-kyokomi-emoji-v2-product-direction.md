@@ -1,13 +1,16 @@
 # Agent Session: Decide Kyokomi Emoji V2 Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-22T154700+0200-decide-kyokomi-emoji-v2-product-direction`
 Created: `2026-09-22T15:47:00+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `44b39ecd1791d1a236166c545355e8318df61300eb044800d2a6733a65af6ced`
 Previous: [2026-09-22T144301+0200-evaluate-kyokomi-emoji-v2-dependency.md](2026-09-22T144301+0200-evaluate-kyokomi-emoji-v2-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-22T162048+0200-evaluate-manifoldco-promptui-dependency.md](2026-09-22T162048+0200-evaluate-manifoldco-promptui-dependency.md)
+Outcome: Option 1 selected. Exact direct-indirect, runtime-relevant
+  kyokomi/emoji/v2 v2.2.12 is explicitly retained unqualified under a target-
+  specific, non-transferable exception; source and dependency metadata remain
+  unchanged, and the bounded Promptui successor was prepared but not executed.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -282,3 +285,150 @@ cleanup, remove the worktree, transfer an exception, reopen emoji/v2, kr/text,
 kr/pty, kr/pretty, Cast, or an earlier decision, evaluate another dependency
 group, write outside the managed scratch root, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 was selected on 2026-09-22. Exact selected
+`github.com/kyokomi/emoji/v2 v2.2.12` is explicitly retained as a main-module
+direct-indirect, production-loaded, runtime-relevant dependency without
+changing product source, `go.mod`, or `go.sum`. It remains unqualified and is
+not described as secure: all ten canonical exact-path stables fail the
+documented `Fprintln` and `Errorf` contracts, and latest v2.2.14 independently
+violates the retained Go 1.18 floor. Physical selection, positive why,
+runtime loading, and advisory absence bound current exposure but do not
+qualify or implicitly accept the module.
+
+The emoji/v2-specific, non-transferable exception accepts only the completed
+repository/release/source, ordinary behavior, API/closure/platform, owner/
+request, route, why/import/load/runtime, graph/tidy/projection/Go-floor,
+earlier-guard, kr/text/kr/pty-guard, and advisory findings. It accepts no
+uncharacterized behavior, new advisory, or independent defect. It neither
+broadens nor expires the closed kr/text or kr/pty exceptions and transfers no
+other exception.
+
+The exception remains valid only while every one of these facts remains exact:
+
+- selected exact path/version `github.com/kyokomi/emoji/v2 v2.2.12`, main's
+  direct-indirect v2.2.12 request, direct supported
+  `github.com/MichaelMure/go-term-markdown v0.1.4` -> v2.2.8, and the
+  historical main v2.2.8 -> v2.2.12 target-root-only change;
+- go-term-markdown's `renderer.go` target import and `emoji.Sprint` use, the
+  complete main `cmd` -> direct requester -> target route, no direct
+  repository target import, positive target and requester why results,
+  production and complete-test loading of both modules, and target runtime
+  relevance;
+- public enabled, unarchived, non-fork MIT repository `kyokomi/emoji`, ID
+  21064634, owned by `kyokomi`, defaulting to `main`, with no parent/source;
+  the exact v2.2.5-v2.2.14 canonical `/v2` line; separation from v2.0.0-
+  v2.2.4 on the unsuffixed `+incompatible` line; absent `/v3`; all completed
+  release/tag/commit/tree/signature/ancestry/archive/sumdb/module/license
+  identities; nine canonical GitHub Release objects with only v2.2.6 absent;
+  and no retraction, deprecation, replacement, prerelease, eligible alternate
+  path, fork, branch, or pseudo-version;
+- every canonical stable remaining unqualified for the completed documented
+  `Fprintln` adjacent-operand and `Errorf` `%w` failures; v2.2.14 remaining
+  Go-1.21-floor-ineligible; the completed API, closure, platform, positive
+  ordinary fixture, upstream-gate, and cross-build results remaining exact;
+  and no future qualified Go-1.18-compatible canonical exact-path stable or
+  supported route appearing;
+- the baseline 234 selected modules, 3,599 graph edges, 355 production
+  entries, 429 complete-test entries, 197 module-backed entries across 41
+  loaded modules, and 1,067 sum lines;
+- `go.mod` / `go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  the 432-line tidy projection at
+  `3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`,
+  and the common applied 52/948-line hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`;
+- all completed disposable exact-get results: v2.2.8 changing only the target
+  root while preserving 234/3,599/355/429/197/41/1,067; selected v2.2.12
+  remaining a no-op; v2.2.13 changing only the target root and two checksum
+  lines for 234/3,599/355/429/197/41/1,069 and tidying with only target
+  identity changed; and v2.2.14 raising the main Go line to 1.21 for
+  234/3,601/355/429/197/41/1,069 and its recorded tidy state; with no
+  projection retained;
+- declared Go 1.18 floor; exact Go 1.26.7 darwin/arm64 official archive/
+  binary SHA-256 identities
+  `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
+  unchanged source/API/CLI/help/launcher/Make/quality contracts; and accepted
+  27/27 Q0-Q2 PASS at L2;
+- all 39 earlier guarded selections exact; 37 negative why results and only
+  closed kr/pretty and kr/text positive; zero guarded repository imports and
+  production/complete-test loads; and their 237 sorted incoming edges at
+  SHA-256
+  `151e72c0b5444acc59ffab45d6ce8fe43e80821b42df6a49a11902b3a6632803`;
+- every kr/text expiry guard, including its exact selected/request/route/
+  behavior/fix/release/owner/why/import/load/runtime/graph/tidy/Go-floor/
+  advisory/qualification/compatible-route state, and every kr/pty expiry
+  guard, including exact selected v1.1.1, the historical v0.1.0 request and
+  unloaded `mc` import, route/why/import/load/runtime state, v1.1.4
+  qualification and unsupported-owner result, later failures, and compatible-
+  route condition; and
+- no new target or requester advisory, independent defect, exact-path stable,
+  repository/release/owner change, qualified stable, supported tidy-stable
+  owner, or compatible genuine route to a qualified emoji/v2, kr/text, or
+  kr/pty release.
+
+Any target path/version, request, requester import, owner identity or route,
+root, why/import/load/runtime fact, graph, module hash, tidy state, Go floor,
+earlier or kr/text/kr/pty guard, advisory, independent finding, repository/
+release/owner, qualification, supported owner, or compatible-route change
+expires this retention and requires a fresh emoji/v2 dependency and product
+decision before merge. Any kr/text or kr/pty guard change separately requires
+its own fresh dependency and product decision. This decision authorizes no
+owner study, direct-root change, branch or pseudo-version, alternate path,
+dependency edit, workaround, unrelated selection, implementation, or
+transferred exception.
+
+Guard-only revalidation began from clean ordinary and ignored state on branch
+`codex/upgrade-quality` at handoff HEAD
+`d3cb8122dcca2e06b29787facc3152bf2e38b947`, parent
+`89b6c413eca06d5ddcc6e9d424da70d3bb324447`, tree
+`830c044d9fe8e80255361e36272008b69e262c42`. That handoff changes exactly
+`codex-dev-start.sh`, the answered emoji/v2 evaluation archive, this then-NEXT
+decision archive, rolling handover, and roadmap. Its reciprocal 262-archive
+chain, sole NEXT state, launcher/archive prompt mirror, exact changed set,
+clean status, and contained launcher check passed. Exact Google UUID v1.4.0
+dependency commit `cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an ancestor.
+
+A freshly downloaded official Go 1.26.7 archive and the exact active binary
+reproduce the identities above. Under `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, empty `GOFLAGS`, `LC_ALL=C`, `LANG=C`, scratch-contained
+caches, and canonical `umask 022`, the baseline counts, module hashes, tidy
+projection and applied tidy hashes, target requests, requester import/use,
+why/import/load state, all 39 earlier selections, and the 237-edge snapshot
+reproduce exactly. Including emoji/v2 gives 40 guarded selections and 239
+incoming edges at SHA-256
+`deb453cac4dcb6df8a6b502f6f20aba72eaeb415ac2ff40f873a677113cf9d4a`.
+
+Fresh proxy metadata still exposes exactly v2.0.0-v2.2.14, with only
+v2.2.5-v2.2.14 resolving as the canonical `/v2` line; `/v3` remains absent.
+GitHub still reports the exact repository identity and nine canonical Release
+objects. Exact-version OSV and GitHub global results for all ten canonical
+stables and go-term-markdown v0.1.4 remain empty, as does the repository
+advisory result. Guard OSV retains only Gorilla WebSocket `GO-2026-6278` /
+`GHSA-w67g-5rqw-f597` and go-retryablehttp `GO-2024-2947` /
+`GHSA-v6v8-xj6m-xwqh`; x/mod v0.14.0 retains `GO-2026-6179` and
+`GO-2026-6180`. The Go module index remains 518,501 bytes/1,402 records at
+SHA-256 `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. The PUBLISHED 2,807-byte memberlist CNA
+response remains SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+updated 2026-07-08T19:40:16.119Z.
+
+The completed emoji behavior, release/source/closure, upstream-gate,
+archive-comparison, disposable-project, and govulncheck evaluations were not
+repeated; option 2 was neither authorized nor run. No source, dependency
+metadata, parent, toolchain declaration, or earlier guard changed. No changed-
+selection scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+Final unchanged-project exact-Go module verification, build, count-one tests,
+race count-one tests, and vet pass.
+
+P7 continues only with the linked bounded evaluation of the next unanswered
+selected queue item, direct exact `github.com/manifoldco/promptui v0.9.0`.
+That reciprocal successor was prepared but not executed and may not reopen
+this emoji/v2 decision, the kr/text or kr/pty decisions, or any earlier
+decision. P8 remains queued.
