@@ -13299,6 +13299,69 @@ Kr Pretty evaluation (2026-09-22):
   metadata or a parent, transfer an exception, combine another group, or begin
   P8. The successor was prepared but not executed.
 
+Kr Pretty product decision (2026-09-22):
+
+- Option 1 was selected. Exact selected, inherited, unloaded
+  `github.com/kr/pretty v0.3.1` is explicitly retained without changing
+  product source, `go.mod`, or `go.sum`. It remains unqualified and is not
+  described as secure. Physical selection, the positive test-only why chain,
+  zero target loading, and advisory absence bound exposure but are not
+  qualification or implicit authorization.
+- The kr/pretty-specific, non-transferable exception accepts only the
+  completed nil-Formatter pass-through failure, map-Diff output-order
+  nondeterminism, upstream vet failures, upstream race/checkptr failure, and
+  completed related evaluation. It accepts no uncharacterized behavior, new
+  advisory, or independent defect and transfers no earlier exception.
+- The exception requires the exact path/version; all five requests and their
+  requested versions; the exact main -> Cast v1.5.1 -> target current owner
+  route; Cast's loaded Viper route and quicktest v1.14.4/pretty v0.3.1/
+  go-internal v1.9.0 test closure; every lower historical route; and every
+  requester/import fact to remain exact. It also requires no direct target
+  root, the recorded yaml.v2-tests/check.v1 why chain only, zero target
+  repository imports and production/complete-test loads, no runtime
+  reachability, exact graph/module/tidy/Go-floor state, and every earlier
+  guard.
+- Any target/request/requester-import/Cast-closure/owner-route, root/why/
+  import/load/runtime, graph/module/tidy/Go-floor, earlier-guard, advisory/
+  independent-finding, repository/release/owner, qualification, supported
+  tidy-stable-owner, or compatible qualified-route change expires the
+  exception and requires a fresh kr/pretty dependency and product decision
+  before merge. Any compatible genuine route to a qualified exact-path release
+  expressly expires the retention. No owner study, Cast or parent change,
+  direct root, source/metadata edit, alternate path, workaround, unrelated
+  selection, or implementation is authorized.
+- Guard-only revalidation preserved 234 modules, 3,599 edges, 355 production
+  and 429 complete-test entries, 197 module-backed entries across 41 modules,
+  1,067 sums, exact module hashes, the 432-line tidy projection, and applied
+  52/948-line tidy hashes. All five requests, current and historical routes,
+  requester facts, and target boundaries reproduce. All 36 earlier guarded
+  selections retain negative why and zero imports/loads; their 228 incoming
+  edges reproduce
+  `361d0c355a69842518a518e682f81c9728d37acfdeff64f430a4fb253929691e`.
+  Including kr/pretty gives 37 selections/233 incoming edges at
+  `1779751e93109c20a3cc7e3f2215665c9115156eb3947a1e45afb51e5cfe364f`.
+- Fresh proxy/GitHub metadata retains the exact release/repository identities.
+  Exact target OSV/GitHub results remain empty; guard OSV retains only the
+  Gorilla/retryablehttp pairs; x/mod v0.14.0 retains GO-2026-6179 and
+  GO-2026-6180; the 1,402-record Go index and PUBLISHED memberlist CNA bytes
+  remain exact. No completed behavior, release, closure, direct-root
+  projection, or owner study was repeated.
+- No dependency implementation or metadata commit was created. No changed-
+  selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. Final exact-Go module verification, build, count-one tests, race
+  count-one tests, vet, reciprocal 257-archive chain, single NEXT state,
+  launcher/archive prompt mirror, exact documentation-only changed set, diff
+  checks, and launcher check pass. Every task-owned scratch artifact was
+  contained beneath the managed session root and removed; only its pre-
+  existing launcher-owned Node compile cache remains. P7 continues only with
+  the prepared bounded evaluation of selected exact-path
+  `github.com/kr/pty v1.1.1`. Current queue observations are one request from
+  historical kr/text v0.1.0, negative why, zero repository imports, and zero
+  production/complete-test loads; none is qualification. The successor must
+  independently verify them and every earlier guard, evaluate no other group,
+  and stop for a fresh product decision if no exact-path release qualifies or
+  any guard changes. It was prepared but not executed. P8 remains queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
