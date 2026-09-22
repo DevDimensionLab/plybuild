@@ -5374,8 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded evaluation of selected exact-path
-`github.com/kr/pretty v0.3.1`. Option 1 explicitly retained exact inherited/
+Status: active for the prepared bounded product decision for selected exact-
+path `github.com/kr/pretty v0.3.1`; no option has been selected. Option 1
+explicitly retained exact inherited/
 unloaded unqualified kr/logfmt
 v0.0.0-20140226030751-b84e30acd515, kr/fs v0.1.0,
 go-windows-terminal-sequences v1.0.1, gotool v1.0.0, and errcheck v1.5.0 under
@@ -5386,8 +5387,9 @@ separately retained and unqualified under their own exceptions. Earlier
 demangle, strcase, and affected/not-secure memberlist decisions remain
 separate under their own guards. Completed dependency groups remain final
 through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2.
-Product source and dependency metadata remain unchanged. The kr/pretty
-successor is prepared but was not executed. P8 remains queued.
+Product source and dependency metadata remain unchanged. No exact-path
+kr/pretty stable qualifies. Its decision successor is prepared but was not
+executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -13228,6 +13230,74 @@ Kr Logfmt product decision (2026-09-22):
   other group, and stop for a fresh product decision if no exact-path release
   qualifies or any guard changes. It was prepared but not executed. P8 remains
   queued.
+
+Kr Pretty evaluation (2026-09-22):
+
+- No exact-path stable qualifies. The canonical proxy and continuous
+  annotated-tag line is v0.1.0, v0.2.0, v0.2.1, v0.3.0, and selected/latest
+  v0.3.1. Exact `/v2` and `/v3` lines do not exist. Go-import resolves without
+  redirect to the public enabled unarchived non-fork MIT `kr/pretty`
+  repository, owned by `kr` with protected default `main`; it has no GitHub
+  Releases. Default main, proxy latest, and v0.3.1 are exact commit
+  `3cd153a126da607b78d1762779b1e1054f9889fc`.
+- Every release names exact `github.com/kr/pretty`. V0.1.0 has no Go directive;
+  later stables use `go 1.12`. There are no retractions, deprecation, or
+  replacements, and all releases preserve Go 1.18. Selected requires kr/text
+  v0.2.0 and go-internal v1.9.0; the selected closure's maximum Go directive
+  is 1.17. Proxy ZIPs and peeled Git regular files agree byte for byte.
+- The module is one formatting/diff package with no cgo, generated source,
+  embed, build tag, platform source, external I/O boundary, library-owned
+  resource, or production mutable global. Exact Go 1.26.7 and contained Go
+  1.18.10 pass build, vet-disabled repeated upstream tests, supported test
+  cross-builds, and bounded positive ordinary/non-mutation/concurrency checks
+  for all five stables.
+- Every stable fails qualification in both SDKs. Full upstream vet rejects its
+  invalid `unsafe.Pointer(uintptr(1))` test construction, and upstream race
+  count-ten aborts there with a checkptr bad-pointer fatal error; the first two
+  releases also retain an int-to-string diagnostic. Ordinary `Formatter(nil)`
+  produces a Format-method reflect panic diagnostic rather than fmt's `<nil>`
+  pass-through representation. Diff output order also changes across ten runs
+  for an ordinary four-entry map because unsorted map keys are traversed.
+  Advisory absence and positive non-disqualifying checks cannot override these
+  failures.
+- MVS requests are Cast v1.5.1 -> v0.3.1, Consul SDK v0.8.0 -> v0.2.0, and
+  client_golang v1.4.0, sergi/go-diff v1.2.0, and errgo.v2 v2.1.0 -> v0.1.0.
+  The shortest genuine current owner is main -> selected Cast v1.5.1 ->
+  target; Cast's quicktest v1.14.4 test closure imports target, while Cast and
+  every lower requester do not. Lower historical routes through mvn-pom-
+  mutator/Viper/Consul or client_golang, direct sergi/Assert, and Honnef/go-
+  internal/errgo reproduce.
+- Target why is positive only through project config -> yaml.v2 tests ->
+  check.v1; repository imports and production/complete-test loads are zero,
+  with no runtime reachability. A disposable direct v0.3.1 get manufactures
+  target/text/go-internal roots and reaches 236 modules/3,606 edges/1,072 sums
+  without changing loads; tidy removes them and preserves Cast as owner. Lower
+  projections downgrade accepted parents/closures or make the project
+  unloadable and are not supported guard-preserving owners. No projection,
+  direct root, or dependency commit was retained.
+- The real project remains 234 modules, 3,599 edges, 355 production entries,
+  429 complete-test entries, 197 module-backed entries across 41 loaded
+  modules, 1,067 sums, exact module hashes, and the recorded 432-line tidy
+  projection. All 36 earlier guarded selections remain exact with negative
+  why and zero imports/loads; their 228 incoming edges reproduce
+  `361d0c355a69842518a518e682f81c9728d37acfdeff64f430a4fb253929691e`.
+- Exact OSV/GitHub/repository-advisory and isolated govulncheck evidence has no
+  target finding. Base and direct-v0.3.1 project populations are identical at
+  30/22/20/20 with no target trace. Guard Gorilla/retryablehttp pairs, x/mod
+  findings, the 1,402-record Go module index, and the PUBLISHED memberlist CNA
+  identity remain exact. The evaluation used only bounded ordinary values and
+  upstream tests; it did not fuzz, stress, generate adversarial values,
+  reproduce a security issue, or assess exploitability.
+- Product source and dependency metadata remain unchanged. No changed-
+  selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. Final exact-Go verify/build/count-one/race/vet pass. P7 stops for one
+  reciprocal bounded product decision: explicitly retain exact selected,
+  inherited, unloaded unqualified v0.3.1 under a kr/pretty-specific exception;
+  authorize exactly one later measurement-only study of the existing main ->
+  Cast v1.5.1 -> target owner/request route; or stop P7 unresolved. Do not
+  repeat the evaluation, reopen Cast, add a direct target root, change source/
+  metadata or a parent, transfer an exception, combine another group, or begin
+  P8. The successor was prepared but not executed.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

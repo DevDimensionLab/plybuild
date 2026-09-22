@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T10:04:35+02:00
+Generated: 2026-09-22T11:06:45+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The kr/logfmt product
-  decision began from clean HEAD `1017a890db0c7ac42c6ebb4bc57bc8c191ac718c`,
-  parent `f7d5b3a94833a92b5d5b5a48b09c33e2dcba9e18`, tree
-  `3bea69f9fa766139c87af1f50fbfcf627a5e71e3`. That handoff changes exactly the
-  launcher, answered kr/logfmt evaluation archive, then-NEXT kr/logfmt
-  decision archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal 254-archive history,
+  `codex/upgrade-quality`, base master at `5635d50`. The kr/pretty evaluation
+  began from clean HEAD `7fb81847f378ba7fbc9a758bacb507b42aea92be`,
+  parent `1017a890db0c7ac42c6ebb4bc57bc8c191ac718c`, tree
+  `a7e89ee68378fc8034290810ca60d6ac560a134b`. That handoff changes exactly the
+  launcher, answered kr/logfmt decision archive, then-NEXT kr/pretty
+  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal 255-archive history,
   latest Google UUID ancestry, exact Go identity, module hashes, target and
   earlier guards, fresh advisory identities, and launcher check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
@@ -24,7 +24,8 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The kr/logfmt decision/evaluation, kr/fs decision/evaluation, go-windows-terminal-
+- The kr/pretty evaluation, kr/logfmt decision/evaluation, kr/fs decision/
+  evaluation, go-windows-terminal-
   sequences decision/evaluation, gotool decision/evaluation, errcheck
   decision/evaluation, httprouter decision/evaluation, jtolds/gls decision/
   evaluation, go-junit-report decision/evaluation, json-iterator decision/
@@ -41,12 +42,14 @@ session diary.
   v1.1.12, and clockwork v0.1.0 under separate target-specific exceptions;
   none is qualified and no implementation was retained. Stable httprouter
   v1.3.0 qualifies but has no genuine supported tidy-stable project owner. No
-  exact-path go-windows-terminal-sequences, kr/fs, or kr/logfmt release
-  qualifies; source and dependency metadata remain unchanged. The sole NEXT
-  archive is
-  `docs/plan/agent-sessions/2026-09-22T100435+0200-evaluate-kr-pretty-dependency.md`.
-  It evaluates only selected exact-path kr/pretty v0.3.1. It must preserve the
-  kr/logfmt exception and every earlier decision, may not manufacture a direct
+  exact-path go-windows-terminal-sequences, kr/fs, kr/logfmt, or kr/pretty
+  release qualifies; source and dependency metadata remain unchanged. The
+  sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-22T110645+0200-decide-kr-pretty-product-direction.md`.
+  It makes only one bounded product choice for selected inherited unloaded
+  kr/pretty v0.3.1: a target-specific unqualified exception, exactly one later
+  measurement-only Cast v1.5.1 owner/request study, or stop P7 unresolved. It
+  may not repeat the completed evaluation, reopen Cast, manufacture a direct
   root, combine another group, write outside the managed scratch root, or
   begin P8.
 - No `.agent-task/current.md` or repository
@@ -66,8 +69,8 @@ json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
 own target-specific exceptions and are not qualified. Exact Go 1.26.7, every
 accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
-P7 continues only with the prepared kr/pretty v0.3.1 evaluation. P8 remains
-queued.
+No exact-path kr/pretty stable qualifies. P7 therefore stops for the prepared
+kr/pretty product decision; no option has been selected. P8 remains queued.
 
 ## Kr Logfmt Evaluation
 
@@ -196,6 +199,88 @@ behavior and disposable-project evaluation was not repeated. Product source,
 dependency metadata, and accepted 27/27 Q0-Q2 PASS at L2 remain unchanged.
 P7 continues only with the reciprocal bounded kr/pretty v0.3.1 evaluation;
 the successor was prepared but not executed. P8 remains queued.
+
+## Kr Pretty Evaluation
+
+No exact-path stable qualifies. The canonical proxy and continuous annotated-
+tag line is v0.1.0, v0.2.0, v0.2.1, v0.3.0, and selected/latest v0.3.1.
+Exact `/v2` and `/v3` lines do not exist. Exact go-import resolves without
+redirect to the public enabled unarchived non-fork MIT `kr/pretty` repository,
+owned by `kr` with protected default `main`; it has no GitHub Releases.
+Default main, proxy latest, and v0.3.1 are commit
+`3cd153a126da607b78d1762779b1e1054f9889fc`. The annotated tags are
+unsigned; GitHub reports the final three peeled commits verified and the first
+two unsigned. Proxy regular files match the five peeled Git trees byte for
+byte, with no symlinks or submodules.
+
+Every module names exact `github.com/kr/pretty`; v0.1.0 has no Go directive,
+the other stables use `go 1.12`, and there are no retractions, deprecation, or
+replacements. All preserve Go 1.18. Selected requires kr/text v0.2.0 and
+go-internal v1.9.0, whose closure has a maximum Go directive of 1.17.
+
+The selected module is one formatting/diff package exporting Formatter,
+Errorf/Fprintf, Log/Print/Sprint families, Diff/Fdiff/Pdiff/Ldiff, Printfer,
+and Logfer. There is no cgo, generated source, embed, build tag, platform
+source, external I/O boundary, library-owned resource, or production mutable
+global. Visited maps are call-local; callers own inputs, writers, callbacks,
+and synchronization, while convenience print/log helpers use standard
+process globals.
+
+Exact Go 1.26.7 and contained Go 1.18.10 pass build, upstream count-one and
+count-ten tests with vet disabled, supported test cross-builds, and bounded
+positive ordinary/non-mutation/concurrency fixtures for all five stables.
+Every stable nevertheless fails qualification in both SDKs. Full upstream vet
+rejects its invalid `unsafe.Pointer(uintptr(1))` test construction; upstream
+race count-ten aborts there with a checkptr bad-pointer fatal error. V0.1.0 and
+v0.2.0 also retain an int-to-string vet diagnostic. Separately, ordinary
+`Formatter(nil)` yields a Format-method reflect panic diagnostic instead of
+fmt's `<nil>` pass-through representation, and Diff order changes across ten
+runs for an ordinary four-entry map because it traverses unsorted map keys.
+No fuzzing, stress, oversized/deep/cyclic/adversarial fixture, security
+reproduction, or exploitability analysis occurred.
+
+MVS has five requests: Cast v1.5.1 -> v0.3.1; Consul SDK v0.8.0 -> v0.2.0;
+and client_golang v1.4.0, sergi/go-diff v1.2.0, and errgo.v2 v2.1.0 ->
+v0.1.0. The shortest current genuine owner route is main -> selected Cast
+v1.5.1 -> selected target; Cast's quicktest v1.14.4 test closure imports the
+target, while Cast itself and all four lower requesters do not. Lower genuine
+historical routes run through direct mvn-pom-mutator/Viper/Consul SDK or
+client_golang, direct sergi and Assert, and three Honnef/go-internal/errgo
+paths. Target why is positive only through project config -> yaml.v2 tests ->
+check.v1; repository imports and production/complete-test loads are zero, so
+there is no runtime reachability. None of those facts is qualification.
+
+The real project remains 234 modules, 3,599 edges, 355 production entries,
+429 complete-test entries, 197 module-backed entries across 41 loaded modules,
+and 1,067 sums with exact module hashes. The 432-line tidy projection and
+52/948-line applied tidy state remain exact. A disposable exact-v0.3.1 get
+manufactures target/text/go-internal roots and yields 236 modules/3,606 edges/
+1,072 sums without changing loads; tidy removes the roots and preserves Cast
+as genuine owner. Lower projections downgrade Cast/Viper or earlier accepted
+closures; v0.1.0 also removes mvn-pom-mutator and makes project loading fail,
+then tidy restores v0.2.0 rather than v0.1.0. No projection, root, owner
+change, or dependency commit was retained.
+
+All 36 earlier guarded selections retain exact versions, negative why, and
+zero imports/loads. Their 228 incoming edges reproduce SHA-256
+`361d0c355a69842518a518e682f81c9728d37acfdeff64f430a4fb253929691e`.
+Fresh exact OSV/GitHub/repository-advisory and pinned isolated govulncheck
+evidence has no target finding. Base and direct-v0.3.1 project populations are
+identical at 30/22/20/20 with no target trace. Earlier Gorilla and retryable-
+http pairs, x/mod findings, the exact 1,402-record Go module index, and the
+PUBLISHED memberlist CNA response remain unchanged. Advisory absence is not
+qualification.
+
+Product source and dependency metadata remain unchanged. No changed-selection
+scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at L2. Final
+exact-Go module verification, build, count-one tests, race count-one tests,
+and vet pass. P7 stops for one reciprocal product choice: explicitly retain
+exact selected/inherited/unloaded unqualified v0.3.1 under a kr/pretty-specific
+exception; authorize exactly one later measurement-only study of the existing
+main -> Cast v1.5.1 -> target owner/request route; or stop P7 unresolved. Do
+not repeat the evaluation, reopen Cast, add a direct target root, alter source/
+metadata or a parent, transfer an exception, combine another group, or begin
+P8. The successor was prepared but not executed.
 
 ## Kr Fs Evaluation
 
