@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T09:29:32+02:00
+Generated: 2026-09-22T10:04:35+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,15 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The kr/logfmt evaluation
-  began from clean HEAD `f7d5b3a94833a92b5d5b5a48b09c33e2dcba9e18`, parent
-  `8e576d81de9521eb81aacdcc540d3f4b014baa11`, tree
-  `8a8eef0cca484c7566180d034ff9ce0b37f17399`. That handoff changes exactly the
-  launcher, answered kr/fs decision archive, then-NEXT kr/logfmt evaluation
-  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 253-archive history, latest Google
-  UUID ancestry, exact Go identity, module hashes, target and earlier guards,
-  fresh advisory identities, and launcher check passed.
+  `codex/upgrade-quality`, base master at `5635d50`. The kr/logfmt product
+  decision began from clean HEAD `1017a890db0c7ac42c6ebb4bc57bc8c191ac718c`,
+  parent `f7d5b3a94833a92b5d5b5a48b09c33e2dcba9e18`, tree
+  `3bea69f9fa766139c87af1f50fbfcf627a5e71e3`. That handoff changes exactly the
+  launcher, answered kr/logfmt evaluation archive, then-NEXT kr/logfmt
+  decision archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal 254-archive history,
+  latest Google UUID ancestry, exact Go identity, module hashes, target and
+  earlier guards, fresh advisory identities, and launcher check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -24,7 +24,7 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The kr/logfmt evaluation, kr/fs decision/evaluation, go-windows-terminal-
+- The kr/logfmt decision/evaluation, kr/fs decision/evaluation, go-windows-terminal-
   sequences decision/evaluation, gotool decision/evaluation, errcheck
   decision/evaluation, httprouter decision/evaluation, jtolds/gls decision/
   evaluation, go-junit-report decision/evaluation, json-iterator decision/
@@ -32,7 +32,8 @@ session diary.
   strcase decision/evaluation, integrated memberlist migration, memberlist
   ownership/final-direction decisions, Serf study, memberlist evaluation, and
   every earlier archive are answered. Option 1 explicitly retains exact
-  inherited, unloaded kr/fs v0.1.0,
+  inherited, unloaded kr/logfmt
+  v0.0.0-20140226030751-b84e30acd515, kr/fs v0.1.0,
   go-windows-terminal-sequences v1.0.1,
   gotool v1.0.0, errcheck v1.5.0,
   httprouter v1.2.0,
@@ -40,14 +41,14 @@ session diary.
   v1.1.12, and clockwork v0.1.0 under separate target-specific exceptions;
   none is qualified and no implementation was retained. Stable httprouter
   v1.3.0 qualifies but has no genuine supported tidy-stable project owner. No
-  exact-path go-windows-terminal-sequences or kr/fs stable qualifies, and no
-  exact-path kr/logfmt release qualifies; source and dependency metadata remain
-  unchanged. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T092932+0200-decide-kr-logfmt-product-direction.md`.
-  It makes only the bounded kr/logfmt product decision. It must preserve the
-  kr/fs exception and every earlier decision, may not repeat completed target
-  behavior, manufacture a direct root, implement a parent change, combine
-  another group, write outside the managed scratch root, or begin P8.
+  exact-path go-windows-terminal-sequences, kr/fs, or kr/logfmt release
+  qualifies; source and dependency metadata remain unchanged. The sole NEXT
+  archive is
+  `docs/plan/agent-sessions/2026-09-22T100435+0200-evaluate-kr-pretty-dependency.md`.
+  It evaluates only selected exact-path kr/pretty v0.3.1. It must preserve the
+  kr/logfmt exception and every earlier decision, may not manufacture a direct
+  root, combine another group, write outside the managed scratch root, or
+  begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -55,18 +56,18 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. No exact-path kr/logfmt release qualifies; product source
-and dependency metadata remain unchanged, and P7 stops for the prepared
-bounded kr/logfmt product decision. P7 selected option 1 for kr/fs: exact
-inherited, unloaded v0.1.0 is explicitly retained only under its target-
-specific, non-transferable exception and remains unqualified. Exact inherited/
-unloaded go-windows-terminal-sequences v1.0.1, gotool v1.0.0, errcheck v1.5.0,
+P2A-P6 are complete. P7 selected option 1 for kr/logfmt: exact inherited,
+unloaded `v0.0.0-20140226030751-b84e30acd515` is explicitly retained only
+under its target-specific, non-transferable exception and remains unqualified.
+The same is true separately for kr/fs v0.1.0. Exact inherited/unloaded
+go-windows-terminal-sequences v1.0.1, gotool v1.0.0, errcheck v1.5.0,
 httprouter v1.2.0, jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
 json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
 own target-specific exceptions and are not qualified. Exact Go 1.26.7, every
 accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
-P8 remains queued.
+P7 continues only with the prepared kr/pretty v0.3.1 evaluation. P8 remains
+queued.
 
 ## Kr Logfmt Evaluation
 
@@ -152,6 +153,49 @@ mvn-pom-mutator v0.2.3 -> TSDB v0.7.1 request route; or stop P7 unresolved.
 Do not repeat completed behavior, add a direct root, promote latest or
 go-logfmt, change a parent/source/metadata, transfer an exception, combine
 another group, or begin P8.
+
+## Kr Logfmt Product Decision
+
+Option 1 is final. Exact selected
+`github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515` is explicitly
+retained as inherited and unloaded under a kr/logfmt-specific,
+non-transferable exception. It remains unqualified and is not described as
+secure. Physical selection, negative why, zero loading, and advisory absence
+only bound present exposure; they are not qualification or implicit
+acceptance.
+
+The exception accepts only the completed non-struct panic, `uint8` rejection,
+and `int8` overflow-wrap failures plus the completed related evaluation. It is
+valid only for the exact path/version; all three requests from go-logfmt
+v0.4.0, Prometheus Common v0.4.1, and Prometheus TSDB v0.7.1; all genuine
+routes beginning at direct mvn-pom-mutator v0.2.3 through TSDB or historical
+Viper/go-metrics/Common/go-logfmt/client_golang; and the recorded requester
+import facts.
+
+The exception also requires no direct target root, negative target why, zero
+target repository imports and production/complete-test loads, no runtime
+reachability, exact graph/module/tidy/Go-floor state, and every earlier guard.
+It expires on any target/request/requester import/owner route, root/import/
+load/runtime, graph/module/tidy/Go-floor, earlier-guard, advisory/finding,
+repository/release/owner, qualification, supported tidy-stable owner, or
+compatible genuine route change. Any compatible genuine route to a qualified
+exact-path release requires a fresh kr/logfmt dependency and product decision
+before merge. No uncharacterized behavior, owner study, parent/source/
+metadata change, direct root, latest or alternate path, fork, replacement,
+patch, wrapper, workaround, unrelated selection, or transferred exception is
+authorized.
+
+Guard-only revalidation preserved the exact module counts and hashes,
+432-line tidy projection, all requests/routes/requester facts, and all 35
+earlier guarded selections with their 225-edge snapshot at
+`5dae96771b3994a9ce1999f8d0487f152d94adb3b2d0bb467b18054be39dc284`.
+Including kr/logfmt gives 36 guarded selections and 228 incoming edges at
+`361d0c355a69842518a518e682f81c9728d37acfdeff64f430a4fb253929691e`.
+Fresh release/repository/advisory identities remain exact. The completed
+behavior and disposable-project evaluation was not repeated. Product source,
+dependency metadata, and accepted 27/27 Q0-Q2 PASS at L2 remain unchanged.
+P7 continues only with the reciprocal bounded kr/pretty v0.3.1 evaluation;
+the successor was prepared but not executed. P8 remains queued.
 
 ## Kr Fs Evaluation
 
@@ -4086,15 +4130,25 @@ or an owner study. No source or dependency metadata changed, so no changed-
 selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS at
 L2.
 
+The kr/logfmt evaluation's final unchanged-project exact Go 1.26.7 module
+verification, build, count-one tests, race count-one tests, and vet pass. Its
+decision revalidation reproduced exact project/module/tidy, three-request/
+genuine-route/requester-import, 35-selection/225-edge and 36-selection/
+228-edge, why/import/load, exact-Go, release/repository, and fresh advisory
+guards without repeating the completed behavior evaluation, disposable
+direct-root projections, or an owner study. No source or dependency metadata
+changed, so no changed-selection scorecard applies and accepted quality
+remains 27/27 Q0-Q2 PASS at L2.
+
 ## Next Bounded Objective
 
 Independently evaluate selected exact-path
-`github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515` as one bounded
-dependency group. Revalidate its three currently observed requests from
-go-logfmt v0.4.0, Prometheus Common v0.4.1, and Prometheus TSDB v0.7.1, plus
-negative why, zero repository imports, zero production/complete-test loads,
-and no runtime reachability; none is qualification. Preserve the kr/fs
-exception and every earlier guard. Select only a qualified exact-path release
-that preserves Go 1.18 and every contract; otherwise leave source and metadata
-unchanged and stop for a fresh product decision. Do not manufacture a direct
-root or owner, combine another group, reopen kr/fs, or begin P8.
+`github.com/kr/pretty v0.3.1` as one bounded dependency group. Reproduce its
+selected request from Cast v1.5.1, lower historical requests, positive why
+chain through yaml.v2 tests and check.v1, zero repository imports, zero
+production/complete-test loads, and genuine current/historical owner routes;
+none is qualification. Preserve the kr/logfmt exception and every earlier
+guard. Select only the highest qualified exact-path stable that preserves Go
+1.18 and every contract; otherwise leave source and metadata unchanged and
+stop for a fresh product decision. Do not add a direct target root, reopen
+Cast, combine kr/pty, kr/text, or another group, or begin P8.

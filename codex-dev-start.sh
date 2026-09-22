@@ -1131,219 +1131,181 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-22T092932+0200-decide-kr-logfmt-product-direction
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T092932+0200-decide-kr-logfmt-product-direction.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T084421+0200-evaluate-kr-logfmt-dependency.md
+#|SESSION_ID=2026-09-22T100435+0200-evaluate-kr-pretty-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T100435+0200-evaluate-kr-pretty-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T092932+0200-decide-kr-logfmt-product-direction.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 with one bounded product decision for exact selected, inherited,
-#|unloaded
-#|`github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515`. Choose one
-#|authorized direction from the completed evaluation: explicitly retain exact
-#|selected under a new target-specific exception, authorize exactly one later
-#|measurement-only owner/request study, or stop P7 unresolved. Do not repeat the
-#|completed behavior evaluation, implement a parent or workaround, combine
-#|another dependency group, or begin P8.
+#|Continue P7 by independently evaluating selected exact-path
+#|`github.com/kr/pretty v0.3.1` as one bounded dependency group. Resolve the
+#|canonical release line and highest qualified Go-1.18-compatible exact-path
+#|stable from primary evidence. Implement one exact dependency-only changed
+#|selection only if the candidate and its exact closure preserve every contract.
+#|If no exact-path stable qualifies, leave source and dependency metadata
+#|unchanged and prepare one bounded product decision. Do not combine kr/pty,
+#|kr/text, another dependency group, or P8.
 #|
 #|# Defensive Scope
 #|
-#|This is an ordinary dependency product decision. Use public metadata, static
-#|records, project graph/build commands, and public advisory evidence. Do not
-#|fuzz, stress, probe resource exhaustion, generate oversized or deeply nested
-#|records, generate adversarial malformed records, reproduce a security issue,
-#|or perform security or exploitability analysis. The completed source and
-#|ordinary logfmt behavior evaluation is final and must not be repeated.
+#|This is an ordinary dependency quality evaluation. Use public metadata, static
+#|source/repository records, project graph/build commands, upstream tests, and
+#|small bounded ordinary formatting fixtures. Do not fuzz, stress, probe
+#|resource exhaustion, generate oversized/deep/cyclic or adversarial values,
+#|reproduce a security issue, or perform security/exploitability analysis.
 #|
-#|Every disposable cache, tool, archive, report, project copy, or advisory
-#|response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Never write to
-#|`/private/tmp`, `/tmp`, a sibling of the managed root, or another external
-#|root. Verify containment and remove task-owned scratch evidence before
-#|handoff.
+#|Every disposable cache, tool, archive, report, project copy, fixture, or
+#|advisory response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Never
+#|write to `/private/tmp`, `/tmp`, a sibling of the managed root, or another
+#|external root. Verify containment and remove task-owned scratch evidence
+#|before handoff.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
 #|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
-#|and all target-specific retained-module decisions through exact selected,
-#|inherited, unloaded kr/fs v0.1.0. Every earlier outcome and exception is final
-#|under its own guards. P8 remains queued.
+#|and all target-specific decisions through exact selected, inherited, unloaded
+#|kr/logfmt. P8 remains queued.
 #|
-#|The kr/fs option-1 decision retains exact v0.1.0 only while both SFTP
-#|v1.13.1/v1.10.1 requests and genuine Afero/Viper/mvn-pom-mutator owner routes,
-#|negative why, zero import/load/runtime state, graph/module/tidy/Go-floor facts,
-#|every earlier guard, and no-new-finding/release/owner/qualified-route
-#|conditions remain exact. No kr/fs, go-windows-terminal-sequences, gotool,
-#|errcheck, httprouter, jtolds/gls, go-junit-report, json-iterator, clockwork,
-#|demangle, strcase, memberlist, or other exception transfers to kr/logfmt.
+#|Option 1 explicitly retains exact
+#|`github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515` as inherited and
+#|unloaded under its own unqualified, non-transferable exception. Its three
+#|ordinary behavior failures, three requests, genuine mvn-pom-mutator/Viper/
+#|Prometheus/go-logfmt routes, requester-import facts, root/import/load/runtime,
+#|graph/module/tidy/Go-floor, earlier-guard, and advisory/release/owner/
+#|qualified-route conditions are final. No kr/logfmt, kr/fs, go-windows-
+#|terminal-sequences, gotool, errcheck, httprouter, jtolds/gls, go-junit-report,
+#|json-iterator, clockwork, demangle, strcase, memberlist, or other exception
+#|transfers to kr/pretty.
 #|
 #|# Measurements At Start
 #|
-#|The completed evaluation began from clean HEAD
-#|`f7d5b3a94833a92b5d5b5a48b09c33e2dcba9e18`, parent
-#|`8e576d81de9521eb81aacdcc540d3f4b014baa11`, tree
-#|`8a8eef0cca484c7566180d034ff9ce0b37f17399`. The latest dependency
+#|The kr/logfmt decision began from clean HEAD
+#|`1017a890db0c7ac42c6ebb4bc57bc8c191ac718c`, parent
+#|`f7d5b3a94833a92b5d5b5a48b09c33e2dcba9e18`, tree
+#|`3bea69f9fa766139c87af1f50fbfcf627a5e71e3`. The latest dependency
 #|implementation remains exact Google UUID v1.4.0 commit
-#|`cf53bc64eeb69471d35c7536d196bf1da15f3973`. The evaluation made no source or
-#|dependency-metadata change and prepared this decision-only handoff commit.
+#|`cf53bc64eeb69471d35c7536d196bf1da15f3973`. The decision changed no source or
+#|dependency metadata and prepared this evaluation-only handoff. Verify the new
+#|handoff HEAD, parent, tree, exact changed set, ancestry, and clean ordinary and
+#|ignored status rather than assuming their values.
 #|
 #|Base `go.mod` and `go.sum` SHA-256 values remain
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
 #|The project remains 234 selected modules, 3,599 graph edges, 355 production
 #|entries, 429 complete-test entries, 197 module-backed entries across 41 loaded
-#|modules, 1,067 sums, and the recorded 432-line tidy projection. Accepted
-#|quality remains 27/27 Q0-Q2 PASS at L2. Verify the new handoff HEAD, parent,
-#|tree, exact changed set, and clean ordinary and ignored status at start rather
-#|than assuming their values.
+#|modules, 1,067 sums, and the recorded 432-line tidy projection. All 36 guarded
+#|selections including kr/logfmt and 228 incoming edges remain exact at sorted
+#|SHA-256
+#|`361d0c355a69842518a518e682f81c9728d37acfdeff64f430a4fb253929691e`.
+#|Accepted quality remains 27/27 Q0-Q2 PASS at L2.
 #|
-#|# Completed Evaluation
+#|Current queue observations select kr/pretty v0.3.1. Exact requests currently
+#|observed are Consul SDK v0.8.0 -> v0.2.0; Prometheus client_golang v1.4.0,
+#|sergi/go-diff v1.2.0, and errgo.v2 v2.1.0 -> v0.1.0; and selected Cast v1.5.1
+#|-> v0.3.1. `go mod why -m` is positive only through the project config package
+#|-> yaml.v2 -> yaml.v2 tests -> check.v1 -> kr/pretty. Repository imports and
+#|production/complete-test package loads of kr/pretty are zero. These are queue
+#|observations, not qualification; independently reproduce them and determine
+#|all genuine current and historical owner routes and runtime relevance.
 #|
-#|No exact-path kr/logfmt release qualifies. The public proxy version list is
-#|empty and the repository has no tags or GitHub Releases. Exact selected
-#|`v0.0.0-20140226030751-b84e30acd515` and proxy `@latest`
-#|`v0.0.0-20210122060352-19f9bcb100e6` are the only serious exact-path
-#|candidates. Selected's module file names exact `github.com/kr/logfmt` with no
-#|Go directive, requirements, retractions, deprecation, or replacement. Latest
-#|adds only `go 1.14`. Sumdb and proxy ZIP identities are exact.
+#|Cast v1.5.1 was previously accepted with the minimal quicktest v1.14.4,
+#|kr/pretty v0.3.1, and rogpeppe/go-internal v1.9.0 test closure. That Cast
+#|decision is final under its guards and does not qualify kr/pretty or authorize
+#|reopening Cast.
 #|
-#|Exact `go-import` metadata resolves without redirect to the public, enabled,
-#|unarchived, non-fork MIT `kr/logfmt` repository. Selected is unsigned commit
-#|`b84e30acd515aadc4b783ad4ff83aff3299bdfe0`. Default `main` and `@latest` are
-#|its direct GitHub-verified signed child
-#|`19f9bcb100e6bcb308b5db29c682de01e9b3f2e6`, adding only `LICENSE` and
-#|`go.mod`; every Go source/test byte is unchanged. Divergent `maybe` is older,
-#|unsigned, and untagged. Exact `/v2` and `/v3` lines do not exist.
-#|`github.com/go-logfmt/logfmt` is a distinct module/repository and unauthorized
-#|alternate path. Proxy and Git regular files agree byte for byte.
+#|# Evaluation Contract
 #|
-#|Both candidates are the same single standard-library-only parser package and
-#|preserve Go 1.18. It exports `ErrUnterminatedString`, `Unmarshal`, `Handler`,
-#|`HandlerFunc`, `NewStructHandler`, `StructHandler`,
-#|`InvalidUnmarshalError`, and `UnmarshalTypeError`; it has no encoder or
-#|formatter API. Handler slices require copying if retained, and caller input,
-#|destination, handler, synchronization, and mutable StructHandler ownership is
-#|documented. There is no cgo, generated source, global mutable state,
-#|network/subprocess boundary, platform source, or library-owned resource.
+#|Resolve exact go-import, repository/owner/status/license, version/tag/release,
+#|commit/tree/signature/ancestry, module-path/directive/requirement/retraction/
+#|deprecation/replacement, proxy/sumdb/archive-to-Git identity, default branch,
+#|and exact-path major-line evidence. Consider only genuine exact-path stable
+#|releases. Do not promote a fork, branch, pseudo-version, replacement,
+#|alternate module path, or ownerless candidate.
 #|
-#|Exact Go 1.26.7 and contained Go 1.18.10 both pass upstream build, repeated
-#|tests/race, vet, supported cross-builds, and all non-disqualifying bounded
-#|ordinary behavior coverage for selected and latest. Their APIs and Go source
-#|are identical. Three exported ordinary behavior contracts fail identically:
-#|non-struct `&int` input panics despite the explicit promise to return an
-#|error; documented support for all numeric types rejects `uint8`; and ordinary
-#|value `128` silently wraps to `-128` in `int8`. The completed source/test
-#|closure, API, parsing/error/ownership/mutation/determinism/concurrency/global-
-#|state/lifecycle/platform/external-boundary evaluation is final.
+#|For selected and every serious stable candidate, inspect the complete module
+#|and test closure, exported API and documentation, Go-floor compatibility,
+#|platform/build-tag/cgo/generated-source boundaries, globals, ownership and
+#|mutation, determinism, concurrency, lifecycle, external boundaries, and
+#|ordinary error behavior. Exercise only small bounded ordinary pretty-
+#|formatting values needed to verify documented behavior. Run upstream build,
+#|tests, repeated tests, race, vet, and supported cross-builds under exact Go
+#|1.26.7 and a contained Go 1.18 toolchain. A release qualifies only if all
+#|ordinary documented contracts and every project guard pass.
 #|
-#|MVS selects exact selected through exactly three requests: go-logfmt v0.4.0,
-#|Prometheus Common v0.4.1, and Prometheus TSDB v0.7.1. The genuine routes all
-#|begin at direct mvn-pom-mutator v0.2.3: directly through TSDB v0.7.1, or
-#|through historical Viper v1.10.1 -> go-metrics v0.3.10 -> Common v0.9.1 and
-#|then go-logfmt v0.4.0, or client_golang v1.0.0 -> Common v0.4.1. Go-logfmt
-#|imports the target only from a build-tagged fuzz file and benchmark; Common
-#|v0.4.1 and TSDB v0.7.1 have stale indirect requirements with no Go import.
+#|Map every MVS request and genuine route, including the accepted Cast v1.5.1
+#|closure and lower historical requests. Reproduce why, repository imports,
+#|production and complete-test loads, module-backed entries, runtime relevance,
+#|graph counts, hashes, tidy projection, all 36 earlier guarded selections, and
+#|the 228-edge snapshot. Physical selection, a why chain, zero loading, or
+#|advisory absence is not qualification.
 #|
-#|The target has negative why, zero repository imports, zero production or
-#|complete-test loads, and no runtime reachability. These facts bound present
-#|exposure; they are not qualification or implicit acceptance.
+#|Use disposable project copies under the managed scratch root to measure exact
+#|candidate projections. Never add a target root to the real project. For each
+#|projection record exact selection, closure, graph, imports/loads, sums, tidy
+#|result, Go-floor effect, and whether a genuine supported tidy-stable owner
+#|exists. Do not retain a projection unless the exact candidate qualifies and
+#|the normal dependency implementation contract authorizes it.
 #|
-#|Disposable exact-selected and latest direct roots manufactured a main edge
-#|and sums but preserved all project loads. Latest's only selection delta was
-#|selected -> latest. Tidy removed both roots; the latest projection restored
-#|inherited selected because no genuine owner requests latest. Both converged
-#|to the common 52/948-line tidy state. No projection was retained. Product
-#|source and dependency metadata remain unchanged.
+#|Refresh exact-version OSV and GitHub advisory evidence, repository advisories,
+#|the guarded advisory population, x/mod guard, Go vulnerability index identity,
+#|memberlist CNA identity, and pinned isolated govulncheck comparison. Advisory
+#|absence cannot override an ordinary behavior failure. Stay within the
+#|defensive scope.
 #|
-#|Fresh OSV and GitHub exact-version results are empty for both candidates, the
-#|repository advisory endpoint is empty, and pinned isolated govulncheck scans
-#|have no findings. Base and both disposable project populations are identical
-#|at 30 module, 22 package, 20 symbol, and 20 test-symbol OSVs with no target
-#|trace. The 518,501-byte, 1,402-record Go index remains exact; guard OSV retains
-#|only the recorded Gorilla/retryablehttp pairs, x/mod retains GO-2026-6179 and
-#|GO-2026-6180, and the PUBLISHED memberlist CNA response remains exact.
-#|Advisory absence does not qualify the ordinary behavior.
+#|# Decision And Implementation Boundary
 #|
-#|The unchanged project remains 234 modules, 3,599 graph edges, 355 production
-#|and 429 complete-test entries, 197 module-backed entries across 41 loaded
-#|modules, 1,067 sum lines, exact module hashes, and the recorded 432-line tidy
-#|projection. All 35 earlier guarded selections and 225 incoming edges remain
-#|exact at sorted SHA-256
-#|`5dae96771b3994a9ce1999f8d0487f152d94adb3b2d0bb467b18054be39dc284`;
-#|all guarded why results are negative and imports/loads zero. Accepted quality
-#|remains 27/27 Q0-Q2 PASS at L2.
+#|Select only the highest qualified Go-1.18-compatible exact-path stable with a
+#|genuine supported project owner. If that exact selection changes, use exact Go
+#|1.26.7 and exact `go get github.com/kr/pretty@<selected-version>` for one
+#|dependency-only commit; do not hand-edit metadata and do not use tidy as the
+#|implementation. Explain and verify the minimal exact transitive closure and
+#|preserve every earlier selection and exception.
 #|
-#|# Required Product Decision
+#|If selected v0.3.1 is already the highest qualified exact decision and exact
+#|get is a no-op, record the no-change decision without forcing a dependency
+#|commit. If no stable qualifies, or no qualified candidate has a genuine
+#|supported tidy-stable owner, retain no projection and prepare one reciprocal
+#|product-decision archive offering only: a target-specific unqualified
+#|exception, exactly one named later measurement-only genuine owner/request
+#|study, or stop P7 unresolved. Do not choose that product direction during the
+#|evaluation.
 #|
-#|Choose exactly one:
-#|
-#|1. Explicitly retain exact selected, inherited, unloaded
-#|   `v0.0.0-20140226030751-b84e30acd515` without source or dependency-metadata
-#|   changes under a kr/logfmt-specific, non-transferable exception. The
-#|   decision must call it unqualified, accept only the three completed ordinary
-#|   API behavior failures plus the completed related evaluation, and define
-#|   exact expiry guards for path/version, all three requests and genuine
-#|   mvn-pom-mutator/Viper/Prometheus/go-logfmt owner routes, requester import
-#|   facts, root/import/load/runtime, graph/module/tidy/Go-floor, every earlier
-#|   guard, advisories/findings/releases/owners, and any compatible genuine route
-#|   to a qualified exact-path release.
-#|2. Authorize exactly one later bounded measurement-only owner/request study.
-#|   Name the existing shortest route: main -> direct mvn-pom-mutator v0.2.3 ->
-#|   Prometheus TSDB v0.7.1 -> selected kr/logfmt. State the exact question to
-#|   measure: whether a genuine supported tidy-stable owner change removes
-#|   kr/logfmt or selects a qualified exact-path release while preserving the Go
-#|   floor and every contract. Do not run it, implement a parent change, add a
-#|   direct target root, transfer an exception, or imply approval of graph/
-#|   source/metadata changes.
-#|3. Stop P7 unresolved, record the blocker, and prepare no dependency or P8
-#|   implementation.
-#|
-#|The decision must not call physical MVS selection, negative why, zero loading,
-#|or advisory absence qualification. It must not select latest directly without
-#|a genuine owner, promote go-logfmt or another alternate path, select a fork,
-#|branch, replacement, patch, wrapper, or workaround; add a direct edge; change
-#|mvn-pom-mutator, TSDB, Viper, Common, go-logfmt, client_golang, go-metrics, the
-#|Go floor, product source, dependency metadata, or another selection; reopen an
-#|earlier decision; or begin P8.
-#|
-#|# Role And Boundaries
-#|
-#|This is a decision-recording session, not a renewed target audit or an
-#|implementation. Reuse the completed evaluation and make exactly one choice.
-#|Do not broaden it into direct use, an ownerless pseudo-version, alternate-path
-#|promotion, parent removal, patching, forking, wrapping, replacement, a
-#|Go-floor change, unrelated-module authorization, another dependency group, or
-#|P8.
+#|After any changed selection, run the complete P7 dependency gate required by
+#|the roadmap. For an unchanged result, run focused target/graph/advisory guards
+#|and final exact-Go module verification, build, count-one tests, race count-one
+#|tests, and vet. In either case preserve the Go 1.18 floor, source/API/CLI/help/
+#|launcher/Make/quality contracts, all earlier guards, and accepted 27/27 Q0-Q2
+#|PASS at L2.
 #|
 #|# Required Reading
 #|
-#|Read this decision archive, the answered target evaluation, kr/fs,
-#|go-windows-terminal-sequences, gotool, and errcheck decisions/evaluations,
-#|direct mvn-pom-mutator and relevant go-logfmt/Prometheus/Viper retained-module
-#|records, rolling handover, roadmap, `go.mod`, and `go.sum`. Verify the new
-#|handoff HEAD/parent/tree and exact changed set, reciprocal archive chain,
-#|latest Google UUID implementation ancestry, exact Go 1.26.7 identity, launcher
-#|check, module hashes/counts/tidy projection, all three requests and genuine
-#|routes, target/requester why-import-load state, all 35 guarded selections and
-#|225-edge snapshot, and fresh target/guard advisory identities. Treat the
-#|completed behavior and disposable project measurements as final.
+#|Read this archive, the answered kr/logfmt decision/evaluation, kr/fs,
+#|go-windows-terminal-sequences, gotool, and errcheck decisions/evaluations, the
+#|accepted Cast v1.5.1 evaluation and related requester/retained-module records,
+#|rolling handover, P7/P8 roadmap, `go.mod`, and `go.sum`. Verify branch,
+#|ancestry, clean ordinary/ignored state, reciprocal archive chain, launcher
+#|check, exact Go identities, module hashes/counts/tidy projection, all 36
+#|earlier guards and 228-edge snapshot, and fresh advisory identities before any
+#|implementation.
 #|
 #|# Three Moves
 #|
-#|First, verify decision prerequisites and choose exactly one authorized option.
-#|Second, record only that decision; leave source, dependency metadata, parents,
-#|Go floor, and every earlier guard unchanged. Third, update roadmap and rolling
-#|handover, answer this archive, prepare the one reciprocal successor the choice
-#|requires, verify containment, and commit the documentation handoff without
+#|First, independently evaluate only kr/pretty and choose the exact qualified
+#|stable or the bounded no-qualified result. Second, make at most the one
+#|authorized dependency-only selection change and verify it, or leave source and
+#|metadata unchanged. Third, update roadmap and rolling handover, answer this
+#|archive, prepare exactly one reciprocal successor required by the result,
+#|verify containment, and make the required local handoff commit without
 #|executing the successor.
 #|
 #|# Automatic Handoff
 #|
-#|Make the required local `docs: prepare next agent session` commit. Do not
-#|launch a successor, push, merge, publish, release, stash, revert, bypass
-#|cleanup, remove the worktree, repeat completed behavior, implement a parent or
-#|workaround, combine another dependency group, reopen earlier work, write
-#|outside the managed scratch root, or begin P8.
+#|Do not launch a successor, push, merge, publish, release, stash, revert,
+#|bypass cleanup, remove the worktree, transfer an exception, reopen Cast or an
+#|earlier decision, evaluate another dependency group, write outside the managed
+#|scratch root, or begin P8.
 # CODEX_MUTABLE_PROMPT_END

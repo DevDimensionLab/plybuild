@@ -5375,8 +5375,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active for the prepared bounded evaluation of selected exact-path
-`github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515`. Option 1 explicitly
-retained exact inherited/unloaded unqualified kr/fs v0.1.0,
+`github.com/kr/pretty v0.3.1`. Option 1 explicitly retained exact inherited/
+unloaded unqualified kr/logfmt
+v0.0.0-20140226030751-b84e30acd515, kr/fs v0.1.0,
 go-windows-terminal-sequences v1.0.1, gotool v1.0.0, and errcheck v1.5.0 under
 separate target-specific non-transferable exceptions. Exact
 inherited/unloaded httprouter v1.2.0, jtolds/gls v4.20.0+incompatible,
@@ -5385,7 +5386,7 @@ separately retained and unqualified under their own exceptions. Earlier
 demangle, strcase, and affected/not-secure memberlist decisions remain
 separate under their own guards. Completed dependency groups remain final
 through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2.
-Product source and dependency metadata remain unchanged. The kr/logfmt
+Product source and dependency metadata remain unchanged. The kr/pretty
 successor is prepared but was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
@@ -13161,6 +13162,72 @@ Kr Logfmt evaluation (2026-09-22):
   request route; or stop P7 unresolved. Do not repeat completed behavior, add
   a direct root, promote latest/go-logfmt, change a parent/source/metadata,
   transfer an exception, combine another group, or begin P8.
+
+Kr Logfmt product decision (2026-09-22):
+
+- Option 1 was selected. Exact selected, inherited, unloaded
+  `github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515` is explicitly
+  retained without changing product source, `go.mod`, or `go.sum`. It remains
+  unqualified and is not described as secure. Physical selection, negative
+  why, zero loading, and advisory absence bound exposure but are not
+  qualification or implicit authorization.
+- The kr/logfmt-specific, non-transferable exception accepts only the
+  completed non-struct panic, `uint8` rejection, and `int8` overflow-wrap
+  failures plus the related repository/release/module/Go-floor/API/ordinary-
+  behavior, ownership/state, MVS/loading, project, vulnerability, and related
+  completed findings. It accepts no uncharacterized behavior, new advisory,
+  or independent defect and transfers no other exception.
+- Ownership is exact selected; all three requests from go-logfmt v0.4.0,
+  Prometheus Common v0.4.1, and Prometheus TSDB v0.7.1; all genuine routes
+  beginning at direct mvn-pom-mutator v0.2.3 through TSDB or historical
+  Viper/go-metrics/Common/go-logfmt/client_golang; and the recorded requester
+  import facts. Guards require no direct target root, negative target why,
+  zero target repository imports and production/complete-test loads, no
+  runtime reachability, exact graph/module/tidy/Go-floor state, and every
+  earlier guard.
+- The exception also requires no new target or requester-closure advisory,
+  independent finding, repository owner/status change, exact-path release,
+  requester/owner, qualified release, supported tidy-stable owner, or
+  compatible genuine route to a qualified exact-path release. Any target,
+  request/requester import, owner identity/route, root, import, load, runtime,
+  graph, module-hash, tidy, Go-floor, earlier-guard, advisory, finding,
+  repository/release/owner, qualification, or route change expires the
+  exception and requires a fresh target dependency and product decision
+  before merge. It authorizes no owner study, parent/source/metadata change,
+  direct root, latest, alternate path, fork, replacement, patch, wrapper,
+  workaround, unrelated selection, or implementation.
+- Guard-only revalidation preserved 234 modules, 3,599 edges, 355 production
+  and 429 complete-test entries, 197 module-backed entries across 41 modules,
+  1,067 sums, exact module hashes, and the 432-line tidy projection. All three
+  requests, routes, requester facts, and target boundaries reproduce. All 35
+  earlier guarded selections retain negative why and zero imports/loads; their
+  225 incoming edges reproduce
+  `5dae96771b3994a9ce1999f8d0487f152d94adb3b2d0bb467b18054be39dc284`.
+  Including kr/logfmt gives 36 selections/228 incoming edges at
+  `361d0c355a69842518a518e682f81c9728d37acfdeff64f430a4fb253929691e`.
+- Fresh proxy/GitHub metadata retains exact release/repository identities.
+  Exact target OSV/GitHub results remain empty; guard OSV retains only the
+  Gorilla/retryablehttp pairs; x/mod v0.14.0 retains GO-2026-6179 and
+  GO-2026-6180; the 1,402-record Go index and PUBLISHED memberlist CNA bytes
+  remain exact. No completed behavior, direct-root projection, or owner study
+  was repeated.
+- No dependency implementation or metadata commit was created. No changed-
+  selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. Final exact-Go module verification, build, count-one tests, race
+  count-one tests, vet, the reciprocal 255-archive chain, sole NEXT state,
+  launcher/archive prompt mirror, exact five-file documentation-only changed
+  set, diff checks, and launcher check pass. Every task-owned scratch artifact
+  was contained beneath the managed session root and removed; only its pre-
+  existing launcher-owned Node compile cache remains. P7 continues only with
+  the prepared bounded evaluation of selected exact-path
+  `github.com/kr/pretty v0.3.1`. Current queue observations are a selected
+  v0.3.1 request from Cast v1.5.1, four lower historical requests, a positive
+  why chain only through yaml.v2 tests/check.v1, zero repository imports, and
+  zero production/complete-test loads; none is qualification. The successor
+  must independently verify these facts and every earlier guard, evaluate no
+  other group, and stop for a fresh product decision if no exact-path release
+  qualifies or any guard changes. It was prepared but not executed. P8 remains
+  queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

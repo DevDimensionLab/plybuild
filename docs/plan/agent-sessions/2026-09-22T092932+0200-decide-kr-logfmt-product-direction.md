@@ -1,13 +1,16 @@
 # Agent Session: Decide Kr Logfmt Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-22T092932+0200-decide-kr-logfmt-product-direction`
 Created: `2026-09-22T09:29:32+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `2d899c6065e9eda4108a9ce54b58be2b6723a73f0b793f599b02a694152576c9`
 Previous: [2026-09-22T084421+0200-evaluate-kr-logfmt-dependency.md](2026-09-22T084421+0200-evaluate-kr-logfmt-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-22T100435+0200-evaluate-kr-pretty-dependency.md](2026-09-22T100435+0200-evaluate-kr-pretty-dependency.md)
+Outcome: Option 1 explicitly retains exact selected, inherited, unloaded,
+  unqualified kr/logfmt under a target-specific, non-transferable exception.
+  No source, dependency metadata, owner, target root, or other selection
+  changed.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -222,3 +225,139 @@ cleanup, remove the worktree, repeat completed behavior, implement a parent or
 workaround, combine another dependency group, reopen earlier work, write
 outside the managed scratch root, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 was selected on 2026-09-22. Exact selected
+`github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515` is explicitly
+retained as inherited and unloaded without changing product source, `go.mod`,
+or `go.sum`. It remains unqualified and is not described as secure. Physical
+MVS selection, negative `go mod why`, zero loading, and advisory absence bound
+present exposure; none qualifies or implicitly accepts the module.
+
+The kr/logfmt-specific, non-transferable exception accepts only the three
+completed ordinary API behavior failures: non-struct `&int` input panics
+despite the promise to return an error; documented support for all numeric
+types rejects `uint8`; and ordinary value `128` silently wraps to `-128` in
+`int8`. It also accepts only the completed repository, archive, release,
+module, Go-floor, source, exported API, parsing/error/ownership/mutation,
+determinism/concurrency/global-state, lifecycle, platform, external-boundary,
+MVS/loading, project, vulnerability, and related evaluation findings. It
+accepts no uncharacterized behavior, new advisory, or independent defect. It
+promotes no go-logfmt or other alternate path, fork, branch, pseudo-version,
+replacement, direct root, patch, wrapper, or workaround and transfers no
+earlier dependency exception.
+
+The exception remains valid only while every one of these facts remains
+exact:
+
+- selected exact path and version
+  `github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515`;
+- all three selected-version requests:
+  `github.com/go-logfmt/logfmt@v0.4.0`,
+  `github.com/prometheus/common@v0.4.1`, and
+  `github.com/prometheus/tsdb@v0.7.1` each requesting exact selected;
+- every genuine route beginning at direct
+  `github.com/devdimensionlab/mvn-pom-mutator v0.2.3`: the shortest route
+  through Prometheus TSDB v0.7.1, and the historical Viper v1.10.1 ->
+  go-metrics v0.3.10 -> Prometheus Common v0.9.1 routes through either
+  go-logfmt v0.4.0 or client_golang v1.0.0 -> Common v0.4.1;
+- go-logfmt v0.4.0 importing the target only from its build-tagged fuzz file
+  and benchmark, while Common v0.4.1 and TSDB v0.7.1 retain stale indirect
+  requirements and no Go import of the target;
+- no direct target root, negative target why, zero target repository imports,
+  zero target production or complete-test package loads, and no target runtime
+  reachability;
+- 234 selected modules, 3,599 graph edges, 355 production entries, 429
+  complete-test entries, 197 module-backed complete-test entries across 41
+  loaded modules, 1,067 sum lines, and the exact 432-line tidy projection at
+  SHA-256
+  `3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`;
+- `go.mod` and `go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  and the common tidy-applied 52/948-line hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`;
+- the declared Go 1.18 floor and exact Go 1.26.7 archive/binary identities;
+- every earlier target-specific guard, with all 35 earlier guarded selections
+  exact, all 35 why results negative, guarded repository imports and loads
+  zero, and their 225 sorted incoming edges at SHA-256
+  `5dae96771b3994a9ce1999f8d0487f152d94adb3b2d0bb467b18054be39dc284`;
+  including kr/logfmt yields 36 guarded selections and 228 incoming edges at
+  SHA-256
+  `361d0c355a69842518a518e682f81c9728d37acfdeff64f430a4fb253929691e`;
+  and
+- no new target or requester-closure advisory, independent finding,
+  repository owner/status change, tag or release, requester or owner,
+  qualified exact-path release, supported tidy-stable owner, or compatible
+  genuine route to a qualified exact-path release.
+
+Any target path/version, request, requester import fact, mvn-pom-mutator,
+Viper, Prometheus, go-logfmt, client_golang, go-metrics, or other owner
+identity/route, root, import, load, runtime, graph, module hash, tidy, Go-floor,
+earlier guard, advisory, independent finding, repository/release/owner,
+qualification, or compatible-route change expires the exception and requires
+a fresh kr/logfmt dependency and product decision before merge. The decision
+authorizes no owner study, parent/source/dependency-metadata change, direct
+target root, latest selection, alternate path, unrelated selection, or
+implementation.
+
+Guard-only revalidation began from clean ordinary and ignored state on branch
+`codex/upgrade-quality` at handoff HEAD
+`1017a890db0c7ac42c6ebb4bc57bc8c191ac718c`, parent
+`f7d5b3a94833a92b5d5b5a48b09c33e2dcba9e18`, tree
+`3bea69f9fa766139c87af1f50fbfcf627a5e71e3`. That handoff changes exactly
+`codex-dev-start.sh`, the answered kr/logfmt evaluation archive, this then-NEXT
+decision archive, rolling handover, and roadmap. Its reciprocal 254-archive
+chain, sole NEXT state, launcher/archive prompt mirror, exact changed set, and
+launcher check passed.
+
+The latest dependency implementation remains exact Google UUID v1.4.0 commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
+`37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
+`b89afd4ec056133b1eefb5611f8f35c12c11824b`, changing only `go.mod` and
+`go.sum`; it remains an ancestor of the handoff. A freshly unpacked official
+Go 1.26.7 archive and binary retained SHA-256 values
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+All guard commands used that binary with `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, no ambient `GOFLAGS`, `LC_ALL=C`, `LANG=C`, and
+`umask 022`.
+
+The baseline counts, module hashes, tidy projection, all three target
+requests, genuine owner routes, and requester import facts reproduce. The
+target why remains negative; repository target imports and target production/
+complete-test loads remain zero. All 35 earlier guarded selections remain
+exact with negative why and zero imports/loads; both the 225-edge earlier
+snapshot and 228-edge snapshot including kr/logfmt reproduce.
+
+Fresh proxy metadata still has an empty version list and resolves `@latest` to
+`v0.0.0-20210122060352-19f9bcb100e6`. GitHub still reports the exact public,
+enabled, unarchived, non-fork MIT repository owned by `kr`, with no tags,
+Releases, or repository advisories. Exact-version OSV and GitHub results for
+selected and latest remain empty. Exact OSV across all earlier guards retains
+only Gorilla WebSocket `GO-2026-6278` / `GHSA-w67g-5rqw-f597` and
+go-retryablehttp `GO-2024-2947` / `GHSA-v6v8-xj6m-xwqh`; x/mod v0.14.0
+retains `GO-2026-6179` and `GO-2026-6180`. The Go vulnerability index remains
+518,501 bytes and 1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. The PUBLISHED 2,807-byte memberlist CNA
+response remains byte-exact at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+
+The completed kr/logfmt behavior and disposable project evaluations were not
+repeated, option 2 was not authorized or run, and no source, dependency
+metadata, parent, toolchain declaration, or earlier guard changed. No changed-
+selection scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+Final unchanged-project exact-Go module verification, build, count-one tests,
+race count-one tests, and vet pass. The reciprocal 255-archive chain, single
+NEXT state, launcher/archive prompt mirror, exact documentation-only changed
+set, diff checks, and launcher check pass after the handoff edit. Every task-
+owned tool, cache, report, archive, and advisory snapshot was contained
+beneath the managed session scratch root and removed; only the pre-existing
+launcher-owned Node compile cache remains there.
+
+P7 continues only with the reciprocal bounded evaluation of the next selected
+queue item, `github.com/kr/pretty v0.3.1`, linked above. That successor was
+prepared but not executed. P8 remains queued.
