@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T11:36:19+02:00
+Generated: 2026-09-22T12:38:47+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,16 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The kr/pretty decision
-  began from clean HEAD `768ec6fe56ac4feafe4c608074082640a131e362`,
-  parent `7fb81847f378ba7fbc9a758bacb507b42aea92be`, tree
-  `3c7ef105d5eddb552c27bba3573273ca6b08daa3`. That handoff changes exactly the
-  launcher, answered kr/pretty evaluation archive, then-NEXT kr/pretty
-  decision archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal 256-archive history,
-  latest Google UUID ancestry, exact Go identity, module hashes, target and
-  earlier guards, fresh advisory identities, and launcher check passed.
+  `codex/upgrade-quality`, base master at `5635d50`. The kr/pty evaluation
+  began from clean HEAD `11de41c21f881a22999dd3c8772779f07ca31b86`,
+  parent `768ec6fe56ac4feafe4c608074082640a131e362`, tree
+  `922e50ba6cbb5b8a1e88afc658dc724d2676a999`. That handoff changes exactly the
+  launcher, answered kr/pretty decision archive, then-NEXT kr/pty evaluation
+  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
+  ancestry, exact changed set, reciprocal 257-archive history, latest Google
+  UUID ancestry, exact Go identities, module hashes/counts/tidy projection,
+  target and earlier guards, fresh advisory identities, and launcher check
+  passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -24,8 +25,8 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The kr/pretty decision/evaluation, kr/logfmt decision/evaluation, kr/fs decision/
-  evaluation, go-windows-terminal-
+- The kr/pty evaluation, kr/pretty decision/evaluation, kr/logfmt decision/
+  evaluation, kr/fs decision/evaluation, go-windows-terminal-
   sequences decision/evaluation, gotool decision/evaluation, errcheck
   decision/evaluation, httprouter decision/evaluation, jtolds/gls decision/
   evaluation, go-junit-report decision/evaluation, json-iterator decision/
@@ -43,14 +44,19 @@ session diary.
   none is qualified and no implementation was retained. Stable httprouter
   v1.3.0 qualifies but has no genuine supported tidy-stable project owner. No
   exact-path go-windows-terminal-sequences, kr/fs, kr/logfmt, or kr/pretty
-  release qualifies; source and dependency metadata remain unchanged. Option
+  release qualifies; source and dependency metadata remain unchanged. Kr/pty
+  v1.1.4 is the highest behavior-qualified Go-1.18-compatible exact-path
+  stable, but no genuine supported tidy-stable project owner requests it;
+  v1.1.5-v1.1.8 fail ordinary documented `Start` behavior. Option
   1 separately retains exact inherited, unloaded kr/pretty v0.3.1 under its
   target-specific, non-transferable exception; it remains unqualified. The
   sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T113619+0200-evaluate-kr-pty-dependency.md`.
-  It evaluates only selected exact-path kr/pty v1.1.1. It may not reopen
-  kr/pretty or an earlier decision, manufacture a direct root, combine kr/text
-  or another group, write outside the managed scratch root, or begin P8.
+  `docs/plan/agent-sessions/2026-09-22T123847+0200-decide-kr-pty-product-direction.md`.
+  It records exactly one bounded kr/pty direction: target-specific exception,
+  one named measurement-only shortest owner/request-route study, or stop P7
+  unresolved. It may not repeat the evaluation, evaluate kr/text, reopen
+  kr/pretty or an earlier decision, manufacture a direct root, change source
+  or metadata, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -69,8 +75,85 @@ json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
 own target-specific exceptions and are not qualified. Exact Go 1.26.7, every
 accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
-No exact-path kr/pretty stable qualifies. P7 continues only with the prepared
-bounded kr/pty v1.1.1 evaluation. P8 remains queued.
+No exact-path kr/pretty stable qualifies. The kr/pty evaluation found v1.1.4
+highest behavior-qualified but without a genuine supported tidy-stable owner;
+no dependency selection changed. P7 stops only for the prepared bounded
+kr/pty product decision. P8 remains queued.
+
+## Kr Pty Evaluation
+
+Exact `github.com/kr/pty v1.1.4` is the highest Go-1.18-compatible exact-path
+stable that passes applicable ordinary behavior, closure, build, repeated,
+race, vet, and supported cross-build contracts. It has no genuine supported
+tidy-stable project owner, so no selection change is authorized. Selected
+v1.1.1 remains inherited and unloaded; no projection, root, or dependency
+commit was retained.
+
+The proxy exposes exactly v1.0.0, v1.0.1, and v1.1.0-v1.1.8. Exact `/v2` and
+`/v3` lines do not exist. Go-import resolves to public enabled archived MIT
+fork `kr/pty`, owned by `kr`, with active non-fork `creack/pty` as parent/
+source and exact v1.1.8 on default `master`. V1.1.7 is the transferred-parent
+release visible on the exact module line. V1.1.8 branches from v1.1.6 and is
+a deprecated shim requiring and delegating to alternate path creack/pty
+v1.1.7. There are no GitHub Releases, retractions, or replacements. Proxy,
+sumdb, tags/commits/trees, and Git regular-file bytes agree.
+
+The pre-shim module is one PTY package with no upstream tests, cgo, network,
+or mutable global state. Selected exports Open/Start and terminal size helpers;
+v1.1.3 adds StartWithSize. Callers own returned descriptors and terminal
+restoration; Start closes the slave and master-on-error. Small ordinary
+fixtures under exact Go 1.26.7 and contained Go 1.18.10 cover Open/close,
+size operations and nonmutation, four independent concurrent opens, and
+short-lived `/bin/echo`/`stty` processes.
+
+V1.0.0-v1.1.4 pass every applicable fixture under both SDKs. V1.1.5-v1.1.8
+fail documented Start/StartWithSize with `Setctty set but Ctty not valid in
+child`; repeated and race invocations reproduce the same functional failure.
+V1.1.6/v1.1.7 additionally fail their claimed Solaris boundary and cannot
+resolve its unpinned x/sys closure under Go 1.18; v1.1.8 also fails its
+Windows shim build. V1.1.4 is therefore highest qualified for behavior and
+floor, while selected v1.1.1 also passes but is lower.
+
+Exact MVS has one target request: historical kr/text v0.1.0 -> kr/pty v1.1.1.
+Requester inspection was ownership-only: kr/text imports target solely from
+its unloaded `mc` command. Historical route families extend lower kr/pretty
+v0.1.0/v0.2.0 routes through direct sergi/Assert, mvn-pom-mutator/Viper/
+Consul or Prometheus, and three Honnef/go-internal/errgo paths. Target why is
+negative; repository imports and production/complete-test target loads are
+zero. Kr/text why is positive only through yaml.v2 tests/check.v1/kr-pretty,
+but its command and target do not load. There is no runtime reachability.
+
+Baseline remains 234 modules, 3,599 edges, 355 production entries, 429
+complete-test entries, 197 module-backed entries across 41 loaded modules,
+1,067 sums, exact real module hashes, and the recorded 432-line tidy
+projection. Disposable v1.1.1 and v1.1.4 gets each manufacture one target
+root, produce 234/3,600 with 1,101/1,102 sums, and preserve every load; tidy
+removes the root and restores v1.1.1/common tidy state. V1.1.8 additionally
+adds creack/pty v1.1.7 for 235/3,602/1,104, but tidy removes both roots. No
+genuine supported tidy-stable owner requests v1.1.4.
+
+All 37 earlier selections and their 233 incoming edges retain SHA-256
+`1779751e93109c20a3cc7e3f2215665c9115156eb3947a1e45afb51e5cfe364f`;
+36 earlier why results are negative and only the closed kr/pretty result is
+positive, with zero guarded imports/loads. Including kr/pty yields 38
+selections/234 edges at
+`d31b2afdb5a11dadac236eec600408cc9ba0ee3deca2793ae2adf7ffc449c320`.
+
+Exact OSV/GitHub results for all eleven stables and repository advisories are
+empty. Exact-Go pinned govulncheck has no target finding; base/direct-v1.1.4
+project populations are identical at 30/22/20/20 without a target trace.
+Guard Gorilla/retryablehttp pairs, x/mod findings, the exact 1,402-record Go
+index, and PUBLISHED memberlist CNA identity remain unchanged. Advisory
+absence is not qualification.
+
+Product source and dependency metadata remain unchanged. Final exact Go
+1.26.7 module verification, build, count-one tests, race count-one tests, and
+vet pass under `umask 022`; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+P7 stops for one reciprocal product choice: retain selected v1.1.1 under a
+kr/pty-specific unqualified exception; authorize one later measurement-only
+study of the shortest main -> direct sergi/go-diff v1.2.0 -> historical
+kr/pretty v0.1.0 -> historical kr/text v0.1.0 -> target route; or stop P7
+unresolved. The successor was prepared but not executed; P8 remains queued.
 
 ## Kr Logfmt Evaluation
 
@@ -4271,12 +4354,13 @@ remains 27/27 Q0-Q2 PASS at L2.
 
 ## Next Bounded Objective
 
-Independently evaluate selected exact-path `github.com/kr/pty v1.1.1` as one
-bounded dependency group. Reproduce its sole observed request from historical
-`github.com/kr/text v0.1.0`, negative why, zero repository imports, zero
-production/complete-test loads, and every genuine owner route; none is
-qualification. Preserve the kr/pretty exception and every earlier guard.
-Select only the highest qualified exact-path stable that preserves Go 1.18 and
-every contract; otherwise leave source and metadata unchanged and stop for a
-fresh product decision. Do not add a direct target root, combine kr/text or
-another group, reopen kr/pretty or any earlier decision, or begin P8.
+Record exactly one bounded product direction for selected exact-path
+`github.com/kr/pty v1.1.1`: retain it as inherited/unloaded under a target-
+specific unqualified exception; authorize one later measurement-only study of
+the named shortest main -> sergi/go-diff v1.2.0 -> historical kr/pretty v0.1.0
+-> historical kr/text v0.1.0 -> target owner/request route; or stop P7
+unresolved. Treat the completed evaluation as final. Do not evaluate kr/text,
+repeat PTY fixtures, add a direct root, select v1.1.4 without a genuine
+supported tidy-stable owner, promote the v1.1.8 alternate-path shim, change
+source or metadata, combine another group, reopen kr/pretty or any earlier
+decision, or begin P8.

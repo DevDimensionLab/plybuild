@@ -5375,9 +5375,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active for the prepared bounded product decision for selected exact-
-path `github.com/kr/pretty v0.3.1`; no option has been selected. Option 1
-explicitly retained exact inherited/
-unloaded unqualified kr/logfmt
+path `github.com/kr/pty v1.1.1`; no option has been selected. Option 1
+explicitly retained exact inherited/unloaded unqualified kr/pretty v0.3.1,
+kr/logfmt
 v0.0.0-20140226030751-b84e30acd515, kr/fs v0.1.0,
 go-windows-terminal-sequences v1.0.1, gotool v1.0.0, and errcheck v1.5.0 under
 separate target-specific non-transferable exceptions. Exact
@@ -5387,9 +5387,11 @@ separately retained and unqualified under their own exceptions. Earlier
 demangle, strcase, and affected/not-secure memberlist decisions remain
 separate under their own guards. Completed dependency groups remain final
 through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2.
-Product source and dependency metadata remain unchanged. No exact-path
-kr/pretty stable qualifies. Its decision successor is prepared but was not
-executed. P8 remains queued.
+Product source and dependency metadata remain unchanged. Kr/pty v1.1.4 is the
+highest behavior-qualified Go-1.18-compatible exact-path stable, but no
+genuine supported tidy-stable project owner requests it; v1.1.5-v1.1.8 fail
+ordinary documented Start behavior. Its decision successor is prepared but
+was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -13361,6 +13363,76 @@ Kr Pretty product decision (2026-09-22):
   independently verify them and every earlier guard, evaluate no other group,
   and stop for a fresh product decision if no exact-path release qualifies or
   any guard changes. It was prepared but not executed. P8 remains queued.
+
+Kr Pty evaluation (2026-09-22):
+
+- The canonical exact-path proxy line contains exactly v1.0.0, v1.0.1, and
+  v1.1.0-v1.1.8; exact `/v2` and `/v3` lines do not exist. Go-import resolves
+  to public enabled archived MIT fork `kr/pty`, owned by `kr`, with active
+  non-fork `creack/pty` as parent/source and exact v1.1.8 on default `master`.
+  There are no GitHub Releases, retractions, or replacements. Proxy/sumdb,
+  tag/commit/tree, and Git regular-file identities agree for all eleven
+  releases; v1.1.7 is the transferred-parent exact-path release.
+- V1.0.0-v1.1.4 and transferred v1.1.7 have no requirement or Go directive;
+  v1.1.5/v1.1.6 declare `go 1.12`. V1.1.8 branches from v1.1.6, declares
+  `go 1.12`, and is a deprecated shim requiring and delegating to alternate
+  path creack/pty v1.1.7. No alternate path, fork, branch, pseudo-version, or
+  replacement was promoted.
+- The pre-shim release is one PTY package with no upstream tests, cgo, network,
+  or mutable shared state. Selected v1.1.1 exports Open/Start and terminal-size
+  helpers; v1.1.3 adds StartWithSize. Callers own returned descriptors and
+  terminal restoration; Start closes the slave and master-on-error. Small
+  bounded fixtures cover Open/close, size operations and input nonmutation,
+  four independent concurrent opens, and short-lived `/bin/echo`/`stty`
+  processes under exact Go 1.26.7 and contained Go 1.18.10.
+- V1.0.0-v1.1.4 pass every applicable ordinary fixture, build, repeated,
+  race, vet, and supported cross-build contract under both SDKs. V1.1.5-
+  v1.1.8 fail documented Start/StartWithSize with `Setctty set but Ctty not
+  valid in child`; repeated and race invocations reproduce the functional
+  failure. V1.1.6/v1.1.7 also fail their claimed Solaris closure and cannot
+  resolve its unpinned x/sys under Go 1.18; v1.1.8 also fails its Windows shim
+  build. V1.1.4 is therefore the highest behavior-qualified exact-path stable
+  preserving Go 1.18. Selected v1.1.1 passes but is lower.
+- Exact MVS has one target request: historical kr/text v0.1.0 -> kr/pty
+  v1.1.1. Requester inspection was ownership-only: kr/text imports target only
+  from its unloaded `mc` command. Genuine historical routes extend kr/pretty
+  v0.1.0/v0.2.0 routes through direct sergi/Assert, mvn-pom-mutator/Viper/
+  Consul or Prometheus, and three Honnef/go-internal/errgo paths. Target why is
+  negative; repository imports and production/complete-test target loads are
+  zero. Kr/text why is positive only through yaml.v2 tests/check.v1/kr/pretty,
+  but neither its command nor target loads. There is no runtime reachability.
+- Disposable exact v1.1.1 and v1.1.4 gets each manufacture a redundant target
+  root. They produce 234 modules/3,600 edges and 1,101/1,102 sums respectively,
+  preserve all 355/429/197/41 load facts, and tidy removes the root and restores
+  selected v1.1.1/common tidy state. V1.1.8 also manufactures creack/pty
+  v1.1.7, producing 235/3,602/1,104; tidy removes both. No genuine supported
+  tidy-stable owner requests v1.1.4, so no projection or dependency commit was
+  retained.
+- The unchanged project remains 234/3,599/355/429/197/41/1,067 with exact
+  module hashes and the recorded 432-line tidy projection. All 37 earlier
+  selections and their 233 incoming edges retain SHA-256
+  `1779751e93109c20a3cc7e3f2215665c9115156eb3947a1e45afb51e5cfe364f`;
+  36 why results are negative and only the closed kr/pretty result is positive,
+  with zero guarded imports/loads. Including kr/pty gives 38 selections/234
+  edges at
+  `d31b2afdb5a11dadac236eec600408cc9ba0ee3deca2793ae2adf7ffc449c320`.
+- Exact OSV/GitHub results for all stables and repository advisories are empty.
+  Exact-Go pinned govulncheck has no target finding; base/direct-v1.1.4 project
+  populations are identical at 30/22/20/20. Guard Gorilla/retryablehttp pairs,
+  x/mod v0.14.0 findings, the exact 1,402-record Go index, and PUBLISHED
+  memberlist CNA response remain unchanged. Advisory absence does not override
+  behavior or ownership.
+- No source or dependency metadata changed. Final exact Go 1.26.7 module
+  verification, build, count-one tests, race count-one tests, and vet pass
+  under `umask 022`; accepted quality remains 27/27 Q0-Q2 PASS at L2. P7 stops
+  for one reciprocal choice: retain selected inherited/unloaded v1.1.1 under a
+  kr/pty-specific unqualified exception; authorize one later measurement-only
+  study of the shortest main -> direct sergi/go-diff v1.2.0 -> historical
+  kr/pretty v0.1.0 -> historical kr/text v0.1.0 -> target route; or stop P7
+  unresolved. Do not repeat the evaluation, evaluate kr/text, add a direct
+  root, select v1.1.4 without an owner, promote v1.1.8's alternate path,
+  transfer an exception, combine another group, or begin P8. The decision
+  successor was prepared but not executed.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
