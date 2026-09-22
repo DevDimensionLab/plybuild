@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T00:36:41+02:00
+Generated: 2026-09-23T01:44:37+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,15 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The mwitkow/go-conntrack
-  product decision began from clean evaluation-handoff HEAD
-  `a586649d5ecaef9a9c9af5e8e33dbe631321c439`, parent
-  `ab5d27df6969e7ebc6766c73adf3af9c94e2cbe6`, tree
-  `8028ed1f41444ba77b66f6763684add385bd59fc`. That handoff changes exactly
-  the launcher, answered go-conntrack evaluation archive, then-NEXT
-  go-conntrack decision archive, rolling handover, and roadmap. Ordinary and
-  ignored status, branch, ancestry, exact changed set, reciprocal archive
-  history, latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
+  `codex/upgrade-quality`, base master at `5635d50`. The oklog/ulid evaluation
+  began from clean decision-handoff HEAD
+  `c0819eb1524b5a5bf6aabbefebaf185d30d36e88`, parent
+  `a586649d5ecaef9a9c9af5e8e33dbe631321c439`, tree
+  `e2f0a3da140de4e35a1030f97510800ba1ddf990`. That handoff changes exactly
+  the launcher, answered go-conntrack decision archive, then-NEXT ULID
+  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal archive history,
+  latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
   unchanged-project gates, and contained launcher check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
@@ -87,12 +87,17 @@ session diary.
   `v0.0.0-20161129095857-cc309e4a2223` under its own unqualified,
   target-specific, non-transferable exception without source or dependency
   change. No projection was retained, and the Prometheus Common Go-Conntrack
-  Ownership Study was not authorized or run. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T003641+0200-evaluate-oklog-ulid-dependency.md`.
-  It authorizes only the bounded P7 evaluation of selected
-  `github.com/oklog/ulid v1.3.1`; it may not reopen or transfer the go-
-  conntrack exception, combine another group, write outside the managed
-  scratch root, or begin P8.
+  Ownership Study was not authorized or run. No canonical exact-path ULID
+  stable satisfies both the complete ordinary closure gates and genuine
+  supported tidy-stable ownership: v0.3.0 is highest behavior-qualified but
+  ownerless in this graph, while v1.0.0-v1.3.1 have an undeclared CLI
+  dependency. No projection was retained. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-23T014437+0200-decide-oklog-ulid-product-direction.md`.
+  It authorizes only one ULID product direction: exact target-specific
+  unqualified retention, the single named later Prometheus TSDB ULID
+  Ownership Study, or stopping P7 unresolved. It may not reevaluate ULID,
+  run the study, reopen or transfer an earlier exception, evaluate another
+  group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -135,9 +140,56 @@ is empty and no root promotion was retained. Modern-go/reflect2 canonical
 it is already selected, its changed closure is empty, and no root promotion
 was retained. No canonical mwitkow/go-conntrack exact-path stable exists, and
 its selected pseudo-version fails complete ordinary upstream closure gates;
-option 1 retains it unchanged and unqualified under its own exact guards. P7
-continues only with the prepared bounded oklog/ulid v1.3.1 evaluation. P8
-remains queued.
+option 1 retains it unchanged and unqualified under its own exact guards. No
+ULID exact-path stable satisfies the combined closure/ownership contract:
+v0.3.0 is highest behavior-qualified but lacks a genuine supported tidy-stable
+owner, and selected v1.3.1 plus every stable from v1.0.0 has an incomplete
+standalone module closure. P7 stops only for the prepared ULID product
+decision. P8 remains queued.
+
+## Oklog ULID Evaluation
+
+No exact-path stable qualifies under the complete evaluation contract. The
+public enabled unarchived non-fork Apache-2.0 `oklog/ulid` repository, ID
+75744278, owns eight v0/v1 stables through selected/latest v1.3.1. The
+separate canonical `/v2` line through v2.1.2 is ineligible and `/v3` is absent.
+All v0/v1 tags, commits, trees, ancestry, synthetic module files, sumdb/proxy
+archives, Git exclusions, license, release, and repository identities were
+resolved from primary evidence.
+
+V0.3.0 is the highest behavior-qualified Go-1.18-compatible stable. It and
+all earlier stables pass complete module verification/build/test/vet under
+exact Go 1.18.10 and 1.26.7; v0.3.0 also passes repeated/race/root vet and nine
+cross-build targets. Every stable from v1.0.0 through v1.3.1 fails complete
+build/test/vet because `cmd/ulid` imports undeclared
+`github.com/pborman/getopt/v2`; the correctly filtered proxy module ZIP has no
+vendor fallback. Selected's root library still passes repeated/race/vet and
+cross-build gates, but that cannot override its incomplete complete closure.
+
+The sole request and complete route are main -> direct mvn-pom-mutator v0.2.3
+-> metadata-only TSDB v0.7.1 -> exact ULID v1.3.1. TSDB genuinely imports
+ULID; target/requester why, repository import, production/complete-test/
+module-backed load, and runtime relevance remain negative. A selected get only
+adds an unused main root/source sum/edge and tidies away. A v0.3.0 get removes
+direct mvn-pom-mutator, TSDB, go-conntrack, and 24 guarded selections, yields
+157 modules/2,219 edges, and cannot load the project; tidy restores the common
+projection and reselects v1.3.1. Thus no genuine supported tidy-stable owner
+requests v0.3.0, and neither projection was retained.
+
+Exact base 234/3,599/355/429/197/41/1,067, module hashes, 432-line and common
+52/948-line tidy identities, Go floor, source/API/CLI/help/launcher/Make/
+quality contracts, and accepted 27/27 Q0-Q2 PASS at L2 remain unchanged. All
+45 earlier guards/273 edges retain SHA-256 `7e5c820d...`; including go-
+conntrack gives 46/275 at SHA-256 `32bd1b68...`. Target advisory results are
+empty; project govulncheck remains 30/22/20/20 with no target trace. Guard
+OSV, x/mod, the 518,501-byte/1,402-record Go index, and PUBLISHED 2,807-byte
+memberlist CNA identities reproduce. Final exact-Go verify/build/count-one/
+race/vet passes. No source or dependency metadata changed.
+
+P7 now requires exactly one ULID product direction: target-specific
+unqualified retention of exact v1.3.1, the single later measurement-only
+Prometheus TSDB ULID Ownership Study, or stopping P7 unresolved. The decision
+successor was prepared but not executed; P8 remains queued.
 
 ## Mwitkow Go-Conntrack Evaluation
 
@@ -5342,11 +5394,11 @@ bounded mapstructure v1.5.0 evaluation; P8 remains queued.
 
 ## Next Bounded Objective
 
-Independently evaluate graph-selected transitive exact
-`github.com/oklog/ulid v1.3.1` as one bounded P7 dependency group. Resolve the
-canonical exact-path stable line and highest qualified Go-1.18-compatible
-stable from primary evidence; implement at most one exact dependency-only
-changed selection only if its complete minimal closure and every earlier
-guard remain exact. Do not reopen or transfer the go-conntrack exception,
-combine another dependency group, write outside the managed scratch root, or
-begin P8.
+Make exactly one product decision for selected, inherited, unloaded
+`github.com/oklog/ulid v1.3.1` from the completed evaluation: explicitly
+retain it under a target-specific unqualified non-transferable exception,
+authorize exactly one later measurement-only Prometheus TSDB ULID Ownership
+Study, or stop P7 unresolved. Revalidate only the narrow decision guards. Do
+not reevaluate ULID, run the study, evaluate pascaldekloe/goe or another
+dependency, change source/dependency metadata, reopen or transfer an earlier
+exception, write outside the managed scratch root, or begin P8.

@@ -5374,7 +5374,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded evaluation of graph-selected,
+Status: active but stopped for the prepared product decision on graph-selected,
 transitive exact `github.com/oklog/ulid v1.3.1`. Option 1 now explicitly
 retains exact selected/inherited/unloaded unqualified go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`, exact indirect/production-loaded
@@ -5408,8 +5408,11 @@ metadata changed. Modern-go/reflect2 v1.0.2 also qualifies and is already
 selected. Mwitkow/go-conntrack has no canonical exact-path stable line and its
 selected pseudo-version remains unchanged and unqualified under a go-
 conntrack-specific, non-transferable option-1 exception. Its owner study was
-not authorized or run. The reciprocal oklog/ulid evaluation is prepared but
-was not executed. P8 remains queued.
+not authorized or run. The completed oklog/ulid evaluation found no stable
+that satisfies both complete ordinary closure qualification and genuine
+supported tidy-stable ownership; no implementation was retained. The
+reciprocal ULID product decision is prepared but was not executed. P8 remains
+queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14281,6 +14284,60 @@ Mwitkow/go-conntrack product decision (2026-09-23):
   closure/race/cross-build/projection/archive/govulncheck work was not repeated
   and no owner study ran. P7 continues only with the prepared bounded
   oklog/ulid v1.3.1 evaluation; P8 remains queued.
+
+Oklog/ULID evaluation (2026-09-23):
+
+- No exact-path stable satisfies the combined complete ordinary closure and
+  genuine supported tidy-stable ownership contract. The public enabled,
+  unarchived, non-fork Apache-2.0 `oklog/ulid` repository, ID 75744278, owns
+  exactly eight v0/v1 stables through selected/latest v1.3.1. Separate
+  canonical `/v2` through v2.1.2 is ineligible; `/v3` is absent. All v0/v1
+  tag, commit/tree/signature/ancestry, synthetic module, sumdb, proxy/Git,
+  license, repository, release, replacement, retraction, and deprecation
+  identities were resolved from primary evidence.
+- V0.3.0 is the highest behavior-qualified Go-1.18-compatible stable. Under
+  exact Go 1.18.10 and Go 1.26.7, v0.1.0-v0.3.0 pass full module verification,
+  build, count-one tests, and vet; v0.3.0 also passes count-10, race, root vet,
+  and nine cgo-disabled cross-build targets. Every stable from v1.0.0 through
+  v1.3.1 fails complete build/test/vet because `cmd/ulid` imports undeclared
+  `github.com/pborman/getopt/v2` and the proxy module ZIP correctly excludes
+  the Git vendor tree. Selected's root library gates pass, but its complete
+  module closure is unresolved.
+- The only target edge and complete current route are main -> direct
+  mvn-pom-mutator v0.2.3 -> metadata-only Prometheus TSDB v0.7.1 -> exact ULID
+  v1.3.1. TSDB genuinely imports ULID in production and tests. Target and TSDB
+  why, repository imports, production/complete-test/module-backed loads, and
+  runtime relevance remain negative.
+- A disposable selected get preserves all selections and loads, adds only an
+  unused main root/source sum/edge, and tidies back to the common projection.
+  A disposable v0.3.0 get removes direct mvn-pom-mutator, TSDB, go-conntrack,
+  and 24 guarded selections, reduces the graph to 157 modules/2,219 edges,
+  and makes project loading fail. Tidy restores the common projection and
+  reselects v1.3.1. No genuine supported tidy-stable owner requests v0.3.0,
+  and neither projection was retained.
+- Exact base 234/3,599/355/429/197/41/1,067, module hashes, the 432-line and
+  common 52/948-line tidy identities, Go 1.18/1.26.7, source/API/CLI/help/
+  launcher/Make/quality contracts, and accepted 27/27 Q0-Q2 PASS at L2 remain
+  unchanged. All 45 earlier guards/273 incoming edges retain SHA-256
+  `7e5c820da743ac628fb18da129b4d91428a36fd374ed248760d1318f2694c525`;
+  including go-conntrack gives 46/275 at SHA-256
+  `32bd1b6893f9a7964567c1b4bf772d60d690e85509f2ec85fd299d537086e544`.
+- Every target exact-version OSV and GitHub query, repository advisory, and
+  isolated pinned govulncheck target result is empty. Project populations
+  remain 30/22/20/20 with no target trace; guard OSV and x/mod retain their
+  exact identities. The Go index remains 518,501 bytes/1,402 records at
+  SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`;
+  the PUBLISHED memberlist CNA response remains 2,807 bytes at SHA-256
+  `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+  Advisory absence was not used as qualification.
+- Final exact-Go module verification, build, count-one tests, race count-one
+  tests, and vet pass. Source and dependency metadata remain byte-identical;
+  no dependency implementation commit exists. P7 now requires exactly one
+  ULID product direction: target-specific unqualified retention of selected
+  v1.3.1, the single later measurement-only Prometheus TSDB ULID Ownership
+  Study, or stopping P7 unresolved. The successor was prepared but not
+  executed; P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
