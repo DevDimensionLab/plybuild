@@ -5374,9 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded product decision for selected exact-
-path `github.com/kr/pty v1.1.1`; no option has been selected. Option 1
-explicitly retained exact inherited/unloaded unqualified kr/pretty v0.3.1,
+Status: active for the prepared bounded evaluation of selected exact-path
+`github.com/kr/text v0.2.0`. Option 1 explicitly retained exact inherited/
+unloaded unqualified kr/pty v1.1.1, kr/pretty v0.3.1,
 kr/logfmt
 v0.0.0-20140226030751-b84e30acd515, kr/fs v0.1.0,
 go-windows-terminal-sequences v1.0.1, gotool v1.0.0, and errcheck v1.5.0 under
@@ -5390,7 +5390,8 @@ through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2.
 Product source and dependency metadata remain unchanged. Kr/pty v1.1.4 is the
 highest behavior-qualified Go-1.18-compatible exact-path stable, but no
 genuine supported tidy-stable project owner requests it; v1.1.5-v1.1.8 fail
-ordinary documented Start behavior. Its decision successor is prepared but
+ordinary documented Start behavior. Its option-1 decision is final under the
+exact expiry guards below. The kr/text evaluation successor is prepared but
 was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
@@ -13433,6 +13434,72 @@ Kr Pty evaluation (2026-09-22):
   root, select v1.1.4 without an owner, promote v1.1.8's alternate path,
   transfer an exception, combine another group, or begin P8. The decision
   successor was prepared but not executed.
+
+Kr Pty product decision (2026-09-22):
+
+- Option 1 was selected. Exact selected, inherited, unloaded
+  `github.com/kr/pty v1.1.1` is explicitly retained without changing product
+  source, `go.mod`, or `go.sum`. It remains unqualified and is not described
+  as secure. Exact v1.1.4 remains the highest behavior-qualified
+  Go-1.18-compatible exact-path stable, but no genuine supported tidy-stable
+  owner requests it. Physical selection, negative target why, zero loading,
+  and advisory absence are exposure bounds, not qualification.
+- The target-specific, non-transferable exception accepts only the completed
+  eleven-release identity; selected v1.1.1 passing contracts; v1.1.4
+  qualification and unsupported-owner result; v1.1.5-v1.1.8 ordinary Start
+  failure; later Solaris/Windows closure failures; sole historical kr/text
+  v0.1.0 request and unloaded `mc` import; all sergi/Assert,
+  mvn-pom-mutator/Viper/Consul/Prometheus, and Honnef/go-internal/errgo route
+  families; why/import/load/runtime boundary; graph/tidy/Go-floor state;
+  disposable projections; earlier guards; advisory identities; and completed
+  related evaluation. No earlier exception transfers.
+- The exception requires exact selected path/version and sole request; the
+  requester's target import and every genuine owner route; no supported
+  v1.1.4 owner; no direct target root; negative target why; zero target
+  repository imports and production/complete-test loads; only the recorded
+  positive kr/text why chain through yaml.v2 tests/check.v1/kr/pretty; no
+  runtime reachability; exact release/repository/parent/shim identities and
+  qualification results; exact project/module/tidy/Go-floor state; every
+  earlier guard; and no new advisory, independent defect, release, owner,
+  qualified stable, supported tidy-stable owner, or compatible genuine route
+  to qualified v1.1.4.
+- Any target/request/requester-import/owner-route, root/why/import/load/runtime,
+  graph/module/tidy/Go-floor, earlier-guard, advisory/finding,
+  repository/release/owner, qualification, supported-owner, or compatible-
+  route change expires the exception and requires a fresh kr/pty dependency
+  and product decision before merge. Any compatible genuine route to
+  qualified v1.1.4 expressly expires retention. No owner study, direct root,
+  alternate path, parent/source/metadata change, workaround, unrelated
+  selection, implementation, or transferred exception is authorized.
+- Guard-only revalidation preserved 234 modules, 3,599 edges, 355 production
+  and 429 complete-test entries, 197 module-backed entries across 41 modules,
+  1,067 sums, exact module hashes, the 432-line tidy projection, applied
+  52/948-line tidy hashes, the sole request, every historical route, and the
+  target/text why/import/load boundary. All 37 earlier guarded selections and
+  233 incoming edges remain exact at
+  `1779751e93109c20a3cc7e3f2215665c9115156eb3947a1e45afb51e5cfe364f`;
+  including kr/pty gives 38 selections/234 incoming edges at
+  `d31b2afdb5a11dadac236eec600408cc9ba0ee3deca2793ae2adf7ffc449c320`.
+- Fresh official Go 1.26.7 archive/binary identities reproduce as
+  `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+  Fresh release/repository/advisory identities remain exact. Guard OSV retains
+  only the Gorilla/retryablehttp pairs; x/mod v0.14.0 retains GO-2026-6179 and
+  GO-2026-6180; the 1,402-record Go index and PUBLISHED memberlist CNA bytes
+  remain exact. No completed PTY behavior, source/release/closure, or
+  disposable-project evaluation was repeated, and no owner study ran.
+- No dependency implementation or metadata commit was created. No changed-
+  selection scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at
+  L2. Final exact-Go module verification, build, count-one tests, race
+  count-one tests, vet, reciprocal 259-archive chain, single NEXT state,
+  launcher/archive prompt mirror, exact documentation-only changed set, diff
+  checks, and launcher check pass. Every task-owned scratch artifact was
+  contained beneath the managed session root and removed; only its pre-
+  existing launcher-owned Node compile cache remains. P7 continues only with
+  the prepared bounded evaluation of selected exact-path
+  `github.com/kr/text v0.2.0`. It must preserve the kr/pty exception and stop
+  before implementation if any kr/pty expiry guard changes. The successor was
+  prepared but not executed. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
