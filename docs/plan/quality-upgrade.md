@@ -5375,8 +5375,7 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active for the prepared bounded evaluation of graph-selected
-transitive exact
-`github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd`.
+transitive exact `github.com/modern-go/reflect2 v1.0.2`.
 Option 1 now explicitly retains exact indirect/production-loaded unqualified
 mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
 v1.1.0 and Promptui v0.9.0, exact direct-indirect/runtime-relevant
@@ -5401,8 +5400,11 @@ The mapstructure, go-homedir, Promptui, emoji/v2, kr/text, and kr/pty option-1
 decisions are final under their separate exact expiry guards below. No
 canonical mapstructure, go-homedir, kyokomi/emoji/v2, or Promptui stable
 qualifies; their decisions retain exact selected v1.5.0, v1.1.0, v2.2.12,
-and v0.9.0 without source or dependency change. The modern-go/concurrent
-evaluation successor is prepared but was not executed. P8 remains queued.
+and v0.9.0 without source or dependency change. Modern-go/concurrent release
+`1.0.3` qualifies with a genuine supported exact-path owner, and the selected
+pseudo-version already names its exact commit/source, so no selection or
+metadata changed. The modern-go/reflect2 evaluation successor is prepared but
+was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14059,6 +14061,65 @@ Mitchellh Mapstructure product decision (2026-09-22):
   upstream/cross-build/projection/archive/govulncheck work was not repeated
   and no owner study ran. P7 continues only with the prepared bounded
   modern-go/concurrent evaluation; P8 remains queued.
+
+Modern-go/concurrent evaluation (2026-09-22):
+
+- Upstream `1.0.3` is the highest qualified genuine exact-path stable.
+  Selected pseudo-version
+  `v0.0.0-20180306012644-bacd9c7ef1dd` is its exact commit and byte-identical
+  source, so product source, `go.mod`, `go.sum`, all selections, and the
+  transitive closure remain unchanged. The pseudo-version itself is not
+  promoted as stable.
+- Public enabled unarchived non-fork Apache-2.0 repository
+  `modern-go/concurrent`, ID 123229061, defaults to `master` at the exact
+  selected commit. Its four genuine GitHub Releases/lightweight tags are
+  named `1.0.0`-`1.0.3` without Go-semver `v` prefixes. The proxy therefore
+  has no stable list; Go resolves each release name to the corresponding
+  pseudo-version. The four unsigned release commits form continuous ancestry,
+  and each proxy archive byte-matches its Git regular-file content. Synthetic
+  module files contain only the exact module directive. No `/v2` or `/v3`,
+  replacement, retraction, deprecation, prerelease, or eligible alternate
+  exists.
+- Every release passes exact Go 1.26.7 and Go 1.18.10 module verification,
+  build, count-one/repeated upstream tests, race, vet, four supported cross-
+  builds, and small ordinary Map/executor fixtures. Release 1.0.3 also passes
+  repeated/race per-executor panic-callback and documented `runtime.Goexit`
+  cleanup fixtures. The standard-library-only package has no cgo, generated,
+  embed, network, or filesystem boundary. Release 1.0.3 qualifies with its
+  genuine supported unarchived exact-path owner.
+- Eight graph edges request the target. Bketelsen/crypt, historical
+  sagikazarmark/crypt, Prometheus client v1.0.0, and both Viper vertices are
+  metadata-only. Json-iterator v1.1.9/v1.1.11/v1.1.12 genuinely use
+  `concurrent.Map`, but json-iterator is not loaded. Selected Viper is the only
+  loaded requester and does not import the target. Repository imports, target
+  why, production/complete-test/module-backed loads, and runtime relevance
+  remain negative. The answered archive records every shortest graph route;
+  selected crypt v0.9.0 also keeps a redundant metadata-only target
+  requirement omitted from the pruned main graph.
+- A disposable exact `@1.0.3` get preserves the selected module set but would
+  add an unauthorized main indirect root, one source sum, and one graph edge;
+  its tidy projection removes the promotion. Because no selection changed,
+  the selection-only implementation contract does not authorize those edits.
+  The projection was not retained and changed closure is empty.
+- Exact base 234/3,599/355/429/197/41/1,067, module hashes, the 432-line and
+  common 52/948-line tidy identities, Go 1.18 floor, source/API/CLI/help/
+  launcher/Make/quality contracts, and accepted 27/27 Q0-Q2 PASS at L2 remain
+  exact. All 43 earlier guarded selections and 256 incoming edges remain at
+  `8f05ff3b4755e6582db200d1d457b6e8b52e84983d9f634976f76b0d731d298f`.
+  Including concurrent gives 44 guards and 264 incoming edges at
+  `4a83d4e3a015f93da4b4d35bd590137071b01c40315ec9bb9c987688004f9b09`.
+  Every closed-exception boundary remains exact.
+- All four exact target OSV/GitHub results and target repository advisories
+  are empty. Pinned govulncheck is empty for each isolated release; unchanged
+  project populations remain 30/22/20/20 with no target trace. Guard OSV,
+  x/mod, the 1,402-record Go index, and PUBLISHED memberlist CNA identities
+  remain exact. Advisory absence was not used as qualification.
+- Final required-umask exact-Go verify/build/count-one/race/vet passes. No
+  dependency implementation commit exists. Every task-owned scratch artifact
+  is removed before handoff; only the pre-existing launcher-owned Node compile
+  cache remains. P7 continues only with the prepared bounded evaluation of
+  selected `github.com/modern-go/reflect2 v1.0.2`; it was not executed. P8
+  remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

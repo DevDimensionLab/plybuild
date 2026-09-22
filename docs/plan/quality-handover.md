@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T21:11:12+02:00
+Generated: 2026-09-22T22:20:53+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,15 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The mapstructure product
-  decision began from clean HEAD
-  `65f72c1c0416ee2e5ccce2135cec589f26cd8142`, parent
-  `bff26c941f30ef51a4f5a35c064a558ef1b45d16`, tree
-  `24a5f29b6ed4b0db8af1f8bc9af7659cfad52f63`. That handoff changes exactly
-  the launcher, answered mapstructure evaluation archive, then-NEXT
-  mapstructure decision archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal archive history,
-  latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
+  `codex/upgrade-quality`, base master at `5635d50`. The modern-go/concurrent
+  evaluation began from clean HEAD
+  `7a4222d5d3d9e63931ac7d0f270904cfbc509f58`, parent
+  `65f72c1c0416ee2e5ccce2135cec589f26cd8142`, tree
+  `251866cd2cfcf76ac94e20fcda6d7f393980c913`. That handoff changes exactly
+  the launcher, answered mapstructure decision archive, then-NEXT
+  modern-go/concurrent archive, rolling handover, and roadmap. Ordinary and
+  ignored status, branch, ancestry, exact changed set, reciprocal archive
+  history, latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
   unchanged-project gates, and contained launcher check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
@@ -75,12 +75,15 @@ session diary.
   no genuine supported owner. Mapstructure option 1 now explicitly retains
   selected indirect, production-loaded v1.5.0 under its own unqualified,
   target-specific, non-transferable exception without source or dependency
-  change. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T211112+0200-evaluate-modern-go-concurrent-dependency.md`.
-  It authorizes only one bounded modern-go/concurrent dependency evaluation.
-  It may not reopen mapstructure, go-homedir, Promptui, emoji/v2, kr/text,
-  kr/pty, kr/pretty, Cast, Viper, or an earlier decision, combine another
-  group, write outside the managed scratch root, or begin P8.
+  change. Modern-go/concurrent release `1.0.3` is the highest qualified
+  genuine stable in its exact-path four-release line. The already-selected
+  pseudo-version is its exact commit/source identity, so no selection or
+  metadata changed. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-22T222053+0200-evaluate-modern-go-reflect2-dependency.md`.
+  It authorizes only one bounded modern-go/reflect2 dependency evaluation. It
+  may not reopen modern-go/concurrent, mapstructure, go-homedir, Promptui,
+  emoji/v2, kr/text, kr/pty, kr/pretty, Cast, Viper, or an earlier decision,
+  combine another group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -113,11 +116,66 @@ Promptui stable qualifies for the recorded closure/output-error/race results.
 No canonical go-homedir stable qualifies for the recorded complete-upstream-
 gate result. No canonical mapstructure stable qualifies for the recorded
 ordinary slice-replacement result, and no exact-path stable has a genuine
-supported owner. Mapstructure option 1 is final under its exact guards. P7
-continues only with the prepared bounded evaluation of graph-selected
-transitive exact
-`github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd`. P8
-remains queued.
+supported owner. Mapstructure option 1 is final under its exact guards.
+Modern-go/concurrent `1.0.3` qualifies under both exact SDKs and has a genuine
+supported owner; its exact commit is already selected, so its changed closure
+is empty and no root promotion was retained. P7 continues only with the
+prepared bounded evaluation of graph-selected transitive exact
+`github.com/modern-go/reflect2 v1.0.2`. P8 remains queued.
+
+## Modern-Go Concurrent Evaluation
+
+Upstream release `1.0.3` is the highest qualified genuine exact-path stable.
+The selected pseudo-version
+`v0.0.0-20180306012644-bacd9c7ef1dd` is its exact commit and byte-identical
+source, so the project selection, source, `go.mod`, and `go.sum` remain
+unchanged. The pseudo-version itself is not promoted as stable.
+
+Public enabled unarchived non-fork Apache-2.0 repository
+`modern-go/concurrent`, ID 123229061, defaults to `master`, which is exactly
+the `1.0.3` commit. Its genuine GitHub Releases and lightweight tags are
+`1.0.0`-`1.0.3` without Go-semver `v` prefixes, so the proxy stable list is
+empty and each release resolves to a pseudo-version. The four release commits
+form continuous unsigned ancestry. Every proxy source archive byte-matches
+its exact Git regular-file content; synthetic module files contain only the
+exact module directive. There is no `/v2` or `/v3`, replacement, retraction,
+deprecation, prerelease, or alternate owner.
+
+Every release passes module verification, build, count-one/repeated tests,
+race, vet, four supported cross-builds, and bounded ordinary Map/executor
+fixtures under exact Go 1.26.7 and Go 1.18.10. Release 1.0.3 additionally
+passes repeated/race panic-callback and documented `runtime.Goexit` cleanup
+fixtures. The single standard-library-only package has no cgo, generated,
+embed, network, or filesystem boundary. Release `1.0.3` therefore qualifies
+with its genuine supported unarchived exact-path owner.
+
+Eight graph edges request the target. Bketelsen/crypt, historical
+sagikazarmark/crypt, Prometheus client v1.0.0, and both Viper vertices are
+metadata-only requesters. Json-iterator v1.1.9/v1.1.11/v1.1.12 genuinely use
+`concurrent.Map`, but json-iterator is not loaded. Selected Viper is the only
+loaded requester and does not import the target. Repository imports, target
+why, production/complete-test/module-backed loads, and runtime relevance all
+remain negative. The exact main -> mvn-pom-mutator/Viper -> requester graph
+routes are recorded in the answered archive. Selected crypt v0.9.0 also keeps
+a redundant metadata-only requirement omitted from the pruned main graph.
+
+A disposable exact `@1.0.3` get preserves all selections but would add an
+unauthorized main indirect root, one source sum, and one graph edge; its tidy
+diff removes that promotion. The projection was not retained because the
+selection did not change. Real state remains 234/3,599/355/429/197/41/1,067,
+the exact module and tidy hashes, and all 43 earlier selections/256 edges at
+`8f05ff3b4755e6582db200d1d457b6e8b52e84983d9f634976f76b0d731d298f`.
+Including concurrent gives the successor 44 guards/264 edges at
+`4a83d4e3a015f93da4b4d35bd590137071b01c40315ec9bb9c987688004f9b09`.
+All six recent closed-exception boundaries remain exact.
+
+All four exact target OSV/GitHub results and repository advisories are empty;
+pinned govulncheck is empty for every isolated release, while the unchanged
+project remains 30/22/20/20 with no target trace. Guard OSV, x/mod, the
+1,402-record Go index, and PUBLISHED memberlist CNA identities remain exact.
+Final required-umask exact-Go verify/build/count-one/race/vet passes; accepted
+quality remains 27/27 Q0-Q2 PASS at L2. Task-owned scratch is removed before
+handoff; the reflect2 successor was prepared but not executed.
 
 ## Mitchellh Mapstructure Evaluation
 
