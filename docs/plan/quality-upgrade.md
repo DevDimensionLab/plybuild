@@ -5374,8 +5374,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded evaluation of selected exact-path
-`github.com/kyokomi/emoji/v2 v2.2.12`. Option 1 explicitly retained exact
+Status: active for the prepared bounded product decision for selected exact-
+path `github.com/kyokomi/emoji/v2 v2.2.12`. Option 1 explicitly retained exact
 inherited/unloaded unqualified kr/text v0.2.0, kr/pty v1.1.1, kr/pretty v0.3.1,
 kr/logfmt
 v0.0.0-20140226030751-b84e30acd515, kr/fs v0.1.0,
@@ -5393,8 +5393,9 @@ genuine supported tidy-stable project owner requests it; v1.1.5-v1.1.8 fail
 ordinary documented Start behavior. Neither exact-path kr/text stable
 qualifies, and its matching adjacent-overlong-word fix remains unreleased.
 Both option-1 decisions are final under their separate exact expiry guards
-below. The kyokomi/emoji/v2 evaluation successor is prepared but was not
-executed. P8 remains queued.
+below. The kyokomi/emoji/v2 evaluation found no qualified canonical exact-path
+stable and retained no change. Its product-decision successor is prepared but
+was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -13606,10 +13607,68 @@ Kr Text product decision (2026-09-22):
   completed text or PTY behavior/source/closure/projection evaluation was
   repeated, and no owner study ran. Final exact-Go verify/build/count-one/
   race/vet pass; accepted quality remains 27/27 Q0-Q2 PASS at L2.
-- P7 continues only with the prepared bounded evaluation of selected
+- P7 continues only with the prepared bounded product decision for selected
   exact-path `github.com/kyokomi/emoji/v2 v2.2.12`. It must preserve all 39
   earlier selections/237 edges and every kr/text and kr/pty expiry guard. The
   successor was prepared but not executed; P8 remains queued.
+
+Kyokomi Emoji V2 dependency evaluation (2026-09-22):
+
+- No canonical exact-path stable qualifies. The proxy's canonical resolvable
+  `/v2` line is v2.2.5-v2.2.14; earlier v2.0.0-v2.2.4 tags lack the `/v2`
+  module declaration and belong to the unsuffixed `+incompatible` line.
+  `/v3` is absent. Public enabled, unarchived, non-fork MIT repository
+  `kyokomi/emoji`, ID 21064634, is owned by `kyokomi`, defaults to `main`, and
+  has no parent/source. Release/tag/commit/tree/signature, module, ancestry,
+  proxy/sumdb, license, and regular-file archive/Git identities agree. There
+  are no retractions, deprecations, replacements, or eligible alternate paths.
+- V2.2.5-v2.2.13 declare Go 1.14 and have no requirements; latest v2.2.14
+  declares Go 1.21 and has no requirements. Exact v2.2.13 is therefore the
+  highest floor-compatible stable. The standard-library-only module contains
+  one library and one example package, with no cgo, embed, build-tag, platform,
+  or runtime network boundary. Generated maps and `ReplacePadding` are exposed
+  mutable globals; callers own mutation, synchronization, writers, and errors.
+- Upstream build, count-one/count-ten, race-count-ten, vet, and supported
+  cross-build gates pass for owner-requested v2.2.8, selected v2.2.12, and
+  highest floor-compatible v2.2.13 under exact Go 1.26.7 and Go 1.18.10;
+  Go 1.26.7 gates pass v2.2.14. Positive bounded ordinary fixtures pass.
+  Every canonical stable nevertheless merges adjacent `Fprintln` operands
+  rather than matching documented `fmt.Fprintln`, and implements documented
+  `Errorf` with a plain error so `%w` does not wrap as `fmt.Errorf` does. Both
+  ordinary failures reproduce under both SDKs and race. V2.2.14 independently
+  violates the retained Go floor.
+- Exact requests are main -> v2.2.12 and direct supported
+  go-term-markdown v0.1.4 -> v2.2.8. Main historically introduced v2.2.8
+  with that requester and later raised only its target root. The requester
+  imports the target in `renderer.go` and uses `emoji.Sprint`. Main directly
+  imports the requester but not the target. Both requester and target have
+  positive why results, are production/complete-test loaded, and are runtime
+  relevant through main `cmd` -> requester -> target.
+- Disposable v2.2.8, v2.2.12, v2.2.13, and v2.2.14 exact gets were not
+  retained. V2.2.8 changes only the target root while preserving the base;
+  v2.2.12 is a no-op; v2.2.13 changes only the target root and two sum lines
+  for 234/3,599/355/429/197/41/1,069; v2.2.14 raises main `go 1.18` to
+  `go 1.21` and produces 234/3,601/355/429/197/41/1,069. Comparable tidy
+  projections preserve all kr/text and kr/pty guards. The real project remains
+  234/3,599/355/429/197/41/1,067 with exact module/common tidy hashes.
+- All 39 earlier selections and 237 incoming edges remain exact at
+  `151e72c0b5444acc59ffab45d6ce8fe43e80821b42df6a49a11902b3a6632803`;
+  37 why results are negative and only closed kr/pretty and kr/text are
+  positive, with zero guarded imports/loads. Neither kr/text nor kr/pty expiry
+  guard changed.
+- Exact target OSV/GitHub/repository results are empty. Pinned isolated
+  govulncheck is empty for selected/highest/latest; base and v2.2.13 project
+  populations match at 30/22/20/20 with no target finding. Guard OSV, x/mod,
+  the exact 1,402-record Go index, and PUBLISHED memberlist CNA identities
+  remain unchanged. Final exact-Go verify/build/count-one/race/vet pass;
+  accepted quality remains 27/27 Q0-Q2 PASS at L2.
+- Product source and dependency metadata remain unchanged. P7 stops for one
+  reciprocal bounded product choice: exact target-specific unqualified
+  v2.2.12 retention; one later measurement-only study of the existing main ->
+  direct go-term-markdown v0.1.4 -> target owner/request route; or stopping P7
+  unresolved. Do not repeat the evaluation, run the study during the decision,
+  add a root, change either closed exception, combine another group, or begin
+  P8. The decision successor was prepared but not executed.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

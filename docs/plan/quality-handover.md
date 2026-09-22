@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T14:43:01+02:00
+Generated: 2026-09-22T15:47:00+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,14 +8,14 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The kr/text decision began
-  from clean HEAD `448692f193ecdd9d7f0e608472251ce780ff62cb`, parent
-  `0781a229dae9852e496c80a10b81075384e6fab8`, tree
-  `d449b3b805c4db0e58d422283ce3a018950f87d3`. That handoff changes exactly the
-  launcher, answered kr/text evaluation archive, then-NEXT kr/text decision
+  `codex/upgrade-quality`, base master at `5635d50`. The emoji/v2 evaluation
+  began from clean HEAD `89b6c413eca06d5ddcc6e9d424da70d3bb324447`, parent
+  `448692f193ecdd9d7f0e608472251ce780ff62cb`, tree
+  `13f2bb7b54f9cee6a2488d991992502952b21516`. That handoff changes exactly the
+  launcher, answered kr/text decision archive, then-NEXT emoji/v2 evaluation
   archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 260-archive history, latest Google
-  UUID ancestry, exact Go identity, module hashes/counts/tidy projection,
+  ancestry, exact changed set, reciprocal 261-archive history, latest Google
+  UUID ancestry, exact Go identities, module hashes/counts/tidy projection,
   target and earlier guards, fresh advisory identities, final unchanged-
   project gates, and launcher check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
@@ -53,13 +53,16 @@ session diary.
   v1.1.1 under separate target-specific, non-transferable exceptions; both
   remain unqualified. Option
   1 separately retains exact inherited, unloaded kr/pretty v0.3.1 under its
-  own exception. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T144301+0200-evaluate-kyokomi-emoji-v2-dependency.md`.
-  It authorizes only a bounded independent evaluation of selected exact-path
-  kyokomi/emoji/v2 v2.2.12. It may not repeat kr/text, kr/pty, or an earlier
-  evaluation, silently expire either exception, manufacture a direct root,
-  combine another group, change source or metadata outside its exact
-  authorization, write outside the managed scratch root, or begin P8.
+  own exception. The emoji/v2 evaluation is answered with no qualified
+  canonical exact-path stable and no source or dependency change. The sole
+  NEXT archive is
+  `docs/plan/agent-sessions/2026-09-22T154700+0200-decide-kyokomi-emoji-v2-product-direction.md`.
+  It authorizes only one bounded product decision: target-specific unqualified
+  v2.2.12 retention, exactly one later measurement-only study of the existing
+  main -> direct go-term-markdown v0.1.4 -> target route, or stopping P7
+  unresolved. It may not repeat the evaluation, run the owner study during the
+  decision, reopen kr/text or kr/pty, manufacture a direct root, combine
+  another group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -80,8 +83,10 @@ and all earlier retained-module decisions remain final under separate guards.
 No exact-path kr/pretty stable qualifies. Kr/pty v1.1.4 is highest behavior-
 qualified but lacks a genuine supported tidy-stable owner. Neither kr/text
 stable qualifies, and its matching fix is unreleased. Both option-1 decisions
-retain the selected versions without changing any dependency selection. P7
-continues only with the prepared bounded kyokomi/emoji/v2 v2.2.12 evaluation.
+retain the selected versions without changing any dependency selection. The
+emoji/v2 evaluation finds no qualified canonical exact-path stable: all ten
+releases fail documented Fprintln and Errorf contracts, and v2.2.14 also
+requires Go 1.21. P7 stops for the prepared bounded emoji/v2 product decision.
 P8 remains queued.
 
 ## Kr Pty Evaluation
@@ -4550,15 +4555,88 @@ disposable-project evaluation was repeated, and no owner study ran. Final
 exact-Go verify/build/count-one/race/vet pass; accepted quality remains 27/27
 Q0-Q2 PASS at L2.
 
+## Kyokomi Emoji V2 Evaluation
+
+No canonical exact-path `github.com/kyokomi/emoji/v2` stable qualifies.
+Exact v2.2.13 is the highest release that still declares a Go-1.18-compatible
+floor, but all ten canonical stables fail documented ordinary Fprintln and
+Errorf behavior. Latest v2.2.14 repeats those failures and declares Go 1.21.
+Selected v2.2.12 remains physically selected but unqualified; no project
+source, dependency metadata, projection, or implementation commit was retained.
+
+Go-import and the module declaration resolve public enabled, unarchived,
+non-fork MIT repository `kyokomi/emoji`, ID 21064634, owned by `kyokomi`,
+defaulting to `main`, with no parent/source. Older v2.0.0-v2.2.4 tags lack the
+`/v2` module path and belong to the unsuffixed `+incompatible` line. The
+canonical exact-path line is v2.2.5-v2.2.14; `/v3` is absent. There are no
+retractions, deprecations, replacements, prereleases, or eligible alternate
+paths, forks, branches, or pseudo-versions. Release tags/commits/trees,
+signatures, proxy/sumdb, module files, MIT license, ancestry, and regular-file
+archive/Git manifests agree.
+
+V2.2.5-v2.2.13 declare Go 1.14 with no requirements; v2.2.14 declares Go
+1.21 with no requirements. The standard-library-only release module contains
+one library package and one example main package; the repository generator is
+a separate nested module. There is no cgo, embed, build-tag, platform-specific,
+or runtime network boundary. Generated maps and `ReplacePadding` are exposed
+mutable globals, so callers own mutation/synchronization. Callers own output
+writers and errors; pure conversion is deterministic and has no lifecycle.
+
+Exact Go 1.26.7 and contained Go 1.18.10 upstream build, repeats, race, vet,
+and supported cross-builds pass for owner-requested v2.2.8, selected v2.2.12,
+and highest floor-compatible v2.2.13; Go 1.26.7 gates pass latest v2.2.14.
+Positive bounded shortcode/determinism/writer/concurrency fixtures pass. Every
+canonical stable nevertheless makes
+`Fprintln(&buf, "left", "right")` return `"leftright\n"` rather than
+documented `fmt.Fprintln` output `"left right\n"`, and implements documented
+`Errorf` with a plain error so `%w` does not wrap for `errors.Is`. Both ordinary
+failures reproduce under both SDKs and race. V2.2.14 independently violates
+the retained Go floor.
+
+Exact MVS requests are main -> v2.2.12 and direct supported
+go-term-markdown v0.1.4 -> v2.2.8. Main introduced the requester and target
+v2.2.8 together, then upgraded only its target root to v2.2.12. The requester
+imports the target in `renderer.go` and applies `emoji.Sprint` to Markdown
+text. Main source directly imports the requester but not the target. Both
+requester and target have positive why results, are production and complete-
+test loaded, and are runtime relevant through main `cmd` -> requester ->
+target.
+
+Disposable exact v2.2.8, v2.2.12, v2.2.13, and v2.2.14 gets were not retained.
+V2.2.8 preserves 234/3,599/355/429/197/41/1,067 and changes only the target
+root; v2.2.12 is a no-op. V2.2.13 changes only the target root and two sums for
+234/3,599/355/429/197/41/1,069 and tidies with only the target identity
+changed. V2.2.14 raises main `go 1.18` to `go 1.21`, produces
+234/3,601/355/429/197/41/1,069, and is floor-ineligible. The real project
+retains exact base module and common tidy hashes.
+
+All 39 earlier guarded selections and 237 incoming edges remain exact at
+`151e72c0b5444acc59ffab45d6ce8fe43e80821b42df6a49a11902b3a6632803`;
+37 why results are negative and only closed kr/pretty and kr/text are positive,
+with zero guarded imports/loads. Every candidate preserves the kr/text and
+kr/pty paths, versions, requests, routes, why/import/load/runtime facts, and
+comparable tidy state. Neither exception expired.
+
+Exact target OSV/GitHub and repository advisory results are empty. Pinned
+isolated govulncheck is empty for selected/highest/latest, while base and
+v2.2.13 project populations remain identical at 30/22/20/20 with no target
+finding. Guard Gorilla/retryablehttp, x/mod, the exact 1,402-record Go index,
+and PUBLISHED memberlist CNA identities remain unchanged. Advisory absence is
+not qualification. Final exact-Go verify/build/count-one/race/vet pass;
+accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+The evaluation prepared but did not execute one reciprocal product decision:
+retain exact selected v2.2.12 under a target-specific unqualified exception;
+authorize exactly one later measurement-only study of main -> direct exact
+go-term-markdown v0.1.4 -> target; or stop P7 unresolved. P8 remains queued.
+
 ## Next Bounded Objective
 
-Independently evaluate only selected exact-path
-`github.com/kyokomi/emoji/v2 v2.2.12`. Resolve its exact stable line,
-repository/source identities, complete closure, ordinary documented behavior,
-Go-1.18 floor compatibility, genuine owner/request routes, runtime relevance,
-project projections, and advisory identities. Retain no candidate unless it is
-the highest qualified Go-1.18-compatible exact-path stable with a genuine
-supported tidy-stable owner and every one of the 39 earlier selections/237
-edges plus all kr/text and kr/pty expiry guards remains exact. Do not repeat an
-earlier evaluation, manufacture a real-project root, combine another group,
-transfer an exception, write outside the managed scratch root, or begin P8.
+Record exactly one emoji/v2 product direction from the completed evaluation.
+Do not repeat behavior, source, release, closure, projection, or vulnerability
+work. Choose only target-specific unqualified v2.2.12 retention, one later
+measurement-only study of the existing go-term-markdown v0.1.4 owner/request
+route, or stopping P7 unresolved. Preserve all 39 selections/237 edges and
+both kr/text and kr/pty expiry guards. Do not run the owner study during the
+decision, change source or dependency metadata, combine another group,
+transfer an exception, or begin P8.
