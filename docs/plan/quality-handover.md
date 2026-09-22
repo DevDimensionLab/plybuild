@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T23:19:26+02:00
+Generated: 2026-09-23T00:11:18+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The modern-go/reflect2
+  `codex/upgrade-quality`, base master at `5635d50`. The mwitkow/go-conntrack
   evaluation began from clean HEAD
-  `1c047f8ded007382fd26df384a0f998ba15156f0`, parent
-  `7a4222d5d3d9e63931ac7d0f270904cfbc509f58`, tree
-  `74fb7c88eed37b863708a76d0b3a1be6d44d9187`. That handoff changes exactly
-  the launcher, answered modern-go/concurrent archive, then-NEXT
-  modern-go/reflect2 archive, rolling handover, and roadmap. Ordinary and
+  `ab5d27df6969e7ebc6766c73adf3af9c94e2cbe6`, parent
+  `1c047f8ded007382fd26df384a0f998ba15156f0`, tree
+  `0e4e12c5d2bb63b911a314a1d05e7e4e3dd00c00`. That handoff changes exactly
+  the launcher, answered modern-go/reflect2 archive, then-NEXT
+  mwitkow/go-conntrack archive, rolling handover, and roadmap. Ordinary and
   ignored status, branch, ancestry, exact changed set, reciprocal archive
   history, latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
@@ -80,13 +80,17 @@ session diary.
   pseudo-version is its exact commit/source identity, so no selection or
   metadata changed. Canonical modern-go/reflect2 `v1.0.2` is likewise the
   highest qualified Go-1.18-compatible exact-path stable with a supported
-  owner and is already selected; no root promotion was retained. The sole
-  NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T231926+0200-evaluate-mwitkow-go-conntrack-dependency.md`.
-  It authorizes only one bounded mwitkow/go-conntrack dependency evaluation.
-  It may not reopen modern-go/reflect2, modern-go/concurrent, mapstructure, go-homedir, Promptui,
-  emoji/v2, kr/text, kr/pty, kr/pretty, Cast, Viper, or an earlier decision,
-  combine another group, write outside the managed scratch root, or begin P8.
+  owner and is already selected; no root promotion was retained. Mwitkow/go-
+  conntrack has no canonical exact-path stable line: the repository has no
+  tags or releases and the proxy exposes only pseudo-versions. Selected
+  `v0.0.0-20161129095857-cc309e4a2223` remains unloaded and unqualified; no
+  projection or dependency edit was retained. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-23T001118+0200-decide-mwitkow-go-conntrack-product-direction.md`.
+  It authorizes exactly one target-specific direction: explicit unqualified
+  retention, one named later Prometheus Common Go-Conntrack Ownership Study,
+  or stopping P7 unresolved. It may not execute the study, reopen an earlier
+  decision, combine another group, write outside the managed scratch root, or
+  begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -125,10 +129,53 @@ supported owner; its exact commit is already selected, so its changed closure
 is empty and no root promotion was retained. Modern-go/reflect2 canonical
 `v1.0.2` also qualifies under both exact SDKs with a genuine supported owner;
 it is already selected, its changed closure is empty, and no root promotion
-was retained. P7 continues only with the prepared bounded evaluation of
-graph-selected transitive exact
-`github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223`. P8
-remains queued.
+was retained. No canonical mwitkow/go-conntrack exact-path stable exists, and
+its selected pseudo-version fails complete ordinary upstream closure gates;
+it remains unchanged and unqualified. P7 continues only with the prepared
+target-specific go-conntrack product decision. P8 remains queued.
+
+## Mwitkow Go-Conntrack Evaluation
+
+No canonical exact-path stable exists for `github.com/mwitkow/go-conntrack`,
+so no stable qualifies. Public enabled unarchived non-fork Apache-2.0
+repository `mwitkow/go-conntrack`, ID 72483369, has zero tags and GitHub
+Releases; its proxy stable list is empty. Selected pseudo-version
+`v0.0.0-20161129095857-cc309e4a2223` is unsigned commit `cc309e4a2223...`,
+tree `8e653f1c675a...`; signed current master/proxy latest is descendant pseudo-
+version `v0.0.0-20190716064945-2f068394615f`, commit `2f068394615f...`, tree
+`a8074d12ad49...`. Synthetic module files contain only the exact module path;
+no major line, replacement, retraction, deprecation, or eligible alternate
+owner exists. The selected proxy archive byte-matches its exact 18-file Git
+tree.
+
+With the historical Prometheus closure, build/count-one/vet pass under exact
+Go 1.18.10 and Go 1.26.7, but repeated tests fail from accumulated global
+metric state and Go 1.26.7 race reports concurrent historical x/net/trace map
+access. With the project's actual Prometheus v1.4.0/common v0.9.1 closure,
+full upstream gates fail under both SDKs at removed `prometheus.Handler` use;
+the two library packages and nine supported cross-build targets compile.
+Thus the selected pseudo-version is independently unqualified.
+
+Prometheus common v0.9.1 and historical v0.4.1 are the only target requesters,
+and both genuinely import it. Their complete current/historical routes run
+through direct mvn-pom-mutator, historical Viper, go-metrics and Prometheus
+client. All are unloaded; target why, repository import, production/complete-
+test/module-backed load, and runtime relevance remain negative.
+
+Disposable selected/latest pseudo gets produce respectively
+234/3,609/82/1,076 and 235/3,610/83/1,079 module/graph/go.mod/go.sum states;
+latest additionally selects `jpillora/backoff v1.0.0`. Both preserve exact
+355/429/197/41 loads and all 45 earlier guards/273 edges, then tidy back to the
+common 52/948 projection. Neither was retained. Exact project state, module/
+tidy hashes, Go floor, every earlier decision, and accepted 27/27 Q0-Q2 PASS
+at L2 remain unchanged.
+
+Target OSV/GitHub/repository/govulncheck findings are empty; base populations
+remain 30/22/20/20 with no target trace. Guard OSV, x/mod v0.14.0, the 1,402-
+record Go index, and memberlist CNA identities remain exact. Final exact-Go
+verify/build/count-one/race/vet passes. Product source and dependency metadata
+did not change. P7 now requires exactly one go-conntrack product direction;
+the decision successor was prepared but not executed.
 
 ## Modern-Go Reflect2 Evaluation
 
@@ -5219,10 +5266,10 @@ bounded mapstructure v1.5.0 evaluation; P8 remains queued.
 
 ## Next Bounded Objective
 
-Evaluate only the next unanswered selected queue item, graph-selected
-transitive exact
-`github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223`, and
-preserve every modern-go/reflect2, modern-go/concurrent, mapstructure,
-go-homedir, Promptui, emoji/v2, kr/text, and kr/pty guard. Do not reopen any
-closed dependency or product decision, combine another group, write outside
-the managed scratch root, or begin P8.
+Choose exactly one recorded direction for exact selected, inherited, unloaded,
+unqualified `github.com/mwitkow/go-conntrack
+v0.0.0-20161129095857-cc309e4a2223`: explicit target-specific retention,
+exactly one later Prometheus Common Go-Conntrack Ownership Study, or stopping
+P7 unresolved. Do not run the study, change product source or dependency
+metadata, reopen an earlier decision, combine options or another group, write
+outside the managed scratch root, or begin P8.

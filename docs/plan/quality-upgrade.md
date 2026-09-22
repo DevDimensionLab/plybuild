@@ -5374,8 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded evaluation of graph-selected
-transitive exact `github.com/modern-go/reflect2 v1.0.2`.
+Status: active for the prepared target-specific product decision for exact
+selected, inherited, unloaded, unqualified
+`github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223`.
 Option 1 now explicitly retains exact indirect/production-loaded unqualified
 mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
 v1.1.0 and Promptui v0.9.0, exact direct-indirect/runtime-relevant
@@ -5403,8 +5404,10 @@ qualifies; their decisions retain exact selected v1.5.0, v1.1.0, v2.2.12,
 and v0.9.0 without source or dependency change. Modern-go/concurrent release
 `1.0.3` qualifies with a genuine supported exact-path owner, and the selected
 pseudo-version already names its exact commit/source, so no selection or
-metadata changed. The modern-go/reflect2 evaluation successor is prepared but
-was not executed. P8 remains queued.
+metadata changed. Modern-go/reflect2 v1.0.2 also qualifies and is already
+selected. Mwitkow/go-conntrack has no canonical exact-path stable line and its
+selected pseudo-version remains unchanged and unqualified. Its reciprocal
+product-decision successor is prepared but was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14177,6 +14180,47 @@ Modern-go/reflect2 evaluation (2026-09-22):
   prepared bounded evaluation of selected
   `github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223`;
   it was not executed. P8 remains queued.
+
+Mwitkow/go-conntrack evaluation (2026-09-23):
+
+- No canonical exact-path stable exists, so no stable qualifies. Public
+  enabled unarchived non-fork Apache-2.0 repository `mwitkow/go-conntrack`, ID
+  72483369, has no tags or GitHub Releases and the proxy stable list is empty.
+  Selected `v0.0.0-20161129095857-cc309e4a2223` and current master/proxy latest
+  `v0.0.0-20190716064945-2f068394615f` are pseudo-versions. No major line,
+  replacement, retraction, deprecation, or eligible alternate owner exists.
+- Selected unsigned commit `cc309e4a2223...`, tree `8e653f1c675a...`, is an
+  ancestor of signed latest commit `2f068394615f...`, tree `a8074d12ad49...`.
+  Synthetic module files declare only the exact path. The selected proxy
+  archive and exact 18-file Git tree match byte-for-byte.
+- Historical-closure build/count-one/vet passes under exact Go 1.18.10 and Go
+  1.26.7, but repeated tests fail from accumulated global metric state and Go
+  1.26.7 race detects concurrent historical x/net/trace access. With the
+  project's actual Prometheus v1.4.0/common v0.9.1 closure, full upstream
+  gates fail under both SDKs at removed `prometheus.Handler` use. The two
+  library packages and nine cross-build targets compile. The selected pseudo-
+  version is therefore independently unqualified.
+- Prometheus common v0.9.1 and historical v0.4.1 are the only requesters and
+  both genuinely import the target. Their routes pass through direct mvn-pom-
+  mutator, historical Viper, go-metrics, and Prometheus client. Target and
+  requesters remain why-negative and unloaded; repository import, production/
+  complete-test/module-backed load, and runtime relevance remain zero.
+- Disposable selected/latest pseudo gets produce respectively
+  234/3,609/82/1,076 and 235/3,610/83/1,079 module/graph/go.mod/go.sum states;
+  latest also selects `jpillora/backoff v1.0.0`. Both preserve 355/429/197/41
+  loads and all 45 earlier guards/273 edges, and both tidy to the common
+  52/948 projection. Neither was retained. Product source, `go.mod`, and
+  `go.sum` remain unchanged; no dependency implementation commit exists.
+- Target exact-version OSV/GitHub/repository/govulncheck findings are empty.
+  Base populations remain 30/22/20/20 with no target trace; guard OSV, x/mod,
+  the 1,402-record Go index, and memberlist CNA identities remain exact.
+  Advisory absence was not used as qualification.
+- Final required-umask exact-Go verify/build/count-one/race/vet passes;
+  accepted 27/27 Q0-Q2 PASS at L2 remains exact. P7 now requires exactly one
+  target-specific product direction: explicit unqualified retention, the
+  single named later Prometheus Common Go-Conntrack Ownership Study, or
+  stopping P7 unresolved. The successor was prepared but not executed. P8
+  remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
