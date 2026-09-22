@@ -14121,6 +14121,63 @@ Modern-go/concurrent evaluation (2026-09-22):
   selected `github.com/modern-go/reflect2 v1.0.2`; it was not executed. P8
   remains queued.
 
+Modern-go/reflect2 evaluation (2026-09-22):
+
+- Canonical `v1.0.2` is the highest qualified Go-1.18-compatible exact-path
+  stable and is already the exact graph selection. Public enabled unarchived
+  non-fork Apache-2.0 repository `modern-go/reflect2`, ID 123239987, is the
+  genuine supported owner. Product source and dependency metadata remain
+  unchanged; the minimal changed closure is empty.
+- The owner published genuine lightweight-tag/GitHub releases `1.0.0`,
+  `1.0.1`, `v1.0.1`, and `v1.0.2`. Only the `v`-prefixed releases appear in
+  the proxy stable list; the legacy releases resolve to exact pseudo-versions.
+  Their commits form continuous ancestry, the two canonical release commits
+  are validly signed, and every proxy ZIP exactly byte-matches its Git regular-
+  file set. V1.0.2 declares Go 1.12 with no requirements. No `/v2` or `/v3`,
+  replacement, retraction, deprecation, prerelease, or eligible alternate
+  owner exists.
+- The owner moved tests to `modern-go/reflect2-tests`. Legacy 1.0.1 and
+  canonical v1.0.1 reproducibly fault in ordinary unsafe map iteration under
+  both exact SDKs. V1.0.2 passes count-one/count-ten upstream tests and vet;
+  its independent legacy test harness is checkptr-incompatible under race,
+  while a standard-library-only target fixture passes repeated/race tests and
+  vet under exact Go 1.26.7 and Go 1.18.10. Direct build/race passes under
+  both SDKs; Go 1.18 vet's sole intentional `NoEscape` unsafeptr diagnostic is
+  isolated, and all other analyzers pass. Nine supported cross-build targets
+  pass under both SDKs.
+- The selected standard-library-only package has reflection, unsafe,
+  architecture assembly, Go-version constraints, runtime/reflect linknames,
+  concurrency-safe caches, and documented caller-owned unsafe pointer
+  correctness. It has no cgo, generated, embed, network, filesystem, retained-
+  goroutine, resource-lifecycle, or external-state boundary.
+- Nine graph edges request the target. Json-iterator v1.1.9/v1.1.11/v1.1.12
+  and etcd client/v2 v2.305.1 genuinely import it; Viper v1.10.1/v1.15.0,
+  both crypt requesters, and Prometheus client v1.0.0 are metadata-only.
+  Selected Viper is the only loaded requester and does not import reflect2.
+  Repository imports, target why, production/complete-test/module-backed
+  loads, and current runtime relevance remain negative.
+- A disposable exact v1.0.2 get preserves the selection and all guards but
+  would add an unauthorized indirect main root, source sum, and graph edge.
+  Tidy removes that promotion and restores the common 52/948-line projection,
+  so no projection was retained. Exact project counts, module hashes, 432-line
+  tidy identity, Go floor, and every source/API/CLI/help/launcher/Make/quality
+  contract remain unchanged.
+- All 44 earlier guarded selections and 264 incoming edges remain exact at
+  `4a83d4e3a015f93da4b4d35bd590137071b01c40315ec9bb9c987688004f9b09`.
+  Including qualified reflect2 gives 45 selections and 273 incoming edges at
+  `7e5c820da743ac628fb18da129b4d91428a36fd374ed248760d1318f2694c525`.
+  Every closed-exception and concurrent guard remains exact.
+- All exact target OSV/GitHub/repository results and isolated govulncheck
+  results are empty. Base/projection govulncheck populations remain identical
+  at 30/22/20/20 with no target trace; guard OSV, x/mod, the exact 1,402-record
+  Go index, and PUBLISHED memberlist CNA identities remain unchanged.
+  Advisory absence was not used as qualification.
+- Final required-umask exact-Go verify/build/count-one/race/vet passes. No
+  dependency implementation commit exists. P7 continues only with the
+  prepared bounded evaluation of selected
+  `github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223`;
+  it was not executed. P8 remains queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

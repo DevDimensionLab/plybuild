@@ -1131,9 +1131,9 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-22T222053+0200-evaluate-modern-go-reflect2-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T222053+0200-evaluate-modern-go-reflect2-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T211112+0200-evaluate-modern-go-concurrent-dependency.md
+#|SESSION_ID=2026-09-22T231926+0200-evaluate-mwitkow-go-conntrack-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T231926+0200-evaluate-mwitkow-go-conntrack-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T222053+0200-evaluate-modern-go-reflect2-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
@@ -1141,12 +1141,12 @@ exit 70
 #|
 #|Continue P7 by independently evaluating the next unanswered selected queue
 #|item, graph-selected transitive exact
-#|`github.com/modern-go/reflect2 v1.0.2`, as exactly one bounded dependency
-#|group. Resolve its canonical exact-path release line and highest qualified
-#|Go-1.18-compatible stable from primary evidence. Implement one exact
-#|dependency-only changed selection only if the candidate, its complete minimal
-#|closure, and every earlier target-specific guard remain exact. Do not combine
-#|another dependency group or begin P8.
+#|`github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223`, as
+#|exactly one bounded dependency group. Resolve its canonical exact-path release
+#|line and highest qualified Go-1.18-compatible stable from primary evidence.
+#|Implement one exact dependency-only changed selection only if the candidate,
+#|its complete minimal closure, and every earlier target-specific guard remain
+#|exact. Do not combine another dependency group or begin P8.
 #|
 #|# Defensive Scope
 #|
@@ -1168,38 +1168,36 @@ exit 70
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
 #|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
 #|the six final target-specific option-1 decisions through mapstructure v1.5.0,
-#|and the qualified no-selection-change modern-go/concurrent decision. P8
-#|remains queued.
+#|qualified no-selection-change modern-go/concurrent, and qualified no-
+#|selection-change modern-go/reflect2. P8 remains queued.
 #|
-#|Modern-go/concurrent release `1.0.3` is the highest qualified genuine stable
-#|in its exact-path four-release line. The owner published lightweight tags and
-#|GitHub Releases named `1.0.0` through `1.0.3` without the Go-semver `v`
-#|prefix, so Go exposes no canonical semver stable list and resolves `1.0.3` to
-#|exact pseudo-version `v0.0.0-20180306012644-bacd9c7ef1dd`. Do not promote the
-#|pseudo-version itself as a stable. It is already the graph-selected exact
-#|commit and byte-identical source of stable release `1.0.3`; therefore no
-#|selection or closure changed. A disposable exact get would only add an
-#|otherwise absent main root request, its source checksum, and one graph edge,
-#|so that projection was not retained and source/dependency metadata remain
-#|unchanged. Preserve the exact release/owner/source/qualification, eight
-#|request and requester-boundary, negative-why/non-load, projection, graph,
-#|advisory, and supported-owner facts as guards.
+#|Canonical `github.com/modern-go/reflect2 v1.0.2` is the highest qualified
+#|Go-1.18-compatible exact-path stable with genuine supported unarchived owner
+#|`modern-go/reflect2`. It is already selected, so no selection or closure
+#|changed. A disposable exact get only adds an otherwise absent main indirect
+#|root, source sum, and one graph edge; tidy removes that promotion, so it was
+#|not retained. Preserve its exact four-release line, owner/release/commit/tree/
+#|signature/archive/source/module identities, Go-1.18 behavior fix, unsafe and
+#|platform boundaries, nine request and requester-import boundaries, negative
+#|why/import/load/runtime facts, projection, graph, advisory, qualification, and
+#|supported-owner facts as guards.
 #|
-#|Mapstructure, go-homedir, Promptui, emoji/v2, kr/text, and kr/pty option-1
-#|decisions separately remain exact, unqualified, target-specific,
-#|non-transferable, and final under every recorded expiry guard. Any change
-#|separately requires the corresponding fresh dependency and product decision.
-#|Do not transfer an exception or reopen modern-go/concurrent, mapstructure,
-#|go-homedir, Promptui, emoji/v2, kr/text, kr/pty, kr/pretty, Cast, Viper, or an
-#|earlier decision.
+#|Modern-go/concurrent remains qualified at owner release `1.0.3`, whose exact
+#|commit/source is already selected through pseudo-version
+#|`v0.0.0-20180306012644-bacd9c7ef1dd`. Mapstructure, go-homedir, Promptui,
+#|emoji/v2, kr/text, and kr/pty option-1 decisions separately remain exact,
+#|unqualified, target-specific, non-transferable, and final under every recorded
+#|expiry guard. Do not transfer an exception or reopen reflect2, concurrent,
+#|mapstructure, go-homedir, Promptui, emoji/v2, kr/text, kr/pty, kr/pretty, Cast,
+#|Viper, or an earlier decision.
 #|
 #|# Measurements At Start
 #|
-#|The modern-go/concurrent evaluation began from clean branch
+#|The modern-go/reflect2 evaluation began from clean branch
 #|`codex/upgrade-quality` at handoff HEAD
-#|`7a4222d5d3d9e63931ac7d0f270904cfbc509f58`, parent
-#|`65f72c1c0416ee2e5ccce2135cec589f26cd8142`, tree
-#|`251866cd2cfcf76ac94e20fcda6d7f393980c913`. Exact Google UUID v1.4.0
+#|`1c047f8ded007382fd26df384a0f998ba15156f0`, parent
+#|`7a4222d5d3d9e63931ac7d0f270904cfbc509f58`, tree
+#|`74fb7c88eed37b863708a76d0b3a1be6d44d9187`. Exact Google UUID v1.4.0
 #|dependency commit `cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an
 #|ancestor. The evaluation changed no product source or dependency metadata and
 #|prepared this evaluation-only handoff. Verify the new handoff HEAD, parent,
@@ -1217,31 +1215,31 @@ exit 70
 #|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
 #|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
 #|
-#|The 43 selections earlier than modern-go/concurrent remain exact with 256
-#|sorted incoming edges at SHA-256
-#|`8f05ff3b4755e6582db200d1d457b6e8b52e84983d9f634976f76b0d731d298f`.
-#|Including qualified closed modern-go/concurrent gives 44 guarded selections
-#|and 264 incoming edges at SHA-256
+#|The 44 selections earlier than reflect2 remain exact with 264 sorted incoming
+#|edges at SHA-256
 #|`4a83d4e3a015f93da4b4d35bd590137071b01c40315ec9bb9c987688004f9b09`.
-#|Thirty-eight why results are negative; only closed kr/pretty, kr/text,
+#|Including qualified closed reflect2 gives 45 guarded selections and 273
+#|incoming edges at SHA-256
+#|`7e5c820da743ac628fb18da129b4d91428a36fd374ed248760d1318f2694c525`.
+#|Thirty-nine why results are negative; only closed kr/pretty, kr/text,
 #|emoji/v2, Promptui, go-homedir, and mapstructure are positive. Promptui and
 #|go-homedir are the only guarded repository imports; emoji/v2, Promptui,
 #|go-homedir, and mapstructure are the only production/complete-test loaded
-#|guarded modules. Every closed-exception and modern-go/concurrent guard remains
-#|exact. Accepted quality remains 27/27 Q0-Q2 PASS at L2.
+#|guarded modules. Every closed-exception, concurrent, and reflect2 guard
+#|remains exact. Accepted quality remains 27/27 Q0-Q2 PASS at L2.
 #|
-#|The queue selects exact `github.com/modern-go/reflect2 v1.0.2` without a main
-#|`go.mod` request. Nine graph edges request the target: selected Viper v1.15.0,
-#|historical Viper v1.10.1, json-iterator v1.1.12, and crypt v0.4.0 request
-#|v1.0.2; selected bketelsen/crypt, Prometheus client v1.0.0, and etcd client/v2
-#|v2.305.1 request v1.0.1; json-iterator v1.1.9 and v1.1.11 request
-#|`v0.0.0-20180701023420-4b7aa43c6742`. Current target why is negative, current
-#|repository source has no target import, and no target package is production or
-#|complete-test loaded. Treat physical selection, transitive graph presence,
-#|negative why, non-loading, or apparent release status as observations rather
-#|than qualification. Independently reproduce every request, current and
-#|historical owner route, requester import or metadata-only boundary, and why/
-#|import/load/runtime fact before choosing a candidate.
+#|The queue selects exact
+#|`github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223`
+#|without a main `go.mod` request. Two graph edges request the target: selected
+#|`github.com/prometheus/common v0.9.1` and historical Prometheus common v0.4.1
+#|both request that exact pseudo-version. The target has only its module checksum
+#|in current `go.sum`. Current target why is negative, current repository source
+#|has no target import, and no target package is production or complete-test
+#|loaded. Treat physical selection, transitive graph presence, negative why,
+#|non-loading, pseudo-version status, or apparent release status as observations
+#|rather than qualification. Independently reproduce both requests, every
+#|current and historical route, requester import or metadata-only boundary, and
+#|why/import/load/runtime fact before choosing a candidate.
 #|
 #|# Evaluation Contract
 #|
@@ -1255,18 +1253,18 @@ exit 70
 #|
 #|For selected and every serious stable candidate, inspect the complete module
 #|and test closure, exported API and documentation, Go-floor compatibility,
-#|platform/build-tag/cgo/generated/embed boundaries, unsafe/reflection behavior,
-#|globals, ownership and mutation, determinism, concurrency, lifecycle, cleanup,
-#|and error behavior. Exercise only small bounded ordinary values needed to
-#|verify documented behavior. Run upstream build, tests, repeated tests, race,
-#|vet, and supported cross-builds under exact Go 1.26.7 and a contained Go 1.18
-#|toolchain. A release qualifies only if all applicable ordinary documented
-#|contracts and every project guard pass.
+#|platform/build-tag/cgo/generated/embed boundaries, globals, ownership and
+#|mutation, determinism, concurrency, lifecycle, cleanup, and error behavior.
+#|Exercise only small bounded ordinary values needed to verify documented
+#|behavior. Run upstream build, tests, repeated tests, race, vet, and supported
+#|cross-builds under exact Go 1.26.7 and a contained Go 1.18 toolchain. A release
+#|qualifies only if all applicable ordinary documented contracts and every
+#|project guard pass.
 #|
 #|Map every target MVS request and genuine current or historical route.
 #|Reproduce target and requester why, repository imports, production and
 #|complete-test loads, module-backed entries, runtime relevance, graph counts,
-#|hashes, tidy projection, all 44 guarded selections, and the 264-edge snapshot.
+#|hashes, tidy projection, all 45 guarded selections, and the 273-edge snapshot.
 #|Physical selection, transitive graph presence, a why result, loading, or
 #|advisory absence is not qualification.
 #|
@@ -1290,11 +1288,11 @@ exit 70
 #|Select only the highest qualified Go-1.18-compatible exact-path stable with a
 #|genuine supported project owner. If that exact selection changes and every
 #|earlier guard remains exact, use exact Go 1.26.7 and exact
-#|`go get github.com/modern-go/reflect2@<selected-version>` for one dependency-
-#|only commit; do not hand-edit metadata and do not use tidy as the
+#|`go get github.com/mwitkow/go-conntrack@<selected-version>` for one
+#|dependency-only commit; do not hand-edit metadata and do not use tidy as the
 #|implementation. Explain and verify the minimal exact transitive closure.
 #|
-#|If a candidate changes any modern-go/concurrent, mapstructure, go-homedir,
+#|If a candidate changes any reflect2, concurrent, mapstructure, go-homedir,
 #|Promptui, emoji/v2, kr/text, or kr/pty path/version, request, requester import,
 #|owner route, root, why/import/load/runtime fact, graph/module/tidy/Go-floor
 #|state, advisory/release/owner identity, qualification, or compatible route,
@@ -1319,17 +1317,17 @@ exit 70
 #|
 #|# Required Reading
 #|
-#|Read this archive, the answered modern-go/concurrent evaluation, answered
+#|Read this archive, the answered reflect2 and concurrent evaluations, answered
 #|mapstructure, go-homedir, Promptui, emoji/v2, kr/text, and kr/pty decisions/
 #|evaluations, kr/pretty and Cast owner records, rolling handover, P7/P8 roadmap,
 #|`go.mod`, and `go.sum`. Verify branch, ancestry, clean ordinary/ignored state,
 #|reciprocal archive chain, launcher check, exact Go identities, module hashes/
-#|counts/tidy projection, all 44 guards and the 264-edge snapshot, every closed-
+#|counts/tidy projection, all 45 guards and the 273-edge snapshot, every closed-
 #|exception boundary, and fresh advisory identities before any implementation.
 #|
 #|# Three Moves
 #|
-#|First, independently evaluate only modern-go/reflect2 and choose the exact
+#|First, independently evaluate only mwitkow/go-conntrack and choose the exact
 #|qualified stable or bounded no-qualified result. Second, make at most the one
 #|authorized dependency-only selection change and verify it, or leave source
 #|and metadata unchanged; stop before implementation if any earlier guard would
@@ -1341,7 +1339,7 @@ exit 70
 #|# Automatic Handoff
 #|
 #|Do not launch a successor, push, merge, publish, release, stash, revert,
-#|bypass cleanup, remove the worktree, transfer an exception, reopen modern-go/
+#|bypass cleanup, remove the worktree, transfer an exception, reopen reflect2,
 #|concurrent, mapstructure, go-homedir, Promptui, emoji/v2, kr/text, kr/pty,
 #|kr/pretty, Cast, Viper, or an earlier decision, evaluate another dependency
 #|group, write outside the managed scratch root, or begin P8.
