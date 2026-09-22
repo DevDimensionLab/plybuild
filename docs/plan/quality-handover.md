@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T19:21:14+02:00
+Generated: 2026-09-22T20:38:11+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-homedir decision
-  began from clean HEAD `0f2bf5aa44b1c0f57003cea4f17dad96740e55d2`, parent
-  `35f8e0ee77586d93667420e00df1c6624c9ff4a5`, tree
-  `40a3b55718b5e936060465a01a30f986b1e811f3`. That handoff changes exactly the
-  launcher, answered go-homedir evaluation archive, then-NEXT go-homedir
-  decision archive, rolling handover, and roadmap. Ordinary and ignored
+  `codex/upgrade-quality`, base master at `5635d50`. The mapstructure
+  evaluation began from clean HEAD
+  `bff26c941f30ef51a4f5a35c064a558ef1b45d16`, parent
+  `0f2bf5aa44b1c0f57003cea4f17dad96740e55d2`, tree
+  `6771799cf803b4591bcb56d086aeed8c534e2019`. That handoff changes exactly the
+  launcher, answered go-homedir decision archive, then-NEXT mapstructure
+  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
@@ -68,9 +69,13 @@ session diary.
   HOME-unset Darwin discovery gate under both exact SDKs. Go-homedir option 1
   now explicitly retains selected, direct, production-loaded, runtime-relevant
   v1.1.0 under its own unqualified, target-specific, non-transferable exception
-  without source or dependency change. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T192114+0200-evaluate-mitchellh-mapstructure-dependency.md`.
-  It authorizes only one bounded mapstructure evaluation. It may not reopen
+  without source or dependency change. No canonical exact-path mapstructure
+  stable qualifies: all 17 stable releases leave a stale destination slice
+  element during ordinary decode, and the archived exact-path repository has
+  no genuine supported owner. Selected indirect v1.5.0 remains unchanged and
+  unqualified pending a product decision. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-22T202511+0200-decide-mitchellh-mapstructure-product-direction.md`.
+  It authorizes only one bounded mapstructure product decision. It may not reopen
   go-homedir, Promptui, emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or an
   earlier decision, combine another group, write outside the managed scratch
   root, or begin P8.
@@ -103,9 +108,83 @@ selection. No canonical emoji/v2 stable qualifies: all ten fail documented
 Fprintln and Errorf contracts, and v2.2.14 also requires Go 1.21. No canonical
 Promptui stable qualifies for the recorded closure/output-error/race results.
 No canonical go-homedir stable qualifies for the recorded complete-upstream-
-gate result. P7 continues only with the prepared bounded evaluation of
+gate result. No canonical mapstructure stable qualifies for the recorded
+ordinary slice-replacement result, and no exact-path stable has a genuine
+supported owner. P7 stops only for the prepared bounded product decision for
 selected exact-path `github.com/mitchellh/mapstructure v1.5.0`. P8 remains
 queued.
+
+## Mitchellh Mapstructure Evaluation
+
+No canonical exact-path stable qualifies, and no stable has a genuine
+supported exact-path owner. Selected indirect
+`github.com/mitchellh/mapstructure v1.5.0` remains unchanged; product source,
+`go.mod`, and `go.sum` were not altered and no dependency implementation
+commit exists.
+
+The exact proxy line has 17 stables from v1.0.0 through latest v1.5.0.
+V1.0.0-v1.1.2 omit a Go directive; v1.2.0-v1.5.0 declare Go 1.14. All current
+lightweight tags form continuous ancestry; v1.0.0's old signature key is not
+verifiable and the later 16 tag commits are validly signed. Selected v1.5.0
+is commit `ab69d8d93410fce4361f4912bb1ff88110a81311`, tree
+`5a1166013faa55170e1acce958c1a3863faf3f80`; its proxy ZIP byte-matches its
+exact Git manifest. V1.2.0 is the sole historical tag-mutation exception: its
+immutable proxy archive matches historical commit `047abd31...`, while the
+current signed tag points to descendant `9e401191...` and adds only two
+CHANGELOG lines. The selected release is unaffected.
+
+Exact go-import resolves to public enabled archived non-fork MIT repository
+`mitchellh/mapstructure`, ID 10166531. Its owner states there will be no more
+tags and names active fork `go-viper/mapstructure` as blessed. That fork
+declares alternate module path `github.com/go-viper/mapstructure/v2` with Go
+1.18; it is not an eligible exact-path release or owner.
+
+All 17 standard-library-only releases pass exact Go 1.26.7/Go 1.18.10 module
+verification, build, count-one tests, race count-one tests, vet, and ten
+Darwin/Linux/Windows/FreeBSD/Plan 9/js-wasm cross-builds. V1.2.2 additionally
+fails repeated upstream metadata-order assertions under both SDKs. Selected
+bounded ordinary deterministic/error/concurrency fixtures pass repeated and
+race runs.
+
+The decisive ordinary slice-replacement fixture fails identically for every
+stable under both SDKs: decoding one source element into a pre-populated two-
+element destination leaves the stale second element. Upstream merged the
+missing two-line truncation fix in commit `33d262e...` three days after
+v1.5.0 and records it for unreleased v1.5.1. Later branch fixes are likewise
+unreleased and ineligible. No lower stable is a fallback.
+
+Nine graph requests select the target. Main and Viper v1.15.0 request v1.5.0;
+historical Viper/crypt request v1.4.3; Kong/Consul API request v1.1.2; and
+Serf requests the recorded 2016 pseudo-version. Main marks the target
+indirect and has no target source import. Target why is positive through
+`cmd -> Viper -> target`; Viper imports it and one target package is
+production/complete-test loaded. Historical Viper, Consul, and Serf have
+genuine imports; Kong and crypt are metadata-only requesters.
+
+A disposable exact v1.5.0 get is a byte no-op. Baseline remains 234 modules,
+3,599 edges, 355 production entries, 429 complete-test entries, 197 module-
+backed entries across 41 loaded modules, 1,067 sums, exact module hashes, and
+the 432-line tidy identity. All 42 earlier selections and 247 incoming edges
+remain exact at
+`4caf9e803c1b324d2afcd17b9ba664e6d2c8d220cd74b264484107ea3dd93f42`;
+every go-homedir, Promptui, emoji/v2, kr/text, and kr/pty expiry guard remains
+exact. No lower projection was retained.
+
+All target OSV/GitHub/repository results are empty. Pinned exact-Go
+govulncheck is empty for every isolated stable; base/no-op project populations
+match at 30/22/20/20 without a target trace. Guard OSV, x/mod, the 1,402-
+record Go index, and PUBLISHED memberlist CNA identities remain unchanged.
+Advisory absence is not qualification.
+
+Final exact-Go verify/build/count-one/race/vet pass; accepted quality remains
+27/27 Q0-Q2 PASS at L2. P7 stops for one reciprocal product choice: retain
+selected v1.5.0 under a mapstructure-specific unqualified exception;
+authorize one later measurement-only `Ply Viper Mapstructure Ownership Study`
+of the existing indirect request, Viper route, historical requester
+provenance, and blessed alternate-path owner; or stop P7 unresolved. Every
+task-owned scratch artifact was contained beneath the managed session root
+and removed; only the pre-existing launcher-owned Node compile cache remains.
+The decision successor was prepared but not executed; P8 remains queued.
 
 ## Kr Pty Evaluation
 

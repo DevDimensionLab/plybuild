@@ -13940,6 +13940,72 @@ Mitchellh Go Homedir product decision (2026-09-22):
   govulncheck work was not repeated and no owner study ran. P7 continues only
   with the prepared bounded mapstructure v1.5.0 evaluation; P8 remains queued.
 
+Mitchellh Mapstructure evaluation (2026-09-22):
+
+- No canonical exact-path stable qualifies, and no stable has a genuine
+  supported exact-path owner. The proxy line contains exactly 17 stables from
+  v1.0.0 through v1.5.0; v1.5.0 is latest and Go-1.18-compatible. V1.0.0-
+  v1.1.2 omit a Go directive and v1.2.0-v1.5.0 declare Go 1.14. Exact `/v2`
+  and `/v3` lines, GitHub Releases, retractions, deprecations, replacements,
+  and prereleases are absent.
+- Public enabled archived non-fork MIT repository `mitchellh/mapstructure`,
+  ID 10166531, remains the exact go-import owner. All 17 lightweight tags
+  form continuous ancestry; the later 16 commits are validly signed while
+  v1.0.0 has an unverifiable old key. Selected v1.5.0 is signed commit
+  `ab69d8d93410fce4361f4912bb1ff88110a81311`, tree
+  `5a1166013faa55170e1acce958c1a3863faf3f80`, and its proxy ZIP byte-matches
+  its exact Git manifest. V1.2.0 is the sole historical tag-mutation record:
+  its immutable proxy archive matches historical commit `047abd31...`, while
+  the current signed tag points to descendant `9e401191...` and differs only
+  by two CHANGELOG lines. Selected v1.5.0 is unaffected.
+- The owner archive notice says there will be no more tags and names active
+  fork `go-viper/mapstructure` as blessed. That fork declares alternate
+  module path `github.com/go-viper/mapstructure/v2` with Go 1.18, so it is
+  neither an exact-path stable nor a supported owner for the exact line.
+- Every stable passes exact Go 1.26.7/Go 1.18.10 verification, build,
+  count-one tests, race count-one tests, vet, and ten Darwin/Linux/Windows/
+  FreeBSD/Plan 9/js-wasm cross-builds. V1.2.2 additionally fails repeated
+  upstream metadata-order assertions under both SDKs. Selected ordinary
+  deterministic/error/concurrency fixtures pass repeated and race runs.
+- The decisive bounded ordinary slice-replacement fixture fails identically
+  at all 17 stables under both SDKs: decoding one source element into a
+  pre-populated two-element destination leaves its stale second element.
+  Upstream merged the two-line truncation fix in commit `33d262e...` three
+  days after v1.5.0 and records it for unreleased v1.5.1. Later branch fixes
+  are likewise unreleased and ineligible. No lower stable is a fallback.
+- Nine exact requests select the target: main/Viper v1.15.0 -> v1.5.0;
+  historical Viper v1.10.1/crypt v0.4.0 -> v1.4.3; Kong plus Consul API
+  v1.1.0/v1.12.0 -> v1.1.2; and Serf v0.8.2/v0.9.6 -> the recorded 2016
+  pseudo-version. Main marks the request indirect and has no target import.
+  Target why is positive through `cmd -> Viper -> target`; one target package
+  is production/complete-test loaded. Viper, Consul, and Serf have genuine
+  historical imports, while Kong and crypt are metadata-only requesters.
+- A disposable exact v1.5.0 get is a byte no-op. The real project remains
+  234/3,599/355/429/197/41/1,067 with exact module hashes and the 432-line
+  tidy identity. All 42 earlier guarded selections and 247 incoming edges
+  remain exact at
+  `4caf9e803c1b324d2afcd17b9ba664e6d2c8d220cd74b264484107ea3dd93f42`.
+  Every go-homedir, Promptui, emoji/v2, kr/text, and kr/pty expiry guard
+  remains exact. No lower projection or dependency implementation was
+  retained.
+- Exact OSV/GitHub/repository results are empty for all 17 stables. Pinned
+  govulncheck is empty for isolated targets; base/no-op project populations
+  match at 30/22/20/20 with no target trace. Guard OSV, x/mod, the exact
+  1,402-record Go index, and PUBLISHED memberlist CNA identities remain
+  unchanged. Advisory absence does not override the ordinary failure or
+  unsupported exact-path owner.
+- Product source and dependency metadata remain unchanged. Final exact-Go
+  verify/build/count-one/race/vet pass; accepted quality remains 27/27 Q0-Q2
+  PASS at L2. P7 stops for one reciprocal bounded product choice: exact
+  mapstructure-specific unqualified v1.5.0 retention; one later measurement-
+  only `Ply Viper Mapstructure Ownership Study` of the existing indirect
+  request, Viper import/load route, historical requester provenance, and
+  blessed alternate-path owner; or stopping P7 unresolved. Do not repeat the
+  evaluation, transfer an exception, combine another group, or begin P8. The
+  decision successor was prepared but not executed. Every task-owned scratch
+  artifact was contained beneath the managed session root and removed; only
+  the pre-existing launcher-owned Node compile cache remains.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
