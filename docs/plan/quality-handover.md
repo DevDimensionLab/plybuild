@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T18:48:46+02:00
+Generated: 2026-09-22T19:21:14+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,17 +8,16 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-homedir evaluation
-  began from clean HEAD `35f8e0ee77586d93667420e00df1c6624c9ff4a5`, parent
-  `12881ba88e843657cd360c508937eeb00c38742c`, tree
-  `0ee5c4f31df0136618336879e584cc0fdfb00ba0`. That handoff changes exactly the
-  launcher, answered Promptui decision archive, then-NEXT go-homedir
-  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
-  status, branch,
-  ancestry, exact changed set, reciprocal archive history, latest Google UUID
-  ancestry, exact Go identities, module hashes/counts/tidy projection, target
-  and earlier guards, fresh advisory identities, final unchanged-project
-  gates, and contained launcher check passed.
+  `codex/upgrade-quality`, base master at `5635d50`. The go-homedir decision
+  began from clean HEAD `0f2bf5aa44b1c0f57003cea4f17dad96740e55d2`, parent
+  `35f8e0ee77586d93667420e00df1c6624c9ff4a5`, tree
+  `40a3b55718b5e936060465a01a30f986b1e811f3`. That handoff changes exactly the
+  launcher, answered go-homedir evaluation archive, then-NEXT go-homedir
+  decision archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal archive history,
+  latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
+  projection, target and earlier guards, fresh advisory identities, final
+  unchanged-project gates, and contained launcher check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -66,12 +65,15 @@ session diary.
   while v0.1.0-v0.3.1 lack a complete standalone module closure. No canonical
   exact-path go-homedir stable qualifies: v1.1.0 is latest and Go-1.18-
   compatible, but both v1.0.0 and v1.1.0 fail the required complete upstream
-  HOME-unset Darwin discovery gate under both exact SDKs. The sole NEXT
-  archive is `docs/plan/agent-sessions/2026-09-22T184846+0200-decide-mitchellh-go-homedir-product-direction.md`.
-  It authorizes only one bounded go-homedir product decision. It may not
-  repeat the evaluation, reopen Promptui, emoji/v2, kr/text, kr/pty,
-  kr/pretty, Cast, or an earlier decision, combine another group, write
-  outside the managed scratch root, or begin P8.
+  HOME-unset Darwin discovery gate under both exact SDKs. Go-homedir option 1
+  now explicitly retains selected, direct, production-loaded, runtime-relevant
+  v1.1.0 under its own unqualified, target-specific, non-transferable exception
+  without source or dependency change. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-22T192114+0200-evaluate-mitchellh-mapstructure-dependency.md`.
+  It authorizes only one bounded mapstructure evaluation. It may not reopen
+  go-homedir, Promptui, emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or an
+  earlier decision, combine another group, write outside the managed scratch
+  root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -80,7 +82,8 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 selected option 1 separately for exact selected,
-direct, production-loaded, runtime-relevant, unqualified Promptui v0.9.0;
+direct, production-loaded, runtime-relevant, unqualified go-homedir v1.1.0
+and Promptui v0.9.0;
 exact selected, direct-indirect, runtime-relevant, unqualified emoji/v2
 v2.2.12; and exact inherited, unloaded, unqualified kr/text v0.2.0 and kr/pty
 v1.1.1 under target-specific, non-transferable exceptions. The same is true
@@ -94,14 +97,15 @@ accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
 No exact-path kr/pretty stable qualifies. Kr/pty v1.1.4 is highest behavior-
 qualified but lacks a genuine supported tidy-stable owner. Neither kr/text
-stable qualifies, and its matching fix is unreleased. All four recent option-1
+stable qualifies, and its matching fix is unreleased. All five recent option-1
 decisions retain the selected versions without changing any dependency
 selection. No canonical emoji/v2 stable qualifies: all ten fail documented
 Fprintln and Errorf contracts, and v2.2.14 also requires Go 1.21. No canonical
 Promptui stable qualifies for the recorded closure/output-error/race results.
 No canonical go-homedir stable qualifies for the recorded complete-upstream-
-gate result. P7 continues only with the prepared bounded go-homedir product
-decision. P8 remains queued.
+gate result. P7 continues only with the prepared bounded evaluation of
+selected exact-path `github.com/mitchellh/mapstructure v1.5.0`. P8 remains
+queued.
 
 ## Kr Pty Evaluation
 
@@ -4900,12 +4904,71 @@ unqualified exception; authorize one later measurement-only
 request and `pkg/config/profiles.go` runtime route; or stop P7 unresolved.
 No source or dependency metadata changed, and P8 remains queued.
 
+## Mitchellh Go Homedir Product Decision
+
+Option 1 is final. Exact selected
+`github.com/mitchellh/go-homedir v1.1.0` is explicitly retained as a direct,
+production-loaded, runtime-relevant dependency under a go-homedir-specific,
+non-transferable exception. It remains unqualified and is not described as
+secure. No canonical exact-path stable qualifies: both v1.0.0 and v1.1.0 fail
+the completed upstream HOME-unset Darwin discovery gate, and v1.0.0 also
+cannot preserve project ownership or earlier guards. Physical selection,
+directness, positive why, runtime loading, and advisory absence are not
+qualification or implicit acceptance.
+
+The exception accepts only the completed two-release/repository/source,
+ordinary behavior, API/closure/platform, exact owner/request, route, why/
+import/load/runtime, graph/tidy/projection/Go-floor, earlier-guard, closed-
+exception, and advisory findings. It transfers or broadens no exception and
+accepts no uncharacterized behavior, new advisory, or independent defect.
+
+Retention requires exact v1.1.0 and main's direct request; all other six
+current/historical requests and current requester selections; the direct root
+since the initial module commit; sole `pkg/config/profiles.go` production
+import and Dir use; three Reset test imports; positive main `pkg/config` ->
+target route; one production/complete-test target package; and runtime
+relevance. The exact requester imports, why/load states, and current/historical
+owner routes must also remain exact.
+
+It also requires the exact v1.0.0-v1.1.0 line, absent `/v2` and `/v3`, exact
+repository/owner/status/license/default-branch and completed release/tag/
+commit/tree/signature/archive/sumdb/module identities, zero GitHub Releases,
+no replacement/retraction/deprecation or eligible alternate, both stables
+remaining unqualified for the completed upstream failure, and no future
+qualified Go-1.18-compatible canonical stable or supported route.
+
+Exact base 234/3,599/355/429/197/41/1,067, real module hashes, the 432-line
+and common 52/948-line tidy identities, no-op v1.1.0 and rejected v1.0.0
+projections, exact Go 1.18/1.26.7, source/API/CLI/help/launcher/Make/quality
+contracts, accepted 27/27 Q0-Q2 PASS at L2, all 41 earlier selections/240
+edges, and every Promptui, emoji/v2, kr/text, and kr/pty expiry guard must
+remain exact. Including go-homedir gives 42 guarded selections and 247
+incoming edges at
+`4caf9e803c1b324d2afcd17b9ba664e6d2c8d220cd74b264484107ea3dd93f42`.
+
+Any target/request/requester-import/owner-route, root/why/import/load/runtime,
+graph/module/tidy/Go-floor, source/behavior/closure, earlier or closed-
+exception guard, advisory/finding, independent defect, repository/release/
+owner, qualification, supported-owner, or compatible-route change expires
+retention and requires a fresh go-homedir decision before merge. Any Promptui,
+emoji/v2, kr/text, or kr/pty change separately requires its own fresh decision.
+No owner study, root change, v1.0.0 selection, branch/pseudo-version, alternate
+path, fork, replacement, dependency edit, workaround, unrelated selection,
+implementation, or transferred exception is authorized.
+
+Guard-only revalidation reproduced exact continuity, module/tidy, all seven
+requests, route/why/import/load, 41-selection/240-edge and 42-selection/247-
+edge, all four earlier closed-exception, official Go 1.26.7, proxy/repository/
+release, target/guard advisory, Go-index, memberlist CNA, and final exact-Go
+gate identities. Completed behavior/source/closure/upstream/cross-build/
+projection/archive/govulncheck work was not repeated and no owner study ran.
+No source or dependency metadata changed. P7 continues only with the prepared
+bounded mapstructure v1.5.0 evaluation; P8 remains queued.
+
 ## Next Bounded Objective
 
-Record exactly one bounded product decision for selected direct exact-path
-`github.com/mitchellh/go-homedir v1.1.0`: retain it under a target-specific
-unqualified exception, authorize exactly one later measurement-only
-`Ply Direct Go Homedir Ownership Study`, or stop P7 unresolved. Do not repeat
-the evaluation, combine options, reopen Promptui, emoji/v2, kr/text, kr/pty,
-kr/pretty, Cast, or any earlier decision, change source or dependency
-metadata, evaluate another group, or begin P8.
+Evaluate only the next unanswered selected queue item, indirect exact-path
+`github.com/mitchellh/mapstructure v1.5.0`, and preserve every go-homedir,
+Promptui, emoji/v2, kr/text, and kr/pty expiry guard. Do not reopen
+go-homedir, kr/pretty, Cast, or any earlier decision, combine another group,
+write outside the managed scratch root, or begin P8.

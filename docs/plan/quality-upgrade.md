@@ -13890,6 +13890,56 @@ Mitchellh Go Homedir evaluation (2026-09-22):
   another group, or begin P8. The decision successor was prepared but not
   executed.
 
+Mitchellh Go Homedir product decision (2026-09-22):
+
+- Option 1 was selected. Exact selected, direct, production-loaded, runtime-
+  relevant `github.com/mitchellh/go-homedir v1.1.0` is explicitly retained
+  without changing product source, `go.mod`, or `go.sum`. It remains
+  unqualified: no canonical exact-path stable qualifies. Directness, positive
+  why, runtime loading, and advisory absence are not qualification.
+- The go-homedir-specific, non-transferable exception accepts only the
+  completed two-release/repository/source, ordinary behavior, API/closure/
+  platform, exact owner/request, `pkg/config/profiles.go` route/use, three
+  Reset test imports, why/import/load/runtime, graph/tidy/projection/Go-floor,
+  earlier-guard, closed-exception, and advisory findings. It accepts no new
+  defect or advisory and transfers or broadens no exception.
+- Retention requires exact v1.1.0, main's direct request and the other six
+  current/historical requests, every current requester selection, the direct
+  root since the initial module commit, sole production import and Dir use,
+  three Reset imports, positive main `pkg/config` -> target route, one
+  production/complete-test target package, runtime relevance, and all
+  requester import/why/load/owner-route boundaries.
+- It also requires the exact v1.0.0-v1.1.0 line, absent `/v2` and `/v3`, exact
+  repository/owner/status/license/default-branch and completed release/tag/
+  commit/tree/signature/archive/sumdb/module identities, zero GitHub Releases,
+  no replacement/retraction/deprecation or eligible alternate, both stables
+  remaining unqualified for the completed upstream-suite result, and no
+  future qualified Go-1.18-compatible stable or supported route.
+- Exact base 234/3,599/355/429/197/41/1,067, real module hashes, the 432-line
+  and common 52/948-line tidy identities, no-op v1.1.0 and rejected v1.0.0
+  projections, exact Go 1.18/1.26.7, source/API/CLI/help/launcher/Make/
+  quality contracts, accepted 27/27 Q0-Q2 PASS at L2, all 41 earlier
+  selections/240 edges, and every Promptui, emoji/v2, kr/text, and kr/pty
+  expiry guard must remain exact. Including go-homedir gives 42 guarded
+  selections and 247 incoming edges at
+  `4caf9e803c1b324d2afcd17b9ba664e6d2c8d220cd74b264484107ea3dd93f42`.
+- Any target/request/requester-import/owner-route, root/why/import/load/runtime,
+  graph/module/tidy/Go-floor, source/behavior/closure, earlier or closed-
+  exception guard, advisory/finding, independent defect, repository/release/
+  owner, qualification, supported-owner, or compatible-route change expires
+  retention and requires a fresh go-homedir decision before merge. Any
+  Promptui, emoji/v2, kr/text, or kr/pty change separately requires its own
+  fresh decision. No owner study, root change, lower selection, fork,
+  replacement, alternate path, dependency edit, workaround, unrelated
+  selection, implementation, or transferred exception is authorized.
+- Guard-only revalidation reproduced exact continuity, module/tidy, request/
+  route/why/import/load, 41-selection/240-edge and 42-selection/247-edge,
+  closed-exception, official Go 1.26.7, proxy/repository/release, target/guard
+  advisory, Go-index, memberlist CNA, and final exact-Go gate identities.
+  Completed behavior/source/closure/upstream/cross-build/projection/archive/
+  govulncheck work was not repeated and no owner study ran. P7 continues only
+  with the prepared bounded mapstructure v1.5.0 evaluation; P8 remains queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

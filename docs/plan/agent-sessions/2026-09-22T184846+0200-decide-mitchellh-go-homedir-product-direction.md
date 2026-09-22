@@ -1,13 +1,13 @@
 # Agent Session: Decide Mitchellh Go Homedir Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-22T184846+0200-decide-mitchellh-go-homedir-product-direction`
 Created: `2026-09-22T18:48:46+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `6e83647c0e2b800f67344941c981055223c0496baa6dc166295c66558a974317`
 Previous: [2026-09-22T180017+0200-evaluate-mitchellh-go-homedir-dependency.md](2026-09-22T180017+0200-evaluate-mitchellh-go-homedir-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-22T192114+0200-evaluate-mitchellh-mapstructure-dependency.md](2026-09-22T192114+0200-evaluate-mitchellh-mapstructure-dependency.md)
+Outcome: Option 1 selected; exact direct, production-loaded, runtime-relevant go-homedir v1.1.0 is retained unqualified under a target-specific exception.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -313,3 +313,164 @@ emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or an earlier decision, repeat the
 go-homedir evaluation, evaluate another dependency group, write outside the
 managed scratch root, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 was selected on 2026-09-22. Exact selected, direct, production-
+loaded, runtime-relevant `github.com/mitchellh/go-homedir v1.1.0` is
+explicitly retained without changing product source, `go.mod`, or `go.sum`.
+It remains unqualified and is not described as secure: no canonical exact-
+path stable qualifies. V1.1.0 is the latest Go-1.18-compatible stable, but its
+complete upstream suite fails the ordinary HOME-unset discovery case on the
+supported Darwin host under both exact SDKs; v1.0.0 repeats the failure and
+cannot form a guard-preserving project selection. Physical selection,
+directness, positive why, runtime loading, and advisory absence do not qualify
+or implicitly accept the module.
+
+The go-homedir-specific, non-transferable exception accepts only the completed
+release/repository/source, ordinary behavior, API/closure/platform, owner/
+request, route, why/import/load/runtime, graph/tidy/projection/Go-floor,
+earlier-guard, Promptui/emoji-v2/kr-text/kr-pty-guard, and advisory findings.
+It accepts no uncharacterized behavior, new advisory, or independent defect.
+It neither broadens nor expires any closed exception and transfers no other
+exception.
+
+The exception remains valid only while every one of these facts remains exact:
+
+- selected exact path/version `github.com/mitchellh/go-homedir v1.1.0` and
+  main's direct v1.1.0 request; mvn-pom-mutator v0.2.3, Viper v1.15.0 and
+  historical Viper v1.10.1, go-rootcerts v1.0.2, and crypt v0.4.0 requesting
+  v1.1.0; historical go-rootcerts v1.0.0 requesting v1.0.0; and every current
+  requester selection remaining exact;
+- the direct v1.1.0 root remaining present since initial module commit
+  `d3543ac979220797a0ca0838e307ac12cd2b3557`; sole production import and Dir
+  use in `pkg/config/profiles.go`; Reset imports in
+  `pkg/template/template_test.go`, `pkg/config/project_test.go`, and
+  `pkg/context/context_test.go`; complete main `pkg/config` -> target route;
+  positive target why; exactly one production/complete-test target package and
+  module-backed entry; and runtime relevance;
+- mvn-pom-mutator's target import/use remaining confined to its unloaded
+  command while its loaded `pkg/pom` owns the current request; Viper retaining
+  no target import; go-rootcerts' import remaining Darwin-only and project-
+  unloaded; crypt retaining no target import; and the recorded positive/
+  negative requester why and load boundaries remaining exact;
+- public enabled archived non-fork MIT repository `mitchellh/go-homedir`, ID
+  23121609, owned by `mitchellh`, defaulting to `main`, with no parent/source;
+  exactly v1.0.0 and v1.1.0; absent `/v2` and `/v3`; all completed release/
+  tag/commit/tree/signature/ancestry/archive/sumdb/module/license identities;
+  zero GitHub Release objects; and no retraction, deprecation, replacement,
+  prerelease, eligible alternate path, fork, branch, or pseudo-version;
+- both exact-path stables remaining unqualified for the completed upstream-
+  suite failure; the completed API, closure, platform, positive ordinary
+  fixture, upstream-gate, and cross-build findings remaining exact; and no
+  future qualified Go-1.18-compatible canonical exact-path stable or
+  supported route appearing;
+- the baseline 234 selected modules, 3,599 graph edges, 355 production
+  entries, 429 complete-test entries, 197 module-backed entries across 41
+  loaded modules, and 1,067 sum lines;
+- `go.mod` / `go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  the 432-line tidy projection at
+  `3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`,
+  and common applied 52/948-line hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`;
+- the completed exact-v1.1.0 get remaining a byte no-op; the exact-v1.0.0
+  request retaining its recorded mvn-pom-mutator removal, Viper downgrade,
+  181-module/2,551-edge broken-load result and tidy restoration to v1.1.0;
+  and no projection or dependency implementation being retained;
+- declared Go 1.18 floor; exact Go 1.26.7 darwin/arm64 official archive/
+  binary SHA-256 identities
+  `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
+  unchanged source/API/CLI/help/launcher/Make/quality contracts; and accepted
+  27/27 Q0-Q2 PASS at L2;
+- all 41 earlier guarded selections exact; 37 negative why results and only
+  closed kr/pretty, kr/text, emoji/v2, and Promptui positive; Promptui as the
+  only guarded repository import; only emoji/v2 and Promptui production/
+  complete-test loaded; and the 240 sorted incoming edges at SHA-256
+  `a4e6042216821077b7a74472a6fcdc60d70644d07a805f6a6e99db1140a71563`;
+- every Promptui expiry guard, including exact selection/request/import/use/
+  route/why/load/runtime/release/behavior/closure/Go-floor/advisory/
+  qualification/compatible-route state; every emoji/v2 guard, including its
+  exact direct-indirect request, importer/use/route, documented failures,
+  release line and floor boundary; every kr/text guard, including exact
+  requests/routes, wrapping failure, unreleased fix, zero load/runtime state,
+  projections and compatible-route conditions; and every kr/pty guard,
+  including exact selected v1.1.1, historical request, unloaded `mc` import,
+  v1.1.4 qualification and unsupported-owner result, later failures,
+  projections and compatible-route condition; and
+- no new target, requester, or closure advisory; independent defect; exact-
+  path stable; repository/release/owner change; qualified stable; supported
+  owner; or compatible genuine route to a qualified go-homedir, Promptui,
+  emoji/v2, kr/text, or kr/pty release.
+
+Any target path/version, request, requester import, owner identity or route,
+root, why/import/load/runtime fact, graph, module hash, tidy state, Go floor,
+source/behavior/closure result, earlier or closed-exception guard, advisory,
+independent finding, repository/release/owner, qualification, supported owner,
+or compatible-route change expires this retention and requires a fresh go-
+homedir dependency and product decision before merge. Any Promptui, emoji/v2,
+kr/text, or kr/pty guard change separately requires its own fresh dependency
+and product decision. This decision authorizes no owner study, root change,
+v1.0.0 selection, branch or pseudo-version, alternate path, fork,
+replacement, dependency edit, workaround, unrelated selection,
+implementation, or transferred exception.
+
+Guard-only revalidation began from clean ordinary and ignored state on branch
+`codex/upgrade-quality` at handoff HEAD
+`0f2bf5aa44b1c0f57003cea4f17dad96740e55d2`, parent
+`35f8e0ee77586d93667420e00df1c6624c9ff4a5`, tree
+`40a3b55718b5e936060465a01a30f986b1e811f3`. That handoff changes exactly
+`codex-dev-start.sh`, the answered go-homedir evaluation archive, this then-
+NEXT decision archive, rolling handover, and roadmap. The reciprocal archive
+chain, sole NEXT state, launcher/archive prompt mirror, exact changed set,
+clean status, and launcher check passed. Exact Google UUID v1.4.0 dependency
+commit `cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an ancestor.
+
+A freshly downloaded official Go 1.26.7 archive and binary reproduce the
+identities above. Under `GOENV=off`, `GOWORK=off`, `GOTOOLCHAIN=local`, empty
+`GOFLAGS`, `LC_ALL=C`, `LANG=C`, scratch-contained caches, and canonical
+`umask 022`, the baseline counts, module hashes, tidy projection and applied
+tidy hashes, seven target requests, target route and load, all 41 earlier
+selections, and the 240-edge snapshot reproduce exactly. Including go-homedir
+gives 42 guarded selections and 247 incoming edges at SHA-256
+`4caf9e803c1b324d2afcd17b9ba664e6d2c8d220cd74b264484107ea3dd93f42`.
+All four closed exception requests, routes, why/import/load boundaries, and
+exact selected versions reproduce without guard drift.
+
+Fresh proxy metadata still exposes exactly v1.0.0 and v1.1.0, latest v1.1.0,
+and no `/v2` or `/v3` line. GitHub still reports the exact repository identity
+and zero Releases. Exact-version OSV and GitHub global results for both
+stables and the repository advisory result remain empty. Fresh selected
+Promptui, emoji/v2, kr/text, and kr/pty OSV and GitHub global/repository
+advisory results are also empty. Guard OSV retains only Gorilla WebSocket
+`GO-2026-6278` / `GHSA-w67g-5rqw-f597` and go-retryablehttp
+`GO-2024-2947` / `GHSA-v6v8-xj6m-xwqh`; x/mod v0.14.0 retains
+`GO-2026-6179` and `GO-2026-6180`. The Go module index remains 518,501
+bytes/1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. The PUBLISHED 2,807-byte memberlist CNA
+response remains SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+updated 2026-07-08T19:40:16.119Z.
+
+The completed go-homedir behavior, release/source/closure, upstream-gate,
+cross-build, archive-comparison, candidate-projection, and govulncheck
+evaluations were not repeated; option 2 was neither authorized nor run. No
+source, dependency metadata, parent, toolchain declaration, or earlier guard
+changed. No changed-selection scorecard applies; accepted quality remains
+27/27 Q0-Q2 PASS at L2. Final unchanged-project exact-Go module verification,
+build, count-one tests, race count-one tests, and vet pass.
+
+Every task-owned SDK, cache, archive, report, project copy, fixture, and
+advisory response remained beneath the exact managed session scratch root and
+was removed before handoff; only the pre-existing launcher-owned Node compile
+cache remains.
+
+P7 continues only with the linked reciprocal bounded evaluation of the next
+unanswered selected queue item, indirect exact
+`github.com/mitchellh/mapstructure v1.5.0`. That successor was prepared but
+not executed and may not reopen this go-homedir decision, Promptui, emoji/v2,
+kr/text, kr/pty, kr/pretty, Cast, or any earlier decision. P8 remains queued.
