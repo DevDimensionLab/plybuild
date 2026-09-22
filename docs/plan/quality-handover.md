@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T13:11:56+02:00
+Generated: 2026-09-22T14:43:01+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The kr/pty decision began
-  from clean HEAD `91c6f272a9a71e57b72a5519d9a79f657ded1951`, parent
-  `11de41c21f881a22999dd3c8772779f07ca31b86`, tree
-  `481653bdafaf05b071757c5833b250fd3ccf7d0d`. That handoff changes exactly the
-  launcher, answered kr/pty evaluation archive, then-NEXT kr/pty decision
+  `codex/upgrade-quality`, base master at `5635d50`. The kr/text decision began
+  from clean HEAD `448692f193ecdd9d7f0e608472251ce780ff62cb`, parent
+  `0781a229dae9852e496c80a10b81075384e6fab8`, tree
+  `d449b3b805c4db0e58d422283ce3a018950f87d3`. That handoff changes exactly the
+  launcher, answered kr/text evaluation archive, then-NEXT kr/text decision
   archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 258-archive history, latest Google
+  ancestry, exact changed set, reciprocal 260-archive history, latest Google
   UUID ancestry, exact Go identity, module hashes/counts/tidy projection,
   target and earlier guards, fresh advisory identities, final unchanged-
   project gates, and launcher check passed.
@@ -25,8 +25,9 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The kr/pty decision/evaluation, kr/pretty decision/evaluation, kr/logfmt decision/
-  evaluation, kr/fs decision/evaluation, go-windows-terminal-
+- The kr/text decision/evaluation, kr/pty decision/evaluation, kr/pretty
+  decision/evaluation, kr/logfmt decision/evaluation, kr/fs
+  decision/evaluation, go-windows-terminal-
   sequences decision/evaluation, gotool decision/evaluation, errcheck
   decision/evaluation, httprouter decision/evaluation, jtolds/gls decision/
   evaluation, go-junit-report decision/evaluation, json-iterator decision/
@@ -48,16 +49,17 @@ session diary.
   v1.1.4 is the highest behavior-qualified Go-1.18-compatible exact-path
   stable, but no genuine supported tidy-stable project owner requests it;
   v1.1.5-v1.1.8 fail ordinary documented `Start` behavior. Option 1 now also
-  explicitly retains exact inherited, unloaded kr/pty v1.1.1 under its own
-  target-specific, non-transferable exception; it remains unqualified. Option
+  explicitly retains exact inherited, unloaded kr/text v0.2.0 and kr/pty
+  v1.1.1 under separate target-specific, non-transferable exceptions; both
+  remain unqualified. Option
   1 separately retains exact inherited, unloaded kr/pretty v0.3.1 under its
   own exception. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T131156+0200-evaluate-kr-text-dependency.md`.
+  `docs/plan/agent-sessions/2026-09-22T144301+0200-evaluate-kyokomi-emoji-v2-dependency.md`.
   It authorizes only a bounded independent evaluation of selected exact-path
-  kr/text v0.2.0. It may not repeat kr/pty or an earlier evaluation, silently
-  expire a kr/pty guard, manufacture a direct root, combine another group,
-  change source or metadata outside its exact authorization, write outside the
-  managed scratch root, or begin P8.
+  kyokomi/emoji/v2 v2.2.12. It may not repeat kr/text, kr/pty, or an earlier
+  evaluation, silently expire either exception, manufacture a direct root,
+  combine another group, change source or metadata outside its exact
+  authorization, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -65,10 +67,9 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 selected option 1 for kr/pty: exact inherited,
-unloaded `v1.1.1` is explicitly retained only under its target-specific,
-non-transferable exception and remains unqualified. The same is true
-separately for kr/pretty v0.3.1 and kr/logfmt
+P2A-P6 are complete. P7 selected option 1 separately for exact inherited,
+unloaded, unqualified kr/text v0.2.0 and kr/pty v1.1.1 under target-specific,
+non-transferable exceptions. The same is true for kr/pretty v0.3.1 and kr/logfmt
 `v0.0.0-20140226030751-b84e30acd515` and kr/fs v0.1.0. Exact inherited/unloaded
 go-windows-terminal-sequences v1.0.1, gotool v1.0.0, errcheck v1.5.0,
 httprouter v1.2.0, jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
@@ -77,10 +78,11 @@ own target-specific exceptions and are not qualified. Exact Go 1.26.7, every
 accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
 No exact-path kr/pretty stable qualifies. Kr/pty v1.1.4 is highest behavior-
-qualified but lacks a genuine supported tidy-stable owner; the option-1
-decision explicitly retains selected v1.1.1 without changing any dependency
-selection. P7 continues only with the prepared bounded kr/text v0.2.0
-evaluation. P8 remains queued.
+qualified but lacks a genuine supported tidy-stable owner. Neither kr/text
+stable qualifies, and its matching fix is unreleased. Both option-1 decisions
+retain the selected versions without changing any dependency selection. P7
+continues only with the prepared bounded kyokomi/emoji/v2 v2.2.12 evaluation.
+P8 remains queued.
 
 ## Kr Pty Evaluation
 
@@ -4489,13 +4491,74 @@ session scratch root and was removed; only the pre-existing launcher-owned
 Node compile cache remains. The bounded kr/text decision successor was
 prepared but not executed, and P8 remains queued.
 
+## Kr Text Product Decision
+
+Option 1 is final. Exact selected `github.com/kr/text v0.2.0` is explicitly
+retained as inherited and unloaded under a kr/text-specific, non-transferable
+exception without changing product source or dependency metadata. It remains
+unqualified and is not described as secure: both exact-path stables fail the
+documented adjacent-overlong-word wrapping contract, and the matching upstream
+fix remains post-release and unreleased. Physical selection, a positive
+test-only why chain, zero loading, and advisory absence only bound present
+exposure.
+
+The exception accepts only the completed two-release/repository/source,
+behavior, API/closure/platform, Cast test-closure ownership, current and
+historical route, why/import/load/runtime, graph/tidy/projection/Go-floor,
+earlier-guard, kr/pty-guard, and advisory findings. It transfers or broadens no
+exception and accepts no uncharacterized behavior, new advisory, or independent
+defect.
+
+Retention requires exact selected v0.2.0; Cast v1.5.1 -> v0.2.0; historical
+kr/pretty v0.1.0/v0.2.0 -> v0.1.0 -> kr/pty v1.1.1; the complete Cast,
+sergi/Assert, mvn-pom-mutator/Viper/Consul/Prometheus, and Honnef/go-internal/
+errgo route families and requester imports; no direct target root; only the
+yaml.v2-tests/check.v1/kr/pretty target why chain; negative kr/pty and
+creack/pty why; zero target/PTY imports and loads; runtime unreachability; the
+exact two-release and repository/archive/sumdb identities; both releases
+remaining unqualified and the fix unreleased; exact project/module/tidy/
+projection/Go-floor state; every earlier and kr/pty guard; and no new advisory,
+finding, release, owner, qualified stable, supported owner, or compatible route
+to a qualified kr/text or kr/pty release.
+
+Any target/request/requester-import/owner-route, root/why/import/load/runtime,
+graph/module/tidy/Go-floor, earlier or kr/pty guard, advisory/finding,
+repository/release/owner, qualification, supported-owner, or compatible-route
+change expires retention and requires a fresh kr/text dependency and product
+decision before merge. Any kr/pty guard change separately requires its fresh
+dependency and product decision. No owner study, direct root, unreleased
+commit, alternate path, dependency edit, workaround, unrelated selection, or
+implementation is authorized.
+
+Guard-only revalidation preserves 234 modules, 3,599 edges, 355 production and
+429 complete-test entries, 197 module-backed entries across 41 modules, 1,067
+sums, exact module hashes, the 432-line tidy projection, applied 52/948-line
+tidy hashes, all target requests/routes, and the why/import/load boundary. All
+38 earlier selections and their 234 incoming edges remain exact at
+`d31b2afdb5a11dadac236eec600408cc9ba0ee3deca2793ae2adf7ffc449c320`;
+including kr/text gives 39 selections/237 edges at
+`151e72c0b5444acc59ffab45d6ce8fe43e80821b42df6a49a11902b3a6632803`.
+Thirty-seven earlier why results are negative and only closed kr/pretty and
+kr/text are positive; guarded imports/loads remain zero.
+
+Fresh official Go 1.26.7 archive/binary identities reproduce. Target OSV,
+GitHub global, and repository advisory results remain empty. Guard OSV retains
+only the Gorilla/retryablehttp pairs; x/mod v0.14.0 retains GO-2026-6179 and
+GO-2026-6180; the 1,402-record Go index and PUBLISHED memberlist CNA bytes
+remain exact. No completed text or PTY behavior, release/source/closure, or
+disposable-project evaluation was repeated, and no owner study ran. Final
+exact-Go verify/build/count-one/race/vet pass; accepted quality remains 27/27
+Q0-Q2 PASS at L2.
+
 ## Next Bounded Objective
 
-Record exactly one bounded kr/text product direction: retain exact selected,
-inherited, unloaded v0.2.0 under a kr/text-specific unqualified and non-
-transferable exception; authorize exactly one later measurement-only study of
-the supported main -> Cast v1.5.1 -> kr/text v0.2.0 owner/request route; or stop
-P7 unresolved. Preserve every kr/pty option-1 expiry guard. Do not repeat text
-or PTY behavior, promote the unreleased fix, add a direct root, transfer an
-exception, change another dependency, combine options or another group, write
-outside the managed scratch root, or begin P8.
+Independently evaluate only selected exact-path
+`github.com/kyokomi/emoji/v2 v2.2.12`. Resolve its exact stable line,
+repository/source identities, complete closure, ordinary documented behavior,
+Go-1.18 floor compatibility, genuine owner/request routes, runtime relevance,
+project projections, and advisory identities. Retain no candidate unless it is
+the highest qualified Go-1.18-compatible exact-path stable with a genuine
+supported tidy-stable owner and every one of the 39 earlier selections/237
+edges plus all kr/text and kr/pty expiry guards remains exact. Do not repeat an
+earlier evaluation, manufacture a real-project root, combine another group,
+transfer an exception, write outside the managed scratch root, or begin P8.

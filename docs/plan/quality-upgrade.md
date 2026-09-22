@@ -5375,8 +5375,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active for the prepared bounded evaluation of selected exact-path
-`github.com/kr/text v0.2.0`. Option 1 explicitly retained exact inherited/
-unloaded unqualified kr/pty v1.1.1, kr/pretty v0.3.1,
+`github.com/kyokomi/emoji/v2 v2.2.12`. Option 1 explicitly retained exact
+inherited/unloaded unqualified kr/text v0.2.0, kr/pty v1.1.1, kr/pretty v0.3.1,
 kr/logfmt
 v0.0.0-20140226030751-b84e30acd515, kr/fs v0.1.0,
 go-windows-terminal-sequences v1.0.1, gotool v1.0.0, and errcheck v1.5.0 under
@@ -5390,9 +5390,11 @@ through accepted Google UUID v1.4.0 and qualified go-cleanhttp v0.5.2.
 Product source and dependency metadata remain unchanged. Kr/pty v1.1.4 is the
 highest behavior-qualified Go-1.18-compatible exact-path stable, but no
 genuine supported tidy-stable project owner requests it; v1.1.5-v1.1.8 fail
-ordinary documented Start behavior. Its option-1 decision is final under the
-exact expiry guards below. The kr/text evaluation successor is prepared but
-was not executed. P8 remains queued.
+ordinary documented Start behavior. Neither exact-path kr/text stable
+qualifies, and its matching adjacent-overlong-word fix remains unreleased.
+Both option-1 decisions are final under their separate exact expiry guards
+below. The kyokomi/emoji/v2 evaluation successor is prepared but was not
+executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -13556,6 +13558,58 @@ Kr Text evaluation (2026-09-22):
   measurement-only main -> Cast v1.5.1 -> kr/text v0.2.0 owner/request study,
   or stopping P7 unresolved. The decision successor was prepared but not
   executed; P8 remains queued.
+
+Kr Text product decision (2026-09-22):
+
+- Option 1 was selected. Exact selected, inherited, unloaded
+  `github.com/kr/text v0.2.0` is explicitly retained without changing product
+  source, `go.mod`, or `go.sum`. It remains unqualified and is not described
+  as secure: both exact-path stables fail the completed adjacent-overlong-word
+  wrapping contract, and the matching upstream fix is unreleased. Physical
+  selection, the test-only why chain, zero loading, and advisory absence bound
+  exposure but are not qualification.
+- The kr/text-specific, non-transferable exception accepts only the completed
+  two-release/repository/source, API/closure/platform/behavior, Cast test-
+  closure ownership, current and historical owner/request routes, why/import/
+  load/runtime, graph/tidy/projection/Go-floor, earlier-guard, kr/pty-guard,
+  and advisory findings. It accepts no new or uncharacterized defect and
+  transfers or broadens no exception.
+- Retention requires exact v0.2.0; Cast v1.5.1 -> v0.2.0; historical kr/pretty
+  v0.1.0/v0.2.0 -> v0.1.0 -> kr/pty v1.1.1; the complete Cast, sergi/Assert,
+  mvn-pom-mutator/Viper/Consul/Prometheus, and Honnef/go-internal/errgo route
+  families and requester imports; no direct target root; only the yaml.v2-
+  tests/check.v1/kr/pretty why chain; negative kr/pty and creack/pty why; zero
+  target/PTY imports and loads; and runtime unreachability.
+- The exact two-release and repository/tag/commit/tree/archive/sumdb identities
+  must remain unchanged; both releases must remain unqualified for the
+  completed failure; the post-release fix must remain unreleased; and no
+  qualified supported route may appear. Exact project/module/tidy/projection/
+  Go-floor state and every earlier and kr/pty guard must also remain exact.
+- Any target/request/requester-import/owner-route, root/why/import/load/runtime,
+  graph/module/tidy/Go-floor, earlier or kr/pty guard, advisory/finding,
+  repository/release/owner, qualification, supported-owner, or compatible-
+  route change expires retention and requires a fresh kr/text dependency and
+  product decision before merge. Any kr/pty guard change separately requires
+  its fresh dependency and product decision. No owner study, direct root,
+  unreleased commit, alternate path, dependency edit, workaround, unrelated
+  selection, or implementation is authorized.
+- Guard-only revalidation preserves 234/3,599/355/429/197/41/1,067, exact
+  module and tidy identities, all target requests/routes, and the why/import/
+  load boundary. All 38 earlier selections/234 incoming edges remain exact at
+  `d31b2afdb5a11dadac236eec600408cc9ba0ee3deca2793ae2adf7ffc449c320`;
+  including kr/text gives 39 selections/237 edges at
+  `151e72c0b5444acc59ffab45d6ce8fe43e80821b42df6a49a11902b3a6632803`.
+  Thirty-seven earlier why results are negative and only closed kr/pretty and
+  kr/text are positive; guarded imports/loads remain zero.
+- Fresh official Go 1.26.7, target advisory, guard OSV, x/mod, Go-index,
+  memberlist CNA, proxy-release, and repository identities reproduce. No
+  completed text or PTY behavior/source/closure/projection evaluation was
+  repeated, and no owner study ran. Final exact-Go verify/build/count-one/
+  race/vet pass; accepted quality remains 27/27 Q0-Q2 PASS at L2.
+- P7 continues only with the prepared bounded evaluation of selected
+  exact-path `github.com/kyokomi/emoji/v2 v2.2.12`. It must preserve all 39
+  earlier selections/237 edges and every kr/text and kr/pty expiry guard. The
+  successor was prepared but not executed; P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

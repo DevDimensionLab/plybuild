@@ -1,13 +1,13 @@
 # Agent Session: Decide Kr Text Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-22T141112+0200-decide-kr-text-product-direction`
 Created: `2026-09-22T14:11:12+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `eccc3b598e1d611534489cc48b552989be70b267dd6dbf345daf29c2d43fc5aa`
 Previous: [2026-09-22T131156+0200-evaluate-kr-text-dependency.md](2026-09-22T131156+0200-evaluate-kr-text-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-22T144301+0200-evaluate-kyokomi-emoji-v2-dependency.md](2026-09-22T144301+0200-evaluate-kyokomi-emoji-v2-dependency.md)
+Outcome: Option 1 selected; exact inherited, unloaded kr/text v0.2.0 is retained unqualified under a target-specific exception.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -267,3 +267,164 @@ cleanup, remove the worktree, select a dependency, add a target root, transfer
 an exception, reopen kr/pty, kr/pretty, Cast, or an earlier decision, evaluate
 another dependency group, write outside the managed scratch root, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 was selected on 2026-09-22. Exact selected
+`github.com/kr/text v0.2.0` is explicitly retained as inherited and unloaded
+without changing product source, `go.mod`, or `go.sum`. It remains unqualified
+and is not described as secure: neither exact-path stable qualifies, and the
+matching upstream behavior fix remains unreleased. Physical MVS selection, a
+test-only why chain, zero loading, and advisory absence bound current exposure;
+none qualifies or implicitly accepts the module.
+
+The kr/text-specific, non-transferable exception accepts only the completed
+adjacent-overlong-word failure and the completed repository, release, archive,
+module, Go-floor, API, closure, platform, positive ordinary fixture, owner/
+request, why/import/load/runtime, graph/tidy, projection, earlier-guard, and
+advisory findings. It accepts no uncharacterized behavior, new advisory, or
+independent defect. It does not broaden, replace, transfer, or expire the
+closed kr/pty exception, and it transfers no other exception.
+
+The exception remains valid only while every one of these facts remains exact:
+
+- selected exact path/version `github.com/kr/text v0.2.0`; selected Cast
+  v1.5.1 -> v0.2.0; historical kr/pretty v0.1.0/v0.2.0 -> v0.1.0; and
+  historical kr/text v0.1.0 -> kr/pty v1.1.1;
+- the current shortest supported owner/request route, main -> selected Cast
+  v1.5.1 -> selected kr/text v0.2.0, including main's indirect Cast
+  requirement, the loaded direct Viper v1.15.0 consumer route, and Cast's
+  supported Go-1.18 quicktest v1.14.4 / kr/pretty v0.3.1 /
+  rogpeppe/go-internal v1.9.0 test closure; Cast retaining no target source
+  import and no direct target root being present;
+- every historical route family: direct sergi/go-diff v1.2.0 and direct
+  Assert v1.0.0 through sergi reaching kr/pretty v0.1.0; direct
+  mvn-pom-mutator v0.2.3 through historical Viper v1.10.1, Consul API
+  v1.12.0, and Consul SDK v0.8.0 reaching kr/pretty v0.2.0; Viper or
+  sagikazarmark/crypt v0.4.0 through go-metrics v0.3.10 and client_golang
+  v1.4.0 reaching kr/pretty v0.1.0; and all three historical Honnef-tools
+  vertices through go-internal v1.3.0 and errgo.v2 v2.1.0 reaching kr/pretty
+  v0.1.0, with every applicable lower route continuing through kr/text
+  v0.1.0 to kr/pty v1.1.1;
+- the positive target why chain only through project `pkg/config` -> yaml.v2
+  -> yaml.v2 tests -> check.v1 -> kr/pretty -> kr/text; negative kr/pty and
+  creack/pty why results; zero target and PTY repository imports and
+  production/complete-test loads; and no target or PTY runtime reachability;
+- exactly two exact-path releases, v0.1.0 and v0.2.0, with absent `/v2` and
+  `/v3` lines; public enabled, unarchived, non-fork MIT repository ID 4450535,
+  owned by `kr`, defaulting to `main`, with no GitHub Releases; no retraction,
+  deprecation, replacement, later exact-path stable, or eligible alternate
+  path, fork, branch, or pseudo-version;
+- unsigned annotated v0.1.0 tag object
+  `a90d266dd68b224558779a7ed518f29481427f41` peeling to unsigned commit
+  `e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f` and tree
+  `82ddc7d7e0af2da48325deab3c7c7a0e16167151`; unsigned annotated v0.2.0 tag
+  object `0e5f52c28dd72ab84daeb81b5a51f20fdc35f9c5` peeling to its direct
+  descendant, GitHub-verified commit
+  `702c74938df48b97370179f33ce2107bd7ff3b3e` and tree
+  `87941db3a7fd2fb33a98b3bf508eb2f352c53061`;
+- proxy ZIP SHA-256 values
+  `9363a4c8f1f3387a36014de51b477b831a13981fc59a5665f9d21609bea9e77c` /
+  `368eb318f91a5b67be905c47032ab5c31a1d49a97848b1011a0d0a2122b30ba4`,
+  normalized regular-file archive/Git manifest hashes
+  `5960b8daf161168d9c1b4c933e5387b50b2fda028a7d45a8280a21e7bd37c733` /
+  `7e59725cfbda17e0daeec72fd1cb375a0e118697a28a250ca17c0e76f1ec2616`,
+  and the recorded v0.1.0 and v0.2.0 sumdb source/module identities;
+- both releases remaining unqualified because
+  `Wrap("overlong overlong foo", 4)` joins the two adjacent over-limit words;
+  verified fix commit `838204404ccb967534580e2a6efb24062880dd0f`, tree
+  `fd73252dc53a2d59bd6b7c128858d17e63172c2a`, remaining post-release and
+  unreleased; the completed API/closure/platform results and positive bounded
+  fixtures remaining exact; and no qualified supported route appearing;
+- the baseline 234 selected modules, 3,599 graph edges, 355 production
+  entries, 429 complete-test entries, 197 module-backed entries across 41
+  loaded modules, and 1,067 sum lines;
+- `go.mod` / `go.sum` SHA-256 values
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  the 432-line tidy projection at
+  `3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`,
+  and the common applied 52/948-line hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`;
+- both completed disposable projections: exact v0.2.0 manufacturing target and
+  creack/pty roots for 235 modules/3,601 edges/1,069 sums before tidy restores
+  the base, while exact v0.1.0 downgrades Cast, Viper, and kr/pretty for
+  229 modules/3,585 edges/389 production/425 complete-test/1,073 sums and
+  retains closed-guard drift after tidy; neither projection being retained;
+- every kr/pty expiry guard, including exact selected v1.1.1, its historical
+  v0.1.0 request and unloaded `mc` import, complete route families, negative
+  why, zero import/load/runtime state, graph/module/tidy/Go-floor state,
+  release/repository/advisory identities, v1.1.4 qualification and missing
+  supported owner, later failures, and compatible-route condition;
+- declared Go 1.18 floor; exact Go 1.26.7 darwin/arm64 official archive/binary
+  SHA-256 identities
+  `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`;
+  unchanged source/API/CLI/help/launcher/Make/quality contracts; and accepted
+  27/27 Q0-Q2 PASS at L2;
+- all 38 earlier guarded selections exact, 37 negative why results and only
+  closed kr/pretty positive, zero guarded repository imports and production/
+  complete-test loads, and their 234 sorted incoming edges at SHA-256
+  `d31b2afdb5a11dadac236eec600408cc9ba0ee3deca2793ae2adf7ffc449c320`;
+  including kr/text yields 39 selections and 237 incoming edges at SHA-256
+  `151e72c0b5444acc59ffab45d6ce8fe43e80821b42df6a49a11902b3a6632803`;
+  and
+- no new target/requester advisory, independent defect, exact-path stable,
+  repository/release/owner change, qualified stable, supported tidy-stable
+  owner, or compatible genuine route to a qualified kr/text or kr/pty release.
+
+Any path/version, request, requester import, owner identity or route, root,
+why/import/load/runtime fact, graph, module hash, tidy state, Go floor, earlier
+or kr/pty guard, advisory, independent finding, repository/release/owner,
+qualification, supported owner, or compatible-route change expires this
+exception and requires a fresh kr/text dependency and product decision before
+merge. Any kr/pty guard change separately requires a fresh kr/pty dependency
+and product decision. This decision authorizes no owner study, direct root,
+unreleased commit, alternate path, dependency edit, workaround, unrelated
+selection, or implementation.
+
+Guard-only revalidation began from clean ordinary and ignored state on branch
+`codex/upgrade-quality` at handoff HEAD
+`448692f193ecdd9d7f0e608472251ce780ff62cb`, parent
+`0781a229dae9852e496c80a10b81075384e6fab8`, tree
+`d449b3b805c4db0e58d422283ce3a018950f87d3`. That handoff changes exactly
+`codex-dev-start.sh`, the answered kr/text evaluation archive, this then-NEXT
+decision archive, rolling handover, and roadmap. Its reciprocal 260-archive
+chain, sole NEXT state, launcher/archive prompt mirror, exact changed set,
+clean status, and launcher check passed. Exact Google UUID v1.4.0 dependency
+commit `cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an ancestor.
+
+A freshly downloaded official Go 1.26.7 archive and its exact binary reproduce
+the identities above. Under `GOENV=off`, `GOWORK=off`,
+`GOTOOLCHAIN=local`, empty `GOFLAGS`, `LC_ALL=C`, `LANG=C`, scratch-contained
+caches, and canonical `umask 022`, the baseline counts, module hashes, tidy
+projection and applied tidy hashes, target requests, why/import/load state, all
+38 earlier selections, and both edge snapshots reproduce exactly.
+
+Fresh proxy metadata still exposes only v0.1.0 and v0.2.0, resolves latest to
+v0.2.0, and has no `/v2` or `/v3` line. GitHub still reports repository ID
+4450535 as enabled, unarchived, non-fork, MIT, owned by `kr`, defaulting to
+`main`, with no Releases. Exact-version OSV and GitHub global results for both
+stables and the repository advisory result remain empty. Guard OSV retains only
+Gorilla WebSocket `GO-2026-6278` / `GHSA-w67g-5rqw-f597` and
+go-retryablehttp `GO-2024-2947` / `GHSA-v6v8-xj6m-xwqh`; x/mod v0.14.0
+retains `GO-2026-6179` and `GO-2026-6180`. The Go module vulnerability index
+remains 518,501 bytes/1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. The PUBLISHED 2,807-byte memberlist CNA
+response remains SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+updated 2026-07-08T19:40:16.119Z.
+
+The completed text and PTY behavior, release/source/closure, and disposable-
+project evaluations were not repeated; option 2 was neither authorized nor
+run. No source, dependency metadata, parent, toolchain declaration, or earlier
+guard changed. No changed-selection scorecard applies; accepted quality
+remains 27/27 Q0-Q2 PASS at L2. Final unchanged-project exact-Go module
+verification, build, count-one tests, race count-one tests, and vet pass.
+
+P7 continues only with the linked bounded evaluation of the next selected
+queue item, `github.com/kyokomi/emoji/v2 v2.2.12`. That reciprocal successor
+was prepared but not executed and may not reopen this kr/text decision, the
+kr/pty decision, or any earlier decision. P8 remains queued.
