@@ -13832,6 +13832,64 @@ Manifoldco Promptui product decision (2026-09-22):
   govulncheck work was not repeated and no owner study ran. P7 continues only
   with the prepared bounded go-homedir evaluation; P8 remains queued.
 
+Mitchellh Go Homedir evaluation (2026-09-22):
+
+- No canonical exact-path stable qualifies. The proxy line contains exactly
+  v1.0.0 and v1.1.0; v1.1.0 is latest and Go-1.18-compatible. Exact `/v2`
+  and `/v3` lines are absent. Public enabled archived non-fork MIT repository
+  `mitchellh/go-homedir`, ID 23121609, is owned by `mitchellh`, defaults to
+  `main`, and has no parent/source. There are no GitHub Releases, retractions,
+  deprecations, replacements, prereleases, or eligible alternate paths.
+- Both lightweight tags form continuous ancestry and both proxy ZIPs
+  byte-match exact Git regular-file manifests. V1.1.0 is validly signed commit
+  `af06845cf3004701891bf4fdb884bfe4920b3727`, tree
+  `c70b446f839c30d92fb3bbb491f0f0b540f47529`; v1.0.0's old signature key is
+  not verifiable by GitHub. Both modules declare only the exact path, with no
+  Go directive, requirement, replacement, or retraction.
+- Both standard-library-only releases pass exact Go 1.26.7 and Go 1.18.10
+  verify/build/vet and supported Darwin/Linux/Windows/FreeBSD/Plan 9/js-wasm
+  cross gates. Small ordinary HOME-backed Dir/Expand/cache/Reset/concurrency
+  fixtures pass repeated and race runs under both SDKs. Both releases fail the
+  required upstream count-one/count-ten/race-count-ten gate: TestDir unsets
+  HOME, Darwin `dscl` returns `eServerError`, the shell fallback cannot `cd`,
+  and Dir returns `exit status 1`. The documented API permits a discovery
+  error, but the complete upstream gate is mandatory for qualification.
+- Seven graph requests select the target. Main has directly requested v1.1.0
+  since its initial module commit; mvn-pom-mutator v0.2.3, Viper v1.15.0 and
+  historical v1.10.1, go-rootcerts v1.0.2, and crypt v0.4.0 also request
+  v1.1.0, while historical go-rootcerts v1.0.0 requests v1.0.0.
+  `pkg/config/profiles.go` is the sole production target import and calls Dir;
+  three tests import Reset. Target why is positive, one package is production/
+  complete-test loaded, and the dependency is runtime relevant.
+- A disposable exact v1.1.0 get is a byte no-op. The real project remains
+  234/3,599/355/429/197/41/1,067 with main Go 1.18, exact module hashes, the
+  432-line tidy identity, and common 52/948-line applied tidy identities. An
+  exact v1.0.0 request removes direct mvn-pom-mutator, downgrades Viper,
+  shrinks the graph to 181 modules/2,551 edges, breaks project loading, and is
+  restored to v1.1.0 by tidy. No projection or implementation was retained.
+- All 41 earlier guarded selections and 240 incoming edges remain exact at
+  `a4e6042216821077b7a74472a6fcdc60d70644d07a805f6a6e99db1140a71563`.
+  Thirty-seven why results are negative; only kr/pretty, kr/text, emoji/v2,
+  and Promptui are positive. Promptui is the only guarded repository import;
+  only emoji/v2 and Promptui are loaded. Every Promptui, emoji/v2, kr/text,
+  and kr/pty expiry guard remains exact.
+- Exact target OSV/GitHub/repository results are empty. Exact-Go pinned
+  govulncheck is empty for both isolated releases; base and no-op-v1.1.0
+  project populations match at 30/22/20/20 with no target trace. Guard OSV,
+  x/mod, the 1,402-record Go index, and PUBLISHED memberlist CNA identities
+  remain unchanged. Advisory absence does not override the upstream gate.
+- Product source and dependency metadata remain unchanged. Final exact-Go
+  verify/build/count-one/race/vet pass; accepted quality remains 27/27 Q0-Q2
+  PASS at L2. Every task-owned scratch artifact was contained beneath the
+  managed root and removed; only the pre-existing launcher-owned Node compile
+  cache remains. P7 stops for one reciprocal bounded product choice: exact
+  target-specific unqualified v1.1.0 retention; one later measurement-only
+  `Ply Direct Go Homedir Ownership Study` of the existing main -> direct
+  target request and `pkg/config/profiles.go` runtime route; or stopping P7
+  unresolved. Do not repeat the evaluation, transfer an exception, combine
+  another group, or begin P8. The decision successor was prepared but not
+  executed.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

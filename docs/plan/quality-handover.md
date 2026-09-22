@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T18:00:17+02:00
+Generated: 2026-09-22T18:48:46+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Promptui decision
-  began from clean HEAD `12881ba88e843657cd360c508937eeb00c38742c`, parent
-  `7f8a3a8dbeaa07ff78a5d384f51d3df72cb538ef`, tree
-  `a4f1996976f2d9c2ddaaf217b081b82f1d0eed80`. That handoff changes exactly the
-  launcher, answered Promptui evaluation archive, then-NEXT Promptui decision
-  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
+  `codex/upgrade-quality`, base master at `5635d50`. The go-homedir evaluation
+  began from clean HEAD `35f8e0ee77586d93667420e00df1c6624c9ff4a5`, parent
+  `12881ba88e843657cd360c508937eeb00c38742c`, tree
+  `0ee5c4f31df0136618336879e584cc0fdfb00ba0`. That handoff changes exactly the
+  launcher, answered Promptui decision archive, then-NEXT go-homedir
+  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch,
   ancestry, exact changed set, reciprocal archive history, latest Google UUID
   ancestry, exact Go identities, module hashes/counts/tidy projection, target
   and earlier guards, fresh advisory identities, final unchanged-project
@@ -62,12 +63,15 @@ session diary.
   canonical exact-path Promptui stable qualifies: v0.9.0 is latest and Go-
   1.18-compatible but loses an ordinary documented writer error and races
   internally during a single Prompt run; v0.3.2-v0.8.0 share both failures,
-  while v0.1.0-v0.3.1 lack a complete standalone module closure. The sole
-  NEXT archive is `docs/plan/agent-sessions/2026-09-22T180017+0200-evaluate-mitchellh-go-homedir-dependency.md`.
-  It authorizes only one bounded go-homedir dependency evaluation. It may not
-  reopen Promptui, emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or an earlier
-  decision, combine another group, write outside the managed scratch root, or
-  begin P8.
+  while v0.1.0-v0.3.1 lack a complete standalone module closure. No canonical
+  exact-path go-homedir stable qualifies: v1.1.0 is latest and Go-1.18-
+  compatible, but both v1.0.0 and v1.1.0 fail the required complete upstream
+  HOME-unset Darwin discovery gate under both exact SDKs. The sole NEXT
+  archive is `docs/plan/agent-sessions/2026-09-22T184846+0200-decide-mitchellh-go-homedir-product-direction.md`.
+  It authorizes only one bounded go-homedir product decision. It may not
+  repeat the evaluation, reopen Promptui, emoji/v2, kr/text, kr/pty,
+  kr/pretty, Cast, or an earlier decision, combine another group, write
+  outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -95,8 +99,9 @@ decisions retain the selected versions without changing any dependency
 selection. No canonical emoji/v2 stable qualifies: all ten fail documented
 Fprintln and Errorf contracts, and v2.2.14 also requires Go 1.21. No canonical
 Promptui stable qualifies for the recorded closure/output-error/race results.
-P7 continues only with the prepared bounded go-homedir evaluation. P8 remains
-queued.
+No canonical go-homedir stable qualifies for the recorded complete-upstream-
+gate result. P7 continues only with the prepared bounded go-homedir product
+decision. P8 remains queued.
 
 ## Kr Pty Evaluation
 
@@ -4825,13 +4830,82 @@ identities. Completed behavior/source/closure/upstream/projection/archive/
 govulncheck work was not repeated and no owner study ran. No source or
 dependency metadata changed.
 
+## Mitchellh Go Homedir Evaluation
+
+No canonical exact-path `github.com/mitchellh/go-homedir` stable qualifies.
+Exact v1.1.0 is the latest stable and is Go-1.18-compatible, but both v1.0.0
+and v1.1.0 fail their complete upstream count-one/count-ten/race-count-ten
+suites under exact Go 1.26.7 and contained Go 1.18.10. TestDir unsets HOME;
+Darwin `dscl` returns `eServerError`, the shell fallback cannot `cd` without
+HOME, and Dir returns `exit status 1`. The API documents that discovery may
+return an error, and small HOME-backed ordinary fixtures pass, but the P7
+qualification contract requires the complete upstream gate.
+
+Go-import and both release modules resolve the public enabled archived
+non-fork MIT `mitchellh/go-homedir` repository, ID 23121609, owned by
+`mitchellh`, defaulting to `main`, with no parent/source. The exact stable
+line is v1.0.0-v1.1.0; `/v2` and `/v3` are absent. There are no GitHub
+Releases, retractions, deprecations, replacements, prereleases, or eligible
+alternate paths. Both lightweight tags form continuous ancestry and both
+proxy ZIPs byte-match exact Git regular-file manifests. V1.1.0 is validly
+signed commit `af06845cf3004701891bf4fdb884bfe4920b3727`, tree
+`c70b446f839c30d92fb3bbb491f0f0b540f47529`; v1.0.0 is signed with an old
+unverifiable key.
+
+Both releases are standard-library-only single packages with no Go directive,
+requirement, replacement, build tag, cgo, generated, embed, testdata, or
+network boundary. V1.1.0 adds only Reset to v1.0.0's DisableCache, Dir, and
+Expand API. HOME and OS user discovery are the environment/filesystem/process
+boundaries. Both exact SDKs pass verify/build/vet and supported Darwin/Linux/
+Windows/FreeBSD/Plan 9/js-wasm cross gates. Small ordinary Dir/Expand/cache/
+Reset/concurrency fixtures pass repeated and race runs; only the required
+upstream discovery gate disqualifies both releases.
+
+The graph has seven target requests: main, mvn-pom-mutator v0.2.3, Viper
+v1.15.0, historical Viper v1.10.1, go-rootcerts v1.0.2, and crypt v0.4.0
+request v1.1.0; historical go-rootcerts v1.0.0 requests v1.0.0. Main has
+requested direct v1.1.0 since its initial Go module commit.
+`pkg/config/profiles.go` is the sole production import and calls Dir at
+runtime; three tests import Reset. Target why is positive, one target package
+is production/complete-test loaded, and the dependency is runtime relevant.
+
+A disposable exact v1.1.0 get is a byte no-op. The project stays
+234/3,599/355/429/197/41/1,067 with exact module/tidy hashes and Go 1.18.
+An exact v1.0.0 request instead removes direct mvn-pom-mutator, downgrades
+Viper, shrinks the graph to 181 modules/2,551 edges, breaks project loading,
+and is reversed to v1.1.0 by tidy. No projection or dependency implementation
+was retained.
+
+All 41 earlier selections and 240 incoming edges remain exact at
+`a4e6042216821077b7a74472a6fcdc60d70644d07a805f6a6e99db1140a71563`.
+Thirty-seven why results are negative; only kr/pretty, kr/text, emoji/v2, and
+Promptui are positive. Promptui is the only guarded repository import, and
+only emoji/v2 and Promptui are loaded. Every Promptui, emoji/v2, kr/text, and
+kr/pty expiry guard remains exact.
+
+Exact target OSV/GitHub/repository advisory results are empty. Pinned exact-
+Go govulncheck is empty for isolated target scans; base/no-op project
+populations match at 30/22/20/20 with no target trace. Guard OSV, x/mod, the
+exact 1,402-record Go index, and PUBLISHED memberlist CNA identities remain
+unchanged. Final exact-Go verify/build/count-one/race/vet pass; accepted
+quality remains 27/27 Q0-Q2 PASS at L2. Advisory absence is not
+qualification. Every task-owned scratch artifact was contained beneath the
+managed session scratch root and removed; only the pre-existing launcher-
+owned Node compile cache remains.
+
+The evaluation prepared but did not execute one reciprocal product choice:
+retain exact selected direct/runtime-relevant v1.1.0 under a target-specific
+unqualified exception; authorize one later measurement-only
+`Ply Direct Go Homedir Ownership Study` of the existing main -> direct target
+request and `pkg/config/profiles.go` runtime route; or stop P7 unresolved.
+No source or dependency metadata changed, and P8 remains queued.
+
 ## Next Bounded Objective
 
-Independently evaluate selected direct exact-path
-`github.com/mitchellh/go-homedir v1.1.0` as the sole next bounded P7
-dependency group. Resolve its canonical exact-path stable line, qualification,
-complete minimal closure, requests/routes/import/load/runtime facts, project
-projection, and fresh advisory identities without reopening Promptui,
-emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or any earlier decision. Implement
-at most one exact dependency-only qualified selection; do not combine another
-group or begin P8.
+Record exactly one bounded product decision for selected direct exact-path
+`github.com/mitchellh/go-homedir v1.1.0`: retain it under a target-specific
+unqualified exception, authorize exactly one later measurement-only
+`Ply Direct Go Homedir Ownership Study`, or stop P7 unresolved. Do not repeat
+the evaluation, combine options, reopen Promptui, emoji/v2, kr/text, kr/pty,
+kr/pretty, Cast, or any earlier decision, change source or dependency
+metadata, evaluate another group, or begin P8.
