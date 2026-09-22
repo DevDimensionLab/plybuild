@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T00:11:18+02:00
+Generated: 2026-09-23T00:36:41+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,12 +9,12 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The mwitkow/go-conntrack
-  evaluation began from clean HEAD
-  `ab5d27df6969e7ebc6766c73adf3af9c94e2cbe6`, parent
-  `1c047f8ded007382fd26df384a0f998ba15156f0`, tree
-  `0e4e12c5d2bb63b911a314a1d05e7e4e3dd00c00`. That handoff changes exactly
-  the launcher, answered modern-go/reflect2 archive, then-NEXT
-  mwitkow/go-conntrack archive, rolling handover, and roadmap. Ordinary and
+  product decision began from clean evaluation-handoff HEAD
+  `a586649d5ecaef9a9c9af5e8e33dbe631321c439`, parent
+  `ab5d27df6969e7ebc6766c73adf3af9c94e2cbe6`, tree
+  `8028ed1f41444ba77b66f6763684add385bd59fc`. That handoff changes exactly
+  the launcher, answered go-conntrack evaluation archive, then-NEXT
+  go-conntrack decision archive, rolling handover, and roadmap. Ordinary and
   ignored status, branch, ancestry, exact changed set, reciprocal archive
   history, latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
@@ -82,15 +82,17 @@ session diary.
   highest qualified Go-1.18-compatible exact-path stable with a supported
   owner and is already selected; no root promotion was retained. Mwitkow/go-
   conntrack has no canonical exact-path stable line: the repository has no
-  tags or releases and the proxy exposes only pseudo-versions. Selected
-  `v0.0.0-20161129095857-cc309e4a2223` remains unloaded and unqualified; no
-  projection or dependency edit was retained. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T001118+0200-decide-mwitkow-go-conntrack-product-direction.md`.
-  It authorizes exactly one target-specific direction: explicit unqualified
-  retention, one named later Prometheus Common Go-Conntrack Ownership Study,
-  or stopping P7 unresolved. It may not execute the study, reopen an earlier
-  decision, combine another group, write outside the managed scratch root, or
-  begin P8.
+  tags or releases and the proxy exposes only pseudo-versions. Option 1 now
+  explicitly retains selected, inherited, unloaded
+  `v0.0.0-20161129095857-cc309e4a2223` under its own unqualified,
+  target-specific, non-transferable exception without source or dependency
+  change. No projection was retained, and the Prometheus Common Go-Conntrack
+  Ownership Study was not authorized or run. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-23T003641+0200-evaluate-oklog-ulid-dependency.md`.
+  It authorizes only the bounded P7 evaluation of selected
+  `github.com/oklog/ulid v1.3.1`; it may not reopen or transfer the go-
+  conntrack exception, combine another group, write outside the managed
+  scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -99,7 +101,9 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 selected option 1 separately for exact selected,
-indirect, production-loaded, unqualified mapstructure v1.5.0; exact selected,
+inherited, unloaded, unqualified go-conntrack
+`v0.0.0-20161129095857-cc309e4a2223`; exact selected, indirect,
+production-loaded, unqualified mapstructure v1.5.0; exact selected,
 direct, production-loaded, runtime-relevant, unqualified go-homedir v1.1.0
 and Promptui v0.9.0;
 exact selected, direct-indirect, runtime-relevant, unqualified emoji/v2
@@ -115,7 +119,7 @@ accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
 No exact-path kr/pretty stable qualifies. Kr/pty v1.1.4 is highest behavior-
 qualified but lacks a genuine supported tidy-stable owner. Neither kr/text
-stable qualifies, and its matching fix is unreleased. All six recent option-1
+stable qualifies, and its matching fix is unreleased. All seven recent option-1
 decisions retain the selected versions without changing any dependency
 selection. No canonical emoji/v2 stable qualifies: all ten fail documented
 Fprintln and Errorf contracts, and v2.2.14 also requires Go 1.21. No canonical
@@ -131,8 +135,9 @@ is empty and no root promotion was retained. Modern-go/reflect2 canonical
 it is already selected, its changed closure is empty, and no root promotion
 was retained. No canonical mwitkow/go-conntrack exact-path stable exists, and
 its selected pseudo-version fails complete ordinary upstream closure gates;
-it remains unchanged and unqualified. P7 continues only with the prepared
-target-specific go-conntrack product decision. P8 remains queued.
+option 1 retains it unchanged and unqualified under its own exact guards. P7
+continues only with the prepared bounded oklog/ulid v1.3.1 evaluation. P8
+remains queued.
 
 ## Mwitkow Go-Conntrack Evaluation
 
@@ -176,6 +181,77 @@ record Go index, and memberlist CNA identities remain exact. Final exact-Go
 verify/build/count-one/race/vet passes. Product source and dependency metadata
 did not change. P7 now requires exactly one go-conntrack product direction;
 the decision successor was prepared but not executed.
+
+## Mwitkow Go-Conntrack Product Decision
+
+Option 1 is final. Exact selected, inherited, unloaded
+`github.com/mwitkow/go-conntrack
+v0.0.0-20161129095857-cc309e4a2223` is explicitly retained without source or
+dependency-metadata changes under a go-conntrack-specific, non-transferable
+exception. It remains unqualified and is not described as stable or secure:
+the exact-path stable line is empty, the selection is a pseudo-version, and
+its completed ordinary upstream closure gates are not all green. Physical
+selection, transitive presence, negative why, zero loading, repository
+activity, and advisory absence do not qualify or implicitly accept it.
+
+Retention requires the exact selected path/pseudo-version and no target root;
+the sole common v0.9.1/v0.4.1 requests at that exact version; both requesters'
+genuine target imports/uses; every direct mvn-pom-mutator -> historical Viper
+-> go-metrics/Prometheus current and historical route edge; negative target
+and requester why; zero repository import, production/complete-test/module-
+backed load, and runtime relevance; and no supported stable owner/request
+route.
+
+It also requires the empty exact-path stable line, absent `/v2` and `/v3`,
+zero tags/releases, exact public enabled unarchived non-fork Apache-2.0
+repository/owner/default-branch identity, selected/latest pseudo-version
+commit/tree/signature/ancestry identities, synthetic module files, recorded
+archive/sumdb/license/source identities, exact selected 18-file proxy/Git
+match, and no replacement, retraction, deprecation, eligible alternate owner,
+or later stable. Neither pseudo-version, master, a pull-request ref, fork,
+replacement, nor alternate path is promoted as stable.
+
+Every completed selected-source API/behavior/closure/upstream/repeated/race/
+vet/cross-build/Go-floor finding remains exact, including historical global-
+metric accumulation, the Go 1.26.7 historical x/net/trace race, and actual-
+project Prometheus `Handler` incompatibility while both library packages and
+nine cross-build targets compile. No new behavior, closure result, advisory,
+or independent defect is accepted.
+
+Exact base 234/3,599/355/429/197/41/1,067, real module hashes, the 432-line
+and common 52/948-line tidy identities, selected/latest disposable
+projections, Go 1.18/1.26.7, source/API/CLI/help/launcher/Make/quality
+contracts, and accepted 27/27 Q0-Q2 PASS at L2 remain guards. All 45 earlier
+selections and 273 incoming edges remain exact at
+`7e5c820da743ac628fb18da129b4d91428a36fd374ed248760d1318f2694c525`,
+with every earlier decision retaining its separate expiry boundary. Go-
+conntrack adds only its exact guarded selection and two incoming request
+edges; no earlier exception is broadened or transferred.
+
+Exact selected/latest target OSV, selected GitHub global, repository advisory,
+and pinned govulncheck findings remain empty; both Prometheus common requester
+OSV results remain empty. Base populations remain 30/22/20/20. Guard OSV,
+x/mod v0.14.0, the 518,501-byte/1,402-record Go index, and PUBLISHED 2,807-byte
+memberlist CNA identities remain exact. Advisory absence is not qualification.
+
+Any target path/version, request, requester import, owner route, root/why/
+import/load/runtime, source/behavior/closure, graph/module/tidy/Go-floor,
+earlier or closed-exception guard, advisory/finding, independent defect,
+repository/release/owner, qualification, supported-owner, or compatible-route
+change expires retention and requires a fresh go-conntrack dependency and
+product decision before merge. No owner study, direct root, latest/master
+selection, requester change, dependency edit, workaround, implementation, or
+transferred exception is authorized.
+
+Guard-only revalidation reproduced exact evaluation-handoff continuity,
+launcher/archive chain, Go/module/graph/load/tidy identities, both requests,
+every recorded route, negative why/import/load facts, 45-selection/273-edge
+earlier snapshot, all closed boundaries, repository/tag/release/proxy facts,
+target/requester/guard advisories, Go index, memberlist CNA, and final exact-Go
+verify/build/count-one/race/vet results. Completed upstream/source/behavior/
+closure/race/cross-build/projection/archive/govulncheck work was not repeated
+and no owner study ran. No source or dependency metadata changed. P7 continues
+only with the prepared bounded oklog/ulid v1.3.1 evaluation; P8 remains queued.
 
 ## Modern-Go Reflect2 Evaluation
 
@@ -5266,10 +5342,11 @@ bounded mapstructure v1.5.0 evaluation; P8 remains queued.
 
 ## Next Bounded Objective
 
-Choose exactly one recorded direction for exact selected, inherited, unloaded,
-unqualified `github.com/mwitkow/go-conntrack
-v0.0.0-20161129095857-cc309e4a2223`: explicit target-specific retention,
-exactly one later Prometheus Common Go-Conntrack Ownership Study, or stopping
-P7 unresolved. Do not run the study, change product source or dependency
-metadata, reopen an earlier decision, combine options or another group, write
-outside the managed scratch root, or begin P8.
+Independently evaluate graph-selected transitive exact
+`github.com/oklog/ulid v1.3.1` as one bounded P7 dependency group. Resolve the
+canonical exact-path stable line and highest qualified Go-1.18-compatible
+stable from primary evidence; implement at most one exact dependency-only
+changed selection only if its complete minimal closure and every earlier
+guard remain exact. Do not reopen or transfer the go-conntrack exception,
+combine another dependency group, write outside the managed scratch root, or
+begin P8.

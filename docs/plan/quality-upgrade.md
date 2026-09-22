@@ -5374,11 +5374,11 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared target-specific product decision for exact
-selected, inherited, unloaded, unqualified
-`github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223`.
-Option 1 now explicitly retains exact indirect/production-loaded unqualified
-mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
+Status: active for the prepared bounded evaluation of graph-selected,
+transitive exact `github.com/oklog/ulid v1.3.1`. Option 1 now explicitly
+retains exact selected/inherited/unloaded unqualified go-conntrack
+`v0.0.0-20161129095857-cc309e4a2223`, exact indirect/production-loaded
+unqualified mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
 v1.1.0 and Promptui v0.9.0, exact direct-indirect/runtime-relevant
 unqualified emoji/v2 v2.2.12, and exact inherited/unloaded unqualified kr/text
 v0.2.0, kr/pty v1.1.1, kr/pretty v0.3.1,
@@ -5406,8 +5406,10 @@ and v0.9.0 without source or dependency change. Modern-go/concurrent release
 pseudo-version already names its exact commit/source, so no selection or
 metadata changed. Modern-go/reflect2 v1.0.2 also qualifies and is already
 selected. Mwitkow/go-conntrack has no canonical exact-path stable line and its
-selected pseudo-version remains unchanged and unqualified. Its reciprocal
-product-decision successor is prepared but was not executed. P8 remains queued.
+selected pseudo-version remains unchanged and unqualified under a go-
+conntrack-specific, non-transferable option-1 exception. Its owner study was
+not authorized or run. The reciprocal oklog/ulid evaluation is prepared but
+was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14221,6 +14223,64 @@ Mwitkow/go-conntrack evaluation (2026-09-23):
   single named later Prometheus Common Go-Conntrack Ownership Study, or
   stopping P7 unresolved. The successor was prepared but not executed. P8
   remains queued.
+
+Mwitkow/go-conntrack product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, unloaded
+  `github.com/mwitkow/go-conntrack
+  v0.0.0-20161129095857-cc309e4a2223` is explicitly retained without source or
+  dependency-metadata changes under a go-conntrack-specific, non-transferable
+  exception. It remains unqualified and is not described as stable or secure:
+  the exact-path stable line is empty, the selection is a pseudo-version, and
+  its completed ordinary upstream closure gates are not all green. Physical
+  selection, transitive presence, negative why, zero loading, repository
+  activity, and advisory absence are not qualification.
+- Retention requires the exact selected path/pseudo-version, zero target root,
+  both exact common v0.9.1/v0.4.1 requests and genuine imports/uses, every
+  current/historical mvn-pom-mutator -> Viper -> go-metrics/Prometheus route,
+  negative target/requester why, zero repository import/load/runtime relevance,
+  and no supported stable owner/request route.
+- It requires the empty stable line, absent `/v2` and `/v3`, zero tags/releases,
+  exact public enabled unarchived non-fork Apache-2.0 repository/owner/default-
+  branch and selected/latest pseudo-version commit/tree/signature/ancestry/
+  archive/sumdb/module/source identities, exact selected 18-file proxy/Git
+  match, and no replacement, retraction, deprecation, eligible alternate
+  owner, or later stable. No pseudo-version, master, pull-request ref, fork,
+  replacement, or alternate path is promoted as stable.
+- Every completed API/behavior/closure/upstream/repeated/race/vet/cross-build/
+  Go-floor finding remains exact, including historical global-metric
+  accumulation, the Go 1.26.7 historical x/net/trace race, and actual-project
+  Prometheus `Handler` incompatibility while both library packages and nine
+  cross-build targets compile. No new defect, behavior, or closure result is
+  accepted.
+- Exact base 234/3,599/355/429/197/41/1,067, module hashes, the 432-line and
+  common 52/948-line tidy identities, both disposable projections, Go
+  1.18/1.26.7, source/API/CLI/help/launcher/Make/quality contracts, and
+  accepted 27/27 Q0-Q2 PASS at L2 remain guards. All 45 earlier selections and
+  273 incoming edges remain exact at
+  `7e5c820da743ac628fb18da129b4d91428a36fd374ed248760d1318f2694c525`;
+  go-conntrack adds only its selected guard and two incoming edges, and every
+  earlier exception retains its separate boundary.
+- Exact selected/latest target OSV, selected GitHub global, repository
+  advisory, and pinned govulncheck findings remain empty. Both common
+  requester OSV results remain empty; base remains 30/22/20/20. Guard OSV,
+  x/mod, the exact Go index, and PUBLISHED memberlist CNA identities remain
+  unchanged. Advisory absence is not qualification.
+- Any target/request/requester-import/owner-route, root/why/import/load/runtime,
+  source/behavior/closure, graph/module/tidy/Go-floor, earlier or closed-
+  exception guard, advisory/finding, independent defect, repository/release/
+  owner, qualification, supported-owner, or compatible-route change expires
+  retention and requires a fresh go-conntrack evaluation and product decision
+  before merge. No owner study, direct root, latest/master selection, requester
+  change, dependency edit, workaround, implementation, or transferred
+  exception is authorized.
+- Guard-only revalidation reproduced exact handoff/chain, Go/module/graph/load/
+  tidy, request/route/why/import/load, 45-selection/273-edge earlier snapshot,
+  closed-exception, repository/release, narrow advisory, Go-index, memberlist
+  CNA, and final exact-Go gate identities. Completed upstream/source/behavior/
+  closure/race/cross-build/projection/archive/govulncheck work was not repeated
+  and no owner study ran. P7 continues only with the prepared bounded
+  oklog/ulid v1.3.1 evaluation; P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

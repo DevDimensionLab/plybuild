@@ -1,13 +1,13 @@
 # Agent Session: Decide Mwitkow Go-Conntrack Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-23T001118+0200-decide-mwitkow-go-conntrack-product-direction`
 Created: `2026-09-23T00:11:18+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `2a28c3fcb8c7cbed504e3b1449753ff449ee550bd911bdbae13d9983ca868591`
 Previous: [2026-09-22T231926+0200-evaluate-mwitkow-go-conntrack-dependency.md](2026-09-22T231926+0200-evaluate-mwitkow-go-conntrack-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-23T003641+0200-evaluate-oklog-ulid-dependency.md](2026-09-23T003641+0200-evaluate-oklog-ulid-dependency.md)
+Outcome: Option 1 selected. Exact inherited, unloaded go-conntrack pseudo-version is retained under a target-specific, non-transferable unqualified exception; source and dependency metadata remain unchanged.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -182,3 +182,192 @@ bypass cleanup, remove the worktree, transfer an exception, reopen any earlier
 decision, evaluate another dependency group, write outside the managed scratch
 root, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 is final. Exact selected, inherited, unloaded
+`github.com/mwitkow/go-conntrack
+v0.0.0-20161129095857-cc309e4a2223` is explicitly retained without changing
+product source, `go.mod`, or `go.sum` under a go-conntrack-specific,
+non-transferable exception. It remains unqualified and is not described as
+stable or secure. The canonical exact-path stable line is empty, the selected
+identity is a pseudo-version, and its completed ordinary upstream closure
+gates are not all green. Physical MVS selection, transitive presence, negative
+why, zero loading, an active repository, and advisory absence are not
+qualification or implicit acceptance.
+
+The exception accepts only the completed repository/release/source/module,
+API and ordinary behavior, closure/upstream/repeated/race/vet/cross-build,
+owner/request/route, why/import/load/runtime, projection/graph/tidy/Go-floor,
+earlier-guard/closed-exception, and advisory findings recorded by the answered
+evaluation. It accepts no uncharacterized behavior, new advisory, independent
+defect, future route, or direct/loaded use. It transfers or broadens no earlier
+exception. Option 2's **Prometheus Common Go-Conntrack Ownership Study** was
+neither authorized nor run, and option 3 was not selected.
+
+### Exact Retention, Request, And Route Guards
+
+Retention requires exact selected path and pseudo-version
+`github.com/mwitkow/go-conntrack
+v0.0.0-20161129095857-cc309e4a2223`. Main must retain no direct target root.
+The only two graph requests must remain selected Prometheus common v0.9.1 and
+historical Prometheus common v0.4.1, both requesting that exact pseudo-version.
+Both requester source trees must continue genuinely importing and using the
+target from `config/http_config.go` to construct their traced, named dial
+context functions; neither edge may become metadata-only or acquire a
+different request.
+
+The complete current route remains main -> direct
+`github.com/devdimensionlab/mvn-pom-mutator v0.2.3` -> historical Viper
+v1.10.1 -> `github.com/armon/go-metrics v0.3.10` -> Prometheus common v0.9.1
+-> target, with the parallel go-metrics -> Prometheus client v1.4.0 -> common
+v0.9.1 branch. The historical route remains common v0.9.1 -> Prometheus
+client v1.0.0 -> common v0.4.1 -> target. Target, both common vertices,
+go-metrics, both Prometheus clients, Consul API, and Serf remain why-negative
+and unloaded. Repository target imports, target production loads, complete-
+test loads, module-backed loads, and runtime relevance remain zero. There is
+no supported stable owner/request route.
+
+### Repository, Release, Source, And Qualification Guards
+
+The canonical exact-path stable line must remain empty. Public, enabled,
+unarchived, non-fork Apache-2.0 repository `mwitkow/go-conntrack`, ID 72483369,
+must remain owned by `mwitkow` and default to `master`, with zero tags, zero
+GitHub Releases, and an empty Go proxy stable list. Exact `/v2` and `/v3`
+lines remain absent. There must be no replacement, retraction, deprecation,
+eligible alternate owner, later exact-path stable, or supported tidy-stable
+requester route.
+
+Every completed identity remains a guard. Selected pseudo-version commit
+`cc309e4a22231782e8893f3c35ced0967807a33e`, tree
+`8e653f1c675ad96001b221496975aa5858f0df09`, remains unsigned and an ancestor
+of signed current master/proxy-latest pseudo-version commit
+`2f068394615f73e460c2f3d2c158b0ad9321cadb`, tree
+`a8074d12ad49ac88f1078e3942c1a95c8bfbc5f2`. Neither pseudo-version,
+`master`, a pull-request ref, fork, replacement, or alternate path is a stable.
+Both synthetic module files retain only the exact module directive, without a
+Go directive, requirement, replacement, retraction, or deprecation. The
+recorded license, signature, ancestry, proxy/sumdb, source/module, ZIP, exact
+18-file archive-to-Git, symlink, and submodule identities remain exact.
+
+The completed exported API and documentation; caller/package ownership and
+mutation; determinism, concurrency, lifecycle, cleanup, error, and global-
+state behavior; platform, network/TLS/file, cgo, build-tag, generated, embed,
+and Go-floor boundaries all remain guards. With the historical Prometheus
+closure, both exact SDKs must retain the recorded passing build/count-one/vet
+results and repeated-test global-metric accumulation failure; Go 1.26.7 must
+retain the recorded historical `x/net/trace` event-map race result. With the
+project's actual Prometheus client v1.4.0/common v0.9.1 closure, both SDKs must
+retain the full-upstream `prometheus.Handler` incompatibility while the two
+library packages and all nine supported cross-build targets continue to
+compile. No selected-source behavior, closure, upstream-gate, or independent
+finding may change.
+
+### Project, Toolchain, Earlier-Decision, And Advisory Guards
+
+The real project remains exactly 234 selected modules, 3,599 graph edges,
+355 production entries, 429 complete-test entries, 197 module-backed entries
+across 41 loaded modules, and 1,067 sum lines. `go.mod` / `go.sum` remain
+74/1,067 lines at SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+The 432-line tidy projection remains SHA-256
+`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`,
+and applied tidy must remain the common 52/948-line state at
+`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+
+The selected-pseudo disposable get must retain its recorded
+234-module/3,609-edge/82-line-go.mod/1,076-line-go.sum root-promotion result.
+The latest-pseudo disposable get must retain its recorded
+235-module/3,610-edge/83-line-go.mod/1,079-line-go.sum result and sole new
+`github.com/jpillora/backoff v1.0.0` selection. Both must remain target-why-
+negative, preserve exact 355/429/197/41 loads and the Go 1.18 floor, and tidy
+back to the common 52/948-line projection. Neither projection is retained.
+
+The Go 1.18 language/compatibility floor and exact Go 1.26.7 Darwin arm64
+official archive/binary SHA-256 identities remain
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+Every source/API/CLI/help/launcher/Make/quality contract remains unchanged,
+and accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+All 45 earlier guarded selections and their 273 sorted incoming edges remain
+exact at SHA-256
+`7e5c820da743ac628fb18da129b4d91428a36fd374ed248760d1318f2694c525`.
+Every reflect2, concurrent, mapstructure, go-homedir, Promptui, emoji/v2,
+kr/text, kr/pty, kr/pretty, Cast, Viper, closed-exception, owner/request,
+why/import/load/runtime, graph/module/tidy/Go-floor, advisory, qualification,
+supported-owner, and compatible-route fact remains final under its own
+separate expiry boundary. Including go-conntrack adds only its exact selection
+guard and the two recorded incoming request edges; it broadens no earlier
+decision.
+
+Exact selected/latest target OSV, selected target GitHub global, repository
+advisory, and pinned isolated govulncheck findings remain empty. Prometheus
+common v0.9.1/v0.4.1 OSV results remain empty. The unchanged project retains
+the exact 30/22/20/20 non-stdlib govulncheck populations with no target trace.
+Guard OSV remains limited to Gorilla WebSocket `GO-2026-6278` /
+`GHSA-w67g-5rqw-f597` and go-retryablehttp `GO-2024-2947` /
+`GHSA-v6v8-xj6m-xwqh`; x/mod v0.14.0 retains `GO-2026-6179` and
+`GO-2026-6180`. The Go vulnerability index remains 518,501 bytes/1,402
+records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
+The PUBLISHED memberlist CNA response remains 2,807 bytes at SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+updated 2026-07-08T19:40:16.119Z. Advisory absence is not qualification.
+
+Any target path/version, request, requester import, owner identity or route,
+root, why/import/load/runtime fact, source/behavior/closure result, graph,
+module hash, tidy state, Go floor, earlier or closed-exception guard,
+advisory/finding, independent defect, repository/release/owner fact,
+qualification, supported-owner result, or compatible genuine route change
+expires this exception and requires a fresh go-conntrack dependency evaluation
+and product decision before merge. Any earlier guard change separately
+requires its own fresh decision. This decision authorizes no owner study,
+direct root, latest/master selection, requester change, dependency edit,
+workaround, implementation, or transferred exception.
+
+### Guard-Only Revalidation And Handoff
+
+Guard-only revalidation began from clean ordinary and ignored state on branch
+`codex/upgrade-quality` at evaluation-handoff HEAD
+`a586649d5ecaef9a9c9af5e8e33dbe631321c439`, parent
+`ab5d27df6969e7ebc6766c73adf3af9c94e2cbe6`, tree
+`8028ed1f41444ba77b66f6763684add385bd59fc`. That handoff changes exactly
+`codex-dev-start.sh`, the answered go-conntrack evaluation archive, this
+then-NEXT decision archive, rolling handover, and roadmap. Exact Google UUID
+v1.4.0 dependency commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an ancestor. The
+reciprocal archive chain, sole NEXT state, launcher/archive prompt mirror,
+exact changed set, and launcher check passed.
+
+Exact Go identity, baseline counts and hashes, tidy projection and applied-
+tidy identities, both target requests, every recorded route edge, negative
+target/requester why results, zero repository import/load state, and the exact
+unchanged graph reproduce. Because `go.mod`, `go.sum`, and the 3,599-edge graph
+are byte-exact under the same toolchain, the 45-selection/273-edge earlier-
+guard snapshot and all closed-exception boundaries retain their recorded
+identity without drift.
+
+Fresh primary metadata still reports repository ID 72483369 with the exact
+owner/status/license/default-branch identity, zero tags/releases/repository
+advisories, an empty global selected-version advisory result, and an empty
+proxy stable list. Selected/latest target and both common requester OSV
+results are empty. The four recorded guard advisory identities, Go index, and
+memberlist CNA record reproduce exactly. The completed upstream/source/
+behavior/closure/race/cross-build/projection/archive/govulncheck evaluation was
+not repeated, and no owner study ran.
+
+No product source, dependency metadata, parent, toolchain declaration, or
+earlier decision changed. No changed-selection scorecard applies. Final exact-
+Go module verification, build, count-one tests, race count-one tests, and vet
+pass under canonical `umask 022`; accepted quality remains 27/27 Q0-Q2 PASS at
+L2. Every task-owned cache, report, response, and project copy was contained
+beneath the managed session scratch root and removed before handoff.
+
+P7 continues only with the linked reciprocal bounded evaluation of the next
+unanswered selected queue item, graph-selected transitive exact
+`github.com/oklog/ulid v1.3.1`. That successor was prepared but not executed
+and may not reopen or transfer this go-conntrack exception or any earlier
+decision. P8 remains queued.
