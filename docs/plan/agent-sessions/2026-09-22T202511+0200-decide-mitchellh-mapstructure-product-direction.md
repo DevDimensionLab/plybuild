@@ -1,13 +1,13 @@
 # Agent Session: Decide Mitchellh Mapstructure Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-22T202511+0200-decide-mitchellh-mapstructure-product-direction`
 Created: `2026-09-22T20:25:11+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3098013c91be7cda8e4cd2c4d14bee151aee65360ae14ad32dc4de7cda018b85`
 Previous: [2026-09-22T192114+0200-evaluate-mitchellh-mapstructure-dependency.md](2026-09-22T192114+0200-evaluate-mitchellh-mapstructure-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-22T211112+0200-evaluate-modern-go-concurrent-dependency.md](2026-09-22T211112+0200-evaluate-modern-go-concurrent-dependency.md)
+Outcome: option 1 explicitly retains exact selected mapstructure v1.5.0 under a target-specific unqualified exception; source and dependency metadata remain unchanged
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -323,3 +323,186 @@ go-homedir, Promptui, emoji/v2, kr/text, kr/pty, kr/pretty, Cast, Viper, or an
 earlier decision, repeat the mapstructure evaluation, evaluate another
 dependency group, write outside the managed scratch root, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 is final. Exact selected indirect, production-loaded
+`github.com/mitchellh/mapstructure v1.5.0` is explicitly retained without
+changing product source, `go.mod`, or `go.sum` under a mapstructure-specific,
+non-transferable exception. It remains unqualified and is not described as
+secure. No canonical exact-path stable qualifies, and no exact-path stable
+has a genuine supported owner. Physical selection, indirectness, positive
+why, production loading, and advisory absence are not qualification or
+implicit acceptance.
+
+The exception accepts only the completed release/repository/source, ordinary
+behavior, API/closure/platform, exact owner/request, route, why/import/load/
+runtime, graph/tidy/projection/Go-floor, earlier-guard, closed-exception, and
+advisory findings. It transfers or broadens no exception and accepts no
+uncharacterized behavior, new advisory, independent defect, or future route.
+Option 2's `Ply Viper Mapstructure Ownership Study` was neither authorized nor
+run, and option 3 was not selected.
+
+### Exact Retention And Route Guards
+
+Retention requires exact selected path/version
+`github.com/mitchellh/mapstructure v1.5.0` and main's explicit indirect
+request. All other eight exact current/historical requests remain guards:
+Viper v1.15.0 requests v1.5.0; historical Viper v1.10.1 and crypt v0.4.0
+request v1.4.3; historical Kong
+`v0.2.1-0.20190708041108-0548c6b1afae` and Consul API v1.1.0/v1.12.0
+request v1.1.2; and Serf v0.8.2/v0.9.6 request
+`v0.0.0-20160808181253-ca63d7c062ee`. Current selections must remain Viper
+v1.15.0, crypt v0.9.0, that exact Kong pseudo-version, Consul API v1.18.0,
+Serf v0.10.1, and target v1.5.0.
+
+The requester boundaries remain exact: current and historical Viper import
+the target in production and test source; historical Consul API and Serf
+genuinely import it; Kong and crypt are metadata-only requesters. Only current
+Viper is loaded among requesters, while the historical requester why results
+remain negative.
+
+Repository source retains zero target imports. Target why remains positive
+only through `cmd -> github.com/spf13/viper -> mapstructure`; Viper v1.15.0
+retains its production/test target imports; and project `cmd/root.go` retains
+its Viper configuration setup/read calls without a repository-local
+mapstructure Decode or Unmarshal call. Exactly one target package remains in
+the production and complete-test closures. The exact load and runtime-use
+boundary must not change.
+
+### Canonical Release, Owner, And Qualification Guards
+
+The exact proxy line remains the 17 stables v1.0.0, v1.1.0-v1.1.2,
+v1.2.0-v1.2.3, v1.3.0-v1.3.3, v1.4.0-v1.4.3, and v1.5.0. Exact-path `/v2`
+and `/v3` lines remain absent. Public, enabled, archived, non-fork MIT
+repository `mitchellh/mapstructure`, ID 10166531, owned by `mitchellh` and
+defaulting to `main`, remains the exact owner. There remain no GitHub
+Releases, prereleases, replacements, retractions, module deprecations, or
+eligible exact-path alternates.
+
+Every completed tag, commit, tree, signature, ancestry, proxy/sumdb, module,
+and archive-to-Git identity remains a guard. In particular, selected v1.5.0
+remains validly signed commit
+`ab69d8d93410fce4361f4912bb1ff88110a81311`, tree
+`5a1166013faa55170e1acce958c1a3863faf3f80`, parent
+`bd687ea300c090473812a1a5730c3a335fbb5b72`, with recorded source/module
+sums, ZIP identity, and byte-matching 13-file Git manifest. The v1.2.0
+historical tag-mutation record must remain exact: immutable proxy/sumdb bytes
+match historical commit `047abd31f2839526c057afa2966f1bc4a374d025`, while
+the current tag points to signed descendant
+`9e4011917e467353a5cacb6b11f3991b381055c8` and differs only by the recorded
+two CHANGELOG lines. Selected v1.5.0 remains unaffected.
+
+The owner archive statement that there will be no further issues, pull
+requests, or tags remains exact. The blessed active `go-viper/mapstructure`
+repository remains a fork whose module declares alternate path
+`github.com/go-viper/mapstructure/v2` with Go 1.18. It is not an eligible
+exact-path release or owner. No exact-path stable has a genuine supported
+owner.
+
+All 17 Go-1.18-compatible stables remain unqualified for the completed
+ordinary slice-replacement result: decoding one element into a pre-populated
+two-element destination retains its stale second element. V1.2.2 additionally
+retains its repeated upstream metadata-order failure. The post-v1.5.0 branch
+truncation fix and later branch fixes remain unreleased and ineligible. No
+future qualified Go-1.18-compatible exact-path stable, supported exact-path
+owner, or compatible genuine route has been accepted.
+
+### Project, Toolchain, And Closed-Exception Guards
+
+The unchanged project remains 234 selected modules, 3,599 graph edges, 355
+production entries, 429 complete-test entries, 197 module-backed entries
+across 41 loaded modules, and 1,067 sum lines. `go.mod` / `go.sum` remain 74/
+1,067 lines at SHA-256
+`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
+The unchanged 432-line tidy projection remains SHA-256
+`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`;
+the common applied 52/948-line hashes remain
+`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+The exact no-op v1.5.0 projection remains final; no dependency implementation
+or lower projection is authorized.
+
+The Go 1.18 language and compatibility floor remains exact. Official Go
+1.26.7 Darwin arm64 archive/binary SHA-256 identities remain
+`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+Source/API/CLI/help/launcher/Make/quality contracts remain unchanged, and
+accepted quality remains 27/27 Q0-Q2 PASS at L2.
+
+All 42 earlier guarded selections remain exact. Their 247 sorted incoming
+edges reproduce SHA-256
+`4caf9e803c1b324d2afcd17b9ba664e6d2c8d220cd74b264484107ea3dd93f42`.
+Thirty-seven why results remain negative; only closed kr/pretty, kr/text,
+emoji/v2, Promptui, and go-homedir are positive. Promptui and go-homedir
+remain the only guarded repository imports; emoji/v2, Promptui, and
+go-homedir remain the only loaded guarded modules. Every go-homedir,
+Promptui, emoji/v2, kr/text, and kr/pty expiry guard remains exact. Including
+closed mapstructure gives 43 guarded selections and 256 incoming edges at
+SHA-256
+`8f05ff3b4755e6582db200d1d457b6e8b52e84983d9f634976f76b0d731d298f`.
+
+Any target, request, requester import or metadata-only boundary, owner route,
+root, why/import/load/runtime fact, graph/module/tidy/Go-floor state, source/
+behavior/closure result, repository/release/owner fact, advisory/finding,
+qualification, supported-owner result, earlier guard, closed-exception guard,
+or compatible-route change expires this exception and requires a fresh
+mapstructure dependency and product decision before merge. Any go-homedir,
+Promptui, emoji/v2, kr/text, or kr/pty change separately requires its
+corresponding fresh dependency and product decision. This exception is not a
+security claim and cannot transfer.
+
+### Guard-Only Revalidation And Continuity
+
+Guard-only revalidation began from clean ordinary and ignored state on branch
+`codex/upgrade-quality` at handoff HEAD
+`65f72c1c0416ee2e5ccce2135cec589f26cd8142`, parent
+`bff26c941f30ef51a4f5a35c064a558ef1b45d16`, tree
+`24a5f29b6ed4b0db8af1f8bc9af7659cfad52f63`. That handoff changes exactly
+the launcher, answered mapstructure evaluation archive, this then-NEXT
+decision archive, rolling handover, and roadmap. Its reciprocal chain, sole
+NEXT state, launcher/archive prompt mirror, exact changed set, clean status,
+and launcher check pass. Exact Google UUID implementation commit
+`cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an ancestor.
+
+The exact Go identities, baseline counts and hashes, tidy and applied-tidy
+identities, all nine requests, requester import boundaries, target route/
+why/import/load state, all 42 earlier selections, 247-edge snapshot, five
+earlier closed-exception boundaries, and 43-selection/256-edge successor
+guard reproduce without drift. Fresh public metadata still exposes exactly
+the 17-release line, absent exact-path `/v2` and `/v3`, the archived exact
+repository identity, and the active alternate-path fork declaration.
+
+Fresh exact-version OSV and GitHub global queries remain empty for all 17
+stables, and the exact repository advisory result remains empty. Fresh
+selected go-homedir, Promptui, emoji/v2, kr/text, and kr/pty OSV, GitHub
+global, and repository advisory results remain empty. Guard OSV retains only
+Gorilla WebSocket `GO-2026-6278` / `GHSA-w67g-5rqw-f597` and
+go-retryablehttp `GO-2024-2947` / `GHSA-v6v8-xj6m-xwqh`; x/mod v0.14.0
+retains `GO-2026-6179` and `GO-2026-6180`. The Go module vulnerability index
+remains 518,501 bytes/1,402 records at SHA-256
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+Last-Modified 2026-09-17T17:29:18Z. The PUBLISHED 2,807-byte
+CVE-2026-14362 memberlist CNA response remains SHA-256
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+updated 2026-07-08T19:40:16.119Z. Advisory absence does not override the
+ordinary failure or unsupported owner.
+
+The completed mapstructure source, behavior, closure, upstream, cross-build,
+projection, archive, and govulncheck evaluations were not repeated. No owner
+study ran. No source, dependency metadata, parent, toolchain declaration, or
+earlier guard changed. No changed-selection scorecard applies. Final
+unchanged-project exact-Go module verification, build, count-one tests, race
+count-one tests, and vet pass.
+
+Every task-owned SDK, cache, archive, report, project copy, and advisory
+response remained beneath the exact managed session scratch root and was
+removed before handoff; only the pre-existing launcher-owned Node compile
+cache remains.
+
+P7 continues only with the linked reciprocal bounded evaluation of the next
+unanswered selected queue item, graph-selected transitive exact
+`github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd`.
+That successor was prepared but not executed and may not reopen or transfer
+this mapstructure exception or any earlier decision. P8 remains queued.

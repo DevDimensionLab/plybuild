@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T20:38:11+02:00
+Generated: 2026-09-22T21:11:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The mapstructure
-  evaluation began from clean HEAD
-  `bff26c941f30ef51a4f5a35c064a558ef1b45d16`, parent
-  `0f2bf5aa44b1c0f57003cea4f17dad96740e55d2`, tree
-  `6771799cf803b4591bcb56d086aeed8c534e2019`. That handoff changes exactly the
-  launcher, answered go-homedir decision archive, then-NEXT mapstructure
-  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
+  `codex/upgrade-quality`, base master at `5635d50`. The mapstructure product
+  decision began from clean HEAD
+  `65f72c1c0416ee2e5ccce2135cec589f26cd8142`, parent
+  `bff26c941f30ef51a4f5a35c064a558ef1b45d16`, tree
+  `24a5f29b6ed4b0db8af1f8bc9af7659cfad52f63`. That handoff changes exactly
+  the launcher, answered mapstructure evaluation archive, then-NEXT
+  mapstructure decision archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
@@ -72,13 +72,15 @@ session diary.
   without source or dependency change. No canonical exact-path mapstructure
   stable qualifies: all 17 stable releases leave a stale destination slice
   element during ordinary decode, and the archived exact-path repository has
-  no genuine supported owner. Selected indirect v1.5.0 remains unchanged and
-  unqualified pending a product decision. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T202511+0200-decide-mitchellh-mapstructure-product-direction.md`.
-  It authorizes only one bounded mapstructure product decision. It may not reopen
-  go-homedir, Promptui, emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or an
-  earlier decision, combine another group, write outside the managed scratch
-  root, or begin P8.
+  no genuine supported owner. Mapstructure option 1 now explicitly retains
+  selected indirect, production-loaded v1.5.0 under its own unqualified,
+  target-specific, non-transferable exception without source or dependency
+  change. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-22T211112+0200-evaluate-modern-go-concurrent-dependency.md`.
+  It authorizes only one bounded modern-go/concurrent dependency evaluation.
+  It may not reopen mapstructure, go-homedir, Promptui, emoji/v2, kr/text,
+  kr/pty, kr/pretty, Cast, Viper, or an earlier decision, combine another
+  group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -87,6 +89,7 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 selected option 1 separately for exact selected,
+indirect, production-loaded, unqualified mapstructure v1.5.0; exact selected,
 direct, production-loaded, runtime-relevant, unqualified go-homedir v1.1.0
 and Promptui v0.9.0;
 exact selected, direct-indirect, runtime-relevant, unqualified emoji/v2
@@ -102,7 +105,7 @@ accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
 No exact-path kr/pretty stable qualifies. Kr/pty v1.1.4 is highest behavior-
 qualified but lacks a genuine supported tidy-stable owner. Neither kr/text
-stable qualifies, and its matching fix is unreleased. All five recent option-1
+stable qualifies, and its matching fix is unreleased. All six recent option-1
 decisions retain the selected versions without changing any dependency
 selection. No canonical emoji/v2 stable qualifies: all ten fail documented
 Fprintln and Errorf contracts, and v2.2.14 also requires Go 1.21. No canonical
@@ -110,9 +113,11 @@ Promptui stable qualifies for the recorded closure/output-error/race results.
 No canonical go-homedir stable qualifies for the recorded complete-upstream-
 gate result. No canonical mapstructure stable qualifies for the recorded
 ordinary slice-replacement result, and no exact-path stable has a genuine
-supported owner. P7 stops only for the prepared bounded product decision for
-selected exact-path `github.com/mitchellh/mapstructure v1.5.0`. P8 remains
-queued.
+supported owner. Mapstructure option 1 is final under its exact guards. P7
+continues only with the prepared bounded evaluation of graph-selected
+transitive exact
+`github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd`. P8
+remains queued.
 
 ## Mitchellh Mapstructure Evaluation
 
@@ -185,6 +190,65 @@ provenance, and blessed alternate-path owner; or stop P7 unresolved. Every
 task-owned scratch artifact was contained beneath the managed session root
 and removed; only the pre-existing launcher-owned Node compile cache remains.
 The decision successor was prepared but not executed; P8 remains queued.
+
+## Mitchellh Mapstructure Product Decision
+
+Option 1 is final. Exact selected indirect, production-loaded
+`github.com/mitchellh/mapstructure v1.5.0` is explicitly retained without
+source or dependency-metadata change under a mapstructure-specific,
+non-transferable exception. It remains unqualified and is not described as
+secure. No canonical exact-path stable qualifies and no stable has a genuine
+supported exact-path owner. Physical selection, indirectness, positive why,
+loading, and advisory absence are not qualification.
+
+Retention requires exact v1.5.0, main's indirect request, the other eight
+current/historical requests, every current requester selection, and each
+requester import or metadata-only boundary. Repository source retains zero
+target imports; target why remains `cmd -> Viper -> mapstructure`; Viper
+retains production/test imports; project code retains only its Viper config
+setup/read calls; and exactly one target package remains production/complete-
+test loaded under the recorded runtime-use boundary.
+
+The exact 17-release line, absent exact-path `/v2` and `/v3`, archived
+`mitchellh/mapstructure` repository/owner/status/license/default-branch
+identity, alternate-path `go-viper/mapstructure/v2` fork identity, and every
+completed release/tag/commit/tree/signature/archive/sumdb/module fact remain
+guards. The v1.2.0 tag-mutation record remains exact and selected v1.5.0
+unaffected. There remains no replacement, retraction, deprecation, eligible
+exact-path alternate, or genuine supported exact-path owner.
+
+All 17 stables remain unqualified for the completed ordinary stale-slice
+result; v1.2.2 retains its repeated-suite failure; and the branch fixes remain
+unreleased and ineligible. No future qualified Go-1.18-compatible exact-path
+stable, supported owner, or compatible genuine route has been accepted.
+
+Exact base 234/3,599/355/429/197/41/1,067, real module hashes, the 432-line
+and common 52/948-line tidy identities, no-op v1.5.0 projection, exact Go
+1.18/1.26.7 identities, source/API/CLI/help/launcher/Make/quality contracts,
+and accepted 27/27 Q0-Q2 PASS at L2 remain guards. All 42 earlier selections
+and 247 incoming edges remain exact at
+`4caf9e803c1b324d2afcd17b9ba664e6d2c8d220cd74b264484107ea3dd93f42`.
+Including mapstructure gives 43 guarded selections and 256 incoming edges at
+`8f05ff3b4755e6582db200d1d457b6e8b52e84983d9f634976f76b0d731d298f`.
+Every go-homedir, Promptui, emoji/v2, kr/text, and kr/pty expiry guard remains
+exact.
+
+Any target/request/requester-import/owner-route, root/why/import/load/runtime,
+graph/module/tidy/Go-floor, source/behavior/closure, repository/release/owner,
+advisory/finding, qualification, supported-owner, earlier guard, closed-
+exception, or compatible-route change expires retention and requires a fresh
+mapstructure dependency and product decision before merge. Any other closed-
+exception change separately requires its corresponding fresh decision. The
+exception is not a security claim and cannot transfer.
+
+Guard-only revalidation reproduced exact continuity, Go/module/tidy, all nine
+requests, route/import/load, 42-selection/247-edge and 43-selection/256-edge,
+all five earlier closed-exception, public owner/release, narrow target/guard
+advisory, Go-index, memberlist CNA, and final exact-Go gate identities. The
+completed source/behavior/closure/upstream/cross-build/projection/archive/
+govulncheck evaluation was not repeated and no owner study ran. No source or
+dependency metadata changed. P7 continues only with the prepared bounded
+modern-go/concurrent evaluation; P8 remains queued.
 
 ## Kr Pty Evaluation
 
@@ -5046,8 +5110,10 @@ bounded mapstructure v1.5.0 evaluation; P8 remains queued.
 
 ## Next Bounded Objective
 
-Evaluate only the next unanswered selected queue item, indirect exact-path
-`github.com/mitchellh/mapstructure v1.5.0`, and preserve every go-homedir,
-Promptui, emoji/v2, kr/text, and kr/pty expiry guard. Do not reopen
-go-homedir, kr/pretty, Cast, or any earlier decision, combine another group,
-write outside the managed scratch root, or begin P8.
+Evaluate only the next unanswered selected queue item, graph-selected
+transitive exact
+`github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd`, and
+preserve every mapstructure, go-homedir, Promptui, emoji/v2, kr/text, and
+kr/pty expiry guard. Do not reopen mapstructure, go-homedir, kr/pretty, Cast,
+Viper, or any earlier decision, combine another group, write outside the
+managed scratch root, or begin P8.

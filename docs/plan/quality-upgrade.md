@@ -5374,11 +5374,14 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded evaluation of selected direct exact-
-path `github.com/mitchellh/go-homedir v1.1.0`. Option 1 now explicitly retains
-exact direct/runtime-relevant unqualified Promptui v0.9.0, exact direct-
-indirect/runtime-relevant unqualified emoji/v2 v2.2.12, and exact inherited/
-unloaded unqualified kr/text v0.2.0, kr/pty v1.1.1, kr/pretty v0.3.1,
+Status: active for the prepared bounded evaluation of graph-selected
+transitive exact
+`github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd`.
+Option 1 now explicitly retains exact indirect/production-loaded unqualified
+mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
+v1.1.0 and Promptui v0.9.0, exact direct-indirect/runtime-relevant
+unqualified emoji/v2 v2.2.12, and exact inherited/unloaded unqualified kr/text
+v0.2.0, kr/pty v1.1.1, kr/pretty v0.3.1,
 kr/logfmt
 v0.0.0-20140226030751-b84e30acd515, kr/fs v0.1.0,
 go-windows-terminal-sequences v1.0.1, gotool v1.0.0, and errcheck v1.5.0 under
@@ -5394,11 +5397,12 @@ highest behavior-qualified Go-1.18-compatible exact-path stable, but no
 genuine supported tidy-stable project owner requests it; v1.1.5-v1.1.8 fail
 ordinary documented Start behavior. Neither exact-path kr/text stable
 qualifies, and its matching adjacent-overlong-word fix remains unreleased.
-The Promptui, emoji/v2, kr/text, and kr/pty option-1 decisions are final under
-their separate exact expiry guards below. No canonical kyokomi/emoji/v2 or
-Promptui stable qualifies; their decisions retain exact selected v2.2.12 and
-v0.9.0 without source or dependency change. The go-homedir evaluation
-successor is prepared but was not executed. P8 remains queued.
+The mapstructure, go-homedir, Promptui, emoji/v2, kr/text, and kr/pty option-1
+decisions are final under their separate exact expiry guards below. No
+canonical mapstructure, go-homedir, kyokomi/emoji/v2, or Promptui stable
+qualifies; their decisions retain exact selected v1.5.0, v1.1.0, v2.2.12,
+and v0.9.0 without source or dependency change. The modern-go/concurrent
+evaluation successor is prepared but was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14005,6 +14009,56 @@ Mitchellh Mapstructure evaluation (2026-09-22):
   decision successor was prepared but not executed. Every task-owned scratch
   artifact was contained beneath the managed session root and removed; only
   the pre-existing launcher-owned Node compile cache remains.
+
+Mitchellh Mapstructure product decision (2026-09-22):
+
+- Option 1 was selected. Exact selected indirect, production-loaded
+  `github.com/mitchellh/mapstructure v1.5.0` is explicitly retained without
+  changing product source, `go.mod`, or `go.sum`. It remains unqualified: no
+  canonical exact-path stable qualifies and no stable has a genuine supported
+  exact-path owner. Indirectness, positive why, production loading, and
+  advisory absence are not qualification.
+- The mapstructure-specific, non-transferable exception accepts only the
+  completed 17-release/repository/source, ordinary behavior, API/closure/
+  platform, exact owner/request, Viper route, why/import/load/runtime, graph/
+  tidy/projection/Go-floor, earlier-guard, closed-exception, and advisory
+  findings. It accepts no new defect or advisory and transfers or broadens no
+  exception.
+- Retention requires exact v1.5.0, main's indirect request and the other eight
+  current/historical requests, every current requester selection, every
+  requester import or metadata-only boundary, zero repository imports, the
+  positive `cmd -> Viper -> target` route, Viper production/test imports,
+  project Viper config calls, one production/complete-test target package,
+  and the recorded load/runtime-use boundary.
+- It also requires the exact 17-release line, absent exact-path `/v2` and
+  `/v3`, archived exact repository/owner/status/license/default-branch,
+  blessed alternate-path fork, and completed release/tag/commit/tree/
+  signature/archive/sumdb/module identities; the v1.2.0 tag-mutation record;
+  no replacement/retraction/deprecation or eligible exact-path alternate; all
+  17 stables remaining unqualified for the stale-slice result; the v1.2.2
+  repeated-suite result; and no future qualified exact-path stable, supported
+  exact-path owner, or compatible genuine route.
+- Exact base 234/3,599/355/429/197/41/1,067, real module hashes, the 432-line
+  and common 52/948-line tidy identities, no-op v1.5.0 projection, exact Go
+  1.18/1.26.7, source/API/CLI/help/launcher/Make/quality contracts, accepted
+  27/27 Q0-Q2 PASS at L2, all 42 earlier selections/247 edges, and every
+  go-homedir, Promptui, emoji/v2, kr/text, and kr/pty expiry guard must remain
+  exact. Including mapstructure gives 43 selections and 256 incoming edges at
+  `8f05ff3b4755e6582db200d1d457b6e8b52e84983d9f634976f76b0d731d298f`.
+- Any target/request/requester-import/owner-route, root/why/import/load/runtime,
+  graph/module/tidy/Go-floor, source/behavior/closure, repository/release/
+  owner, advisory/finding, qualification, supported-owner, earlier guard,
+  closed-exception, or compatible-route change expires retention and requires
+  a fresh mapstructure dependency and product decision before merge. Any
+  other closed-exception change separately requires its corresponding fresh
+  decision. This exception is not a security claim and cannot transfer.
+- Guard-only revalidation reproduced exact continuity, Go/module/tidy,
+  request/route/import/load, 42-selection/247-edge and 43-selection/256-edge,
+  closed-exception, owner/release, narrow advisory, Go-index, memberlist CNA,
+  and final exact-Go gate identities. Completed source/behavior/closure/
+  upstream/cross-build/projection/archive/govulncheck work was not repeated
+  and no owner study ran. P7 continues only with the prepared bounded
+  modern-go/concurrent evaluation; P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
