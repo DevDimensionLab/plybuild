@@ -5374,12 +5374,11 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active for the prepared bounded product decision on selected direct
-exact-path `github.com/manifoldco/promptui v0.9.0` after its completed
-evaluation found no qualifying canonical stable. Option 1 explicitly
-retained exact direct-indirect/runtime-relevant unqualified emoji/v2 v2.2.12
-and exact inherited/unloaded unqualified kr/text v0.2.0, kr/pty v1.1.1,
-kr/pretty v0.3.1,
+Status: active for the prepared bounded evaluation of selected direct exact-
+path `github.com/mitchellh/go-homedir v1.1.0`. Option 1 now explicitly retains
+exact direct/runtime-relevant unqualified Promptui v0.9.0, exact direct-
+indirect/runtime-relevant unqualified emoji/v2 v2.2.12, and exact inherited/
+unloaded unqualified kr/text v0.2.0, kr/pty v1.1.1, kr/pretty v0.3.1,
 kr/logfmt
 v0.0.0-20140226030751-b84e30acd515, kr/fs v0.1.0,
 go-windows-terminal-sequences v1.0.1, gotool v1.0.0, and errcheck v1.5.0 under
@@ -5395,11 +5394,11 @@ highest behavior-qualified Go-1.18-compatible exact-path stable, but no
 genuine supported tidy-stable project owner requests it; v1.1.5-v1.1.8 fail
 ordinary documented Start behavior. Neither exact-path kr/text stable
 qualifies, and its matching adjacent-overlong-word fix remains unreleased.
-All three option-1 decisions are final under their separate exact expiry
-guards below. No canonical kyokomi/emoji/v2 stable qualifies; its option-1
-decision retains exact selected v2.2.12 without source or dependency change.
-The Promptui product-decision successor is prepared but was not executed. P8
-remains queued.
+The Promptui, emoji/v2, kr/text, and kr/pty option-1 decisions are final under
+their separate exact expiry guards below. No canonical kyokomi/emoji/v2 or
+Promptui stable qualifies; their decisions retain exact selected v2.2.12 and
+v0.9.0 without source or dependency change. The go-homedir evaluation
+successor is prepared but was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -13785,6 +13784,53 @@ Manifoldco Promptui evaluation (2026-09-22):
   route; or stopping P7 unresolved. Do not repeat the evaluation, run the
   study during the decision, transfer an exception, combine another group, or
   begin P8. The decision successor was prepared but not executed.
+
+Manifoldco Promptui product decision (2026-09-22):
+
+- Option 1 was selected. Exact selected, direct, production-loaded, runtime-
+  relevant `github.com/manifoldco/promptui v0.9.0` is explicitly retained
+  without changing product source, `go.mod`, or `go.sum`. It remains
+  unqualified: no canonical exact-path stable qualifies. Directness, positive
+  why, runtime loading, and advisory absence are not qualification.
+- The Promptui-specific, non-transferable exception accepts only the completed
+  twelve-release/repository/source, ordinary behavior, API/closure/platform,
+  owner/request, `cmd/root.go` route/use, why/import/load/runtime, graph/tidy/
+  Go-floor, earlier-guard, closed-exception, and advisory findings. It accepts
+  no new defect or advisory and transfers or broadens no exception.
+- Retention requires exact v0.9.0 and main's sole direct request; Promptui's
+  four exact requirements; main's direct readline v1.5.1 MVS selection; the
+  historical v0.8.0 request/removal and v0.9.0 reintroduction; sole import,
+  PromptTemplates and two Prompt.Run uses; positive main `cmd` -> target route;
+  three production/complete-test target packages; and runtime relevance.
+- It also requires the exact v0.1.0-v0.9.0 line, absent `/v2` and `/v3`, exact
+  repository/owner/status/license/default-branch and completed release/tag/
+  commit/tree/signature/archive/sumdb/module identities, nine Release objects,
+  no replacement/retraction/deprecation or eligible alternate, every stable
+  remaining unqualified for the completed closure/output-error/race results,
+  and no future qualified Go-1.18-compatible stable or supported route.
+- Exact base 234/3,599/355/429/197/41/1,067, real module hashes, the 432-line
+  and common 52/948-line tidy identities, no-op v0.9.0 projection, exact Go
+  1.18/1.26.7, source/API/CLI/help/launcher/Make/quality contracts, accepted
+  27/27 Q0-Q2 PASS at L2, all 40 earlier selections/239 edges, and every
+  emoji/v2, kr/text, and kr/pty expiry guard must remain exact. Including
+  Promptui gives 41 selections/240 incoming edges at
+  `a4e6042216821077b7a74472a6fcdc60d70644d07a805f6a6e99db1140a71563`.
+- Any target/request/import/owner-route, root/why/import/load/runtime, graph/
+  module/tidy/Go-floor, earlier or closed-exception guard, advisory/finding,
+  independent defect, repository/release/owner, qualification, supported-
+  owner, or compatible-route change expires retention and requires a fresh
+  Promptui decision before merge. Any emoji/v2, kr/text, or kr/pty change
+  separately requires its own fresh decision. No owner study, root change,
+  branch/pseudo-version, alternate path, dependency edit, workaround,
+  unrelated selection, implementation, or transferred exception is
+  authorized.
+- Guard-only revalidation reproduced exact continuity, module/tidy, request/
+  route/why/import/load, 40-selection/239-edge and 41-selection/240-edge,
+  closed-exception, official Go 1.26.7, proxy/repository/release, target/
+  readline/guard advisory, Go-index, memberlist CNA, and final exact-Go gate
+  identities. Completed behavior/source/closure/upstream/projection/archive/
+  govulncheck work was not repeated and no owner study ran. P7 continues only
+  with the prepared bounded go-homedir evaluation; P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

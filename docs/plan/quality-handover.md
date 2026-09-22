@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T17:16:32+02:00
+Generated: 2026-09-22T18:00:17+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,11 +8,11 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Promptui evaluation
-  began from clean HEAD `7f8a3a8dbeaa07ff78a5d384f51d3df72cb538ef`, parent
-  `d3cb8122dcca2e06b29787facc3152bf2e38b947`, tree
-  `962beb97bf678f87c6bdd43c440522a17e5f82f2`. That handoff changes exactly the
-  launcher, answered emoji/v2 decision archive, then-NEXT Promptui evaluation
+  `codex/upgrade-quality`, base master at `5635d50`. The Promptui decision
+  began from clean HEAD `12881ba88e843657cd360c508937eeb00c38742c`, parent
+  `7f8a3a8dbeaa07ff78a5d384f51d3df72cb538ef`, tree
+  `a4f1996976f2d9c2ddaaf217b081b82f1d0eed80`. That handoff changes exactly the
+  launcher, answered Promptui evaluation archive, then-NEXT Promptui decision
   archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
   ancestry, exact changed set, reciprocal archive history, latest Google UUID
   ancestry, exact Go identities, module hashes/counts/tidy projection, target
@@ -53,19 +53,21 @@ session diary.
   v1.1.1 under separate target-specific, non-transferable exceptions; both
   remain unqualified. Option
   1 separately retains exact inherited, unloaded kr/pretty v0.3.1 under its
-  own exception. Emoji/v2 option 1 now explicitly retains exact selected,
+  own exception. Emoji/v2 option 1 explicitly retains exact selected,
   direct-indirect, runtime-relevant v2.2.12 under its own unqualified, target-
   specific, non-transferable exception without source or dependency change.
-  No canonical exact-path Promptui stable qualifies: v0.9.0 is latest and
-  Go-1.18-compatible but loses an ordinary documented writer error and races
+  Promptui option 1 explicitly retains exact selected, direct, production-
+  loaded, runtime-relevant v0.9.0 under its own unqualified, target-specific,
+  non-transferable exception without source or dependency change. No
+  canonical exact-path Promptui stable qualifies: v0.9.0 is latest and Go-
+  1.18-compatible but loses an ordinary documented writer error and races
   internally during a single Prompt run; v0.3.2-v0.8.0 share both failures,
-  while v0.1.0-v0.3.1 lack a complete standalone module closure. Source and
-  dependency metadata remain unchanged. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T171632+0200-decide-manifoldco-promptui-product-direction.md`.
-  It authorizes only one bounded Promptui product decision. It may not repeat
-  the evaluation, run the named owner study during the decision, reopen
-  emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or an earlier decision, combine
-  another group, write outside the managed scratch root, or begin P8.
+  while v0.1.0-v0.3.1 lack a complete standalone module closure. The sole
+  NEXT archive is `docs/plan/agent-sessions/2026-09-22T180017+0200-evaluate-mitchellh-go-homedir-dependency.md`.
+  It authorizes only one bounded go-homedir dependency evaluation. It may not
+  reopen Promptui, emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or an earlier
+  decision, combine another group, write outside the managed scratch root, or
+  begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -73,12 +75,12 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 now stops for the Promptui product decision after its
-bounded evaluation found no qualifying canonical exact-path stable. P7
-selected option 1 separately for exact selected,
-direct-indirect, runtime-relevant, unqualified emoji/v2 v2.2.12 and exact
-inherited, unloaded, unqualified kr/text v0.2.0 and kr/pty v1.1.1 under target-
-specific, non-transferable exceptions. The same is true for kr/pretty v0.3.1 and kr/logfmt
+P2A-P6 are complete. P7 selected option 1 separately for exact selected,
+direct, production-loaded, runtime-relevant, unqualified Promptui v0.9.0;
+exact selected, direct-indirect, runtime-relevant, unqualified emoji/v2
+v2.2.12; and exact inherited, unloaded, unqualified kr/text v0.2.0 and kr/pty
+v1.1.1 under target-specific, non-transferable exceptions. The same is true
+for kr/pretty v0.3.1 and kr/logfmt
 `v0.0.0-20140226030751-b84e30acd515` and kr/fs v0.1.0. Exact inherited/unloaded
 go-windows-terminal-sequences v1.0.1, gotool v1.0.0, errcheck v1.5.0,
 httprouter v1.2.0, jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
@@ -88,11 +90,13 @@ accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
 and all earlier retained-module decisions remain final under separate guards.
 No exact-path kr/pretty stable qualifies. Kr/pty v1.1.4 is highest behavior-
 qualified but lacks a genuine supported tidy-stable owner. Neither kr/text
-stable qualifies, and its matching fix is unreleased. All three option-1
+stable qualifies, and its matching fix is unreleased. All four recent option-1
 decisions retain the selected versions without changing any dependency
 selection. No canonical emoji/v2 stable qualifies: all ten fail documented
-Fprintln and Errorf contracts, and v2.2.14 also requires Go 1.21. P7 continues
-only with the prepared bounded Promptui product decision. P8 remains queued.
+Fprintln and Errorf contracts, and v2.2.14 also requires Go 1.21. No canonical
+Promptui stable qualifies for the recorded closure/output-error/race results.
+P7 continues only with the prepared bounded go-homedir evaluation. P8 remains
+queued.
 
 ## Kr Pty Evaluation
 
@@ -4758,12 +4762,76 @@ remain exact. Advisory absence does not qualify Promptui. Final exact-Go
 verify/build/count-one/race/vet pass; accepted quality remains 27/27 Q0-Q2
 PASS at L2.
 
+## Manifoldco Promptui Product Decision
+
+Option 1 is final. Exact selected
+`github.com/manifoldco/promptui v0.9.0` is explicitly retained as a direct,
+production-loaded, runtime-relevant dependency under a Promptui-specific,
+non-transferable exception. It remains unqualified and is not described as
+secure. No canonical exact-path stable qualifies: v0.9.0 is latest and Go-
+1.18-compatible but loses an ordinary documented output error and races
+internally during one supported Prompt run; v0.3.2-v0.8.0 share both failures,
+while v0.1.0-v0.3.1 lack a complete standalone module closure. Physical
+selection, positive why, runtime loading, and advisory absence are not
+qualification or implicit acceptance.
+
+The exception accepts only the completed twelve-release/repository/source,
+ordinary behavior, API/closure/platform, owner/request, `cmd/root.go` import/
+use and route, why/import/load/runtime, graph/tidy/Go-floor, earlier-guard,
+closed-exception, and advisory findings. It transfers or broadens no
+exception and accepts no uncharacterized behavior, new advisory, or
+independent defect.
+
+Retention requires exact selected v0.9.0 and main's sole direct request;
+Promptui's four exact requirements; main's direct readline v1.5.1 MVS
+selection; the historical main v0.8.0 request/removal and v0.9.0
+reintroduction; sole `cmd/root.go` import; PromptTemplates and value/
+confirmation Prompt.Run uses; positive main `cmd` -> target route; root,
+list, and screenbuf production/complete-test loads; and runtime relevance.
+
+It also requires the exact v0.1.0-v0.9.0 line, absent `/v2` and `/v3`, exact
+repository/owner/status/license/default-branch and completed release/tag/
+commit/tree/signature/archive/sumdb/module identities, nine GitHub Release
+objects, no replacement/retraction/deprecation or eligible alternate, every
+stable remaining unqualified for the completed closure/output-error/race
+results, and no future qualified Go-1.18-compatible stable or supported
+route.
+
+The exception further requires exact base 234/3,599/355/429/197/41/1,067
+state; real module hashes; the 432-line and common 52/948-line tidy identities;
+the no-op v0.9.0 projection; exact Go 1.18/1.26.7; source/API/CLI/help/
+launcher/Make/quality contracts; accepted 27/27 Q0-Q2 PASS at L2; all 40
+earlier selections and 239 incoming edges at
+`deb453cac4dcb6df8a6b502f6f20aba72eaeb415ac2ff40f873a677113cf9d4a`;
+and every emoji/v2, kr/text, and kr/pty expiry guard. Including Promptui gives
+41 guarded selections and 240 incoming edges at
+`a4e6042216821077b7a74472a6fcdc60d70644d07a805f6a6e99db1140a71563`.
+
+Any target/request/import/owner-route, root/why/import/load/runtime, graph/
+module/tidy/Go-floor, earlier or closed-exception guard, advisory/finding,
+independent defect, repository/release/owner, qualification, supported-owner,
+or compatible-route change expires retention and requires a fresh Promptui
+dependency and product decision before merge. Any emoji/v2, kr/text, or
+kr/pty guard change separately requires its own fresh decision. No owner
+study, root change, branch/pseudo-version, alternate path, dependency edit,
+workaround, unrelated selection, implementation, or transferred exception is
+authorized.
+
+Guard-only revalidation reproduced exact continuity, module/tidy, request/
+route/why/import/load, 40-selection/239-edge and 41-selection/240-edge,
+closed-exception, official Go 1.26.7, proxy/repository/release, target/
+readline/guard advisory, Go-index, memberlist CNA, and final exact-Go gate
+identities. Completed behavior/source/closure/upstream/projection/archive/
+govulncheck work was not repeated and no owner study ran. No source or
+dependency metadata changed.
+
 ## Next Bounded Objective
 
-Choose exactly one Promptui product direction: retain exact v0.9.0 under a
-target-specific unqualified exception; authorize exactly one later
-measurement-only `Ply Direct Promptui Ownership Study` of the existing main ->
-direct target request and `cmd/root.go` runtime route; or stop P7 unresolved.
-Do not repeat the evaluation, run the study during the decision, change source
-or dependency metadata, transfer an exception, combine another dependency
-group, or begin P8.
+Independently evaluate selected direct exact-path
+`github.com/mitchellh/go-homedir v1.1.0` as the sole next bounded P7
+dependency group. Resolve its canonical exact-path stable line, qualification,
+complete minimal closure, requests/routes/import/load/runtime facts, project
+projection, and fresh advisory identities without reopening Promptui,
+emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or any earlier decision. Implement
+at most one exact dependency-only qualified selection; do not combine another
+group or begin P8.
