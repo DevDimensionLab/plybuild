@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-22T08:44:21+02:00
+Generated: 2026-09-22T09:29:32+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The kr/fs decision began
-  from clean HEAD `8e576d81de9521eb81aacdcc540d3f4b014baa11`, parent
-  `f12458f3e753abb2fe6b0420d345e3ef39b3af7f`, tree
-  `4c8edcd542d43b432dac579bdb819df8f6b42e9d`. That handoff changes exactly the
-  launcher, answered kr/fs evaluation archive, then-NEXT kr/fs decision
+  `codex/upgrade-quality`, base master at `5635d50`. The kr/logfmt evaluation
+  began from clean HEAD `f7d5b3a94833a92b5d5b5a48b09c33e2dcba9e18`, parent
+  `8e576d81de9521eb81aacdcc540d3f4b014baa11`, tree
+  `8a8eef0cca484c7566180d034ff9ce0b37f17399`. That handoff changes exactly the
+  launcher, answered kr/fs decision archive, then-NEXT kr/logfmt evaluation
   archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal 252-archive history, latest Google
+  ancestry, exact changed set, reciprocal 253-archive history, latest Google
   UUID ancestry, exact Go identity, module hashes, target and earlier guards,
   fresh advisory identities, and launcher check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
@@ -24,14 +24,15 @@ session diary.
   and `go.sum`, with three insertions and no deletions. Consul API, Gateway,
   and every retained group since Google UUID have no dependency implementation
   or metadata commit.
-- The kr/fs decision/evaluation, go-windows-terminal-sequences decision/evaluation,
-  gotool decision/evaluation, errcheck decision/evaluation, httprouter decision/evaluation, jtolds/gls
-  decision/evaluation, go-junit-report decision/evaluation, json-iterator
-  decision/evaluation, clockwork decision/evaluation, demangle decision/
-  evaluation, strcase decision/evaluation, integrated memberlist migration,
-  memberlist ownership/final-direction decisions, Serf study, memberlist
-  evaluation, and every earlier archive are answered. Option 1 explicitly
-  retains exact inherited, unloaded kr/fs v0.1.0,
+- The kr/logfmt evaluation, kr/fs decision/evaluation, go-windows-terminal-
+  sequences decision/evaluation, gotool decision/evaluation, errcheck
+  decision/evaluation, httprouter decision/evaluation, jtolds/gls decision/
+  evaluation, go-junit-report decision/evaluation, json-iterator decision/
+  evaluation, clockwork decision/evaluation, demangle decision/evaluation,
+  strcase decision/evaluation, integrated memberlist migration, memberlist
+  ownership/final-direction decisions, Serf study, memberlist evaluation, and
+  every earlier archive are answered. Option 1 explicitly retains exact
+  inherited, unloaded kr/fs v0.1.0,
   go-windows-terminal-sequences v1.0.1,
   gotool v1.0.0, errcheck v1.5.0,
   httprouter v1.2.0,
@@ -39,13 +40,14 @@ session diary.
   v1.1.12, and clockwork v0.1.0 under separate target-specific exceptions;
   none is qualified and no implementation was retained. Stable httprouter
   v1.3.0 qualifies but has no genuine supported tidy-stable project owner. No
-  exact-path go-windows-terminal-sequences or kr/fs stable qualifies; source
-  and dependency metadata remain unchanged. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-22T084421+0200-evaluate-kr-logfmt-dependency.md`.
-  It makes only the bounded kr/logfmt evaluation. It must preserve the kr/fs
-  exception and every earlier decision, may not manufacture a direct root or
-  parent change, combine another group, write outside the managed scratch root,
-  or begin P8.
+  exact-path go-windows-terminal-sequences or kr/fs stable qualifies, and no
+  exact-path kr/logfmt release qualifies; source and dependency metadata remain
+  unchanged. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-22T092932+0200-decide-kr-logfmt-product-direction.md`.
+  It makes only the bounded kr/logfmt product decision. It must preserve the
+  kr/fs exception and every earlier decision, may not repeat completed target
+  behavior, manufacture a direct root, implement a parent change, combine
+  another group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -53,18 +55,103 @@ session diary.
 
 ## Roadmap And Guarded Decisions
 
-P2A-P6 are complete. P7 selected option 1 for kr/fs: exact inherited, unloaded
-v0.1.0 is explicitly retained only under its target-specific, non-transferable
-exception and remains unqualified. Exact inherited/unloaded go-windows-
-terminal-sequences v1.0.1, gotool v1.0.0, errcheck v1.5.0, httprouter v1.2.0,
-jtolds/gls v4.20.0+incompatible,
-go-junit-report v0.9.1, json-iterator v1.1.12, and clockwork v0.1.0 remain
-accepted only under their own target-specific exceptions and are not
-qualified. No exact-path stable kr/fs release qualifies. Product source and
-dependency metadata remain unchanged. P7 continues only with the prepared
-bounded kr/logfmt evaluation. Exact Go 1.26.7, every accepted dependency move
-through Google UUID v1.4.0, qualified go-cleanhttp, and all earlier retained-
-module decisions remain final under separate guards. P8 remains queued.
+P2A-P6 are complete. No exact-path kr/logfmt release qualifies; product source
+and dependency metadata remain unchanged, and P7 stops for the prepared
+bounded kr/logfmt product decision. P7 selected option 1 for kr/fs: exact
+inherited, unloaded v0.1.0 is explicitly retained only under its target-
+specific, non-transferable exception and remains unqualified. Exact inherited/
+unloaded go-windows-terminal-sequences v1.0.1, gotool v1.0.0, errcheck v1.5.0,
+httprouter v1.2.0, jtolds/gls v4.20.0+incompatible, go-junit-report v0.9.1,
+json-iterator v1.1.12, and clockwork v0.1.0 remain accepted only under their
+own target-specific exceptions and are not qualified. Exact Go 1.26.7, every
+accepted dependency move through Google UUID v1.4.0, qualified go-cleanhttp,
+and all earlier retained-module decisions remain final under separate guards.
+P8 remains queued.
+
+## Kr Logfmt Evaluation
+
+No exact-path release qualifies. The public proxy version list is empty and
+the repository has no tags or GitHub Releases. Selected
+`v0.0.0-20140226030751-b84e30acd515` and proxy `@latest`
+`v0.0.0-20210122060352-19f9bcb100e6` are the only serious candidates.
+Selected has no Go directive or requirements; latest adds only `go 1.14`.
+Neither has a retraction, deprecation, or replacement.
+
+Exact go-import resolves without redirect to the public enabled unarchived
+non-fork MIT `kr/logfmt` repository. Selected is unsigned commit
+`b84e30acd515aadc4b783ad4ff83aff3299bdfe0`; `main`/latest is its direct
+GitHub-verified signed child
+`19f9bcb100e6bcb308b5db29c682de01e9b3f2e6`, adding only `LICENSE` and
+`go.mod`. All Go source and tests are byte-identical. Divergent `maybe` is
+older/unsigned/untagged; exact `/v2` and `/v3` lines do not exist; and
+`github.com/go-logfmt/logfmt` is a distinct unauthorized alternate path.
+Proxy and corresponding Git trees agree byte for byte.
+
+Both candidates are the same single standard-library-only parser package and
+preserve Go 1.18. They export `ErrUnterminatedString`, `Unmarshal`, handler and
+struct-handler APIs, plus invalid-target/type errors; there is no encoder or
+formatter API. Exact Go 1.26.7 and contained Go 1.18.10 pass upstream build,
+repeated tests/race, vet, supported cross-builds, and all non-disqualifying
+bounded ordinary fixtures. There is no cgo, generated source, global mutable
+state, network/subprocess boundary, platform source, or library-owned
+resource.
+
+Three exported ordinary behavior contracts fail identically in selected and
+latest: a non-struct `&int` target panics despite the explicit promise to
+return an error; documented support for all numeric types rejects `uint8`;
+and ordinary value `128` silently wraps to `-128` in `int8`. The latest
+candidate cannot repair these because its Go source is byte-exact with
+selected. The evaluation used only small ordinary records; there was no
+fuzzing, stress, adversarial input, security reproduction, or exploitability
+analysis.
+
+MVS selects exact selected through three requests: go-logfmt v0.4.0,
+Prometheus Common v0.4.1, and Prometheus TSDB v0.7.1. All genuine routes begin
+at direct mvn-pom-mutator v0.2.3: directly through TSDB v0.7.1, or through
+historical Viper v1.10.1 -> go-metrics v0.3.10 -> Common v0.9.1 and then
+go-logfmt v0.4.0, or client_golang v1.0.0 -> Common v0.4.1. Go-logfmt imports
+the target only from a build-tagged fuzz file and benchmark. Common v0.4.1 and
+TSDB v0.7.1 have stale indirect requirements and no Go imports.
+
+Target why is negative, repository imports and production/complete-test loads
+are zero, and there is no runtime reachability. Disposable selected/latest
+direct roots manufactured only one main edge and sums, preserved all loads,
+and were removed by tidy. Latest's only selection delta was selected ->
+latest, and tidy restored inherited selected because no genuine owner requests
+latest. No direct root, projection, owner change, or dependency commit was
+retained.
+
+The project remains 234/3,599/355/429/197/41/1,067 with exact module hashes
+and the recorded 432-line tidy projection. All 35 earlier guarded selections
+and their 225 incoming edges retain SHA-256
+`5dae96771b3994a9ce1999f8d0487f152d94adb3b2d0bb467b18054be39dc284`;
+every guarded why remains negative and imports/loads zero.
+
+Fresh exact OSV/GitHub/repository-advisory and isolated govulncheck evidence
+has no candidate finding. Base and both disposable project populations are
+identical at 30 module, 22 package, 20 symbol, and 20 test-symbol OSVs with no
+target trace. Earlier guard advisories, the exact 1,402-record Go index, and
+PUBLISHED memberlist CNA response remain unchanged. Advisory absence is not
+qualification.
+
+Product source and dependency metadata remain unchanged. No changed-selection
+scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS at L2. Final
+exact-Go verify/build/count-one/race/vet pass under required `umask 022`. The
+initial invocation inherited `umask 077` and produced only known mode-
+sensitive fixture mismatches; the required rerun passed. P7 stops for one
+reciprocal product choice after the reciprocal 254-archive chain, sole NEXT
+state, launcher/archive prompt mirror, exact five-file documentation-only
+changed set, diff checks, and launcher check pass. Every task-owned scratch
+artifact was contained beneath the managed session root and removed; only its
+pre-existing launcher-owned Node compile cache remains.
+
+The choice is: retain exact selected/inherited/unloaded unqualified
+`v0.0.0-20140226030751-b84e30acd515` under a target-specific exception;
+authorize one later measurement-only study of the shortest current direct
+mvn-pom-mutator v0.2.3 -> TSDB v0.7.1 request route; or stop P7 unresolved.
+Do not repeat completed behavior, add a direct root, promote latest or
+go-logfmt, change a parent/source/metadata, transfer an exception, combine
+another group, or begin P8.
 
 ## Kr Fs Evaluation
 
