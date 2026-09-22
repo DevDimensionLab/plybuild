@@ -1131,37 +1131,40 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-22T162048+0200-evaluate-manifoldco-promptui-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T162048+0200-evaluate-manifoldco-promptui-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T154700+0200-decide-kyokomi-emoji-v2-product-direction.md
+#|SESSION_ID=2026-09-22T171632+0200-decide-manifoldco-promptui-product-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T171632+0200-decide-manifoldco-promptui-product-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-22T162048+0200-evaluate-manifoldco-promptui-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 by independently evaluating selected direct exact-path
-#|`github.com/manifoldco/promptui v0.9.0` as exactly one bounded dependency
-#|group. Resolve its canonical exact-path release line and highest qualified
-#|Go-1.18-compatible stable from primary evidence. Implement one exact
-#|dependency-only changed selection only if the candidate, its complete minimal
-#|closure, and every earlier target-specific guard remain exact. Do not combine
-#|another dependency group or begin P8.
+#|Continue P7 by recording exactly one bounded product decision for selected
+#|direct exact-path `github.com/manifoldco/promptui v0.9.0`. The completed
+#|evaluation found that no canonical exact-path stable qualifies: v0.9.0 is the
+#|latest Go-1.18-compatible stable but loses an ordinary documented output error
+#|and races internally during a single supported Prompt run; v0.3.2-v0.8.0
+#|repeat those failures, while v0.1.0-v0.3.1 lack a complete standalone release
+#|module closure. Choose only one of the three directions below, apply that
+#|choice exactly, and prepare only its reciprocal successor if the choice
+#|requires one. Do not repeat the dependency evaluation, evaluate another
+#|dependency group, or begin P8.
 #|
-#|# Defensive Scope
+#|# Defensive Decision Scope
 #|
-#|This is an ordinary dependency-quality evaluation. Use public metadata,
-#|static source/repository records, project graph/build commands, upstream
-#|tests, and only small bounded ordinary prompt/text/terminal fixtures needed by
-#|documented behavior. Do not fuzz, stress, probe resource exhaustion, create
-#|oversized, deeply nested, cyclic, malformed, adversarial, or escape-sequence
-#|payloads, reproduce a security issue, or perform security or exploitability
-#|analysis.
+#|This is an ordinary dependency-quality product decision. Use only the
+#|completed public release/repository metadata, static source and graph facts,
+#|small bounded ordinary prompt/text/terminal behavior results, project
+#|projection, and advisory identities recorded here and in the answered
+#|evaluation. Do not fuzz, stress, probe resource exhaustion, create oversized,
+#|deeply nested, cyclic, malformed, adversarial, or escape-sequence payloads,
+#|reproduce a security issue, or perform security or exploitability analysis.
 #|
-#|Every disposable cache, tool, archive, report, project copy, fixture, or
-#|advisory response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Never
-#|write to `/private/tmp`, `/tmp`, a sibling of the managed root, or another
-#|external root. Verify containment and remove task-owned scratch evidence
-#|before handoff.
+#|Every disposable cache, tool, report, project copy, fixture, or advisory
+#|response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Never write to
+#|`/private/tmp`, `/tmp`, a sibling of the managed root, or another external
+#|root. Verify containment and remove task-owned scratch evidence before
+#|handoff.
 #|
 #|# Authorized Roadmap
 #|
@@ -1170,37 +1173,98 @@ exit 70
 #|and target-specific option-1 decisions through exact selected, direct-
 #|indirect, runtime-relevant emoji/v2 v2.2.12. P8 remains queued.
 #|
-#|Emoji/v2 option 1 is exact, unqualified, target-specific, non-transferable,
-#|and final. All ten canonical exact-path stables fail the completed documented
-#|Fprintln and Errorf contracts; v2.2.14 also violates the Go 1.18 floor. Its
-#|selected and historical requests, go-term-markdown importer/use and supported
-#|route, why/import/load/runtime facts, repository/release/source identities,
-#|qualification results, graph/module/tidy/Go-floor state, projections,
-#|advisories, all earlier guards, and compatible-route conditions remain expiry
-#|guards. Any change requires a fresh emoji/v2 dependency and product decision
-#|before merge.
+#|Emoji/v2, kr/text, and kr/pty option 1 decisions are separately exact,
+#|unqualified, target-specific, non-transferable, and final. Their selected and
+#|historical requests, requester imports, complete routes, why/import/load/
+#|runtime facts, release/repository/source identities, qualification results,
+#|graph/module/tidy/Go-floor state, projections, advisories, all earlier guards,
+#|and compatible-route conditions remain expiry guards. Any change requires the
+#|corresponding fresh dependency and product decision before merge. Do not
+#|transfer an exception or reopen emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or
+#|an earlier decision.
 #|
-#|Kr/text and kr/pty option 1 decisions separately remain exact, unqualified,
-#|target-specific, non-transferable, and final under every recorded expiry
-#|guard. Any change separately requires the corresponding fresh dependency and
-#|product decision. Do not transfer an exception or reopen emoji/v2, kr/text,
-#|kr/pty, kr/pretty, Cast, or an earlier decision.
+#|# Completed Evaluation Is Final
 #|
-#|# Measurements At Start
-#|
-#|The emoji/v2 decision began from clean branch `codex/upgrade-quality` at
-#|handoff HEAD `d3cb8122dcca2e06b29787facc3152bf2e38b947`, parent
-#|`89b6c413eca06d5ddcc6e9d424da70d3bb324447`, tree
-#|`830c044d9fe8e80255361e36272008b69e262c42`. Exact Google UUID v1.4.0
+#|The evaluation began from clean branch `codex/upgrade-quality` at handoff HEAD
+#|`7f8a3a8dbeaa07ff78a5d384f51d3df72cb538ef`, parent
+#|`d3cb8122dcca2e06b29787facc3152bf2e38b947`, tree
+#|`962beb97bf678f87c6bdd43c440522a17e5f82f2`. Exact Google UUID v1.4.0
 #|dependency commit `cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an ancestor. The
-#|decision changed no product source or dependency metadata and prepared this
-#|evaluation-only handoff. Verify the new handoff HEAD, parent, tree, exact
-#|changed set, ancestry, reciprocal archive chain, and clean ordinary and
-#|ignored status rather than assuming them.
+#|evaluation changed no product source or dependency metadata and prepared this
+#|decision-only handoff. Verify the new handoff HEAD, parent, tree, exact changed
+#|set, ancestry, reciprocal archive chain, and clean ordinary and ignored status
+#|rather than assuming them.
 #|
-#|The unchanged project remains 234 selected modules, 3,599 graph edges, 355
-#|production entries, 429 complete-test entries, 197 module-backed entries
-#|across 41 loaded modules, and 1,067 sum lines. `go.mod` / `go.sum` SHA-256 is
+#|Exact go-import metadata and module declarations resolve
+#|`github.com/manifoldco/promptui` to public, enabled, unarchived, non-fork
+#|BSD-3-Clause repository `manifoldco/promptui`, ID 107154646, owned by
+#|`manifoldco`, defaulting to `master`, with no parent/source. The proxy exposes
+#|exactly v0.1.0, v0.2.0, v0.2.1, v0.3.0, v0.3.1, v0.3.2, v0.4.0, v0.5.0,
+#|v0.6.0, v0.7.0, v0.8.0, and v0.9.0; `@latest` is v0.9.0. Exact `/v2` and
+#|`/v3` lines are absent. There are no retractions, module deprecations,
+#|prereleases, or eligible alternate paths, forks, branches, pseudo-versions,
+#|or replacements. Nine releases have GitHub Release objects; v0.3.1-v0.4.0
+#|exist as genuine tags without them.
+#|
+#|All tags are lightweight and form continuous ancestry. Selected/latest v0.9.0
+#|is unsigned commit `c2e487d3597f59bcf76b24c9e80679740a72212b`, tree
+#|`becf36d02c10091c82f8eeccba0e67bead88d418`. All twelve proxy ZIPs byte-match
+#|the regular-file manifests of their exact Git tags. V0.9.0 source/module sums
+#|are `h1:3V4HzJk1TtXW1MTZMP7mdlwbBpIinw3HztaIlYthEiA=` and
+#|`h1:ka04sppxSGFAtxX0qhlYQjISsg9mR4GWtQEhdbn6Pgg=`. The answered evaluation
+#|records every commit/tree/signature, archive, license, and manifest identity.
+#|
+#|V0.1.0-v0.3.1 have no release `go.mod`, and their synthesized proxy module
+#|files contain no requirements. V0.3.2-v0.4.0 include old tool requirements
+#|and an exclude; v0.5.0 declares Go 1.11 and includes a go-i18n replacement;
+#|v0.6.0 declares Go 1.11; v0.7.0-v0.9.0 declare Go 1.12. V0.9.0 requires
+#|chzyer/logex v1.1.10, chzyer/readline
+#|v0.0.0-20180603132655-2972be24d48e, chzyer/test
+#|v0.0.0-20180213035817-a1ea475d72b1, and x/sys
+#|v0.0.0-20181122145206-62eef0e2fa9b. Its loaded production/test package closure
+#|spans Promptui plus that readline pseudo-version, while its module build list
+#|retains all four requirements. Main's separate direct readline v1.5.1 request
+#|wins MVS in the project.
+#|
+#|V0.9.0 contains root, list, and screenbuf library packages plus examples and
+#|exports Prompt, PromptTemplates, Select, SelectWithAdd, list/screen-buffer
+#|helpers, and mutable style/key/search/icon/function/cursor globals. Callers own
+#|global mutation/synchronization and caller-provided streams. Readline is the
+#|external terminal boundary; there is no cgo, generated, embed, subprocess, or
+#|network boundary. Windows/non-Windows source splits are supported; old
+#|readline does not support js/wasm.
+#|
+#|Exact Go 1.26.7 and contained Go 1.18.10 module verification, build, upstream
+#|count-one/count-ten, race-count-ten, vet, and supported Darwin, Linux,
+#|Windows, and FreeBSD cross-build/test gates pass v0.9.0. Its complete
+#|production/test closure is 84/144 packages, 10 module-backed entries, and two
+#|modules under Go 1.26.7, and 64/98/10/two under Go 1.18.10. V0.3.2-v0.8.0
+#|pass the equivalent available upstream gates under both SDKs.
+#|
+#|A bounded ordinary fixture uses only `ordinary\n` input, simple documented
+#|templates, and a caller writer returning an ordinary error. Positive input,
+#|validation, and deterministic rendering pass. Every v0.3.2-v0.9.0 release
+#|nevertheless discards that writer failure and returns nil despite Prompt.Run's
+#|documented execution-error result. A single Prompt run, without caller
+#|concurrency or mutation, also races between readline's listener goroutine and
+#|Prompt rendering under both SDKs. V0.1.0-v0.3.1 independently fail standalone
+#|release build/test module resolution because their release archives and
+#|synthesized module files provide no requirements. No canonical exact-path
+#|stable qualifies.
+#|
+#|The sole target request is main -> selected v0.9.0. Main first requested
+#|v0.8.0, removed it, then reintroduced v0.9.0; the current source import and
+#|prompt functions followed later. Repository source imports Promptui only in
+#|`cmd/root.go`, configures PromptTemplates, and calls Prompt.Run in value and
+#|confirmation paths. `go mod why -m` resolves main `cmd` -> Promptui. Root,
+#|list, and screenbuf are production and complete-test loaded, with three
+#|module-backed entries. The direct dependency is runtime relevant.
+#|
+#|A disposable exact-Go-1.26.7
+#|`go get github.com/manifoldco/promptui@v0.9.0` is a byte no-op. The unchanged
+#|project remains 234 selected modules, 3,599 graph edges, 355 production
+#|entries, 429 complete-test entries, 197 module-backed entries across 41
+#|loaded modules, and 1,067 sum lines. `go.mod` / `go.sum` SHA-256 is
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
 #|The 432-line tidy projection remains
@@ -1208,123 +1272,144 @@ exit 70
 #|the common applied 52/948-line hashes remain
 #|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
 #|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+#|No projection or implementation was retained.
 #|
-#|All 39 pre-emoji guarded selections remain exact. Their 237 sorted incoming
+#|All 40 earlier guarded selections remain exact. Their 239 sorted incoming
 #|edges retain SHA-256
-#|`151e72c0b5444acc59ffab45d6ce8fe43e80821b42df6a49a11902b3a6632803`;
-#|37 why results are negative and only closed kr/pretty and kr/text are
-#|positive, with zero guarded repository imports and production/complete-test
-#|loads. Including emoji/v2 gives 40 guarded selections and 239 incoming edges
-#|at SHA-256
 #|`deb453cac4dcb6df8a6b502f6f20aba72eaeb415ac2ff40f873a677113cf9d4a`.
-#|Every emoji/v2, kr/text, and kr/pty expiry guard remains exact. Accepted
-#|quality remains 27/27 Q0-Q2 PASS at L2.
+#|Thirty-seven why results are negative; only closed kr/pretty, kr/text, and
+#|emoji/v2 are positive. Guarded repository imports are zero and only emoji/v2
+#|is production/complete-test loaded. Every emoji/v2, kr/text, and kr/pty expiry
+#|guard remains exact.
 #|
-#|The queue selects direct exact `github.com/manifoldco/promptui v0.9.0`.
-#|Treat direct selection, any project import, loading, or apparent release
-#|status as observations rather than qualification. Independently reproduce
-#|every target request, genuine current and historical owner route, requester
-#|import, why/import/load/runtime fact, and projection before choosing a
-#|candidate.
+#|Exact-version OSV is empty for every Promptui stable, Promptui's requested
+#|readline pseudo-version, and project-selected readline v1.5.1; GitHub global
+#|Promptui/readline and Promptui repository advisory results are empty. Pinned
+#|isolated govulncheck v1.8.0 is empty for target module/package/symbol/test-
+#|symbol scans; the unchanged project remains 30/22/20/20 with no target trace.
+#|Guard OSV
+#|retains only the recorded Gorilla WebSocket and go-retryablehttp pairs; x/mod
+#|v0.14.0 retains GO-2026-6179 and GO-2026-6180. The 518,501-byte/1,402-record
+#|Go index and PUBLISHED 2,807-byte memberlist CNA response remain byte-exact at
+#|their recorded hashes. Advisory absence does not override ordinary behavior.
 #|
-#|# Evaluation Contract
+#|Final unchanged-project exact Go 1.26.7 module verification, build, count-one
+#|tests, race count-one tests, and vet pass under `umask 022`. The Go 1.18,
+#|source/API/CLI/help/launcher/Make/quality contracts and every earlier decision
+#|remain exact. Accepted quality remains 27/27 Q0-Q2 PASS at L2. Treat all
+#|completed release, source, behavior, closure, route, projection, advisory, and
+#|final-gate findings as final.
 #|
-#|Resolve exact go-import and module-path identity; repository owner/status/
-#|license/default branch; version/tag/release, commit/tree/signature/ancestry,
-#|proxy/sumdb/archive-to-Git identity; module directives and requirements;
-#|retractions, deprecation, replacements, and exact-path major lines. Consider
-#|only genuine exact-path stable releases. Do not promote a fork, branch,
-#|pseudo-version, prerelease, replacement, alternate module path, or ownerless
-#|candidate.
+#|# Choose Exactly One Direction
 #|
-#|For selected and every serious stable candidate, inspect the complete module
-#|and test closure, exported API and documentation, Go-floor compatibility,
-#|platform/build-tag/cgo/generated/embed boundaries, globals, ownership and
-#|mutation, determinism, concurrency, lifecycle, cleanup and error behavior,
-#|and external terminal/process boundaries. Exercise only small bounded
-#|ordinary values needed to verify documented behavior. Run upstream build,
-#|tests, repeated tests, race, vet, and supported cross-builds under exact Go
-#|1.26.7 and a contained Go 1.18 toolchain. A release qualifies only if all
-#|applicable ordinary documented contracts and every project guard pass.
+#|1. Explicitly retain exact selected, direct, production-loaded, runtime-
+#|   relevant `github.com/manifoldco/promptui v0.9.0` without product-source or
+#|   dependency-metadata changes under a Promptui-specific, non-transferable
+#|   exception. Call it unqualified: no canonical exact-path stable qualifies.
+#|   Accept only the completed release/source, ordinary behavior, exact owner/
+#|   request, route, why/import/load/runtime, graph/tidy/Go-floor, earlier-guard,
+#|   and advisory facts. Define the exact expiry guards below. This exception
+#|   must not broaden or expire the closed emoji/v2, kr/text, or kr/pty
+#|   exceptions.
+#|2. Authorize exactly one later bounded measurement-only genuine owner/request
+#|   study named `Ply Direct Promptui Ownership Study`. Its sole route is the
+#|   existing main -> direct exact `github.com/manifoldco/promptui v0.9.0`
+#|   request and the `cmd/root.go` value/confirmation Prompt.Run runtime use.
+#|   Its exact question is whether that direct root and runtime route can be
+#|   removed through a genuine supported project-owner change while preserving
+#|   the public API/CLI behavior, Go 1.18 floor, all 40 earlier selections/239
+#|   edges, and every emoji/v2, kr/text, and kr/pty exception. Do not run the
+#|   study, change source or any selection, introduce a fork/replacement, or
+#|   reopen an earlier decision in this decision-recording move; prepare one
+#|   reciprocal measurement-only successor.
+#|3. Stop P7 unresolved with no product-source, dependency-metadata, roadmap,
+#|   or P8 implementation change and no successor execution.
 #|
-#|Map every target MVS request and genuine current or historical route.
-#|Reproduce target and requester why, repository imports, production and
-#|complete-test loads, module-backed entries, runtime relevance, graph counts,
-#|hashes, tidy projection, all 40 earlier guarded selections, and the 239-edge
-#|snapshot. Physical selection, directness, a why result, loading, or advisory
-#|absence is not qualification.
+#|Do not invent a fourth option or combine options. Physical selection,
+#|directness, positive why, runtime loading, and advisory absence are not
+#|qualification. Do not call v0.9.0 qualified, select an earlier release, add or
+#|change a root, use a fork, replacement, branch, pseudo-version, or alternate
+#|path, change readline, emoji/v2, kr/text, kr/pty, kr/pretty, Cast, the Go floor,
+#|product source, dependency metadata, or another module, transfer an exception,
+#|or begin P8.
 #|
-#|Use disposable project copies beneath the managed scratch root to measure
-#|exact candidate projections. Never add or alter a target root in the real
-#|project outside the one final exact dependency implementation authorized
-#|below. For each projection record exact selection, closure, graph, imports/
-#|loads, sums, tidy result, Go-floor effect, genuine supported tidy-stable
-#|ownership, and whether every emoji/v2, kr/text, and kr/pty expiry guard remains
-#|exact. Do not retain a projection unless the candidate qualifies and the
-#|normal dependency implementation contract authorizes it.
+#|# Option 1 Expiry Guards
 #|
-#|Refresh exact-version OSV and GitHub advisory evidence, repository advisories,
-#|the guarded advisory population, x/mod guard, Go vulnerability index identity,
-#|memberlist CNA identity, and a pinned isolated govulncheck comparison.
-#|Advisory absence cannot override an ordinary behavior, upstream-gate,
-#|ownership, or earlier-guard failure. Stay within the defensive scope.
+#|If option 1 is selected, preserve and record at minimum:
 #|
-#|# Decision And Implementation Boundary
+#|- exact selected path/version `github.com/manifoldco/promptui v0.9.0`, main's
+#|  sole direct request, target's four exact requirements, and main's direct
+#|  readline v1.5.1 MVS selection;
+#|- the historical main v0.8.0 request/removal and v0.9.0 reintroduction, sole
+#|  `cmd/root.go` import, PromptTemplates and Prompt.Run uses, complete main
+#|  `cmd` -> target route, positive target why, three production/complete-test
+#|  target packages, and runtime relevance;
+#|- the exact twelve-release line, absent `/v2` and `/v3`, repository/owner/
+#|  status/license/default-branch identity, release/tag/commit/tree/signature/
+#|  archive/sumdb/module facts, and no replacement/retraction/deprecation or
+#|  eligible alternate;
+#|- every stable remaining unqualified for the completed module-closure or
+#|  ordinary output-error/race failures, and no future qualified
+#|  Go-1.18-compatible canonical exact-path stable or supported route;
+#|- baseline 234/3,599/355/429/197/41/1,067 state, exact module hashes, common
+#|  tidy state, no-op v0.9.0 projection, and no dependency implementation;
+#|- exact Go 1.18 floor, exact Go 1.26.7 identity, source/API/CLI/help/launcher/
+#|  Make/quality contracts, and accepted 27/27 Q0-Q2 PASS at L2;
+#|- all 40 earlier selections/239 incoming edges and their exact hash, plus
+#|  every emoji/v2, kr/text, and kr/pty expiry guard; and
+#|- no new target/closure advisory, independent defect, release, owner,
+#|  qualified stable, supported owner, or compatible genuine route to a
+#|  qualified Promptui, emoji/v2, kr/text, or kr/pty release.
 #|
-#|Select only the highest qualified Go-1.18-compatible exact-path stable with a
-#|genuine supported project owner. If that exact selection changes and every
-#|earlier guard remains exact, use exact Go 1.26.7 and exact
-#|`go get github.com/manifoldco/promptui@<selected-version>` for one dependency-
-#|only commit; do not hand-edit metadata and do not use tidy as the
-#|implementation. Explain and verify the minimal exact transitive closure.
+#|Any target/request/import/owner-route, root/why/import/load/runtime, graph/
+#|module/tidy/Go-floor, earlier or emoji/v2/kr/text/kr/pty guard, advisory/
+#|finding, independent defect, repository/release/owner, qualification,
+#|supported-owner, or compatible-route change expires retention and requires a
+#|fresh Promptui dependency and product decision before merge. Any emoji/v2,
+#|kr/text, or kr/pty guard change separately requires its own fresh dependency
+#|and product decision. Option 1 authorizes no owner study, root change, branch
+#|or pseudo-version, alternate path, dependency edit, workaround, unrelated
+#|selection, implementation, or transferred exception.
 #|
-#|If a candidate changes any emoji/v2, kr/text, or kr/pty path/version, request,
-#|requester import, owner route, root, why/import/load/runtime fact, graph/module/
-#|tidy/Go-floor state, advisory/release/owner identity, qualification, or
-#|compatible route, retain no projection and stop for the corresponding fresh
-#|dependency and product decision before merge. This evaluation cannot silently
-#|expire, replace, broaden, or transfer any closed exception.
+#|# Role And Boundaries
 #|
-#|If selected v0.9.0 is already the highest qualified exact decision and exact
-#|get is a no-op, record the no-change decision without forcing a dependency
-#|commit. If no stable qualifies, or no qualified candidate has a genuine
-#|supported tidy-stable owner, retain no projection and prepare one reciprocal
-#|product-decision archive offering only a target-specific unqualified
-#|exception, exactly one named later measurement-only genuine owner/request
-#|study, or stopping P7 unresolved. Do not choose that product direction during
-#|the evaluation.
+#|This session is decision recording, not dependency implementation or a new
+#|evaluation. Revalidate only the minimum continuity, exact graph/guard,
+#|advisory-identity, exact-Go final-gate, archive, launcher, and containment
+#|facts needed to make the one decision durable. Do not repeat completed
+#|behavior fixtures, upstream gates, archive comparisons, candidate projections,
+#|or govulncheck analysis. Do not run option 2's owner study during this move.
 #|
-#|After any changed selection, run the complete P7 dependency gate required by
-#|the roadmap. For an unchanged result, run focused target/graph/advisory guards
-#|and final exact-Go module verification, build, count-one tests, race count-one
-#|tests, and vet. Preserve Go 1.18, source/API/CLI/help/launcher/Make/quality
-#|contracts, every earlier decision, and accepted 27/27 Q0-Q2 PASS at L2.
+#|If option 1 is selected, update roadmap and rolling handover, answer this
+#|archive, and prepare exactly one reciprocal next bounded P7 dependency
+#|evaluation without executing it. If option 2 is selected, prepare exactly one
+#|reciprocal measurement-only owner/request successor without executing it. If
+#|option 3 is selected, record the stop and prepare no implementation successor.
+#|None of the options authorizes P8.
 #|
 #|# Required Reading
 #|
-#|Read this archive, the answered emoji/v2 decision/evaluation, answered
-#|kr/text and kr/pty decisions/evaluations, kr/pretty and Cast owner records,
-#|rolling handover, P7/P8 roadmap, `go.mod`, and `go.sum`. Verify branch,
-#|ancestry, clean ordinary/ignored state, reciprocal archive chain, launcher
-#|check, exact Go identities, module hashes/counts/tidy projection, all 40
-#|earlier guards and the 239-edge snapshot, all three closed exception
-#|boundaries, and fresh advisory identities before any implementation.
+#|Read this archive and the answered Promptui evaluation; the answered emoji/v2,
+#|kr/text, and kr/pty decisions/evaluations; the kr/pretty and Cast owner
+#|records; rolling handover; P7/P8 roadmap; `go.mod`; and `go.sum`. Verify
+#|branch, ancestry, clean ordinary/ignored state, reciprocal archive chain,
+#|launcher check, exact Go identities, target requests/routes/loads, module
+#|hashes/counts/tidy state, all 40 earlier selections/239 edges, all three closed
+#|exceptions, and fresh advisory identities before recording the choice.
 #|
 #|# Three Moves
 #|
-#|First, independently evaluate only manifoldco/promptui and choose the exact
-#|qualified stable or bounded no-qualified result. Second, make at most the one
-#|authorized dependency-only selection change and verify it, or leave source
-#|and metadata unchanged; stop before implementation if any emoji/v2, kr/text,
-#|or kr/pty guard would expire. Third, update roadmap and rolling handover,
-#|answer this archive, prepare exactly one reciprocal successor required by the
-#|result, verify containment, and make the required local handoff commit without
-#|executing the successor.
+#|First, choose exactly one authorized direction using only the final completed
+#|evaluation. Second, record only that decision without changing product source
+#|or dependency metadata or running an owner study. Third, update roadmap and
+#|rolling handover, answer this archive, prepare only the one reciprocal
+#|successor required by the chosen direction, verify containment, and make the
+#|required local handoff commit without executing the successor.
 #|
 #|# Automatic Handoff
 #|
-#|Do not launch a successor, push, merge, publish, release, stash, revert,
-#|bypass cleanup, remove the worktree, transfer an exception, reopen emoji/v2,
-#|kr/text, kr/pty, kr/pretty, Cast, or an earlier decision, evaluate another
-#|dependency group, write outside the managed scratch root, or begin P8.
+#|Do not launch a successor, push, merge, publish, release, stash, revert, bypass
+#|cleanup, remove the worktree, transfer an exception, reopen Promptui,
+#|emoji/v2, kr/text, kr/pty, kr/pretty, Cast, or an earlier decision, evaluate
+#|another dependency group, write outside the managed scratch root, or begin P8.
 # CODEX_MUTABLE_PROMPT_END
