@@ -4433,15 +4433,69 @@ race count-one tests, vet, and launcher check pass. No source or dependency
 metadata changed, so no changed-selection scorecard applies and accepted
 quality remains 27/27 Q0-Q2 PASS at L2.
 
+The kr/text evaluation resolved the exact-path line to only v0.1.0 and v0.2.0
+in the enabled, unarchived, non-fork MIT `kr/text` repository. Proxy/sumdb,
+tag/commit/tree, and Git regular-file identities agree; no exact `/v2` or `/v3`
+line, GitHub Release, retraction, deprecation, replacement, or eligible later
+stable exists. V0.1.0 requires kr/pty v1.1.1; v0.2.0 changes that unloaded `mc`
+command boundary to creack/pty v1.1.9. Both complete closures preserve Go 1.18
+and pass upstream build, repeated tests, race, vet, positive bounded ordinary
+fixtures, and supported Darwin/Linux/FreeBSD cross-builds under exact Go
+1.26.7 and contained Go 1.18.10.
+
+Neither stable qualifies. Both violate the documented claim that only a single
+over-limit word can make a line exceed the limit:
+`Wrap("overlong overlong foo", 4)` returns
+`"overlong overlong\nfoo"`. Repeated and race runs reproduce the ordinary
+failure under both SDKs. Verified post-release commit
+`838204404ccb967534580e2a6efb24062880dd0f` contains the matching adjacent-
+long-word PR #9 fix, but no release contains it; no branch or pseudo-version
+was promoted.
+
+Selected Cast v1.5.1 genuinely requests selected kr/text v0.2.0 through its
+supported test closure. Historical kr/pretty v0.1.0/v0.2.0 request v0.1.0,
+whose unloaded `mc` command alone imports and requests kr/pty v1.1.1. Every
+direct sergi/Assert, mvn-pom-mutator/Viper/Consul/Prometheus, and Honnef/
+go-internal/errgo historical family reproduces. Target why is positive only
+through project config -> yaml.v2 tests -> check.v1 -> kr/pretty -> kr/text;
+kr/pty and creack/pty why are negative. Repository imports, production and
+complete-test loads, and runtime reachability for the target and both PTY
+boundaries remain zero.
+
+Disposable exact v0.2.0 and v0.1.0 roots were not retained. V0.2.0 adds a
+manufactured creack/pty edge and produces 235 modules/3,601 edges/1,069 sums;
+tidy removes both roots and restores the base, but the raw graph/module change
+would expire a kr/pty guard. V0.1.0 downgrades Cast, Viper, and kr/pretty and
+produces 229/3,585/389/425/1,073; tidy retains broad closed-guard drift. The
+real project remains exact at 234/3,599/355/429/197/41/1,067 with unchanged
+module/tidy hashes. All 38 earlier selections and 234 incoming edges reproduce
+at `d31b2afdb5a11dadac236eec600408cc9ba0ee3deca2793ae2adf7ffc449c320`;
+37 guard why results are negative and only closed kr/pretty is positive, with
+zero guarded imports/loads. The closed kr/pty exception remains exact.
+
+Fresh exact target OSV/GitHub and repository advisory results are empty.
+Pinned isolated govulncheck v1.8.0 is empty for both stables, and base/direct-
+v0.2.0 project populations remain identical at 30/22/20/20 with no target
+trace. Guard Gorilla/retryablehttp, x/mod, Go-index, and memberlist CNA
+identities remain exact. Final unchanged-project exact Go 1.26.7 module
+verification, build, count-one tests, race count-one tests, and vet pass. No
+source or dependency metadata changed; accepted quality remains 27/27 Q0-Q2
+PASS at L2.
+
+The reciprocal 260-archive chain, sole NEXT state, launcher/archive prompt
+mirror, exact five-file documentation/launcher changed set, diff checks, and
+launcher check pass. Every task-owned artifact remained beneath the managed
+session scratch root and was removed; only the pre-existing launcher-owned
+Node compile cache remains. The bounded kr/text decision successor was
+prepared but not executed, and P8 remains queued.
+
 ## Next Bounded Objective
 
-Independently evaluate selected exact-path `github.com/kr/text v0.2.0` as one
-bounded dependency group. Resolve only its exact-path stable line, complete
-closure, ordinary documented text behavior, genuine supported ownership,
-project effects, and advisory identities. Preserve the exact kr/pty option-1
-exception and every earlier guard; if a candidate would change any kr/pty
-expiry fact, retain no projection and stop for a fresh kr/pty dependency and
-product decision before merge. Do not repeat the kr/pty evaluation, add a
-direct root to the real project, transfer an exception, combine another group,
-reopen Cast/kr/pretty or any earlier decision, write outside the managed
-scratch root, or begin P8.
+Record exactly one bounded kr/text product direction: retain exact selected,
+inherited, unloaded v0.2.0 under a kr/text-specific unqualified and non-
+transferable exception; authorize exactly one later measurement-only study of
+the supported main -> Cast v1.5.1 -> kr/text v0.2.0 owner/request route; or stop
+P7 unresolved. Preserve every kr/pty option-1 expiry guard. Do not repeat text
+or PTY behavior, promote the unreleased fix, add a direct root, transfer an
+exception, change another dependency, combine options or another group, write
+outside the managed scratch root, or begin P8.

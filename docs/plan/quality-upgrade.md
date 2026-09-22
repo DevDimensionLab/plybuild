@@ -13501,6 +13501,62 @@ Kr Pty product decision (2026-09-22):
   before implementation if any kr/pty expiry guard changes. The successor was
   prepared but not executed. P8 remains queued.
 
+Kr Text evaluation (2026-09-22):
+
+- The canonical exact path has exactly v0.1.0 and v0.2.0; `/v2` and `/v3`
+  lines do not exist. Public enabled, unarchived, non-fork MIT repository
+  `kr/text`, owned by `kr`, defaults to `main` and has no GitHub Releases.
+  Neither stable has a Go directive, retraction, deprecation, or replacement.
+  Proxy/sumdb, annotated tag, commit/tree, and Git regular-file identities
+  agree. No branch, pseudo-version, alternate path, fork, or replacement was
+  promoted.
+- V0.1.0 requires kr/pty v1.1.1; v0.2.0 changes only its `mc` import and
+  requirement to creack/pty v1.1.9. Both stables expose the root text API,
+  colwriter, and `agg`/`mc` commands. Their complete closures preserve Go 1.18.
+  Both SDKs pass upstream build, repeated tests, race, vet, positive bounded
+  ordinary fixtures, and supported Darwin/Linux/FreeBSD cross-builds. Windows
+  and js/wasm stop at the PTY-backed `mc` platform boundary.
+- Neither stable qualifies. The documentation says a line can exceed its limit
+  only when a single word exceeds it, but both stables join two adjacent
+  over-limit words: `Wrap("overlong overlong foo", 4)` returns
+  `"overlong overlong\nfoo"`. Exact Go 1.26.7 and Go 1.18.10 repeated and race
+  runs reproduce the ordinary failure. Verified post-release commit
+  `838204404ccb967534580e2a6efb24062880dd0f` merged the matching PR #9 fix,
+  but no later stable exists, so that commit and `main` are ineligible.
+- Exact MVS selects v0.2.0 through supported Cast v1.5.1. Historical kr/pretty
+  v0.1.0/v0.2.0 request v0.1.0, whose unloaded `mc` command alone requests and
+  imports kr/pty v1.1.1. The complete direct sergi/Assert,
+  mvn-pom-mutator/Viper/Consul/Prometheus, and Honnef/go-internal/errgo route
+  families reproduce. Target why is positive only through yaml.v2 tests/
+  check.v1/kr/pretty; target and both PTY modules have zero repository imports
+  and production/complete-test loads and no runtime reachability.
+- A disposable exact v0.2.0 root adds creack/pty, giving 235 modules, 3,601
+  edges, and 1,069 sums; tidy removes both manufactured roots and restores the
+  exact base. Its raw graph/module state would expire a kr/pty guard. A
+  disposable v0.1.0 root downgrades Cast, Viper, and kr/pretty, giving
+  229/3,585/389/425/1,073; tidy retains broad selection and graph drift. It
+  violates Cast, kr/pretty, and kr/pty guards. Neither projection was retained,
+  and the real project received no exact get.
+- The unchanged project remains 234/3,599/355/429/197/41/1,067 with exact
+  module hashes and the recorded 432-line/common applied tidy state. All 38
+  earlier guarded selections remain exact; their 234 incoming edges retain
+  `d31b2afdb5a11dadac236eec600408cc9ba0ee3deca2793ae2adf7ffc449c320`.
+  Thirty-seven why results are negative and only closed kr/pretty is positive;
+  guarded imports/loads remain zero. The complete kr/pty exception remains
+  exact in the real project.
+- Exact target OSV/GitHub and repository advisory results are empty. Pinned
+  isolated govulncheck v1.8.0 is empty for both stables; base/direct-v0.2.0
+  project populations are identical at 30/22/20/20 with no target trace.
+  Guard Gorilla/retryablehttp pairs, x/mod findings, the 1,402-record Go index,
+  and PUBLISHED memberlist CNA identity remain exact. Advisory absence does not
+  override behavior. Final exact-Go module verification, build, count-one,
+  race count-one, and vet pass; accepted quality remains 27/27 Q0-Q2 PASS at
+  L2. No source or dependency metadata changed. P7 stops for one reciprocal
+  choice: exact target-specific unqualified v0.2.0 retention, one later
+  measurement-only main -> Cast v1.5.1 -> kr/text v0.2.0 owner/request study,
+  or stopping P7 unresolved. The decision successor was prepared but not
+  executed; P8 remains queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
