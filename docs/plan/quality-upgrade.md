@@ -12902,6 +12902,69 @@ Konsorten Go Windows Terminal Sequences evaluation (2026-09-22):
   path v1.0.4, implement a parent/source change, transfer an exception,
   combine another group, or begin P8.
 
+Konsorten Go Windows Terminal Sequences product decision (2026-09-22):
+
+- Option 1 was selected. Exact selected, inherited, unloaded
+  `github.com/konsorten/go-windows-terminal-sequences v1.0.1` is explicitly
+  retained without changing product source, `go.mod`, or `go.sum`. It remains
+  unqualified and is not described as secure. Physical selection, negative
+  why, zero loading, and advisory absence bound exposure but are not
+  qualification or implicit authorization.
+- The target-specific, non-transferable exception accepts only the completed
+  unsafe handle-conversion, non-Windows source/stub, handle-mode-preservation,
+  and related repository/release/module/Go-floor/API/behavior, ownership/state,
+  MVS/loading, project, and vulnerability findings. It accepts no
+  uncharacterized behavior, new advisory, or independent defect, promotes no
+  alternate identity, direct root, patch, wrapper, or workaround, and
+  transfers no other exception.
+- Ownership is exact v1.0.1; both requests from historical Logrus v1.4.2 and
+  v1.2.0; and the genuine mvn-pom-mutator/Viper/go-metrics/Prometheus owner
+  routes. Direct/imported/loaded Logrus v1.9.3 remains outside those requests
+  and does not import the target. Guards require no direct target root,
+  negative target why, zero repository imports and production/complete-test
+  loads, no runtime reachability, exact graph/module/tidy/Go-floor state, and
+  every earlier guard.
+- The exception also requires no new target or closure advisory, independent
+  finding, repository owner/status change, exact-path stable release,
+  requester/owner, qualified release, supported tidy-stable owner, or
+  compatible genuine route to a qualified exact-path release. Any target,
+  request, owner identity/route, root, import, load, runtime, graph, module-
+  hash, tidy, Go-floor, earlier-guard, advisory, finding, repository/release/
+  owner, qualification, or route change expires the exception and requires a
+  fresh target dependency and product decision before merge. It authorizes no
+  owner study, parent/source/metadata change, direct root, alternate path,
+  unrelated selection, or implementation.
+- Guard-only revalidation preserved 234 modules, 3,599 edges, 355 production
+  and 429 complete-test entries, 197 module-backed entries across 41 modules,
+  1,067 sums, exact module hashes, and the 432-line tidy projection. Both
+  requests/routes reproduce. All 33 earlier guarded selections retain
+  negative why and zero imports/loads; their 221 incoming edges reproduce
+  `dc3506a8e687d59a90e5711c347821b01672f8fa99ea060e494dadb505e320d5`.
+  Including the target gives 34 selections/223 edges at
+  `8cb329e95dcd81165af873c9bb4f11c85f61f7d68f39794394ab16a49f5cddc6`.
+- Fresh proxy/go-import/GitHub metadata retains the exact release/repository
+  identities. Exact target OSV and GitHub results remain empty; guard OSV
+  retains only the Gorilla/retryablehttp pairs; x/mod v0.14.0 retains
+  GO-2026-6179 and GO-2026-6180; the 1,402-record Go index and PUBLISHED
+  memberlist CNA bytes remain exact. No behavior evaluation, direct-root
+  projection, or owner study was repeated.
+- No dependency implementation or metadata commit was created. No changed-
+  selection scorecard applies and accepted quality remains 27/27 Q0-Q2 PASS
+  at L2. Final exact-Go module verification, build, count-one tests, race
+  count-one tests, vet, the reciprocal 251-archive chain, sole NEXT state,
+  launcher/archive prompt mirror, exact five-file documentation-only changed
+  set, diff checks, launcher check, and all 62 launcher controls pass. Every
+  task-owned scratch artifact was contained beneath the managed session root
+  and removed; only its pre-existing launcher-owned Node compile cache
+  remains. P7 continues only with the prepared bounded evaluation of selected
+  exact-path `github.com/kr/fs v0.1.0`. Its current queue facts are exact
+  requests from SFTP v1.10.1/v1.13.1, negative why, zero repository imports,
+  zero production/complete-test loads, and no runtime reachability; none is
+  qualification. The successor must independently verify them, preserve this
+  exception and every earlier guard, evaluate no other group, and stop for a
+  fresh product decision if no exact-path stable release qualifies or any
+  guard changes. It was prepared but not executed. P8 remains queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
