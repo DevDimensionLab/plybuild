@@ -5374,8 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active on one bounded evaluation of selected exact-path
-`github.com/konsorten/go-windows-terminal-sequences v1.0.1`. Option 1
+Status: stopped for one bounded product decision about selected exact-path
+`github.com/konsorten/go-windows-terminal-sequences v1.0.1`; no exact-path
+stable release qualifies. Option 1
 explicitly retained exact inherited/unloaded gotool v1.0.0 and errcheck
 v1.5.0 under separate target-specific non-transferable exceptions. Exact
 inherited/unloaded httprouter v1.2.0, jtolds/gls v4.20.0+incompatible,
@@ -12843,6 +12844,63 @@ Kisielk Gotool product decision (2026-09-21):
   every earlier guard, evaluate no other group, and stop for a fresh product
   decision if no stable exact-path release qualifies or any guard changes.
   It was prepared but not executed. P8 remains queued.
+
+Konsorten Go Windows Terminal Sequences evaluation (2026-09-22):
+
+- No exact-path stable release qualifies. The exact proxy exposes v1.0.1,
+  v1.0.2, and latest v1.0.3. Exact `go-import` points to the public enabled
+  unarchived MIT Konsorten repository, which is a fork of the original
+  Nine-Lives-Later repository. The three lightweight tags have continuous
+  ancestry and master equals v1.0.3. Original-repository v1.0.4 changes the
+  module/import identity and is an unauthorized alternate path. Proxy/sumdb/
+  Git bytes, commits, trees, license, and repository/release state reproduce.
+- Every exact stable is one standard-library-only package with no Go directive
+  or requirements and preserves the Go 1.18 floor. Its sole export controls
+  the Windows virtual-terminal-processing bit. V1.0.1/v1.0.2 retain an unsafe
+  handle conversion that fails Windows vet and has a public ordinary crash
+  report; v1.0.3 fixes that conversion. V1.0.2/v1.0.3 add deterministic
+  Darwin/Linux error stubs, while v1.0.1 has no non-Windows source.
+- All three exact releases retain the disqualifying ordinary behavior: they
+  always read stdout's whole console mode, toggle one bit, and write that mode
+  to the caller-supplied handle. Because console mode is handle-specific, a
+  stderr or alternate-screen-buffer call can overwrite caller-owned mode bits
+  with stdout's mode. The upstream stderr test omits state preservation.
+  Highest stable v1.0.3 therefore remains unqualified. This is exact static
+  source behavior, not an unobserved Windows-runtime test failure.
+- MVS selects v1.0.1 through exactly two historical Logrus v1.4.2/v1.2.0
+  requests. Both genuine routes begin at direct mvn-pom-mutator v0.2.3, then
+  historical Viper v1.10.1, go-metrics v0.3.10, and Prometheus Common v0.9.1;
+  the v1.2.0 route adds client_golang v1.0.0 and Common v0.4.1. Direct,
+  imported, loaded Logrus v1.9.3 does not request/import the target and uses
+  the same handle for mode read/write. Target why is negative, repository
+  imports and production/complete-test loads are zero, and it is runtime-
+  unreachable. None of these exposure facts is qualification.
+- A disposable v1.0.3 root changed only target selection, manufactured one
+  main edge and two sums, and preserved loads. Tidy removed it and restored
+  inherited v1.0.1; no genuine owner requests v1.0.3. No projection or
+  dependency commit was retained. The project remains
+  234/3,599/355/429/197/41/1,067 with exact module hashes and 432-line tidy
+  projection.
+- Fresh exact OSV/GitHub/repository-advisory and isolated govulncheck evidence
+  is empty. Base and disposable project populations are identical. All 33
+  earlier guarded selections and 221 edges remain exact at SHA-256
+  `dc3506a8e687d59a90e5711c347821b01672f8fa99ea060e494dadb505e320d5`;
+  including the target gives 34 selections/223 edges at SHA-256
+  `8cb329e95dcd81165af873c9bb4f11c85f61f7d68f39794394ab16a49f5cddc6`.
+  Every guarded why remains negative and imports/loads zero; earlier advisory
+  identities remain exact. No security reproduction or exploitability work
+  occurred.
+- Product source and dependency metadata remain unchanged. No changed-
+  selection scorecard applies; accepted quality remains 27/27 Q0-Q2 PASS at
+  L2. Final exact-Go verify/build/count-one/race/vet pass under canonical
+  `umask 022`; an inherited-`umask 077` count-one attempt reproduced only the
+  known permission-mode harness failures. P7 stops for one
+  reciprocal product choice: explicitly retain inherited unloaded
+  unqualified v1.0.1 under a target-specific exception; authorize one later
+  measurement-only existing historical Logrus owner/request study; or stop P7
+  unresolved. Do not repeat behavior, add a direct root, promote alternate-
+  path v1.0.4, implement a parent/source change, transfer an exception,
+  combine another group, or begin P8.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
