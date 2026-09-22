@@ -8,7 +8,9 @@ Status: accepted for the `codex/upgrade-quality` worktree.
 when the roadmap is complete, when a real failure occurs, or when a bounded
 product choice requires authorization. `codex-dev-auto.sh` is the outer
 controller that distinguishes those cases and continues only after a separate
-decision agent has recorded a safe choice.
+decision agent has recorded a safe choice. The one exception is an exact,
+known Codex model-capacity failure, which is safe to retry without making a
+repository decision.
 
 Start the automatic controller from the worktree root:
 
@@ -16,10 +18,17 @@ Start the automatic controller from the worktree root:
 ./codex-dev-auto.sh
 ```
 
-It runs the ordinary launcher unchanged. After every launcher exit it starts a
-fresh ephemeral Codex decision turn with structured JSON output. The decision
-turn inspects the tracked lifecycle, repository state, and retained launcher
-logs, then returns exactly one action:
+It runs the ordinary launcher unchanged. After a launcher exit caused by the
+exact known model-capacity failure, the controller retries only if the
+worktree is clean and the launcher still validates a `NEXT` session. It first
+compacts the launcher logs, waits 60 seconds by default, and starts a new
+bounded cycle. Every capacity retry counts toward the same maximum-cycle
+limit.
+
+After every other launcher exit it starts a fresh ephemeral Codex decision
+turn with structured JSON output. The decision turn inspects the tracked
+lifecycle, repository state, and retained launcher logs, then returns exactly
+one action:
 
 - `restart`: record one explicit bounded authorization in one local commit,
   leave a valid `NEXT` session, and run the launcher again;
@@ -80,10 +89,11 @@ Validate configuration without starting either agent with:
 ./codex-dev-auto.sh --check
 ```
 
-`CODEX_DEV_AUTO_LOG_ROOT`, `CODEX_DEV_AUTO_LOG_KEEP_RUNS`, and
-`CODEX_DEV_AUTO_MAX_CYCLES` override the bounded defaults. Exit status 0 means
-verified completion, 2 means a retained blocker or rejected decision, and 130
-means interruption.
+`CODEX_DEV_AUTO_LOG_ROOT`, `CODEX_DEV_AUTO_LOG_KEEP_RUNS`,
+`CODEX_DEV_AUTO_MAX_CYCLES`, and
+`CODEX_DEV_AUTO_CAPACITY_RETRY_DELAY_SECONDS` override the bounded defaults.
+Exit status 0 means verified completion, 2 means a retained blocker or
+rejected decision, and 130 means interruption.
 
 ## Runtime Contract
 

@@ -42,6 +42,7 @@ make_fixture() {
 	chmod 755 "$fixture/codex-dev-auto.sh"
 	printf '%s\n' 'initial handover' >"$fixture/docs/plan/quality-handover.md"
 	printf '%s\n' '0' >"${fixture}-state/phase"
+	printf '%s\n' '0' >"${fixture}-state/launcher-attempts"
 
 	cat >"$fixture/codex-dev-start.sh" <<'LAUNCHER'
 #!/usr/bin/env bash
@@ -62,6 +63,14 @@ printf '%s\n' '{"type":"thread.started","thread_id":"launcher"}' \
 	>"$supervisor/turn-001/events.jsonl"
 printf 'launcher stderr phase %s\n' "$phase" \
 	>"$supervisor/turn-001/codex.stderr"
+attempts=$(sed -n '1p' "$AUTO_TEST_STATE_DIR/launcher-attempts")
+attempts=$((attempts + 1))
+printf '%s\n' "$attempts" >"$AUTO_TEST_STATE_DIR/launcher-attempts"
+if [[ "${AUTO_TEST_LAUNCHER_CAPACITY_ONCE:-0}" == '1' && "$attempts" == '1' ]]; then
+	printf '%s\n' \
+		'codex-dev-start: Codex terminal failure: Selected model is at capacity. Please try a different model.'
+	exit 1
+fi
 printf 'fake launcher phase %s\n' "$phase"
 case $phase in
 0) exit 1 ;;
@@ -232,6 +241,26 @@ assert_file_contains "$latest/cycle-001/launcher-final-messages.log" 'final phas
 		/bin/bash ./codex-dev-auto.sh --status
 ) >"$success_state/status.out" 2>&1
 assert_file_contains "$success_state/status.out" '"action": "complete"'
+
+capacity_fixture="$TEST_ROOT/capacity"
+capacity_state="${capacity_fixture}-state"
+capacity_logs="${capacity_fixture}-logs"
+make_fixture "$capacity_fixture"
+run_wrapper "$capacity_fixture" "$capacity_state/run.out" \
+	env AUTO_TEST_LAUNCHER_CAPACITY_ONCE=1 \
+	CODEX_DEV_AUTO_CAPACITY_RETRY_DELAY_SECONDS=0
+assert_equal '2' "$(sed -n '1p' "$capacity_state/phase")" 'capacity-retry phase'
+assert_equal '' "$(cd "$capacity_fixture" && git status --porcelain=v1 --untracked-files=all)" \
+	'capacity-retry worktree status'
+capacity_latest=$(sed -n '1p' "$capacity_logs/latest-run.txt")
+assert_file_contains "$capacity_latest/run.log" \
+	'model at capacity; retrying valid NEXT session after 0s'
+assert_equal '0' "$(find "$capacity_latest/cycle-001" -type f -name 'decision-final.json' | wc -l | tr -d '[:space:]')" \
+	'capacity-cycle decision output count'
+assert_equal '2' "$(find "$capacity_latest" -type f -name 'decision-final.json' | wc -l | tr -d '[:space:]')" \
+	'capacity-run decision output count'
+assert_equal '0' "$(find "$capacity_latest" -type d -name 'codex-dev-start.*' | wc -l | tr -d '[:space:]')" \
+	'capacity-run raw launcher directory count'
 
 blocked_fixture="$TEST_ROOT/blocked"
 blocked_state="${blocked_fixture}-state"

@@ -6,7 +6,9 @@ umask 077
 
 LOG_KEEP_RUNS=${CODEX_DEV_AUTO_LOG_KEEP_RUNS:-10}
 MAX_CYCLES=${CODEX_DEV_AUTO_MAX_CYCLES:-200}
+CAPACITY_RETRY_DELAY_SECONDS=${CODEX_DEV_AUTO_CAPACITY_RETRY_DELAY_SECONDS:-60}
 SERVICE_TIER='default'
+CAPACITY_FAILURE_LINE='codex-dev-start: Codex terminal failure: Selected model is at capacity. Please try a different model.'
 ACTIVE_DECISION_SCRATCH=''
 ACTIVE_LAUNCHER_TMP=''
 LOCK_DIR=''
@@ -16,9 +18,11 @@ usage() {
 Usage: $(basename "$0") [--check|--status|--help]
 
 Run codex-dev-start.sh until the authorized roadmap is complete or a decision
-agent reports a real blocker. After every launcher stop, a fresh decision agent
-inspects the repository and launcher logs. It may choose and record a bounded
-option when the active session explicitly offers one; otherwise it must stop.
+agent reports a real blocker. A known model-capacity stop is retried only from
+a clean worktree with a valid NEXT session. After every other launcher stop, a
+fresh decision agent inspects the repository and launcher logs. It may choose
+and record a bounded option when the active session explicitly offers one;
+otherwise it must stop.
 
   --check   Validate executables, repository state, and log configuration.
   --status  Show the latest retained automatic-loop log.
@@ -28,6 +32,8 @@ Environment:
   CODEX_DEV_AUTO_LOG_ROOT       External log directory (default: TMPDIR based).
   CODEX_DEV_AUTO_LOG_KEEP_RUNS  Retained run directories (default: 10).
   CODEX_DEV_AUTO_MAX_CYCLES     Maximum launcher/decision cycles (default: 200).
+  CODEX_DEV_AUTO_CAPACITY_RETRY_DELAY_SECONDS
+                                Delay before a known capacity retry (default: 60).
   CODEX_DEV_START_BIN           Alternate launcher, primarily for contract tests.
   CODEX_DECIDER_BIN             Alternate Codex executable for the decision agent.
 
@@ -44,6 +50,13 @@ fail() {
 is_positive_integer() {
 	case $1 in
 	''|*[!0-9]*|0) return 1 ;;
+	*) return 0 ;;
+	esac
+}
+
+is_nonnegative_integer() {
+	case $1 in
+	''|*[!0-9]*) return 1 ;;
 	*) return 0 ;;
 	esac
 }
@@ -416,6 +429,13 @@ launcher_status() {
 	esac
 }
 
+launcher_stopped_for_capacity() {
+	local launcher_log=$1
+	[[ "$LAUNCHER_RC" -ne 0 && -f "$launcher_log" && ! -L "$launcher_log" ]] ||
+		return 1
+	grep -F -x -- "$CAPACITY_FAILURE_LINE" "$launcher_log" >/dev/null
+}
+
 decision_commit_scope_allowed() {
 	local commit=$1
 	local path
@@ -564,6 +584,8 @@ main() {
 	PYTHON=$(resolve_executable python3) || fail 'python3 is required'
 	is_positive_integer "$LOG_KEEP_RUNS" || fail 'log retention must be a positive integer'
 	is_positive_integer "$MAX_CYCLES" || fail 'maximum cycles must be a positive integer'
+	is_nonnegative_integer "$CAPACITY_RETRY_DELAY_SECONDS" ||
+		fail 'capacity retry delay must be a nonnegative integer'
 
 	requested_log_root=${CODEX_DEV_AUTO_LOG_ROOT:-${TMPDIR:-/tmp}/ply-codex-dev-auto-logs}
 	[[ ! -L "$requested_log_root" ]] || fail 'log root must not be a symlink'
@@ -592,8 +614,9 @@ main() {
 	fi
 	if [[ "$mode" == 'check' ]]; then
 		"$LAUNCHER" --check
-		printf 'codex-dev-auto: PASS (logs %s, keep %s, max cycles %s)\n' \
-			"$LOG_ROOT" "$LOG_KEEP_RUNS" "$MAX_CYCLES"
+		printf 'codex-dev-auto: PASS (logs %s, keep %s, max cycles %s, capacity retry %ss)\n' \
+			"$LOG_ROOT" "$LOG_KEEP_RUNS" "$MAX_CYCLES" \
+			"$CAPACITY_RETRY_DELAY_SECONDS"
 		exit 0
 	fi
 
@@ -643,6 +666,27 @@ main() {
 			exit 130
 		fi
 		log "cycle $cycle: launcher stopped with exit $LAUNCHER_RC"
+
+		if launcher_stopped_for_capacity "$CYCLE_DIR/launcher.log"; then
+			worktree_status=$(git status --porcelain=v1 --untracked-files=all) ||
+				fail 'could not inspect worktree status after capacity failure'
+			current_status=''
+			if [[ -z "$worktree_status" ]] &&
+				current_status=$(launcher_status) &&
+				[[ "$current_status" == 'NEXT' ]]; then
+				if ! compact_launcher_logs "$LAUNCHER_TMP"; then
+					log "cycle $cycle: capacity retry blocked because launcher log cleanup failed"
+					exit 2
+				fi
+				ACTIVE_LAUNCHER_TMP=''
+				log "cycle $cycle: model at capacity; retrying valid NEXT session after ${CAPACITY_RETRY_DELAY_SECONDS}s"
+				if [[ "$CAPACITY_RETRY_DELAY_SECONDS" -gt 0 ]]; then
+					sleep "$CAPACITY_RETRY_DELAY_SECONDS"
+				fi
+				continue
+			fi
+			log "cycle $cycle: capacity retry rejected because the worktree or launcher state is not a clean NEXT"
+		fi
 
 		HEAD_BEFORE_DECISION=$(git rev-parse HEAD) || fail 'could not read HEAD'
 		if ! run_decision_agent; then
