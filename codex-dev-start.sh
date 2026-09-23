@@ -1131,115 +1131,63 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-23T061712+0200-decide-pkg-sftp-product-direction
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T061712+0200-decide-pkg-sftp-product-direction.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T051316+0200-evaluate-pkg-sftp-dependency.md
+#|SESSION_ID=2026-09-23T065422+0200-evaluate-pmezard-go-difflib-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T065422+0200-evaluate-pmezard-go-difflib-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T061712+0200-decide-pkg-sftp-product-direction.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 by making exactly one product decision for exact selected,
-#|inherited, indirect, unloaded `github.com/pkg/sftp v1.13.1` from the completed
-#|evaluation. Choose only one direction offered below, preserve the explicit
-#|pkg/errors exception and every earlier target-specific guard, update the
-#|roadmap and rolling handover, answer this archive, prepare exactly one
-#|reciprocal successor required by the chosen direction, and make the local
-#|handoff commit. Do not reevaluate SFTP, implement a dependency change, execute
-#|the named study, evaluate another dependency group, or begin P8.
+#|Continue P7 by independently evaluating the next unanswered selected queue
+#|item, graph-selected transitive exact `github.com/pmezard/go-difflib v1.0.0`,
+#|as exactly one bounded dependency group. Resolve its canonical exact-path
+#|release line and highest qualified Go-1.18-compatible stable from primary
+#|evidence. Implement one exact dependency-only changed selection only if the
+#|candidate, its complete minimal closure, and every earlier target-specific
+#|guard remain exact. Do not combine another dependency group or begin P8.
 #|
 #|# Defensive Scope
 #|
-#|This is an ordinary product decision and guard-only revalidation. Use public
-#|metadata, static repository records, and ordinary project graph/build
-#|commands. Do not fuzz, stress, probe resource exhaustion, construct oversized,
-#|deeply nested, cyclic, malformed, adversarial, or escape-sequence payloads,
-#|reproduce a security issue, or perform security or exploitability analysis.
+#|This is an ordinary dependency-quality evaluation. Use public metadata,
+#|static source/repository records, project graph/build commands, upstream tests,
+#|and only small bounded ordinary fixtures required by documented behavior. Do
+#|not fuzz, stress, probe resource exhaustion, create oversized, deeply nested,
+#|cyclic, malformed, adversarial, or escape-sequence payloads, reproduce a
+#|security issue, or perform security or exploitability analysis.
 #|
-#|Every disposable cache, tool, response, report, or project copy must remain
-#|beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Never write to `/private/tmp`,
-#|`/tmp`, a sibling of the managed root, or another external root. Verify
-#|containment and remove task-owned scratch evidence before handoff.
-#|
-#|# Completed Evaluation Is Final
-#|
-#|No genuine supported selection qualifies. Canonical exact-path v1.13.11 is
-#|the latest of 35 repository stable tags and 22 proxy-listed canonical
-#|`v1.8.0`-through-`v1.13.11` stables. The separate `/v2` path has only two
-#|prereleases, `/v3` is absent, and there is no replacement, retraction,
-#|deprecation, redirect, or eligible alternate. Do not promote a branch, fork,
-#|pseudo-version, prerelease, alternate path, patch, or vendor copy.
-#|
-#|V1.13.0 is the highest behavior-qualified Go-1.18-compatible stable. Its exact
-#|commit is `5b7da38a9cdb1bb082343ddc7cff194b751ef665`, tree
-#|`0a95b7d88a409566bc67cc0a45b19b29b6249205`; GitHub reports the merge commit
-#|signature valid. Under both exact Go 1.18.10 and Go 1.26.7 it passes module
-#|verification, complete build, count-one and count-ten tests, race, vet, the
-#|small ordinary in-memory client/server lifecycle fixture, and ten cgo-disabled
-#|cross build/test-compilation targets. It preserves the Go 1.18 project floor.
-#|
-#|Selected v1.13.1 and every stable through v1.13.7 fail complete vet under both
-#|SDKs because the internal RawPacket and RequestPacket `ReadFrom` methods have
-#|nonstandard signatures; several versions add unreachable-code or lock-copy
-#|findings. Selected v1.13.1 also fails 32-bit cross test compilation on
-#|overflowing untyped test constants and Plan 9 compilation on undefined
-#|`s_ISVTX`. V1.13.8 and v1.13.9 declare Go 1.15 but their exact x/crypto v0.31.0
-#|closure requires `crypto/ecdh`, absent from Go 1.18. V1.13.10 declares Go
-#|1.23; v1.13.11 declares Go 1.25. None can qualify. V1.13.0 predates selected
-#|API additions including `File.ReadFromWithConcurrency` and
-#|`RealPathFileLister`; that difference is recorded and is not an authorization
-#|to change product behavior.
-#|
-#|MVS selects v1.13.1 from genuine source imports in Afero v1.9.4 and v1.8.2.
-#|Historical Afero v1.6.0 and v1.3.3 request and genuinely import SFTP v1.10.1.
-#|The shortest selected route is main -> direct-indirect Afero v1.9.4 -> SFTP
-#|v1.13.1. The recorded historical route is main -> direct mvn-pom-mutator
-#|v0.2.3 -> Viper v1.10.1 -> Afero v1.6.0 -> SFTP v1.10.1. Current Viper
-#|v1.15.0 only contributes its Afero request as metadata; main genuinely imports
-#|Viper, while selected Afero root/internal/common/mem packages load. Afero's
-#|SFTP adapter and the target do not load. Target why, repository imports,
-#|production/complete-test/module-backed loads, runtime relevance, current main
-#|root, and history root are all negative or zero.
-#|
-#|An exact disposable selected get adds unused indirect roots for kr/fs,
-#|pkg/errors, SFTP, and x/crypto plus source sums and main edges; tidy removes
-#|them and returns the common projection. A v1.13.7 get changes SFTP, x/crypto,
-#|x/net, x/text, x/mod, and x/tools and removes selected SFTP's genuine
-#|pkg/errors request/import boundary; tidy reselects v1.13.1 and leaves changed
-#|x/net/x/text state. Exact v1.13.0 removes direct mvn-pom-mutator, downgrades
-#|direct Viper v1.15.0 to v1.10.1 and Afero v1.9.4 to v1.6.0, and cannot load at
-#|127 modules/499 edges. Its tidy projection rediscovers mvn-pom-mutator but
-#|reselects v1.13.1 in a non-equivalent 228-module/3,465-edge project with Viper
-#|v1.10.1 and changed loads. It changes the closed pkg/errors SFTP owner/request
-#|route and many earlier guards. No supported tidy-stable project owner requests
-#|v1.13.0. No projection was retained.
-#|
-#|The repository/release/tag/commit/tree/signature/ancestry/proxy/sumdb/module/
-#|license/archive identities; API/documentation and source boundaries; globals,
-#|ownership, mutation, determinism, concurrency, lifecycle, cleanup, and error
-#|behavior; complete closures; build constraints and platform/cgo/generated/
-#|embed boundaries; ordinary fixture; exact SDK/native/repeated/race/vet/cross
-#|results; all projections; and advisory results are final. Do not repeat them
-#|unless a narrow guard-only check proves an input changed; stop for a fresh
-#|owning evaluation if it did.
+#|Every disposable cache, tool, archive, report, project copy, fixture, or
+#|advisory response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.
+#|Never write to `/private/tmp`, `/tmp`, a sibling of the managed root, or
+#|another external root. Verify containment and remove task-owned scratch
+#|evidence before handoff.
 #|
 #|# Authorized Roadmap
 #|
 #|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
 #|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
-#|the ten final target-specific option-1 decisions through pkg/errors, and
+#|the eleven final target-specific option-1 decisions through SFTP, and
 #|qualified no-selection-change modern-go/concurrent and modern-go/reflect2.
 #|P8 remains queued.
 #|
-#|Exact selected, inherited, indirect, unloaded
-#|`github.com/pkg/errors v0.9.1` is retained only under its explicit,
-#|unqualified, pkg/errors-specific, non-transferable exception. Its selected
-#|SFTP v1.13.1 genuine source owner, all ten requests and requester boundaries,
-#|routes, root/why/import/load/runtime facts, source/behavior/closure identities,
-#|projections, advisory identities, and expiry conditions remain exact. Do not
-#|run the rejected Pkg Errors Owner-Route Removal Study, substitute standard
-#|`errors`, patch/vendor upstream, change an owner/requester, or transfer the
-#|exception.
+#|Exact selected, inherited, indirect, unloaded `github.com/pkg/sftp v1.13.1`
+#|is retained only under its explicit SFTP-specific, unqualified,
+#|non-transferable exception. V1.13.0 is the highest behavior-qualified
+#|Go-1.18-compatible stable but has no genuine supported tidy-stable project
+#|owner; selected v1.13.1 fails complete vet and supported cross gates. Preserve
+#|all four Afero requests and genuine import boundaries, every recorded route,
+#|no main/history target root, why/import/load/runtime facts, repository/release/
+#|source/behavior/closure identities, every projection, the selected SFTP ->
+#|pkg/errors owner route, advisory identities, and every expiry condition. Do
+#|not run the rejected Afero SFTP Owner/Request Study, change an owner/requester,
+#|add a root, patch/vendor upstream, or transfer the exception.
+#|
+#|Exact selected, inherited, indirect, unloaded `github.com/pkg/errors v0.9.1`
+#|remains retained only under its own explicit unqualified non-transferable
+#|exception. Preserve its ten requests and requester boundaries, selected SFTP
+#|genuine owner, routes, root/why/import/load/runtime facts, source/behavior/
+#|closure identities, projections, advisories, and expiry conditions. Do not
+#|run the rejected Pkg Errors Owner-Route Removal Study or transfer it.
 #|
 #|Exact Goe, ULID, go-conntrack, mapstructure, go-homedir, Promptui, emoji/v2,
 #|kr/text, kr/pty, kr/pretty, kr/logfmt, kr/fs, go-windows-terminal-sequences,
@@ -1250,7 +1198,19 @@ exit 70
 #|Go-floor, advisory, source, behavior, closure, qualification, and expiry guard
 #|remains final. Do not reopen, broaden, or transfer any decision.
 #|
-#|The unchanged project is 234 selected modules, 3,599 graph edges, 355
+#|# Measurements At Start
+#|
+#|The SFTP decision began from clean branch `codex/upgrade-quality` at
+#|evaluation-handoff HEAD `f5705b68aaf58644476bd315fd58952fc98ad355`,
+#|parent `a6d9bc87ba801899df9d88597100eace51d82488`, tree
+#|`1fa7f6b82daa0dbe305fb4c5f534f8bd6f72b851`. Exact Google UUID v1.4.0
+#|dependency commit `cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an
+#|ancestor. The decision changed no product source or dependency metadata and
+#|prepared this evaluation-only handoff. Verify the new handoff HEAD, parent,
+#|tree, exact changed set, ancestry, reciprocal archive chain, and clean ordinary
+#|and ignored status rather than assuming them.
+#|
+#|The unchanged project remains 234 selected modules, 3,599 graph edges, 355
 #|production entries, 429 complete-test entries, 197 module-backed entries
 #|across 41 loaded modules, and 1,067 sum lines. `go.mod` / `go.sum` SHA-256 is
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
@@ -1263,110 +1223,127 @@ exit 70
 #|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
 #|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
 #|
-#|All 47 pre-Goe selections and 276 incoming edges remain exact at
+#|All 47 pre-Goe guarded selections and 276 incoming edges remain exact at
 #|`7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`.
-#|The separate complete Goe guard and complete pkg/errors guard remain exact.
-#|Forty-one guarded why results are negative; only kr/pretty, kr/text, emoji/v2,
-#|Promptui, go-homedir, and mapstructure are positive. Promptui and go-homedir
-#|are the only guarded repository imports; emoji/v2, Promptui, go-homedir, and
+#|The separate complete Goe, pkg/errors, and SFTP guards remain exact. Forty-one
+#|guarded why results are negative; only kr/pretty, kr/text, emoji/v2, Promptui,
+#|go-homedir, and mapstructure are positive. Promptui and go-homedir are the
+#|only guarded repository imports; emoji/v2, Promptui, go-homedir, and
 #|mapstructure are the only loaded guarded modules. Accepted quality remains
 #|27/27 Q0-Q2 PASS at L2.
 #|
-#|Exact-version SFTP OSV, GitHub global, and repository advisory results are
-#|empty for selected and serious candidates. Pinned govulncheck v1.8.0 under
-#|exact Go 1.26.7 records identical x/crypto-only populations for v1.13.0 and
-#|v1.13.1, and a smaller but nonzero x/crypto-only population for v1.13.7;
-#|advisory absence or population size is not qualification. Guard OSV remains
-#|limited to Gorilla WebSocket and go-retryablehttp; x/mod v0.14.0 retains
-#|GO-2026-6179 and GO-2026-6180. The Go vulnerability index remains 518,501
-#|bytes/1,402 records at SHA-256
+#|Guard OSV remains limited to Gorilla WebSocket and go-retryablehttp; x/mod
+#|v0.14.0 retains GO-2026-6179 and GO-2026-6180. The Go vulnerability index
+#|remains 518,501 bytes/1,402 records at SHA-256
 #|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
 #|The PUBLISHED memberlist CNA response remains 2,807 bytes at SHA-256
 #|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+#|Advisory absence is not qualification.
 #|
-#|# Measurements At Start
-#|
-#|The SFTP evaluation began from clean branch `codex/upgrade-quality` at
-#|handoff HEAD `a6d9bc87ba801899df9d88597100eace51d82488`, parent
-#|`7b078f6d42a02c57feb7a45dd9a821e02d4b0f14`, tree
-#|`cee9fe5c41bd2dbf664742ee851b84ef912aa589`. Exact Google UUID v1.4.0
-#|dependency commit `cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an
-#|ancestor. The evaluation changed no product source or dependency metadata and
-#|prepared this decision-only handoff. Independently verify the new handoff
-#|HEAD, parent, tree, exact changed set, ancestry, clean ordinary and ignored
-#|status, reciprocal archive chain, launcher check, exact Go identities, fixed
-#|project/earlier/Goe/pkg-errors/target guards, advisories, and final gates.
+#|The queue identifies exact `github.com/pmezard/go-difflib v1.0.0` as the next
+#|selected module after SFTP. Current static graph observations are 23 requests,
+#|a positive why chain through go-term-markdown's Testify assertion dependency,
+#|zero repository imports, and zero production/complete-test loads. Treat these
+#|as starting observations only. Independently reproduce every request, current
+#|or historical route, requester genuine-import or metadata-only boundary,
+#|target/requester why, repository import, production/complete-test/module-
+#|backed load, runtime relevance, and root/history-root fact before selecting a
+#|candidate. Do not infer qualification, ownership, or runtime relevance from
+#|physical graph selection or a why result.
 #|
 #|# Role And Boundaries
 #|
-#|This turn may choose exactly one offered product direction after narrow
-#|guard-only revalidation. It may record that decision and prepare its required
-#|successor, but it may not repeat completed SFTP behavior/closure work, change
-#|source or dependency metadata, run an owner/request study, or implement any
-#|selection. Stop for a fresh owning evaluation if release, route, guard, or
-#|advisory input has changed.
+#|Resolve exact go-import and module-path identity; repository owner/status/
+#|license/default branch; version/tag/release, commit/tree/signature/ancestry,
+#|proxy/sumdb/archive-to-Git identity; module directives and requirements;
+#|retractions, deprecation, replacements, and exact-path major lines. Consider
+#|only genuine exact-path stable releases. Do not promote a fork, branch,
+#|pseudo-version, prerelease, replacement, alternate module path, or ownerless
+#|candidate as a stable.
 #|
-#|# Choose Exactly One Direction
+#|For selected and every serious stable candidate, inspect the complete module
+#|and test closure, exported API and documentation, Go-floor compatibility,
+#|platform/build-tag/cgo/generated/embed boundaries, globals, ownership and
+#|mutation, determinism, concurrency, lifecycle, cleanup, and error behavior.
+#|Exercise only small bounded ordinary values needed to verify documented
+#|behavior. Run upstream build, tests, repeated tests, race, vet, and supported
+#|cross-builds under exact Go 1.26.7 and a contained Go 1.18 toolchain. A
+#|release qualifies only if every applicable ordinary documented contract and
+#|every project guard pass.
 #|
-#|1. Explicitly retain exact selected, inherited, indirect, unloaded
-#|   `github.com/pkg/sftp v1.13.1` without product-source or dependency-metadata
-#|   changes under an SFTP-specific, unqualified, non-transferable exception.
-#|   Record that v1.13.0 is the highest behavior-qualified Go-1.18-compatible
-#|   stable but lacks a genuine supported tidy-stable project owner, while
-#|   selected v1.13.1 fails complete vet and supported cross gates. Guard every
-#|   request, requester import boundary and route, no main/history root,
-#|   why/import/load/runtime facts, repository/release/source/behavior/closure
-#|   identities, all projections, the pkg/errors owner route, all earlier
-#|   decisions, and no new advisory or independent defect. If selected, prepare
-#|   but do not execute the next bounded P7 queue item named by the roadmap.
-#|2. Authorize exactly one later, measurement-only **Afero SFTP Owner/Request
-#|   Study**. It may measure whether a genuine supported Afero owner/request
-#|   route can select behavior-qualified v1.13.0, remove the unloaded SFTP route,
-#|   or establish that neither is supportable while preserving Go 1.18. It may
-#|   inspect the four recorded Afero requests/imports and current/historical
-#|   Viper and mvn-pom-mutator routes. It may not change product source,
-#|   dependency metadata, SFTP, Afero, Viper, mvn-pom-mutator, pkg/errors, a
-#|   target root, any requester, or an earlier decision. Any possible future
-#|   route change that affects pkg/errors requires a fresh pkg/errors decision;
-#|   any implementation requires its own owning product decisions. If selected,
-#|   prepare that named study as the sole successor but do not execute it.
-#|3. Stop P7 unresolved, leave source/dependency metadata and all decisions
-#|   unchanged, prepare no dependency evaluation or study, keep P8 queued, and
-#|   mark the launcher COMPLETE only for the authorized roadmap.
+#|Map every target MVS request and genuine current or historical route.
+#|Reproduce target and requester why, repository imports, production and
+#|complete-test loads, module-backed entries, runtime relevance, graph counts,
+#|hashes, tidy projection, all earlier guarded selections, the 276-edge pre-Goe
+#|snapshot, and the separate Goe, pkg/errors, and SFTP guards. Physical
+#|selection, transitive presence, a why result, loading, or advisory absence is
+#|not qualification.
 #|
-#|Do not invent a fourth option, combine options, silently retain v1.13.1,
-#|describe it as qualified, safe, fixed, or equivalent to v1.13.0, transfer the
-#|pkg/errors or another exception, or use advisory absence as acceptance. This
-#|decision authorizes no dependency implementation commit.
+#|Use disposable project copies beneath the managed scratch root to measure
+#|exact candidate projections. Never add or alter a target root in the real
+#|project outside the one final exact dependency implementation authorized
+#|below. Record selection, closure, graph, imports/loads, sums, tidy result,
+#|Go-floor effect, genuine supported tidy-stable ownership, and every earlier
+#|guard for each projection. Do not retain a projection unless the candidate
+#|qualifies and the normal dependency implementation contract authorizes it.
 #|
-#|# Required Reading
+#|Refresh exact-version OSV and GitHub advisory evidence, repository advisories,
+#|the guarded advisory population, x/mod guard, Go-index identity, memberlist
+#|CNA identity, and a pinned isolated govulncheck comparison. Advisory absence
+#|cannot override ordinary behavior, an upstream gate, ownership, or an earlier-
+#|guard failure. Stay within the defensive scope.
 #|
-#|Read this archive, the answered SFTP evaluation, answered pkg/errors and Goe
-#|decisions/evaluations, answered ULID and go-conntrack decisions/evaluations,
-#|reflect2 and concurrent evaluations, mapstructure, go-homedir, Promptui,
-#|emoji/v2, kr/text, and kr/pty decisions/evaluations, rolling handover, P7/P8
-#|roadmap, `go.mod`, and `go.sum`. Earlier evaluation facts are final. Refresh
-#|only the narrow decision inputs: selection and four requests, routes and
-#|requester boundaries, root/history/why/import/load/runtime facts, project
-#|hashes/counts/tidy state, earlier/Goe/pkg-errors guards, repository release
-#|status, exact target and guarded advisories, Go-index/memberlist identities,
-#|and final exact-Go module verification, build, count-one tests, race count-one
-#|tests, and vet. Stop for a fresh owning evaluation if a guard changed.
+#|# Decision And Implementation Boundary
+#|
+#|Select only the highest qualified Go-1.18-compatible exact-path stable with a
+#|genuine supported project owner. If that exact selection changes and every
+#|earlier guard remains exact, use exact Go 1.26.7 and exact
+#|`go get github.com/pmezard/go-difflib@<selected-version>` for one dependency-
+#|only commit; do not hand-edit metadata and do not use tidy as the
+#|implementation. Explain and verify the minimal exact transitive closure.
+#|
+#|If no genuine supported changed selection qualifies, do not retain a direct
+#|root, redundant source sum, downgrade, replacement, branch, fork, pseudo-
+#|version, prerelease, alternate path, patch, vendor copy, workaround, or
+#|unrelated metadata churn. Record the completed result and prepare exactly one
+#|reciprocal product-decision successor offering only target-specific
+#|unqualified retention, one precisely bounded later measurement-only owner/
+#|request study if justified by evidence, or stopping P7 unresolved. Do not
+#|silently retain an unqualified target or transfer an exception.
+#|
+#|# Required Reading And Verification
+#|
+#|Read this archive, the answered SFTP decision and evaluation, answered
+#|pkg/errors and Goe decisions/evaluations, answered ULID and go-conntrack
+#|decisions/evaluations, reflect2 and concurrent evaluations, mapstructure,
+#|go-homedir, Promptui, emoji/v2, kr/text, and kr/pty decisions/evaluations,
+#|rolling handover, P7/P8 roadmap, `go.mod`, and `go.sum`. Earlier evaluation
+#|facts are final unless a guard-only check proves an input changed; stop for a
+#|fresh owning evaluation if one did.
+#|
+#|Before implementation, verify branch/HEAD/parent/tree, exact changed set,
+#|ancestry, ordinary and ignored cleanliness, reciprocal archive chain,
+#|launcher check, exact Go identities, project hashes/counts/tidy state,
+#|selection/requests/routes/import/load/runtime facts, all earlier guards, and
+#|fresh advisories. After any changed selection, run focused consumer contracts,
+#|module verification, build, count-one and repeated tests, race, vet, supported
+#|cross-builds, pinned lint, API/CLI/help/launcher/Make/quality contracts,
+#|accepted Q0-Q2 quality, vulnerability comparison, and exact tidy analysis.
 #|
 #|# Three Moves
 #|
-#|First, guard-only revalidate the completed result and choose exactly one
-#|offered direction. Second, record only that direction without dependency or
-#|product implementation. Third, update roadmap and rolling handover, answer
-#|this archive, prepare exactly one reciprocal successor required by the choice
-#|or mark the authorized roadmap COMPLETE for option 3, verify scratch
-#|containment, and make the local handoff commit without executing a successor.
+#|First, independently resolve canonical releases, qualification, ownership,
+#|routes, closures, projections, advisories, and earlier guards. Second, make at
+#|most one exact dependency-only implementation if the highest supported
+#|candidate fully qualifies; otherwise leave source and dependency metadata
+#|unchanged. Third, update roadmap and rolling handover, answer this archive,
+#|prepare exactly one reciprocal successor required by the result, verify
+#|scratch containment and cleanup, and make the local handoff commit.
 #|
 #|# Automatic Handoff
 #|
-#|Do not launch a successor, run the study, push, merge, publish, release, stash,
-#|revert, bypass cleanup, remove the worktree, change source or dependency
-#|metadata, add a root, change an owner/requester, transfer an exception,
-#|reevaluate SFTP, pkg/errors, or an earlier group, evaluate another dependency,
-#|write outside the managed scratch root, or begin P8.
+#|Do not launch a successor, run an owner study, push, merge, publish, release,
+#|stash, revert, bypass cleanup, remove the worktree, change another dependency,
+#|transfer an exception, reopen SFTP, pkg/errors, or an earlier group, write
+#|outside the managed scratch root, or begin P8.
 # CODEX_MUTABLE_PROMPT_END

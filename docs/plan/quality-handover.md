@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T06:17:12+02:00
+Generated: 2026-09-23T06:54:22+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The SFTP evaluation began
-  from clean handoff HEAD `a6d9bc87ba801899df9d88597100eace51d82488`,
-  parent `7b078f6d42a02c57feb7a45dd9a821e02d4b0f14`, tree
-  `cee9fe5c41bd2dbf664742ee851b84ef912aa589`. That handoff changes exactly
-  the launcher, answered pkg/errors decision archive, then-NEXT SFTP
-  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
+  `codex/upgrade-quality`, base master at `5635d50`. The SFTP decision began
+  from clean evaluation-handoff HEAD
+  `f5705b68aaf58644476bd315fd58952fc98ad355`, parent
+  `a6d9bc87ba801899df9d88597100eace51d82488`, tree
+  `1fa7f6b82daa0dbe305fb4c5f534f8bd6f72b851`. That handoff changes exactly
+  the launcher, answered SFTP evaluation archive, then-NEXT SFTP decision
+  archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
@@ -112,12 +113,16 @@ session diary.
   pkg/errors owner/request route, and crosses earlier guards. Selected v1.13.1
   and v1.13.2-v1.13.7 fail complete vet; v1.13.8-v1.13.9 have a Go-1.18-
   incompatible x/crypto closure; v1.13.10-v1.13.11 raise the Go floor. No
-  projection, product source, or dependency metadata changed. The sole NEXT
-  archive is `docs/plan/agent-sessions/2026-09-23T061712+0200-decide-pkg-sftp-product-direction.md`.
-  It authorizes only one SFTP product direction; it may not reevaluate SFTP,
-  run the study, reopen or transfer the pkg/errors exception or an earlier
-  decision, combine another group, write outside the managed scratch root, or
-  begin P8.
+  projection, product source, or dependency metadata changed. SFTP option 1
+  is now final: exact selected, inherited, indirect, unloaded v1.13.1 is
+  explicitly retained unchanged under its own unqualified, non-transferable
+  exception. The Afero SFTP Owner/Request Study was not authorized or run.
+  The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-23T065422+0200-evaluate-pmezard-go-difflib-dependency.md`.
+  It authorizes only the bounded evaluation of exact selected
+  `github.com/pmezard/go-difflib v1.0.0`; it may not reopen or transfer the
+  SFTP or pkg/errors exceptions or an earlier decision, combine another group,
+  write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -172,9 +177,11 @@ pkg/errors direction qualifies: selected/latest v0.9.1 fails the complete Go
 1.26.7 upstream contract, no later stable or eligible replacement exists, and
 removal violates direct-owner and earlier-selection guards. Pkg/errors option
 1 explicitly retains it unchanged and unqualified under its own exact guards.
-P7 is active at the prepared SFTP product-direction decision. V1.13.0 is the
-highest behavior-qualified stable but is ownerless under a supported tidy
-project; selected v1.13.1 is unqualified. P8 remains queued.
+SFTP option 1 explicitly retains exact selected, inherited, indirect,
+unloaded v1.13.1 unchanged and unqualified under its own exact guards;
+v1.13.0 remains the highest behavior-qualified stable but has no supported
+tidy-stable project owner. P7 is active at the prepared bounded evaluation of
+exact selected `github.com/pmezard/go-difflib v1.0.0`; P8 remains queued.
 
 ## Oklog ULID Evaluation
 
@@ -5739,9 +5746,48 @@ unqualified retention of exact v1.13.1; one later measurement-only **Afero
 SFTP Owner/Request Study**; or stopping P7 unresolved. The successor was
 prepared but not executed; P8 remains queued.
 
+## Pkg SFTP Product Decision
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/pkg/sftp v1.13.1` is explicitly retained without product-source
+or dependency-metadata changes under an SFTP-specific, unqualified,
+non-transferable exception. It remains unqualified: selected v1.13.1 fails
+complete vet and supported cross gates. Exact v1.13.0 remains the highest
+behavior-qualified Go-1.18-compatible stable but has no genuine supported
+tidy-stable project owner. The Afero SFTP Owner/Request Study was not
+authorized or run.
+
+Retention requires all four exact Afero requests and genuine `sftpfs` import
+boundaries, every current/historical route, no target main/history root,
+negative target why, zero repository target imports and target loads, selected
+Afero's exact loaded-package boundary, and zero runtime relevance. The exact
+35-tag/22-canonical-stable release line, repository/tag/commit/tree/signature/
+proxy/sumdb/module/license/archive identities, completed API/source/behavior/
+closure/native/repeat/race/vet/cross outcomes, and all three disposable
+projection families remain guarded.
+
+The separate pkg/errors exception remains exact and untransferred. Selected
+SFTP v1.13.1 must remain its genuine source owner requesting v0.9.1 through
+selected Afero; all ten pkg/errors requests, requester boundaries, routes,
+root/why/import/load/runtime facts, projections, advisories, and expiry
+conditions remain exact. Any SFTP/Afero route change affecting pkg/errors
+requires fresh owning evaluations and product decisions.
+
+Guard-only revalidation reproduced the exact handoff/chain, official Go
+identities, 234/3,599/355/429/197/41/1,067 project state, module/graph/tidy
+hashes, four SFTP requests and boundaries, complete Goe/pkg-errors/earlier
+guards, repository/release status, target and guarded advisories, Go-index and
+memberlist-CNA identities, and final exact-Go verify/build/count-one/race/vet
+gates. Advisory absence was not used as qualification and no new independent
+defect was found. No source or dependency metadata changed.
+
+P7 continues only with the linked bounded evaluation of the next selected
+queue item, exact `github.com/pmezard/go-difflib v1.0.0`; it was prepared but
+not executed. P8 remains queued.
+
 ## Next Bounded Objective
 
-Choose exactly one direction in the prepared SFTP product-decision archive.
-Preserve the pkg/errors exception and every earlier guard; do not reevaluate
-SFTP, run either owner-route study, combine another group, begin P8, or write
-disposable state outside the managed scratch root.
+Evaluate exact selected `github.com/pmezard/go-difflib v1.0.0` as the sole
+bounded P7 dependency group. Preserve the SFTP and pkg/errors exceptions and
+every earlier guard; do not combine another group, run either owner-route
+study, begin P8, or write disposable state outside the managed scratch root.

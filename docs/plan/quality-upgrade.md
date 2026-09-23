@@ -5375,8 +5375,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active at the prepared bounded evaluation of graph-selected exact
-`github.com/pkg/sftp v1.13.1`. Option 1 now explicitly retains exact selected,
-inherited, indirect, unloaded, unqualified pkg/errors v0.9.1 and exact selected/
+`github.com/pmezard/go-difflib v1.0.0`. Option 1 now explicitly retains exact
+selected, inherited, indirect, unloaded, unqualified SFTP v1.13.1 and
+pkg/errors v0.9.1 and exact selected/
 inherited/unloaded unqualified Goe v0.1.0, ULID v1.3.1, and go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`, exact indirect/production-loaded
 unqualified mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
@@ -5422,8 +5423,14 @@ evaluation found no qualified direction: selected/latest v0.9.1 fails the
 complete Go 1.26.7 test/race/vet contract, no later stable or eligible
 replacement exists, and removal violates direct-owner and earlier-selection
 guards. Pkg/errors option 1 is final under its own exact guards; the named
-owner-route study was not authorized or run. Its reciprocal SFTP evaluation
-successor is prepared but was not executed. P8 remains queued.
+owner-route study was not authorized or run. The completed SFTP evaluation
+found v1.13.0 to be the highest behavior-qualified Go-1.18-compatible stable,
+but no genuine supported tidy-stable project owner requests it. Selected
+v1.13.1 fails complete vet and supported cross gates. SFTP option 1 is final:
+exact selected v1.13.1 is retained unchanged and unqualified under its own
+exact guards; the Afero SFTP Owner/Request Study was not authorized or run.
+The reciprocal pmezard/go-difflib evaluation successor is prepared but was
+not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14619,6 +14626,41 @@ Pkg/sftp evaluation (2026-09-23):
   one later measurement-only **Afero SFTP Owner/Request Study**; or stopping
   P7 unresolved. The successor was prepared but not executed; P8 remains
   queued.
+
+Pkg/sftp product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, indirect, unloaded
+  `github.com/pkg/sftp v1.13.1` is explicitly retained unchanged under an
+  SFTP-specific, unqualified, non-transferable exception. It is not qualified,
+  safe, fixed, or equivalent to v1.13.0. Selected v1.13.1 fails complete vet
+  and supported cross gates; exact v1.13.0 remains the highest behavior-
+  qualified Go-1.18-compatible stable but has no genuine supported tidy-stable
+  project owner. The Afero SFTP Owner/Request Study was not authorized or run.
+- Retention requires all four Afero requests and genuine `sftpfs` import
+  boundaries, every recorded current/historical route, no target main/history
+  root, negative target why, zero target repository import/load/runtime state,
+  and selected Afero's exact loaded-package boundary. Any changed request,
+  requester boundary, owner route, root, why/import/load/runtime fact, or new
+  supported owner expires the exception.
+- The exact repository/release/tag/commit/tree/signature/ancestry/proxy/sumdb/
+  module/license/archive identities, source/API/behavior/closure/native/repeat/
+  race/vet/cross outcomes, and selected/v1.13.7/v1.13.0 projection identities
+  remain guards. No projection is retained.
+- The pkg/errors exception remains separate and untransferred. Selected SFTP
+  v1.13.1 remains its genuine source owner requesting v0.9.1 through selected
+  Afero; all ten pkg/errors requests, boundaries, routes, facts, projections,
+  advisories, and expiry conditions remain exact. Any route change affecting
+  pkg/errors requires fresh owning evaluations and product decisions.
+- Exact 234/3,599/355/429/197/41/1,067 project state, module/graph/tidy hashes,
+  Go floor, 47-selection/276-edge pre-Goe guard, separate Goe/pkg-errors
+  guards, every earlier decision, target/guard advisories, Go-index and
+  memberlist-CNA identities, and final exact-Go verify/build/count-one/race/vet
+  gates reproduced without drift. Advisory absence was not used as
+  qualification and no new independent defect was found.
+- No source, dependency metadata, root, owner/requester, or earlier decision
+  changed. P7 continues only with the prepared bounded evaluation of exact
+  selected `github.com/pmezard/go-difflib v1.0.0`; it was not executed. P8
+  remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
