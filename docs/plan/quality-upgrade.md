@@ -5374,8 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at the prepared bounded evaluation of graph-selected exact
-`github.com/posener/complete v1.2.3`. Option 1 now explicitly retains exact
+Status: active at the prepared bounded product decision for graph-selected
+exact `github.com/posener/complete v1.2.3`. No canonical exact-path Complete
+stable qualifies, and its evaluation left source and dependency metadata
+unchanged. Option 1 now explicitly retains exact
 selected, inherited, indirect, unloaded, unqualified go-difflib v1.0.0, SFTP
 v1.13.1, and pkg/errors v0.9.1 and exact selected/
 inherited/unloaded unqualified Goe v0.1.0, ULID v1.3.1, and go-conntrack
@@ -14754,6 +14756,50 @@ Pmezard/go-difflib product decision (2026-09-23):
   `go.sum` change remains. P7 continues only with the prepared bounded
   evaluation of exact selected `github.com/posener/complete v1.2.3`; it was
   not executed. P8 remains queued.
+
+Posener Complete evaluation (2026-09-23):
+
+- Exact go-import metadata resolves the public, enabled, unarchived, non-fork
+  MIT `posener/complete` repository, whose default `v1` branch directs current
+  development to `master`. The exact-path line has six genuine stables:
+  v1.1.1, v1.1.2, and v1.2.0 through selected/latest v1.2.3. The `/v2` line is
+  an ineligible alternate module path and `/v3` is absent. Exact tag, commit,
+  tree, signature, ancestry, proxy/sumdb, module, license, and archive-to-Git
+  identities reproduce.
+- V1.1.1 and v1.1.2 fail build, tests, race, and vet under exact Go 1.18.10
+  and Go 1.26.7 because their synthesized module metadata omits imported
+  go-multierror. V1.2.0 through v1.2.3 preserve Go 1.18 and pass verification,
+  build, repeated tests, race, vet, and the supported cross-build/test-
+  compilation matrix under both SDKs.
+- No buildable stable qualifies. Every v1.2 release implements exported
+  `cmd/install.Uninstall` with a hard-coded `/tmp/complete-*` temporary file,
+  copies it over the original, and never removes it after success; close errors
+  are also discarded. The path was not executed because it writes outside the
+  managed scratch root. Static source identity proves the ordinary cleanup
+  failure, and passing gates or advisory absence do not override it.
+- Exactly three graph requests exist. Historical Mitchellh CLI v1.0.0 and
+  v1.1.0 request v1.1.1 and genuinely import Complete; Serf v0.9.6 requests
+  v1.2.3 only in metadata. All routes enter through direct mvn-pom-mutator
+  v0.2.3 and the recorded historical Viper/crypt/Consul API/Serf/CLI graph.
+  Target, selected Serf, and selected CLI why are negative; repository imports,
+  production/complete-test/module-backed loads, runtime relevance, and current
+  or historical target roots are zero.
+- A disposable exact selected get changes no selection, adds three unused
+  indirect roots/main edges and three source sums, and preserves loads. Normal
+  tidy removes that manufactured state and restores the common projection. No
+  projection was retained.
+- Exact 234/3,599/355/429/197/41/1,067 project state, module/graph/tidy/Go-
+  floor identities, all 47 pre-Goe selections and 276 incoming edges, separate
+  Goe/pkg-errors/SFTP/go-difflib guards, every earlier decision, and accepted
+  27/27 Q0-Q2 PASS at L2 remain exact. Fresh target advisories and isolated
+  govulncheck results are empty; guarded advisory populations, the Go index,
+  and memberlist CNA response remain exact. Advisory absence is not
+  qualification.
+- No dependency implementation is authorized or retained. P7 stops for the
+  prepared reciprocal decision among Complete-specific unqualified retention
+  of v1.2.3, one later measurement-only **Mvn-Pom-Mutator Complete Owner/
+  Request Study**, or stopping P7 unresolved. The decision was not executed;
+  P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

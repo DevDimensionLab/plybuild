@@ -1131,221 +1131,194 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-23T082105+0200-evaluate-posener-complete-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T082105+0200-evaluate-posener-complete-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T074006+0200-decide-pmezard-go-difflib-product-direction.md
+#|SESSION_ID=2026-09-23T092359+0200-decide-posener-complete-product-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T092359+0200-decide-posener-complete-product-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T082105+0200-evaluate-posener-complete-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 by independently evaluating the next unanswered selected queue
-#|item, graph-selected transitive exact `github.com/posener/complete v1.2.3`, as
-#|exactly one bounded dependency group. Resolve its canonical exact-path release
-#|line and highest qualified Go-1.18-compatible stable from primary evidence.
-#|Implement one exact dependency-only changed selection only if the candidate,
-#|its complete minimal closure, and every earlier target-specific guard remain
-#|exact. Do not combine another dependency group or begin P8.
+#|Choose exactly one bounded product direction for graph-selected exact
+#|`github.com/posener/complete v1.2.3` from the completed evaluation recorded in
+#|this archive. Exactly one of the three choices below may be selected. Do not
+#|repeat the evaluation, change a dependency, run a study, combine another
+#|dependency group, or begin P8.
 #|
 #|# Defensive Scope
 #|
-#|This is an ordinary dependency-quality evaluation. Use public metadata,
-#|static source/repository records, project graph/build commands, upstream tests,
-#|and only small bounded ordinary fixtures required by documented behavior. Do
-#|not fuzz, stress, probe resource exhaustion, create oversized, deeply nested,
-#|cyclic, malformed, adversarial, or escape-sequence payloads, reproduce a
-#|security issue, or perform security or exploitability analysis.
+#|This is an ordinary dependency-quality product decision. Use only the answered
+#|evaluation and narrow guard-only public metadata, graph, build, and advisory
+#|checks. Do not fuzz, stress, probe resource exhaustion, create oversized,
+#|deeply nested, cyclic, malformed, adversarial, or escape-sequence payloads,
+#|reproduce a security issue, or perform security or exploitability analysis.
 #|
-#|Every disposable cache, tool, archive, report, project copy, fixture, or
-#|advisory response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.
-#|Never write to `/private/tmp`, `/tmp`, a sibling of the managed root, or
-#|another external root. Verify containment and remove task-owned scratch
-#|evidence before handoff.
+#|Every disposable cache, tool, report, or response must remain beneath
+#|`${CODEX_SESSION_SCRATCH_ROOT:?}`. Never write to `/private/tmp`, `/tmp`, a
+#|sibling of the managed root, or another external root. Verify containment and
+#|remove task-owned scratch evidence before handoff.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
-#|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
-#|all final target-specific exceptions through go-difflib, and qualified no-
-#|selection-change modern-go/concurrent and modern-go/reflect2. P8 remains
-#|queued.
-#|
-#|Exact selected, inherited, indirect, unloaded
-#|`github.com/pmezard/go-difflib v1.0.0` is retained only under its explicit,
-#|go-difflib-specific, unqualified, non-transferable exception. It is the sole
-#|and latest stable but is neither qualified, supported, safe, nor fixed:
-#|upstream ended maintenance, both exact SDKs fail complete vet, and its two
-#|exported diff writers discard final buffered `Flush` errors. Preserve all 23
-#|exact requests, Testify's nine genuine import boundaries, all 14 metadata-only
-#|requester boundaries, every current/historical route, the positive target why
-#|through direct go-term-markdown's dependency test, zero repository import/
-#|load/runtime/root state, all release/source/behavior/closure/projection/
-#|advisory identities, and every expiry condition. Do not run the rejected Go-
-#|Term-Markdown Testify Go-Difflib Owner/Request Study, add a root, patch/vendor
-#|upstream, change an owner/requester, or transfer the exception.
-#|
-#|Exact selected, inherited, indirect, unloaded `github.com/pkg/sftp v1.13.1`
-#|and `github.com/pkg/errors v0.9.1` remain retained only under their own
-#|explicit unqualified non-transferable exceptions. Preserve their exact
-#|requests, genuine owner/import boundaries, routes, root/why/import/load/
-#|runtime facts, source/behavior/closure/projection/advisory identities, mutual
-#|route guard, and expiry conditions. Do not run their rejected owner studies,
-#|reopen them, or transfer either exception.
-#|
-#|Exact Goe, ULID, go-conntrack, mapstructure, go-homedir, Promptui, emoji/v2,
-#|kr/text, kr/pty, kr/pretty, kr/logfmt, kr/fs, go-windows-terminal-sequences,
-#|gotool, errcheck, httprouter, GLS, go-junit-report, json-iterator, and
-#|clockwork exceptions remain final, target-specific, unqualified, and non-
-#|transferable. Every concurrent, reflect2, Cast, Viper, memberlist, earlier
-#|selection, owner, request, route, why/import/load/runtime, graph/module/tidy/
-#|Go-floor, advisory, source, behavior, closure, qualification, and expiry guard
-#|remains final. Do not reopen, broaden, or transfer any decision.
+#|P2A-P6 are complete. P7 remains active only at this Complete product decision;
+#|P8 remains queued. No dependency implementation or owner/request study is
+#|authorized by this archive. Exactly one of the three bounded choices below may
+#|be selected.
 #|
 #|# Measurements At Start
 #|
-#|The go-difflib decision began from clean branch `codex/upgrade-quality` at
-#|evaluation-handoff HEAD `4e6198c4c3ff5315928df9f6d0690de985bf9ce3`, parent
-#|`632840058974b19122e27302fde780ed6739510b`, tree
-#|`30b7ea878359482c0f2ff1495daf35c5f0741bc2`. Exact Google UUID v1.4.0
-#|dependency commit `cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an
-#|ancestor. The decision changed no product source or dependency metadata and
-#|prepared this evaluation-only handoff. Verify the new handoff HEAD, parent,
-#|tree, exact changed set, ancestry, reciprocal archive chain, and clean
-#|ordinary and ignored status rather than assuming them.
+#|The completed evaluation found six canonical exact-path stable versions,
+#|v1.1.1, v1.1.2, and v1.2.0 through latest/selected v1.2.3. The public,
+#|enabled, unarchived, non-fork MIT repository `posener/complete`, GitHub ID
+#|90418143, remains owned by `posener`. Default branch `v1` explicitly directs
+#|current development to `master`; all canonical v1 tags are lightweight,
+#|valid-signed commits and ancestors of `v1`. The separate canonical `/v2` line
+#|through v2.1.0 is an ineligible alternate module path; `/v3` is absent. There
+#|are no exact-path prereleases, replacements, retractions, or deprecations.
 #|
-#|The unchanged project remains 234 selected modules, 3,599 graph edges, 355
-#|production entries, 429 complete-test entries, 197 module-backed entries
-#|across 41 loaded modules, and 1,067 sum lines. `go.mod` / `go.sum` SHA-256 is
-#|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874` /
-#|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`.
-#|The graph SHA-256 is
-#|`abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-#|The 432-line tidy diff SHA-256 is
-#|`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`;
-#|the common applied 52/948-line hashes are
-#|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
-#|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+#|Selected v1.2.3 is commit
+#|`05b68ffc813dd10c420993cb1cf927b346c057b8`, tree
+#|`58ea2366a478ec75ecf97d4d30097a3f16709fab`. Exact go-import, release, tag,
+#|commit/tree/signature/ancestry, proxy/sumdb, archive-to-Git, module, and license
+#|identities are recorded in the answered evaluation and remain final unless a
+#|guard-only check proves an input changed. V1.2.3 declares Go 1.13 and requires
+#|go-multierror v1.0.0 and Testify v1.4.0.
 #|
-#|All 47 pre-Goe guarded selections and 276 incoming edges remain exact at
-#|`7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`.
-#|The separate complete Goe, pkg/errors, SFTP, and go-difflib guards remain
-#|exact. Preserve every earlier selection and target-specific qualification or
-#|exception boundary. Accepted quality remains 27/27 Q0-Q2 PASS at L2.
+#|V1.1.1 and v1.1.2 fail build, tests, race, and vet under exact Go 1.18.10 and
+#|Go 1.26.7 because their synthesized module metadata omits imported
+#|`github.com/hashicorp/go-multierror`. V1.2.0 through v1.2.3 preserve Go 1.18
+#|and pass module verification, build, count-one/count-ten tests, race, vet, and
+#|the recorded supported cgo-disabled cross-build/test-compilation matrix under
+#|both exact SDKs. They nevertheless do not qualify: every buildable v1.2
+#|release implements exported `cmd/install.Uninstall` by creating a hard-coded
+#|`/tmp/complete-*` temporary file, copying it back, and never removing it after
+#|successful completion. Static source identity is sufficient; the path was not
+#|executed because it would write outside the managed scratch root. Passing
+#|upstream gates and advisory absence do not override this ordinary cleanup
+#|failure. No canonical exact-path stable qualifies.
 #|
-#|Guard OSV remains limited to Gorilla WebSocket and go-retryablehttp; x/mod
-#|v0.14.0 retains GO-2026-6179 and GO-2026-6180. The Go vulnerability index
-#|remains 518,501 bytes/1,402 records at SHA-256
-#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
-#|The PUBLISHED memberlist CNA response remains 2,807 bytes at SHA-256
-#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
-#|Advisory absence is not qualification.
+#|Exactly three graph requests target the module path. Historical Mitchellh CLI
+#|v1.0.0 and v1.1.0 each request v1.1.1 and genuinely import the target in their
+#|production command/autocomplete implementation; Hashicorp Serf v0.9.6 requests
+#|selected v1.2.3 only in module metadata. Preserve the three exact requester
+#|versions, requested target versions, genuine-import/metadata-only boundaries,
+#|and every current or historical route recorded by the answered evaluation.
 #|
-#|The queue identifies exact `github.com/posener/complete v1.2.3` as the next
-#|selected module after go-difflib. Current guard-only observations show one
-#|exact selected request, `github.com/hashicorp/serf v0.9.6` -> target, and the
-#|shortest selected route main -> direct mvn-pom-mutator v0.2.3 -> historical
-#|Viper v1.10.1 -> Serf v0.9.6 -> target. Target why is negative; repository
-#|imports, loaded target entries, runtime relevance, and current/history roots
-#|are zero. Treat these as starting observations only. Independently reproduce
-#|every request, current or historical route, requester genuine-import or
-#|metadata-only boundary, target/requester why, repository import, production/
-#|complete-test/module-backed load, runtime relevance, and root/history-root
-#|fact before selecting a candidate. Do not infer qualification, ownership, or
-#|runtime relevance from physical graph selection or a route.
+#|The shortest selected route is main -> direct mvn-pom-mutator v0.2.3 ->
+#|historical Viper v1.10.1 -> Serf v0.9.6 -> selected target. The two v1.1.1
+#|routes continue through the recorded Viper/crypt, Consul API, Serf, and CLI
+#|vertices. Target, selected Serf, and selected CLI why results are negative.
+#|The repository has zero target, Serf, or CLI imports; their packages are absent
+#|from production and complete-test loads; target module-backed load and runtime
+#|relevance are zero; and no current or historical main target root exists.
+#|Physical graph selection or a route does not establish qualification,
+#|ownership, loading, or runtime relevance.
+#|
+#|A disposable exact selected get changes no selected version. It manufactures
+#|three unused indirect roots/main edges and three source sums, producing 234
+#|modules, 3,602 graph edges, unchanged 355/429/197/41 loads, and 1,070 sum
+#|lines. Normal tidy removes those roots and sums and returns the exact common
+#|234-module/3,557-edge, 52/948-line projection. No projection was retained.
+#|
+#|The real project remains 234 modules, 3,599 edges, 355 production entries,
+#|429 complete-test entries, 197 module-backed entries across 41 loaded modules,
+#|and 1,067 sum lines. Its `go.mod`, `go.sum`, and graph identities, common tidy
+#|projection, Go 1.18 floor, 47-selection/276-edge pre-Goe guard, separate Goe,
+#|pkg/errors, SFTP, and go-difflib guards, and every earlier decision remain
+#|exact. Accepted quality remains 27/27 Q0-Q2 PASS at L2.
+#|
+#|Exact target OSV, GitHub global, repository advisory, and isolated pinned
+#|govulncheck findings are empty. The unchanged project retains exact
+#|30/22/20/20 module/package/symbol/test-symbol advisory populations without a
+#|target trace. Guard OSV remains limited to the recorded Gorilla WebSocket and
+#|go-retryablehttp pairs; x/mod v0.14.0 retains GO-2026-6179 and GO-2026-6180.
+#|The 518,501-byte/1,402-record Go index and PUBLISHED 2,807-byte memberlist CNA
+#|response remain byte-exact. Advisory absence is not qualification.
+#|
+#|# Earlier Decisions Remain Closed
+#|
+#|Exact go-difflib v1.0.0, SFTP v1.13.1, and pkg/errors v0.9.1 remain retained
+#|only under their own explicit target-specific, unqualified, non-transferable
+#|exceptions. Preserve their exact requests, requester boundaries, routes,
+#|why/import/load/runtime/root facts, source/behavior/closure/projection/advisory
+#|identities, mutual guards, and expiry conditions. Do not run their rejected
+#|owner studies, reopen them, or transfer an exception.
+#|
+#|Exact Goe, ULID, go-conntrack, mapstructure, go-homedir, Promptui, emoji/v2,
+#|kr/text, kr/pty, kr/pretty, kr/logfmt, kr/fs,
+#|go-windows-terminal-sequences, gotool, errcheck, httprouter, GLS,
+#|go-junit-report, json-iterator, and clockwork exceptions remain final,
+#|target-specific, unqualified, and non-transferable. Concurrent, reflect2,
+#|Cast, Viper, memberlist, every earlier selection/owner/request/route/fact, and
+#|all qualification/expiry guards remain final. Do not reopen, broaden, or
+#|transfer any decision.
 #|
 #|# Role And Boundaries
 #|
-#|Resolve exact go-import and module-path identity; repository owner/status/
-#|license/default branch; version/tag/release, commit/tree/signature/ancestry,
-#|proxy/sumdb/archive-to-Git identity; module directives and requirements;
-#|retractions, deprecation, replacements, and exact-path major lines. Consider
-#|only genuine exact-path stable releases. Do not promote a fork, branch,
-#|pseudo-version, prerelease, replacement, alternate module path, or ownerless
-#|candidate as a stable.
+#|Act only as the bounded Posener Complete product decision-maker. Treat the
+#|answered evaluation as final, use guard-only checks to detect changed inputs,
+#|and stop for a fresh owning evaluation if any input changed. Do not perform new
+#|behavior, closure, projection, owner-study, or dependency implementation work.
 #|
-#|For selected and every serious stable candidate, inspect the complete module
-#|and test closure, exported API and documentation, Go-floor compatibility,
-#|platform/build-tag/cgo/generated/embed boundaries, globals, ownership and
-#|mutation, determinism, concurrency, lifecycle, cleanup, and error behavior.
-#|Exercise only small bounded ordinary values needed to verify documented
-#|behavior. Run upstream build, tests, repeated tests, race, vet, and supported
-#|cross-builds under exact Go 1.26.7 and a contained Go 1.18 toolchain. A
-#|release qualifies only if every applicable ordinary documented contract and
-#|every project guard pass.
+#|# Authorized Choice
 #|
-#|Map every target MVS request and genuine current or historical route.
-#|Reproduce target and requester why, repository imports, production and
-#|complete-test loads, module-backed entries, runtime relevance, graph counts,
-#|hashes, tidy projection, all earlier guarded selections, the 276-edge pre-Goe
-#|snapshot, and the separate Goe, pkg/errors, SFTP, and go-difflib guards.
-#|Physical selection, transitive presence, a route, loading, or advisory absence
-#|is not qualification.
+#|Choose exactly one:
 #|
-#|Use disposable project copies beneath the managed scratch root to measure
-#|exact candidate projections. Never add or alter a target root in the real
-#|project outside the one final exact dependency implementation authorized
-#|below. Record selection, closure, graph, imports/loads, sums, tidy result,
-#|Go-floor effect, genuine supported tidy-stable ownership, and every earlier
-#|guard for each projection. Do not retain a projection unless the candidate
-#|qualifies and the normal dependency implementation contract authorizes it.
+#|1. Explicitly retain exact selected, inherited, indirect, unloaded
+#|   `github.com/posener/complete v1.2.3` without source or dependency-metadata
+#|   changes under a Complete-specific, unqualified, non-transferable exception.
+#|   State that it is latest but not qualified or fixed. Bind retention to all
+#|   three exact requests, both genuine CLI import boundaries, the Serf metadata-
+#|   only boundary, every route, negative target/requester why, zero repository
+#|   import/load/runtime/root state, all release/source/behavior/closure/
+#|   projection/advisory identities, every earlier guard, and explicit expiry on
+#|   any changed input. Then prepare only the next bounded selected dependency
+#|   queue evaluation named by the roadmap.
+#|2. Authorize exactly one later, measurement-only **Mvn-Pom-Mutator Complete
+#|   Owner/Request Study**. It may measure only whether a supported stable update
+#|   of the existing direct mvn-pom-mutator owner can eliminate all three target
+#|   requests through its recorded historical Viper/crypt/Consul API/Serf/CLI
+#|   graph while preserving product behavior, every direct root, the Go 1.18
+#|   floor, and every earlier guard. It may not implement, add a target root,
+#|   patch/vendor/fork upstream, change an unrelated requester, select a branch,
+#|   pseudo-version, prerelease, replacement, or alternate module path, execute
+#|   the leaking uninstall path, or call v1.2.3 qualified. Any viable measured
+#|   route still requires fresh owning dependency evaluations and a product
+#|   decision before implementation.
+#|3. Stop P7 unresolved without source, dependency, owner/requester, roadmap-
+#|   queue, or exception changes and prepare no dependency evaluation.
 #|
-#|Refresh exact-version OSV and GitHub advisory evidence, repository advisories,
-#|the guarded advisory population, x/mod guard, Go-index identity, memberlist
-#|CNA identity, and a pinned isolated govulncheck comparison. Advisory absence
-#|cannot override ordinary behavior, an upstream gate, ownership, or an earlier-
-#|guard failure. Stay within the defensive scope.
+#|Do not silently retain v1.2.3, transfer an earlier exception, or use physical
+#|selection, zero loading, or advisory absence as acceptance. A decision is
+#|explicit only when its exact scope, unqualified status, guards, and expiry
+#|conditions are recorded.
 #|
-#|# Decision And Implementation Boundary
+#|# Required Reading
 #|
-#|Select only the highest qualified Go-1.18-compatible exact-path stable with a
-#|genuine supported project owner. If that exact selection changes and every
-#|earlier guard remains exact, use exact Go 1.26.7 and exact
-#|`go get github.com/posener/complete@<selected-version>` for one dependency-
-#|only commit; do not hand-edit metadata and do not use tidy as the
-#|implementation. Explain and verify the minimal exact transitive closure.
-#|
-#|If no genuine supported changed selection qualifies, do not retain a direct
-#|root, redundant source sum, downgrade, replacement, branch, fork, pseudo-
-#|version, prerelease, alternate path, patch, vendor copy, workaround, or
-#|unrelated metadata churn. Record the completed result and prepare exactly one
-#|reciprocal product-decision successor offering only target-specific
-#|unqualified retention, one precisely bounded later measurement-only owner/
-#|request study if justified by evidence, or stopping P7 unresolved. Do not
-#|silently retain an unqualified target or transfer an exception.
-#|
-#|# Required Reading And Verification
-#|
-#|Read this archive, the answered go-difflib decision and evaluation, answered
-#|SFTP and pkg/errors decisions/evaluations, answered Goe, ULID, and go-
-#|conntrack decisions/evaluations, reflect2 and concurrent evaluations,
-#|mapstructure, go-homedir, Promptui, emoji/v2, kr/text, and kr/pty decisions/
-#|evaluations, rolling handover, P7/P8 roadmap, `go.mod`, and `go.sum`. Earlier
-#|evaluation facts are final unless a guard-only check proves an input changed;
-#|stop for a fresh owning evaluation if one did.
-#|
-#|Before implementation, verify branch/HEAD/parent/tree, exact changed set,
-#|ancestry, ordinary and ignored cleanliness, reciprocal archive chain,
-#|launcher check, exact Go identities, project hashes/counts/tidy state,
-#|selection/requests/routes/import/load/runtime facts, all earlier guards, and
-#|fresh advisories. After any changed selection, run focused consumer contracts,
-#|module verification, build, count-one and repeated tests, race, vet, supported
-#|cross-builds, pinned lint, API/CLI/help/launcher/Make/quality contracts,
-#|accepted Q0-Q2 quality, vulnerability comparison, and exact tidy analysis.
+#|Read this archive, the answered Complete evaluation, answered go-difflib,
+#|SFTP, pkg/errors, Goe, ULID, and go-conntrack decisions/evaluations, rolling
+#|handover, P7/P8 roadmap, `go.mod`, and `go.sum`. Perform guard-only verification
+#|of branch/HEAD/parent/tree, exact changed set, ancestry, ordinary and ignored
+#|cleanliness, reciprocal archive chain, launcher check, exact Go identities,
+#|project hashes/counts/tidy state, all target request/route/why/import/load/
+#|runtime facts, every earlier guard, and narrow fresh advisory identities. Do
+#|not repeat completed upstream behavior, closure, race, cross-build, archive,
+#|projection, or govulncheck work unless a guard-only check proves an input
+#|changed; stop for a fresh owning evaluation if one did.
 #|
 #|# Three Moves
 #|
-#|First, independently resolve canonical releases, qualification, ownership,
-#|routes, closures, projections, advisories, and earlier guards. Second, make at
-#|most one exact dependency-only implementation if the highest supported
-#|candidate fully qualifies; otherwise leave source and dependency metadata
-#|unchanged. Third, update roadmap and rolling handover, answer this archive,
-#|prepare exactly one reciprocal successor required by the result, verify
-#|scratch containment and cleanup, and make the local handoff commit.
+#|First, verify the completed record and choose exactly one authorized option.
+#|Second, record only that decision without source or dependency-metadata
+#|changes and without executing a study. Third, update roadmap and rolling
+#|handover, answer this archive, prepare at most the one reciprocal successor
+#|required by the chosen option, verify scratch containment and cleanup, and
+#|make the local handoff commit.
 #|
 #|# Automatic Handoff
 #|
-#|Do not launch a successor, run an owner study, push, merge, publish, release,
-#|stash, revert, bypass cleanup, remove the worktree, change another dependency,
-#|transfer an exception, reopen go-difflib, SFTP, pkg/errors, or an earlier
-#|group, write outside the managed scratch root, or begin P8.
+#|Do not launch a successor or study; push, merge, publish, release, stash,
+#|revert, bypass cleanup, remove the worktree, edit a dependency, transfer an
+#|exception, reopen Complete, go-difflib, SFTP, pkg/errors, or an earlier group,
+#|write outside the managed scratch root, or begin P8.
 # CODEX_MUTABLE_PROMPT_END

@@ -5854,10 +5854,70 @@ vet gates. No source or dependency metadata changed. P7 continues only with
 the prepared bounded evaluation of exact selected
 `github.com/posener/complete v1.2.3`; it was not executed. P8 remains queued.
 
+## Posener Complete Evaluation
+
+No canonical exact-path stable qualifies. Exact go-import resolves the public,
+enabled, unarchived, non-fork MIT `posener/complete` repository. The exact-path
+line has v1.1.1, v1.1.2, and v1.2.0 through selected/latest v1.2.3. All six
+lightweight tags name valid-signed commits ancestral to default branch `v1`;
+that branch explicitly directs current development to `master`. The stable
+`/v2` line is an ineligible alternate module path and `/v3` is absent. Exact
+repository, release, tag/commit/tree/signature/ancestry, proxy/sumdb, module,
+license, and archive-to-Git identities reproduce.
+
+V1.1.1 and v1.1.2 pass module verification but fail build, tests, race, and
+vet under exact Go 1.18.10 and Go 1.26.7 because proxy-synthesized module
+metadata omits imported go-multierror. V1.2.0 through v1.2.3 preserve Go 1.18
+and pass verification, build, count-one/count-ten tests, race, vet, and ten
+supported cgo-disabled cross-build/test-compilation targets under both SDKs.
+Their complete source nevertheless shares one disqualifying ordinary cleanup
+failure: exported `cmd/install.Uninstall` creates a hard-coded
+`/tmp/complete-*` file, copies it over the original, and never removes it after
+success; close errors are also discarded. The operation was not executed
+because it writes outside managed scratch. Static source identity is complete
+evidence, so passing upstream gates and advisory absence do not qualify it.
+
+Exactly three graph requests exist. Historical Mitchellh CLI v1.0.0 and
+v1.1.0 request v1.1.1 and genuinely import Complete in production; Serf
+v0.9.6 requests selected v1.2.3 only in metadata. The shortest selected route
+is main -> direct mvn-pom-mutator v0.2.3 -> historical Viper v1.10.1 -> Serf
+v0.9.6 -> target. The two CLI routes continue through the recorded Viper/
+crypt, Consul API, Serf, and CLI vertices. Target, selected Serf, and selected
+CLI why are negative. Repository target/Serf/CLI imports, their production and
+complete-test loads, target module-backed load, target runtime relevance, and
+current/history target roots are zero.
+
+A disposable exact selected get changes no selected version. It manufactures
+three unused indirect roots/main edges and three source sums, yielding
+234/3,602/355/429/197/41/1,070; normal tidy removes them and restores the
+common 234-module/3,557-edge, 52/948-line projection. Nothing was retained.
+The real project remains 234/3,599/355/429/197/41/1,067 with exact module and
+graph identities, unchanged Go 1.18 floor, and exact common tidy result.
+
+All 47 pre-Goe selections and 276 incoming edges remain exact at SHA-256
+`7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`.
+The separate Goe, pkg/errors, SFTP, and go-difflib request/route/why/import/
+load/runtime guards and every earlier decision remain exact. Fresh exact-
+version OSV, GitHub, repository-advisory, and isolated pinned govulncheck
+findings are empty. The project retains exact 30/22/20/20 advisory
+populations without a target trace; guard OSV/x/mod, the 518,501-byte/1,402-
+record Go index, and PUBLISHED memberlist CNA identities reproduce. Advisory
+absence was not used as qualification.
+
+Final unchanged-project exact-Go-1.26.7 module verification, build, count-one
+tests, race count-one tests, and vet pass under umask 022. Source, `go.mod`,
+and `go.sum` remain unchanged; accepted quality remains 27/27 Q0-Q2 PASS at
+L2. P7 stops for one reciprocal choice: explicitly retain exact inherited,
+indirect, unloaded, unqualified v1.2.3 under a Complete-specific exception;
+authorize one later measurement-only **Mvn-Pom-Mutator Complete Owner/Request
+Study**; or stop P7 unresolved. The successor was prepared but not executed.
+P8 remains queued.
+
 ## Next Bounded Objective
 
-Evaluate exact selected `github.com/posener/complete v1.2.3` as the sole
-bounded P7 dependency group. Preserve the go-difflib, SFTP, and pkg/errors
-exceptions and every earlier guard; do not combine another group, run an owner-
-route study, begin P8, or write disposable state outside the managed scratch
-root.
+Choose exactly one bounded product direction for exact selected
+`github.com/posener/complete v1.2.3`: target-specific unqualified retention,
+one later measurement-only Mvn-Pom-Mutator Complete Owner/Request Study, or
+stopping P7 unresolved. Preserve go-difflib, SFTP, pkg/errors, and every
+earlier target-specific guard. Do not repeat the evaluation, edit dependency
+metadata, run the study, combine another group, or begin P8.
