@@ -5375,7 +5375,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active at one prepared bounded evaluation of graph-selected exact
-`github.com/prometheus/client_model v0.2.0`. Client_golang option 1 is final:
+`github.com/shurcooL/sanitized_anchor_name v1.0.0`. Go-diff option 1 is final:
+exact selected, indirect, unloaded v1.2.0 remains unchanged, unqualified, and
+without genuine supported tidy-stable ownership under its own non-transferable
+exception. Client_golang option 1 is final:
 exact selected, inherited, indirect, unloaded v1.4.0 remains unchanged and
 unqualified under its own non-transferable exception. Its fresh complete
 evaluation found no qualifying stable; highest-floor v1.16.0 also lacks a
@@ -15454,7 +15457,9 @@ Russross/blackfriday/v2 product decision (2026-09-24):
   relevance/root facts, corrected advisory identities, all 47 pre-Goe
   selections/276 edges, separate later selections/requests/exceptions, every
   earlier decision, and 27/27 Q0-Q2 PASS at L2. Final exact-Go gates pass and
-  contained task scratch is removed.
+  all 23,891 contained task-scratch entries are verified without symlink or
+  outside-path entries and removed. The 302-record reciprocal archive graph
+  has exactly one NEXT successor.
 - P7 remains active only with one prepared bounded evaluation of the next
   unevaluated alphabetical module, exact `github.com/sergi/go-diff v1.2.0`.
   Its main, Assert v1.0.0, and Chroma v0.7.1 graph requests are starting
@@ -15504,6 +15509,50 @@ Sergi/go-diff evaluation (2026-09-24):
   authorize only a later measurement-only **Go-Diff Request/Ownership Study**;
   or stop unresolved. It is prepared but not executed. No study, successor,
   other dependency group, exception transfer, or P8 work begins.
+
+Sergi/go-diff product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded
+  `github.com/sergi/go-diff v1.2.0` remains unchanged under a go-diff-specific,
+  unqualified, non-transferable exception. It is not qualified, safe, or fixed
+  and lacks a genuine supported tidy-stable owner. The **Go-Diff Request/
+  Ownership Study** is not authorized or run; no dependency/source/root
+  change, projection, implementation pre-authorization, ownership claim, or
+  exception transfer is made.
+- Retention requires the exact three requests/routes; Assert v1.0.0's genuine
+  production import; historical Chroma v0.7.1's zero-source-import metadata-
+  only target edge; go-term-markdown's genuine Chroma import; exact why,
+  repository-import, load/runtime, and first-root facts; all 84 historical
+  checkpoints; 33/33 selected Chroma loads; and selected v1.2.0's exact
+  commit, tree, and source/module sums. Any change requires a fresh owning
+  evaluation and explicit decision.
+- The exact owner/release/tag/commit/tree/signature/ancestry/proxy/sumdb/
+  archive/module/license identities, regular-entry/generated/source/build
+  boundaries, package/API/behavior, complete closures, native/vet/test-scope/
+  cross results, and all six qualification failures are expiry guards. V1.2.0
+  remains unqualified; highest v1.4.0 remains non-API-identical and without a
+  genuine supported tidy-stable owner.
+- Selected get must remain byte-neutral. Ordinary tidy must remove target and
+  Assert roots, select the 2017 Assert pseudo-version and go-diff v1.0.0
+  through Chroma's metadata-only route, and restore the common projection. A
+  v1.4.0 selection must continue changing only target and two sums before tidy
+  discards it. No projection is authorized or retained.
+- Empty target advisory responses do not imply safety or qualification.
+  Incomplete/stopped focal test closures prevent a complete qualification
+  claim; the project remains 30/22/20/20 without go-diff, Blackfriday,
+  fastuuid, TSDB, or Procfs trace, and client_golang retains its separate
+  GHSA/GO/CVE identity. No earlier exception transfers.
+- Guard-only revalidation reproduces clean continuity, reciprocal archives and
+  launcher, both SDK identities, exact 234/3,599/355/429/197/41/1,067 project
+  state, module/graph/common-tidy hashes, Go 1.18, all target/requester route/
+  relevance/root facts, corrected advisory identities, all 47 pre-Goe
+  selections/276 edges, separate later selections/requests/exceptions, every
+  earlier decision, and 27/27 Q0-Q2 PASS at L2. Final exact-Go gates pass and
+  contained task scratch is removed.
+- P7 remains active only with one prepared bounded evaluation of the next
+  unevaluated alphabetical module, exact
+  `github.com/shurcooL/sanitized_anchor_name v1.0.0`. It is not launched; no
+  rejected study, successor, other group, or P8 work begins.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

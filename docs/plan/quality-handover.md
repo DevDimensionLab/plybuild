@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T00:30:20+02:00
+Generated: 2026-09-24T01:41:02+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,12 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Russross Blackfriday
-  v2 product decision began from clean Blackfriday evaluation handoff HEAD
-  `49d7bb334bb5d4b507b0024f94c590d7a03bf212`, parent
-  `5ccd80d618eba0d423a40e637395bf95cf2ac2f6`, tree
-  `3a76d64e46e23f3b9805a19eeb4e7e55c1bd7bde`. That handoff changes exactly
-  the launcher, answered Blackfriday evaluation archive, then-NEXT decision
+  `codex/upgrade-quality`, base master at `5635d50`. The Sergi go-diff product
+  decision began from clean go-diff evaluation handoff HEAD
+  `fccb8361de745a870bc2602d198945d88c0dc54d`, parent
+  `0710ac3a6d65daf77e28c06d52c44c93a16e3300`, tree
+  `5a3131b89a34a739de166a1af0bbb75f4232edef`. That handoff changes exactly
+  the launcher, answered go-diff evaluation archive, then-NEXT decision
   archive, rolling handover, and roadmap. Ordinary and ignored status,
   branch, Google UUID ancestry, exact changed set, reciprocal archive history,
   exact SDK identities, module hashes/counts/common-tidy projection, all
@@ -174,10 +174,18 @@ session diary.
   genuine supported go-md2man requester, but no stable qualifies because the
   mandatory complete upstream tests cross the explicit stress/malformed-input
   boundary. No dependency or source change, projection, root, or exception was
-  retained. The sole NEXT archive is now
-  `docs/plan/agent-sessions/2026-09-23T234834+0200-decide-russross-blackfriday-v2-product-direction.md`.
-  It chooses only one Blackfriday-specific product direction and may not
-  transfer an exception, launch a study, combine another group, write outside
+  retained. Go-diff option 1 is now final: exact selected indirect unloaded
+  v1.2.0 remains unchanged under its own unqualified, non-transferable
+  exception. It is not qualified, safe, or fixed and lacks a genuine
+  supported tidy-stable owner. The Go-Diff Request/Ownership Study was not
+  authorized or run. Its three requests/routes, Assert genuine import,
+  Chroma metadata-only boundary, why/import/load/runtime and root facts, 84
+  checkpoints, selected sums, complete evaluation identities, and all earlier
+  guards are exact expiry conditions. The sole NEXT archive is now
+  `docs/plan/agent-sessions/2026-09-24T014102+0200-evaluate-shurcool-sanitized-anchor-name-dependency.md`.
+  It authorizes only one bounded evaluation of exact selected
+  `github.com/shurcooL/sanitized_anchor_name v1.0.0` and may not transfer an
+  exception, launch a study or successor, combine another group, write outside
   managed scratch, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
@@ -6704,12 +6712,57 @@ decision, and the validated task-owned scratch tree is removed after all
 120,548 entries were confirmed beneath the managed task root with no symlink
 or outside-path entry.
 
+## Sergi Go-Diff Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/sergi/go-diff v1.2.0` remains unchanged under a go-diff-specific,
+unqualified, non-transferable exception. It is not qualified, safe, or fixed
+and lacks a genuine supported tidy-stable owner. The **Go-Diff Request/
+Ownership Study** is not authorized or run. No dependency/source/root change,
+projection, implementation pre-authorization, ownership claim, transferred
+exception, other dependency group, or P8 work is included.
+
+Retention requires the exact direct-main, Assert v1.0.0, and historical Chroma
+v0.7.1 requests/routes; Assert's genuine production import; Chroma's zero-
+source-import metadata-only target edge; go-term-markdown's genuine Chroma
+import; exact target/requester why, import/load/runtime facts; 33/33 selected
+Chroma loads; exact first-root commits; all 84 historical checkpoints; and the
+selected v1.2.0 commit, tree, and source/module sums. Any change requires a
+fresh owning evaluation and explicit decision.
+
+The exact owner/release/tag/commit/tree/signature/ancestry/proxy/sumdb/
+archive/module/license identities, regular-entry and generated/source/build
+boundaries, package/API/behavior, complete closures, native/vet/test-scope/
+cross results, and all six qualification failures remain expiry guards.
+V1.2.0 is not qualified; highest v1.4.0 remains non-API-identical and neither
+qualified nor genuinely owned by a supported tidy-stable project requester.
+
+Exact selected get must remain byte-neutral. Ordinary tidy must continue
+removing target and Assert roots, selecting the 2017 Assert pseudo-version and
+go-diff v1.0.0 through Chroma's metadata-only route, and restoring the common
+projection. A v1.4.0 selection must continue changing only target and its two
+sums before tidy discards it. No projection is authorized or retained.
+
+Target OSV/GitHub/repository emptiness does not imply safety or qualification.
+Incomplete/stopped focal test closures prevent a complete qualification claim;
+the project remains 30/22/20/20 without go-diff, Blackfriday, fastuuid, TSDB,
+or Procfs trace, and client_golang retains its separate GHSA/GO/CVE identity.
+No earlier exception transfers.
+
+Guard-only revalidation reproduces clean continuity, reciprocal archives and
+launcher, both SDK identities, exact 234/3,599/355/429/197/41/1,067 project
+state, module/graph/common-tidy hashes, Go 1.18, all target/requester request/
+route/relevance/root facts, corrected advisory identities, all 47 pre-Goe
+selections/276 edges, separate later selections/requests/exceptions, every
+earlier decision, and 27/27 Q0-Q2 PASS at L2. Final exact-Go gates pass and
+all 23,891 contained task-scratch entries are verified without symlink or
+outside-path entries and removed. The 302-record reciprocal archive graph has
+exactly one NEXT successor.
+
 ## Next Bounded Objective
 
-Choose exactly one direction in
-[the prepared reciprocal go-diff product decision](agent-sessions/2026-09-24T011213+0200-decide-sergi-go-diff-product-direction.md): retain selected
-v1.2.0 under a target-specific unqualified non-transferable exception;
-authorize only a later measurement-only **Go-Diff Request/Ownership Study**;
-or stop P7 unresolved. The decision is prepared but not executed. Do not run
-a study or successor, change another dependency, transfer an exception, or
-begin P8.
+Run only [the prepared bounded sanitized_anchor_name evaluation](agent-sessions/2026-09-24T014102+0200-evaluate-shurcool-sanitized-anchor-name-dependency.md)
+for exact selected indirect
+`github.com/shurcooL/sanitized_anchor_name v1.0.0`. The evaluation is prepared
+but not launched. Do not run the rejected go-diff study, change another
+dependency, transfer or reopen an exception, or begin P8.
