@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T17:25:41+02:00
+Generated: 2026-09-23T21:23:15+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -156,11 +156,12 @@ session diary.
   run. All four
   requests/import boundaries, routes, relevance facts, release/source/closure/
   projection/advisory identities, and earlier guards are exact expiry
-  conditions. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T131751+0200-evaluate-prometheus-client-model-dependency.md`.
-  It evaluates only exact selected `github.com/prometheus/client_model v0.2.0`
-  as one bounded group. It may not reopen client_golang, transfer an exception,
-  combine another group, write outside managed scratch, or begin P8.
+  conditions. The sole NEXT archive is now
+  `docs/plan/agent-sessions/2026-09-23T212315+0200-decide-prometheus-tsdb-product-direction.md`.
+  It chooses only the bounded disposition of exact selected
+  `github.com/prometheus/tsdb v0.7.1`. It may not repeat the evaluation, launch
+  a study or successor, transfer an exception, combine another group, write
+  outside managed scratch, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -6399,11 +6400,62 @@ work was not repeated. Final exact-Go gates and contained task scratch cleanup
 pass. No source, dependency metadata, target root, study, ownership, or
 transferred exception is retained.
 
+## Prometheus TSDB Evaluation
+
+No canonical exact-path stable qualifies and no genuine supported tidy-stable
+owner exists, so no dependency or source change is authorized. Exact go-import
+metadata redirects the target path to the public archived Apache-2.0
+`prometheus-junkyard/tsdb` repository. The proxy has exactly 14 canonical
+stables v0.1.0-v0.10.0 with no prerelease/replacement/retraction/deprecation or
+alternate-major line; all preserve Go 1.18 and v0.10.0 is highest compatible.
+Exact release/Git/signature/ancestry, proxy/sumdb/archive, module/license,
+source/build boundary, API, and ordinary behavior evidence is complete.
+
+V0.1.0/v0.2.0 verify through synthesized module-directive-only metadata but
+cannot build their undeclared standalone closure. Every v0.3.0-v0.10.0
+closure verifies and builds under exact Go 1.18.10 and Go 1.26.7 but fails
+mandatory vet under both. Static review found randomized WAL generation and
+corruption cases inside conventionally named ordinary upstream tests; active
+rows were stopped and no later TSDB test was executed, so the defensive scope
+also precludes complete test/repeat/race qualification. The 280-row
+cgo-disabled compile-only matrix passes Darwin/Linux/Windows/FreeBSD for
+v0.3.0-v0.10.0 but fails Plan 9 and js/wasm; v0.1.0/v0.2.0 fail every target.
+
+Selected v0.7.1 has a 27-module/14-package closure; its Go 1.18.10 and Go
+1.26.7 production/test/module-backed populations are 182/210/62 and
+245/273/62 across 19 loaded modules. V0.10.0 has a 40-module/14-package
+closure with 180/208/60 and 243/271/60 across 20. Their exact API snapshots,
+commit/tree/tag/signature/sum identities, vet and cross failures remain
+guards. No stable is fully qualified.
+
+Exactly one request and route reproduce: main -> direct mvn-pom-mutator
+v0.2.3 -> metadata-only TSDB v0.7.1. The project genuinely imports and loads
+requester `pkg/pom`, but the requester has zero TSDB imports. Target why is
+negative, repository import and target production/test/module-backed load are
+zero, runtime relevance is zero, and current and historical target roots are
+zero. The canonical repository is archived, no requester asks for v0.10.0,
+and no genuine supported owner exists.
+
+Selected get manufactures 13 redundant indirect roots and no selection
+change; ordinary tidy removes them and restores the common projection with
+v0.7.1 selected. No v0.10.0 projection was authorized because it was not
+otherwise qualified. Direct target advisory responses are empty without
+implying qualification. Both focal closures have 3/1/0/0 pinned non-stdlib
+findings through client_golang/x/sys, while the project remains 30/22/20/20
+with no TSDB or Procfs trace and client_golang's GHSA/GO/CVE identity intact.
+
+Exact SDKs, real 234/3,599/355/429/197/41/1,067 state, Go floor, module/graph/
+common-tidy hashes, corrected advisory guards, all 47 pre-Goe selections/276
+edges, separate later selections/exceptions, every earlier decision, and
+27/27 Q0-Q2 PASS at L2 remain exact. Final exact-Go module verify/build/count-
+one/race/vet passes and task scratch is removed. No project dependency/source
+change or projection is retained.
+
 ## Next Bounded Objective
 
-Evaluate exactly selected `github.com/prometheus/tsdb v0.7.1`, the next
-alphabetical P7 module, against its canonical Go-1.18-compatible stable line,
-complete closure, genuine owner, and every earlier guard. Its single graph
-request from direct mvn-pom-mutator v0.2.3 is a starting observation only. The
-successor is prepared but not executed. Do not run a rejected owner study,
-transfer any exception, combine another dependency group, or begin P8.
+Choose exactly one reciprocal TSDB product direction: TSDB-specific
+unqualified non-transferable retention of exact inherited v0.7.1; one later
+measurement-only **Mvn-Pom-Mutator Prometheus TSDB Owner/Request Study**; or
+stop P7 unresolved. The decision is prepared but not executed. Do not repeat
+the evaluation, run a study, transfer any exception, combine another group,
+or begin P8.
