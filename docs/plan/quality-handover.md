@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T23:01:40+02:00
+Generated: 2026-09-24T00:05:57+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,17 +8,17 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Rogpeppe fastuuid
-  evaluation began from clean TSDB decision handoff HEAD
-  `34549ce1e64317726f87f23820fc353df151f0db`, parent
-  `96fe50c72d9b5d85a86e6eb93e0abbdc0d2cfa94`, tree
-  `05059c0cf3bb68454214d8df568865976b565699`. That handoff changes exactly
-  the launcher, answered TSDB decision, then-NEXT fastuuid archive, rolling
-  handover, and roadmap. Ordinary and ignored status, branch, ancestry, exact
-  changed set, reciprocal archive history, latest Google UUID ancestry, exact
-  Go identities, module hashes/counts/common-tidy projection, all fastuuid and
-  earlier guards, fresh advisory identities, final unchanged-project gates,
-  and contained launcher check pass. No source or dependency metadata changed.
+  `codex/upgrade-quality`, base master at `5635d50`. The Russross Blackfriday
+  v2 evaluation began from clean fastuuid evaluation handoff HEAD
+  `5ccd80d618eba0d423a40e637395bf95cf2ac2f6`, parent
+  `34549ce1e64317726f87f23820fc353df151f0db`, tree
+  `e715e5a8a0725c62b4878f0a68bf6ed47a8e168d`. That handoff changes exactly
+  the launcher, answered fastuuid archive, then-NEXT Blackfriday archive,
+  rolling handover, and roadmap. Ordinary and ignored status, branch, Google
+  UUID ancestry, exact changed set, reciprocal archive history, exact SDK
+  identities, module hashes/counts/common-tidy projection, all Blackfriday and
+  earlier guards, fresh advisory identities, and contained launcher check
+  passed at start. No source or dependency metadata changed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -169,11 +169,15 @@ session diary.
   selected, and exact get followed by ordinary tidy makes no retained
   selection or metadata change. Selected rogpeppe/go-internal v1.9.0 is
   already closed as Cast v1.5.1's fully verified minimal test closure. The
-  sole NEXT archive is now
-  `docs/plan/agent-sessions/2026-09-23T224910+0200-evaluate-russross-blackfriday-v2-dependency.md`.
-  It evaluates only exact selected `github.com/russross/blackfriday/v2
-  v2.1.0`. It may not transfer an exception, combine another group, write
-  outside managed scratch, or begin P8.
+  completed Blackfriday evaluation found v2.1.0 highest compatible with a
+  genuine supported go-md2man requester, but no stable qualifies because the
+  mandatory complete upstream tests cross the explicit stress/malformed-input
+  boundary. No dependency or source change, projection, root, or exception was
+  retained. The sole NEXT archive is now
+  `docs/plan/agent-sessions/2026-09-23T234834+0200-decide-russross-blackfriday-v2-product-direction.md`.
+  It chooses only one Blackfriday-specific product direction and may not
+  transfer an exception, launch a study, combine another group, write outside
+  managed scratch, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -6554,12 +6558,69 @@ state, module/graph/common-tidy hashes, Go floor, all 47 pre-Goe selections/
 and 27/27 Q0-Q2 PASS at L2 remain exact. Final exact-Go gates pass and task-
 owned scratch is removed. No source or dependency selection changed.
 
+## Russross Blackfriday V2 Evaluation
+
+No canonical exact-path stable fully qualifies, so no dependency or source
+change is authorized. Parent-path go-import metadata identifies the public,
+enabled, unarchived, non-fork `russross/blackfriday` repository. The canonical
+fetchable `/v2` stable line is exactly v2.0.1 and v2.1.0; v2.0.0 is not usable
+at the exact major path and v2.1.0-pre.1 is an excluded prerelease at the
+stable commit. V2.1.0 is highest compatible, neither stable declares a Go
+version, and no replacement, retraction, deprecation, or alternate-major
+exact-path line exists. Exact repository/license, tag/commit/tree/signature/
+ancestry, proxy/sumdb/archive-to-Git, module, package, and source boundaries
+are recorded in the answered evaluation.
+
+V2.0.1 has an incomplete declared closure: production imports
+sanitized_anchor_name and tests import go-difflib, but its module metadata
+declares neither. Native readonly build/vet/test compilation and all 40
+production/test cross results therefore fail across exact Go 1.18.10 and Go
+1.26.7. V2.1.0 has
+a one-module/one-package standard-library closure and passes verify, build,
+vet, safe test compilation, and all 40 cgo-disabled production/test compile
+rows. Both releases' ordinary tests explicitly stress every input substring
+and contain an explicitly malformed-input case. Static review found that
+boundary before execution; complete count-one, repeated, and race rows were
+stopped and not run. Partial evidence cannot qualify either release.
+
+Exactly four selected-version requests and current routes reproduce: direct
+main; selected go-md2man v2.0.7; Cobra v1.10.2 -> go-md2man v2.0.6; and direct
+mvn-pom-mutator -> Cobra v1.4.0 -> go-md2man v2.0.1. Every go-md2man requester
+genuinely imports Blackfriday and requests v2.1.0; selected Cobra genuinely
+imports go-md2man. The active public go-md2man repository establishes genuine
+supported tidy-stable transitive ownership, though target and requester why,
+repository imports, all project load populations, and runtime relevance are
+zero. All 84 historical module checkpoints reproduce route evolution. Main
+first roots target and selected requester together at
+`55dc69dda20c4d8f96b6dbcdd70cfef76467cc85`; neither is an earlier root.
+
+Selected get changes no selection or project byte. Ordinary tidy removes the
+redundant target/requester roots, keeps v2.1.0 transitively, and restores the
+established common projection. No projection is retained. Exact-version OSV,
+narrow GitHub, and repository responses are empty without contributing to
+qualification. Pinned focal v2.1.0 is 0/0/0/0; v2.0.1 cannot be loaded
+completely and has no usable empty result. The project remains 30/22/20/20
+without Blackfriday, fastuuid, TSDB, or Procfs trace; the client_golang
+GHSA/GO/CVE guard remains exact.
+
+Both SDK identities, exact 234/3,599/355/429/197/41/1,067 state, Go floor,
+module/graph/common-tidy hashes, corrected advisory guards, all 47 pre-Goe
+selections/276 edges, every separate later selection/request/exception, every
+earlier decision, and 27/27 Q0-Q2 PASS at L2 remain exact. No source,
+dependency metadata, target root, projection, exception, study, other group,
+or P8 work is retained. A first final-gate attempt inherited a restrictive
+runner umask and stopped at three existing file-mode contract checks. The
+entire gate was restarted under established ordinary `umask 022`; exact Go
+1.26.7 module verification, build, count-one tests, race count-one tests, and
+vet all pass. All disposable evidence remained beneath the managed session
+scratch root, and the validated task-owned directory is removed.
+
 ## Next Bounded Objective
 
-The selected alphabetical `github.com/rogpeppe/go-internal v1.9.0` is already
-closed as Cast v1.5.1's fully verified minimal test closure. Evaluate exactly
-one next unevaluated alphabetical P7 module,
-`github.com/russross/blackfriday/v2 v2.1.0`. The main module's indirect
-requirement and go-md2man/v2 v2.0.1/v2.0.6/v2.0.7 requests are starting
-observations only. The evaluation is prepared but not launched. Do not run a
-rejected study, transfer any exception, combine another group, or begin P8.
+Choose exactly one bounded product direction for exact selected indirect
+unloaded `github.com/russross/blackfriday/v2 v2.1.0`: retain it unchanged only
+under a Blackfriday-specific unqualified non-transferable exception; authorize
+one later measurement-only **Go-Md2man Blackfriday Elimination Study**; or stop
+P7 unresolved. The decision is prepared but not executed. Do not repeat the
+evaluation, run a study, transfer an exception, combine another group, or begin
+P8.

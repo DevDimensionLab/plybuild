@@ -15362,6 +15362,61 @@ Rogpeppe/fastuuid evaluation (2026-09-23):
   observations only. The successor is not launched; no rejected study,
   exception transfer, other group, or P8 work begins.
 
+Russross/blackfriday/v2 evaluation (2026-09-23):
+
+- No canonical exact-path stable fully qualifies, so no dependency or source
+  change is authorized. Parent-path go-import metadata identifies the public,
+  enabled, unarchived, non-fork `russross/blackfriday` repository. The
+  fetchable canonical `/v2` stable line is exactly v2.0.1 and v2.1.0;
+  v2.0.0 lacks an applicable exact-path module file and v2.1.0-pre.1 is an
+  excluded prerelease at the stable commit. V2.1.0 is highest compatible, no
+  stable declares a Go version, and no replacement, retraction, deprecation,
+  or alternate-major exact-path line exists.
+- V2.0.1 has an incomplete declared closure: production imports
+  sanitized_anchor_name and tests import go-difflib, while its module metadata
+  declares neither. Native readonly build/vet/test compilation and every
+  cross row therefore fail under both exact SDKs. V2.1.0 has a one-module,
+  one-package standard-library closure and passes verify, build, vet, safe
+  test-package compilation, and the full 40-row cgo-disabled production/test
+  compile matrix across both SDKs.
+- Both stable ordinary test suites explicitly stress every input substring and
+  include an explicitly malformed-input case. Static review found the boundary
+  before execution; complete count-one, repeated, and race rows were stopped
+  and not run. The defensive scope forbids those payloads and forbids partial
+  evidence as qualification, so neither release qualifies.
+- Exactly four v2.1.0 requests and current routes reproduce: direct main;
+  selected go-md2man v2.0.7; Cobra v1.10.2 -> go-md2man v2.0.6; and direct
+  mvn-pom-mutator -> Cobra v1.4.0 -> go-md2man v2.0.1. Each go-md2man release
+  genuinely imports Blackfriday in production/tests and requests v2.1.0;
+  selected Cobra genuinely imports go-md2man. The active public go-md2man
+  repository establishes genuine supported tidy-stable transitive ownership,
+  although target/requester why, repository imports, all project loads, and
+  runtime relevance are zero. All 84 historical module checkpoints reproduce;
+  main first roots target and selected requester together at
+  `55dc69dda20c4d8f96b6dbcdd70cfef76467cc85`.
+- Selected get changes no selection or project byte. Ordinary tidy removes the
+  redundant target/requester roots, retains v2.1.0 transitively, and restores
+  the established common projection. No projection is retained. Empty target
+  advisory responses do not imply safety or qualification; v2.1.0 focal scan
+  is 0/0/0/0, v2.0.1 is incomplete, and the project remains 30/22/20/20
+  without Blackfriday, fastuuid, TSDB, or Procfs trace. The client_golang
+  GHSA/GO/CVE guard remains exact.
+- Exact SDKs, 234/3,599/355/429/197/41/1,067 project state, module/graph/
+  common-tidy hashes, Go floor, corrected advisory guards, all 47 pre-Goe
+  selections/276 edges, separate later selections/requests/exceptions, every
+  earlier decision, and 27/27 Q0-Q2 PASS at L2 remain exact. No source,
+  dependency metadata, root, exception, study, other group, or P8 work is
+  retained. An initial restrictive-runner-umask attempt stopped at three
+  existing file-mode contract checks; the complete exact-Go-1.26.7 gate passes
+  after restart under established ordinary `umask 022`. Task-owned scratch was
+  contained beneath the managed session root and removed.
+- P7 stops for exactly one reciprocal product decision: retain exact selected,
+  indirect, unloaded v2.1.0 under a Blackfriday-specific unqualified,
+  non-transferable exception; authorize one later measurement-only
+  **Go-Md2man Blackfriday Elimination Study**; or stop unresolved. The decision
+  is prepared but not executed; no study, successor, other group, or P8 work
+  begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

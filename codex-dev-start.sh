@@ -1131,187 +1131,182 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-23T224910+0200-evaluate-russross-blackfriday-v2-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T224910+0200-evaluate-russross-blackfriday-v2-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T220817+0200-evaluate-rogpeppe-fastuuid-dependency.md
+#|SESSION_ID=2026-09-23T234834+0200-decide-russross-blackfriday-v2-product-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T234834+0200-decide-russross-blackfriday-v2-product-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T224910+0200-evaluate-russross-blackfriday-v2-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 with exactly one fresh, bounded evaluation of the next unevaluated
-#|alphabetical module, exact indirect selected
-#|`github.com/russross/blackfriday/v2 v2.1.0`. Resolve its canonical exact-path
-#|release line and highest fully qualified Go-1.18-compatible stable from primary
-#|evidence. Implement one exact dependency-only changed selection only if the
-#|candidate, complete minimal closure, genuine supported tidy-stable project
-#|owner, and every earlier guard remain exact. Do not combine another dependency
-#|group or begin P8.
+#|Continue P7 with exactly one bounded product-direction decision for exact
+#|selected indirect `github.com/russross/blackfriday/v2 v2.1.0`. The completed
+#|fresh evaluation found no fully qualified canonical Go-1.18-compatible stable,
+#|although v2.1.0 is highest compatible and has a genuine supported tidy-stable
+#|requester. Choose and record exactly one of the three authorized directions
+#|below. Do not repeat the evaluation, implement a dependency or source change,
+#|combine another group, launch a study or successor, or begin P8.
 #|
 #|# Defensive Scope
 #|
-#|This is an ordinary dependency-quality evaluation. Use public metadata,
-#|static source and repository records, project graph/build commands, upstream
-#|tests, and only small bounded ordinary fixtures required by documented
-#|behavior. Do not fuzz, stress, probe resource exhaustion, create oversized,
-#|deeply nested, cyclic, malformed, adversarial, or escape-sequence payloads,
-#|reproduce a security issue, or perform security or exploitability analysis.
+#|This is an ordinary dependency product-direction decision. Use only completed
+#|public release/source/build/graph/projection/advisory evidence and bounded
+#|read-only guard checks. Do not fuzz, stress, probe resource exhaustion, create
+#|oversized, deeply nested, cyclic, malformed, adversarial, or escape-sequence
+#|payloads, reproduce a security issue, or perform security or exploitability
+#|analysis.
 #|
-#|Every disposable cache, tool, archive, report, project copy, fixture, or
-#|advisory response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.
-#|Never write to `/private/tmp`, `/tmp`, a sibling of the managed root, or
-#|another external root. Set every tool temp/cache root explicitly, verify
-#|containment, and remove task-owned scratch evidence before handoff.
+#|Every disposable cache, report, project copy, or advisory response must remain
+#|beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Never write to `/private/tmp`,
+#|`/tmp`, a sibling of the managed root, or another external root. Set every
+#|tool temp/cache root explicitly, verify containment, and remove task-owned
+#|scratch evidence before handoff.
 #|
-#|# Authorized Roadmap And Closed Decisions
+#|# Completed Evaluation
 #|
-#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
-#|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
-#|qualified no-selection-change modern-go/concurrent, modern-go/reflect2, and
-#|rogpeppe/fastuuid, and all final target-specific decisions through Prometheus
-#|TSDB. P8 remains queued. Selected rogpeppe/go-internal v1.9.0 was already
-#|fully verified and closed as Cast v1.5.1's minimal test closure; do not repeat
-#|it as a standalone queue item.
+#|Parent-path primary go-import metadata maps the exact owner to the public,
+#|enabled, unarchived, non-fork `russross/blackfriday` repository. Its default
+#|`master` branch remains on the separate v1.6.0 line; exact branch `v2` is at
+#|selected v2.1.0. The repository license file contains Simplified BSD
+#|two-clause terms despite GitHub's unclassified license result.
 #|
-#|Fastuuid v1.2.0 is the highest qualified exact-path stable and already the
-#|exact selection. Preserve its exact three-release owner/source/API/behavior/
-#|closure/native/cross/advisory identities, sole genuine grpc-gateway request,
-#|current/historical routes, negative why and zero project load/runtime/root
-#|facts, real go.mod-only sum boundary, and get-then-tidy no-selection-change
-#|projection. Do not add a fastuuid root or reopen its completed evaluation.
+#|The exact-path proxy exposes v2.0.0, v2.0.1, v2.1.0-pre.1, and v2.1.0.
+#|V2.0.0 is not a usable canonical `/v2` release because its tree lacks an
+#|applicable `go.mod`; v2.1.0-pre.1 is a prerelease at the same commit as the
+#|stable. Thus v2.0.1 and v2.1.0 are the two canonical fetchable stables, with
+#|v2.1.0 highest. No replacement, retraction, deprecation, or alternate-major
+#|exact-path line exists. Neither module declares a Go version, so both preserve
+#|the project Go 1.18 floor. Exact tags, commits, trees, signatures, ancestry,
+#|proxy/sumdb/archive-to-Git identity, module/license files, packages, source
+#|boundaries, and regular-only archive entries are recorded in the answered
+#|evaluation.
 #|
-#|Exact selected, inherited, indirect, unloaded TSDB v0.7.1, Procfs v0.0.8,
-#|Common v0.9.1, client_model v0.2.0, and client_golang v1.4.0 remain only under
-#|their separate target-specific, unqualified, non-transferable exceptions.
-#|Do not run their rejected owner studies, select rejected candidates, add a
-#|target root, transfer an exception, or describe them as qualified, supported,
-#|safe, or fixed. Preserve Complete, go-difflib, SFTP, pkg/errors, Goe, ULID,
-#|go-conntrack, and every earlier qualified or excepted result under its exact
-#|recorded guards.
+#|V2.0.1 has an incomplete declared standalone closure: production imports
+#|`github.com/shurcooL/sanitized_anchor_name`, tests also import go-difflib, and
+#|its `go.mod` declares neither. Native readonly build/vet/test compilation and
+#|all 40 cgo-disabled production/test compilation results therefore fail across
+#|both exact SDKs and ten supported targets.
 #|
-#|# Protected Starting State
+#|V2.1.0 has a one-module, one-package standard-library closure. Under exact Go
+#|1.18.10 and Go 1.26.7 it passes module verification, build, vet, safe
+#|test-package compilation, and all 40 cgo-disabled production/test-compilation
+#|rows across Darwin, Linux, Windows, FreeBSD, Plan 9, and js/wasm. These are
+#|partial qualification results only.
 #|
-#|Begin only from the clean fastuuid evaluation handoff on
-#|`codex/upgrade-quality`. Verify its HEAD, parent, tree, exact changed set,
-#|branch and Google UUID ancestry, reciprocal archive chain, sole NEXT state,
-#|launcher mirror/check, and ordinary and ignored cleanliness. Stop for a fresh
-#|owning decision if any protected input changed.
+#|Both stable ordinary test suites invoke a helper explicitly designed to test
+#|every input substring to stress bounds checking and contain a test explicitly
+#|using malformed input. Static review found the boundary before execution, so
+#|complete count-one, repeated, and race tests were stopped and not run under
+#|either SDK. The governing defensive scope forbids those payloads and forbids
+#|using partial evidence as qualification. Consequently no canonical stable
+#|fully qualifies; no advisory absence or passing compile row changes that
+#|result.
 #|
-#|The unchanged real project has exactly 234 modules, 3,599 graph edges, 355
-#|production entries, 429 complete-test entries, 197 module-backed entries
-#|across 41 loaded modules, and 1,067 `go.sum` lines. `go.mod`, `go.sum`, and
-#|graph SHA-256 remain
-#|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
-#|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
-#|and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-#|Normal tidy has the established 432-line diff at
-#|`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`;
-#|the common 52/948-line, 234-module/3,557-edge projection has `go.mod` /
-#|`go.sum` hashes
-#|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
-#|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
-#|No projection is retained. The module floor remains Go 1.18 and accepted
-#|quality remains 27/27 Q0-Q2 PASS at L2.
+#|The current graph has exactly four v2.1.0 requests: main and go-md2man/v2
+#|v2.0.1, v2.0.6, and selected v2.0.7. Each go-md2man release genuinely imports
+#|Blackfriday in production and tests and requests exactly v2.1.0. Selected
+#|Cobra v1.10.2 genuinely imports go-md2man in its production documentation
+#|package. The public go-md2man repository is enabled, unarchived, non-fork, and
+#|active, establishing a genuine supported tidy-stable transitive requester
+#|boundary even though the project does not load it.
 #|
-#|Official Go 1.18.10 archive/binary SHA-256 remains
-#|`718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
-#|`f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`;
-#|Go 1.26.7 remains
-#|`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
-#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
-#|Use only exact verified binaries for named SDK gates.
+#|The four current complete routes are the direct main edge; main -> selected
+#|go-md2man v2.0.7; main -> Cobra v1.10.2 -> go-md2man v2.0.6; and main ->
+#|direct mvn-pom-mutator v0.2.3 -> Cobra v1.4.0 -> go-md2man v2.0.1. All 84
+#|historical module checkpoints reproduce the route evolution from the initial
+#|2020 Cobra v1.0.0/go-md2man v2.0.0/Blackfriday v2.0.1 route through the
+#|current v2.1.0 route families. Main first requests target v2.1.0 and
+#|go-md2man v2.0.7 at commit `55dc69dda20c4d8f96b6dbcdd70cfef76467cc85`;
+#|neither is an earlier root.
 #|
-#|All 47 pre-Goe selections and 276 incoming edges remain exact at
-#|`7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`.
-#|Separate selections/request counts remain Goe v0.1.0/four, pkg/errors
-#|v0.9.1/ten, SFTP v1.13.1/four, go-difflib v1.0.0/23, Complete v1.2.3/three,
-#|ULID v1.3.1/one, go-conntrack `cc309e4a2223`/two, client_golang v1.4.0/four,
-#|client_model v0.2.0/15, Common v0.9.1/four, Procfs v0.0.8/four, TSDB
-#|v0.7.1/one, and fastuuid v1.2.0/one. Preserve every recorded why/import/load/
-#|runtime, route, source, behavior, closure, qualification/exception,
-#|projection, advisory, and expiry fact.
+#|Target and requester why are negative; repository imports, project production
+#|and complete-test loads, module-backed entries, and runtime relevance are all
+#|zero for both. The unchanged project populations remain 355/429/197 across 41
+#|loaded modules. Exact selected get changes no byte or selection. Ordinary tidy
+#|removes the redundant direct target/requester roots while retaining v2.1.0
+#|through genuine go-md2man routes and restores the established common
+#|projection. No projection was retained.
 #|
-#|# Target Starting Observation
+#|Exact-version OSV and narrow GitHub/repository responses are empty without
+#|implying safety or qualification. Pinned govulncheck v1.8.0 reports 0/0/0/0
+#|for v2.1.0's complete focal closure; v2.0.1 cannot be loaded completely and
+#|has no usable empty result. The project remains 30/22/20/20 without a
+#|Blackfriday, fastuuid, TSDB, or Procfs trace; client_golang v1.4.0 retains
+#|GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698. No exploitability claim
+#|was made.
 #|
-#|Read-only queue identification selects exact
-#|`github.com/russross/blackfriday/v2 v2.1.0`. The current full graph has four
-#|target requests: the indirect main request and go-md2man/v2 v2.0.1, v2.0.6,
-#|and selected v2.0.7, each to v2.1.0. Target why is negative and current
-#|repository source has no target import. These are starting observations only.
-#|Independently reproduce every request, requester import or metadata boundary,
-#|complete current and historical routes from main, target/requester why,
-#|repository import, production/complete-test/module-backed load, runtime
-#|relevance, and current/historical root facts. Physical selection, a main
-#|request, a route, loading, or advisory absence does not establish
-#|qualification or genuine ownership.
+#|The real project remains exactly 234 modules, 3,599 graph edges, 355
+#|production entries, 429 complete-test entries, 197 module-backed entries over
+#|41 loaded modules, and 1,067 sum lines at the protected hashes and Go 1.18
+#|floor. Official SDK identities, the established common tidy projection,
+#|corrected Go-index/CNA identities, all 47 pre-Goe selections and 276 incoming
+#|edges, every separate later selection/request count and exception, all earlier
+#|decisions, and accepted 27/27 Q0-Q2 PASS at L2 remain exact. No dependency,
+#|source, root, projection, exception, or study was retained by the evaluation.
 #|
-#|The corrected Go vulnerability index guard is exactly 518,501 bytes and 1,402
-#|records at SHA-256
-#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
-#|The PUBLISHED CVE-2026-14362 CNA response is exactly 2,807 bytes at
-#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
-#|The unchanged project advisory guard remains 30/22/20/20 module/package/
-#|symbol/test-symbol findings with no fastuuid, TSDB, or Procfs trace.
-#|Client_golang v1.4.0 retains GHSA-cg3q-j54f-5p7p / GO-2022-0322 /
-#|CVE-2022-21698. Revalidate target and guard advisories narrowly; advisory
-#|absence cannot qualify blackfriday.
+#|# Role And Boundaries
 #|
-#|# Evaluation Contract
+#|Choose exactly one:
 #|
-#|Resolve exact go-import owner, repository identity/status/license/default
-#|branch, exact-path stable/prerelease/replacement/retraction/deprecation and
-#|alternate-major lines, release chronology, Go-floor compatibility, tags,
-#|commits, trees, signatures, ancestry, proxy/sumdb/archive-to-Git identity,
-#|module/license files, packages, and source/build boundaries from primary
-#|evidence. Inspect every Go-1.18-compatible canonical stable needed to identify
-#|the highest fully qualified release; do not assume latest, a physical graph
-#|selection, or a passing build is qualified.
+#|1. Explicitly retain exact selected, indirect, unloaded
+#|   `github.com/russross/blackfriday/v2 v2.1.0` unchanged under a
+#|   Blackfriday-specific, unqualified, non-transferable exception. State that it
+#|   is highest compatible but is not qualified, safe, or fixed. Preserve the
+#|   exact four requests and current routes, all historical route families,
+#|   genuine go-md2man requester/import boundary, negative why, zero project
+#|   import/load/runtime facts, root history, sums, release/source/API/behavior/
+#|   closure/native/test-scope/cross/projection/advisory identities, and every
+#|   earlier guard as expiry conditions. Do not transfer another exception.
+#|2. Authorize exactly one later measurement-only **Go-Md2man Blackfriday
+#|   Elimination Study** to determine whether a supported requester update or
+#|   replacement can eliminate Blackfriday while preserving product behavior,
+#|   direct roots, the Go 1.18 floor, and every earlier guard. Do not run the
+#|   study, grant an exception, change a dependency or source file, or
+#|   pre-authorize an implementation.
+#|3. Stop P7 unresolved without changing source, dependency metadata, ownership,
+#|   or any exception.
 #|
-#|Review the public API and documented ordinary behavior, parser/renderer
-#|options, caller input/output ownership and mutation, determinism, concurrency,
-#|lifecycle, cleanup, errors, build tags, cgo, generated/embed boundaries,
-#|symlinks, submodules, and archive entries. Exercise only small bounded
-#|ordinary fixtures required by documented contracts. Run the complete minimal
-#|closure's verification, build, complete count-one and repeated tests, race
-#|count-one tests, vet, and supported cgo-disabled production/test-compilation
-#|matrix under exact Go 1.18.10 and Go 1.26.7. Stop any row that crosses the
-#|defensive scope and do not use partial evidence as qualification.
-#|
-#|Map every target request and genuine current or historical route. Reproduce
-#|target/requester why, repository imports, production and complete-test loads,
-#|module-backed entries, runtime relevance, graph counts/hashes, tidy projection,
-#|all protected selections, and each exception boundary. Use only disposable
-#|project copies beneath managed scratch for candidate projections. Record exact
-#|selection, closure, graph, sums, Go-floor effect, genuine supported tidy-stable
-#|ownership, and every earlier guard. Retain no projection unless every gate
-#|passes and the implementation contract authorizes exactly one dependency-only
-#|selection.
-#|
-#|Query exact-version OSV, narrow GitHub global/repository advisories, pinned
-#|govulncheck v1.8.0 focal closures, and the unchanged project guard. Do not
-#|infer safety or qualification from an empty advisory response and make no
-#|exploitability claim.
+#|Option 1 is recommended because the selected highest compatible release is
+#|unloaded and runtime-irrelevant, the genuine transitive requester is supported,
+#|and the qualification boundary is explicit. This is a product acceptance
+#|decision, not a qualification or safety claim.
 #|
 #|# Required Reading And Handoff
 #|
-#|Read the answered fastuuid evaluation, TSDB product decision/evaluation, and
-#|all incorporated prior guards before acting. Do not repeat completed work for
-#|another module, run a rejected owner study, transfer an exception, add an
-#|unqualified target root, or relax the Go 1.18 floor.
+#|Start only from the clean Blackfriday evaluation handoff. Verify its HEAD,
+#|parent, tree, exact changed set, branch and Google UUID ancestry, reciprocal
+#|archive chain, sole NEXT state, launcher mirror/check, ordinary and ignored
+#|cleanliness, official SDK identities, real project counts and hashes, common
+#|tidy projection, Go 1.18 floor, all target/requester request/import/route/
+#|relevance/root facts, target/closure/project advisory identities, and every
+#|earlier guard. Stop for a fresh owning decision if any protected input changed.
 #|
-#|If and only if one canonical stable, its complete closure, a genuine supported
-#|tidy-stable project owner, and every earlier guard qualify, retain exactly one
-#|dependency-only changed selection and run the full implementation gate. If the
-#|current selection is already the highest exact qualified decision, record the
-#|no-change result without manufacturing metadata. If no candidate qualifies or
-#|no genuine owner exists, retain no project change and prepare exactly one
-#|reciprocal product-direction decision; do not grant an exception during
-#|evaluation.
+#|Preserve exact selected TSDB v0.7.1, Procfs v0.0.8, Common v0.9.1,
+#|client_model v0.2.0, and client_golang v1.4.0 only under their own separate
+#|unqualified, non-transferable exceptions. Preserve Complete, go-difflib, SFTP,
+#|pkg/errors, Goe, ULID, go-conntrack, and every earlier qualified or excepted
+#|result under its exact guards. Preserve fully qualified selected fastuuid
+#|v1.2.0 without adding a root. Do not run rejected studies, select rejected
+#|candidates, reopen a completed module, or transfer an exception. P8 remains
+#|queued.
 #|
-#|Answer this archive, update the roadmap and rolling handover, verify scratch
-#|containment and cleanup, run final exact-Go-1.26.7 project module verification,
-#|build, count-one tests, race count-one tests, and vet, and make one local
-#|handoff commit. Do not push, merge, publish, release, stash, revert, remove the
-#|worktree, combine another dependency group, launch a study or successor, or
-#|begin P8.
+#|Do only guard-level revalidation; do not repeat completed release, source,
+#|behavior, API, closure, projection, native, cross, or advisory-matrix work.
+#|Record the chosen product direction, answer this archive, update the roadmap
+#|and rolling handover, verify containment and cleanup, run final exact-Go-1.26.7
+#|project module verification, build, count-one tests, race count-one tests, and
+#|vet, and make one local handoff commit.
+#|
+#|# Three Moves
+#|
+#|Choose only one numbered direction. Option 1 is the recommended bounded
+#|acceptance; option 2 authorizes only a later measurement study; option 3 stops
+#|unresolved. None authorizes work in another dependency group or P8.
+#|
+#|# Automatic Handoff
+#|
+#|Do not launch a study or successor; push, merge, publish, release, stash,
+#|revert, bypass cleanup, remove the worktree, transfer or reopen an exception,
+#|change a dependency or source file, combine another dependency group, or begin
+#|P8.
 # CODEX_MUTABLE_PROMPT_END
