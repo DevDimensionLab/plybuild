@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T21:23:15+02:00
+Generated: 2026-09-23T22:08:17+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,15 +8,15 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Prometheus Common
+  `codex/upgrade-quality`, base master at `5635d50`. The Prometheus TSDB
   product decision began from clean evaluation handoff HEAD
-  `2eb35fcdd1d4e1cbc7375acefe31df2470e08ea3`, parent
-  `e170896d0afaa5541ea2c0080160be520a3bde0c`, tree
-  `75a82918f7dc220e2f5ba7d816ab5b5badf73ae3`. That handoff changes exactly
-  the launcher, answered Common evaluation, then-NEXT decision, rolling
+  `96fe50c72d9b5d85a86e6eb93e0abbdc0d2cfa94`, parent
+  `960f1531c6ecf20579e317e0721e693953d7160c`, tree
+  `ce68f1086a71a6d05d3671cdf9b1a4ebb14560ec`. That handoff changes exactly
+  the launcher, answered TSDB evaluation, then-NEXT decision, rolling
   handover, and roadmap. Ordinary and ignored status, branch, ancestry, exact
   changed set, reciprocal archive history, latest Google UUID ancestry, exact
-  Go identities, module hashes/counts/tidy projection, all Common request/
+  Go identities, module hashes/counts/common-tidy projection, all TSDB request/
   route/import/relevance and earlier guards, fresh advisory identities, final
   unchanged-project gates, and contained launcher check pass. No source or
   dependency metadata changed.
@@ -156,12 +156,20 @@ session diary.
   run. All four
   requests/import boundaries, routes, relevance facts, release/source/closure/
   projection/advisory identities, and earlier guards are exact expiry
-  conditions. The sole NEXT archive is now
-  `docs/plan/agent-sessions/2026-09-23T212315+0200-decide-prometheus-tsdb-product-direction.md`.
-  It chooses only the bounded disposition of exact selected
-  `github.com/prometheus/tsdb v0.7.1`. It may not repeat the evaluation, launch
-  a study or successor, transfer an exception, combine another group, write
-  outside managed scratch, or begin P8.
+  conditions. TSDB option 1 is now final: exact selected, inherited, indirect,
+  unloaded v0.7.1 is explicitly retained unchanged under its own unqualified,
+  non-transferable exception. It is not qualified, supported, safe, or fixed;
+  every buildable stable fails mandatory vet, the defensive scope prevents a
+  complete native test qualification, and no genuine supported tidy-stable
+  owner exists. The named owner/request study was not authorized or run. Its
+  sole request/route, metadata-only requester boundary, relevance facts,
+  release/source/API/behavior/closure/native/cross/projection/advisory
+  identities, exact sums, and earlier guards are expiry conditions. The sole
+  NEXT archive is now
+  `docs/plan/agent-sessions/2026-09-23T220817+0200-evaluate-rogpeppe-fastuuid-dependency.md`.
+  It evaluates only exact selected `github.com/rogpeppe/fastuuid v1.2.0`.
+  It may not transfer an exception, combine another group, write outside
+  managed scratch, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -6451,11 +6459,60 @@ edges, separate later selections/exceptions, every earlier decision, and
 one/race/vet passes and task scratch is removed. No project dependency/source
 change or projection is retained.
 
+## Prometheus TSDB Product Decision
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/prometheus/tsdb v0.7.1` is explicitly retained unchanged under a
+TSDB-specific, unqualified, non-transferable exception. It is not qualified,
+supported, safe, or fixed. Every buildable canonical stable fails mandatory
+vet under both exact SDKs, the defensive boundary prevents complete upstream
+test/repetition/race qualification, and the archived canonical repository plus
+sole metadata-only request provides no genuine supported tidy-stable owner.
+The **Mvn-Pom-Mutator Prometheus TSDB Owner/Request Study** is not authorized
+or run.
+
+Retention requires the sole exact metadata-only request from direct mvn-pom-
+mutator v0.2.3, sole route, positive requester why/negative target why, zero
+repository target import/load/runtime/current-and-history-root state, no
+v0.10.0 request, and the exact release/project sum boundary. Guard-only
+inspection clarifies that the two release sumdb identities remain exact while
+the protected real-project `go.sum` contains only the v0.7.1 `/go.mod` line;
+the evaluation's two-project-line wording was inaccurate, but the protected
+hash and dependency metadata never changed. Any changed request, route,
+requester import/metadata boundary, why/load/runtime/root/sum fact, newly
+qualified release, or newly supported owner expires the exception.
+
+The exact repository/release/tag/commit/tree/signature/ancestry/proxy/sumdb/
+archive/module/license identities, source/build boundary, package/API/
+behavior, complete closures, SDK load/API snapshots, native/vet/test-scope/
+cross results, selected and v0.10.0 qualification failures, and all 14 stable
+identities remain expiry guards. The selected projection also remains a guard:
+exact get manufactures 13 redundant roots without a selection change, while
+ordinary tidy restores the common projection with v0.7.1. No v0.10.0
+projection is authorized or retained.
+
+Target OSV/GitHub/repository emptiness does not qualify TSDB. Both focal
+closures remain 3/1/0/0 through client_golang/x/sys with no TSDB or vulnerable-
+symbol finding. The project remains 30/22/20/20 without a TSDB/Procfs trace;
+client_golang retains its separate GHSA/GO/CVE identity and exception. This
+exception does not transfer Procfs, Common, client_model, client_golang, or
+any earlier exception or qualification.
+
+Guard-only revalidation reproduced the clean evaluation handoff and ancestry,
+reciprocal archive chain and launcher, both SDK identities, exact
+234/3,599/355/429/197/41/1,067 project state, module/graph/common-tidy hashes,
+all request/import/route/relevance facts, corrected advisory identities, all
+47 pre-Goe selections/276 edges, separate later selections/exceptions, every
+earlier decision, and accepted 27/27 Q0-Q2 PASS at L2. Completed release,
+source, behavior, API, closure, projection, native, cross, and advisory-matrix
+work was not repeated. Final exact-Go gates and contained task scratch cleanup
+pass. No source, dependency metadata, target root, study, ownership, or
+transferred exception is retained.
+
 ## Next Bounded Objective
 
-Choose exactly one reciprocal TSDB product direction: TSDB-specific
-unqualified non-transferable retention of exact inherited v0.7.1; one later
-measurement-only **Mvn-Pom-Mutator Prometheus TSDB Owner/Request Study**; or
-stop P7 unresolved. The decision is prepared but not executed. Do not repeat
-the evaluation, run a study, transfer any exception, combine another group,
-or begin P8.
+Evaluate exactly one next unevaluated alphabetical P7 module,
+`github.com/rogpeppe/fastuuid v1.2.0`. Its sole grpc-gateway v1.16.0 graph
+request is a starting observation only. The evaluation is prepared but not
+launched. Do not run a rejected study, transfer any exception, combine another
+group, or begin P8.

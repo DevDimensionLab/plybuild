@@ -15275,6 +15275,51 @@ Prometheus/tsdb evaluation (2026-09-23):
   prepared but not executed; no study, other group, exception transfer, or P8
   work begins.
 
+Prometheus/tsdb product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, indirect, unloaded
+  `github.com/prometheus/tsdb v0.7.1` remains unchanged under a TSDB-specific,
+  unqualified, non-transferable exception. It is not qualified, supported,
+  safe, or fixed. The **Mvn-Pom-Mutator Prometheus TSDB Owner/Request Study**
+  is not authorized or run; no dependency/source change, target root,
+  projection, ownership claim, or implementation pre-authorization is made.
+- Retention requires the exact sole metadata-only request from direct mvn-pom-
+  mutator v0.2.3, sole route, positive requester why/negative target why,
+  zero repository target import/load/runtime/current-and-history-root state,
+  absent v0.10.0 request, and exact release/project sum boundaries. Any
+  request, route, requester import/metadata, why/load/runtime/root/sum, or
+  supported-owner change expires the exception and requires a fresh owning
+  evaluation and decision.
+- The selected release's two sumdb identities remain exact. Guard-only
+  inspection clarifies that protected real-project `go.sum` has one TSDB
+  line—the v0.7.1 `/go.mod` sum—rather than the source and module lines stated
+  in the evaluation handoff. The project hash and dependency metadata never
+  changed; this records the exact boundary without adding the source sum.
+- The exact 14-stable release line, repository/tag/commit/tree/signature/
+  ancestry/proxy/sumdb/archive/module/license identities, source/build
+  boundary/package/API/behavior, complete closures, native/vet/test-scope/
+  cross results, load/API snapshots, and universal qualification failures are
+  expiry guards. No canonical stable currently qualifies and no genuine
+  supported tidy-stable owner currently exists.
+- The exact selected projection remains a guard: selected get adds 13
+  redundant indirect roots without a selection change, and ordinary tidy
+  restores the common projection with v0.7.1. No v0.10.0 projection was
+  authorized and none is retained. Target advisory emptiness does not qualify
+  TSDB; both focal closures remain 3/1/0/0, the project remains 30/22/20/20
+  without a TSDB/Procfs trace, and client_golang retains its separate
+  GHSA/GO/CVE identity and exception.
+- Guard-only revalidation reproduces clean continuity, reciprocal archives and
+  launcher, both SDK identities, exact 234/3,599/355/429/197/41/1,067 project
+  state, module/graph/common-tidy hashes, all request/import/route/relevance
+  facts, corrected advisory identities, all 47 pre-Goe selections/276 edges,
+  every separate later selection/exception, every earlier decision, and 27/27
+  Q0-Q2 PASS at L2. Final exact-Go gates pass and contained task scratch is
+  removed.
+- P7 remains active only with one prepared bounded evaluation of the next
+  unevaluated alphabetical module, exact `github.com/rogpeppe/fastuuid
+  v1.2.0`. Its sole grpc-gateway v1.16.0 request is a starting observation
+  only. The successor is not launched; no rejected study or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
