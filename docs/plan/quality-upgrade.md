@@ -5374,9 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active but stopped for the prepared product decision on graph-selected,
-transitive exact `github.com/oklog/ulid v1.3.1`. Option 1 now explicitly
-retains exact selected/inherited/unloaded unqualified go-conntrack
+Status: active with the prepared bounded evaluation of graph-selected exact
+`github.com/pascaldekloe/goe v0.1.0`. Option 1 now explicitly retains exact
+selected/inherited/unloaded unqualified ULID v1.3.1 and go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`, exact indirect/production-loaded
 unqualified mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
 v1.1.0 and Promptui v0.9.0, exact direct-indirect/runtime-relevant
@@ -5410,8 +5410,10 @@ selected pseudo-version remains unchanged and unqualified under a go-
 conntrack-specific, non-transferable option-1 exception. Its owner study was
 not authorized or run. The completed oklog/ulid evaluation found no stable
 that satisfies both complete ordinary closure qualification and genuine
-supported tidy-stable ownership; no implementation was retained. The
-reciprocal ULID product decision is prepared but was not executed. P8 remains
+supported tidy-stable ownership; no implementation was retained. ULID option
+1 retains exact v1.3.1 unchanged and unqualified under its own guard. The
+Prometheus TSDB ULID Ownership Study was not authorized or run. The reciprocal
+pascaldekloe/goe evaluation is prepared but was not executed. P8 remains
 queued.
 
 Toolchain baseline move (2026-09-01):
@@ -14338,6 +14340,61 @@ Oklog/ULID evaluation (2026-09-23):
   v1.3.1, the single later measurement-only Prometheus TSDB ULID Ownership
   Study, or stopping P7 unresolved. The successor was prepared but not
   executed; P8 remains queued.
+
+Oklog/ULID product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, unloaded
+  `github.com/oklog/ulid v1.3.1` is explicitly retained without source or
+  dependency-metadata changes under a ULID-specific, unqualified,
+  non-transferable exception. V0.3.0 remains the highest behavior-qualified
+  Go-1.18-compatible stable but lacks a genuine supported tidy-stable project
+  owner. Selected v1.3.1 and v1.0.0-v1.3.1 retain their incomplete standalone
+  module closure. V1.3.1 is not called qualified, stable-supported, safe, or
+  fixed. The Prometheus TSDB ULID Ownership Study was not authorized or run.
+- Retention requires exact v1.3.1, no main target root, the sole TSDB v0.7.1
+  request and genuine production/test imports, complete main -> direct mvn-
+  pom-mutator v0.2.3 -> metadata-only TSDB -> target route, negative target/
+  requester why, zero repository import and production/complete-test/module-
+  backed load, zero runtime relevance, no second requester, and no supported
+  owner route. It also requires the exact eight-release v0/v1 line, separate
+  ineligible `/v2`, absent `/v3`, repository/owner/status/license/default-
+  branch identity, every recorded release/archive/source/module identity,
+  completed behavior/closure results, and no later eligible stable or route.
+- The selected disposable get must continue manufacturing only an unused
+  root/source sum/edge before tidy removes it. The v0.3.0 get must retain its
+  owner/TSDB/go-conntrack/24-guard removal, 157-module/2,219-edge unloadable
+  result, and tidy restoration to selected v1.3.1. Neither projection is
+  retained. Exact 234/3,599/355/429/197/41/1,067 project state, module/tidy
+  hashes, Go floor, exact SDK identities, source/API/CLI/help/launcher/Make/
+  quality contracts, and accepted 27/27 Q0-Q2 PASS at L2 remain exact.
+- All 45 pre-go-conntrack selections/273 edges retain SHA-256
+  `7e5c820da743ac628fb18da129b4d91428a36fd374ed248760d1318f2694c525`;
+  all 46 pre-ULID selections/275 edges retain SHA-256
+  `32bd1b6893f9a7964567c1b4bf772d60d690e85509f2ec85fd299d537086e544`.
+  Forty guarded why results remain negative, guarded repository imports remain
+  only Promptui/go-homedir, and guarded loaded modules remain only emoji/v2,
+  Promptui, go-homedir, and mapstructure. Every earlier guard retains its own
+  separate expiry boundary.
+- Target OSV/GitHub/repository advisory results remain empty. Guard OSV stays
+  limited to the recorded Gorilla WebSocket and go-retryablehttp pairs; x/mod
+  v0.14.0 retains GO-2026-6179 and GO-2026-6180. The Go-index and PUBLISHED
+  memberlist-CNA byte identities remain exact. Advisory absence is not
+  qualification.
+- Any target/request/requester-import/owner-route, root/why/import/load/runtime,
+  repository/release/source/behavior/closure, projection/graph/module/tidy/Go-
+  floor, earlier guard, advisory/finding, independent defect, qualification,
+  supported-owner, or compatible-route change expires retention and requires
+  a fresh ULID evaluation and decision before merge. No owner study, v0.3.0 or
+  `/v2` selection, direct root, patch/vendor change, requester change,
+  dependency edit, implementation, or transferred exception is authorized.
+- Guard-only revalidation reproduced exact handoff/chain, official Go,
+  project/module/tidy/load, sole request/route/import, why/import/load/runtime,
+  both earlier edge snapshots, closed-exception, repository/release, target/
+  guard advisory, Go-index, memberlist-CNA, and final exact-Go module verify/
+  build/count-one/race/vet identities. Completed evaluation work was not
+  repeated. P7 continues only with the prepared bounded evaluation of
+  graph-selected exact `github.com/pascaldekloe/goe v0.1.0`; it was not
+  executed. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
