@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T00:05:57+02:00
+Generated: 2026-09-24T00:30:20+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,16 +9,17 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The Russross Blackfriday
-  v2 evaluation began from clean fastuuid evaluation handoff HEAD
-  `5ccd80d618eba0d423a40e637395bf95cf2ac2f6`, parent
-  `34549ce1e64317726f87f23820fc353df151f0db`, tree
-  `e715e5a8a0725c62b4878f0a68bf6ed47a8e168d`. That handoff changes exactly
-  the launcher, answered fastuuid archive, then-NEXT Blackfriday archive,
-  rolling handover, and roadmap. Ordinary and ignored status, branch, Google
-  UUID ancestry, exact changed set, reciprocal archive history, exact SDK
-  identities, module hashes/counts/common-tidy projection, all Blackfriday and
-  earlier guards, fresh advisory identities, and contained launcher check
-  passed at start. No source or dependency metadata changed.
+  v2 product decision began from clean Blackfriday evaluation handoff HEAD
+  `49d7bb334bb5d4b507b0024f94c590d7a03bf212`, parent
+  `5ccd80d618eba0d423a40e637395bf95cf2ac2f6`, tree
+  `3a76d64e46e23f3b9805a19eeb4e7e55c1bd7bde`. That handoff changes exactly
+  the launcher, answered Blackfriday evaluation archive, then-NEXT decision
+  archive, rolling handover, and roadmap. Ordinary and ignored status,
+  branch, Google UUID ancestry, exact changed set, reciprocal archive history,
+  exact SDK identities, module hashes/counts/common-tidy projection, all
+  target/requester and earlier guards, fresh narrow advisory identities, and
+  contained launcher check passed at start. No source or dependency metadata
+  changed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -6615,12 +6616,43 @@ entire gate was restarted under established ordinary `umask 022`; exact Go
 vet all pass. All disposable evidence remained beneath the managed session
 scratch root, and the validated task-owned directory is removed.
 
+## Russross Blackfriday V2 Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/russross/blackfriday/v2 v2.1.0` is explicitly retained unchanged
+under a Blackfriday-specific, unqualified, non-transferable exception. It is
+highest compatible but is not qualified, safe, or fixed. The **Go-Md2man
+Blackfriday Elimination Study** is not authorized or run.
+
+Retention requires the exact four selected-version requests and routes;
+go-md2man v2.0.1/v2.0.6/v2.0.7 production/test imports; selected Cobra's
+production go-md2man import; the active public supported requester boundary;
+negative target/requester why; zero project import/load/runtime relevance;
+the shared first-root commit and all 84 historical route checkpoints; and the
+exact selected source/module sums. Any change requires a fresh owning
+evaluation and explicit decision.
+
+The exact repository/release/tag/commit/tree/signature/ancestry/proxy/sumdb/
+archive/module/license identities, source/build boundary, package/API/
+behavior, complete closures, native/vet/test-scope/cross results, and both
+stable qualification failures remain expiry guards. Selected get must remain
+byte-neutral and ordinary tidy must continue restoring the common projection
+while retaining v2.1.0 through genuine go-md2man routes. No projection is
+authorized or retained.
+
+Target OSV/GitHub/repository emptiness does not imply safety or qualification.
+Selected focal findings remain 0/0/0/0, the project remains 30/22/20/20 with
+no Blackfriday trace, and client_golang retains its separate GHSA/GO/CVE
+identity. Exact SDKs, project/module/graph/common-tidy hashes, Go floor,
+corrected advisory guards, all pre-Goe and separate later selection/request
+guards, every prior decision, and 27/27 Q0-Q2 PASS at L2 reproduce. Final
+exact-Go gates and contained cleanup pass. No dependency/source/root change,
+study, transferred exception, other group, or P8 work is retained.
+
 ## Next Bounded Objective
 
-Choose exactly one bounded product direction for exact selected indirect
-unloaded `github.com/russross/blackfriday/v2 v2.1.0`: retain it unchanged only
-under a Blackfriday-specific unqualified non-transferable exception; authorize
-one later measurement-only **Go-Md2man Blackfriday Elimination Study**; or stop
-P7 unresolved. The decision is prepared but not executed. Do not repeat the
-evaluation, run a study, transfer an exception, combine another group, or begin
-P8.
+Evaluate only exact selected indirect `github.com/sergi/go-diff v1.2.0`, the
+next unevaluated alphabetical module. The current main, Assert v1.0.0, and
+Chroma v0.7.1 graph requests are starting observations only. The evaluation
+is prepared but not executed. Do not run a rejected study, reopen or transfer
+an exception, combine another group, or begin P8.

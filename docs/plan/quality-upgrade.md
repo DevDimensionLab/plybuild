@@ -15417,6 +15417,50 @@ Russross/blackfriday/v2 evaluation (2026-09-23):
   is prepared but not executed; no study, successor, other group, or P8 work
   begins.
 
+Russross/blackfriday/v2 product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded
+  `github.com/russross/blackfriday/v2 v2.1.0` remains unchanged under a
+  Blackfriday-specific, unqualified, non-transferable exception. It is highest
+  compatible but is not qualified, safe, or fixed. The **Go-Md2man
+  Blackfriday Elimination Study** is not authorized or run; no dependency/
+  source change, root change, projection, implementation pre-authorization,
+  or ownership transfer is made.
+- Retention requires the exact four v2.1.0 requests and routes; genuine
+  production/test imports from go-md2man v2.0.1/v2.0.6/v2.0.7; selected
+  Cobra's genuine go-md2man import; the active public supported requester;
+  negative target/requester why; zero project import/load/runtime relevance;
+  the shared first-root commit and all 84 historical route checkpoints; and
+  the exact selected source/module sums. Any change requires a fresh owning
+  evaluation and decision.
+- The exact owner/release/tag/commit/tree/signature/ancestry/proxy/sumdb/
+  archive/module/license identities, source/build boundary, package/API/
+  behavior, complete closures, native/vet/test-scope/cross results, and both
+  stable qualification failures are expiry guards. Both ordinary upstream
+  suites remain beyond the defensive scope, so the decision adds no
+  qualification claim.
+- Exact selected get must continue changing no selection or project byte;
+  ordinary tidy must remove the redundant target/requester roots while
+  retaining v2.1.0 through genuine go-md2man routes and restoring the common
+  projection. No projection is authorized or retained.
+- Empty target OSV/GitHub/repository results do not imply safety or
+  qualification. Selected focal findings remain 0/0/0/0, v2.0.1 remains
+  incomplete, and the project remains 30/22/20/20 without Blackfriday,
+  fastuuid, TSDB, or Procfs trace. Client_golang retains its separate
+  GHSA/GO/CVE identity and exception. No earlier exception transfers.
+- Guard-only revalidation reproduces clean continuity, reciprocal archives and
+  launcher, both SDK identities, exact 234/3,599/355/429/197/41/1,067 project
+  state, module/graph/common-tidy hashes, Go 1.18, all target/requester route/
+  relevance/root facts, corrected advisory identities, all 47 pre-Goe
+  selections/276 edges, separate later selections/requests/exceptions, every
+  earlier decision, and 27/27 Q0-Q2 PASS at L2. Final exact-Go gates pass and
+  contained task scratch is removed.
+- P7 remains active only with one prepared bounded evaluation of the next
+  unevaluated alphabetical module, exact `github.com/sergi/go-diff v1.2.0`.
+  Its main, Assert v1.0.0, and Chroma v0.7.1 graph requests are starting
+  observations only. The successor is not launched; no rejected study or P8
+  work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
