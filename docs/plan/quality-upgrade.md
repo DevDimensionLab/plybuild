@@ -5374,10 +5374,13 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at the prepared bounded product decision for graph-selected
-exact `github.com/posener/complete v1.2.3`. No canonical exact-path Complete
-stable qualifies, and its evaluation left source and dependency metadata
-unchanged. Option 1 now explicitly retains exact
+Status: active at one prepared fresh bounded evaluation of graph-selected exact
+`github.com/prometheus/client_golang v1.4.0` after option 1 repaired two
+unsupported advisory-response hashes to the independently reproduced
+preceding-archive identities. The stopped partial client_golang matrix is
+discarded and supplies no qualification result. No canonical exact-path
+Complete stable qualifies, and its evaluation left source and dependency
+metadata unchanged. Option 1 now explicitly retains exact
 selected, inherited, indirect, unloaded, unqualified go-difflib v1.0.0, SFTP
 v1.13.1, and pkg/errors v0.9.1 and exact selected/
 inherited/unloaded unqualified Goe v0.1.0, ULID v1.3.1, and go-conntrack
@@ -5434,9 +5437,10 @@ exact guards; the Afero SFTP Owner/Request Study was not authorized or run.
 The completed go-difflib evaluation found no genuine supported qualifying
 exact-path stable. Option 1 is final: exact selected v1.0.0 is retained
 unchanged and unqualified under its own exact guards; the Go-Term-Markdown
-Testify Go-Difflib Owner/Request Study was not authorized or run. The
-reciprocal posener/complete evaluation successor is prepared but was not
-executed. P8 remains queued.
+Testify Go-Difflib Owner/Request Study was not authorized or run. Complete
+option 1 and the client_golang guard repair are now final. One fresh complete
+client_golang evaluation successor is prepared but was not executed. P8
+remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14866,6 +14870,35 @@ Prometheus/client_golang evaluation guard stop (2026-09-23):
   them and authorize one measurement-only advisory provenance study; or stop
   P7 unresolved. No target exception, owner study, another group, or P8 is
   authorized.
+
+Prometheus/client_golang guard direction (2026-09-23):
+
+- Option 1 is final. The unsupported NEXT `bdd6a085...` / `cacd856f...`
+  response hashes are transcription/provenance defects. The active guards are
+  restored to the exact preceding-archive identities
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  and `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+  Normal and explicit no-cache primary requests again returned pairwise byte-
+  identical 518,501-byte/1,402-record and PUBLISHED 2,807-byte responses with
+  the recorded Last-Modified and `no-store` controls. No provenance study is
+  authorized.
+- Exact selected client_golang v1.4.0 and all four requests remain unchanged.
+  The stopped release/source/behavior/closure/projection/API/test/advisory
+  matrix is discarded and establishes no qualification, rejection, retention,
+  exception, or dependency selection. Its preliminary facts may be treated
+  only as observations to reproduce from new contained evidence.
+- Exact continuity, official SDK identities, real
+  234/3,599/355/429/197/41/1,067 project state, module/graph/common-tidy/Go-
+  floor identities, pre-Goe and separate Goe/pkg-errors/SFTP/go-difflib/
+  Complete guards, all earlier decisions, and narrow advisory guards remain
+  unchanged. Final exact-Go verify/build/count-one/race/vet pass. No product
+  source or dependency metadata changed and no exception transferred.
+- P7 continues only with one prepared fresh complete client_golang evaluation.
+  It must start from a newly verified clean state, discard all partial closure
+  results, and either implement the one fully qualified genuinely owned tidy-
+  stable exact selection whose complete projection preserves every guard or
+  retain no change and prepare a reciprocal product decision. It was prepared
+  but not executed. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -6004,9 +6004,61 @@ all-eligible matrix was interrupted and its partial rows are not accepted.
 
 ## Next Bounded Objective
 
-Choose exactly one client_golang guard direction: repair the two NEXT hashes
-to the independently reproduced preceding-archive identities and authorize a
-fresh complete evaluation; preserve the asserted hashes and authorize one
-measurement-only **Client Golang Advisory Guard Provenance Study**; or stop P7
-unresolved. Do not resume the partial evaluation, qualify or except the target,
-run an owner study, change a dependency, combine another group, or begin P8.
+Run only the prepared fresh complete evaluation of exact selected
+`github.com/prometheus/client_golang v1.4.0`. Begin from a newly verified clean
+state with the repaired Go-index and CNA identities, discard every partial
+closure and qualification result from the stopped turn, and independently
+reproduce all release/source/behavior/closure/ownership/projection/advisory
+evidence. Implement at most the one fully qualified Go-1.18-compatible exact
+selection with a genuine supported tidy-stable owner whose complete projection
+preserves every earlier guard. Otherwise retain no dependency or source change
+and prepare one reciprocal product decision. Do not combine another group,
+transfer an exception, run a provenance or owner study, or begin P8.
+
+## Prometheus Client Golang Guard Decision
+
+Option 1 is final. The active NEXT archive's asserted `bdd6a085...` and
+`cacd856f...` response hashes were transcription/provenance defects. Fresh
+normal and explicit no-cache requests to the exact primary Go modules index
+again returned pairwise byte-identical 518,501-byte, 1,402-record responses at
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+with Last-Modified 2026-09-17T17:29:18Z. Equivalent requests to the exact
+CVE-2026-14362 CNA endpoint again returned pairwise byte-identical PUBLISHED
+2,807-byte responses at
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`
+with `Cache-Control: no-store`. Those identities match the preceding answered
+archives and the stopped evaluation. The unsupported asserted pair has no
+reproduced primary bytes or differing semantic/header state. No advisory guard
+provenance study is authorized.
+
+The stopped evaluation's partial 33-release work, source/behavior/closure/
+projection/API/test matrix, and advisory observations are discarded. They do
+not qualify, reject, retain, or except client_golang and authorize no selection.
+Exact selected v1.4.0 remains unchanged with the four exact requests from
+go-metrics v0.3.10, Common v0.9.1, Common v0.4.1, and TSDB v0.7.1. Their
+recorded genuine-import boundaries, negative why results, zero repository
+target import/load/runtime/root state, and all routes are guards for fresh
+independent reproduction, not accepted evaluation conclusions.
+
+The stopped-evaluation handoff was exact at
+`ff4bcc1b009662d30041e0489fcb2b01c35cbe52`, parent
+`438178de84797dad6178f1011560c53e192f1e0c`, tree
+`fc665bf6bfac864f2f4198dfca590e300650045c`, with exactly the launcher,
+answered stopped evaluation, then-NEXT decision, rolling handover, and roadmap
+changed. Google UUID implementation `cf53bc64e...` remains ancestral. The
+reciprocal chain, sole NEXT, launcher mirror/check, ordinary and ignored clean
+state, and official Go 1.18.10/1.26.7 archive and binary identities reproduced.
+
+The real project remains exactly 234 modules, 3,599 graph edges, 355 production
+entries, 429 complete-test entries, 197 module-backed entries across 41 loaded
+modules, and 1,067 sum lines. Exact `go.mod`, `go.sum`, graph, common tidy, Go
+1.18 floor, 47-selection/276-edge pre-Goe, separate Goe/pkg-errors/SFTP/go-
+difflib/Complete, ULID, go-conntrack, and every earlier guard remain unchanged.
+Final exact-Go-1.26.7 module verification, build, count-one tests, race count-
+one tests, and vet pass. No source, dependency metadata, target root, owner,
+requester, exception, or earlier decision changed.
+
+One fresh bounded client_golang evaluation successor is prepared but not
+executed. It uses the repaired advisory identities, requires a newly verified
+clean start and new contained evidence, and explicitly rejects reuse of the
+interrupted matrix. P8 remains queued.
