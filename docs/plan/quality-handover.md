@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T03:11:34+02:00
+Generated: 2026-09-23T03:50:08+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,11 +9,11 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The pascaldekloe/goe
-  evaluation began from clean evaluation-handoff HEAD
-  `536df39770daedc4f841a6898e5c69b8605eed6f`, parent
-  `27046bec05003b317329a1918fd69baf5ffe4eb0`, tree
-  `bf97e1053d7f50c7df6e55e1800ed6d751d77915`. That handoff changes exactly
-  the launcher, answered ULID decision archive, then-NEXT Goe evaluation
+  product decision began from clean evaluation-handoff HEAD
+  `413fb1a154a5c9a4acfe151dfb9518714a701ed1`, parent
+  `536df39770daedc4f841a6898e5c69b8605eed6f`, tree
+  `0f6a53bb3eaa70c43d1bc91047ca25fa399f6c0f`. That handoff changes exactly
+  the launcher, answered Goe evaluation archive, then-NEXT Goe decision
   archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
   ancestry, exact changed set, reciprocal archive history, latest Google UUID
   ancestry, exact Go identities, module hashes/counts/tidy projection, target
@@ -313,6 +313,57 @@ specific unqualified retention of exact selected v0.1.0; the single later
 measurement-only **Armon Go-Metrics Goe Ownership Study**; or stopping P7
 unresolved. The reciprocal decision successor was prepared but not executed;
 P8 remains queued.
+
+## Pascaldekloe Goe Product Decision
+
+Option 1 is final. Exact selected, inherited, unloaded
+`github.com/pascaldekloe/goe v0.1.0` is explicitly retained without product-
+source or dependency-metadata changes under a Goe-specific, unqualified,
+non-transferable exception. V0.1.0 remains unqualified because it fails the
+Go 1.26.7 `el.ExampleInt` and complete upstream race gates. V0.1.1 removes
+the example but still fails race and has no genuine supported tidy-stable
+project owner. Neither release is described as qualified, stable-supported,
+safe, or fixed. The Armon Go-Metrics Goe Ownership Study was not authorized
+or run.
+
+Retention requires exact v0.1.0, no main target root, all four exact requests,
+the go-metrics and Consul API test-only imports, both memberlist metadata-only
+edges, every recorded route through direct mvn-pom-mutator and historical
+Viper/crypt/go-metrics/Consul API/Serf/memberlist, negative target/requester
+why, and zero repository import, production/complete-test/module-backed load,
+and runtime relevance. It also requires the exact two-release line, absent
+major lines and alternate owners, repository/release/tag/commit/tree/proxy/
+sumdb/module/license/archive identities, and completed source/API/closure/
+ordinary-behavior/race findings.
+
+The selected disposable get must continue adding only an unused root, source
+sum, and main edge before tidy restores the common state. The v0.1.1 get must
+continue changing only target selection plus its root/sums/edge before tidy
+restores the common state and reselects v0.1.0. Neither projection is retained.
+Exact project/module/tidy/Go-floor state and all 47 earlier selections/276
+incoming edges remain guarded, as do every earlier target-specific decision,
+closed-exception boundary, and expiry condition.
+
+Guard-only revalidation reproduced clean handoff/chain and launcher state,
+official Go 1.26.7 identities, exact 234/3,599/355/429/197/41/1,067 project
+state, module/tidy hashes, four requests and requester import boundaries,
+routes and why/import/load/runtime facts, the 47-selection/276-edge snapshot,
+repository release boundary, target and guard advisories, Go-index and
+memberlist-CNA identities, and final exact-Go module verify/build/count-one/
+race/vet passes. Advisory absence is not qualification. Completed source,
+behavior, closure, race, cross-build, archive, projection, and govulncheck
+work was not repeated; no new independent defect was found.
+
+Any guarded target/request/requester boundary, route/owner, root/why/import/
+load/runtime, repository/release/archive/source/behavior/closure, projection/
+graph/module/tidy/Go-floor, earlier decision, advisory/finding, independent
+defect, qualification, supported-owner, or compatible-route change expires
+retention and requires a fresh Goe evaluation and decision. No v0.1.1
+selection, study, root, requester change, patch, fork, alternate path,
+pseudo-version promotion, dependency edit, implementation, or transferred
+exception is authorized. P7 continues only with the prepared bounded
+evaluation of exact selected `github.com/pkg/errors v0.9.1`; it was not
+executed. P8 remains queued.
 
 ## Mwitkow Go-Conntrack Evaluation
 
@@ -5517,11 +5568,11 @@ bounded mapstructure v1.5.0 evaluation; P8 remains queued.
 
 ## Next Bounded Objective
 
-Make exactly one product decision for selected, inherited, unloaded
-`github.com/pascaldekloe/goe v0.1.0` from the completed evaluation: explicitly
-retain it under a target-specific unqualified non-transferable exception,
-authorize exactly one later measurement-only **Armon Go-Metrics Goe Ownership
-Study**, or stop P7 unresolved. Revalidate only the narrow decision guards.
-Do not reevaluate Goe, run the study, evaluate another dependency, change
-source/dependency metadata, reopen or transfer an earlier exception, write
+Evaluate exact selected `github.com/pkg/errors v0.9.1` as the next bounded P7
+queue item. Resolve its real owner/request/import/load/runtime boundary,
+canonical release and source identities, Go-1.18-compatible candidates,
+complete ordinary behavior and upstream gates, disposable project projections,
+and advisory state while preserving the final Goe decision and every earlier
+guard. Do not make the pkg/errors product decision, change source/dependency
+metadata, evaluate another dependency, reopen or transfer an exception, write
 outside the managed scratch root, or begin P8.

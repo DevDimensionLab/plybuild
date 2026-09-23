@@ -1,13 +1,13 @@
 # Agent Session: Decide Pascaldekloe Goe Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-23T031134+0200-decide-pascaldekloe-goe-product-direction`
 Created: `2026-09-23T03:11:34+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c1d648237e69e7ba022263ee260e6275403b5a906fc7bcfa7d2075ebc3b7c9cd`
 Previous: [2026-09-23T021646+0200-evaluate-pascaldekloe-goe-dependency.md](2026-09-23T021646+0200-evaluate-pascaldekloe-goe-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-23T035008+0200-evaluate-pkg-errors-dependency.md](2026-09-23T035008+0200-evaluate-pkg-errors-dependency.md)
+Outcome: Option 1 selected; exact inherited, unloaded `github.com/pascaldekloe/goe v0.1.0` is retained under a Goe-specific unqualified, non-transferable exception, and only the bounded `github.com/pkg/errors v0.9.1` evaluation is prepared next.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -196,3 +196,71 @@ metadata, add a root, change a requester, transfer an exception, reevaluate
 Goe or an earlier group, evaluate another dependency, write outside the
 managed scratch root, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 is final. Exact selected, inherited, unloaded
+`github.com/pascaldekloe/goe v0.1.0` remains unchanged under a Goe-specific,
+unqualified, non-transferable exception. No product source or dependency
+metadata changed. V0.1.0 is not qualified, stable-supported, safe, or fixed:
+it fails ordinary `el.ExampleInt` under exact Go 1.26.7 and the complete
+upstream race gate. V0.1.1 removes the failing example but still fails the
+race gate and has no genuine supported tidy-stable project owner. The Armon
+Go-Metrics Goe Ownership Study was not authorized or run.
+
+Retention requires exact v0.1.0, no main target root, and all four exact
+requests: go-metrics v0.3.10 requests v0.1.0, while Consul API v1.1.0 and
+memberlist v0.1.3/v0.3.0 request its exact commit through pseudo-version
+`v0.0.0-20180627143212-57f6aae5913c`. Go-metrics and Consul API must continue
+to import `goe/verify` only in tests; both memberlist requests must remain
+metadata-only. Every recorded route through direct mvn-pom-mutator v0.2.3,
+historical Viper/crypt, go-metrics, Consul API, Serf, and memberlist; negative
+target/requester why; zero repository import, production/complete-test/module-
+backed load, and runtime relevance; and absence of another supported owner
+route remain required.
+
+The exact two-release v0.1.0/v0.1.1 line, absent `/v2` and `/v3`, repository
+identity and status, tags/commits/trees/ancestry, proxy/sumdb/module/license
+and archive-to-Git identities, source/API/closure results, completed ordinary
+behavior and race results, and lack of a replacement, retraction, deprecation,
+redirect, eligible alternate, or later eligible stable remain guarded. The
+selected disposable get must continue to add only an unused root, source sum,
+and main edge before tidy restores the common projection. The v0.1.1 get must
+continue to change only target selection plus its root/sums/edge before tidy
+restores the common projection and reselects v0.1.0. Neither projection is
+retained.
+
+Guard-only revalidation reproduced clean continuity at starting HEAD
+`413fb1a154a5c9a4acfe151dfb9518714a701ed1`, parent
+`536df39770daedc4f841a6898e5c69b8605eed6f`, tree
+`0f6a53bb3eaa70c43d1bc91047ca25fa399f6c0f`; the exact five-file handoff,
+reciprocal archive chain, launcher check, and Google UUID implementation
+ancestry; exact Go 1.26.7 binary and archive identities; and unchanged
+234-module/3,599-edge/355/429/197/41/1,067-line project state. The exact
+`go.mod`/`go.sum`, 432-line tidy, and applied 52/948-line hashes reproduced.
+All 47 earlier guarded selections and 276 sorted incoming edges retain SHA-256
+`7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`;
+their why/import/load boundaries and every earlier target-specific decision
+remain exact.
+
+Fresh public guard checks reproduced the two-release repository boundary,
+empty exact-target OSV/GitHub/repository advisory results, the recorded guard
+OSV and x/mod findings, the 518,501-byte/1,402-record Go-index identity, and
+the PUBLISHED 2,807-byte memberlist-CNA identity. Advisory absence is not
+qualification. Final exact-Go module verification, build, count-one tests,
+race count-one tests, and vet passed. Completed Goe evaluation work was not
+repeated, and no new independent defect was found.
+
+Any target selection/request/requester-import or metadata-only boundary,
+route/owner, root/why/import/load/runtime, repository/release/archive/source/
+behavior/closure, projection/graph/module/tidy/Go-floor, earlier guard,
+advisory/finding, independent defect, qualification, supported-owner, or
+compatible-route change expires this retention and requires a fresh Goe
+evaluation and product decision before merge. No v0.1.1 selection, owner
+study, direct root, requester change, patch, fork, alternate path, pseudo-
+version promotion, dependency edit, implementation, or transferred exception
+is authorized.
+
+P7 remains active only with the prepared bounded evaluation of exact selected
+`github.com/pkg/errors v0.9.1`, the next unanswered queue item after Goe. It
+was not executed. P8 remains queued.

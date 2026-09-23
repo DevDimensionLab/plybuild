@@ -5374,9 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active but stopped for the prepared product decision on graph-selected
-exact `github.com/pascaldekloe/goe v0.1.0`. Option 1 now explicitly retains exact
-selected/inherited/unloaded unqualified ULID v1.3.1 and go-conntrack
+Status: active at the prepared bounded evaluation of graph-selected exact
+`github.com/pkg/errors v0.9.1`. Option 1 now explicitly retains exact selected/
+inherited/unloaded unqualified Goe v0.1.0, ULID v1.3.1, and go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`, exact indirect/production-loaded
 unqualified mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
 v1.1.0 and Promptui v0.9.0, exact direct-indirect/runtime-relevant
@@ -14447,6 +14447,44 @@ Pascaldekloe/Goe evaluation (2026-09-23):
   later measurement-only **Armon Go-Metrics Goe Ownership Study**; or stopping
   P7 unresolved. The successor was prepared but not executed; P8 remains
   queued.
+
+Pascaldekloe/Goe product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, unloaded
+  `github.com/pascaldekloe/goe v0.1.0` is explicitly retained without source
+  or dependency-metadata changes under a Goe-specific, unqualified, non-
+  transferable exception. V0.1.0 fails the exact-Go-1.26.7 example and
+  complete race gates. V0.1.1 still fails race and has no genuine supported
+  tidy-stable project owner. Neither is qualified, stable-supported, safe, or
+  fixed. The Armon Go-Metrics Goe Ownership Study was not authorized or run.
+- Retention requires exact v0.1.0, no main target root, all four exact requests,
+  go-metrics/Consul-API test-only imports, both memberlist metadata-only edges,
+  every current/historical route through direct mvn-pom-mutator and historical
+  Viper/crypt/go-metrics/Consul API/Serf/memberlist, negative target/requester
+  why, and zero repository import, production/complete-test/module-backed load,
+  and runtime relevance. It also requires the exact two-release line, absent
+  major/alternate lines, and every recorded repository/release/archive/source/
+  API/behavior/closure identity.
+- Selected and v0.1.1 disposable gets must retain their exact unused-root/sum/
+  edge effects and tidy restoration to the common projection with v0.1.0
+  reselected. Neither projection is retained. Exact 234/3,599/355/429/197/41/
+  1,067 project state, module/tidy hashes, Go floor, all 47 earlier guarded
+  selections/276 incoming edges, and every earlier final decision remain
+  unchanged and independently guarded.
+- Target and guard advisory identities, the Go-index and memberlist-CNA byte
+  identities, and final exact-Go module verify/build/count-one/race/vet gates
+  reproduced. Advisory absence is not qualification. Completed Goe source,
+  behavior, closure, race, cross-build, archive, projection, and govulncheck
+  evaluation work was not repeated; no new independent defect was found.
+- Any target/request/requester, owner/route, root/why/import/load/runtime,
+  repository/release/source/behavior/closure, projection/graph/module/tidy/Go-
+  floor, earlier guard, advisory/finding, independent defect, qualification,
+  supported-owner, or compatible-route change expires retention and requires
+  a fresh Goe evaluation and decision. No v0.1.1 selection, study, root,
+  requester change, patch, fork, alternate, dependency edit, implementation,
+  or transferred exception is authorized.
+- P7 continues only with the prepared bounded evaluation of exact selected
+  `github.com/pkg/errors v0.9.1`; it was not executed. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
