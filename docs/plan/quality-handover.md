@@ -5965,14 +5965,48 @@ prepared bounded evaluation of exact selected
 `github.com/prometheus/client_golang v1.4.0`; it was not executed. P8 remains
 queued.
 
+## Prometheus Client Golang Evaluation Guard Stop
+
+The client_golang evaluation retained no dependency or source change because a
+mandatory starting guard failed. Its NEXT archive asserts a 518,501-byte,
+1,402-record Go vulnerability index at
+`bdd6a085321fce25b28e405543bd966376216594e386547494634986e43c282a`
+and a PUBLISHED 2,807-byte memberlist CNA response at
+`cacd856ff66c4aad5ee56c2c4f45c5a053f16540767cc71e843ec65cc115674c`.
+Two independent primary fetches, including no-cache requests, instead returned
+the preceding answered archives' byte identities
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+and
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+Byte counts, record count, and CNA state agree, but the protected byte hashes
+do not. The evaluation therefore stopped before completing qualification.
+
+Continuity, both exact SDKs, the exact real 234/3,599/355/429/197/41/1,067
+state, module/graph/common-tidy hashes, Go 1.18 floor, 47-selection/276-edge
+pre-Goe guard, separate Goe/pkg-errors/SFTP/go-difflib/Complete guards, and
+every earlier decision remain unchanged. No projection was retained.
+
+Bounded preliminary work reproduced four requests, all as genuine imports:
+go-metrics v0.3.10 -> v1.4.0; Common v0.9.1 -> v1.0.0; Common v0.4.1 and
+TSDB v0.7.1 -> v0.9.1. Target and requester why are negative; repository
+import, all target/requester loads, runtime relevance, and current/history
+target roots are zero. Primary metadata exposes 51 exact-path stables, six
+prereleases, 33 stables with declared floors no higher than Go 1.18, and
+v1.16.0 as the highest by declared floor. Selected v1.4.0 has
+GHSA-cg3q-j54f-5p7p / GO-2022-0322; v1.16.0's narrow advisory results were
+empty. These are not qualification conclusions.
+
+A selected scratch get only added an unused target root/sum/edge before tidy
+returned the common projection. A candidate v1.16.0 get changed protected
+go-conntrack and other selections in a 235-module/3,622-edge raw graph; tidy
+removed the candidate and returned the common projection with v1.4.0. The
+all-eligible matrix was interrupted and its partial rows are not accepted.
+
 ## Next Bounded Objective
 
-Independently evaluate exact selected
-`github.com/prometheus/client_golang v1.4.0` as the next bounded P7 dependency
-group. Resolve its canonical exact-path release line, complete ordinary
-behavior and closure, exact requests and requester import boundaries, every
-route, genuine supported tidy-stable ownership, projections, and advisories.
-Implement at most one fully qualified supported exact selection. Preserve the
-Complete exception and every earlier target-specific guard; if no stable
-qualifies or any guard changes, retain no change and prepare one reciprocal
-product decision. Do not combine another group or begin P8.
+Choose exactly one client_golang guard direction: repair the two NEXT hashes
+to the independently reproduced preceding-archive identities and authorize a
+fresh complete evaluation; preserve the asserted hashes and authorize one
+measurement-only **Client Golang Advisory Guard Provenance Study**; or stop P7
+unresolved. Do not resume the partial evaluation, qualify or except the target,
+run an owner study, change a dependency, combine another group, or begin P8.

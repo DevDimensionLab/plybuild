@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Prometheus Client Golang Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-23T100201+0200-evaluate-prometheus-client-golang-dependency`
 Created: `2026-09-23T10:02:01+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `7aecb00e1b52e258de3ef382c9d8fe10c77609662b19e24cf76cf335d990dd6c`
 Previous: [2026-09-23T092359+0200-decide-posener-complete-product-direction.md](2026-09-23T092359+0200-decide-posener-complete-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-23T103802+0200-decide-prometheus-client-golang-guard-direction.md](2026-09-23T103802+0200-decide-prometheus-client-golang-guard-direction.md)
+Outcome: Evaluation stopped on a protected starting-input mismatch: two fresh primary advisory responses reproduce the preceding archives' byte identities rather than this archive's asserted hashes. No qualification, dependency selection, source change, or projection was retained; one reciprocal guard-direction decision was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -220,3 +220,158 @@ revert, bypass cleanup, remove the worktree, transfer or reopen an exception,
 change another dependency group, write outside the managed scratch root, or
 begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+No client_golang selection is authorized. The mandatory starting guard failed:
+two independent fresh primary fetches, including explicit no-cache requests,
+returned the preceding answered archives' Go vulnerability-index and
+memberlist-CNA byte identities rather than the different identities asserted
+by this NEXT archive. The evaluation stopped before completing the required
+all-eligible qualification. Product source, `go.mod`, and `go.sum` remain
+byte-identical, no projection was retained, and no dependency implementation
+commit exists.
+
+### Exact stop condition
+
+- The NEXT archive asserts a 518,501-byte, 1,402-record Go index at SHA-256
+  `bdd6a085321fce25b28e405543bd966376216594e386547494634986e43c282a`
+  and a PUBLISHED 2,807-byte CVE-2026-14362 CNA response at
+  `cacd856ff66c4aad5ee56c2c4f45c5a053f16540767cc71e843ec65cc115674c`.
+- Normal and explicit no-cache primary requests were pairwise byte-identical
+  but instead hashed to
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  and
+  `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+  These are the exact identities protected by the preceding answered
+  evaluation and decision archives. The Go response retained Last-Modified
+  2026-09-17T17:29:18Z; the CNA response retained state PUBLISHED and returned
+  `Cache-Control: no-store`.
+- Byte counts and semantic record/state checks therefore agree while the two
+  asserted byte identities do not. The archive requires stopping for a fresh
+  owning decision when any protected starting input differs, so no candidate
+  may be qualified or implemented from this turn.
+
+### Continuity and unchanged project
+
+- Work began clean on `codex/upgrade-quality` at
+  `438178de84797dad6178f1011560c53e192f1e0c`, parent
+  `18e5105b90fd7380f4621ea82ed4e90ba59daf0e`, tree
+  `298f5959760cd5332ca85aa524d7083731ac70a0`. The Complete evaluation
+  handoff remains exact at `18e5105b90fd7380f4621ea82ed4e90ba59daf0e`,
+  parent `7c126d36f09a63f25a48f120f6987d7cba87d1a8`, tree
+  `039413ad0d21ad371b0f853ec5dff5c9a10df3e8`, with the stated five-file
+  change. Google UUID implementation commit
+  `cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an ancestor.
+- The reciprocal archive chain, sole NEXT state, launcher/archive mirror,
+  launcher check, ordinary and ignored cleanliness, and exact official SDK
+  identities reproduced. Go 1.18.10 archive/binary remains
+  `718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
+  `f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`;
+  Go 1.26.7 remains
+  `020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+- The real project remains 234 modules, 3,599 graph edges, 355 production
+  entries, 429 complete-test entries, 197 module-backed entries across 41
+  loaded modules, and 1,067 sum lines. `go.mod`, `go.sum`, and graph SHA-256
+  remain respectively
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
+  Normal tidy still reaches the exact common 52/948-line, 234-module/
+  3,557-edge projection at hashes
+  `5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+  `b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+  The known local Git presentation is 431 lines; applied bytes remain exact.
+- The exact full graph and module identities prove the 47 pre-Goe guarded
+  selections/276 incoming edges and separate Goe, pkg/errors, SFTP,
+  go-difflib, Complete, and every earlier selection/request/route guard remain
+  unchanged. No exception was reopened, broadened, or transferred.
+
+### Bounded preliminary target evidence
+
+The following observations were completed before the stop but are not a
+qualification or retention result:
+
+- Exact go-import metadata resolves the public, enabled, unarchived, non-fork
+  Apache-2.0 `prometheus/client_golang` repository, GitHub ID 7823926, owned by
+  `prometheus` on default branch `main`. Proxy metadata exposes 51 exact-path
+  stables and six prereleases through v1.24.1, no `/v2` or `/v3`, no
+  replacement or retraction, and 33 stable module versions whose declared Go
+  floor does not exceed 1.18. V1.16.0 is the highest such stable by declared
+  floor. The repository's v1.16.0 module excludes v1.12.1; this is not a
+  retraction or replacement.
+- Selected v1.4.0 is valid-signed commit
+  `76dd6c581988366a52807465d426f83e776128ad`, tree
+  `399889725112fc64b42014ef7249e2608722dacc`; candidate v1.16.0 is
+  valid-signed commit `3583c1e1d085b75cab406c78b015562d45552b39`, tree
+  `5049d8142bf27f33903b95a9071e4f4f2173a7b5`. Their source/module sums are
+  respectively `h1:YVIb/fVcOTMSqtqZWSKnHpSLBxu8DKgxq8z6RuBZwqI=` /
+  `h1:e9GMxYsXl05ICDXkRhurwBS4Q3OK1iX/F2sw+iXX5zU=` and
+  `h1:yk/hx9hDbrGHovbci4BY+pRMfSuuat626eFsHb7tmT8=` /
+  `h1:Zsulrv/L9oM40tJ7T815tM89lFEugiJ9HzIqaAx4LKc=`. Their proxy ZIPs match
+  Git byte-for-byte across 89 and 139 regular files, with no symlink or
+  submodule. These identities do not establish qualification.
+- Exactly four graph requests reproduce: go-metrics v0.3.10 -> v1.4.0,
+  Prometheus Common v0.9.1 -> v1.0.0, Common v0.4.1 -> v0.9.1, and TSDB
+  v0.7.1 -> v0.9.1. Contrary to a possible metadata-only interpretation, all
+  four are genuine source import boundaries. Go-metrics imports `prometheus`
+  and `push` in production plus `prometheus` in tests; both Common versions
+  import `prometheus` from production `version/info.go`; TSDB imports
+  `prometheus`/`promauto` in production and `testutil` in tests.
+- Each requester has one shortest route. Go-metrics is reached through direct
+  mvn-pom-mutator v0.2.3 -> historical Viper v1.10.1. Common v0.9.1 continues
+  through go-metrics. Common v0.4.1 continues through Common v0.9.1 ->
+  client_golang v1.0.0. TSDB is reached directly from mvn-pom-mutator. Target
+  and all four requester why results are negative; the repository has no
+  target import; target/requester packages are absent from all project loads;
+  target module-backed load and runtime relevance are zero; and current and
+  historical main target roots are absent.
+- A selected v1.4.0 scratch get changes no selection, adds only an unused
+  indirect root, source sum, and one main edge, producing 234 modules, 3,600
+  edges, 75/1,068 module lines, unchanged 355/429/197/41 loads, and negative
+  target why. Ordinary tidy removes that state and returns the common
+  projection with v1.4.0 selected.
+- A v1.16.0 scratch get produces 235 modules, 3,622 edges, 75/1,069 module
+  lines, unchanged loads, and negative target why. It upgrades the protected
+  go-conntrack pseudo-version to `2f068394615f`, adds jpillora/backoff, and
+  changes client_model, Common, procfs, protobuf-extension, oauth2, and
+  protobuf selections. Ordinary tidy removes the candidate and every raw
+  selection change, returning the common projection with v1.4.0 selected.
+  Thus the measured candidate route is not tidy-stable and its raw form crosses
+  the closed go-conntrack guard. Neither projection was retained.
+- Exact-version OSV reports GHSA-cg3q-j54f-5p7p / GO-2022-0322 for every
+  eligible stable through v1.11.0, including selected v1.4.0. GitHub global
+  and repository advisory endpoints identify the same GHSA for v1.4.0.
+  V1.16.0 returned no narrow OSV or GitHub global result. Guard OSV still
+  reproduces the recorded Gorilla WebSocket, go-retryablehttp, and x/mod
+  findings. Advisory presence does not replace the incomplete source/closure
+  evaluation, and absence does not qualify v1.16.0.
+
+The all-eligible upstream matrix was interrupted immediately after the guard
+mismatch was confirmed. It did not reach v1.16.0, and completed partial rows
+are not accepted closure evidence. No claim is made about the highest fully
+qualified stable or about exact retention.
+
+### Final verification and containment
+
+- With the verified exact Go 1.26.7 binary, unchanged-project `go mod verify`,
+  build, count-one tests, race count-one tests, and vet all pass.
+- `go.mod` and `go.sum` remain at their starting hashes. `git diff --check`,
+  the launcher/archive byte-mirror check, reciprocal archive progression, and
+  the sole-NEXT guard pass.
+- Every task-owned project copy, cache, SDK copy, repository, tool, response,
+  report, and temporary prompt mirror was contained below
+  `${CODEX_SESSION_SCRATCH_ROOT:?}` and removed. Only the launcher's pre-existing
+  `node-compile-cache` remains there.
+
+### Handoff
+
+P7 stops on exactly one reciprocal client_golang guard-direction decision:
+repair the two handoff identities to the independently reproduced preceding-
+archive values and authorize a fresh full evaluation; preserve the asserted
+values and authorize one measurement-only **Client Golang Advisory Guard
+Provenance Study**; or stop P7 unresolved. The successor was prepared but not
+executed. It may not use the partial matrix as qualification, grant an
+exception, run an owner study, change a dependency, combine another group, or
+begin P8.

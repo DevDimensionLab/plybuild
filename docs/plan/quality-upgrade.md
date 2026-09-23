@@ -14837,6 +14837,36 @@ Posener Complete product decision (2026-09-23):
   the evaluation must independently reproduce their import boundaries and all
   routes. It was prepared but not executed. P8 remains queued.
 
+Prometheus/client_golang evaluation guard stop (2026-09-23):
+
+- No dependency or source change was retained. Two fresh primary advisory
+  fetches reproduce the preceding archives' 518,501-byte Go-index and
+  PUBLISHED 2,807-byte memberlist-CNA identities
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`
+  / `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+  not the active NEXT archive's asserted `bdd6a085...` / `cacd856f...`
+  identities. Counts and semantic states agree, but the protected byte guard
+  does not, so qualification stopped.
+- Exact continuity, SDKs, 234/3,599/355/429/197/41/1,067 project state,
+  module/graph/common-tidy hashes, Go floor, pre-Goe snapshot, separate Goe/
+  pkg-errors/SFTP/go-difflib/Complete guards, and every earlier decision remain
+  unchanged. No projection was retained.
+- Preliminary evidence reproduced all four genuine requester import
+  boundaries, negative target/requester why, zero repository import/load/
+  runtime/root state, 51 stables/six prereleases, and 33 stables whose declared
+  floor is no higher than Go 1.18. Selected v1.4.0 has
+  GHSA-cg3q-j54f-5p7p / GO-2022-0322. V1.16.0 is highest by declared floor,
+  but no qualification claim is made.
+- Selected get/tidy returns the common projection. V1.16.0 raw get changes the
+  closed go-conntrack selection and other closure versions; tidy removes the
+  candidate and returns v1.4.0. The all-eligible matrix was interrupted and is
+  not accepted evidence.
+- P7 stops for exactly one guard-direction decision: repair the two asserted
+  hashes and authorize a fresh complete client_golang evaluation; preserve
+  them and authorize one measurement-only advisory provenance study; or stop
+  P7 unresolved. No target exception, owner study, another group, or P8 is
+  authorized.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
