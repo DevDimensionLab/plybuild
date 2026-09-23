@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T05:13:16+02:00
+Generated: 2026-09-23T06:17:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,12 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The pkg/errors product
-  decision began from clean evaluation-handoff HEAD
-  `7b078f6d42a02c57feb7a45dd9a821e02d4b0f14`, parent
-  `bf71bc950a601e38233d20e33a50c45f44f0e9c9`, tree
-  `f1bc36ceef014e57a2ca12c0ccb37dcc2e0dc8fe`. That handoff changes exactly
-  the launcher, answered pkg/errors evaluation archive, then-NEXT pkg/errors
-  decision archive, rolling handover, and roadmap. Ordinary and ignored
+  `codex/upgrade-quality`, base master at `5635d50`. The SFTP evaluation began
+  from clean handoff HEAD `a6d9bc87ba801899df9d88597100eace51d82488`,
+  parent `7b078f6d42a02c57feb7a45dd9a821e02d4b0f14`, tree
+  `cee9fe5c41bd2dbf664742ee851b84ef912aa589`. That handoff changes exactly
+  the launcher, answered pkg/errors decision archive, then-NEXT SFTP
+  evaluation archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
@@ -106,12 +105,19 @@ session diary.
   Pkg/errors option 1 is now final: exact selected, inherited, indirect,
   unloaded v0.9.1 is explicitly retained unchanged under its own unqualified,
   non-transferable exception. The named owner-route study was not authorized
-  or run. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T051316+0200-evaluate-pkg-sftp-dependency.md`.
-  It authorizes only the bounded evaluation of exact selected
-  `github.com/pkg/sftp v1.13.1`; it may not reopen or transfer the pkg/errors
-  exception or an earlier decision, combine another group, write outside the
-  managed scratch root, or begin P8.
+  or run. The completed SFTP evaluation found v1.13.0 to be the highest
+  behavior-qualified Go-1.18-compatible exact-path stable, but it has no
+  genuine supported tidy-stable project owner. Selecting it removes direct
+  mvn-pom-mutator, downgrades direct Viper and Afero, changes the closed
+  pkg/errors owner/request route, and crosses earlier guards. Selected v1.13.1
+  and v1.13.2-v1.13.7 fail complete vet; v1.13.8-v1.13.9 have a Go-1.18-
+  incompatible x/crypto closure; v1.13.10-v1.13.11 raise the Go floor. No
+  projection, product source, or dependency metadata changed. The sole NEXT
+  archive is `docs/plan/agent-sessions/2026-09-23T061712+0200-decide-pkg-sftp-product-direction.md`.
+  It authorizes only one SFTP product direction; it may not reevaluate SFTP,
+  run the study, reopen or transfer the pkg/errors exception or an earlier
+  decision, combine another group, write outside the managed scratch root, or
+  begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -166,8 +172,9 @@ pkg/errors direction qualifies: selected/latest v0.9.1 fails the complete Go
 1.26.7 upstream contract, no later stable or eligible replacement exists, and
 removal violates direct-owner and earlier-selection guards. Pkg/errors option
 1 explicitly retains it unchanged and unqualified under its own exact guards.
-P7 is active at the prepared bounded SFTP v1.13.1 evaluation; P8 remains
-queued.
+P7 is active at the prepared SFTP product-direction decision. V1.13.0 is the
+highest behavior-qualified stable but is ownerless under a supported tidy
+project; selected v1.13.1 is unqualified. P8 remains queued.
 
 ## Oklog ULID Evaluation
 
@@ -5680,9 +5687,61 @@ earlier decision changed. P7 continues only with the prepared bounded
 evaluation of exact selected `github.com/pkg/sftp v1.13.1`; it was not
 executed. P8 remains queued.
 
+## Pkg SFTP Evaluation
+
+No genuine supported selection qualifies. The public enabled unarchived
+non-fork BSD-2-Clause `pkg/sftp` repository, ID 14132192, owns 35 exact-path
+stable tags. The proxy exposes 22 canonical v1 stables through latest
+v1.13.11; `/v2` has only two alphas and `/v3` is absent. All stable commits
+are ancestors of latest. Selected v1.13.1 is exact valid-signed commit
+`5b98d05076b8ac5e6e762559e7c2d69efe1676ee`, tree
+`75fe68d6216f8866baf52f0796a6c7dab04df71f`.
+
+V1.13.0 is the highest behavior-qualified Go-1.18-compatible stable. Under
+both exact SDKs it passes verify/build/count-one/count-ten/race/vet, the small
+ordinary in-memory client/server lifecycle fixture, and ten supported cross
+build/test-compilation targets. Selected v1.13.1 and v1.13.2-v1.13.7 fail
+complete vet on two nonstandard internal ReadFrom signatures; selected also
+fails 32-bit cross test compilation and Plan 9 compilation. V1.13.8-v1.13.9
+have an x/crypto v0.31.0 closure that cannot compile on Go 1.18; v1.13.10 and
+v1.13.11 declare Go 1.23 and 1.25. V1.13.0 predates selected exported API
+additions, including File.ReadFromWithConcurrency and RealPathFileLister.
+
+Four Afero requests select the target: v1.9.4/v1.8.2 request v1.13.1 and
+v1.6.0/v1.3.3 request v1.10.1. Every requester genuinely imports SFTP in its
+unloaded `sftpfs` adapter. The shortest route is main -> direct-indirect Afero
+v1.9.4 -> target; historical routes pass through direct mvn-pom-mutator,
+Viper v1.10.1, and the recorded Afero versions. Target why, repository import,
+all target loads, runtime relevance, and main/history roots are zero; selected
+Afero root/internal/common/mem packages load, not `sftpfs`.
+
+A selected get manufactures four unused roots and source sums before tidy
+returns the common projection. V1.13.7 changes x/crypto/x/net/x/text/x/mod/
+x/tools and removes the selected SFTP -> pkg/errors owner boundary; tidy
+reselects v1.13.1 into a changed projection. V1.13.0 removes direct mvn-pom-
+mutator, downgrades direct Viper and Afero, produces an unloadable 127-module/
+499-edge graph, and changes the pkg/errors route and many guards. Tidy
+reselects v1.13.1 in a non-equivalent 228-module/3,465-edge project. Thus no
+genuine supported tidy-stable owner requests v1.13.0. No projection was
+retained.
+
+Exact base 234/3,599/355/429/197/41/1,067 state, module/graph/tidy hashes, Go
+floor, all 47 pre-Goe selections/276 edges, separate Goe and pkg/errors guards,
+and every earlier decision remain unchanged. Target OSV/GitHub/repository
+advisory results are empty; exact-Go isolated govulncheck records only the
+version-specific x/crypto closure populations. Guard OSV/x/mod, the exact
+518,501-byte/1,402-record Go index, and PUBLISHED memberlist CNA identities
+reproduce. Final unchanged-project exact-Go verify/build/count-one/race/vet
+passes. No source or dependency metadata changed.
+
+P7 now requires exactly one SFTP product direction: target-specific
+unqualified retention of exact v1.13.1; one later measurement-only **Afero
+SFTP Owner/Request Study**; or stopping P7 unresolved. The successor was
+prepared but not executed; P8 remains queued.
+
 ## Next Bounded Objective
 
-Evaluate exact selected `github.com/pkg/sftp v1.13.1` as the sole bounded P7
-dependency group. Preserve the pkg/errors exception and every earlier guard;
-do not combine another group, run the pkg/errors owner-route study, begin P8,
-or write disposable state outside the managed scratch root.
+Choose exactly one direction in the prepared SFTP product-decision archive.
+Preserve the pkg/errors exception and every earlier guard; do not reevaluate
+SFTP, run either owner-route study, combine another group, begin P8, or write
+disposable state outside the managed scratch root.

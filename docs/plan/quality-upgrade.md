@@ -14576,6 +14576,50 @@ Pkg/errors product decision (2026-09-23):
   exact selected `github.com/pkg/sftp v1.13.1`; it was not executed. P8
   remains queued.
 
+Pkg/sftp evaluation (2026-09-23):
+
+- No genuine supported SFTP selection qualifies. The public enabled
+  unarchived non-fork BSD-2-Clause `pkg/sftp` repository, ID 14132192, owns 35
+  exact-path stable tags. The proxy exposes 22 canonical v1 stables through
+  latest v1.13.11; `/v2` has only two prereleases and `/v3` is absent. All
+  stable commits are ancestors of latest. Selected v1.13.1 is exact valid-
+  signed commit `5b98d05076b8ac5e6e762559e7c2d69efe1676ee`, tree
+  `75fe68d6216f8866baf52f0796a6c7dab04df71f`.
+- V1.13.0 is the highest behavior-qualified Go-1.18-compatible stable. It
+  passes exact Go 1.18.10 and Go 1.26.7 module verify, complete build,
+  count-one/count-ten tests, race, vet, the ordinary bounded client/server
+  lifecycle fixture, and ten cgo-disabled cross build/test-compilation targets.
+  Selected v1.13.1 and every v1.13.2-v1.13.7 stable fail complete vet on two
+  nonstandard internal ReadFrom signatures; selected also fails recorded
+  32-bit and Plan 9 cross gates. V1.13.8-v1.13.9 have an x/crypto v0.31.0
+  closure incompatible with Go 1.18; v1.13.10 and v1.13.11 declare Go 1.23
+  and 1.25. V1.13.0 predates selected API additions.
+- Four Afero requests select SFTP: v1.9.4/v1.8.2 request v1.13.1 and
+  v1.6.0/v1.3.3 request v1.10.1. All four genuinely import it in their
+  unloaded `sftpfs` adapters. Current and historical routes pass through the
+  main indirect Afero root and direct mvn-pom-mutator/Viper routes. Target why,
+  repository import, production/complete-test/module-backed load, runtime
+  relevance, and main/history roots remain zero.
+- A selected get adds four unused roots/source sums and tidies to the common
+  projection. V1.13.7 changes six selected dependencies and removes selected
+  SFTP's pkg/errors owner boundary; tidy reselects v1.13.1 into a changed
+  projection. V1.13.0 removes direct mvn-pom-mutator, downgrades direct Viper
+  and Afero, creates an unloadable 127-module/499-edge graph, and changes the
+  pkg/errors route and many earlier guards. Tidy reselects v1.13.1 in a non-
+  equivalent 228-module/3,465-edge project. No genuine supported tidy-stable
+  project owner requests v1.13.0. No projection was retained.
+- Exact base state, module/graph/tidy identities, Go floor, 47-selection/276-
+  edge pre-Goe guard, separate Goe and pkg/errors guards, and every earlier
+  decision remain exact. Target exact-version advisory responses are empty;
+  isolated govulncheck records only version-specific x/crypto closure
+  populations. Guard OSV/x/mod, Go-index, memberlist-CNA, and final exact-Go
+  project gates reproduce. Advisory absence was not used as qualification.
+- No source or dependency metadata changed. P7 now requires exactly one
+  product direction: SFTP-specific unqualified retention of exact v1.13.1;
+  one later measurement-only **Afero SFTP Owner/Request Study**; or stopping
+  P7 unresolved. The successor was prepared but not executed; P8 remains
+  queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
