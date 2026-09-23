@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T14:47:51+02:00
+Generated: 2026-09-23T17:25:41+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,18 +8,18 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The client_model product
-  decision began from clean evaluation handoff HEAD
-  `c339c4a32a42c81cc9be44209ffced75755e7faa`, parent
-  `f747850982e27aa784b64552c5ffedbdc04dc7c7`, tree
-  `5c37acd72962c82e9a9d5fc2d0bdfdc58ea6ddd5`. That handoff changes exactly
-  the launcher, answered client_model evaluation, then-NEXT decision, rolling
+  `codex/upgrade-quality`, base master at `5635d50`. The Prometheus Common
+  product decision began from clean evaluation handoff HEAD
+  `2eb35fcdd1d4e1cbc7375acefe31df2470e08ea3`, parent
+  `e170896d0afaa5541ea2c0080160be520a3bde0c`, tree
+  `75a82918f7dc220e2f5ba7d816ab5b5badf73ae3`. That handoff changes exactly
+  the launcher, answered Common evaluation, then-NEXT decision, rolling
   handover, and roadmap. Ordinary and ignored status, branch, ancestry, exact
   changed set, reciprocal archive history, latest Google UUID ancestry, exact
-  Go identities, module hashes/counts/tidy projection, all client_model
-  request/route/import/relevance and earlier guards, fresh advisory identities,
-  final unchanged-project gates, and contained launcher check pass. No source
-  or dependency metadata changed.
+  Go identities, module hashes/counts/tidy projection, all Common request/
+  route/import/relevance and earlier guards, fresh advisory identities, final
+  unchanged-project gates, and contained launcher check pass. No source or
+  dependency metadata changed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -6271,11 +6271,53 @@ go-conntrack/client_golang/client_model guards, every earlier decision, and
 verification, build, count-one tests, race count-one tests, and vet pass; all
 task-owned scratch evidence is removed.
 
+## Prometheus Common Product Decision
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/prometheus/common v0.9.1` is explicitly retained unchanged under a
+Common-specific, unqualified, non-transferable exception. It is not qualified,
+supported, safe, or fixed. Selected v0.9.1 fails mandatory native, complete-
+cross, and closure-advisory gates. Highest native-clean compatible stable
+v0.44.0 also fails complete-cross and closure-advisory gates, has no genuine
+supported tidy-stable owner, and is not guard-preserving. The **Mvn-Pom-
+Mutator Prometheus Common Owner/Request Study** is not authorized or run.
+
+Retention requires the exact four requests, requester import/metadata
+boundaries, all four complete shortest routes, negative target/requester why,
+zero repository Common import and target/requester load, zero Common module-
+backed load/runtime/current-root state, the exact nonzero historical-root
+boundary, three go.mod-only sums, and no v0.44.0 request. The exact repository/
+release/tag/commit/tree/signature/ancestry/proxy/sumdb/archive/module/license,
+source/build boundary, package/API/behavior, closure, native/repeated/race/vet/
+cross, and advisory identities for all 51 compatible candidates remain expiry
+guards. Any changed input, newly qualified release, or newly supported guard-
+preserving owner route requires a fresh owning evaluation and decision.
+
+Both exact disposable projection identities remain guards. Selected get adds
+only a redundant root/source sum/main edge before tidy restores the common
+projection. V0.44.0 get changes 15 selections including protected go-
+conntrack/client_golang/client_model and adds four modules; tidy reselects
+v0.9.1 but retains six unrelated upgrades. Neither projection is retained.
+Target advisory emptiness is not qualification; the isolated v0.9.1 and
+v0.44.0 closure populations remain 25/3/0/1 and 20/6/5/5. The project remains
+30/22/20/20 with no Common trace, and client_golang retains its separate GHSA/
+GO/CVE identity and unqualified exception.
+
+Guard-only revalidation reproduced the clean evaluation handoff and ancestry,
+reciprocal archive chain and launcher, both SDK identities, exact
+234/3,599/355/429/197/41/1,067 project state, module/graph/common-tidy hashes,
+all requests/imports/routes/relevance boundaries, corrected advisory
+identities, all 47 pre-Goe selections/276 edges, separate Goe/pkg-errors/SFTP/
+go-difflib/Complete/ULID/go-conntrack/client_golang/client_model guards, every
+earlier decision, and accepted 27/27 Q0-Q2 PASS at L2. Completed release,
+source, behavior, API, closure, projection, native, cross, and advisory-matrix
+work was not repeated. Final exact-Go gates and contained task scratch cleanup
+pass. No source, dependency metadata, target root, study, ownership, or
+transferred exception is retained.
+
 ## Next Bounded Objective
 
-Choose exactly one Prometheus Common product direction: retain exact selected,
-inherited, indirect, unloaded v0.9.1 under a Common-specific unqualified
-non-transferable exception; authorize one later measurement-only **Mvn-Pom-
-Mutator Prometheus Common Owner/Request Study**; or stop P7 unresolved. Do not
-repeat the evaluation, execute the study, change a dependency or source file,
-transfer an exception, launch a successor, combine another group, or begin P8.
+Evaluate only the next selected alphabetical module, graph-selected transitive
+exact `github.com/prometheus/procfs v0.0.8`. Its four graph requests are queue
+observations only. Do not alter Common, client_model, client_golang, or any
+earlier exception; combine another dependency group; or begin P8.
