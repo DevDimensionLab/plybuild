@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T04:38:12+02:00
+Generated: 2026-09-23T05:13:16+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,17 +8,17 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The pkg/errors evaluation
-  began from clean handoff HEAD
-  `bf71bc950a601e38233d20e33a50c45f44f0e9c9`, parent
-  `413fb1a154a5c9a4acfe151dfb9518714a701ed1`, tree
-  `ab1d295120cac85d6f7c4d633c54d5e919cbafa2`. That handoff changes exactly
-  the launcher, answered Goe decision archive, then-NEXT pkg/errors evaluation
-  archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
-  ancestry, exact changed set, reciprocal archive history, latest Google UUID
-  ancestry, exact Go identities, module hashes/counts/tidy projection, target
-  and earlier guards, fresh advisory identities, final unchanged-project
-  gates, and contained launcher check passed.
+  `codex/upgrade-quality`, base master at `5635d50`. The pkg/errors product
+  decision began from clean evaluation-handoff HEAD
+  `7b078f6d42a02c57feb7a45dd9a821e02d4b0f14`, parent
+  `bf71bc950a601e38233d20e33a50c45f44f0e9c9`, tree
+  `f1bc36ceef014e57a2ca12c0ccb37dcc2e0dc8fe`. That handoff changes exactly
+  the launcher, answered pkg/errors evaluation archive, then-NEXT pkg/errors
+  decision archive, rolling handover, and roadmap. Ordinary and ignored
+  status, branch, ancestry, exact changed set, reciprocal archive history,
+  latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
+  projection, target and earlier guards, fresh advisory identities, final
+  unchanged-project gates, and contained launcher check passed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -103,12 +103,15 @@ session diary.
   fails its complete Go 1.26.7 test/race/vet contract, no later stable or
   eligible replacement exists, and removal destroys direct owners and earlier
   selections before tidy reintroduces v0.9.1 into a non-equivalent project.
-  The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T043812+0200-decide-pkg-errors-product-direction.md`.
-  It authorizes only one pkg/errors product direction from the completed
-  evaluation; it may not reevaluate pkg/errors, run the named owner-route
-  study, reopen or transfer an earlier exception, evaluate another group,
-  write outside the managed scratch root, or begin P8.
+  Pkg/errors option 1 is now final: exact selected, inherited, indirect,
+  unloaded v0.9.1 is explicitly retained unchanged under its own unqualified,
+  non-transferable exception. The named owner-route study was not authorized
+  or run. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-23T051316+0200-evaluate-pkg-sftp-dependency.md`.
+  It authorizes only the bounded evaluation of exact selected
+  `github.com/pkg/sftp v1.13.1`; it may not reopen or transfer the pkg/errors
+  exception or an earlier decision, combine another group, write outside the
+  managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -161,8 +164,10 @@ v0.1.1 fail their complete race gate, v0.1.0 additionally fails an ordinary
 Go 1.26.7 example, and v0.1.1 has no genuine supported tidy-stable owner. No
 pkg/errors direction qualifies: selected/latest v0.9.1 fails the complete Go
 1.26.7 upstream contract, no later stable or eligible replacement exists, and
-removal violates direct-owner and earlier-selection guards. P7 is stopped only
-for the prepared pkg/errors product decision; P8 remains queued.
+removal violates direct-owner and earlier-selection guards. Pkg/errors option
+1 explicitly retains it unchanged and unqualified under its own exact guards.
+P7 is active at the prepared bounded SFTP v1.13.1 evaluation; P8 remains
+queued.
 
 ## Oklog ULID Evaluation
 
@@ -5625,10 +5630,59 @@ unqualified retention of selected v0.9.1; one later measurement-only **Pkg
 Errors Owner-Route Removal Study**; or stopping P7 unresolved. The successor
 was prepared but not executed; P8 remains queued.
 
+## Pkg Errors Product Decision
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/pkg/errors v0.9.1` is explicitly retained without product-source
+or dependency-metadata changes under a pkg/errors-specific, unqualified,
+non-transferable exception. V0.9.1 is proxy-latest and has a genuine selected
+SFTP v1.13.1 owner through selected Afero v1.9.4, but it is not qualified,
+safe, or fixed because it fails the complete Go 1.26.7 test, race, and vet
+gates. Physical selection, transitive presence, genuine ownership, zero
+loading, and advisory absence do not qualify or implicitly accept it. The
+**Pkg Errors Owner-Route Removal Study** was not authorized or run.
+
+Retention requires all ten exact current/historical requests, selected
+Viper's metadata-only boundary, the recorded genuine production/test-support
+imports for every other requester, and every shortest route through direct
+go-term-markdown, selected/historical Afero and Viper, direct mvn-pom-mutator,
+and the recorded historical requesters. The target retains no current or
+history main root; only selected Viper is why-positive; repository import,
+target production/complete-test/module-backed load, and runtime relevance
+remain zero.
+
+The exact 13-stable release line through v0.9.1, absent later or alternate
+line, repository/release/tag/commit/tree/signature/ancestry/proxy/sumdb/
+module/license/archive identities, exported API and legacy Cause versus
+Is/As/Unwrap behavior, stack/format semantics, empty closure, build
+boundaries, ordinary behavior, and exact SDK/cross-build results remain
+guarded. The selected-get projection must still add only an unused indirect
+root, source sum, and main edge before tidy reaches the common projection.
+Removal must retain its recorded direct-owner removal, direct markdown/Viper/
+Afero downgrades, unloadable 109-module/430-edge raw graph, and non-equivalent
+228-module/3,465-edge tidy graph that reintroduces v0.9.1. Neither projection
+is retained.
+
+Exact 234/3,599/355/429/197/41/1,067 project state, module/graph/tidy hashes,
+Go floor, all 47 pre-Goe selections/276 edges, the separate Goe guard, every
+earlier final decision, target/guard advisories, 30/22/20/20 project
+populations, Go-index and memberlist-CNA identities, and final exact-Go
+verify/build/count-one/race/vet gates reproduced without drift. Advisory
+absence was not used as qualification; no new independent defect was found.
+Any target/request/requester boundary, owner/route, root/why/import/load/
+runtime, repository/release/source/behavior/closure, projection/graph/module/
+tidy/Go-floor, earlier guard, advisory/finding, qualification, supported-
+owner, or compatible-route change expires this exception and requires a fresh
+owning evaluation and product decision.
+
+No product source, dependency metadata, target root, owner/requester, or
+earlier decision changed. P7 continues only with the prepared bounded
+evaluation of exact selected `github.com/pkg/sftp v1.13.1`; it was not
+executed. P8 remains queued.
+
 ## Next Bounded Objective
 
-Choose exactly one product direction for exact selected
-`github.com/pkg/errors v0.9.1` from the completed evaluation. Do not reevaluate
-pkg/errors, execute the named owner-route study, change source/dependency
-metadata, evaluate another dependency, reopen or transfer an exception, write
-outside the managed scratch root, or begin P8.
+Evaluate exact selected `github.com/pkg/sftp v1.13.1` as the sole bounded P7
+dependency group. Preserve the pkg/errors exception and every earlier guard;
+do not combine another group, run the pkg/errors owner-route study, begin P8,
+or write disposable state outside the managed scratch root.

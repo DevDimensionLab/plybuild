@@ -5374,8 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at the prepared bounded product decision for graph-selected
-exact `github.com/pkg/errors v0.9.1`. Option 1 now explicitly retains exact selected/
+Status: active at the prepared bounded evaluation of graph-selected exact
+`github.com/pkg/sftp v1.13.1`. Option 1 now explicitly retains exact selected,
+inherited, indirect, unloaded, unqualified pkg/errors v0.9.1 and exact selected/
 inherited/unloaded unqualified Goe v0.1.0, ULID v1.3.1, and go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`, exact indirect/production-loaded
 unqualified mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
@@ -5420,8 +5421,9 @@ projection was retained, and Goe option 1 is final. The completed pkg/errors
 evaluation found no qualified direction: selected/latest v0.9.1 fails the
 complete Go 1.26.7 test/race/vet contract, no later stable or eligible
 replacement exists, and removal violates direct-owner and earlier-selection
-guards. Its reciprocal product decision is prepared but was not executed. P8
-remains queued.
+guards. Pkg/errors option 1 is final under its own exact guards; the named
+owner-route study was not authorized or run. Its reciprocal SFTP evaluation
+successor is prepared but was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14535,6 +14537,43 @@ Pkg/errors evaluation (2026-09-23):
   product direction: pkg/errors-specific unqualified retention of exact
   v0.9.1; one later measurement-only **Pkg Errors Owner-Route Removal Study**;
   or stopping P7 unresolved. The successor was prepared but not executed; P8
+  remains queued.
+
+Pkg/errors product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, indirect, unloaded
+  `github.com/pkg/errors v0.9.1` is explicitly retained without product-source
+  or dependency-metadata changes under a pkg/errors-specific, unqualified,
+  non-transferable exception. It is proxy-latest and has a genuine selected
+  SFTP v1.13.1 owner through selected Afero v1.9.4, but it is not qualified,
+  safe, or fixed: it fails the complete Go 1.26.7 test, race, and vet gates.
+  The **Pkg Errors Owner-Route Removal Study** was not authorized or run.
+- Retention requires all ten exact current/historical requests, selected
+  Viper's metadata-only boundary, every other requester's recorded genuine
+  production/test-support import boundary, every shortest route through
+  direct go-term-markdown, Afero, Viper, and mvn-pom-mutator plus historical
+  requesters, no main or history target root, positive why only for selected
+  Viper, and zero repository import, target production/complete-test/module-
+  backed load, and runtime relevance. Any changed request, requester boundary,
+  owner route, why/import/load/runtime fact, or supported owner expires the
+  exception.
+- The exact 13-stable release line, absent major/prerelease/alternate line,
+  repository/release/tag/commit/tree/signature/ancestry/proxy/sumdb/module/
+  license/archive identities, exported API and legacy Cause versus Is/As/
+  Unwrap behavior, stack/format semantics, empty closure, build boundaries,
+  ordinary behavior, exact SDK and cross-build outcomes remain guarded. The
+  selected-get and destructive-removal projections retain their recorded
+  effects and common/non-equivalent tidy outcomes; neither is retained.
+- Exact 234/3,599/355/429/197/41/1,067 project state, module/graph/tidy hashes,
+  Go floor, all 47 pre-Goe selections/276 edges, the separate Goe guard, every
+  earlier final decision, target/guard advisories, 30/22/20/20 project
+  populations, Go-index and memberlist-CNA identities, and final exact-Go
+  verify/build/count-one/race/vet gates reproduced without drift. Advisory
+  absence was not used as qualification, and no new independent defect was
+  found.
+- No product source, dependency metadata, root, owner/requester, or earlier
+  decision changed. P7 continues only with the prepared bounded evaluation of
+  exact selected `github.com/pkg/sftp v1.13.1`; it was not executed. P8
   remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
