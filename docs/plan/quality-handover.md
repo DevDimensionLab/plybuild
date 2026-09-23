@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T08:21:05+02:00
+Generated: 2026-09-23T10:02:01+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,12 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-difflib decision
+  `codex/upgrade-quality`, base master at `5635d50`. The Complete decision
   began from clean evaluation-handoff HEAD
-  `4e6198c4c3ff5315928df9f6d0690de985bf9ce3`, parent
-  `632840058974b19122e27302fde780ed6739510b`, tree
-  `30b7ea878359482c0f2ff1495daf35c5f0741bc2`. That handoff changes exactly
-  the launcher, answered go-difflib evaluation archive, then-NEXT go-difflib
+  `18e5105b90fd7380f4621ea82ed4e90ba59daf0e`, parent
+  `7c126d36f09a63f25a48f120f6987d7cba87d1a8`, tree
+  `039413ad0d21ad371b0f853ec5dff5c9a10df3e8`. That handoff changes exactly
+  the launcher, answered Complete evaluation archive, then-NEXT Complete
   decision archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
@@ -137,12 +137,19 @@ session diary.
   why/import/load/runtime/root facts, release/source/behavior/closure/
   projection/advisory identities, and earlier guards are exact expiry
   conditions. The Go-Term-Markdown Testify Go-Difflib Owner/Request Study was
-  not authorized or run. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T082105+0200-evaluate-posener-complete-dependency.md`.
-  It evaluates only exact selected `github.com/posener/complete v1.2.3`, may
-  implement at most one fully qualified supported exact selection, preserves
-  go-difflib and every earlier guard, and may not combine another group, write
-  outside the managed scratch root, or begin P8.
+  not authorized or run. Complete option 1 is also final: exact selected,
+  inherited, indirect, unloaded v1.2.3 is explicitly retained unchanged under
+  its own Complete-specific, unqualified, non-transferable exception. It is
+  latest but not qualified or fixed, and the Mvn-Pom-Mutator Complete Owner/
+  Request Study was not authorized or run. All three requests, requester
+  import boundaries, historical routes, why/import/load/runtime/root facts,
+  release/source/behavior/closure/projection/advisory identities, and earlier
+  guards are exact expiry conditions. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-23T100201+0200-evaluate-prometheus-client-golang-dependency.md`.
+  It evaluates only exact selected `github.com/prometheus/client_golang
+  v1.4.0`, may implement at most one fully qualified supported exact selection,
+  preserves Complete and every earlier guard, and may not combine another
+  group, write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -151,7 +158,8 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 selected option 1 separately for exact selected,
-inherited, indirect, unloaded, unqualified go-difflib v1.0.0; exact selected,
+inherited, indirect, unloaded, unqualified Complete v1.2.3 and go-difflib
+v1.0.0; exact selected,
 inherited, unloaded, unqualified ULID v1.3.1 and go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`; exact selected, indirect,
 production-loaded, unqualified mapstructure v1.5.0; exact selected,
@@ -205,9 +213,13 @@ tidy-stable project owner. Go-difflib selected/latest v1.0.0 is its sole
 exact-path stable and is neither qualified, supported, safe, nor fixed: both
 exact SDKs fail complete vet, its diff writers discard ordinary final-flush
 errors, and upstream ended maintenance. Option 1 retains it unchanged and
-unqualified under its own exact guards; no selection or metadata changed. P7
-is active at the prepared bounded posener/complete v1.2.3 evaluation; P8
-remains queued.
+unqualified under its own exact guards; no selection or metadata changed.
+Complete v1.2.3 is latest but not qualified or fixed because every buildable
+v1.2 stable retains its hard-coded `/tmp` Uninstall temporary file after
+success. Option 1 retains it unchanged and unqualified under its own exact
+guards; no owner study, source change, or dependency metadata change was
+authorized. P7 is active only at the prepared bounded
+prometheus/client_golang v1.4.0 evaluation; P8 remains queued.
 
 ## Oklog ULID Evaluation
 
@@ -5913,11 +5925,54 @@ authorize one later measurement-only **Mvn-Pom-Mutator Complete Owner/Request
 Study**; or stop P7 unresolved. The successor was prepared but not executed.
 P8 remains queued.
 
+## Posener Complete Product Decision
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/posener/complete v1.2.3` is explicitly retained without source or
+dependency-metadata changes under a Complete-specific, unqualified, non-
+transferable exception. It is latest but not qualified or fixed. Every
+buildable v1.2 stable retains the hard-coded `/tmp/complete-*` temporary file
+created by exported `cmd/install.Uninstall` after success. The operation was
+not executed, and physical selection, zero loading, and advisory absence were
+not used as acceptance. The Mvn-Pom-Mutator Complete Owner/Request Study was
+not authorized or run.
+
+Retention requires exactly the CLI v1.0.0 and v1.1.0 genuine-import requests
+for Complete v1.1.1 and the Serf v0.9.6 metadata-only request for selected
+v1.2.3; every recorded Viper/crypt/Consul API/Serf/CLI route; negative target,
+selected Serf, and selected CLI why; and zero repository import, production/
+complete-test/module-backed load, runtime relevance, and current/history main
+target-root state. It also requires the exact release/repository/tag/commit/
+tree/signature/ancestry/proxy/sumdb/module/license/archive identities,
+completed source/behavior/closure/race/vet/cross results, selected-get/common-
+tidy projection identities, real project/graph/Go-floor state, every earlier
+guard, and target/guard advisory identities.
+
+Any release/support, source/behavior/closure, request/requester boundary,
+route/owner/relevance, root/why/import/load/runtime, projection/project/Go-
+floor, earlier-guard, advisory/finding, independent-defect, qualification, or
+compatible-supported-route change expires retention and requires a fresh
+owning Complete evaluation and explicit product decision. No earlier exception
+transfers.
+
+Guard-only revalidation reproduced exact continuity, archive chain and
+launcher state, exact SDKs, project/module/tidy/load state, all target requests
+and routes, relevance boundaries, earlier guards, repository/release state,
+narrow advisory identities, and final exact-Go-1.26.7 module verification,
+build, count-one, race count-one, and vet. Completed evaluation work was not
+repeated. No source or dependency metadata changed. P7 continues only with the
+prepared bounded evaluation of exact selected
+`github.com/prometheus/client_golang v1.4.0`; it was not executed. P8 remains
+queued.
+
 ## Next Bounded Objective
 
-Choose exactly one bounded product direction for exact selected
-`github.com/posener/complete v1.2.3`: target-specific unqualified retention,
-one later measurement-only Mvn-Pom-Mutator Complete Owner/Request Study, or
-stopping P7 unresolved. Preserve go-difflib, SFTP, pkg/errors, and every
-earlier target-specific guard. Do not repeat the evaluation, edit dependency
-metadata, run the study, combine another group, or begin P8.
+Independently evaluate exact selected
+`github.com/prometheus/client_golang v1.4.0` as the next bounded P7 dependency
+group. Resolve its canonical exact-path release line, complete ordinary
+behavior and closure, exact requests and requester import boundaries, every
+route, genuine supported tidy-stable ownership, projections, and advisories.
+Implement at most one fully qualified supported exact selection. Preserve the
+Complete exception and every earlier target-specific guard; if no stable
+qualifies or any guard changes, retain no change and prepare one reciprocal
+product decision. Do not combine another group or begin P8.

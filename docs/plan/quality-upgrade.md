@@ -14801,6 +14801,42 @@ Posener Complete evaluation (2026-09-23):
   Request Study**, or stopping P7 unresolved. The decision was not executed;
   P8 remains queued.
 
+Posener Complete product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, indirect, unloaded
+  `github.com/posener/complete v1.2.3` is explicitly retained unchanged under
+  a Complete-specific, unqualified, non-transferable exception. It is latest
+  but not qualified or fixed: every buildable v1.2 stable leaves its hard-
+  coded `/tmp/complete-*` Uninstall temporary file after successful completion.
+  The path was not executed. The Mvn-Pom-Mutator Complete Owner/Request Study
+  was not authorized or run.
+- Retention requires exactly the CLI v1.0.0 -> Complete v1.1.1 and CLI v1.1.0
+  -> Complete v1.1.1 genuine-import requests, the Serf v0.9.6 -> selected
+  v1.2.3 metadata-only request, every recorded Viper/crypt/Consul API/Serf/CLI
+  route, negative target/Serf/CLI why, and zero repository import, production/
+  complete-test/module-backed load, runtime relevance, and current/history
+  target-root state. A changed request, import boundary, route, owner, why/
+  import/load/runtime fact, root, or supported owner route expires retention.
+- The exact repository/release/tag/commit/tree/signature/ancestry/proxy/sumdb/
+  module/license/archive identities; completed source/behavior/closure/race/
+  vet/cross-build outcomes; selected-get/common-tidy projections; exact real
+  234/3,599/355/429/197/41/1,067 project state; Go floor; pre-Goe and separate
+  Goe/pkg-errors/SFTP/go-difflib guards; every earlier decision; and target/
+  guard advisory identities remain exact expiry conditions. No projection,
+  product source, `go.mod`, or `go.sum` change is retained. Advisory absence
+  was not used as qualification, and no earlier exception transfers.
+- Guard-only verification and final unchanged-project exact-Go-1.26.7 module
+  verification, build, count-one, race count-one, and vet passed. Any changed
+  release/support, source/behavior/closure, route/relevance, project/projection,
+  Go-floor, earlier-guard, advisory/finding, independent-defect, qualification,
+  or compatible-supported-route input requires a fresh owning evaluation and
+  product decision before merge.
+- P7 continues only with the prepared bounded evaluation of exact selected
+  `github.com/prometheus/client_golang v1.4.0`. Starting observations identify
+  four requests through go-metrics, two Prometheus Common versions, and TSDB;
+  the evaluation must independently reproduce their import boundaries and all
+  routes. It was prepared but not executed. P8 remains queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

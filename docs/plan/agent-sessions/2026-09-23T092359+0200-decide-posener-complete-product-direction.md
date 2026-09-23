@@ -1,13 +1,13 @@
 # Agent Session: Decide Posener Complete Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-23T092359+0200-decide-posener-complete-product-direction`
 Created: `2026-09-23T09:23:59+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `3bb44d86808558eccec2f9df95e3bf6163fccf7189985e7ba0906f2e9ff6f003`
 Previous: [2026-09-23T082105+0200-evaluate-posener-complete-dependency.md](2026-09-23T082105+0200-evaluate-posener-complete-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-23T100201+0200-evaluate-prometheus-client-golang-dependency.md](2026-09-23T100201+0200-evaluate-prometheus-client-golang-dependency.md)
+Outcome: Option 1 is final. Exact selected, inherited, indirect, unloaded `github.com/posener/complete v1.2.3` remains unchanged under a Complete-specific, unqualified, non-transferable exception. It is latest but not qualified or fixed; no study or dependency change was authorized, and one bounded Prometheus client_golang evaluation was prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -197,3 +197,72 @@ revert, bypass cleanup, remove the worktree, edit a dependency, transfer an
 exception, reopen Complete, go-difflib, SFTP, pkg/errors, or an earlier group,
 write outside the managed scratch root, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/posener/complete v1.2.3` is explicitly retained without product-
+source or dependency-metadata changes under a Complete-specific, unqualified,
+non-transferable exception. It is the latest exact-path v1 stable but is not
+qualified or fixed: every buildable v1.2 stable leaves the hard-coded
+`/tmp/complete-*` temporary file created by exported `cmd/install.Uninstall`
+after successful completion. The operation was not executed. Physical graph
+selection, zero loading, and advisory absence are not acceptance. Option 2's
+Mvn-Pom-Mutator Complete Owner/Request Study was not authorized or run, and
+option 3 was not selected.
+
+Retention is bound to exactly three requests: Mitchellh CLI v1.0.0 and v1.1.0
+each request Complete v1.1.1 and genuinely import it in production command/
+autocomplete code, while Serf v0.9.6 requests selected v1.2.3 only in module
+metadata. It requires the shortest selected route main -> direct mvn-pom-
+mutator v0.2.3 -> historical Viper v1.10.1 -> Serf v0.9.6 -> v1.2.3 and both
+recorded v1.1.1 routes through the historical Viper/crypt, Consul API, Serf,
+and CLI vertices. Target, selected Serf, and selected CLI why remain negative;
+repository target/Serf/CLI imports, production and complete-test loads, target
+module-backed load and runtime relevance, and current or historical main
+target roots remain zero. Any changed request, requester import boundary,
+route, owner, why/import/load/runtime fact, root, or supported owner route
+expires the exception.
+
+The exact six-release v1 line, separate ineligible `/v2` line, absent `/v3`,
+repository/owner/status/license/default-branch, tag/commit/tree/signature/
+ancestry, proxy/sumdb/archive/module identities, and completed source/API/
+behavior/closure/race/vet/cross-build results remain guards. Selected v1.2.3
+remains commit `05b68ffc813dd10c420993cb1cf927b346c057b8`, tree
+`58ea2366a478ec75ecf97d4d30097a3f16709fab`. The selected-get
+234/3,602/355/429/197/41/1,070 state and its ordinary tidy return to the common
+234/3,557, 52/948-line projection remain guards; neither projection is
+retained.
+
+The real project remains 234 modules, 3,599 graph edges, 355 production
+entries, 429 complete-test entries, 197 module-backed entries across 41 loaded
+modules, and 1,067 sum lines. Its exact `go.mod`, `go.sum`, graph, common-tidy,
+Go-1.18-floor, 47-selection/276-edge pre-Goe, separate Goe/pkg-errors/SFTP/go-
+difflib, and every earlier decision guard remain exact. Exact target advisory
+results remain empty; the project 30/22/20/20 populations have no target trace;
+the recorded Gorilla WebSocket, go-retryablehttp, x/mod, Go-index, and
+memberlist-CNA advisory identities remain guards. Advisory absence did not
+qualify the target.
+
+Guard-only revalidation reproduced the clean evaluation handoff, exact changed
+set and ancestry, reciprocal archive chain, launcher state, both exact SDK
+identities, project hashes/counts/tidy state, every target request/route/why/
+import/load/runtime fact, earlier guards, repository/release status, and narrow
+fresh advisory identities. Final unchanged-project exact Go 1.26.7 module
+verification, build, count-one tests, race count-one tests, and vet pass. No
+completed upstream behavior, closure, projection, archive, cross-build, or
+govulncheck work was repeated. One accidental bootstrap-toolchain invocation
+completed only build and count-one tests before it was stopped; all authorized
+final gates were then rerun with the verified exact Go 1.26.7 binary.
+
+Any release/support, source/behavior/closure, request/route/relevance,
+projection/project/Go-floor, earlier-guard, advisory/finding, independent
+defect, qualification, or compatible supported-route change expires retention
+and requires a fresh owning Complete evaluation and explicit product decision
+before merge. Go-difflib, SFTP, pkg/errors, Goe, ULID, go-conntrack, and every
+earlier exception remain separate, unqualified, and untransferred.
+
+No source, `go.mod`, or `go.sum` change remains. P7 continues only with the
+prepared bounded evaluation of exact selected
+`github.com/prometheus/client_golang v1.4.0`; it was not launched or executed.
+P8 remains queued.
