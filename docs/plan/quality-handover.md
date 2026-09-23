@@ -6315,9 +6315,54 @@ work was not repeated. Final exact-Go gates and contained task scratch cleanup
 pass. No source, dependency metadata, target root, study, ownership, or
 transferred exception is retained.
 
+## Prometheus Procfs Evaluation
+
+No canonical exact-path stable fully qualifies, so no dependency or source
+change is authorized. The public, enabled, unarchived, non-fork Apache-2.0
+Prometheus repository on `master` has exactly 48 stables v0.0.1-v0.22.0 and no
+prerelease, replacement, retraction, deprecation, `/v2`, or `/v3` line. Exactly
+27 preserve Go 1.18 through highest v0.9.0. Exact release/Git, proxy/sumdb/
+archive, module/license, package/build-boundary, API, and ordinary-behavior
+evidence is complete for all eligible releases.
+
+All 27 verify and build under exact Go 1.18.10 and Go 1.26.7. Selected v0.0.8
+fails complete count-one/count-ten/race tests under both SDKs on its Darwin VM,
+Btrfs, and sysfs behavior. V0.9.0 passes count-one/race/vet from its exact Git
+tree under both SDKs but fails count-ten on its four-column softnet fixture.
+Its production cross-builds pass, but Linux/386 and Windows/386 test
+compilation fail under both SDKs because its tests assign 64-bit extrema to
+`int`. No lower stable passes every mandatory gate.
+
+All 27 exact-version OSV responses and selected/v0.9.0 GitHub/repository
+responses are empty without implying qualification. Pinned isolated
+govulncheck is empty for v0.0.8; v0.9.0 has only module-level GO-2026-5024 in
+x/sys v0.3.0 and no Procfs trace. The unchanged project remains 30/22/20/20
+with no Procfs trace, and client_golang retains its GHSA/GO/CVE identity.
+
+Exactly four requests and four complete shortest routes reproduce. TSDB
+v0.7.1 and Common v0.4.1 are metadata-only; client_golang v1.4.0 and v1.0.0
+have genuine production/test imports. Routes run from direct mvn-pom-mutator
+through TSDB or historical Viper/go-metrics/Common/client_golang. Target and
+requester why are negative; repository import, target/requester load, target
+runtime relevance, and current and historical target roots are zero. No
+requester asks for v0.9.0.
+
+Selected get only manufactures an indirect root, source sum, and main edge;
+ordinary tidy removes all three and restores inherited v0.0.8 plus the common
+projection. No higher projection was authorized because no higher stable was
+otherwise qualified. Exact SDKs, real 234/3,599/355/429/197/41/1,067 project
+state, module/graph/common-tidy hashes, Go floor, corrected advisory guards,
+all 47 pre-Goe selections/276 edges, separate later selections/exceptions,
+every earlier decision, and 27/27 Q0-Q2 PASS at L2 remain exact. No projection
+or real dependency/source change is retained. Final exact-Go-1.26.7 module
+verification, build, count-one, race count-one, and vet pass; all task-owned
+scratch evidence was contained beneath the managed session root and removed.
+
 ## Next Bounded Objective
 
-Evaluate only the next selected alphabetical module, graph-selected transitive
-exact `github.com/prometheus/procfs v0.0.8`. Its four graph requests are queue
-observations only. Do not alter Common, client_model, client_golang, or any
-earlier exception; combine another dependency group; or begin P8.
+Make exactly one product decision for inherited, indirect, unloaded
+`github.com/prometheus/procfs v0.0.8`: target-specific unqualified retention;
+one later measurement-only **Mvn-Pom-Mutator Prometheus Procfs Owner/Request
+Study**; or stopping P7 unresolved. The decision is prepared but not executed.
+Do not alter or transfer Common, client_model, client_golang, or any earlier
+exception; combine another dependency group; launch a study; or begin P8.

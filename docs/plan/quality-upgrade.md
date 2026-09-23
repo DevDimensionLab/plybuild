@@ -15145,6 +15145,47 @@ Prometheus/common product decision (2026-09-23):
   launched; the rejected Common/client_model/client_golang studies are neither
   prepared nor run, and P8 remains queued.
 
+Prometheus/procfs evaluation (2026-09-23):
+
+- The canonical public Prometheus owner has exactly 48 stable exact-path
+  releases v0.0.1-v0.22.0 and no prerelease/replacement/retraction/deprecation
+  or alternate-major line. Exactly 27 preserve Go 1.18 through v0.9.0. Exact
+  repository/release/Git, proxy/sumdb/archive, module/license, package/build-
+  boundary, API, and ordinary-behavior evidence is complete for all eligible
+  releases.
+- All 27 verify and build under exact Go 1.18.10 and Go 1.26.7. Selected
+  v0.0.8 fails complete count-one/count-ten/race tests under both SDKs on its
+  Darwin VM, Btrfs, and sysfs behavior. V0.9.0 passes count-one/race/vet from
+  its exact Git tree but fails count-ten under both SDKs on its four-column
+  softnet fixture. It also fails Linux/386 and Windows/386 test compilation
+  under both SDKs because its tests assign 64-bit extrema to `int`. No stable
+  fully qualifies.
+- Exact-version OSV and narrow GitHub/repository responses are empty without
+  implying qualification. Isolated pinned govulncheck is empty for v0.0.8;
+  v0.9.0 has module-only GO-2026-5024 in x/sys v0.3.0 and no Procfs trace.
+  The project remains 30/22/20/20 with no target trace, and client_golang's
+  GHSA/GO/CVE remains exact.
+- Four requests and four complete shortest routes reproduce through direct
+  mvn-pom-mutator and its TSDB or historical Viper/go-metrics/Common/
+  client_golang chains. TSDB/Common are metadata-only; both client_golang
+  vertices genuinely import Procfs in production/tests. Target/requester why,
+  repository import, target/requester loads, runtime relevance, and current/
+  historical target roots are zero. No requester asks for v0.9.0.
+- Selected get adds only a redundant indirect root, source sum, and edge before
+  tidy restores inherited v0.0.8 and the common projection. No higher
+  projection was authorized because no higher stable was otherwise qualified.
+  No project dependency/source change or projection is retained.
+- Exact SDKs, real 234/3,599/355/429/197/41/1,067 state, Go floor, module/
+  graph/common-tidy hashes, corrected advisory guards, all 47 pre-Goe
+  selections/276 edges, separate later selections/exceptions, every earlier
+  decision, and 27/27 Q0-Q2 PASS at L2 remain exact. Final exact-Go module
+  verify/build/count-one/race/vet passes and task scratch is removed.
+- P7 stops for exactly one reciprocal decision: Procfs-specific unqualified
+  retention of v0.0.8; one later measurement-only **Mvn-Pom-Mutator Prometheus
+  Procfs Owner/Request Study**; or stopping unresolved. The decision is
+  prepared but not executed; no study, other group, exception transfer, or P8
+  work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
