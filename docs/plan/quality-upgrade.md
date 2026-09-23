@@ -5374,8 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at one prepared reciprocal product decision for graph-selected
-exact `github.com/prometheus/client_golang v1.4.0`. The fresh complete
+Status: active at one prepared bounded evaluation of graph-selected exact
+`github.com/prometheus/client_model v0.2.0`. Client_golang option 1 is final:
+exact selected, inherited, indirect, unloaded v1.4.0 remains unchanged and
+unqualified under its own non-transferable exception. Its fresh complete
 evaluation found no qualifying stable; highest-floor v1.16.0 also lacks a
 supported tidy-stable owner and crosses the protected go-conntrack selection
 before tidy returns v1.4.0. No canonical exact-path
@@ -5438,9 +5440,10 @@ The completed go-difflib evaluation found no genuine supported qualifying
 exact-path stable. Option 1 is final: exact selected v1.0.0 is retained
 unchanged and unqualified under its own exact guards; the Go-Term-Markdown
 Testify Go-Difflib Owner/Request Study was not authorized or run. Complete
-option 1 and the client_golang guard repair are now final. One fresh complete
-client_golang evaluation successor is prepared but was not executed. P8
-remains queued.
+option 1, the client_golang guard repair, and client_golang option 1 are now
+final. The Mvn-Pom-Mutator Client Golang Owner/Request Removal Study was not
+authorized or run. One bounded client_model evaluation successor is prepared
+but was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14939,6 +14942,40 @@ Prometheus/client_golang fresh evaluation (2026-09-23):
   specific non-transferable exception; authorize one later measurement-only
   **Mvn-Pom-Mutator Client Golang Owner/Request Removal Study**; or stop P7
   unresolved. The decision was prepared but not executed. P8 remains queued.
+
+Prometheus/client_golang product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, indirect, unloaded
+  `github.com/prometheus/client_golang v1.4.0` is explicitly retained
+  unchanged under a client_golang-specific, unqualified, non-transferable
+  exception. It is not qualified, supported, safe, or fixed. All 33 eligible
+  exact-path stables fail at least one mandatory complete-closure gate;
+  selected v1.4.0 also retains GHSA-cg3q-j54f-5p7p / GO-2022-0322 /
+  CVE-2022-21698. Highest-floor v1.16.0 is not qualified, has no supported
+  tidy-stable owner, and is not guard-preserving. Advisory absence for
+  v1.16.0 was not used as qualification. The named owner/request-removal
+  study was not authorized or run.
+- Retention requires exactly the four go-metrics/Common/TSDB requests, every
+  genuine requester import boundary and recorded route from direct mvn-pom-
+  mutator, negative target/requester why, zero repository target import/load/
+  runtime/root state, and the existing tidy-stable v1.4.0 route. It also
+  requires the exact release/repository/source/API/behavior/closure/native/
+  race/vet/cross results, selected/v1.16.0 projection identities, project/
+  tidy/Go-floor state, all earlier guards, and target/guard advisory
+  identities. Any changed guarded input or newly compatible supported route
+  expires retention and requires a fresh owning evaluation and decision.
+- Guard-only revalidation reproduced exact continuity, archive chain and
+  launcher state, both SDKs, real 234/3,599/355/429/197/41/1,067 state,
+  common tidy, all requests/routes/import and relevance boundaries, separate
+  earlier guards, and narrow advisory identities. Completed evaluation work
+  was not repeated. Final exact-Go-1.26.7 module verification, build,
+  count-one, race count-one, and vet passed. No source or dependency metadata
+  changed, and no earlier exception transfers.
+- P7 continues only with the prepared bounded evaluation of the next selected
+  alphabetical module, exact `github.com/prometheus/client_model v0.2.0`.
+  Its current 15 requests and zero why/import/load/runtime/root observations
+  are starting observations only. The successor was not executed. P8 remains
+  queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

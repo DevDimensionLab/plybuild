@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T12:46:10+02:00
+Generated: 2026-09-23T13:17:51+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,12 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The fresh client_golang
-  evaluation began from clean guard-decision handoff HEAD
-  `eea09d0057ad57278945ce9fbba02eba46017c10`, parent
-  `ff4bcc1b009662d30041e0489fcb2b01c35cbe52`, tree
-  `488b0b89d05c48f2ffbe390813b9302c50967cfd`. That handoff changes exactly
-  the launcher, answered stopped evaluation, answered guard decision,
+  `codex/upgrade-quality`, base master at `5635d50`. The client_golang product
+  decision began from clean fresh-evaluation handoff HEAD
+  `a35afe399fa9897e33d115764db81d0181e4102e`, parent
+  `eea09d0057ad57278945ce9fbba02eba46017c10`, tree
+  `7a2e37c3ea365171190ce335364f392b53017f3a`. That handoff changes exactly
+  the launcher, answered fresh evaluation, then-NEXT product decision,
   rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
@@ -144,12 +144,22 @@ session diary.
   Request Study was not authorized or run. All three requests, requester
   import boundaries, historical routes, why/import/load/runtime/root facts,
   release/source/behavior/closure/projection/advisory identities, and earlier
-  guards are exact expiry conditions. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T124610+0200-decide-prometheus-client-golang-product-direction.md`.
-  It chooses only explicit exact-v1.4.0 unqualified retention, the named
-  measurement-only Mvn-Pom-Mutator owner/request-removal study, or stopping P7
-  unresolved. It may not repeat the completed evaluation, change a dependency
-  or source, combine another group, write outside managed scratch, or begin P8.
+  guards are exact expiry conditions. Client_golang option 1 is now final:
+  exact selected, inherited, indirect, unloaded v1.4.0 is explicitly retained
+  unchanged under its own unqualified, non-transferable exception. It is not
+  qualified, supported, safe, or fixed; all 33 eligible stables fail at least
+  one mandatory complete-closure gate, selected v1.4.0 retains
+  GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698, and v1.16.0 is not
+  qualified, has no supported tidy-stable owner, and is not guard-preserving.
+  The named Mvn-Pom-Mutator owner/request-removal study was not authorized or
+  run. All four
+  requests/import boundaries, routes, relevance facts, release/source/closure/
+  projection/advisory identities, and earlier guards are exact expiry
+  conditions. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-23T131751+0200-evaluate-prometheus-client-model-dependency.md`.
+  It evaluates only exact selected `github.com/prometheus/client_model v0.2.0`
+  as one bounded group. It may not reopen client_golang, transfer an exception,
+  combine another group, write outside managed scratch, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -218,8 +228,10 @@ Complete v1.2.3 is latest but not qualified or fixed because every buildable
 v1.2 stable retains its hard-coded `/tmp` Uninstall temporary file after
 success. Option 1 retains it unchanged and unqualified under its own exact
 guards; no owner study, source change, or dependency metadata change was
-authorized. P7 is active only at the prepared reciprocal
-prometheus/client_golang v1.4.0 product decision; P8 remains queued.
+authorized. Client_golang option 1 likewise retains exact selected v1.4.0
+unchanged and unqualified under its own exact guards; the named study was not
+authorized. P7 is active only at the prepared bounded evaluation of exact
+selected `github.com/prometheus/client_model v0.2.0`; P8 remains queued.
 
 ## Oklog ULID Evaluation
 
@@ -6092,12 +6104,48 @@ Go floor, common tidy, all 47 pre-Goe selections/276 edges, separate Complete/
 go-difflib/SFTP/pkg-errors/Goe/ULID/go-conntrack guards, and every earlier
 decision remain unchanged. Final exact-Go gates and scratch cleanup pass.
 
+## Prometheus Client Golang Product Decision
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/prometheus/client_golang v1.4.0` is explicitly retained unchanged
+under a client_golang-specific, unqualified, non-transferable exception. It is
+not qualified, supported, safe, or fixed. All 33 eligible exact-path stables
+fail at least one mandatory complete-closure gate. Selected v1.4.0 retains
+GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698. Highest-floor v1.16.0
+is not qualified, has no supported tidy-stable owner, and is not guard-
+preserving; its raw projection changes protected go-conntrack. Advisory
+absence for v1.16.0 did not qualify it. The Mvn-Pom-Mutator Client Golang
+Owner/Request Removal Study was not authorized or run.
+
+Retention requires exactly the four go-metrics/Common/TSDB requests, every
+genuine requester import boundary and recorded route from direct mvn-pom-
+mutator, negative target/requester why, zero repository target import/load/
+runtime/root state, and the existing tidy-stable v1.4.0 route. The exact
+release/repository/source/API/behavior/closure/native/race/vet/cross results,
+selected/v1.16.0 projection identities, project/tidy/Go-floor state, all
+earlier guards, and target/guard advisory identities remain expiry conditions.
+Any changed guarded input or newly compatible supported route requires a fresh
+owning evaluation and explicit product decision; no earlier exception
+transfers.
+
+Guard-only revalidation reproduced clean continuity and ancestry, exact
+archive chain and launcher state, both SDK identities, real
+234/3,599/355/429/197/41/1,067 project state, common tidy, all requests,
+routes, requester imports and relevance boundaries, separate earlier guarded
+selections/request counts, and narrow advisory identities. Completed release,
+source, behavior, API, closure, projection, native, and cross-build work was
+not repeated. Final unchanged-project exact-Go-1.26.7 module verification,
+build, count-one tests, race count-one tests, and vet pass. No product source,
+dependency metadata, target root, study, or transferred exception was retained.
+
 ## Next Bounded Objective
 
-Choose exactly one prepared reciprocal client_golang product direction:
-explicitly retain exact selected inherited indirect unloaded v1.4.0 under its
-own unqualified non-transferable exception; authorize only the later
-measurement-only **Mvn-Pom-Mutator Client Golang Owner/Request Removal Study**;
-or stop P7 unresolved. Do not repeat the evaluation, execute the study, change
-a dependency or source, transfer an exception, combine another group, or begin
-P8.
+Evaluate exactly one next selected alphabetical P7 target,
+`github.com/prometheus/client_model v0.2.0`. Treat its 15 graph requests and
+zero current why/import/load/runtime/root state only as observations to
+reproduce. Resolve its canonical exact-path stable line, complete ordinary
+closure, genuine supported tidy-stable ownership, exact project projection,
+advisories, and every earlier guard. Implement only one exact fully qualified
+dependency selection; otherwise retain no change and prepare one reciprocal
+product decision. Do not reopen client_golang, transfer an exception, combine
+another group, or begin P8.
