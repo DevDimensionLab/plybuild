@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T03:50:08+02:00
+Generated: 2026-09-23T04:38:12+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,12 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The pascaldekloe/goe
-  product decision began from clean evaluation-handoff HEAD
-  `413fb1a154a5c9a4acfe151dfb9518714a701ed1`, parent
-  `536df39770daedc4f841a6898e5c69b8605eed6f`, tree
-  `0f6a53bb3eaa70c43d1bc91047ca25fa399f6c0f`. That handoff changes exactly
-  the launcher, answered Goe evaluation archive, then-NEXT Goe decision
+  `codex/upgrade-quality`, base master at `5635d50`. The pkg/errors evaluation
+  began from clean handoff HEAD
+  `bf71bc950a601e38233d20e33a50c45f44f0e9c9`, parent
+  `413fb1a154a5c9a4acfe151dfb9518714a701ed1`, tree
+  `ab1d295120cac85d6f7c4d633c54d5e919cbafa2`. That handoff changes exactly
+  the launcher, answered Goe decision archive, then-NEXT pkg/errors evaluation
   archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
   ancestry, exact changed set, reciprocal archive history, latest Google UUID
   ancestry, exact Go identities, module hashes/counts/tidy projection, target
@@ -98,12 +98,17 @@ session diary.
   authorized or run. No canonical exact-path Goe stable qualifies: v0.1.0
   and v0.1.1 both fail the complete upstream race gate, selected v0.1.0 also
   fails an ordinary Go 1.26.7 example, and v0.1.1 has no genuine supported
-  tidy-stable project owner. No projection was retained. The sole NEXT archive
-  is `docs/plan/agent-sessions/2026-09-23T031134+0200-decide-pascaldekloe-goe-product-direction.md`.
-  It authorizes only one Goe product direction from the completed evaluation;
-  it may not reevaluate Goe, run the named ownership study, reopen or transfer
-  an earlier exception, evaluate another group, write outside the managed
-  scratch root, or begin P8.
+  tidy-stable project owner. No Goe projection was retained. The completed
+  pkg/errors evaluation found no qualifying direction: selected/latest v0.9.1
+  fails its complete Go 1.26.7 test/race/vet contract, no later stable or
+  eligible replacement exists, and removal destroys direct owners and earlier
+  selections before tidy reintroduces v0.9.1 into a non-equivalent project.
+  The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-23T043812+0200-decide-pkg-errors-product-direction.md`.
+  It authorizes only one pkg/errors product direction from the completed
+  evaluation; it may not reevaluate pkg/errors, run the named owner-route
+  study, reopen or transfer an earlier exception, evaluate another group,
+  write outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -153,8 +158,11 @@ owner, and selected v1.3.1 plus every stable from v1.0.0 has an incomplete
 standalone module closure. ULID option 1 retains v1.3.1 unchanged and
 unqualified under its exact guards. No Goe stable qualifies: both v0.1.0 and
 v0.1.1 fail their complete race gate, v0.1.0 additionally fails an ordinary
-Go 1.26.7 example, and v0.1.1 has no genuine supported tidy-stable owner. P7
-is stopped only for the prepared Goe product decision; P8 remains queued.
+Go 1.26.7 example, and v0.1.1 has no genuine supported tidy-stable owner. No
+pkg/errors direction qualifies: selected/latest v0.9.1 fails the complete Go
+1.26.7 upstream contract, no later stable or eligible replacement exists, and
+removal violates direct-owner and earlier-selection guards. P7 is stopped only
+for the prepared pkg/errors product decision; P8 remains queued.
 
 ## Oklog ULID Evaluation
 
@@ -5566,13 +5574,61 @@ projection/archive/govulncheck work was not repeated and no owner study ran.
 No source or dependency metadata changed. P7 continues only with the prepared
 bounded mapstructure v1.5.0 evaluation; P8 remains queued.
 
+## Pkg Errors Evaluation
+
+No genuine supported direction qualifies. The public enabled unarchived
+non-fork BSD-2-Clause `pkg/errors` repository, ID 48643510, owns 13 exact-path
+stables through selected/proxy-latest v0.9.1. It remains in documented
+maintenance mode and accepts bug fixes, but has no later stable, prerelease,
+major line, replacement, retraction, deprecation, redirect, or eligible
+alternate. Selected signed commit `614d223910a179a466c1767a985424175c39b465`,
+tree `6dd01fd9b7f97a850cc87788579cfc01fd6431fd`, all tags/releases/module files,
+sumdb records, and all 13 proxy-to-Git archive identities were resolved.
+
+V0.9.1 is standard-library-only, preserves the Go 1.18 floor, and passes exact
+Go 1.18.10 build/count-one/count-ten/race/vet plus all nine cgo-disabled build
+and test-compile targets under both SDKs. It fails the complete Go 1.26.7
+native contract: vet rejects two non-constant upstream Wrapf/WithMessagef
+calls, while test and race with vet disabled still fail TestStackTrace because
+the runtime's nested function name differs from the asserted historical name.
+Thus exact retention is not qualified; no later stable can be upgraded to.
+Standard `errors` is not behavior-equivalent to pkg/errors stack/Cause/format
+semantics and would require external requester changes.
+
+MVS selects v0.9.1 from ten current/historical requests. Selected SFTP
+v1.13.1 genuinely imports it and requests v0.9.1 through selected Afero;
+selected direct Viper v1.15.0 requests v0.9.1 metadata-only. Kong, two Consul
+SDK versions, historical SFTP, two Prometheus Common versions, TSDB, and Zap
+request v0.8.0/v0.8.1 and genuinely import it at the recorded boundaries.
+Only Viper has positive why. The target has no main/history root, repository
+import, production/complete-test/module-backed load, or runtime relevance.
+
+A selected get only manufactures an unused indirect root/source sum/main edge,
+then tidy reaches the common projection with v0.9.1 retained. Removal instead
+removes direct mvn-pom-mutator, downgrades direct go-term-markdown and Viper
+plus Afero, collapses to 109 modules/430 edges, and cannot load. Tidy
+reintroduces v0.9.1 but leaves a non-equivalent 228-module/3,465-edge graph and
+changed direct versions/loads. No projection was retained.
+
+Exact base 234/3,599/355/429/197/41/1,067 state, module/graph/tidy hashes, Go
+floor, all 47 pre-Goe selections/276 edges, the separate Goe guard, and every
+earlier final decision remain unchanged. Target OSV/GitHub/repository advisory
+and isolated govulncheck findings are empty; project populations reproduce
+30/22/20/20 with no target trace. Guard OSV/x/mod, the 518,501-byte/1,402-
+record Go index, and PUBLISHED 2,807-byte memberlist CNA identities reproduce.
+Final unchanged-project exact-Go verify/build/count-one/race/vet gates pass
+under ordinary umask 022. Advisory absence was not used as qualification.
+
+The evaluation changed no product source or dependency metadata. P7 now
+requires exactly one pkg/errors product direction: target-specific
+unqualified retention of selected v0.9.1; one later measurement-only **Pkg
+Errors Owner-Route Removal Study**; or stopping P7 unresolved. The successor
+was prepared but not executed; P8 remains queued.
+
 ## Next Bounded Objective
 
-Evaluate exact selected `github.com/pkg/errors v0.9.1` as the next bounded P7
-queue item. Resolve its real owner/request/import/load/runtime boundary,
-canonical release and source identities, Go-1.18-compatible candidates,
-complete ordinary behavior and upstream gates, disposable project projections,
-and advisory state while preserving the final Goe decision and every earlier
-guard. Do not make the pkg/errors product decision, change source/dependency
+Choose exactly one product direction for exact selected
+`github.com/pkg/errors v0.9.1` from the completed evaluation. Do not reevaluate
+pkg/errors, execute the named owner-route study, change source/dependency
 metadata, evaluate another dependency, reopen or transfer an exception, write
 outside the managed scratch root, or begin P8.

@@ -5374,8 +5374,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at the prepared bounded evaluation of graph-selected exact
-`github.com/pkg/errors v0.9.1`. Option 1 now explicitly retains exact selected/
+Status: active at the prepared bounded product decision for graph-selected
+exact `github.com/pkg/errors v0.9.1`. Option 1 now explicitly retains exact selected/
 inherited/unloaded unqualified Goe v0.1.0, ULID v1.3.1, and go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`, exact indirect/production-loaded
 unqualified mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
@@ -5416,8 +5416,12 @@ Prometheus TSDB ULID Ownership Study was not authorized or run. The completed
 pascaldekloe/goe evaluation found no qualified stable: v0.1.0 and v0.1.1 both
 fail the complete race gate, selected v0.1.0 also fails an ordinary Go 1.26.7
 example, and v0.1.1 lacks a genuine supported tidy-stable project owner. No
-projection was retained. The reciprocal Goe product decision is prepared but
-was not executed. P8 remains queued.
+projection was retained, and Goe option 1 is final. The completed pkg/errors
+evaluation found no qualified direction: selected/latest v0.9.1 fails the
+complete Go 1.26.7 test/race/vet contract, no later stable or eligible
+replacement exists, and removal violates direct-owner and earlier-selection
+guards. Its reciprocal product decision is prepared but was not executed. P8
+remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14485,6 +14489,53 @@ Pascaldekloe/Goe product decision (2026-09-23):
   or transferred exception is authorized.
 - P7 continues only with the prepared bounded evaluation of exact selected
   `github.com/pkg/errors v0.9.1`; it was not executed. P8 remains queued.
+
+Pkg/errors evaluation (2026-09-23):
+
+- No genuine supported upgrade, replacement, removal, or exact-retention
+  direction qualifies. The public enabled unarchived non-fork BSD-2-Clause
+  `pkg/errors` repository, ID 48643510, owns 13 exact-path stables through
+  selected/proxy-latest v0.9.1. There is no prerelease, `/v2`, `/v3`,
+  replacement, retraction, deprecation, redirect, or eligible alternate.
+  Repository maintenance-mode status, every tag/release/commit/tree/signature/
+  ancestry, synthetic module file, sumdb record, license, and all 13 proxy-to-
+  Git archive identities were resolved from primary evidence.
+- Selected v0.9.1 is standard-library-only and preserves Go 1.18. It passes
+  exact Go 1.18.10 build/count-one/count-ten/race/vet. Both exact SDKs pass
+  nine cgo-disabled build and test-compilation targets. Exact Go 1.26.7 build
+  and cross gates pass, but the complete native gate fails: vet rejects two
+  non-constant upstream Wrapf/WithMessagef calls, and with vet disabled
+  count-one/count-ten/race still fail TestStackTrace on the changed nested-
+  function name. No partial pass qualifies retention. V0.9.1 is latest, and
+  standard `errors` is not behavior-equivalent to its stack/Cause/format API.
+- Ten current/historical requests select v0.9.1 by MVS. Selected SFTP v1.13.1
+  genuinely imports it and requests v0.9.1 through selected Afero v1.9.4;
+  selected direct Viper v1.15.0 requests v0.9.1 metadata-only. Kong, two
+  Consul SDK versions, historical SFTP, two Prometheus Common versions, TSDB,
+  and Zap request v0.8.0/v0.8.1 with the recorded genuine import boundaries.
+  Complete routes pass through direct go-term-markdown, Afero, Viper, and
+  mvn-pom-mutator plus the recorded historical requesters. Only Viper has
+  positive why. Target root/history root, repository import, production/
+  complete-test/module-backed load, and runtime relevance are zero.
+- A selected get adds only an unused indirect root, source sum, and main edge,
+  then tidy reaches the common projection with v0.9.1 still selected. Removal
+  removes direct mvn-pom-mutator, downgrades direct go-term-markdown and Viper
+  plus Afero, produces an unloadable 109-module/430-edge graph, and crosses
+  earlier guards. Tidy reintroduces v0.9.1 but leaves a non-equivalent 228-
+  module/3,465-edge project and changed direct selections/loads. Neither
+  projection was retained.
+- Exact base 234/3,599/355/429/197/41/1,067 state, module/graph/tidy identities,
+  Go floor, all 47 pre-Goe selections/276 edges, separate Goe guard, and every
+  earlier decision remain exact. Exact target OSV/GitHub/repository advisory
+  and isolated govulncheck findings are empty; project populations remain
+  30/22/20/20 with no target trace. Guard OSV/x/mod, the exact Go index, and
+  PUBLISHED memberlist CNA identities reproduce. Final unchanged-project
+  exact-Go verify/build/count-one/race/vet passes under ordinary umask 022.
+- No source or dependency metadata changed. P7 now requires exactly one
+  product direction: pkg/errors-specific unqualified retention of exact
+  v0.9.1; one later measurement-only **Pkg Errors Owner-Route Removal Study**;
+  or stopping P7 unresolved. The successor was prepared but not executed; P8
+  remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
