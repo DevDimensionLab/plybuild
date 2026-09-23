@@ -5374,8 +5374,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at the prepared bounded evaluation of graph-selected exact
-`github.com/pmezard/go-difflib v1.0.0`. Option 1 now explicitly retains exact
+Status: active at the prepared bounded product-direction decision for graph-
+selected exact `github.com/pmezard/go-difflib v1.0.0`. Option 1 now explicitly retains exact
 selected, inherited, indirect, unloaded, unqualified SFTP v1.13.1 and
 pkg/errors v0.9.1 and exact selected/
 inherited/unloaded unqualified Goe v0.1.0, ULID v1.3.1, and go-conntrack
@@ -14661,6 +14661,61 @@ Pkg/sftp product decision (2026-09-23):
   changed. P7 continues only with the prepared bounded evaluation of exact
   selected `github.com/pmezard/go-difflib v1.0.0`; it was not executed. P8
   remains queued.
+
+Pmezard/go-difflib evaluation (2026-09-23):
+
+- No genuine supported exact-path stable qualifies. Public, enabled,
+  unarchived, non-fork repository `pmezard/go-difflib`, ID 13722766, is
+  BSD-3-Clause and has exactly one stable, selected/latest v1.0.0. `/v2` and
+  `/v3` are absent; there are no GitHub Releases, prereleases, replacements,
+  retractions, deprecations, or eligible alternate owners. Master explicitly
+  ends maintenance and resolves only to an ineligible unreleased pseudo-
+  version whose changes after v1.0.0 are limited to README/CI files.
+- Annotated v1.0.0 tag object
+  `c0b812dadcf4498dede02bb7f0c5c478be997e34` peels to unsigned commit
+  `792786c7400a136282c1664665ae0a8db921c6c2`, tree
+  `88a8f04b9498fa242292814d2eed8e86083c98f9`. Exact go-import, synthetic
+  module, proxy/sumdb, license, ancestry, and five-file archive-to-Git
+  identities were resolved. The proxy ZIP and normalized source manifest
+  SHA-256 values are
+  `de04cecc1a4b8d53e4357051026794bcbc54f2e6a260cfac508ce69d5d6457a0`
+  and `8f325e34b41f9e003b1c2100be0bc3881829909f07e9fdf871defda7cc18a681`.
+- The package is standard-library-only and preserves Go 1.18. Exact Go
+  1.18.10 and 1.26.7 module verification/build, vet-disabled count-one/count-
+  ten/race tests, and ten cgo-disabled cross-build/test-compilation targets
+  pass. The complete gate fails under both SDKs because vet rejects two
+  examples named for nonexistent identifiers. A small ordinary fixture also
+  proves `WriteUnifiedDiff` and `WriteContextDiff` discard final buffered
+  writer errors. V1.0.0 is therefore neither behavior-qualified nor supported.
+- Exactly 23 current/historical requests select v1.0.0. Testify v1.3.0,
+  v1.4.0, v1.5.1, v1.6.1, v1.7.0, v1.7.1, v1.8.0, v1.8.4, and selected
+  v1.9.0 genuinely import it from `assert` and `mock`; Kong, both hclog,
+  both memberlist, TSDB, both Logrus, Cast, JWalterWeatherman, both Viper,
+  objx, and gotenv request it metadata-only. Every shortest route is recorded
+  in the answered evaluation. Target why is positive only through main `cmd`
+  -> direct go-term-markdown v0.1.4 -> its Testify assertion test -> target.
+  Repository import, production/complete-test/module-backed load, runtime
+  relevance, and current/history roots are zero.
+- A disposable selected get changes no selection or sum; it adds only a
+  redundant indirect main root and the 3,600th graph edge while preserving
+  exact loads. Tidy removes the root and returns the established common
+  52/948-line projection. No projection was retained.
+- Exact base 234/3,599/355/429/197/41/1,067 state, module/graph/tidy hashes,
+  exact SDK identities, all 47 pre-Goe selections/276 edges at SHA-256
+  `7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`,
+  separate Goe/pkg-errors/SFTP guards, every earlier decision, and accepted
+  27/27 Q0-Q2 PASS at L2 remain exact. Final unchanged-project exact-Go module
+  verify/build/count-one/race/vet passes under umask 022.
+- Exact target OSV, GitHub global/repository advisory, and isolated pinned
+  govulncheck findings are empty. The project reproduces 30/22/20/20 advisory
+  populations without a target trace. Guard OSV/x/mod, the 518,501-byte/
+  1,402-record Go index, and PUBLISHED 2,807-byte memberlist CNA identities
+  reproduce. Advisory absence was not used as qualification.
+- No source or dependency metadata changed. P7 now requires exactly one
+  product direction: go-difflib-specific unqualified retention of exact
+  v1.0.0; one later measurement-only **Go-Term-Markdown Testify Go-Difflib
+  Owner/Request Study**; or stopping P7 unresolved. The successor was prepared
+  but not executed; P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

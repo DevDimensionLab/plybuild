@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T06:54:22+02:00
+Generated: 2026-09-23T07:40:06+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,12 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The SFTP decision began
-  from clean evaluation-handoff HEAD
-  `f5705b68aaf58644476bd315fd58952fc98ad355`, parent
-  `a6d9bc87ba801899df9d88597100eace51d82488`, tree
-  `1fa7f6b82daa0dbe305fb4c5f534f8bd6f72b851`. That handoff changes exactly
-  the launcher, answered SFTP evaluation archive, then-NEXT SFTP decision
+  `codex/upgrade-quality`, base master at `5635d50`. The go-difflib evaluation
+  began from clean SFTP-decision handoff HEAD
+  `632840058974b19122e27302fde780ed6739510b`, parent
+  `f5705b68aaf58644476bd315fd58952fc98ad355`, tree
+  `714a47e2ba19030614f931206add7592a0b8addb`. That handoff changes exactly
+  the launcher, answered SFTP decision archive, then-NEXT go-difflib evaluation
   archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
@@ -117,12 +117,26 @@ session diary.
   is now final: exact selected, inherited, indirect, unloaded v1.13.1 is
   explicitly retained unchanged under its own unqualified, non-transferable
   exception. The Afero SFTP Owner/Request Study was not authorized or run.
+  The completed go-difflib evaluation found no genuine supported qualifying
+  exact-path stable. Selected/latest v1.0.0 is the sole stable, but upstream
+  explicitly ended maintenance, both exact SDKs fail complete vet on two
+  misnamed examples, and an ordinary writer fixture proves both exported diff
+  writers discard final buffered flush errors. All 23 requests and routes were
+  reproduced: nine Testify versions genuinely import the target; the other 14
+  requester vertices are metadata-only. Target why is positive only through
+  direct go-term-markdown's Testify-based dependency test, while repository
+  import, production/complete-test/module-backed load, runtime relevance, and
+  main/history roots remain zero. A selected get manufactures only a redundant
+  indirect root and one graph edge, then tidy removes it. No projection,
+  product source, or dependency metadata changed.
   The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T065422+0200-evaluate-pmezard-go-difflib-dependency.md`.
-  It authorizes only the bounded evaluation of exact selected
-  `github.com/pmezard/go-difflib v1.0.0`; it may not reopen or transfer the
-  SFTP or pkg/errors exceptions or an earlier decision, combine another group,
-  write outside the managed scratch root, or begin P8.
+  `docs/plan/agent-sessions/2026-09-23T074006+0200-decide-pmezard-go-difflib-product-direction.md`.
+  It authorizes only one explicit go-difflib product direction: target-specific
+  unqualified retention of exact v1.0.0, one later measurement-only Go-Term-
+  Markdown Testify Go-Difflib Owner/Request Study, or stopping P7 unresolved.
+  It may not repeat the evaluation, run the study, reopen or transfer SFTP,
+  pkg/errors, or an earlier exception, change a dependency, write outside the
+  managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -180,8 +194,11 @@ removal violates direct-owner and earlier-selection guards. Pkg/errors option
 SFTP option 1 explicitly retains exact selected, inherited, indirect,
 unloaded v1.13.1 unchanged and unqualified under its own exact guards;
 v1.13.0 remains the highest behavior-qualified stable but has no supported
-tidy-stable project owner. P7 is active at the prepared bounded evaluation of
-exact selected `github.com/pmezard/go-difflib v1.0.0`; P8 remains queued.
+tidy-stable project owner. Go-difflib selected/latest v1.0.0 is its sole
+exact-path stable and is neither qualified nor supported: both exact SDKs fail
+complete vet, its diff writers discard ordinary final-flush errors, and
+upstream ended maintenance. No selection or metadata changed. P7 is active at
+the prepared go-difflib product-direction decision; P8 remains queued.
 
 ## Oklog ULID Evaluation
 
