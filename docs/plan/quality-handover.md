@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T07:40:06+02:00
+Generated: 2026-09-23T08:21:05+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The go-difflib evaluation
-  began from clean SFTP-decision handoff HEAD
-  `632840058974b19122e27302fde780ed6739510b`, parent
-  `f5705b68aaf58644476bd315fd58952fc98ad355`, tree
-  `714a47e2ba19030614f931206add7592a0b8addb`. That handoff changes exactly
-  the launcher, answered SFTP decision archive, then-NEXT go-difflib evaluation
-  archive, rolling handover, and roadmap. Ordinary and ignored
+  `codex/upgrade-quality`, base master at `5635d50`. The go-difflib decision
+  began from clean evaluation-handoff HEAD
+  `4e6198c4c3ff5315928df9f6d0690de985bf9ce3`, parent
+  `632840058974b19122e27302fde780ed6739510b`, tree
+  `30b7ea878359482c0f2ff1495daf35c5f0741bc2`. That handoff changes exactly
+  the launcher, answered go-difflib evaluation archive, then-NEXT go-difflib
+  decision archive, rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
@@ -129,14 +129,20 @@ session diary.
   main/history roots remain zero. A selected get manufactures only a redundant
   indirect root and one graph edge, then tidy removes it. No projection,
   product source, or dependency metadata changed.
-  The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T074006+0200-decide-pmezard-go-difflib-product-direction.md`.
-  It authorizes only one explicit go-difflib product direction: target-specific
-  unqualified retention of exact v1.0.0, one later measurement-only Go-Term-
-  Markdown Testify Go-Difflib Owner/Request Study, or stopping P7 unresolved.
-  It may not repeat the evaluation, run the study, reopen or transfer SFTP,
-  pkg/errors, or an earlier exception, change a dependency, write outside the
-  managed scratch root, or begin P8.
+  Go-difflib option 1 is now final: exact selected, inherited, indirect,
+  unloaded v1.0.0 is explicitly retained unchanged under its own unqualified,
+  target-specific, non-transferable exception. It is the sole/latest stable
+  but is neither qualified, supported, safe, nor fixed. All 23 requests,
+  Testify's genuine imports, metadata-only requester boundaries, routes,
+  why/import/load/runtime/root facts, release/source/behavior/closure/
+  projection/advisory identities, and earlier guards are exact expiry
+  conditions. The Go-Term-Markdown Testify Go-Difflib Owner/Request Study was
+  not authorized or run. The sole NEXT archive is
+  `docs/plan/agent-sessions/2026-09-23T082105+0200-evaluate-posener-complete-dependency.md`.
+  It evaluates only exact selected `github.com/posener/complete v1.2.3`, may
+  implement at most one fully qualified supported exact selection, preserves
+  go-difflib and every earlier guard, and may not combine another group, write
+  outside the managed scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -145,6 +151,7 @@ session diary.
 ## Roadmap And Guarded Decisions
 
 P2A-P6 are complete. P7 selected option 1 separately for exact selected,
+inherited, indirect, unloaded, unqualified go-difflib v1.0.0; exact selected,
 inherited, unloaded, unqualified ULID v1.3.1 and go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`; exact selected, indirect,
 production-loaded, unqualified mapstructure v1.5.0; exact selected,
@@ -195,10 +202,12 @@ SFTP option 1 explicitly retains exact selected, inherited, indirect,
 unloaded v1.13.1 unchanged and unqualified under its own exact guards;
 v1.13.0 remains the highest behavior-qualified stable but has no supported
 tidy-stable project owner. Go-difflib selected/latest v1.0.0 is its sole
-exact-path stable and is neither qualified nor supported: both exact SDKs fail
-complete vet, its diff writers discard ordinary final-flush errors, and
-upstream ended maintenance. No selection or metadata changed. P7 is active at
-the prepared go-difflib product-direction decision; P8 remains queued.
+exact-path stable and is neither qualified, supported, safe, nor fixed: both
+exact SDKs fail complete vet, its diff writers discard ordinary final-flush
+errors, and upstream ended maintenance. Option 1 retains it unchanged and
+unqualified under its own exact guards; no selection or metadata changed. P7
+is active at the prepared bounded posener/complete v1.2.3 evaluation; P8
+remains queued.
 
 ## Oklog ULID Evaluation
 
@@ -5802,9 +5811,53 @@ P7 continues only with the linked bounded evaluation of the next selected
 queue item, exact `github.com/pmezard/go-difflib v1.0.0`; it was prepared but
 not executed. P8 remains queued.
 
+## Pmezard Go Difflib Evaluation And Product Decision
+
+The completed evaluation found no genuine supported qualifying exact-path
+stable. Selected/latest v1.0.0 is the sole stable, but the repository
+explicitly ended maintenance, both exact Go 1.18.10 and 1.26.7 SDKs fail
+complete vet on two misnamed examples, and a small ordinary fixture proves
+both exported diff writers discard final buffered `Flush` errors. Its
+standard-library-only closure otherwise preserves Go 1.18 and passes the
+recorded verification, build, vet-disabled repeated/race, and supported cross
+gates; those partial passes do not qualify it.
+
+Exactly 23 current/historical requests select v1.0.0. Nine Testify versions
+genuinely import the target from `assert` and `mock`; Kong, both hclog, both
+memberlist, TSDB, both Logrus, Cast, JWalterWeatherman, both Viper, objx, and
+gotenv are metadata-only requesters. Target why is positive only through main
+`cmd` -> direct go-term-markdown v0.1.4 -> its Testify assertion test ->
+target. Repository target import, target/Testify loads, target module-backed
+load and runtime relevance, and current/history roots are zero. A selected get
+adds only a redundant indirect root and one edge; tidy removes it. No
+projection was retained.
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/pmezard/go-difflib v1.0.0` is explicitly retained without product-
+source or dependency-metadata changes under a go-difflib-specific,
+unqualified, non-transferable exception. It is neither qualified, supported,
+safe, nor fixed. Retention requires every exact request and requester boundary,
+route, why/import/load/runtime/root fact, repository/release/tag/commit/tree/
+proxy/sumdb/module/license/archive identity, completed source/API/behavior/
+closure result, selected-get/tidy projection, project/graph/Go-floor identity,
+earlier guard, and advisory identity recorded by the answered evaluation and
+decision. Any changed input expires the exception and requires a fresh owning
+evaluation and explicit product decision. The named owner/request study was
+not authorized or run; SFTP, pkg/errors, and every earlier exception remain
+separate and untransferred.
+
+Guard-only revalidation reproduced the clean handoff/chain, exact SDKs,
+234/3,599/355/429/197/41/1,067 project state, module/graph/tidy identities,
+all target request/route/relevance and earlier guards, fresh repository and
+narrow advisory identities, and final exact-Go verify/build/count-one/race/
+vet gates. No source or dependency metadata changed. P7 continues only with
+the prepared bounded evaluation of exact selected
+`github.com/posener/complete v1.2.3`; it was not executed. P8 remains queued.
+
 ## Next Bounded Objective
 
-Evaluate exact selected `github.com/pmezard/go-difflib v1.0.0` as the sole
-bounded P7 dependency group. Preserve the SFTP and pkg/errors exceptions and
-every earlier guard; do not combine another group, run either owner-route
-study, begin P8, or write disposable state outside the managed scratch root.
+Evaluate exact selected `github.com/posener/complete v1.2.3` as the sole
+bounded P7 dependency group. Preserve the go-difflib, SFTP, and pkg/errors
+exceptions and every earlier guard; do not combine another group, run an owner-
+route study, begin P8, or write disposable state outside the managed scratch
+root.

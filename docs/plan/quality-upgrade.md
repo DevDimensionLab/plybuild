@@ -5374,10 +5374,10 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at the prepared bounded product-direction decision for graph-
-selected exact `github.com/pmezard/go-difflib v1.0.0`. Option 1 now explicitly retains exact
-selected, inherited, indirect, unloaded, unqualified SFTP v1.13.1 and
-pkg/errors v0.9.1 and exact selected/
+Status: active at the prepared bounded evaluation of graph-selected exact
+`github.com/posener/complete v1.2.3`. Option 1 now explicitly retains exact
+selected, inherited, indirect, unloaded, unqualified go-difflib v1.0.0, SFTP
+v1.13.1, and pkg/errors v0.9.1 and exact selected/
 inherited/unloaded unqualified Goe v0.1.0, ULID v1.3.1, and go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`, exact indirect/production-loaded
 unqualified mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
@@ -5429,8 +5429,12 @@ but no genuine supported tidy-stable project owner requests it. Selected
 v1.13.1 fails complete vet and supported cross gates. SFTP option 1 is final:
 exact selected v1.13.1 is retained unchanged and unqualified under its own
 exact guards; the Afero SFTP Owner/Request Study was not authorized or run.
-The reciprocal pmezard/go-difflib evaluation successor is prepared but was
-not executed. P8 remains queued.
+The completed go-difflib evaluation found no genuine supported qualifying
+exact-path stable. Option 1 is final: exact selected v1.0.0 is retained
+unchanged and unqualified under its own exact guards; the Go-Term-Markdown
+Testify Go-Difflib Owner/Request Study was not authorized or run. The
+reciprocal posener/complete evaluation successor is prepared but was not
+executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14716,6 +14720,40 @@ Pmezard/go-difflib evaluation (2026-09-23):
   v1.0.0; one later measurement-only **Go-Term-Markdown Testify Go-Difflib
   Owner/Request Study**; or stopping P7 unresolved. The successor was prepared
   but not executed; P8 remains queued.
+
+Pmezard/go-difflib product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, indirect, unloaded
+  `github.com/pmezard/go-difflib v1.0.0` is explicitly retained without source
+  or dependency-metadata changes under a go-difflib-specific, unqualified,
+  non-transferable exception. It is the sole/latest genuine exact-path stable
+  but is neither qualified, supported, safe, nor fixed. Upstream ended
+  maintenance, both exact SDKs fail complete vet, and both exported diff
+  writers discard ordinary final buffered `Flush` errors. The named owner/
+  request study was not authorized or run.
+- Retention requires all 23 exact requests, Testify's nine genuine `assert`
+  and `mock` import boundaries, all 14 metadata-only requester boundaries,
+  every recorded current/historical route, the positive target why only
+  through direct go-term-markdown's dependency test, zero repository target
+  import/load/runtime/root state, and every requester-why result. Any changed
+  request, boundary, route, owner, why/import/load/runtime fact, root, or new
+  supported owner expires the exception.
+- The sole release, repository/tag/commit/tree/signature/ancestry/proxy/sumdb/
+  module/license/archive identities; source/API/documentation and completed
+  behavior/closure/native/repeat/race/vet/cross outcomes; selected-get and
+  tidy projection identities; exact project/module/graph/Go-floor state; all
+  earlier guards; and target/guard advisory identities remain exact. No
+  projection is retained, and advisory absence was not used as qualification.
+- The exception expires on any changed release/support, source/behavior/
+  closure, request/route/relevance, projection/project, earlier-guard, or
+  advisory input and then requires a fresh owning evaluation and product
+  decision. SFTP, pkg/errors, and every earlier exception remain separate and
+  untransferred.
+- Guard-only revalidation and final unchanged-project exact-Go module verify,
+  build, count-one, race count-one, and vet passed. No source, `go.mod`, or
+  `go.sum` change remains. P7 continues only with the prepared bounded
+  evaluation of exact selected `github.com/posener/complete v1.2.3`; it was
+  not executed. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
