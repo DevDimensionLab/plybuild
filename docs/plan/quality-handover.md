@@ -6223,16 +6223,59 @@ not repeated. Final exact-Go gates and contained scratch cleanup pass. No
 source, dependency metadata, target root, study, ownership, or transferred
 exception is retained.
 
+## Prometheus Common Evaluation
+
+No canonical stable fully qualifies and no dependency or source change is
+authorized. The exact public Prometheus owner has 88 non-retracted exact-path
+stable candidates after alternate-module and retracted-line exclusions; 51
+preserve Go 1.18 through highest v0.44.0. Exact repository, tag/commit/tree,
+signature/ancestry, proxy/sumdb/archive, module/license, source/build boundary,
+package, API, and ordinary behavior evidence is complete for all 51.
+
+All 51 verify and build under exact Go 1.18.10 and Go 1.26.7. Selected v0.9.1
+fails count-one/count-ten/race tests under both because its legacy certificate
+fixtures and TLS expectations no longer match either supported toolchain. Only
+v0.37.0-v0.44.0 are native-clean at the floor, with v0.37.1 losing current-SDK
+test compatibility. Every release fails production build and test compilation
+on Plan 9 under both SDKs through its exact go-conntrack closure; the other nine
+cross targets pass. V0.44.0 is therefore the highest native-clean compatible
+stable, not a fully qualified release.
+
+Target OSV and narrow GitHub responses are empty, but absence is not
+qualification. Selected v0.9.1's isolated closure has 25/3/0/1 non-stdlib
+module/package/symbol/test-symbol findings; v0.44.0 has 20/6/5/5, and every
+native-clean release retains reachable closure findings. The unchanged project
+remains exactly 30/22/20/20 with no Common trace, and client_golang's recorded
+GHSA/GO/CVE identity remains exact.
+
+All four requests and four complete shortest routes reproduce. TSDB v0.7.1 is
+metadata-only; go-metrics v0.3.10 has a genuine test import; client_golang
+v1.4.0 and v1.0.0 have genuine production/test imports. Routes run from direct
+mvn-pom-mutator through TSDB or historical Viper/go-metrics/Common/
+client_golang. Target/requester why is negative; repository import, target and
+requester loads, target runtime relevance, and current target root are zero;
+historical roots are nonzero. No requester asks for v0.44.0.
+
+Selected get only adds a redundant root/source sum/edge before tidy restores
+the established common projection. V0.44.0 get changes 15 selections including
+protected go-conntrack, client_golang, and client_model and adds four modules;
+tidy reselects v0.9.1 but retains six unrelated upgrades. The candidate is
+neither tidy-stable, genuinely owned, nor guard-preserving. Neither projection
+is retained.
+
+Corrected Go-index/CNA identities, exact 234/3,599/355/429/197/41/1,067 real
+project state, SDK identities, Go floor, common tidy, all 47 pre-Goe
+selections/276 edges, separate Goe/pkg-errors/SFTP/go-difflib/Complete/ULID/
+go-conntrack/client_golang/client_model guards, every earlier decision, and
+27/27 Q0-Q2 PASS at L2 remain unchanged. Final exact-Go-1.26.7 module
+verification, build, count-one tests, race count-one tests, and vet pass; all
+task-owned scratch evidence is removed.
+
 ## Next Bounded Objective
 
-Evaluate exactly one next selected alphabetical P7 target,
-`github.com/prometheus/common v0.9.1`. Treat its four current/historical
-requests, negative current why, zero repository import/load/runtime/current-
-root state, and nonzero history-root state only as observations to reproduce.
-Resolve its canonical exact-path stable line, complete ordinary closure,
-genuine supported tidy-stable ownership, exact project projection,
-advisories, and every earlier guard. Implement only one exact fully qualified
-dependency selection; otherwise retain no change and prepare one reciprocal
-product decision. Preserve the new client_model-specific exception and the
-separate client_golang and every earlier decision without transfer or
-reopening. Do not launch this successor, combine another group, or begin P8.
+Choose exactly one Prometheus Common product direction: retain exact selected,
+inherited, indirect, unloaded v0.9.1 under a Common-specific unqualified
+non-transferable exception; authorize one later measurement-only **Mvn-Pom-
+Mutator Prometheus Common Owner/Request Study**; or stop P7 unresolved. Do not
+repeat the evaluation, execute the study, change a dependency or source file,
+transfer an exception, launch a successor, combine another group, or begin P8.

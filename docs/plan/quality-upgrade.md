@@ -15063,6 +15063,46 @@ Prometheus/client_model product decision (2026-09-23):
   starting observations only. The successor is not launched; the rejected
   client_model study is neither prepared nor run, and P8 remains queued.
 
+Prometheus/common evaluation (2026-09-23):
+
+- The exact public Prometheus owner has 88 non-retracted canonical exact-path
+  stable candidates after excluding alternate-module and retracted artifacts;
+  51 preserve the Go 1.18 floor through v0.44.0. Exact repository/release/Git,
+  proxy/sumdb/archive, module/license, source/build-tag, package, API, and
+  ordinary-behavior evidence is complete for all eligible releases.
+- All 51 verify and build under exact Go 1.18.10 and Go 1.26.7. Selected
+  v0.9.1 fails tests, repetition, and race under both SDKs on legacy
+  certificate fixtures/TLS expectations. V0.44.0 is the highest native-clean
+  compatible stable, but no release passes the complete cross matrix: every
+  exact go-conntrack closure fails Plan 9 build/test compilation under both
+  SDKs while the other nine targets pass.
+- Target advisory responses are empty without implying qualification.
+  Selected's isolated closure is 25/3/0/1 and v0.44.0's is 20/6/5/5
+  module/package/symbol/test-symbol findings; every native-clean compatible
+  release retains reachable closure findings. Project govulncheck remains
+  30/22/20/20 with no Common trace and client_golang retains its GHSA/GO/CVE.
+- Exactly four requests, requester import/metadata boundaries, and four
+  complete shortest routes reproduce through direct mvn-pom-mutator and its
+  TSDB or historical Viper/go-metrics/Common/client_golang chains. Target and
+  requester why are negative; target import/load/runtime/current-root state is
+  zero, historical roots are nonzero, and no requester asks for v0.44.0.
+- Selected get adds only a redundant root/source sum/edge and tidy restores the
+  common projection. V0.44.0 get changes 15 selections, including protected
+  go-conntrack/client_golang/client_model, and adds four modules; tidy reselects
+  v0.9.1 but retains six unrelated upgrades. V0.44.0 is not tidy-stable,
+  genuinely owned, or guard-preserving. No projection or dependency/source
+  change is retained.
+- Exact SDKs, real 234/3,599/355/429/197/41/1,067 project state, Go floor,
+  common tidy, corrected advisory guards, all 47 pre-Goe selections/276 edges,
+  separate earlier selections/exceptions, every product decision, and 27/27
+  Q0-Q2 PASS at L2 remain exact. Final exact-Go-1.26.7 module verification,
+  build, count-one, race count-one, and vet pass; task-owned scratch is removed.
+- P7 stops for exactly one reciprocal decision: retain v0.9.1 under a Common-
+  specific unqualified non-transferable exception, authorize one later
+  measurement-only **Mvn-Pom-Mutator Prometheus Common Owner/Request Study**,
+  or stop unresolved. The decision is prepared but not executed; no study,
+  successor, other group, exception transfer, or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
