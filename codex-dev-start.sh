@@ -1131,138 +1131,202 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-23T141334+0200-decide-prometheus-client-model-product-direction
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T141334+0200-decide-prometheus-client-model-product-direction.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T131751+0200-evaluate-prometheus-client-model-dependency.md
+#|SESSION_ID=2026-09-23T144751+0200-evaluate-prometheus-common-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T144751+0200-evaluate-prometheus-common-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-23T141334+0200-decide-prometheus-client-model-product-direction.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 with exactly one bounded product decision for graph-selected
-#|transitive exact `github.com/prometheus/client_model v0.2.0`. The completed
-#|fresh evaluation found selected v0.2.0 unqualified because its exact declared
-#|closure does not compile, while highest otherwise-qualified Go-1.18-compatible
-#|stable v0.4.0 has no genuine supported tidy-stable project owner. Choose and
-#|record exactly one of the three authorized directions below. Do not repeat the
-#|completed evaluation, implement a dependency change, combine another group,
-#|launch a study or successor, or begin P8.
+#|Continue P7 with exactly one fresh, bounded evaluation of the next selected
+#|alphabetical module, graph-selected transitive exact
+#|`github.com/prometheus/common v0.9.1`. Resolve its canonical exact-path release
+#|line and highest fully qualified Go-1.18-compatible stable from primary
+#|evidence. Implement one exact dependency-only changed selection only if the
+#|candidate, its complete minimal closure, a genuine supported tidy-stable
+#|project owner, and every earlier guard remain exact. Do not combine another
+#|dependency group or begin P8.
 #|
 #|# Defensive Scope
 #|
-#|This is an ordinary dependency product-direction decision. Use only the
-#|completed static/release/build/graph/projection/advisory evidence and bounded
-#|read-only guard checks. Do not fuzz, stress, probe resource exhaustion, create
-#|oversized, deeply nested, cyclic, malformed, adversarial, or escape-sequence
-#|payloads, reproduce a security issue, or perform security or exploitability
-#|analysis.
+#|This is an ordinary dependency-quality evaluation. Use public metadata,
+#|static source and repository records, project graph/build commands, upstream
+#|tests, and only small bounded ordinary fixtures required by documented
+#|behavior. Do not fuzz, stress, probe resource exhaustion, create oversized,
+#|deeply nested, cyclic, malformed, adversarial, or escape-sequence payloads,
+#|reproduce a security issue, or perform security or exploitability analysis.
 #|
-#|Every disposable cache, report, project copy, or advisory response must remain
-#|beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Never write to `/private/tmp`,
-#|`/tmp`, a sibling of the managed root, or another external root. Set every
-#|tool temp/cache root explicitly, verify containment, and remove task-owned
-#|scratch evidence before handoff.
+#|Every disposable cache, tool, archive, report, project copy, fixture, or
+#|advisory response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.
+#|Never write to `/private/tmp`, `/tmp`, a sibling of the managed root, or
+#|another external root. Set every tool temp/cache root explicitly, verify
+#|containment, and remove task-owned scratch evidence before handoff.
 #|
-#|# Completed Evaluation
+#|# Authorized Roadmap And Closed Decisions
 #|
-#|The exact public Prometheus owner has nine canonical exact-path stable releases
-#|v0.1.0 through v0.6.3, no prereleases, replacements, retractions, or
-#|deprecations, and no `/v2` or `/v3` release line. Exactly v0.1.0 through v0.4.0
-#|preserve the Go 1.18 floor. Exact tag, commit, tree, signature, ancestry,
-#|proxy/sumdb, archive-to-Git, module, license, source, generated/build boundary,
-#|exported API, and documented ordinary behavior evidence is complete.
+#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
+#|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
+#|qualified no-selection-change modern-go/concurrent and modern-go/reflect2,
+#|and all final target-specific decisions through Prometheus client_model. P8
+#|remains queued.
 #|
-#|Selected v0.2.0 verifies but fails build, count-one/count-ten tests, race, vet,
-#|ordinary behavior compilation, and all 40 supported cgo-disabled cross rows
-#|under exact Go 1.18.10 and Go 1.26.7: generated metrics.pb.go requires
-#|`proto.ProtoPackageIsVersion3`, but its own exact go.mod selects
-#|`github.com/golang/protobuf v1.2.0`, where that symbol does not exist. V0.1.0,
-#|v0.3.0, and v0.4.0 pass complete native, repeated, race, vet, behavior, and
-#|cross gates under both SDKs. Thus v0.4.0 is the highest otherwise-qualified
-#|Go-1.18-compatible stable.
+#|Exact selected, inherited, indirect, unloaded
+#|`github.com/prometheus/client_model v0.2.0` is retained only under its new
+#|client_model-specific, unqualified, non-transferable exception. It is not
+#|qualified, supported, safe, or fixed. Preserve all 15 requests and genuine
+#|requester imports, all 24 complete shortest routes, negative target/requester
+#|why, zero target repository import/load/runtime/root state, release/source/
+#|behavior/API/closure/projection/advisory identities, and every expiry
+#|condition. Do not run the rejected **Mvn-Pom-Mutator Client Model Owner/Request
+#|Study**, select v0.4.0, add a target root, or transfer this exception.
 #|
-#|Exactly 15 requests and all genuine requester import boundaries reproduce:
-#|go-metrics v0.3.10, client_golang v1.4.0, and Common v0.9.1 request v0.2.0;
-#|client_golang v1.0.0 requests `fd36f4220a90`; Common v0.4.1 and TSDB v0.7.1
-#|request `5c3871d89910`; nine historical go-control-plane vertices request
-#|`14fe0d1b01d4`. All 24 complete shortest routes originate at the main module
-#|and run through direct mvn-pom-mutator, its historical Viper/go-metrics/Common,
-#|gRPC/cloud/genproto/client_golang/TSDB chains, or the recorded Google Martian
-#|and Afero entries into those chains. Target/requester why is negative;
-#|repository target import, production/complete-test/module-backed load, runtime
-#|relevance, and current/history target-root state are zero. No requester asks
-#|for v0.4.0.
+#|Selected `github.com/prometheus/client_golang v1.4.0` separately remains only
+#|under its own client_golang-specific, unqualified, non-transferable exception.
+#|Do not run its rejected owner/request-removal study, select v1.16.0, add a
+#|root, or transfer that exception. Preserve the separate Complete, go-difflib,
+#|SFTP, pkg/errors, Goe, ULID, go-conntrack, and every earlier qualified or
+#|excepted result under its own exact selection/request/route/relevance/source/
+#|closure/projection/advisory/expiry guards. No exception transfers or reopens.
 #|
-#|A selected get only adds a redundant target root, source sum, and main edge;
-#|tidy restores the common projection. A v0.4.0 get changes client_model v0.2.0
-#|to v0.4.0 and google.golang.org/protobuf v1.28.1 to v1.30.0; ordinary tidy
-#|removes the root and both changes and reselects v0.2.0. V0.4.0 therefore has
-#|no genuine supported tidy-stable project owner. No projection, source,
-#|`go.mod`, or `go.sum` change was retained.
+#|# Protected Starting State
 #|
-#|Narrow client_model advisory responses are empty; advisory absence did not
-#|establish qualification. The isolated v0.4.0 closure has only module-level
-#|GO-2024-2611 against protobuf v1.30.0 and zero package/symbol findings. The
-#|unchanged project remains exactly 30/22/20/20 module/package/symbol/test-symbol
-#|findings with no target trace. Client_golang v1.4.0 still retains
-#|GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698. The corrected Go-index
-#|and CVE-2026-14362 CNA identities remain exact.
+#|The client_model product decision began clean on `codex/upgrade-quality` at
+#|evaluation handoff HEAD `c339c4a32a42c81cc9be44209ffced75755e7faa`, parent
+#|`f747850982e27aa784b64552c5ffedbdc04dc7c7`, tree
+#|`5c37acd72962c82e9a9d5fc2d0bdfdc58ea6ddd5`. That handoff changes exactly
+#|the launcher, answered client_model evaluation, then-NEXT decision, rolling
+#|handover, and roadmap. Google UUID implementation commit
+#|`cf53bc64eeb69471d35c7536d196bf1da15f3973` remains an ancestor. Verify the
+#|new decision handoff, reciprocal archive chain, sole NEXT state, launcher
+#|mirror, exact changed set, ancestry, and ordinary and ignored cleanliness.
 #|
-#|# Authorized Decision
+#|The unchanged real project has 234 modules, 3,599 graph edges, 355 production
+#|entries, 429 complete-test entries, 197 module-backed entries across 41 loaded
+#|modules, and 1,067 `go.sum` lines. `go.mod`, `go.sum`, and graph SHA-256 are
+#|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+#|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+#|and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
+#|Normal tidy has the established 432-line diff at
+#|`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`
+#|and common 52/948-line, 234-module/3,557-edge projection with `go.mod` /
+#|`go.sum` hashes
+#|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+#|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+#|No projection is retained. The module floor remains Go 1.18 and accepted
+#|quality remains 27/27 Q0-Q2 PASS at L2.
 #|
-#|Choose exactly one:
+#|Official Go 1.18.10 archive/binary SHA-256 remains
+#|`718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
+#|`f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`;
+#|Go 1.26.7 remains
+#|`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+#|Use only exact verified binaries for named SDK gates.
 #|
-#|1. Explicitly retain exact selected, inherited, indirect, unloaded
-#|   `github.com/prometheus/client_model v0.2.0` unchanged under a client_model-
-#|   specific, unqualified, non-transferable exception. State that it is not
-#|   qualified, supported, safe, or fixed. Preserve all 15 exact requests,
-#|   genuine requester import boundaries, 24 routes, negative why, zero target
-#|   repository import/load/runtime/root state, exact release/source/behavior/
-#|   closure/projection/advisory identities, and every earlier guard as expiry
-#|   conditions. Do not transfer the client_golang or any earlier exception.
-#|2. Authorize exactly one later measurement-only **Mvn-Pom-Mutator Client Model
-#|   Owner/Request Study** to determine whether a supported update of the direct
-#|   root can establish genuine tidy-stable ownership of qualified v0.4.0 or
-#|   eliminate all client_model requests while preserving product behavior,
-#|   direct roots, Go 1.18, and every earlier guard. Do not run the study, change
-#|   a dependency, grant an exception, or pre-authorize an implementation.
-#|3. Stop P7 unresolved without changing source, dependency metadata, ownership,
-#|   or any exception.
+#|All 47 pre-Goe selections and 276 incoming edges remain exact at
+#|`7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`.
+#|Separate selections/request counts remain Goe v0.1.0/four, pkg/errors
+#|v0.9.1/ten, SFTP v1.13.1/four, go-difflib v1.0.0/23, Complete v1.2.3/three,
+#|ULID v1.3.1/one, go-conntrack `cc309e4a2223`/two, client_golang v1.4.0/four,
+#|and client_model v0.2.0/15. Preserve every recorded why/import/load/runtime,
+#|route, source, behavior, closure, qualification/exception, projection,
+#|advisory, and expiry fact.
 #|
-#|Option 1 is recommended because the target is unloaded and runtime-irrelevant,
-#|the exact failure and absence of a supported owner are now explicit, and it
-#|preserves the unchanged project without broadening a study or transferring an
-#|exception. This is a product acceptance decision, not a qualification claim.
+#|# Target Starting Observations
 #|
-#|# Protected State And Checks
+#|Read-only queue identification selects exact Prometheus Common v0.9.1
+#|immediately after client_model. The current full graph has four target
+#|requests: Prometheus TSDB v0.7.1 requests
+#|`v0.0.0-20181113130724-41aa239b4cce`; go-metrics v0.3.10 and client_golang
+#|v1.4.0 request v0.9.1; and client_golang v1.0.0 requests v0.4.1. Current
+#|target why, repository import, production/complete-test load, runtime
+#|relevance, and main root are zero; historical main-root state is nonzero.
 #|
-#|Start only from the clean evaluation handoff. Verify its HEAD, parent, tree,
-#|exact changed set, branch/ancestry, reciprocal archive chain, sole NEXT state,
-#|launcher mirror, ordinary and ignored cleanliness, official SDK identities,
-#|real 234-module/3,599-edge/355-production/429-complete-test/197-module-backed/
-#|41-loaded/1,067-sum-line state, module/graph/common-tidy hashes, Go 1.18 floor,
-#|all target requests/routes/relevance facts, advisory identities, and every
-#|earlier guard. Stop for a fresh owning decision if any protected input changed.
+#|These are starting observations only. Independently reproduce every exact
+#|request, requester genuine-import or metadata-only boundary, complete current
+#|and historical route from main, target/requester why, repository import,
+#|production/complete-test/module-backed load, runtime relevance, and current/
+#|historical root fact. Physical selection, a route, loading, or advisory
+#|absence does not establish qualification or ownership.
 #|
-#|All 47 pre-Goe selections and 276 incoming edges remain exact. Preserve the
-#|separate Complete, go-difflib, SFTP, pkg/errors, Goe, ULID, go-conntrack,
-#|client_golang, and every earlier qualified or excepted result under its own
-#|exact guards. Selected client_golang v1.4.0 remains only under its separate
-#|unqualified non-transferable exception; do not run its rejected owner study,
-#|select v1.16.0, add a root, or transfer that exception. Accepted quality
-#|remains 27/27 Q0-Q2 PASS at L2. P8 remains queued.
+#|The corrected Go vulnerability-index guard is exactly 518,501 bytes and 1,402
+#|records at SHA-256
+#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
+#|The PUBLISHED CVE-2026-14362 CNA response is exactly 2,807 bytes at
+#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+#|The unchanged project advisory guard remains 30/22/20/20 module/package/
+#|symbol/test-symbol findings. Client_golang v1.4.0 retains
+#|GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698; client_model's eligible
+#|responses remain empty without implying qualification. Revalidate target and
+#|guard advisories narrowly; advisory absence cannot establish qualification.
 #|
-#|Do only guard-level revalidation; do not repeat completed release, source,
-#|behavior, API, closure, fixture, projection, native, cross, or advisory matrix
-#|work. Record the chosen product direction, update the roadmap and rolling
-#|handover, answer this archive, verify containment and cleanup, run final exact-
-#|Go-1.26.7 project module verification, build, count-one tests, race count-one
-#|tests, and vet, and make the local handoff commit.
+#|# Evaluation Contract
+#|
+#|Resolve the exact go-import owner, repository identity/status/license/default
+#|branch, exact-path stable/prerelease/replacement/retraction/deprecation lines,
+#|tags, commits, trees, signatures, ancestry, proxy/sumdb, archive-to-Git,
+#|module directives, Go floors, packages, build tags, cgo, generated/embed
+#|boundaries, exported API, and documented ordinary behavior for every eligible
+#|stable. Exclude branches, pseudo-versions as candidates, prereleases,
+#|replacements, alternate module paths, forks, patches, vendoring, and source
+#|changes unless explicitly authorized; none is.
+#|
+#|For selected and every eligible stable candidate, evaluate the complete
+#|minimal upstream module closure under exact Go 1.18.10 and Go 1.26.7 with
+#|module verification, build, complete count-one and repeated tests, race where
+#|supported, vet, and a bounded supported cgo-disabled cross-build/test-
+#|compilation matrix. Use only small ordinary deterministic fixtures where
+#|upstream coverage does not settle documented behavior. Do not execute
+#|unrelated network services or destructive paths. A release qualifies only if
+#|its complete closure and ordinary public behavior qualify, it preserves the
+#|Go 1.18 floor, and it has a genuine supported tidy-stable owner/request route
+#|that preserves every earlier guard.
+#|
+#|Use scratch-contained project copies only to measure the selected exact get
+#|and at most the one highest otherwise-qualified candidate get, each followed
+#|by normal tidy. Record the exact selection, closure, graph, imports/loads,
+#|sums, Go-floor effect, genuine ownership, and every earlier guard. Do not add
+#|or alter a target root in the real project except for the one exact final
+#|implementation authorized below.
+#|
+#|# Decision And Implementation Boundary
+#|
+#|If and only if one canonical exact-path stable is the highest fully qualified
+#|Go-1.18-compatible candidate, has a genuine supported tidy-stable project
+#|owner, and its complete projection preserves every guard, implement exactly
+#|`go get github.com/prometheus/common@<selected>` followed by ordinary tidy and
+#|the full project gates. Retain only the exact measured minimal dependency
+#|closure. Do not add a direct root, change source, patch, vendor, fork, alter an
+#|unrelated requester, select an alternate path, or combine another group.
+#|
+#|If no stable qualifies, no supported tidy-stable owner exists, a projection
+#|crosses any guard, or any protected starting input changed, retain no
+#|dependency or source change. Record the completed result and prepare exactly
+#|one reciprocal product decision for this target. Do not silently retain an
+#|unqualified target, grant or transfer an exception, authorize an owner study,
+#|or move to another dependency in the same turn.
+#|
+#|# Required Reading And Checks
+#|
+#|Read this archive; the answered client_model product decision and evaluation;
+#|the answered client_golang product decision and fresh evaluation; the answered
+#|Complete decision/evaluation; rolling handover; P7/P8 roadmap; `go.mod`; and
+#|`go.sum`. Verify branch/HEAD/parent/tree, exact changed set, ancestry,
+#|reciprocal archive chain, launcher check, ordinary and ignored cleanliness,
+#|exact SDK identities, project hashes/counts/tidy state, target requests/routes/
+#|why/import/load/runtime/root facts, all earlier guards, and narrow advisory
+#|identities. Stop for a fresh owning decision if any protected input changed.
+#|
+#|Update the roadmap and rolling handover, answer this archive, prepare at most
+#|one reciprocal product decision required by the result, verify containment
+#|and cleanup, run final exact-Go project gates, and make the local handoff
+#|commit.
 #|
 #|# Automatic Handoff
 #|
-#|Do not launch a study or successor; push, merge, publish, release, stash,
+#|Do not launch a successor or study; push, merge, publish, release, stash,
 #|revert, bypass cleanup, remove the worktree, transfer or reopen an exception,
-#|change a dependency or source file, combine another dependency group, or begin
-#|P8.
+#|change another dependency group, write outside the managed scratch root, or
+#|begin P8.
 # CODEX_MUTABLE_PROMPT_END

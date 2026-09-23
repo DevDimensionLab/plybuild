@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T14:13:34+02:00
+Generated: 2026-09-23T14:47:51+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,18 +8,18 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The client_model
-  evaluation began from clean client_golang-decision handoff HEAD
-  `f747850982e27aa784b64552c5ffedbdc04dc7c7`, parent
-  `a35afe399fa9897e33d115764db81d0181e4102e`, tree
-  `a9261aafb43b70b489062b7392bb6fa0b223def9`. That handoff changes exactly
-  the launcher, answered client_golang fresh evaluation, then-NEXT decision,
-  rolling handover, and roadmap. Ordinary and ignored
-  status, branch, ancestry, exact changed set, reciprocal archive history,
-  latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
-  projection, client_model request/route/relevance and earlier guards, fresh
-  advisory identities, final unchanged-project gates, and contained launcher
-  check passed. No source or dependency metadata changed.
+  `codex/upgrade-quality`, base master at `5635d50`. The client_model product
+  decision began from clean evaluation handoff HEAD
+  `c339c4a32a42c81cc9be44209ffced75755e7faa`, parent
+  `f747850982e27aa784b64552c5ffedbdc04dc7c7`, tree
+  `5c37acd72962c82e9a9d5fc2d0bdfdc58ea6ddd5`. That handoff changes exactly
+  the launcher, answered client_model evaluation, then-NEXT decision, rolling
+  handover, and roadmap. Ordinary and ignored status, branch, ancestry, exact
+  changed set, reciprocal archive history, latest Google UUID ancestry, exact
+  Go identities, module hashes/counts/tidy projection, all client_model
+  request/route/import/relevance and earlier guards, fresh advisory identities,
+  final unchanged-project gates, and contained launcher check pass. No source
+  or dependency metadata changed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -6183,14 +6183,56 @@ Complete/ULID/go-conntrack/client_golang guards, every earlier decision, and
 27/27 Q0-Q2 PASS at L2 remain unchanged. Final exact-Go gates and contained
 scratch cleanup pass.
 
+## Prometheus Client Model Product Decision
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/prometheus/client_model v0.2.0` is explicitly retained unchanged
+under a client_model-specific, unqualified, non-transferable exception. It is
+not qualified, supported, safe, or fixed. Its generated source requires
+`proto.ProtoPackageIsVersion3`, while its exact declared closure selects
+protobuf v1.2.0 without that symbol. Highest otherwise-qualified compatible
+stable v0.4.0 has no genuine supported tidy-stable owner. The **Mvn-Pom-
+Mutator Client Model Owner/Request Study** was not authorized or run.
+
+Retention requires the exact 15 requests, every genuine requester import
+boundary, all 24 complete shortest routes, negative target/requester why,
+zero target repository import/load/runtime/current-or-history-root state, four
+go.mod-only target sums, and no v0.4.0 request. The exact repository/release/
+tag/commit/tree/signature/ancestry/proxy/sumdb/archive/module/license,
+generated-source/build boundary, API, behavior, closure, native/repeated/race/
+vet/cross, selected compile-failure, and v0.4.0 qualification results remain
+expiry guards. Any changed input or newly supported compatible owner route
+requires a fresh owning evaluation and explicit decision.
+
+Both exact disposable projection identities and their tidy return to inherited
+v0.2.0 remain guards; neither is retained. Target advisory emptiness is not
+qualification. Isolated v0.4.0 retains only module-level GO-2024-2611 against
+protobuf v1.30.0; the project remains 30/22/20/20 with no target trace.
+Client_golang's GHSA/GO/CVE and its separate unqualified exception remain
+unchanged and do not transfer.
+
+Guard-only revalidation reproduced the clean handoff and ancestry, reciprocal
+archive chain and launcher, both SDK identities, exact
+234/3,599/355/429/197/41/1,067 project state, module/graph/common-tidy hashes,
+all requests/imports/routes/relevance boundaries, corrected advisory
+identities, all 47 pre-Goe selections/276 edges, separate Goe/pkg-errors/SFTP/
+go-difflib/Complete/ULID/go-conntrack/client_golang guards, every earlier
+decision, and accepted 27/27 Q0-Q2 PASS at L2. Completed release, source,
+behavior, API, closure, projection, native, cross, and advisory-matrix work was
+not repeated. Final exact-Go gates and contained scratch cleanup pass. No
+source, dependency metadata, target root, study, ownership, or transferred
+exception is retained.
+
 ## Next Bounded Objective
 
-Decide exactly one product direction for exact selected, inherited, indirect,
-unloaded `github.com/prometheus/client_model v0.2.0`: explicit client_model-
-specific unqualified non-transferable retention; one later measurement-only
-**Mvn-Pom-Mutator Client Model Owner/Request Study**; or stopping P7
-unresolved. Treat v0.2.0 as unqualified and v0.4.0 as otherwise qualified but
-without a genuine supported tidy-stable owner. Do only guard revalidation; do
-not repeat the completed evaluation, grant or transfer an exception before
-the decision, run a study, implement a dependency change, launch another
-successor, combine another group, or begin P8.
+Evaluate exactly one next selected alphabetical P7 target,
+`github.com/prometheus/common v0.9.1`. Treat its four current/historical
+requests, negative current why, zero repository import/load/runtime/current-
+root state, and nonzero history-root state only as observations to reproduce.
+Resolve its canonical exact-path stable line, complete ordinary closure,
+genuine supported tidy-stable ownership, exact project projection,
+advisories, and every earlier guard. Implement only one exact fully qualified
+dependency selection; otherwise retain no change and prepare one reciprocal
+product decision. Preserve the new client_model-specific exception and the
+separate client_golang and every earlier decision without transfer or
+reopening. Do not launch this successor, combine another group, or begin P8.

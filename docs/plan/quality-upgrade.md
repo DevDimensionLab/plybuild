@@ -15022,6 +15022,47 @@ Prometheus/client_model evaluation (2026-09-23):
   is prepared but not executed; no exception is granted or transferred, no
   study or successor is launched, and P8 remains queued.
 
+Prometheus/client_model product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, indirect, unloaded
+  `github.com/prometheus/client_model v0.2.0` remains unchanged under a
+  client_model-specific, unqualified, non-transferable exception. It is not
+  qualified, supported, safe, or fixed. The **Mvn-Pom-Mutator Client Model
+  Owner/Request Study** is not authorized or run; no dependency/source change,
+  target root, ownership claim, or implementation pre-authorization is made.
+- Retention requires the exact 15 requests and genuine requester import
+  boundaries, all 24 complete shortest routes, negative target/requester why,
+  zero target repository import/load/runtime/current-or-history-root state,
+  four go.mod-only target sums, and no v0.4.0 request. Any request, import,
+  route, why/load/runtime/root/sum, or supported-owner change expires the
+  exception and requires a fresh owning evaluation and explicit decision.
+- The exact nine-release/no-prerelease/replacement/retraction/deprecation/
+  alternate-major line, four compatible stables, repository/tag/commit/tree/
+  signature/ancestry/proxy/sumdb/archive/module/license identities,
+  generated-source/build boundary, exported API, behavior, minimal closures,
+  native/repeated/race/vet/cross results, selected compile defect, and v0.4.0
+  otherwise-qualified result are expiry guards. V0.2.0 remains unqualified;
+  v0.4.0 remains without a genuine supported tidy-stable owner.
+- The exact selected and v0.4.0 raw projection identities and their ordinary-
+  tidy return to inherited v0.2.0 remain guards. Neither projection is
+  retained. Target advisory emptiness does not qualify the target; isolated
+  v0.4.0 retains module-only GO-2024-2611 against protobuf v1.30.0, the project
+  remains 30/22/20/20 with no target trace, and client_golang retains its
+  separate GHSA/GO/CVE identity and unqualified exception.
+- Guard-only revalidation reproduces clean continuity, the reciprocal archive
+  chain and launcher, both SDK identities, exact
+  234/3,599/355/429/197/41/1,067 project state, module/graph/common-tidy
+  hashes, all requests/imports/routes/relevance boundaries, corrected advisory
+  identities, all 47 pre-Goe selections/276 edges, separate Goe/pkg-errors/
+  SFTP/go-difflib/Complete/ULID/go-conntrack/client_golang guards, every
+  earlier decision, and accepted 27/27 Q0-Q2 PASS at L2. Final exact-Go gates
+  pass and contained task scratch is removed.
+- P7 remains active only with one prepared bounded evaluation of the next
+  selected alphabetical module, exact `github.com/prometheus/common v0.9.1`.
+  Its four requests and zero current why/import/load/runtime/root facts are
+  starting observations only. The successor is not launched; the rejected
+  client_model study is neither prepared nor run, and P8 remains queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
