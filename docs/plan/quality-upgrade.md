@@ -15186,6 +15186,44 @@ Prometheus/procfs evaluation (2026-09-23):
   prepared but not executed; no study, other group, exception transfer, or P8
   work begins.
 
+Prometheus/procfs product decision (2026-09-23):
+
+- Option 1 is final. Exact selected, inherited, indirect, unloaded
+  `github.com/prometheus/procfs v0.0.8` remains unchanged under a Procfs-
+  specific, unqualified, non-transferable exception. It is not qualified,
+  supported, safe, or fixed. The **Mvn-Pom-Mutator Prometheus Procfs Owner/
+  Request Study** is not authorized or run; no dependency/source change,
+  target root, ownership claim, or implementation pre-authorization is made.
+- Retention requires the exact four requests and requester import/metadata
+  boundaries, all four complete shortest routes, negative target/requester
+  why, zero repository target/requester import/load/runtime/current-and-
+  history-root state, three go.mod-only sums, and no v0.9.0 request. Any
+  request, import, route, why/load/runtime/root/sum, or supported-owner change
+  expires the exception and requires a fresh owning evaluation and decision.
+- The exact 48-stable/27-compatible release line, repository/tag/commit/tree/
+  signature/ancestry/proxy/sumdb/archive/module/license identities, package/
+  build boundary/API/behavior, complete closures, native/repeated/race/vet/
+  cross results, selected native-test failures, and v0.9.0 repetition/32-bit
+  failures are expiry guards. No canonical stable currently qualifies.
+- The exact selected projection remains a guard: get adds only a redundant
+  indirect root, source sum, and main edge before tidy restores inherited
+  v0.0.8 and the common projection. No higher projection was authorized and
+  none is retained. Target advisory emptiness does not qualify the target;
+  selected isolation remains empty, v0.9.0 retains module-only GO-2026-5024,
+  the project remains 30/22/20/20 without a Procfs trace, and client_golang
+  retains its separate GHSA/GO/CVE identity and exception.
+- Guard-only revalidation reproduces clean continuity, reciprocal archives and
+  launcher, both SDK identities, exact 234/3,599/355/429/197/41/1,067 project
+  state, module/graph/common-tidy hashes, all request/import/route/relevance
+  facts, corrected advisory identities, all 47 pre-Goe selections/276 edges,
+  every separate later selection/exception, every earlier decision, and 27/27
+  Q0-Q2 PASS at L2. Final exact-Go gates pass and contained task scratch is
+  removed.
+- P7 remains active only with one prepared bounded evaluation of the next
+  selected alphabetical module, exact `github.com/prometheus/tsdb v0.7.1`.
+  Its single direct mvn-pom-mutator request is a starting observation only.
+  The successor is not launched; no rejected study or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

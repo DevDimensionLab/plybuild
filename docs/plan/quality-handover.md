@@ -6358,11 +6358,52 @@ or real dependency/source change is retained. Final exact-Go-1.26.7 module
 verification, build, count-one, race count-one, and vet pass; all task-owned
 scratch evidence was contained beneath the managed session root and removed.
 
+## Prometheus Procfs Product Decision
+
+Option 1 is final. Exact selected, inherited, indirect, unloaded
+`github.com/prometheus/procfs v0.0.8` is explicitly retained unchanged under a
+Procfs-specific, unqualified, non-transferable exception. It is not qualified,
+supported, safe, or fixed. Selected v0.0.8 fails mandatory complete native
+tests under both SDKs. Highest compatible v0.9.0 fails mandatory repetition
+and supported 32-bit test compilation. No canonical stable fully qualifies.
+The **Mvn-Pom-Mutator Prometheus Procfs Owner/Request Study** is not authorized
+or run.
+
+Retention requires exactly the four requests, requester import/metadata
+boundaries, all four shortest routes, negative target/requester why, zero
+repository target/requester import/load/runtime/current-and-history-root
+state, three go.mod-only sums, and no v0.9.0 request. The exact repository/
+release/tag/commit/tree/signature/ancestry/proxy/sumdb/archive/module/license,
+package/build-boundary/API/behavior, closure, native/repeated/race/vet/cross,
+projection, and advisory identities remain expiry guards. Any changed input,
+newly qualified release, or newly supported guard-preserving owner route
+requires a fresh owning evaluation and explicit decision.
+
+The selected projection remains a guard: exact get adds only a redundant
+indirect root, source sum, and main edge before tidy restores inherited v0.0.8
+and the common projection. No higher projection was authorized and none is
+retained. Exact target advisory responses remain empty without implying
+qualification. Selected isolation remains empty; v0.9.0 retains only module-
+level GO-2026-5024 in x/sys v0.3.0; the project remains 30/22/20/20 with no
+Procfs trace, and client_golang retains its separate GHSA/GO/CVE identity.
+
+Guard-only revalidation reproduced the clean evaluation handoff and ancestry,
+reciprocal archive chain and launcher, both SDK identities, exact
+234/3,599/355/429/197/41/1,067 project state, module/graph/common-tidy hashes,
+all requests/imports/routes/relevance boundaries, corrected advisory
+identities, all 47 pre-Goe selections/276 edges, separate Goe/pkg-errors/SFTP/
+go-difflib/Complete/ULID/go-conntrack/client_golang/client_model/Common guards,
+every earlier decision, and accepted 27/27 Q0-Q2 PASS at L2. Completed release,
+source, behavior, API, closure, projection, native, cross, and advisory-matrix
+work was not repeated. Final exact-Go gates and contained task scratch cleanup
+pass. No source, dependency metadata, target root, study, ownership, or
+transferred exception is retained.
+
 ## Next Bounded Objective
 
-Make exactly one product decision for inherited, indirect, unloaded
-`github.com/prometheus/procfs v0.0.8`: target-specific unqualified retention;
-one later measurement-only **Mvn-Pom-Mutator Prometheus Procfs Owner/Request
-Study**; or stopping P7 unresolved. The decision is prepared but not executed.
-Do not alter or transfer Common, client_model, client_golang, or any earlier
-exception; combine another dependency group; launch a study; or begin P8.
+Evaluate exactly selected `github.com/prometheus/tsdb v0.7.1`, the next
+alphabetical P7 module, against its canonical Go-1.18-compatible stable line,
+complete closure, genuine owner, and every earlier guard. Its single graph
+request from direct mvn-pom-mutator v0.2.3 is a starting observation only. The
+successor is prepared but not executed. Do not run a rejected owner study,
+transfer any exception, combine another dependency group, or begin P8.
