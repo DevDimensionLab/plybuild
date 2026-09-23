@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T13:17:51+02:00
+Generated: 2026-09-23T14:13:34+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,17 +8,18 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The client_golang product
-  decision began from clean fresh-evaluation handoff HEAD
-  `a35afe399fa9897e33d115764db81d0181e4102e`, parent
-  `eea09d0057ad57278945ce9fbba02eba46017c10`, tree
-  `7a2e37c3ea365171190ce335364f392b53017f3a`. That handoff changes exactly
-  the launcher, answered fresh evaluation, then-NEXT product decision,
+  `codex/upgrade-quality`, base master at `5635d50`. The client_model
+  evaluation began from clean client_golang-decision handoff HEAD
+  `f747850982e27aa784b64552c5ffedbdc04dc7c7`, parent
+  `a35afe399fa9897e33d115764db81d0181e4102e`, tree
+  `a9261aafb43b70b489062b7392bb6fa0b223def9`. That handoff changes exactly
+  the launcher, answered client_golang fresh evaluation, then-NEXT decision,
   rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
-  projection, target and earlier guards, fresh advisory identities, final
-  unchanged-project gates, and contained launcher check passed.
+  projection, client_model request/route/relevance and earlier guards, fresh
+  advisory identities, final unchanged-project gates, and contained launcher
+  check passed. No source or dependency metadata changed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -6138,14 +6139,58 @@ not repeated. Final unchanged-project exact-Go-1.26.7 module verification,
 build, count-one tests, race count-one tests, and vet pass. No product source,
 dependency metadata, target root, study, or transferred exception was retained.
 
+## Prometheus Client Model Evaluation
+
+No dependency or source change is authorized. Exact go-import, repository,
+Git, proxy, and sumdb evidence establishes nine canonical exact-path stables
+v0.1.0 through v0.6.3, no prereleases/replacements/retractions/deprecations,
+and exactly four Go-1.18-compatible candidates through v0.4.0. Exact release,
+tag, commit, tree, signature, ancestry, module, license, archive-to-Git,
+generated-source/build boundary, API, and documented ordinary behavior
+evidence reproduces.
+
+Selected v0.2.0 verifies but fails build, tests, repetition, race, vet,
+ordinary behavior compilation, and all 40 supported cgo-disabled cross rows
+under exact Go 1.18.10 and Go 1.26.7. Its generated source requires
+`proto.ProtoPackageIsVersion3`, but its exact declared closure selects
+`github.com/golang/protobuf v1.2.0`, where that symbol is absent. V0.1.0,
+v0.3.0, and v0.4.0 pass their complete native/behavior/cross gates under both
+SDKs, making v0.4.0 the highest otherwise-qualified compatible stable.
+
+Exactly 15 requests and every genuine requester import reproduce. All 24
+complete shortest routes originate at the main module through direct mvn-pom-
+mutator and its recorded Viper/go-metrics/Common/gRPC/cloud/genproto/
+client_golang/TSDB routes or the Google Martian and Afero entries into those
+historical chains. Target/requester why is negative; repository target import,
+target/requester production and complete-test load, target module-backed load,
+runtime relevance, and current/history target-root state are zero. No
+requester asks for v0.4.0.
+
+A selected get only manufactures a root, source sum, and main edge before tidy
+restores the common projection. A v0.4.0 get changes client_model and
+google.golang.org/protobuf, but ordinary tidy removes the root and both
+selection changes and reselects v0.2.0. V0.4.0 therefore has no genuine
+supported tidy-stable project owner. No projection is retained.
+
+Fresh target advisory responses are empty; absence was not used as
+qualification. The isolated v0.4.0 closure has module-level GO-2024-2611
+against protobuf v1.30.0 and no package/symbol finding. Project govulncheck
+remains exact at 30/22/20/20 with no target trace; client_golang's recorded
+GHSA/GO/CVE remains. Corrected Go-index/CNA identities, both SDKs, exact
+234/3,599/355/429/197/41/1,067 project state, Go floor, common tidy, all 47
+pre-Goe selections/276 edges, separate Goe/pkg-errors/SFTP/go-difflib/
+Complete/ULID/go-conntrack/client_golang guards, every earlier decision, and
+27/27 Q0-Q2 PASS at L2 remain unchanged. Final exact-Go gates and contained
+scratch cleanup pass.
+
 ## Next Bounded Objective
 
-Evaluate exactly one next selected alphabetical P7 target,
-`github.com/prometheus/client_model v0.2.0`. Treat its 15 graph requests and
-zero current why/import/load/runtime/root state only as observations to
-reproduce. Resolve its canonical exact-path stable line, complete ordinary
-closure, genuine supported tidy-stable ownership, exact project projection,
-advisories, and every earlier guard. Implement only one exact fully qualified
-dependency selection; otherwise retain no change and prepare one reciprocal
-product decision. Do not reopen client_golang, transfer an exception, combine
-another group, or begin P8.
+Decide exactly one product direction for exact selected, inherited, indirect,
+unloaded `github.com/prometheus/client_model v0.2.0`: explicit client_model-
+specific unqualified non-transferable retention; one later measurement-only
+**Mvn-Pom-Mutator Client Model Owner/Request Study**; or stopping P7
+unresolved. Treat v0.2.0 as unqualified and v0.4.0 as otherwise qualified but
+without a genuine supported tidy-stable owner. Do only guard revalidation; do
+not repeat the completed evaluation, grant or transfer an exception before
+the decision, run a study, implement a dependency change, launch another
+successor, combine another group, or begin P8.

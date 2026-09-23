@@ -14977,6 +14977,51 @@ Prometheus/client_golang product decision (2026-09-23):
   are starting observations only. The successor was not executed. P8 remains
   queued.
 
+Prometheus/client_model evaluation (2026-09-23):
+
+- Exact go-import, repository, Git, proxy, and sumdb evidence establishes nine
+  canonical exact-path stables v0.1.0 through v0.6.3, no prereleases,
+  replacements, retractions, or deprecations, and exactly four releases that
+  preserve the Go 1.18 floor through highest-floor v0.4.0. Exact tag, commit,
+  tree, signature, ancestry, module, license, archive-to-Git, generated-source/
+  build-boundary, API, and documented ordinary behavior evidence reproduces.
+- Selected v0.2.0 verifies but fails build, count-one/count-ten tests, race,
+  vet, ordinary behavior compilation, and all 40 supported cgo-disabled cross
+  rows under both exact SDKs. Its generated source requires
+  `proto.ProtoPackageIsVersion3` while its own exact go.mod selects
+  `github.com/golang/protobuf v1.2.0`, where that symbol is absent. V0.1.0,
+  v0.3.0, and v0.4.0 pass complete native, repeated, race, vet, behavior, and
+  cross gates, so v0.4.0 is the highest otherwise-qualified compatible stable.
+- Exactly 15 requests, every genuine requester source-import boundary, and all
+  24 complete shortest routes reproduce. Routes originate at the main module
+  through direct mvn-pom-mutator and its recorded Viper/go-metrics/Common/
+  gRPC/cloud/genproto/client_golang/TSDB chains or the Google Martian and Afero
+  entries into those historical chains. Target/requester why is negative;
+  repository target imports, production/complete-test/module-backed loads,
+  runtime relevance, and current/history target roots are zero. No requester
+  asks for v0.4.0.
+- Selected get only adds a redundant root, source sum, and main edge before
+  tidy restores the common projection. V0.4.0 get changes client_model and
+  google.golang.org/protobuf; ordinary tidy removes the root and both changes
+  and reselects v0.2.0. V0.4.0 therefore has no genuine supported tidy-stable
+  project owner. No projection, source, `go.mod`, or `go.sum` change remains.
+- Narrow target advisories are empty, but absence did not establish
+  qualification. Isolated v0.4.0 has only module-level GO-2024-2611 against
+  protobuf v1.30.0 and zero package/symbol findings. Project govulncheck stays
+  30/22/20/20 with no target trace; client_golang's GHSA/GO/CVE and corrected
+  Go-index/CNA guards reproduce.
+- Exact 234/3,599/355/429/197/41/1,067 project state, module/graph/common-tidy
+  hashes, SDKs, Go floor, all 47 pre-Goe selections/276 edges, separate Goe/
+  pkg-errors/SFTP/go-difflib/Complete/ULID/go-conntrack/client_golang guards,
+  every earlier decision, and accepted 27/27 Q0-Q2 PASS at L2 remain exact.
+  Final exact-Go gates pass and task-owned scratch is removed.
+- No dependency implementation is authorized. P7 stops for exactly one
+  reciprocal decision among client_model-specific unqualified non-transferable
+  retention of exact v0.2.0, one later measurement-only **Mvn-Pom-Mutator
+  Client Model Owner/Request Study**, or stopping P7 unresolved. The decision
+  is prepared but not executed; no exception is granted or transferred, no
+  study or successor is launched, and P8 remains queued.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
