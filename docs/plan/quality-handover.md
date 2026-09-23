@@ -6649,10 +6649,67 @@ guards, every prior decision, and 27/27 Q0-Q2 PASS at L2 reproduce. Final
 exact-Go gates and contained cleanup pass. No dependency/source/root change,
 study, transferred exception, other group, or P8 work is retained.
 
+## Sergi Go-Diff Evaluation
+
+No canonical stable fully qualifies and no changed selection has a genuine
+supported tidy-stable project owner, so no source or dependency change is
+authorized. Exact go-import metadata identifies the public, enabled,
+unarchived, non-fork MIT `sergi/go-diff` repository. Its canonical exact-path
+line contains exactly v1.0.0, v1.1.0, selected v1.2.0, v1.3.0, v1.3.1, and
+highest stable v1.4.0. There is no prerelease, replacement, retraction,
+deprecation, or alternate-major line. All six releases preserve Go 1.18.
+
+All exact Git/proxy-matched releases pass module verification, production
+build, and the 120-row cgo-disabled production compilation matrix under exact
+Go 1.18.10 and Go 1.26.7. V1.0.0 has an incomplete test closure because its
+proxy-synthesized module file omits imported Testify. V1.1.0 fails mandatory
+vet under both SDKs. V1.2.0-v1.4.0 pass safe vet, but every release's test
+suite contains explicit invalid URL-escape, invalid UTF-8, invalid patch, and
+timeout-amplification inputs. V1.2.0+ also contains multi-megabyte fixtures,
+and v1.4.0 adds an exhaustive Unicode-range loop. Static inspection stopped
+count-one, repeated, race, and affected test-compilation rows before crossing
+the defensive boundary. Partial evidence does not qualify any release.
+
+Exactly three requests and routes reproduce: direct main -> selected v1.2.0;
+direct Assert v1.0.0 -> v1.2.0; and main -> direct go-term-markdown v0.1.4 ->
+historical Chroma v0.7.1 -> v1.0.0. Assert genuinely imports go-diff;
+Chroma's request is metadata-only, while go-term-markdown genuinely imports
+Chroma. Target and Assert why are negative; target/Assert repository imports,
+project loads, module-backed loads, and runtime relevance are zero. Chroma is
+loaded and runtime-relevant only through go-term-markdown. All 84 historical
+checkpoints and exact first-root epochs reproduce.
+
+Selected get changes no byte or selection. Ordinary tidy removes direct
+target and Assert roots and selects go-diff v1.0.0 through Chroma's metadata-
+only route. A disposable v1.4.0 selection changes only go-diff and adds its
+two sums, but ordinary tidy discards it and restores the same common
+projection. No requester asks for v1.3.0, v1.3.1, or v1.4.0; therefore no
+changed candidate has a genuine supported tidy-stable owner. No projection is
+retained.
+
+Empty exact-version OSV and narrow GitHub responses do not imply safety or
+qualification. Pinned govulncheck finds no non-standard-library production
+finding in loadable focal closures, but incomplete/stopped test closures
+prevent a complete qualification claim. The project remains 30/22/20/20 with
+no go-diff, Blackfriday, fastuuid, TSDB, or Procfs trace; client_golang keeps
+its separate GHSA/GO/CVE identity. Exact SDKs, protected project and common-
+tidy counts/hashes, Go floor, all 47 pre-Goe selections/276 edges, separate
+later requests/exceptions, every earlier decision, and 27/27 Q0-Q2 PASS at L2
+remain exact.
+
+The final exact-Go-1.26.7 project gate passes module verification, build,
+count-one tests, race count-one tests, and vet. Real module, sum, and graph
+identities remain exact. The 301-record reciprocal archive graph has one NEXT
+decision, and the validated task-owned scratch tree is removed after all
+120,548 entries were confirmed beneath the managed task root with no symlink
+or outside-path entry.
+
 ## Next Bounded Objective
 
-Evaluate only exact selected indirect `github.com/sergi/go-diff v1.2.0`, the
-next unevaluated alphabetical module. The current main, Assert v1.0.0, and
-Chroma v0.7.1 graph requests are starting observations only. The evaluation
-is prepared but not executed. Do not run a rejected study, reopen or transfer
-an exception, combine another group, or begin P8.
+Choose exactly one direction in
+[the prepared reciprocal go-diff product decision](agent-sessions/2026-09-24T011213+0200-decide-sergi-go-diff-product-direction.md): retain selected
+v1.2.0 under a target-specific unqualified non-transferable exception;
+authorize only a later measurement-only **Go-Diff Request/Ownership Study**;
+or stop P7 unresolved. The decision is prepared but not executed. Do not run
+a study or successor, change another dependency, transfer an exception, or
+begin P8.

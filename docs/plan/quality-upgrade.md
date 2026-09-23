@@ -15461,6 +15461,50 @@ Russross/blackfriday/v2 product decision (2026-09-24):
   observations only. The successor is not launched; no rejected study or P8
   work begins.
 
+Sergi/go-diff evaluation (2026-09-24):
+
+- No canonical stable fully qualifies and no changed selection has a genuine
+  supported tidy-stable project owner, so no dependency/source change is
+  authorized. Exact go-import metadata maps the canonical six-stable v1.0.0-
+  v1.4.0 line to the public enabled unarchived non-fork MIT repository. There
+  is no prerelease, replacement, retraction, deprecation, or alternate-major
+  line; all six releases preserve the Go 1.18 floor.
+- Every exact Git/proxy-matched release passes verify, production build, and
+  the full 120-row cgo-disabled production matrix across exact Go 1.18.10 and
+  Go 1.26.7. V1.0.0 has an incomplete test closure, v1.1.0 fails mandatory
+  vet, and v1.2.0-v1.4.0 pass safe vet. Every upstream suite contains invalid
+  escape/UTF-8/patch and timeout-amplification cases; v1.2.0+ has multi-
+  megabyte fixtures and v1.4.0 an exhaustive Unicode-range loop. Mandatory
+  test rows were stopped before crossing the defensive boundary, so partial
+  evidence does not qualify any release.
+- The exact three requests/routes reproduce: direct main and Assert v1.0.0
+  request selected v1.2.0, while go-term-markdown v0.1.4 -> historical Chroma
+  v0.7.1 requests v1.0.0. Assert genuinely imports the target; Chroma's edge
+  is metadata-only, and go-term-markdown genuinely imports Chroma. Target and
+  Assert remain unloaded and runtime-irrelevant. All 84 historical checkpoints
+  and first-root epochs reproduce.
+- Selected get changes no byte or selection. A disposable v1.4.0 selection
+  changes only go-diff and its two sums, but ordinary tidy discards the target
+  and Assert direct roots and selects v1.0.0 through Chroma's metadata-only
+  route at the common projection. No requester asks for v1.3.0-v1.4.0, so no
+  candidate has genuine supported tidy-stable ownership. No projection is
+  retained.
+- Empty target advisories do not imply safety or qualification. Incomplete or
+  stopped test closures prevent a complete focal claim; the project remains
+  30/22/20/20 without a go-diff/Blackfriday/fastuuid/TSDB/Procfs trace, and
+  client_golang retains its separate GHSA/GO/CVE identity. Exact SDKs,
+  project/common-tidy identities, Go floor, all earlier selections and
+  exceptions, every earlier decision, and 27/27 Q0-Q2 PASS at L2 remain exact.
+- The final exact-Go-1.26.7 project module verification, build, count-one,
+  race count-one, and vet gate passes. The real module/sum/graph identities
+  remain exact; the 301-record archive graph has one reciprocal NEXT decision;
+  and the validated task-owned scratch tree is removed.
+- P7 stops for exactly one reciprocal product decision: retain selected
+  v1.2.0 under a go-diff-specific unqualified non-transferable exception;
+  authorize only a later measurement-only **Go-Diff Request/Ownership Study**;
+  or stop unresolved. It is prepared but not executed. No study, successor,
+  other dependency group, exception transfer, or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
