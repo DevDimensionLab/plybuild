@@ -15320,6 +15320,48 @@ Prometheus/tsdb product decision (2026-09-23):
   v1.2.0`. Its sole grpc-gateway v1.16.0 request is a starting observation
   only. The successor is not launched; no rejected study or P8 work begins.
 
+Rogpeppe/fastuuid evaluation (2026-09-23):
+
+- Canonical `github.com/rogpeppe/fastuuid v1.2.0` is the highest fully
+  qualified Go-1.18-compatible stable in the exact three-release v1.0.0-
+  v1.2.0 line. The public enabled unarchived non-fork BSD-3-Clause exact-path
+  repository remains on `master`, whose HEAD is v1.2.0. No prerelease,
+  replacement, retraction, deprecation, or alternate-major line exists. All
+  releases declare Go 1.12 and have a one-module, one-package, standard-
+  library-only closure.
+- All three exact Git/proxy-matched releases pass verification, build,
+  complete count-one/count-ten tests, race, vet, and the 60-row cgo-disabled
+  production/test-compilation matrix under exact Go 1.18.10 and Go 1.26.7.
+  V1.2.0 preserves the API while applying RFC4122 version-4/variant bits;
+  generator state is privately owned, atomically advanced, and concurrently
+  safe. Seed creation has a normal error/Must-panic boundary and no retained
+  resource or cleanup lifecycle.
+- Exactly one request exists, grpc-gateway v1.16.0 -> v1.2.0. The requester
+  genuinely imports fastuuid in production example-server source, but target
+  and requester why are negative and repository import, production/complete-
+  test/module-backed loads, runtime relevance, and current/history roots are
+  zero. Current and historical route families reproduce exactly.
+- Exact selected get changes no selection and only manufactures a redundant
+  target root, source sum, and main edge. Ordinary tidy removes those effects
+  and restores the established common projection with v1.2.0 selected. The
+  selection-only implementation boundary authorizes no project metadata
+  change; no projection or dependency/source change is retained.
+- Target advisory responses are empty without contributing to qualification;
+  its candidate focal closure is 0/0/0/0. The project remains 30/22/20/20
+  without fastuuid, TSDB, or Procfs trace, and the client_golang GHSA/GO/CVE
+  guard remains exact. Corrected Go index/CNA identities, both SDKs, exact
+  234/3,599/355/429/197/41/1,067 state, module/graph/common-tidy hashes, Go
+  floor, all 47 pre-Goe selections/276 edges, separate later decisions, and
+  27/27 Q0-Q2 PASS at L2 remain exact. Final exact-Go gates pass and contained
+  task scratch is removed.
+- Selected `github.com/rogpeppe/go-internal v1.9.0` is already closed as Cast
+  v1.5.1's verified minimal test closure. P7 remains active only with one
+  prepared bounded evaluation of the next unevaluated alphabetical module,
+  exact `github.com/russross/blackfriday/v2 v2.1.0`. The main module's indirect
+  requirement and go-md2man/v2 v2.0.1/v2.0.6/v2.0.7 requests are starting
+  observations only. The successor is not launched; no rejected study,
+  exception transfer, other group, or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

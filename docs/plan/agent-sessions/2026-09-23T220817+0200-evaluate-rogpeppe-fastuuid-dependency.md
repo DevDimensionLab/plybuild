@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Rogpeppe Fastuuid Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-23T220817+0200-evaluate-rogpeppe-fastuuid-dependency`
 Created: `2026-09-23T22:08:17+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `999515ff63b39fdccd8cbb51339f294257eda68678d84e7dd4f4c819c6ac3ef3`
 Previous: [2026-09-23T212315+0200-decide-prometheus-tsdb-product-direction.md](2026-09-23T212315+0200-decide-prometheus-tsdb-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-23T224910+0200-evaluate-russross-blackfriday-v2-dependency.md](2026-09-23T224910+0200-evaluate-russross-blackfriday-v2-dependency.md)
+Outcome: v1.2.0 is the highest fully qualified Go-1.18-compatible stable and is already the exact tidy-stable selection; no dependency selection or project metadata changed
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -186,3 +186,138 @@ handoff commit. Do not push, merge, publish, release, stash, revert, remove the
 worktree, combine another dependency group, launch a study or successor, or
 begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Canonical stable `github.com/rogpeppe/fastuuid v1.2.0` is the highest fully
+qualified Go-1.18-compatible release. It is already the exact graph selection.
+Its complete minimal closure is the one-module, one-package, standard-library-
+only target, and the public unarchived exact-path owner plus the genuine
+grpc-gateway requester remain supported. Product source, `go.mod`, and
+`go.sum` are unchanged; no dependency implementation commit or retained
+projection exists.
+
+### Canonical Owner And Releases
+
+Exact go-import metadata maps the module to
+`https://github.com/rogpeppe/fastuuid.git`. GitHub repository ID 28855114 is
+public, enabled, unarchived, non-fork, BSD-3-Clause, and uses default branch
+`master`. Default HEAD is the v1.2.0 commit. The exact path has three stable
+proxy releases, v1.0.0, v1.1.0, and v1.2.0; there are no prereleases,
+retractions, replacements, deprecation markers, or `/v2` or `/v3` lines.
+`@latest` is v1.2.0. All three byte-identical module files declare only the
+module path and Go 1.12, so all preserve the project Go 1.18 floor.
+
+The release identities, in chronology order, are:
+
+- v1.0.0 annotated tag object
+  `211734a23c1d29f2454d53e28ea793ea2ab522e1`, commit
+  `d61b6ae132d93dcb396be506396bf9a5127a41aa`, tree
+  `c61ac86bf8aee7973c70cbbcfeba6c610981e7ff`, 2019-01-17;
+- v1.1.0 annotated tag object
+  `d31f08d431b94b3760b9d945ab41e6c50ebd22aa`, commit
+  `f8cc0d34a06cb01497e9d3d8aadfdcb9cb271242`, tree
+  `f9a3359933050065174aee8664c89b86caf30f7f`, 2019-05-10; and
+- v1.2.0 lightweight tag/commit
+  `10c3923834d38e951ae8f627bfec2dc632c5b6cb`, tree
+  `de7f64713d572cfc0bbf39830b2bed390a0a289e`, 2019-07-08.
+
+All release commits are ancestors of `master`. The v1.0.0 tag and commit and
+the v1.1.0 tag are unsigned; GitHub verifies the v1.1.0 and v1.2.0 commits.
+Each proxy archive byte-matches its exact Git tree and contains only LICENSE,
+README, `go.mod`, `uuid.go`, and `uuid_test.go`, all regular files. There are
+no symlinks, submodules, cgo, build tags, generated files, `go:generate`, or
+embed boundaries. Source sums are
+`h1:f5eq2L8Y87sP63CaPojeD05ON4/AEe/wejW/jp8N6QQ=`,
+`h1:INyGLmTCMGFr6OVIb977ghJvABML2CMVjPoRfNDdYDo=`, and
+`h1:Ppwyp6VYCF1nvBTXL3trRso7mXMlRrw9ooo375wvi2s=`; all share module sum
+`h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=`. Sumdb verifies all six
+identities. The real project intentionally contains only the selected
+v1.2.0 `/go.mod` sum.
+
+### API, Behavior, And Qualification
+
+V1.0.0 exports `Generator`, `NewGenerator`, `MustNewGenerator`, and `Next`.
+V1.1.0 adds package and generator `Hex128` functions plus `ValidHex128`.
+V1.2.0 preserves those signatures and makes `Hex128` emit RFC4122 version-4
+and variant bits without discarding generator entropy. `NewGenerator` reads a
+private 24-byte seed from `crypto/rand`, returns a textual read error, and
+retains no reader or caller-owned resource. `MustNewGenerator` panics on that
+error. A generator owns its seed and atomic counter; subsequent output is
+deterministic relative to that seed and concurrent calls are safe. The
+documented IDs are not promised to be unpredictable. `ValidHex128` validates
+lowercase canonical syntax, not version/variant semantics. No lifecycle or
+cleanup obligation exists.
+
+Every stable passes module verification, build, complete count-one and
+count-ten upstream tests, race count-one tests, vet, and all 60 cgo-disabled
+production/test-compilation rows under exact Go 1.18.10 and Go 1.26.7. The ten
+targets are Darwin amd64/arm64, Linux amd64/arm64/386, Windows amd64/386,
+FreeBSD amd64, Plan 9 amd64, and js/wasm. Upstream tests cover deterministic
+seed substitution, sequential generation, bounded concurrent uniqueness,
+formatting, and validation; static review settles the documented error paths,
+so no extra fixture was necessary. V1.2.0 is consequently the highest fully
+qualified stable.
+
+Under Go 1.18, v1.0.0 loads 51 production, 85 complete-test, and three module-
+backed entries; v1.1.0/v1.2.0 load 52/86/3. Under Go 1.26 those populations
+are 96/129/3 and 97/130/3. Each closure has one loaded module; the target has
+no dependency closure beyond the standard library.
+
+### Requests, Routes, And Projection
+
+Exactly one graph edge requests the target:
+`github.com/grpc-ecosystem/grpc-gateway v1.16.0` -> v1.2.0. Grpc-gateway
+genuinely imports fastuuid in ordinary production example-server source, but
+both modules have negative project why results and zero repository imports,
+production loads, complete-test loads, module-backed entries, and runtime
+relevance. Neither has ever been a project root.
+
+The sole shortest current route is main -> direct
+`github.com/devdimensionlab/mvn-pom-mutator v0.2.3` -> historical Viper v1.10.1
+-> etcd API v3.5.1 -> grpc-gateway v1.16.0 -> fastuuid v1.2.0. Historical
+snapshots reproduce the earlier spring-boot-co-pilot/Viper v1.7.0/grpc-gateway
+v1.9.0 route to the 2015 fastuuid pseudo-version, followed by co-pilot/Viper
+v1.9.0/crypt/etcd API v3.5.0 and the current mvn-pom-mutator family. This is a
+genuine requester boundary but an unloaded project route.
+
+A disposable exact selected get changes no selected module. Before tidy it
+only manufactures a redundant indirect main root, the source sum, and one
+main graph edge: 75 `go.mod` lines, 1,068 `go.sum` lines, 234 modules, and
+3,600 edges, with hashes
+`6e78b988663c1f68f7924b4508be7fb4eb05adbc1982e3bd6d8b76ecab0bdabf`,
+`d0d20ad61b82320b56c320a2e61dd351eb29055078af7a8be7852d895fa20e65`,
+and `9af354be063db22ca358b3429c76e29881221d03eeacbe8d872fb823b8a81473`.
+Ordinary tidy removes those synthetic effects and restores the established
+52/948-line common projection, 234 modules, 3,557 edges, and selected v1.2.0.
+The selection-only implementation contract therefore authorizes no project
+change; the minimal changed closure is empty.
+
+### Advisories, Guards, And Handoff
+
+Exact-version OSV responses are empty for all three releases, as are narrow
+GitHub global and repository advisory responses. This absence is not used to
+qualify the target. Pinned govulncheck v1.8.0 built with exact Go 1.26.7 finds
+zero non-standard-library module/package/symbol/test-symbol findings in the
+candidate focal closure. The project remains exactly 30/22/20/20 without a
+fastuuid, TSDB, or Procfs trace; client_golang v1.4.0 retains
+GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698. The twice-fetched Go
+index remains 518,501 bytes/1,402 records at
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+and the twice-fetched PUBLISHED CNA response remains 2,807 bytes at
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+
+The real project remains exactly 234 modules, 3,599 edges, 355 production
+entries, 429 complete-test entries, 197 module-backed entries across 41 loaded
+modules, and 1,067 sum lines. Module, sum, graph, normal-tidy, common-
+projection, SDK, Go-floor, all 47 pre-Goe selections/276 edges, every separate
+request count, all target-specific qualification/exception boundaries, and
+accepted 27/27 Q0-Q2 PASS at L2 remain exact. No exception is transferred or
+reopened. Exact final Go 1.26.7 module verification, build, count-one tests,
+race count-one tests, and vet pass. All task-owned scratch is removed.
+
+The next selected alphabetical module, `github.com/rogpeppe/go-internal
+v1.9.0`, is already closed as the fully verified minimal test closure of Cast
+v1.5.1. The reciprocal successor therefore prepares only the next unevaluated
+module, exact `github.com/russross/blackfriday/v2 v2.1.0`; it is not launched
+here.

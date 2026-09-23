@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T22:08:17+02:00
+Generated: 2026-09-23T23:01:40+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,18 +8,17 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Prometheus TSDB
-  product decision began from clean evaluation handoff HEAD
-  `96fe50c72d9b5d85a86e6eb93e0abbdc0d2cfa94`, parent
-  `960f1531c6ecf20579e317e0721e693953d7160c`, tree
-  `ce68f1086a71a6d05d3671cdf9b1a4ebb14560ec`. That handoff changes exactly
-  the launcher, answered TSDB evaluation, then-NEXT decision, rolling
+  `codex/upgrade-quality`, base master at `5635d50`. The Rogpeppe fastuuid
+  evaluation began from clean TSDB decision handoff HEAD
+  `34549ce1e64317726f87f23820fc353df151f0db`, parent
+  `96fe50c72d9b5d85a86e6eb93e0abbdc0d2cfa94`, tree
+  `05059c0cf3bb68454214d8df568865976b565699`. That handoff changes exactly
+  the launcher, answered TSDB decision, then-NEXT fastuuid archive, rolling
   handover, and roadmap. Ordinary and ignored status, branch, ancestry, exact
   changed set, reciprocal archive history, latest Google UUID ancestry, exact
-  Go identities, module hashes/counts/common-tidy projection, all TSDB request/
-  route/import/relevance and earlier guards, fresh advisory identities, final
-  unchanged-project gates, and contained launcher check pass. No source or
-  dependency metadata changed.
+  Go identities, module hashes/counts/common-tidy projection, all fastuuid and
+  earlier guards, fresh advisory identities, final unchanged-project gates,
+  and contained launcher check pass. No source or dependency metadata changed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -165,11 +164,16 @@ session diary.
   sole request/route, metadata-only requester boundary, relevance facts,
   release/source/API/behavior/closure/native/cross/projection/advisory
   identities, exact sums, and earlier guards are expiry conditions. The sole
-  NEXT archive is now
-  `docs/plan/agent-sessions/2026-09-23T220817+0200-evaluate-rogpeppe-fastuuid-dependency.md`.
-  It evaluates only exact selected `github.com/rogpeppe/fastuuid v1.2.0`.
-  It may not transfer an exception, combine another group, write outside
-  managed scratch, or begin P8.
+  fastuuid request is a genuine grpc-gateway import but remains unloaded in
+  the project. Canonical v1.2.0 is the highest fully qualified stable, already
+  selected, and exact get followed by ordinary tidy makes no retained
+  selection or metadata change. Selected rogpeppe/go-internal v1.9.0 is
+  already closed as Cast v1.5.1's fully verified minimal test closure. The
+  sole NEXT archive is now
+  `docs/plan/agent-sessions/2026-09-23T224910+0200-evaluate-russross-blackfriday-v2-dependency.md`.
+  It evaluates only exact selected `github.com/russross/blackfriday/v2
+  v2.1.0`. It may not transfer an exception, combine another group, write
+  outside managed scratch, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -6509,10 +6513,53 @@ work was not repeated. Final exact-Go gates and contained task scratch cleanup
 pass. No source, dependency metadata, target root, study, ownership, or
 transferred exception is retained.
 
+## Rogpeppe Fastuuid Evaluation
+
+Canonical `github.com/rogpeppe/fastuuid v1.2.0` is the highest fully qualified
+Go-1.18-compatible stable in the exact three-stable v1.0.0-v1.2.0 line. The
+public enabled unarchived non-fork BSD-3-Clause exact-path repository remains
+on `master`, whose HEAD is v1.2.0. There is no prerelease, replacement,
+retraction, deprecation, or alternate-major line. All releases declare Go 1.12
+and have a one-module, one-package, standard-library-only closure.
+
+All three exact Git/proxy-matched releases pass verification, build, complete
+count-one and count-ten tests, race, vet, and the 60-row cgo-disabled
+production/test-compilation matrix under exact Go 1.18.10 and Go 1.26.7.
+V1.2.0 preserves the v1.1 API while applying RFC4122 version-4/variant bits.
+Generator state is privately owned, atomically advanced, and concurrently
+safe; seed creation has a normal error/Must-panic boundary and no retained
+resource or cleanup lifecycle. The release therefore fully qualifies.
+
+Exactly one request exists: grpc-gateway v1.16.0 -> v1.2.0. The requester
+genuinely imports fastuuid in production example-server source, but target and
+requester why are negative and repository import, production/complete-test/
+module-backed loads, runtime relevance, and current/history target roots are
+zero. The sole shortest current route is main -> direct mvn-pom-mutator ->
+historical Viper v1.10.1 -> etcd API v3.5.1 -> grpc-gateway -> fastuuid;
+historical spring-boot-co-pilot/co-pilot route families reproduce.
+
+Selected get changes no selection and only manufactures a redundant target
+root, source sum, and main edge. Ordinary tidy removes those effects and
+restores the established common projection with v1.2.0 selected. The exact
+selection-only implementation boundary therefore authorizes no project
+metadata change, and no projection is retained.
+
+Target OSV/GitHub/repository responses are empty without contributing to
+qualification. The candidate focal closure is 0/0/0/0 under pinned
+govulncheck v1.8.0. The project remains 30/22/20/20 without fastuuid, TSDB, or
+Procfs trace; the client_golang GHSA/GO/CVE guard remains exact. Corrected Go
+index and CNA identities, exact SDKs, real 234/3,599/355/429/197/41/1,067
+state, module/graph/common-tidy hashes, Go floor, all 47 pre-Goe selections/
+276 edges, separate later requests and exceptions, every earlier decision,
+and 27/27 Q0-Q2 PASS at L2 remain exact. Final exact-Go gates pass and task-
+owned scratch is removed. No source or dependency selection changed.
+
 ## Next Bounded Objective
 
-Evaluate exactly one next unevaluated alphabetical P7 module,
-`github.com/rogpeppe/fastuuid v1.2.0`. Its sole grpc-gateway v1.16.0 graph
-request is a starting observation only. The evaluation is prepared but not
-launched. Do not run a rejected study, transfer any exception, combine another
-group, or begin P8.
+The selected alphabetical `github.com/rogpeppe/go-internal v1.9.0` is already
+closed as Cast v1.5.1's fully verified minimal test closure. Evaluate exactly
+one next unevaluated alphabetical P7 module,
+`github.com/russross/blackfriday/v2 v2.1.0`. The main module's indirect
+requirement and go-md2man/v2 v2.0.1/v2.0.6/v2.0.7 requests are starting
+observations only. The evaluation is prepared but not launched. Do not run a
+rejected study, transfer any exception, combine another group, or begin P8.
