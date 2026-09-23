@@ -5374,8 +5374,8 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active with the prepared bounded evaluation of graph-selected exact
-`github.com/pascaldekloe/goe v0.1.0`. Option 1 now explicitly retains exact
+Status: active but stopped for the prepared product decision on graph-selected
+exact `github.com/pascaldekloe/goe v0.1.0`. Option 1 now explicitly retains exact
 selected/inherited/unloaded unqualified ULID v1.3.1 and go-conntrack
 `v0.0.0-20161129095857-cc309e4a2223`, exact indirect/production-loaded
 unqualified mapstructure v1.5.0, exact direct/runtime-relevant unqualified go-homedir
@@ -5412,9 +5412,12 @@ not authorized or run. The completed oklog/ulid evaluation found no stable
 that satisfies both complete ordinary closure qualification and genuine
 supported tidy-stable ownership; no implementation was retained. ULID option
 1 retains exact v1.3.1 unchanged and unqualified under its own guard. The
-Prometheus TSDB ULID Ownership Study was not authorized or run. The reciprocal
-pascaldekloe/goe evaluation is prepared but was not executed. P8 remains
-queued.
+Prometheus TSDB ULID Ownership Study was not authorized or run. The completed
+pascaldekloe/goe evaluation found no qualified stable: v0.1.0 and v0.1.1 both
+fail the complete race gate, selected v0.1.0 also fails an ordinary Go 1.26.7
+example, and v0.1.1 lacks a genuine supported tidy-stable project owner. No
+projection was retained. The reciprocal Goe product decision is prepared but
+was not executed. P8 remains queued.
 
 Toolchain baseline move (2026-09-01):
 
@@ -14395,6 +14398,55 @@ Oklog/ULID product decision (2026-09-23):
   repeated. P7 continues only with the prepared bounded evaluation of
   graph-selected exact `github.com/pascaldekloe/goe v0.1.0`; it was not
   executed. P8 remains queued.
+
+Pascaldekloe/Goe evaluation (2026-09-23):
+
+- No genuine exact-path stable qualifies. The public enabled unarchived
+  non-fork CC0-1.0 `pascaldekloe/goe` repository owns exactly v0.1.0 and
+  v0.1.1, with no `/v2`, `/v3`, prerelease, replacement, retraction,
+  deprecation, or eligible alternate owner. Exact tag/commit/tree/ancestry,
+  proxy/sumdb/module, license, and archive-to-Git identities were resolved.
+  V0.1.0 has a synthetic module file; v0.1.1 declares Go 1.16. Both preserve
+  the Go 1.18 floor.
+- Both releases expose four standard-library-only packages with no cgo, build
+  tags, generated directives, or embed boundary. Exact Go 1.18.10/1.26.7
+  verification, build, vet, and nine cgo-disabled cross targets pass.
+  V0.1.0 fails ordinary `el.ExampleInt` under Go 1.26.7. V0.1.1 removes that
+  example and passes ordinary count-one/count-ten tests, but both releases
+  fail their complete race gate in upstream `metrics` tests because the
+  permanent `NewStatsD` worker writes a caller-owned buffer concurrently with
+  its read and exposes no close/wait/flush synchronization contract.
+- MVS selects v0.1.0 through four requests: go-metrics v0.3.10 requests the
+  stable, while Consul API v1.1.0 and memberlist v0.1.3/v0.3.0 request its
+  exact pseudo-version. Go-metrics and Consul API genuinely import
+  `goe/verify` only in tests; both memberlist edges are metadata-only. Routes
+  run from direct mvn-pom-mutator through historical Viper/crypt, go-metrics,
+  Consul API, Serf, and memberlist. Target/requester why are negative;
+  repository import, production/complete-test/module-backed load, and runtime
+  relevance are zero.
+- Disposable v0.1.0 and v0.1.1 gets each manufacture only an unused root/main
+  edge plus sums. Both keep 234 modules and exact 355/429/197/41 loads while
+  adding the 3,600th edge. Tidy removes either root, restores the common
+  52/948-line state, and selects v0.1.0; thus v0.1.1 also has no genuine
+  supported tidy-stable project owner. Neither projection was retained.
+- Exact real 234/3,599/355/429/197/41/1,067 state, module and tidy hashes, Go
+  floor, source/API/CLI/help/launcher/Make/quality contracts, and accepted
+  27/27 Q0-Q2 PASS at L2 remain unchanged. All 47 earlier selections/276
+  incoming edges retain SHA-256
+  `7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`.
+  Every earlier exception and qualified decision remains exact.
+- Exact target OSV/GitHub/repository advisory and isolated pinned
+  govulncheck results are empty. Base/v0.1.1 project populations are identical
+  at 30/22/20/20 with no target trace. Guard OSV, x/mod, the 518,501-byte/
+  1,402-record Go index, and PUBLISHED 2,807-byte memberlist CNA identities
+  reproduce. Final exact-Go verify/build/count-one/race/vet passes. Advisory
+  absence is not qualification.
+- No product source or dependency metadata changed, and no dependency
+  implementation commit exists. P7 now requires exactly one Goe product
+  direction: target-specific unqualified retention of selected v0.1.0; one
+  later measurement-only **Armon Go-Metrics Goe Ownership Study**; or stopping
+  P7 unresolved. The successor was prepared but not executed; P8 remains
+  queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

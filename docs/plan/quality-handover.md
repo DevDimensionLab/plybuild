@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T02:16:46+02:00
+Generated: 2026-09-23T03:11:34+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,12 +8,12 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The oklog/ulid decision
-  began from clean evaluation-handoff HEAD
-  `27046bec05003b317329a1918fd69baf5ffe4eb0`, parent
-  `c0819eb1524b5a5bf6aabbefebaf185d30d36e88`, tree
-  `15f3c216faad8c67df78a5e6eaf73ce567940653`. That handoff changes exactly
-  the launcher, answered ULID evaluation archive, then-NEXT ULID decision
+  `codex/upgrade-quality`, base master at `5635d50`. The pascaldekloe/goe
+  evaluation began from clean evaluation-handoff HEAD
+  `536df39770daedc4f841a6898e5c69b8605eed6f`, parent
+  `27046bec05003b317329a1918fd69baf5ffe4eb0`, tree
+  `bf97e1053d7f50c7df6e55e1800ed6d751d77915`. That handoff changes exactly
+  the launcher, answered ULID decision archive, then-NEXT Goe evaluation
   archive, rolling handover, and roadmap. Ordinary and ignored status, branch,
   ancestry, exact changed set, reciprocal archive history, latest Google UUID
   ancestry, exact Go identities, module hashes/counts/tidy projection, target
@@ -95,10 +95,13 @@ session diary.
   retains exact selected, inherited, unloaded v1.3.1 under its own
   unqualified, target-specific, non-transferable exception without source or
   dependency change. The Prometheus TSDB ULID Ownership Study was not
-  authorized or run. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T021646+0200-evaluate-pascaldekloe-goe-dependency.md`.
-  It authorizes only the bounded evaluation of graph-selected exact
-  `github.com/pascaldekloe/goe v0.1.0`; it may not reopen or transfer ULID or
+  authorized or run. No canonical exact-path Goe stable qualifies: v0.1.0
+  and v0.1.1 both fail the complete upstream race gate, selected v0.1.0 also
+  fails an ordinary Go 1.26.7 example, and v0.1.1 has no genuine supported
+  tidy-stable project owner. No projection was retained. The sole NEXT archive
+  is `docs/plan/agent-sessions/2026-09-23T031134+0200-decide-pascaldekloe-goe-product-direction.md`.
+  It authorizes only one Goe product direction from the completed evaluation;
+  it may not reevaluate Goe, run the named ownership study, reopen or transfer
   an earlier exception, evaluate another group, write outside the managed
   scratch root, or begin P8.
 - No `.agent-task/current.md` or repository
@@ -148,8 +151,10 @@ ULID exact-path stable satisfies the combined closure/ownership contract:
 v0.3.0 is highest behavior-qualified but lacks a genuine supported tidy-stable
 owner, and selected v1.3.1 plus every stable from v1.0.0 has an incomplete
 standalone module closure. ULID option 1 retains v1.3.1 unchanged and
-unqualified under its exact guards. P7 continues only with the prepared
-bounded pascaldekloe/goe v0.1.0 evaluation. P8 remains queued.
+unqualified under its exact guards. No Goe stable qualifies: both v0.1.0 and
+v0.1.1 fail their complete race gate, v0.1.0 additionally fails an ordinary
+Go 1.26.7 example, and v0.1.1 has no genuine supported tidy-stable owner. P7
+is stopped only for the prepared Goe product decision; P8 remains queued.
 
 ## Oklog ULID Evaluation
 
@@ -250,6 +255,64 @@ identities, Go index, memberlist CNA, and final exact-Go verify/build/count-
 one/race/vet results. Completed ULID evaluation work was not repeated, and the
 ownership study did not run. P7 continues only with the prepared bounded
 pascaldekloe/goe v0.1.0 evaluation; P8 remains queued.
+
+## Pascaldekloe Goe Evaluation
+
+No genuine exact-path stable qualifies. The public enabled unarchived
+non-fork CC0-1.0 `pascaldekloe/goe` repository, ID 35051646, owns exactly
+v0.1.0 and v0.1.1; `/v2` and `/v3` are absent. It remains maintained on
+`master` but has no GitHub Releases. Both lightweight unsigned tags, exact
+commit/tree/parent/ancestry identities, proxy/sumdb records, module files,
+license identities, and byte-exact archive-to-Git manifests were verified.
+V0.1.0 uses a synthetic module file with no Go directive; v0.1.1 declares Go
+1.16 with no requirements.
+
+Both releases expose the standard-library-only `el`, `metrics`, `rest`, and
+`verify` packages with no cgo, build tags, generated directives, or embed
+boundary. Exact Go 1.18.10 and Go 1.26.7 verification/build/vet and nine
+cgo-disabled cross-build/test-compile targets pass. V0.1.0's tests pass under
+Go 1.18.10 but fail under Go 1.26.7 at ordinary `el.ExampleInt`. V0.1.1
+deletes that example and passes count-one/count-ten tests under both SDKs.
+Both releases fail their complete race gate in ordinary upstream `metrics`
+tests: caller `bytes.Buffer.String` reads race with the permanent `NewStatsD`
+goroutine's writes, and the API has no close/wait/flush synchronization or
+cleanup contract. Thus neither stable qualifies.
+
+MVS selects v0.1.0 through four requests. Go-metrics v0.3.10 requests v0.1.0
+and genuinely imports `goe/verify` in tests. Consul API v1.1.0 requests the
+exact v0.1.0 commit pseudo-version and genuinely imports it in two tests.
+Memberlist v0.1.3 and v0.3.0 make metadata-only requests for that pseudo-
+version. Complete current/historical routes run from direct mvn-pom-mutator
+v0.2.3 through historical Viper/crypt, go-metrics, Consul API, Serf, and
+memberlist. Target and requester why are negative; repository imports,
+production/complete-test/module-backed loads, and runtime relevance are zero.
+
+A disposable exact v0.1.0 get adds only an unused root/source sum/main edge
+and tidies to the common state. A disposable v0.1.1 get changes only target
+selection plus its root/sums/edge, but tidy removes that owner and reselects
+v0.1.0. Both keep 234 modules, change 3,599 to 3,600 edges, preserve exact
+355/429/197/41 loads, and preserve all 47 earlier selections/276 incoming
+edges at SHA-256
+`7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`.
+V0.1.1 therefore also lacks a genuine supported tidy-stable project owner.
+Neither projection was retained.
+
+Exact real 234/3,599/355/429/197/41/1,067 state, module hashes, 432-line and
+common 52/948-line tidy identities, Go floor, source/API/CLI/help/launcher/
+Make/quality contracts, every earlier decision, and accepted 27/27 Q0-Q2 PASS
+at L2 remain unchanged. Exact target OSV/GitHub/repository advisory and
+isolated govulncheck results are empty; base/v0.1.1 project populations match
+at 30/22/20/20 with no target trace. Guard OSV, x/mod, the 518,501-byte/1,402-
+record Go index, and PUBLISHED 2,807-byte memberlist CNA identities reproduce.
+Final exact-Go verify/build/count-one/race/vet passes. Advisory absence is not
+qualification.
+
+No source or dependency metadata changed, and no dependency implementation
+commit exists. P7 now requires exactly one Goe product direction: target-
+specific unqualified retention of exact selected v0.1.0; the single later
+measurement-only **Armon Go-Metrics Goe Ownership Study**; or stopping P7
+unresolved. The reciprocal decision successor was prepared but not executed;
+P8 remains queued.
 
 ## Mwitkow Go-Conntrack Evaluation
 
@@ -5455,10 +5518,10 @@ bounded mapstructure v1.5.0 evaluation; P8 remains queued.
 ## Next Bounded Objective
 
 Make exactly one product decision for selected, inherited, unloaded
-`github.com/oklog/ulid v1.3.1` from the completed evaluation: explicitly
+`github.com/pascaldekloe/goe v0.1.0` from the completed evaluation: explicitly
 retain it under a target-specific unqualified non-transferable exception,
-authorize exactly one later measurement-only Prometheus TSDB ULID Ownership
-Study, or stop P7 unresolved. Revalidate only the narrow decision guards. Do
-not reevaluate ULID, run the study, evaluate pascaldekloe/goe or another
-dependency, change source/dependency metadata, reopen or transfer an earlier
-exception, write outside the managed scratch root, or begin P8.
+authorize exactly one later measurement-only **Armon Go-Metrics Goe Ownership
+Study**, or stop P7 unresolved. Revalidate only the narrow decision guards.
+Do not reevaluate Goe, run the study, evaluate another dependency, change
+source/dependency metadata, reopen or transfer an earlier exception, write
+outside the managed scratch root, or begin P8.
