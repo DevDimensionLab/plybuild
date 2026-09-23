@@ -5374,11 +5374,11 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at one prepared fresh bounded evaluation of graph-selected exact
-`github.com/prometheus/client_golang v1.4.0` after option 1 repaired two
-unsupported advisory-response hashes to the independently reproduced
-preceding-archive identities. The stopped partial client_golang matrix is
-discarded and supplies no qualification result. No canonical exact-path
+Status: active at one prepared reciprocal product decision for graph-selected
+exact `github.com/prometheus/client_golang v1.4.0`. The fresh complete
+evaluation found no qualifying stable; highest-floor v1.16.0 also lacks a
+supported tidy-stable owner and crosses the protected go-conntrack selection
+before tidy returns v1.4.0. No canonical exact-path
 Complete stable qualifies, and its evaluation left source and dependency
 metadata unchanged. Option 1 now explicitly retains exact
 selected, inherited, indirect, unloaded, unqualified go-difflib v1.0.0, SFTP
@@ -14835,11 +14835,11 @@ Posener Complete product decision (2026-09-23):
   Go-floor, earlier-guard, advisory/finding, independent-defect, qualification,
   or compatible-supported-route input requires a fresh owning evaluation and
   product decision before merge.
-- P7 continues only with the prepared bounded evaluation of exact selected
-  `github.com/prometheus/client_golang v1.4.0`. Starting observations identify
-  four requests through go-metrics, two Prometheus Common versions, and TSDB;
-  the evaluation must independently reproduce their import boundaries and all
-  routes. It was prepared but not executed. P8 remains queued.
+- P7 continues only with the prepared reciprocal product decision for exact
+  selected `github.com/prometheus/client_golang v1.4.0`: explicit target-
+  specific unqualified retention, the named later measurement-only Mvn-Pom-
+  Mutator owner/request-removal study, or stopping P7 unresolved. The decision
+  was prepared but not executed. P8 remains queued.
 
 Prometheus/client_golang evaluation guard stop (2026-09-23):
 
@@ -14899,6 +14899,46 @@ Prometheus/client_golang guard direction (2026-09-23):
   stable exact selection whose complete projection preserves every guard or
   retain no change and prepare a reciprocal product decision. It was prepared
   but not executed. P8 remains queued.
+
+Prometheus/client_golang fresh evaluation (2026-09-23):
+
+- No canonical exact-path stable qualifies. The public Prometheus owner has 51
+  stables and six prereleases; 33 stables declare a Go floor no higher than
+  1.18, through v1.16.0. Exact tag/commit/tree/signature/ancestry, proxy/sumdb,
+  archive-to-Git, module/license/source/platform, API, and ordinary behavior
+  evidence was freshly resolved for every eligible stable.
+- The complete 660-row native matrix covers all 33 releases, both exact SDKs,
+  verification, build, count-one/count-ten tests, race, vet, enumeration, and
+  API capture. Every release fails at least one mandatory gate. Selected
+  v1.4.0 fails tests, repetition, race, and vet under both SDKs. V1.16.0 passes
+  Go 1.18.10 build/tests/repetition/race but fails vet; its Go 1.26.7 generated
+  runtime-metric test support no longer compiles, so tests, repetition, race,
+  and vet fail. The 1,320-row supported cgo-disabled cross matrix also finds
+  v1.16.0 32-bit-test and Plan-9-closure failures.
+- All four exact requests, genuine requester imports, and complete shortest
+  routes from direct mvn-pom-mutator through historical Viper/go-metrics/
+  Common or TSDB reproduce. Target/requester why are negative; repository
+  target imports, production/complete-test/module-backed loads, runtime
+  relevance, and current/history target roots are zero. Selected v1.4.0 is
+  genuinely requested and tidy-stable. No requester asks for v1.16.0.
+- Selected get adds only a redundant root/source sum/edge, then tidy restores
+  the common projection. V1.16.0 get changes nine selections, including
+  protected go-conntrack from `cc309e4a2223` to `2f068394615f`; tidy removes
+  them and reselects v1.4.0. V1.16.0 is neither qualified, guard-preserving,
+  nor supported and tidy-stable. No projection or product/dependency change
+  was retained.
+- Selected v1.4.0 and 22 other eligible releases through v1.11.0 retain
+  GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698. V1.16.0 advisory
+  responses are empty, but absence is not qualification. Project govulncheck
+  remains 30/22/20/20 with no target trace. Corrected Go-index/CNA identities,
+  real 234/3,599/355/429/197/41/1,067 state, SDKs, Go floor, common tidy, all
+  47 pre-Goe selections/276 edges, separate earlier guards, and every decision
+  remain exact. Final exact-Go gates pass and scratch evidence is removed.
+- P7 stops for one reciprocal product decision: explicitly retain exact
+  selected inherited indirect unloaded unqualified v1.4.0 under a target-
+  specific non-transferable exception; authorize one later measurement-only
+  **Mvn-Pom-Mutator Client Golang Owner/Request Removal Study**; or stop P7
+  unresolved. The decision was prepared but not executed. P8 remains queued.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-23T10:02:01+02:00
+Generated: 2026-09-23T12:46:10+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -8,13 +8,13 @@ session diary.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
-  `codex/upgrade-quality`, base master at `5635d50`. The Complete decision
-  began from clean evaluation-handoff HEAD
-  `18e5105b90fd7380f4621ea82ed4e90ba59daf0e`, parent
-  `7c126d36f09a63f25a48f120f6987d7cba87d1a8`, tree
-  `039413ad0d21ad371b0f853ec5dff5c9a10df3e8`. That handoff changes exactly
-  the launcher, answered Complete evaluation archive, then-NEXT Complete
-  decision archive, rolling handover, and roadmap. Ordinary and ignored
+  `codex/upgrade-quality`, base master at `5635d50`. The fresh client_golang
+  evaluation began from clean guard-decision handoff HEAD
+  `eea09d0057ad57278945ce9fbba02eba46017c10`, parent
+  `ff4bcc1b009662d30041e0489fcb2b01c35cbe52`, tree
+  `488b0b89d05c48f2ffbe390813b9302c50967cfd`. That handoff changes exactly
+  the launcher, answered stopped evaluation, answered guard decision,
+  rolling handover, and roadmap. Ordinary and ignored
   status, branch, ancestry, exact changed set, reciprocal archive history,
   latest Google UUID ancestry, exact Go identities, module hashes/counts/tidy
   projection, target and earlier guards, fresh advisory identities, final
@@ -145,11 +145,11 @@ session diary.
   import boundaries, historical routes, why/import/load/runtime/root facts,
   release/source/behavior/closure/projection/advisory identities, and earlier
   guards are exact expiry conditions. The sole NEXT archive is
-  `docs/plan/agent-sessions/2026-09-23T100201+0200-evaluate-prometheus-client-golang-dependency.md`.
-  It evaluates only exact selected `github.com/prometheus/client_golang
-  v1.4.0`, may implement at most one fully qualified supported exact selection,
-  preserves Complete and every earlier guard, and may not combine another
-  group, write outside the managed scratch root, or begin P8.
+  `docs/plan/agent-sessions/2026-09-23T124610+0200-decide-prometheus-client-golang-product-direction.md`.
+  It chooses only explicit exact-v1.4.0 unqualified retention, the named
+  measurement-only Mvn-Pom-Mutator owner/request-removal study, or stopping P7
+  unresolved. It may not repeat the completed evaluation, change a dependency
+  or source, combine another group, write outside managed scratch, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -218,8 +218,8 @@ Complete v1.2.3 is latest but not qualified or fixed because every buildable
 v1.2 stable retains its hard-coded `/tmp` Uninstall temporary file after
 success. Option 1 retains it unchanged and unqualified under its own exact
 guards; no owner study, source change, or dependency metadata change was
-authorized. P7 is active only at the prepared bounded
-prometheus/client_golang v1.4.0 evaluation; P8 remains queued.
+authorized. P7 is active only at the prepared reciprocal
+prometheus/client_golang v1.4.0 product decision; P8 remains queued.
 
 ## Oklog ULID Evaluation
 
@@ -6002,19 +6002,6 @@ go-conntrack and other selections in a 235-module/3,622-edge raw graph; tidy
 removed the candidate and returned the common projection with v1.4.0. The
 all-eligible matrix was interrupted and its partial rows are not accepted.
 
-## Next Bounded Objective
-
-Run only the prepared fresh complete evaluation of exact selected
-`github.com/prometheus/client_golang v1.4.0`. Begin from a newly verified clean
-state with the repaired Go-index and CNA identities, discard every partial
-closure and qualification result from the stopped turn, and independently
-reproduce all release/source/behavior/closure/ownership/projection/advisory
-evidence. Implement at most the one fully qualified Go-1.18-compatible exact
-selection with a genuine supported tidy-stable owner whose complete projection
-preserves every earlier guard. Otherwise retain no dependency or source change
-and prepare one reciprocal product decision. Do not combine another group,
-transfer an exception, run a provenance or owner study, or begin P8.
-
 ## Prometheus Client Golang Guard Decision
 
 Option 1 is final. The active NEXT archive's asserted `bdd6a085...` and
@@ -6062,3 +6049,55 @@ One fresh bounded client_golang evaluation successor is prepared but not
 executed. It uses the repaired advisory identities, requires a newly verified
 clean start and new contained evidence, and explicitly rejects reuse of the
 interrupted matrix. P8 remains queued.
+
+## Prometheus Client Golang Fresh Evaluation
+
+No canonical exact-path stable qualifies. The exact public Prometheus owner
+has 51 stables and six prereleases; exactly 33 stables declare a Go floor no
+higher than 1.18, through highest-floor v1.16.0. Exact tag, commit, tree,
+signature, ancestry, proxy/sumdb, archive-to-Git, module, license, source,
+platform/build-tag, API, and ordinary behavior evidence was resolved for every
+eligible stable from newly contained evidence.
+
+The complete native matrix has 660 rows across 33 releases, exact Go 1.18.10
+and Go 1.26.7, verification, build, count-one/count-ten tests, race, vet,
+package enumeration, and API capture. Every release fails at least one gate.
+Selected v1.4.0 fails tests, repetition, race, and vet under both SDKs.
+V1.16.0 passes Go 1.18.10 build/tests/repetition/race but fails vet; under Go
+1.26.7 it builds but its generated runtime-metric test support no longer
+compiles, so tests, repetition, race, and vet fail. The 1,320-row supported
+cgo-disabled cross matrix adds v1.16.0 32-bit test and Plan 9 closure failures.
+
+All four exact requests and genuine requester imports reproduce. Their
+shortest routes run from direct mvn-pom-mutator v0.2.3 through historical
+Viper/go-metrics/Common or directly through TSDB. Target/requester why are
+negative; repository target imports, target and requester loads, target
+runtime relevance, and current/history roots are zero. Selected v1.4.0 has a
+genuine tidy-stable existing historical request route. No requester asks for
+v1.16.0.
+
+A selected get only adds a redundant root/source sum/edge before tidy restores
+the common projection. A v1.16.0 get changes nine selections, including the
+protected go-conntrack pseudo-version; tidy removes them all and reselects
+v1.4.0. Thus the candidate is neither qualified, guard-preserving, nor
+supported and tidy-stable. No projection, source, `go.mod`, or `go.sum` change
+was retained.
+
+Selected v1.4.0 and 22 other eligible releases through v1.11.0 retain
+GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698. V1.16.0's narrow
+advisory responses are empty, but absence is not qualification. Project
+govulncheck remains exact at 30/22/20/20 with no target trace. Corrected Go-
+index/CNA guards, exact 234/3,599/355/429/197/41/1,067 project state, SDKs,
+Go floor, common tidy, all 47 pre-Goe selections/276 edges, separate Complete/
+go-difflib/SFTP/pkg-errors/Goe/ULID/go-conntrack guards, and every earlier
+decision remain unchanged. Final exact-Go gates and scratch cleanup pass.
+
+## Next Bounded Objective
+
+Choose exactly one prepared reciprocal client_golang product direction:
+explicitly retain exact selected inherited indirect unloaded v1.4.0 under its
+own unqualified non-transferable exception; authorize only the later
+measurement-only **Mvn-Pom-Mutator Client Golang Owner/Request Removal Study**;
+or stop P7 unresolved. Do not repeat the evaluation, execute the study, change
+a dependency or source, transfer an exception, combine another group, or begin
+P8.
