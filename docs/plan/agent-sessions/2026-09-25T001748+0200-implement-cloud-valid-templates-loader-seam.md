@@ -1,13 +1,13 @@
 # Agent Session: Implement Cloud Valid Templates Loader Seam
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-25T001748+0200-implement-cloud-valid-templates-loader-seam`
 Created: `2026-09-25T00:17:48+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c0b4e2c3ec301e7c5483b4a49ded99c7ada7a1901714d14778e9b432713adbab`
 Previous: [2026-09-24T235342+0200-plan-next-p8-cloud-modernization-move.md](2026-09-24T235342+0200-plan-next-p8-cloud-modernization-move.md)
-Next: none
-Outcome: pending
+Next: [2026-09-25T005818+0200-plan-next-p8-cloud-modernization-move.md](2026-09-25T005818+0200-plan-next-p8-cloud-modernization-move.md)
+Outcome: Completed the tenth bounded P8 cloud slice at focused commit `fd69ac206216260b4f1966214062149264e3e347`; the reciprocal successor is planning-only.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -137,3 +137,103 @@ repair profile behavior, route `HasTemplate`, change `unique`, alter caller
 policy, reopen an earlier slice, or begin a second cloud, Spring, or packaging
 move.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+The tenth bounded P8 cloud slice is complete at focused implementation commit
+`fd69ac206216260b4f1966214062149264e3e347` (parent
+`7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, tree
+`43fb3cb60255482590737012691b8c67ce8c9116`). It changes exactly
+`pkg/config/cloud.go` and new focused
+`pkg/config/cloud_valid_templates_test.go`, with 310 insertions and one
+deletion. No public symbol, `unique`, `Template`, `Templates`, `HasTemplate`,
+caller, opener, project/profile/POM path, fixture, mutation file, dependency
+file, Spring path, packaging path, or `ply-config` input changed.
+
+### Implementation And Characterization
+
+- `perNameTemplateLoader`, `validTemplatesDependencies`, and
+  `gitPerNameTemplateLoader` are private. Production explicitly selects the
+  Git-backed loader, passes the complete `GitCloudConfig` receiver and exact
+  name, delegates exactly once to unchanged `gitCfg.Template(name)`, and
+  returns its complete `CloudTemplate` and exact error without inspection,
+  copying, caching, refreshing, or normalization. A missing loader returns
+  zero `CloudTemplate` plus exact `filesystem.ErrNoFilesystem` before receiver
+  access.
+- Public `GitCloudConfig.ValidTemplatesFrom(list []string)` retains its
+  signature and is the production wrapper around one small private dependency-
+  taking helper. The helper keeps unchanged `unique(list)`, case-sensitive
+  first-occurrence order, one load per unique name, exact ordered successes,
+  and first-error precedence. It returns the exact prior partial result,
+  discards any value delivered with the failing error, and does not call later
+  names. Nil and empty inputs return nil and nil without a load; separate
+  invocations remain independent.
+- Focused TDD first failed only on the absent private selector, dependency,
+  production loader, and helper. Final tests cover production Git selection
+  and the tracked complete template; arbitrary receiver/name delivery and one
+  call; exact value/error and embedded interface identities; case-sensitive
+  first-occurrence order including duplicate empty names; stop-at-first-error,
+  exact partial result, discarded failing value, and no later load; nil/empty
+  inputs; independent repeated invocations; safe zero behavior without path
+  access; and rejected empty recordings. The existing tracked production
+  partial-result test remains unchanged.
+- Each first-occurrence unique name still enters public `Template` once, so the
+  ninth-slice list loader and both earlier template seams still perform one
+  fresh complete eager walk and project load per unique name. Build validation,
+  add-template, Maven replacement continuation, `HasTemplate`, every other
+  reader, and both cloud openers retain their previous behavior.
+
+### Verification And Protected State
+
+- The checkpoint began clean on `codex/upgrade-quality` at planning handoff
+  HEAD `7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, parent
+  `2fbed1cc16d64aef53b1d0048109fab8a498d85f`, tree
+  `02e10945e0262ea9b98647f576c0b5ae6f44312e`, with exactly the launcher,
+  answered planning archive, this then-NEXT implementation archive, rolling
+  handover, and roadmap changed. The ninth implementation retains its exact
+  parent/tree/two-file shape. All ten preceding P8/Google UUID ancestry checks,
+  the reciprocal 346-archive/sole-NEXT state, launcher mirror/check, shell
+  syntax, protected inputs, and ordinary/ignored cleanliness passed.
+- Focused valid-template/config/context/Maven/template/command tests pass. The
+  byte-unchanged config-cloud direct harness retains all ten exact IDs,
+  selections, and meanings with
+  `declared=10 killed=10 survived=0 unusable=0`; its T1-T10 meta-test passes
+  with the same totals.
+- Direct exact Go 1.26.7 module verification, build, count-one tests, race
+  count-one tests, and vet pass under `umask 022`, offline module resolution,
+  readonly inputs, direct Xcode compilers, and managed scratch. Pinned API/CLI
+  compatibility and both meta-tests, the CLI surface, complete preflight,
+  ordinary `make test`, explicit `make test-install`, a real scratch-local
+  install/help smoke, fresh empty-HOME count-two tests, and all 62 launcher
+  controls pass.
+- All 15 quality-audit meta-controls pass. The canonical audit returned its
+  documented findings exit 1 rather than audit-broken exit 2. Its structured
+  Q0-Q2 scope has all 21 automated criteria PASS; the six manual criteria
+  remain correctly unclaimed. Seven comparable ratchets improve, and the sole
+  overall regression remains the pre-existing Q3.4 documentation indicator.
+- Go 1.18 and protected 234 modules, 3,599 graph edges, 355 production entries,
+  429 complete-test entries, 197 module-backed entries across 41 loaded
+  modules, and 1,067 `go.sum` lines reproduce. `go.mod`, `go.sum`, and graph
+  hashes remain respectively
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
+  API/CLI, completed seams, project/profile/migration/POM behavior, cache
+  layout, callers, other readers, fixtures, mutation files, dependency
+  metadata, and the Go floor remain unchanged.
+- Discarded environment-only attempts reproduced known boundaries rather than
+  product defects: forcing the Homebrew launcher local exposed its underlying
+  Go 1.26.2 during initial measurement, and the first empty-HOME install smoke
+  lacked an explicit existing `GOMODCACHE`. Accepted measurements and gates
+  invoked the resolved Go 1.26.7 binary directly, supplied the existing read-
+  only module cache where HOME was empty, and changed no repository input.
+- All disposable evidence stayed beneath the managed task root. Its exact
+  containment and ordinary entry types were verified, and the task-owned
+  subtree was removed before the reciprocal handoff commit.
+
+The rollback boundary remains the single focused two-file implementation
+commit. The reciprocal successor is planning-only and may select at most one
+further smallest repository-owned cloud slice or stop unresolved; it may not
+execute a slice, inspect or select `ply-config`, repair profile behavior,
+combine or reopen completed seams, alter caller policy, or begin Spring or
+packaging work.

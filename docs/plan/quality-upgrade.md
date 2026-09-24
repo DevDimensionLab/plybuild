@@ -16755,8 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after nine bounded cloud implementation slices; the tenth
-bounded slice is selected and prepared for implementation.
+Status: active after ten bounded cloud implementation slices; a fresh bounded
+planning checkpoint is prepared.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17355,6 +17355,43 @@ bounded slice is selected and prepared for implementation.
   reopen a completed seam; or any other protected-input change. The reciprocal
   successor implements only this private per-name loader and may not combine a
   second move.
+- Focused commit `fd69ac206216260b4f1966214062149264e3e347` completes the
+  tenth selected slice in exactly `pkg/config/cloud.go` and new focused
+  `pkg/config/cloud_valid_templates_test.go`. One private per-name template
+  loader, one private dependency value, one Git-backed production
+  implementation, and one private helper isolate the direct
+  `ValidTemplatesFrom` call to public `Template`. Production passes the
+  complete receiver and exact name once per first-occurrence unique name,
+  delegates exactly once to unchanged `gitCfg.Template(name)`, and returns its
+  complete value and exact error. A missing loader returns zero
+  `CloudTemplate` plus exact `filesystem.ErrNoFilesystem` before receiver
+  access.
+- Focused characterization covers production selection and a complete tracked
+  template, arbitrary receiver/name delivery and exact calls, complete value/
+  error and embedded identities, case-sensitive first-occurrence order,
+  duplicate suppression including empty names, exact prior partial results,
+  discarded failing values, stop-before-later behavior, nil/empty inputs,
+  independent repeated invocations, safe zero behavior, and non-empty
+  recordings. The existing tracked production partial-result test remains
+  unchanged. `unique`, `Template`, `Templates`, all three earlier template
+  seams, `HasTemplate`, callers, openers, project/profile/migration/POM
+  behavior, fixtures, and mutation files remain unchanged.
+- Final-commit valid-template/config/context/Maven/template/command tests and
+  the byte-unchanged config-cloud direct/meta 10/10 mutation gates pass. Direct
+  exact Go 1.26.7 verify/build/test/race/vet, pinned API/CLI compatibility and
+  meta-tests, complete preflight, ordinary test/install, real scratch install,
+  fresh empty-HOME count-two, all 15 audit controls, and all 62 launcher
+  controls pass. Structured Q0-Q2 has all 21 automated rows PASS; the six
+  manual rows remain unclaimed and Q3.4 remains the sole pre-existing overall
+  ratchet regression. Protected 234/3,599/355/429/197/41/1,067 counts and all
+  three hashes reproduce.
+- The reciprocal successor is planning-only. It must reproduce the exact
+  focused implementation and protected state, re-characterize remaining
+  repository-owned cloud effects, construction choices, and policy boundaries,
+  and select at most one smallest reversible next slice or stop unresolved. It
+  may not implement a slice, inspect or select `ply-config`, repair profile
+  behavior, combine or reopen completed seams, alter caller policy, or begin
+  Spring or packaging work.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 

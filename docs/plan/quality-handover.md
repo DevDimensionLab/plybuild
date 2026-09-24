@@ -8079,17 +8079,80 @@ count-two, all 15 audit controls, and all 62 launcher controls pass. Rollback is
 the single two-file commit; there is no public, cache, fixture, caller, user-data,
 or dependency migration to unwind.
 
+## P8 Eighth Cloud Slice
+
+Focused commit `d26d19232b18d70a4401586d75604d08f85bd8a8` changes exactly
+`pkg/config/cloud.go` and `pkg/config/cloud_templates_test.go`. Template walking
+now selects unchanged `InitProjectFromDirectory` through one private zero-
+value-safe project loader. Exact walk roots, callback order, current/legacy
+matching, derived names and directories, project and embedded interface
+identities, logging, partial/final errors, and independent repeated construction
+remain fixed. A missing loader returns zero `Project` plus exact
+`filesystem.ErrNoFilesystem` without construction.
+
+Focused config/context/Maven/template/command tests, unchanged config-cloud
+direct/meta 10/10 mutation gates, and the complete exact-Go-1.26.7 gate set
+pass. Project/profile/migration/POM behavior, both openers, callers, fixtures,
+public API, Go floor, dependency metadata, and rollback remain unchanged.
+
+## P8 Ninth Cloud Slice
+
+Focused commit `96275513bf0e1992ba6864b30c17e35bf2b27447` changes exactly
+`pkg/config/cloud.go` and new focused
+`pkg/config/cloud_template_lookup_test.go`. Public `Template` now selects one
+private zero-value-safe list loader that delegates once to unchanged
+`gitCfg.Templates()`. It preserves one fresh complete eager list load per call,
+eager list-error precedence, first exact case-sensitive match, complete
+identities, exact not-found text, and independent repeated loads. A missing
+loader returns nil plus exact `filesystem.ErrNoFilesystem` before receiver
+access.
+
+Focused lookup/config/context/Maven/template/command tests, both unchanged
+config-cloud 10/10 mutation gates, and the full exact-Go-1.26.7 gate set pass.
+`Templates`, both earlier template seams, `HasTemplate`, `ValidTemplatesFrom`,
+callers, fixtures, public API, dependencies, and rollback remain unchanged.
+
+## P8 Tenth Cloud Slice
+
+Focused commit `fd69ac206216260b4f1966214062149264e3e347` (parent
+`7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, tree
+`43fb3cb60255482590737012691b8c67ce8c9116`) changes exactly
+`pkg/config/cloud.go` and new focused
+`pkg/config/cloud_valid_templates_test.go`. Public `ValidTemplatesFrom` now
+selects one private zero-value-safe per-name loader that passes the complete
+receiver and exact name to unchanged `gitCfg.Template(name)` once for every
+first-occurrence unique name.
+
+The helper retains unchanged case-sensitive `unique`, ordered exact successes,
+one fresh complete walk/project load per unique name, exact first-error and
+prior-partial-result behavior, discarded failing values, no later calls,
+nil/empty results, and independent repeated invocations. A missing loader
+returns zero `CloudTemplate` plus exact `filesystem.ErrNoFilesystem` before
+receiver access. Focused tests cover production selection, receiver/name/call,
+value/error/identity, order/duplicates, error truncation, nil/empty, repetition,
+safe zero behavior, and non-empty recordings; the tracked production partial-
+result test remains unchanged.
+
+Focused valid-template/config/context/Maven/template/command tests and both
+byte-unchanged config-cloud mutation gates pass with exact 10/10 kills. Direct
+Go 1.26.7 verify/build/count-one/race/vet, pinned API/CLI compatibility,
+complete preflight, ordinary test/install, real scratch install, empty-HOME
+count-two, all 15 audit controls, and all 62 launcher controls pass. Structured
+Q0-Q2 retains 21 automated PASS and six unclaimed manual rows; seven ratchets
+improve and Q3.4 remains the sole pre-existing overall regression. Go 1.18,
+234/3,599/355/429/197/41/1,067, and all three protected hashes reproduce.
+`unique`, `Template`, `Templates`, all completed seams, `HasTemplate`, callers,
+project/profile/migration/POM behavior, fixtures, mutation files, public API,
+and dependencies remain unchanged. Rollback is the single focused two-file
+commit.
+
 ## Next Bounded Objective
 
-Run only [the prepared next P8 cloud planning checkpoint](agent-sessions/2026-09-24T235342+0200-plan-next-p8-cloud-modernization-move.md).
+Run only [the prepared next P8 cloud planning checkpoint](agent-sessions/2026-09-25T005818+0200-plan-next-p8-cloud-modernization-move.md).
 Re-characterize the remaining repository-owned cloud boundary and select at
 most one smallest reversible slice or stop unresolved. Do not implement a
 slice, inspect or select `ply-config`, repair profile behavior, route
 `HasTemplate`, reopen an earlier seam, add a shared/exported catalog, alter
-caller policy, or begin Spring or packaging work. The ninth bounded P8 cloud
-slice is complete at focused implementation commit
-`96275513bf0e1992ba6864b30c17e35bf2b27447` (parent
-`3d98042f2fa10efe2386822fda0deebf7d541365`, tree
-`3c82a32c2a67eafd659140f6a92625769b307330`) and changes exactly
-`pkg/config/cloud.go` and new focused
-`pkg/config/cloud_template_lookup_test.go`.
+caller policy, or begin Spring or packaging work. The tenth bounded P8 cloud
+slice is complete at the focused implementation commit and exact two-file
+shape recorded above.
