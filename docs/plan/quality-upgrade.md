@@ -15596,6 +15596,43 @@ ShurcooL/sanitized_anchor_name evaluation (2026-09-24):
   later measurement-only **Mvn-Pom-Mutator Sanitized-Anchor Ownership Study**;
   or stop unresolved. It is not launched, and no other group or P8 work begins.
 
+ShurcooL/sanitized_anchor_name product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded v1.0.0 remains
+  unchanged under a sanitized_anchor_name-specific, unqualified,
+  non-transferable project-ownership exception. The sole canonical release is
+  fully release-qualified, but the project selection is not fully qualified
+  because no genuine current supported tidy-stable owner exists. This is not a
+  safety claim or transferable qualification. The named Mvn-Pom-Mutator study
+  is neither authorized nor run.
+- Retention requires the exact one request/route, mvn-pom-mutator's zero-
+  source-import metadata-only boundary, target/requester why/import/load/
+  runtime facts, all 84 historical checkpoints and route epochs, target never
+  being a main root, and exact selected sums. Any change requires a fresh
+  owning evaluation and explicit decision.
+- Exact owner/release/tag/commit/tree/signature/ancestry/proxy/sumdb/archive/
+  module/license identities, API/behavior/closure/native/cross qualification,
+  projection, advisory, and every earlier guard are expiry conditions.
+  Selected get must manufacture only the redundant root/source sum/edge, and
+  ordinary tidy must remove all three and restore the common projection. No
+  projection is retained.
+- Empty target advisory responses do not imply safety or qualification. Focal
+  results remain 0/0/0/0, project results remain 30/22/20/20 without a target
+  trace, and client_golang retains its separate GHSA/GO/CVE identity. No
+  earlier exception transfers.
+- Guard-only revalidation reproduces clean continuity, reciprocal archives and
+  launcher, both exact SDK identities, the protected
+  234/3,599/355/429/197/41/1,067 state, module/graph/common-tidy hashes, Go
+  1.18, all ownership/root/history facts, corrected advisory identities, all
+  earlier selections/requests/exceptions, every earlier decision, and 27/27
+  Q0-Q2 PASS at L2. Final exact-Go gates and contained cleanup pass.
+- P7 remains active only with one prepared bounded evaluation of exact selected
+  indirect `github.com/smartystreets/assertions
+  v0.0.0-20180927180507-b2de0cb4f26d`. Its sole Goconvey v1.6.4 request and
+  negative target why are starting observations only. The successor is not
+  launched; no study, other dependency group, exception transfer, or P8 work
+  begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

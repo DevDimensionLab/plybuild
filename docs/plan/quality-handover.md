@@ -6811,12 +6811,51 @@ the genuine-owner gate fails. The implementation contract therefore permits no
 real-project change and grants no exception during evaluation. Exactly one
 reciprocal product-direction decision is prepared and remains unexecuted.
 
+## ShurcooL Sanitized Anchor Name Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/shurcooL/sanitized_anchor_name v1.0.0` remains unchanged under a
+sanitized_anchor_name-specific, unqualified, non-transferable project-
+ownership exception. The sole canonical v1.0.0 release is fully release-
+qualified, but the project selection is not fully qualified because no genuine
+current supported tidy-stable owner exists. This is a bounded product
+acceptance, not a safety claim or transferable qualification. The **Mvn-Pom-
+Mutator Sanitized-Anchor Ownership Study** is not authorized or run.
+
+Retention requires the exact main -> direct loaded mvn-pom-mutator v0.2.3 ->
+target route; the requester's zero-source-import metadata-only target edge;
+positive requester and negative target why; zero target repository imports,
+production/complete-test/module-backed loads, and runtime relevance; all 84
+historical checkpoints and route epochs; target never being a main root; and
+selected v1.0.0's exact tag/commit/tree and source/module sums. Any change
+requires a fresh owning evaluation and explicit decision.
+
+The exact owner/release/signature/ancestry/proxy/sumdb/archive/module/license,
+source/build boundary, package/API/behavior, complete closure, native/cross,
+projection, and advisory identities remain expiry guards. Exact Go 1.18.10 and
+Go 1.26.7 must retain every recorded passing gate. Selected get must continue
+manufacturing only the redundant root, source sum, and graph edge; ordinary
+tidy must remove all three and restore the common projection. No projection is
+authorized or retained.
+
+Empty target advisory responses do not imply safety or qualification. Focal
+results remain 0/0/0/0, the project remains 30/22/20/20 without a target trace,
+and client_golang retains its separate GHSA/GO/CVE identity. No earlier
+exception transfers. Guard-only revalidation reproduces clean continuity,
+reciprocal archives and launcher, exact SDKs, the protected
+234/3,599/355/429/197/41/1,067 project state, module/graph/common-tidy hashes,
+Go 1.18, target/requester ownership facts, corrected advisory identities, all
+earlier selections/requests/exceptions, and 27/27 Q0-Q2 PASS at L2. Final exact-
+Go gates and contained cleanup pass. No source, dependency, root, study, other
+group, or P8 work is included.
+
 ## Next Bounded Objective
 
-Run only [the prepared bounded sanitized_anchor_name product decision](agent-sessions/2026-09-24T021744+0200-decide-shurcool-sanitized-anchor-name-product-direction.md).
-Choose exactly one: retain selected v1.0.0 under a target-specific unqualified,
-non-transferable project-ownership exception; authorize only a later
-measurement-only **Mvn-Pom-Mutator Sanitized-Anchor Ownership Study**; or stop
-P7 unresolved. The decision is prepared but not launched. Do not run a study
-or successor, change another dependency, transfer or reopen an exception, or
-begin P8.
+Run only [the prepared bounded Smartystreets Assertions evaluation](agent-sessions/2026-09-24T024219+0200-evaluate-smartystreets-assertions-dependency.md).
+Resolve exact selected indirect
+`github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d`
+and its canonical Go-1.18-compatible release line without assuming that the
+pseudo-version, the single selected Goconvey request, or negative target why
+establishes qualification or genuine ownership. The evaluation is prepared but
+not launched. Do not run a rejected study, combine another group, transfer or
+reopen an exception, or begin P8.
