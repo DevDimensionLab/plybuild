@@ -14,6 +14,39 @@ type GitCloudConfig struct {
 	Impl DirConfig
 }
 
+type servicesLoader interface {
+	Load(directory Directory) (CloudServices, error)
+}
+
+type servicesDependencies struct {
+	Loader servicesLoader
+}
+
+func systemServicesDependencies() servicesDependencies {
+	return servicesDependencies{Loader: fileServicesLoader{}}
+}
+
+func (dependencies servicesDependencies) Load(directory Directory) (CloudServices, error) {
+	if dependencies.Loader == nil {
+		return CloudServices{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type fileServicesLoader struct{}
+
+func (fileServicesLoader) Load(directory Directory) (CloudServices, error) {
+	var services CloudServices
+
+	path, err := directory.FilePath("services.json")
+	if err != nil {
+		return services, err
+	}
+
+	err = file.ReadJson(path, &services)
+	return services, err
+}
+
 type gitHookFilesDependencies struct {
 	Files filesystem.Dependencies
 }
@@ -157,24 +190,14 @@ func (gitCfg GitCloudConfig) refresh(dependencies refreshGitDependencies, localC
 }
 
 func (gitCfg GitCloudConfig) Services() func() (CloudServices, error) {
-	var services CloudServices
+	return gitCfg.services(systemServicesDependencies())
+}
 
-	path, err := gitCfg.Implementation().FilePath("services.json")
-	if err != nil {
-		return func() (CloudServices, error) {
-			return services, err
-		}
-	}
-
-	err = file.ReadJson(path, &services)
-	if err != nil {
-		return func() (CloudServices, error) {
-			return services, err
-		}
-	}
+func (gitCfg GitCloudConfig) services(dependencies servicesDependencies) func() (CloudServices, error) {
+	services, err := dependencies.Load(gitCfg.Implementation())
 
 	return func() (CloudServices, error) {
-		return services, nil
+		return services, err
 	}
 }
 
