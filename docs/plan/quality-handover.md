@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T05:03:05+02:00
+Generated: 2026-09-24T05:41:58+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -7144,13 +7144,64 @@ selections/requests/exceptions, and 27/27 Q0-Q2 PASS at L2. No completed
 evaluation, test, study, or network research was rerun. No source, dependency,
 root, study, other group, or P8 work is included.
 
+## Spaolacci Murmur3 Evaluation
+
+No dependency change is authorized or retained. The canonical exact-path line
+has exactly v1.0.0 and v1.1.0; both tags and the selected pseudo-version resolve
+to commit `f09979ecbc725b9e6d41a297405f65e7e8804acc` and tree
+`6dc7b6cbff8cabb8a11d92892c729c806fc1bac8`. Canonical v1.1.0 is the highest
+stable compatible with Go 1.18. There is no prerelease, alternate-major line,
+replacement, retraction, or deprecation.
+
+No stable fully qualifies. Both pass verification, build, native test
+compilation, complete count-one/count-ten tests, and all 80 supported cgo-
+disabled production/test-compilation results under exact Go 1.18.10 and Go
+1.26.7. Both fail mandatory vet under both SDKs at `murmur32.go:129` for
+possible unsafe-pointer misuse and fail the ordinary race suite under Go
+1.18.10 with a checkptr fatal. Passing safe evidence and identical source do
+not qualify a release.
+
+The sole target request is cespare/xxhash v1.1.0 -> the selected pseudo-version.
+The current shortest route is main -> direct mvn-pom-mutator v0.2.3 -> TSDB
+v0.7.1 -> xxhash v1.1.0 -> Murmur3. Mvn-pom-mutator's TSDB edge is metadata-
+only, TSDB genuinely imports xxhash in production, and xxhash genuinely imports
+Murmur3 only in tests. Target and requester are why-negative, indirect,
+unloaded, absent from project imports and all load populations, and not runtime-
+relevant; neither is a main root.
+
+All 84 reconstructed historical checkpoints retain the same selected pseudo-
+version, sole xxhash v1.1.0 request, and no target or requester root. Their
+complete Viper/client_golang/TSDB, Viper/cloud-or-grpc, and old/new mvn-pom-
+mutator/TSDB route epochs all end in the same xxhash test-import boundary. No
+requester asks for a canonical stable.
+
+A disposable selected get manufactures only an indirect target root and source
+sum; ordinary tidy removes them and restores the exact common projection. A
+v1.1.0 get changes only Murmur3 among selected modules and adds its source/
+module sums, but tidy discards it because xxhash still requests the pseudo-
+version and again restores the common projection. No genuine supported tidy-
+stable owner requests v1.1.0. No projection is retained.
+
+Exact target OSV and narrow GitHub responses are empty. Pinned focal
+govulncheck v1.8.0 is 0/0/0/0. Empty results do not imply safety or
+qualification. The project reproduces 30/22/20/20 without Murmur3 or a named
+protected trace; corrected index/CNA, client_golang, selection, exception, SDK,
+project/common-tidy, Go-floor, and 27/27 Q0-Q2 guards remain exact. The
+evaluation grants no exception, root, study, other group, or P8 work.
+
+Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass with
+the protected 234 modules, 3,599 edges, 1,067 sum lines, module/sum/graph
+hashes, and Go 1.18 floor unchanged. The 311-record reciprocal archive graph
+has exactly one NEXT decision. All 144,413 task-owned scratch entries were
+contained, had zero symlink/outside/special entries, and were removed; only
+launcher-owned cache state remains.
+
 ## Next Bounded Objective
 
-Run only [the prepared bounded Spaolacci Murmur3 evaluation](agent-sessions/2026-09-24T051502+0200-evaluate-spaolacci-murmur3-dependency.md).
-Resolve exact selected indirect `github.com/spaolacci/murmur3
-v0.0.0-20180118202830-f09979ecbc72` and its canonical Go-1.18-compatible
-release line without assuming that the physical selection, its sole selected
-cespare/xxhash v1.1.0 request, the observed TSDB route, or negative target and
-requester why establish qualification or genuine ownership. The evaluation is
-prepared but not launched. Do not run a rejected study, combine another group,
-transfer or reopen an exception, or begin P8.
+Run only [the prepared Murmur3 product-direction decision](agent-sessions/2026-09-24T054158+0200-decide-spaolacci-murmur3-product-direction.md).
+Choose exactly one: retain the selected pseudo-version under a Murmur3-specific
+unqualified, non-transferable exception; authorize but do not run the later
+measurement-only **Cespare XXHash Murmur3 Ownership Study**; or stop P7
+unresolved. The decision is prepared but not launched. Do not rerun the
+evaluation, execute a study, change a dependency or source, add a root, combine
+another group, transfer or reopen an exception, or begin P8.

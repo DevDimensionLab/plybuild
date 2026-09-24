@@ -15922,13 +15922,52 @@ Soheilhy/cmux product decision (2026-09-24):
   cleanliness; 234 modules, 3,599 edges, 1,067 sum lines; protected module/
   sum/graph hashes; Go 1.18; all earlier selections/requests/exceptions; and
   27/27 Q0-Q2 PASS at L2. No completed test or network evidence was rerun.
-- P7 remains active only with one prepared bounded evaluation of the next
-  unevaluated alphabetical module, exact selected indirect
-  `github.com/spaolacci/murmur3
-  v0.0.0-20180118202830-f09979ecbc72`. Its single selected cespare/xxhash
-  v1.1.0 request and negative target why are starting observations only. The
-  successor is not launched; no study, other group, exception transfer, or P8
-  work begins.
+- The prepared Murmur3 evaluation is now answered. P7 remains active only with
+  its reciprocal product-direction decision; that decision is not launched.
+
+Spaolacci/murmur3 evaluation (2026-09-24):
+
+- No dependency change is authorized or retained. The canonical exact-path
+  line contains exactly v1.0.0 and v1.1.0; both tags and the selected pseudo-
+  version resolve to the same commit/tree. V1.1.0 is the highest stable
+  compatible with Go 1.18. There is no canonical prerelease, alternate-major
+  line, replacement, retraction, or deprecation.
+- No stable fully qualifies. Both stables pass verification, production build,
+  native test compilation, complete count-one/count-ten tests, and all 80
+  supported cgo-disabled production/test-compilation results under exact Go
+  1.18.10 and Go 1.26.7. Both fail mandatory vet under both SDKs for possible
+  unsafe-pointer misuse and fail the ordinary race suite under Go 1.18.10 with
+  a checkptr fatal. Passing safe evidence and identical source are not
+  qualification.
+- The current shortest route is main -> direct mvn-pom-mutator v0.2.3 -> TSDB
+  v0.7.1 -> xxhash v1.1.0 -> selected Murmur3. Mvn-pom-mutator's TSDB edge is
+  metadata-only, TSDB genuinely imports xxhash in production, and xxhash
+  genuinely imports Murmur3 only in tests while requesting the pseudo-version.
+  Target and requester are why-negative, indirect, unloaded, absent from
+  project imports and load populations, runtime-irrelevant, and not roots.
+- All 84 historical checkpoints retain the same selected pseudo-version, one
+  xxhash v1.1.0 request, and no target or requester root. Every complete route
+  epoch ends in the same genuine xxhash test-import boundary, and no requester
+  asks for a canonical stable.
+- A disposable selected get manufactures only a target root and source sum
+  that ordinary tidy removes. A v1.1.0 get changes only Murmur3 among selected
+  modules, but tidy discards it because xxhash still requests the pseudo-
+  version. Both restore the exact common projection; no genuine supported
+  tidy-stable owner requests v1.1.0, and no projection is retained.
+- Empty exact OSV, narrow GitHub, and 0/0/0/0 focal govulncheck results do not
+  imply safety or qualification. The project remains 30/22/20/20 without
+  Murmur3 or a named protected trace; all corrected index/CNA, client_golang,
+  selection, exception, SDK, project/common-tidy, Go-floor, and 27/27 Q0-Q2
+  guards remain exact.
+- The evaluation grants no exception. P7 stops for one prepared reciprocal
+  decision: retain the selected pseudo-version under a Murmur3-specific
+  unqualified, non-transferable exception; authorize but do not run a later
+  measurement-only **Cespare XXHash Murmur3 Ownership Study**; or stop P7
+  unresolved. It is not launched; no other dependency group or P8 work begins.
+- Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass.
+  Protected project identities remain exact; the 311-record archive graph has
+  one NEXT decision; and all 144,413 contained task-scratch entries were
+  audited and removed, leaving only launcher-owned cache state.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
