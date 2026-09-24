@@ -16755,8 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after the first bounded cloud implementation slice; one fresh
-planning-only successor is prepared.
+Status: active after the first bounded cloud implementation slice; the second
+bounded implementation slice is selected but not executed.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16777,10 +16777,26 @@ planning-only successor is prepared.
   meta-controls, the accepted 27/27 Q0-Q2 L2 contracts, empty-HOME tests, and
   all 62 launcher checks pass. Protected 234/3,599/355/429/197/41/1,067 counts
   and `go.mod` / `go.sum` / graph hashes reproduce without regression.
-- A fresh planning-only checkpoint must re-characterize the resulting boundary
-  and select at most one smallest repository-owned next slice or stop. Direct
-  `ply-config` inspection, selection, or integration and every second cloud
-  move require later explicit ownership.
+- The next selected slice changes only `pkg/config/cloud.go` and
+  `pkg/config/cloud_test.go`: isolate the eager cached `services.json` load
+  behind one private zero-value-safe services loader. Production must retain
+  `Directory.FilePath("services.json")`, unchanged `file.ReadJson`, exactly
+  one eager load, and a stable closure over the exact value/error. The public
+  interface, cache layout, refresh, constructors, callers, other readers,
+  fixtures, mutations, and dependency metadata remain unchanged.
+- `Services` is selected ahead of nominally similar `Deprecated` and
+  `ProjectDefaults` seams because it alone has an existing focused success
+  fixture and pure downstream contracts. `GlobalCloudConfig` also carries
+  environment/YAML semantics; a common loader would combine four readers; and
+  a shared constructor factory would cross packages and add public surface.
+  Direct `ply-config` inspection, selection, or integration remains forbidden.
+- The reciprocal implementation successor is prepared but not executed. It
+  must use TDD for production selection, complete dependency delivery, exact
+  filename, eager one-call closure behavior, stable success/error replay,
+  exact path-error propagation, safe zero behavior, and non-empty recordings.
+  The ten config-cloud mutations remain byte-unchanged and must retain exact
+  10/10 kills. Any need for another reader, caller, or dependency knowledge
+  stops for a fresh owning decision.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
