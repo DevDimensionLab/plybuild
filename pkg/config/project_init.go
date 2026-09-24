@@ -8,6 +8,31 @@ import (
 	"strings"
 )
 
+type projectCloudConfigOpener interface {
+	Open(profilePath string) CloudConfig
+}
+
+type projectCloudConfigDependencies struct {
+	Opener projectCloudConfigOpener
+}
+
+func systemProjectCloudConfigDependencies() projectCloudConfigDependencies {
+	return projectCloudConfigDependencies{Opener: gitProjectCloudConfigOpener{}}
+}
+
+type gitProjectCloudConfigOpener struct{}
+
+func (gitProjectCloudConfigOpener) Open(profilePath string) CloudConfig {
+	return OpenGitCloudConfig(profilePath)
+}
+
+func openProjectCloudConfig(dependencies projectCloudConfigDependencies, profilePath string) CloudConfig {
+	if dependencies.Opener == nil {
+		return nil
+	}
+	return dependencies.Opener.Open(profilePath)
+}
+
 func InitProjectConfigurationFromFile(filePath string) (ProjectConfiguration, error) {
 	config := ProjectConfiguration{}
 
@@ -95,7 +120,7 @@ func InitProjectFromDirectory(targetDir string) (project Project, err error) {
 			return
 		}
 	}
-	project.CloudConfig = OpenGitCloudConfig(profilePath)
+	project.CloudConfig = openProjectCloudConfig(systemProjectCloudConfigDependencies(), profilePath)
 
 	pomFile := file.Path("%s/pom.xml", targetDir)
 	if file.Exists(pomFile) {
