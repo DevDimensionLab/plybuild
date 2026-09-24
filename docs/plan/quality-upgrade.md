@@ -15554,6 +15554,48 @@ Sergi/go-diff product decision (2026-09-24):
   `github.com/shurcooL/sanitized_anchor_name v1.0.0`. It is not launched; no
   rejected study, successor, other group, or P8 work begins.
 
+ShurcooL/sanitized_anchor_name evaluation (2026-09-24):
+
+- Exact selected v1.0.0 is the sole and highest release-qualified canonical
+  Go-1.18-compatible stable. The public enabled unarchived non-fork MIT
+  repository has no prerelease, replacement, retraction, deprecation, GitHub
+  Release, or alternate-major line. Exact proxy/sumdb, Git ancestry,
+  archive-to-Git, module/license, and source/build-boundary identities
+  reproduce.
+- The standard-library-only one-module/one-package closure exposes only
+  `Create(string) string`. Exact Go 1.18.10 and Go 1.26.7 pass verify, build,
+  complete count-one/repeated and race tests, vet, test compilation, and the
+  full 40-result cgo-disabled production/test cross matrix. No test crosses
+  the defensive boundary.
+- The sole current route is main -> direct loaded mvn-pom-mutator v0.2.3 ->
+  target v1.0.0. The requester is genuinely loaded and runtime-relevant, but
+  its target edge is stale indirect metadata with zero target source imports.
+  The target is unloaded, why-negative, absent from repository imports and
+  project loads, runtime-irrelevant, and never a main root.
+- All 84 historical checkpoints retain v1.0.0. The early genuine production
+  route through go-md2man -> Blackfriday no longer exists; all later
+  mvn-pom-mutator edges are metadata-only. The requester repository remains
+  supported, but no genuine current source-importing tidy-stable target owner
+  exists.
+- A disposable selected get manufactures only a redundant root, source sum,
+  and graph edge; ordinary tidy removes them and restores the exact common
+  projection. No dependency, source, root, or projection change is retained.
+- Empty target advisory responses do not imply safety or project
+  qualification. Focal govulncheck results are 0/0/0/0; project and corrected
+  advisory guards, exact SDKs, protected project/common-tidy identities, Go
+  floor, earlier selections/exceptions/decisions, and 27/27 Q0-Q2 PASS at L2
+  remain exact.
+- Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass.
+  Protected module/sum/graph identities remain exact; the 303-record archive
+  graph has one NEXT decision; and all 143,694 contained task-scratch entries
+  were verified without symlink or outside-path entries and removed.
+- The release qualifies, but the project selection fails the genuine-owner
+  gate. Evaluation grants no exception. P7 stops for exactly one prepared
+  reciprocal product decision: retain selected v1.0.0 under a target-specific
+  unqualified non-transferable project-ownership exception; authorize only a
+  later measurement-only **Mvn-Pom-Mutator Sanitized-Anchor Ownership Study**;
+  or stop unresolved. It is not launched, and no other group or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

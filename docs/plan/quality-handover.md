@@ -6759,10 +6759,64 @@ all 23,891 contained task-scratch entries are verified without symlink or
 outside-path entries and removed. The 302-record reciprocal archive graph has
 exactly one NEXT successor.
 
+## ShurcooL Sanitized Anchor Name Evaluation
+
+Canonical `github.com/shurcooL/sanitized_anchor_name v1.0.0` is the exact
+selected version and the sole and highest release-qualified Go-1.18-compatible
+stable. Exact go-import metadata identifies the public, enabled, unarchived,
+non-fork MIT repository. There is no prerelease, replacement, retraction,
+deprecation, GitHub Release, or alternate-major line. Exact proxy/sumdb,
+tag/commit/tree/ancestry, archive-to-Git, module/license, regular-entry, and
+source/build-boundary identities reproduce.
+
+The one-module, one-package, standard-library-only closure exposes only
+`Create(string) string`. Its stateless Unicode normalization behavior, caller
+ownership, determinism, concurrency, and no-error/no-resource lifecycle are
+fully recorded. Exact Go 1.18.10 and Go 1.26.7 pass module verification,
+production build, complete count-one and repeated tests, race count-one tests,
+vet, test compilation, and all 40 cgo-disabled production/test compilation
+results across the 20 supported target rows. No test crosses the defensive
+scope.
+
+The exact current route is main -> direct loaded mvn-pom-mutator v0.2.3 ->
+target v1.0.0. The requester is genuinely loaded and runtime-relevant through
+project `pkg/pom`, but the target request is stale metadata-only with zero
+requester source imports. Target why is negative and target repository imports,
+production/complete-test/module-backed loads, and runtime relevance are zero.
+All 84 historical checkpoints retain v1.0.0. An early genuine route through
+go-md2man -> Blackfriday no longer exists; every later mvn-pom-mutator target
+edge is metadata-only. There is no genuine current supported tidy-stable
+project owner.
+
+A disposable selected get changes no version but manufactures a redundant
+target root, source sum, and graph edge. Ordinary tidy removes them and restores
+the exact common projection while retaining v1.0.0 through requester metadata.
+No source, dependency, root, or projection change is retained.
+
+Empty exact target advisory responses do not imply safety or project
+qualification. Pinned focal govulncheck results are 0/0/0/0; the project remains
+30/22/20/20 without a sanitized_anchor_name/go-diff/Blackfriday/fastuuid/TSDB/
+Procfs trace, and client_golang retains its separate GHSA/GO/CVE identity.
+Exact SDKs, project/common-tidy identities, Go floor, all earlier selections,
+exceptions, and decisions, and 27/27 Q0-Q2 PASS at L2 remain exact.
+
+Final exact-Go-1.26.7 project module verification, build, count-one tests, race
+count-one tests, and vet pass. Protected module, sum, and graph identities
+remain exact. The 303-record reciprocal archive graph has one NEXT decision;
+all 143,694 task-owned scratch entries were verified beneath the managed task
+root with zero symlink or outside-path entries and removed.
+
+The release qualifies, but the project selection does not fully qualify because
+the genuine-owner gate fails. The implementation contract therefore permits no
+real-project change and grants no exception during evaluation. Exactly one
+reciprocal product-direction decision is prepared and remains unexecuted.
+
 ## Next Bounded Objective
 
-Run only [the prepared bounded sanitized_anchor_name evaluation](agent-sessions/2026-09-24T014102+0200-evaluate-shurcool-sanitized-anchor-name-dependency.md)
-for exact selected indirect
-`github.com/shurcooL/sanitized_anchor_name v1.0.0`. The evaluation is prepared
-but not launched. Do not run the rejected go-diff study, change another
-dependency, transfer or reopen an exception, or begin P8.
+Run only [the prepared bounded sanitized_anchor_name product decision](agent-sessions/2026-09-24T021744+0200-decide-shurcool-sanitized-anchor-name-product-direction.md).
+Choose exactly one: retain selected v1.0.0 under a target-specific unqualified,
+non-transferable project-ownership exception; authorize only a later
+measurement-only **Mvn-Pom-Mutator Sanitized-Anchor Ownership Study**; or stop
+P7 unresolved. The decision is prepared but not launched. Do not run a study
+or successor, change another dependency, transfer or reopen an exception, or
+begin P8.
