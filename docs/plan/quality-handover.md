@@ -1,58 +1,46 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T12:21:18+02:00
+Generated: 2026-09-24T13:00:19+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
-## Current P7 Checkpoint
+## Current P8 Checkpoint
 
-- Xordataexchange Crypt option 1 is final. Exact selected indirect, unloaded
-  `github.com/xordataexchange/crypt
-  v0.0.3-0.20170626215501-b2862e3d0a77` remains unchanged under its own
-  target-specific, unqualified, non-transferable exception. Its sole current
-  request is metadata-only and the target is unloaded and runtime-irrelevant,
-  but it is not qualified, safe, or fixed. The **Mvn-Pom-Mutator
-  Xordataexchange Crypt Elimination Study** is neither authorized nor run.
-- Retention requires the direct selected/loaded mvn-pom-mutator v0.2.3 edge,
-  positive requester why through `cmd -> pkg/pom`, 22 repository requester
-  imports, one loaded requester package, the 11-file zero-target-import
-  boundary, negative target why/import/load/runtime/root facts, and module-
-  file-only sum. All 88 follow-history commits, 84 graphable checkpoints, 87
-  requests with their exact 36/4/2/5/40 distribution, 13 route epochs, six
-  main names, unselected Viper v1.4.0's sole real target import, and every
-  selected Viper/mutator zero-import boundary remain expiry guards.
-- Every recorded owner/repository/release/tag/commit/tree/signature/ancestry/
-  proxy/sumdb/module/license/archive/source, API/behavior/closure/test/cross,
-  projection, and advisory identity remains exact. Both stables and selected
-  retain unresolved closures; root-only verification and empty or stopped
-  advisory evidence imply neither qualification nor safety. Exact v0.0.2 get
-  must continue removing the direct requester and breaking the product before
-  tidy restores the protected common projection. No root or projection is
-  authorized, and no exception transfers.
-- Guard-only revalidation reproduces evaluation HEAD
-  `648c37a2d558af32fc3d3c96321e35dc79e836f8`, parent
-  `16255b32f2cd085f5bcf4f208a35c49dd3179c9a`, tree
-  `902873eab76ac9b978cbc7fe0c94b70de7574813`, its exact five-file set,
-  branch/UUID ancestry, reciprocal 325-archive chain, launcher mirror/check,
-  ordinary/ignored cleanliness, both SDK identities, exact
-  234/3,599/355/429/197/41/1,067 project state, protected hashes/common tidy,
-  Go 1.18, complete target/requester history, corrected advisory identities,
-  every earlier guard, and 27/27 Q0-Q2 PASS at L2.
-- Final exact-Go-1.26.7 unchanged-project verify/build/count-one/race/vet gates
-  pass under `umask 022`; product source and dependency metadata
-  remain byte-exact. The 48,810-entry task root is contained,
-  audited with zero symlink/outside/special entries, and removed. Launcher,
-  prompt-mirror, sole-NEXT, reciprocal-chain, syntax, and exact documentation-
-  only diff checks pass. `make test-agent-start` passes controls 1-9 and
-  reaches only the known control-10 outgoing-heading incompatibility; no
-  production/test change is authorized.
-- P7 remains active only at sole NEXT archive
-  `2026-09-24T122118+0200-complete-p7-quality-exit-gate`. It may verify and
-  close the completed P7 ledger, then activate but not implement P8. It may
-  not evaluate another dependency, run a study, reopen a completed module,
-  transfer an exception, or change source/dependency metadata. P8 remains
-  queued until that exit checkpoint succeeds.
+- P7 is complete. Its 220-archive ledger is answered from the toolchain
+  baseline through the final Xordataexchange Crypt decision and bounded exit;
+  that decision has no dependency successor. No study, projection, root,
+  dependency/source change, or unowned selection is pending or silently
+  qualified. Every qualified selection and target-specific exception remains
+  exact, separate, non-transferable, and guarded by its recorded expiry facts.
+- The P7 exit began from exact clean Xordataexchange handoff HEAD
+  `59d026a0db3d5952c81b8168ed2c9fabf47b0104`, parent
+  `648c37a2d558af32fc3d3c96321e35dc79e836f8`, tree
+  `2874ffb1a3df493ffe78604912e8d86ec438be85`, and its five-file shape.
+  Branch, Google UUID ancestry, reciprocal archives, launcher mirror/check,
+  sole NEXT, ordinary/ignored cleanliness, SDK identities, project counts and
+  hashes, common tidy, Go floor, complete ledger/exception registry, and
+  advisory identities reproduced exactly.
+- Exact Go 1.26.7 module verification, build, count-one tests, race count-one
+  tests, and vet pass. Pinned API/CLI compatibility and meta-tests, the quality
+  Make contract, toolchain declarations, and all 15 canonical quality-audit
+  meta-controls pass. Product source, dependency metadata, and the quality
+  instrument remain byte-exact, preserving accepted 27/27 Q0-Q2 PASS at L2.
+- The real project remains exactly 234 modules, 3,599 graph edges, 355
+  production entries, 429 complete-test entries, 197 module-backed entries
+  over 41 loaded modules, 1,067 sum lines, Go 1.18, and the protected module,
+  sum, and graph hashes. The unretained common tidy projection remains 52/948
+  lines, 234 modules, 3,557 edges, and its two protected hashes.
+- Fresh identity-only checks reproduce the 518,501-byte, 1,402-record Go
+  advisory index, the 2,807-byte PUBLISHED CVE-2026-14362 response, project
+  30/22/20/20 populations, and client_golang's recorded aliases. They make no
+  safety claim. Contained task scratch was audited and removed; no P8
+  implementation or product/dependency mutation ran.
+- P8 is active only at sole NEXT archive
+  `2026-09-24T130019+0200-plan-first-p8-cloud-modernization-move`. It may map
+  the existing `GitCloudConfig` and cache-first contracts and select exactly
+  one smallest implementation slice toward `ply-config`; it may not implement
+  that slice, start Spring/packaging work, reopen P7, or evaluate dependencies.
 
 ## Repository And Continuity
 
@@ -7929,17 +7917,27 @@ dependency group, or P8 work ran. The contained 48,810-entry task
 root is audited with zero symlink, outside-target, or special entries and
 removed before handoff.
 
-Production launcher/archive, prompt-mirror, sole-NEXT, reciprocal-chain,
-syntax, and exact documentation-only diff checks pass. `make test-agent-start`
-passes controls 1-9 and reaches only the known control-10 hardcoded outgoing-
-heading incompatibility; no production/test change is authorized. One final
-P7 quality-exit checkpoint is prepared but not executed; P8 remains queued.
+That product decision's production launcher/archive, prompt mirror, sole-NEXT,
+reciprocal chain, syntax, and exact documentation-only diff checks passed. Its
+then-known control-10 outgoing-heading mismatch is superseded only at the
+continuity layer: the prepared P8 prompt uses the required ordered headings,
+and the unchanged launcher contract now passes all 62 controls. No production
+or test file changed. The P7 exit result follows.
+
+## P7 Quality Exit
+
+The selected-module queue is exhausted through the final Xordataexchange
+Crypt decision. All 220 P7 archives are answered, the unchanged project and
+common tidy identities reproduce, exact-Go project and compatibility gates
+pass, and all 15 quality-audit meta-controls pass canonically. P7 is complete;
+P8 is active without implementation. The full evidence and exact guard
+language are retained in the answered exit archive and roadmap.
 
 ## Next Bounded Objective
 
-Run only [the prepared P7 quality exit gate](agent-sessions/2026-09-24T122118+0200-complete-p7-quality-exit-gate.md).
-Verify that the selected-module ledger is exhausted through Xordataexchange
-Crypt and that every qualification, target-specific exception, project/SDK/
-advisory identity, and quality guard remains exact. Do not evaluate another
-dependency, run an ownership study, change source or dependency metadata,
-transfer an exception, or begin P8 implementation.
+Run only [the prepared first P8 cloud-modernization planning checkpoint](agent-sessions/2026-09-24T130019+0200-plan-first-p8-cloud-modernization-move.md).
+Map the existing `GitCloudConfig`, cache-first refresh, fixtures, and callers,
+then choose exactly one smallest owned implementation slice toward
+`ply-config`. Do not implement it, start Spring or packaging work, reopen P7,
+evaluate a dependency, run an ownership study, or change source/dependency
+metadata.

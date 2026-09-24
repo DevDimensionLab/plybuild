@@ -39,8 +39,8 @@ P3|complete
 P4|complete
 P5|complete
 P6|complete
-P7|active
-P8|queued
+P7|complete
+P8|active
 <!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->
 
 On 2026-09-06, the operator removed accumulated reproducible scratch, audit,
@@ -5374,12 +5374,14 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at one prepared final P7 quality-exit checkpoint.
-Xordataexchange Crypt option 1 is final: exact selected, indirect, unloaded
+Status: complete. The selected-module ledger is exhausted through the final
+Xordataexchange Crypt option-1 decision and the bounded P7 exit contract
+passes. Xordataexchange Crypt option 1 is final: exact selected, indirect, unloaded
 `github.com/xordataexchange/crypt
 v0.0.3-0.20170626215501-b2862e3d0a77` remains unchanged, unqualified, and
 without a genuine supported tidy-stable owner under its own non-transferable
-exception. Its elimination study is not authorized or run. P8 remains queued.
+exception. Its elimination study is not authorized or run. P8 is active only
+at its prepared first cloud-modernization planning checkpoint.
 Murmur3 option 1 is final: exact selected,
 indirect, unloaded pseudo-version
 `v0.0.0-20180118202830-f09979ecbc72` remains unchanged, unqualified, and
@@ -16708,16 +16710,53 @@ are resolved or explicitly risk-accepted.
   change, other group, or P8 work ran. The contained 48,810-entry
   task root is audited with zero symlink, outside-target, or special entries
   and removed.
-- Production launcher/archive, prompt-mirror, sole-NEXT, reciprocal-chain,
-  syntax, and exact documentation-only diff checks pass. The launcher contract
-  test passes controls 1-9 and reaches only the known control-10
-  hardcoded outgoing-heading incompatibility; no production/test change is
-  authorized. P7 remains active only with one prepared, unlaunched quality-
-  exit checkpoint; P8 remains queued until it passes.
+- That decision's launcher/archive, prompt-mirror, sole-NEXT, reciprocal-chain,
+  syntax, and exact documentation-only diff checks pass. Its then-known
+  control-10 outgoing-heading mismatch is superseded at the continuity layer
+  by the prepared P8 prompt's required ordered headings; the unchanged
+  launcher contract now passes all 62 controls. No production/test change was
+  authorized. The P7 exit below is answered and P8 is active.
+
+### P7 Quality Exit Checkpoint (2026-09-24)
+
+- The reciprocal P7 archive ledger contains 220 answered P7 archives from the
+  toolchain-baseline adoption through this exit. The ordered target queue ends
+  at the answered Xordataexchange Crypt decision, whose only successor is the
+  answered exit checkpoint. No dependency evaluation, product decision,
+  authorized study, projection, root, dependency/source change, or selection
+  remains pending; no closure-only module or unowned selection was silently
+  promoted to qualified.
+- Clean starting HEAD `59d026a0db3d5952c81b8168ed2c9fabf47b0104`, parent
+  `648c37a2d558af32fc3d3c96321e35dc79e836f8`, tree
+  `2874ffb1a3df493ffe78604912e8d86ec438be85`, its five-file set, branch,
+  Google UUID ancestry, reciprocal archive/launcher state, sole NEXT,
+  cleanliness, official SDK identities, project counts/hashes, common tidy,
+  Go floor, complete ledger/exception registry, and advisory identities all
+  reproduce. Product source and dependency metadata remain byte-exact.
+- Exact Go 1.26.7 module verification, build, count-one tests, race count-one
+  tests, and vet pass. Pinned API/CLI compatibility, compatibility meta-tests,
+  the quality Make contract, toolchain declarations, and all 15 canonical
+  quality-audit meta-controls pass. The unchanged quality instrument and
+  product preserve the accepted 27/27 Q0-Q2 PASS at L2.
+- The unchanged project remains 234 modules, 3,599 edges, 355 production
+  entries, 429 complete-test entries, 197 module-backed entries over 41 loaded
+  modules, 1,067 sum lines, the three protected hashes, and Go 1.18. The
+  unretained common tidy projection remains 52/948 lines, 234 modules, 3,557
+  edges, and its two protected hashes. No projection was applied.
+- Identity-only advisory checks reproduce the recorded 518,501-byte/1,402-
+  record Go index, 2,807-byte PUBLISHED CNA response, project 30/22/20/20
+  populations, and client_golang advisory aliases. They establish neither
+  safety nor qualification. Every qualified selection and every separate
+  target-specific exception remains exact under its own expiry guards; none
+  transfers or reopens.
+- All task evidence was contained beneath managed session scratch, audited for
+  containment and ordinary entry types, and removed. P7 is complete. No P8
+  implementation ran.
 
 ### P8 - Domain Modernization
 
-Status: queued after the core L2 flows.
+Status: active at one prepared cloud-configuration planning checkpoint; no P8
+implementation has begun.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.

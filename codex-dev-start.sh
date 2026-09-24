@@ -1131,120 +1131,94 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-24T122118+0200-complete-p7-quality-exit-gate
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T122118+0200-complete-p7-quality-exit-gate.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T120430+0200-decide-xordataexchange-crypt-product-direction.md
+#|SESSION_ID=2026-09-24T130019+0200-plan-first-p8-cloud-modernization-move
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T130019+0200-plan-first-p8-cloud-modernization-move.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T122118+0200-complete-p7-quality-exit-gate.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Complete P7 with exactly one final, bounded quality-exit checkpoint. Verify
-#|that the selected-module evaluation ledger is exhausted through the final
-#|Xordataexchange Crypt decision, that every qualified selection and every
-#|target-specific exception remains exact, and that the maintained Go and
-#|dependency baseline satisfies the recorded P7 exit contract. Do not evaluate
-#|another dependency, run an ownership study, change source or dependency
-#|metadata, or begin P8 implementation.
+#|Begin P8 with one bounded cloud-configuration modernization planning
+#|checkpoint. Characterize the existing `GitCloudConfig` boundary, its
+#|cache-first refresh behavior, and its compatibility fixtures; then select and
+#|specify exactly one smallest owned implementation slice toward `ply-config`.
+#|Do not implement the slice in this checkpoint.
 #|
-#|# Defensive Scope
+#|# Authorized Roadmap
 #|
-#|This is a closure and verification checkpoint, not a dependency evaluation or
-#|security investigation. Do not perform security or exploitability analysis;
-#|fuzz, stress, or probe resource exhaustion; create oversized, deeply nested,
-#|cyclic, malformed, adversarial, or escape-sequence payloads; or reproduce a
-#|security issue. Revalidate only the established ordinary project gates and
-#|recorded advisory identities.
+#|P2A-P7 are complete. P8 is active. Its ordered work is cloud configuration,
+#|then Spring modernization under characterization tests, then any inactive
+#|packaging only through a separate scope decision. This checkpoint may plan
+#|only the first cloud-configuration slice. It may not start Spring or packaging
+#|work, reopen P7, evaluate a dependency, run an ownership study, or change
+#|source or dependency metadata.
 #|
-#|Keep every disposable cache, report, project copy, and verification artifact
-#|beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Verify containment and entry types,
-#|then remove all task-owned scratch before handoff.
+#|# Measurements At Start
 #|
-#|# Completed P7 State
-#|
-#|P2A-P6 are complete. P7 has completed its bounded selected-module queue
-#|through exact selected indirect, unloaded
-#|`github.com/xordataexchange/crypt
-#|v0.0.3-0.20170626215501-b2862e3d0a77`. Option 1 is final for that target: it
-#|remains unchanged only under its own unqualified, non-transferable exception.
-#|It is not qualified, safe, or fixed. The **Mvn-Pom-Mutator Xordataexchange
-#|Crypt Elimination Study** is neither authorized nor run.
-#|
-#|All Xordataexchange current/historical request, selection, source-import,
-#|route, load, runtime, root, owner/release/API/behavior/closure/test/cross/
-#|projection/advisory facts remain expiry guards. Exact Xiang90 Probing, Ugorji
-#|Go, HTTP Unix, TMC, Testify, Objx, and every earlier qualified or excepted
-#|selection remain closed only under their separate target-specific guards. No
-#|exception transfers and no rejected study or candidate is reopened.
-#|
-#|The unchanged real project remains exactly 234 modules, 3,599 graph edges,
-#|355 production entries, 429 complete-test entries, 197 module-backed entries
-#|over 41 loaded modules, and 1,067 `go.sum` lines at Go 1.18. Protected
-#|`go.mod`, `go.sum`, and graph SHA-256 values remain
+#|The P7 exit preserved Go 1.18, all direct roots, product behavior, accepted
+#|27/27 Q0-Q2 PASS at L2, every target-specific P7 guard, and the exact
+#|234-module / 3,599-edge / 355-production / 429-complete-test / 197-module-
+#|backed / 41-loaded-module / 1,067-sum-line project state. Protected `go.mod`,
+#|`go.sum`, and graph hashes remain
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
 #|and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-#|The unretained common tidy projection remains 52/948 lines, 234 modules, and
-#|3,557 edges at module/sum hashes
-#|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
-#|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+#|Exact Go 1.26.7 unchanged-project verification, build, count-one tests, race
+#|count-one tests, vet, compatibility contracts, and quality meta-controls pass.
 #|
-#|Official Go 1.18.10 archive/binary SHA-256 remains
-#|`718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
-#|`f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`;
-#|Go 1.26.7 remains
-#|`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
-#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
-#|Google UUID v1.4.0 implementation commit
-#|`cf53bc64eeb69471d35c7536d196bf1da15f3973` remains ancestral. Accepted
-#|quality remains 27/27 Q0-Q2 PASS at L2.
+#|Begin only from the clean reciprocal P7-exit handoff on
+#|`codex/upgrade-quality`. Verify its branch, five-file documentation/launcher
+#|commit shape, Google UUID ancestry, sole NEXT state, archive chain, launcher
+#|mirror/check, ordinary and ignored cleanliness, and unchanged source and
+#|dependency metadata. Stop for a fresh owning decision if a protected input
+#|changed.
 #|
-#|The corrected Go vulnerability index remains 518,501 bytes and 1,402 records
-#|at `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
-#|The PUBLISHED CVE-2026-14362 CNA response remains 2,807 bytes at
-#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
-#|The unchanged project advisory populations remain 30/22/20/20 without a
-#|Xordataexchange or named protected trace, and client_golang v1.4.0 retains
-#|GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698. These are identity
-#|guards, not safety claims.
+#|# Role And Boundaries
 #|
-#|# Protected Starting State
+#|This is a product-boundary planning checkpoint, not implementation, dependency
+#|evaluation, security investigation, or upstream ownership research. Use the
+#|existing source, tests, design record, and local Git history. Do not add or
+#|modify production code, tests, fixtures, `go.mod`, or `go.sum`; do not fetch or
+#|select a `ply-config` dependency; and do not claim compatibility beyond the
+#|recorded evidence.
 #|
-#|Begin only from the clean Xordataexchange Crypt product-decision handoff on
-#|`codex/upgrade-quality`. Verify its exact HEAD, parent, tree, five-file changed
-#|set, branch and Google UUID ancestry, reciprocal archive chain, sole NEXT
-#|state, launcher prompt mirror/check, ordinary/ignored cleanliness, official
-#|SDK identities, project counts/hashes, common tidy projection, Go floor,
-#|complete dependency ledger and exception registry, advisory identities, and
-#|final unchanged-project gate result. Stop for a fresh owning decision if any
-#|protected input changed.
+#|Keep every disposable cache, report, project copy, and verification artifact
+#|beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`. Use only ordinary bounded
+#|inspection and established tests. Verify containment and entry types, then
+#|remove all task-owned scratch before handoff.
 #|
-#|# Exit Contract
+#|# Required Reading
 #|
-#|First prove from the existing roadmap, inventory, module graph, and archive
-#|ledger that no selected P7 dependency remains unevaluated and that no pending
-#|study, projection, root, dependency/source change, or unowned selection is
-#|silently treated as qualified. Do not repeat completed dependency evaluations,
-#|upstream matrices, ownership studies, or behavior fixtures.
+#|Read the P8 roadmap and P7 exit answer, the rolling handover,
+#|`docs/design/quality-lift.md`, `pkg/config/cloud.go`,
+#|`pkg/config/cloud_refresh_test.go`, `pkg/config/cloud_test.go`, the focused
+#|cloud fixture/contract tests, the `CloudConfig` callers in `cmd` and
+#|`pkg/context`, and the existing config-cloud mutation harness. Treat those as
+#|the planning inputs; do not repeat P7 dependency work.
 #|
-#|Then run the established exact-Go-1.26.7 unchanged-project module
-#|verification, build, count-one tests, race count-one tests, vet, and the
-#|appropriate P7 quality/compatibility checks. Preserve Go 1.18, all direct
-#|roots, product behavior, accepted Q0-Q2 L2 quality, and every target-specific
-#|expiry guard. Advisory absence or an incomplete scan cannot establish safety
-#|or qualification.
+#|# Three Moves
 #|
-#|If and only if the complete P7 ledger and all exit guards pass, mark P7
-#|complete and P8 active in the authorized roadmap without implementing P8.
-#|Answer this archive, rewrite the rolling handover and roadmap, prepare exactly
-#|one reciprocal NEXT archive for the first bounded P8 planning/implementation
-#|move, replace only launcher mutable regions, run launcher/handoff checks, and
-#|make one local handoff commit. Do not execute the P8 successor.
+#|1. Map the current cloud-configuration construction, refresh, cache, read, and
+#|   caller boundaries. Record the exact behaviors and public/API surfaces that
+#|   a first slice must preserve, especially cache-first operation and current
+#|   compatibility fixtures.
+#|2. Run only focused ordinary tests needed to confirm that characterization.
+#|   Identify any evidence gap, but do not fill it with production/test changes
+#|   in this planning checkpoint. Compare candidate seams by size, ownership,
+#|   reversibility, and compatibility risk.
+#|3. Select exactly one smallest implementation slice, or stop unresolved.
+#|   Specify its files, behavior contract, focused tests, full gates, rollback
+#|   boundary, and expiry conditions. Do not implement or combine a second
+#|   slice.
 #|
-#|# Prohibited Actions
+#|# Automatic Handoff
 #|
-#|Do not push, merge, publish, release, stash, revert, remove the worktree,
-#|transfer or reopen an exception, run a rejected study, select a rejected
-#|candidate, change source or dependency metadata, combine another dependency
-#|group, or begin P8 implementation in this checkpoint.
+#|If and only if one implementation slice is fully owned and bounded, answer
+#|this archive, update the roadmap and rolling handover, prepare exactly one
+#|reciprocal NEXT archive that implements only that slice, replace only launcher
+#|mutable regions, run launcher/handoff checks, and make one local handoff
+#|commit. If ownership or behavior is unresolved, prepare one decision successor
+#|instead. Do not execute the successor, push, merge, publish, release, stash,
+#|revert, remove the worktree, or broaden P8.
 # CODEX_MUTABLE_PROMPT_END
