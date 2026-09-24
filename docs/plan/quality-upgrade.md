@@ -16756,7 +16756,7 @@ are resolved or explicitly risk-accepted.
 ### P8 - Domain Modernization
 
 Status: active after the first three bounded cloud implementation slices; the
-next bounded slice is not yet selected.
+fourth bounded slice is selected but not yet implemented.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16819,15 +16819,47 @@ next bounded slice is not yet selected.
   automated FAIL and zero ratchet regression; the accepted 27/27 L2 state
   remains supported. Protected 234/3,599/355/429/197/41/1,067 counts and the
   three hashes reproduce.
-- `ProjectDefaults` is now private-effect-injected alongside `Services`,
-  `GitHookFiles`, `Examples`, and `Templates`. `Deprecated` and
-  `GlobalCloudConfig` remain direct readers with distinct caller, fixture, and
-  semantic gaps. Caller refresh-policy gaps, real network/cloud behavior,
-  combined reader work, and construction changes remain guarded.
-- The reciprocal successor is planning-only. It must re-characterize the
-  resulting cloud boundary and select at most one smallest repository-owned
-  implementation slice or stop unresolved. Direct `ply-config` inspection,
-  selection, or integration remains forbidden.
+- The next planning checkpoint reproduces the exact five-file handoff, focused
+  project-defaults parent, all three P8 implementation commits, Google UUID
+  ancestry, reciprocal 333-record/sole-NEXT launcher state, clean ordinary and
+  ignored status, protected source/caller/fixture/mutation/dependency inputs,
+  Go 1.18, 234/3,599/355/429/197/41/1,067 counts, and the three hashes.
+  Exact-Go-1.26.7 config/context/Maven/command tests and unchanged direct/meta
+  config-cloud 10/10 mutation gates pass with offline, readonly inputs and
+  contained scratch.
+- `ProjectDefaults` remains private-effect-injected alongside `Services`,
+  `GitHookFiles`, `Examples`, and `Templates`. It preserves production loader
+  selection, complete `Directory` delivery, exact filename and
+  `file.ReadJson`, one independent load per invocation, exact path/read/
+  unmarshal and partial-result semantics, safe zero behavior, and the existing
+  context merge/error/order contract.
+- The fourth selected slice is only a private `Deprecated` loader in
+  `pkg/config/cloud.go` and `pkg/config/cloud_test.go`. Production must receive
+  the complete `Directory`, request exact `deprecated.json`, delegate to
+  unchanged `file.ReadJson`, load exactly once per invocation, preserve exact
+  value/error and partial-result behavior, and return exact
+  `filesystem.ErrNoFilesystem` before path access when zero-valued. Separate
+  calls remain independent and non-memoized.
+- Focused TDD must cover production selection, complete dependency delivery,
+  exact filename, independent call counts, representative complete recursive
+  JSON decode, exact dependency/path/read/unmarshal results, safe zero behavior,
+  and non-empty recordings. `ListDeprecated`, Maven/status/upgrade callers,
+  refresh, every other reader, constructors, tracked fixtures, mutation files,
+  public API, Go floor, and dependency metadata remain unchanged.
+- The mutation harness remains byte-exact because no expression crosses
+  `Deprecated`; direct and meta gates must retain the same ten IDs, selections,
+  meanings, and 10/10 kills. Rollback is the single focused two-file commit.
+  The slice expires on any changed reader/result/caller/cache/API/mutation/
+  dependency premise or any need for `ply-config` knowledge.
+- `GlobalCloudConfig` remains the sole direct document reader after the planned
+  seam, but no work on it is authorized here. Its direct path construction,
+  `file.Open`, environment expansion, YAML decode, source formatting, command
+  consumers, and missing fixture contract require a fresh checkpoint. Caller
+  refresh-policy gaps, real network/cloud behavior, combined reader work, and
+  construction changes remain guarded.
+- The reciprocal successor implements only the private deprecated loader seam.
+  Direct `ply-config` inspection, selection, or integration, caller cleanup,
+  another reader, construction, Spring, and packaging remain forbidden.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
