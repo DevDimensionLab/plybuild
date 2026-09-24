@@ -1131,39 +1131,40 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-24T153032+0200-plan-next-p8-cloud-modernization-move
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T153032+0200-plan-next-p8-cloud-modernization-move.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T145009+0200-implement-cloud-services-loader-seam.md
+#|SESSION_ID=2026-09-24T154421+0200-implement-cloud-project-defaults-loader-seam
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T154421+0200-implement-cloud-project-defaults-loader-seam.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T153032+0200-plan-next-p8-cloud-modernization-move.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Plan exactly one next bounded P8 cloud-configuration modernization slice after
-#|the completed private cached-services loader seam. Re-characterize the
-#|resulting `GitCloudConfig` boundary, compare the smallest repository-owned next
-#|seams, and select one implementation slice or stop unresolved. Do not implement
-#|the slice in this checkpoint.
+#|Implement exactly the third bounded P8 cloud-configuration slice selected by
+#|the answered planning checkpoint: isolate the cache-backed
+#|`project-defaults.json` read behind one private zero-value-safe loader while
+#|preserving the non-memoized `GitCloudConfig.ProjectDefaults` API and every
+#|refresh, caller, other-reader, fixture, and dependency contract. Do not
+#|integrate or select `ply-config`, and do not begin a second slice.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P7 are complete. P8 remains active in cloud configuration only. The first
-#|two P8 implementation slices are complete at focused commits
-#|`57f9d5674157d238a2f93462b65161a17e3b5498` and
-#|`c12307a078a29af74163df0c658d05c821482a33`. This checkpoint may plan only
-#|one next cloud-configuration slice. It may not change source or dependency
-#|metadata, integrate or select `ply-config`, begin Spring or packaging work,
-#|reopen an earlier slice, or combine multiple implementation moves.
+#|P2A-P7 are complete. P8 is active in cloud configuration only. The first two
+#|P8 slices are complete at `57f9d5674157d238a2f93462b65161a17e3b5498`
+#|and `c12307a078a29af74163df0c658d05c821482a33`. This checkpoint may change
+#|only `pkg/config/cloud.go` and `pkg/config/cloud_test.go` for the private
+#|project-defaults loader seam. It may not change a caller, refresh, another
+#|reader, constructor, tracked fixture, mutation file, dependency metadata,
+#|Spring, or packaging.
 #|
 #|# Measurements At Start
 #|
-#|Begin only from the clean reciprocal implementation handoff on
+#|Begin only from the clean reciprocal planning handoff on
 #|`codex/upgrade-quality`. Verify its branch, exact five-file documentation and
-#|launcher commit shape, focused cached-services implementation parent and exact
+#|launcher commit shape, focused services implementation ancestry and exact
 #|two-file shape, cache-probe and Google UUID ancestry, sole NEXT state,
-#|reciprocal 331-archive chain, launcher mirror/check, ordinary and ignored
-#|cleanliness, and unchanged protected readers, callers, fixtures, mutation
-#|files, and dependency metadata. The protected project remains Go 1.18 with 234
+#|reciprocal 332-archive chain, launcher mirror/check, ordinary and ignored
+#|cleanliness, and unchanged protected source, callers, fixtures, mutation files,
+#|and dependency metadata. The protected project remains Go 1.18 with 234
 #|modules, 3,599 graph edges, 355 production entries, 429 complete-test entries,
 #|197 module-backed entries over 41 loaded modules, 1,067 `go.sum` lines, and
 #|protected `go.mod` / `go.sum` / graph hashes
@@ -1174,49 +1175,61 @@ exit 70
 #|
 #|# Role And Boundaries
 #|
-#|This is a planning checkpoint, not implementation, dependency evaluation,
-#|caller-policy cleanup, generic reader migration, construction refactoring,
-#|security work, Spring work, or packaging work. Use only repository source,
-#|tests, fixtures, design records, and local Git history. Do not modify production
-#|code, tests, fixtures, mutation files, `go.mod`, or `go.sum`; do not fetch,
-#|inspect, or select a new dependency; and do not claim real cloud compatibility
-#|beyond recorded evidence. Keep every disposable artifact beneath
-#|`${CODEX_SESSION_SCRATCH_ROOT:?}`, verify containment and entry types, and
-#|remove task-owned scratch before handoff.
+#|This is one behavior-preserving private loader seam, not `ply-config`
+#|integration, dependency evaluation, generic document-reader work, caller-
+#|policy cleanup, construction refactoring, security work, Spring work, or
+#|packaging work. Do not change any exported symbol, signature, or field; cache
+#|layout; refresh; `Services`, `Deprecated`, or `GlobalCloudConfig`; Git hooks,
+#|templates, or examples; `Context.OnEachMavenProject` or
+#|`MergeProjectDefaults`; any command/context caller; tracked fixture; mutation
+#|file; `go.mod`; or `go.sum`. Do not fetch, inspect, or select a new dependency.
+#|Keep every disposable cache, report, copy, and test fixture beneath
+#|`${CODEX_SESSION_SCRATCH_ROOT:?}` and remove task-owned scratch after
+#|containment and entry-type verification.
 #|
 #|# Required Reading
 #|
-#|Read the answered cached-services implementation archive and its planning
-#|predecessor, the answered cache-probe implementation archive, current P8
-#|roadmap and rolling handover, `docs/design/quality-lift.md`,
-#|`pkg/config/cloud.go`, all focused cloud tests, the `CloudConfig` callers in
-#|`cmd` and `pkg/context`, and `scripts/mutate-config-cloud` with its meta-test.
-#|Treat every recorded caller, other-reader, real-network, and fixture gap as a
-#|guard rather than permission to combine work. Do not inspect `ply-config`.
+#|Read the answered planning archive and its exact selected-slice contract, the
+#|answered services and cache-probe implementation archives, current P8 roadmap
+#|and rolling handover, `docs/design/quality-lift.md`, `pkg/config/cloud.go`,
+#|`pkg/config/cloud_test.go`, `pkg/config/dir.go`, `pkg/config/types.go`,
+#|`pkg/config/project.go`'s `MergeProjectDefaults`, `pkg/file/file.go`'s
+#|`ReadJson` and `Open` paths, `pkg/context/context.go` and its focused defaults
+#|test, the local acceptance fixture setup in `test/acceptance/common.sh`, and
+#|`scripts/mutate-config-cloud` with its meta-test. Treat every caller,
+#|other-reader, real-network, and fixture gap as a guard.
 #|
 #|# Three Moves
 #|
-#|1. Confirm the completed services seam preserves production loader selection,
-#|   complete `Directory` delivery, exact `services.json` and `file.ReadJson`
-#|   behavior, one eager load, stable closure replay, exact path errors, safe zero
-#|   value, and all public, refresh, caller, reader, fixture, and mutation
-#|   contracts.
-#|2. Map only the remaining cloud boundary and run focused read-only tests needed
-#|   to validate candidate ownership. Compare candidates by file count, public
-#|   surface, dependency knowledge, cache compatibility, reversibility, and the
-#|   recorded characterization gaps. Do not fetch or inspect `ply-config`.
-#|3. Select exactly one smallest repository-owned implementation slice with its
-#|   files, behavior contract, tests, mutation impact, full gates, rollback, and
-#|   expiry conditions, or stop unresolved. Do not implement it or combine a
-#|   second move.
+#|1. Add focused failing characterization for production loader selection,
+#|   complete `Directory` delivery, the exact `project-defaults.json` request,
+#|   exactly one load per invocation with independent repeated invocations,
+#|   representative complete JSON decode, exact dependency/path/read/unmarshal
+#|   results, safe zero value, and non-empty recordings. Do not characterize or
+#|   change another reader or caller.
+#|2. Add one private project-defaults loader interface and private dependency
+#|   value. The production implementation accepts the complete `Directory`,
+#|   calls `FilePath("project-defaults.json")`, and delegates to unchanged
+#|   `file.ReadJson`. The private helper loads exactly once per call and returns
+#|   the exact value/error; a missing loader returns
+#|   `filesystem.ErrNoFilesystem` before developer-path access. Preserve the
+#|   exported wrapper, non-memoized cache-only operation, and every other
+#|   boundary exactly.
+#|3. Run focused config/context/Maven/command and exact unchanged config-cloud
+#|   mutation gates, then the full recorded exact-Go-1.26.7 gates under
+#|   `umask 022`, readonly/offline module inputs, and managed scratch. Verify no
+#|   API/CLI, source-scope, refresh, caller, other-reader, fixture, Go-floor,
+#|   dependency, graph, mutation, or quality regression. Roll back the single
+#|   two-file commit if any contract fails; do not compensate in another slice.
 #|
 #|# Automatic Handoff
 #|
-#|If and only if one next slice is fully owned and bounded, answer this archive,
-#|update the roadmap and rolling handover, prepare exactly one reciprocal NEXT
-#|archive for that implementation, replace only launcher mutable regions, run
-#|launcher/handoff checks, and make one local handoff commit. If ownership or
-#|behavior is unresolved, prepare one decision successor instead. Do not execute
-#|the successor, push, merge, publish, release, stash, revert, remove the
-#|worktree, integrate `ply-config`, or begin Spring or packaging work.
+#|If and only if the one seam and every gate pass, record its focused commit and
+#|evidence, answer this archive, update the roadmap and rolling handover, prepare
+#|exactly one reciprocal NEXT archive for a fresh bounded P8 cloud planning
+#|checkpoint, replace only launcher mutable regions, run launcher/handoff checks,
+#|and make one local handoff commit. If a contract is unresolved, prepare one
+#|decision successor instead. Do not execute the successor, push, merge,
+#|publish, release, stash, revert, remove the worktree, integrate `ply-config`,
+#|or start a second cloud, Spring, or packaging slice.
 # CODEX_MUTABLE_PROMPT_END

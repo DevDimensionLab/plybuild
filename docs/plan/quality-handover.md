@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T15:30:32+02:00
+Generated: 2026-09-24T15:44:21+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -45,11 +45,31 @@ session diary.
   `go.mod`/`go.sum`/graph hashes reproduce. Refresh, callers, other readers,
   fixtures, mutation files, and dependency metadata are byte-unchanged. API
   and CLI reports pass.
-- No next implementation is owned yet. The sole successor is a fresh bounded
-  planning checkpoint that may compare only the smallest remaining
-  repository-owned cloud seams and select at most one. Direct `ply-config`
-  inspection/selection, implementation, combined readers, caller cleanup,
-  Spring, and packaging remain unowned.
+- The planning checkpoint reproduced clean handoff HEAD
+  `d6382a80e14e9bcee48a058a74940e310e15fc48`, parent
+  `c12307a078a29af74163df0c658d05c821482a33`, tree
+  `a015048e12f63ddc4d472b0285de30be201de207`, exact five-file handoff and
+  two-file services shapes, cache-probe and UUID ancestry, reciprocal 331-
+  archive/sole-NEXT/launcher state, protected counts/hashes, and unchanged
+  source/callers/fixtures/mutation/dependency inputs. Exact-Go focused config,
+  context, Maven, and command tests pass under `umask 022`; unchanged direct
+  and meta mutation gates retain exact 10/10 kills.
+- The third P8 slice is selected but not executed: change only
+  `pkg/config/cloud.go` and `pkg/config/cloud_test.go` to isolate
+  `ProjectDefaults` behind one private zero-value-safe loader. Preserve exact
+  `project-defaults.json`, complete `Directory`, unchanged `file.ReadJson`, one
+  independent load per invocation, exact value/error and partial-result
+  behavior, no memoization or refresh, and the exported signature.
+- This reader is owned because `Context.OnEachMavenProject` is its sole concrete
+  caller and already records once-per-project calls, merge-before-job order,
+  error warning/continuation, and logs; the acceptance profile supplies valid
+  cache-only JSON. `Deprecated` remains deferred because its Maven/status/
+  upgrade surface is wider. `GlobalCloudConfig` remains deferred because
+  environment expansion, YAML decoding, and two source-formatting consumers
+  are not yet directly fixture-bounded.
+- The sole successor implements only the selected project-defaults seam. Direct
+  `ply-config` inspection/selection, another reader, caller cleanup,
+  construction work, Spring, and packaging remain unowned.
 
 ## Repository And Continuity
 
@@ -7944,8 +7964,9 @@ language are retained in the answered exit archive and roadmap.
 
 ## Next Bounded Objective
 
-Run only [the prepared next P8 cloud planning checkpoint](agent-sessions/2026-09-24T153032+0200-plan-next-p8-cloud-modernization-move.md).
-Re-characterize the boundary after the completed cached-services seam and
-select at most one smallest repository-owned next slice or stop unresolved.
-Do not implement it, inspect or select `ply-config`, combine readers or caller
-cleanup, or begin Spring or packaging work.
+Run only [the prepared project-defaults loader implementation](agent-sessions/2026-09-24T154421+0200-implement-cloud-project-defaults-loader-seam.md).
+Implement exactly the selected private loader in `pkg/config/cloud.go` and
+`pkg/config/cloud_test.go`, preserving one non-memoized cache read per call and
+all protected contracts. Do not inspect or select `ply-config`, change a
+caller/fixture/mutation/dependency, combine another reader, or begin Spring or
+packaging work.

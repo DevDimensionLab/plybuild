@@ -16756,7 +16756,7 @@ are resolved or explicitly risk-accepted.
 ### P8 - Domain Modernization
 
 Status: active after the first two bounded cloud implementation slices; the
-next checkpoint is planning-only and not executed.
+third bounded slice is selected but not executed.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16799,13 +16799,30 @@ next checkpoint is planning-only and not executed.
   234/3,599/355/429/197/41/1,067 counts and the three hashes reproduce.
 - `Services` is now private-effect-injected alongside `GitHookFiles`,
   `Examples`, and `Templates`. `Deprecated`, `ProjectDefaults`, and
-  `GlobalCloudConfig` remain direct readers with their distinct recorded
-  fixture/semantic gaps. Caller refresh-policy gaps, real network/cloud
-  behavior, combined reader work, and construction changes remain guarded.
-- No third implementation slice is selected. The reciprocal successor is a
-  fresh planning-only checkpoint that may compare the smallest remaining
-  repository-owned cloud seams and select at most one or stop unresolved.
-  Direct `ply-config` inspection, selection, or integration remains forbidden.
+  `GlobalCloudConfig` remain direct readers with distinct fixture and semantic
+  gaps. Caller refresh-policy gaps, real network/cloud behavior, combined
+  reader work, and construction changes remain guarded.
+- The next planning checkpoint reproduced the clean five-file handoff, exact
+  implementation ancestry and shapes, reciprocal 331-archive chain, launcher,
+  focused tests, unchanged 10/10 mutation gates, Go 1.18, exact
+  234/3,599/355/429/197/41/1,067 measurements, and all three protected hashes.
+  Source, callers, fixtures, mutation files, and dependency metadata remain
+  unchanged.
+- The third slice is selected but unexecuted: add only a private zero-value-
+  safe `ProjectDefaults` loader in `pkg/config/cloud.go` with focused tests in
+  `pkg/config/cloud_test.go`. Production must retain complete `Directory`
+  delivery, exact `FilePath("project-defaults.json")`, unchanged
+  `file.ReadJson`, one independent load per invocation, exact value/error
+  results, and safe zero behavior. No memoization or implicit refresh is
+  allowed.
+- `ProjectDefaults` is the smallest owned next reader because its sole concrete
+  `Context.OnEachMavenProject` policy already has focused call/order/error/
+  merge coverage and the acceptance profile supplies cache-only valid JSON.
+  `Deprecated` is wider across Maven/status/upgrade; `GlobalCloudConfig` adds
+  environment expansion and YAML semantics. Both remain deferred, as do a
+  shared loader, caller cleanup, and construction work.
+- The reciprocal successor may implement only that exact two-file seam. Direct
+  `ply-config` inspection, selection, or integration remains forbidden.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
