@@ -16755,9 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after six bounded cloud implementation slices; one private
-project cloud-config opener is selected as the seventh slice but is not yet
-implemented.
+Status: active after seven bounded cloud implementation slices; one fresh
+planning checkpoint is prepared to select at most one next owned cloud slice.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17067,6 +17066,43 @@ implemented.
   reciprocal successor implements only this private project opener; it may not
   repair the decoded-profile gap or start a second cloud, Spring, or packaging
   move.
+- Focused commit `9c1899d484633e0ce6cf112544ba33ca89bc4adb` completes the
+  seventh selected slice in exactly `pkg/config/project_init.go` and new
+  `pkg/config/project_init_cloud_test.go`. One private zero-value-safe opener,
+  private dependency value, Git-backed implementation, and small dependency-
+  taking helper isolate the final project construction choice. Only the direct
+  cloud assignment changed; the public constructor body and surrounding flow
+  remain in place.
+- Production explicitly selects Git, passes the complete already-resolved
+  profile path exactly once to unchanged `OpenGitCloudConfig`, and assigns the
+  exact returned `CloudConfig` interface without wrapping or inspection. A
+  missing opener returns nil before path access. Focused characterization fixes
+  production selection, exact path/call/identity, active-profile and missing-
+  profile migration cache mapping, safe zero behavior, early configuration
+  failure, independent repeated construction, and non-empty recordings.
+- The current decoded-profile non-override gap remains exact: decoded
+  `projectConfig.Profile` is returned in final `project.Config`, but the
+  earlier branch still checks zero `project.Config.Profile`, so cloud mapping
+  follows the active profile. Active lookup, text-matched migration/retry,
+  legacy `.co-pilot` fallback, non-ENOENT named-error flow, cloud-before-POM
+  ordering, POM warning/partial results, and final project fields are unchanged.
+- Final-commit config/context/Maven/command tests and count-two focused tests
+  pass. The byte-unchanged config-cloud direct and meta gates retain exact
+  10/10 kills. Exact Go 1.26.7 verify/build/count-one/race/vet, pinned API/CLI
+  compatibility and meta-tests, complete preflight, ordinary test/install,
+  real scratch install, empty-HOME count-two, all 15 audit controls, and all 62
+  launcher checks pass. Structured Q0-Q2 has all 21 automated rows PASS and
+  zero scoped regression; Q3.4 remains the sole pre-existing overall ratchet
+  regression.
+- Go 1.18, protected 234/3,599/355/429/197/41/1,067 counts, all three hashes,
+  public API/CLI, root opener, profile/project/POM behavior, callers, readers,
+  fixtures, cache layout, refresh, mutation files, and dependency metadata
+  reproduce unchanged. Rollback remains the single focused two-file commit.
+- The reciprocal successor is planning-only. It must re-characterize the
+  remaining cloud boundary and select at most one smallest repository-owned
+  next slice or stop unresolved; it may not implement that slice, inspect or
+  select `ply-config`, repair decoded-profile behavior, reopen an earlier
+  slice, combine moves, alter caller policy, or begin Spring or packaging work.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
