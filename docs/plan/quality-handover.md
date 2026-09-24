@@ -1,46 +1,55 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T13:00:19+02:00
+Generated: 2026-09-24T13:15:21+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P8 Checkpoint
 
-- P7 is complete. Its 220-archive ledger is answered from the toolchain
-  baseline through the final Xordataexchange Crypt decision and bounded exit;
-  that decision has no dependency successor. No study, projection, root,
-  dependency/source change, or unowned selection is pending or silently
-  qualified. Every qualified selection and target-specific exception remains
-  exact, separate, non-transferable, and guarded by its recorded expiry facts.
-- The P7 exit began from exact clean Xordataexchange handoff HEAD
-  `59d026a0db3d5952c81b8168ed2c9fabf47b0104`, parent
-  `648c37a2d558af32fc3d3c96321e35dc79e836f8`, tree
-  `2874ffb1a3df493ffe78604912e8d86ec438be85`, and its five-file shape.
-  Branch, Google UUID ancestry, reciprocal archives, launcher mirror/check,
-  sole NEXT, ordinary/ignored cleanliness, SDK identities, project counts and
-  hashes, common tidy, Go floor, complete ledger/exception registry, and
-  advisory identities reproduced exactly.
-- Exact Go 1.26.7 module verification, build, count-one tests, race count-one
-  tests, and vet pass. Pinned API/CLI compatibility and meta-tests, the quality
-  Make contract, toolchain declarations, and all 15 canonical quality-audit
-  meta-controls pass. Product source, dependency metadata, and the quality
-  instrument remain byte-exact, preserving accepted 27/27 Q0-Q2 PASS at L2.
-- The real project remains exactly 234 modules, 3,599 graph edges, 355
-  production entries, 429 complete-test entries, 197 module-backed entries
-  over 41 loaded modules, 1,067 sum lines, Go 1.18, and the protected module,
-  sum, and graph hashes. The unretained common tidy projection remains 52/948
-  lines, 234 modules, 3,557 edges, and its two protected hashes.
-- Fresh identity-only checks reproduce the 518,501-byte, 1,402-record Go
-  advisory index, the 2,807-byte PUBLISHED CVE-2026-14362 response, project
-  30/22/20/20 populations, and client_golang's recorded aliases. They make no
-  safety claim. Contained task scratch was audited and removed; no P8
-  implementation or product/dependency mutation ran.
-- P8 is active only at sole NEXT archive
-  `2026-09-24T130019+0200-plan-first-p8-cloud-modernization-move`. It may map
-  the existing `GitCloudConfig` and cache-first contracts and select exactly
-  one smallest implementation slice toward `ply-config`; it may not implement
-  that slice, start Spring/packaging work, reopen P7, or evaluate dependencies.
+- The first P8 planning checkpoint began clean at exact five-file P7 handoff
+  HEAD `7179b28fa1b179fd66e0c6252f97aa7bbf81be41`, parent
+  `59d026a0db3d5952c81b8168ed2c9fabf47b0104`, and tree
+  `385df5e78d0a9750315c1f63e668b1f6394fb444`. Branch, Google UUID ancestry,
+  the reciprocal 327-archive chain, sole NEXT state, launcher mirror/check,
+  ordinary/ignored cleanliness, exact Go 1.26.7, protected module/sum hashes,
+  and unchanged product source reproduced. No P8 implementation or dependency
+  change ran.
+- `OpenGitCloudConfig` returns the public concrete `GitCloudConfig` rooted at
+  `<profile>/cloud-config`. `Context.LoadProfile` constructs the root value;
+  `InitProjectFromDirectory` constructs project values from active or selected
+  profiles. The public 15-method `CloudConfig` interface and concrete facade
+  feed command, context, Maven, template, tips, and resource consumers.
+- `Refresh` parses local config, derives the cache directory, probes exactly
+  `<target>/.git`, then pulls an existing cache or clones configured URL before
+  target for a missing cache. Git errors retain `shell.Output.FormatError`.
+  Reads consume only the local cache. Caller refresh policy is intentionally
+  mixed and preserved: several commands refresh only under `ForceCloudSync`,
+  build defaults that flag true, example flows refresh unconditionally, and
+  other template flows read cache without refreshing themselves.
+- Focused evidence covers clone/pull selection and errors, current and legacy
+  templates, service/default-environment lookup, examples, Git hooks, context
+  construction, downstream command use, acceptance cached defaults/deprecated
+  data, and the ten-mutation config-cloud harness. The focused tests pass under
+  managed scratch and `umask 022`. The initial inherited restrictive-umask
+  context run observed `0600`; its canonical rerun passed `0644`. All 62
+  launcher controls pass; the 3,480-entry task subtree had zero symlink or
+  special entries and was removed after containment verification.
+- Recorded gaps remain: no direct command test owns force-sync gating,
+  refresh-error continuation, or unconditional example refresh; no focused
+  fixture owns global config, deprecated, or project-default reads; the exact
+  cache probe is not independently injected; real cloud/network behavior is
+  unverified. Direct `ply-config` dependency/API work was prohibited and not
+  inspected.
+- Exactly one smallest slice is owned: add a private zero-value-safe
+  cache-presence dependency to the existing refresh dependency bundle,
+  delegate production to unchanged `file.Exists` for exact `<target>/.git`,
+  add focused characterization, and update only that branch's mutation
+  expression. Owned product/test/harness files are `pkg/config/cloud.go`,
+  `pkg/config/cloud_refresh_test.go`, and `scripts/mutate-config-cloud`. Public
+  API, callers, readers, fixtures, Go floor, and dependencies remain unchanged.
+  Rollback is the single implementation commit; every second cloud move,
+  direct `ply-config` integration, Spring, and packaging remain unauthorized.
 
 ## Repository And Continuity
 
@@ -7935,9 +7944,9 @@ language are retained in the answered exit archive and roadmap.
 
 ## Next Bounded Objective
 
-Run only [the prepared first P8 cloud-modernization planning checkpoint](agent-sessions/2026-09-24T130019+0200-plan-first-p8-cloud-modernization-move.md).
-Map the existing `GitCloudConfig`, cache-first refresh, fixtures, and callers,
-then choose exactly one smallest owned implementation slice toward
-`ply-config`. Do not implement it, start Spring or packaging work, reopen P7,
-evaluate a dependency, run an ownership study, or change source/dependency
-metadata.
+Run only [the prepared private cache-probe implementation slice](agent-sessions/2026-09-24T131521+0200-implement-cloud-cache-probe-seam.md).
+Inject the exact `<target>/.git` presence decision into the existing private
+refresh dependency bundle, preserve all behavior and public surfaces, update
+its focused tests and one mutation expression, and run the specified gates.
+Do not integrate or select `ply-config`, change callers/readers/fixtures or
+dependency metadata, or begin another cloud, Spring, or packaging slice.

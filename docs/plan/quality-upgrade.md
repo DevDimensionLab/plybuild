@@ -16755,11 +16755,25 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active at one prepared cloud-configuration planning checkpoint; no P8
+Status: active at one prepared cache-probe implementation slice; no P8
 implementation has begun.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
+- The first planning checkpoint mapped the public 15-method `CloudConfig`
+  facade, its two `GitCloudConfig` construction sites, local cached readers,
+  command refresh policies, focused current/legacy fixtures, and the
+  ten-mutation config-cloud harness. Fresh focused config, context, and command
+  tests pass under their recorded environment; real cloud behavior and several
+  reader/caller policies remain explicitly uncharacterized.
+- Exactly one first implementation slice is selected: inject only the private
+  `<target>/.git` cache-presence probe within the existing refresh dependency
+  bundle, delegating production to unchanged `file.Exists` behavior. The slice
+  owns only `pkg/config/cloud.go`, `pkg/config/cloud_refresh_test.go`, and the
+  corresponding expression in `scripts/mutate-config-cloud`; it changes no
+  public API, caller, cached read, fixture, or dependency metadata. Direct
+  `ply-config` integration and every second cloud slice require a later owning
+  checkpoint.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
