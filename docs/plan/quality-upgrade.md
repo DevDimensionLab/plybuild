@@ -16227,12 +16227,69 @@ Stretchr/testify product decision (2026-09-24):
   234/3,599/355/429/197/41/1,067 project state, protected hashes, and every
   earlier guard. Final exact-Go-1.26.7 verify/build/count-one/race/vet gates
   pass. No study, dependency/source/root change, other group, or P8 work ran.
-- P7 remains active only with one prepared, unlaunched bounded evaluation of
-  the next unevaluated alphabetical module, exact selected indirect
+- P7 advanced through one fresh bounded evaluation of exact selected indirect
   `github.com/tmc/grpc-websocket-proxy
-  v0.0.0-20190109142713-0ad062ec5ee5`. Its sole current mvn-pom-mutator
-  metadata request, negative target why, absent project import, and module-
-  file-only sum are starting observations only.
+  v0.0.0-20190109142713-0ad062ec5ee5`; the result below is closed. P7 remains
+  active only with its prepared reciprocal product-direction decision.
+
+TMC gRPC WebSocket Proxy evaluation (2026-09-24):
+
+- No dependency change is authorized or retained. Exact go-import metadata
+  resolves the public, enabled, unarchived, non-fork MIT
+  `tmc/grpc-websocket-proxy` repository on `master`. Its proxy, tag, and
+  Release lists have zero stable or prerelease entries; `/v2` and `/v3` do not
+  exist, and there is no replacement, retraction, deprecation, or alternate
+  major. Therefore no Go-1.18-compatible stable exists. Proxy latest is only
+  pseudo-version `v0.0.0-20220101234140-673ab2c3ae75`.
+- Selected/newest commits, trees, parents, times, verified signatures,
+  ancestry, sums, proxy archives, byte-identical Git entries, module/license/
+  package/source identities, and build-tag/cgo/generate/embed/unsafe/symlink/
+  submodule/special/executable boundaries are exact. Selected's synthesized
+  module file contains only its path. Newest declares Go 1.15 and its complete
+  14-module closure reaches only Go 1.17.
+- The API upgrades HTTP requests to WebSockets and bridges messages to an HTTP
+  body/response scanner while exposing method, cookie/authentication, header,
+  logger, request-mutation, buffer, and ping controls. Caller ownership,
+  aliasing/mutation, synchronization, mutable defaults, nondeterministic
+  network/scheduling, logged-error, and connection/context/pipe/goroutine/
+  ticker lifecycle boundaries are closed guards, not safety findings.
+- Under both exact SDKs, selected download/verify pass but every build, test-
+  compilation, count-one/count-ten/race, vet, and cross row fails because its
+  readonly synthesized metadata omits all production dependencies. Newest
+  passes every native row and 40/40 cross production/test-compilation rows;
+  it has no upstream tests. Passing partial evidence cannot create a stable
+  release or owner.
+- Current ownership is the sole metadata-only route `main -> mvn-pom-mutator
+  v0.2.3 -> selected target`. Target why/import/load/runtime/root facts remain
+  negative; the loaded requester has a positive `cmd -> pkg/pom` why route but
+  no target source import. All 88 follow-history commits reduce to 84 graphable
+  distinct module checkpoints; all select this pseudo-version and never root
+  it. The 123 request instances span seven requester/version edges and 14
+  exact route epochs, every one ending at a Viper or old/new Mvn-Pom-Mutator
+  metadata-only boundary. No genuine selected or candidate owner exists.
+- Selected exact-get manufactures only a root and source sum. Newest exact-get
+  manufactures a root and changes only the target selection. Both retain the
+  exact 355/429/197/41 load population with zero target entries, and tidy
+  removes the root/newest selection for the protected common 52/948-line,
+  234-module/3,557-edge projection. Normal tidy reproduces the protected 432-
+  line diff. No projection is retained.
+- Exact OSV/GitHub queries contain no target record. Pinned newest focal
+  results are 24/3/1/1; selected focal rows stop at incomplete metadata. The
+  corrected index/CNA and unchanged project 30/22/20/20 guard without target,
+  Testify, Objx, or client_golang traces reproduce. No advisory observation
+  implies safety, exploitability, or qualification.
+- Clean continuity, Testify decision HEAD/parent/tree/five-file set, UUID
+  ancestry, reciprocal chain, 234/3,599/355/429/197/41/1,067 state, protected
+  hashes, every selection/exception, Go floor, and 27/27 Q0-Q2 remain exact.
+  Final exact-Go-1.26.7 verify/build/count-one/race/vet gates pass with standard
+  project umask 022. All 154,163 task entries are contained, have zero symlink/
+  outside/dangling/special entries, and are removed. No source/dependency/root/
+  exception/study/other-group/P8 work ran.
+- The evaluation grants no exception. P7 stops for exactly one prepared,
+  unlaunched reciprocal decision: retain selected under its own unqualified,
+  non-transferable exception; authorize but do not run a later measurement-
+  only **Mvn-Pom-Mutator gRPC-WebSocket-Proxy Ownership Study**; or stop P7
+  unresolved.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
