@@ -16755,8 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after the first three bounded cloud implementation slices; the
-fourth bounded slice is selected but not yet implemented.
+Status: active after the first four bounded cloud implementation slices; the
+next bounded checkpoint is planning-only.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16819,47 +16819,42 @@ fourth bounded slice is selected but not yet implemented.
   automated FAIL and zero ratchet regression; the accepted 27/27 L2 state
   remains supported. Protected 234/3,599/355/429/197/41/1,067 counts and the
   three hashes reproduce.
-- The next planning checkpoint reproduces the exact five-file handoff, focused
-  project-defaults parent, all three P8 implementation commits, Google UUID
-  ancestry, reciprocal 333-record/sole-NEXT launcher state, clean ordinary and
-  ignored status, protected source/caller/fixture/mutation/dependency inputs,
-  Go 1.18, 234/3,599/355/429/197/41/1,067 counts, and the three hashes.
-  Exact-Go-1.26.7 config/context/Maven/command tests and unchanged direct/meta
-  config-cloud 10/10 mutation gates pass with offline, readonly inputs and
-  contained scratch.
-- `ProjectDefaults` remains private-effect-injected alongside `Services`,
-  `GitHookFiles`, `Examples`, and `Templates`. It preserves production loader
-  selection, complete `Directory` delivery, exact filename and
-  `file.ReadJson`, one independent load per invocation, exact path/read/
-  unmarshal and partial-result semantics, safe zero behavior, and the existing
-  context merge/error/order contract.
-- The fourth selected slice is only a private `Deprecated` loader in
-  `pkg/config/cloud.go` and `pkg/config/cloud_test.go`. Production must receive
-  the complete `Directory`, request exact `deprecated.json`, delegate to
-  unchanged `file.ReadJson`, load exactly once per invocation, preserve exact
-  value/error and partial-result behavior, and return exact
-  `filesystem.ErrNoFilesystem` before path access when zero-valued. Separate
-  calls remain independent and non-memoized.
-- Focused TDD must cover production selection, complete dependency delivery,
-  exact filename, independent call counts, representative complete recursive
-  JSON decode, exact dependency/path/read/unmarshal results, safe zero behavior,
-  and non-empty recordings. `ListDeprecated`, Maven/status/upgrade callers,
-  refresh, every other reader, constructors, tracked fixtures, mutation files,
-  public API, Go floor, and dependency metadata remain unchanged.
-- The mutation harness remains byte-exact because no expression crosses
-  `Deprecated`; direct and meta gates must retain the same ten IDs, selections,
-  meanings, and 10/10 kills. Rollback is the single focused two-file commit.
-  The slice expires on any changed reader/result/caller/cache/API/mutation/
-  dependency premise or any need for `ply-config` knowledge.
-- `GlobalCloudConfig` remains the sole direct document reader after the planned
-  seam, but no work on it is authorized here. Its direct path construction,
+- Focused commit `51da9bcfc0eb8ae871c98467c52c942db6b480bd` completes the
+  fourth selected slice in exactly `pkg/config/cloud.go` and
+  `pkg/config/cloud_test.go`. One private deprecated loader and private
+  dependency isolate the cached `deprecated.json` read; production retains
+  complete `Directory` delivery, exact `FilePath("deprecated.json")`, unchanged
+  `file.ReadJson`, one independent load per invocation, and exact value/error
+  and partial-result behavior. A zero loader returns exact
+  `filesystem.ErrNoFilesystem` before path access.
+- Focused characterization covers production selection, complete dependency
+  delivery, exact filename, independent repeated invocation counts, complete
+  recursive JSON decode, explicit-empty and omitted slice semantics, exact
+  dependency/path/read/unmarshal and partial results, safe zero behavior, and
+  non-empty recordings. The exported non-memoized wrapper, `ListDeprecated`,
+  Maven/status/upgrade callers, refresh, every other reader, construction,
+  tracked fixtures, mutation files, public API, Go floor, and dependency
+  metadata are unchanged.
+- Final-commit config/context/Maven/command tests, unchanged config-cloud
+  direct and meta 10/10 mutation gates, exact Go 1.26.7 verify/build/test/race/
+  vet, pinned API/CLI compatibility, complete preflight, ordinary test/install,
+  empty-HOME count-two, all 15 audit controls, and all 62 launcher checks pass.
+  Structured Q0-Q2 has all automated rows PASS and zero scoped ratchet
+  regression; the baseline-bound manual evidence is correctly stale rather
+  than falsely refreshed from a sample. Protected
+  234/3,599/355/429/197/41/1,067 counts and all three hashes reproduce.
+- `GlobalCloudConfig` is now the sole direct document reader, but no work on it
+  is authorized by the completed slice. Its direct path construction,
   `file.Open`, environment expansion, YAML decode, source formatting, command
-  consumers, and missing fixture contract require a fresh checkpoint. Caller
-  refresh-policy gaps, real network/cloud behavior, combined reader work, and
-  construction changes remain guarded.
-- The reciprocal successor implements only the private deprecated loader seam.
-  Direct `ply-config` inspection, selection, or integration, caller cleanup,
-  another reader, construction, Spring, and packaging remain forbidden.
+  consumers, and missing fixture contract require a fresh planning checkpoint.
+  Caller refresh-policy gaps, real network/cloud behavior, combined reader
+  work, and construction changes remain guarded.
+- The reciprocal successor is planning-only. It must reproduce the exact
+  five-file handoff, four focused P8 commits and protected state, confirm the
+  deprecated seam, compare only smallest repository-owned candidates, and
+  select at most one implementation slice or stop unresolved. Direct
+  `ply-config` inspection, selection, or integration, implementation, caller
+  cleanup, combined readers, construction, Spring, and packaging are forbidden.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 

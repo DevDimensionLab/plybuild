@@ -1,13 +1,13 @@
 # Agent Session: Implement Cloud Deprecated Loader Seam
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-24T170216+0200-implement-cloud-deprecated-loader-seam`
 Created: `2026-09-24T17:02:16+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `d7ea6a34ef2384064d25fe685ca38cfe9f441fbdae77846bb627a3a3ca8dac24`
 Previous: [2026-09-24T164219+0200-plan-next-p8-cloud-modernization-move.md](2026-09-24T164219+0200-plan-next-p8-cloud-modernization-move.md)
-Next: none
-Outcome: pending
+Next: [2026-09-24T174851+0200-plan-next-p8-cloud-modernization-move.md](2026-09-24T174851+0200-plan-next-p8-cloud-modernization-move.md)
+Outcome: the fourth bounded P8 slice is complete at focused commit `51da9bcfc0eb8ae871c98467c52c942db6b480bd`; the deprecated cache read now has one private zero-value-safe loader with its public non-memoized behavior unchanged
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -106,3 +106,85 @@ decision successor instead. Do not execute the successor, push, merge,
 publish, release, stash, revert, remove the worktree, integrate `ply-config`,
 or start a second cloud, Spring, or packaging slice.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+The fourth bounded P8 cloud slice is complete at focused implementation commit
+`51da9bcfc0eb8ae871c98467c52c942db6b480bd` (parent
+`deb6e42d333bb8621c4579ec6b658ab36a9af572`, tree
+`e095c58797d42b9fc4a1ba353c9ddc1916a70614`). It changes exactly
+`pkg/config/cloud.go` and `pkg/config/cloud_test.go`. No second reader, caller,
+refresh, constructor, fixture, mutation file, dependency metadata, Spring,
+packaging, or `ply-config` work ran.
+
+### Implementation And Characterization
+
+- `deprecatedLoader` and `deprecatedDependencies` are private. Their zero value
+  returns exact `filesystem.ErrNoFilesystem` before accessing the supplied
+  `Directory`; production explicitly selects `fileDeprecatedLoader`.
+- The production loader receives the complete `Directory`, requests exactly
+  `deprecated.json`, preserves exact `FilePath` errors, and delegates to
+  unchanged `file.ReadJson`. The exported `Deprecated()` signature remains the
+  production wrapper. Its private helper performs exactly one load for each
+  invocation, so repeated invocations remain independent, cache-only, and
+  non-memoized.
+- Focused TDD first failed on the absent private interface, dependency selector,
+  production loader, and helper. The final tests cover production selection,
+  complete dependency delivery, the exact filename, one load per invocation,
+  independent repeated value/error results, complete recursive decode,
+  explicit-empty and omitted slice semantics, exact dependency/path/read/
+  unmarshal and partial-result behavior, safe zero defaults, and non-empty
+  recording populations.
+- `ListDeprecated`, Maven and command callers, refresh, `Services`,
+  `ProjectDefaults`, `GlobalCloudConfig`, every other reader, construction,
+  tracked fixtures, and the config-cloud mutation manifest remain byte-exact.
+
+### Verification And Protected State
+
+- Final-commit focused deprecated tests and all `pkg/config`, `pkg/context`,
+  `pkg/maven`, and `cmd/...` tests pass. The unchanged config-cloud harness and
+  T1-T10 meta-test each report exact
+  `declared=10 killed=10 survived=0 unusable=0` with unchanged IDs,
+  selections, and meanings.
+- Exact Go 1.26.7 module verification, build, uncached count-one tests, race
+  count-one tests, and vet pass under `umask 022`, offline module resolution,
+  readonly project inputs, and managed scratch. Pinned API/CLI compatibility,
+  both compatibility meta-tests, the CLI surface, complete `make preflight`,
+  ordinary `make test`, `make test-install`, a real scratch-local install, and
+  all 62 launcher controls pass. A fresh empty-HOME count-two run also passes.
+- All 15 quality-audit meta-controls pass. The canonical audit has its
+  documented finding exit 1 rather than audit-broken exit 2. Its structured
+  Q0-Q2 scope has all 21 automated criteria PASS and zero Q0-Q2 ratchet
+  regression. The copied baseline manual evidence is correctly rejected as
+  stale because it is bound to the historical baseline commit; no false fresh
+  manual PASS is claimed. The existing six manual contracts remain supported:
+  this slice strengthens the safe-default, argument-recorder, non-empty, and
+  partial-result evidence; all eight mutation harnesses retain 10/10 kills;
+  acceptance magnitude and bad-input/read-only controls are unchanged.
+- Go 1.18 and protected 234 modules, 3,599 graph edges, 355 production entries,
+  429 complete-test entries, 197 module-backed entries across 41 loaded
+  modules, and 1,067 sum lines reproduce. `go.mod`, `go.sum`, and graph hashes
+  remain respectively
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
+  API/CLI, cache layout, refresh, callers, other readers, fixtures, mutation
+  files, dependency metadata, and the Go floor remain unchanged.
+- Environment-only discarded attempts reproduced known harness boundaries:
+  the Homebrew launcher selected Go 1.26.2 in an empty HOME; macOS no-template
+  `mktemp` ignored `TMPDIR`; passing a tool path through outer `make` polluted
+  the Make meta-test through `MAKEFLAGS`; and system Xcode probes attempted
+  sandbox-denied cache writes without creating artifacts. The accepted runs
+  used the existing exact Go 1.26.7 binary, scratch-local pinned tools, the
+  existing read-only module cache, a scratch-local no-template `mktemp`
+  adapter, and direct Xcode compiler paths for race. Two ignored compatibility
+  reports created by the first discarded preflight were verified as regular
+  task-owned outputs and removed before the accepted clean rerun.
+- All disposable evidence stayed beneath the managed task root. Before final
+  removal, containment and entry types were verified across 8,043 directories
+  and 46,534 regular files, with zero symlinks and zero special entries.
+
+The rollback boundary remains the single focused two-file implementation
+commit. The reciprocal successor is planning-only and may select at most one
+further owned cloud slice; it may not execute that slice, inspect or select
+`ply-config`, combine readers, or begin Spring or packaging work.

@@ -1,100 +1,86 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T17:02:16+02:00
+Generated: 2026-09-24T17:48:51+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P8 Checkpoint
 
-- The first three bounded P8 implementations remain exact focused commits
+- The first four bounded P8 implementations are exact focused commits
   `57f9d5674157d238a2f93462b65161a17e3b5498`,
   `c12307a078a29af74163df0c658d05c821482a33`, and
-  `c999212d266d98868930769108e4e8a73070a0a2`. Their exact changed sets are,
-  respectively, `pkg/config/cloud.go` plus the refresh test and mutation
-  expression, then `pkg/config/cloud.go` plus `pkg/config/cloud_test.go` for
-  each private JSON loader. No later protected product input changed.
+  `c999212d266d98868930769108e4e8a73070a0a2`, followed by deprecated-loader
+  commit `51da9bcfc0eb8ae871c98467c52c942db6b480bd`. Their changed sets are the
+  refresh three-file slice followed by three exact two-file
+  `pkg/config/cloud.go` / `pkg/config/cloud_test.go` slices. No protected
+  product input changed outside those sets.
 - The cache probe preserves one exact `<target>/.git` check, local-config-first
   order, pull/clone selection, Git formatting, safe zero value, callers, reads,
   fixtures, and dependencies. The services loader receives the complete
   `Directory`, requests exact `services.json`, delegates to unchanged
   `file.ReadJson`, eagerly loads once, and stably replays the exact value/error
   through the public closure.
-- The completed project-defaults loader receives the complete `Directory`,
-  requests exact `project-defaults.json`, delegates to unchanged
-  `file.ReadJson`, and loads exactly once per invocation. Separate invocations
-  remain independent and return exact values/errors, including partial decode
-  results. Its zero value returns exact `filesystem.ErrNoFilesystem` before
-  path access. Focused tests cover production selection, complete delivery,
-  every settings field, exact path/read/unmarshal behavior, non-empty
-  recordings, and safe defaults.
+- Project defaults and deprecated each receive the complete `Directory`,
+  request their exact JSON filename, delegate to unchanged `file.ReadJson`,
+  and load exactly once per invocation. Separate invocations remain
+  independent and return exact values/errors, including partial decode
+  results. Their zero values return exact `filesystem.ErrNoFilesystem` before
+  path access. Deprecated characterization additionally covers complete
+  recursive data plus explicit-empty and omitted slice semantics.
 - The public `CloudConfig` interface still has 15 methods. `GitCloudConfig`,
   exported `Impl`, `OpenGitCloudConfig`, `GlobalCloudConfig.SourceFor`, all
   public data types, and construction in `Context.LoadProfile` and
   `InitProjectFromDirectory` remain compatibility surfaces. No read method
   refreshes itself; all refresh and command policies remain unchanged.
-- Five read/effect paths are now privately injected: `GitHookFiles`,
-  `Examples`, `Templates`, `Services`, and `ProjectDefaults`. Two direct
-  document readers remain. `Deprecated` uses `Directory.FilePath` for exact
-  `deprecated.json` then unchanged `file.ReadJson` once per call.
-  `GlobalCloudConfig` directly composes `global-config.yaml`, calls
+- Six read/effect paths are now privately injected: `GitHookFiles`,
+  `Examples`, `Templates`, `Services`, `ProjectDefaults`, and `Deprecated`.
+  `GlobalCloudConfig` is the remaining direct document reader: it composes
+  `global-config.yaml`, calls
   `file.Open`, expands the process environment, and unmarshals YAML.
 - `Deprecated` feeds `ListDeprecated`, Maven `RemoveDeprecated` and
   `StatusDeprecated`, and status/upgrade command flows. Focused Maven tests
   guard ordered partial removal/template results and replacement-error
   continuation through a cloud double; acceptance supplies an empty valid
-  cached JSON file. The direct reader itself has no focused fixture contract.
-  `GlobalCloudConfig` feeds template/tips source output and likewise has no
-  direct focused fixture. These gaps remain guards.
-- The fourth bounded P8 slice is selected but not implemented: add only a
-  private zero-value-safe deprecated loader and helper in
-  `pkg/config/cloud.go`, with focused characterization in
-  `pkg/config/cloud_test.go`. The exported `Deprecated()` remains the
-  production wrapper and its signature is unchanged.
-- Production must select the file-backed loader, deliver the complete
-  `Directory`, request only `deprecated.json`, and delegate to unchanged
-  `file.ReadJson`. The helper loads exactly once per invocation; repeated calls
-  re-read independently and remain cache-only and non-memoized. Exact
-  `FilePath`, read, unmarshal, partial-result, nil/empty-slice, and recursive
-  `CloudDeprecated` data semantics are preserved. A missing loader returns
-  zero plus exact `filesystem.ErrNoFilesystem` before developer-path access.
-- Focused TDD must cover production selection, complete delivery, exact
-  filename, independent repeated calls, representative complete recursive
-  decode, exact dependency/path/read/unmarshal results, safe zero behavior,
-  and non-empty recordings. It may not change `ListDeprecated`, Maven or
-  command callers, refresh, another reader, constructor, tracked fixture,
-  mutation file, public API, Go floor, or dependency metadata.
+  cached JSON file. The new private loader tests now cover that read boundary
+  directly without changing the caller flows. `GlobalCloudConfig` feeds
+  template/tips source output and still has no focused reader fixture; its
+  environment and consumer gaps remain guards.
+- The fourth slice is complete. Production selects `fileDeprecatedLoader`,
+  delivers the whole `Directory`, requests only `deprecated.json`, and uses
+  unchanged `file.ReadJson`. The private helper loads exactly once per call;
+  repeated calls re-read independently. The exported wrapper, recursive
+  result and partial-error semantics, nil/empty slices, callers, cache layout,
+  and refresh policy remain unchanged.
 - The config-cloud mutation manifest remains byte-exact because no current
   expression crosses `Deprecated`; both direct and T1-T10 meta gates must
   retain the same ten IDs, selections, meanings, and exact 10/10 kills. Full
   gates are the recorded exact-Go-1.26.7 offline/readonly suite. Rollback is
   the single focused two-file implementation commit, with no API, cache schema,
   fixture, caller-policy, user-data, or dependency migration to unwind.
-- The planning checkpoint began clean at exact handoff HEAD
-  `e3dbf55ce219a30887e4a1140f0edef8199036b7`, parent
-  `c999212d266d98868930769108e4e8a73070a0a2`, tree
-  `da7c07deba78d3bb1884bf04577e2b16ebaa63e9`, with its exact five-file
-  launcher/documentation shape. The project-defaults implementation has exact
-  parent `f45d6c4ab63b1c6e76fa31a1b710fbc07ae31f38`, tree
-  `7914ce896206532040fc66fc0dd7f366926aa891`, and exact two-file shape.
-  Cache-probe, services, and UUID ancestry reproduce.
-- The reciprocal 333-archive graph, sole NEXT state, launcher mirror/check,
-  ordinary and ignored cleanliness, and unchanged protected readers, callers,
-  fixtures, mutation files, and dependency metadata reproduce. Exact Go 1.26.7
-  confirms Go 1.18, 234/3,599/355/429/197/41/1,067 counts and exact
-  `go.mod`/`go.sum`/graph hashes. Focused config/context/Maven/command tests and
-  unchanged direct/meta 10/10 mutation gates pass under contained scratch.
-- The prepared handoff has exactly five launcher/documentation paths, a
-  connected 334-record graph with one NEXT implementation archive, byte-exact
-  launcher/archive prompt mirroring, valid shell syntax, passing launcher
-  `--check`, clean diffs, and all 62 launcher lifecycle controls. Its contained
-  task root held 267 directories and 3,396 regular files with no symlink or
-  special entry and was removed after containment verification.
-- The sole successor implements only the private deprecated loader seam. It
-  expires on any changed reader/result/caller/cache/API/mutation/dependency
-  premise or need for `ply-config` knowledge. Direct dependency inspection or
-  selection, caller cleanup, generic/shared reader work, `GlobalCloudConfig`,
-  construction, Spring, and packaging remain unowned.
+- The implementation checkpoint began clean at handoff HEAD
+  `deb6e42d333bb8621c4579ec6b658ab36a9af572`, parent
+  `e3dbf55ce219a30887e4a1140f0edef8199036b7`, with its exact five-file
+  launcher/documentation shape and connected 334-archive graph. Deprecated
+  commit `51da9bcfc0eb8ae871c98467c52c942db6b480bd` has exact parent
+  `deb6e42d333bb8621c4579ec6b658ab36a9af572`, tree
+  `e095c58797d42b9fc4a1ba353c9ddc1916a70614`, and exact two-file shape.
+  Earlier P8 and UUID ancestry reproduce.
+- Exact Go 1.26.7 confirms Go 1.18, 234/3,599/355/429/197/41/1,067 counts
+  and exact `go.mod`/`go.sum`/graph hashes. Focused and full tests, race, vet,
+  compatibility, complete preflight, test/install, empty-HOME count-two,
+  unchanged direct/meta 10/10 config-cloud mutations, all 15 audit controls,
+  and all 62 launcher controls pass. Structured Q0-Q2 has all automated rows
+  PASS and zero scoped ratchet regression; stale baseline-bound manual evidence
+  is not misrepresented as current evidence.
+- The task-owned scratch was contained and audited across 8,043 directories
+  and 46,534 regular files with zero symlink or special entry before removal.
+- The sole successor is planning-only. It must re-characterize the post-
+  deprecated boundary and may select at most one smallest repository-owned
+  cloud slice or stop unresolved. `GlobalCloudConfig` is a candidate, not an
+  authorized implementation. Direct `ply-config` inspection or selection,
+  caller cleanup, generic/shared reader work, construction, Spring, and
+  packaging remain unowned.
 
 ## Repository And Continuity
 
@@ -7984,13 +7970,13 @@ The selected-module queue is exhausted through the final Xordataexchange
 Crypt decision. All 220 P7 archives are answered, the unchanged project and
 common tidy identities reproduce, exact-Go project and compatibility gates
 pass, and all 15 quality-audit meta-controls pass canonically. P7 is complete;
-P8 is active without implementation. The full evidence and exact guard
-language are retained in the answered exit archive and roadmap.
+P8 is active after four bounded implementations. The full P7 evidence and
+exact guard language are retained in the answered exit archive and roadmap.
 
 ## Next Bounded Objective
 
-Run only [the prepared bounded cloud planning checkpoint](agent-sessions/2026-09-24T164219+0200-plan-next-p8-cloud-modernization-move.md).
-Re-characterize the post-project-defaults `GitCloudConfig` boundary and select
+Run only [the prepared bounded cloud planning checkpoint](agent-sessions/2026-09-24T174851+0200-plan-next-p8-cloud-modernization-move.md).
+Re-characterize the post-deprecated cloud boundary and select
 at most one smallest repository-owned next implementation slice or stop
 unresolved. Do not implement it, inspect or select `ply-config`, combine
 readers, change source/dependencies/callers/fixtures/mutations, or begin Spring
