@@ -1,41 +1,46 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T10:19:13+02:00
+Generated: 2026-09-24T11:11:24+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P7 Checkpoint
 
-- The bounded `github.com/ugorji/go v1.1.4` evaluation is complete with no
-  project change and no evaluation-time exception. Primary evidence resolves
-  27 canonical Go-1.18-compatible stables; v1.2.14 is highest and closes over
-  split `github.com/ugorji/go/codec v1.2.14`. Every stable's mandatory complete
-  suite contains prohibited cyclic/large payloads, with later depth-limit and
-  malformed-CBOR cases, so complete test rows were stopped before execution
-  and no stable fully qualifies. Selected v1.1.4 independently fails build,
-  test compilation, and vet through an undeclared tools import.
-- The current sole mvn-pom-mutator request and all 87 requests across 84
-  historical checkpoints are metadata-only; target why/import/load/runtime/
-  root facts are negative. A manufactured v1.2.14 get adds target plus codec
-  (235 modules/3,602 edges), violating the one-selection rule; tidy discards
-  both roots and restores the protected common projection. No changed
-  selection has a genuine supported owner.
-- Candidate/root/codec partial native, cross-compilation, ordinary fixture,
-  archive/API, and advisory evidence is recorded in the answered evaluation
-  but does not qualify a release. Every protected project, SDK, advisory,
-  Go-floor, earlier-decision, and 27/27 L2 guard remains exact. Final exact-Go-
-  1.26.7 unchanged-project gates pass.
+- The bounded `github.com/xiang90/probing
+  v0.0.0-20190116061207-43a291ad63a2` evaluation is complete with no project
+  change and no evaluation-time exception. The proxy canonical stable and
+  prerelease lines are empty: upstream tags/Releases `0.0.1` and `0.0.2` omit
+  the mandatory `v` prefix and resolve only as pseudo-versions. Selected is the
+  `0.0.2` commit; proxy latest is
+  `v0.0.0-20221125231312-a49e3df8f510`. No canonical stable exists.
+- Selected and latest each have a one-module standard-library closure and pass
+  both exact SDKs' verification, build, complete count-one/count-ten/race, vet,
+  and 40/40 supported cgo-disabled production/test-compilation rows. Their
+  seven regular proxy entries are byte-identical to Git. Passing rows do not
+  create a stable release or establish ownership.
+- The current mvn-pom-mutator request and all 123 incoming requests across 84
+  historical checkpoints are metadata-only; all 68 requester Go files have
+  zero target imports. Target why/import/load/runtime/root facts are negative.
+  Latest exact-get changes only the target selection plus a manufactured root,
+  but tidy rejects it and restores selected through requester metadata in the
+  exact common projection. No changed selection has a genuine supported
+  tidy-stable owner.
+- Exact target/advisory, protected project/hash/count/common-tidy, SDK,
+  Go-floor, UUID, every earlier qualification/exception, and 27/27 L2 guards
+  remain exact. Final exact-Go-1.26.7 unchanged-project verify/build/
+  count-one/race/vet gates pass. No source, dependency, root, projection,
+  study, other group, or P8 work is retained.
 - P7 is paused at sole NEXT decision
-  `2026-09-24T101913+0200-decide-ugorji-go-product-direction`: choose target-
-  specific retention, authorize a later measurement-only elimination study,
-  or stop unresolved. Do not run the study, change dependencies/source,
-  combine another group, or begin P8.
-- The task scratch tree was audited at 153,961 entries with zero symlinks or
-  special entries and removed. Launcher `--check`, prompt mirror, sole-NEXT,
-  chain, and diff checks pass. `make test-agent-start` again passes controls
-  1-9 and stops at the known control-10 hardcoded-heading incompatibility; no
-  production/test change is authorized by this documentation handoff.
+  `2026-09-24T111124+0200-decide-xiang90-probing-product-direction`: choose
+  target-specific retention, authorize only a later measurement-only
+  elimination study, or stop unresolved. Do not run the study, transfer an
+  exception, evaluate another dependency, or begin P8.
+- The 303,296-entry contained task tree has zero symlinks or special entries
+  and is removed. Production launcher `--check`, prompt mirror, sole-NEXT,
+  reciprocal-chain, syntax, and diff checks pass. `make test-agent-start`
+  passes controls 1-9 and stops at the known control-10 hardcoded outgoing-
+  heading incompatibility; no production/test change is authorized.
 
 ## Repository And Continuity
 
@@ -7755,14 +7760,76 @@ contained task entries are audited with zero symlink or special entries and
 removed; no study, dependency/source/root/projection change, other dependency
 group, or P8 work ran.
 
-P7 remains active only with the prepared, unlaunched Xiang90 Probing evaluation
-described below. P8 remains queued.
+P7 has advanced only through the completed Xiang90 Probing evaluation described
+below. P8 remains queued.
+
+## Xiang90 Probing Evaluation
+
+No canonical exact-path stable or prerelease exists. The public, enabled,
+unarchived, non-fork MIT repository has only lightweight tags and GitHub
+Releases `0.0.1` and `0.0.2`; both omit the required `v` prefix and resolve to
+pseudo-versions. Selected
+`v0.0.0-20190116061207-43a291ad63a2` is the `0.0.2` commit, and proxy latest is
+`v0.0.0-20221125231312-a49e3df8f510`. `/v2` and `/v3` are absent, and neither
+pseudo-version declares a Go version, dependency, replacement, retraction, or
+deprecation.
+
+Both pseudo-versions have one-module standard-library closures. Under exact Go
+1.18.10 and Go 1.26.7 they pass verification, build, no-run test compilation,
+complete upstream count-one/count-ten/race, vet, and all 40 supported
+cgo-disabled production/test-compilation rows. Their seven regular archive
+entries are byte-identical to Git; there are no symlink, submodule, generated/
+embed, build-tag, cgo, or unsafe boundaries. The three bounded upstream tests
+pass. Passing pseudo-version rows are suite evidence and cannot create a
+canonical stable or imply safety.
+
+The public interfaces cover prober creation, timed HTTP probes, live status,
+health JSON, reset, and removal. Caller-owned transport and endpoint slices,
+live status aliasing, mutexes, timer/network/clock/goroutine nondeterminism,
+response-body/error handling, endpoint rotation, stop-channel/ticker cleanup,
+and lack of in-flight cancellation are exact recorded boundaries. Latest
+changes only private first-sample SRTT initialization.
+
+The sole current edge is loaded direct mvn-pom-mutator v0.2.3 requesting the
+target indirectly. Requester why is positive, but its 11 Go files have zero
+target imports. Target why, repository imports, 355/429/197/41 loads, runtime
+relevance, and root status are negative; the sum has only the target module-
+file checksum. All 88 follow-history commits reduce to 84 graphable
+checkpoints, every one selects exact selected and none roots it. The 123
+requests span Viper v1.4.0/v1.7.0/v1.7.1 at 36/1/35, old mutator v0.1.41 at
+four, and new mutator v0.2.0/v0.2.1/v0.2.3 at 2/5/40 across thirteen route
+epochs and six main names. All 68 requester Go files have zero target imports;
+every boundary is metadata-only.
+
+Selected exact-get manufactures only a redundant root/source sum/main edge.
+Latest exact-get changes exactly target selection plus its manufactured root
+and sums. Both retain zero target loads and 234 modules/3,600 edges. Ordinary
+tidy removes either root, discards latest, and restores selected only through
+requester metadata in the protected common 52/948-line, 234-module/3,557-edge
+projection. No projection is retained; latest has no genuine supported
+tidy-stable owner.
+
+Exact selected/latest OSV/GitHub and pinned govulncheck v1.8.0 focal results
+are empty; absence is neither qualification nor safety evidence. Corrected
+index/CNA, project 30/22/20/20 without target or named protected traces,
+client_golang GHSA/GO/CVE, official SDK, project/hash/common-tidy, Go-floor,
+every earlier selection/exception, and accepted 27/27 Q0-Q2 guards remain
+exact. Final exact-Go-1.26.7 unchanged-project verify/build/count-one/race/vet
+gates pass. No source/dependency/root/projection/exception/study/other-group/P8
+work is retained.
+
+The evaluation grants no exception. P7 stops for exactly one prepared,
+unlaunched reciprocal decision: retain selected under its own unqualified,
+non-transferable exception; authorize but do not run the later measurement-
+only **Mvn-Pom-Mutator Xiang90 Probing Elimination Study**; or stop P7
+unresolved.
 
 ## Next Bounded Objective
 
-Run only [the prepared Xiang90 Probing evaluation](agent-sessions/2026-09-24T103516+0200-evaluate-xiang90-probing-dependency.md).
-Evaluate exact selected indirect `github.com/xiang90/probing
-v0.0.0-20190116061207-43a291ad63a2` as one bounded P7 dependency group.
-Preserve Ugorji Go and every earlier result under their separate guards. Do not
-run an ownership study, reopen a completed module, transfer an exception,
-combine another group, launch a successor, relax Go 1.18, or begin P8.
+Run only [the prepared Xiang90 Probing product decision](agent-sessions/2026-09-24T111124+0200-decide-xiang90-probing-product-direction.md).
+Choose exactly one numbered direction for exact selected indirect, unloaded
+`github.com/xiang90/probing
+v0.0.0-20190116061207-43a291ad63a2`. Preserve Ugorji Go and every earlier
+result under separate guards. Do not run an ownership study, change source or
+dependency metadata, evaluate another group, launch a successor, transfer an
+exception, relax Go 1.18, or begin P8.

@@ -16533,6 +16533,30 @@ are resolved or explicitly risk-accepted.
   exact selected indirect `github.com/xiang90/probing
   v0.0.0-20190116061207-43a291ad63a2`. P8 remains queued.
 
+### P7 Xiang90 Probing Evaluation Checkpoint (2026-09-24)
+
+- Exact selected indirect, unloaded `github.com/xiang90/probing
+  v0.0.0-20190116061207-43a291ad63a2` remains unchanged. The exact-path proxy
+  stable and prerelease lines are empty: upstream `0.0.1` and `0.0.2` tags/
+  Releases omit the mandatory `v` prefix and resolve only to pseudo-versions.
+  Selected is the `0.0.2` commit; proxy latest is
+  `v0.0.0-20221125231312-a49e3df8f510`. No canonical stable exists.
+- Both pseudo-versions have one-module standard-library closures and pass exact
+  Go 1.18.10 and Go 1.26.7 verification, build, complete count-one/count-ten/
+  race, vet, and 40/40 supported cgo-disabled production/test-compilation
+  rows. Their archives are byte-identical to Git and the three bounded upstream
+  tests pass. Passing rows cannot create a stable release or imply safety.
+- The current edge and all 123 request instances across 84 historical
+  checkpoints are metadata-only; all 68 requester Go files have zero target
+  imports. Target why/import/load/runtime/root facts are negative. Latest get
+  changes only target selection plus a manufactured root, but ordinary tidy
+  removes it and restores selected through requester metadata in the protected
+  common projection. There is no genuine supported tidy-stable owner.
+- No dependency/source/root/projection or exception is retained. Protected
+  project, SDK, advisory, Go-floor, UUID, every earlier-decision, and 27/27 L2
+  guards remain exact; final unchanged-project Go 1.26.7 gates pass. One
+  reciprocal product-direction decision is prepared; P8 remains queued.
+
 ### P8 - Domain Modernization
 
 Status: queued after the core L2 flows.
