@@ -16755,8 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after nine bounded cloud implementation slices; one fresh
-planning checkpoint is prepared to select at most one further owned cloud slice.
+Status: active after nine bounded cloud implementation slices; the tenth
+bounded slice is selected and prepared for implementation.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17289,6 +17289,72 @@ planning checkpoint is prepared to select at most one further owned cloud slice.
   It may not implement a slice, inspect or select `ply-config`, repair profile
   behavior, route `HasTemplate`, reopen an earlier seam, alter caller policy,
   or begin Spring or packaging work.
+- The fresh planning checkpoint reproduced clean handoff HEAD
+  `2fbed1cc16d64aef53b1d0048109fab8a498d85f`, parent
+  `96275513bf0e1992ba6864b30c17e35bf2b27447`, tree
+  `824b27ca8052b2829e722769e59168972b806947`, and its exact five-file
+  shape. The focused ninth implementation retains parent
+  `3d98042f2fa10efe2386822fda0deebf7d541365`, tree
+  `3c82a32c2a67eafd659140f6a92625769b307330`, and exactly
+  `pkg/config/cloud.go` plus `pkg/config/cloud_template_lookup_test.go`. All
+  earlier P8 and Google UUID commits are ancestral; the reciprocal 345-record/
+  sole-NEXT launcher state, prompt mirror/check, shell syntax, ordinary/ignored
+  cleanliness, and unchanged protected source, test, fixture, mutation, and
+  dependency inputs pass.
+- Direct exact Go 1.26.7 reproduced Go 1.18,
+  234/3,599/355/429/197/41/1,067, and all three protected hashes. Focused
+  config/context/Maven/template/command tests and both byte-unchanged config-
+  cloud mutation gates pass under `umask 022`, offline/readonly inputs, and
+  managed scratch with exact 10/10 kills. A discarded forced-local measurement
+  used only the known Homebrew underlying Go 1.26.2; accepted evidence invoked
+  the resolved Go 1.26.7 binary directly and changed no repository input.
+- All repository-owned cloud file/network/construction effects remain behind
+  private dependencies or completed production adapters. One active cloud
+  composition boundary remains direct: `ValidTemplatesFrom` applies unchanged
+  first-occurrence `unique` ordering and calls public `Template` once per unique
+  name until the first error. Build validation is its sole production caller;
+  each successful call currently triggers a fresh complete template walk and
+  project load through the three completed template seams.
+- Candidate comparison selects only a private per-name template loader for
+  `ValidTemplatesFrom` in `pkg/config/cloud.go`, with new focused
+  characterization in `pkg/config/cloud_valid_templates_test.go`. A separate
+  `HasTemplate` seam is explicitly guarded and callerless; deprecated/service
+  presentation or pure policy has no active caller; a shared catalog or
+  changed `unique` algorithm risks current repeated-load, order, and partial-
+  result behavior; caller policy, other readers, and direct `ply-config` work
+  remain guarded or unauthorized.
+- Production must explicitly select a private Git-backed loader, pass the
+  complete receiver and exact name once, and delegate exactly once per first-
+  occurrence unique name to unchanged `gitCfg.Template(name)`, returning its
+  complete value and exact error without inspection, copying, caching,
+  refreshing, or normalization. A missing loader returns zero `CloudTemplate`
+  plus exact `filesystem.ErrNoFilesystem` before receiver access.
+- The private helper preserves unchanged `unique`: nil/empty inputs produce nil
+  with no load, first occurrences retain case-sensitive input order, exact
+  successful values and embedded identities append in order, and the first
+  error returns the exact preceding partial result, discards any failing value,
+  and prevents later calls. Repeated invocations remain independent, and each
+  unique name retains one fresh full eager walk and project load.
+- Focused TDD must cover production selection and tracked production partial
+  results, complete receiver/name delivery and call counts, exact value/error
+  and identities, unique ordering and duplicates, stop/error/partial/failing-
+  value behavior, nil/empty results, repeated calls, safe zero behavior, and
+  non-empty recordings. `Template`, `Templates`, both earlier template seams,
+  `HasTemplate`, callers, openers, project/profile/migration/POM behavior,
+  cache layout, public API, fixtures, and dependencies remain unchanged.
+- The config-cloud mutation files remain byte-exact. The existing valid-
+  template-deduplication mutation retains its exact branch, selected test, and
+  meaning; direct/meta gates must retain all ten IDs and exact 10/10 kills.
+  Rollback is one focused two-file commit with no API, cache, profile, fixture,
+  caller-policy, user-data, or dependency migration.
+- The selected slice expires on changed `ValidTemplatesFrom`, `unique`, loader
+  selection, receiver/name/call, fresh-load, order, identity, partial/error,
+  nil/empty, build, mutation, zero, public, cache, profile, fixture, Go,
+  dependency, or quality behavior; any need to route `HasTemplate`, change a
+  caller or reader, share/export/cache a catalog, inspect `ply-config`, or
+  reopen a completed seam; or any other protected-input change. The reciprocal
+  successor implements only this private per-name loader and may not combine a
+  second move.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 

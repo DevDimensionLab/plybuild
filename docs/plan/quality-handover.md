@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T23:53:42+02:00
+Generated: 2026-09-25T00:17:48+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -20,15 +20,15 @@ session diary.
   refresh three-file slice, four exact cloud-reader two-file slices, the exact
   root- and project-opener pairs, the exact template-project-loader pair, and
   the exact template-list-loader pair.
-- This implementation checkpoint began clean at planning handoff HEAD
-  `3d98042f2fa10efe2386822fda0deebf7d541365`, parent
-  `d297ccb8a5cdbd4d92c97b9c322f27196148a944`, tree
-  `988f3e284e4a18a76ce428e635425f9d52ff341a`, with exactly the launcher,
-  answered planning archive, this then-NEXT implementation archive, rolling
-  handover, and roadmap changed. The reciprocal chain had 344 archives and one
-  NEXT; all earlier P8 and Google UUID commits were ancestral, protected inputs
-  were unchanged, and launcher mirror/check, shell syntax, and ordinary/ignored
-  cleanliness passed.
+- This planning checkpoint began clean at implementation handoff HEAD
+  `2fbed1cc16d64aef53b1d0048109fab8a498d85f`, parent
+  `96275513bf0e1992ba6864b30c17e35bf2b27447`, tree
+  `824b27ca8052b2829e722769e59168972b806947`, with exactly the launcher,
+  answered template-list-loader implementation archive, this then-NEXT
+  planning archive, rolling handover, and roadmap changed. The reciprocal chain
+  had 345 archives and one NEXT; all earlier P8 and Google UUID commits were
+  ancestral, protected inputs were unchanged, and launcher mirror/check, shell
+  syntax, and ordinary/ignored cleanliness passed.
 - Focused commit `96275513bf0e1992ba6864b30c17e35bf2b27447`
   has parent `3d98042f2fa10efe2386822fda0deebf7d541365`, tree
   `3c82a32c2a67eafd659140f6a92625769b307330`, and changes exactly
@@ -44,25 +44,11 @@ session diary.
   eager list-error precedence, first exact case-sensitive match, complete
   project/interface identities, exact not-found text, and independent fresh
   loads.
-- Focused TDD covers production selection and tracked current/legacy lookups,
-  arbitrary complete receiver delivery and one call, complete list and exact
-  error delivery, matching-partial error precedence, first match and identities,
-  nil/empty/case-mismatch/empty-name not-found results, repeated loads, safe
-  zero behavior, and non-empty recordings. `Templates`, both completed template
-  seams, `HasTemplate`, `ValidTemplatesFrom`, callers, cache/profile/project/
-  migration/POM behavior, fixtures, and mutations remain unchanged.
-- Final-commit lookup/config/context/Maven/template/command tests pass under
+- Exact-Go lookup/config/context/Maven/template/command tests pass under
   exact Go 1.26.7, `umask 022`, offline/readonly module inputs, and managed
   scratch. The byte-unchanged config-cloud direct and T1-T10 meta gates retain
   all ten exact IDs, selections, meanings, and
   `declared=10 killed=10 survived=0 unusable=0`.
-- Direct exact-Go module verification, build, count-one and race tests, and vet
-  pass. Pinned API/CLI compatibility and meta-tests, complete preflight,
-  ordinary `make test`, explicit `make test-install`, a real scratch-local
-  install/help smoke, fresh empty-HOME count-two, all 15 audit controls, and all
-  62 launcher controls pass. The canonical audit returned findings exit 1:
-  all 21 automated Q0-Q2 rows PASS, six manual rows remain unclaimed, seven
-  comparable ratchets improve, and Q3.4 is the sole pre-existing regression.
 - Go 1.18 and protected 234 modules, 3,599 graph edges, 355 production entries,
   429 complete-test entries, 197 module-backed entries over 41 loaded modules,
   and 1,067 `go.sum` lines reproduce. Protected `go.mod`, `go.sum`, and
@@ -70,27 +56,69 @@ session diary.
   `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
   `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
   and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-- One discarded compatibility invocation used the Homebrew launcher with
-  automatic toolchain resolution while checksum verification was disabled and
-  stopped before comparison. Accepted compatibility and later gates invoked
-  the resolved Go 1.26.7 binary directly. Sandbox-denied `xcrun` cache probes
-  created no outside artifact; exact leak guards passed.
+- One discarded measurement invocation forced the Homebrew launcher's
+  underlying Go 1.26.2 through `GOTOOLCHAIN=local`; accepted measurements and
+  gates invoked the resolved Go 1.26.7 binary directly. No repository input
+  changed.
+- Every repository-owned cloud file/network/construction effect remains behind
+  a private dependency or completed production adapter. The remaining active
+  composition boundary is `ValidTemplatesFrom`: it applies unchanged case-
+  sensitive first-occurrence `unique` order and directly calls public
+  `Template` once per unique name until the first error. Build validation is
+  its sole production caller. Each lookup intentionally performs a fresh full
+  template walk and project load through the three completed template seams.
+- Direct `Template` callers remain add-template and Maven deprecated-
+  replacement resolution; the latter logs lookup errors and continues.
+  `HasTemplate` is explicitly guarded and callerless. `ListDeprecated`,
+  `LinkFromService`, and `DefaultServiceEnvironmentUrl` retain presentation or
+  pure policy with no active repository caller. Caller refresh/continue policy,
+  other readers, profile/migration, environment, network, and fixture gaps
+  remain guards.
+- Candidate comparison selects one private per-name template loader for
+  `ValidTemplatesFrom` in `pkg/config/cloud.go`, characterized in new
+  `pkg/config/cloud_valid_templates_test.go`. Shared catalogs, batch lookup,
+  changed `unique`, `HasTemplate`, caller movement, other-reader work, and
+  direct `ply-config` integration are not part of this slice.
+- Production must select one private Git-backed loader, deliver the complete
+  `GitCloudConfig` and exact name, call unchanged `gitCfg.Template(name)` once
+  for each first-occurrence unique name, and return its complete value and exact
+  error without inspection, copying, filtering, caching, refreshing, or
+  normalization. A missing loader returns zero `CloudTemplate` plus exact
+  `filesystem.ErrNoFilesystem` before receiver access.
+- The private helper preserves nil/empty no-load results, first-occurrence
+  case-sensitive order, duplicate suppression, exact appended values and
+  embedded interface identities, the exact preceding ordered partial result at
+  the first error, discarded failing value, no later call, and independent
+  repeated invocations. One fresh complete list walk and project load per
+  unique name remains exact.
+- Focused TDD must cover production selection and tracked production partial
+  results, complete receiver/name/call delivery, exact values/errors and
+  identities, unique order and duplicates, stop/error/partial/failing-value
+  behavior, nil/empty results, repeated calls, safe zero behavior, and non-
+  empty recordings. All completed seams, `HasTemplate`, callers, public API,
+  cache/profile/project/migration/POM behavior, fixtures, and dependencies stay
+  unchanged.
+- The config-cloud mutation files remain byte-exact; the existing valid-
+  template-deduplication mutation retains its exact branch, selection, and
+  meaning, and both gates must retain all ten IDs and 10/10 kills. Rollback is
+  one focused two-file implementation commit with no API, cache, profile,
+  fixture, caller-policy, user-data, or dependency migration.
+- The slice expires on changed `ValidTemplatesFrom`, `unique`, production
+  loader selection, receiver/name/call, per-unique fresh loading, order,
+  identity, partial/error, nil/empty, build, mutation, zero, public, cache,
+  profile, fixture, Go, dependency, or quality behavior; or any need to route
+  `HasTemplate`, change a caller/reader, share/export/cache a catalog, inspect
+  `ply-config`, or reopen a completed seam.
 - The prepared reciprocal handoff has exactly five launcher/documentation
-  paths, a connected 345-record graph with one NEXT planning archive,
+  paths, a connected 346-record graph with one NEXT implementation archive,
   byte-exact launcher/archive prompt mirroring, valid shell syntax, and passing
   launcher/handoff checks. Task-owned scratch is containment/type audited and
   removed before the handoff commit.
-- Rollback is the single focused two-file implementation commit. The completed
-  slice expires on changed fresh-complete-list, eager walk/load, order,
-  identity, error precedence, lookup, downstream, zero, public, cache, profile,
-  fixture, mutation, Go, dependency, or quality behavior, or any need to route
-  `HasTemplate`, change another reader/caller, share/export a catalog, inspect
-  `ply-config`, or reopen a completed seam.
-- The sole successor is planning-only. It must re-characterize the remaining
-  repository-owned cloud boundary and select at most one smallest reversible
-  slice or stop unresolved. It may not implement a slice, inspect or select
-  `ply-config`, repair profile behavior, route `HasTemplate`, alter caller
-  policy, reopen an earlier seam, or begin Spring or packaging work.
+- The sole successor implements only the private `ValidTemplatesFrom` per-name
+  loader and its focused test file. It may not inspect or select `ply-config`,
+  change `unique`, repair profile behavior, route `HasTemplate`, alter caller
+  policy, reopen an earlier seam, or begin a second cloud, Spring, or packaging
+  move.
 
 ## Repository And Continuity
 
