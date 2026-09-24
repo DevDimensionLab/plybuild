@@ -16756,7 +16756,7 @@ are resolved or explicitly risk-accepted.
 ### P8 - Domain Modernization
 
 Status: active after the first four bounded cloud implementation slices; the
-next bounded checkpoint is planning-only.
+fifth bounded slice is selected but not yet implemented.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16843,18 +16843,60 @@ next bounded checkpoint is planning-only.
   regression; the baseline-bound manual evidence is correctly stale rather
   than falsely refreshed from a sample. Protected
   234/3,599/355/429/197/41/1,067 counts and all three hashes reproduce.
-- `GlobalCloudConfig` is now the sole direct document reader, but no work on it
-  is authorized by the completed slice. Its direct path construction,
-  `file.Open`, environment expansion, YAML decode, source formatting, command
-  consumers, and missing fixture contract require a fresh planning checkpoint.
-  Caller refresh-policy gaps, real network/cloud behavior, combined reader
-  work, and construction changes remain guarded.
-- The reciprocal successor is planning-only. It must reproduce the exact
-  five-file handoff, four focused P8 commits and protected state, confirm the
-  deprecated seam, compare only smallest repository-owned candidates, and
-  select at most one implementation slice or stop unresolved. Direct
-  `ply-config` inspection, selection, or integration, implementation, caller
-  cleanup, combined readers, construction, Spring, and packaging are forbidden.
+- The next planning checkpoint reproduces handoff HEAD
+  `70543a3e7efa58c43c5d21fcc78f0c791f7dd1e7`, parent
+  `51da9bcfc0eb8ae871c98467c52c942db6b480bd`, tree
+  `1a316b9a9b760957dbf16288373eb180f0fb365f`, its exact five-file shape,
+  all four focused P8 implementations, Google UUID ancestry, reciprocal
+  335-record/sole-NEXT launcher state, ordinary/ignored cleanliness, protected
+  source/caller/fixture/mutation/dependency inputs, Go 1.18,
+  234/3,599/355/429/197/41/1,067 counts, and all three hashes.
+  Exact-Go-1.26.7 config/context/Maven/command tests and unchanged direct/meta
+  config-cloud 10/10 mutation gates pass under `umask 022` with offline,
+  readonly inputs and contained scratch.
+- The completed deprecated seam retains explicit production selection,
+  complete `Directory` delivery, exact `deprecated.json` and `file.ReadJson`,
+  one independent load per invocation, recursive and slice data, exact path/
+  read/unmarshal/partial results, safe zero behavior, and unchanged public,
+  refresh, caller, fixture, mutation, Go-floor, and dependency contracts.
+- `GlobalCloudConfig` is the sole direct document reader. It directly composes
+  `<implementation>/global-config.yaml` from `Directory.Dir()` with `file.Path`
+  and does not call `Directory.FilePath`; it uses `file.Open`, expands the live
+  process environment over the complete read before YAML decode, returns the
+  current value/error including any partial YAML result, and reads independently
+  on every invocation. `SourceFor` feeds only template markdown and tips source
+  output. There is no tracked global-config fixture or focused reader test.
+- Candidate comparison selects only a private global-config loader in
+  `pkg/config/cloud.go` with characterization in `pkg/config/cloud_test.go`.
+  Environment-only injection is incomplete; `SourceFor`/consumer work does not
+  isolate the reader; a shared document loader would combine incompatible JSON
+  `FilePath` and direct YAML/environment contracts; constructor/caller policy is
+  larger; and direct `ply-config` work lacks authorized dependency knowledge.
+- Production must select the file-backed private loader, receive the complete
+  `Directory`, compose exact `file.Path("%s/global-config.yaml",
+  directory.Dir())` without `FilePath` or an existence probe, preserve unchanged
+  `file.Open`, expand with exact `[]byte(os.ExpandEnv(string(b)))` before
+  unchanged `yaml.Unmarshal`, and return the exact value/error. The helper loads
+  exactly once per call; repeated calls re-read and re-expand independently. A
+  missing loader returns zero plus exact `filesystem.ErrNoFilesystem` before
+  developer-path access.
+- Focused TDD must cover production selection, complete dependency delivery,
+  direct path/no-`FilePath` behavior, independent call counts, representative
+  complete environment-expanded YAML, raw read errors, partial YAML results,
+  safe zero behavior, unchanged `SourceFor`, and non-empty recordings using
+  only disposable local fixtures. Public API, callers, refresh, all other
+  readers, tracked fixtures, cache layout, Go floor, and dependency metadata
+  remain unchanged.
+- The config-cloud mutation manifest remains byte-exact because no current
+  expression crosses `GlobalCloudConfig`; direct and meta gates must retain the
+  same ten IDs, selections, meanings, and 10/10 kills. Rollback is the single
+  focused two-file implementation commit. The slice expires on any changed
+  direct-path/read/environment/YAML/result/caller/cache/API/mutation/dependency
+  premise or any need for `ply-config` knowledge.
+- The reciprocal successor implements only the private global-config loader
+  seam. Direct `ply-config` inspection, selection, or integration, caller
+  cleanup, generic/shared reader work, construction, Spring, and packaging
+  remain forbidden.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
