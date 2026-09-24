@@ -16755,8 +16755,9 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after ten bounded cloud implementation slices; a fresh bounded
-planning checkpoint is prepared.
+Status: active after ten bounded cloud implementation slices; active
+repository-owned seams are exhausted and one owning cloud-direction decision
+is prepared.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17392,6 +17393,54 @@ planning checkpoint is prepared.
   may not implement a slice, inspect or select `ply-config`, repair profile
   behavior, combine or reopen completed seams, alter caller policy, or begin
   Spring or packaging work.
+- The fresh post-tenth planning checkpoint began clean at reciprocal handoff
+  HEAD `0615a2a`, parent
+  `fd69ac206216260b4f1966214062149264e3e347`, tree
+  `09a6c1537cfbc410909fc9a698280ad025a35eee`, with exactly the launcher,
+  answered valid-templates implementation archive, then-NEXT planning archive,
+  rolling handover, and roadmap changed. The focused tenth implementation
+  retains its exact parent/tree/two-file shape. All ten P8 and Google UUID
+  commits are ancestral; the reciprocal 347-record/sole-NEXT state, launcher
+  mirror/check, shell syntax, protected implementation-to-handoff identity,
+  and ordinary/ignored cleanliness pass. All 62 launcher lifecycle controls
+  pass against the prepared decision successor.
+- Direct exact Go 1.26.7 reproduces Go 1.18,
+  234/3,599/355/429/197/41/1,067, and all three protected hashes under
+  `umask 022`, offline/readonly inputs, and managed scratch. Focused config/
+  context/Maven/template/command tests pass. Both byte-unchanged config-cloud
+  mutation gates retain all ten exact IDs, selections, meanings, and
+  `declared=10 killed=10 survived=0 unusable=0`. The task-owned scratch tree
+  was containment/type audited at 543 directories, 3,995 regular files, zero
+  symlinks, and zero special entries, then removed completely.
+- Every active repository-owned cloud operational effect and composition call
+  is now isolated: Git/cache refresh, four cached document reads, Git-hook and
+  example reads, template walk/project construction/list/per-name loading, and
+  both construction sites all select private production dependencies. The only
+  direct `OpenGitCloudConfig` calls are inside the two completed Git opener
+  adapters. Root/project production selection, the public 15-method interface,
+  cache layout, exported values, callers, and exact behavior remain unchanged.
+- Remaining repository-only candidates are not supportable slices under the
+  closed guards. `HasTemplate` and `ListDeprecated` are callerless;
+  `LinkFromService` and `DefaultServiceEnvironmentUrl` are callerless pure or
+  presentation policy; caller refresh/path/continuation cleanup crosses active
+  command policy and public cache knowledge; and shared catalogs, generic
+  readers, or unified openers would combine completed seams and alter fresh-
+  load, ordering, error, or construction contracts.
+- An alternate implementation cannot be specified without external knowledge
+  of `ply-config` API, lifecycle, cache ownership, data mapping, errors, and
+  zero behavior. No eleventh slice is selected. The sole unresolved owning
+  decision is whether to authorize one later bounded read-only `ply-config`
+  compatibility evaluation with no product/dependency change, or close the
+  cloud portion of P8 at the current Git-backed boundary and prepare later
+  Spring planning.
+- The decision-only successor may change exactly its archive, one reciprocal
+  successor archive, launcher mutable regions, roadmap, and rolling handover.
+  It may not inspect `ply-config`, change product/test/dependency state, harden
+  an inactive seam, alter caller policy, begin Spring, or begin packaging. No
+  focused failing characterization is authorized until the owner selects the
+  direction. Production keeps the exact Git default and all completed safe-
+  zero contracts. Rollback is the single documentation-only five-file handoff
+  commit.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 

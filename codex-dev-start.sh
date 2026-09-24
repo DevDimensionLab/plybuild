@@ -1131,25 +1131,26 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-25T005818+0200-plan-next-p8-cloud-modernization-move
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-25T005818+0200-plan-next-p8-cloud-modernization-move.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-25T001748+0200-implement-cloud-valid-templates-loader-seam.md
+#|SESSION_ID=2026-09-25T011458+0200-decide-p8-cloud-modernization-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-25T011458+0200-decide-p8-cloud-modernization-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-25T005818+0200-plan-next-p8-cloud-modernization-move.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Run exactly one fresh bounded P8 cloud-configuration planning checkpoint after
-#|the tenth completed slice. Re-characterize the remaining repository-owned
-#|cloud boundary and select at most one smallest reversible next slice, or stop
-#|unresolved with one owning decision. This is planning only: do not implement a
-#|slice, inspect or select `ply-config`, or begin Spring or packaging work.
+#|Resolve exactly one owning P8 cloud-modernization direction after the ten
+#|completed repository-owned slices and the fresh seam-exhaustion checkpoint.
+#|Choose either a later bounded read-only `ply-config` compatibility evaluation,
+#|or closure of the cloud portion of P8 at the current Git-backed boundary. This
+#|is decision only: do not inspect or select `ply-config`, implement a slice,
+#|change a dependency, begin Spring, or begin packaging.
 #|
 #|# Authorized Roadmap
 #|
-#|P2A-P7 are complete. P8 remains active in cloud configuration only. The first
-#|ten bounded P8 slices are complete at
-#|`57f9d5674157d238a2f93462b65161a17e3b5498`,
+#|P2A-P7 are complete. P8 remains active in cloud configuration only until this
+#|direction decision is recorded. The first ten bounded P8 slices are complete
+#|at `57f9d5674157d238a2f93462b65161a17e3b5498`,
 #|`c12307a078a29af74163df0c658d05c821482a33`,
 #|`c999212d266d98868930769108e4e8a73070a0a2`,
 #|`51da9bcfc0eb8ae871c98467c52c942db6b480bd`,
@@ -1158,93 +1159,92 @@ exit 70
 #|`9c1899d484633e0ce6cf112544ba33ca89bc4adb`,
 #|`d26d19232b18d70a4401586d75604d08f85bd8a8`,
 #|`96275513bf0e1992ba6864b30c17e35bf2b27447`, and
-#|`fd69ac206216260b4f1966214062149264e3e347`. This checkpoint may inspect and
-#|document the current cloud boundary and prepare one successor archive. It may
-#|not change production code, tests, fixtures, mutation files, dependency
-#|metadata, public contracts, Spring, or packaging.
+#|`fd69ac206216260b4f1966214062149264e3e347`. The answered planning checkpoint
+#|selects no eleventh slice because every active repository-owned effect and
+#|composition boundary is isolated and every remaining move is inactive policy,
+#|caller/public policy, a combination of completed seams, or dependent on
+#|prohibited external knowledge.
 #|
 #|# Measurements At Start
 #|
-#|Begin only from the clean reciprocal implementation handoff on
-#|`codex/upgrade-quality`. Verify its branch, exact five-file documentation and
-#|launcher commit shape, answered valid-templates-loader implementation archive,
-#|focused implementation parent/tree and exact two-file shape, all earlier P8
-#|and Google UUID ancestry, sole NEXT state, reciprocal 347-archive chain,
-#|launcher mirror/check, ordinary and ignored cleanliness, and unchanged
-#|protected cloud, project, profile, context, caller, fixture, mutation, and
-#|dependency inputs. The focused tenth implementation must remain commit
-#|`fd69ac206216260b4f1966214062149264e3e347`, parent
+#|Begin only from the clean reciprocal planning handoff on
+#|`codex/upgrade-quality`. Verify its exact five-file launcher/documentation
+#|shape, answered seam-exhaustion archive, focused tenth implementation parent/
+#|tree/two-file shape, all ten P8 and Google UUID ancestry, sole NEXT state,
+#|reciprocal 348-archive chain, launcher mirror/check, shell syntax, ordinary and
+#|ignored cleanliness, and byte-unchanged protected cloud, project, profile,
+#|context, caller, fixture, mutation, and dependency inputs. The tenth
+#|implementation remains `fd69ac206216260b4f1966214062149264e3e347`, parent
 #|`7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, tree
 #|`43fb3cb60255482590737012691b8c67ce8c9116`, changing only
-#|`pkg/config/cloud.go` and `pkg/config/cloud_valid_templates_test.go`. The
-#|project remains Go 1.18 with 234 modules, 3,599 graph edges, 355 production
-#|entries, 429 complete-test entries, 197 module-backed entries over 41 loaded
-#|modules, 1,067 `go.sum` lines, and protected `go.mod` / `go.sum` / graph hashes
+#|`pkg/config/cloud.go` and `pkg/config/cloud_valid_templates_test.go`.
+#|
+#|The protected project remains Go 1.18 with 234 modules, 3,599 graph edges, 355
+#|production entries, 429 complete-test entries, 197 module-backed entries over
+#|41 loaded modules, 1,067 `go.sum` lines, and `go.mod` / `go.sum` / graph hashes
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
 #|and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-#|Stop for a fresh owning decision if a protected input changed.
+#|Stop for a fresh owning decision if any protected premise changed.
 #|
 #|# Role And Boundaries
 #|
-#|This is one evidence-backed planning checkpoint, not implementation,
-#|dependency evaluation, profile-policy repair, generic reader or constructor
-#|refactoring, shared/exported catalog design, caller-policy cleanup, security
-#|work, Spring work, or packaging work. Do not change product or test source,
-#|fixtures, mutation files, `go.mod`, or `go.sum`; fetch, inspect, or select a new
-#|dependency; inspect `ply-config`; execute a proposed successor; or reopen a
-#|completed P8 slice. Treat decoded-profile, non-ENOENT, migration, caller-policy,
-#|`HasTemplate`, other-reader, real-network, environment, and fixture gaps as
-#|guards rather than permission to broaden the next slice. Keep all disposable
-#|evidence beneath `${CODEX_SESSION_SCRATCH_ROOT:?}` and remove task-owned scratch
-#|after containment and entry-type verification.
+#|This is one product-direction decision, not implementation, dependency
+#|evaluation, external repository research, API design, profile repair, generic
+#|reader/constructor work, inactive seam hardening, caller-policy cleanup,
+#|security work, Spring work, or packaging work. Do not change product or test
+#|source, fixtures, mutation files, `go.mod`, or `go.sum`; fetch, browse, inspect,
+#|or select `ply-config`; add a dependency; write a compatibility adapter; route
+#|`HasTemplate`; reopen or combine completed seams; alter a caller; or execute
+#|the successor. Keep disposable evidence beneath
+#|`${CODEX_SESSION_SCRATCH_ROOT:?}` and remove task-owned scratch after exact
+#|containment and entry-type verification.
 #|
 #|# Required Reading
 #|
-#|Read the answered valid-templates-loader implementation archive and preceding
-#|planning archive; the answered template-list-loader, template-project-loader,
-#|project- and root-opener, global-config, deprecated, project-defaults, services,
-#|and cache-probe implementation archives; current P8 roadmap and rolling
-#|handover; `docs/design/quality-lift.md`; `pkg/config/cloud.go` and every focused
-#|cloud test; `pkg/config/project_init.go`, its focused opener tests,
-#|`pkg/config/profiles.go`, and `pkg/config/project.go`;
-#|`pkg/context/context.go` and its focused opener tests; every active
-#|`CloudConfig`, `Template`, and `ValidTemplatesFrom` caller in `cmd`,
-#|`pkg/context`, `pkg/maven`, and `pkg/template`; and
-#|`scripts/mutate-config-cloud` with its meta-test. Read only repository-owned
-#|inputs needed to compare remaining candidates. Do not inspect `ply-config`.
+#|Read the answered seam-exhaustion planning archive, answered valid-templates
+#|implementation archive, current P8 roadmap and rolling handover,
+#|`docs/design/quality-lift.md`, `pkg/config/cloud.go`, the focused cloud tests,
+#|both completed opener implementations and tests, and the active cloud callers
+#|identified by the answered checkpoint. Read only repository-owned evidence
+#|needed to resolve the direction. Do not inspect `ply-config` or reopen closed
+#|implementation evidence.
 #|
 #|# Three Moves
 #|
-#|1. Reproduce the protected handoff, focused implementation shape, archive
-#|   graph, launcher mirror, Go/module/graph/source counts and hashes, focused
-#|   config/context/Maven/template/command tests, and both unchanged config-cloud
-#|   mutation gates under exact Go 1.26.7, `umask 022`, offline/readonly inputs,
-#|   and managed scratch. Stop if any protected premise changed.
-#|2. Re-characterize the cloud boundary after the private per-name template
-#|   loader. Inventory only remaining repository-owned direct effects,
-#|   construction choices, and policy boundaries; trace their callers, cache and
-#|   environment knowledge, behavior evidence, public-surface risk, file scope,
-#|   testability, rollback boundary, and interaction with completed seams.
-#|   Compare candidates explicitly and select at most one smallest reversible
-#|   slice only if its exact behavior-preserving contract is supportable without
-#|   `ply-config` knowledge. Otherwise prepare one owning decision.
-#|3. Record the chosen slice or unresolved decision with exact authorized files,
-#|   preserved behavior, focused failing characterization, production default,
-#|   zero-value behavior, verification gates, expiry conditions, and rollback
-#|   boundary. Answer this archive, update only the roadmap and rolling handover,
-#|   prepare exactly one reciprocal implementation-or-decision NEXT archive,
-#|   replace only launcher mutable regions, run launcher/handoff checks, and make
-#|   one local five-file handoff commit. Do not execute the successor.
+#|1. Reproduce the clean five-file handoff, exact focused implementation shape,
+#|   ancestry, 348-record reciprocal graph, sole NEXT, launcher mirror/check,
+#|   cleanliness, counts, hashes, focused exact-Go-1.26.7 tests, and both byte-
+#|   unchanged 10/10 config-cloud mutation gates under `umask 022`, offline/
+#|   readonly inputs, and managed scratch. Stop if a protected premise changed.
+#|2. Choose exactly one direction. Option 1 authorizes one later bounded read-
+#|   only `ply-config` compatibility evaluation that may inspect external API and
+#|   lifecycle evidence but may not select/change a dependency or implement an
+#|   adapter. Option 2 closes the cloud portion of P8 at the current Git-backed
+#|   boundary and prepares only a fresh Spring planning checkpoint. Base the
+#|   choice on roadmap intent, active ownership, public/cache/caller risk,
+#|   evidence required before implementation, reversibility, and the cost of
+#|   retaining the current boundary. Do not create a third implicit option or
+#|   use a callerless/guarded seam to avoid the decision.
+#|3. Record the selected direction, rejected option, preserved production Git
+#|   default and completed safe-zero contracts, exact next authorized files and
+#|   evidence, expiry conditions, verification gates, and documentation-only
+#|   rollback. Answer this archive, update only roadmap and rolling handover,
+#|   prepare exactly one reciprocal NEXT planning/evaluation archive for the
+#|   selected direction, replace only launcher mutable regions, run launcher/
+#|   handoff checks, and make one local five-file handoff commit. Do not execute
+#|   the successor.
 #|
 #|# Automatic Handoff
 #|
-#|If and only if one bounded repository-owned cloud slice is selected, prepare
-#|one implementation successor limited to that slice. If no slice is supportable
-#|or any premise is unresolved, prepare one decision successor instead. In both
-#|cases keep exactly one NEXT archive, preserve byte-exact launcher/archive prompt
-#|mirroring, and stop after the local handoff commit. Do not push, merge, publish,
-#|release, stash, revert, remove the worktree, inspect or integrate `ply-config`,
-#|repair profile behavior, combine or reopen completed seams, alter caller
-#|policy, or begin Spring or packaging work.
+#|If Option 1 is selected, prepare one evaluation-only successor whose first act
+#|is bounded read-only `ply-config` inspection and whose output is a compatibility
+#|map or a fresh stop, never an implementation or dependency selection. If
+#|Option 2 is selected, record the exact retained Git boundary, close cloud work,
+#|and prepare one planning-only Spring successor without beginning Spring work.
+#|In either case keep exactly one NEXT archive, preserve byte-exact launcher/
+#|archive prompt mirroring, and stop after the local handoff commit. Do not push,
+#|merge, publish, release, stash, revert, remove the worktree, change product or
+#|dependency state, repair profile behavior, alter caller policy, or begin
+#|packaging.
 # CODEX_MUTABLE_PROMPT_END
