@@ -7515,14 +7515,72 @@ outside-resolution, dangling, or special entries and removed before handoff.
 P7 stops at exactly one prepared, unlaunched reciprocal TMC product-direction
 decision. No study, successor, other group, or P8 work is included.
 
+## TMC gRPC WebSocket Proxy Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/tmc/grpc-websocket-proxy
+v0.0.0-20190109142713-0ad062ec5ee5` remains unchanged under a TMC-specific,
+unqualified, non-transferable exception. No canonical stable or prerelease
+exists. Selected's path-only synthesized metadata omits its production
+dependencies, so it is not a qualified release. This acceptance is neither
+release qualification nor a safety claim. The **Mvn-Pom-Mutator
+gRPC-WebSocket-Proxy Ownership Study** is not authorized or run.
+
+Retention requires the exact sole current route `main -> mvn-pom-mutator
+v0.2.3 -> selected target`. The requester remains genuinely loaded through
+`cmd -> pkg/pom`, but its target edge must remain metadata-only and all 11
+requester Go files must remain free of target imports. Target why, project
+imports and 355/429/197/41 load populations, runtime relevance, and root status
+remain negative; the protected sum file contains only the selected module-file
+sum.
+
+All 84 graphable checkpoints must continue selecting the same pseudo-version
+without a target root. All 123 incoming instances, seven requester/version
+edges, 14 exact route epochs, historical main names, and Viper/old/new
+Mvn-Pom-Mutator metadata-only boundaries remain expiry guards. Any owner,
+request, route, import/load/runtime, support, root-history, checkpoint, or
+requester-source change requires a fresh owning evaluation and explicit
+decision. No current or historical requester owns newest or any stable.
+
+Selected/newest chronology, commits, trees, parents, times, valid signatures,
+ancestry, sums, proxy archives and byte-identical Git entries; every owner/
+repository/release/GitHub Release/tag/proxy/module/license/package/source and
+archive-entry fact; public API/behavior/caller ownership/mutation/concurrency/
+lifecycle/error boundaries; and build-tag/cgo/generate/embed/unsafe, closure,
+native, vet/test/race/cross, declared/effective Go-floor, projection, and
+advisory evidence remain exact non-transferable expiry guards. Passing newest
+rows, physical selection, and empty advisory evidence do not qualify selected
+or imply safety.
+
+Selected and newest exact-get projections must continue manufacturing target
+roots with zero target loads; ordinary tidy must remove those roots, retain the
+real requester's selected pseudo-version, discard newest, and restore the
+protected common projection. No projection is authorized. Corrected index/CNA,
+newest 24/3/1/1, selected stopped advisory rows, project 30/22/20/20,
+client_golang, exact SDK, project/common-tidy, Go-floor, every earlier
+selection/exception, and 27/27 Q0-Q2 guards remain exact. No exception
+transfers.
+
+Guard-only revalidation reproduces clean continuity at exact TMC evaluation
+HEAD `7f8bdd31a8c5f2d9b31bc7720799a9497ad38097`, parent
+`583bfa1e1a2ce457c62d9d4a7f44a5dda3d251d2`, tree
+`cade670fffb76674b6011817210d01b4b8edfc4c`, its exact five-file changed set,
+UUID ancestry, reciprocal archives/launcher, ordinary/ignored cleanliness,
+exact 234/3,599/355/429/197/41/1,067 project state, protected hashes, and every
+earlier guard. Final exact-Go-1.26.7 verify/build/count-one/race/vet gates pass
+under the standard project umask. Product source, `go.mod`, and `go.sum` remain
+byte-exact; all 7,630 contained task entries were audited with zero symlink or
+special entries and removed. No study, dependency/source/root change, other
+group, or P8 work ran.
+
 ## Next Bounded Objective
 
-Run only [the prepared TMC gRPC WebSocket Proxy product decision](agent-sessions/2026-09-24T082426+0200-decide-tmc-grpc-websocket-proxy-product-direction.md).
-Choose exactly one authorized move for selected indirect
-`github.com/tmc/grpc-websocket-proxy
-v0.0.0-20190109142713-0ad062ec5ee5`: retain it under a new target-specific,
-unqualified, non-transferable exception; authorize but do not run a later
-measurement-only **Mvn-Pom-Mutator gRPC-WebSocket-Proxy Ownership Study**; or
-stop P7 unresolved. This is decision-only. Do not rerun the evaluation or a
-completed module, execute any study, change dependency/source/root state,
+Run only [the prepared Tv42 HTTP Unix evaluation](agent-sessions/2026-09-24T084125+0200-evaluate-tv42-httpunix-dependency.md).
+Evaluate exact selected indirect
+`github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926` as one bounded
+P7 group. Its sole observed incoming graph edge from go-metrics v0.3.10,
+selected go-metrics v0.4.0 boundary, negative target why, absent project
+import, and module-file-only sum are starting observations only. The evaluation
+is prepared but not launched. Do not run a rejected ownership study, reopen a
+completed module, change another dependency or source, add an unqualified root,
 transfer an exception, combine another group, relax Go 1.18, or begin P8.

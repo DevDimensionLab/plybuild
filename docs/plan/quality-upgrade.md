@@ -16291,6 +16291,58 @@ TMC gRPC WebSocket Proxy evaluation (2026-09-24):
   only **Mvn-Pom-Mutator gRPC-WebSocket-Proxy Ownership Study**; or stop P7
   unresolved.
 
+TMC gRPC WebSocket Proxy product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded
+  `github.com/tmc/grpc-websocket-proxy
+  v0.0.0-20190109142713-0ad062ec5ee5` remains unchanged under its own
+  target-specific, unqualified, non-transferable exception. No canonical
+  stable or prerelease exists; selected's incomplete path-only metadata omits
+  its production dependencies and is not qualified. The acceptance is neither
+  release qualification nor a safety claim. The **Mvn-Pom-Mutator
+  gRPC-WebSocket-Proxy Ownership Study** is neither authorized nor run.
+- Retention requires the exact sole route `main -> mvn-pom-mutator v0.2.3 ->
+  selected target`. The loaded requester remains positive through `cmd ->
+  pkg/pom`, while its target edge remains only a module-file request and all 11
+  Go files remain free of target imports. Target why/import/load/runtime/root
+  facts remain negative, and the sum boundary remains module-file-only.
+- All 84 graphable checkpoints, the no-root and exact-selected state, all 123
+  incoming instances, seven requester/version edges, 14 route epochs,
+  historical main names, and metadata-only requester boundaries remain expiry
+  guards. Any owner, request, route, import/load/runtime, support, root-history,
+  checkpoint, or requester-source change requires a fresh owning evaluation
+  and explicit decision. No requester owns newest or a stable.
+- Selected/newest commit/tree/parent/time/signature/ancestry/sum and proxy/
+  archive identities; every owner/repository/release/GitHub Release/tag/module/
+  license/package/source/archive-entry fact; API/behavior/caller/concurrency/
+  lifecycle/error boundary; and closure, native, vet/test/race/cross,
+  declared/effective Go-floor, projection, and advisory evidence remain exact
+  non-transferable expiry guards. Passing newest rows, physical selection, and
+  empty advisory evidence do not qualify selected or imply safety.
+- Selected/newest exact-get projections must continue manufacturing roots with
+  zero target loads before tidy removes the roots, preserves selected for the
+  real requester, discards newest, and restores the protected common
+  projection. No projection is authorized. Corrected index/CNA, newest
+  24/3/1/1, selected stopped rows, project 30/22/20/20, client_golang, exact
+  SDK, project/common-tidy, Go-floor, every earlier selection/exception, and
+  27/27 Q0-Q2 guards remain exact. No earlier exception transfers.
+- Guard-only revalidation reproduces clean continuity at exact TMC evaluation
+  HEAD `7f8bdd31a8c5f2d9b31bc7720799a9497ad38097`, parent
+  `583bfa1e1a2ce457c62d9d4a7f44a5dda3d251d2`, tree
+  `cade670fffb76674b6011817210d01b4b8edfc4c`, its five-file changed set, UUID
+  ancestry, reciprocal archives/launcher, ordinary/ignored cleanliness, exact
+  234/3,599/355/429/197/41/1,067 project state, protected hashes, and every
+  earlier guard. Final exact-Go-1.26.7 verify/build/count-one/race/vet gates
+  pass; all 7,630 contained task entries were audited with zero symlink or
+  special entries and removed. No study, dependency/source/root change, other
+  group, or P8 work ran.
+- P7 remains active only with one prepared, unlaunched bounded evaluation of
+  the next unevaluated alphabetical module, exact selected indirect
+  `github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926`. Its observed
+  go-metrics v0.3.10 incoming edge, selected v0.4.0 boundary, negative why,
+  absent project import, and module-file-only sum are starting observations
+  only.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
