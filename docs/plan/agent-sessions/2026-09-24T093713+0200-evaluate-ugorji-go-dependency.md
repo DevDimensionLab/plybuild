@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Ugorji Go Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-24T093713+0200-evaluate-ugorji-go-dependency`
 Created: `2026-09-24T09:37:13+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `31426ce983eae597c33c00a8fb146f82e5330ea2220cd39026cbece2b37317a0`
 Previous: [2026-09-24T091320+0200-decide-tv42-httpunix-product-direction.md](2026-09-24T091320+0200-decide-tv42-httpunix-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-24T101913+0200-decide-ugorji-go-product-direction.md](2026-09-24T101913+0200-decide-ugorji-go-product-direction.md)
+Outcome: No canonical stable fully qualifies and no changed selection has a genuine supported tidy-stable owner. Exact selected v1.1.4 remains unchanged without an evaluation-time exception; one reciprocal product-direction decision is prepared.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -219,3 +219,170 @@ module, select a rejected candidate, relax Go 1.18, retain an unqualified or
 ownerless projection, run a rejected ownership study, combine another
 dependency group, launch a successor, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+No canonical `github.com/ugorji/go` stable fully qualifies, and no changed
+selection has a genuine supported tidy-stable project owner. Exact selected
+indirect v1.1.4 therefore remains unchanged. No source, dependency metadata,
+root, projection, or exception is retained; exactly one reciprocal product-
+direction decision is prepared and remains unexecuted.
+
+### Canonical identity and release line
+
+Primary go-import metadata maps the path to
+`https://github.com/ugorji/go.git`. GitHub repository 10373529 is public,
+enabled, unarchived, non-fork, MIT-licensed, and uses `master`. The exact-path
+proxy exposes 33 semver versions: 27 stables from v1.1.1 through v1.2.14 and
+six prereleases. Noncanonical tag `v1.1` is not in the proxy line. V1.2.14 is
+latest at 2025-05-27T13:41:32Z; exact `/v2` and `/v3` lines return 404. All 27
+stable module files preserve Go 1.18: the earliest omit a directive, v1.1.6
+uses Go 1.6, and v1.1.8 onward use Go 1.11. None declares replacement,
+retraction, or deprecation.
+
+Selected v1.1.4 is unsigned lightweight tag/commit
+`2adff0894ba3bc2eeb9f9aea45fefd49802e1a13`, parent
+`74d13ae4984d0b2363d2fd402977ea797f95ed32`, tree
+`5063081b2254c945a919e66d057bead6938d2c02`. Its source/module sums are
+`h1:j4s+tAvLfL3bZyefP2SEWmhBzmuIlH/eqNuPdFPgngw=` and
+`h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=`. Its 64-entry regular
+proxy archive has SHA-256
+`9db847f1d70b63a1d95f8ea44eaa1b271d5cd00498c867bbff122be5e5516c0b`
+and byte-matches all 64 eligible Git files; two Git executable modes are
+normalized to regular archive entries.
+
+Candidate v1.2.14 is unsigned annotated tag at commit
+`71baf8671b3a2ffc3ed0c86ddd8ce25de6c44f0c`, parent
+`d9176f046ecf705e010b472baf1d49b66a147a61`, tree
+`47af2889154724062a1ced81be1fd669d981b64e`, with selected ancestral. Its
+source/module sums are
+`h1:SF7fWwl4qI4M2pMrQNJ+9ewA0YsieKGwe0hsediRIsE=` and
+`h1:bxnq2Vhalv6vaLo6FMr4FrFoOwNKfkjwgEjTaDH+Lck=`. Its eight-entry regular
+archive has SHA-256
+`7a3563f265b529b2d616634e1f049ab2fb0f2a8d5f44a339e039a923a9da3037`
+and byte-matches its eight eligible regular Git files.
+
+V1.2.14 is a one-file compatibility package with no exported API and a blank
+import of its complete minimal closure, split module
+`github.com/ugorji/go/codec v1.2.14`. Codec's unsigned annotated tag resolves
+to commit `5c887fd4a3855f21b8e97442a75aae666c78723e`, parent
+`c848ee3e4d9e6d8f399f1d09eb704b075c35e56e`, tree
+`2501a3ff66a512a51a29c3946c24ecda567e3613`. Its source/module sums are
+`h1:yOQvXCBc3Ij46LRkRoh4Yd5qK6LVOgi0bYOXfb7ifjw=` and
+`h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=`. Its 75-entry regular
+archive has SHA-256
+`3f77badb32adf2ab02c34a588823fcb3a6977297f9c8c5c782344835350b11a3`
+and byte-matches 75 eligible Git files after excluding nested modules and
+including inherited LICENSE; two executable modes are normalized. No eligible
+archive contains a symlink or submodule.
+
+The complete 27-row stable chronology/commit/parent/tree/signature inventory
+is internally consistent and hashes to
+`24a34b19244bec5a54aa2c3634377d706abe7fc7aa6225a59b41738fbff32683`.
+
+### API, behavior, closure, and bounded verification
+
+Codec's documented formats are Binc, CBOR, JSON, Msgpack, and Simple, with
+extension, RPC, and code-generation boundaries. Encoders and decoders are not
+concurrent-use safe but are resettable; handles are shared only after
+configuration. Byte decoders may alias caller input, byte encoders write to a
+caller-owned slice, decode mutates destinations in place, `Must*` methods
+panic, ordinary methods return recovered errors, writer errors propagate, and
+canonical mode supplies deterministic map ordering. Release is a no-op;
+connection lifecycle remains owned by the RPC boundary. The source has safe/
+unsafe, compiler, Go-version, fast-path, codecgen, and generated build
+variants, generated files and `unsafe` paths, but no cgo or embed boundary.
+
+A small ordinary fixture exercised all five formats, repeated deterministic
+encoding, unchanged caller input, initialized-handle sharing, and writer-error
+propagation. Exact Go 1.18.10 and 1.26.7 count-one, count-ten, race count-one,
+and vet rows pass. Fixture go.mod/go.sum/test hashes are respectively
+`5e6c69528a4e8e983abe7ce2abf2bba72fe6eb78628a23818e0d137f1debe921`,
+`74530a6cb7b05b224e5afa40cfb38f875213c8e218dbee6bc0347ac33bc877d2`,
+and `9119680b0abb4a6ddbad212b84d73a900461d20c03d6f7ee32ffe9bfa2292561`.
+
+Under both exact SDKs, v1.2.14 root and codec pass download/verification,
+build, safe no-run test compilation, and vet. Root loads 1 package and 133/133
+production/test entries under Go 1.18.10 and 196/196 under Go 1.26.7; codec
+loads 132/151 and 195/214. Codec's Go-1.18 API snapshot is 1,381 lines at
+SHA-256 `8d8de60c677294d12677355df78cf6b231199c745b5bd7a4dfe193ecc514ddb2`.
+Both root and codec pass all 40 cgo-disabled build/test-compilation rows across
+Darwin amd64/arm64, Linux amd64/arm64/386, Windows amd64/386, FreeBSD amd64,
+Plan 9 amd64, and js/wasm under both SDKs.
+
+Selected v1.1.4 verifies, but native build, test compilation, and vet fail
+under both SDKs because `codec/codecgen/goversion_pkgpath_gte_go111.go`
+imports undeclared `golang.org/x/tools/go/packages`; all 40 cross rows fail at
+that same closure boundary.
+
+Static review of all 27 compatible stables found explicit circular-reference
+and large-container tests in every complete closure; v1.1.2 onward also have
+depth-limit tests and v1.1.8 onward malformed-CBOR tests. Complete count-one,
+repeated, and race rows were stopped before execution under both SDKs because
+those mandatory suites cross the defensive scope. A stopped row is not waived,
+and partial passing rows do not qualify a release. Thus no canonical stable is
+fully qualified.
+
+### Ownership, history, and projection
+
+The current sole incoming edge is main -> direct, loaded
+`github.com/devdimensionlab/mvn-pom-mutator v0.2.3 -> target v1.1.4`.
+Requester why is positive through `cmd -> pkg/pom`, but its 11 Go files have
+zero target imports. Target why is negative. The repository has no target
+import; target is absent from all protected production, complete-test, and
+module-backed loads, runtime-irrelevant, indirect, and not a root. The real
+sum contains only its module-file checksum.
+
+All 84 distinct go.mod checkpoints from 88 follow-history commits graph and
+select v1.1.4. Their 87 direct request instances are Viper v1.4.0 (36),
+co-pilot-cli/mvn-pom-mutator v0.1.41 (4), and devdimensionlab/mvn-pom-mutator
+v0.2.0/v0.2.1/v0.2.3 (2/5/40). All five requester versions have zero target
+imports, so all requests are metadata-only. Thirty-seven route epochs span
+the six historical main-module names, evolving from Cobra -> Viper routes to
+direct mvn-pom-mutator routes. Target is never a root; Viper v1.4.0 is never a
+root, while co-pilot v0.1.41 and devdimensionlab v0.2.0/v0.2.1/v0.2.3 are
+roots in 4/2/5/40 checkpoints. These facts establish no genuine target-source
+owner.
+
+A disposable v1.2.14 get adds both target and codec roots, yielding 76/1,071
+manifest lines, 235 modules, and 3,602 edges at go.mod/go.sum/graph hashes
+`84648f1a2fbcf7e80da1e9a21036c985a33cbda2f73f508881c9a18b257292f3`,
+`475b9e978549f69d8d5203234aa8713b01ab57b4a6db898896084272ac6e4ba5`,
+and `abbe16266818d749623c129dae0dd0d02b3e4c4d7a0b8124ff5189f5ad7deaad`.
+It violates the exact one-selection rule. Ordinary tidy discards both
+manufactured roots and reproduces the protected 52/948-line, 234-module/
+3,557-edge common projection at its exact hashes, with v1.1.4 retained only
+through metadata. There is no changed-selection owner and no projection is
+retained.
+
+### Advisories and final guards
+
+Selected and candidate exact-version OSV responses are empty two-byte objects;
+narrow GitHub global and repository responses are empty arrays. Pinned
+govulncheck v1.8.0, binary SHA-256
+`e9d756ea32f34f30cb614bc775ff8991b4968309688a13f94ca7582dc46b0f2c`,
+built with exact Go 1.26.7 against database timestamp
+2026-09-16T18:00:43Z, reports 0/0/0/0 for candidate root and codec. These
+absences imply neither safety nor qualification.
+
+Twice-fetched Go module indexes remain 518,501 bytes/1,402 records at
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
+The CNA response remains 2,807 bytes at
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+The unchanged project reproduces 30/22/20/20 without a target or named
+protected trace. Client_golang v1.4.0 retains GHSA-cg3q-j54f-5p7p /
+GO-2022-0322 / CVE-2022-21698.
+
+The protected 234/3,599/355/429/197/41/1,067 state, Go 1.18 floor, manifest/
+graph hashes, common tidy projection, exact SDKs, UUID ancestry, every earlier
+decision, and 27/27 Q0-Q2 L2 guard remain exact. Final exact-Go-1.26.7 module
+verification, build, count-one tests, race count-one tests, and vet pass. The
+task-owned scratch tree was contained, audited at 153,961 entries with zero
+symlinks, sockets, FIFOs, devices, or outside-resolving targets, and removed.
+The launcher `--check`, byte-exact prompt mirror, sole-NEXT, reciprocal chain,
+and diff checks pass. `make test-agent-start` passes controls 1-9, then its
+known control-10 fixture rejects the required successor because it hardcodes
+the outgoing decision prompt heading `# Authorized Roadmap`; this evaluation
+does not authorize changing production or test code to broaden that fixture.
+One reciprocal decision is the sole successor; no other dependency group or
+P8 work began.

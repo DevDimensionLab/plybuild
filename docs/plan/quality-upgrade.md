@@ -16471,6 +16471,25 @@ Exit: the declared toolchain matches the verified toolchain, dependency
 upgrades have no unexplained output or API drift, and vulnerability findings
 are resolved or explicitly risk-accepted.
 
+### P7 Ugorji Go Evaluation Checkpoint (2026-09-24)
+
+- Exact selected indirect `github.com/ugorji/go v1.1.4` remains unchanged.
+  The canonical line has 27 Go-1.18-compatible stables; v1.2.14 is highest and
+  requires split codec v1.2.14. No stable fully qualifies because every
+  mandatory complete suite crosses the defensive scope with cyclic/large
+  payloads (and later depth/malformed cases), so complete test rows were
+  stopped, not waived. Selected v1.1.4 also fails its undeclared codecgen tools
+  dependency.
+- The current request and all 87 requests across 84 historical checkpoints are
+  metadata-only; target why/import/load/runtime/root facts are negative. Forced
+  v1.2.14 changes two selections by adding codec, and ordinary tidy discards
+  both roots and restores the exact common projection. There is no genuine
+  supported tidy-stable owner for a changed selection.
+- No dependency/source/root/projection or exception was retained. All protected
+  project, SDK, advisory, Go-floor, UUID, earlier-decision, and 27/27 L2 guards
+  remain exact; final unchanged-project Go 1.26.7 gates pass. One reciprocal
+  product-direction decision is prepared; P8 remains queued.
+
 ### P8 - Domain Modernization
 
 Status: queued after the core L2 flows.

@@ -1,9 +1,41 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T09:37:13+02:00
+Generated: 2026-09-24T10:19:13+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
+
+## Current P7 Checkpoint
+
+- The bounded `github.com/ugorji/go v1.1.4` evaluation is complete with no
+  project change and no evaluation-time exception. Primary evidence resolves
+  27 canonical Go-1.18-compatible stables; v1.2.14 is highest and closes over
+  split `github.com/ugorji/go/codec v1.2.14`. Every stable's mandatory complete
+  suite contains prohibited cyclic/large payloads, with later depth-limit and
+  malformed-CBOR cases, so complete test rows were stopped before execution
+  and no stable fully qualifies. Selected v1.1.4 independently fails build,
+  test compilation, and vet through an undeclared tools import.
+- The current sole mvn-pom-mutator request and all 87 requests across 84
+  historical checkpoints are metadata-only; target why/import/load/runtime/
+  root facts are negative. A manufactured v1.2.14 get adds target plus codec
+  (235 modules/3,602 edges), violating the one-selection rule; tidy discards
+  both roots and restores the protected common projection. No changed
+  selection has a genuine supported owner.
+- Candidate/root/codec partial native, cross-compilation, ordinary fixture,
+  archive/API, and advisory evidence is recorded in the answered evaluation
+  but does not qualify a release. Every protected project, SDK, advisory,
+  Go-floor, earlier-decision, and 27/27 L2 guard remains exact. Final exact-Go-
+  1.26.7 unchanged-project gates pass.
+- P7 is paused at sole NEXT decision
+  `2026-09-24T101913+0200-decide-ugorji-go-product-direction`: choose target-
+  specific retention, authorize a later measurement-only elimination study,
+  or stop unresolved. Do not run the study, change dependencies/source,
+  combine another group, or begin P8.
+- The task scratch tree was audited at 153,961 entries with zero symlinks or
+  special entries and removed. Launcher `--check`, prompt mirror, sole-NEXT,
+  chain, and diff checks pass. `make test-agent-start` again passes controls
+  1-9 and stops at the known control-10 hardcoded-heading incompatibility; no
+  production/test change is authorized by this documentation handoff.
 
 ## Repository And Continuity
 
@@ -7681,18 +7713,14 @@ documentation-only decision session does not authorize changing production or
 test code to broaden that fixture. Treat this as a test-fixture compatibility
 limit; the authoritative reciprocal launcher/archive handoff is valid.
 
-P7 remains active only with one prepared, unlaunched bounded evaluation of the
-next unevaluated alphabetical module, exact selected indirect
-`github.com/ugorji/go v1.1.4`. Its sole observed incoming edge from direct,
-loaded mvn-pom-mutator v0.2.3, the requester's module-file request and 11-file
-zero-import boundary, negative target why/import/load/root facts, and
-module-file-only target sum are starting observations only.
+P7 remains active only at the prepared, unlaunched Ugorji Go reciprocal
+product-direction decision described above. No successor or P8 work began.
 
 ## Next Bounded Objective
 
-Run only [the prepared Ugorji Go evaluation](agent-sessions/2026-09-24T093713+0200-evaluate-ugorji-go-dependency.md).
-Evaluate exact selected indirect `github.com/ugorji/go v1.1.4` under the
-bounded dependency contract. Preserve HTTP Unix and every earlier result under
-their separate recorded guards. Do not execute a rejected study, reopen a
-completed module, transfer an exception, combine another group, launch a
-successor, relax Go 1.18, or begin P8.
+Run only [the prepared Ugorji Go product-direction decision](agent-sessions/2026-09-24T101913+0200-decide-ugorji-go-product-direction.md).
+Choose exactly one authorized direction from the completed evaluation.
+Preserve HTTP Unix and every earlier result under their separate guards. Do
+not repeat the evaluation, run a study, reopen a completed module, transfer an
+exception, combine another group, launch a successor, relax Go 1.18, or begin
+P8.
