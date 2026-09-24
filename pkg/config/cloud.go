@@ -218,6 +218,31 @@ func (gitTemplateListLoader) Load(gitCfg GitCloudConfig) ([]CloudTemplate, error
 	return gitCfg.Templates()
 }
 
+type perNameTemplateLoader interface {
+	Load(gitCfg GitCloudConfig, name string) (CloudTemplate, error)
+}
+
+type validTemplatesDependencies struct {
+	Loader perNameTemplateLoader
+}
+
+func systemValidTemplatesDependencies() validTemplatesDependencies {
+	return validTemplatesDependencies{Loader: gitPerNameTemplateLoader{}}
+}
+
+func (dependencies validTemplatesDependencies) Load(gitCfg GitCloudConfig, name string) (CloudTemplate, error) {
+	if dependencies.Loader == nil {
+		return CloudTemplate{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(gitCfg, name)
+}
+
+type gitPerNameTemplateLoader struct{}
+
+func (gitPerNameTemplateLoader) Load(gitCfg GitCloudConfig, name string) (CloudTemplate, error) {
+	return gitCfg.Template(name)
+}
+
 type refreshGit interface {
 	Clone(url string, target string) shell.Output
 	Pull(target string) shell.Output
@@ -531,8 +556,12 @@ func (gitCfg GitCloudConfig) globalCloudConfig(dependencies globalConfigDependen
 }
 
 func (gitCfg GitCloudConfig) ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error) {
+	return gitCfg.validTemplatesFrom(systemValidTemplatesDependencies(), list)
+}
+
+func (gitCfg GitCloudConfig) validTemplatesFrom(dependencies validTemplatesDependencies, list []string) (templates []CloudTemplate, err error) {
 	for _, t := range unique(list) {
-		template, err := gitCfg.Template(t)
+		template, err := dependencies.Load(gitCfg, t)
 		if err != nil {
 			return templates, err
 		} else {
