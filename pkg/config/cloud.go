@@ -193,6 +193,31 @@ func (initTemplateProjectLoader) Load(directory string) (Project, error) {
 	return InitProjectFromDirectory(directory)
 }
 
+type templateListLoader interface {
+	Load(gitCfg GitCloudConfig) ([]CloudTemplate, error)
+}
+
+type templateLookupDependencies struct {
+	Loader templateListLoader
+}
+
+func systemTemplateLookupDependencies() templateLookupDependencies {
+	return templateLookupDependencies{Loader: gitTemplateListLoader{}}
+}
+
+func (dependencies templateLookupDependencies) Load(gitCfg GitCloudConfig) ([]CloudTemplate, error) {
+	if dependencies.Loader == nil {
+		return nil, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(gitCfg)
+}
+
+type gitTemplateListLoader struct{}
+
+func (gitTemplateListLoader) Load(gitCfg GitCloudConfig) ([]CloudTemplate, error) {
+	return gitCfg.Templates()
+}
+
 type refreshGit interface {
 	Clone(url string, target string) shell.Output
 	Pull(target string) shell.Output
@@ -432,7 +457,11 @@ func (gitCfg GitCloudConfig) HasTemplate(name string) bool {
 }
 
 func (gitCfg GitCloudConfig) Template(name string) (CloudTemplate, error) {
-	templates, err := gitCfg.Templates()
+	return gitCfg.template(systemTemplateLookupDependencies(), name)
+}
+
+func (gitCfg GitCloudConfig) template(dependencies templateLookupDependencies, name string) (CloudTemplate, error) {
+	templates, err := dependencies.Load(gitCfg)
 	if err != nil {
 		return CloudTemplate{}, err
 	}
