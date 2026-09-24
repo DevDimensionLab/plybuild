@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-25T01:14:58+02:00
+Generated: 2026-09-25T01:29:40+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -20,23 +20,23 @@ session diary.
   `fd69ac206216260b4f1966214062149264e3e347`. Their exact shapes remain
   one refresh three-file slice, four document-reader two-file slices, root and
   project opener pairs, and template project/list/per-name loader pairs.
-- This post-tenth planning checkpoint began clean on
-  `codex/upgrade-quality` at handoff HEAD `0615a2a`, direct parent
-  `fd69ac206216260b4f1966214062149264e3e347`, tree
-  `09a6c1537cfbc410909fc9a698280ad025a35eee`. The handoff changes exactly
-  the launcher, answered valid-templates implementation archive, this then-NEXT
-  planning archive, rolling handover, and roadmap.
+- This owning direction decision began clean on `codex/upgrade-quality` at
+  handoff HEAD `5d9f6749ad4ac08b30a955191b1c8487e17b70bb`, direct parent
+  `0615a2a260cd713e16213c774d37f93d95c1cc1c`, tree
+  `e91ca6a5ce320aacda267cb5e205a6012414116c`. The handoff changes exactly
+  the launcher, answered seam-exhaustion archive, this then-NEXT decision
+  archive, rolling handover, and roadmap.
 - The focused tenth implementation remains exact parent
   `7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, tree
   `43fb3cb60255482590737012691b8c67ce8c9116`, changing only
   `pkg/config/cloud.go` and new
   `pkg/config/cloud_valid_templates_test.go`. All ten P8 commits and
   Google UUID `cf53bc64eeb69471d35c7536d196bf1da15f3973` are ancestral.
-- The reciprocal graph had 347 archives and one NEXT. Launcher/archive prompt
+- The reciprocal graph had 348 archives and one NEXT. Launcher/archive prompt
   mirroring, launcher `--check`, shell syntax, exact five-file handoff shape,
   protected implementation-to-handoff source identity, and ordinary/ignored
   cleanliness pass. The complete launcher lifecycle suite passes all 62
-  controls against the prepared decision successor.
+  controls against the prepared compatibility-evaluation successor.
 - Direct exact Go 1.26.7 under `umask 022`, offline resolution, readonly
   inputs, and managed scratch reproduces Go 1.18, 234 modules, 3,599 graph
   edges, 355 production entries, 429 complete-test entries, 197 module-backed
@@ -50,7 +50,7 @@ session diary.
   ID, selection, meaning, and
   `declared=10 killed=10 survived=0 unusable=0`. Protected product, test,
   fixture, mutation, dependency, project, profile, context, and caller inputs
-  remain unchanged. The contained task root had 543 directories, 3,995 regular
+  remain unchanged. The contained task root had 522 directories, 4,103 regular
   files, zero symlinks, and zero special entries and was removed completely.
 - Every active repository-owned cloud operational effect and composition call
   is isolated behind a private dependency or completed adapter: Git clone/pull
@@ -75,29 +75,48 @@ session diary.
   completed seams and risk fresh-load, ordering, error, construction, or
   rollback contracts. Decoded-profile, non-ENOENT migration, real-network,
   environment, other-reader, and fixture gaps remain guards.
-- No eleventh repository-owned slice is selected. An alternate cloud
-  implementation cannot be specified without inspecting `ply-config` API,
-  lifecycle, cache ownership, data mapping, errors, and zero behavior. The sole
-  unresolved owning direction is whether to authorize one later bounded read-
-  only compatibility evaluation with no dependency/product change, or close
-  cloud work at the current Git-backed boundary and proceed only later to
-  Spring planning.
-- The prepared decision-only successor may change exactly its archive, one new
-  reciprocal successor archive, launcher mutable regions, roadmap, and rolling
-  handover. It may not inspect or select `ply-config`, modify source/tests/
-  dependencies, harden an inactive seam, alter caller policy, begin Spring, or
-  begin packaging. It must preserve the exact production Git default and every
-  completed safe-zero contract. No focused failing test is authorized until
-  the owner chooses the direction.
-- The decision expires on any protected-input change, newly active repository
-  caller, named repository-owned product need, public-contract requirement, or
-  external API fact. Verification remains the five-file/archive/launcher/
-  cleanliness checks, counts and hashes, focused exact-Go tests, and both
-  unchanged 10/10 mutation gates. Rollback is the single documentation-only
-  five-file handoff commit.
-- Run only [the prepared P8 cloud direction decision](agent-sessions/2026-09-25T011458+0200-decide-p8-cloud-modernization-direction.md). Do not execute
-  its successor, inspect `ply-config`, change product/dependency state, begin
-  Spring, or begin packaging.
+- Option 1 is selected: run exactly one later bounded read-only `ply-config`
+  compatibility evaluation while retaining the production Git boundary.
+  Option 2 is rejected now because closing cloud before the smallest reversible
+  external-evidence check would abandon the roadmap's named migration premise.
+  The evaluation can still support an explicit Git-boundary closure if primary
+  evidence shows incompatibility, missing ownership, lifecycle failure, or
+  unresolved behavior.
+- Production remains exact: both private openers select `GitCloudConfig`, the
+  public 15-method interface and `<profile>/cloud-config` cache mapping stay
+  unchanged, and refresh, warnings, returns, continuation, merge, and exposed
+  `Implementation().Dir()` path policy remain caller-owned. Retaining this
+  boundary during a documentation-only evaluation introduces no migration or
+  fallback cost.
+- Completed safe-zero contracts remain exact. Missing refresh dependencies
+  retain false/zero behavior; missing document, Git-hook, example, template-
+  project, template-list, and per-name loaders retain their recorded zero or
+  nil result plus exact `filesystem.ErrNoFilesystem`; and missing root/project
+  openers return nil before path access. No alternate default or new zero
+  behavior is authorized.
+- The prepared evaluation may change exactly its archive, one new reciprocal
+  successor archive, launcher mutable regions, roadmap, and rolling handover.
+  After protected-start validation it may inspect only canonical primary
+  `ply-config` repository/module, API/type, release/lifecycle, license, Go-
+  floor, cache/refresh/path/environment, data, result/error/order, test, and
+  caller-compatibility evidence. External copies and reports stay in managed
+  scratch. It may not select/recommend a version, change product/tests/
+  dependencies, run upstream code, design or implement an adapter, change a
+  caller, or begin Spring or packaging.
+- The required output is an identity-bound matrix for all 15 public methods and
+  every active cache/caller use, classifying each row native, bounded-adapter-
+  compatible, incompatible, or unresolved. The evaluation expires on changed
+  upstream identity/revision/API/lifecycle evidence, protected repository
+  input, active caller, public/cache contract, or roadmap priority. It must
+  return a complete map or fresh evidence stop and prepare only a reciprocal
+  decision/planning successor.
+- Verification remains the five-file/archive/launcher/cleanliness checks,
+  protected counts and hashes, focused exact-Go tests, and both unchanged 10/10
+  mutation gates. Rollback is the single documentation-only five-file decision
+  handoff commit.
+- Run only [the prepared `ply-config` cloud compatibility evaluation](agent-sessions/2026-09-25T012940+0200-evaluate-ply-config-cloud-compatibility.md).
+  Do not execute its successor, select/change a dependency, change product
+  state, implement an adapter, or begin Spring or packaging.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch

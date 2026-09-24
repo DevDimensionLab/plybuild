@@ -16756,8 +16756,8 @@ are resolved or explicitly risk-accepted.
 ### P8 - Domain Modernization
 
 Status: active after ten bounded cloud implementation slices; active
-repository-owned seams are exhausted and one owning cloud-direction decision
-is prepared.
+repository-owned seams are exhausted and the owning direction selected one
+bounded read-only `ply-config` compatibility evaluation.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17441,6 +17441,47 @@ is prepared.
   direction. Production keeps the exact Git default and all completed safe-
   zero contracts. Rollback is the single documentation-only five-file handoff
   commit.
+- The owning cloud-direction decision selects Option 1: authorize exactly one
+  later bounded read-only `ply-config` compatibility evaluation while retaining
+  the current production Git boundary. The accepted roadmap explicitly names a
+  later `ply-config` move, and external API/lifecycle/cache evidence is the only
+  remaining information that can test that direction without changing product
+  or dependency state. The 15-method public interface, caller-owned refresh and
+  continuation policy, exposed cache paths, partial/error behavior, and data
+  mapping make implementation without that map unjustified.
+- Option 2, closing cloud now and moving to Spring planning, is rejected at this
+  checkpoint because it would abandon the named migration premise before the
+  smallest reversible feasibility check. Retaining Git during the evaluation
+  has low cost: both private openers still select exact `GitCloudConfig`, all
+  callers and `<profile>/cloud-config` paths remain unchanged, and no migration
+  or fallback is introduced. Closure remains an explicit possible result only
+  after the evaluation supplies evidence or an evidence-bound stop.
+- The completed safe-zero contracts remain exact. Missing refresh dependencies
+  retain false/zero behavior; missing services, project-defaults, deprecated,
+  global-config, Git-hook, example, template-project, template-list, and per-
+  name loaders retain their recorded zero or nil result plus exact
+  `filesystem.ErrNoFilesystem`; and missing root/project openers return nil
+  before path access. The evaluation may not introduce a new production
+  default or zero-value contract.
+- The evaluation may change only its own archive, one reciprocal successor
+  archive, launcher mutable regions, roadmap, and rolling handover. External
+  copies and reports must remain in managed scratch. It must bind canonical
+  repository/module, inspected commit/tag, release and maintenance lifecycle,
+  license, Go floor, exported API/types, cache/refresh/path/environment
+  ownership, data mapping, eager/partial/error/order behavior, all 15 public
+  methods, and active callers into a primary-source compatibility matrix. Each
+  row is classified native, bounded-adapter-compatible, incompatible, or
+  unresolved. It may not select/recommend a version, modify `go.mod`/`go.sum`,
+  run upstream code, design or implement an adapter, change a caller, or begin
+  Spring or packaging.
+- The evaluation expires on changed canonical upstream identity or inspected
+  revision, API/lifecycle evidence, protected repository input, active caller,
+  public/cache contract, or roadmap priority. It must return a complete map or
+  a fresh evidence stop and prepare only a reciprocal decision/planning
+  successor. Verification retains the branch/ancestry/five-file/archive/
+  launcher/cleanliness checks, protected counts and hashes, focused exact-Go
+  tests, and both byte-unchanged 10/10 cloud mutation gates. Decision rollback
+  is documentation-only: revert the single five-file handoff commit.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
