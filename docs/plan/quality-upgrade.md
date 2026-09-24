@@ -16755,8 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after the first two bounded cloud implementation slices; the
-third bounded slice is selected but not executed.
+Status: active after the first three bounded cloud implementation slices; the
+next bounded slice is not yet selected.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16797,32 +16797,37 @@ third bounded slice is selected but not executed.
   Structured Q0-Q2 has zero automated FAIL and zero ratchet regression; the
   accepted 27/27 L2 state remains supported. Protected
   234/3,599/355/429/197/41/1,067 counts and the three hashes reproduce.
-- `Services` is now private-effect-injected alongside `GitHookFiles`,
-  `Examples`, and `Templates`. `Deprecated`, `ProjectDefaults`, and
-  `GlobalCloudConfig` remain direct readers with distinct fixture and semantic
-  gaps. Caller refresh-policy gaps, real network/cloud behavior, combined
-  reader work, and construction changes remain guarded.
-- The next planning checkpoint reproduced the clean five-file handoff, exact
-  implementation ancestry and shapes, reciprocal 331-archive chain, launcher,
-  focused tests, unchanged 10/10 mutation gates, Go 1.18, exact
-  234/3,599/355/429/197/41/1,067 measurements, and all three protected hashes.
-  Source, callers, fixtures, mutation files, and dependency metadata remain
-  unchanged.
-- The third slice is selected but unexecuted: add only a private zero-value-
-  safe `ProjectDefaults` loader in `pkg/config/cloud.go` with focused tests in
-  `pkg/config/cloud_test.go`. Production must retain complete `Directory`
-  delivery, exact `FilePath("project-defaults.json")`, unchanged
-  `file.ReadJson`, one independent load per invocation, exact value/error
-  results, and safe zero behavior. No memoization or implicit refresh is
-  allowed.
-- `ProjectDefaults` is the smallest owned next reader because its sole concrete
-  `Context.OnEachMavenProject` policy already has focused call/order/error/
-  merge coverage and the acceptance profile supplies cache-only valid JSON.
-  `Deprecated` is wider across Maven/status/upgrade; `GlobalCloudConfig` adds
-  environment expansion and YAML semantics. Both remain deferred, as do a
-  shared loader, caller cleanup, and construction work.
-- The reciprocal successor may implement only that exact two-file seam. Direct
-  `ply-config` inspection, selection, or integration remains forbidden.
+- Focused commit `c999212d266d98868930769108e4e8a73070a0a2` completes the
+  third selected slice in exactly `pkg/config/cloud.go` and
+  `pkg/config/cloud_test.go`. One private project-defaults loader and private
+  dependency now isolate the cached `project-defaults.json` read; production
+  retains complete `Directory` delivery, exact
+  `FilePath("project-defaults.json")`, unchanged `file.ReadJson`, one
+  independent load per invocation, and exact value/error and partial-result
+  behavior. A zero loader returns exact `filesystem.ErrNoFilesystem` before
+  path access.
+- Focused characterization covers production selection, complete dependency
+  delivery, exact filename, independent repeated invocation counts,
+  representative full settings decode, exact path/read/unmarshal results,
+  safe zero behavior, and non-empty recordings. The first clean audit caught a
+  direct test-fixture write; moving it to the central guarded test writer made
+  Q0.6 pass with zero unsafe test writes before the focused commit was finalized.
+- Final-commit config/context/Maven/command tests, unchanged config-cloud direct
+  and meta 10/10 mutation gates, exact Go 1.26.7 full gates, pinned API/CLI
+  compatibility, preflight, ordinary test/install, empty-HOME count-two, all 15
+  audit controls, and all 62 launcher checks pass. Structured Q0-Q2 has zero
+  automated FAIL and zero ratchet regression; the accepted 27/27 L2 state
+  remains supported. Protected 234/3,599/355/429/197/41/1,067 counts and the
+  three hashes reproduce.
+- `ProjectDefaults` is now private-effect-injected alongside `Services`,
+  `GitHookFiles`, `Examples`, and `Templates`. `Deprecated` and
+  `GlobalCloudConfig` remain direct readers with distinct caller, fixture, and
+  semantic gaps. Caller refresh-policy gaps, real network/cloud behavior,
+  combined reader work, and construction changes remain guarded.
+- The reciprocal successor is planning-only. It must re-characterize the
+  resulting cloud boundary and select at most one smallest repository-owned
+  implementation slice or stop unresolved. Direct `ply-config` inspection,
+  selection, or integration remains forbidden.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 

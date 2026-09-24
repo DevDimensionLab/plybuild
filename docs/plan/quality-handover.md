@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T15:44:21+02:00
+Generated: 2026-09-24T16:42:19+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -29,47 +29,58 @@ session diary.
   `filesystem.ErrNoFilesystem` before developer-path access. Focused TDD covers
   production selection, complete delivery, fixture decode, path errors, stable
   success/error replay, safe zero behavior, and non-empty recordings.
-- The resulting boundary has four private injected read/effect paths
-  (`GitHookFiles`, `Examples`, `Templates`, `Services`) and three direct
-  document readers (`Deprecated`, `ProjectDefaults`, `GlobalCloudConfig`). No
-  reader refreshes itself; refresh, caller policy, and the two concrete
-  construction sites are unchanged. The remaining reader and caller evidence
-  gaps remain guards, not authorization for a combined move.
-- Focused config/context/command tests, unchanged config-cloud direct/meta
-  10/10 mutation gates, exact-Go-1.26.7 verify/build/count-one/race/vet, pinned
-  API/CLI compatibility, preflight, ordinary test/install/launcher gates,
-  empty-HOME count-two, and all 15 audit controls pass. Canonical structured
-  Q0-Q2 has zero automated FAIL and zero ratchet regression; the known overall
-  Q3.4 documentation ratchet remains outside this protected scope.
-- Protected Go 1.18, 234/3,599/355/429/197/41/1,067 counts and the exact
+- The third bounded P8 slice is exact focused commit
+  `c999212d266d98868930769108e4e8a73070a0a2`, parent
+  `f45d6c4ab63b1c6e76fa31a1b710fbc07ae31f38`, tree
+  `7914ce896206532040fc66fc0dd7f366926aa891`, changing only
+  `pkg/config/cloud.go` and `pkg/config/cloud_test.go`. It adds one private
+  project-defaults loader interface, private dependency value, file-backed
+  production implementation, and private non-memoizing helper without changing
+  an exported API.
+- Production receives the complete `Directory`, requests exact
+  `project-defaults.json`, and delegates to unchanged `file.ReadJson`.
+  `ProjectDefaults()` loads exactly once per invocation and separate calls
+  independently return their exact value/error, including partial decode
+  results. A missing loader returns exact `filesystem.ErrNoFilesystem` before
+  developer-path access.
+- Focused TDD covers production selection, complete delivery, exact filename,
+  independent call counts, representative decoding of every settings field,
+  exact dependency/path/read/unmarshal results, safe zero behavior, and
+  non-empty recordings. The initial clean audit caught one direct disposable
+  test-fixture write; routing it through the central guarded writer made focused
+  and final Q0.6 pass with zero unsafe test writes before the commit was
+  finalized.
+- The resulting boundary has five private injected read/effect paths
+  (`GitHookFiles`, `Examples`, `Templates`, `Services`, `ProjectDefaults`) and
+  two direct document readers (`Deprecated`, `GlobalCloudConfig`). No reader
+  refreshes itself; refresh, caller policy, and the two concrete construction
+  sites are unchanged. The remaining reader and caller evidence gaps remain
+  guards, not authorization for a combined move.
+- Final-commit focused config/context/Maven/command tests, unchanged
+  config-cloud direct/meta 10/10 mutation gates, exact-Go-1.26.7
+  verify/build/count-one/race/vet, pinned API/CLI compatibility, preflight,
+  ordinary test/install/launcher gates, empty-HOME count-two, and all 15 audit
+  controls pass. Canonical structured Q0-Q2 has zero automated FAIL and zero
+  ratchet regression; the known overall Q3.4 documentation ratchet remains
+  outside this protected scope.
+- Protected Go 1.18, 234/3,599/355/429/197/41/1,067 counts and exact
   `go.mod`/`go.sum`/graph hashes reproduce. Refresh, callers, other readers,
   fixtures, mutation files, and dependency metadata are byte-unchanged. API
   and CLI reports pass.
-- The planning checkpoint reproduced clean handoff HEAD
-  `d6382a80e14e9bcee48a058a74940e310e15fc48`, parent
-  `c12307a078a29af74163df0c658d05c821482a33`, tree
-  `a015048e12f63ddc4d472b0285de30be201de207`, exact five-file handoff and
-  two-file services shapes, cache-probe and UUID ancestry, reciprocal 331-
-  archive/sole-NEXT/launcher state, protected counts/hashes, and unchanged
-  source/callers/fixtures/mutation/dependency inputs. Exact-Go focused config,
-  context, Maven, and command tests pass under `umask 022`; unchanged direct
-  and meta mutation gates retain exact 10/10 kills.
-- The third P8 slice is selected but not executed: change only
-  `pkg/config/cloud.go` and `pkg/config/cloud_test.go` to isolate
-  `ProjectDefaults` behind one private zero-value-safe loader. Preserve exact
-  `project-defaults.json`, complete `Directory`, unchanged `file.ReadJson`, one
-  independent load per invocation, exact value/error and partial-result
-  behavior, no memoization or refresh, and the exported signature.
-- This reader is owned because `Context.OnEachMavenProject` is its sole concrete
-  caller and already records once-per-project calls, merge-before-job order,
-  error warning/continuation, and logs; the acceptance profile supplies valid
-  cache-only JSON. `Deprecated` remains deferred because its Maven/status/
-  upgrade surface is wider. `GlobalCloudConfig` remains deferred because
-  environment expansion, YAML decoding, and two source-formatting consumers
-  are not yet directly fixture-bounded.
-- The sole successor implements only the selected project-defaults seam. Direct
-  `ply-config` inspection/selection, another reader, caller cleanup,
-  construction work, Spring, and packaging remain unowned.
+- The implementation began from clean planning handoff HEAD
+  `f45d6c4ab63b1c6e76fa31a1b710fbc07ae31f38`, parent
+  `d6382a80e14e9bcee48a058a74940e310e15fc48`, tree
+  `31ff98b548d5a02c9a7d61d32c1993945d6d79fc`, with its exact five-file
+  launcher/documentation shape. The two-file services implementation,
+  cache-probe and UUID ancestry, reciprocal 332-archive/sole-NEXT/launcher
+  state, ordinary and ignored cleanliness, protected counts/hashes, and
+  unchanged source/callers/fixtures/mutation/dependency inputs all reproduced
+  before editing.
+- The sole successor is a fresh planning checkpoint. It may re-characterize the
+  resulting cloud boundary and select at most one smallest repository-owned
+  next slice or stop unresolved. Direct `ply-config` inspection or selection,
+  implementation, caller cleanup, combined-reader work, construction work,
+  Spring, and packaging remain unowned.
 
 ## Repository And Continuity
 
@@ -7964,9 +7975,9 @@ language are retained in the answered exit archive and roadmap.
 
 ## Next Bounded Objective
 
-Run only [the prepared project-defaults loader implementation](agent-sessions/2026-09-24T154421+0200-implement-cloud-project-defaults-loader-seam.md).
-Implement exactly the selected private loader in `pkg/config/cloud.go` and
-`pkg/config/cloud_test.go`, preserving one non-memoized cache read per call and
-all protected contracts. Do not inspect or select `ply-config`, change a
-caller/fixture/mutation/dependency, combine another reader, or begin Spring or
-packaging work.
+Run only [the prepared bounded cloud planning checkpoint](agent-sessions/2026-09-24T164219+0200-plan-next-p8-cloud-modernization-move.md).
+Re-characterize the post-project-defaults `GitCloudConfig` boundary and select
+at most one smallest repository-owned next implementation slice or stop
+unresolved. Do not implement it, inspect or select `ply-config`, combine
+readers, change source/dependencies/callers/fixtures/mutations, or begin Spring
+or packaging work.
