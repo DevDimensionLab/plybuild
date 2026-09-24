@@ -22,6 +22,31 @@ type Context struct {
 	CloudConfig     config.CloudConfig
 }
 
+type cloudConfigOpener interface {
+	Open(profilePath string) config.CloudConfig
+}
+
+type loadProfileDependencies struct {
+	Opener cloudConfigOpener
+}
+
+func systemLoadProfileDependencies() loadProfileDependencies {
+	return loadProfileDependencies{Opener: gitCloudConfigOpener{}}
+}
+
+func (dependencies loadProfileDependencies) Open(profilePath string) config.CloudConfig {
+	if dependencies.Opener == nil {
+		return nil
+	}
+	return dependencies.Opener.Open(profilePath)
+}
+
+type gitCloudConfigOpener struct{}
+
+func (gitCloudConfigOpener) Open(profilePath string) config.CloudConfig {
+	return config.OpenGitCloudConfig(profilePath)
+}
+
 func (ctx *Context) FindAndPopulateMavenProjects() error {
 	excludes := []string{
 		"flattened-pom.xml",
@@ -138,8 +163,12 @@ func (ctx *Context) OnRootProject(description string, do ...func(project config.
 }
 
 func (ctx *Context) LoadProfile(profilePath string) {
+	ctx.loadProfile(systemLoadProfileDependencies(), profilePath)
+}
+
+func (ctx *Context) loadProfile(dependencies loadProfileDependencies, profilePath string) {
 	ctx.LocalConfig = config.OpenLocalConfig(profilePath)
-	ctx.CloudConfig = config.OpenGitCloudConfig(profilePath)
+	ctx.CloudConfig = dependencies.Open(profilePath)
 	if !ctx.LocalConfig.Exists() {
 		log.Debugf("localConfig does not exists, touching a new file")
 		err := ctx.LocalConfig.TouchFile()

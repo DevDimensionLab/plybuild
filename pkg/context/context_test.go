@@ -72,6 +72,23 @@ func (cloud *contextCloudDefaults) ProjectDefaults() (config.CloudProjectDefault
 	return cloud.defaults, cloud.err
 }
 
+type contextCloudConfigOpener struct {
+	cloud        config.CloudConfig
+	profilePaths []string
+}
+
+func (opener *contextCloudConfigOpener) Open(profilePath string) config.CloudConfig {
+	opener.profilePaths = append(opener.profilePaths, profilePath)
+	return opener.cloud
+}
+
+func (opener *contextCloudConfigOpener) assertedProfilePaths() ([]string, error) {
+	if len(opener.profilePaths) == 0 {
+		return nil, errors.New("recorded cloud-config opener profile-path population is empty")
+	}
+	return append([]string(nil), opener.profilePaths...), nil
+}
+
 type contextEnvironmentValue struct {
 	value string
 	set   bool
@@ -696,6 +713,73 @@ func TestLoadProfilePreservesAssignmentsCreationExistingContentAndTouchError(t *
 			{level: logrus.ErrorLevel, message: wantError},
 		})
 	})
+}
+
+func TestLoadProfileCloudConfigOpenerPreservesProductionSelectionAndPublicCacheMapping(t *testing.T) {
+	dependencies := systemLoadProfileDependencies()
+	if reflect.TypeOf(dependencies.Opener) != reflect.TypeOf(gitCloudConfigOpener{}) {
+		t.Fatalf("production cloud-config opener was %T, want %T", dependencies.Opener, gitCloudConfigOpener{})
+	}
+
+	profile := filepath.Join(t.TempDir(), `complete profile path with spaces and backslash\segment-ø`)
+	cloud := dependencies.Open(profile)
+	gitCloud, ok := cloud.(config.GitCloudConfig)
+	if !ok {
+		t.Fatalf("production cloud-config opener returned %T, want config.GitCloudConfig", cloud)
+	}
+	wantCache := filepath.Join(profile, "cloud-config")
+	if gitCloud.Implementation().Dir() != wantCache {
+		t.Fatalf("production cloud-config cache path was %q, want %q", gitCloud.Implementation().Dir(), wantCache)
+	}
+}
+
+func TestLoadProfileHelperDeliversCompletePathOnceAndAssignsExactCloudConfigIdentity(t *testing.T) {
+	runContextStateSubtest(t, "injected opener preserves state", func(t *testing.T) {
+		profile := filepath.Join(t.TempDir(), `complete profile path with spaces and backslash\segment-β`)
+		marker := []byte("existing local config remains exact through injected opener\n")
+		writeContextFile(t, filepath.Join(profile, "local-config.yaml"), marker)
+		cloud := &contextCloudDefaults{}
+		opener := &contextCloudConfigOpener{cloud: cloud}
+		ctx := Context{
+			LocalConfig: config.OpenLocalConfig("/old/local"),
+			CloudConfig: &contextCloudDefaults{},
+		}
+		_, hook := captureContextLog(t)
+
+		ctx.loadProfile(loadProfileDependencies{Opener: opener}, profile)
+
+		paths, err := opener.assertedProfilePaths()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(paths, []string{profile}) {
+			t.Fatalf("cloud-config opener profile paths were %#v, want one complete path %q", paths, profile)
+		}
+		if ctx.CloudConfig != cloud {
+			t.Fatalf("LoadProfile helper stored %T %#x, want exact returned %T %#x",
+				ctx.CloudConfig, contextInterfacePointer(ctx.CloudConfig), cloud, contextInterfacePointer(cloud))
+		}
+		if ctx.LocalConfig.Implementation().Path != profile {
+			t.Fatalf("LoadProfile helper local config path was %q, want %q", ctx.LocalConfig.Implementation().Path, profile)
+		}
+		contents, err := os.ReadFile(filepath.Join(profile, "local-config.yaml"))
+		if err != nil || !bytes.Equal(contents, marker) {
+			t.Fatalf("LoadProfile helper existing local config was (%q, %v), want exact %q", contents, err, marker)
+		}
+		if len(hook.records) != 0 {
+			t.Fatalf("LoadProfile helper existing local config emitted logs: %#v", hook.records)
+		}
+	})
+}
+
+func TestLoadProfileDependenciesZeroValueReturnsNilWithoutTouchingPath(t *testing.T) {
+	profile := filepath.Join(t.TempDir(), "zero opener must remain absent")
+	if cloud := (loadProfileDependencies{}).Open(profile); cloud != nil {
+		t.Fatalf("zero cloud-config opener returned %T %#v, want nil", cloud, cloud)
+	}
+	if _, err := os.Lstat(profile); !os.IsNotExist(err) {
+		t.Fatalf("zero cloud-config opener touched profile path %q: %v", profile, err)
+	}
 }
 
 func TestGetMavenRepositoryPreservesConfiguredAuthAndLegacyDefaultSelection(t *testing.T) {
