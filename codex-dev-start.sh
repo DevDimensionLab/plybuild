@@ -1131,201 +1131,164 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-24T034135+0200-evaluate-smartystreets-goconvey-dependency
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T034135+0200-evaluate-smartystreets-goconvey-dependency.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T032851+0200-decide-smartystreets-assertions-product-direction.md
+#|SESSION_ID=2026-09-24T041623+0200-decide-smartystreets-goconvey-product-direction
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T041623+0200-decide-smartystreets-goconvey-product-direction.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T034135+0200-evaluate-smartystreets-goconvey-dependency.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 with exactly one fresh, bounded evaluation of the next unevaluated
-#|alphabetical module, exact selected indirect
-#|`github.com/smartystreets/goconvey v1.6.4`. Resolve its canonical exact-path
-#|release line and highest fully qualified Go-1.18-compatible stable from primary
-#|evidence. Implement one exact dependency-only changed selection only if the
-#|candidate, complete minimal closure, genuine supported tidy-stable project
-#|owner, and every earlier guard remain exact. Do not combine another dependency
-#|group or begin P8.
+#|Continue P7 with exactly one explicit product-direction decision for exact
+#|selected indirect `github.com/smartystreets/goconvey v1.6.4`. Choose one of
+#|the three authorized moves below. This is a decision-only session: do not
+#|rerun the completed evaluation, execute a study, change a dependency, add a
+#|root, combine another dependency group, or begin P8.
 #|
-#|# Defensive Scope
+#|# Closed Evaluation
 #|
-#|This is an ordinary dependency-quality evaluation. Use public metadata,
-#|static source and repository records, project graph/build commands, upstream
-#|tests, and only small bounded ordinary fixtures required by documented
-#|behavior. Do not fuzz, stress, probe resource exhaustion, create oversized,
-#|deeply nested, cyclic, malformed, adversarial, or escape-sequence payloads,
-#|reproduce a security issue, or perform security or exploitability analysis.
+#|The fresh bounded Goconvey evaluation is complete. The canonical exact-path
+#|line contains 16 stable releases from v1.3.1 through v1.8.1, and v1.8.1 is
+#|the highest stable compatible with the Go 1.18 floor. There is no canonical
+#|prerelease, replacement, retraction, deprecation, or alternate-major line.
+#|The public enabled unarchived non-fork smartystreets/goconvey repository and
+#|exact release/tag/commit/tree/signature/ancestry/proxy/sumdb/archive/module/
+#|license/source identities are resolved.
 #|
-#|Every disposable cache, tool, archive, report, project copy, fixture, or
-#|advisory response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.
-#|Never write to `/private/tmp`, `/tmp`, a sibling of the managed root, or
-#|another external root. Set every tool temp/cache root explicitly, verify
-#|containment, and remove task-owned scratch evidence before handoff.
+#|No canonical stable fully qualifies. V1.3.1-v1.6.3 have incomplete proxy-
+#|synthesized module metadata and fail standalone build, test compilation, and
+#|vet. V1.6.5 has a source-level reporting signature mismatch and fails the same
+#|rows. Selected v1.6.4 and v1.6.6-v1.8.1 build and test-compile under exact Go
+#|1.18.10 and Go 1.26.7, but every one fails mandatory vet. Every canonical
+#|stable contains expressly malformed GoConvey-output fixtures; v1.6.0 onward
+#|also has upstream test support fixed to `/tmp`. Complete count-one, repeated,
+#|and race rows were therefore stopped without executing a prohibited fixture
+#|or writing outside managed scratch. Partial evidence is not qualification.
 #|
-#|# Authorized Roadmap And Closed Decisions
+#|The full cgo-disabled production and no-run test-compilation matrix passes
+#|160/160 plus 160/160 rows for v1.6.4 and v1.6.6-v1.8.1 across both SDKs and
+#|ten supported targets. Older metadata-incomplete releases and v1.6.5 fail
+#|their corresponding matrix rows. No target test binary was executed.
 #|
-#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
-#|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
-#|qualified no-selection-change modern-go/concurrent, modern-go/reflect2,
-#|rogpeppe/fastuuid, and all final target-specific decisions through Assertions.
-#|P8 remains queued. Selected rogpeppe/go-internal v1.9.0 was already fully
-#|verified and closed as Cast v1.5.1's minimal test closure; do not repeat it as
-#|a standalone queue item. Selected Logrus and every earlier direct or closure
-#|result remain closed under their recorded guards.
+#|The exact current route is main -> direct loaded mvn-pom-mutator v0.2.3 ->
+#|selected Goconvey v1.6.4. The requester is why-positive and runtime-relevant,
+#|but its indirect Goconvey request is metadata-only with zero source imports.
+#|Goconvey is why-negative, unloaded, absent from project imports, and runtime-
+#|irrelevant; it has never been a main root. Its selected source genuinely
+#|imports the separately excepted old-path Assertions pseudo-version in
+#|production. All 84 historical checkpoints select v1.6.4, and every Viper or
+#|mvn-pom-mutator predecessor edge is metadata-only. There is no genuine current
+#|or historical source-importing project route to Goconvey.
 #|
-#|Exact selected, indirect, unloaded
-#|`github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d`
-#|remains unchanged only under its Assertions-specific, unqualified,
-#|non-transferable exception. No canonical stable fully qualifies and no changed
-#|stable has a genuine supported tidy-stable owner. Preserve active Goconvey's
-#|genuine production import, the exact current route and all 84 historical
-#|checkpoints, target/requester why/import/load/runtime and root facts, selected
-#|sums, and every owner/release/source/API/behavior/closure/native/vet/test/
-#|cross/projection/advisory identity and expiry condition. Complete test rows
-#|remain defensively stopped, partial evidence is not qualification, and advisory
-#|absence is not a safety claim. Do not run the rejected **GoConvey Assertions
-#|Release/Ownership Study**, add a target root, select v1.13.1, or transfer the
-#|exception.
+#|A disposable selected get manufactures Goconvey and closure roots without
+#|changing a version; ordinary tidy removes them and restores the exact common
+#|projection. A disposable v1.8.1 get changes Goconvey plus x/mod, x/net, x/text,
+#|and x/tools, adds relocated Assertions and GopherJS, and changes the genuine
+#|Assertions production boundary. Ordinary tidy discards v1.8.1 because no
+#|owner requests it but retains unrelated x/* upgrades, so it does not restore
+#|the common projection. No genuine current supported tidy-stable requester
+#|owns v1.8.1, and no projection is retained.
 #|
-#|Exact selected sanitized_anchor_name v1.0.0, go-diff v1.2.0, Blackfriday
-#|v2.1.0, TSDB v0.7.1, Procfs v0.0.8, Common v0.9.1, client_model v0.2.0, and
-#|client_golang v1.4.0 separately remain only under their own target-specific,
-#|unqualified, non-transferable exceptions. Preserve Complete, go-difflib, SFTP,
-#|pkg/errors, Goe, ULID, go-conntrack, and every earlier qualified or excepted
-#|result under its own exact guards. Preserve fully qualified selected fastuuid
-#|v1.2.0 without adding a root. Do not run rejected studies, select rejected
-#|candidates, reopen a completed module, or transfer an exception.
+#|Exact-version OSV and narrow GitHub results are empty for all 16 stables.
+#|Pinned focal govulncheck is 0/0/0/0 for selected v1.6.4; v1.8.1 has three
+#|module-only x/sys/x/mod findings and zero package/symbol/test-symbol findings.
+#|Advisory absence or non-reachability is not a safety or qualification claim.
+#|The unchanged project remains 30/22/20/20 without a Goconvey trace, and every
+#|corrected index, CNA, client_golang, and earlier advisory guard remains exact.
 #|
-#|# Protected Starting State
+#|# Protected State And Closed Guards
 #|
-#|Begin only from the clean Assertions product-decision handoff on
+#|Start only from the clean Goconvey evaluation handoff on
 #|`codex/upgrade-quality`. Verify its HEAD, parent, tree, exact changed set,
 #|branch and Google UUID ancestry, reciprocal archive chain, sole NEXT state,
 #|launcher mirror/check, and ordinary and ignored cleanliness. Stop for a fresh
-#|owning decision if any protected input changed.
+#|owning decision if a protected input changed.
 #|
-#|The unchanged real project has exactly 234 modules, 3,599 graph edges, 355
-#|production entries, 429 complete-test entries, 197 module-backed entries
-#|across 41 loaded modules, and 1,067 `go.sum` lines. `go.mod`, `go.sum`, and
+#|The unchanged real project remains exactly 234 modules, 3,599 graph edges,
+#|355 production entries, 429 complete-test entries, 197 module-backed entries
+#|over 41 loaded modules, and 1,067 `go.sum` lines. `go.mod`, `go.sum`, and
 #|graph SHA-256 remain
 #|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
 #|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
 #|and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-#|Normal tidy has the established 432-line diff at
-#|`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`;
-#|the common 52/948-line, 234-module/3,557-edge projection has `go.mod` /
-#|`go.sum` hashes
-#|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
-#|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
-#|No projection is retained. The module floor remains Go 1.18 and accepted
-#|quality remains 27/27 Q0-Q2 PASS at L2.
+#|Normal tidy retains its exact protected 432-line identity. The common 52/948-
+#|line, 234-module/3,557-edge projection and protected hashes remain exact; no
+#|projection is retained.
 #|
-#|Official Go 1.18.10 archive/binary SHA-256 remains
-#|`718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
-#|`f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`;
-#|Go 1.26.7 remains
-#|`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
-#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
-#|Use only exact verified binaries for named SDK gates.
+#|The module floor remains Go 1.18, accepted quality remains 27/27 Q0-Q2 PASS at
+#|L2, and exact Go 1.18.10 and Go 1.26.7 archive/binary identities remain
+#|protected. Preserve all 47 pre-Goe selections and 276 incoming edges, every
+#|separate selected version and request count, every qualified result, and every
+#|target-specific unqualified non-transferable exception through Assertions.
+#|Rogpeppe/go-internal remains closed as Cast v1.5.1's minimal test closure. Do
+#|not run the rejected GoConvey Assertions Release/Ownership Study, reopen a
+#|completed module, select a rejected candidate, transfer an exception, or
+#|relax the Go floor.
 #|
-#|All 47 pre-Goe selections and 276 incoming edges remain exact at
-#|`7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`.
-#|Separate selections/request counts remain Goe v0.1.0/four, pkg/errors
-#|v0.9.1/ten, SFTP v1.13.1/four, go-difflib v1.0.0/23, Complete v1.2.3/three,
-#|ULID v1.3.1/one, go-conntrack `cc309e4a2223`/two, client_golang v1.4.0/four,
-#|client_model v0.2.0/15, Common v0.9.1/four, Procfs v0.0.8/four, TSDB
-#|v0.7.1/one, fastuuid v1.2.0/one, Blackfriday v2.1.0/four, go-diff
-#|v1.2.0/three, sanitized_anchor_name v1.0.0/one, and Assertions selected
-#|pseudo-version/one. Preserve every recorded why/import/load/runtime, route,
-#|source, behavior, closure, qualification/exception, projection, advisory, and
-#|expiry fact.
+#|Preserve Goconvey's exact owner/repository/release chronology, Go-floor,
+#|GitHub Release, tag/commit/tree/signature/ancestry, proxy/sumdb/archive-to-Git,
+#|module/license, source/build, public API/behavior/caller ownership/mutation,
+#|determinism/concurrency/lifecycle/cleanup/error, build-tag/cgo/generate/embed,
+#|symlink/submodule, closure/native/vet/stopped-test/cross, projection, and
+#|advisory identities. Preserve the exact current and 84-checkpoint historical
+#|routes; selected sums; target/requester why, imports, loads, ownership, runtime,
+#|and root facts; genuine Assertions import; and every stopped defensive row.
 #|
-#|# Target Starting Observation
+#|The corrected Go vulnerability index remains exactly 518,501 bytes and 1,402
+#|records at its protected SHA-256. The published CNA response remains exactly
+#|2,807 bytes at its protected SHA-256. The project advisory guard remains
+#|30/22/20/20 without a Goconvey or named protected trace, while client_golang
+#|retains GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698. Advisory absence
+#|is not a safety or qualification claim.
 #|
-#|Read-only queue identification selects exact
-#|`github.com/smartystreets/goconvey v1.6.4`. The current graph has one observed
-#|request from direct loaded `github.com/devdimensionlab/mvn-pom-mutator v0.2.3`;
-#|that edge is metadata-only, target why is negative, and selected Goconvey
-#|genuinely imports Assertions in production. These are starting observations
-#|only. Independently reproduce every request, requester import or metadata
-#|boundary, complete current and historical route from main, target/requester
-#|why, repository import, production/complete-test/module-backed load, runtime
-#|relevance, and current/historical root fact. Physical selection, a request, a
-#|route, loading, or advisory absence does not establish qualification or genuine
-#|ownership.
+#|# Authorized Product Moves
 #|
-#|The corrected Go vulnerability index guard is exactly 518,501 bytes and 1,402
-#|records at SHA-256
-#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
-#|The PUBLISHED CVE-2026-14362 CNA response is exactly 2,807 bytes at
-#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
-#|The unchanged project advisory guard remains 30/22/20/20 module/package/
-#|symbol/test-symbol findings with no Assertions, sanitized_anchor_name,
-#|go-diff, Blackfriday, fastuuid, TSDB, or Procfs trace. Client_golang v1.4.0
-#|retains GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698. Revalidate target
-#|and guard advisories narrowly; advisory absence cannot qualify Goconvey.
+#|Choose exactly one:
 #|
-#|# Evaluation Contract
-#|
-#|Resolve exact go-import owner, repository identity/status/license/default
-#|branch, exact-path stable/prerelease/replacement/retraction/deprecation and
-#|alternate-major lines, release chronology, Go-floor compatibility, tags,
-#|commits, trees, signatures, ancestry, proxy/sumdb/archive-to-Git identity,
-#|module/license files, packages, and source/build boundaries from primary
-#|evidence. Inspect every Go-1.18-compatible canonical stable needed to identify
-#|the highest fully qualified release; do not assume latest, a physical graph
-#|selection, or a passing build is qualified.
-#|
-#|Review the public API and documented ordinary behavior, caller input/output
-#|ownership and mutation, determinism, concurrency, lifecycle and cleanup,
-#|errors, build tags, cgo, generated/embed boundaries, symlinks, submodules, and
-#|archive entries. Exercise only small bounded ordinary fixtures required by
-#|documented contracts. Run the complete minimal closure's verification, build,
-#|complete count-one and repeated tests, race count-one tests, vet, and supported
-#|cgo-disabled production/test-compilation matrix under exact Go 1.18.10 and Go
-#|1.26.7. Stop any row that crosses the defensive scope and do not use partial
-#|evidence as qualification.
-#|
-#|Map every target request and genuine current or historical route. Reproduce
-#|target/requester why, repository imports, production and complete-test loads,
-#|module-backed entries, runtime relevance, graph counts/hashes, tidy projection,
-#|all protected selections, and each exception boundary. Use only disposable
-#|project copies beneath managed scratch for candidate projections. Record exact
-#|selection, closure, graph, sums, Go-floor effect, genuine supported tidy-stable
-#|ownership, and every earlier guard. Retain no projection unless every gate
-#|passes and the implementation contract authorizes exactly one dependency-only
-#|selection.
-#|
-#|Query exact-version OSV, narrow GitHub global/repository advisories, pinned
-#|govulncheck v1.8.0 focal closures, and the unchanged project guard. Do not infer
-#|safety or qualification from an empty advisory response and make no
-#|exploitability claim.
+#|1. **Retain selected v1.6.4 under a Goconvey-specific exception
+#|   (recommended).** Keep exact selected indirect
+#|   `github.com/smartystreets/goconvey v1.6.4` unchanged under a new
+#|   unqualified, non-transferable exception. State precisely that no canonical
+#|   stable fully qualifies and no changed stable has a genuine supported tidy-
+#|   stable project owner. The bounded acceptance may rely on the exact active
+#|   requester metadata, unloaded/runtime-irrelevant target position, unchanged
+#|   84-checkpoint selection, genuine selected Assertions import, passing safe
+#|   build/cross evidence, and exact advisory boundary, but it is not a release
+#|   qualification or safety claim. Expire the exception on any owner, request,
+#|   route, import/load/runtime, root, source/API/behavior, closure, vet/test,
+#|   Go-floor, projection, Assertions-boundary, or advisory change. Make no
+#|   dependency or source change.
+#|2. **Authorize a later Mvn-Pom-Mutator Goconvey Ownership Study.** Define one
+#|   separate measurement-only study that may determine whether a supported
+#|   mvn-pom-mutator release can genuinely request a qualified Goconvey release
+#|   while preserving every project and Assertions guard. Do not run the study
+#|   now, pre-authorize a dependency change, add a target root, combine the
+#|   requester with this group, or imply that the defensively stopped tests or
+#|   failing vet gate pass. P7 remains blocked on the later study and an owning
+#|   decision.
+#|3. **Stop P7 unresolved.** Retain exact selected v1.6.4 and all guards without
+#|   granting an exception or authorizing a study. Record that P7 cannot advance
+#|   until a new explicit product direction is supplied.
 #|
 #|# Required Reading And Handoff
 #|
-#|Read the answered Assertions product decision/evaluation, the
-#|sanitized_anchor_name decision/evaluation, go-diff decision/evaluation,
-#|Blackfriday decision/evaluation, fastuuid evaluation, TSDB decision/evaluation,
-#|and all incorporated prior guards before acting. Do not repeat completed work
-#|for another module, run a rejected study, transfer an exception, add an
-#|unqualified target root, or relax the Go 1.18 floor.
+#|Read the answered Goconvey evaluation and the immediately prior Assertions
+#|decision/evaluation, plus incorporated sanitized_anchor_name, go-diff,
+#|Blackfriday, fastuuid, TSDB, and earlier guards. This is guard-only decision
+#|work. Do not repeat tests or network research except minimum read-only checks
+#|needed to prove the protected handoff remains exact.
 #|
-#|If and only if one canonical stable, its complete closure, a genuine supported
-#|tidy-stable owner, and every earlier guard fully pass, implement exactly one
-#|dependency-only selection. Otherwise retain no projection and stop for one
-#|explicit product decision. Answer this archive, update the roadmap and rolling
-#|handover, verify containment and cleanup, run final exact-Go-1.26.7 project
-#|module verification, build, count-one tests, race count-one tests, and vet,
-#|and make one local handoff commit.
+#|Record the selected option and exact rationale in this archive, roadmap, and
+#|rolling handover. Preserve reciprocal links and one sole NEXT state, verify
+#|launcher mirror/check and ordinary and ignored cleanliness, and make one local
+#|handoff commit. Do not push, merge, publish, release, stash, revert, remove the
+#|worktree, or change product/dependency files.
 #|
 #|# Automatic Handoff
 #|
-#|Do not push, merge, publish, release, stash, revert, bypass cleanup, remove the
-#|worktree, transfer or reopen an exception, change product source, combine
-#|another dependency group, launch a study or successor, or begin P8. If the
-#|evaluation cannot make a fully qualified, genuinely owned exact selection,
-#|prepare but do not launch exactly one reciprocal product-direction decision.
-#|If it closes Goconvey without such a decision, prepare but do not launch exactly
-#|one next bounded P7 queue item.
+#|If option 1 closes Goconvey, prepare but do not launch exactly one next bounded
+#|alphabetical P7 queue item. If option 2 is chosen, prepare but do not launch
+#|exactly that single study. If option 3 is chosen, leave no successor. Do not
+#|prepare multiple successors, launch prepared work, combine another dependency
+#|group, reopen or transfer an exception, or begin P8.
 # CODEX_MUTABLE_PROMPT_END

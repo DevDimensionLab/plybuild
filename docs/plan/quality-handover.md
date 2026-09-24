@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T01:41:02+02:00
+Generated: 2026-09-24T04:16:23+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -6943,13 +6943,61 @@ Go 1.18, all earlier selections/requests/exceptions, and 27/27 Q0-Q2 PASS at
 L2. No completed evaluation, test, study, or network research was rerun. No
 source, dependency, root, study, other group, or P8 work is included.
 
+## Smartystreets Goconvey Evaluation
+
+No dependency change is authorized or retained. Exact-path v1.8.1 is the
+highest of 16 canonical stable releases and is compatible with the Go 1.18
+floor. The public enabled unarchived non-fork repository, release chronology,
+tags, commit/tree/signature/ancestry, proxy/sumdb/archive-to-Git, module/
+license, source/build, API/behavior, and closure identities are resolved.
+There is no canonical prerelease, replacement, retraction, deprecation, or
+alternate-major line.
+
+No stable fully qualifies. V1.3.1-v1.6.3 have incomplete synthesized module
+metadata; v1.6.5 has a source signature mismatch. The other buildable stables
+all fail mandatory vet under exact Go 1.18.10 and Go 1.26.7. Every stable
+contains expressly malformed upstream fixtures, and v1.6.0 onward also directs
+upstream test state to `/tmp`; complete count-one, repeated, and race rows
+were stopped without executing a prohibited fixture. Partial evidence is not
+qualification. Selected v1.6.4 and v1.6.6-v1.8.1 pass all 160 production and
+160 no-run test-compilation cgo-disabled cross rows; no target test binary ran.
+
+The exact current route is main -> direct loaded, why-positive and runtime-
+relevant mvn-pom-mutator v0.2.3 -> selected Goconvey v1.6.4. The requester edge
+is indirect metadata with zero target source imports. Goconvey is why-negative,
+unloaded, absent from project imports, runtime-irrelevant, and never a main
+root. All 84 historical checkpoints select v1.6.4, and every Viper or
+mvn-pom-mutator predecessor edge is metadata-only. Selected Goconvey genuinely
+imports the separately excepted old-path Assertions pseudo-version in
+production.
+
+A disposable selected get manufactures target/closure roots and is wholly
+removed by ordinary tidy. A v1.8.1 get changes the target plus an x/* group,
+adds relocated Assertions/GopherJS, and changes the active Assertions ownership
+boundary. Tidy discards v1.8.1 for lack of an owner but retains unrelated x/*
+upgrades, so the common projection is not restored. No genuine supported tidy-
+stable requester owns v1.8.1, and no projection is retained.
+
+Empty exact OSV and narrow GitHub responses do not imply safety or
+qualification. Selected focal findings are 0/0/0/0; v1.8.1 has three module-
+only x/sys/x/mod findings and no package/symbol/test-symbol finding. The
+project remains 30/22/20/20 without a Goconvey or named protected trace;
+client_golang and corrected index/CNA identities remain exact. All earlier
+selections, request counts, exceptions, decisions, SDKs, project/common-tidy
+hashes, Go floor, and 27/27 Q0-Q2 PASS at L2 remain exact.
+
+Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass.
+Protected module/sum/graph/load identities remain exact; the 307-record
+archive graph has one NEXT decision; and all contained task-scratch entries
+were verified without symlink, outside-path, or special entries and removed.
+The evaluation grants no exception.
+
 ## Next Bounded Objective
 
-Run only [the prepared bounded Smartystreets Goconvey evaluation](agent-sessions/2026-09-24T034135+0200-evaluate-smartystreets-goconvey-dependency.md).
-Resolve exact selected indirect `github.com/smartystreets/goconvey v1.6.4` and
-its canonical Go-1.18-compatible release line without assuming that the
-physical selection, its sole mvn-pom-mutator metadata request, its genuine
-Assertions production import, or negative target why establishes qualification
-or genuine ownership. The evaluation is prepared but not launched. Do not run
-a rejected study, combine another group, transfer or reopen an exception, or
-begin P8.
+Run only [the prepared Smartystreets Goconvey product decision](agent-sessions/2026-09-24T041623+0200-decide-smartystreets-goconvey-product-direction.md).
+Choose exactly one authorized move: retain selected v1.6.4 under a Goconvey-
+specific unqualified non-transferable exception; authorize only a later
+measurement-only **Mvn-Pom-Mutator Goconvey Ownership Study**; or stop P7
+unresolved. The decision is prepared but not launched. Do not rerun the
+evaluation, run a rejected study, change a dependency/root/source, combine
+another group, transfer an exception, or begin P8.
