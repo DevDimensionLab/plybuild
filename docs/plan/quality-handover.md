@@ -1,99 +1,98 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T21:31:00+02:00
+Generated: 2026-09-24T21:53:38+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P8 Checkpoint
 
-- The first seven bounded P8 implementations are exact focused commits
+- The first seven bounded P8 implementations remain exact focused commits
   `57f9d5674157d238a2f93462b65161a17e3b5498`,
   `c12307a078a29af74163df0c658d05c821482a33`,
   `c999212d266d98868930769108e4e8a73070a0a2`,
   `51da9bcfc0eb8ae871c98467c52c942db6b480bd`,
   `f12344b115b6c732295d152a7f3d86b876a4d1d8`,
   `76c3571f04969c304785338bc31c34a266e2f869`, and
-  `9c1899d484633e0ce6cf112544ba33ca89bc4adb`. Their changed sets are the
-  refresh three-file slice, four exact `pkg/config/cloud.go` /
-  `pkg/config/cloud_test.go` slices, the exact two-file root-opener slice, and
-  the exact `pkg/config/project_init.go` /
-  `pkg/config/project_init_cloud_test.go` project-opener slice.
-- Cache probing, services, project defaults, deprecated, and global config
-  retain the previously recorded path, read, result, repetition, environment,
-  safe-zero, refresh, and caller contracts. Eight cloud read/effect paths and
-  the refresh Git dependency remain privately injected. Force-sync policy,
-  warning/continuation, unconditional example refreshes, real cloud/network
-  behavior, and missing caller/fixture evidence remain guards.
-- The completed root opener retains explicit Git production selection,
-  complete profile-path delivery exactly once, exact returned interface
-  identity, `<profile>/cloud-config` mapping, safe zero behavior,
-  local-before-cloud assignment, existence/touch/log order, lifecycle results,
-  and independent repeated construction. Its focused commit remains exact at
-  `76c3571f04969c304785338bc31c34a266e2f869`, parent
-  `75b2e249e6c9665e280902c709238fbfe412aa42`, tree
-  `3fc1887b116fbb0b56ca44a26a4b8eff7bd64898`, with only the two context
-  files changed.
-- The completed project opener is exact at focused commit
-  `9c1899d484633e0ce6cf112544ba33ca89bc4adb`, parent
-  `c5fec9cce330094b0628b7ebc7a60e1c6f91d474`, tree
-  `1083cb67f52b347a5f0760a4ddda7cf533c2a0d4`, with only the two authorized
-  project files changed. Its private production selector passes the complete
-  resolved profile path exactly once to unchanged `OpenGitCloudConfig` and
-  assigns the exact returned `CloudConfig` interface. A missing opener returns
-  nil before path access.
-- `InitProjectFromDirectory` retains its public signature, body, and exact
-  ordering. Configuration load/populate, active-profile lookup, text-matched
-  missing-file migration/retry, legacy `.co-pilot` home fallback, non-ENOENT
-  named-error flow, cloud-before-POM assignment, POM warning/partial behavior,
-  and final project fields are unchanged. The decoded value remains local
-  `projectConfig` until the end, so the earlier zero `project.Config.Profile`
-  check still does not override the active profile. That gap remains frozen.
-- Focused characterization covers explicit Git selection, exact arbitrary
-  path/call/identity, public active-profile and migration cache mapping, current
-  decoded-profile non-override behavior, safe zero behavior, early
-  configuration failure, independent repeated construction, and non-empty
-  recordings. Root-opener behavior, public API, callers, readers, cache layout,
-  refresh, fixtures, and mutation expressions remain unchanged.
+  `9c1899d484633e0ce6cf112544ba33ca89bc4adb`. Their shapes remain the
+  refresh three-file slice, four exact cloud reader two-file slices, the exact
+  context root-opener pair, and the exact project-opener pair.
+- This planning checkpoint began clean at handoff HEAD
+  `47e81b2c9ef0d6184d8bf6476365ccdf70d48365`, direct parent
+  `9c1899d484633e0ce6cf112544ba33ca89bc4adb`, tree
+  `7517f25e00367d9ecfd82719728bbff867a3b047`, with exactly the launcher,
+  answered project implementation archive, then-NEXT planning archive,
+  rolling handover, and roadmap changed. The project implementation retains
+  parent `c5fec9cce330094b0628b7ebc7a60e1c6f91d474`, tree
+  `1083cb67f52b347a5f0760a4ddda7cf533c2a0d4`, and only
+  `pkg/config/project_init.go` plus new
+  `pkg/config/project_init_cloud_test.go`. All earlier P8 and Google UUID
+  commits are ancestral; the 341-record reciprocal chain had one NEXT and
+  passed launcher mirror/check, shell syntax, and ordinary/ignored cleanliness.
+- The completed project opener still explicitly selects Git, passes the
+  complete resolved profile path exactly once to unchanged
+  `OpenGitCloudConfig`, and returns the exact `CloudConfig` identity. Active
+  and missing-profile migration cache mapping, safe zero behavior, early
+  configuration failure, and independent repeated construction are fixed by
+  focused evidence. The decoded project profile still does not override the
+  active profile because `project.Config.Profile` is checked before the final
+  decoded assignment; non-ENOENT, migration, legacy-home, project/POM, and
+  cache behavior remain frozen guards. The root opener remains unchanged.
+- Cache probing and refresh Git, services, project defaults, deprecated,
+  global config, Git hooks, examples, and template filesystem walking are
+  privately injected. The remaining direct construction dependency inside the
+  cloud reader boundary is the template callback's
+  `InitProjectFromDirectory(relPath[0])` call for exact `ply.json` or legacy
+  `co-pilot.json` matches. It pulls profile/HOME/migration/POM/cache knowledge
+  into `GitCloudConfig.templates` even though filesystem walking is isolated.
+  Pure service/template/source policy, caller refresh policy, real-network
+  behavior, and missing caller/fixture evidence remain guarded and unchanged.
+- Exactly one eighth slice is selected: change only `pkg/config/cloud.go` and
+  `pkg/config/cloud_templates_test.go` to add a private template-project loader,
+  extend the existing private templates dependency bundle, explicitly select
+  a production implementation, and replace only the direct constructor call.
+  Production passes each complete derived template directory once to unchanged
+  `InitProjectFromDirectory` and returns its complete `Project` and exact error.
+  A missing loader returns zero `Project` plus exact
+  `filesystem.ErrNoFilesystem` without construction.
+- The implementation must preserve the exact receiver-derived walk root,
+  callback order and incoming-error suppression, current/legacy matching,
+  path/name derivation, per-match loading, ordered append, current and legacy
+  results, error log and ordered partial result, final walk errors, nil results,
+  and independent repeated calls. Project/profile/migration/POM/cache behavior,
+  both openers, public API, callers, other readers, and fixtures remain
+  unchanged. Focused TDD records production selections, exact path/call/value/
+  interface identity, ignored/error no-calls, partial/error/log behavior, safe
+  missing-loader behavior under an injected walk, and non-empty populations.
+- Exact Go 1.26.7 focused project-opener/template tests and all `pkg/config`,
+  `pkg/context`, `pkg/maven`, and `cmd/...` tests pass under `umask 022`,
+  offline/readonly module inputs, and managed scratch. The byte-unchanged
+  config-cloud direct and T1-T10 meta gates retain all ten IDs, selections,
+  meanings, and exact `declared=10 killed=10 survived=0 unusable=0`. Their two
+  template mutations remain bound to exact filename matching and relative-name
+  selection.
 - Go 1.18 and protected 234 modules, 3,599 graph edges, 355 production entries,
   429 complete-test entries, 197 module-backed entries over 41 loaded modules,
   and 1,067 `go.sum` lines reproduce. Protected `go.mod`, `go.sum`, and graph
   hashes remain `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
   `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
   and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-- This implementation checkpoint began clean at handoff HEAD
-  `c5fec9cce330094b0628b7ebc7a60e1c6f91d474`, direct parent
-  `64ebd292672c80bad207fc7325345aefc78e42c9`, with its exact five-file
-  launcher/documentation shape, focused root implementation and all earlier P8
-  and UUID ancestry, reciprocal 340-archive chain, sole NEXT, clean ordinary/
-  ignored state, and unchanged protected source, fixtures, mutations,
-  construction, callers, profiles, and dependencies.
-- Final-commit config/context/Maven/command and focused count-two tests pass.
-  The byte-unchanged direct and T1-T10 config-cloud mutation gates retain the
-  same IDs, selections, meanings, and exact
-  `declared=10 killed=10 survived=0 unusable=0` result. Exact Go 1.26.7 module
-  verification, build, count-one, race, vet, pinned API/CLI compatibility and
-  meta-tests, complete preflight, ordinary test/install, real scratch install,
-  empty-HOME count-two, all 15 audit controls, and all 62 launcher controls
-  pass under `umask 022`, offline inputs, and managed scratch.
-- The canonical audit returns its expected findings exit 1. Structured Q0-Q2
-  retains all 21 automated PASS rows with zero scoped ratchet regression; the
-  six manual rows remain unclaimed and Q3.4 remains the sole pre-existing
-  overall ratchet regression.
 - The prepared handoff has exactly five launcher/documentation paths, a
-  connected 341-record graph with one NEXT planning archive, byte-exact
+  connected 342-record graph with one NEXT implementation archive, byte-exact
   launcher/archive prompt mirroring, valid shell syntax, and passing launcher
   and handoff checks. Task-owned scratch is containment/type audited and removed
   before the handoff commit.
-- The config-cloud mutation files remain byte-exact because their ten
-  expressions are confined to `pkg/config/cloud.go`. Rollback remains one focused
-  two-file implementation commit with no API, cache schema, fixture,
-  caller-policy, user-data, or dependency migration to unwind.
-- The sole successor is planning-only. It must re-characterize the remaining
-  cloud boundary and select at most one smallest repository-owned next slice or
-  stop unresolved. It may not implement a slice, inspect or select
-  `ply-config`, repair decoded-profile behavior, reopen an earlier slice,
-  combine moves, alter caller policy, or begin Spring or packaging work.
+- Rollback is one focused two-file implementation commit with no public API,
+  cache, profile, fixture, caller-policy, user-data, or dependency migration.
+  The slice expires on changed walk/match/path/load/order/value/identity/log/
+  partial/final/repeated behavior, any project/profile/migration/POM/cache or
+  zero-default change, any need for a constructor, opener, caller, fixture,
+  shared/exported factory, second reader, or `ply-config` knowledge, or any
+  protected Go/dependency/graph/mutation/quality change.
+- The sole successor implements only this private template-project loader. It
+  may not repair profile behavior, reopen an earlier seam, combine a second
+  cloud move, change caller policy, inspect or select `ply-config`, or begin
+  Spring or packaging work.
 
 ## Repository And Continuity
 

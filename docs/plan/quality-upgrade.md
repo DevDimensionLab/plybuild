@@ -16755,8 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after seven bounded cloud implementation slices; one fresh
-planning checkpoint is prepared to select at most one next owned cloud slice.
+Status: active after seven bounded cloud implementation slices; one eighth
+private template-project loader slice is selected and prepared for implementation.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17103,6 +17103,63 @@ planning checkpoint is prepared to select at most one next owned cloud slice.
   next slice or stop unresolved; it may not implement that slice, inspect or
   select `ply-config`, repair decoded-profile behavior, reopen an earlier
   slice, combine moves, alter caller policy, or begin Spring or packaging work.
+- The next planning checkpoint reproduced handoff HEAD
+  `47e81b2c9ef0d6184d8bf6476365ccdf70d48365`, parent
+  `9c1899d484633e0ce6cf112544ba33ca89bc4adb`, tree
+  `7517f25e00367d9ecfd82719728bbff867a3b047`, its exact five-file shape,
+  the project implementation's exact parent/tree/two-file shape, all earlier
+  P8 and Google UUID ancestry, reciprocal 341-record/sole-NEXT launcher state,
+  ordinary/ignored cleanliness, and unchanged protected cloud, construction,
+  profile, caller, fixture, mutation, Go-floor, dependency, and graph inputs.
+  Exact Go 1.26.7 reproduced 234/3,599/355/429/197/41/1,067 and all three
+  hashes. Focused project/template and full config/context/Maven/command tests
+  and both unchanged config-cloud 10/10 mutation gates pass under `umask 022`,
+  offline/readonly inputs, and contained scratch.
+- The completed project opener retains explicit Git production selection,
+  exact complete resolved-profile-path delivery once, returned interface
+  identity, active and migration cache mapping, current decoded-profile
+  non-override behavior, safe zero behavior, early configuration failure, and
+  independent repeated construction. Root-opener, project/POM, public, caller,
+  reader, fixture, mutation, Go-floor, and dependency contracts remain exact.
+- Cache and refresh effects, cached documents, Git-hook and example listing,
+  and template filesystem walking are private dependencies. The template walk
+  callback nevertheless still calls `InitProjectFromDirectory(relPath[0])`
+  directly for each exact current or legacy project-config match. That is the
+  only direct project-construction dependency in `pkg/config/cloud.go` and
+  imports profile/HOME/migration/POM/cache knowledge into the reader callback.
+  Pure service, deprecated, source, and template-selection policy remains
+  effect-free; caller and real-network gaps remain guards.
+- Candidate comparison selects only a private template-project loader in
+  `pkg/config/cloud.go` with focused characterization in
+  `pkg/config/cloud_templates_test.go`. A template lookup/provider seam and
+  pure policy seams do not isolate construction; a shared root/project/template
+  factory reopens completed slices; caller policy is larger; and direct
+  `ply-config` work lacks authorized dependency knowledge.
+- Extend only the existing private `templatesDependencies` with one private
+  loader and explicit production implementation. Production passes each
+  complete already-derived template directory exactly once to unchanged
+  `InitProjectFromDirectory`, returns the complete `Project` and exact error,
+  and never wraps, refreshes, or inspects the result. A missing loader returns
+  zero `Project` plus exact `filesystem.ErrNoFilesystem` without construction.
+- Focused TDD must retain exact filesystem production selection and record
+  project-loader selection, complete path/call/value/interface identity, no
+  ignored or incoming-error loads, current/legacy ordered results, exact
+  logging/errors/partial results, independent calls, safe zero behavior, and
+  non-empty populations. Walk root/order/error suppression, matching,
+  path/name derivation, append order, project/profile/migration/POM/cache
+  behavior, public API, callers, other readers, and fixtures remain unchanged.
+- The config-cloud mutation files remain byte-exact. Their two template
+  mutations continue to target exact filename matching and relative-name
+  selection, and direct/meta gates must retain all ten IDs, meanings, and
+  exact 10/10 kills. Rollback is one focused two-file commit with no API,
+  cache, profile, fixture, caller, user-data, or dependency migration.
+- The selected slice expires on changed walking, matching, derivation,
+  loading, value/identity, logging, partial/final result, repetition, project/
+  profile/migration/POM/cache, or safe-zero behavior; any need to change a
+  constructor, opener, caller, fixture, shared/exported factory, or second
+  reader; any `ply-config` knowledge; or any protected Go, dependency, graph,
+  mutation, or quality change. The reciprocal successor implements only this
+  private template-project loader and may not combine a second move.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
