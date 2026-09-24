@@ -16123,6 +16123,63 @@ Stretchr/objx product decision (2026-09-24):
   only project why route, selected Units/go-toml requesters, and genuine Objx
   production import are starting observations only.
 
+Stretchr/testify evaluation (2026-09-24):
+
+- No dependency change is authorized or retained. The proxy has 31 stable
+  artifacts and no prerelease; misspelled-path, self-retracted v1.2.3 is not a
+  canonical exact-path release, leaving 30 canonical v1 stables. There is no
+  alternate major, replacement, canonical retraction, or deprecation.
+  V1.12.1 is the highest target-declared Go-1.18-compatible stable, while
+  v1.8.2 is the highest whose complete closure stays within Go 1.18. No stable
+  fully qualifies.
+- Every release's complete suite necessarily supplies invalid JSON in assert
+  and require tests. Complete count-one, repeated, and race rows therefore
+  stop at the defensive boundary under both exact SDKs. Of 29 target-compatible
+  proxy artifacts examined, safe per-SDK evidence is 29/29 download/verify,
+  21/29 build/test-compile, and 12/29 vet. The ten-target cgo-disabled matrix
+  is 210/290 for both production and test compilation per SDK. Selected v1.9.0
+  and candidate v1.12.1 pass every safe native/cross row, but partial evidence
+  cannot qualify them.
+- Selected v1.9.0's six-module closure has seven target packages and reaches Go
+  1.20 through excepted Objx v0.5.2. Candidate v1.12.1's three-module closure
+  has ten target packages and reaches Go 1.20 through Objx v0.5.3. Exact
+  release, source, API/behavior, caller ownership/mutation, concurrency,
+  lifecycle/error, build-tag/cgo/generate/embed/unsafe, closure, signature,
+  proxy/archive, and sum identities are recorded in the answered evaluation.
+- The current graph has 51 requests: 43 test-file imports, three Logrus
+  internal test-support imports, and five metadata-only edges. Only selected
+  Units `0f3dac36c52b` and go-toml/v2 v2.2.2 request selected v1.9.0, both for
+  tests. Target why remains positive only through go-term-markdown's tests;
+  target source imports, protected loads, runtime relevance, and root status
+  remain zero. Selected Testify's genuine production Objx import remains the
+  separate Objx-exception owner, not project ownership.
+- All 84 historical checkpoints graph successfully and never root Testify.
+  Selection counts are v1.3.0/1, v1.4.0/29, v1.7.0/7, v1.7.1/1, v1.8.0/3,
+  v1.8.1/26, and v1.9.0/17. Eighteen shortest routes span 20 consecutive
+  epochs. The historical union has 94 requests: 82 test-file imports, six
+  internal test-support imports, and six metadata-only edges. No requester owns
+  v1.12.1.
+- A disposable v1.12.1 get manufactures a main request. Tidy retains that root
+  and changes Testify v1.9.0 -> v1.12.1, Objx v0.5.2 -> v0.5.3, and go.yaml/v3
+  v3.0.4 -> v3.0.5. This violates the one-selection contract and exact Objx
+  exception and has no genuine supported owner. No projection is retained;
+  ordinary no-op tidy reproduces the protected common projection.
+- Empty exact OSV, narrow GitHub, and pinned selected/candidate 0/0/0/0 focal
+  results do not imply safety or qualification. Corrected index/CNA,
+  project 30/22/20/20 without Testify/Objx/protected traces, client_golang,
+  exact SDK, project/common-tidy, Go-floor, every earlier selection/exception,
+  and 27/27 Q0-Q2 guards remain exact.
+- The evaluation grants no exception. P7 stops for one prepared reciprocal
+  decision: retain selected v1.9.0 under a Testify-specific unqualified,
+  non-transferable exception; authorize but do not run a later measurement-
+  only **Units/Go-TOML Testify Ownership Study**; or stop P7 unresolved. It is
+  not launched; no other dependency group or P8 work begins.
+- Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass.
+  Protected project identities remain exact; the 315-record archive graph has
+  one NEXT decision; and all 168,330 contained evaluation entries are audited
+  with zero symlink/outside/special entries and removed before handoff, leaving
+  only launcher-owned cache state.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

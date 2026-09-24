@@ -7348,11 +7348,56 @@ source, `go.mod`, and `go.sum` remain byte-exact, and contained task scratch is
 removed. No study, dependency/source/root change, other group, or P8 work was
 run.
 
+## Stretchr Testify Evaluation
+
+No dependency change is authorized or retained. The exact-path proxy line has
+31 stable artifacts and no prerelease; misspelled-path, self-retracted v1.2.3
+is not canonical, leaving 30 canonical v1 stables. V1.12.1 is the highest
+target-declared Go-1.18-compatible stable, while v1.8.2 is the highest whose
+complete closure stays within Go 1.18. No stable fully qualifies.
+
+Every release's mandatory assert/require suite supplies invalid JSON, so
+complete count-one, repeated, and race rows are stopped at the defensive
+boundary. Safe per-SDK results over 29 target-compatible proxy artifacts are
+29/29 download/verify, 21/29 build/test-compile, and 12/29 vet; the ten-target
+cgo-disabled production and test-compilation matrices are each 210/290.
+Selected v1.9.0 and candidate v1.12.1 pass all safe rows, but partial evidence
+cannot replace stopped tests. Selected's closure reaches Go 1.20 through
+excepted Objx v0.5.2; candidate's reaches Go 1.20 through Objx v0.5.3.
+
+The current graph has 51 requests: 43 test-file imports, three Logrus internal
+test-support imports, and five metadata-only edges. Units `0f3dac36c52b` and
+go-toml/v2 v2.2.2 request selected v1.9.0 only for tests. Testify why is
+positive only through go-term-markdown's dependency tests; it is absent from
+project imports and protected loads, indirect, unloaded, runtime-irrelevant,
+and never a root. Its genuine production Objx import remains the separate Objx
+exception owner, not project ownership.
+
+All 84 historical checkpoints graph successfully. Testify selection counts
+are v1.3.0/1, v1.4.0/29, v1.7.0/7, v1.7.1/1, v1.8.0/3, v1.8.1/26, and
+v1.9.0/17 across 18 shortest routes and 20 consecutive epochs. The complete
+historical union has 94 requests: 82 test-file, six internal test-support, and
+six metadata-only boundaries. No requester owns v1.12.1.
+
+A v1.12.1 get manufactures a main request; tidy retains it and changes
+Testify, Objx, and go.yaml together. That violates the one-selection contract
+and Objx's exact exception and lacks a genuine supported owner. No projection
+is retained. Empty exact OSV/GitHub and pinned focal 0/0/0/0 results make no
+safety or qualification claim. The project remains 30/22/20/20 without a
+Testify/Objx/protected trace; all earlier guards remain exact.
+
+Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass with
+234 modules, 3,599 edges, 1,067 sum lines, and protected hashes unchanged.
+All 168,330 contained task entries are audited with zero symlink/outside/
+special entries and removed before handoff. The 315-record reciprocal archive
+graph has exactly one NEXT Testify product decision. No source,
+dependency, root, projection, exception, study, other group, or P8 work is
+included.
+
 ## Next Bounded Objective
 
-Run only [the prepared Testify evaluation](agent-sessions/2026-09-24T064425+0200-evaluate-stretchr-testify-dependency.md).
-Evaluate exact selected indirect `github.com/stretchr/testify v1.9.0` as one
-bounded P7 group while preserving the new Objx exception and every earlier
-guard. The evaluation is prepared but not launched. Do not run the rejected
-Testify Objx Ownership Study, combine another dependency group, transfer an
-exception, add an unqualified root, relax the Go 1.18 floor, or begin P8.
+Run only [the prepared Testify product decision](agent-sessions/2026-09-24T073300+0200-decide-stretchr-testify-product-direction.md).
+Choose exactly one authorized move for selected indirect Testify v1.9.0. The
+decision is prepared but not launched. Do not rerun the evaluation, run either
+ownership study, change a dependency or source, add a root, transfer an
+exception, combine another group, relax Go 1.18, or begin P8.
