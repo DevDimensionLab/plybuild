@@ -80,6 +80,39 @@ func (fileProjectDefaultsLoader) Load(directory Directory) (CloudProjectDefaults
 	return projectDefaults, err
 }
 
+type deprecatedLoader interface {
+	Load(directory Directory) (CloudDeprecated, error)
+}
+
+type deprecatedDependencies struct {
+	Loader deprecatedLoader
+}
+
+func systemDeprecatedDependencies() deprecatedDependencies {
+	return deprecatedDependencies{Loader: fileDeprecatedLoader{}}
+}
+
+func (dependencies deprecatedDependencies) Load(directory Directory) (CloudDeprecated, error) {
+	if dependencies.Loader == nil {
+		return CloudDeprecated{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type fileDeprecatedLoader struct{}
+
+func (fileDeprecatedLoader) Load(directory Directory) (CloudDeprecated, error) {
+	var deprecated CloudDeprecated
+
+	path, err := directory.FilePath("deprecated.json")
+	if err != nil {
+		return deprecated, err
+	}
+
+	err = file.ReadJson(path, &deprecated)
+	return deprecated, err
+}
+
 type gitHookFilesDependencies struct {
 	Files filesystem.Dependencies
 }
@@ -270,15 +303,11 @@ func (gitCfg GitCloudConfig) DefaultServiceEnvironmentUrl(service CloudService, 
 }
 
 func (gitCfg GitCloudConfig) Deprecated() (CloudDeprecated, error) {
-	var deprecated CloudDeprecated
+	return gitCfg.deprecated(systemDeprecatedDependencies())
+}
 
-	path, err := gitCfg.Implementation().FilePath("deprecated.json")
-	if err != nil {
-		return deprecated, err
-	}
-
-	err = file.ReadJson(path, &deprecated)
-	return deprecated, err
+func (gitCfg GitCloudConfig) deprecated(dependencies deprecatedDependencies) (CloudDeprecated, error) {
+	return dependencies.Load(gitCfg.Implementation())
 }
 
 func (gitCfg GitCloudConfig) ProjectDefaults() (CloudProjectDefaults, error) {

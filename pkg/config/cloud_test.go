@@ -79,6 +79,60 @@ type recordingProjectDefaultsDirectory struct {
 	fileNames []string
 }
 
+type deprecatedLoadResult struct {
+	deprecated CloudDeprecated
+	err        error
+}
+
+type recordingDeprecatedLoader struct {
+	directories []Directory
+	results     []deprecatedLoadResult
+}
+
+func (recording *recordingDeprecatedLoader) Load(directory Directory) (CloudDeprecated, error) {
+	recording.directories = append(recording.directories, directory)
+	index := len(recording.directories) - 1
+	if index >= len(recording.results) {
+		return CloudDeprecated{}, errors.New("recorded Deprecated result population is incomplete")
+	}
+	result := recording.results[index]
+	return result.deprecated, result.err
+}
+
+func (recording *recordingDeprecatedLoader) dependencies() deprecatedDependencies {
+	return deprecatedDependencies{Loader: recording}
+}
+
+func (recording *recordingDeprecatedLoader) assertedDirectories() ([]Directory, error) {
+	if len(recording.directories) == 0 {
+		return nil, errors.New("recorded Deprecated loader directory population is empty")
+	}
+	return recording.directories, nil
+}
+
+type recordingDeprecatedDirectory struct {
+	dir       string
+	path      string
+	err       error
+	fileNames []string
+}
+
+func (directory *recordingDeprecatedDirectory) Dir() string {
+	return directory.dir
+}
+
+func (directory *recordingDeprecatedDirectory) FilePath(fileName string) (string, error) {
+	directory.fileNames = append(directory.fileNames, fileName)
+	return directory.path, directory.err
+}
+
+func (directory *recordingDeprecatedDirectory) assertedFileNames() ([]string, error) {
+	if len(directory.fileNames) == 0 {
+		return nil, errors.New("recorded Deprecated filename population is empty")
+	}
+	return directory.fileNames, nil
+}
+
 func (directory *recordingProjectDefaultsDirectory) Dir() string {
 	return directory.dir
 }
@@ -374,6 +428,222 @@ func TestRecordedProjectDefaultsRejectsEmptyPopulations(t *testing.T) {
 	}
 	if _, err := (&recordingProjectDefaultsDirectory{}).assertedFileNames(); err == nil {
 		t.Fatal("empty recorded ProjectDefaults filename population passed")
+	}
+}
+
+func TestDeprecatedSelectsFileLoaderForProductionAndRequestsExactFile(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "deprecated.json")
+	writeDeprecatedFixture(t, path, representativeDeprecatedJSON)
+	dependencies := systemDeprecatedDependencies()
+
+	if dependencies.Loader == nil {
+		t.Fatal("Deprecated selected an incomplete loader dependency")
+	}
+	if reflect.TypeOf(dependencies.Loader) != reflect.TypeOf(fileDeprecatedLoader{}) {
+		t.Fatalf("Deprecated loader dependency is %T, want %T", dependencies.Loader, fileDeprecatedLoader{})
+	}
+
+	directory := &recordingDeprecatedDirectory{dir: root, path: path}
+	deprecated, err := dependencies.Load(directory)
+	if err != nil {
+		t.Fatalf("production Deprecated loader returned an error: %v", err)
+	}
+	fileNames, populationErr := directory.assertedFileNames()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(fileNames, []string{"deprecated.json"}) {
+		t.Fatalf("production Deprecated loader requested filenames %#v, want exact deprecated.json", fileNames)
+	}
+	if !reflect.DeepEqual(deprecated, representativeDeprecated()) {
+		t.Fatalf("production Deprecated loader decoded %#v, want representative complete recursive value %#v", deprecated, representativeDeprecated())
+	}
+
+	publicDeprecated, err := (GitCloudConfig{Impl: DirConfig{Path: root}}).Deprecated()
+	if err != nil || !reflect.DeepEqual(publicDeprecated, representativeDeprecated()) {
+		t.Fatalf("public Deprecated production wrapper returned (%#v, %v), want (%#v, nil)", publicDeprecated, err, representativeDeprecated())
+	}
+}
+
+func TestDeprecatedLoadsExactlyOncePerIndependentInvocationWithCompleteDirectory(t *testing.T) {
+	loadError := errors.New("complete Deprecated loader dependency error")
+	first := CloudDeprecated{Type: "first complete deprecated value"}
+	second := CloudDeprecated{Type: "second complete partial deprecated value"}
+	recording := &recordingDeprecatedLoader{results: []deprecatedLoadResult{
+		{deprecated: first},
+		{deprecated: second, err: loadError},
+	}}
+	if len(recording.results) == 0 {
+		t.Fatal("Deprecated loader result population is empty")
+	}
+	gitCfg := GitCloudConfig{Impl: DirConfig{Path: "/complete cloud-config receiver/root with spaces"}}
+
+	actual, err := gitCfg.deprecated(recording.dependencies())
+	if !reflect.DeepEqual(actual, first) || err != nil {
+		t.Fatalf("first Deprecated invocation returned (%#v, %v), want exact (%#v, nil)", actual, err, first)
+	}
+	if len(recording.directories) != 1 {
+		t.Fatalf("first Deprecated invocation loaded %d times, want exactly one", len(recording.directories))
+	}
+
+	actual, err = gitCfg.deprecated(recording.dependencies())
+	if !reflect.DeepEqual(actual, second) || err != loadError {
+		t.Fatalf("second Deprecated invocation returned (%#v, %v), want exact (%#v, %v)", actual, err, second, loadError)
+	}
+	directories, populationErr := recording.assertedDirectories()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if len(directories) != 2 {
+		t.Fatalf("two Deprecated invocations loaded %d times, want one independent load each", len(directories))
+	}
+	for index, directory := range directories {
+		if !reflect.DeepEqual(directory, gitCfg.Implementation()) {
+			t.Fatalf("Deprecated invocation %d received directory %#v, want complete implementation %#v", index+1, directory, gitCfg.Implementation())
+		}
+	}
+}
+
+func TestFileDeprecatedLoaderReturnsExactFilePathReadAndUnmarshalResults(t *testing.T) {
+	pathError := errors.New("complete Deprecated FilePath dependency error")
+	directory := &recordingDeprecatedDirectory{
+		dir:  "/developer/home/cloud-config/must-not-be-accessed",
+		err:  pathError,
+		path: "/must/not/be/read/deprecated.json",
+	}
+
+	deprecated, err := (fileDeprecatedLoader{}).Load(directory)
+	if !reflect.DeepEqual(deprecated, CloudDeprecated{}) || err != pathError {
+		t.Fatalf("file Deprecated loader returned (%#v, %v), want (zero, exact error %v)", deprecated, err, pathError)
+	}
+	fileNames, populationErr := directory.assertedFileNames()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(fileNames, []string{"deprecated.json"}) {
+		t.Fatalf("file Deprecated loader requested filenames %#v, want exact deprecated.json", fileNames)
+	}
+
+	root := t.TempDir()
+	missing := filepath.Join(root, "missing-deprecated.json")
+	deprecated, err = (fileDeprecatedLoader{}).Load(&recordingDeprecatedDirectory{path: missing})
+	wantReadError := "Unable to read " + missing + ", " + (&os.PathError{Op: "open", Path: missing, Err: syscall.ENOENT}).Error()
+	if !reflect.DeepEqual(deprecated, CloudDeprecated{}) || err == nil || err.Error() != wantReadError {
+		t.Fatalf("file Deprecated read result was (%#v, %v), want (zero, exact %q)", deprecated, err, wantReadError)
+	}
+
+	malformed := filepath.Join(root, "malformed-deprecated.json")
+	writeDeprecatedFixture(t, malformed, `{"type":"partial deprecated","data":{"dependencies":[{"groupId":"partial.group","artifactId":123}]}}`)
+	deprecated, err = (fileDeprecatedLoader{}).Load(&recordingDeprecatedDirectory{path: malformed})
+	wantPartial := CloudDeprecated{Type: "partial deprecated"}
+	wantPartial.Data.Dependencies = []CloudDeprecatedDependency{{GroupId: "partial.group"}}
+	wantUnmarshalError := "Unable to unmarshal " + malformed + ", json: cannot unmarshal number into Go struct field CloudDeprecatedDependency.data.dependencies.artifactId of type string"
+	if !reflect.DeepEqual(deprecated, wantPartial) || err == nil || err.Error() != wantUnmarshalError {
+		t.Fatalf("file Deprecated unmarshal result was (%#v, %v), want exact partial (%#v, %q)", deprecated, err, wantPartial, wantUnmarshalError)
+	}
+}
+
+func TestDeprecatedDependenciesDefaultToSafeNoDeveloperPathAccess(t *testing.T) {
+	directory := &recordingDeprecatedDirectory{dir: "/developer/home/cloud-config/must-not-be-accessed"}
+
+	deprecated, err := (deprecatedDependencies{}).Load(directory)
+	if !reflect.DeepEqual(deprecated, CloudDeprecated{}) || err != filesystem.ErrNoFilesystem {
+		t.Fatalf("safe Deprecated dependency default returned (%#v, %v), want (zero, exact %v)", deprecated, err, filesystem.ErrNoFilesystem)
+	}
+	if len(directory.fileNames) != 0 {
+		t.Fatalf("safe Deprecated dependency accessed developer filenames: %#v", directory.fileNames)
+	}
+
+	deprecated, err = (GitCloudConfig{Impl: DirConfig{Path: directory.dir}}).deprecated(deprecatedDependencies{})
+	if !reflect.DeepEqual(deprecated, CloudDeprecated{}) || err != filesystem.ErrNoFilesystem {
+		t.Fatalf("safe Deprecated helper returned (%#v, %v), want (zero, exact %v)", deprecated, err, filesystem.ErrNoFilesystem)
+	}
+	if len(directory.fileNames) != 0 {
+		t.Fatalf("safe Deprecated helper accessed developer filenames: %#v", directory.fileNames)
+	}
+}
+
+func TestRecordedDeprecatedRejectsEmptyPopulations(t *testing.T) {
+	if _, err := (&recordingDeprecatedLoader{}).assertedDirectories(); err == nil {
+		t.Fatal("empty recorded Deprecated loader directory population passed")
+	}
+	if _, err := (&recordingDeprecatedDirectory{}).assertedFileNames(); err == nil {
+		t.Fatal("empty recorded Deprecated filename population passed")
+	}
+}
+
+const representativeDeprecatedJSON = `{
+  "type": "complete deprecated",
+  "data": {
+    "dependencies": [{
+      "groupId": "root.group",
+      "artifactId": "root-artifact",
+      "files": ["root-one", "root-two"],
+      "associated": {
+        "files": ["root-associated-file"],
+        "dependencies": [{
+          "groupId": "associated.group",
+          "artifactId": "associated-artifact",
+          "files": ["associated-file"],
+          "associated": {
+            "files": ["nested-associated-file"],
+            "dependencies": [{
+              "groupId": "nested.group",
+              "artifactId": "nested-artifact",
+              "files": ["nested-file"],
+              "associated": {"files": ["leaf-file"], "dependencies": []},
+              "replacement_templates": ["nested-template"]
+            }]
+          },
+          "replacement_templates": ["associated-template"]
+        }]
+      },
+      "replacement_templates": ["first-template", "second-template"]
+    }, {
+      "groupId": "nil.group",
+      "artifactId": "nil-artifact"
+    }]
+  }
+}`
+
+func representativeDeprecated() CloudDeprecated {
+	nested := CloudDeprecatedDependency{
+		GroupId:              "nested.group",
+		ArtifactId:           "nested-artifact",
+		Files:                []string{"nested-file"},
+		ReplacementTemplates: []string{"nested-template"},
+	}
+	nested.Associated.Files = []string{"leaf-file"}
+	nested.Associated.Dependencies = []CloudDeprecatedDependency{}
+	associated := CloudDeprecatedDependency{
+		GroupId:              "associated.group",
+		ArtifactId:           "associated-artifact",
+		Files:                []string{"associated-file"},
+		ReplacementTemplates: []string{"associated-template"},
+	}
+	associated.Associated.Files = []string{"nested-associated-file"}
+	associated.Associated.Dependencies = []CloudDeprecatedDependency{nested}
+	root := CloudDeprecatedDependency{
+		GroupId:              "root.group",
+		ArtifactId:           "root-artifact",
+		Files:                []string{"root-one", "root-two"},
+		ReplacementTemplates: []string{"first-template", "second-template"},
+	}
+	root.Associated.Files = []string{"root-associated-file"}
+	root.Associated.Dependencies = []CloudDeprecatedDependency{associated}
+	deprecated := CloudDeprecated{Type: "complete deprecated"}
+	deprecated.Data.Dependencies = []CloudDeprecatedDependency{
+		root,
+		{GroupId: "nil.group", ArtifactId: "nil-artifact"},
+	}
+	return deprecated
+}
+
+func writeDeprecatedFixture(t *testing.T, path string, contents string) {
+	t.Helper()
+	if err := testutil.WriteFileOutsideWorkingTree(path, []byte(contents), 0600); err != nil {
+		t.Fatalf("write disposable Deprecated fixture: %v", err)
 	}
 }
 
