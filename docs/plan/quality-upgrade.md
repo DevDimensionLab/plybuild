@@ -15830,6 +15830,50 @@ Smartystreets/goconvey product decision (2026-09-24):
   request and negative target why are starting observations only. The successor
   is not launched; no study, other group, exception transfer, or P8 work begins.
 
+Soheilhy/cmux evaluation (2026-09-24):
+
+- Canonical v0.1.5 is the highest of exactly six exact-path stable releases
+  and is compatible with Go 1.18. Exact active repository, release chronology,
+  GitHub Release, tag/commit/tree/signature/ancestry, proxy/sumdb/archive,
+  module/license, source/build, API/behavior, and closure identities reproduce.
+  There is no canonical prerelease, replacement, retraction, deprecation, or
+  alternate-major line.
+- No stable fully qualifies. V0.1.0-v0.1.4 have incomplete synthesized module
+  metadata and fail standalone build, test compilation, vet, and every cross
+  row because required x/net/http2 and hpack packages are absent. V0.1.5 passes
+  verification, build, count-one/count-ten/race tests, and every supported
+  cgo-disabled production/test-compilation row under both exact SDKs, but
+  fails mandatory vet on both due to upstream non-test-goroutine
+  `testing.T.Fatal` calls. Passing safe evidence is not qualification.
+- The current route is main -> direct loaded, why-positive and runtime-relevant
+  mvn-pom-mutator v0.2.3 -> selected Cmux v0.1.4. Its target edge is indirect
+  metadata with zero source imports. Cmux is why-negative, unloaded, absent
+  from project imports and load populations, runtime-irrelevant, selected by
+  one request, and never a main root.
+- All 84 historical checkpoints select v0.1.4. Every Viper and old/new
+  mvn-pom-mutator route edge into Cmux is metadata-only; no genuine current or
+  historical source-importing project route owns it.
+- A disposable selected get manufactures a target root and source sum that
+  ordinary tidy removes to restore the common projection. A v0.1.5 get changes
+  only Cmux among selected modules, but tidy discards it for lack of an owner
+  and again restores the exact common projection and v0.1.4. No projection is
+  retained.
+- Empty target OSV and narrow GitHub results do not imply safety or
+  qualification. Selected focal scanning cannot load through incomplete
+  metadata; v0.1.5 has 25/10/2/2 focal findings in its complete closure. The
+  project remains 30/22/20/20 without a Cmux or protected named trace; all
+  corrected index/CNA, client_golang, selection, exception, SDK, project/
+  common-tidy, Go-floor, and 27/27 Q0-Q2 guards remain exact.
+- Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass.
+  Protected module/sum/graph/load identities remain exact; the 309-record
+  archive graph has one NEXT decision; all contained task-scratch entries were
+  verified without symlink, outside-path, or special entries and removed.
+- The evaluation grants no exception. P7 stops for one prepared reciprocal
+  decision: retain selected v0.1.4 under a Cmux-specific unqualified,
+  non-transferable exception; authorize only a later measurement-only
+  **Mvn-Pom-Mutator Cmux Ownership Study**; or stop unresolved. It is not
+  launched; no other dependency group or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

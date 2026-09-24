@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T04:16:23+02:00
+Generated: 2026-09-24T05:03:05+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -7043,12 +7043,58 @@ graph hashes, Go 1.18, all earlier selections/requests/exceptions, and 27/27
 Q0-Q2 PASS at L2. No completed evaluation, test, study, or network research was
 rerun. No source, dependency, root, study, other group, or P8 work is included.
 
+## Soheilhy Cmux Evaluation
+
+No dependency change is authorized or retained. Canonical v0.1.5 is the
+highest of exactly six exact-path stable releases and is compatible with Go
+1.18. Exact active repository, release chronology, GitHub Release, tag/commit/
+tree/signature/ancestry, proxy/sumdb/archive, module/license, source/build,
+API/behavior, and closure identities reproduce. There is no canonical
+prerelease, replacement, retraction, deprecation, or alternate-major line.
+
+No stable fully qualifies. V0.1.0-v0.1.4 have incomplete proxy-synthesized
+module metadata and cannot build or test-compile because x/net/http2 and hpack
+are absent. V0.1.5 passes module verification, build, complete count-one and
+count-ten tests, race count-one tests, and all 40 supported cgo-disabled
+production/test-compilation results under exact Go 1.18.10 and Go 1.26.7, but
+fails mandatory vet under both because upstream tests call `testing.T.Fatal`
+from non-test goroutines. Passing safe evidence is not qualification.
+
+The current route is main -> direct loaded, why-positive and runtime-relevant
+mvn-pom-mutator v0.2.3 -> selected Cmux v0.1.4. Its target request is indirect
+metadata with zero source imports. Cmux is why-negative, unloaded, absent from
+project imports and all project load populations, runtime-irrelevant, selected
+through one request, and never a main root. All 84 historical checkpoints
+retain v0.1.4; every Viper and old/new mvn-pom-mutator incoming edge is
+metadata-only. No genuine current or historical source-importing route owns
+Cmux.
+
+A disposable selected get manufactures a redundant target root and source
+sum; ordinary tidy removes them and restores the exact common projection. A
+v0.1.5 get changes only Cmux among selected modules, but tidy discards v0.1.5
+for lack of an owner and again restores the exact common projection and
+v0.1.4. No genuine supported tidy-stable requester owns v0.1.5. No projection
+is retained.
+
+Empty exact OSV and narrow GitHub results do not imply safety or qualification.
+Selected focal scanning is invalid because incomplete metadata prevents
+package loading; v0.1.5 has 25/10/2/2 focal findings in its complete closure.
+The unchanged project remains 30/22/20/20 without a Cmux or named protected
+trace. Corrected index/CNA, client_golang, selection, exception, SDK, project/
+common-tidy, Go-floor, and 27/27 Q0-Q2 guards remain exact.
+
+Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass.
+Protected module/sum/graph/load identities remain exact; the 309-record
+archive graph has one NEXT decision; and all contained task-scratch entries
+were verified without symlink, outside-path, or special entries and removed.
+The evaluation grants no exception.
+
 ## Next Bounded Objective
 
-Run only [the prepared bounded Soheilhy Cmux evaluation](agent-sessions/2026-09-24T042942+0200-evaluate-soheilhy-cmux-dependency.md).
-Resolve exact selected indirect `github.com/soheilhy/cmux v0.1.4` and its
-canonical Go-1.18-compatible release line without assuming that the physical
-selection, its sole mvn-pom-mutator request, or negative target why establishes
-qualification or genuine ownership. The evaluation is prepared but not
-launched. Do not run a rejected study, combine another group, transfer or
-reopen an exception, or begin P8.
+Run only [the prepared reciprocal Soheilhy Cmux product decision](agent-sessions/2026-09-24T050305+0200-decide-soheilhy-cmux-product-direction.md).
+Choose exactly one: retain selected v0.1.4 under a Cmux-specific unqualified,
+non-transferable exception; authorize only a later measurement-only
+**Mvn-Pom-Mutator Cmux Ownership Study**; or stop P7 unresolved. The decision
+is prepared but not launched. Do not rerun the completed evaluation, run a
+study, change a dependency or root, combine another group, transfer or reopen
+an exception, or begin P8.
