@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/testutil"
+	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 )
 
@@ -24,8 +25,13 @@ type recordingCloudGit struct {
 	pullOutput  shell.Output
 }
 
-func (recording *recordingCloudGit) dependencies() refreshGitDependencies {
-	return refreshGitDependencies{Git: recording}
+type recordingCloudCacheProbe struct {
+	paths   []string
+	present bool
+}
+
+func (recording *recordingCloudGit) dependencies(cache *recordingCloudCacheProbe) refreshGitDependencies {
+	return refreshGitDependencies{Git: recording, Cache: cache}
 }
 
 func (recording *recordingCloudGit) Clone(url string, target string) shell.Output {
@@ -49,6 +55,18 @@ func (recording *recordingCloudGit) assertedCalls() ([]recordedCloudGitCall, err
 		return nil, errors.New("recorded cloud Git call population is empty")
 	}
 	return recording.calls, nil
+}
+
+func (recording *recordingCloudCacheProbe) Exists(path string) bool {
+	recording.paths = append(recording.paths, path)
+	return recording.present
+}
+
+func (recording *recordingCloudCacheProbe) assertedPaths() ([]string, error) {
+	if len(recording.paths) == 0 {
+		return nil, errors.New("recorded cloud cache-probe path population is empty")
+	}
+	return recording.paths, nil
 }
 
 type staticLocalConfig struct {
@@ -105,12 +123,14 @@ func TestCloudCloneKeepsCompleteURLBeforeCompleteTargetDirectory(t *testing.T) {
 	url := "ssh://git@example.invalid/team/complete-repository.git?ref=complete-value"
 	target := filepath.Join(t.TempDir(), "complete cloud target directory")
 	gitCfg := GitCloudConfig{Impl: DirConfig{Path: target}}
+	cache := &recordingCloudCacheProbe{}
 
-	err := gitCfg.refresh(recording.dependencies(), localConfigWithCloudURL(url))
+	err := gitCfg.refresh(recording.dependencies(cache), localConfigWithCloudURL(url))
 
 	if err != nil {
 		t.Fatalf("refresh returned an error: %v", err)
 	}
+	assertRecordedCloudCacheProbePaths(t, cache, []string{file.Path("%s/.git", target)})
 	assertRecordedCloudGitCalls(t, recording, []recordedCloudGitCall{{
 		Operation: "clone",
 		Values:    []string{url, target},
@@ -120,18 +140,58 @@ func TestCloudCloneKeepsCompleteURLBeforeCompleteTargetDirectory(t *testing.T) {
 func TestCloudRefreshExistingGitPathSelectsPullWithCompleteDependency(t *testing.T) {
 	recording := &recordingCloudGit{}
 	target := filepath.Join(t.TempDir(), "existing cloud target directory")
-	createExistingGitPath(t, target)
 	gitCfg := GitCloudConfig{Impl: DirConfig{Path: target}}
+	cache := &recordingCloudCacheProbe{present: true}
 
-	err := gitCfg.refresh(recording.dependencies(), localConfigWithCloudURL("unused://clone-url"))
+	err := gitCfg.refresh(recording.dependencies(cache), localConfigWithCloudURL("unused://clone-url"))
 
 	if err != nil {
 		t.Fatalf("refresh returned an error: %v", err)
 	}
+	assertRecordedCloudCacheProbePaths(t, cache, []string{file.Path("%s/.git", target)})
 	assertRecordedCloudGitCalls(t, recording, []recordedCloudGitCall{{
 		Operation: "pull",
 		Values:    []string{target},
 	}})
+}
+
+func TestCloudRefreshSelectsFileCacheProbeForProduction(t *testing.T) {
+	dependencies := systemRefreshGitDependencies()
+
+	if dependencies.Cache == nil {
+		t.Fatal("Cloud refresh selected an incomplete cache-probe dependency")
+	}
+	if reflect.TypeOf(dependencies.Cache) != reflect.TypeOf(fileRefreshCache{}) {
+		t.Fatalf("Cloud refresh cache-probe dependency is %T, want %T", dependencies.Cache, fileRefreshCache{})
+	}
+
+	target := filepath.Join(t.TempDir(), "production cache-probe target")
+	createExistingGitPath(t, target)
+	if !dependencies.Exists(file.Path("%s/.git", target)) {
+		t.Fatal("production cache probe reported the existing Git path as absent")
+	}
+	if dependencies.Exists(file.Path("%s/missing/.git", target)) {
+		t.Fatal("production cache probe reported a missing Git path as present")
+	}
+}
+
+func TestCloudRefreshReturnsLocalConfigErrorBeforeCacheProbeOrGit(t *testing.T) {
+	localConfigError := errors.New("complete local-config dependency error")
+	recording := &recordingCloudGit{}
+	cache := &recordingCloudCacheProbe{present: true}
+	gitCfg := GitCloudConfig{Impl: DirConfig{Path: "/developer/home/cloud-config/must-not-be-accessed"}}
+
+	err := gitCfg.refresh(recording.dependencies(cache), staticLocalConfig{err: localConfigError})
+
+	if err != localConfigError {
+		t.Fatalf("refresh error was %v, want exact local-config error %v", err, localConfigError)
+	}
+	if len(cache.paths) != 0 {
+		t.Fatalf("cache probe ran before the local-config error returned: %#v", cache.paths)
+	}
+	if len(recording.calls) != 0 {
+		t.Fatalf("Git dependency ran before the local-config error returned: %#v", recording.calls)
+	}
 }
 
 func TestCloudRefreshFormatsGitDependencyErrors(t *testing.T) {
@@ -151,16 +211,14 @@ func TestCloudRefreshFormatsGitDependencyErrors(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			target := filepath.Join(t.TempDir(), test.name+" cloud target")
-			if test.existing {
-				createExistingGitPath(t, target)
-			}
 			output := shell.Output{Err: errors.New(test.name + " dependency failed")}
 			_, _ = output.StdOut.WriteString(test.name + " complete stdout\n")
 			_, _ = output.StdErr.WriteString(test.name + " complete stderr\n")
 			recording := &recordingCloudGit{cloneOutput: output, pullOutput: output}
+			cache := &recordingCloudCacheProbe{present: test.existing}
 			gitCfg := GitCloudConfig{Impl: DirConfig{Path: target}}
 
-			err := gitCfg.refresh(recording.dependencies(), localConfigWithCloudURL("https://example.invalid/complete.git"))
+			err := gitCfg.refresh(recording.dependencies(cache), localConfigWithCloudURL("https://example.invalid/complete.git"))
 
 			if err == nil {
 				t.Fatal("Git dependency error was lost")
@@ -168,6 +226,7 @@ func TestCloudRefreshFormatsGitDependencyErrors(t *testing.T) {
 			if err.Error() != output.FormatError().Error() {
 				t.Fatalf("formatted Git error changed:\n got: %q\nwant: %q", err.Error(), output.FormatError().Error())
 			}
+			assertRecordedCloudCacheProbePaths(t, cache, []string{file.Path("%s/.git", target)})
 			calls, callsErr := recording.assertedCalls()
 			if callsErr != nil {
 				t.Fatal(callsErr)
@@ -180,7 +239,7 @@ func TestCloudRefreshFormatsGitDependencyErrors(t *testing.T) {
 }
 
 func TestCloudRefreshGitDependenciesDefaultToNoMutation(t *testing.T) {
-	target := filepath.Join(t.TempDir(), "safe default cloud target")
+	target := "/developer/home/cloud-config/must-not-be-accessed"
 	gitCfg := GitCloudConfig{Impl: DirConfig{Path: target}}
 
 	err := gitCfg.refresh(refreshGitDependencies{}, localConfigWithCloudURL("https://example.invalid/must-not-clone.git"))
@@ -188,8 +247,8 @@ func TestCloudRefreshGitDependenciesDefaultToNoMutation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("safe Git dependency default returned an error: %v", err)
 	}
-	if _, statErr := os.Stat(target); !os.IsNotExist(statErr) {
-		t.Fatalf("safe Git dependency default mutated the target: %v", statErr)
+	if (refreshGitDependencies{}).Exists(file.Path("%s/.git", target)) {
+		t.Fatal("safe cache-probe dependency default reported an unprobed developer path as present")
 	}
 }
 
@@ -198,6 +257,10 @@ func TestRecordedCloudGitCallsRejectEmptyPopulation(t *testing.T) {
 
 	if _, err := recording.assertedCalls(); err == nil {
 		t.Fatal("empty recorded cloud Git population passed")
+	}
+	cache := &recordingCloudCacheProbe{}
+	if _, err := cache.assertedPaths(); err == nil {
+		t.Fatal("empty recorded cloud cache-probe population passed")
 	}
 }
 
@@ -209,5 +272,16 @@ func assertRecordedCloudGitCalls(t *testing.T, recording *recordingCloudGit, wan
 	}
 	if !reflect.DeepEqual(calls, want) {
 		t.Fatalf("recorded cloud Git calls differ:\n got: %#v\nwant: %#v", calls, want)
+	}
+}
+
+func assertRecordedCloudCacheProbePaths(t *testing.T, recording *recordingCloudCacheProbe, want []string) {
+	t.Helper()
+	paths, err := recording.assertedPaths()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(paths, want) {
+		t.Fatalf("recorded cloud cache-probe paths differ:\n got: %#v\nwant: %#v", paths, want)
 	}
 }

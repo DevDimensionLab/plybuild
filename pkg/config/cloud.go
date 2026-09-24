@@ -43,8 +43,17 @@ type refreshGit interface {
 	Pull(target string) shell.Output
 }
 
+type refreshCacheProbe interface {
+	Exists(path string) bool
+}
+
 type refreshGitDependencies struct {
-	Git refreshGit
+	Git   refreshGit
+	Cache refreshCacheProbe
+}
+
+func systemRefreshGitDependencies() refreshGitDependencies {
+	return refreshGitDependencies{Git: shellRefreshGit{}, Cache: fileRefreshCache{}}
 }
 
 func (dependencies refreshGitDependencies) Clone(url string, target string) shell.Output {
@@ -61,6 +70,13 @@ func (dependencies refreshGitDependencies) Pull(target string) shell.Output {
 	return dependencies.Git.Pull(target)
 }
 
+func (dependencies refreshGitDependencies) Exists(path string) bool {
+	if dependencies.Cache == nil {
+		return false
+	}
+	return dependencies.Cache.Exists(path)
+}
+
 type shellRefreshGit struct{}
 
 func (shellRefreshGit) Clone(url string, target string) shell.Output {
@@ -69,6 +85,12 @@ func (shellRefreshGit) Clone(url string, target string) shell.Output {
 
 func (shellRefreshGit) Pull(target string) shell.Output {
 	return shell.GitPull(target)
+}
+
+type fileRefreshCache struct{}
+
+func (fileRefreshCache) Exists(path string) bool {
+	return file.Exists(path)
 }
 
 type CloudConfig interface {
@@ -107,7 +129,7 @@ func (gitCfg GitCloudConfig) Implementation() Directory {
 }
 
 func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
-	return gitCfg.refresh(refreshGitDependencies{Git: shellRefreshGit{}}, localConfig)
+	return gitCfg.refresh(systemRefreshGitDependencies(), localConfig)
 }
 
 func (gitCfg GitCloudConfig) refresh(dependencies refreshGitDependencies, localConfig LocalConfigFile) error {
@@ -117,7 +139,7 @@ func (gitCfg GitCloudConfig) refresh(dependencies refreshGitDependencies, localC
 	}
 
 	target := gitCfg.Implementation().Dir()
-	if file.Exists(file.Path("%s/.git", target)) {
+	if dependencies.Exists(file.Path("%s/.git", target)) {
 		log.Info(fmt.Sprintf("pulling cloud config on %s", target))
 		pull := dependencies.Pull(target)
 		if pull.Err != nil {

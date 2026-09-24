@@ -117,7 +117,7 @@ mutate() {
 declare_manifest() {
 # 3. cloud clone keeps URL before target directory
 mutate "cloud-clone-argument-order" "pkg/config/cloud.go" "dependencies.Clone(localCfg.CloudConfig.Git.Url, target)" "dependencies.Clone(target, localCfg.CloudConfig.Git.Url)" "./pkg/config" "TestCloudCloneKeepsCompleteURLBeforeCompleteTargetDirectory" ""
-mutate "cloud-refresh-existing-branch" "pkg/config/cloud.go" "if file.Exists(file.Path(\"%s/.git\", target)) {" "if !file.Exists(file.Path(\"%s/.git\", target)) {" "./pkg/config" "TestCloudCloneKeepsCompleteURLBeforeCompleteTargetDirectory,TestCloudRefreshExistingGitPathSelectsPullWithCompleteDependency" ""
+mutate "cloud-refresh-existing-branch" "pkg/config/cloud.go" "if dependencies.Exists(file.Path(\"%s/.git\", target)) {" "if !dependencies.Exists(file.Path(\"%s/.git\", target)) {" "./pkg/config" "TestCloudCloneKeepsCompleteURLBeforeCompleteTargetDirectory,TestCloudRefreshExistingGitPathSelectsPullWithCompleteDependency" ""
 mutate "cloud-pull-error-gate" "pkg/config/cloud.go" "if pull.Err != nil {" "if pull.Err == nil {" "./pkg/config" "TestCloudRefreshFormatsGitDependencyErrors" ""
 mutate "cloud-clone-error-gate" "pkg/config/cloud.go" "if clone.Err != nil {" "if clone.Err == nil {" "./pkg/config" "TestCloudRefreshFormatsGitDependencyErrors" ""
 mutate "git-hook-file-classification" "pkg/config/cloud.go" "if !f.IsDir() {" "if f.IsDir() {" "./pkg/config" "TestGitHookFilesPreservesReceiverRootDeliveredOrderMetadataClassificationAndFilenameResults" ""
