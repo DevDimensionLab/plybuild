@@ -17482,6 +17482,53 @@ bounded read-only `ply-config` compatibility evaluation.
   launcher/cleanliness checks, protected counts and hashes, focused exact-Go
   tests, and both byte-unchanged 10/10 cloud mutation gates. Decision rollback
   is documentation-only: revert the single five-file handoff commit.
+- The bounded evaluation completes canonical primary-source inspection at
+  public GitHub repository ID `292204216`, `DevDimensionLab/ply-config`,
+  default branch `master`, exact commit
+  `73c09ffeeb97d7f3f0f399219a7549febbc58478`, tree
+  `958de5153deca209f55f311fff78dd1dcc556a4d`, retrieved 2026-09-25. The
+  canonical project is a Git configuration-content repository, not a Go
+  module, dependency, library, or alternate `CloudConfig` implementation.
+- The exact canonical tree has 125 tracked files, zero Go files, no `go.mod`,
+  public Go API, Go floor, root README, tags, or releases. It is public,
+  enabled, unarchived, and MIT licensed, but the default branch ends on
+  2024-01-19 and the last recorded push is an unmerged branch on 2024-01-28.
+  Root Maven `1.0.0-SNAPSHOT` is not treated as a release or selection.
+- Exact `services.json`, `deprecated.json`, `project-defaults.json`,
+  `global-config.yaml`, eight template roots, three examples, two Git hooks,
+  tips, and resources map to retained types and paths. Upstream owns none of
+  the cache-first refresh, `<profile>/cloud-config`, environment expansion,
+  eager/fresh/partial result, error, ordering, deduplication, safe-zero, or
+  caller continuation behavior; those contracts remain local.
+- The public compatibility matrix is complete: zero native methods, all 15
+  methods bounded-adapter-compatible at the exact Git/data boundary, and zero
+  method rows incompatible or unresolved. This describes why the retained Git
+  boundary can consume the canonical content; it identifies no dependency or
+  implementation target and authorizes no adapter.
+- The active-use matrix preserves both Git openers, five refresh call sites,
+  every reader/cache-path consumer, and caller-owned warning/return/
+  continuation behavior as bounded-compatible. Its one incompatible row is
+  protected fresh-profile `defaultCloudConfigUrl`: exact
+  `devdimensionlab/plybuild-config.git` returned repository not found, while
+  historical `DevDimensionLab/co-pilot-config` resolves to canonical
+  `ply-config`. No URL, profile, fixture, or caller is changed here.
+- Public/cache/caller risks are the absent upstream runtime contract, absence
+  of any release/tag support boundary, dormant default branch, content tests
+  that specify no retained Go behavior, and the protected source-identity
+  mismatch. Remaining unknowns require an owning product decision about the
+  meaning of “move toward `ply-config`”, whether source identity may change,
+  and what revision/support policy would be acceptable.
+- The reciprocal successor is decision-only: choose whether the completed map
+  warrants one later bounded integration-planning checkpoint, or close cloud
+  P8 at the retained Git-backed boundary. It may not repeat upstream
+  inspection, select a revision/dependency, change the source URL, design or
+  implement an adapter, alter caller/profile/public policy, or begin Spring or
+  packaging.
+- The map expires on changed canonical repository identity/default branch/
+  commit, a new release/tag/API/lifecycle contract, changed source URL or
+  profile policy, any protected repository input, active caller, public/cache/
+  error/order contract, or roadmap priority. Verification and rollback remain
+  documentation-only plus the exact protected gates.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
