@@ -16755,8 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after the first four bounded cloud implementation slices; the
-fifth bounded slice is selected but not yet implemented.
+Status: active after the first five bounded cloud implementation slices; the
+next bounded slice is not yet selected.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16893,10 +16893,34 @@ fifth bounded slice is selected but not yet implemented.
   focused two-file implementation commit. The slice expires on any changed
   direct-path/read/environment/YAML/result/caller/cache/API/mutation/dependency
   premise or any need for `ply-config` knowledge.
-- The reciprocal successor implements only the private global-config loader
-  seam. Direct `ply-config` inspection, selection, or integration, caller
-  cleanup, generic/shared reader work, construction, Spring, and packaging
-  remain forbidden.
+- Focused commit `f12344b115b6c732295d152a7f3d86b876a4d1d8` completes the
+  fifth selected slice in exactly `pkg/config/cloud.go` and
+  `pkg/config/cloud_test.go`. One private global-config loader and private
+  dependency now isolate the direct cached `global-config.yaml` read;
+  production retains complete `Directory` delivery, exact `Dir()`-based
+  `file.Path` composition without `FilePath`, unchanged `file.Open`, complete
+  environment expansion before unchanged YAML decode, one independent load per
+  invocation, and exact value/error and partial-result behavior. A zero loader
+  returns exact `filesystem.ErrNoFilesystem` before directory access.
+- Focused characterization covers production selection, exact direct path and
+  no `FilePath`, complete dependency delivery, independent repeated file and
+  environment changes, raw read errors, complete and partial YAML results, safe
+  zero behavior, unchanged `SourceFor` formatting, and non-empty recordings.
+  The exported wrapper, consumers, refresh, every other reader, construction,
+  tracked fixtures, mutation files, public API, Go floor, and dependency
+  metadata are unchanged.
+- Final-commit config/context/Maven/command tests, unchanged config-cloud direct
+  and meta 10/10 mutation gates, exact Go 1.26.7 verify/build/test/race/vet,
+  pinned API/CLI compatibility, complete preflight, ordinary test/install,
+  real scratch install, empty-HOME count-two, all 15 audit controls, and all 62
+  launcher checks pass. Structured Q0-Q2 has all 21 automated rows PASS and no
+  scoped regression; manual evidence remains correctly stale and Q3.4 remains
+  the sole pre-existing overall ratchet regression. Protected
+  234/3,599/355/429/197/41/1,067 counts and all three hashes reproduce.
+- The reciprocal successor is planning-only and may select at most one next
+  repository-owned cloud slice. Direct `ply-config` inspection, selection, or
+  integration, caller cleanup, generic/shared reader work, construction,
+  Spring, and packaging remain forbidden.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 

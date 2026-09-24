@@ -7980,17 +7980,36 @@ The selected-module queue is exhausted through the final Xordataexchange
 Crypt decision. All 220 P7 archives are answered, the unchanged project and
 common tidy identities reproduce, exact-Go project and compatibility gates
 pass, and all 15 quality-audit meta-controls pass canonically. P7 is complete;
-P8 is active after four bounded implementations. The full P7 evidence and
+P8 is active after five bounded implementations. The full P7 evidence and
 exact guard language are retained in the answered exit archive and roadmap.
+
+## P8 Fifth Cloud Slice
+
+Focused commit `f12344b115b6c732295d152a7f3d86b876a4d1d8` changes exactly
+`pkg/config/cloud.go` and `pkg/config/cloud_test.go`. The direct
+`global-config.yaml` read now sits behind one private zero-value-safe loader.
+Production still receives the complete `Directory`, composes the exact direct
+`Dir()` path without `FilePath`, uses unchanged `file.Open`, expands the live
+environment before unchanged YAML decode, returns exact complete/partial values
+and errors, and loads independently per invocation. `SourceFor`, callers,
+refresh, every other reader, construction, fixtures, mutation files, public API,
+Go floor, and dependency metadata remain unchanged.
+
+Focused config/context/Maven/command tests and unchanged config-cloud direct and
+meta 10/10 mutation gates pass. Direct exact-Go-1.26.7 module verification,
+build, count-one, race, vet, pinned API/CLI compatibility, complete preflight,
+ordinary test/install, scratch install, empty-HOME count-two, all 15 audit
+controls, and all 62 launcher checks pass. Structured Q0-Q2 retains all 21
+automated PASS rows with no scoped regression; manual evidence is correctly
+stale and the sole overall ratchet regression is the pre-existing Q3.4
+documentation indicator. Protected 234/3,599/355/429/197/41/1,067 counts and
+all three hashes reproduce.
 
 ## Next Bounded Objective
 
-Run only [the prepared global-config loader implementation](agent-sessions/2026-09-24T180445+0200-implement-cloud-global-config-loader-seam.md).
-Implement one private zero-value-safe loader around the existing direct
-`global-config.yaml` read in `pkg/config/cloud.go`, with focused
-characterization in `pkg/config/cloud_test.go`. Preserve direct `Dir()` path
-composition without `FilePath`, raw `file.Open`, environment-before-YAML
-ordering, partial results, independent invocations, `SourceFor`, callers,
-fixtures, mutations, API, Go floor, and dependencies. Do not inspect or select
-`ply-config`, combine readers, change construction/caller policy, or begin
-Spring or packaging work.
+Run only [the prepared next P8 cloud planning checkpoint](agent-sessions/2026-09-24T190912+0200-plan-next-p8-cloud-modernization-move.md).
+Re-characterize the boundary after the global-config loader seam, compare only
+the smallest repository-owned candidates, and select at most one next bounded
+implementation slice or stop unresolved. Do not implement that slice, inspect
+or select `ply-config`, combine readers, change construction/caller policy, or
+begin Spring or packaging work.
