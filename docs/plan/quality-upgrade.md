@@ -16408,6 +16408,56 @@ Tv42 HTTP Unix evaluation (2026-09-24):
   non-transferable exception; authorize but do not run a later measurement-
   only **Viper Go-Metrics HTTP-Unix Ownership Study**; or stop P7 unresolved.
 
+Tv42 HTTP Unix product decision (2026-09-24):
+
+- Option 1 is final. Exact selected indirect unloaded
+  `github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926` remains
+  unchanged under its own target-specific, unqualified, non-transferable
+  exception. No canonical stable or prerelease exists. Passing selected/latest
+  pseudo-version evidence is not qualification, supported ownership, or a
+  safety claim. The **Viper Go-Metrics HTTP-Unix Ownership Study** is neither
+  authorized nor run.
+- Retention requires the sole edge from unselected go-metrics v0.3.10,
+  selected requester v0.4.0, exact route through direct mvn-pom-mutator v0.2.3
+  and Viper v1.10.1, both requester versions' 24-file zero-import boundary,
+  negative target/requester why, zero project imports/loads/runtime/roots, and
+  module-file-only sum. All 84 checkpoints, absent/present 31/53 split, exact
+  selected target, 56 request instances, v0.3.10/53 and v0.4.0/3 request
+  edges, 10/43 selected-requester split, ten route epochs, and no-root/
+  metadata-only history remain expiry guards.
+- Selected/latest commit/tree/parent/time/unsigned/ancestry/sum and proxy/
+  archive identities; every owner/repository/no-release/module/license/
+  package/source/archive-entry fact; API/behavior/caller/concurrency/lifecycle/
+  Unix-socket/error boundary; and closure, native, fixture, vet/test/race,
+  cross, declared/effective Go-floor, projection, and advisory evidence remain
+  exact non-transferable expiry guards. Passing rows, physical selection, and
+  empty advisory results do not qualify selected or imply safety.
+- Selected/latest exact-get projections must continue manufacturing only their
+  recorded roots/selection/sums with zero target loads. Ordinary tidy must
+  remove the roots, discard latest, retain selected through real requester
+  metadata, and restore the protected common projection. No projection is
+  authorized. Corrected index/CNA, focal 0/0/0/0, project 30/22/20/20,
+  client_golang, exact SDK, project/common-tidy, Go-floor, every earlier
+  selection/exception, and 27/27 Q0-Q2 guards remain exact. No earlier
+  exception transfers.
+- Guard-only revalidation reproduces clean continuity at exact HTTP Unix
+  evaluation HEAD `6e370e7c274e1391dae26c240b8f269004a64103`, parent
+  `a03ad37b488556123bfe3a1be49e8b2457f70f5a`, tree
+  `43edaaa6d1ee14c52d627e52b64f4e4ddc07af1d`, its five-file changed set, UUID
+  ancestry, reciprocal archives/launcher, ordinary/ignored cleanliness, exact
+  234/3,599/355/429/197/41/1,067 state, protected hashes and tidy projection,
+  release/advisory identities, both SDK identities, and every earlier guard.
+  Final exact-Go-1.26.7 verify/build/count-one/race/vet gates pass. No study,
+  dependency/source/root change, other group, or P8 work ran. All 44,782
+  task-owned scratch entries are audited with zero symlink, outside-target, or
+  special entries and removed.
+- P7 remains active only with one prepared, unlaunched bounded evaluation of
+  the next unevaluated alphabetical module, exact selected indirect
+  `github.com/ugorji/go v1.1.4`. Its sole observed incoming edge from direct,
+  loaded mvn-pom-mutator v0.2.3, module-file request, requester 11-file
+  zero-import boundary, negative target why/import/load/root facts, and
+  module-file-only sum are starting observations only.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

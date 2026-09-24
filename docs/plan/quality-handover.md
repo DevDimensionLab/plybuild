@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T09:13:20+02:00
+Generated: 2026-09-24T09:37:13+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -9,16 +9,16 @@ session diary.
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
   `codex/upgrade-quality`, base master at `5635d50`. The Tv42 HTTP Unix
-  evaluation began from clean TMC product-decision handoff HEAD
-  `a03ad37b488556123bfe3a1be49e8b2457f70f5a`, parent
-  `7f8bdd31a8c5f2d9b31bc7720799a9497ad38097`, tree
-  `fcf5f45ce419e67120a4c48c2427c86da4d82c9c`. That handoff changes exactly
-  the launcher, answered TMC decision archive, then-NEXT HTTP Unix evaluation,
-  rolling handover, and roadmap. Ordinary and ignored status, branch, Google
-  UUID ancestry, reciprocal 318-archive history, exact SDK identities,
-  module/hash/count/common-tidy state, all target/requester and earlier guards,
-  advisory identities, and launcher mirror/check passed at start. No product
-  source or dependency metadata changed.
+  product decision began from clean HTTP Unix evaluation handoff HEAD
+  `6e370e7c274e1391dae26c240b8f269004a64103`, parent
+  `a03ad37b488556123bfe3a1be49e8b2457f70f5a`, tree
+  `43edaaa6d1ee14c52d627e52b64f4e4ddc07af1d`. That handoff changes exactly
+  the launcher, answered HTTP Unix evaluation archive, this then-NEXT
+  decision, rolling handover, and roadmap. Ordinary and ignored status,
+  branch, Google UUID ancestry, reciprocal 319-archive history, exact SDK
+  identities, module/hash/count/common-tidy state, all target/requester and
+  earlier guards, advisory identities, and launcher mirror/check passed at
+  start. No product source or dependency metadata changed.
 - The latest dependency implementation remains exact Google UUID v1.4.0
   commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`, parent
   `37ab9ece6b0e5b1d735d3da83c3bc76adce7c2e3`, tree
@@ -180,12 +180,18 @@ session diary.
   authorized or run. Its three requests/routes, Assert genuine import,
   Chroma metadata-only boundary, why/import/load/runtime and root facts, 84
   checkpoints, selected sums, complete evaluation identities, and all earlier
-  guards are exact expiry conditions. The sole NEXT archive is now
-  `docs/plan/agent-sessions/2026-09-24T091320+0200-decide-tv42-httpunix-product-direction.md`.
-  It authorizes only the reciprocal HTTP Unix product decision and may not
-  rerun the completed evaluation, execute a study, transfer an exception,
-  change source/dependency metadata, launch a successor, combine another group,
-  write outside managed scratch, or begin P8.
+  guards are exact expiry conditions. HTTP Unix option 1 is now final: exact
+  selected indirect unloaded
+  `github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926` remains
+  unchanged and unqualified under its own target-specific, non-transferable
+  exception. No canonical stable or prerelease exists; passing pseudo-version
+  evidence is not qualification or a safety claim. The Viper Go-Metrics
+  HTTP-Unix Ownership Study is neither authorized nor run. The sole NEXT
+  archive is now
+  `docs/plan/agent-sessions/2026-09-24T093713+0200-evaluate-ugorji-go-dependency.md`.
+  It authorizes only the fresh bounded Ugorji Go evaluation and may not reopen
+  HTTP Unix or any earlier result, run a rejected study, transfer an exception,
+  combine another group, write outside managed scratch, or begin P8.
 - No `.agent-task/current.md` or repository
   `.quality/manual-evidence.json` exists. Do not launch a successor, push,
   merge, publish, release, stash, revert, bypass cleanup, or remove the
@@ -256,10 +262,11 @@ success. Option 1 retains it unchanged and unqualified under its own exact
 guards; no owner study, source change, or dependency metadata change was
   authorized. Client_golang option 1 likewise retains exact selected v1.4.0
   unchanged and unqualified under its own exact guards; the named study was not
-  authorized. P7 is active only at the prepared reciprocal product decision
-  for exact selected
-  `github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926`; P8 remains
-  queued.
+  authorized. HTTP Unix option 1 likewise retains exact selected
+  `v0.0.0-20150427012821-b75d8614f926` unchanged and unqualified under its own
+  exact guards; the named ownership study was not authorized. P7 is active only
+  with the prepared bounded evaluation of exact selected
+  `github.com/ugorji/go v1.1.4`; P8 remains queued.
 
 ## Oklog ULID Evaluation
 
@@ -7623,13 +7630,69 @@ unlaunched reciprocal decision: retain selected under its own unqualified,
 non-transferable exception; authorize but do not run the later measurement-
 only **Viper Go-Metrics HTTP-Unix Ownership Study**; or stop P7 unresolved.
 
+## Tv42 HTTP Unix Product Decision
+
+Option 1 is final. Exact selected indirect, unloaded
+`github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926` remains unchanged
+under its own target-specific, unqualified, non-transferable exception. No
+canonical stable or prerelease exists. Passing selected/latest pseudo-version
+native, fixture, race, vet, and cross rows do not qualify either version,
+establish a supported owner, or imply safety. The **Viper Go-Metrics HTTP-Unix
+Ownership Study** is neither authorized nor run.
+
+Retention requires the sole target edge from unselected go-metrics v0.3.10,
+selected requester v0.4.0, exact four-hop route through direct mvn-pom-mutator
+v0.2.3 and Viper v1.10.1, both 24-file zero-import boundaries, negative
+target/requester why, zero project imports/loads/runtime/roots, and the
+module-file-only sum. All 84 checkpoints, 31/53 absent/present split, 56
+request instances, v0.3.10/53 and v0.4.0/3 requester edges, 10/43 selected-
+requester split, ten route epochs, and current/historical no-root metadata-only
+facts remain non-transferable expiry guards.
+
+Selected/latest owner, repository, no-release, commit/tree/parent/time/
+signature/ancestry, sum, proxy/archive, module/license/package/source/build,
+API/behavior/caller/concurrency/lifecycle/Unix-socket, closure/native/fixture/
+vet/test/race/cross, projection, and advisory identities remain exact expiry
+guards. Selected/latest exact-get effects must remain bounded to their recorded
+manufactured roots/selection/sums with zero loads, and ordinary tidy must
+discard latest and restore selected through real requester metadata in the
+protected common projection. No projection is retained. Advisory absence is
+not qualification or safety evidence, and no earlier exception transfers.
+
+Guard-only revalidation reproduces clean continuity at exact HTTP Unix
+evaluation HEAD `6e370e7c274e1391dae26c240b8f269004a64103`, parent
+`a03ad37b488556123bfe3a1be49e8b2457f70f5a`, tree
+`43edaaa6d1ee14c52d627e52b64f4e4ddc07af1d`, its exact five-file changed set,
+Google UUID ancestry, reciprocal archives/launcher, ordinary/ignored
+cleanliness, exact 234/3,599/355/429/197/41/1,067 project state, protected
+hashes and tidy projection, release/advisory identities, both SDK identities,
+and every earlier guard. Final exact-Go-1.26.7 verify/build/count-one/race/vet
+gates pass under `umask 022`. Product source, `go.mod`, and `go.sum` remain
+byte-exact. All 44,782 task-owned scratch entries are audited with zero
+symlink, outside-target, or special entries and removed. No study, dependency/
+source/root change, other group, or P8 work ran.
+
+The production launcher `--check` and byte-exact active archive mirror pass.
+`make test-agent-start` passes controls 1-9, then control 10 rejects the
+required evaluation successor because that fixture hardcodes the outgoing
+decision prompt's exact section headings (`# Authorized Roadmap`,
+`# Measurements At Start`, and its later decision sections). This
+documentation-only decision session does not authorize changing production or
+test code to broaden that fixture. Treat this as a test-fixture compatibility
+limit; the authoritative reciprocal launcher/archive handoff is valid.
+
+P7 remains active only with one prepared, unlaunched bounded evaluation of the
+next unevaluated alphabetical module, exact selected indirect
+`github.com/ugorji/go v1.1.4`. Its sole observed incoming edge from direct,
+loaded mvn-pom-mutator v0.2.3, the requester's module-file request and 11-file
+zero-import boundary, negative target why/import/load/root facts, and
+module-file-only target sum are starting observations only.
+
 ## Next Bounded Objective
 
-Run only [the prepared Tv42 HTTP Unix product decision](agent-sessions/2026-09-24T091320+0200-decide-tv42-httpunix-product-direction.md).
-Choose exactly one authorized direction for exact selected indirect
-`github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926`. Preserve the
-closed no-release, pseudo-version, closure, ownership/history, projection,
-advisory, and earlier-guard evidence. Do not rerun the evaluation, execute the
-named study, change source or dependency metadata, add a root, transfer an
-exception, combine another group, launch a successor, relax Go 1.18, or begin
-P8.
+Run only [the prepared Ugorji Go evaluation](agent-sessions/2026-09-24T093713+0200-evaluate-ugorji-go-dependency.md).
+Evaluate exact selected indirect `github.com/ugorji/go v1.1.4` under the
+bounded dependency contract. Preserve HTTP Unix and every earlier result under
+their separate recorded guards. Do not execute a rejected study, reopen a
+completed module, transfer an exception, combine another group, launch a
+successor, relax Go 1.18, or begin P8.
