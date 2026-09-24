@@ -16490,6 +16490,49 @@ are resolved or explicitly risk-accepted.
   remain exact; final unchanged-project Go 1.26.7 gates pass. One reciprocal
   product-direction decision is prepared; P8 remains queued.
 
+### P7 Ugorji Go Product Decision (2026-09-24)
+
+- Option 1 is final. Exact selected indirect, unloaded
+  `github.com/ugorji/go v1.1.4` remains unchanged under its own target-specific,
+  unqualified, non-transferable exception. It is not qualified, safe, or fixed.
+  Every observed request is metadata-only, and the target remains unloaded and
+  runtime-irrelevant. The **Mvn-Pom-Mutator Ugorji Go Elimination Study** is
+  neither authorized nor run.
+- Retention requires the exact current mvn-pom-mutator v0.2.3 edge, positive
+  requester why through `cmd -> pkg/pom`, requester 11-file zero-import
+  boundary, negative target why/import/load/runtime/root facts, indirect status,
+  and module-file-only sum. All 84 checkpoints, 87 requests with exact
+  36/4/2/5/40 requester-version distribution, 37 route epochs, six historical
+  main-module names, requester-root history, and metadata-only boundaries are
+  expiry guards. Any change requires a fresh owning evaluation and decision.
+- Every recorded owner/repository/release/source/API/behavior/closure/native/
+  mandatory-test-scope/cross/projection/advisory identity remains an exact
+  non-transferable expiry guard. Stopped cyclic/large/depth/malformed test rows
+  are not waived, selected's undeclared codecgen dependency remains a failure,
+  and partial passing or empty advisory evidence implies neither qualification
+  nor safety.
+- V1.2.14 must continue adding both target and codec roots and two selections;
+  tidy must discard both and restore selected v1.1.4 only through requester
+  metadata in the protected common projection. No root or projection is
+  authorized. Protected SDK/project/common-tidy/advisory/Go-floor/quality
+  identities and every earlier selection or exception remain separately exact;
+  no exception transfers.
+- Guard-only revalidation reproduces clean evaluation HEAD
+  `a299839d8f6ebf79105ba720fa7bf5dc60429e7c`, parent
+  `e8b6a430dcf66abcef36d6502b57063a7524516a`, tree
+  `f369eb75c5c28b7cc10c62ca078e8c23923be097`, its exact five-file changed
+  set, UUID ancestry, reciprocal archives/launcher, ordinary/ignored
+  cleanliness, exact 234/3,599/355/429/197/41/1,067 project state, protected
+  hashes and tidy projection, both SDK identities, complete target/requester
+  facts, advisories, and every earlier guard. Final exact-Go-1.26.7 verify/
+  build/count-one/race/vet gates pass. Product source, `go.mod`, and `go.sum`
+  remain byte-exact; all 40,159 contained task entries are audited with zero
+  symlink or special entries and removed. No study, dependency/source/root/
+  projection change, other group, or P8 work ran.
+- P7 remains active only with one prepared, unlaunched bounded evaluation of
+  exact selected indirect `github.com/xiang90/probing
+  v0.0.0-20190116061207-43a291ad63a2`. P8 remains queued.
+
 ### P8 - Domain Modernization
 
 Status: queued after the core L2 flows.

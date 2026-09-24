@@ -7713,14 +7713,56 @@ documentation-only decision session does not authorize changing production or
 test code to broaden that fixture. Treat this as a test-fixture compatibility
 limit; the authoritative reciprocal launcher/archive handoff is valid.
 
-P7 remains active only at the prepared, unlaunched Ugorji Go reciprocal
-product-direction decision described above. No successor or P8 work began.
+## Ugorji Go Product Decision
+
+Option 1 is final. Exact selected indirect, unloaded
+`github.com/ugorji/go v1.1.4` remains unchanged under its own target-specific,
+unqualified, non-transferable exception. Every observed request is metadata-
+only and the target remains unloaded and runtime-irrelevant, but it is not
+qualified, safe, or fixed. The **Mvn-Pom-Mutator Ugorji Go Elimination Study**
+is neither authorized nor run.
+
+Retention requires the exact current mvn-pom-mutator v0.2.3 edge, positive
+requester why through `cmd -> pkg/pom`, requester 11-file zero-import boundary,
+negative target why/import/load/runtime/root facts, indirect status, and the
+module-file-only sum. All 84 graphable checkpoints, 87 direct requests with
+exact requester/version distribution, 37 route epochs, six historical main-
+module names, requester-root history, and current/historical metadata-only
+boundaries remain non-transferable expiry guards. Any change requires a fresh
+owning evaluation and product decision.
+
+Every recorded owner/repository/release/source/API/behavior/closure/native/
+mandatory-test-scope/cross/projection/advisory identity remains exact. The
+stopped cyclic/large/depth/malformed test rows are not waived, selected's
+undeclared codecgen dependency remains a failure, and partial passing or empty
+advisory evidence implies neither qualification nor safety. V1.2.14 must
+continue manufacturing target and codec roots and two selection changes;
+ordinary tidy must discard both and restore selected only through requester
+metadata in the protected common projection. No root or projection is
+authorized, and no earlier exception transfers.
+
+Guard-only revalidation reproduces clean evaluation HEAD
+`a299839d8f6ebf79105ba720fa7bf5dc60429e7c`, parent
+`e8b6a430dcf66abcef36d6502b57063a7524516a`, tree
+`f369eb75c5c28b7cc10c62ca078e8c23923be097`, its exact five-file changed set,
+branch/UUID ancestry, reciprocal archives and launcher, ordinary/ignored
+cleanliness, both exact SDK identities, exact 234/3,599/355/429/197/41/1,067
+project state, protected hashes/common tidy projection, complete target/
+requester and advisory facts, every earlier guard, and 27/27 Q0-Q2 PASS at L2.
+Final exact-Go-1.26.7 verify/build/count-one/race/vet gates pass under
+`umask 022`. Product source and module metadata remain byte-exact. All 40,159
+contained task entries are audited with zero symlink or special entries and
+removed; no study, dependency/source/root/projection change, other dependency
+group, or P8 work ran.
+
+P7 remains active only with the prepared, unlaunched Xiang90 Probing evaluation
+described below. P8 remains queued.
 
 ## Next Bounded Objective
 
-Run only [the prepared Ugorji Go product-direction decision](agent-sessions/2026-09-24T101913+0200-decide-ugorji-go-product-direction.md).
-Choose exactly one authorized direction from the completed evaluation.
-Preserve HTTP Unix and every earlier result under their separate guards. Do
-not repeat the evaluation, run a study, reopen a completed module, transfer an
-exception, combine another group, launch a successor, relax Go 1.18, or begin
-P8.
+Run only [the prepared Xiang90 Probing evaluation](agent-sessions/2026-09-24T103516+0200-evaluate-xiang90-probing-dependency.md).
+Evaluate exact selected indirect `github.com/xiang90/probing
+v0.0.0-20190116061207-43a291ad63a2` as one bounded P7 dependency group.
+Preserve Ugorji Go and every earlier result under their separate guards. Do not
+run an ownership study, reopen a completed module, transfer an exception,
+combine another group, launch a successor, relax Go 1.18, or begin P8.
