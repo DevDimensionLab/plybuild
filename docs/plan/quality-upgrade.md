@@ -16608,6 +16608,57 @@ are resolved or explicitly risk-accepted.
   `github.com/xordataexchange/crypt
   v0.0.3-0.20170626215501-b2862e3d0a77`. P8 remains queued.
 
+### P7 Xordataexchange Crypt Evaluation (2026-09-24)
+
+- No dependency selection qualifies or is retained. The public, enabled,
+  unarchived, non-fork MIT repository has exactly canonical stable v0.0.1 and
+  v0.0.2, no semver prerelease/replacement/retraction/deprecation or alternate
+  major, and selected later pseudo-version
+  `v0.0.3-0.20170626215501-b2862e3d0a77` at default-branch HEAD. Exact owner,
+  tag/commit/tree/signature/ancestry, proxy/sumdb/module/license/archive, and
+  source/package boundaries reproduce.
+- Both stable proxy module files are synthesized and path-only. Their source
+  imports three undeclared dependencies, including retired
+  `code.google.com/p/go.crypto/openpgp`; exact Go 1.18.10 and 1.26.7 cannot
+  resolve the complete closure. Root-only verification passes, but build,
+  test compilation, count-one/count-ten/race, vet, and all 40 supported cgo-
+  disabled cross rows fail before the sole stable test executes. Selected's
+  undeclared closure also fails. API/behavior/ownership/concurrency/lifecycle/
+  error/codec/IO boundaries are recorded without a safety claim.
+- Current direct, selected, loaded mvn-pom-mutator v0.2.3 is why-positive and
+  source-used, but all eleven requester files are target-import-free. Target
+  why/import/load/runtime/root facts are negative and the sum has only its
+  module-file checksum. Across 84 graphable checkpoints, all select the exact
+  pseudo-version without a root. Their 87 requests distribute 36/4/2/5/40
+  over unselected Viper v1.4.0 and four selected/rooted mutators. Viper v1.4.0
+  has one source import but is never selected; all nine selected Viper versions
+  and all mutators are import-free. Thirteen route epochs over six main names
+  have no selected source owner.
+- Exact-selected get manufactures only a redundant root/source sum/main edge
+  at 234 modules/3,600 edges. Exact v0.0.2 get removes direct
+  mvn-pom-mutator v0.2.3, collapses to 157 modules/2,219 edges, and breaks the
+  product. Tidy restores the mutator, discards v0.0.2, reselects the pseudo-
+  version, and reproduces the protected common projection. No candidate has a
+  genuine supported tidy-stable owner and no root/projection is retained.
+- Target OSV and narrow GitHub results are empty; focal pinned govulncheck
+  v1.8.0 scans stop at unresolved closure. Corrected index/CNA, unchanged
+  project 30/22/20/20 without target/named protected traces, and client_golang
+  GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698 identities reproduce.
+  Advisory absence or a stopped row implies neither safety nor qualification.
+- Clean Xiang90 decision HEAD/parent/tree and five-file set, UUID ancestry,
+  reciprocal 324-archive chain/launcher, ordinary/ignored cleanliness, exact
+  SDKs, protected 234/3,599/355/429/197/41/1,067 project state, module/graph/
+  common-tidy identities, Go 1.18, every earlier guard, and 27/27 Q0-Q2 PASS
+  at L2 remain exact. Final exact-Go-1.26.7 unchanged-project verify/build/
+  count-one/race/vet gates pass. Product source and dependency metadata remain
+  byte-exact. The contained 126,952-entry task root is audited and
+  removed; launcher/archive/prompt/sole-NEXT/reciprocal/syntax/diff checks pass.
+- The evaluation grants no exception. P7 stops for exactly one prepared,
+  unlaunched reciprocal product decision: retain selected under its own
+  unqualified non-transferable exception; authorize but do not run a later
+  measurement-only **Mvn-Pom-Mutator Xordataexchange Crypt Elimination
+  Study**; or stop unresolved. P8 remains queued.
+
 ### P8 - Domain Modernization
 
 Status: queued after the core L2 flows.

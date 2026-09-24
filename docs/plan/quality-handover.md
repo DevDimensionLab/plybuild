@@ -1,53 +1,54 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T11:34:45+02:00
+Generated: 2026-09-24T12:04:30+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P7 Checkpoint
 
-- Xiang90 Probing option 1 is final. Exact selected indirect, unloaded
-  `github.com/xiang90/probing
-  v0.0.0-20190116061207-43a291ad63a2` remains unchanged under its own target-
-  specific, unqualified, non-transferable exception. It is not qualified,
-  safe, or fixed. The **Mvn-Pom-Mutator Xiang90 Probing Elimination Study** is
-  neither authorized nor run.
-- Retention requires the exact current mvn-pom-mutator v0.2.3 edge and all 123
-  historical requests across 84 graphable checkpoints to remain metadata-
-  only; all 68 requester Go files remain free of target imports. The negative
-  target why/import/load/runtime/root facts and module-file-only sum remain
-  exact. The 36/1/35/4/2/5/40 requester-version distribution, 13 route epochs,
-  six main-module names, and requester-root facts are expiry guards.
-- The public repository, empty canonical release lines, selected/latest
-  pseudo-version source, API/behavior/closure/test/cross, projection, and
-  advisory identities remain exact expiry conditions. Selected/latest gets
-  manufacture only their recorded roots/selection/sums/edges with zero target
-  loads; tidy removes the roots, discards latest, and restores selected through
-  requester metadata in the exact common projection. No root or projection is
-  authorized.
-- Guard-only revalidation reproduces evaluation HEAD
-  `82363f10c0fb6eee536a19d9e77b930785f9acb0`, parent
-  `abaac120695c85a619153d961865d97668156931`, tree
-  `b49f025d421be86bb93e370c99d8c22b1378de3e`, its five-file set, branch/UUID
-  ancestry, reciprocal archive/launcher state, ordinary/ignored cleanliness,
-  official SDKs, exact 234/3,599/355/429/197/41/1,067 project state, protected
-  module/graph/common-tidy and advisory identities, every earlier guard, and
-  accepted 27/27 Q0-Q2 PASS at L2. Final exact-Go-1.26.7 unchanged-project
-  verify/build/count-one/race/vet gates pass. Product source and dependency
-  metadata remain byte-exact; no study, projection, other group, or P8 work
-  ran.
-- P7 remains active at sole NEXT archive
-  `2026-09-24T113445+0200-evaluate-xordataexchange-crypt-dependency`, a fresh
-  bounded evaluation of exact selected indirect
+- The Xordataexchange Crypt evaluation is complete without a retained change
+  or exception. Exact selected indirect, unloaded
   `github.com/xordataexchange/crypt
-  v0.0.3-0.20170626215501-b2862e3d0a77`. It is prepared but not executed. It
-  may not reopen Xiang90 Probing or another completed module, run a rejected
-  study, transfer an exception, combine another group, or begin P8.
-- The contained 76,000-entry task root has zero symlinks or special entries
-  and is removed. Production launcher `--check`, prompt mirror, sole-NEXT,
-  reciprocal-chain, syntax, and diff checks pass. `make test-agent-start`
-  passes controls 1-9 and stops at the known control-10 hardcoded outgoing-
+  v0.0.3-0.20170626215501-b2862e3d0a77` remains unchanged. Canonical v0.0.1
+  and highest stable v0.0.2 cannot resolve their complete closure under either
+  exact SDK; build/test/vet and all 40 cross rows fail before tests execute.
+- Exact v0.0.2 get is not an isolated target move: it removes direct, source-
+  used mvn-pom-mutator v0.2.3, falls to 157 modules/2,219 edges, and breaks the
+  project. Tidy restores the mutator, discards the stable root, reselects the
+  pseudo-version, and reproduces the protected common projection. No stable
+  has a genuine supported tidy-stable owner and no projection is retained.
+- The current sole mutator request is metadata-only, with positive requester
+  why/load and negative target why/import/load/runtime/root facts. All 84
+  graphable checkpoints select the pseudo-version without a target root. Their
+  87 requests distribute 36/4/2/5/40 across Viper v1.4.0 and four mutator
+  versions. Unselected Viper v1.4.0 has one target source import; all nine
+  selected Viper versions and all selected/rooted mutators are import-free.
+  Thirteen route epochs over six main names contain no selected source owner.
+- Owner/release/tag/commit/tree/signature/ancestry/proxy/sumdb/archive/module/
+  license, API/behavior/closure/test/cross, source-ownership, projection, and
+  advisory identities are exact expiry guards. Empty advisories and root-only
+  verification imply neither qualification nor safety. No exception transfers.
+- Work began clean at Xiang90 decision HEAD
+  `16255b32f2cd085f5bcf4f208a35c49dd3179c9a`, parent
+  `82363f10c0fb6eee536a19d9e77b930785f9acb0`, tree
+  `4d3ba50b0ffe60fcfd1cab3cadc6cd0cb3326a45`, with its exact five-file set,
+  branch/UUID ancestry, reciprocal 324-archive chain, launcher mirror/check,
+  ordinary/ignored cleanliness, official SDKs, exact
+  234/3,599/355/429/197/41/1,067 project state, protected hashes/common tidy,
+  every earlier guard, and 27/27 Q0-Q2 PASS at L2 exact. Final exact-Go-1.26.7
+  unchanged-project verify/build/count-one/race/vet gates pass; product source
+  and dependency metadata remain byte-exact.
+- P7 stops at sole NEXT archive
+  `2026-09-24T120430+0200-decide-xordataexchange-crypt-product-direction`.
+  It may only choose target-specific unqualified retention, authorize but not
+  run a measurement-only **Mvn-Pom-Mutator Xordataexchange Crypt Elimination
+  Study**, or stop unresolved. It may not reopen Xiang90 Probing or another
+  completed module, transfer an exception, combine another group, or begin P8.
+- The contained 126,952-entry task root has zero symlinks or
+  special entries and is removed. Production launcher `--check`, prompt
+  mirror, sole-NEXT, reciprocal-chain, syntax, and diff checks pass.
+  `make test-agent-start` reaches only its known control-10 hardcoded outgoing-
   heading incompatibility; no production/test change is authorized.
 
 ## Repository And Continuity
@@ -7881,9 +7882,11 @@ incompatibility; no production/test change is authorized.
 
 ## Next Bounded Objective
 
-Run only [the prepared Xordataexchange Crypt evaluation](agent-sessions/2026-09-24T113445+0200-evaluate-xordataexchange-crypt-dependency.md).
-Evaluate exact selected indirect `github.com/xordataexchange/crypt
-v0.0.3-0.20170626215501-b2862e3d0a77` under the complete bounded contract.
-Preserve Xiang90 Probing and every earlier result under separate exact guards.
-Do not run a rejected ownership study, change another dependency group, launch
-a successor, transfer an exception, relax Go 1.18, or begin P8.
+Make only [the prepared Xordataexchange Crypt product decision](agent-sessions/2026-09-24T120430+0200-decide-xordataexchange-crypt-product-direction.md).
+Choose one numbered direction for exact selected indirect, unloaded
+`github.com/xordataexchange/crypt
+v0.0.3-0.20170626215501-b2862e3d0a77`. Preserve the complete evaluation,
+Xiang90 Probing, and every earlier result under separate exact guards. Do not
+run an ownership study, change source or dependency metadata, evaluate another
+dependency, launch a successor, transfer an exception, relax Go 1.18, or begin
+P8.
