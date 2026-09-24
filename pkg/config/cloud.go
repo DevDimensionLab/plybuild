@@ -47,6 +47,39 @@ func (fileServicesLoader) Load(directory Directory) (CloudServices, error) {
 	return services, err
 }
 
+type projectDefaultsLoader interface {
+	Load(directory Directory) (CloudProjectDefaults, error)
+}
+
+type projectDefaultsDependencies struct {
+	Loader projectDefaultsLoader
+}
+
+func systemProjectDefaultsDependencies() projectDefaultsDependencies {
+	return projectDefaultsDependencies{Loader: fileProjectDefaultsLoader{}}
+}
+
+func (dependencies projectDefaultsDependencies) Load(directory Directory) (CloudProjectDefaults, error) {
+	if dependencies.Loader == nil {
+		return CloudProjectDefaults{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type fileProjectDefaultsLoader struct{}
+
+func (fileProjectDefaultsLoader) Load(directory Directory) (CloudProjectDefaults, error) {
+	var projectDefaults CloudProjectDefaults
+
+	path, err := directory.FilePath("project-defaults.json")
+	if err != nil {
+		return projectDefaults, err
+	}
+
+	err = file.ReadJson(path, &projectDefaults)
+	return projectDefaults, err
+}
+
 type gitHookFilesDependencies struct {
 	Files filesystem.Dependencies
 }
@@ -249,15 +282,11 @@ func (gitCfg GitCloudConfig) Deprecated() (CloudDeprecated, error) {
 }
 
 func (gitCfg GitCloudConfig) ProjectDefaults() (CloudProjectDefaults, error) {
-	var projectDefaults CloudProjectDefaults
+	return gitCfg.projectDefaults(systemProjectDefaultsDependencies())
+}
 
-	path, err := gitCfg.Implementation().FilePath("project-defaults.json")
-	if err != nil {
-		return CloudProjectDefaults{}, err
-	}
-
-	err = file.ReadJson(path, &projectDefaults)
-	return projectDefaults, err
+func (gitCfg GitCloudConfig) projectDefaults(dependencies projectDefaultsDependencies) (CloudProjectDefaults, error) {
+	return dependencies.Load(gitCfg.Implementation())
 }
 
 func (gitCfg GitCloudConfig) GitHookFiles(path string) ([]string, error) {
