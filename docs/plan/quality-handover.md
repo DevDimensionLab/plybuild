@@ -6849,13 +6849,60 @@ earlier selections/requests/exceptions, and 27/27 Q0-Q2 PASS at L2. Final exact-
 Go gates and contained cleanup pass. No source, dependency, root, study, other
 group, or P8 work is included.
 
+## Smartystreets Assertions Evaluation
+
+Exact-path v1.13.1 is the highest canonical stable compatible with Go 1.18.
+V1.14.0 through v1.16.0 declare relocated module path
+`github.com/smarty/assertions`; v1.16.0 also requires Go 1.21. Exact go-import
+owner, repository status, release chronology, tag/commit/tree/ancestry,
+proxy/sumdb/archive-to-Git, module/license, and source/build identities
+reproduce. There is no prerelease, replacement, retraction, deprecation,
+GitHub Release, or alternate-major line.
+
+No stable fully qualifies. Every usable stable fails mandatory vet under exact
+Go 1.18.10 and Go 1.26.7. The selected version and every stable contain
+upstream recursive struct, array, and map tests. Complete count-one, repeated,
+and race rows were stopped because the defensive scope prohibits creating
+cyclic payloads. No cyclic fixture was created or executed; partial evidence is
+not qualification. Safe module verification, production build, and no-run test
+compilation pass. All 160 cgo-disabled production and 160 no-run test-
+compilation rows pass across eight stables, both SDKs, and ten targets.
+
+The exact current route is main -> direct loaded mvn-pom-mutator v0.2.3 ->
+Goconvey v1.6.4 -> selected Assertions pseudo-version. Mvn-pom-mutator's
+Goconvey request is metadata-only; active supported Goconvey genuinely imports
+Assertions in production but asks only for the pseudo-version. Target and
+requester why are negative, and both have zero repository imports, project
+loads, module-backed loads, and runtime relevance. All 84 historical
+checkpoints keep the same sole request, exact route epochs, and no target root.
+
+A disposable v1.13.1 get manufactures a redundant target root and changes only
+the target selection and source/module sums. Ordinary tidy removes that root
+and source sum and restores the exact common projection. No genuine supported
+tidy-stable project owner requests v1.13.1. No source, dependency, root, or
+projection change is retained.
+
+Empty target OSV/GitHub/repository results do not imply safety or
+qualification. Pinned focal results are 0/0/0/0. Corrected index/CNA identities
+reproduce, the project remains 30/22/20/20 without an Assertions trace, and
+client_golang plus all other protected findings retain their separate exact
+identities. All earlier selections, requests, exceptions, decisions, SDKs,
+project/common-tidy hashes, Go floor, and 27/27 Q0-Q2 PASS at L2 remain exact.
+
+Final exact-Go-1.26.7 project module verification, build, count-one tests, race
+count-one tests, and vet pass. Protected module, sum, and graph identities
+remain exact. The 305-record reciprocal archive graph has one NEXT decision;
+all 498,795 task-owned scratch entries were confirmed
+beneath the managed task root with no symlink or outside-path entry and removed.
+
+The evaluation grants no exception. Exactly one reciprocal product-direction
+decision is prepared and remains unexecuted.
+
 ## Next Bounded Objective
 
-Run only [the prepared bounded Smartystreets Assertions evaluation](agent-sessions/2026-09-24T024219+0200-evaluate-smartystreets-assertions-dependency.md).
-Resolve exact selected indirect
-`github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d`
-and its canonical Go-1.18-compatible release line without assuming that the
-pseudo-version, the single selected Goconvey request, or negative target why
-establishes qualification or genuine ownership. The evaluation is prepared but
-not launched. Do not run a rejected study, combine another group, transfer or
-reopen an exception, or begin P8.
+Run only [the prepared Smartystreets Assertions product-direction decision](agent-sessions/2026-09-24T032851+0200-decide-smartystreets-assertions-product-direction.md).
+Choose exactly one: retain the exact selected pseudo-version under an
+Assertions-specific unqualified non-transferable exception; authorize only a
+later measurement-only **GoConvey Assertions Release/Ownership Study**; or stop
+P7 unresolved. Do not rerun the evaluation, execute the study, change a
+dependency or root, combine another group, transfer an exception, or begin P8.

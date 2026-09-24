@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Smartystreets Assertions Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-24T024219+0200-evaluate-smartystreets-assertions-dependency`
 Created: `2026-09-24T02:42:19+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `0f6090eb54bf2ce1036f43d4109a53f033174cb97d13e99cf0db2cc2e4b33f0b`
 Previous: [2026-09-24T021744+0200-decide-shurcool-sanitized-anchor-name-product-direction.md](2026-09-24T021744+0200-decide-shurcool-sanitized-anchor-name-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-24T032851+0200-decide-smartystreets-assertions-product-direction.md](2026-09-24T032851+0200-decide-smartystreets-assertions-product-direction.md)
+Outcome: no canonical stable fully qualifies; no changed selection has a genuine supported tidy-stable project owner; no projection retained; one product decision prepared
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -201,3 +201,180 @@ prepare but do not launch exactly one reciprocal product-direction decision.
 If it closes Assertions without such a decision, prepare but do not launch
 exactly one next bounded P7 queue item.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+No dependency change is authorized or retained. Canonical exact-path stable
+`github.com/smartystreets/assertions v1.13.1` is the highest release compatible
+with the Go 1.18 floor, but it is not fully qualified: its mandatory vet gate
+fails under both exact SDKs, and its complete count-one, repeated, and race test
+rows cannot be run without executing upstream cyclic fixtures forbidden by the
+defensive scope. No genuine current supported tidy-stable project owner
+requests v1.13.1. Exactly one reciprocal product-direction decision is
+prepared and remains unexecuted.
+
+### Protected start and project route
+
+The clean protected handoff reproduced on `codex/upgrade-quality` at HEAD
+`2c02f3c41d6b92f0d0b5facbb2bd9705fabcab0a`, parent
+`01917dd1be8a70b960058d37625a8a5ce9931c76`, and tree
+`e20dcb9b2598e9d3b3a30d3f8200fb3825e4b5fd`. The Google UUID implementation
+commit remains an ancestor, the reciprocal archive graph and launcher check
+passed, and this evaluation was the sole NEXT record.
+
+The unchanged real project reproduces 234 modules, 3,599 graph edges, 355
+production entries, 429 complete-test entries, 197 module-backed entries over
+41 loaded modules, and 1,067 `go.sum` lines. Its `go.mod`, `go.sum`, and graph
+SHA-256 values remain `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
+Normal tidy retains its exact 432-line diff and
+`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`
+identity. Applying it only in a disposable copy restores the exact 52/948-line,
+234-module/3,557-edge common projection with protected module and sum hashes.
+
+The exact current route is main -> direct loaded mvn-pom-mutator v0.2.3 ->
+Goconvey v1.6.4 -> selected Assertions pseudo-version. Mvn-pom-mutator has no
+Goconvey source import, so that predecessor edge is metadata-only. Goconvey
+genuinely imports Assertions in production through its blank dependency import,
+`convey/init.go`, and `convey/assertions.go`. The target and requester why
+queries are negative in this project; neither module has a repository import,
+production load, complete-test load, module-backed load, or runtime relevance.
+The target has exactly one request and has never been a main root.
+
+All 84 historical checkpoints select the same pseudo-version through the same
+sole Goconvey v1.6.4 request. The complete route epochs reproduce: initial
+spring-boot-co-pilot/Viper routes, renamed co-pilot-cli/Viper routes, the
+temporary dual Viper and mvn-pom-mutator routes, successive old and
+devdimensionlab mvn-pom-mutator routes, and the final plybuild ->
+mvn-pom-mutator v0.2.3 route. Every Viper and mvn-pom-mutator predecessor edge
+is metadata-only; the Goconvey -> Assertions edge is the genuine production
+boundary.
+
+### Canonical owner and release line
+
+The legacy path redirects to the public go-import owner
+`github.com/smarty/assertions` and `https://github.com/smarty/assertions.git`.
+GitHub repository 31558831 is public, enabled, unarchived, non-fork, uses
+default branch `master`, and has current owner `smarty`. Its current HEAD is
+`d2a204b4c0e27a1acdb4cc018a1b207665044dc1`, tree
+`b7a5ecf155dded10baf009f9dd6df5c6d09a86f7`; it is unsigned. There are no
+GitHub Release objects. Source license files contain MIT terms even though the
+repository API reports an unclassified license.
+
+The exact old-path proxy line contains v1.0.0, v1.0.1, v1.1.0, v1.1.1,
+v1.2.0, v1.2.1, v1.13.0, v1.13.1, v1.14.0, v1.15.0, v1.15.1, and v1.16.0.
+Versions through v1.13.1 declare the old module path; v1.14.0 through v1.16.0
+declare `github.com/smarty/assertions` and cannot be selected as canonical
+releases of the exact old module path. The usable old-path releases declare Go
+1.12, 1.13, 1.17, or 1.18; v1.13.1 is the highest exact-path stable compatible
+with the project's Go 1.18 floor. The relocated v1.16.0 requires Go 1.21.
+There is no prerelease, replacement, retraction, deprecation, or alternate-
+major line. A path migration is outside this exact dependency-only contract.
+
+Every release tag resolves to a commit on `master`; annotated tags and commits
+are unsigned. Selected pseudo-version commit
+`b2de0cb4f26d0705483a2f495d89896d0b808573`, tree
+`ed8a5d4424aa6cbbf7d454c00f63e9abdf642f20`, and v1.13.1 commit
+`3c68ac00e8bcc1da1c0612edc4a7362d44682ff8`, tree
+`48bc7af9df45d601b0ffd82dee198fa81383f957`, reproduce exact ancestry.
+Direct proxy and sumdb records were independently resolved for the selected
+pseudo-version and every usable stable, plus the relocated releases. Every
+proxy archive byte-matches its Git tree after the module-prefix mapping. No
+archive has a symlink, submodule, special entry, or path violation.
+
+### Source, API, behavior, and closure
+
+The usable stable sources contain 52 Go files and 14 test files with no build
+tags, cgo, or embed boundary. Generation is limited to the documented stringer
+directive and checked-in `operation_string.go`; internal go-diff and go-render
+sources are vendored in-module. The selected and v1.13.1 MIT license identities
+reproduce, including separate embedded go-diff license files.
+
+The root package exposes assertion functions, `So`, `New`, and `Assertion`,
+with supporting `assert.Result` and `should` aliases. Relative to the selected
+pseudo-version, v1.13.1 additively exposes `SoFunc`,
+`ShouldNotBeChronological`, `ShouldWrap`, and aliases, and includes ordinary
+behavior changes such as `errors.Is` and JSON handling. Assertions return an
+empty result on success and diagnostic text on failure. Most inputs are read by
+reflection, but caller-provided `Equal` methods and panic assertion functions
+are executed and may have caller-defined effects. `GoConveyMode` mutates a
+package-global serializer without synchronization, so concurrent mode mutation
+is not a supported deterministic contract. Independent ordinary assertions
+otherwise have no cleanup or resource lifecycle; assertion objects own their
+failure flag and are not concurrency synchronized. Documented fatal, panic,
+logging, and printing result methods keep their explicit effects. Diagnostic
+text may include addresses or file locations, and rendering has a bounded
+timeout, so output is not universally byte-deterministic.
+
+Under Go 1.18.10 the v1.13.1 closure has 67 production and 157 complete-test
+entries, with 8 and 14 module-backed entries from one module. Under Go 1.26.7
+it has 91 and 219, again with 8 and 14 module-backed entries. The closure is
+standard-library-only. The selected closure has 62/155 and 7/13 entries under
+Go 1.18.10, and 83/217 and 7/13 under Go 1.26.7.
+
+### Verification and defensive stop
+
+Static inspection before test execution found
+`internal/go-render/render/render_test.go` creates recursive struct, array, and
+map fixtures in `TestRenderRecursiveStruct`, `TestRenderRecursiveArray`, and
+`TestRenderRecursiveMap`. Those cyclic fixtures are present in the selected
+pseudo-version and every usable stable. The defensive scope expressly forbids
+creating cyclic payloads, so complete count-one, repeated, and race count-one
+test rows were stopped and not run under either SDK. No cyclic fixture was
+created or executed, and partial evidence is not treated as qualification.
+
+For the selected version and every usable stable, exact Go 1.18.10 and Go
+1.26.7 pass module verification, production build, and no-run test compilation.
+Mandatory vet fails for every stable under both SDKs. v1.0.0 through v1.1.1
+have an integer-to-string diagnostic in vendored go-diff plus an invalid
+example-name diagnostic; v1.2.0 through v1.13.1 fail because
+`ExampleInReadme` refers to an unknown identifier. The selected pseudo-version
+has the same example-name failure. Therefore no canonical stable fully passes
+even apart from the defensively stopped test rows.
+
+The cgo-disabled matrix passes all 160 production and all 160 no-run test-
+compilation rows: both exact SDKs, all eight usable stables, and darwin
+amd64/arm64, linux amd64/arm64/386, windows amd64/386, freebsd amd64, plan9
+amd64, and js/wasm. No target test binary was executed.
+
+### Ownership projection and advisories
+
+The active public Goconvey repository is genuinely maintained and its selected
+v1.6.4 release genuinely owns the production Assertions import, but it requests
+only the selected 2018 pseudo-version. No supported selected requester asks for
+v1.13.1. A disposable `go get` of v1.13.1 therefore manufactures a redundant
+main root and changes only the target selection and its two sums. It produces
+234 modules and 3,600 graph edges with module, sum, and graph hashes
+`13f665803669377dd31bf07ca17aa86ae01e4b5524ae9e2dfcfca23a1067060c`,
+`8010bfc595a979e0a00157c258247d720a83fa4209a9a66c84005425110f5f4a`,
+and `4b6b18fa2707abe7486396406421ce136fae891e8251a68d877fdc708ca8617d`.
+Ordinary tidy removes the root and source sum and restores the exact common
+projection. No genuine supported tidy-stable owner exists for the changed
+selection, and no projection is retained.
+
+Exact-version OSV queries for the selected version, every usable stable, and
+the relocated releases are empty. Narrow GitHub global and repository advisory
+queries are also empty. Pinned govulncheck v1.8.0 focal results for the selected
+version and v1.13.1 are 0/0/0/0. These absences neither establish safety nor
+qualify a release. The corrected Go index reproduces 518,501 bytes, 1,402
+records, and its protected hash; the published CNA response reproduces 2,807
+bytes and its protected hash. The project guard remains exactly 30/22/20/20
+without an Assertions trace. Client_golang and the other named guard findings
+retain their separate exact advisory identities.
+
+All protected selections and request counts, target-specific exceptions,
+closed decisions, Go 1.18 floor, official SDK identities, common projection,
+and 27/27 Q0-Q2 PASS at L2 remain exact. The evaluation grants no exception,
+adds no target root, and changes no product or dependency file.
+
+Final exact-Go-1.26.7 project module verification, build, count-one tests, race
+count-one tests, and vet pass with the established `umask 022`. An initial
+final test invocation inherited a restrictive umask and failed only three
+fixture mode expectations; it made no repository change, and the entire gate
+was repeated under the recorded umask rather than treating that environment
+artifact as a product result. Protected module, sum, and graph identities
+remain exact. The reciprocal archive has 305 records and exactly one NEXT
+decision. All 498,795 task-owned scratch entries were confirmed beneath the
+managed task root with zero symlink, outside-path, or special entries and were
+removed. The worktree retains only the five intended handoff changes.

@@ -15633,6 +15633,53 @@ ShurcooL/sanitized_anchor_name product decision (2026-09-24):
   launched; no study, other dependency group, exception transfer, or P8 work
   begins.
 
+Smartystreets/assertions evaluation (2026-09-24):
+
+- Exact-path v1.13.1 is the highest canonical stable compatible with Go 1.18.
+  V1.14.0 through v1.16.0 declare relocated module path
+  `github.com/smarty/assertions`, and v1.16.0 requires Go 1.21. There is no
+  prerelease, replacement, retraction, deprecation, GitHub Release, or
+  alternate-major line. Exact owner, tag/commit/tree/ancestry, proxy/sumdb,
+  archive-to-Git, module/license, and source/build identities reproduce.
+- No stable fully qualifies. All usable stables fail mandatory vet under exact
+  Go 1.18.10 and Go 1.26.7. The selected version and every usable stable contain
+  recursive struct/array/map test fixtures; complete count-one, repeated, and
+  race rows were stopped because the defensive scope prohibits creating cyclic
+  payloads. No cyclic fixture was created or executed, and partial evidence is
+  not qualification.
+- Safe verify/build/no-run test compilation passes for the selected version and
+  all usable stables under both SDKs. All 160 cgo-disabled production and all
+  160 no-run test-compilation rows pass across eight stables, two SDKs, and ten
+  supported targets. V1.13.1's standard-library-only closure, API, behavior,
+  caller effects, global-mode concurrency boundary, lifecycle, generated code,
+  and diagnostic determinism limits are recorded exactly.
+- The current route is main -> direct loaded mvn-pom-mutator v0.2.3 ->
+  Goconvey v1.6.4 -> selected Assertions pseudo-version. Mvn-pom-mutator's
+  Goconvey edge is metadata-only; active supported Goconvey genuinely imports
+  Assertions in production but requests only the pseudo-version. Target and
+  requester are why-negative, unloaded, absent from project imports, and
+  runtime-irrelevant. All 84 historical checkpoints retain the same sole
+  Goconvey request and never make Assertions a main root.
+- A disposable v1.13.1 get manufactures a redundant root and changes only the
+  target selection and its sums. Ordinary tidy removes the root and source sum
+  and restores the exact common projection. No genuine supported tidy-stable
+  owner requests v1.13.1; no dependency, source, root, or projection change is
+  retained.
+- Empty exact OSV and narrow GitHub results do not imply safety or
+  qualification. Focal results are 0/0/0/0, the project guard remains exact
+  30/22/20/20 without an Assertions trace, and all corrected advisory and
+  earlier selection/exception guards remain exact.
+- Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass.
+  Protected module/sum/graph identities remain exact; the 305-record archive
+  graph has one NEXT decision; and all 498,795 contained
+  task-scratch entries were verified without symlink or outside-path entries
+  and removed.
+- The evaluation grants no exception. P7 stops for one prepared reciprocal
+  product decision: retain the selected pseudo-version under an Assertions-
+  specific unqualified non-transferable exception; authorize only a later
+  measurement-only **GoConvey Assertions Release/Ownership Study**; or stop
+  unresolved. It is not launched; no other group or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
