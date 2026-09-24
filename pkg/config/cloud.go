@@ -164,12 +164,33 @@ func systemExamplesDependencies() examplesDependencies {
 	return examplesDependencies{Files: filesystem.System()}
 }
 
+type templateProjectLoader interface {
+	Load(directory string) (Project, error)
+}
+
 type templatesDependencies struct {
-	Files filesystem.Dependencies
+	Files  filesystem.Dependencies
+	Loader templateProjectLoader
 }
 
 func systemTemplatesDependencies() templatesDependencies {
-	return templatesDependencies{Files: filesystem.System()}
+	return templatesDependencies{
+		Files:  filesystem.System(),
+		Loader: initTemplateProjectLoader{},
+	}
+}
+
+func (dependencies templatesDependencies) Load(directory string) (Project, error) {
+	if dependencies.Loader == nil {
+		return Project{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type initTemplateProjectLoader struct{}
+
+func (initTemplateProjectLoader) Load(directory string) (Project, error) {
+	return InitProjectFromDirectory(directory)
 }
 
 type refreshGit interface {
@@ -436,7 +457,7 @@ func (gitCfg GitCloudConfig) templates(dependencies templatesDependencies) (temp
 		if err == nil && (info.Name() == projectConfigFileName || info.Name() == legacyProjectConfigFileName) {
 			relPath := strings.Split(path, file.Path("/"+info.Name()))
 			name := strings.Split(relPath[0], file.Path("/templates/"))
-			project, err := InitProjectFromDirectory(relPath[0])
+			project, err := dependencies.Load(relPath[0])
 			if err != nil {
 				log.Error(err)
 				return err

@@ -40,6 +40,33 @@ type recordedTemplatesCallback struct {
 	err  error
 }
 
+type templateProjectLoadResult struct {
+	project Project
+	err     error
+}
+
+type recordingTemplateProjectLoader struct {
+	directories []string
+	results     []templateProjectLoadResult
+}
+
+func (recording *recordingTemplateProjectLoader) Load(directory string) (Project, error) {
+	recording.directories = append(recording.directories, directory)
+	index := len(recording.directories) - 1
+	if index >= len(recording.results) {
+		return Project{}, errors.New("recorded Templates project result population is incomplete")
+	}
+	result := recording.results[index]
+	return result.project, result.err
+}
+
+func (recording *recordingTemplateProjectLoader) assertedDirectories() ([]string, error) {
+	if len(recording.directories) == 0 {
+		return nil, errors.New("recorded Templates project-loader directory population is empty")
+	}
+	return recording.directories, nil
+}
+
 type recordingTemplatesFilesystem struct {
 	walkRoots       []string
 	walkInputs      []recordedTemplatesCallback
@@ -121,8 +148,11 @@ func (*recordingTemplatesFilesystem) Copy(filesystem.File, io.Reader) (int64, er
 	return 0, errors.New("unexpected Templates copy")
 }
 
-func (recording *recordingTemplatesFilesystem) dependencies() templatesDependencies {
-	return templatesDependencies{Files: filesystem.Dependencies{FileSystem: recording}}
+func (recording *recordingTemplatesFilesystem) dependencies(loader templateProjectLoader) templatesDependencies {
+	return templatesDependencies{
+		Files:  filesystem.Dependencies{FileSystem: recording},
+		Loader: loader,
+	}
 }
 
 func (recording *recordingTemplatesFilesystem) assertedWalkRoots() ([]string, error) {
@@ -193,7 +223,11 @@ func (templatesMessageOnlyFormatter) Format(entry *logrus.Entry) ([]byte, error)
 	return []byte(entry.Message + "\n"), nil
 }
 
-func TestTemplatesSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
+type templatesCloudConfigIdentity struct {
+	GitCloudConfig
+}
+
+func TestTemplatesSelectsCompleteSystemFilesystemAndProjectLoaderDependencies(t *testing.T) {
 	dependencies := systemTemplatesDependencies()
 	systemFiles := filesystem.System()
 
@@ -203,14 +237,99 @@ func TestTemplatesSelectsCompleteSystemFilesystemDependencies(t *testing.T) {
 	if reflect.TypeOf(dependencies.Files.FileSystem) != reflect.TypeOf(systemFiles.FileSystem) {
 		t.Fatalf("Templates filesystem dependency is %T, want %T", dependencies.Files.FileSystem, systemFiles.FileSystem)
 	}
+	if dependencies.Loader == nil {
+		t.Fatal("Templates selected an incomplete project-loader dependency")
+	}
+	if reflect.TypeOf(dependencies.Loader) != reflect.TypeOf(initTemplateProjectLoader{}) {
+		t.Fatalf("Templates project-loader dependency is %T, want %T", dependencies.Loader, initTemplateProjectLoader{})
+	}
+}
+
+func TestInitTemplateProjectLoaderPreservesCompleteProjectAndExactError(t *testing.T) {
+	tests := []struct {
+		name      string
+		directory string
+		assert    func(*testing.T, Project, error)
+	}{
+		{
+			name:      "complete tracked project",
+			directory: file.Path("test/cloud-config/templates/test-template"),
+			assert: func(t *testing.T, project Project, err error) {
+				if err != nil {
+					t.Fatalf("production Templates project loader returned an error: %v", err)
+				}
+				wantDirectory := file.Path("test/cloud-config/templates/test-template")
+				wantConfig := file.Path("%s/%s", wantDirectory, projectConfigFileName)
+				if project.Path != wantDirectory || project.ConfigFile != wantConfig || project.Config.Name != "test-template" {
+					t.Fatalf("production Templates project loader returned %#v, want complete tracked project", project)
+				}
+				if !project.IsMavenProject() || project.Type == nil || project.CloudConfig == nil {
+					t.Fatalf("production Templates project loader lost embedded interfaces: Type=%T CloudConfig=%T", project.Type, project.CloudConfig)
+				}
+			},
+		},
+		{
+			name:      "exact project error",
+			directory: file.Path("test/templates-load-error/templates/broken-template"),
+			assert: func(t *testing.T, project Project, err error) {
+				wantError := fmt.Sprintf("%s directory detected, but language was not set in %s",
+					file.Path("test/templates-load-error/templates/broken-template/src"),
+					"config file (ply.json, or co-pilot.json")
+				if !reflect.DeepEqual(project, Project{}) || err == nil || err.Error() != wantError {
+					t.Fatalf("production Templates project-loader error result was (%#v, %v), want (zero, exact %q)", project, err, wantError)
+				}
+			},
+		},
+	}
+	if len(tests) == 0 {
+		t.Fatal("production Templates project-loader test-case population is empty")
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			isolateConfigTestHome(t)
+			project, err := (initTemplateProjectLoader{}).Load(test.directory)
+			test.assert(t, project, err)
+		})
+	}
+}
+
+func TestTemplatesProductionRetainsTrackedCurrentAndLegacyProjects(t *testing.T) {
+	isolateConfigTestHome(t)
+	gitCfg := GitCloudConfig{Impl: DirConfig{Path: file.Path("test/cloud-config")}}
+
+	actual, err := gitCfg.Templates()
+
+	if err != nil {
+		t.Fatalf("production Templates returned an error: %v", err)
+	}
+	wantNames := []string{file.Path("legacy-category/legacy-template"), "test-template"}
+	if len(actual) != len(wantNames) {
+		t.Fatalf("production Templates returned %#v, want %d tracked projects", actual, len(wantNames))
+	}
+	for index, wantName := range wantNames {
+		wantDirectory := file.Path("test/cloud-config/templates/%s", wantName)
+		wantConfigName := projectConfigFileName
+		wantProjectName := "test-template"
+		wantMaven := true
+		if index == 0 {
+			wantConfigName = legacyProjectConfigFileName
+			wantProjectName = "legacy-template"
+			wantMaven = false
+		}
+		if actual[index].Name != wantName || actual[index].Project.Path != wantDirectory ||
+			actual[index].Project.ConfigFile != file.Path("%s/%s", wantDirectory, wantConfigName) ||
+			actual[index].Project.Config.Name != wantProjectName || actual[index].Project.IsMavenProject() != wantMaven ||
+			actual[index].Project.CloudConfig == nil {
+			t.Fatalf("production Templates result %d was %#v, want exact tracked %q project", index, actual[index], wantName)
+		}
+	}
 }
 
 func TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingNamesAndProjects(t *testing.T) {
-	isolateConfigTestHome(t)
 	gitCfg := GitCloudConfig{Impl: DirConfig{Path: "/complete cloud-config receiver/root with spaces"}}
-	fixtureRoot := file.Path("test/cloud-config/templates")
-	currentDirectory := file.Path("%s/test-template", fixtureRoot)
-	legacyDirectory := file.Path("%s/legacy-category/legacy-template", fixtureRoot)
+	fixtureRoot := file.Path("%s/templates", gitCfg.Implementation().Dir())
+	currentDirectory := file.Path("%s/current category/current template", fixtureRoot)
+	legacyDirectory := file.Path("%s/legacy category/legacy template", fixtureRoot)
 	currentPath := file.Path("%s/%s", currentDirectory, projectConfigFileName)
 	legacyPath := file.Path("%s/%s", legacyDirectory, legacyProjectConfigFileName)
 	incomingError := errors.New("suppressed incoming Templates walk error")
@@ -225,9 +344,42 @@ func TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingN
 		{path: currentPath, info: currentInfo},
 		{path: legacyPath, info: legacyInfo},
 	}}
-	dependencies := recording.dependencies()
+	currentCloud := &templatesCloudConfigIdentity{GitCloudConfig: GitCloudConfig{Impl: DirConfig{Path: "/complete current cloud identity"}}}
+	legacyCloud := &templatesCloudConfigIdentity{GitCloudConfig: GitCloudConfig{Impl: DirConfig{Path: "/complete legacy cloud identity"}}}
+	currentType := &MavenProject{PomFile: "/complete current pom identity"}
+	legacyType := &MavenProject{PomFile: "/complete legacy pom identity"}
+	wantProjects := []Project{
+		{
+			Path: currentDirectory,
+			GitInfo: GitInfo{
+				IsRepo: true, IsDirty: true, EnableCommit: true,
+			},
+			ConfigFile:  currentPath,
+			Config:      ProjectConfiguration{Name: "complete current project", Profile: "current profile"},
+			Type:        currentType,
+			CloudConfig: currentCloud,
+		},
+		{
+			Path: legacyDirectory,
+			GitInfo: GitInfo{
+				IsRepo: true, EnableCommit: true,
+			},
+			ConfigFile:  legacyPath,
+			Config:      ProjectConfiguration{Name: "complete legacy project", Profile: "legacy profile"},
+			Type:        legacyType,
+			CloudConfig: legacyCloud,
+		},
+	}
+	loader := &recordingTemplateProjectLoader{results: []templateProjectLoadResult{
+		{project: wantProjects[0]},
+		{project: wantProjects[1]},
+	}}
+	dependencies := recording.dependencies(loader)
 	if dependencies.Files.FileSystem != recording {
 		t.Fatalf("Templates dependency lost its complete filesystem value: %#v", dependencies)
+	}
+	if dependencies.Loader != loader {
+		t.Fatalf("Templates dependency lost its complete project-loader value: %#v", dependencies)
 	}
 
 	actual, err := gitCfg.templates(dependencies)
@@ -254,7 +406,16 @@ func TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingN
 		t.Fatalf("Templates callback results were %#v, want every incoming walk error suppressed and all callbacks nil", recording.callbackResults)
 	}
 
-	wantNames := []string{"test-template", file.Path("legacy-category/legacy-template")}
+	directories, populationErr := loader.assertedDirectories()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	wantDirectories := []string{currentDirectory, legacyDirectory}
+	if !reflect.DeepEqual(directories, wantDirectories) {
+		t.Fatalf("Templates project-loader directories were %#v, want one exact load per current/legacy match %#v", directories, wantDirectories)
+	}
+
+	wantNames := []string{file.Path("current category/current template"), file.Path("legacy category/legacy template")}
 	if len(wantNames) == 0 {
 		t.Fatal("Templates name expectation population is empty")
 	}
@@ -265,24 +426,19 @@ func TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingN
 		if actual[index].Name != wantName {
 			t.Fatalf("Templates result %d name was %q, want exact relative name %q", index, actual[index].Name, wantName)
 		}
-	}
-	wantDirectories := []string{currentDirectory, legacyDirectory}
-	wantConfigFiles := []string{currentPath, legacyPath}
-	if len(wantDirectories) != len(wantNames) || len(wantConfigFiles) != len(wantNames) {
-		t.Fatal("Templates path expectation populations do not match the guarded name population")
-	}
-	for index := range actual {
-		if actual[index].Project.Path != wantDirectories[index] || actual[index].Project.ConfigFile != wantConfigFiles[index] {
-			t.Fatalf("Templates result %d loaded project path/config was (%q, %q), want (%q, %q)",
-				index, actual[index].Project.Path, actual[index].Project.ConfigFile, wantDirectories[index], wantConfigFiles[index])
+		if !reflect.DeepEqual(actual[index].Project, wantProjects[index]) {
+			t.Fatalf("Templates result %d project was %#v, want complete exact value %#v", index, actual[index].Project, wantProjects[index])
 		}
-	}
-	if actual[0].Project.Config.Name != "test-template" || actual[1].Project.Config.Name != "legacy-template" {
-		t.Fatalf("Templates loaded project configurations were (%q, %q), want exact fixture projects",
-			actual[0].Project.Config.Name, actual[1].Project.Config.Name)
-	}
-	if !actual[0].Project.IsMavenProject() || actual[1].Project.IsMavenProject() {
-		t.Fatalf("Templates loaded project types were (%T, %T), want Maven then non-Maven", actual[0].Project.Type, actual[1].Project.Type)
+		if actual[index].Project.CloudConfig != wantProjects[index].CloudConfig {
+			t.Fatalf("Templates result %d cloud-config identity was %T %#v, want exact %T %#v",
+				index, actual[index].Project.CloudConfig, actual[index].Project.CloudConfig,
+				wantProjects[index].CloudConfig, wantProjects[index].CloudConfig)
+		}
+		if actual[index].Project.Type != wantProjects[index].Type {
+			t.Fatalf("Templates result %d project-type identity was %T %#v, want exact %T %#v",
+				index, actual[index].Project.Type, actual[index].Project.Type,
+				wantProjects[index].Type, wantProjects[index].Type)
+		}
 	}
 
 	if rootInfo.nameCalls != 2 || ignoredInfo.nameCalls != 2 || currentInfo.nameCalls != 2 || legacyInfo.nameCalls != 3 {
@@ -301,7 +457,6 @@ func TestTemplatesPreservesReceiverRootCallbackOrderPathsMetadataErrorsMatchingN
 }
 
 func TestTemplatesReturnsAndLogsExactProjectLoadErrorWithOrderedPartialResult(t *testing.T) {
-	isolateConfigTestHome(t)
 	output := &bytes.Buffer{}
 	logger := logrus.New()
 	logger.SetLevel(logrus.ErrorLevel)
@@ -312,23 +467,35 @@ func TestTemplatesReturnsAndLogsExactProjectLoadErrorWithOrderedPartialResult(t 
 	t.Cleanup(func() { log = previousLogger })
 
 	gitCfg := GitCloudConfig{Impl: DirConfig{Path: "/complete project-load-error receiver"}}
-	fixtureRoot := file.Path("test/cloud-config/templates")
-	currentDirectory := file.Path("%s/test-template", fixtureRoot)
+	fixtureRoot := file.Path("%s/templates", gitCfg.Implementation().Dir())
+	currentDirectory := file.Path("%s/first-template", fixtureRoot)
 	currentPath := file.Path("%s/%s", currentDirectory, projectConfigFileName)
-	brokenDirectory := file.Path("test/templates-load-error/templates/broken-template")
+	brokenDirectory := file.Path("%s/broken-template", fixtureRoot)
 	brokenPath := file.Path("%s/%s", brokenDirectory, projectConfigFileName)
+	thirdDirectory := file.Path("%s/third-template", fixtureRoot)
+	projectLoadError := errors.New("complete Templates project-loader dependency error")
+	firstProject := Project{
+		Path:        currentDirectory,
+		ConfigFile:  currentPath,
+		Config:      ProjectConfiguration{Name: "complete first project"},
+		Type:        &MavenProject{PomFile: "/complete first pom identity"},
+		CloudConfig: &templatesCloudConfigIdentity{},
+	}
 	recording := &recordingTemplatesFilesystem{walkInputs: []recordedTemplatesCallback{
 		{path: currentPath, info: &templatesFileInfo{name: projectConfigFileName}},
 		{path: brokenPath, info: &templatesFileInfo{name: projectConfigFileName}},
-		{path: file.Path("%s/legacy-category/legacy-template/%s", fixtureRoot, legacyProjectConfigFileName), info: &templatesFileInfo{name: legacyProjectConfigFileName}},
+		{path: file.Path("%s/%s", thirdDirectory, legacyProjectConfigFileName), info: &templatesFileInfo{name: legacyProjectConfigFileName}},
+	}}
+	loader := &recordingTemplateProjectLoader{results: []templateProjectLoadResult{
+		{project: firstProject},
+		{project: Project{Path: brokenDirectory, Config: ProjectConfiguration{Name: "complete failed partial project"}}, err: projectLoadError},
+		{project: Project{Path: thirdDirectory}},
 	}}
 
-	actual, err := gitCfg.templates(recording.dependencies())
+	actual, err := gitCfg.templates(recording.dependencies(loader))
 
-	wantError := fmt.Sprintf("%s directory detected, but language was not set in %s",
-		file.Path("%s/src", brokenDirectory), "config file (ply.json, or co-pilot.json")
-	if err == nil || err.Error() != wantError {
-		t.Fatalf("Templates project-load error was %v, want exact error %q", err, wantError)
+	if err != projectLoadError {
+		t.Fatalf("Templates project-load error was %v, want exact dependency error %v", err, projectLoadError)
 	}
 	if len(recording.callbackResults) != 2 || recording.callbackResults[0] != nil || recording.callbackResults[1] != err {
 		t.Fatalf("Templates callback results were %#v, want nil then the exact returned project-load error", recording.callbackResults)
@@ -336,7 +503,14 @@ func TestTemplatesReturnsAndLogsExactProjectLoadErrorWithOrderedPartialResult(t 
 	if len(recording.callbackInputs) != 2 {
 		t.Fatalf("Templates delivered %d callbacks, want stop at project-load error after 2", len(recording.callbackInputs))
 	}
-	if len(actual) != 1 || actual[0].Name != "test-template" || actual[0].Project.Path != currentDirectory {
+	directories, populationErr := loader.assertedDirectories()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(directories, []string{currentDirectory, brokenDirectory}) {
+		t.Fatalf("Templates project-load-error directories were %#v, want stop after exact failed load", directories)
+	}
+	if len(actual) != 1 || actual[0].Name != "first-template" || !reflect.DeepEqual(actual[0].Project, firstProject) {
 		t.Fatalf("Templates project-load error partial result was %#v, want the first exact loaded template", actual)
 	}
 	if output.String() != err.Error()+"\n" {
@@ -360,25 +534,38 @@ func TestTemplatesReturnsEveryExactFinalWalkErrorWithCurrentOrderedPartialResult
 
 	for _, walkError := range walkErrors {
 		t.Run(walkError.name, func(t *testing.T) {
-			isolateConfigTestHome(t)
-			fixtureRoot := file.Path("test/cloud-config/templates")
-			currentDirectory := file.Path("%s/test-template", fixtureRoot)
+			fixtureRoot := file.Path("/complete walk-error receiver/templates")
+			currentDirectory := file.Path("%s/current-template", fixtureRoot)
 			currentPath := file.Path("%s/%s", currentDirectory, projectConfigFileName)
+			currentProject := Project{
+				Path:        currentDirectory,
+				ConfigFile:  currentPath,
+				Config:      ProjectConfiguration{Name: "complete walk-error project"},
+				CloudConfig: &templatesCloudConfigIdentity{},
+			}
 			recording := &recordingTemplatesFilesystem{
 				walkInputs: []recordedTemplatesCallback{{path: currentPath, info: &templatesFileInfo{name: projectConfigFileName}}},
 				walkErr:    walkError.err,
 			}
+			loader := &recordingTemplateProjectLoader{results: []templateProjectLoadResult{{project: currentProject}}}
 
-			actual, err := (GitCloudConfig{Impl: DirConfig{Path: "/complete walk-error receiver"}}).templates(recording.dependencies())
+			actual, err := (GitCloudConfig{Impl: DirConfig{Path: "/complete walk-error receiver"}}).templates(recording.dependencies(loader))
 
 			if err != walkError.err {
 				t.Fatalf("Templates walk error was %v, want exact dependency error %v", err, walkError.err)
 			}
-			if len(actual) != 1 || actual[0].Name != "test-template" || actual[0].Project.Path != currentDirectory {
+			if len(actual) != 1 || actual[0].Name != "current-template" || !reflect.DeepEqual(actual[0].Project, currentProject) {
 				t.Fatalf("Templates walk-error partial result was %#v, want current exact ordered result", actual)
 			}
 			if !reflect.DeepEqual(recording.callbackResults, []error{nil}) {
 				t.Fatalf("Templates walk-error callback results were %#v, want nil", recording.callbackResults)
+			}
+			directories, populationErr := loader.assertedDirectories()
+			if populationErr != nil {
+				t.Fatal(populationErr)
+			}
+			if !reflect.DeepEqual(directories, []string{currentDirectory}) {
+				t.Fatalf("Templates walk-error project-loader directories were %#v, want one exact load", directories)
 			}
 		})
 	}
@@ -391,8 +578,9 @@ func TestTemplatesReturnsNilForOnlyIgnoredAndIncomingWalkErrorCallbacks(t *testi
 		{path: "/developer/home/cloud-config/must-not-be-accessed", info: nil, err: incomingError},
 		{path: "/complete ignored/path/Ply.json", info: ignoredInfo},
 	}}
+	loader := &recordingTemplateProjectLoader{}
 
-	actual, err := (GitCloudConfig{Impl: DirConfig{Path: "/complete nil-result receiver"}}).templates(recording.dependencies())
+	actual, err := (GitCloudConfig{Impl: DirConfig{Path: "/complete nil-result receiver"}}).templates(recording.dependencies(loader))
 
 	if actual != nil || err != nil {
 		t.Fatalf("Templates no-match result was (%#v, %v), want (nil, nil)", actual, err)
@@ -404,15 +592,80 @@ func TestTemplatesReturnsNilForOnlyIgnoredAndIncomingWalkErrorCallbacks(t *testi
 		t.Fatalf("Templates ignored entry observations were Name=%d other=%d, want exact two name comparisons only",
 			ignoredInfo.nameCalls, ignoredInfo.nonNameMetadataCalls())
 	}
+	if len(loader.directories) != 0 {
+		t.Fatalf("Templates loaded projects for ignored or incoming-error callbacks: %#v", loader.directories)
+	}
+	if _, populationErr := loader.assertedDirectories(); populationErr == nil {
+		t.Fatal("empty Templates project-loader recording unexpectedly passed")
+	}
 }
 
-func TestTemplatesDependenciesDefaultToSafeNoDeveloperPathAccess(t *testing.T) {
+func TestTemplatesFilesystemDependenciesDefaultToSafeNoDeveloperPathAccess(t *testing.T) {
 	gitCfg := GitCloudConfig{Impl: DirConfig{Path: "/developer/home/cloud-config/must-not-be-accessed"}}
 
 	actual, err := gitCfg.templates(templatesDependencies{})
 
 	if actual != nil || !errors.Is(err, filesystem.ErrNoFilesystem) {
 		t.Fatalf("safe Templates dependency default returned (%#v, %v), want (nil, %v)", actual, err, filesystem.ErrNoFilesystem)
+	}
+}
+
+func TestTemplatesProjectLoaderDefaultsToSafeExactErrorWithInjectedWalk(t *testing.T) {
+	projectDirectory := file.Path("/developer/home/cloud-config/must-not-be-accessed/templates/complete-template")
+	projectPath := file.Path("%s/%s", projectDirectory, projectConfigFileName)
+	recording := &recordingTemplatesFilesystem{walkInputs: []recordedTemplatesCallback{{
+		path: projectPath,
+		info: &templatesFileInfo{name: projectConfigFileName},
+	}}}
+
+	actual, err := (GitCloudConfig{Impl: DirConfig{Path: "/complete missing-loader receiver"}}).templates(recording.dependencies(nil))
+
+	if actual != nil || err != filesystem.ErrNoFilesystem {
+		t.Fatalf("safe Templates project-loader default returned (%#v, %v), want (nil, exact %v)", actual, err, filesystem.ErrNoFilesystem)
+	}
+	if !reflect.DeepEqual(recording.callbackResults, []error{filesystem.ErrNoFilesystem}) {
+		t.Fatalf("safe Templates project-loader callback results were %#v, want exact filesystem error", recording.callbackResults)
+	}
+	if len(recording.callbackInputs) != 1 {
+		t.Fatalf("safe Templates project-loader received %d callbacks, want one injected match", len(recording.callbackInputs))
+	}
+}
+
+func TestTemplatesLoadsProjectsIndependentlyAcrossRepeatedInvocations(t *testing.T) {
+	gitCfg := GitCloudConfig{Impl: DirConfig{Path: "/complete repeated Templates receiver"}}
+	projectDirectory := file.Path("%s/templates/repeated-template", gitCfg.Implementation().Dir())
+	projectPath := file.Path("%s/%s", projectDirectory, projectConfigFileName)
+	recording := &recordingTemplatesFilesystem{walkInputs: []recordedTemplatesCallback{{
+		path: projectPath,
+		info: &templatesFileInfo{name: projectConfigFileName},
+	}}}
+	firstCloud := &templatesCloudConfigIdentity{GitCloudConfig: GitCloudConfig{Impl: DirConfig{Path: "/first repeated cloud identity"}}}
+	secondCloud := &templatesCloudConfigIdentity{GitCloudConfig: GitCloudConfig{Impl: DirConfig{Path: "/second repeated cloud identity"}}}
+	first := Project{Path: "first repeated project", Config: ProjectConfiguration{Name: "first"}, CloudConfig: firstCloud}
+	second := Project{Path: "second repeated project", Config: ProjectConfiguration{Name: "second"}, CloudConfig: secondCloud}
+	loader := &recordingTemplateProjectLoader{results: []templateProjectLoadResult{{project: first}, {project: second}}}
+	dependencies := recording.dependencies(loader)
+
+	firstResult, err := gitCfg.templates(dependencies)
+	if err != nil || len(firstResult) != 1 || !reflect.DeepEqual(firstResult[0].Project, first) || firstResult[0].Project.CloudConfig != firstCloud {
+		t.Fatalf("first repeated Templates invocation returned (%#v, %v), want exact first project", firstResult, err)
+	}
+	secondResult, err := gitCfg.templates(dependencies)
+	if err != nil || len(secondResult) != 1 || !reflect.DeepEqual(secondResult[0].Project, second) || secondResult[0].Project.CloudConfig != secondCloud {
+		t.Fatalf("second repeated Templates invocation returned (%#v, %v), want independent exact second project", secondResult, err)
+	}
+	directories, populationErr := loader.assertedDirectories()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(directories, []string{projectDirectory, projectDirectory}) {
+		t.Fatalf("repeated Templates project-loader directories were %#v, want one complete load per invocation", directories)
+	}
+	if !reflect.DeepEqual(recording.walkRoots, []string{
+		file.Path("%s/templates", gitCfg.Implementation().Dir()),
+		file.Path("%s/templates", gitCfg.Implementation().Dir()),
+	}) {
+		t.Fatalf("repeated Templates walk roots were %#v, want independent exact roots", recording.walkRoots)
 	}
 }
 
@@ -424,5 +677,8 @@ func TestRecordedTemplatesRejectsEmptyPopulations(t *testing.T) {
 	}
 	if _, err := recording.assertedCallbackInputs(); err == nil {
 		t.Fatal("empty recorded Templates callback population passed")
+	}
+	if _, err := (&recordingTemplateProjectLoader{}).assertedDirectories(); err == nil {
+		t.Fatal("empty recorded Templates project-loader directory population passed")
 	}
 }
