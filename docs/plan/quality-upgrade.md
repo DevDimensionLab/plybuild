@@ -5375,7 +5375,11 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
 Status: active at one prepared bounded evaluation of graph-selected exact
-`github.com/shurcooL/sanitized_anchor_name v1.0.0`. Go-diff option 1 is final:
+`github.com/stretchr/objx v0.5.2`. Murmur3 option 1 is final: exact selected,
+indirect, unloaded pseudo-version
+`v0.0.0-20180118202830-f09979ecbc72` remains unchanged, unqualified, and
+without a genuine supported tidy-stable owner under its own non-transferable
+exception. Go-diff option 1 is final:
 exact selected, indirect, unloaded v1.2.0 remains unchanged, unqualified, and
 without genuine supported tidy-stable ownership under its own non-transferable
 exception. Client_golang option 1 is final:
@@ -15968,6 +15972,61 @@ Spaolacci/murmur3 evaluation (2026-09-24):
   Protected project identities remain exact; the 311-record archive graph has
   one NEXT decision; and all 144,413 contained task-scratch entries were
   audited and removed, leaving only launcher-owned cache state.
+
+Spaolacci/murmur3 product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded
+  `github.com/spaolacci/murmur3
+  v0.0.0-20180118202830-f09979ecbc72` remains unchanged under a Murmur3-
+  specific, unqualified, non-transferable exception. No canonical stable fully
+  qualifies, and no changed stable has a genuine supported tidy-stable project
+  owner. This bounded acceptance is not a release qualification or safety
+  claim. The **Cespare XXHash Murmur3 Ownership Study** is neither authorized
+  nor run.
+- Retention requires the exact main -> direct mvn-pom-mutator v0.2.3 -> TSDB
+  v0.7.1 -> xxhash v1.1.0 -> selected Murmur3 route. Mvn-pom-mutator's TSDB
+  edge remains metadata-only, TSDB continues genuinely importing xxhash in
+  production, and xxhash continues genuinely importing Murmur3 only in tests
+  while directly requesting the selected pseudo-version. Target and requester
+  remain why-negative, indirect, unloaded, absent from project imports and all
+  project load populations, runtime-irrelevant, and never main roots.
+- All 84 historical checkpoints must retain the selected pseudo-version, sole
+  xxhash v1.1.0 request, no target/requester root, and every recorded route
+  epoch ending at the same genuine xxhash test-import boundary. No requester
+  may ask for a canonical Murmur3 stable. Any owner, request, route, import/
+  load/runtime, support, root-history, or checkpoint change requires a fresh
+  owning evaluation and product decision.
+- Selected, v1.0.0, and v1.1.0 commit/tree, sums, exact owner/repository/
+  release/GitHub Release/tag/signature/ancestry/proxy/archive/module/license,
+  source/build, API/behavior/caller/concurrency/lifecycle/error, unsafe/native-
+  endian/build-tag/cgo/generate/embed, closure, native, cross, projection,
+  Go-floor, and advisory identities are expiry guards. The project retains
+  only the selected module-file sum.
+- Both canonical stables must continue passing their recorded safe
+  verification/build/test/count-ten/cross rows while failing mandatory vet
+  under both exact SDKs and the ordinary race suite under Go 1.18.10. Identical
+  source, passing safe evidence, physical selection, genuine test ownership,
+  and empty advisory results do not qualify a release or imply safety.
+- Selected and v1.1.0 gets must continue producing only their measured
+  Murmur3 root/selection/sum effects before ordinary tidy restores the selected
+  pseudo-version and exact common projection. No genuine supported tidy-stable
+  owner may request v1.1.0, and no projection is authorized or retained.
+- Corrected index/CNA identities, focal 0/0/0/0 and project 30/22/20/20
+  advisory boundaries, client_golang identity, every earlier selection and
+  exception, exact SDKs, project/common-tidy identities, Go 1.18 floor, and
+  27/27 Q0-Q2 PASS at L2 remain exact. No earlier exception transfers.
+- Guard-only revalidation reproduces clean continuity at exact Murmur3
+  evaluation HEAD `d5eb0a913b065daade520b870f4d4c9e25df00c2`, parent
+  `794f7ac15c1541c69ff10542088e55b177e40d36`, tree
+  `325239328f00cafaab130af6a34e834e83d85eb7`, its exact five-file changed
+  set, UUID ancestry, reciprocal archives/launcher, 234/3,599/355/429/197/41/
+  1,067 project state, protected hashes, and ordinary/ignored cleanliness.
+  Final exact-Go-1.26.7 verify/build/count-one/race/vet gates pass. No
+  completed evaluation, study, dependency/source/root change, other group, or
+  P8 work was run.
+- P7 remains active with exactly one prepared, unlaunched bounded evaluation
+  of the next unevaluated alphabetical module, selected indirect
+  `github.com/stretchr/objx v0.5.2`.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

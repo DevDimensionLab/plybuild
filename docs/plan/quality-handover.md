@@ -7196,12 +7196,66 @@ has exactly one NEXT decision. All 144,413 task-owned scratch entries were
 contained, had zero symlink/outside/special entries, and were removed; only
 launcher-owned cache state remains.
 
+## Spaolacci Murmur3 Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/spaolacci/murmur3
+v0.0.0-20180118202830-f09979ecbc72` remains unchanged under a Murmur3-
+specific, unqualified, non-transferable exception. No canonical stable fully
+qualifies, and no changed stable has a genuine supported tidy-stable owner.
+This bounded acceptance is neither a release qualification nor a safety
+claim. The **Cespare XXHash Murmur3 Ownership Study** is not authorized or
+run.
+
+Retention requires the exact main -> direct mvn-pom-mutator v0.2.3 -> TSDB
+v0.7.1 -> xxhash v1.1.0 -> selected Murmur3 route. The first edge remains
+metadata-only, TSDB continues genuinely importing xxhash in production, and
+xxhash continues genuinely importing Murmur3 only in tests while directly
+requesting the selected pseudo-version. Target and requester remain why-
+negative, indirect, unloaded, absent from project imports and load populations,
+runtime-irrelevant, and never roots. All 84 checkpoints must preserve that
+selection, request, root state, and every recorded route epoch ending at the
+same genuine test-import boundary. No requester may ask for a canonical
+stable.
+
+The selected pseudo-version and both stables retain their exact shared commit
+and tree, source/module sums, and project module-sum-only boundary. All owner/
+repository/release/GitHub Release/tag/signature/ancestry/proxy/archive/module/
+license, source/build, API/behavior/caller/concurrency/lifecycle/error,
+unsafe/native-endian/build-tag/cgo/generate/embed, closure, native, cross,
+projection, Go-floor, and advisory identities remain expiry guards. Both
+stables must retain passing safe verification/build/test/count-ten/cross rows,
+mandatory vet failure under both SDKs, and the ordinary Go 1.18.10 race
+failure. Identical source and passing safe evidence do not qualify either
+stable.
+
+Selected and v1.1.0 gets must continue producing only their measured target
+root/selection/sum effects before ordinary tidy restores the selected pseudo-
+version and exact common projection. No genuine supported tidy-stable owner
+may request v1.1.0, and no projection is authorized. Empty target/focal
+advisory responses do not imply safety or qualification; protected index/CNA,
+project 30/22/20/20, client_golang, SDK, selection/exception, Go-floor,
+project/common-tidy, and 27/27 Q0-Q2 guards remain exact. No earlier exception
+transfers.
+
+Guard-only revalidation reproduces exact clean continuity at Murmur3
+evaluation HEAD `d5eb0a913b065daade520b870f4d4c9e25df00c2`, parent
+`794f7ac15c1541c69ff10542088e55b177e40d36`, tree
+`325239328f00cafaab130af6a34e834e83d85eb7`, its five-file changed set, UUID
+ancestry, reciprocal archive/launcher state, 234/3,599/355/429/197/41/1,067
+project state, protected hashes, and ordinary/ignored cleanliness. Final exact-
+Go-1.26.7 verify/build/count-one/race/vet gates pass. Product source,
+`go.mod`, and `go.sum` remain byte-exact, and contained task scratch is
+removed. No evaluation, study, dependency/source/root change, other group, or
+P8 work was run.
+
 ## Next Bounded Objective
 
-Run only [the prepared Murmur3 product-direction decision](agent-sessions/2026-09-24T054158+0200-decide-spaolacci-murmur3-product-direction.md).
-Choose exactly one: retain the selected pseudo-version under a Murmur3-specific
-unqualified, non-transferable exception; authorize but do not run the later
-measurement-only **Cespare XXHash Murmur3 Ownership Study**; or stop P7
-unresolved. The decision is prepared but not launched. Do not rerun the
-evaluation, execute a study, change a dependency or source, add a root, combine
-another group, transfer or reopen an exception, or begin P8.
+Run only [the prepared Objx evaluation](agent-sessions/2026-09-24T055739+0200-evaluate-stretchr-objx-dependency.md).
+Evaluate exact selected indirect `github.com/stretchr/objx v0.5.2` as the next
+unevaluated alphabetical P7 module. The 11 observed incoming graph requests,
+selected Testify v1.9.0 request, historical Testify/Logrus requests, and
+negative target why are starting observations only. Do not run a rejected
+study, reopen or transfer an exception, combine another dependency group, add
+an unqualified root, relax the Go floor, or begin P8. The evaluation is
+prepared but not launched.
