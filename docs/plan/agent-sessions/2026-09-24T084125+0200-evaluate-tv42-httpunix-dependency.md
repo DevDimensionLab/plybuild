@@ -1,13 +1,13 @@
 # Agent Session: Evaluate Tv42 HTTP Unix Dependency
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-24T084125+0200-evaluate-tv42-httpunix-dependency`
 Created: `2026-09-24T08:41:25+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `4fb28a72513369978331140128db7c2b9a95063a11088cc46e7d261ab8675471`
 Previous: [2026-09-24T082426+0200-decide-tmc-grpc-websocket-proxy-product-direction.md](2026-09-24T082426+0200-decide-tmc-grpc-websocket-proxy-product-direction.md)
-Next: none
-Outcome: pending
+Next: [2026-09-24T091320+0200-decide-tv42-httpunix-product-direction.md](2026-09-24T091320+0200-decide-tv42-httpunix-product-direction.md)
+Outcome: No canonical exact-path stable or prerelease exists, so no release can qualify. Selected and proxy-latest pseudo-versions pass the bounded ordinary closure gates, but all current and historical target requests are metadata-only and ordinary tidy rejects latest; dependency metadata remains unchanged and P7 stops for the reciprocal product-direction decision.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -224,3 +224,169 @@ module, select a rejected candidate, relax Go 1.18, retain an unqualified or
 ownerless projection, run a rejected ownership study, combine another
 dependency group, launch a successor, or begin P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+No dependency, product source, root, or projection change is authorized or
+retained. The exact-path release line has no stable or prerelease at all, and
+the current project has no genuine source-importing owner for either the
+selected or newest pseudo-version. P7 therefore stops at exactly one
+reciprocal product-direction decision.
+
+### Canonical owner, release line, and source identity
+
+- Exact go-import metadata maps `github.com/tv42/httpunix` to
+  `https://github.com/tv42/httpunix.git`. GitHub repository ID `31613605` is
+  public, enabled, unarchived, non-fork, MIT-licensed, and uses protected
+  default branch `master`; its last pushed commit is from 2019-12-20.
+- The exact-path proxy list, Git tag list, and GitHub Release list are empty.
+  `/v2` and `/v3` proxy lines return no matching version. There is no stable,
+  prerelease, replacement, retraction, deprecation, alternate-major release,
+  or eligible alternate owner. Consequently no Go-1.18-compatible canonical
+  stable exists, and there is no highest fully qualified stable.
+- Selected pseudo-version
+  `v0.0.0-20150427012821-b75d8614f926` is unsigned commit
+  `b75d8614f926c077e48d85f1f8f7885b758c6225`, parent
+  `901a17c16be1c40cc02943210c7d493f269da8d6`, tree
+  `0767180e6bdf16ef7f876cbca4ec2162d4665e62`, at
+  `2015-04-27T01:28:21Z`. Proxy latest
+  `v0.0.0-20191220191345-2ba4b9c3382c` is unsigned commit
+  `2ba4b9c3382c77e7b9ea89d00746e6111d142a22`, parent
+  `d9b79f5e8704303eace27c0dbfaec1891a06c61e`, tree
+  `cc5d171a3daa5674f932bc5db3a678cd1014162d`, at
+  `2019-12-20T19:13:45Z`. Selected is an ancestor of latest; the complete
+  repository history has ten commits.
+- Selected source/module sums are
+  `h1:G3dpKMzFDjgEh2q1Z7zUUtKa8ViPtH+ocF0bE0g00O8=` /
+  `h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=`. Latest sums are
+  `h1:u6SKchux2yDvFQnDHS3lPnIRmfVJ5Sxy3ao2SIdysLQ=` /
+  `h1:hzIxponao9Kjc7aWznkXaL4U4TWaDSs8zcsY4Ka08nM=`. Sumdb records and
+  proxy info times agree with Git.
+- The selected proxy ZIP has four files and SHA-256
+  `8246ebc82e0d9d3142f5aeb50d4fcd67f3f435fb5464120c356a4e5d57ef4aa0`;
+  latest has five files and SHA-256
+  `3835d37bfd63336db8f0b0971368e0e9a03d70a446b32e93cbd30e99ba6e9d27`.
+  Every archive file has the exact Git blob identity. Both trees contain one
+  Go package, no symlink, submodule, executable or special entry, build tag,
+  cgo import, generation directive, generated/embed boundary, or unsafe
+  import. Selected has a proxy-synthesized path-only module file; latest has
+  the tracked exact-path module file with `go 1.13` and no requirement.
+
+### API, ordinary behavior, and complete closure
+
+- Both versions export `Scheme`, `Transport`, `RegisterLocation`, and
+  `RoundTrip`. The caller registers a URL host-to-Unix-socket path mapping;
+  duplicate registration panics. Requests require a non-nil URL, exact
+  `http+unix` scheme, a host, and a known location. The caller owns the
+  request and must close the returned response body under the ordinary
+  `http.RoundTripper` contract.
+- Selected opens one Unix connection per request, writes the request directly,
+  reads the HTTP response, and applies its three timeout fields as dial/write/
+  response-header deadlines. Latest clones the caller request before rewriting
+  the clone's scheme, delegates to an internal pooling `http.Transport`,
+  supports context cancellation, rejects TLS, disables automatic compression,
+  deprecates `DialTimeout` and `ResponseHeaderTimeout`, and makes
+  `RequestTimeout` ineffective. Its internal transport is initialized once;
+  configuration fields therefore belong to pre-use setup. Mapping reads and
+  registrations are mutex-protected, but callers retain synchronization for
+  request/configuration mutation. Network timing and connection scheduling are
+  not deterministic. Neither version exposes listener creation or an explicit
+  idle-connection cleanup method; the examples show a separately caller-owned
+  Unix listener/server.
+- A small contained ordinary fixture confirms exact validation, duplicate
+  panic, a real Unix-socket HTTP request/response, response-body cleanup, and
+  preservation of the caller request's original scheme. Count-one, count-ten,
+  and race-count-one fixture rows pass for selected and latest under both exact
+  SDKs. No malformed, cyclic, oversized, stress, escape-sequence, or security
+  fixture was created.
+- Each pseudo-version has a complete one-module, standard-library-only closure.
+  Selected declares no Go version; latest declares Go 1.13. Exact Go 1.18.10
+  and Go 1.26.7 download/verification, build, no-run test compilation,
+  count-one, count-ten, race count-one, and vet all pass. The upstream suite
+  contains only three examples without `Output` assertions, so the test runs
+  report no tests to run; this is suite evidence, not proof of correctness.
+  Both versions pass all 40 supported cgo-disabled production/test-compilation
+  rows across Darwin amd64/arm64, Linux amd64/arm64/386, Windows amd64/386,
+  FreeBSD amd64, Plan 9 amd64, and js/wasm under both SDKs. No cross binary was
+  executed. Passing pseudo-version rows cannot create a stable release.
+
+### Current and historical ownership
+
+- The current graph has one exact target edge:
+  `github.com/armon/go-metrics v0.3.10 -> selected target`. MVS selects
+  go-metrics v0.4.0. Both go-metrics v0.3.10 and v0.4.0 module files request
+  the target indirectly, while all 24 Go files in each archive contain zero
+  target imports. The current shortest route is `main -> direct
+  mvn-pom-mutator v0.2.3 -> Viper v1.10.1 -> go-metrics v0.3.10 -> target`.
+- Target and requester why are both negative. Project source imports neither;
+  neither appears in the 355 production or 429 complete-test load entries.
+  The target has zero repository import, production/test/module-backed load,
+  and runtime relevance; requester and target are not main roots. The
+  protected sum contains only the selected target module-file sum.
+- All 88 follow-history commits reduce to 84 distinct module checkpoints.
+  The target is absent in checkpoints 1-31, present in 53 checkpoints, always
+  selected at the exact pseudo-version, and never a root. There are 56 request
+  instances over two edges: go-metrics v0.3.10 requests it in 53 checkpoints
+  and v0.4.0 in three. MVS selects requester v0.3.10 in ten present checkpoints
+  and v0.4.0 in 43. Both requester versions are metadata-only and never roots.
+- Ten route epochs, including the absent epoch, are complete: 1-31 absent;
+  32-37 through co-pilot-cli/co-pilot and Viper v1.10.1/v0.3.10; 38 through
+  devdimensionlab/co-pilot and Viper v1.11.0/v0.3.10; 39-40 through Viper
+  v1.12.0/v0.3.10; 41 through Viper v1.13.0/v0.3.10; 42-44 through Viper
+  v1.14.0/v0.4.0; 45 through mvn-pom-mutator v0.2.1 and Viper
+  v1.10.1/v0.3.10; 46-49 through v0.2.3 with that route; 50 changes main to
+  `github.com/devdimensionlab/ply`; and 51-84 use current `plybuild` with the
+  same v0.2.3/Viper v1.10.1/v0.3.10 route. No current or historical route is a
+  genuine target source owner.
+
+### Projection, advisories, guards, and handoff
+
+- An exact selected get manufactures only a redundant indirect target root,
+  source sum, and main graph edge: raw state is 75/1,068 lines, 234 modules,
+  3,600 edges, unchanged 355/429/197/41 loads, zero target loads, and
+  `go.mod` / `go.sum` hashes
+  `6a4cd15a9e3d957a8c2eb7dfe87575b54a0ce9ad66c613816311686ceebf2760` /
+  `0aa32c3c70e695300c16c68aa090af6d1306fb7834e3ae2d2fefba6ccb1aaa2c`.
+  A latest-pseudo get changes exactly the target selection plus its root and
+  sums: 75/1,069 lines, 234 modules, 3,600 edges, unchanged load populations,
+  and hashes
+  `33dc9d34578d44bfa7244c39128f9a28c7fe4238132a46d347d388cb327faccd` /
+  `8213daa7acd29b695c0ea11dec1fc338988b1ed4b9582504ac6b0cf42026b381`.
+  Ordinary tidy removes either manufactured root, discards latest, retains
+  selected through requester metadata, and restores the exact common
+  52/948-line, 234-module/3,557-edge projection and protected hashes. No
+  projection is retained; there is no genuine supported tidy-stable owner.
+- Exact selected/latest OSV results are empty two-byte objects at SHA-256
+  `44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a`;
+  narrow GitHub exact-version and repository results are empty arrays. Pinned
+  govulncheck v1.8.0 reports 0/0/0/0 for each one-module closure. Absence does
+  not imply safety, exploitability, or qualification.
+- The protected vulnerability module index reproduces 518,501 bytes, 1,402
+  records, and SHA-256
+  `bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`;
+  the PUBLISHED CVE-2026-14362 CNA response reproduces 2,807 bytes at
+  `cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+  The unchanged project remains 30/22/20/20 with no target, TMC, Testify,
+  Objx, or client_golang trace. Separate exact queries retain client_golang
+  v1.4.0's GHSA-cg3q-j54f-5p7p / GO-2022-0322 / CVE-2022-21698 identity.
+- Work began clean at protected TMC decision HEAD
+  `a03ad37b488556123bfe3a1be49e8b2457f70f5a`, parent
+  `7f8bdd31a8c5f2d9b31bc7720799a9497ad38097`, tree
+  `fcf5f45ce419e67120a4c48c2427c86da4d82c9c`, with its exact five-file
+  changed set, UUID ancestry, 318-record reciprocal chain, sole NEXT prompt,
+  launcher mirror/check, and ordinary/ignored cleanliness exact. Official SDK
+  archive/binary hashes, 234/3,599/355/429/197/41/1,067 project state,
+  protected module/sum/graph/common-tidy identities, Go 1.18 floor, every
+  earlier qualification/exception, and 27/27 Q0-Q2 PASS at L2 remain exact.
+- Final exact-Go-1.26.7 unchanged-project module verification, build,
+  count-one tests, race count-one tests, and vet pass under `umask 022`.
+  Product source, `go.mod`, and `go.sum` remain byte-exact. All disposable
+  evidence stayed beneath the managed scratch root and is removed before
+  handoff.
+
+The evaluation grants no exception. No stable exists, and latest is an
+ownerless pseudo-version that tidy rejects. P7 stops for exactly one prepared,
+unlaunched reciprocal decision: retain selected under its own unqualified,
+non-transferable exception; authorize but do not run a later measurement-only
+**Viper Go-Metrics HTTP-Unix Ownership Study**; or stop P7 unresolved. No
+study, successor execution, other dependency group, or P8 work is included.

@@ -16343,6 +16343,71 @@ TMC gRPC WebSocket Proxy product decision (2026-09-24):
   absent project import, and module-file-only sum are starting observations
   only.
 
+Tv42 HTTP Unix evaluation (2026-09-24):
+
+- No dependency change is authorized or retained. Exact go-import metadata
+  resolves public, enabled, unarchived, non-fork MIT repository
+  `tv42/httpunix` on `master`. Exact-path proxy, Git tag, and GitHub Release
+  lists are empty; `/v2` and `/v3` do not exist. There is no stable,
+  prerelease, replacement, retraction, deprecation, alternate major, or
+  eligible alternate owner. Therefore no Go-1.18-compatible canonical stable
+  exists and no stable can qualify.
+- Selected pseudo-version
+  `v0.0.0-20150427012821-b75d8614f926` and proxy latest
+  `v0.0.0-20191220191345-2ba4b9c3382c` have exact unsigned commit/tree/parent/
+  time/ancestry, proxy/sumdb/archive-to-Git, module/license, package/source,
+  and archive-entry identities. Selected has synthesized path-only metadata;
+  latest declares Go 1.13. Each has a complete one-module standard-library
+  closure with no build-tag/cgo/generate/embed/unsafe/symlink/submodule/
+  executable/special boundary.
+- The API and ordinary behavior identities are closed. Both versions implement
+  a caller-configured HTTP RoundTripper over Unix sockets. Selected performs a
+  fresh connection with dial/write/header deadlines; latest clones the request
+  and delegates to a private pooling/context-aware `http.Transport`, rejects
+  TLS, disables compression, and changes timeout semantics. Caller ownership,
+  configuration-before-use, synchronization, nondeterministic network,
+  response-body, listener/server, Unix-socket/filesystem, and cleanup
+  boundaries remain exact.
+- Under exact Go 1.18.10 and Go 1.26.7, both pseudo-versions pass verification,
+  build, no-run test compilation, count-one/count-ten/race, vet, and 40/40
+  supported cgo-disabled cross production/test-compilation rows. A bounded
+  ordinary real-Unix-socket fixture passes all count-one/count-ten/race rows.
+  Upstream has three examples but no runnable assertion. Passing rows cannot
+  create a stable release, supported owner, or safety claim.
+- The current graph has one target edge from unselected go-metrics v0.3.10
+  while MVS selects v0.4.0. Both requester module files list target only
+  indirectly, while all 24 Go files in each version have zero target imports.
+  Current route is `main -> mvn-pom-mutator v0.2.3 -> Viper v1.10.1 ->
+  go-metrics v0.3.10 -> target`. Target/requester why, project imports and
+  loads, target runtime relevance, and roots are zero; the protected sum is
+  module-file-only.
+- All 88 follow-history commits reduce to 84 distinct module checkpoints.
+  Target is absent in 31, present in 53, always exact selected, and never a
+  root. Fifty-six request instances reduce to go-metrics v0.3.10/53 and
+  v0.4.0/3. MVS selects requester v0.3.10 in ten present checkpoints and
+  v0.4.0 in 43. Ten route epochs include the absent state and every historical
+  main/Viper/requester boundary. Every request is metadata-only, and neither
+  requester version is a root.
+- Selected exact-get manufactures only a redundant root/source sum/edge.
+  Latest get changes exactly target selection plus its root and sums. Both
+  preserve 355/429/197/41 loads with zero target entries; ordinary tidy removes
+  the roots, discards latest, retains selected through metadata, and restores
+  the exact common 52/948-line, 234-module/3,557-edge projection. No genuine
+  supported tidy-stable owner exists and no projection is retained.
+- Exact target OSV/GitHub and pinned govulncheck v1.8.0 focal results are empty;
+  absence does not imply safety. Corrected 518,501-byte/1,402-record index and
+  2,807-byte PUBLISHED CNA hashes, project 30/22/20/20 without target/TMC/
+  Testify/Objx/client_golang traces, and separate client_golang GHSA/GO/CVE
+  identity reproduce. Official SDK, 234/3,599/355/429/197/41/1,067 project,
+  module/sum/graph/common-tidy, Go-floor, earlier decision, and 27/27 Q0-Q2
+  guards remain exact. Final exact-Go-1.26.7 unchanged-project verify/build/
+  count-one/race/vet gates pass. No source/dependency/root/projection/
+  exception/study/other-group/P8 work ran.
+- The evaluation grants no exception. P7 stops for exactly one prepared,
+  unlaunched reciprocal decision: retain selected under its own unqualified,
+  non-transferable exception; authorize but do not run a later measurement-
+  only **Viper Go-Metrics HTTP-Unix Ownership Study**; or stop P7 unresolved.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,
