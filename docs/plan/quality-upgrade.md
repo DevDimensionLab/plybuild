@@ -5374,9 +5374,13 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at one prepared bounded evaluation of exact selected indirect
+Status: active at one prepared final P7 quality-exit checkpoint.
+Xordataexchange Crypt option 1 is final: exact selected, indirect, unloaded
 `github.com/xordataexchange/crypt
-v0.0.3-0.20170626215501-b2862e3d0a77`. Murmur3 option 1 is final: exact selected,
+v0.0.3-0.20170626215501-b2862e3d0a77` remains unchanged, unqualified, and
+without a genuine supported tidy-stable owner under its own non-transferable
+exception. Its elimination study is not authorized or run. P8 remains queued.
+Murmur3 option 1 is final: exact selected,
 indirect, unloaded pseudo-version
 `v0.0.0-20180118202830-f09979ecbc72` remains unchanged, unqualified, and
 without a genuine supported tidy-stable owner under its own non-transferable
@@ -16658,6 +16662,58 @@ are resolved or explicitly risk-accepted.
   unqualified non-transferable exception; authorize but do not run a later
   measurement-only **Mvn-Pom-Mutator Xordataexchange Crypt Elimination
   Study**; or stop unresolved. P8 remains queued.
+
+### P7 Xordataexchange Crypt Product Decision (2026-09-24)
+
+- Option 1 is final. Exact selected indirect, unloaded
+  `github.com/xordataexchange/crypt
+  v0.0.3-0.20170626215501-b2862e3d0a77` remains unchanged under its own
+  target-specific, unqualified, non-transferable exception. It is not
+  qualified, safe, or fixed. The sole current request is metadata-only and
+  the target remains unloaded and runtime-irrelevant. The **Mvn-Pom-Mutator
+  Xordataexchange Crypt Elimination Study** is neither authorized nor run.
+- Retention requires the exact current mvn-pom-mutator v0.2.3 edge, positive
+  requester why through `cmd -> pkg/pom`, 22 repository requester imports,
+  one loaded requester package, the requester 11-file zero-import boundary,
+  negative target why/import/load/runtime/root facts, and module-file-only sum.
+  All 88 follow-history commits, 84 graphable checkpoints, exact target
+  selection/no-root history, 87 requests with their 36/4/2/5/40 distribution,
+  13 route epochs, six main names, unselected Viper v1.4.0's sole real target
+  import, and every selected Viper/mutator zero-import boundary are expiry
+  guards. Any change requires a fresh owning evaluation and decision.
+- Every recorded owner/repository/release/source/API/behavior/closure/test/
+  cross/projection/advisory identity remains an exact non-transferable expiry
+  guard. Stable and selected closure failures remain unwaived; root-only
+  verification and empty or stopped advisory evidence imply neither
+  qualification nor safety.
+- Exact-selected get must remain limited to its redundant root/source sum/main
+  edge with zero target loads. Exact v0.0.2 get must continue removing the
+  direct requester, collapsing the graph, and breaking the product before
+  ordinary tidy restores mvn-pom-mutator, discards the stable root, reselects
+  the pseudo-version, and reproduces the protected common projection. No root
+  or projection is authorized. Protected SDK/project/common-tidy/advisory/Go-
+  floor/quality identities and every earlier selection or exception remain
+  separately exact; no exception transfers.
+- Guard-only revalidation reproduces clean evaluation HEAD
+  `648c37a2d558af32fc3d3c96321e35dc79e836f8`, parent
+  `16255b32f2cd085f5bcf4f208a35c49dd3179c9a`, tree
+  `902873eab76ac9b978cbc7fe0c94b70de7574813`, its exact five-file changed
+  set, branch/UUID ancestry, reciprocal archives/launcher, ordinary/ignored
+  cleanliness, both SDK identities, exact 234/3,599/355/429/197/41/1,067
+  project state, protected hashes/common tidy, complete target/requester
+  history, corrected advisory identities, every earlier guard, and 27/27
+  Q0-Q2 PASS at L2. Final exact-Go-1.26.7 verify/build/count-one/race/vet
+  gates pass under `umask 022`. Product source, `go.mod`, and
+  `go.sum` remain byte-exact. No study, dependency/source/root/projection
+  change, other group, or P8 work ran. The contained 48,810-entry
+  task root is audited with zero symlink, outside-target, or special entries
+  and removed.
+- Production launcher/archive, prompt-mirror, sole-NEXT, reciprocal-chain,
+  syntax, and exact documentation-only diff checks pass. The launcher contract
+  test passes controls 1-9 and reaches only the known control-10
+  hardcoded outgoing-heading incompatibility; no production/test change is
+  authorized. P7 remains active only with one prepared, unlaunched quality-
+  exit checkpoint; P8 remains queued until it passes.
 
 ### P8 - Domain Modernization
 
