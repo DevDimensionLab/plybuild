@@ -1,13 +1,13 @@
 # Agent Session: Decide Xiang90 Probing Product Direction
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-24T111124+0200-decide-xiang90-probing-product-direction`
 Created: `2026-09-24T11:11:24+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `1e8ec92f1306a44e65b0053619a350380ed3a3fcfc62f34ab7fc0b76d21d54cb`
 Previous: [2026-09-24T103516+0200-evaluate-xiang90-probing-dependency.md](2026-09-24T103516+0200-evaluate-xiang90-probing-dependency.md)
-Next: none
-Outcome: pending
+Next: [2026-09-24T113445+0200-evaluate-xordataexchange-crypt-dependency.md](2026-09-24T113445+0200-evaluate-xordataexchange-crypt-dependency.md)
+Outcome: Option 1 is final: retain exact selected indirect, unloaded `github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2` unchanged under its own unqualified, non-transferable exception; it is not qualified, safe, or fixed, no elimination study or implementation is authorized, and P7 advances only to one prepared, unlaunched Xordataexchange Crypt evaluation.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -158,3 +158,147 @@ revert, bypass cleanup, remove the worktree, transfer or reopen an exception,
 change a dependency or source file, combine another dependency group, or begin
 P8.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 1 is final. Exact selected indirect, unloaded
+`github.com/xiang90/probing
+v0.0.0-20190116061207-43a291ad63a2` remains unchanged under a Xiang90-
+Probing-specific, unqualified, non-transferable exception. This is a bounded
+product acceptance because every observed request is metadata-only and the
+target is unloaded and runtime-irrelevant. It is not release qualification, a
+safety claim, or a fix. The **Mvn-Pom-Mutator Xiang90 Probing Elimination
+Study** is neither authorized nor run.
+
+Retention requires the exact current edge from direct, selected, loaded
+`github.com/devdimensionlab/mvn-pom-mutator v0.2.3` to the exact selected
+target. The requester must remain positively reachable through `cmd ->
+pkg/pom`, while its 11 Go files retain zero target imports and its request
+remains module metadata only. Target why, repository imports, all 355
+production loads, all 429 complete-test loads, all 197 module-backed loads
+across 41 loaded modules, runtime relevance, and root status must remain
+negative. The protected sum must continue containing only the selected target
+module-file checksum.
+
+All 88 follow-history commits must continue reducing to 84 graphable module
+checkpoints that select the exact pseudo-version without a target root. Their
+123 request instances must remain Viper v1.4.0/v1.7.0/v1.7.1 at 36/1/35,
+co-pilot-cli mvn-pom-mutator v0.1.41 at four, and DevDimensionLab mvn-pom-
+mutator v0.2.0/v0.2.1/v0.2.3 at 2/5/40. Viper v1.4.0 must remain never
+selected or rooted, v1.7.0 selected/rooted once, and v1.7.1 selected/rooted in
+29 of its 35 request checkpoints, with the other six requests unselected. The
+four mutator versions must remain selected and rooted whenever present. All 13
+route epochs, six historical main-module names, exact requester-root facts,
+and all 68 requester Go files' zero-target-import boundary are expiry guards.
+Any request, route, import, load, runtime, root, support, checkpoint, or
+requester-source change requires a fresh owning evaluation and explicit
+product decision.
+
+The exact go-import owner; public/enabled/unarchived/non-fork repository ID
+38800748; MIT license; `master` default branch; empty canonical stable and
+prerelease lines; absent `/v2` and `/v3`; and the two lightweight tags and
+non-draft/non-prerelease Releases `0.0.1` and `0.0.2` remain non-transferable
+expiry guards. Both release names must continue omitting the mandatory `v`
+prefix. The selected `0.0.2` commit
+`43a291ad63a214a207fefbf03c7d9d78b703162b` and tree
+`3d0777ab1f702df9663a873b14681efa56c5bcc4`, latest commit
+`a49e3df8f510ee8b42e68345ca4636dbb161bd0a` and tree
+`ed332239f7cfe8b944cfda2bc38d998c7f8efba0`, their parent/signature/time and
+selected-to-latest ancestry, path-only synthesized module files, absent Go
+directives/requirements/replacements/retractions/deprecations, and one-module
+standard-library closures remain exact.
+
+The selected/latest MIT license hash
+`bf9960acb1d86d81c0cb2724f7713f525e43fd8158b95c0898ca0d1f45afea8e`,
+source/module sums, proxy zip hashes
+`437bdc666239fda4581b592b068001f08269c68c70699a721bff9334412d4181`
+and
+`ee5b87f49c72ea40bddc94ed228874ba9fcd3a3745ad613011131147c773b3ff`,
+seven byte-identical regular archive entries, and absent symlink/submodule/
+generated/embed/build-tag/cgo/unsafe boundaries remain expiry conditions.
+The selected and latest exported API hash
+`f04f5215a5c4037173b273b51e480945affb46935c9cae81c12b184b7961dc06`
+must remain exact; latest's only recorded change must remain the private first-
+sample SRTT initialization.
+
+The recorded public API and ordinary HTTP/JSON behavior, caller-owned
+transport and endpoint slice, live status aliasing, separate mutex boundaries,
+nondeterministic network/timer/clock/goroutine observations, response-body
+closing, error and endpoint-rotation behavior, reset semantics, stop-channel/
+ticker cleanup, positive-interval/non-empty-slice preconditions, and lack of
+in-flight request cancellation are exact expiry guards. Under both official
+exact SDKs, both pseudo-versions must retain their passing verification,
+build, no-run test compilation, complete count-one/count-ten/race, vet, and
+40/40 cgo-disabled production/test-compilation rows. The bounded three-test
+upstream suite remains suite evidence only, not proof of correctness. Passing
+rows cannot create a stable release or establish safety.
+
+The exact-selected get must continue manufacturing only a redundant indirect
+root, source sum, and main edge at 75/1,068 lines, 234 modules, and 3,600
+edges, with `go.mod` / `go.sum` hashes
+`1902fa815021f1b90875ed23c23407de1c7bc3f7d4a4a24036ff0b1c978a47be` /
+`49df1511e7d21db8143ec342e62d545d8a2f619464bfc20cbd3556a02edd1131`.
+Latest get must continue changing only the target selection plus the same
+manufactured root and sums at 75/1,069 lines, 234 modules, and 3,600 edges,
+with hashes
+`4c3a524c49e8fa786437705fd0d3fe3aa9298277481b6ea45ced5c2d9fba0175` /
+`02ea0b08d2eb290adb1686fcca115cc33b6db1a6d0f979ee8f25dd48d37d7ce8`.
+Both must preserve the protected loads with zero target entries. Ordinary tidy
+must remove either root, discard latest, retain selected only through
+requester metadata, and restore the exact 52/948-line, 234-module/3,557-edge
+common projection and its protected hashes. The 432-line normal tidy diff hash
+`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`
+remains exact. No projection or target root is authorized.
+
+Selected/latest exact-version OSV and narrow GitHub/repository responses and
+pinned govulncheck v1.8.0 focal 0/0/0/0 observations remain advisory expiry
+evidence only; their absence implies neither safety nor qualification. The
+protected 518,501-byte/1,402-record Go index hash
+`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`,
+2,807-byte PUBLISHED CNA hash
+`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`,
+project 30/22/20/20 advisory populations without a target or named protected
+trace, and client_golang GHSA-cg3q-j54f-5p7p / GO-2022-0322 /
+CVE-2022-21698 identity remain separate and exact. Any advisory-input change
+requires a fresh owning decision.
+
+Exact selected Ugorji Go, HTTP Unix, TMC, Testify, Objx, and every earlier
+qualified or excepted result remain closed only under their own guards. No
+earlier exception transfers to Xiang90 Probing, and this exception cannot
+transfer elsewhere. Rejected ownership studies, rejected candidates, and
+completed modules remain closed.
+
+Guard-only revalidation reproduced clean continuity at evaluation HEAD
+`82363f10c0fb6eee536a19d9e77b930785f9acb0`, parent
+`abaac120695c85a619153d961865d97668156931`, tree
+`b49f025d421be86bb93e370c99d8c22b1378de3e`, and its exact five-file changed
+set; branch and Google UUID ancestry; reciprocal 323-archive chain and sole
+NEXT launcher/archive mirror; and ordinary/ignored cleanliness. Official Go
+1.18.10 and Go 1.26.7 archive/binary identities, the protected
+234/3,599/355/429/197/41/1,067 project state and hashes, Go 1.18 floor, common
+tidy projection, current and complete historical request/source facts,
+repository/release/proxy state, narrow advisory/index/CNA identities, every
+earlier guard, and accepted 27/27 Q0-Q2 PASS at L2 remain exact. Completed API,
+behavior, closure, upstream-test, cross, projection, and govulncheck work was
+not repeated.
+
+Final exact-Go-1.26.7 unchanged-project module verification, build, count-one
+tests, race count-one tests, and vet pass under `umask 022` with every task
+cache and temporary root contained beneath the managed session scratch.
+Product source, `go.mod`, and `go.sum` remain byte-exact. No dependency,
+source, root, projection, study, rejected candidate, other dependency group,
+or P8 work ran. The contained 76,000-entry task root was audited
+with zero symlink or special entries and removed before handoff; only the
+launcher's pre-existing cache state remains.
+
+Production launcher `--check`, byte-exact prompt mirror, sole-NEXT,
+reciprocal-chain, shell-syntax, and diff checks pass. `make test-agent-start`
+passes controls 1-9, then its known control-10 fixture rejects the required
+evaluation successor because it hardcodes the outgoing `# Authorized Roadmap`
+heading. No production or test change is authorized to broaden that fixture;
+the authoritative launcher/archive handoff remains valid.
+
+One bounded evaluation of the next unevaluated alphabetical P7 module, exact
+selected indirect `github.com/xordataexchange/crypt
+v0.0.3-0.20170626215501-b2862e3d0a77`, is prepared as the sole reciprocal
+successor. It is not executed by this decision. P8 remains queued.

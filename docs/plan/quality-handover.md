@@ -1,42 +1,50 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T11:11:24+02:00
+Generated: 2026-09-24T11:34:45+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P7 Checkpoint
 
-- The bounded `github.com/xiang90/probing
-  v0.0.0-20190116061207-43a291ad63a2` evaluation is complete with no project
-  change and no evaluation-time exception. The proxy canonical stable and
-  prerelease lines are empty: upstream tags/Releases `0.0.1` and `0.0.2` omit
-  the mandatory `v` prefix and resolve only as pseudo-versions. Selected is the
-  `0.0.2` commit; proxy latest is
-  `v0.0.0-20221125231312-a49e3df8f510`. No canonical stable exists.
-- Selected and latest each have a one-module standard-library closure and pass
-  both exact SDKs' verification, build, complete count-one/count-ten/race, vet,
-  and 40/40 supported cgo-disabled production/test-compilation rows. Their
-  seven regular proxy entries are byte-identical to Git. Passing rows do not
-  create a stable release or establish ownership.
-- The current mvn-pom-mutator request and all 123 incoming requests across 84
-  historical checkpoints are metadata-only; all 68 requester Go files have
-  zero target imports. Target why/import/load/runtime/root facts are negative.
-  Latest exact-get changes only the target selection plus a manufactured root,
-  but tidy rejects it and restores selected through requester metadata in the
-  exact common projection. No changed selection has a genuine supported
-  tidy-stable owner.
-- Exact target/advisory, protected project/hash/count/common-tidy, SDK,
-  Go-floor, UUID, every earlier qualification/exception, and 27/27 L2 guards
-  remain exact. Final exact-Go-1.26.7 unchanged-project verify/build/
-  count-one/race/vet gates pass. No source, dependency, root, projection,
-  study, other group, or P8 work is retained.
-- P7 is paused at sole NEXT decision
-  `2026-09-24T111124+0200-decide-xiang90-probing-product-direction`: choose
-  target-specific retention, authorize only a later measurement-only
-  elimination study, or stop unresolved. Do not run the study, transfer an
-  exception, evaluate another dependency, or begin P8.
-- The 303,296-entry contained task tree has zero symlinks or special entries
+- Xiang90 Probing option 1 is final. Exact selected indirect, unloaded
+  `github.com/xiang90/probing
+  v0.0.0-20190116061207-43a291ad63a2` remains unchanged under its own target-
+  specific, unqualified, non-transferable exception. It is not qualified,
+  safe, or fixed. The **Mvn-Pom-Mutator Xiang90 Probing Elimination Study** is
+  neither authorized nor run.
+- Retention requires the exact current mvn-pom-mutator v0.2.3 edge and all 123
+  historical requests across 84 graphable checkpoints to remain metadata-
+  only; all 68 requester Go files remain free of target imports. The negative
+  target why/import/load/runtime/root facts and module-file-only sum remain
+  exact. The 36/1/35/4/2/5/40 requester-version distribution, 13 route epochs,
+  six main-module names, and requester-root facts are expiry guards.
+- The public repository, empty canonical release lines, selected/latest
+  pseudo-version source, API/behavior/closure/test/cross, projection, and
+  advisory identities remain exact expiry conditions. Selected/latest gets
+  manufacture only their recorded roots/selection/sums/edges with zero target
+  loads; tidy removes the roots, discards latest, and restores selected through
+  requester metadata in the exact common projection. No root or projection is
+  authorized.
+- Guard-only revalidation reproduces evaluation HEAD
+  `82363f10c0fb6eee536a19d9e77b930785f9acb0`, parent
+  `abaac120695c85a619153d961865d97668156931`, tree
+  `b49f025d421be86bb93e370c99d8c22b1378de3e`, its five-file set, branch/UUID
+  ancestry, reciprocal archive/launcher state, ordinary/ignored cleanliness,
+  official SDKs, exact 234/3,599/355/429/197/41/1,067 project state, protected
+  module/graph/common-tidy and advisory identities, every earlier guard, and
+  accepted 27/27 Q0-Q2 PASS at L2. Final exact-Go-1.26.7 unchanged-project
+  verify/build/count-one/race/vet gates pass. Product source and dependency
+  metadata remain byte-exact; no study, projection, other group, or P8 work
+  ran.
+- P7 remains active at sole NEXT archive
+  `2026-09-24T113445+0200-evaluate-xordataexchange-crypt-dependency`, a fresh
+  bounded evaluation of exact selected indirect
+  `github.com/xordataexchange/crypt
+  v0.0.3-0.20170626215501-b2862e3d0a77`. It is prepared but not executed. It
+  may not reopen Xiang90 Probing or another completed module, run a rejected
+  study, transfer an exception, combine another group, or begin P8.
+- The contained 76,000-entry task root has zero symlinks or special entries
   and is removed. Production launcher `--check`, prompt mirror, sole-NEXT,
   reciprocal-chain, syntax, and diff checks pass. `make test-agent-start`
   passes controls 1-9 and stops at the known control-10 hardcoded outgoing-
@@ -7824,12 +7832,58 @@ non-transferable exception; authorize but do not run the later measurement-
 only **Mvn-Pom-Mutator Xiang90 Probing Elimination Study**; or stop P7
 unresolved.
 
+## Xiang90 Probing Product Decision
+
+Option 1 is final. Exact selected indirect, unloaded
+`github.com/xiang90/probing
+v0.0.0-20190116061207-43a291ad63a2` remains unchanged under its own target-
+specific, unqualified, non-transferable exception. Every observed request is
+metadata-only and the target remains unloaded and runtime-irrelevant, but it
+is not qualified, safe, or fixed. The **Mvn-Pom-Mutator Xiang90 Probing
+Elimination Study** is neither authorized nor run.
+
+Retention requires the exact current mvn-pom-mutator v0.2.3 edge, positive
+requester why through `cmd -> pkg/pom`, requester 11-file zero-import boundary,
+negative target why/import/load/runtime/root facts, and module-file-only sum.
+All 88 follow-history commits, 84 graphable checkpoints, 123 direct requests
+with their exact requester/version distribution, 13 route epochs, six
+historical main-module names, requester-root history, and all 68 requester
+files' zero-import boundary remain non-transferable expiry guards. Any change
+requires a fresh owning evaluation and product decision.
+
+Every recorded owner/repository/release/source/API/behavior/closure/test/cross/
+projection/advisory identity remains exact. Passing pseudo-version rows and
+empty advisory evidence imply neither qualification nor safety. Selected and
+latest exact-get effects must remain bounded to their recorded manufactured
+roots/selection/sums/edges with zero loads, and ordinary tidy must remove the
+roots, discard latest, and restore selected only through requester metadata in
+the protected common projection. No root or projection is authorized, and no
+earlier exception transfers.
+
+Guard-only revalidation reproduces clean evaluation HEAD
+`82363f10c0fb6eee536a19d9e77b930785f9acb0`, parent
+`abaac120695c85a619153d961865d97668156931`, tree
+`b49f025d421be86bb93e370c99d8c22b1378de3e`, its exact five-file changed set,
+branch/UUID ancestry, reciprocal archives and launcher, ordinary/ignored
+cleanliness, both exact SDK identities, exact 234/3,599/355/429/197/41/1,067
+project state, protected hashes/common tidy projection, complete target/
+requester history and advisory facts, every earlier guard, and 27/27 Q0-Q2
+PASS at L2. Final exact-Go-1.26.7 verify/build/count-one/race/vet gates pass
+under `umask 022`. Product source and module metadata remain byte-exact. No
+study, dependency/source/root/projection change, other dependency group, or P8
+work ran.
+
+The contained 76,000-entry task root is audited with zero symlink or special
+entries and removed. Production launcher `--check`, prompt mirror, sole-NEXT,
+reciprocal-chain, syntax, and diff checks pass. `make test-agent-start` passes
+controls 1-9 and then stops at the known control-10 hardcoded outgoing-heading
+incompatibility; no production/test change is authorized.
+
 ## Next Bounded Objective
 
-Run only [the prepared Xiang90 Probing product decision](agent-sessions/2026-09-24T111124+0200-decide-xiang90-probing-product-direction.md).
-Choose exactly one numbered direction for exact selected indirect, unloaded
-`github.com/xiang90/probing
-v0.0.0-20190116061207-43a291ad63a2`. Preserve Ugorji Go and every earlier
-result under separate guards. Do not run an ownership study, change source or
-dependency metadata, evaluate another group, launch a successor, transfer an
-exception, relax Go 1.18, or begin P8.
+Run only [the prepared Xordataexchange Crypt evaluation](agent-sessions/2026-09-24T113445+0200-evaluate-xordataexchange-crypt-dependency.md).
+Evaluate exact selected indirect `github.com/xordataexchange/crypt
+v0.0.3-0.20170626215501-b2862e3d0a77` under the complete bounded contract.
+Preserve Xiang90 Probing and every earlier result under separate exact guards.
+Do not run a rejected ownership study, change another dependency group, launch
+a successor, transfer an exception, relax Go 1.18, or begin P8.

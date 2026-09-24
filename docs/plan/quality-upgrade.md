@@ -5374,8 +5374,9 @@ Exit: Q2.5-Q2.10 have executable evidence for all four core flows and a clean
 
 ### P7 - Adopt A Maintained Go And Dependency Baseline
 
-Status: active at one prepared bounded evaluation of graph-selected exact
-`github.com/stretchr/objx v0.5.2`. Murmur3 option 1 is final: exact selected,
+Status: active at one prepared bounded evaluation of exact selected indirect
+`github.com/xordataexchange/crypt
+v0.0.3-0.20170626215501-b2862e3d0a77`. Murmur3 option 1 is final: exact selected,
 indirect, unloaded pseudo-version
 `v0.0.0-20180118202830-f09979ecbc72` remains unchanged, unqualified, and
 without a genuine supported tidy-stable owner under its own non-transferable
@@ -16556,6 +16557,56 @@ are resolved or explicitly risk-accepted.
   project, SDK, advisory, Go-floor, UUID, every earlier-decision, and 27/27 L2
   guards remain exact; final unchanged-project Go 1.26.7 gates pass. One
   reciprocal product-direction decision is prepared; P8 remains queued.
+
+### P7 Xiang90 Probing Product Decision (2026-09-24)
+
+- Option 1 is final. Exact selected indirect, unloaded
+  `github.com/xiang90/probing
+  v0.0.0-20190116061207-43a291ad63a2` remains unchanged under its own target-
+  specific, unqualified, non-transferable exception. It is not qualified,
+  safe, or fixed. Every observed request is metadata-only, and the target is
+  unloaded and runtime-irrelevant. The **Mvn-Pom-Mutator Xiang90 Probing
+  Elimination Study** is neither authorized nor run.
+- Retention requires the exact current mvn-pom-mutator v0.2.3 edge, positive
+  requester why through `cmd -> pkg/pom`, requester 11-file zero-import
+  boundary, negative target why/import/load/runtime/root facts, and module-
+  file-only sum. All 88 follow-history commits, 84 graphable checkpoints, 123
+  requests with exact 36/1/35/4/2/5/40 requester-version distribution, 13
+  route epochs, six historical main-module names, requester-root history, and
+  all 68 requester files' zero-import boundary are expiry guards. Any change
+  requires a fresh owning evaluation and decision.
+- Every recorded owner/repository/release/source/API/behavior/closure/test/
+  cross/projection/advisory identity remains an exact non-transferable expiry
+  guard. Passing rows, physical selection, and empty advisory evidence do not
+  qualify either pseudo-version or imply safety. Latest must remain limited to
+  its private first-sample SRTT initialization change.
+- Selected/latest gets must continue manufacturing only their recorded roots,
+  target selection, sums, and edges with zero target loads. Ordinary tidy must
+  remove the roots, discard latest, retain selected only through requester
+  metadata, and restore the protected common projection. No target root or
+  projection is authorized. Protected SDK/project/common-tidy/advisory/Go-
+  floor/quality identities and every earlier selection or exception remain
+  separately exact; no exception transfers.
+- Guard-only revalidation reproduces clean evaluation HEAD
+  `82363f10c0fb6eee536a19d9e77b930785f9acb0`, parent
+  `abaac120695c85a619153d961865d97668156931`, tree
+  `b49f025d421be86bb93e370c99d8c22b1378de3e`, its exact five-file changed
+  set, UUID ancestry, reciprocal archives/launcher, ordinary/ignored
+  cleanliness, official SDKs, exact 234/3,599/355/429/197/41/1,067 project
+  state, protected hashes and tidy projection, complete request/source
+  history, repository/release/proxy and advisory identities, and every earlier
+  guard. Final exact-Go-1.26.7 verify/build/count-one/race/vet gates pass.
+  Product source, `go.mod`, and `go.sum` remain byte-exact. No study,
+  dependency/source/root/projection change, other group, or P8 work ran. The
+  contained 76,000-entry task root has zero symlink or special entries and is
+  removed. Production launcher/archive, prompt-mirror, sole-NEXT, reciprocal-
+  chain, syntax, and diff checks pass. `make test-agent-start` passes controls
+  1-9 and reaches only its known control-10 outgoing-heading incompatibility;
+  no production/test change is authorized.
+- P7 remains active only with one prepared, unlaunched bounded evaluation of
+  the next unevaluated alphabetical module, exact selected indirect
+  `github.com/xordataexchange/crypt
+  v0.0.3-0.20170626215501-b2862e3d0a77`. P8 remains queued.
 
 ### P8 - Domain Modernization
 
