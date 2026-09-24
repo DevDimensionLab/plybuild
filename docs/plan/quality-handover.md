@@ -1,55 +1,49 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T13:15:21+02:00
+Generated: 2026-09-24T14:33:15+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P8 Checkpoint
 
-- The first P8 planning checkpoint began clean at exact five-file P7 handoff
-  HEAD `7179b28fa1b179fd66e0c6252f97aa7bbf81be41`, parent
-  `59d026a0db3d5952c81b8168ed2c9fabf47b0104`, and tree
-  `385df5e78d0a9750315c1f63e668b1f6394fb444`. Branch, Google UUID ancestry,
-  the reciprocal 327-archive chain, sole NEXT state, launcher mirror/check,
-  ordinary/ignored cleanliness, exact Go 1.26.7, protected module/sum hashes,
-  and unchanged product source reproduced. No P8 implementation or dependency
-  change ran.
-- `OpenGitCloudConfig` returns the public concrete `GitCloudConfig` rooted at
-  `<profile>/cloud-config`. `Context.LoadProfile` constructs the root value;
-  `InitProjectFromDirectory` constructs project values from active or selected
-  profiles. The public 15-method `CloudConfig` interface and concrete facade
-  feed command, context, Maven, template, tips, and resource consumers.
-- `Refresh` parses local config, derives the cache directory, probes exactly
-  `<target>/.git`, then pulls an existing cache or clones configured URL before
-  target for a missing cache. Git errors retain `shell.Output.FormatError`.
-  Reads consume only the local cache. Caller refresh policy is intentionally
-  mixed and preserved: several commands refresh only under `ForceCloudSync`,
-  build defaults that flag true, example flows refresh unconditionally, and
-  other template flows read cache without refreshing themselves.
-- Focused evidence covers clone/pull selection and errors, current and legacy
-  templates, service/default-environment lookup, examples, Git hooks, context
-  construction, downstream command use, acceptance cached defaults/deprecated
-  data, and the ten-mutation config-cloud harness. The focused tests pass under
-  managed scratch and `umask 022`. The initial inherited restrictive-umask
-  context run observed `0600`; its canonical rerun passed `0644`. All 62
-  launcher controls pass; the 3,480-entry task subtree had zero symlink or
-  special entries and was removed after containment verification.
-- Recorded gaps remain: no direct command test owns force-sync gating,
-  refresh-error continuation, or unconditional example refresh; no focused
-  fixture owns global config, deprecated, or project-default reads; the exact
-  cache probe is not independently injected; real cloud/network behavior is
-  unverified. Direct `ply-config` dependency/API work was prohibited and not
-  inspected.
-- Exactly one smallest slice is owned: add a private zero-value-safe
-  cache-presence dependency to the existing refresh dependency bundle,
-  delegate production to unchanged `file.Exists` for exact `<target>/.git`,
-  add focused characterization, and update only that branch's mutation
-  expression. Owned product/test/harness files are `pkg/config/cloud.go`,
-  `pkg/config/cloud_refresh_test.go`, and `scripts/mutate-config-cloud`. Public
-  API, callers, readers, fixtures, Go floor, and dependencies remain unchanged.
-  Rollback is the single implementation commit; every second cloud move,
-  direct `ply-config` integration, Spring, and packaging remain unauthorized.
+- The first bounded P8 implementation slice is complete at focused commit
+  `57f9d5674157d238a2f93462b65161a17e3b5498`, parent
+  `d385616b3191be9a8a2a0b42ced411c3aacd9f11`, tree
+  `bbd931ef16a334079473e1cd35aa387ed6b61ef9`. It changes exactly
+  `pkg/config/cloud.go`, `pkg/config/cloud_refresh_test.go`, and
+  `scripts/mutate-config-cloud`; fixtures and dependency metadata are
+  unchanged.
+- The existing private refresh dependency bundle now contains one private
+  cache-presence probe. Production delegates exactly once to `file.Exists` for
+  `file.Path("%s/.git", target)`, and the zero-value bundle safely reports a
+  missing cache. Local configuration still parses first; present selects one
+  pull, absent selects one clone with URL before target. Logs, Git formatting,
+  exported surfaces, constructors, callers, and cache-backed reads are
+  unchanged.
+- Focused characterization owns the exact path and one-call rule for both
+  branches, production dependency selection and real present/missing behavior,
+  safe zero-value behavior, and local-config error ordering. Existing Git call,
+  clone-order, and formatted-error assertions remain. Only the matching branch
+  expression changed in the mutation harness; all ten mutation IDs and
+  meanings remain intact and both direct and meta harnesses kill 10/10.
+- Exact Go 1.26.7 verify, build, count-one tests, race count-one tests, vet,
+  pinned API/CLI compatibility and meta-tests, `make preflight`, `make test`,
+  install, 62 launcher checks, and empty-HOME count-two tests pass under the
+  recorded managed environment. All 15 audit meta-controls pass; the canonical
+  audit returns its documented findings exit 1 with no authoritative automated
+  Q0-Q2 FAIL or Q0-Q2 ratchet regression. The accepted manual Q0-Q2 contracts
+  remain supported, including all eight mutation meta-suites at 10/10.
+- The protected project remains Go 1.18 with 234 modules, 3,599 graph edges,
+  355 production entries, 429 complete-test entries, 197 module-backed entries
+  across 41 loaded modules, and 1,067 sum lines. The `go.mod`, `go.sum`, and
+  graph hashes remain `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
+- Recorded caller-policy, reader-fixture, and real-network gaps remain guards.
+  The reciprocal successor is planning-only and may select at most one next
+  repository-owned cloud slice. Direct `ply-config` evaluation or integration,
+  a second cloud move, Spring, and packaging remain unauthorized.
 
 ## Repository And Continuity
 
@@ -7944,9 +7938,9 @@ language are retained in the answered exit archive and roadmap.
 
 ## Next Bounded Objective
 
-Run only [the prepared private cache-probe implementation slice](agent-sessions/2026-09-24T131521+0200-implement-cloud-cache-probe-seam.md).
-Inject the exact `<target>/.git` presence decision into the existing private
-refresh dependency bundle, preserve all behavior and public surfaces, update
-its focused tests and one mutation expression, and run the specified gates.
-Do not integrate or select `ply-config`, change callers/readers/fixtures or
-dependency metadata, or begin another cloud, Spring, or packaging slice.
+Run only [the prepared next P8 cloud planning checkpoint](agent-sessions/2026-09-24T143315+0200-plan-next-p8-cloud-modernization-move.md).
+Confirm the completed cache-probe seam, map only the remaining cloud boundary,
+compare the smallest repository-owned candidates, and select exactly one next
+implementation slice or stop unresolved. Do not implement it, inspect or
+select `ply-config`, change source or dependency metadata, combine cloud moves,
+or begin Spring or packaging work.

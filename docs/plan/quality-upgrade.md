@@ -16755,25 +16755,32 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active at one prepared cache-probe implementation slice; no P8
-implementation has begun.
+Status: active after the first bounded cloud implementation slice; one fresh
+planning-only successor is prepared.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
-- The first planning checkpoint mapped the public 15-method `CloudConfig`
-  facade, its two `GitCloudConfig` construction sites, local cached readers,
-  command refresh policies, focused current/legacy fixtures, and the
-  ten-mutation config-cloud harness. Fresh focused config, context, and command
-  tests pass under their recorded environment; real cloud behavior and several
-  reader/caller policies remain explicitly uncharacterized.
-- Exactly one first implementation slice is selected: inject only the private
-  `<target>/.git` cache-presence probe within the existing refresh dependency
-  bundle, delegating production to unchanged `file.Exists` behavior. The slice
-  owns only `pkg/config/cloud.go`, `pkg/config/cloud_refresh_test.go`, and the
-  corresponding expression in `scripts/mutate-config-cloud`; it changes no
-  public API, caller, cached read, fixture, or dependency metadata. Direct
-  `ply-config` integration and every second cloud slice require a later owning
-  checkpoint.
+- Focused commit `57f9d5674157d238a2f93462b65161a17e3b5498` completes the
+  first selected slice in exactly `pkg/config/cloud.go`,
+  `pkg/config/cloud_refresh_test.go`, and `scripts/mutate-config-cloud`. The
+  refresh dependency bundle now owns one private zero-value-safe cache probe;
+  production delegates exactly once to unchanged `file.Exists` behavior for
+  `<target>/.git`.
+- Characterization fixes the one-call path, present-to-pull and absent-to-clone
+  selection, production adapter, local-config-first error ordering, Git
+  argument and formatting contracts, and safe zero-value behavior. Public API,
+  construction and command callers, cached reads, fixtures, Go 1.18 floor,
+  `go.mod`, and `go.sum` are unchanged. The mutation branch expression alone
+  follows the seam; all ten mutations retain their IDs and meanings and kill
+  10/10 in direct and meta runs.
+- Exact Go 1.26.7 full gates, pinned API/CLI compatibility, all 15 audit
+  meta-controls, the accepted 27/27 Q0-Q2 L2 contracts, empty-HOME tests, and
+  all 62 launcher checks pass. Protected 234/3,599/355/429/197/41/1,067 counts
+  and `go.mod` / `go.sum` / graph hashes reproduce without regression.
+- A fresh planning-only checkpoint must re-characterize the resulting boundary
+  and select at most one smallest repository-owned next slice or stop. Direct
+  `ply-config` inspection, selection, or integration and every second cloud
+  move require later explicit ownership.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
