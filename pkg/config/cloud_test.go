@@ -117,6 +117,60 @@ type recordingDeprecatedDirectory struct {
 	fileNames []string
 }
 
+type globalConfigLoadResult struct {
+	config GlobalCloudConfig
+	err    error
+}
+
+type recordingGlobalConfigLoader struct {
+	directories []Directory
+	results     []globalConfigLoadResult
+}
+
+func (recording *recordingGlobalConfigLoader) Load(directory Directory) (GlobalCloudConfig, error) {
+	recording.directories = append(recording.directories, directory)
+	index := len(recording.directories) - 1
+	if index >= len(recording.results) {
+		return GlobalCloudConfig{}, errors.New("recorded GlobalCloudConfig result population is incomplete")
+	}
+	result := recording.results[index]
+	return result.config, result.err
+}
+
+func (recording *recordingGlobalConfigLoader) dependencies() globalConfigDependencies {
+	return globalConfigDependencies{Loader: recording}
+}
+
+func (recording *recordingGlobalConfigLoader) assertedDirectories() ([]Directory, error) {
+	if len(recording.directories) == 0 {
+		return nil, errors.New("recorded GlobalCloudConfig loader directory population is empty")
+	}
+	return recording.directories, nil
+}
+
+type recordingGlobalConfigDirectory struct {
+	dir       string
+	dirCalls  []string
+	fileNames []string
+}
+
+func (directory *recordingGlobalConfigDirectory) Dir() string {
+	directory.dirCalls = append(directory.dirCalls, directory.dir)
+	return directory.dir
+}
+
+func (directory *recordingGlobalConfigDirectory) FilePath(fileName string) (string, error) {
+	directory.fileNames = append(directory.fileNames, fileName)
+	return "", errors.New("GlobalCloudConfig must not use Directory.FilePath")
+}
+
+func (directory *recordingGlobalConfigDirectory) assertedDirCalls() ([]string, error) {
+	if len(directory.dirCalls) == 0 {
+		return nil, errors.New("recorded GlobalCloudConfig Dir call population is empty")
+	}
+	return directory.dirCalls, nil
+}
+
 func (directory *recordingDeprecatedDirectory) Dir() string {
 	return directory.dir
 }
@@ -570,6 +624,210 @@ func TestRecordedDeprecatedRejectsEmptyPopulations(t *testing.T) {
 	}
 	if _, err := (&recordingDeprecatedDirectory{}).assertedFileNames(); err == nil {
 		t.Fatal("empty recorded Deprecated filename population passed")
+	}
+}
+
+func TestGlobalCloudConfigSelectsFileLoaderForProductionAndUsesDirectEnvironmentExpandedYAMLPath(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "global-config.yaml")
+	t.Setenv("PLY_TEST_GLOBAL_CONFIG_DOCUMENT_KEY", "cloudConfigSource")
+	t.Setenv("PLY_TEST_GLOBAL_CONFIG_ROOT_KEY", "rootUrl")
+	t.Setenv("PLY_TEST_GLOBAL_CONFIG_ROOT", "https://expanded.example/cloud")
+	t.Setenv("PLY_TEST_GLOBAL_CONFIG_RELATIVE", "/expanded/raw")
+	writeGlobalConfigFixture(t, path, `${PLY_TEST_GLOBAL_CONFIG_DOCUMENT_KEY}:
+  ${PLY_TEST_GLOBAL_CONFIG_ROOT_KEY}: "${PLY_TEST_GLOBAL_CONFIG_ROOT}"
+  relativFileUrl: "${PLY_TEST_GLOBAL_CONFIG_RELATIVE}"
+`)
+	dependencies := systemGlobalConfigDependencies()
+
+	if dependencies.Loader == nil {
+		t.Fatal("GlobalCloudConfig selected an incomplete loader dependency")
+	}
+	if reflect.TypeOf(dependencies.Loader) != reflect.TypeOf(fileGlobalConfigLoader{}) {
+		t.Fatalf("GlobalCloudConfig loader dependency is %T, want %T", dependencies.Loader, fileGlobalConfigLoader{})
+	}
+
+	directory := &recordingGlobalConfigDirectory{dir: root}
+	config, err := dependencies.Load(directory)
+	if err != nil {
+		t.Fatalf("production GlobalCloudConfig loader returned an error: %v", err)
+	}
+	dirCalls, populationErr := directory.assertedDirCalls()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(dirCalls, []string{root}) {
+		t.Fatalf("production GlobalCloudConfig loader requested directories %#v, want exact root %q once", dirCalls, root)
+	}
+	if len(directory.fileNames) != 0 {
+		t.Fatalf("production GlobalCloudConfig loader called FilePath with %#v, want direct Dir path composition", directory.fileNames)
+	}
+	want := GlobalCloudConfig{CloudConfigSource: CloudConfigSource{
+		RootUrl:        "https://expanded.example/cloud",
+		RelativFileUrl: "/expanded/raw",
+	}}
+	if !reflect.DeepEqual(config, want) {
+		t.Fatalf("production GlobalCloudConfig loader decoded %#v, want exact expanded value %#v", config, want)
+	}
+
+	publicConfig, err := (GitCloudConfig{Impl: DirConfig{Path: root}}).GlobalCloudConfig()
+	if err != nil || !reflect.DeepEqual(publicConfig, want) {
+		t.Fatalf("public GlobalCloudConfig production wrapper returned (%#v, %v), want (%#v, nil)", publicConfig, err, want)
+	}
+}
+
+func TestGlobalCloudConfigLoadsExactlyOncePerIndependentInvocationWithCompleteDirectory(t *testing.T) {
+	loadError := errors.New("complete GlobalCloudConfig loader dependency error")
+	first := GlobalCloudConfig{CloudConfigSource: CloudConfigSource{RootUrl: "first complete config value"}}
+	second := GlobalCloudConfig{CloudConfigSource: CloudConfigSource{RootUrl: "second complete partial config value"}}
+	recording := &recordingGlobalConfigLoader{results: []globalConfigLoadResult{
+		{config: first},
+		{config: second, err: loadError},
+	}}
+	if len(recording.results) == 0 {
+		t.Fatal("GlobalCloudConfig loader result population is empty")
+	}
+	gitCfg := GitCloudConfig{Impl: DirConfig{Path: "/complete cloud-config receiver/root with spaces"}}
+
+	actual, err := gitCfg.globalCloudConfig(recording.dependencies())
+	if !reflect.DeepEqual(actual, first) || err != nil {
+		t.Fatalf("first GlobalCloudConfig invocation returned (%#v, %v), want exact (%#v, nil)", actual, err, first)
+	}
+	if len(recording.directories) != 1 {
+		t.Fatalf("first GlobalCloudConfig invocation loaded %d times, want exactly one", len(recording.directories))
+	}
+
+	actual, err = gitCfg.globalCloudConfig(recording.dependencies())
+	if !reflect.DeepEqual(actual, second) || err != loadError {
+		t.Fatalf("second GlobalCloudConfig invocation returned (%#v, %v), want exact (%#v, %v)", actual, err, second, loadError)
+	}
+	directories, populationErr := recording.assertedDirectories()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if len(directories) != 2 {
+		t.Fatalf("two GlobalCloudConfig invocations loaded %d times, want one independent load each", len(directories))
+	}
+	for index, directory := range directories {
+		if !reflect.DeepEqual(directory, gitCfg.Implementation()) {
+			t.Fatalf("GlobalCloudConfig invocation %d received directory %#v, want complete implementation %#v", index+1, directory, gitCfg.Implementation())
+		}
+	}
+}
+
+func TestFileGlobalConfigLoaderReturnsExactRawReadAndPartialYAMLResults(t *testing.T) {
+	root := t.TempDir()
+	directory := &recordingGlobalConfigDirectory{dir: root}
+	config, err := (fileGlobalConfigLoader{}).Load(directory)
+	missing := filepath.Join(root, "global-config.yaml")
+	wantReadError := &os.PathError{Op: "open", Path: missing, Err: syscall.ENOENT}
+	if !reflect.DeepEqual(config, GlobalCloudConfig{}) || !reflect.DeepEqual(err, wantReadError) {
+		t.Fatalf("file GlobalCloudConfig read result was (%#v, %#v), want (zero, exact raw %#v)", config, err, wantReadError)
+	}
+	dirCalls, populationErr := directory.assertedDirCalls()
+	if populationErr != nil {
+		t.Fatal(populationErr)
+	}
+	if !reflect.DeepEqual(dirCalls, []string{root}) {
+		t.Fatalf("file GlobalCloudConfig loader requested directories %#v, want exact root %q once", dirCalls, root)
+	}
+	if len(directory.fileNames) != 0 {
+		t.Fatalf("file GlobalCloudConfig loader called FilePath with %#v, want no calls", directory.fileNames)
+	}
+
+	writeGlobalConfigFixture(t, missing, `cloudConfigSource:
+  rootUrl: "https://partial.example/root"
+  relativFileUrl:
+    nested: invalid
+`)
+	config, err = (fileGlobalConfigLoader{}).Load(&recordingGlobalConfigDirectory{dir: root})
+	wantPartial := GlobalCloudConfig{CloudConfigSource: CloudConfigSource{RootUrl: "https://partial.example/root"}}
+	wantUnmarshalError := "yaml: unmarshal errors:\n  line 4: cannot unmarshal !!map into string"
+	if !reflect.DeepEqual(config, wantPartial) || err == nil || err.Error() != wantUnmarshalError {
+		t.Fatalf("file GlobalCloudConfig YAML result was (%#v, %v), want exact partial (%#v, %q)", config, err, wantPartial, wantUnmarshalError)
+	}
+}
+
+func TestGlobalCloudConfigRereadsAndReexpandsEachPublicInvocation(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "global-config.yaml")
+	gitCfg := GitCloudConfig{Impl: DirConfig{Path: root}}
+	t.Setenv("PLY_TEST_GLOBAL_CONFIG_DYNAMIC", "first-environment")
+	writeGlobalConfigFixture(t, path, `cloudConfigSource:
+  rootUrl: "${PLY_TEST_GLOBAL_CONFIG_DYNAMIC}/first-file"
+  relativFileUrl: "/first-relative"
+`)
+
+	first, err := gitCfg.GlobalCloudConfig()
+	wantFirst := GlobalCloudConfig{CloudConfigSource: CloudConfigSource{
+		RootUrl:        "first-environment/first-file",
+		RelativFileUrl: "/first-relative",
+	}}
+	if err != nil || !reflect.DeepEqual(first, wantFirst) {
+		t.Fatalf("first public GlobalCloudConfig invocation returned (%#v, %v), want (%#v, nil)", first, err, wantFirst)
+	}
+
+	t.Setenv("PLY_TEST_GLOBAL_CONFIG_DYNAMIC", "second-environment")
+	writeGlobalConfigFixture(t, path, `cloudConfigSource:
+  rootUrl: "${PLY_TEST_GLOBAL_CONFIG_DYNAMIC}/second-file"
+  relativFileUrl: "/second-relative"
+`)
+	second, err := gitCfg.GlobalCloudConfig()
+	wantSecond := GlobalCloudConfig{CloudConfigSource: CloudConfigSource{
+		RootUrl:        "second-environment/second-file",
+		RelativFileUrl: "/second-relative",
+	}}
+	if err != nil || !reflect.DeepEqual(second, wantSecond) {
+		t.Fatalf("second public GlobalCloudConfig invocation returned (%#v, %v), want fresh (%#v, nil)", second, err, wantSecond)
+	}
+}
+
+func TestGlobalConfigDependenciesDefaultToSafeNoDeveloperPathAccess(t *testing.T) {
+	directory := &recordingGlobalConfigDirectory{dir: "/developer/home/cloud-config/must-not-be-accessed"}
+
+	config, err := (globalConfigDependencies{}).Load(directory)
+	if !reflect.DeepEqual(config, GlobalCloudConfig{}) || err != filesystem.ErrNoFilesystem {
+		t.Fatalf("safe GlobalCloudConfig dependency default returned (%#v, %v), want (zero, exact %v)", config, err, filesystem.ErrNoFilesystem)
+	}
+	if len(directory.dirCalls) != 0 || len(directory.fileNames) != 0 {
+		t.Fatalf("safe GlobalCloudConfig dependency accessed developer directory: Dir=%#v FilePath=%#v", directory.dirCalls, directory.fileNames)
+	}
+
+	config, err = (GitCloudConfig{Impl: DirConfig{Path: directory.dir}}).globalCloudConfig(globalConfigDependencies{})
+	if !reflect.DeepEqual(config, GlobalCloudConfig{}) || err != filesystem.ErrNoFilesystem {
+		t.Fatalf("safe GlobalCloudConfig helper returned (%#v, %v), want (zero, exact %v)", config, err, filesystem.ErrNoFilesystem)
+	}
+	if len(directory.dirCalls) != 0 || len(directory.fileNames) != 0 {
+		t.Fatalf("safe GlobalCloudConfig helper accessed developer directory: Dir=%#v FilePath=%#v", directory.dirCalls, directory.fileNames)
+	}
+}
+
+func TestGlobalCloudConfigSourceForPreservesExactSlashFormatting(t *testing.T) {
+	config := GlobalCloudConfig{CloudConfigSource: CloudConfigSource{
+		RootUrl:        "https://source.example/base/",
+		RelativFileUrl: "/raw/content",
+	}}
+
+	actual := config.SourceFor("tips/advanced", "README.md")
+	want := "https://source.example/base//raw/content/tips/advanced/README.md"
+	if actual != want {
+		t.Fatalf("GlobalCloudConfig SourceFor returned %q, want exact unchanged formatting %q", actual, want)
+	}
+}
+
+func TestRecordedGlobalCloudConfigRejectsEmptyPopulations(t *testing.T) {
+	if _, err := (&recordingGlobalConfigLoader{}).assertedDirectories(); err == nil {
+		t.Fatal("empty recorded GlobalCloudConfig loader directory population passed")
+	}
+	if _, err := (&recordingGlobalConfigDirectory{}).assertedDirCalls(); err == nil {
+		t.Fatal("empty recorded GlobalCloudConfig Dir call population passed")
+	}
+}
+
+func writeGlobalConfigFixture(t *testing.T, path string, contents string) {
+	t.Helper()
+	if err := testutil.WriteFileOutsideWorkingTree(path, []byte(contents), 0600); err != nil {
+		t.Fatalf("write disposable GlobalCloudConfig fixture: %v", err)
 	}
 }
 

@@ -113,6 +113,41 @@ func (fileDeprecatedLoader) Load(directory Directory) (CloudDeprecated, error) {
 	return deprecated, err
 }
 
+type globalConfigLoader interface {
+	Load(directory Directory) (GlobalCloudConfig, error)
+}
+
+type globalConfigDependencies struct {
+	Loader globalConfigLoader
+}
+
+func systemGlobalConfigDependencies() globalConfigDependencies {
+	return globalConfigDependencies{Loader: fileGlobalConfigLoader{}}
+}
+
+func (dependencies globalConfigDependencies) Load(directory Directory) (GlobalCloudConfig, error) {
+	if dependencies.Loader == nil {
+		return GlobalCloudConfig{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type fileGlobalConfigLoader struct{}
+
+func (fileGlobalConfigLoader) Load(directory Directory) (globalCloudConfig GlobalCloudConfig, err error) {
+	globalConfigFile := file.Path("%s/global-config.yaml", directory.Dir())
+
+	b, err := file.Open(globalConfigFile)
+	if err != nil {
+		return globalCloudConfig, err
+	}
+
+	b = []byte(os.ExpandEnv(string(b)))
+
+	err = yaml.Unmarshal(b, &globalCloudConfig)
+	return globalCloudConfig, err
+}
+
 type gitHookFilesDependencies struct {
 	Files filesystem.Dependencies
 }
@@ -438,18 +473,11 @@ func (gitCfg GitCloudConfig) examples(dependencies examplesDependencies) (templa
 }
 
 func (gitCfg GitCloudConfig) GlobalCloudConfig() (globalCloudConfig GlobalCloudConfig, err error) {
+	return gitCfg.globalCloudConfig(systemGlobalConfigDependencies())
+}
 
-	globalConfigFile := file.Path("%s/global-config.yaml", gitCfg.Implementation().Dir())
-
-	b, err := file.Open(globalConfigFile)
-	if err != nil {
-		return
-	}
-
-	b = []byte(os.ExpandEnv(string(b)))
-
-	err = yaml.Unmarshal(b, &globalCloudConfig)
-	return
+func (gitCfg GitCloudConfig) globalCloudConfig(dependencies globalConfigDependencies) (GlobalCloudConfig, error) {
+	return dependencies.Load(gitCfg.Implementation())
 }
 
 func (gitCfg GitCloudConfig) ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error) {
