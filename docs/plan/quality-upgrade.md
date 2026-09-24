@@ -15776,6 +15776,60 @@ Smartystreets/goconvey evaluation (2026-09-24):
   **Mvn-Pom-Mutator Goconvey Ownership Study**; or stop unresolved. It is not
   launched; no other dependency group or P8 work begins.
 
+Smartystreets/goconvey product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded
+  `github.com/smartystreets/goconvey v1.6.4` remains unchanged under a
+  Goconvey-specific, unqualified, non-transferable exception. No canonical
+  stable fully qualifies, and no changed stable has a genuine supported tidy-
+  stable project owner. This bounded acceptance is not a release qualification
+  or safety claim. The **Mvn-Pom-Mutator Goconvey Ownership Study** is neither
+  authorized nor run.
+- Retention requires the exact main -> direct loaded mvn-pom-mutator v0.2.3 ->
+  selected Goconvey v1.6.4 route; the requester's metadata-only edge and zero
+  target source imports; positive requester why and runtime relevance;
+  negative target why; zero target repository import, production/complete-test/
+  module-backed load, and runtime relevance; the sole request, no target root,
+  and exact v1.6.4 selection through all 84 checkpoints. Every historical
+  predecessor edge must remain metadata-only. Any change requires a fresh
+  owning evaluation and explicit decision.
+- Selected release sums and project sum boundary remain exact. Selected
+  Goconvey must continue genuinely importing the separately excepted old-path
+  Assertions pseudo-version in production. Any target identity, sum,
+  Assertions request/import/selection, or old-path/relocated-path boundary
+  change expires retention; the Assertions exception remains separate.
+- Exact owner/release/GitHub Release/tag/commit/tree/signature/ancestry/proxy/
+  sumdb/archive/module/license identities, source/build and build-boundary
+  facts, API/behavior/caller/concurrency/lifecycle/error identities, closures,
+  native vet/test and stopped defensive rows, cross results, projection,
+  advisory, Go-floor, and every earlier guard are expiry conditions. Every
+  buildable stable still fails vet, prohibited malformed and `/tmp`-writing
+  upstream rows remain unexecuted, and partial safe evidence does not qualify a
+  release.
+- A disposable selected get must continue manufacturing roots that ordinary
+  tidy removes to restore the common projection. A v1.8.1 get must continue
+  changing Goconvey, x/mod, x/net, x/text, x/tools, relocated Assertions,
+  GopherJS, and the Assertions production boundary; tidy must discard v1.8.1
+  while retaining unrelated x/* upgrades. No genuine supported tidy-stable
+  owner may request v1.8.1. No projection is authorized or retained.
+- Empty target advisory responses, selected focal 0/0/0/0 findings, and the
+  v1.8.1 module-only findings do not imply safety or qualification. Corrected
+  index/CNA identities and project 30/22/20/20 results without a Goconvey or
+  named protected trace remain exact; client_golang and every named guard
+  retain their separate identities. No earlier exception transfers.
+- Guard-only revalidation reproduces clean continuity at exact Goconvey
+  evaluation HEAD `00eff4110377593ddeb874b1672459810a5418b0`, parent
+  `2121f11a32c2e0ab1bb85af9742a7874346c5a4a`, tree
+  `b461109d5aa49f266d24e949a3ad32eb5840dae5`, and five-file changed set;
+  reciprocal archives and launcher; UUID ancestry; ordinary/ignored
+  cleanliness; 234 modules, 3,599 edges, 1,067 sum lines; protected module/
+  sum/graph hashes; Go 1.18; all earlier selections/requests/exceptions; and
+  27/27 Q0-Q2 PASS at L2. No completed test or network evidence was rerun.
+- P7 remains active only with one prepared bounded evaluation of exact selected
+  indirect `github.com/soheilhy/cmux v0.1.4`. Its sole mvn-pom-mutator v0.2.3
+  request and negative target why are starting observations only. The successor
+  is not launched; no study, other group, exception transfer, or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

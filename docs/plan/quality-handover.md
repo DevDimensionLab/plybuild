@@ -6992,12 +6992,63 @@ archive graph has one NEXT decision; and all contained task-scratch entries
 were verified without symlink, outside-path, or special entries and removed.
 The evaluation grants no exception.
 
+## Smartystreets Goconvey Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/smartystreets/goconvey v1.6.4` remains unchanged under a Goconvey-
+specific, unqualified, non-transferable exception. No canonical stable fully
+qualifies and no changed stable has a genuine supported tidy-stable project
+owner. This is a bounded product acceptance, not a release qualification,
+safety claim, or transferable qualification. The **Mvn-Pom-Mutator Goconvey
+Ownership Study** is not authorized or run.
+
+Retention requires the exact main -> direct loaded, why-positive, runtime-
+relevant mvn-pom-mutator v0.2.3 -> selected Goconvey v1.6.4 route. The target
+request must remain indirect metadata with zero source imports. Goconvey must
+remain why-negative, unloaded, absent from project imports and all project load
+populations, runtime-irrelevant, selected through one request, and never a main
+root. All 84 historical checkpoints and route epochs must retain v1.6.4 and
+metadata-only predecessors. Any owner, request, route, import/load/runtime,
+support, root-history, or checkpoint change requires a fresh owning evaluation
+and explicit decision.
+
+Selected release identities, sums, and the project module-sum-only boundary
+remain exact. Selected Goconvey must genuinely import the separately excepted
+old-path Assertions pseudo-version in production. Every owner/repository/
+release/GitHub Release/tag/commit/tree/signature/ancestry/proxy/sumdb/archive/
+module/license, source/build, API/behavior/caller/concurrency/lifecycle/error,
+closure, native vet/test, stopped defensive row, cross, projection, Go-floor,
+Assertions-boundary, and advisory identity in the answered evaluation remains
+an expiry guard. The Assertions exception remains separate and untransferred.
+
+Every buildable stable must continue failing mandatory vet under both exact
+SDKs. The malformed fixtures and `/tmp` test-support boundary remain
+unexecuted; passing safe build/no-run/cross evidence stays partial and cannot
+qualify a release. A selected get must continue manufacturing roots that tidy
+removes to restore the common projection. A v1.8.1 get must continue changing
+the target, x/* group, relocated Assertions/GopherJS, and Assertions production
+boundary before tidy discards v1.8.1 but retains unrelated x/* upgrades. No
+supported tidy-stable owner may request v1.8.1. No projection is authorized or
+retained.
+
+Empty target advisory results and selected focal 0/0/0/0 findings do not imply
+safety or qualification; v1.8.1 retains only its recorded module findings.
+Corrected index/CNA identities and project 30/22/20/20 results without a
+Goconvey or named protected trace remain exact; client_golang and every named
+guard retain separate identities. No earlier exception transfers. Guard-only
+revalidation reproduces exact clean continuity, reciprocal archives and
+launcher, UUID ancestry, exact five-file starting handoff, ordinary/ignored
+cleanliness, 234 modules, 3,599 edges, 1,067 sum lines, protected module/sum/
+graph hashes, Go 1.18, all earlier selections/requests/exceptions, and 27/27
+Q0-Q2 PASS at L2. No completed evaluation, test, study, or network research was
+rerun. No source, dependency, root, study, other group, or P8 work is included.
+
 ## Next Bounded Objective
 
-Run only [the prepared Smartystreets Goconvey product decision](agent-sessions/2026-09-24T041623+0200-decide-smartystreets-goconvey-product-direction.md).
-Choose exactly one authorized move: retain selected v1.6.4 under a Goconvey-
-specific unqualified non-transferable exception; authorize only a later
-measurement-only **Mvn-Pom-Mutator Goconvey Ownership Study**; or stop P7
-unresolved. The decision is prepared but not launched. Do not rerun the
-evaluation, run a rejected study, change a dependency/root/source, combine
-another group, transfer an exception, or begin P8.
+Run only [the prepared bounded Soheilhy Cmux evaluation](agent-sessions/2026-09-24T042942+0200-evaluate-soheilhy-cmux-dependency.md).
+Resolve exact selected indirect `github.com/soheilhy/cmux v0.1.4` and its
+canonical Go-1.18-compatible release line without assuming that the physical
+selection, its sole mvn-pom-mutator request, or negative target why establishes
+qualification or genuine ownership. The evaluation is prepared but not
+launched. Do not run a rejected study, combine another group, transfer or
+reopen an exception, or begin P8.
