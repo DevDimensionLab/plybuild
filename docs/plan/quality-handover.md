@@ -1,18 +1,19 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T18:04:45+02:00
+Generated: 2026-09-24T19:27:07+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P8 Checkpoint
 
-- The first four bounded P8 implementations remain exact focused commits
+- The first five bounded P8 implementations remain exact focused commits
   `57f9d5674157d238a2f93462b65161a17e3b5498`,
   `c12307a078a29af74163df0c658d05c821482a33`,
-  `c999212d266d98868930769108e4e8a73070a0a2`, and
-  `51da9bcfc0eb8ae871c98467c52c942db6b480bd`. Their changed sets are the
-  refresh three-file slice followed by three exact two-file
+  `c999212d266d98868930769108e4e8a73070a0a2`,
+  `51da9bcfc0eb8ae871c98467c52c942db6b480bd`, and
+  `f12344b115b6c732295d152a7f3d86b876a4d1d8`. Their changed sets are the
+  refresh three-file slice followed by four exact two-file
   `pkg/config/cloud.go` / `pkg/config/cloud_test.go` slices. No protected input
   changed beyond those focused sets.
 - Cache probing preserves exact local-config-first pull/clone selection.
@@ -21,75 +22,79 @@ session diary.
   exact `FilePath`/`file.ReadJson` and partial results, complete `Directory`
   delivery, and safe zero values. Deprecated additionally preserves complete
   recursive data and explicit-empty versus omitted slices.
+- Global config retains production `fileGlobalConfigLoader` selection,
+  complete `Directory` delivery, exact direct `Dir()`-based
+  `global-config.yaml` path without `FilePath`, unchanged `file.Open`, complete
+  live-environment expansion before unchanged YAML decode, exact raw-read/YAML/
+  partial results, safe zero behavior, and one independent load per invocation.
+  `SourceFor` and both command consumers remain unchanged.
 - The public `CloudConfig` interface still has 15 methods. `GitCloudConfig`,
   exported `Impl`, `OpenGitCloudConfig`, `GlobalCloudConfig.SourceFor`, all
   public data types, and construction in `Context.LoadProfile` and
   `InitProjectFromDirectory` remain compatibility surfaces. No read method
   refreshes itself; all refresh and command policy remains unchanged.
-- Seven read/effect paths are privately injected: the refresh cache probe,
+- Eight read/effect paths are privately injected: the refresh cache probe,
   `GitHookFiles`, `Examples`, `Templates`, `Services`, `ProjectDefaults`, and
-  `Deprecated`. `GlobalCloudConfig` is the sole direct document reader. It
-  composes `<implementation>/global-config.yaml` from `Directory.Dir()` with
-  `file.Path`, does not call `Directory.FilePath`, reads with `file.Open`,
-  expands the complete bytes through the live process environment, and then
-  unmarshals YAML. Every invocation reads independently.
-- `GlobalCloudConfig.SourceFor` preserves direct concatenation of `RootUrl`,
-  `RelativFileUrl`, directory, and name. Its only production consumers are
-  template markdown output in `cmd/build_options.go` and tips source output in
-  `cmd/tips.go`. There is no tracked global-config fixture or focused reader
-  test. Real cloud/network behavior, caller refresh policy, and consumer gaps
-  remain guards.
-- The selected fifth slice changes only `pkg/config/cloud.go` and
-  `pkg/config/cloud_test.go`: add one private global-config loader interface,
-  private dependency value, file-backed implementation, and helper. The public
-  method remains the production wrapper and `SourceFor` remains byte-exact.
-- Production must receive the complete `Directory`, compose exact
-  `file.Path("%s/global-config.yaml", directory.Dir())`, never call `FilePath`
-  or add an existence probe, preserve raw `file.Open` behavior, apply exact
-  `[]byte(os.ExpandEnv(string(b)))` before unchanged `yaml.Unmarshal`, and
-  return the exact value/error including partial YAML data. The helper loads
-  once per call; separate calls re-read and re-expand. A missing loader returns
-  exact `filesystem.ErrNoFilesystem` before developer-path access.
-- Focused TDD must cover production selection, complete dependency delivery,
-  direct path/no-`FilePath` behavior, one independent load per call, controlled
-  environment expansion before complete YAML decode, raw read errors, partial
-  YAML results, safe zero behavior, unchanged `SourceFor`, and non-empty
-  recordings. Use disposable local fixtures only. No caller, other reader,
-  tracked fixture, refresh, constructor, mutation, API, Go-floor, or dependency
-  change is authorized.
+  `Deprecated`, plus `GlobalCloudConfig`. The refresh Git dependency remains
+  private as well. Force-sync gating, warning/continuation, unconditional
+  example refreshes, real cloud/network behavior, and missing caller/fixture
+  evidence remain guards.
+- Exactly two production sites select cloud implementations. Root
+  `Context.LoadProfile` calls `config.OpenGitCloudConfig(profilePath)` after
+  assigning the matching local config. `InitProjectFromDirectory`
+  independently resolves the active or project-specific profile and calls
+  `OpenGitCloudConfig`. Both retain exact `<profile>/cloud-config` mapping.
+- The selected sixth slice changes only `pkg/context/context.go` and
+  `pkg/context/context_test.go`: add one private cloud-config opener interface,
+  private dependency value, Git-backed production opener, and private
+  `loadProfile` helper. Public `Context.LoadProfile` remains the production
+  wrapper with its exact signature and no return value.
+- Production must deliver the complete profile path exactly once to unchanged
+  `config.OpenGitCloudConfig`, return its complete result as
+  `config.CloudConfig`, and assign it without wrapping, copying, refreshing, or
+  inspection. The helper preserves exact local-before-cloud assignment and
+  local existence/touch/log ordering. A missing opener returns nil without
+  touching the path.
+- Focused TDD must cover production opener selection, exact complete path and
+  one call, exact returned interface identity, public production cache mapping,
+  safe zero behavior, and non-empty recordings. Existing assignment,
+  missing-file creation, existing bytes, default content/mode, logs, and touch-
+  error cases remain exact. Project construction and caller policy stay out of
+  scope.
 - The config-cloud mutation manifest remains byte-exact because none of its ten
-  expressions crosses `GlobalCloudConfig`; direct and T1-T10 meta gates must
+  expressions crosses `pkg/context`; direct and T1-T10 meta gates must
   retain the same IDs, selections, meanings, and exact 10/10 kills. Full gates
   remain the recorded exact-Go-1.26.7 offline/readonly suite. Rollback is one
   focused two-file implementation commit with no API, cache schema, fixture,
   caller-policy, user-data, or dependency migration to unwind.
 - This planning checkpoint began clean at handoff HEAD
-  `70543a3e7efa58c43c5d21fcc78f0c791f7dd1e7`, parent
-  `51da9bcfc0eb8ae871c98467c52c942db6b480bd`, tree
-  `1a316b9a9b760957dbf16288373eb180f0fb365f`, with its exact five-file
-  launcher/documentation shape. Deprecated commit
-  `51da9bcfc0eb8ae871c98467c52c942db6b480bd` has exact parent
-  `deb6e42d333bb8621c4579ec6b658ab36a9af572`, tree
-  `e095c58797d42b9fc4a1ba353c9ddc1916a70614`, and exact two-file shape.
+  `56fb53eaadf1ee8adfdde7b786eb3e82ae86c29b`, parent
+  `f12344b115b6c732295d152a7f3d86b876a4d1d8`, tree
+  `9137d60a9194462ea4054e155dca278a2918b7cd`, with its exact five-file
+  launcher/documentation shape. Global-config commit
+  `f12344b115b6c732295d152a7f3d86b876a4d1d8` has exact parent
+  `82f100de434a37acd94ce16cd8bfba41f7f08e36`, tree
+  `e4e28bf42fe484904bb92d8ff4f155878594591c`, and exact two-file shape.
   Earlier P8 and UUID ancestry reproduce.
-- The reciprocal 335-archive graph, sole NEXT state, launcher mirror/check,
+- The reciprocal 337-archive graph, sole NEXT state, launcher mirror/check,
   ordinary/ignored cleanliness, and protected readers, callers, fixtures,
   mutations, and dependencies reproduce. Exact Go 1.26.7 confirms Go 1.18,
   234/3,599/355/429/197/41/1,067 counts and the exact three hashes. Under
   `umask 022`, config/context/Maven/command tests and unchanged direct/meta
-  10/10 cloud mutations pass. One discarded ambient-umask run reproduced only
-  the known local-config file-mode guard.
+  10/10 cloud mutations pass.
 - The prepared handoff has exactly five launcher/documentation paths, a
-  connected 336-record graph with one NEXT implementation archive, byte-exact
-  launcher/archive prompt mirroring, valid shell syntax, and passing launcher
-  and handoff checks. The contained task root had 267 directories, 3,389
-  regular files, zero symlinks, and zero special entries and was removed before
-  handoff.
-- The sole successor implements only the private global-config loader seam. It
-  expires on any changed direct-path/read/environment/YAML/result/SourceFor/
-  caller/cache/API/mutation/dependency premise or need for `ply-config`
-  knowledge. Direct dependency inspection or selection, caller cleanup,
-  generic/shared reader work, construction, Spring, and packaging remain
+  connected 338-record graph with one NEXT implementation archive, byte-exact
+  launcher/archive prompt mirroring, valid shell syntax, passing launcher and
+  handoff checks, and all 62 launcher controls passing. The contained task root
+  had 271 directories, 3,391 regular files, zero symlinks, and zero special
+  entries and was removed before handoff.
+- The sole successor implements only the private root cloud-config opener. It
+  expires on any changed `LoadProfile` signature, assignment/touch/log order,
+  concrete Git selection, profile/cache mapping, repeated-call behavior, need
+  to move both constructors atomically, project/caller-policy change, exported-
+  factory need, protected input change, or need for `ply-config` knowledge.
+  Direct dependency inspection or selection, project-constructor routing,
+  caller cleanup, generic/shared reader work, Spring, and packaging remain
   unowned.
 
 ## Repository And Continuity
@@ -8005,11 +8010,30 @@ stale and the sole overall ratchet regression is the pre-existing Q3.4
 documentation indicator. Protected 234/3,599/355/429/197/41/1,067 counts and
 all three hashes reproduce.
 
+## P8 Sixth Cloud Slice Selection
+
+The next bounded slice is a private root cloud-config opener in only
+`pkg/context/context.go` and `pkg/context/context_test.go`. Public
+`Context.LoadProfile` remains the production wrapper. Its private helper must
+preserve exact local-before-cloud assignment, missing/existing local-config
+lifecycle, content, mode, logs, touch-error behavior, and repeated calls.
+Production delivers the complete profile path once to unchanged
+`config.OpenGitCloudConfig` and assigns its complete `config.CloudConfig`
+result; a missing opener returns nil without path access.
+
+Project construction remains independently bound to `OpenGitCloudConfig` and
+is not routed in this slice. No caller policy, reader, public API, cache path,
+fixture, mutation, Go-floor, or dependency input changes. Focused tests cover
+production selection, exact call/path/identity, public cache mapping, safe zero
+behavior, and non-empty recordings. The config-cloud mutation gates remain
+byte-exact at 10/10 direct and meta kills. Rollback is one two-file commit; any
+need for a shared/exported factory, atomic two-constructor change, caller-policy
+change, or external dependency knowledge expires the slice.
+
 ## Next Bounded Objective
 
-Run only [the prepared next P8 cloud planning checkpoint](agent-sessions/2026-09-24T190912+0200-plan-next-p8-cloud-modernization-move.md).
-Re-characterize the boundary after the global-config loader seam, compare only
-the smallest repository-owned candidates, and select at most one next bounded
-implementation slice or stop unresolved. Do not implement that slice, inspect
-or select `ply-config`, combine readers, change construction/caller policy, or
-begin Spring or packaging work.
+Run only [the prepared root cloud-config opener implementation](agent-sessions/2026-09-24T192707+0200-implement-root-cloud-config-opener-seam.md).
+Implement the one private `Context.LoadProfile` opener seam and its focused
+tests without routing project construction, adding an exported factory,
+changing caller policy or readers, inspecting or selecting `ply-config`, or
+beginning a second cloud, Spring, or packaging slice.

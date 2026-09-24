@@ -16755,8 +16755,9 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after the first five bounded cloud implementation slices; the
-next bounded slice is not yet selected.
+Status: active after the first five bounded cloud implementation slices; one
+private root cloud-config opener is selected as the sixth slice but is not yet
+implemented.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16917,10 +16918,60 @@ next bounded slice is not yet selected.
   scoped regression; manual evidence remains correctly stale and Q3.4 remains
   the sole pre-existing overall ratchet regression. Protected
   234/3,599/355/429/197/41/1,067 counts and all three hashes reproduce.
-- The reciprocal successor is planning-only and may select at most one next
-  repository-owned cloud slice. Direct `ply-config` inspection, selection, or
-  integration, caller cleanup, generic/shared reader work, construction,
-  Spring, and packaging remain forbidden.
+- The next planning checkpoint reproduces handoff HEAD
+  `56fb53eaadf1ee8adfdde7b786eb3e82ae86c29b`, parent
+  `f12344b115b6c732295d152a7f3d86b876a4d1d8`, tree
+  `9137d60a9194462ea4054e155dca278a2918b7cd`, its exact five-file shape,
+  all five focused P8 implementations, Google UUID ancestry, reciprocal
+  337-record/sole-NEXT launcher state, ordinary/ignored cleanliness, protected
+  source/caller/fixture/mutation/dependency inputs, Go 1.18,
+  234/3,599/355/429/197/41/1,067 counts, and all three hashes.
+  Exact-Go-1.26.7 config/context/Maven/command tests and unchanged direct/meta
+  config-cloud 10/10 mutation gates pass under `umask 022` with offline,
+  readonly inputs and contained scratch.
+- The completed global-config seam retains explicit production selection,
+  complete `Directory` delivery, exact direct `global-config.yaml` path without
+  `FilePath`, unchanged `file.Open`, complete environment expansion before YAML
+  decode, one independent load per invocation, exact raw-read/YAML/partial
+  results, safe zero behavior, `SourceFor`, and unchanged public, refresh,
+  caller, reader, fixture, mutation, Go-floor, and dependency contracts.
+- Eight cloud read/effect paths are now private seams. The remaining
+  implementation-selection boundary has two production construction sites:
+  root `Context.LoadProfile` and project `InitProjectFromDirectory`, both of
+  which call concrete `OpenGitCloudConfig` and retain exact
+  `<profile>/cloud-config` mapping. The root site has focused assignment,
+  create/existing/touch-error, content, mode, and log evidence; the project site
+  also owns profile discovery, migration, override, project, and Maven behavior.
+- Candidate comparison selects only a private root cloud-config opener in
+  `pkg/context/context.go` with characterization in
+  `pkg/context/context_test.go`. The project opener has wider environment and
+  error-order knowledge; a shared two-constructor factory combines moves and
+  risks a new exported surface; pure domain lookup/logging seams do not isolate
+  implementation selection; caller policy remains guarded; and direct
+  `ply-config` work lacks authorized dependency knowledge.
+- Production must select a private Git-backed opener that receives the complete
+  profile path once and delegates exactly once to unchanged
+  `config.OpenGitCloudConfig`, returning the complete value as
+  `config.CloudConfig`. The private helper preserves exact local-before-cloud
+  assignment and local existence/touch/log ordering. A missing opener returns
+  nil without accessing the path. `InitProjectFromDirectory`, all commands,
+  readers, refresh, cache layout, public API, fixtures, and dependencies remain
+  byte-exact.
+- Focused TDD must cover production selection, exact profile-path delivery and
+  one call, exact returned interface identity, public production cache mapping,
+  safe zero behavior, and non-empty recordings while retaining all existing
+  `LoadProfile` lifecycle cases. The config-cloud mutation manifest remains
+  byte-exact with the same ten IDs, selections, meanings, and 10/10 direct/meta
+  kills. Rollback is one focused two-file implementation commit.
+- The slice expires on changed `LoadProfile` signature, assignment/touch/log
+  order, concrete Git selection, cache mapping, repeated-call behavior, any
+  requirement to move both constructors atomically, project or caller-policy
+  change, exported-factory or `ply-config` knowledge, or changed protected
+  fixture, Go, dependency, graph, mutation, or quality input.
+- The reciprocal successor implements only this private root opener. Direct
+  `ply-config` inspection, selection, or integration, project-constructor
+  routing, caller cleanup, generic/shared reader work, Spring, and packaging
+  remain forbidden.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
