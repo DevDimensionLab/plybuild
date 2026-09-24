@@ -16073,6 +16073,56 @@ Stretchr/objx evaluation (2026-09-24):
   small contained recheck roots were audited and removed, leaving only
   launcher-owned cache state.
 
+Stretchr/objx product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded
+  `github.com/stretchr/objx v0.5.2` remains unchanged under an Objx-specific,
+  unqualified, non-transferable exception. V0.5.1 is the highest canonical
+  stable compatible with Go 1.18, but no compatible stable completes the
+  mandatory qualification gates. Selected v0.5.2 declares Go 1.20 and is not
+  a qualified Go-1.18 release. The acceptance is neither release qualification
+  nor a safety claim. The **Testify Objx Ownership Study** is neither authorized
+  nor run.
+- Retention requires the exact main -> Units `0f3dac36c52b` -> Testify v1.9.0
+  -> selected Objx v0.5.2 route. Testify continues genuinely importing Objx in
+  production `mock/mock.go`; Objx why remains negative and Testify why remains
+  positive only through the dependency-test route. Neither enters project
+  source or protected load populations; Objx remains indirect, unloaded,
+  runtime-irrelevant, and not a root, and Testify remains not a root.
+- All 11 requests and their genuine-Testify or metadata-only-Logrus boundaries,
+  all 84 checkpoints and 19 route epochs, historical selection counts, and no
+  v0.5.1 owner remain expiry guards. Any owner, request, route, import/load/
+  runtime, support, root-history, or checkpoint change requires a fresh owning
+  evaluation and explicit decision.
+- Selected/candidate commit/tree/sums and project sum boundary; every owner/
+  repository/release/GitHub Release/tag/signature/ancestry/proxy/archive/
+  module/license/source identity; API/behavior/caller/concurrency/lifecycle/
+  error boundaries; and closure, native, defensive-scope, vet/test/race,
+  cross, projection, declared/effective Go-floor, and advisory evidence remain
+  exact non-transferable expiry guards. Passing safe rows, successful current
+  Go 1.18 consumption, genuine Testify ownership, physical selection, and
+  empty advisory evidence do not qualify v0.5.2 or imply safety.
+- A disposable v0.5.1 get must continue manufacturing a root and unrelated
+  Testify, Units, and go-toml/v2 downgrades before tidy discards v0.5.1 for
+  v0.5.0 without restoring the no-op baseline. Normal no-op tidy retains the
+  exact common projection. No projection is authorized or retained.
+- Corrected index/CNA, focal 0/0/0/0, project 30/22/20/20, client_golang,
+  exact SDK, project/common-tidy, Go-floor, every earlier selection/exception,
+  and 27/27 Q0-Q2 guards remain exact. No earlier exception transfers.
+- Guard-only revalidation reproduces clean continuity at exact Objx evaluation
+  HEAD `e77c9d857f1d3d2713042d8dee2185d656debb03`, parent
+  `496b90f8ee5d18657b832ea7e5d8013f603c5fa9`, tree
+  `bda95d1fd1a8bbc959dd1246ccbd1ae47113d296`, its five-file changed set, UUID
+  ancestry, reciprocal archives/launcher, ordinary/ignored cleanliness, exact
+  234/3,599/355/429/197/41/1,067 project state, protected hashes, and every
+  earlier guard. Final exact-Go-1.26.7 verify/build/count-one/race/vet gates
+  pass. No study, dependency/source/root change, other group, or P8 work ran.
+- P7 remains active only with one prepared, unlaunched bounded evaluation of
+  the next alphabetical selected module, exact indirect
+  `github.com/stretchr/testify v1.9.0`. Its current requests, dependency-test-
+  only project why route, selected Units/go-toml requesters, and genuine Objx
+  production import are starting observations only.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

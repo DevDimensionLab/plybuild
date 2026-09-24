@@ -7295,12 +7295,64 @@ only launcher-owned cache state remains. The 313-record reciprocal archive
 graph has exactly one NEXT Objx product decision. No source, dependency, root,
 projection, exception, study, other group, or P8 work is included.
 
+## Stretchr Objx Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/stretchr/objx v0.5.2` remains unchanged under an Objx-specific,
+unqualified, non-transferable exception. V0.5.1 is the highest canonical
+stable compatible with Go 1.18, but no compatible stable completes the
+mandatory qualification gates. Selected v0.5.2 declares Go 1.20 and is not a
+qualified Go-1.18 release. This bounded acceptance is neither release
+qualification nor a safety claim. The **Testify Objx Ownership Study** is not
+authorized or run.
+
+Retention requires the exact main -> Units `0f3dac36c52b` -> Testify v1.9.0
+-> Objx v0.5.2 route. Testify must continue genuinely importing Objx in
+production `mock/mock.go` and requesting selected v0.5.2. Objx why remains
+negative; Testify why remains positive only through the recorded dependency-
+test route. Neither may enter project source or protected load populations;
+Objx remains indirect, unloaded, runtime-irrelevant, and not a root, while
+Testify remains not a root.
+
+All 11 requests and genuine-Testify or metadata-only-Logrus boundaries, all
+84 checkpoints and 19 route epochs, the 38/4/25/17 historical selection
+counts, and the absence of a v0.5.1 owner remain expiry guards. Any owner,
+request, route, import/load/runtime, support, root-history, or checkpoint
+change requires a fresh owning evaluation and explicit decision.
+
+Selected/candidate commit, tree, sum, and project sum-boundary identities;
+the complete owner/repository/release/GitHub Release/tag/signature/ancestry/
+proxy/archive/module/license/source boundaries; the API/behavior/caller/
+concurrency/lifecycle/error identities; and all closure, native, defensive-
+scope, vet/test/race/cross, projection, declared/effective Go-floor, and
+advisory evidence remain non-transferable expiry guards. Passing safe rows,
+current exact-Go-1.18 consumption, genuine Testify ownership, physical
+selection, and empty advisory results do not qualify v0.5.2 or imply safety.
+
+A v0.5.1 get must continue manufacturing the target root and unrelated
+Testify, Units, and go-toml/v2 downgrades; tidy must continue discarding
+v0.5.1 for v0.5.0 without restoring the no-op baseline. Normal no-op tidy
+must retain the exact common projection. No projection is authorized. The
+corrected index/CNA, focal 0/0/0/0, project 30/22/20/20, client_golang, SDK,
+project/common-tidy, Go-floor, earlier selection/exception, and 27/27 Q0-Q2
+guards remain exact. No earlier exception transfers.
+
+Guard-only revalidation reproduces clean continuity at Objx evaluation HEAD
+`e77c9d857f1d3d2713042d8dee2185d656debb03`, parent
+`496b90f8ee5d18657b832ea7e5d8013f603c5fa9`, tree
+`bda95d1fd1a8bbc959dd1246ccbd1ae47113d296`, its exact five-file changed set,
+UUID ancestry, reciprocal archives/launcher, ordinary/ignored cleanliness,
+and exact 234/3,599/355/429/197/41/1,067 project state and protected hashes.
+Final exact-Go-1.26.7 verify/build/count-one/race/vet gates pass. Product
+source, `go.mod`, and `go.sum` remain byte-exact, and contained task scratch is
+removed. No study, dependency/source/root change, other group, or P8 work was
+run.
+
 ## Next Bounded Objective
 
-Run only [the prepared Objx product decision](agent-sessions/2026-09-24T063300+0200-decide-stretchr-objx-product-direction.md).
-Choose exactly one: retain selected v0.5.2 under an Objx-specific unqualified,
-non-transferable exception; authorize but do not run a later measurement-only
-**Testify Objx Ownership Study**; or stop P7 unresolved. The decision is
-prepared but not launched. Do not rerun the closed evaluation, launch a study,
-change a dependency/source/root, transfer an exception, combine another group,
-relax the Go 1.18 floor, or begin P8.
+Run only [the prepared Testify evaluation](agent-sessions/2026-09-24T064425+0200-evaluate-stretchr-testify-dependency.md).
+Evaluate exact selected indirect `github.com/stretchr/testify v1.9.0` as one
+bounded P7 group while preserving the new Objx exception and every earlier
+guard. The evaluation is prepared but not launched. Do not run the rejected
+Testify Objx Ownership Study, combine another dependency group, transfer an
+exception, add an unqualified root, relax the Go 1.18 floor, or begin P8.
