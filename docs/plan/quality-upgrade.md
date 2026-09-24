@@ -16755,9 +16755,9 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after the first five bounded cloud implementation slices; one
-private root cloud-config opener is selected as the sixth slice but is not yet
-implemented.
+Status: active after six bounded cloud implementation slices; the private root
+cloud-config opener is complete and one fresh planning-only cloud checkpoint is
+prepared.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16972,6 +16972,43 @@ implemented.
   `ply-config` inspection, selection, or integration, project-constructor
   routing, caller cleanup, generic/shared reader work, Spring, and packaging
   remain forbidden.
+- Focused commit `76c3571f04969c304785338bc31c34a266e2f869` completes the
+  sixth selected slice in exactly `pkg/context/context.go` and
+  `pkg/context/context_test.go`. One private zero-value-safe cloud-config
+  opener, private dependency value, Git-backed production implementation, and
+  private `loadProfile` helper isolate the root construction choice. Public
+  `Context.LoadProfile` retains its exact signature and remains the production
+  wrapper.
+- Production selects the Git-backed opener, delivers the complete profile path
+  once to unchanged `config.OpenGitCloudConfig`, and assigns the returned
+  complete `config.CloudConfig` interface without wrapping or inspection. The
+  helper retains exact local-before-cloud assignment and existence/touch/log
+  ordering. A missing opener returns nil without touching its path.
+- Focused characterization covers production selection, public
+  `<profile>/cloud-config` mapping, arbitrary complete path delivery exactly
+  once, returned interface identity, zero-value safety, and non-empty
+  recordings while retaining the existing missing/existing local-config,
+  content, mode, log, touch-error, and repeated-call cases. A count-two test
+  exposed and removed test-only logger-state leakage before the focused commit
+  was finalized.
+- Final-commit context/config/Maven/command tests, unchanged config-cloud
+  direct and meta 10/10 mutation gates, exact Go 1.26.7 verify/build/test/race/
+  vet, pinned API/CLI compatibility, complete preflight, ordinary test/install,
+  real scratch install, fresh empty-HOME count-two, all 15 audit controls, and
+  all 62 launcher controls pass. Structured Q0-Q2 has all 21 automated rows
+  PASS and zero scoped regression; the six manual rows remain unclaimed and
+  Q3.4 remains the sole pre-existing overall ratchet regression. Protected
+  234/3,599/355/429/197/41/1,067 counts and all three hashes reproduce.
+- `config.OpenGitCloudConfig`, `GitCloudConfig`, the 15-method `CloudConfig`,
+  `InitProjectFromDirectory`, project profile selection, cache layout, refresh,
+  commands, readers, fixtures, mutation files, public API, Go floor, and
+  dependency metadata remain unchanged. The project constructor still chooses
+  Git directly and is not routed through the root seam.
+- The reciprocal successor is planning-only. It must re-characterize the
+  remaining cloud boundary and select at most one smallest repository-owned
+  next slice or stop unresolved; it may not implement that slice, inspect or
+  select `ply-config`, combine construction moves, alter caller policy, or
+  begin Spring or packaging work.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 

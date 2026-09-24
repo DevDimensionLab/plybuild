@@ -1,13 +1,13 @@
 # Agent Session: Implement Root Cloud Config Opener Seam
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-24T192707+0200-implement-root-cloud-config-opener-seam`
 Created: `2026-09-24T19:27:07+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `997909146ef2e03f8162465aaf57a85a2408b08705ef1bc93898762e94470c0a`
 Previous: [2026-09-24T190912+0200-plan-next-p8-cloud-modernization-move.md](2026-09-24T190912+0200-plan-next-p8-cloud-modernization-move.md)
-Next: none
-Outcome: pending
+Next: [2026-09-24T202938+0200-plan-next-p8-cloud-modernization-move.md](2026-09-24T202938+0200-plan-next-p8-cloud-modernization-move.md)
+Outcome: the sixth bounded P8 slice is complete at focused commit `76c3571f04969c304785338bc31c34a266e2f869`; root profile loading now selects its unchanged Git cloud configuration through one private zero-value-safe opener with every protected lifecycle and caller contract unchanged
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -111,3 +111,87 @@ decision successor instead. Do not execute the successor, push, merge, publish,
 release, stash, revert, remove the worktree, integrate `ply-config`, route the
 project constructor, or start a second cloud, Spring, or packaging slice.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+The sixth bounded P8 cloud slice is complete at focused implementation commit
+`76c3571f04969c304785338bc31c34a266e2f869` (parent
+`75b2e249e6c9665e280902c709238fbfe412aa42`, tree
+`3fc1887b116fbb0b56ca44a26a4b8eff7bd64898`). It changes exactly
+`pkg/context/context.go` and `pkg/context/context_test.go`. Project
+construction, callers, readers, fixtures, mutation files, dependency metadata,
+Spring, packaging, and `ply-config` remain untouched.
+
+### Implementation And Characterization
+
+- `cloudConfigOpener`, `loadProfileDependencies`, and
+  `gitCloudConfigOpener` are private. Production explicitly selects the
+  Git-backed opener, which delegates directly to unchanged
+  `config.OpenGitCloudConfig(profilePath)` and returns the complete result as
+  `config.CloudConfig`. A zero dependency returns nil before invoking an
+  opener or touching the supplied path.
+- Public `Context.LoadProfile(profilePath string)` keeps its exact signature
+  and is the production wrapper around private `loadProfile`. The helper still
+  assigns `config.OpenLocalConfig(profilePath)` first and the cloud interface
+  second, then preserves exact existence, debug-log, `TouchFile`, and error-log
+  ordering. Missing-parent errors, default bytes and mode, existing bytes, and
+  repeated public construction behavior remain unchanged.
+- Focused TDD first failed on the absent production dependency selector,
+  Git-backed implementation, helper, and safe dependency value. Final tests
+  cover concrete production selection, exact public `<profile>/cloud-config`
+  mapping, complete arbitrary profile-path delivery exactly once, exact
+  returned interface identity, safe zero behavior, and rejected empty recorder
+  populations while retaining every earlier local-config lifecycle case.
+- The first committed test draft exposed its own package-logger leak under the
+  required count-two gate. The new test was moved into the existing
+  state-restoring subtest wrapper and the same focused commit was amended before
+  acceptance. Final `pkg/context -count=2` and the fresh full empty-HOME
+  count-two suite pass.
+- `config.OpenGitCloudConfig`, `GitCloudConfig`, the 15-method `CloudConfig`
+  interface, `InitProjectFromDirectory`, project-selected profiles, cache
+  layout, refresh, every command caller, and every cached reader are byte-exact
+  against the implementation parent. Pinned API and CLI compatibility reports
+  pass.
+
+### Verification And Protected State
+
+- Final-commit `pkg/context`, `pkg/config`, `pkg/maven`, and `cmd/...` tests
+  pass. The byte-unchanged config-cloud direct harness retains all ten exact
+  IDs, selections, and meanings with
+  `declared=10 killed=10 survived=0 unusable=0`; its T1-T10 meta-test passes
+  with the same totals.
+- Direct exact Go 1.26.7 module verification, build, uncached count-one tests,
+  race count-one tests, and vet pass under `umask 022`, offline module
+  resolution, readonly project inputs, direct Xcode compilers, and managed
+  scratch. Pinned API/CLI compatibility and both compatibility meta-tests,
+  complete `make preflight`, ordinary `make test`, explicit
+  `make test-install`, a real scratch-local install, fresh empty-HOME count-two
+  tests, and all 62 launcher controls pass.
+- All 15 quality-audit meta-controls pass. The canonical audit has its expected
+  finding exit 1 rather than audit-broken exit 2. Its structured Q0-Q2 scope
+  has all 21 automated criteria PASS and zero scoped ratchet regression; the
+  six manual criteria remain correctly unclaimed. The sole overall regression
+  remains the pre-existing Q3.4 documentation indicator.
+- Go 1.18 and protected 234 modules, 3,599 graph edges, 355 production entries,
+  429 complete-test entries, 197 module-backed entries across 41 loaded
+  modules, and 1,067 sum lines reproduce. `go.mod`, `go.sum`, and graph hashes
+  remain respectively
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
+- Discarded environment-only attempts were not accepted as evidence: the
+  Homebrew launcher reported its underlying Go 1.26.2 under
+  `GOTOOLCHAIN=local`, two default compatibility reports briefly appeared in
+  ignored `target/` before exact removal and scratch redirection, and an audit
+  wrapper initially required a markdown artifact that the valid finding exit
+  deliberately invalidates. None changed product state or the final gates.
+- The contained 57,730-entry task root was audited before removal: 8,065
+  directories, 49,665 regular files, zero symlinks, and zero special entries.
+  Its resolved root stayed beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`; the exact
+  task-owned subtree was then removed completely before the handoff commit.
+
+The rollback boundary remains the single focused two-file implementation
+commit. The reciprocal successor is planning-only and may select at most one
+further owned cloud slice; it may not execute that slice, inspect or select
+`ply-config`, route the project constructor, combine construction moves, alter
+caller policy, or begin Spring or packaging work.
