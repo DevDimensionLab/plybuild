@@ -15874,6 +15874,62 @@ Soheilhy/cmux evaluation (2026-09-24):
   **Mvn-Pom-Mutator Cmux Ownership Study**; or stop unresolved. It is not
   launched; no other dependency group or P8 work begins.
 
+Soheilhy/cmux product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded
+  `github.com/soheilhy/cmux v0.1.4` remains unchanged under a Cmux-specific,
+  unqualified, non-transferable exception. No canonical stable fully
+  qualifies, and no changed stable has a genuine supported tidy-stable project
+  owner. This bounded acceptance is not a release qualification or safety
+  claim. The **Mvn-Pom-Mutator Cmux Ownership Study** is neither authorized
+  nor run.
+- Retention requires the exact main -> direct loaded mvn-pom-mutator v0.2.3 ->
+  selected Cmux v0.1.4 route; the requester's metadata-only edge and zero
+  target source imports; positive requester why and runtime relevance;
+  negative target why; zero target repository import, production/complete-test/
+  module-backed load, and runtime relevance; the sole request, no target root,
+  and exact v0.1.4 selection through all 84 checkpoints. Every historical
+  Viper and old/new mvn-pom-mutator edge must remain metadata-only. Any change
+  requires a fresh owning evaluation and explicit decision.
+- Selected release identities, sums, and the project module-sum-only boundary
+  remain exact. Exact owner/release/GitHub Release/tag/commit/tree/signature/
+  ancestry/proxy/sumdb/archive/module/license identities, source/build facts,
+  API/behavior/caller/concurrency/lifecycle/error identities, closure, native
+  vet/test, cross results, projection, advisory, Go-floor, and every earlier
+  guard are expiry conditions.
+- V0.1.0-v0.1.4 retain incomplete synthesized metadata and continue failing
+  standalone build, test compilation, vet, and every cross row. V0.1.5 retains
+  complete metadata and passing safe verification/build/test/race/cross
+  evidence, but continues failing mandatory vet under both exact SDKs. Partial
+  safe evidence does not qualify a release.
+- A disposable selected get must continue manufacturing a root and source sum
+  that ordinary tidy removes to restore the common projection. A v0.1.5 get
+  must continue changing only Cmux among selected modules before tidy discards
+  it for lack of an owner and again restores v0.1.4 and the common projection.
+  No genuine supported tidy-stable owner may request v0.1.5. No projection is
+  authorized or retained.
+- Empty target advisory responses do not imply safety or qualification.
+  Selected focal scanning remains invalid because incomplete metadata prevents
+  package loading; v0.1.5 retains 25/10/2/2 focal findings. Corrected index/CNA
+  identities and project 30/22/20/20 results without a Cmux or named protected
+  trace remain exact; client_golang and every named guard retain their separate
+  identities. No earlier exception transfers.
+- Guard-only revalidation reproduces clean continuity at exact Cmux evaluation
+  HEAD `e57c5376cbd858d8140d30cadc041061a23f0598`, parent
+  `61fa143b149f39a3df60bf0b9c20c389dc47bdd2`, tree
+  `19c2e241f8a21da6f6baf5f085065d6b2435a264`, and five-file changed set;
+  reciprocal archives and launcher; UUID ancestry; ordinary/ignored
+  cleanliness; 234 modules, 3,599 edges, 1,067 sum lines; protected module/
+  sum/graph hashes; Go 1.18; all earlier selections/requests/exceptions; and
+  27/27 Q0-Q2 PASS at L2. No completed test or network evidence was rerun.
+- P7 remains active only with one prepared bounded evaluation of the next
+  unevaluated alphabetical module, exact selected indirect
+  `github.com/spaolacci/murmur3
+  v0.0.0-20180118202830-f09979ecbc72`. Its single selected cespare/xxhash
+  v1.1.0 request and negative target why are starting observations only. The
+  successor is not launched; no study, other group, exception transfer, or P8
+  work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

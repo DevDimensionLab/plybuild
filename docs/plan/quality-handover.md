@@ -7089,12 +7089,68 @@ archive graph has one NEXT decision; and all contained task-scratch entries
 were verified without symlink, outside-path, or special entries and removed.
 The evaluation grants no exception.
 
+## Soheilhy Cmux Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/soheilhy/cmux v0.1.4` remains unchanged under a Cmux-specific,
+unqualified, non-transferable exception. No canonical stable fully qualifies
+and no changed stable has a genuine supported tidy-stable project owner. This
+is a bounded product acceptance, not a release qualification, safety claim, or
+transferable qualification. The **Mvn-Pom-Mutator Cmux Ownership Study** is not
+authorized or run.
+
+Retention requires the exact main -> direct loaded, why-positive, runtime-
+relevant mvn-pom-mutator v0.2.3 -> selected Cmux v0.1.4 route. The target
+request must remain indirect metadata with zero source imports. Cmux must
+remain why-negative, unloaded, absent from project imports and all project load
+populations, runtime-irrelevant, selected through one request, and never a main
+root. All 84 historical checkpoints and Viper/old-new-mvn-pom-mutator route
+epochs must retain v0.1.4 and metadata-only incoming edges. Any owner, request,
+route, import/load/runtime, support, root-history, or checkpoint change requires
+a fresh owning evaluation and explicit decision.
+
+Selected release identities, sums, and the project module-sum-only boundary
+remain exact. Every owner/repository/release/GitHub Release/tag/commit/tree/
+signature/ancestry/proxy/sumdb/archive/module/license, source/build, API/
+behavior/caller/concurrency/lifecycle/error, closure, native vet/test, cross,
+projection, Go-floor, and advisory identity in the answered evaluation remains
+an expiry guard.
+
+V0.1.0-v0.1.4 must continue failing standalone build, test compilation, vet,
+and every cross row because their synthesized metadata omits x/net/http2 and
+hpack. V0.1.5 must continue passing its recorded safe verification, build,
+complete count-one/count-ten, race, and 40 cgo-disabled production/test-
+compilation results while failing mandatory vet under both exact SDKs because
+upstream tests call `testing.T.Fatal` from non-test goroutines. Passing safe
+evidence stays partial and cannot qualify a release.
+
+A selected get must continue manufacturing only a redundant target root and
+source sum that tidy removes to restore v0.1.4 and the common projection. A
+v0.1.5 get must continue changing only Cmux among selected modules before tidy
+discards it for lack of an owner and again restores the common projection. No
+supported tidy-stable owner may request v0.1.5. No projection is authorized or
+retained.
+
+Empty target advisory results do not imply safety or qualification. Selected
+focal scanning remains invalid because incomplete metadata prevents package
+loading; v0.1.5 retains 25/10/2/2 focal findings. Corrected index/CNA identities
+and project 30/22/20/20 results without a Cmux or named protected trace remain
+exact; client_golang and every named guard retain separate identities. No
+earlier exception transfers. Guard-only revalidation reproduces exact clean
+continuity, reciprocal archives and launcher, UUID ancestry, exact five-file
+starting handoff, ordinary/ignored cleanliness, 234 modules, 3,599 edges,
+1,067 sum lines, protected module/sum/graph hashes, Go 1.18, all earlier
+selections/requests/exceptions, and 27/27 Q0-Q2 PASS at L2. No completed
+evaluation, test, study, or network research was rerun. No source, dependency,
+root, study, other group, or P8 work is included.
+
 ## Next Bounded Objective
 
-Run only [the prepared reciprocal Soheilhy Cmux product decision](agent-sessions/2026-09-24T050305+0200-decide-soheilhy-cmux-product-direction.md).
-Choose exactly one: retain selected v0.1.4 under a Cmux-specific unqualified,
-non-transferable exception; authorize only a later measurement-only
-**Mvn-Pom-Mutator Cmux Ownership Study**; or stop P7 unresolved. The decision
-is prepared but not launched. Do not rerun the completed evaluation, run a
-study, change a dependency or root, combine another group, transfer or reopen
-an exception, or begin P8.
+Run only [the prepared bounded Spaolacci Murmur3 evaluation](agent-sessions/2026-09-24T051502+0200-evaluate-spaolacci-murmur3-dependency.md).
+Resolve exact selected indirect `github.com/spaolacci/murmur3
+v0.0.0-20180118202830-f09979ecbc72` and its canonical Go-1.18-compatible
+release line without assuming that the physical selection, its sole selected
+cespare/xxhash v1.1.0 request, the observed TSDB route, or negative target and
+requester why establish qualification or genuine ownership. The evaluation is
+prepared but not launched. Do not run a rejected study, combine another group,
+transfer or reopen an exception, or begin P8.
