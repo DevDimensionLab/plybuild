@@ -1131,174 +1131,211 @@ exit 70
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
 #|SESSION_STATUS=NEXT
-#|SESSION_ID=2026-09-24T073300+0200-decide-stretchr-testify-product-direction
-#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T073300+0200-decide-stretchr-testify-product-direction.md
-#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T064425+0200-evaluate-stretchr-testify-dependency.md
+#|SESSION_ID=2026-09-24T074500+0200-evaluate-tmc-grpc-websocket-proxy-dependency
+#|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T074500+0200-evaluate-tmc-grpc-websocket-proxy-dependency.md
+#|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-24T073300+0200-decide-stretchr-testify-product-direction.md
 # CODEX_MUTABLE_SESSION_HEADER_END
 
 # CODEX_MUTABLE_PROMPT_BEGIN
 #|# Mission
 #|
-#|Continue P7 with exactly one explicit product-direction decision for exact
-#|selected indirect `github.com/stretchr/testify v1.9.0`. Choose one of the
-#|three authorized moves below. This is a decision-only session: do not rerun
-#|the completed evaluation, execute a study, change a dependency, add a root,
-#|combine another dependency group, relax the Go 1.18 floor, or begin P8.
+#|Continue P7 with exactly one fresh, bounded evaluation of the next unevaluated
+#|alphabetical module, exact selected indirect
+#|`github.com/tmc/grpc-websocket-proxy
+#|v0.0.0-20190109142713-0ad062ec5ee5`. Resolve its canonical exact-path release
+#|line and highest fully qualified Go-1.18-compatible stable from primary
+#|evidence. Implement one exact dependency-only changed selection only if the
+#|candidate, complete minimal closure, genuine supported tidy-stable project
+#|owner, and every earlier guard remain exact. Do not combine another dependency
+#|group or begin P8.
 #|
-#|# Closed Evaluation
+#|# Defensive Scope
 #|
-#|The fresh bounded Testify evaluation is complete. Exact go-import metadata
-#|maps the path to the public, enabled, unarchived, non-fork MIT
-#|`stretchr/testify` repository on `master`. The proxy has 31 stable artifacts
-#|and no prerelease; v1.2.3 is a misspelled-path, self-retracted artifact and not
-#|a canonical exact-path release, leaving 30 canonical v1 stables. There is no
-#|alternate major, replacement, canonical retraction, or deprecation. All
-#|release chronology, GitHub Release, tag/commit/tree/signature/ancestry,
-#|proxy/sumdb/archive-to-Git, module/license, package, and source/build identities
-#|are resolved.
+#|This is an ordinary dependency-quality evaluation. Use public metadata,
+#|static source and repository records, project graph/build commands, upstream
+#|tests, and only small bounded ordinary fixtures required by documented
+#|behavior. Do not fuzz, stress, probe resource exhaustion, create oversized,
+#|deeply nested, cyclic, malformed, adversarial, or escape-sequence payloads,
+#|reproduce a security issue, or perform security or exploitability analysis.
 #|
-#|No canonical stable fully qualifies. V1.12.1 is the highest stable whose
-#|target module declares a Go version compatible with Go 1.18, but its complete
-#|closure reaches Go 1.20 through Objx v0.5.3. V1.8.2 is the highest stable whose
-#|complete closure remains within Go 1.18. Every release's complete suite
-#|necessarily runs assert and require tests that intentionally provide invalid
-#|JSON. Count-one, repeated, and race rows were therefore STOPPED rather than
-#|cross the defensive scope. Safe verification, build, no-run test compilation,
-#|vet, and supported cgo-disabled cross-compilation evidence is partial and
-#|cannot replace stopped mandatory rows or qualify a release.
+#|Every disposable cache, tool, archive, report, project copy, fixture, or
+#|advisory response must remain beneath `${CODEX_SESSION_SCRATCH_ROOT:?}`.
+#|Never write to `/private/tmp`, `/tmp`, a sibling of the managed root, or
+#|another external root. Set every tool temp/cache root explicitly, verify
+#|containment, and remove task-owned scratch evidence before handoff.
 #|
-#|Testify exposes assert/require helpers, mock expectations and callbacks, suite
-#|lifecycle hooks, and HTTP/filesystem/JSON/YAML/equality/error/collection/timing
-#|helpers. Caller maps, slices, interfaces, pointers, callbacks, channels, test
-#|objects, and suite instances remain caller-owned; mock arguments can alias,
-#|callbacks can mutate, pointer changes affect comparisons, and callers must
-#|synchronize shared state. Require uses `FailNow` on the test goroutine;
-#|timing/channel helpers can block and are scheduling-dependent. Exact API,
-#|behavior, ownership/mutation, determinism, concurrency, lifecycle/cleanup,
-#|error, build-tag/cgo/generate/embed/unsafe, symlink/submodule, and archive facts
-#|are closed guards.
+#|# Authorized Roadmap And Closed Decisions
 #|
-#|The current graph has 51 requests: 43 test-file imports, three Logrus internal
-#|test-support imports, and five metadata-only edges. Selected Units
-#|`0f3dac36c52b` and go-toml/v2 v2.2.2 request selected v1.9.0 only for tests.
-#|The selected shortest route is main -> Units -> Testify v1.9.0; target why is
-#|positive only through go-term-markdown's dependency tests. Testify is not
-#|imported by project source, is absent from production/complete-test/module-
-#|backed load populations, is indirect, unloaded, runtime-irrelevant, and not a
-#|root. It genuinely imports excepted Objx v0.5.2 in production `mock/mock.go`,
-#|but that does not establish project ownership or qualification.
+#|P2A-P6 are complete. P7 remains active after exact Go 1.26.7, every accepted
+#|dependency move through Google UUID v1.4.0, qualified go-cleanhttp v0.5.2,
+#|qualified no-selection-change modern-go/concurrent, modern-go/reflect2, and
+#|rogpeppe/fastuuid, and all final target-specific decisions through Testify.
+#|P8 remains queued. Selected rogpeppe/go-internal v1.9.0 was already fully
+#|verified and closed as Cast v1.5.1's minimal test closure. Selected
+#|subosito/gotenv v1.4.2 was already evaluated and retained after v1.6.0 failed
+#|its mandatory self-tests. Do not repeat either as a standalone queue item.
+#|Selected Logrus, the completed Spf13 dependency groups, and every earlier
+#|direct or closure result remain closed under their recorded guards.
 #|
-#|All 84 historical checkpoints graph successfully and Testify is never a root.
-#|Selections are v1.3.0/1, v1.4.0/29, v1.7.0/7, v1.7.1/1, v1.8.0/3,
-#|v1.8.1/26, and v1.9.0/17. Eighteen shortest routes span 20 consecutive
-#|epochs. The complete historical union has 94 requester-version edges: 82
-#|test-file imports, six Logrus internal test-support imports, and six metadata-
-#|only edges. Every selected route ends at a test boundary and no requester owns
-#|v1.12.1.
+#|Exact selected indirect unloaded `github.com/stretchr/testify v1.9.0`
+#|remains unchanged only under its Testify-specific, unqualified,
+#|non-transferable exception. No canonical stable fully qualifies. Selected
+#|v1.9.0's closure reaches Go 1.20 through separately excepted Objx v0.5.2, and
+#|v1.12.1 is not an authorized candidate. The exception relies only on the
+#|exact test-only requesters/why route, unloaded/runtime-irrelevant target,
+#|unchanged history, passing safe evidence, current exact-Go-1.18 consumption,
+#|genuine selected Objx production import, and advisory boundary. It is neither
+#|release qualification nor a safety claim.
 #|
-#|A disposable v1.12.1 get manufactures a main Testify root. Ordinary tidy
-#|retains it and selects Testify v1.12.1, Objx v0.5.3, and go.yaml/v3 v3.0.5.
-#|That is three changed selections, invalidates the exact Objx exception, and
-#|has no genuine supported owner. No projection is retained; normal no-op tidy
-#|reproduces the protected common projection.
+#|Preserve all 51 current and 94 historical-union Testify requests and their
+#|test-file, internal test-support, or metadata-only boundaries; selected
+#|Units/go-toml/v2 requests; the dependency-test-only why route; target import/
+#|load/runtime/root facts; all 84 historical checkpoints, selection counts,
+#|routes, and epochs; selected and candidate sums; every owner/release/source/
+#|API/behavior/closure/native/cross/projection/advisory identity; the separate
+#|Objx exception; and every Testify expiry condition. Do not run the rejected
+#|**Units/Go-TOML Testify Ownership Study**, add a Testify root, select v1.12.1,
+#|waive stopped mandatory rows or the Go floor, alter Objx, or transfer either
+#|exception.
 #|
-#|Exact-version OSV, narrow GitHub, and pinned selected/candidate focal
-#|govulncheck results are empty. Advisory absence does not imply safety or
-#|qualification. The corrected index/CNA identities, project 30/22/20/20
-#|population without Testify/Objx/protected traces, and client_golang advisory
-#|identity remain exact.
+#|Exact selected Objx v0.5.2, Murmur3 pseudo-version, Cmux v0.1.4, Goconvey
+#|v1.6.4, Assertions pseudo-version, sanitized_anchor_name v1.0.0, go-diff
+#|v1.2.0, Blackfriday v2.1.0, TSDB v0.7.1, Procfs v0.0.8, Common v0.9.1,
+#|client_model v0.2.0, and client_golang v1.4.0 separately remain only under
+#|their own target-specific, unqualified, non-transferable exceptions. Preserve
+#|Complete, go-difflib, SFTP, pkg/errors, Goe, ULID, go-conntrack, fastuuid, and
+#|every earlier qualified or excepted result under its own exact guards. Do not
+#|run rejected studies, select rejected candidates, reopen a completed module,
+#|or transfer an exception.
 #|
-#|# Protected State And Closed Guards
+#|# Protected Starting State
 #|
-#|Start only from the clean Testify evaluation handoff on
+#|Begin only from the clean Testify product-decision handoff on
 #|`codex/upgrade-quality`. Verify its HEAD, parent, tree, exact changed set,
 #|branch and Google UUID ancestry, reciprocal archive chain, sole NEXT state,
-#|launcher mirror/check, and ordinary/ignored cleanliness. Stop for a fresh
-#|owning decision if a protected input changed. Do not rerun completed release,
-#|source, behavior, closure, test, projection, history, or network research when
-#|guard-only evidence remains exact.
+#|launcher mirror/check, and ordinary and ignored cleanliness. Stop for a fresh
+#|owning decision if any protected input changed.
 #|
-#|The unchanged project remains exactly 234 modules, 3,599 graph edges, 355
-#|production entries, 429 complete-test entries, 197 module-backed entries over
-#|41 loaded modules, and 1,067 `go.sum` lines. Protected `go.mod`, `go.sum`,
-#|graph, normal-tidy diff, common 52/948-line 234-module/3,557-edge projection,
-#|Go 1.18 floor, 27/27 Q0-Q2 PASS at L2, and exact Go 1.18.10/Go 1.26.7 archive
-#|and binary identities remain exact. No projection is retained.
+#|The unchanged real project has exactly 234 modules, 3,599 graph edges, 355
+#|production entries, 429 complete-test entries, 197 module-backed entries
+#|across 41 loaded modules, and 1,067 `go.sum` lines. `go.mod`, `go.sum`, and
+#|graph SHA-256 remain
+#|`7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+#|`87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+#|and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
+#|Normal tidy has the established 432-line diff at
+#|`3309bc33637f6868a75b6f3006f333e547d8481645da22f238763297bbedc708`;
+#|the common 52/948-line, 234-module/3,557-edge projection has `go.mod` /
+#|`go.sum` hashes
+#|`5881324093819c0c824281bab7ee950a9eac9a888e9ae50377af386119872479` /
+#|`b01164dfb62d3a2b7a049ee46d79ef1f48fd6e5a3527715729a1911e2b6dff8a`.
+#|No projection is retained. The module floor remains Go 1.18 and accepted
+#|quality remains 27/27 Q0-Q2 PASS at L2.
 #|
-#|Preserve every earlier qualified result and every target-specific,
-#|unqualified, non-transferable exception through Objx. Objx v0.5.2 retains only
-#|its exact genuine-Testify production-import owner and all recorded expiry
-#|guards. Do not run the rejected **Testify Objx Ownership Study**, transfer an
-#|exception, reopen a completed module, select a rejected candidate, or relax
-#|the Go floor.
+#|Official Go 1.18.10 archive/binary SHA-256 remains
+#|`718b32cb2c1d203ba2c5e6d2fc3cf96a6952b38e389d94ff6cdb099eb959dade` /
+#|`f96ea900187be55d1be92addc093c44af2a437f50b58e2d56b05bc8a37b29c74`;
+#|Go 1.26.7 remains
+#|`020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d` /
+#|`9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`.
+#|Use only exact verified binaries for named SDK gates.
 #|
-#|Preserve Testify's exact owner/repository/release chronology; Go floors;
-#|GitHub Releases; tag/commit/tree/signature/ancestry; proxy/sumdb/archive-to-
-#|Git; module/license/package/source identities; selected/candidate sums; public
-#|API and behavior; caller ownership/mutation, determinism, concurrency,
-#|lifecycle/cleanup/error boundaries; build-tag/cgo/generate/embed/unsafe facts;
-#|closure/native/vet/test/race/cross results; projection effects; advisories;
-#|all 51 current and 94 historical-union requests and boundaries; all 84
-#|checkpoints, selection counts, routes/epochs; why/import/load/runtime/root
-#|facts; and every earlier guard.
+#|All 47 pre-Goe selections and 276 incoming edges remain exact at
+#|`7f2d3038c8376a7de6790d21b2a496017182f3171ec3335af11387b542c70d3d`.
+#|Every later selection/request count, qualification, exception, route, source,
+#|behavior, closure, projection, advisory, and expiry fact through Testify
+#|remains separate and exact.
 #|
-#|# Authorized Product Moves
+#|# Target Starting Observation
 #|
-#|Choose exactly one:
+#|Read-only queue identification selects exact
+#|`github.com/tmc/grpc-websocket-proxy
+#|v0.0.0-20190109142713-0ad062ec5ee5`. The current graph has one observed
+#|incoming request: direct project dependency mvn-pom-mutator v0.2.3 requests
+#|the selected pseudo-version. The target why result is negative, project source
+#|has no target import, and the protected `go.sum` contains only the selected
+#|module-file sum. The current shortest observed route is `main -> direct
+#|mvn-pom-mutator v0.2.3 -> selected target`.
 #|
-#|1. **Retain selected v1.9.0 under a Testify-specific exception
-#|   (recommended).** Keep exact selected indirect
-#|   `github.com/stretchr/testify v1.9.0` unchanged under a new unqualified,
-#|   non-transferable exception. State precisely that no canonical stable fully
-#|   qualifies, selected v1.9.0's closure reaches Go 1.20 through separately
-#|   excepted Objx v0.5.2, and v1.12.1 is not an authorized candidate. The
-#|   bounded acceptance may rely only on the exact test-only requesters/why
-#|   route, unloaded/runtime-irrelevant target, unchanged history, passing safe
-#|   evidence, current successful exact-Go-1.18 consumption, genuine selected
-#|   Objx import, and advisory boundary. It is neither release qualification nor
-#|   a safety claim. Expire it on any owner, request, route, import/load/runtime,
-#|   root, source/API/behavior, Go-floor, closure, defensive-scope, vet/test/race,
-#|   projection, Objx-exception, or advisory change. Make no dependency, source,
-#|   or root change.
-#|2. **Authorize a later Units/Go-TOML Testify Ownership Study.** Define one
-#|   separate, measurement-only study that may determine whether supported
-#|   genuine test owners can own a fully qualified Go-1.18-compatible Testify
-#|   selection while preserving Objx and every project guard. Do not run it now,
-#|   pre-authorize a dependency change, add a Testify root, waive stopped rows or
-#|   a Go floor, transfer the Objx exception, or imply any release qualifies.
-#|   P7 remains blocked on that later study and another explicit owning decision.
-#|3. **Stop P7 unresolved.** Make no dependency, source, root, exception, study,
-#|   other-group, or P8 change. Record Testify as the unresolved blocker.
+#|These are starting observations only. Independently reproduce every request,
+#|the requester's import or metadata boundary, complete current and historical
+#|route from main, target/requester why, repository import, production/complete-
+#|test/module-backed load, runtime relevance, and current/historical root fact.
+#|Physical selection, a request, a route, or advisory absence does not establish
+#|qualification or genuine project ownership.
 #|
-#|# Decision Contract
+#|The corrected Go vulnerability index guard is exactly 518,501 bytes and 1,402
+#|records at SHA-256
+#|`bdd6fef3e1c488176122a98315a4c8c6874d09c6ad0d65ae69fa0fb44fa2c4cd`.
+#|The PUBLISHED CVE-2026-14362 CNA response is exactly 2,807 bytes at
+#|`cacd85de49cc8685c4eb5a378d1825408bae27e152b0db60c6068e784082c659`.
+#|The unchanged project advisory guard remains 30/22/20/20 module/package/
+#|symbol/test-symbol findings with no Testify, Objx, or named protected trace.
+#|Client_golang v1.4.0 retains GHSA-cg3q-j54f-5p7p / GO-2022-0322 /
+#|CVE-2022-21698. Revalidate target and guard advisories narrowly; advisory
+#|absence cannot qualify the target.
 #|
-#|Make exactly one choice. Preserve selected v1.9.0 and every earlier guard
-#|unless option 1 explicitly grants only the target-specific retention above.
-#|Do not transfer another exception. A study authorization is not permission to
-#|run it or to change Testify, Objx, Units, go-toml/v2, go-term-markdown, or
-#|another module.
+#|# Evaluation Contract
 #|
-#|Answer this archive, update the roadmap and rolling handover, verify contained
-#|scratch cleanup, run final exact-Go-1.26.7 project module verification, build,
-#|count-one tests, race count-one tests, and vet, and make one local handoff
-#|commit. Do not rerun the completed Testify evaluation unless a guard-only
-#|check proves a protected input changed.
+#|Resolve exact go-import owner, repository identity/status/license/default
+#|branch, exact-path stable/prerelease/pseudo-version/replacement/retraction/
+#|deprecation and alternate-major lines, release chronology, Go-floor
+#|compatibility, tags, commits, trees, signatures, ancestry, proxy/sumdb/
+#|archive-to-Git identity, module/license files, packages, and source/build
+#|boundaries from primary evidence. Inspect every Go-1.18-compatible canonical
+#|stable needed to identify the highest fully qualified release; do not assume
+#|latest, the selected pseudo-version, a physical graph selection, or a passing
+#|build is qualified.
 #|
-#|# Required Reading
+#|Review the public API and documented ordinary behavior, caller input/output
+#|ownership and mutation, determinism, concurrency, lifecycle and cleanup,
+#|errors, network/listener/HTTP/WebSocket boundaries, build tags, cgo,
+#|generated/embed boundaries, symlinks, submodules, and archive entries.
+#|Exercise only small bounded ordinary fixtures required by documented
+#|contracts. Run the complete minimal closure's verification, build, complete
+#|count-one and repeated tests, race count-one tests, vet, and supported cgo-
+#|disabled production/test-compilation matrix under exact Go 1.18.10 and Go
+#|1.26.7. Stop any row that crosses the defensive scope and do not use partial
+#|evidence as qualification.
 #|
-#|Read the answered Testify evaluation and incorporated Objx, Murmur3, Cmux,
-#|Goconvey, Assertions, sanitized_anchor_name, go-diff, Blackfriday, fastuuid,
-#|TSDB, and earlier guards before deciding. Do not infer qualification from a
-#|physical selection, test-only ownership, passing safe rows, successful old-
-#|toolchain consumption, or empty advisory evidence.
+#|Map every target request and genuine current or historical route. Reproduce
+#|target/requester why, repository imports, production and complete-test loads,
+#|module-backed entries, runtime relevance, graph counts/hashes, tidy
+#|projection, all protected selections, and each exception boundary. Use only
+#|disposable project copies beneath managed scratch for candidate projections.
+#|Record exact selection, closure, graph, sums, Go-floor effect, genuine
+#|supported tidy-stable ownership, and every earlier guard. Retain no projection
+#|unless every gate passes and the implementation contract authorizes exactly
+#|one dependency-only selection.
+#|
+#|Query exact-version OSV, narrow GitHub global/repository advisories, pinned
+#|govulncheck v1.8.0 focal closures, and the unchanged project guard. Do not
+#|infer safety or qualification from an empty advisory response and make no
+#|exploitability claim.
+#|
+#|# Required Reading And Handoff
+#|
+#|Read the answered Testify product decision/evaluation and all incorporated
+#|Objx, Murmur3, Cmux, Goconvey, Assertions, sanitized_anchor_name, go-diff,
+#|Blackfriday, fastuuid, TSDB, and prior guards before acting. Do not repeat
+#|completed work for another module, run a rejected study, transfer an exception,
+#|add an unqualified target root, or relax the Go 1.18 floor.
+#|
+#|If and only if one canonical stable, its complete closure, a genuine supported
+#|tidy-stable owner, and every earlier guard fully pass, implement exactly one
+#|dependency-only selection. Otherwise retain no projection and stop for one
+#|explicit product decision. Answer this archive, update the roadmap and rolling
+#|handover, verify containment and cleanup, run final exact-Go-1.26.7 project
+#|module verification, build, count-one tests, race count-one tests, and vet,
+#|and make one local handoff commit.
 #|
 #|# Automatic Handoff
 #|
-#|Do not launch a study or successor; push, merge, publish, release, stash,
-#|revert, bypass cleanup, remove the worktree, change a dependency or product
-#|source, add a target root, transfer or reopen an exception, combine another
-#|dependency group, or begin P8. If option 1 closes Testify, prepare but do not
-#|launch exactly one next bounded P7 queue item. If option 2 is chosen, prepare
-#|but do not launch exactly the named study. If option 3 is chosen, prepare no
-#|successor.
+#|Do not push, merge, publish, release, stash, revert, bypass cleanup, remove the
+#|worktree, transfer or reopen an exception, change product source, combine
+#|another dependency group, launch a study or successor, or begin P8. If the
+#|evaluation cannot make a fully qualified, genuinely owned exact selection,
+#|prepare but do not launch exactly one reciprocal product-direction decision.
+#|If it closes the target without such a decision, prepare but do not launch
+#|exactly one next bounded P7 queue item.
 # CODEX_MUTABLE_PROMPT_END

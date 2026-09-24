@@ -16116,7 +16116,9 @@ Stretchr/objx product decision (2026-09-24):
   ancestry, reciprocal archives/launcher, ordinary/ignored cleanliness, exact
   234/3,599/355/429/197/41/1,067 project state, protected hashes, and every
   earlier guard. Final exact-Go-1.26.7 verify/build/count-one/race/vet gates
-  pass. No study, dependency/source/root change, other group, or P8 work ran.
+  pass; the contained 23,885-entry task root had zero symlink or special
+  entries before successful removal. No study, dependency/source/root change,
+  other group, or P8 work ran.
 - P7 remains active only with one prepared, unlaunched bounded evaluation of
   the next alphabetical selected module, exact indirect
   `github.com/stretchr/testify v1.9.0`. Its current requests, dependency-test-
@@ -16179,6 +16181,58 @@ Stretchr/testify evaluation (2026-09-24):
   one NEXT decision; and all 168,330 contained evaluation entries are audited
   with zero symlink/outside/special entries and removed before handoff, leaving
   only launcher-owned cache state.
+
+Stretchr/testify product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded
+  `github.com/stretchr/testify v1.9.0` remains unchanged under a Testify-
+  specific, unqualified, non-transferable exception. No canonical stable fully
+  qualifies. Selected v1.9.0's closure reaches Go 1.20 through separately
+  excepted Objx v0.5.2, and v1.12.1 is not an authorized candidate. The
+  acceptance is neither release qualification nor a safety claim. The
+  **Units/Go-TOML Testify Ownership Study** is neither authorized nor run.
+- Retention requires selected Units `0f3dac36c52b` and go-toml/v2 v2.2.2 to
+  continue requesting selected v1.9.0 only for tests. The shortest route
+  remains main -> Units -> Testify and target why remains positive only through
+  go-term-markdown's dependency tests. Testify remains absent from project
+  source and protected loads, indirect, unloaded, runtime-irrelevant, and not
+  a root. Its genuine production Objx v0.5.2 import remains only the separate
+  Objx-exception owner, not Testify qualification or project ownership.
+- All 51 current request boundaries, all 84 checkpoints and no-root state,
+  exact selection counts, 18 routes/20 epochs, and the 94-edge historical
+  union remain expiry guards. Any owner, request, route, import/load/runtime,
+  support, root-history, or checkpoint change requires a fresh owning
+  evaluation and explicit decision. No requester may own v1.12.1.
+- Selected/candidate commit/tree/sums and project sum boundary; every owner/
+  repository/release/GitHub Release/tag/signature/ancestry/proxy/archive/
+  module/license/source identity; API/behavior/caller/concurrency/lifecycle/
+  error boundary; and closure, native, defensive-scope, vet/test/race, cross,
+  projection, declared/effective Go-floor, and advisory evidence remain exact
+  non-transferable expiry guards. Passing safe rows, successful current Go
+  1.18 consumption, physical selection, test-only requests, and empty advisory
+  evidence do not qualify v1.9.0 or imply safety.
+- A disposable v1.12.1 get must continue manufacturing a root before tidy
+  retains it and changes Testify, Objx, and go.yaml together. This remains an
+  unauthorized three-selection projection without a genuine owner and
+  violates Objx's exception. Normal no-op tidy retains the exact common
+  projection. Corrected index/CNA, focal 0/0/0/0, project 30/22/20/20,
+  client_golang, exact SDK, project/common-tidy, Go-floor, every earlier
+  selection/exception, and 27/27 Q0-Q2 guards remain exact. No earlier
+  exception transfers.
+- Guard-only revalidation reproduces clean continuity at exact Testify
+  evaluation HEAD `df1d9430ec30db1efdaaab3572971f596b7f217e`, parent
+  `2ac017de08a75dc477c5234f39a7267ee7f01f97`, tree
+  `e3498ad5c0a902002d7824da77dd3550d51692a5`, its five-file changed set, UUID
+  ancestry, reciprocal archives/launcher, ordinary/ignored cleanliness, exact
+  234/3,599/355/429/197/41/1,067 project state, protected hashes, and every
+  earlier guard. Final exact-Go-1.26.7 verify/build/count-one/race/vet gates
+  pass. No study, dependency/source/root change, other group, or P8 work ran.
+- P7 remains active only with one prepared, unlaunched bounded evaluation of
+  the next unevaluated alphabetical module, exact selected indirect
+  `github.com/tmc/grpc-websocket-proxy
+  v0.0.0-20190109142713-0ad062ec5ee5`. Its sole current mvn-pom-mutator
+  metadata request, negative target why, absent project import, and module-
+  file-only sum are starting observations only.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.

@@ -7394,10 +7394,71 @@ graph has exactly one NEXT Testify product decision. No source,
 dependency, root, projection, exception, study, other group, or P8 work is
 included.
 
+## Stretchr Testify Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/stretchr/testify v1.9.0` remains unchanged under a Testify-
+specific, unqualified, non-transferable exception. No canonical stable fully
+qualifies. Selected v1.9.0's complete closure reaches Go 1.20 through
+separately excepted Objx v0.5.2, and v1.12.1 is not an authorized candidate.
+This bounded acceptance is neither release qualification nor a safety claim.
+The **Units/Go-TOML Testify Ownership Study** is not authorized or run.
+
+Retention requires selected Units `0f3dac36c52b` and go-toml/v2 v2.2.2 to
+continue requesting selected v1.9.0 only for tests. The selected shortest
+route remains main -> Units -> Testify; target why remains positive only
+through go-term-markdown's dependency tests. Testify remains absent from
+project source and protected load populations, indirect, unloaded, runtime-
+irrelevant, and not a root. Its genuine production import of Objx v0.5.2
+remains only the separate Objx exception owner, not Testify qualification or
+project ownership.
+
+All 51 current request boundaries, all 84 historical checkpoints and no-root
+state, the recorded selection counts, 18 shortest routes and 20 epochs, and
+the 94-edge historical union remain expiry guards. Any owner, request, route,
+import/load/runtime, support, root-history, or checkpoint change requires a
+fresh owning evaluation and explicit decision. No requester may own v1.12.1.
+
+Selected/candidate commit, tree, sum, and project sum-boundary identities;
+complete owner/repository/release/GitHub Release/tag/signature/ancestry/
+proxy/archive/module/license/source facts; API/behavior/caller/concurrency/
+lifecycle/error boundaries; and build-tag/cgo/generate/embed/unsafe, closure,
+native, defensive-scope, vet/test/race/cross, projection, declared/effective
+Go-floor, and advisory evidence remain non-transferable expiry guards.
+Passing safe rows, current exact-Go-1.18 consumption, physical selection,
+test-only requests, and empty advisory evidence do not qualify v1.9.0 or
+imply safety.
+
+A v1.12.1 get must continue manufacturing a Testify root before tidy retains
+it and changes Testify, Objx, and go.yaml together. That projection must
+continue violating the one-selection contract and exact Objx exception while
+lacking a genuine supported owner. Normal no-op tidy retains the exact common
+projection. No projection is authorized. Corrected index/CNA, focal 0/0/0/0,
+project 30/22/20/20, client_golang, exact SDK, project/common-tidy, Go-floor,
+every earlier selection/exception, and 27/27 Q0-Q2 guards remain exact. No
+earlier exception transfers.
+
+Guard-only revalidation reproduces clean continuity at Testify evaluation
+HEAD `df1d9430ec30db1efdaaab3572971f596b7f217e`, parent
+`2ac017de08a75dc477c5234f39a7267ee7f01f97`, tree
+`e3498ad5c0a902002d7824da77dd3550d51692a5`, its exact five-file changed
+set, UUID ancestry, reciprocal archives/launcher, ordinary/ignored
+cleanliness, exact 234/3,599/355/429/197/41/1,067 project state, protected
+hashes, and every earlier guard. Final exact-Go-1.26.7 verify/build/count-one/
+race/vet gates pass. Product source, `go.mod`, and `go.sum` remain byte-exact,
+and the contained 23,885-entry task root had zero symlink or special entries
+before successful removal. No study, dependency/source/root change, other
+group, or P8 work ran.
+
 ## Next Bounded Objective
 
-Run only [the prepared Testify product decision](agent-sessions/2026-09-24T073300+0200-decide-stretchr-testify-product-direction.md).
-Choose exactly one authorized move for selected indirect Testify v1.9.0. The
-decision is prepared but not launched. Do not rerun the evaluation, run either
-ownership study, change a dependency or source, add a root, transfer an
-exception, combine another group, relax Go 1.18, or begin P8.
+Run only [the prepared TMC gRPC WebSocket Proxy evaluation](agent-sessions/2026-09-24T074500+0200-evaluate-tmc-grpc-websocket-proxy-dependency.md).
+Evaluate exact selected indirect
+`github.com/tmc/grpc-websocket-proxy
+v0.0.0-20190109142713-0ad062ec5ee5` as one bounded P7 group. Its sole current
+mvn-pom-mutator metadata request, negative target why, absent project import,
+and module-file-only sum are starting observations only. The evaluation is
+prepared but not launched. Do not run either rejected ownership study, reopen
+a completed module, change another dependency or source, add an unqualified
+root, transfer an exception, combine another group, relax Go 1.18, or begin
+P8.
