@@ -16755,8 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after seven bounded cloud implementation slices; one eighth
-private template-project loader slice is selected and prepared for implementation.
+Status: active after eight bounded cloud implementation slices; one fresh
+planning checkpoint is prepared to select at most one further owned cloud slice.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17160,6 +17160,40 @@ private template-project loader slice is selected and prepared for implementatio
   reader; any `ply-config` knowledge; or any protected Go, dependency, graph,
   mutation, or quality change. The reciprocal successor implements only this
   private template-project loader and may not combine a second move.
+- Focused commit `d26d19232b18d70a4401586d75604d08f85bd8a8` completes the
+  eighth selected slice in exactly `pkg/config/cloud.go` and
+  `pkg/config/cloud_templates_test.go`. One private
+  `templateProjectLoader`, private production implementation, and one field on
+  the existing private `templatesDependencies` isolate the template callback's
+  direct project construction. Production retains the complete system
+  filesystem dependency, delivers each complete matched template directory
+  once to unchanged `InitProjectFromDirectory`, and returns the complete
+  `Project` and exact error. A missing loader returns zero `Project` plus exact
+  `filesystem.ErrNoFilesystem` without construction.
+- Focused characterization covers production filesystem and project-loader
+  selection, tracked current and legacy projects, arbitrary complete directory
+  delivery and exact per-match call counts, ignored and incoming-error
+  no-calls, complete project and embedded interface identity, exact error/log/
+  stop-order/partial and final-walk results, independent repeated invocations,
+  safe missing filesystem and loader behavior, and non-empty recordings.
+  Walking, matching, path/name derivation, append order, both cloud openers,
+  project/profile/migration/POM/cache behavior, public API, callers, other
+  readers, fixtures, and mutation files remain unchanged.
+- Final-commit config/context/Maven/command tests and unchanged config-cloud
+  direct/meta 10/10 mutation gates pass. Exact Go 1.26.7 verify/build/test/race/
+  vet, pinned API/CLI compatibility, complete preflight, ordinary test/install,
+  real scratch install, fresh empty-HOME count-two, all 15 audit controls, and
+  all 62 launcher controls pass. Structured Q0-Q2 has all 21 automated rows
+  PASS and no scoped regression; the six manual rows remain unclaimed and
+  Q3.4 remains the sole pre-existing overall ratchet regression. Protected
+  234/3,599/355/429/197/41/1,067 counts and all three hashes reproduce.
+- The reciprocal successor is planning-only. It must reproduce the exact
+  focused implementation and protected state, re-characterize remaining
+  repository-owned cloud effects, construction choices, and policy boundaries,
+  and select at most one smallest reversible next slice or stop unresolved.
+  It may not implement a slice, inspect or select `ply-config`, repair profile
+  behavior, reopen an earlier seam, alter caller policy, or begin Spring or
+  packaging work.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 
