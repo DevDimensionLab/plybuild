@@ -7249,13 +7249,58 @@ Go-1.26.7 verify/build/count-one/race/vet gates pass. Product source,
 removed. No evaluation, study, dependency/source/root change, other group, or
 P8 work was run.
 
+## Stretchr Objx Evaluation
+
+No dependency change is authorized or retained. The canonical exact-path line
+has nine stable releases v0.1.0-v0.5.3, no prerelease or alternate major, and
+no replacement, retraction, or deprecation. V0.5.1 is the highest stable
+compatible with Go 1.18; selected v0.5.2 and latest v0.5.3 declare Go 1.20.
+
+No compatible stable fully qualifies. Every v0.1.0-v0.5.1 suite necessarily
+exercises malformed JSON, and v0.1.1-v0.5.1 also exercise an invalid percent
+escape, so complete count-one/repeated/race rows are stopped at the defensive
+boundary. V0.1.0-v0.1.1 separately have incomplete synthesized test metadata.
+V0.2.0-v0.5.1 pass safe verification, build, no-run test compilation, vet,
+and 100/100 supported cgo-disabled rows in each of production and test-
+compilation mode under both exact SDKs, but partial safe evidence cannot
+qualify a release.
+
+The graph has 11 requests. Logrus v1.2.0/v1.4.2 request v0.1.1 without an Objx
+import; all nine Testify requesters genuinely import Objx in production
+`mock/mock.go`. The selected route is main -> Units `0f3dac36c52b` -> Testify
+v1.9.0 -> selected Objx v0.5.2. Objx why is negative; Testify why is positive
+only through go-term-markdown's tests. Objx is indirect, unloaded, absent from
+project imports and all load populations, runtime-irrelevant, and not a root.
+
+All 84 historical checkpoints reproduce 19 route epochs: v0.1.1 is selected
+in 38, v0.4.0 in four, v0.5.0 in 25, and v0.5.2 in 17. Objx and Testify are
+never roots, and no requester owns v0.5.1. A disposable v0.5.1 get manufactures
+a main root and forces unrelated Testify, Units, and go-toml/v2 downgrades;
+tidy then discards v0.5.1 for v0.5.0 and does not restore the baseline. No
+genuine supported tidy-stable owner exists and no projection is retained. The
+normal no-op tidy projection remains exact.
+
+Empty exact OSV, narrow GitHub, and pinned v0.5.1/v0.5.2 focal 0/0/0/0 results
+do not imply safety or qualification. Corrected index/CNA identities and the
+project 30/22/20/20 population without Objx or a named protected trace remain
+exact; client_golang retains its separate identity. All earlier selection,
+exception, SDK, project/common-tidy, Go-floor, and 27/27 Q0-Q2 guards remain
+unchanged.
+
+Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass with
+234 modules, 3,599 edges, 1,067 sum lines, and protected hashes unchanged. All
+280,695 task-owned evaluation entries and both small recheck roots were
+contained, audited with zero symlink/outside/special entries, and removed;
+only launcher-owned cache state remains. The 313-record reciprocal archive
+graph has exactly one NEXT Objx product decision. No source, dependency, root,
+projection, exception, study, other group, or P8 work is included.
+
 ## Next Bounded Objective
 
-Run only [the prepared Objx evaluation](agent-sessions/2026-09-24T055739+0200-evaluate-stretchr-objx-dependency.md).
-Evaluate exact selected indirect `github.com/stretchr/objx v0.5.2` as the next
-unevaluated alphabetical P7 module. The 11 observed incoming graph requests,
-selected Testify v1.9.0 request, historical Testify/Logrus requests, and
-negative target why are starting observations only. Do not run a rejected
-study, reopen or transfer an exception, combine another dependency group, add
-an unqualified root, relax the Go floor, or begin P8. The evaluation is
-prepared but not launched.
+Run only [the prepared Objx product decision](agent-sessions/2026-09-24T063300+0200-decide-stretchr-objx-product-direction.md).
+Choose exactly one: retain selected v0.5.2 under an Objx-specific unqualified,
+non-transferable exception; authorize but do not run a later measurement-only
+**Testify Objx Ownership Study**; or stop P7 unresolved. The decision is
+prepared but not launched. Do not rerun the closed evaluation, launch a study,
+change a dependency/source/root, transfer an exception, combine another group,
+relax the Go 1.18 floor, or begin P8.

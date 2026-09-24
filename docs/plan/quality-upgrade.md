@@ -16024,9 +16024,54 @@ Spaolacci/murmur3 product decision (2026-09-24):
   Final exact-Go-1.26.7 verify/build/count-one/race/vet gates pass. No
   completed evaluation, study, dependency/source/root change, other group, or
   P8 work was run.
-- P7 remains active with exactly one prepared, unlaunched bounded evaluation
-  of the next unevaluated alphabetical module, selected indirect
-  `github.com/stretchr/objx v0.5.2`.
+- The prepared Objx evaluation is now answered. P7 remains active only with
+  its reciprocal product-direction decision; that decision is not launched.
+
+Stretchr/objx evaluation (2026-09-24):
+
+- No dependency change is authorized or retained. The canonical exact-path
+  line has nine stable releases v0.1.0-v0.5.3 and no prerelease, alternate
+  major, replacement, retraction, or deprecation. V0.5.1 is the highest stable
+  compatible with Go 1.18; selected v0.5.2 and latest v0.5.3 declare Go 1.20.
+- No compatible stable fully qualifies. Every v0.1.0-v0.5.1 suite necessarily
+  exercises malformed JSON, and v0.1.1-v0.5.1 also exercise an invalid percent
+  escape, so complete count-one/repeated/race rows stop at the defensive
+  boundary. V0.1.0-v0.1.1 separately have incomplete synthesized test
+  metadata. V0.2.0-v0.5.1 pass safe verification, build, no-run test
+  compilation, vet, and the complete supported cross-compilation matrix under
+  both exact SDKs. Partial safe evidence cannot qualify a release.
+- The current graph has 11 requests. Logrus v1.2.0/v1.4.2 requests are
+  metadata-only; all nine Testify requesters genuinely import Objx in
+  production `mock/mock.go`. The selected route is main -> Units
+  `0f3dac36c52b` -> Testify v1.9.0 -> Objx v0.5.2. Objx why is negative;
+  Testify why is positive only through dependency tests. Objx is indirect,
+  unloaded, absent from project imports and load populations, runtime-
+  irrelevant, and not a root.
+- All 84 historical checkpoints reproduce 19 route epochs: v0.1.1 is selected
+  in 38, v0.4.0 in four, v0.5.0 in 25, and v0.5.2 in 17. Objx and Testify are
+  never roots, every route ends at a genuine-Testify or metadata-only-Logrus
+  boundary, and no requester owns v0.5.1.
+- A disposable v0.5.1 get manufactures a main root and forces unrelated
+  Testify, Units, and go-toml/v2 downgrades. Tidy discards v0.5.1 for v0.5.0,
+  retains an unrelated downgrade, and does not restore the no-op baseline. No
+  genuine supported tidy-stable owner exists, and no projection is retained.
+  The common no-op tidy projection remains exact.
+- Empty exact OSV, narrow GitHub, and pinned v0.5.1/v0.5.2 focal 0/0/0/0
+  results do not imply safety or qualification. Corrected index/CNA identities
+  and the project 30/22/20/20 population without Objx or a protected trace
+  remain exact; client_golang retains its separate identity. Every earlier
+  selection, exception, SDK, project/common-tidy, Go-floor, and Q0-Q2 guard is
+  unchanged.
+- The evaluation grants no exception. P7 stops for one prepared reciprocal
+  decision: retain selected v0.5.2 under an Objx-specific unqualified,
+  non-transferable exception; authorize but do not run a later measurement-
+  only **Testify Objx Ownership Study**; or stop P7 unresolved. It is not
+  launched; no other dependency group or P8 work begins.
+- Final exact-Go-1.26.7 project verify/build/count-one/race/vet gates pass.
+  Protected project identities remain exact; the 313-record archive graph has
+  one NEXT decision; and all 280,695 contained evaluation entries plus both
+  small contained recheck roots were audited and removed, leaving only
+  launcher-owned cache state.
 
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
