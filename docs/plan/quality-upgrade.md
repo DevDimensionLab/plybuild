@@ -16755,8 +16755,8 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after the first bounded cloud implementation slice; the second
-bounded implementation slice is selected but not executed.
+Status: active after the first two bounded cloud implementation slices; the
+next checkpoint is planning-only and not executed.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -16777,26 +16777,35 @@ bounded implementation slice is selected but not executed.
   meta-controls, the accepted 27/27 Q0-Q2 L2 contracts, empty-HOME tests, and
   all 62 launcher checks pass. Protected 234/3,599/355/429/197/41/1,067 counts
   and `go.mod` / `go.sum` / graph hashes reproduce without regression.
-- The next selected slice changes only `pkg/config/cloud.go` and
-  `pkg/config/cloud_test.go`: isolate the eager cached `services.json` load
-  behind one private zero-value-safe services loader. Production must retain
-  `Directory.FilePath("services.json")`, unchanged `file.ReadJson`, exactly
-  one eager load, and a stable closure over the exact value/error. The public
-  interface, cache layout, refresh, constructors, callers, other readers,
-  fixtures, mutations, and dependency metadata remain unchanged.
-- `Services` is selected ahead of nominally similar `Deprecated` and
-  `ProjectDefaults` seams because it alone has an existing focused success
-  fixture and pure downstream contracts. `GlobalCloudConfig` also carries
-  environment/YAML semantics; a common loader would combine four readers; and
-  a shared constructor factory would cross packages and add public surface.
+- Focused commit `c12307a078a29af74163df0c658d05c821482a33` completes the
+  second selected slice in exactly `pkg/config/cloud.go` and
+  `pkg/config/cloud_test.go`. One private services loader and private
+  dependency now isolate the eager cached `services.json` read; production
+  retains complete `Directory` delivery, exact `FilePath("services.json")`,
+  unchanged `file.ReadJson`, one eager load, and stable closure replay of the
+  exact value/error. A zero loader returns exact
+  `filesystem.ErrNoFilesystem` before path access.
+- Focused characterization covers production selection, complete dependency
+  delivery, exact filename, eager one-call behavior, stable repeated success
+  and error results, tracked fixture decode, exact path errors, safe zero
+  behavior, and non-empty recordings. Public API, cache layout, refresh,
+  constructors, callers, other readers, fixtures, mutation files, Go 1.18,
+  and dependency metadata are unchanged.
+- The unchanged config-cloud direct and meta harnesses retain exact 10/10
+  kills. Exact Go 1.26.7 full gates, pinned API/CLI compatibility, preflight,
+  all 15 audit controls, empty-HOME count-two, and all 62 launcher checks pass.
+  Structured Q0-Q2 has zero automated FAIL and zero ratchet regression; the
+  accepted 27/27 L2 state remains supported. Protected
+  234/3,599/355/429/197/41/1,067 counts and the three hashes reproduce.
+- `Services` is now private-effect-injected alongside `GitHookFiles`,
+  `Examples`, and `Templates`. `Deprecated`, `ProjectDefaults`, and
+  `GlobalCloudConfig` remain direct readers with their distinct recorded
+  fixture/semantic gaps. Caller refresh-policy gaps, real network/cloud
+  behavior, combined reader work, and construction changes remain guarded.
+- No third implementation slice is selected. The reciprocal successor is a
+  fresh planning-only checkpoint that may compare the smallest remaining
+  repository-owned cloud seams and select at most one or stop unresolved.
   Direct `ply-config` inspection, selection, or integration remains forbidden.
-- The reciprocal implementation successor is prepared but not executed. It
-  must use TDD for production selection, complete dependency delivery, exact
-  filename, eager one-call closure behavior, stable success/error replay,
-  exact path-error propagation, safe zero behavior, and non-empty recordings.
-  The ten config-cloud mutations remain byte-unchanged and must retain exact
-  10/10 kills. Any need for another reader, caller, or dependency knowledge
-  stops for a fresh owning decision.
 - Repair and modernize Spring behavior under dedicated characterization tests.
 - Revisit inactive packaging only through a separate scope decision.
 

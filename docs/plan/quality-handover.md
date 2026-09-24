@@ -1,6 +1,6 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-24T14:50:09+02:00
+Generated: 2026-09-24T15:30:32+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
@@ -15,36 +15,41 @@ session diary.
   `scripts/mutate-config-cloud`. Its private cache probe preserves one exact
   `<target>/.git` call, local-config-first order, pull/clone selection, Git
   formatting, safe zero value, callers, reads, fixtures, and dependencies.
-- The resulting boundary has three already-injected directory readers
-  (`GitHookFiles`, `Examples`, `Templates`) and four direct document readers
-  (`Services`, `Deprecated`, `ProjectDefaults`, `GlobalCloudConfig`).
-  `Services` eagerly resolves `services.json`, delegates to `file.ReadJson`,
-  then returns a closure over the value/error. No reader refreshes itself;
-  caller refresh policy and the two concrete construction sites are unchanged.
-- The next owned slice is only a private zero-value-safe services loader in
-  `pkg/config/cloud.go` with focused tests in `pkg/config/cloud_test.go`.
-  Production receives the complete `Directory`, requests exactly
-  `services.json`, retains unchanged `file.ReadJson`, loads exactly once when
-  `Services()` is called, and returns a stable closure. A missing loader returns
-  `filesystem.ErrNoFilesystem` without developer-path access. No exported API,
-  caller, other reader, fixture, mutation file, or dependency changes.
-- `Services` is smaller in evidence risk than `Deprecated` or
-  `ProjectDefaults`, which lack direct focused reader fixtures, and than
-  `GlobalCloudConfig`, which adds environment/YAML behavior. A common document
-  loader would combine four moves; a shared constructor factory crosses
-  packages and adds public surface. Direct `ply-config` work remains unowned.
-- Clean start verification reproduced the exact handoff/implementation shapes,
-  Google UUID ancestry, connected 329-archive chain, sole NEXT, launcher
-  mirror/check, cleanliness, fixtures, dependency metadata, and exact Go
-  1.26.7. Protected Go 1.18, 234/3,599/355/429/197/41/1,067 counts and
-  `go.mod`/`go.sum`/graph hashes remain exact. Focused `pkg/config`,
-  `pkg/context`, and `cmd` tests pass offline under managed scratch.
-- The implementation successor must use TDD for production selection, complete
-  dependency delivery, exact filename, eager one-call and stable closure
-  behavior, success/error/path-error propagation, safe zero value, and non-
-  empty recordings. The unchanged ten-mutation direct/meta gates must remain
-  10/10. Caller-policy, other-reader, real-network, and real-cloud gaps remain
-  guards; any second move requires a fresh planning checkpoint.
+- The second bounded P8 slice is exact focused commit
+  `c12307a078a29af74163df0c658d05c821482a33`, parent
+  `9bc26b9dc80b8ed059e09597b1a82675abd184af`, tree
+  `1edb19744f0abd6a4f6256991e14e8aa561711cd`, changing only
+  `pkg/config/cloud.go` and `pkg/config/cloud_test.go`. It adds one private
+  services-loader interface, private dependency value, file-backed production
+  implementation, and private eager helper without changing an exported API.
+- Production receives the complete `Directory`, requests exact
+  `services.json`, and delegates to unchanged `file.ReadJson`. `Services()`
+  loads exactly once and closes over the exact value/error; repeated closure
+  calls do not reload. A missing loader returns exact
+  `filesystem.ErrNoFilesystem` before developer-path access. Focused TDD covers
+  production selection, complete delivery, fixture decode, path errors, stable
+  success/error replay, safe zero behavior, and non-empty recordings.
+- The resulting boundary has four private injected read/effect paths
+  (`GitHookFiles`, `Examples`, `Templates`, `Services`) and three direct
+  document readers (`Deprecated`, `ProjectDefaults`, `GlobalCloudConfig`). No
+  reader refreshes itself; refresh, caller policy, and the two concrete
+  construction sites are unchanged. The remaining reader and caller evidence
+  gaps remain guards, not authorization for a combined move.
+- Focused config/context/command tests, unchanged config-cloud direct/meta
+  10/10 mutation gates, exact-Go-1.26.7 verify/build/count-one/race/vet, pinned
+  API/CLI compatibility, preflight, ordinary test/install/launcher gates,
+  empty-HOME count-two, and all 15 audit controls pass. Canonical structured
+  Q0-Q2 has zero automated FAIL and zero ratchet regression; the known overall
+  Q3.4 documentation ratchet remains outside this protected scope.
+- Protected Go 1.18, 234/3,599/355/429/197/41/1,067 counts and the exact
+  `go.mod`/`go.sum`/graph hashes reproduce. Refresh, callers, other readers,
+  fixtures, mutation files, and dependency metadata are byte-unchanged. API
+  and CLI reports pass.
+- No next implementation is owned yet. The sole successor is a fresh bounded
+  planning checkpoint that may compare only the smallest remaining
+  repository-owned cloud seams and select at most one. Direct `ply-config`
+  inspection/selection, implementation, combined readers, caller cleanup,
+  Spring, and packaging remain unowned.
 
 ## Repository And Continuity
 
@@ -7939,9 +7944,8 @@ language are retained in the answered exit archive and roadmap.
 
 ## Next Bounded Objective
 
-Run only [the prepared cached-services loader implementation](agent-sessions/2026-09-24T145009+0200-implement-cloud-services-loader-seam.md).
-Implement the private loader in `pkg/config/cloud.go` with focused
-`pkg/config/cloud_test.go` characterization, preserving the eager one-load
-closure and every protected boundary. Do not change mutation files, another
-reader, refresh, constructors, callers, fixtures, dependency metadata, inspect
-or select `ply-config`, or begin a second cloud, Spring, or packaging move.
+Run only [the prepared next P8 cloud planning checkpoint](agent-sessions/2026-09-24T153032+0200-plan-next-p8-cloud-modernization-move.md).
+Re-characterize the boundary after the completed cached-services seam and
+select at most one smallest repository-owned next slice or stop unresolved.
+Do not implement it, inspect or select `ply-config`, combine readers or caller
+cleanup, or begin Spring or packaging work.
