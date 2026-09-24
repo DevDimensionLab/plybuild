@@ -15680,6 +15680,54 @@ Smartystreets/assertions evaluation (2026-09-24):
   measurement-only **GoConvey Assertions Release/Ownership Study**; or stop
   unresolved. It is not launched; no other group or P8 work begins.
 
+Smartystreets/assertions product decision (2026-09-24):
+
+- Option 1 is final. Exact selected, indirect, unloaded
+  `github.com/smartystreets/assertions
+  v0.0.0-20180927180507-b2de0cb4f26d` remains unchanged under an Assertions-
+  specific, unqualified, non-transferable exception. No canonical stable fully
+  qualifies, and no changed stable has a genuine supported tidy-stable owner.
+  This bounded acceptance is not a release qualification or safety claim. The
+  **GoConvey Assertions Release/Ownership Study** is neither authorized nor
+  run.
+- Retention requires the exact main -> direct loaded mvn-pom-mutator v0.2.3 ->
+  Goconvey v1.6.4 -> selected Assertions route; mvn-pom-mutator's metadata-only
+  Goconvey edge; Goconvey's active supported repository, genuine production
+  Assertions import, and exact pseudo-version request; negative target/
+  requester why; zero repository import, project load, module-backed load, and
+  runtime relevance; the sole request across all 84 historical checkpoints;
+  target never being a main root; and exact selected sums. Any change requires
+  a fresh owning evaluation and explicit decision.
+- Exact owner/release/tag/commit/tree/signature/ancestry/proxy/sumdb/archive/
+  module/license identities, source/build boundaries, API/behavior/caller-
+  effect/concurrency/lifecycle identities, closures, native vet/test and
+  stopped defensive rows, cross results, projection, advisory, Go-floor, and
+  every earlier guard are expiry conditions. Every usable stable still fails
+  vet, cyclic upstream fixtures remain unexecuted, and partial safe evidence
+  does not qualify a release.
+- A disposable v1.13.1 get must continue manufacturing a redundant target root
+  and changing only the selection and its source/module sums; ordinary tidy
+  must remove the root/source sum and restore the common projection. No
+  supported tidy-stable owner may request v1.13.1. No projection is authorized
+  or retained.
+- Empty target advisory responses and focal 0/0/0/0 findings do not imply
+  safety or qualification. The corrected index/CNA identities and project
+  30/22/20/20 result without an Assertions trace remain exact; client_golang
+  and every named guard retain their separate identities. No earlier exception
+  transfers.
+- Guard-only revalidation reproduces clean continuity at the exact Assertions
+  evaluation HEAD/parent/tree and five-file changed set, reciprocal archives
+  and launcher, UUID ancestry, ordinary/ignored cleanliness, 234 modules,
+  3,599 edges, 1,067 sum lines, protected module/sum/graph hashes, Go 1.18,
+  all earlier selections/requests/exceptions, and 27/27 Q0-Q2 PASS at L2. No
+  completed test or network evidence was rerun.
+- P7 remains active only with one prepared bounded evaluation of exact selected
+  indirect `github.com/smartystreets/goconvey v1.6.4`. Its sole
+  mvn-pom-mutator v0.2.3 request, metadata-only predecessor edge, genuine
+  Assertions production import, and negative target why are starting
+  observations only. The successor is not launched; no study, other group,
+  exception transfer, or P8 work begins.
+
 - Keep the selected Go 1.26.7 declarations and exact baseline identity aligned;
   reconsidering the Go line requires a separate measured toolchain move.
 - Upgrade dependencies in small groups, with `go mod tidy`, build, tests, race,

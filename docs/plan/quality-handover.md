@@ -6898,11 +6898,58 @@ beneath the managed task root with no symlink or outside-path entry and removed.
 The evaluation grants no exception. Exactly one reciprocal product-direction
 decision is prepared and remains unexecuted.
 
+## Smartystreets Assertions Product Decision
+
+Option 1 is final. Exact selected, indirect, unloaded
+`github.com/smartystreets/assertions
+v0.0.0-20180927180507-b2de0cb4f26d` remains unchanged under an Assertions-
+specific, unqualified, non-transferable exception. No canonical stable fully
+qualifies and no changed stable has a genuine supported tidy-stable owner. This
+is a bounded product acceptance, not a release qualification, safety claim, or
+transferable qualification. The **GoConvey Assertions Release/Ownership Study**
+is not authorized or run.
+
+Retention requires the exact main -> direct loaded mvn-pom-mutator v0.2.3 ->
+Goconvey v1.6.4 -> selected Assertions route. Mvn-pom-mutator's Goconvey edge
+must remain metadata-only; active supported Goconvey must genuinely import
+Assertions in production and request only the pseudo-version. Target/requester
+why, repository import, production/complete-test/module-backed load, and runtime
+facts must remain zero. The exact sole request, all 84 historical checkpoints
+and route epochs, target never being a main root, and selected sums are expiry
+guards. Any change requires a fresh owning evaluation and explicit decision.
+
+Every owner/release/tag/commit/tree/signature/ancestry/proxy/sumdb/archive/
+module/license, source/build, API/behavior/caller-effect/concurrency/lifecycle,
+closure, native vet/test, stopped defensive row, cross, projection, Go-floor,
+and advisory identity in the answered evaluation remains an expiry guard. Every
+usable stable must continue failing mandatory vet under both exact SDKs. The
+recursive struct/array/map fixtures remain unexecuted; passing safe build and
+cross evidence stays partial and cannot qualify a release.
+
+A disposable v1.13.1 get must continue manufacturing a redundant target root
+and changing only the selection and source/module sums. Ordinary tidy must
+remove the root and source sum and restore the common projection, with no
+genuine supported tidy-stable owner requesting v1.13.1. No projection is
+authorized or retained.
+
+Empty target advisory results and focal 0/0/0/0 findings do not imply safety or
+qualification. Corrected index/CNA identities and project 30/22/20/20 results
+without an Assertions trace remain exact; client_golang and every named guard
+retain separate identities. No earlier exception transfers. Guard-only
+revalidation reproduces clean continuity, reciprocal archives and launcher,
+UUID ancestry, exact five-file starting handoff, ordinary/ignored cleanliness,
+234 modules, 3,599 edges, 1,067 sum lines, protected module/sum/graph hashes,
+Go 1.18, all earlier selections/requests/exceptions, and 27/27 Q0-Q2 PASS at
+L2. No completed evaluation, test, study, or network research was rerun. No
+source, dependency, root, study, other group, or P8 work is included.
+
 ## Next Bounded Objective
 
-Run only [the prepared Smartystreets Assertions product-direction decision](agent-sessions/2026-09-24T032851+0200-decide-smartystreets-assertions-product-direction.md).
-Choose exactly one: retain the exact selected pseudo-version under an
-Assertions-specific unqualified non-transferable exception; authorize only a
-later measurement-only **GoConvey Assertions Release/Ownership Study**; or stop
-P7 unresolved. Do not rerun the evaluation, execute the study, change a
-dependency or root, combine another group, transfer an exception, or begin P8.
+Run only [the prepared bounded Smartystreets Goconvey evaluation](agent-sessions/2026-09-24T034135+0200-evaluate-smartystreets-goconvey-dependency.md).
+Resolve exact selected indirect `github.com/smartystreets/goconvey v1.6.4` and
+its canonical Go-1.18-compatible release line without assuming that the
+physical selection, its sole mvn-pom-mutator metadata request, its genuine
+Assertions production import, or negative target why establishes qualification
+or genuine ownership. The evaluation is prepared but not launched. Do not run
+a rejected study, combine another group, transfer or reopen an exception, or
+begin P8.
