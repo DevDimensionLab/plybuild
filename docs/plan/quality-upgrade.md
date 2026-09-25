@@ -16755,10 +16755,10 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: cloud configuration closed at the retained Git-backed boundary after
-ten bounded implementation slices and the canonical compatibility map; P8 is
-active only for the prepared bounded read-only Spring Initializr compatibility
-evaluation authorized by the owning Option-1 direction decision.
+Status: cloud configuration is closed at the retained Git-backed boundary and
+Spring is closed at the retained Initializr behavior; P8 is active only for
+the separate inactive-packaging scope decision. No packaging planning or
+implementation is authorized.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17716,7 +17716,58 @@ evaluation authorized by the owning Option-1 direction decision.
   map expires on changed official identity/lifecycle, root/catalog/response
   behavior, local retained contracts/inputs, or roadmap priority. Rollback is
   documentation-only.
-- Revisit inactive packaging only through a separate scope decision.
+- The owning post-map decision reproduces clean Initializr-map handoff HEAD
+  `6d4ea49c88c235a51a0a859a8bbc0c2f2058d081`, parent
+  `884274e0368a24425680852aadd4a2572b1b1b7d`, tree
+  `b8a09f6d0d46647240ca1e811813634b441a6a7a`, exact five-file shape,
+  complete map and evidence limits, answered Spring direction/plan, cloud
+  closure/map, focused tenth-cloud shape, all cloud and Google UUID ancestry,
+  reciprocal 354-record/sole-NEXT state, launcher checks, and ordinary/ignored
+  cleanliness. No later Spring implementation exists and protected product,
+  test, fixture, mutation, and dependency inputs remain byte-exact.
+- Direct exact Go 1.26.7 reproduces Go 1.18,
+  234/3,599/355/429/197/41/1,067 and all three protected hashes under
+  `umask 022`, offline/readonly inputs, and managed scratch. Focused cloud,
+  Spring, caller, Maven, effect, HTTP, file, and shell tests pass. Both byte-
+  unchanged cloud and Spring mutation systems retain exact 10/10 direct kills
+  plus T1-T10 meta passes.
+- Option 2 is selected and Spring P8 closes at the exact retained behavior.
+  The map identifies real uncertainty and concrete DTO/error mismatches, but
+  none supplies a behavior-preserving repository objective without choosing
+  policy. Java `11` is accepted but unadvertised; generated compatibility was
+  not tested; changing request values needs Java/Boot policy. Correcting
+  `ArtifactId.Type` changes an exported decoded value under unpinned v2.1 and
+  needs DTO/media-type policy. Interpreting links, BOMs, or repositories needs
+  consumer and Maven policy.
+- Handling structured starter 400 responses would choose status/content-type
+  validation, archive creation/retention, returned errors, and possibly shared
+  HTTP behavior. Reconciling 204 root IDs with the 179-ID default catalog would
+  choose Boot-sensitive validation and POM authority. Pinning v2.3 requires a
+  header capability and media-type policy. Option 1 is rejected because its
+  planning checkpoint could name a slice only by silently making one of those
+  forbidden choices.
+- All Spring contracts remain exact: exported DTOs/functions; project fields,
+  ordered dependencies, Java `11`, `maven-project`, and optional Boot request;
+  anonymous root/catalog requests; empty-validation short circuit and exact
+  matching/errors; directory-before-clock archive naming; starter URL;
+  status-agnostic download plus unzip/delete/log/error and retained-archive
+  order; safe-zero sentinels; demo cleanup warnings/continuation; build,
+  interactive, options, and context caller policy; Maven parent cap and
+  unqualified-catalog direct/managed POM mutation; fixtures and non-network
+  acceptance; cloud closure; Go floor; dependencies; and mutation guards.
+- Spring may reopen only through a fresh product owner that supplies the exact
+  Java/Boot/dependency/endpoint/catalog/media-type/DTO/download/error or Maven
+  policy required by a concrete need, refreshes relevant Initializr evidence,
+  and revalidates every affected retained contract. Changed service evidence,
+  local contracts or inputs, cloud scope, or roadmap priority also expires the
+  closure. Rollback is documentation-only.
+- The sole successor is the separate inactive-packaging scope decision. It may
+  decide whether retained repository evidence authorizes one later bounded
+  planning checkpoint for currently inactive Homebrew or Snap packaging, or
+  keep both inactive and close the authorized roadmap. It may not begin
+  packaging, run release tools, select publisher/destination/credential/
+  channel/support policy, reopen binary/Docker, cloud, or Spring, or execute a
+  later checkpoint.
 
 ## Gate For Every Checkpoint
 
