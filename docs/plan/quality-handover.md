@@ -1,66 +1,73 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-25T02:44:01+02:00
+Generated: 2026-09-25T03:04:57+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P8 Checkpoint
 
-- The owning Spring direction decision selected Option 1. It began clean at
-  Spring-planning handoff HEAD
-  `9425e5e739a6d007a94c28f9c913cc281cf9afd4`, parent
-  `b9200e2055afeea38180b4ee20b3535c3ff77649`, tree
-  `df48576ca61a3345a2f7ce545ffdff78df453f63`, changing exactly the launcher,
-  answered Spring plan, then-NEXT decision, rolling handover, and roadmap. The
-  reciprocal graph had 352 archives and one NEXT; launcher mirror/check, shell
-  syntax, exact five-file shape, and ordinary/ignored cleanliness passed.
-- Cloud P8 remains closed at the retained Git-backed boundary. The focused
-  tenth implementation retains exact commit/parent/tree/two-file shape, all ten
-  cloud implementations and Google UUID are ancestral, and the canonical map,
-  Option-2 closure, default/profile/cache/caller behavior, and completed
-  safe-zero contracts remain guards with no reopening owner. No Spring
-  implementation exists after the protected cloud boundary.
+- The canonical Initializr evaluation is complete. It began clean at Option-1
+  handoff HEAD `884274e0368a24425680852aadd4a2572b1b1b7d`, parent
+  `9425e5e739a6d007a94c28f9c913cc281cf9afd4`, tree
+  `c27bd1b0788bb993e9cc054f0eae8562fc9e0fda`, with exact five-file shape,
+  353 connected archives and one NEXT, launcher mirror/check and syntax, and
+  ordinary/ignored cleanliness. No Spring implementation exists after the
+  protected cloud boundary; protected product/test/fixture/mutation/dependency
+  inputs remain byte-exact.
+- Cloud P8 remains closed. Focused tenth implementation commit
+  `fd69ac206216260b4f1966214062149264e3e347`, parent
+  `7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, tree
+  `43fb3cb60255482590737012691b8c67ce8c9116`, exact two-file shape, all ten
+  cloud implementations, Google UUID ancestry, canonical cloud map, Option-2
+  closure, and all retained cloud contracts remain guards with no reopening
+  owner.
 - Direct exact Go 1.26.7 under `umask 022`, offline resolution, readonly inputs,
   and managed scratch reproduces Go 1.18 and exact
   234/3,599/355/429/197/41/1,067 counts. `go.mod`, `go.sum`, and raw graph
   hashes remain `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
   `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
   and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-  Focused cloud/Spring/effect/caller tests pass. Both byte-unchanged cloud and
-  Spring mutation systems retain exact 10/10 direct kills and T1-T10 meta
-  passes.
-- Option 1 is selected because Initializr is active in build, validation,
-  interactive, options, and Maven-cleanup flows, while local fixtures and host
-  acceptance deliberately do not verify its real request/response behavior.
-  One authoritative compatibility map can resolve that external uncertainty
-  without selecting Java, Boot, dependencies, endpoints, catalog authority, or
-  Maven policy. Closure is rejected now because it would leave an unmeasured
-  production compatibility risk; it remains available after the map.
-- The public surface and DTOs remain exact. `UrlValuesFrom` retains project
-  fields, ordered comma-joined dependencies, Java `11`, `maven-project`, and
-  optional Boot version. Discovery retains exact anonymous root and
-  `/dependencies` requests, the empty-validation short-circuit, exact matching,
-  invalid order, and dependency errors. Missing clients retain exact safe-zero
-  sentinels.
-- Download retains working-directory-before-clock archive naming, exact
-  `/starter.zip` encoding, download/unzip/delete order, early errors, retained
-  archive after unzip failure, final deletion error, discarded unzip result,
-  logs, and safe-zero behavior. Demo cleanup retains exact Java/Kotlin
-  selection and warning continuation through the test file, `HELP.md`, `mvnw`,
-  and `mvnw.cmd`.
-- Build retains explicit flag before `MaxSpringBootVersion`, validation before
-  target creation, exact `initializer` routing, returned Initializr errors, and
-  warning-only cleanup. Interactive/options/context caller policies remain
-  frozen. `UpgradeParent` disable/latest/max behavior and
-  `CleanManualVersions` catalog-driven direct/managed POM mutation remain
-  separate unresolved policy; fixtures and non-network acceptance stay exact.
-- Run only [the prepared bounded Initializr compatibility evaluation](agent-sessions/2026-09-25T024401+0200-evaluate-spring-initializr-compatibility.md).
-  It may inspect authoritative service/project evidence and minimal anonymous
-  read-only response behavior, produce a canonical map, and prepare one owning
-  planning-or-closure decision. It may not run upstream or generated code,
-  select or recommend a version/value/policy, add tests or fixtures, change a
-  caller, plan or implement a slice, reopen cloud, or begin packaging.
+  Focused cloud/Spring/caller/Maven/effect tests pass; both byte-unchanged
+  mutation systems retain exact 10/10 direct kills and T1-T10 meta passes.
+- Official sources bind the service to active Apache-2.0 Spring projects
+  `spring-io/initializr` and `spring-io/start.spring.io`. The library is
+  explicitly pre-1.0; latest release `v0.24.0` moved its baseline to Spring
+  Boot 4.0.x. Exact unversioned root and `/dependencies` requests returned 200
+  v2.1 JSON, while official docs identify v2.3 as current, warn of incompatible
+  metadata evolution, and advise an Accept header the retained request cannot
+  express.
+- Root exposed every retained request name and exact `maven-project`
+  `/starter.zip`, but advertised Java 27/25/21/17 rather than hard-coded `11`.
+  It contained 204 dependency IDs with 123 range signals. Unqualified
+  `/dependencies` returned default Boot `4.1.1` and 179 IDs, excluding 25 root
+  IDs; the endpoint officially accepts optional `bootVersion`, but retained
+  validation and Maven cleanup omit it. Defaults/catalog values are evidence,
+  not selected policy.
+- The exact full Java `11`, Java-language, `maven-project`, text-field, ordered
+  `actuator,web` request returned 200 zip with no redirect both without Boot and
+  with the then-advertised default Boot probe. Bodies were discarded. Exact
+  zip content type and attachment disposition are supported, but acceptance
+  does not prove generated Java/Boot/dependency compatibility or buildability;
+  Java `11` remains unadvertised and ambiguous.
+- Invalid Boot and dependency probes returned exact structured 400 JSON. The
+  retained downloader does not inspect status/content type and would feed an
+  error body to unzip, surfacing an archive error and retaining the file. Root
+  DTOs cover the observed top-level v2.1 shape, but `ArtifactId.Type` is
+  mismapped by `json:"text"`; dependency links, top-level BOMs, and per-
+  dependency repository selection are ignored. No repair or desired semantics
+  are selected.
+- All public/request/effect/safe-zero/caller/Maven/POM/error/partial-result/
+  fixture/cloud/Go-floor/mutation/dependency contracts remain exact. The map
+  distinguishes supported request binding, concrete mapping/error mismatches,
+  ambiguous media-type/catalog/Java-Boot behavior, and generated behavior that
+  was deliberately not tested. It selects no Java, Boot, dependency, endpoint,
+  catalog, media type, DTO, download, or Maven policy.
+- Run only [the prepared owning Spring boundary decision](agent-sessions/2026-09-25T030457+0200-decide-spring-p8-boundary-after-initializr-map.md).
+  It must choose one later bounded repository-only planning checkpoint or
+  closure of Spring P8 at retained behavior. It may not repeat the evaluation,
+  contact upstream, select policy, name or plan a slice, reopen cloud, or begin
+  packaging.
 
 ## Repository And Continuity
 

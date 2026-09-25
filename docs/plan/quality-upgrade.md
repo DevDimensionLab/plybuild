@@ -17652,6 +17652,70 @@ evaluation authorized by the owning Option-1 direction decision.
   lifecycle, a concrete product objective, or roadmap priority expires the
   authorization. Verification and rollback remain documentation-only plus the
   exact protected gates.
+- The bounded Initializr evaluation reproduces clean Option-1 handoff HEAD
+  `884274e0368a24425680852aadd4a2572b1b1b7d`, parent
+  `9425e5e739a6d007a94c28f9c913cc281cf9afd4`, tree
+  `c27bd1b0788bb993e9cc054f0eae8562fc9e0fda`, exact five-file shape,
+  answered Spring plan/direction, cloud map/closure, focused tenth-cloud shape,
+  all cloud and Google UUID ancestry, reciprocal 353-record/sole-NEXT state,
+  launcher checks, and ordinary/ignored cleanliness. Protected product/test/
+  fixture/mutation/dependency inputs remain byte-exact with no later Spring
+  implementation.
+- Direct exact Go 1.26.7 reproduces Go 1.18,
+  234/3,599/355/429/197/41/1,067 and all three protected hashes under
+  `umask 022`, offline/readonly inputs, and managed scratch. Focused cloud,
+  Spring, caller, Maven, and effect tests pass. Both byte-unchanged cloud and
+  Spring mutation systems retain exact 10/10 direct kills plus T1-T10 meta
+  passes.
+- Official sources bind the active service to Apache-2.0, public, unarchived,
+  actively maintained `spring-io/initializr` and its production-instance
+  configuration `spring-io/start.spring.io`. Initializr remains explicitly
+  pre-1.0; latest release `v0.24.0` was published 2026-03-20 and moved its
+  baseline from Spring Boot 3.5.x to 4.0.x. These lifecycle facts select no
+  repository version or policy.
+- Exact anonymous unversioned root and `/dependencies` GETs returned 200 and
+  `application/vnd.initializr.v2.1+json`. Official docs identify v2.3 as
+  current, warn metadata can evolve incompatibly, and advise an explicit v2.3
+  Accept header. The retained request type cannot express that header, so
+  current parsing works but media-type stability remains ambiguous.
+- Root exposes all retained request field names, exact `maven-project` action
+  `/starter.zip`, Java values 27/25/21/17, six Boot values, and 204 dependency
+  IDs with 123 range signals. Unqualified `/dependencies` returns Boot `4.1.1`
+  and 179 IDs: 25 root IDs are absent and no catalog-only ID exists. The
+  official catalog accepts optional `bootVersion`; retained validation and
+  Maven cleanup do not provide it, leaving caller-specific catalog authority
+  unresolved rather than selecting a policy.
+- The exact full request with hard-coded Java `11`, ordered comma-joined
+  `actuator,web`, Java language, project text fields, and `maven-project`
+  returned 200 zip with no redirect when Boot was omitted and when the then-
+  advertised default Boot value was supplied. Bodies were discarded without
+  inspection. Request acceptance and response headers are supported, but
+  Java `11` is unadvertised and generated compatibility/buildability remains
+  ambiguous.
+- Valid starter responses have exact `application/zip` and attachment
+  filename disposition. Invalid Boot and dependency probes return structured
+  400 JSON with inline disposition and exact messages. Retained `http.Wget`
+  does not inspect status or content type, so it would pass an error body to
+  unzip and surface an archive error while retaining the file. This is a
+  concrete service/local error-semantics mismatch, not authorization to repair
+  it.
+- Current DTOs cover the observed top-level v2.1 and consumer-used dependency
+  fields. `ArtifactId.Type` is concretely mismapped by `json:"text"` against
+  observed `type`; root dependency links, top-level BOMs, and per-dependency
+  repository selection are ignored. Their desired local semantics remain
+  unspecified, and no DTO or Maven change is selected.
+- The canonical map therefore records supported request binding and response
+  format, concrete mapping/error mismatches, ambiguous media-type/catalog/
+  Java-Boot semantics, and explicit non-tested generated behavior. It selects
+  no Java, Boot, dependency, endpoint, catalog, media type, DTO, download, or
+  Maven policy and supplies evidence rather than a repair.
+- The reciprocal successor is decision-only: choose whether the completed map
+  supports one later bounded repository-only planning checkpoint or close
+  Spring P8 at the retained behavior. It may not repeat external inspection,
+  select policy, name or plan a slice, reopen cloud, or begin packaging. The
+  map expires on changed official identity/lifecycle, root/catalog/response
+  behavior, local retained contracts/inputs, or roadmap priority. Rollback is
+  documentation-only.
 - Revisit inactive packaging only through a separate scope decision.
 
 ## Gate For Every Checkpoint
