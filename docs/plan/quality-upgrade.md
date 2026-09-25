@@ -16755,9 +16755,9 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: active after ten bounded cloud implementation slices; active
-repository-owned seams are exhausted and the owning direction selected one
-bounded read-only `ply-config` compatibility evaluation.
+Status: cloud configuration closed at the retained Git-backed boundary after
+ten bounded implementation slices and the canonical compatibility map; P8 is
+active only for the prepared first Spring planning checkpoint.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17529,7 +17529,46 @@ bounded read-only `ply-config` compatibility evaluation.
   profile policy, any protected repository input, active caller, public/cache/
   error/order contract, or roadmap priority. Verification and rollback remain
   documentation-only plus the exact protected gates.
+- The owning post-map decision selects Option 2 and closes cloud P8 at the
+  retained Git-backed boundary. Zero native methods, 15 bounded content-
+  compatibility rows, the incompatible protected fresh-profile source default,
+  absent release/runtime support contracts, dormant upstream activity, and
+  locally owned caller/cache behavior identify no concrete supported
+  integration objective beyond the implementation already in production.
+  Option 1 is rejected because a planning checkpoint would first have to own a
+  source-identity/profile-policy change and revision/support policy rather than
+  a behavior-preserving repository slice.
+- Production remains exact. Both private openers select `GitCloudConfig`, cache
+  mapping remains `<profile>/cloud-config`, refresh probes `.git` and pulls or
+  clones the profile-configured URL, and fresh local configuration retains
+  exact `defaultCloudConfigUrl`
+  `https://github.com/devdimensionlab/plybuild-config.git`. The map records that
+  default as distinct from and nonexistent relative to canonical
+  `DevDimensionLab/ply-config`; closure does not change or reinterpret it.
+  Every public/cache/caller, eager/partial/error/order, environment, and
+  completed safe-zero contract remains unchanged.
+- Cloud has no later integration-planning owner. Reopening requires a fresh
+  owning product decision with a concrete supported objective and explicit
+  source identity, profile policy, revision, and maintenance/support
+  requirements, plus refreshed identity/lifecycle and retained-contract
+  evidence. Changed canonical lifecycle/API/release facts, default/profile
+  policy, active callers, public/cache contracts, protected inputs, or roadmap
+  priority expire the closure. Rollback is documentation-only.
+- The closure checkpoint reproduces clean evaluation handoff HEAD
+  `1b73ebeb51427652e9dcfa405340d448539f1675`, parent
+  `016da5222a9a06cdf933e472fe3fbd45ad0ba2c2`, tree
+  `2721d2106959b0331a3130ac00be062c167c8a8c`, its exact five-file shape,
+  the focused tenth implementation parent/tree/two-file shape, all P8 and
+  Google UUID ancestry, the reciprocal 350-record/sole-NEXT state, complete
+  15-method/16-active-use map, launcher checks, and ordinary/ignored
+  cleanliness. Direct exact Go 1.26.7 reproduces
+  234/3,599/355/429/197/41/1,067 and all three protected hashes; focused
+  config/context/Maven/template/tips/resources/command tests and both byte-
+  unchanged 10/10 cloud mutation gates pass under `umask 022` with offline,
+  readonly inputs and managed scratch.
 - Repair and modernize Spring behavior under dedicated characterization tests.
+  Only the reciprocal first-Spring checkpoint is prepared; no Spring source,
+  test, fixture, caller, dependency, or product-policy work has begun.
 - Revisit inactive packaging only through a separate scope decision.
 
 ## Gate For Every Checkpoint

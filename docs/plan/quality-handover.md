@@ -1,13 +1,14 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-25T01:49:37+02:00
+Generated: 2026-09-25T02:07:28+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P8 Checkpoint
 
-- Ten bounded P8 cloud implementations are complete at
+- Cloud P8 is closed at the retained Git-backed boundary. Ten bounded cloud
+  implementations remain complete at
   `57f9d5674157d238a2f93462b65161a17e3b5498`,
   `c12307a078a29af74163df0c658d05c821482a33`,
   `c999212d266d98868930769108e4e8a73070a0a2`,
@@ -17,96 +18,67 @@ session diary.
   `9c1899d484633e0ce6cf112544ba33ca89bc4adb`,
   `d26d19232b18d70a4401586d75604d08f85bd8a8`,
   `96275513bf0e1992ba6864b30c17e35bf2b27447`, and
-  `fd69ac206216260b4f1966214062149264e3e347`. Active
-  repository-owned seams remain exhausted.
-- This compatibility evaluation began clean on `codex/upgrade-quality` at
-  reciprocal decision handoff HEAD
-  `016da5222a9a06cdf933e472fe3fbd45ad0ba2c2`, parent
-  `5d9f6749ad4ac08b30a955191b1c8487e17b70bb`. The handoff changes
-  exactly the launcher, answered direction archive, this then-NEXT evaluation
-  archive, rolling handover, and roadmap.
-- The focused tenth implementation remains exact commit
-  `fd69ac206216260b4f1966214062149264e3e347`, parent
+  `fd69ac206216260b4f1966214062149264e3e347`; active repository-owned cloud
+  seams remain exhausted.
+- The owning decision began clean at reciprocal evaluation handoff HEAD
+  `1b73ebeb51427652e9dcfa405340d448539f1675`, parent
+  `016da5222a9a06cdf933e472fe3fbd45ad0ba2c2`, tree
+  `2721d2106959b0331a3130ac00be062c167c8a8c`, with exactly the launcher,
+  answered evaluation archive, then-NEXT decision archive, rolling handover,
+  and roadmap changed. The focused tenth implementation retains exact parent
   `7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, tree
-  `43fb3cb60255482590737012691b8c67ce8c9116`, changing only
-  `pkg/config/cloud.go` and
-  `pkg/config/cloud_valid_templates_test.go`. All ten P8 commits and Google
-  UUID `cf53bc64eeb69471d35c7536d196bf1da15f3973` are ancestral.
-- The protected start had 349 reciprocal archives and one NEXT. Exact
-  five-file shape, launcher/archive mirror, launcher `--check`, shell syntax,
-  ordinary/ignored cleanliness, and protected source identity passed before
-  external inspection.
+  `43fb3cb60255482590737012691b8c67ce8c9116`, and two-file source shape.
+  All ten P8 commits and Google UUID are ancestral.
+- The protected start had 350 reciprocal archives and one NEXT. Exact
+  five-file shape, complete 15-method/16-active-use map, launcher/archive
+  mirror, launcher `--check`, shell syntax, protected source identity, and
+  ordinary/ignored cleanliness passed.
 - Direct exact Go 1.26.7 under `umask 022`, offline resolution, readonly
-  inputs, and managed scratch reproduces Go 1.18, 234 modules, 3,599 graph
-  edges, 355 production entries, 429 complete-test entries, 197 module-backed
-  entries across 41 loaded modules, and 1,067 `go.sum` lines. Protected
-  `go.mod`, `go.sum`, and graph hashes remain
-  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+  inputs, and managed scratch reproduces Go 1.18,
+  234/3,599/355/429/197/41/1,067 and protected `go.mod`, `go.sum`, and graph
+  hashes `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
   `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
   and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-  Focused config/context/Maven/template/tips/resources/command tests pass.
-  Both byte-unchanged cloud mutation gates retain exact
-  `declared=10 killed=10 survived=0 unusable=0`.
-- Canonical primary evidence retrieved 2026-09-25 binds repository ID
-  `292204216`, `DevDimensionLab/ply-config`, default branch `master`,
-  exact commit `73c09ffeeb97d7f3f0f399219a7549febbc58478`, and tree
-  `958de5153deca209f55f311fff78dd1dcc556a4d`. It is a public,
-  enabled, unarchived MIT Git content repository, not a Go module or runtime
-  library.
-- The exact canonical tree has 125 tracked files, zero Go files, no `go.mod`,
-  root README, exported runtime API, Go floor, tags, or releases. Its default
-  branch ends on 2024-01-19; the repository's last recorded push is an
-  unmerged branch on 2024-01-28. Root Maven `1.0.0-SNAPSHOT` is neither a Go
-  dependency version nor a released tag.
-- Exact root `services.json`, `deprecated.json`,
-  `project-defaults.json`, `global-config.yaml`, eight
-  `templates/**/ply.json` roots, three example directories, two Git-hook
-  files, tips, and resources match the retained data/layout boundary. Upstream
-  supplies no cache-first clone/pull, local path, environment expansion,
-  eager/fresh/partial result, error, ordering, deduplication, or caller
-  continuation contract; all remain locally owned.
-- The historical `DevDimensionLab/co-pilot-config` identity used by upstream
-  `global-config.yaml` resolves to canonical `ply-config`. The protected
-  fresh-profile default
-  `https://github.com/devdimensionlab/plybuild-config.git` instead returned
-  repository not found. This is the map's one incompatible active source-
-  default row; no URL, profile, fixture, or caller changed.
-- The complete public matrix classifies zero methods native, all 15 methods
-  bounded-adapter-compatible at the exact Git/data boundary, and zero methods
-  incompatible or unresolved. This describes the retained Git implementation;
-  it does not identify a dependency or authorize an adapter. The active-use
-  matrix classifies both openers, five refresh call sites, all data readers,
-  cache-path consumers, and caller-owned return/warn/continue behavior as
-  bounded-compatible, except for the incompatible protected fresh-profile URL.
-- Production remains exact: both private openers select `GitCloudConfig`;
-  cache mapping is `<profile>/cloud-config`; refresh probes `.git` then
-  clones or pulls; `Implementation().Dir()` remains public cache knowledge;
-  environment expansion, fresh/eager/partial/error/order behavior, active
-  callers, and every completed safe-zero contract remain unchanged.
-- Public/cache/caller risks are the absent upstream runtime contract, no
-  release/tag support boundary, dormant default branch, stale content-focused
-  tests, and the protected URL mismatch. Remaining unknowns are product-owner
-  decisions: what “move toward `ply-config`” means, whether source identity
-  change is in scope, and what revision/support policy is acceptable.
-- The prepared reciprocal successor is decision-only. It must choose whether
-  this complete map warrants one later bounded integration-planning checkpoint
-  or whether cloud P8 closes at the retained Git boundary. It may not repeat
-  upstream inspection, select a revision/dependency, change the URL, plan or
-  implement an adapter, alter caller/profile/public policy, or begin Spring or
-  packaging.
-- The map expires on changed canonical identity/default branch/commit, a new
-  release/tag/API/lifecycle contract, changed source URL or profile policy,
-  protected repository input, active caller, public/cache/error/order contract,
-  or roadmap priority. Verification remains the five-file/archive/launcher/
-  cleanliness checks, protected counts/hashes, focused exact-Go tests, and
-  both unchanged 10/10 mutation gates. Rollback is documentation-only.
-- The task-owned scratch subtree contained 443 directories and 3,599 regular
-  files, with zero symlinks and zero special entries, and was removed
-  completely.
-- Run only [the prepared cloud-boundary decision](agent-sessions/2026-09-25T014937+0200-decide-p8-cloud-boundary-after-ply-config-map.md).
-  Do not execute its successor, select/change a dependency or source URL,
-  change product state, design/implement an adapter, or begin Spring or
-  packaging.
+  Focused config/context/Maven/template/tips/resources/command tests pass. Both
+  byte-unchanged cloud mutation gates retain exact 10/10 kills.
+- Canonical evidence remains bound to public GitHub repository ID `292204216`,
+  `DevDimensionLab/ply-config`, default branch `master`, exact commit
+  `73c09ffeeb97d7f3f0f399219a7549febbc58478`, tree
+  `958de5153deca209f55f311fff78dd1dcc556a4d`, and retrieval date 2026-09-25.
+  It is an MIT Git content repository with zero Go files, no `go.mod`, public
+  runtime API, tag, or release, and no cache/refresh/path/environment/result/
+  error contract; its default branch is dormant since January 2024.
+- The map classifies zero native methods and all 15 public methods as bounded-
+  adapter-compatible only at the Git/data boundary. Its 16-row active-use map
+  retains one incompatibility: protected fresh-profile
+  `defaultCloudConfigUrl`
+  `https://github.com/devdimensionlab/plybuild-config.git` names the observed
+  nonexistent `plybuild-config`, not canonical `ply-config`. The map identifies
+  no dependency, runtime implementation, released support line, or concrete
+  integration objective.
+- Option 2 is selected. Option 1 is rejected because a later planning
+  checkpoint would first need to decide source identity, profile policy, and
+  revision/support requirements rather than plan a bounded repository-owned
+  integration. Content compatibility instead confirms that the retained
+  Git/file boundary remains coherent; absent release/runtime contracts and
+  locally owned caller/cache behavior do not justify another layer.
+- Production remains exact: both private openers select `GitCloudConfig`,
+  `<profile>/cloud-config` remains the cache, refresh probes `.git` and pulls or
+  clones the profile-configured URL, fresh profiles retain the exact protected
+  default, and existing profiles retain their configured URLs. All public,
+  cache, caller warning/return/continuation, environment, eager/partial/error/
+  order, and completed safe-zero contracts remain unchanged.
+- Cloud has no integration-planning owner. Reopening requires a fresh owning
+  product decision with a concrete supported objective, explicit source and
+  profile policy, revision/support requirements, refreshed lifecycle evidence,
+  and the retained contract map. Changed lifecycle/API/release evidence,
+  source/profile policy, active callers, public/cache contracts, protected
+  inputs, or roadmap priority expire the closure. Rollback is documentation-
+  only.
+- Run only [the prepared first Spring planning checkpoint](agent-sessions/2026-09-25T020728+0200-plan-first-p8-spring-modernization-move.md).
+  It may characterize repository-owned Spring behavior and select at most one
+  bounded slice, but may not implement it, reopen cloud, change dependency or
+  product state, or begin packaging.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
