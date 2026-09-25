@@ -1,84 +1,75 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-25T02:07:28+02:00
+Generated: 2026-09-25T02:26:27+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P8 Checkpoint
 
-- Cloud P8 is closed at the retained Git-backed boundary. Ten bounded cloud
-  implementations remain complete at
-  `57f9d5674157d238a2f93462b65161a17e3b5498`,
-  `c12307a078a29af74163df0c658d05c821482a33`,
-  `c999212d266d98868930769108e4e8a73070a0a2`,
-  `51da9bcfc0eb8ae871c98467c52c942db6b480bd`,
-  `f12344b115b6c732295d152a7f3d86b876a4d1d8`,
-  `76c3571f04969c304785338bc31c34a266e2f869`,
-  `9c1899d484633e0ce6cf112544ba33ca89bc4adb`,
-  `d26d19232b18d70a4401586d75604d08f85bd8a8`,
-  `96275513bf0e1992ba6864b30c17e35bf2b27447`, and
-  `fd69ac206216260b4f1966214062149264e3e347`; active repository-owned cloud
-  seams remain exhausted.
-- The owning decision began clean at reciprocal evaluation handoff HEAD
-  `1b73ebeb51427652e9dcfa405340d448539f1675`, parent
-  `016da5222a9a06cdf933e472fe3fbd45ad0ba2c2`, tree
-  `2721d2106959b0331a3130ac00be062c167c8a8c`, with exactly the launcher,
-  answered evaluation archive, then-NEXT decision archive, rolling handover,
-  and roadmap changed. The focused tenth implementation retains exact parent
-  `7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, tree
-  `43fb3cb60255482590737012691b8c67ce8c9116`, and two-file source shape.
-  All ten P8 commits and Google UUID are ancestral.
-- The protected start had 350 reciprocal archives and one NEXT. Exact
-  five-file shape, complete 15-method/16-active-use map, launcher/archive
-  mirror, launcher `--check`, shell syntax, protected source identity, and
-  ordinary/ignored cleanliness passed.
+- The first repository-only Spring planning checkpoint is answered with no
+  implementation slice. It began clean at cloud-closure handoff HEAD
+  `b9200e2055afeea38180b4ee20b3535c3ff77649`, parent
+  `1b73ebeb51427652e9dcfa405340d448539f1675`, tree
+  `12d3ddda7868fdc8e5d5eda7393f36b0f9931cae`, changing exactly the launcher,
+  answered cloud decision, then-NEXT Spring plan, rolling handover, and
+  roadmap. The reciprocal graph had 351 archives and one NEXT; launcher
+  mirror/check, shell syntax, exact five-file shape, and ordinary/ignored
+  cleanliness passed.
+- Cloud P8 remains closed at the retained Git-backed boundary. The ten focused
+  commits through `fd69ac206216260b4f1966214062149264e3e347`, its exact
+  `7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63` parent,
+  `43fb3cb60255482590737012691b8c67ce8c9116` tree, and two-file shape remain
+  exact; all ten plus Google UUID are ancestral. The answered canonical map,
+  Option-2 closure, retained default URL/profile/cache/caller behavior, and
+  every completed safe-zero contract remain guards with no reopening owner.
 - Direct exact Go 1.26.7 under `umask 022`, offline resolution, readonly
-  inputs, and managed scratch reproduces Go 1.18,
-  234/3,599/355/429/197/41/1,067 and protected `go.mod`, `go.sum`, and graph
-  hashes `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+  inputs, and managed scratch reproduces Go 1.18 and exact
+  234/3,599/355/429/197/41/1,067 counts. `go.mod`, `go.sum`, and graph hashes
+  remain `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
   `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
   and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-  Focused config/context/Maven/template/tips/resources/command tests pass. Both
-  byte-unchanged cloud mutation gates retain exact 10/10 kills.
-- Canonical evidence remains bound to public GitHub repository ID `292204216`,
-  `DevDimensionLab/ply-config`, default branch `master`, exact commit
-  `73c09ffeeb97d7f3f0f399219a7549febbc58478`, tree
-  `958de5153deca209f55f311fff78dd1dcc556a4d`, and retrieval date 2026-09-25.
-  It is an MIT Git content repository with zero Go files, no `go.mod`, public
-  runtime API, tag, or release, and no cache/refresh/path/environment/result/
-  error contract; its default branch is dormant since January 2024.
-- The map classifies zero native methods and all 15 public methods as bounded-
-  adapter-compatible only at the Git/data boundary. Its 16-row active-use map
-  retains one incompatibility: protected fresh-profile
-  `defaultCloudConfigUrl`
-  `https://github.com/devdimensionlab/plybuild-config.git` names the observed
-  nonexistent `plybuild-config`, not canonical `ply-config`. The map identifies
-  no dependency, runtime implementation, released support line, or concrete
-  integration objective.
-- Option 2 is selected. Option 1 is rejected because a later planning
-  checkpoint would first need to decide source identity, profile policy, and
-  revision/support requirements rather than plan a bounded repository-owned
-  integration. Content compatibility instead confirms that the retained
-  Git/file boundary remains coherent; absent release/runtime contracts and
-  locally owned caller/cache behavior do not justify another layer.
-- Production remains exact: both private openers select `GitCloudConfig`,
-  `<profile>/cloud-config` remains the cache, refresh probes `.git` and pulls or
-  clones the profile-configured URL, fresh profiles retain the exact protected
-  default, and existing profiles retain their configured URLs. All public,
-  cache, caller warning/return/continuation, environment, eager/partial/error/
-  order, and completed safe-zero contracts remain unchanged.
-- Cloud has no integration-planning owner. Reopening requires a fresh owning
-  product decision with a concrete supported objective, explicit source and
-  profile policy, revision/support requirements, refreshed lifecycle evidence,
-  and the retained contract map. Changed lifecycle/API/release evidence,
-  source/profile policy, active callers, public/cache contracts, protected
-  inputs, or roadmap priority expire the closure. Rollback is documentation-
-  only.
-- Run only [the prepared first Spring planning checkpoint](agent-sessions/2026-09-25T020728+0200-plan-first-p8-spring-modernization-move.md).
-  It may characterize repository-owned Spring behavior and select at most one
-  bounded slice, but may not implement it, reopen cloud, change dependency or
-  product state, or begin packaging.
+  Focused cloud/Spring/effect/caller tests pass. Both byte-unchanged cloud and
+  Spring mutation systems retain exact 10/10 direct kills and T1-T10 meta
+  passes.
+- Spring discovery already has one private zero-value-safe HTTP boundary for
+  exact root and `/dependencies` anonymous JSON requests. Empty validation
+  makes no request; nonempty validation fetches once, preserves exact matching,
+  user invalid order, and dependency errors. Initializer download already has
+  private HTTP/filesystem/shell composition, while archive naming already has
+  complete filesystem and clock dependencies. Exact download/unzip/delete
+  order, early errors, retained archive after unzip failure, final deletion
+  error, logs, and safe-zero sentinels are characterized and mutation-covered.
+- `UrlValuesFrom` remains the public request-policy boundary: exact project
+  fields and dependency order, hard-coded Java `11`, exact `maven-project`, and
+  an optional caller-selected Boot version. Build chooses the flag or
+  `MaxSpringBootVersion`, validates before target creation, and invokes this
+  path only for exact upstream `initializer`. No repository evidence names a
+  replacement Java, project type, Boot line, endpoint, dependency catalog, or
+  compatibility policy.
+- Demo cleanup retains exact `.java`-only selection, `.kt` fallback, lookup
+  path, warning-only failures, and ordered continuation through `HELP.md`,
+  `mvnw`, and `mvnw.cmd`; deletion already crosses the filesystem adapter.
+  Adding another deleter, constructor, or public-download orchestrator would
+  be generic cleanup over existing seams, not an owned modernization slice.
+- Maven policy remains distinct and unresolved. `UpgradeParent` combines
+  repository latest metadata with disable/max settings, while
+  `CleanManualVersions` treats the Initializr dependency catalog as authority
+  before mutating direct and managed POM dependencies. Exact cap-transition and
+  catalog-authority semantics are not recorded, and context callers warn,
+  continue, and may write after job errors. A first repair cannot infer those
+  policies or combine them with Initializr work.
+- Local POM/project fixtures and inline root DTO JSON exist, but there is no
+  tracked Initializr response or starter archive. Host build acceptance uses
+  empty dependencies, `--upstream none`, and disabled upgrades. Real
+  Initializr/end-to-end behavior remains explicitly unverified. No focused
+  failing characterization is authorized until the missing policy or external
+  evidence direction is owned.
+- Run only [the prepared Spring direction decision](agent-sessions/2026-09-25T022627+0200-decide-first-p8-spring-modernization-direction.md).
+  It must choose one later bounded read-only Initializr compatibility
+  evaluation or close Spring P8 at the retained behavior. It may not evaluate
+  Initializr, implement a slice, choose Java/Boot/endpoint/catalog/POM policy,
+  add tests, reopen cloud, or begin packaging.
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch

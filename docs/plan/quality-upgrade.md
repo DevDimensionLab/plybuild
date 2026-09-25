@@ -16757,7 +16757,8 @@ are resolved or explicitly risk-accepted.
 
 Status: cloud configuration closed at the retained Git-backed boundary after
 ten bounded implementation slices and the canonical compatibility map; P8 is
-active only for the prepared first Spring planning checkpoint.
+active only for the prepared owning Spring direction decision after the first
+repository-only planning checkpoint selected no implementation slice.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17566,9 +17567,55 @@ active only for the prepared first Spring planning checkpoint.
   config/context/Maven/template/tips/resources/command tests and both byte-
   unchanged 10/10 cloud mutation gates pass under `umask 022` with offline,
   readonly inputs and managed scratch.
-- Repair and modernize Spring behavior under dedicated characterization tests.
-  Only the reciprocal first-Spring checkpoint is prepared; no Spring source,
-  test, fixture, caller, dependency, or product-policy work has begun.
+- The first repository-only Spring planning checkpoint reproduces clean cloud-
+  closure handoff HEAD `b9200e2055afeea38180b4ee20b3535c3ff77649`, parent
+  `1b73ebeb51427652e9dcfa405340d448539f1675`, tree
+  `12d3ddda7868fdc8e5d5eda7393f36b0f9931cae`, exact five-file shape,
+  answered cloud map/Option-2 closure, focused tenth-cloud shape, all cloud and
+  Google UUID ancestry, reciprocal 351-record/sole-NEXT state, launcher checks,
+  and ordinary/ignored cleanliness. Protected product/test/fixture/mutation/
+  dependency paths remain byte-exact.
+- Direct exact Go 1.26.7 reproduces Go 1.18,
+  234/3,599/355/429/197/41/1,067 and all three protected hashes under
+  `umask 022`, offline/readonly inputs, and managed scratch. Focused cloud,
+  Spring, effect-adapter, and caller tests pass. Both byte-unchanged cloud and
+  Spring mutation systems retain exact 10/10 direct kills plus T1-T10 meta
+  passes.
+- Current Spring discovery already uses one private safe-zero HTTP dependency
+  for exact root and `/dependencies` requests. Initializer download already
+  composes private download/unzip/delete dependencies; archive naming already
+  uses complete filesystem and clock dependencies. Exact requests, arguments,
+  effect order, early errors, partial artifacts, final delete errors, logs,
+  production selection, and safe-zero sentinels are characterized and
+  mutation-covered. Another constructor or effect wrapper would be generic
+  cleanup over completed seams rather than an owned modernization slice.
+- Public `UrlValuesFrom` retains exact project values and joined dependency
+  order, hard-coded Java `11`, exact `maven-project`, and optional Boot version.
+  Build selects the explicit flag or `MaxSpringBootVersion`, validates before
+  target creation, and invokes Initializr only for exact upstream
+  `initializer`. Repository history and fixtures name no replacement Java,
+  Boot line, request type, endpoint, catalog, or compatibility policy.
+- Demo cleanup remains warning-only and ordered, with exact `.java`/`.kt`
+  discovery plus `HELP.md`, `mvnw`, and `mvnw.cmd` deletion through the existing
+  filesystem adapter. Maven separately combines repository latest metadata,
+  disable/max settings, Initializr catalog authority, direct and managed POM
+  mutation, and context warn/continue/write policy. The intended cap transition
+  and catalog authority have no focused product-policy contract and cannot be
+  inferred or combined into the first slice.
+- Local POM/project fixtures and inline DTO JSON do not verify real
+  Initializr. Host build acceptance deliberately uses empty dependencies,
+  `--upstream none`, and disabled upgrading. No tracked Initializr response or
+  starter archive, real end-to-end evidence, or recorded compatibility target
+  exists. Consequently no behavior-preserving implementation slice or focused
+  failing characterization is authorized by repository evidence.
+- The sole unresolved owner must choose Option 1, one later bounded read-only
+  Initializr compatibility evaluation, or Option 2, closure of Spring P8 at
+  the retained behavior until a fresh exact Java/Boot/endpoint/catalog/POM
+  product objective exists. The prepared decision may change only its archive,
+  one reciprocal successor, launcher mutable regions, roadmap, and handover;
+  all production, test, fixture, mutation, dependency, public, CLI, caller,
+  request/effect/error/order, partial-result, and safe-zero behavior remains
+  frozen. Rollback is documentation-only.
 - Revisit inactive packaging only through a separate scope decision.
 
 ## Gate For Every Checkpoint
