@@ -16757,8 +16757,8 @@ are resolved or explicitly risk-accepted.
 
 Status: cloud configuration closed at the retained Git-backed boundary after
 ten bounded implementation slices and the canonical compatibility map; P8 is
-active only for the prepared owning Spring direction decision after the first
-repository-only planning checkpoint selected no implementation slice.
+active only for the prepared bounded read-only Spring Initializr compatibility
+evaluation authorized by the owning Option-1 direction decision.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17608,14 +17608,50 @@ repository-only planning checkpoint selected no implementation slice.
   starter archive, real end-to-end evidence, or recorded compatibility target
   exists. Consequently no behavior-preserving implementation slice or focused
   failing characterization is authorized by repository evidence.
-- The sole unresolved owner must choose Option 1, one later bounded read-only
-  Initializr compatibility evaluation, or Option 2, closure of Spring P8 at
-  the retained behavior until a fresh exact Java/Boot/endpoint/catalog/POM
-  product objective exists. The prepared decision may change only its archive,
-  one reciprocal successor, launcher mutable regions, roadmap, and handover;
-  all production, test, fixture, mutation, dependency, public, CLI, caller,
-  request/effect/error/order, partial-result, and safe-zero behavior remains
-  frozen. Rollback is documentation-only.
+- The owning Spring direction decision reproduces clean planning handoff HEAD
+  `9425e5e739a6d007a94c28f9c913cc281cf9afd4`, parent
+  `b9200e2055afeea38180b4ee20b3535c3ff77649`, tree
+  `df48576ca61a3345a2f7ce545ffdff78df453f63`, its exact five-file shape,
+  answered unresolved plan, cloud closure/map, focused tenth-cloud shape, all
+  cloud and Google UUID ancestry, reciprocal 352-record/sole-NEXT state,
+  launcher checks, and ordinary/ignored cleanliness. No Spring implementation
+  exists after the protected cloud boundary, and protected product/test/
+  fixture/mutation/dependency paths remain byte-exact.
+- Exact Go 1.26.7 reproduces Go 1.18,
+  234/3,599/355/429/197/41/1,067 and all three protected hashes under
+  `umask 022`, offline/readonly inputs, and managed scratch. Focused cloud,
+  Spring, effect, and caller tests pass. Both byte-unchanged cloud and Spring
+  mutation systems retain exact 10/10 direct kills plus T1-T10 meta passes.
+- Option 1 is selected: authorize one bounded read-only Initializr
+  compatibility evaluation. The active build, validation, interactive,
+  options, and Maven-cleanup paths consume the service, while repository
+  fixtures and host acceptance do not verify its real request/response
+  contracts. Authoritative root, catalog, starter-field, compatibility,
+  response/error, and lifecycle evidence can resolve that external uncertainty
+  without selecting Java, Boot, dependency, endpoint, catalog, or Maven policy.
+- Option 2 is rejected at this checkpoint because closure would retain an
+  unmeasured external compatibility risk on an active production path and
+  would mistake absent repository product policy for evidence that the current
+  service contract remains supported. Closure remains available after the map
+  if no concrete supported planning objective exists.
+- Every current Spring contract remains exact: exported DTOs and functions;
+  `UrlValuesFrom` fields, dependency order, Java `11`, `maven-project`, and
+  optional Boot version; anonymous root and `/dependencies` requests; empty
+  validation short-circuit and exact matching/errors; working-directory/clock
+  archive naming; `/starter.zip` encoding; download/unzip/delete/log/error and
+  retained-archive ordering; safe-zero sentinels; demo cleanup warning and
+  continuation; build/interactive/options/context caller policy; Maven parent
+  cap and catalog-driven direct/managed POM behavior; and existing fixture and
+  host-acceptance limits.
+- The prepared successor may gather only bounded authoritative read-only
+  evidence, distinguish observation from inference, and produce a canonical
+  map plus one later owning planning-or-closure decision. It may not execute
+  upstream or generated code, select or recommend a value/policy, add a test or
+  fixture, change a caller, plan or implement a slice, reopen cloud, or begin
+  packaging. Changed local contracts, protected inputs, service identity or
+  lifecycle, a concrete product objective, or roadmap priority expires the
+  authorization. Verification and rollback remain documentation-only plus the
+  exact protected gates.
 - Revisit inactive packaging only through a separate scope decision.
 
 ## Gate For Every Checkpoint

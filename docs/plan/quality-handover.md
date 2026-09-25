@@ -1,75 +1,67 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-25T02:26:27+02:00
+Generated: 2026-09-25T02:44:01+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
 ## Current P8 Checkpoint
 
-- The first repository-only Spring planning checkpoint is answered with no
-  implementation slice. It began clean at cloud-closure handoff HEAD
-  `b9200e2055afeea38180b4ee20b3535c3ff77649`, parent
-  `1b73ebeb51427652e9dcfa405340d448539f1675`, tree
-  `12d3ddda7868fdc8e5d5eda7393f36b0f9931cae`, changing exactly the launcher,
-  answered cloud decision, then-NEXT Spring plan, rolling handover, and
-  roadmap. The reciprocal graph had 351 archives and one NEXT; launcher
-  mirror/check, shell syntax, exact five-file shape, and ordinary/ignored
-  cleanliness passed.
-- Cloud P8 remains closed at the retained Git-backed boundary. The ten focused
-  commits through `fd69ac206216260b4f1966214062149264e3e347`, its exact
-  `7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63` parent,
-  `43fb3cb60255482590737012691b8c67ce8c9116` tree, and two-file shape remain
-  exact; all ten plus Google UUID are ancestral. The answered canonical map,
-  Option-2 closure, retained default URL/profile/cache/caller behavior, and
-  every completed safe-zero contract remain guards with no reopening owner.
-- Direct exact Go 1.26.7 under `umask 022`, offline resolution, readonly
-  inputs, and managed scratch reproduces Go 1.18 and exact
-  234/3,599/355/429/197/41/1,067 counts. `go.mod`, `go.sum`, and graph hashes
-  remain `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+- The owning Spring direction decision selected Option 1. It began clean at
+  Spring-planning handoff HEAD
+  `9425e5e739a6d007a94c28f9c913cc281cf9afd4`, parent
+  `b9200e2055afeea38180b4ee20b3535c3ff77649`, tree
+  `df48576ca61a3345a2f7ce545ffdff78df453f63`, changing exactly the launcher,
+  answered Spring plan, then-NEXT decision, rolling handover, and roadmap. The
+  reciprocal graph had 352 archives and one NEXT; launcher mirror/check, shell
+  syntax, exact five-file shape, and ordinary/ignored cleanliness passed.
+- Cloud P8 remains closed at the retained Git-backed boundary. The focused
+  tenth implementation retains exact commit/parent/tree/two-file shape, all ten
+  cloud implementations and Google UUID are ancestral, and the canonical map,
+  Option-2 closure, default/profile/cache/caller behavior, and completed
+  safe-zero contracts remain guards with no reopening owner. No Spring
+  implementation exists after the protected cloud boundary.
+- Direct exact Go 1.26.7 under `umask 022`, offline resolution, readonly inputs,
+  and managed scratch reproduces Go 1.18 and exact
+  234/3,599/355/429/197/41/1,067 counts. `go.mod`, `go.sum`, and raw graph
+  hashes remain `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
   `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
   and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
   Focused cloud/Spring/effect/caller tests pass. Both byte-unchanged cloud and
   Spring mutation systems retain exact 10/10 direct kills and T1-T10 meta
   passes.
-- Spring discovery already has one private zero-value-safe HTTP boundary for
-  exact root and `/dependencies` anonymous JSON requests. Empty validation
-  makes no request; nonempty validation fetches once, preserves exact matching,
-  user invalid order, and dependency errors. Initializer download already has
-  private HTTP/filesystem/shell composition, while archive naming already has
-  complete filesystem and clock dependencies. Exact download/unzip/delete
-  order, early errors, retained archive after unzip failure, final deletion
-  error, logs, and safe-zero sentinels are characterized and mutation-covered.
-- `UrlValuesFrom` remains the public request-policy boundary: exact project
-  fields and dependency order, hard-coded Java `11`, exact `maven-project`, and
-  an optional caller-selected Boot version. Build chooses the flag or
-  `MaxSpringBootVersion`, validates before target creation, and invokes this
-  path only for exact upstream `initializer`. No repository evidence names a
-  replacement Java, project type, Boot line, endpoint, dependency catalog, or
-  compatibility policy.
-- Demo cleanup retains exact `.java`-only selection, `.kt` fallback, lookup
-  path, warning-only failures, and ordered continuation through `HELP.md`,
-  `mvnw`, and `mvnw.cmd`; deletion already crosses the filesystem adapter.
-  Adding another deleter, constructor, or public-download orchestrator would
-  be generic cleanup over existing seams, not an owned modernization slice.
-- Maven policy remains distinct and unresolved. `UpgradeParent` combines
-  repository latest metadata with disable/max settings, while
-  `CleanManualVersions` treats the Initializr dependency catalog as authority
-  before mutating direct and managed POM dependencies. Exact cap-transition and
-  catalog-authority semantics are not recorded, and context callers warn,
-  continue, and may write after job errors. A first repair cannot infer those
-  policies or combine them with Initializr work.
-- Local POM/project fixtures and inline root DTO JSON exist, but there is no
-  tracked Initializr response or starter archive. Host build acceptance uses
-  empty dependencies, `--upstream none`, and disabled upgrades. Real
-  Initializr/end-to-end behavior remains explicitly unverified. No focused
-  failing characterization is authorized until the missing policy or external
-  evidence direction is owned.
-- Run only [the prepared Spring direction decision](agent-sessions/2026-09-25T022627+0200-decide-first-p8-spring-modernization-direction.md).
-  It must choose one later bounded read-only Initializr compatibility
-  evaluation or close Spring P8 at the retained behavior. It may not evaluate
-  Initializr, implement a slice, choose Java/Boot/endpoint/catalog/POM policy,
-  add tests, reopen cloud, or begin packaging.
+- Option 1 is selected because Initializr is active in build, validation,
+  interactive, options, and Maven-cleanup flows, while local fixtures and host
+  acceptance deliberately do not verify its real request/response behavior.
+  One authoritative compatibility map can resolve that external uncertainty
+  without selecting Java, Boot, dependencies, endpoints, catalog authority, or
+  Maven policy. Closure is rejected now because it would leave an unmeasured
+  production compatibility risk; it remains available after the map.
+- The public surface and DTOs remain exact. `UrlValuesFrom` retains project
+  fields, ordered comma-joined dependencies, Java `11`, `maven-project`, and
+  optional Boot version. Discovery retains exact anonymous root and
+  `/dependencies` requests, the empty-validation short-circuit, exact matching,
+  invalid order, and dependency errors. Missing clients retain exact safe-zero
+  sentinels.
+- Download retains working-directory-before-clock archive naming, exact
+  `/starter.zip` encoding, download/unzip/delete order, early errors, retained
+  archive after unzip failure, final deletion error, discarded unzip result,
+  logs, and safe-zero behavior. Demo cleanup retains exact Java/Kotlin
+  selection and warning continuation through the test file, `HELP.md`, `mvnw`,
+  and `mvnw.cmd`.
+- Build retains explicit flag before `MaxSpringBootVersion`, validation before
+  target creation, exact `initializer` routing, returned Initializr errors, and
+  warning-only cleanup. Interactive/options/context caller policies remain
+  frozen. `UpgradeParent` disable/latest/max behavior and
+  `CleanManualVersions` catalog-driven direct/managed POM mutation remain
+  separate unresolved policy; fixtures and non-network acceptance stay exact.
+- Run only [the prepared bounded Initializr compatibility evaluation](agent-sessions/2026-09-25T024401+0200-evaluate-spring-initializr-compatibility.md).
+  It may inspect authoritative service/project evidence and minimal anonymous
+  read-only response behavior, produce a canonical map, and prepare one owning
+  planning-or-closure decision. It may not run upstream or generated code,
+  select or recommend a version/value/policy, add tests or fixtures, change a
+  caller, plan or implement a slice, reopen cloud, or begin packaging.
+
 ## Repository And Continuity
 
 - Worktree `/Users/perottochristensen/github/ply/upgrade-quality`, branch
