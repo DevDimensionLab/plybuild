@@ -1,66 +1,68 @@
 # Quality Upgrade Handover
 
-Generated: 2026-09-25T03:23:21+02:00
+Generated: 2026-09-25T03:40:39+02:00
 
 This is a rolling handover. Rewrite it at each checkpoint; do not append a
 session diary.
 
-## Current P8 Checkpoint
+## Authorized Roadmap Complete
 
-- The owning post-map decision selected Option 2 and closes Spring P8 at the
-  exact retained behavior. It began clean at Initializr-map handoff HEAD
-  `6d4ea49c88c235a51a0a859a8bbc0c2f2058d081`, parent
-  `884274e0368a24425680852aadd4a2572b1b1b7d`, tree
-  `b8a09f6d0d46647240ca1e811813634b441a6a7a`, with exact five-file shape,
-  354 connected archives and one NEXT, launcher mirror/check and shell syntax,
-  ordinary/ignored cleanliness, and byte-exact protected inputs. No Spring
-  implementation exists after the cloud boundary.
-- Cloud P8 remains closed. Focused tenth implementation commit
+- The inactive-packaging decision selected Option 2. Homebrew and Snap remain
+  inactive, P8 is complete, the P2A-P8 authorized roadmap is closed, and no
+  successor or NEXT archive exists. The decision began clean at Spring-closure
+  handoff HEAD `45e168e0176420ded25499038a6563f5ea15737a`, parent
+  `6d4ea49c88c235a51a0a859a8bbc0c2f2058d081`, tree
+  `7486de1a9cf946b6f39baccdfcb0dfb199da196e`, with its exact five-file
+  shape, 355 connected archives and one then-NEXT, launcher mirror/check,
+  shell syntax, ordinary/ignored cleanliness, and byte-exact protected inputs.
+- Cloud remains closed at the retained Git-backed boundary and Spring remains
+  closed at the retained Initializr behavior. Focused tenth-cloud commit
   `fd69ac206216260b4f1966214062149264e3e347`, parent
   `7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, tree
-  `43fb3cb60255482590737012691b8c67ce8c9116`, exact two-file shape, all ten
-  cloud implementations, Google UUID ancestry, canonical cloud map, Option-2
-  closure, and all retained cloud contracts remain guards with no reopening
-  owner.
+  `43fb3cb60255482590737012691b8c67ce8c9116`, its exact two-file shape, all
+  ten cloud implementations, Google UUID ancestry, both canonical maps and
+  closures, and every retained public/caller/effect/fixture/mutation/
+  dependency contract remain exact. No cloud, Spring, or packaging
+  implementation exists after the protected boundary.
 - Direct exact Go 1.26.7 under `umask 022`, offline resolution, readonly inputs,
   and managed scratch reproduces Go 1.18 and exact
   234/3,599/355/429/197/41/1,067 counts. `go.mod`, `go.sum`, and raw graph
   hashes remain `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
   `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
   and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
-  Focused cloud/Spring/caller/Maven/effect/HTTP/file/shell tests pass; both
-  byte-unchanged mutation systems retain exact 10/10 direct kills and T1-T10
-  meta passes.
-- The completed Initializr map remains evidence, not policy. Current request
-  binding is accepted, but Java `11` is unadvertised and generated content was
-  neither inspected nor built. Changing request values needs Java/Boot policy.
-  The concrete `ArtifactId.Type` mismatch changes an exported decoded value
-  and needs DTO/media-type policy; ignored links, BOMs, and repositories need
-  consumer and Maven policy.
-- Repairing structured starter 400 handling would select status/content-type,
-  archive-retention, error, partial-result, and possibly shared HTTP behavior.
-  Reconciling root and default dependency catalogs would select Boot-sensitive
-  validation and POM authority. Pinning v2.3 needs request-header/media-type
-  policy. No concrete objective is behavior-preserving without one of those
-  choices, so Option 1 is rejected.
-- Every Spring public/request/effect/safe-zero/caller/Maven/POM/error/partial-
-  result/fixture/cloud/Go-floor/mutation/dependency contract remains exact.
-  This includes request values and order, anonymous discovery, validation,
-  directory-before-clock archive naming, status-agnostic download and ordered
-  unzip/delete behavior, retained error archive, safe-zero sentinels, demo
-  cleanup continuation, caller order/errors, parent cap, unqualified-catalog
-  POM mutation, and non-network fixtures/acceptance.
-- Spring may reopen only for a fresh product need whose owner supplies the
-  exact Java/Boot/dependency/endpoint/catalog/media-type/DTO/download/error or
-  Maven policy, refreshes relevant Initializr evidence, and revalidates every
-  affected retained contract. Changed service evidence, local inputs, cloud
-  scope, or roadmap priority likewise requires a fresh owner.
-- Run only [the prepared inactive-packaging scope decision](agent-sessions/2026-09-25T032321+0200-decide-inactive-packaging-scope.md).
-  It may decide whether one later bounded repository-only planning checkpoint
-  is authorized for currently inactive packaging or keep Homebrew and Snap
-  inactive and close the authorized roadmap. It may not begin packaging, run
-  release tools, select publisher/destination/credential/channel/support
-  policy, or reopen binary/Docker, cloud, or Spring.
+  Focused cloud/Spring/caller/Maven/HTTP/file/shell/webservice/effect tests pass;
+  both byte-unchanged mutation systems retain exact 10/10 direct kills and
+  T1-T10 meta passes.
+- Binary and Docker remain the active distribution targets. Binary retains the
+  publisher-free, remote-release-disabled GoReleaser configuration, exact
+  credential-cleared local snapshot behavior for both `snapshot` and ordinary
+  `release`, and completed snapshot acceptance. Docker retains its existing
+  Dockerfile, Make targets, publication script, and completed daemon-backed
+  immutable-image acceptance. Neither active target is reopened or changed.
+- Homebrew remains inactive: its standalone publisher configuration is absent,
+  the default GoReleaser configuration has no package-manager publisher, and
+  `release-brew` fails closed. Snap remains inactive: its tracked recipe is
+  historical evidence, not a support promise or publication authorization.
+  No packaging/release tool or external registry, tap, store, publisher,
+  destination, credential, formula, channel, or support policy was inspected,
+  selected, configured, or executed.
+- Option 1 is rejected because no retained decision supplies a current
+  Homebrew or Snap need, owner, acceptance objective, publisher, destination,
+  credential, channel, release, maintenance, or support policy. A later
+  planning checkpoint could name an objective only by inventing those choices;
+  the presence of a historical Snap recipe does not cure that absence.
+- Reopening requires a fresh accountable product owner and concrete need that
+  supplies the target, supported user/platform population, acceptance
+  objective, publisher and destination ownership, credential governance,
+  channel/release lifecycle, and maintenance/support policy, plus authority
+  for any current external evidence. Changed distribution policy, release
+  configuration, recipe, acceptance contract, protected input, cloud/Spring
+  closure, or roadmap priority also requires a fresh scope decision.
+- The task-owned scratch tree contained 267 directories and 3,616 regular
+  files with zero symlink or special entries and was removed after exact
+  containment and entry-type verification. Verification remains the exact
+  retained guards. Rollback is documentation-only: revert the terminal
+  four-file handoff commit.
 
 ## Repository And Continuity
 

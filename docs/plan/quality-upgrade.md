@@ -40,7 +40,7 @@ P4|complete
 P5|complete
 P6|complete
 P7|complete
-P8|active
+P8|complete
 <!-- CODEX_AUTHORIZED_CHECKPOINTS_END -->
 
 On 2026-09-06, the operator removed accumulated reproducible scratch, audit,
@@ -16755,10 +16755,10 @@ are resolved or explicitly risk-accepted.
 
 ### P8 - Domain Modernization
 
-Status: cloud configuration is closed at the retained Git-backed boundary and
-Spring is closed at the retained Initializr behavior; P8 is active only for
-the separate inactive-packaging scope decision. No packaging planning or
-implementation is authorized.
+Status: complete. Cloud configuration is closed at the retained Git-backed
+boundary, Spring is closed at the retained Initializr behavior, and Homebrew
+and Snap remain inactive. Binary and Docker remain the active distribution
+targets. No packaging planning or implementation is authorized.
 
 - Migrate cloud configuration toward `ply-config` while retaining cache-first
   behavior and compatibility fixtures.
@@ -17768,6 +17768,58 @@ implementation is authorized.
   packaging, run release tools, select publisher/destination/credential/
   channel/support policy, reopen binary/Docker, cloud, or Spring, or execute a
   later checkpoint.
+- The inactive-packaging decision reproduces clean Spring-closure handoff HEAD
+  `45e168e0176420ded25499038a6563f5ea15737a`, parent
+  `6d4ea49c88c235a51a0a859a8bbc0c2f2058d081`, tree
+  `7486de1a9cf946b6f39baccdfcb0dfb199da196e`, exact five-file shape,
+  answered Spring and cloud closures/maps, focused tenth-cloud shape, all ten
+  cloud and Google UUID ancestry, the reciprocal 355-record/sole-NEXT state,
+  launcher mirror/check, Bash and zsh syntax, ordinary/ignored cleanliness,
+  and byte-exact protected product, test, fixture, mutation, and dependency
+  inputs. No cloud, Spring, or packaging implementation exists after the
+  protected boundary.
+- Direct exact Go 1.26.7 reproduces Go 1.18,
+  234/3,599/355/429/197/41/1,067 and all three protected hashes under
+  `umask 022`, offline resolution, readonly inputs, and managed scratch.
+  Focused cloud, Spring, caller, Maven, HTTP, file, shell, webservice, and
+  effect-adapter tests pass. Both byte-unchanged cloud and Spring mutation
+  systems retain exact 10/10 direct kills plus T1-T10 meta passes.
+- Option 2 is selected. Homebrew and Snap remain inactive and the authorized
+  roadmap closes with no successor. Accepted design and P2B already make the
+  supported boundary explicit: binary and Docker are active; the default
+  GoReleaser configuration disables remote release and has no package-manager
+  publisher; `snapshot` and ordinary `release` use the exact credential-
+  cleared non-publishing snapshot path; the standalone Homebrew configuration
+  is absent; and `release-brew` fails closed. The tracked Snap recipe is
+  historical evidence, not a current support or publication promise.
+- Option 1 is rejected because retained evidence supplies no current Homebrew
+  or Snap product need, owner, acceptance objective, publisher, destination,
+  credential, channel, release, maintenance, or support policy. A planning
+  checkpoint could name an objective only by inventing those choices. The
+  completed snapshot-binary and Docker acceptance work remains active-target
+  evidence and cannot be reopened or traded for inactive packaging scope.
+- Binary retains its exact local-only GoReleaser and snapshot-acceptance
+  contracts. Docker retains its existing Dockerfile, Make targets,
+  `docker-publish.sh`, and daemon-backed immutable-image acceptance contracts.
+  Homebrew retains absent publisher configuration and a fail-closed Make path;
+  Snap retains only its historical/inactive recipe. No packaging or release
+  tool, external registry/tap/store, artifact, publisher, destination,
+  credential, formula, channel, or support policy was inspected or executed.
+- Reopening requires a fresh accountable product owner and concrete need that
+  supplies the intended packaging target, supported user/platform population,
+  acceptance objective, publisher/destination ownership, credential
+  governance, channel and release lifecycle, and maintenance/support policy,
+  plus authority for any current external evidence. Changed distribution
+  policy, release configuration, recipe, acceptance contract, protected
+  input, cloud/Spring closure, or roadmap priority also expires this closure
+  and requires a fresh scope decision. Verification remains the exact retained
+  guards; rollback is documentation-only by reverting the terminal four-file
+  handoff commit.
+- The managed task tree contained 267 directories and 3,616 regular files
+  with zero symlink or special entries and was removed after exact containment
+  and entry-type verification. The final archive graph retains 355 connected
+  answered archives with no NEXT state. P2A-P8 and the authorized roadmap are
+  complete; no successor is prepared or executed.
 
 ## Gate For Every Checkpoint
 

@@ -1130,7 +1130,7 @@ exit 70
 # CODEX_STABLE_EXECUTION_END
 
 # CODEX_MUTABLE_SESSION_HEADER_BEGIN
-#|SESSION_STATUS=NEXT
+#|SESSION_STATUS=COMPLETE
 #|SESSION_ID=2026-09-25T032321+0200-decide-inactive-packaging-scope
 #|SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-25T032321+0200-decide-inactive-packaging-scope.md
 #|PREVIOUS_SESSION_ARCHIVE_REL=docs/plan/agent-sessions/2026-09-25T030457+0200-decide-spring-p8-boundary-after-initializr-map.md

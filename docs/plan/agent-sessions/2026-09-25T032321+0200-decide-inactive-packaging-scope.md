@@ -1,13 +1,13 @@
 # Agent Session: Decide Inactive Packaging Scope
 
-Status: NEXT
+Status: ANSWERED - HISTORY
 Session ID: `2026-09-25T032321+0200-decide-inactive-packaging-scope`
 Created: `2026-09-25T03:23:21+02:00`
 Source: `codex-dev-start.sh`
 Prompt SHA-256: `c736fe239f9734291853078e90f6e2887eefdd9ec7ef300edd3d8fd554d3dedb`
 Previous: [2026-09-25T030457+0200-decide-spring-p8-boundary-after-initializr-map.md](2026-09-25T030457+0200-decide-spring-p8-boundary-after-initializr-map.md)
 Next: none
-Outcome: pending
+Outcome: Selected Option 2: keep Homebrew and Snap inactive and close the authorized roadmap with no successor.
 
 The block below is the byte-exact Codex prompt argument, including its terminal LF.
 
@@ -126,3 +126,121 @@ byte-exact launcher/archive prompt mirroring and stop after the local handoff
 commit. Do not push, merge, publish, release, stash, revert, remove the
 worktree, change product/dependency state, or combine directions.
 <!-- CODEX_SESSION_PROMPT_END -->
+
+## Answer
+
+Option 2 is selected. Homebrew and Snap remain inactive, and the authorized
+roadmap closes with no successor. The retained repository evidence contains
+strong guards for the active local binary and Docker targets, but it supplies
+no current package-manager product need or owner and therefore no bounded
+inactive-packaging objective that can be planned without inventing policy.
+
+### Reproduced Protected Start
+
+- Work began clean on `codex/upgrade-quality` at Spring-closure handoff HEAD
+  `45e168e0176420ded25499038a6563f5ea15737a`, parent
+  `6d4ea49c88c235a51a0a859a8bbc0c2f2058d081`, tree
+  `7486de1a9cf946b6f39baccdfcb0dfb199da196e`. It changes exactly
+  `codex-dev-start.sh`, the answered Spring-closure archive, this then-NEXT
+  archive, rolling handover, and roadmap.
+- The answered Option-2 Spring closure and complete retained contracts,
+  Initializr map/direction/plan, cloud map and Option-2 closure remain exact.
+  Focused tenth-cloud implementation
+  `fd69ac206216260b4f1966214062149264e3e347` retains parent
+  `7be6dbf91e5cfbc8e6e0b00c7400d27bcecc8e63`, tree
+  `43fb3cb60255482590737012691b8c67ce8c9116`, and changes only
+  `pkg/config/cloud.go` and new
+  `pkg/config/cloud_valid_templates_test.go`. All ten cloud implementations
+  and Google UUID commit `cf53bc64eeb69471d35c7536d196bf1da15f3973`
+  are ancestral.
+- The reciprocal graph had 355 connected regular-file archives and exactly one
+  NEXT. Launcher/archive prompt mirroring, launcher `--check`, Bash and zsh
+  syntax, exact five-file shape, ordinary and ignored cleanliness, and
+  implementation-to-handoff identity passed. No product, test, fixture,
+  mutation, dependency, cloud, Spring, or packaging implementation changed
+  after the protected cloud boundary.
+- Direct exact Go 1.26.7 at binary SHA-256
+  `9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6`
+  reproduced declared Go 1.18, 234 modules, 3,599 graph edges, 355 production
+  entries, 429 complete-test entries, 197 module-backed entries over 41 loaded
+  modules, and 1,067 `go.sum` lines under `umask 022`, offline resolution,
+  readonly module inputs, and managed scratch. `go.mod`, `go.sum`, and raw
+  graph hashes remained
+  `7255a37243bc8dd4601ef065e5985b9ffc0b7a43346035a869568f99679ec874`,
+  `87c9efb4baa70c3cc37ba91c8833d06d078c7e168b607eaa12564aa442b886a7`,
+  and `abdac9686ca5aeb51d5d413bf98d58e2cb7ea3244272d815784cdabe1c104cdf`.
+- Focused config, context, Maven, template, tips, resources, command, Spring,
+  HTTP, file, shell, webservice, and effect-adapter tests passed. The byte-
+  unchanged cloud and Spring direct mutation harnesses each killed all ten
+  declared mutations; both T1-T10 meta-tests passed with exact
+  `declared=10 killed=10 survived=0 unusable=0`.
+
+### Direction And Rejected Alternative
+
+- Accepted design already names binary and Docker as active and Homebrew and
+  Snap as inactive. P2B deliberately removed package-manager publishers from
+  the default release path, removed the standalone Homebrew configuration,
+  disabled remote releases, made ordinary `release` the exact credential-
+  cleared non-publishing snapshot path, and made `release-brew` fail closed.
+  Those facts describe a completed boundary, not a packaging backlog.
+- The tracked `snap/snapcraft.yaml` records historical recipe choices only. It
+  identifies neither a current support promise nor an authorized publisher,
+  destination, credential model, channel, acceptance population, lifecycle,
+  or owner. Its presence cannot supply the missing objective.
+- P6 independently completed the active snapshot-binary and daemon-backed
+  Docker acceptance targets. Their artifact, provenance, non-publication,
+  immutable-image, and core-flow guards are retained acceptance evidence and
+  are not candidates for package-manager reinterpretation or rework.
+- Option 1 is rejected. Any purported planning checkpoint would first have to
+  choose Homebrew, Snap, or both and invent at least publisher, destination,
+  credential, channel, support, release, and acceptance policy. Repository
+  history provides no current need or owner authorized to make those choices,
+  so naming a planning objective would violate the decision gate.
+
+### Retained Boundary, Reopening Owner, And Closure
+
+- Binary remains an active target at the exact local-only boundary: the
+  default GoReleaser configuration has remote releases disabled and no
+  package-manager publisher section; `snapshot` and ordinary `release` retain
+  exact credential-cleared `release --snapshot --clean --skip=publish`
+  behavior; and the completed snapshot acceptance contract remains unchanged.
+- Docker remains an active target at its existing repository boundary. The
+  Dockerfile, Make targets, `docker-publish.sh`, and completed daemon-backed
+  immutable-image acceptance remain unchanged. This decision does not run,
+  reinterpret, or expand any Docker build, publication, destination, or
+  support policy.
+- Homebrew and Snap remain inactive. The standalone Homebrew publisher file
+  stays absent, `release-brew` stays fail closed, the default GoReleaser
+  configuration stays publisher-free, and the tracked Snap recipe stays
+  historical/inactive rather than a support or publication promise. No
+  package-manager tool, artifact, registry, tap, store, publisher, credential,
+  formula, channel, or destination was inspected, selected, configured, or
+  executed.
+- Reopening requires a fresh accountable product owner and concrete product
+  need. That owner must supply the intended package-manager target, supported
+  user and platform population, acceptance objective, publisher and
+  destination ownership, credential governance, channel/release lifecycle,
+  maintenance and support policy, and authority for any necessary current
+  external evidence before implementation planning can be considered.
+- Closure expires if such a need and owner are supplied; active/inactive
+  distribution policy changes; a publisher, destination, credential, channel,
+  release, acceptance, maintenance, or support policy is adopted; the local
+  release configuration, Snap recipe, distribution contract, active artifact
+  acceptance, protected product/dependency inputs, cloud/Spring closures, or
+  roadmap priority changes. A changed premise requires a fresh scope decision
+  rather than reinterpretation of this closure.
+- Verification remains the exact branch/ancestry/five-file/archive/launcher/
+  cleanliness guards, protected counts and hashes, focused exact-Go tests, both
+  byte-unchanged 10/10 direct and T1-T10 mutation systems, and static local
+  distribution evidence. Rollback is documentation-only: revert this terminal
+  four-file handoff commit. The authorized P2A-P8 roadmap is complete, no NEXT
+  archive exists, and no successor is prepared or executed.
+- Task scratch was a strict ordinary child of managed session scratch. It
+  contained 267 directories, 3,616 regular files, zero symbolic links, and
+  zero special entries and was removed completely after exact containment and
+  entry-type verification.
+
+No packaging, publication, release, registry/tap/store inspection, credential
+work, source, test, fixture, mutation, dependency, public API, CLI, binary,
+Docker, cloud, or Spring change occurred. No push, merge, stash, revert, or
+worktree removal occurred.
