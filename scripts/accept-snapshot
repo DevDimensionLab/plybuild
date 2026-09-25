@@ -1,0 +1,319 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+helper="$repo_root/test/acceptance/snapshot_acceptance.py"
+go_name=${PLY_SNAPSHOT_GO:-${GO:-go}}
+goreleaser_name=${PLY_SNAPSHOT_GORELEASER:-${GORELEASER:-goreleaser}}
+bash_bin=${PLY_SNAPSHOT_BASH:-/bin/bash}
+expected_verifiers=(verify-status verify-upgrade verify-build)
+
+fail() {
+	printf 'snapshot acceptance: %s\n' "$*" >&2
+	exit 1
+}
+
+resolve_executable() {
+	local name=$1
+	local resolved
+	if [[ "$name" == */* ]]; then
+		resolved=$name
+	else
+		resolved=$(command -v -- "$name" 2>/dev/null) || return 1
+	fi
+	[[ -f "$resolved" && -x "$resolved" ]] || return 1
+	resolved=$(realpath "$resolved" 2>/dev/null) || return 1
+	[[ -f "$resolved" && -x "$resolved" && ! -L "$resolved" ]] || return 1
+	printf '%s\n' "$resolved"
+}
+
+external_candidate() {
+	local requested=$1
+	local parent name parent_physical candidate
+	[[ "$requested" == /* ]] || fail 'evidence root must be an absolute path'
+	[[ "$requested" != *[$'\n\r\t ']* ]] || fail 'evidence root cannot contain whitespace'
+	[[ ! -e "$requested" && ! -L "$requested" ]] || fail 'evidence root is stale or pre-existing'
+	parent=$(dirname "$requested")
+	name=$(basename "$requested")
+	[[ -d "$parent" ]] || fail 'evidence-root parent does not exist'
+	parent_physical=$(cd "$parent" && pwd -P) || fail 'cannot resolve evidence-root parent'
+	candidate="$parent_physical/$name"
+	case "$candidate" in
+	"$repo_root"|"$repo_root"/*) fail 'evidence root must be outside the repository' ;;
+	esac
+	printf '%s\n' "$candidate"
+}
+
+status_before=$(git -C "$repo_root" status --porcelain=v1 --ignored -uall) ||
+	fail 'cannot measure repository status'
+[[ -z "$status_before" ]] || fail 'repository source must be clean, including ignored paths'
+commit=$(git -C "$repo_root" rev-parse HEAD) || fail 'cannot resolve source commit'
+tree=$(git -C "$repo_root" rev-parse 'HEAD^{tree}') || fail 'cannot resolve source tree'
+
+[[ -f "$helper" && -x "$helper" && ! -L "$helper" ]] ||
+	fail 'snapshot acceptance helper is missing or not executable'
+go_bin=$(resolve_executable "$go_name") || fail 'configured Go tool is not a regular executable'
+goreleaser_bin=$(resolve_executable "$goreleaser_name") ||
+	fail 'configured GoReleaser is not a regular executable'
+bash_bin=$(resolve_executable "$bash_bin") || fail 'configured Bash is not a regular executable'
+for tool_path in "$go_bin" "$goreleaser_bin" "$bash_bin"; do
+	case "$tool_path" in
+	"$repo_root"|"$repo_root"/*) fail "configured tool is repository-local: $tool_path" ;;
+	esac
+done
+
+if [[ -n "${PLY_SNAPSHOT_EVIDENCE_ROOT:-}" ]]; then
+	evidence_root=$(external_candidate "$PLY_SNAPSHOT_EVIDENCE_ROOT")
+	mkdir "$evidence_root" || fail 'cannot create fresh evidence root'
+else
+	tmp_base=${TMPDIR:-/tmp}
+	tmp_base=${tmp_base%/}
+	[[ -d "$tmp_base" ]] || fail 'TMPDIR does not exist'
+	tmp_physical=$(cd "$tmp_base" && pwd -P) || fail 'cannot resolve TMPDIR'
+	case "$tmp_physical" in
+	"$repo_root"|"$repo_root"/*) fail 'TMPDIR is repository-local' ;;
+	esac
+	evidence_root=$(mktemp -d "$tmp_physical/ply-snapshot-acceptance.XXXXXX") ||
+		fail 'cannot create fresh evidence root'
+fi
+printf 'snapshot evidence root: %s\n' "$evidence_root"
+
+source_root="$evidence_root/source"
+logs_root="$evidence_root/logs"
+home_root="$evidence_root/home"
+cache_root="$evidence_root/cache"
+go_tmp_root="$evidence_root/go-tmp"
+tmp_root="$evidence_root/tmp"
+call_record="$evidence_root/goreleaser-call.json"
+tool_identity="$evidence_root/tool-identity.json"
+artifact_record="$evidence_root/artifact.json"
+report="$evidence_root/report.txt"
+host_install_root="$evidence_root/host-install"
+mkdir "$logs_root" "$home_root" "$cache_root" "$go_tmp_root" "$tmp_root" ||
+	fail 'cannot initialize external evidence directories'
+
+cleanup_transient_tree() {
+	local path=$1
+	case "$path" in
+	"$evidence_root"/*) ;;
+	*) printf 'snapshot acceptance: refusing transient cleanup outside evidence root: %s\n' "$path" >&2; return 1 ;;
+	esac
+	[[ ! -L "$path" ]] || {
+		printf 'snapshot acceptance: refusing transient symlink cleanup: %s\n' "$path" >&2
+		return 1
+	}
+	if [[ -d "$path" ]]; then
+		find "$path" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+		rm -rf "$path"
+	fi
+}
+
+cleanup_snapshot_transients() {
+	cleanup_transient_tree "$source_root" || true
+	cleanup_transient_tree "$home_root" || true
+	cleanup_transient_tree "$cache_root" || true
+	cleanup_transient_tree "$go_tmp_root" || true
+	cleanup_transient_tree "$tmp_root" || true
+	cleanup_transient_tree "$host_install_root" || true
+}
+trap cleanup_snapshot_transients EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+host_goos=$($go_bin env GOHOSTOS) || fail 'cannot determine host GOOS'
+host_goarch=$($go_bin env GOHOSTARCH) || fail 'cannot determine host GOARCH'
+[[ "$host_goos" =~ ^[a-z0-9]+$ && "$host_goarch" =~ ^[a-z0-9]+$ ]] ||
+	fail 'host platform metadata is malformed'
+
+"$helper" validate-tool \
+	--config "$repo_root/.goreleaser.yml" \
+	--tool "$goreleaser_bin" \
+	--go "$go_bin" \
+	--repo "$repo_root" \
+	--host-goos "$host_goos" \
+	--host-goarch "$host_goarch" \
+	--version-output "$logs_root/goreleaser-version.log" \
+	--metadata-output "$logs_root/goreleaser-build-metadata.log" \
+	--output "$tool_identity" || fail 'pinned GoReleaser identity is invalid'
+
+git -c core.hooksPath=/dev/null clone --quiet --no-local --no-checkout \
+	"$repo_root" "$source_root" >"$logs_root/git-clone.stdout" 2>"$logs_root/git-clone.stderr" ||
+	fail 'cannot create external source clone'
+git -C "$source_root" -c core.hooksPath=/dev/null checkout --quiet --detach "$commit" ||
+	fail 'cannot check out the exact source commit'
+[[ "$(git -C "$source_root" rev-parse HEAD)" == "$commit" ]] ||
+	fail 'external source clone is at the wrong commit'
+[[ -z "$(git -C "$source_root" status --porcelain=v1 --ignored -uall)" ]] ||
+	fail 'external source clone is not initially clean'
+[[ ! -e "$source_root/dist" && ! -L "$source_root/dist" ]] ||
+	fail 'external source clone contains stale snapshot output'
+
+started=$(date +%s)
+mod_cache=$($go_bin env GOMODCACHE) || fail 'cannot determine external module cache'
+[[ -d "$mod_cache" ]] || fail 'module cache does not exist'
+mod_cache=$(cd "$mod_cache" && pwd -P) || fail 'cannot resolve module cache'
+case "$mod_cache" in
+"$repo_root"|"$repo_root"/*) fail 'module cache is repository-local' ;;
+esac
+if ! (
+	cd "$source_root"
+	HOME="$home_root" TMPDIR="$tmp_root" GOCACHE="$cache_root" \
+		GOTMPDIR="$go_tmp_root" GOMODCACHE="$mod_cache" \
+		PLY_SNAPSHOT_REAL_GORELEASER="$goreleaser_bin" \
+		PLY_SNAPSHOT_CALL_RECORD="$call_record" \
+		GITHUB_TOKEN=acceptance-must-clear \
+		GITLAB_TOKEN=acceptance-must-clear \
+		GITEA_TOKEN=acceptance-must-clear \
+		HOMEBREW_TAP_GITHUB_TOKEN=acceptance-must-clear \
+		SNAPCRAFT_STORE_CREDENTIALS=acceptance-must-clear \
+		make --no-print-directory snapshot \
+			GORELEASER="$source_root/test/acceptance/snapshot_acceptance.py"
+) >"$logs_root/goreleaser.stdout" 2>"$logs_root/goreleaser.stderr"; then
+	fail 'real snapshot command failed'
+fi
+
+"$helper" validate-call --record "$call_record" --tool "$goreleaser_bin" --started "$started" ||
+	fail 'snapshot command lacks exact invocation evidence'
+clone_status=$(git -C "$source_root" status --porcelain=v1 --ignored -uall) ||
+	fail 'cannot measure external source status after snapshot'
+[[ -n "$clone_status" ]] || fail 'snapshot produced no external dist population'
+while IFS= read -r status_line; do
+	[[ "$status_line" == '!! dist/'* ]] ||
+		fail "snapshot changed external source outside its fresh dist directory: ${clone_status//$'\n'/; }"
+done <<<"$clone_status"
+
+"$helper" validate-artifact \
+	--repo "$repo_root" \
+	--source "$source_root" \
+	--config "$source_root/.goreleaser.yml" \
+	--go "$go_bin" \
+	--host-goos "$host_goos" \
+	--host-goarch "$host_goarch" \
+	--commit "$commit" \
+	--started "$started" \
+	--output "$artifact_record" || fail 'host snapshot artifact is invalid or ambiguous'
+artifact=$("$helper" field --path "$artifact_record" --field artifact.path) ||
+	fail 'cannot read selected artifact path'
+artifact_sha256=$("$helper" field --path "$artifact_record" --field artifact.sha256) ||
+	fail 'cannot read selected artifact digest'
+artifact_size=$("$helper" field --path "$artifact_record" --field artifact.size) ||
+	fail 'cannot read selected artifact size'
+artifact_relative=$("$helper" field --path "$artifact_record" --field artifact.relative_path) ||
+	fail 'cannot read selected artifact relative path'
+artifact_target=$("$helper" field --path "$artifact_record" --field artifact.target) ||
+	fail 'cannot read selected artifact target'
+
+host_gobin="$host_install_root/missing-bin"
+host_artifact="$host_gobin/ply"
+mkdir "$host_install_root" || fail 'cannot initialize host-install evidence directory'
+[[ ! -e "$host_gobin" && ! -L "$host_gobin" ]] ||
+	fail 'host install GOBIN must initially be missing'
+if ! GOBIN="$host_gobin" GOCACHE="$cache_root" \
+	make --no-print-directory -C "$repo_root" install GO="$go_bin" \
+	>"$logs_root/make-install.stdout" 2>"$logs_root/make-install.stderr"; then
+	fail 'real make install contract failed'
+fi
+"$helper" identity --path "$host_artifact" --output "$evidence_root/host-install.json" ||
+	fail 'make install did not produce one regular executable named ply'
+host_artifact_sha256=$("$helper" field --path "$evidence_root/host-install.json" --field sha256)
+host_artifact_size=$("$helper" field --path "$evidence_root/host-install.json" --field size)
+
+install_stdout="$logs_root/verify-install.stdout"
+install_stderr="$logs_root/verify-install.stderr"
+if ! env -u PLY_VERIFY_ARTIFACT -u PLY_VERIFY_GO GO="$go_bin" \
+	"$bash_bin" "$repo_root/scripts/verify-install" \
+	>"$install_stdout" 2>"$install_stderr"; then
+	fail 'separate host-install verifier failed'
+fi
+"$helper" validate-terminal \
+	--name install --stdout "$install_stdout" --output "$evidence_root/verify-install.json" ||
+	fail 'separate host-install verifier has no exact terminal PASS'
+
+selection_text=${PLY_SNAPSHOT_VERIFIERS:-"${expected_verifiers[*]}"}
+read -r -a selected_verifiers <<<"$selection_text"
+[[ "${#selected_verifiers[@]}" -eq "${#expected_verifiers[@]}" ]] ||
+	fail 'snapshot verifier selection is skipped, empty, or duplicated'
+for index in "${!expected_verifiers[@]}"; do
+	[[ "${selected_verifiers[$index]}" == "${expected_verifiers[$index]}" ]] ||
+		fail 'snapshot verifier selection is not the exact declared population'
+done
+
+for verifier_name in "${selected_verifiers[@]}"; do
+	flow=${verifier_name#verify-}
+	verifier="$repo_root/scripts/$verifier_name"
+	[[ -f "$verifier" && -x "$verifier" && ! -L "$verifier" ]] ||
+		fail "selected verifier is not a regular executable: $verifier_name"
+	stdout_log="$logs_root/$verifier_name.stdout"
+	trace_log="$logs_root/$verifier_name.trace"
+	before_identity="$logs_root/$verifier_name.identity.before.json"
+	after_identity="$logs_root/$verifier_name.identity.after.json"
+	receipt="$evidence_root/$verifier_name.json"
+	"$helper" identity --path "$artifact" --output "$before_identity" ||
+		fail "cannot capture artifact identity before $verifier_name"
+	if ! PS4='TRACE:${BASH_SOURCE}:${LINENO}:' PLY_VERIFY_ARTIFACT="$artifact" \
+		"$bash_bin" -x "$verifier" >"$stdout_log" 2>"$trace_log"; then
+		fail "selected verifier failed: $verifier_name"
+	fi
+	"$helper" identity --path "$artifact" --output "$after_identity" ||
+		fail "cannot capture artifact identity after $verifier_name"
+	cmp -s "$before_identity" "$after_identity" ||
+		fail "selected verifier substituted or changed the artifact: $verifier_name"
+	"$helper" validate-verifier \
+		--name "$flow" \
+		--artifact "$artifact" \
+		--stdout "$stdout_log" \
+		--trace "$trace_log" \
+		--output "$receipt" ||
+		fail "selected verifier lacks exact artifact execution evidence: $verifier_name"
+done
+
+status_after=$(git -C "$repo_root" status --porcelain=v1 --ignored -uall) ||
+	fail 'cannot remeasure repository status'
+[[ "$status_after" == "$status_before" ]] ||
+	fail 'snapshot acceptance changed the repository worktree'
+
+tool_version=$("$helper" field --path "$tool_identity" --field accepted_config_version)
+tool_sha256=$("$helper" field --path "$tool_identity" --field tool_sha256)
+{
+	printf 'snapshot-acceptance-schema=1\n'
+	printf 'source-commit=%s\n' "$commit"
+	printf 'source-tree=%s\n' "$tree"
+	printf 'source-status=clean\n'
+	printf 'tool-version=%s\n' "$tool_version"
+	printf 'tool-path=%s\n' "$goreleaser_bin"
+	printf 'tool-sha256=%s\n' "$tool_sha256"
+	printf 'command=release --snapshot --clean --skip=publish\n'
+	printf 'release-credentials=5-cleared\n'
+	printf 'remote-publication=disabled-and-skipped\n'
+	printf 'host-platform=%s/%s\n' "$host_goos" "$host_goarch"
+	printf 'artifact-relative-path=%s\n' "$artifact_relative"
+	printf 'artifact-path=%s\n' "$artifact"
+	printf 'artifact-target=%s\n' "$artifact_target"
+	printf 'artifact-size=%s\n' "$artifact_size"
+	printf 'artifact-sha256=%s\n' "$artifact_sha256"
+	printf 'host-install-command=make install:go install ./cmd/ply\n'
+	printf 'host-install-gobin-initially=missing\n'
+	printf 'host-install-artifact=%s\n' "$host_artifact"
+	printf 'host-install-size=%s\n' "$host_artifact_size"
+	printf 'host-install-sha256=%s\n' "$host_artifact_sha256"
+	printf 'install-verifier=verify-install:PASS:artifact-override-unset\n'
+	printf 'snapshot-verifier-count=%s\n' "${#selected_verifiers[@]}"
+	for verifier_name in "${selected_verifiers[@]}"; do
+		flow=${verifier_name#verify-}
+		receipt="$evidence_root/$verifier_name.json"
+		trace_count=$("$helper" field --path "$receipt" --field behavioral_trace_records)
+		trace_sha=$("$helper" field --path "$receipt" --field trace_sha256)
+		stdout_sha=$("$helper" field --path "$receipt" --field stdout_sha256)
+		printf 'snapshot-verifier=%s:PASS:artifact=%s:behavioral-traces=%s:stdout-sha256=%s:trace-sha256=%s\n' \
+			"$flow" "$artifact" "$trace_count" "$stdout_sha" "$trace_sha"
+	done
+	printf 'snapshot-acceptance: PASS\n'
+} >"$report"
+
+cleanup_snapshot_transients
+sed -n '1,200p' "$report"
+printf 'snapshot receipts retained; reproducible build state cleaned: %s\n' "$evidence_root"

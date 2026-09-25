@@ -22,6 +22,31 @@ type Context struct {
 	CloudConfig     config.CloudConfig
 }
 
+type cloudConfigOpener interface {
+	Open(profilePath string) config.CloudConfig
+}
+
+type loadProfileDependencies struct {
+	Opener cloudConfigOpener
+}
+
+func systemLoadProfileDependencies() loadProfileDependencies {
+	return loadProfileDependencies{Opener: gitCloudConfigOpener{}}
+}
+
+func (dependencies loadProfileDependencies) Open(profilePath string) config.CloudConfig {
+	if dependencies.Opener == nil {
+		return nil
+	}
+	return dependencies.Opener.Open(profilePath)
+}
+
+type gitCloudConfigOpener struct{}
+
+func (gitCloudConfigOpener) Open(profilePath string) config.CloudConfig {
+	return config.OpenGitCloudConfig(profilePath)
+}
+
 func (ctx *Context) FindAndPopulateMavenProjects() error {
 	excludes := []string{
 		"flattened-pom.xml",
@@ -52,7 +77,7 @@ func (ctx *Context) FindAndPopulateMavenProjects() error {
 }
 
 func (ctx *Context) OnEachMavenProject(description string, do ...func(repository maven.Repository, project config.Project) error) {
-	if ctx.Projects == nil || len(ctx.Projects) == 0 {
+	if len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
 	}
@@ -83,16 +108,14 @@ func (ctx *Context) OnEachMavenProject(description string, do ...func(repository
 			log.Debugf("operating on a dirty git repo")
 		}
 
-		if do != nil {
-			for _, job := range do {
-				if job == nil {
-					continue
-				}
-				err := job(mavenRepository, p)
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
+		for _, job := range do {
+			if job == nil {
+				continue
+			}
+			err := job(mavenRepository, p)
+			if err != nil {
+				log.Warnln(err)
+				continue
 			}
 		}
 
@@ -105,14 +128,15 @@ func (ctx *Context) OnEachMavenProject(description string, do ...func(repository
 }
 
 func (ctx *Context) OnRootProject(description string, do ...func(project config.Project) error) {
-	if ctx.Projects == nil || len(ctx.Projects) == 0 {
+	if len(ctx.Projects) == 0 {
 		log.Errorln("could not find any pom models in the context")
 		return
 	}
 
 	rootProject := ctx.Projects[0]
 	if rootProject.Type == nil {
-		log.Fatalln(fmt.Sprintf("no project type defined for path: %s", rootProject.Path))
+		log.Errorln(fmt.Sprintf("no project type defined for path: %s", rootProject.Path))
+		return
 	}
 	log.Info(fmt.Sprintf("%s for file %s", description, rootProject.Type.FilePath()))
 
@@ -120,16 +144,14 @@ func (ctx *Context) OnRootProject(description string, do ...func(project config.
 		log.Warnf("operating on a dirty git repo")
 	}
 
-	if do != nil {
-		for _, job := range do {
-			if job == nil {
-				continue
-			}
-			err := job(rootProject)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
+	for _, job := range do {
+		if job == nil {
+			continue
+		}
+		err := job(rootProject)
+		if err != nil {
+			log.Warnln(err)
+			continue
 		}
 	}
 
@@ -141,8 +163,12 @@ func (ctx *Context) OnRootProject(description string, do ...func(project config.
 }
 
 func (ctx *Context) LoadProfile(profilePath string) {
+	ctx.loadProfile(systemLoadProfileDependencies(), profilePath)
+}
+
+func (ctx *Context) loadProfile(dependencies loadProfileDependencies, profilePath string) {
 	ctx.LocalConfig = config.OpenLocalConfig(profilePath)
-	ctx.CloudConfig = config.OpenGitCloudConfig(profilePath)
+	ctx.CloudConfig = dependencies.Open(profilePath)
 	if !ctx.LocalConfig.Exists() {
 		log.Debugf("localConfig does not exists, touching a new file")
 		err := ctx.LocalConfig.TouchFile()
@@ -158,7 +184,7 @@ func (ctx *Context) GetMavenRepository() maven.Repository {
 		log.Warnln(err)
 	}
 
-	var repository = maven.Repository{}
+	var repository maven.Repository
 
 	if cfg.Nexus.Url != "" {
 		log.Debugf("using maven repository from local config %s\n", cfg.Nexus.Url)

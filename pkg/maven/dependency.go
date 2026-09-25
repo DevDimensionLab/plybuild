@@ -1,7 +1,6 @@
 package maven
 
 import (
-	"errors"
 	"fmt"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
 	"github.com/devdimensionlab/plybuild/pkg/config"
@@ -91,7 +90,7 @@ func (repository Repository) specificDependencyUpgrade(model *pom.Model, availab
 		}
 	}
 
-	return errors.New(fmt.Sprintf("could not find %s:%s in project", groupId, artifactId))
+	return fmt.Errorf("could not find %s:%s in project", groupId, artifactId)
 }
 
 func isSecondParty(model *pom.Model, enabled bool) func(groupId string) bool {
@@ -214,7 +213,7 @@ func (repository Repository) upgradeDependency(model *pom.Model, dep pom.Depende
 		}
 
 		//err = model.SetDependencyVersion(dep, latestVersion.ToString())
-		err = action(dep, latestVersion.ToString())
+		_ = action(dep, latestVersion.ToString())
 	}
 
 	return nil

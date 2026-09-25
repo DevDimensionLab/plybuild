@@ -19,19 +19,20 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Status functionality for a project",
 	Long:  `Status functionality for a project`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := OpenDocumentationWebsite(cmd, "commands/status"); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if !statusOpts.Any() || statusOpts.Show {

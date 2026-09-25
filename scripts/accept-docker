@@ -1,0 +1,433 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+unset CDPATH DOCKER_AUTH_CONFIG
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+helper="$repo_root/test/acceptance/docker_acceptance.py"
+docker_name=${PLY_DOCKER_BIN:-docker}
+go_name=${PLY_DOCKER_GO:-${GO:-go}}
+bash_name=${PLY_DOCKER_BASH:-/bin/bash}
+expected_verifiers=(verify-status verify-upgrade verify-build)
+
+fail() {
+	printf 'docker acceptance: %s\n' "$*" >&2
+	exit 1
+}
+
+resolve_executable() {
+	local name=$1
+	local resolved
+	if [[ "$name" == */* ]]; then
+		resolved=$name
+	else
+		resolved=$(command -v -- "$name" 2>/dev/null) || return 1
+	fi
+	[[ -f "$resolved" && -x "$resolved" ]] || return 1
+	resolved=$(realpath "$resolved" 2>/dev/null) || return 1
+	[[ -f "$resolved" && -x "$resolved" && ! -L "$resolved" ]] || return 1
+	printf '%s\n' "$resolved"
+}
+
+external_candidate() {
+	local requested=$1
+	local parent name parent_physical candidate
+	[[ "$requested" == /* ]] || fail 'evidence root must be an absolute path'
+	[[ "$requested" != *[$'\n\r\t ']* ]] || fail 'evidence root cannot contain whitespace'
+	[[ ! -e "$requested" && ! -L "$requested" ]] || fail 'evidence root is stale or pre-existing'
+	parent=$(dirname "$requested")
+	name=$(basename "$requested")
+	[[ -d "$parent" ]] || fail 'evidence-root parent does not exist'
+	parent_physical=$(cd "$parent" && pwd -P) || fail 'cannot resolve evidence-root parent'
+	candidate="$parent_physical/$name"
+	case "$candidate" in
+	"$repo_root"|"$repo_root"/*) fail 'evidence root must be outside the repository' ;;
+	esac
+	printf '%s\n' "$candidate"
+}
+
+status_before=$(git -C "$repo_root" status --porcelain=v1 --ignored -uall) ||
+	fail 'cannot measure repository status'
+[[ -z "$status_before" ]] || fail 'repository source must be clean, including ignored paths'
+commit=$(git -C "$repo_root" rev-parse HEAD) || fail 'cannot resolve source commit'
+tree=$(git -C "$repo_root" rev-parse 'HEAD^{tree}') || fail 'cannot resolve source tree'
+
+[[ -f "$helper" && -x "$helper" && ! -L "$helper" ]] ||
+	fail 'Docker acceptance helper is missing or not executable'
+docker_bin=$(resolve_executable "$docker_name") || fail 'configured Docker client is not a regular executable'
+go_bin=$(resolve_executable "$go_name") || fail 'configured Go tool is not a regular executable'
+bash_bin=$(resolve_executable "$bash_name") || fail 'configured Bash is not a regular executable'
+for tool_path in "$docker_bin" "$go_bin" "$bash_bin"; do
+	case "$tool_path" in
+	"$repo_root"|"$repo_root"/*) fail "configured tool is repository-local: $tool_path" ;;
+	esac
+done
+
+if [[ -n "${PLY_DOCKER_EVIDENCE_ROOT:-}" ]]; then
+	evidence_root=$(external_candidate "$PLY_DOCKER_EVIDENCE_ROOT")
+	mkdir "$evidence_root" || fail 'cannot create fresh evidence root'
+else
+	tmp_base=${TMPDIR:-/tmp}
+	tmp_base=${tmp_base%/}
+	[[ -d "$tmp_base" ]] || fail 'TMPDIR does not exist'
+	tmp_physical=$(cd "$tmp_base" && pwd -P) || fail 'cannot resolve TMPDIR'
+	case "$tmp_physical" in
+	"$repo_root"|"$repo_root"/*) fail 'TMPDIR is repository-local' ;;
+	esac
+	evidence_root=$(mktemp -d "$tmp_physical/ply-docker-acceptance.XXXXXX") ||
+		fail 'cannot create fresh evidence root'
+fi
+printf 'docker evidence root: %s\n' "$evidence_root"
+
+source_root="$evidence_root/source"
+logs_root="$evidence_root/logs"
+runtime_root="$evidence_root/runtime"
+cache_root="$evidence_root/cache"
+tmp_root="$evidence_root/tmp"
+docker_config="$evidence_root/docker-config"
+buildx_config="$evidence_root/buildx-config"
+call_record="$evidence_root/docker-calls.jsonl"
+daemon_record="$evidence_root/daemon.json"
+image_record="$evidence_root/image.json"
+image_file_record="$evidence_root/image-file.json"
+report="$evidence_root/report.txt"
+host_install_root="$evidence_root/host-install"
+mkdir "$source_root" "$logs_root" "$runtime_root" "$cache_root" "$tmp_root" \
+	"$docker_config" "$buildx_config" ||
+	fail 'cannot initialize external evidence directories'
+: >"$call_record"
+
+acceptance_run_id="${commit:0:12}-$(date -u +%Y%m%dt%H%M%S)-$$"
+[[ "$acceptance_run_id" =~ ^[a-z0-9][a-z0-9._-]*$ ]] ||
+	fail 'acceptance run identity is malformed'
+builder_label="org.plyproject.acceptance-run=$acceptance_run_id"
+tag=${PLY_DOCKER_TAG:-"ply-acceptance:$acceptance_run_id"}
+tag_cleanup_authorized=no
+[[ "$tag" =~ ^[a-z0-9][a-z0-9._/-]*:[a-z0-9][a-z0-9._-]*$ ]] ||
+	fail 'image tag is malformed or not canonical lowercase'
+context_path="$source_root"
+
+cleanup_transient_tree() {
+	local path=$1
+	case "$path" in
+	"$evidence_root"/*) ;;
+	*) printf 'docker acceptance: refusing transient cleanup outside evidence root: %s\n' "$path" >&2; return 1 ;;
+	esac
+	[[ ! -L "$path" ]] || {
+		printf 'docker acceptance: refusing transient symlink cleanup: %s\n' "$path" >&2
+		return 1
+	}
+	if [[ -d "$path" ]]; then
+		find "$path" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+		rm -rf -- "$path"
+	elif [[ -f "$path" ]]; then
+		rm -f -- "$path"
+	fi
+}
+
+cleanup_docker_artifacts() {
+	local cidfile cid image
+	if [[ -d "$runtime_root" && ! -L "$runtime_root" ]]; then
+		while IFS= read -r -d '' cidfile; do
+			cid=$(tr -d '\r\n' <"$cidfile")
+			[[ "$cid" =~ ^[[:xdigit:]]{12,64}$ ]] || continue
+			"$docker_bin" container rm -f "$cid" >/dev/null 2>&1 || true
+		done < <(find "$runtime_root" -type f -name '*.cid' -print0 2>/dev/null)
+	fi
+	if [[ "$tag_cleanup_authorized" == yes ]]; then
+		"$docker_bin" image rm -f "$tag" >/dev/null 2>&1 || true
+	fi
+	while IFS= read -r image; do
+		[[ "$image" =~ ^sha256:[[:xdigit:]]{64}$ ]] || continue
+		"$docker_bin" image rm -f "$image" >/dev/null 2>&1 || true
+	done < <("$docker_bin" image ls --all --no-trunc --quiet \
+		--filter "label=$builder_label" 2>/dev/null || true)
+}
+
+cleanup_docker_acceptance() {
+	cleanup_docker_artifacts
+	cleanup_transient_tree "$source_root" || true
+	cleanup_transient_tree "$runtime_root" || true
+	cleanup_transient_tree "$cache_root" || true
+	cleanup_transient_tree "$tmp_root" || true
+	cleanup_transient_tree "$docker_config" || true
+	cleanup_transient_tree "$buildx_config" || true
+	cleanup_transient_tree "$host_install_root" || true
+	cleanup_transient_tree "$evidence_root/source.tar" || true
+	cleanup_transient_tree "$evidence_root/source.tar.sha256" || true
+}
+trap cleanup_docker_acceptance EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+selected_context=$($docker_bin context show 2>"$logs_root/context-bootstrap.stderr") ||
+	fail 'cannot identify the selected Docker context'
+[[ -n "$selected_context" && "$selected_context" != *[$'\n\r\t ']* ]] ||
+	fail 'selected Docker context name is malformed'
+
+export PLY_DOCKER_REAL_BIN="$docker_bin"
+export PLY_DOCKER_CALL_RECORD="$call_record"
+export PLY_DOCKER_EXPECTED_TAG="$tag"
+export PLY_DOCKER_EXPECTED_CONTEXT="$context_path"
+export PLY_DOCKER_EXPECTED_CONTEXT_NAME="$selected_context"
+export PLY_DOCKER_REPO_ROOT="$repo_root"
+export PLY_DOCKER_ACCEPTANCE_RUN_ID="$acceptance_run_id"
+
+docker_call() {
+	"$helper" docker "$@"
+}
+
+docker_call version --format '{{json .}}' >"$logs_root/docker-version.json" ||
+	fail 'Docker version lacks a reachable daemon'
+docker_call info --format '{{json .}}' >"$logs_root/docker-info.json" ||
+	fail 'Docker info failed for the selected context'
+docker_call context show >"$logs_root/docker-context-show.txt" ||
+	fail 'cannot revalidate the selected Docker context'
+docker_call context inspect "$selected_context" >"$logs_root/docker-context-inspect.json" ||
+	fail 'cannot inspect the selected Docker context'
+docker_call buildx version >"$logs_root/docker-buildx-version.txt" ||
+	fail 'cannot identify Docker buildx'
+BUILDX_CONFIG="$buildx_config" docker_call buildx inspect \
+	>"$logs_root/docker-buildx-inspect.txt" || fail 'cannot inspect the selected Docker builder'
+
+"$helper" validate-daemon \
+	--version "$logs_root/docker-version.json" \
+	--info "$logs_root/docker-info.json" \
+	--context-show "$logs_root/docker-context-show.txt" \
+	--context-inspect "$logs_root/docker-context-inspect.json" \
+	--buildx-version "$logs_root/docker-buildx-version.txt" \
+	--buildx-inspect "$logs_root/docker-buildx-inspect.txt" \
+	--output "$daemon_record" || fail 'Docker daemon, context, or builder identity is invalid'
+endpoint=$("$helper" field --path "$daemon_record" --field endpoint)
+image_os=$("$helper" field --path "$daemon_record" --field os)
+image_arch=$("$helper" field --path "$daemon_record" --field architecture)
+
+printf '%s\n' '{"auths":{}}' >"$docker_config/config.json"
+export DOCKER_CONFIG="$docker_config"
+export DOCKER_HOST="$endpoint"
+export DOCKER_BUILDKIT=0
+
+git -C "$repo_root" archive --format=tar HEAD >"$evidence_root/source.tar" ||
+	fail 'cannot create exact committed source archive'
+shasum -a 256 "$evidence_root/source.tar" >"$evidence_root/source.tar.sha256"
+tar -xf "$evidence_root/source.tar" -C "$source_root" || fail 'cannot materialize source archive'
+[[ -f "$source_root/Dockerfile" && ! -L "$source_root/Dockerfile" ]] ||
+	fail 'external context lacks a regular Dockerfile'
+[[ $(grep -Fxc 'ARG PLY_ACCEPTANCE_RUN_ID=unmanaged' "$source_root/Dockerfile") -eq 1 &&
+	$(grep -Fxc 'LABEL org.plyproject.acceptance-run=$PLY_ACCEPTANCE_RUN_ID' \
+		"$source_root/Dockerfile") -eq 1 ]] ||
+	fail 'Dockerfile lacks the exact run-scoped builder cleanup label contract'
+[[ ! -e "$source_root/dist" && ! -L "$source_root/dist" ]] ||
+	fail 'external context contains stale distribution output'
+find "$source_root" -type f -print | LC_ALL=C sort >"$evidence_root/context-files.txt"
+[[ -s "$evidence_root/context-files.txt" ]] || fail 'external build context population is empty'
+
+set +e
+docker_call image inspect "$tag" >"$logs_root/preexisting-image.stdout" \
+	2>"$logs_root/preexisting-image.stderr"
+preexisting_exit=$?
+set -e
+[[ "$preexisting_exit" -ne 0 ]] || fail 'unique image tag already names a stale image'
+tag_cleanup_authorized=yes
+
+started=$(date +%s)
+printf '%s\n' "$started" >"$evidence_root/build-started-epoch.txt"
+printf 'docker build --no-cache --force-rm --tag %q --build-arg %q %q\n' \
+	"$tag" "PLY_ACCEPTANCE_RUN_ID=$acceptance_run_id" "$context_path" >"$evidence_root/build.argv"
+printf '%s\n' \
+	'DOCKER_BUILDKIT=0' \
+	"DOCKER_CONFIG=$docker_config" \
+	"DOCKER_HOST=$endpoint" >"$evidence_root/build.environment"
+if ! docker_call build --no-cache --force-rm --tag "$tag" \
+	--build-arg "PLY_ACCEPTANCE_RUN_ID=$acceptance_run_id" "$context_path" \
+	>"$logs_root/docker-build.stdout" 2>"$logs_root/docker-build.stderr"; then
+	fail 'real non-publishing Docker build failed'
+fi
+date +%s >"$evidence_root/build-finished-epoch.txt"
+
+docker_call image inspect "$tag" >"$logs_root/image-inspect.json" ||
+	fail 'fresh tag does not resolve after the build'
+docker_call image ls --no-trunc --quiet "$tag" >"$logs_root/image-tag-ids.txt" ||
+	fail 'cannot resolve the fresh image tag'
+"$helper" validate-image \
+	--inspect "$logs_root/image-inspect.json" \
+	--tag-ids "$logs_root/image-tag-ids.txt" \
+	--tag "$tag" --os "$image_os" --architecture "$image_arch" \
+	--started "$started" --output "$image_record" ||
+	fail 'fresh image identity, platform, or configuration is invalid'
+image_id=$("$helper" field --path "$image_record" --field image_id)
+export PLY_DOCKER_EXPECTED_IMAGE_ID="$image_id"
+docker_call image inspect "$image_id" >"$logs_root/image-id-inspect.json" ||
+	fail 'immutable image ID does not resolve'
+docker_call history --no-trunc --format '{{json .}}' "$image_id" \
+	>"$logs_root/image-history.jsonl" || fail 'cannot inspect image creation history'
+
+inspection_root="$runtime_root/image-inspection"
+mkdir "$inspection_root"
+inspection_cidfile="$inspection_root/container.cid"
+inspection_script='path=/bin/ply; test -e "$path" || exit 41; test ! -L "$path" || exit 42; test -f "$path" || exit 43; test -x "$path" || exit 44; printf '\''path=/bin/ply\ntype=regular\n'\''; stat -c '\''mode=%a'\'' "$path"; stat -c '\''size=%s'\'' "$path"; sha256sum "$path" | awk '\''{print "sha256=" $1}'\'''
+inspection_argv=(run --cidfile "$inspection_cidfile" --entrypoint /bin/sh "$image_id" -c "$inspection_script")
+inspection_json=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1:],separators=(",",":")))' "${inspection_argv[@]}")
+if ! PLY_DOCKER_EXPECTED_RUN_ARGV="$inspection_json" docker_call "${inspection_argv[@]}" \
+	>"$logs_root/image-file.stdout" 2>"$logs_root/image-file.stderr"; then
+	fail 'in-container /bin/ply inspection failed'
+fi
+[[ -s "$inspection_cidfile" ]] || fail 'image inspection produced no container identity'
+inspection_cid=$(tr -d '\n' <"$inspection_cidfile")
+inspection_container_image=$(PLY_DOCKER_EXPECTED_CONTAINER_ID="$inspection_cid" \
+	docker_call container inspect "$inspection_cid" --format '{{.Image}}') ||
+	fail 'cannot bind inspection container to its image'
+[[ "$inspection_container_image" == "$image_id" ]] || fail 'inspection container substituted the image'
+PLY_DOCKER_EXPECTED_CONTAINER_ID="$inspection_cid" docker_call container rm "$inspection_cid" \
+	>"$logs_root/image-inspection-remove.stdout" || fail 'cannot remove stopped inspection container'
+"$helper" validate-image-file --path "$logs_root/image-file.stdout" --output "$image_file_record" ||
+	fail '/bin/ply is missing, symlinked, non-executable, empty, or undigested'
+
+host_gobin="$host_install_root/missing-bin"
+host_artifact="$host_gobin/ply"
+mkdir "$host_install_root" || fail 'cannot initialize host-install evidence directory'
+[[ ! -e "$host_gobin" && ! -L "$host_gobin" ]] ||
+	fail 'host install GOBIN must initially be missing'
+if ! GOBIN="$host_gobin" GOCACHE="$cache_root" \
+	make --no-print-directory -C "$repo_root" install GO="$go_bin" \
+	>"$logs_root/make-install.stdout" 2>"$logs_root/make-install.stderr"; then
+	fail 'separate make install contract failed'
+fi
+"$helper" identity --path "$host_artifact" --output "$evidence_root/host-install.json" ||
+	fail 'make install did not produce one regular executable named ply'
+
+mkdir "$tmp_root/verify-install"
+if ! env -u PLY_VERIFY_ARTIFACT -u PLY_VERIFY_GO GO="$go_bin" TMPDIR="$tmp_root/verify-install" \
+	"$bash_bin" "$repo_root/scripts/verify-install" \
+	>"$logs_root/verify-install.stdout" 2>"$logs_root/verify-install.stderr"; then
+	fail 'separate host-install verifier failed'
+fi
+"$helper" validate-terminal --name install --stdout "$logs_root/verify-install.stdout" \
+	--output "$evidence_root/verify-install.json" ||
+	fail 'separate host-install verifier has no exact terminal PASS'
+
+selection_text=${PLY_DOCKER_VERIFIERS:-"${expected_verifiers[*]}"}
+read -r -a selected_verifiers <<<"$selection_text"
+[[ "${#selected_verifiers[@]}" -eq "${#expected_verifiers[@]}" ]] ||
+	fail 'Docker verifier selection is skipped, empty, or duplicated'
+for index in "${!expected_verifiers[@]}"; do
+	[[ "${selected_verifiers[$index]}" == "${expected_verifiers[$index]}" ]] ||
+		fail 'Docker verifier selection is not the exact declared population'
+done
+
+check_tag() {
+	local label=$1
+	local inspect="$logs_root/tag-$label-inspect.json"
+	local ids="$logs_root/tag-$label-ids.txt"
+	local receipt="$evidence_root/tag-$label.json"
+	docker_call image inspect "$tag" >"$inspect" || return 1
+	docker_call image ls --no-trunc --quiet "$tag" >"$ids" || return 1
+	"$helper" validate-image --inspect "$inspect" --tag-ids "$ids" \
+		--tag "$tag" --os "$image_os" --architecture "$image_arch" \
+		--started "$started" --output "$receipt" || return 1
+	[[ "$("$helper" field --path "$receipt" --field image_id)" == "$image_id" ]]
+}
+
+for verifier_name in "${selected_verifiers[@]}"; do
+	flow=${verifier_name#verify-}
+	verifier="$repo_root/scripts/$verifier_name"
+	[[ -f "$verifier" && -x "$verifier" && ! -L "$verifier" ]] ||
+		fail "selected verifier is not a regular executable: $verifier_name"
+	check_tag "before-$flow" || fail "image tag retargeted before $verifier_name"
+	flow_runtime="$runtime_root/$flow"
+	flow_tmp="$tmp_root/$flow"
+	flow_home="$evidence_root/verifier-default/$flow/home"
+	mkdir -p "$flow_runtime" "$flow_tmp" "$flow_home"
+	stdout_log="$logs_root/$verifier_name.stdout"
+	stderr_log="$logs_root/$verifier_name.stderr"
+	if ! HOME="$flow_home" TMPDIR="$flow_tmp" \
+		PLY_VERIFY_ARTIFACT="$helper" \
+		PLY_ACCEPTANCE_REPOSITORY_HOST=host.docker.internal \
+		PLY_DOCKER_RUNTIME_ROOT="$flow_runtime" \
+		PLY_DOCKER_EXPECTED_FLOW="$flow" \
+		"$bash_bin" "$verifier" >"$stdout_log" 2>"$stderr_log"; then
+		fail "selected verifier failed through the image: $verifier_name"
+	fi
+	"$helper" validate-terminal --name "$flow" --stdout "$stdout_log" \
+		--output "$evidence_root/$verifier_name-terminal.json" ||
+		fail "selected verifier lacks one terminal PASS: $verifier_name"
+	"$helper" validate-runtime --root "$flow_runtime" --flow "$flow" \
+		--image-id "$image_id" --tag "$tag" --output "$evidence_root/$verifier_name-runtime.json" ||
+		fail "selected verifier lacks exact immutable-image runtime receipts: $verifier_name"
+	check_tag "after-$flow" || fail "image tag retargeted after $verifier_name"
+done
+
+"$helper" validate-calls --path "$call_record" --tag "$tag" --context "$context_path" \
+	--run-id "$acceptance_run_id" --image-id "$image_id" \
+	--output "$evidence_root/docker-call-summary.json" ||
+	fail 'Docker build/run population or non-publishing call contract is invalid'
+
+status_after=$(git -C "$repo_root" status --porcelain=v1 --ignored -uall) ||
+	fail 'cannot remeasure repository status'
+[[ "$status_after" == "$status_before" ]] || fail 'Docker acceptance changed the repository worktree'
+
+source_archive_sha=$(awk '{print $1}' "$evidence_root/source.tar.sha256")
+image_size=$("$helper" field --path "$image_record" --field size)
+image_descriptor=$("$helper" field --path "$image_record" --field descriptor_digest)
+ply_size=$("$helper" field --path "$image_file_record" --field size)
+ply_sha=$("$helper" field --path "$image_file_record" --field sha256)
+host_size=$("$helper" field --path "$evidence_root/host-install.json" --field size)
+host_sha=$("$helper" field --path "$evidence_root/host-install.json" --field sha256)
+docker_calls=$("$helper" field --path "$evidence_root/docker-call-summary.json" --field call_count)
+{
+	printf 'docker-acceptance-schema=1\n'
+	printf 'source-commit=%s\n' "$commit"
+	printf 'source-tree=%s\n' "$tree"
+	printf 'source-status=clean\n'
+	printf 'source-archive-sha256=%s\n' "$source_archive_sha"
+	printf 'context-path=%s\n' "$context_path"
+	printf 'docker-context=%s\n' "$selected_context"
+	printf 'docker-endpoint=%s\n' "$endpoint"
+	printf 'builder-driver=docker\n'
+	printf 'builder-cleanup-label=%s\n' "$builder_label"
+	printf 'build-command=docker build --no-cache --force-rm --tag %s --build-arg PLY_ACCEPTANCE_RUN_ID=%s %s\n' \
+		"$tag" "$acceptance_run_id" "$context_path"
+	printf 'build-auth=anonymous-empty-config\n'
+	printf 'publish-operations=0\n'
+	printf 'image-tag=%s\n' "$tag"
+	printf 'image-id=%s\n' "$image_id"
+	printf 'image-descriptor-digest=%s\n' "$image_descriptor"
+	printf 'image-platform=%s/%s\n' "$image_os" "$image_arch"
+	printf 'image-entrypoint=/bin/ply\n'
+	printf 'image-size=%s\n' "$image_size"
+	printf 'image-executable=/bin/ply:regular:executable:size=%s:sha256=%s\n' "$ply_size" "$ply_sha"
+	printf 'host-install-command=make install:go install ./cmd/ply\n'
+	printf 'host-install-gobin-initially=missing\n'
+	printf 'host-install-size=%s\n' "$host_size"
+	printf 'host-install-sha256=%s\n' "$host_sha"
+	printf 'install-verifier=verify-install:PASS:artifact-override-unset\n'
+	printf 'docker-verifier-count=%s\n' "${#selected_verifiers[@]}"
+	for verifier_name in "${selected_verifiers[@]}"; do
+		flow=${verifier_name#verify-}
+		receipt="$evidence_root/$verifier_name-runtime.json"
+		behavior_count=$("$helper" field --path "$receipt" --field behavioral_runtime_receipts)
+		printf 'docker-verifier=%s:PASS:image-id=%s:runtime-receipts=3:behavioral-receipts=%s\n' \
+			"$flow" "$image_id" "$behavior_count"
+	done
+	printf 'docker-call-count=%s\n' "$docker_calls"
+	printf 'docker-build-count=1\n'
+	printf 'docker-run-count=10\n'
+	printf 'docker-artifacts-cleaned-on-exit=tag-and-labeled-builder\n'
+	printf 'docker-acceptance: PASS\n'
+} >"$report"
+
+cleanup_docker_acceptance
+(
+	cd "$evidence_root"
+	find . \
+		\( -path './cache' -o -path './cache/*' -o -path './tmp' -o -path './tmp/*' \) -prune -o \
+		-type f ! -name evidence-manifest.sha256 ! -name evidence-manifest-digest.txt -print0 |
+		LC_ALL=C sort -z | xargs -0 shasum -a 256 >evidence-manifest.sha256
+	shasum -a 256 evidence-manifest.sha256 >evidence-manifest-digest.txt
+)
+
+sed -n '1,220p' "$report"
+printf 'evidence-manifest-sha256=%s\n' "$(awk '{print $1}' "$evidence_root/evidence-manifest-digest.txt")"
+printf 'docker receipts retained; reproducible build state and Docker artifacts cleaned: %s\n' "$evidence_root"

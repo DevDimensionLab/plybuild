@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
@@ -17,19 +18,20 @@ var upgradeCmd = &cobra.Command{
 	Use:   "upgrade",
 	Short: "Upgrade options",
 	Long:  `Perform upgrade on existing projects`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := OpenDocumentationWebsite(cmd, "commands/upgrade"); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 }
 
@@ -46,12 +48,13 @@ var upgradeDependencyCmd = &cobra.Command{
 	Use:   "dependency",
 	Short: "Upgrade a specific dependency on a project",
 	Long:  `Upgrade a specific dependency on a project`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if groupId == "" || artifactId == "" {
-			log.Fatal("--groupId (-g) and --artifactId (-a) must be set")
+			return errors.New("--groupId (-g) and --artifactId (-a) must be set")
 		}
 		description := fmt.Sprintf("upgrading dependency %s:%s", groupId, artifactId)
 		ctx.OnEachMavenProject(description, maven.UpgradeDependency(groupId, artifactId))
+		return nil
 	},
 }
 
@@ -134,9 +137,16 @@ var upgradeInteractiveCmd = &cobra.Command{
 	Use:   "interactive",
 	Short: "Interactively upgrade the project",
 	Long:  `Interactively upgrade the project`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(ctx.Projects) == 0 {
+			return errors.New("could not find any pom models in the context")
+		}
+		if ctx.Projects[0].Type == nil {
+			return fmt.Errorf("no project type defined for path: %s", ctx.Projects[0].Path)
+		}
 		ctx.OnRootProject("starting interactive upgrade",
 			webservice.InitAndBlockProject(webservice.Upgrade, api.CallbackChannel))
+		return nil
 	},
 }
 

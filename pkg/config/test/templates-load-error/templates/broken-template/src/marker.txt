@@ -1,0 +1,1 @@
+This fixture keeps src non-empty while providing no Java or Kotlin source.

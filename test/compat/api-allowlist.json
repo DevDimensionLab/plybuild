@@ -1,0 +1,12 @@
+{
+  "base_ref": "v1.0.1",
+  "compatible_changes": [
+    "./cmd.ExecuteE: added",
+    "package github.com/devdimensionlab/plybuild/cmd/ply: added"
+  ],
+  "incompatible_changes": [],
+  "module": "github.com/devdimensionlab/plybuild",
+  "schema_version": 1,
+  "tool_module": "golang.org/x/exp",
+  "tool_version": "v0.0.0-20260709172345-9ea1abe57597"
+}

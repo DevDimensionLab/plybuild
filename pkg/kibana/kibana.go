@@ -1,9 +1,10 @@
 package kibana
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/clock"
+	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"io"
 	"net/http"
@@ -109,39 +110,67 @@ type KibanaResponse struct {
 
 const kibanaMaxResult = 500
 
-func POST(reguest KibanaFetchRequest) (error, KibanaResponse) {
-	err, response := internalPOST(reguest)
+type postDependencies struct {
+	InternalPOST func(KibanaFetchRequest) (error, KibanaResponse)
+	Clock        clock.Dependencies
+}
 
-	if 0 == len(response.KibanaResult.Result.RawResponse.Hits.Hits) {
+func (dependencies postDependencies) Post(request KibanaFetchRequest) (error, KibanaResponse) {
+	if dependencies.InternalPOST == nil {
+		return httpclient.ErrNoClient, KibanaResponse{}
+	}
+	return dependencies.InternalPOST(request)
+}
+
+func systemPostDependencies() postDependencies {
+	return postDependencies{
+		InternalPOST: internalPOST,
+		Clock:        clock.System(),
+	}
+}
+
+func POST(reguest KibanaFetchRequest) (error, KibanaResponse) {
+	return post(systemPostDependencies(), reguest)
+}
+
+func post(dependencies postDependencies, reguest KibanaFetchRequest) (error, KibanaResponse) {
+	err, response := dependencies.Post(reguest)
+
+	if len(response.KibanaResult.Result.RawResponse.Hits.Hits) == 0 {
 		println("sleep and retry")
-		time.Sleep(15 * time.Second) // dont stress the server
-		err, response := internalPOST(reguest)
+		clock.Sleep(dependencies.Clock, 15*time.Second) // dont stress the server
+		err, response := dependencies.Post(reguest)
 		return err, response
 	}
 	return err, response
 }
 
 func internalPOST(request KibanaFetchRequest) (error, KibanaResponse) {
-	client := &http.Client{}
+	return internalPost(httpclient.System(), request)
+}
 
+func internalPost(dependencies httpclient.Dependencies, request KibanaFetchRequest) (error, KibanaResponse) {
 	size := RawParse(`\"size\":\d+`, request.Body)
 	newSize := `"size":` + strconv.Itoa(kibanaMaxResult)
 	request.Body = strings.Replace(request.Body, size, newSize, 1)
 
-	req, err := http.NewRequest("POST", request.Url, bytes.NewBuffer([]byte(request.Body)))
+	requestHeader := make(http.Header)
+	requestHeader.Add("accept-language", request.AcceptLanguage)
+	requestHeader.Add("authorization", request.Authorization)
+	requestHeader.Add("content-type", request.ContentType)
+	requestHeader.Add("kbn-version", request.KbnVersion)
+
+	resp, err := httpclient.Execute(dependencies, httpclient.Request{
+		URL: request.Url,
+		POST: &httpclient.POST{
+			Body:   []byte(request.Body),
+			Header: requestHeader,
+		},
+	})
 	if nil != err {
 		return err, KibanaResponse{}
 	}
-
-	req.Header.Add("accept-language", request.AcceptLanguage)
-	req.Header.Add("authorization", request.Authorization)
-	req.Header.Add("content-type", request.ContentType)
-	req.Header.Add("kbn-version", request.KbnVersion)
-
-	resp, err := client.Do(req)
-	if nil != err {
-		return err, KibanaResponse{}
-	}
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if nil != err {
@@ -163,8 +192,6 @@ func internalPOST(request KibanaFetchRequest) (error, KibanaResponse) {
 		return err, KibanaResponse{}
 	}
 
-	defer resp.Body.Close()
-
 	kibanaResponse := KibanaResponse{
 		KibanaResponseHeader: kibanaResponseHeaderLocal,
 		KibanaResult:         kibanaResult}
@@ -185,8 +212,8 @@ func LoadFromFetchRequest(f string) (KibanaFetchRequest, error) {
 	bodyLine := RawParse(bodyPrefix+`{\\".*?`+bodySuffix, fetch)
 	bodyWithSuffix := strings.Replace(bodyLine, bodyPrefix, "", 1)
 	rawBody := strings.Replace(bodyWithSuffix, bodySuffix, "", 1) + "}"
-	bodyWithoutEscaping := strings.Replace(rawBody, `\"`, `"`, -1)
-	bodyWithoutEscapingErr := strings.Replace(bodyWithoutEscaping, `\\`, `\`, -1)
+	bodyWithoutEscaping := strings.ReplaceAll(rawBody, `\"`, `"`)
+	bodyWithoutEscapingErr := strings.ReplaceAll(bodyWithoutEscaping, `\\`, `\`)
 
 	kibanaRequest := KibanaFetchRequest{
 		Url:            strings.Replace(ParseForValueInQuote(`fetch\(".*?\"`, 0, fetch), "compress=true", "compress=false", 1),
@@ -270,10 +297,48 @@ func ExecuteKibanaQuery(
 	filter map[string]string,
 	resultExits map[string]bool,
 	outputPadding string) (error, KibanaResponse, []string, map[string]bool) {
+	return executeKibanaQuery(
+		systemQueryDependencies(), kibanaRequest, requestTimeInterval, filter, resultExits, outputPadding,
+	)
+}
+
+type queryPOSTClient interface {
+	Post(KibanaFetchRequest) (KibanaResponse, error)
+}
+
+type queryDependencies struct {
+	Client queryPOSTClient
+}
+
+func (dependencies queryDependencies) Post(request KibanaFetchRequest) (KibanaResponse, error) {
+	if dependencies.Client == nil {
+		return KibanaResponse{}, httpclient.ErrNoClient
+	}
+	return dependencies.Client.Post(request)
+}
+
+func systemQueryDependencies() queryDependencies {
+	return queryDependencies{Client: packageQueryPOST{}}
+}
+
+type packageQueryPOST struct{}
+
+func (packageQueryPOST) Post(request KibanaFetchRequest) (KibanaResponse, error) {
+	err, response := POST(request)
+	return response, err
+}
+
+func executeKibanaQuery(
+	dependencies queryDependencies,
+	kibanaRequest KibanaFetchRequest,
+	requestTimeInterval TimeInterval,
+	filter map[string]string,
+	resultExits map[string]bool,
+	outputPadding string) (error, KibanaResponse, []string, map[string]bool) {
 
 	request := CreateRequestForInterval(requestTimeInterval, kibanaRequest)
 
-	err, kibanaResponse := POST(request)
+	kibanaResponse, err := dependencies.Post(request)
 	if err != nil {
 		return err, KibanaResponse{}, nil, resultExits
 	}
@@ -300,7 +365,9 @@ func ExecuteKibanaQuery(
 
 		requestTimeInterval.Lte = responseTimeInterval.Gte
 
-		err, kibanaResponse, subQueryResult, _ := ExecuteKibanaQuery(kibanaRequest, newRequestTimeInterval, filter, updatedResultExits, outputPadding+"  ")
+		err, kibanaResponse, subQueryResult, _ := executeKibanaQuery(
+			dependencies, kibanaRequest, newRequestTimeInterval, filter, updatedResultExits, outputPadding+"  ",
+		)
 		if err != nil {
 			return err, KibanaResponse{}, nil, resultExits
 		}

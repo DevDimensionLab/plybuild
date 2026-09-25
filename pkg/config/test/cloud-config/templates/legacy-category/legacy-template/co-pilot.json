@@ -1,0 +1,10 @@
+{
+  "language": "java",
+  "groupId": "no.ply.template",
+  "artifactId": "legacy",
+  "package": "no.ply.template.legacy",
+  "applicationName": "LegacyTemplateApplication",
+  "name": "legacy-template",
+  "description": "legacy project configuration fixture",
+  "dependencies": []
+}

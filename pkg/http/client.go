@@ -3,17 +3,20 @@ package http
 import (
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
+	"github.com/devdimensionlab/plybuild/internal/adapter/httpclient"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 )
 
 func GetJson(url string, parsed interface{}) error {
-	body, err := get(url)
+	return getJson(httpclient.System(), url, parsed)
+}
+
+func getJson(dependencies httpclient.Dependencies, url string, parsed interface{}) error {
+	body, err := getHTTPResponse(dependencies, httpclient.Request{URL: url})
 	if err != nil {
 		return err
 	}
@@ -27,7 +30,11 @@ func GetJson(url string, parsed interface{}) error {
 }
 
 func GetXml(url string, parsed interface{}) error {
-	body, err := get(url)
+	return getXml(httpclient.System(), url, parsed)
+}
+
+func getXml(dependencies httpclient.Dependencies, url string, parsed interface{}) error {
+	body, err := getHTTPResponse(dependencies, httpclient.Request{URL: url})
 	if err != nil {
 		return err
 	}
@@ -40,28 +47,41 @@ func GetXml(url string, parsed interface{}) error {
 	return nil
 }
 
-func get(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+func getHTTPResponse(dependencies httpclient.Dependencies, request httpclient.Request) ([]byte, error) {
+	resp, err := httpclient.Execute(dependencies, request)
+	return responseBody(request.URL, resp, err)
+}
+
+func responseBody(url string, resp *http.Response, err error) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
-		return nil, errors.New(fmt.Sprintf("%s returned status code [%s]", url, resp.Status))
+		return nil, fmt.Errorf("%s returned status code [%s]", url, resp.Status)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return body, err
 	}
-
-	defer resp.Body.Close()
 
 	return body, nil
 }
 
 func GetAuthXml(url, username, password string, parsed interface{}) error {
-	body, err := getBasicAuth(url, username, password)
+	return getAuthXml(httpclient.System(), url, username, password, parsed)
+}
+
+func getAuthXml(dependencies httpclient.Dependencies, url, username, password string, parsed interface{}) error {
+	body, err := getHTTPResponse(dependencies, httpclient.Request{
+		URL: url,
+		BasicAuth: &httpclient.BasicAuth{
+			Username: username,
+			Password: password,
+		},
+	})
 	if err != nil {
 		return err
 	}
@@ -74,92 +94,94 @@ func GetAuthXml(url, username, password string, parsed interface{}) error {
 	return nil
 }
 
-func getBasicAuth(url, username, password string) ([]byte, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	client := &http.Client{}
-	req.SetBasicAuth(username, password)
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode >= 400 {
-		return nil, errors.New(fmt.Sprintf("%s returned status code [%s]", url, resp.Status))
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return body, err
-	}
-
-	defer resp.Body.Close()
-
-	return body, nil
+func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {
+	return getJsonWithAccessToken(httpclient.System(), host, path, accessToken, response)
 }
 
-func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {
-	req, err := http.NewRequest("GET", host+path, nil)
+func getJsonWithAccessToken(dependencies httpclient.Dependencies, host string, path string, accessToken string, response interface{}) error {
+	request := httpclient.Request{
+		URL: host + path,
+		BearerJSON: &httpclient.BearerJSON{
+			AccessToken: accessToken,
+		},
+	}
+	resp, err := httpclient.Execute(dependencies, request)
 	if err != nil {
+		log.Debugln(http.MethodGet, host+path, err)
 		return err
 	}
 
-	req.Header.Add("Authorization", `Bearer `+accessToken)
-	req.Header.Add("Content-Type", `application/json`)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Debugln(req.Method, host+path, err)
-		return err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	log.Debugln(req.Method, host+path, resp.StatusCode, len(body))
+	defer func() { _ = resp.Body.Close() }()
+	body, _ := io.ReadAll(resp.Body)
+	log.Debugln(http.MethodGet, host+path, resp.StatusCode, len(body))
 
 	return json.Unmarshal(body, &response)
 }
 
 func Wget(url, filepath string) error {
-	// Get the data
-	resp, err := http.Get(url)
+	return wget(wgetDependencies{
+		HTTP:  httpclient.System(),
+		Files: filesystem.System(),
+	}, url, filepath)
+}
+
+type wgetDependencies struct {
+	HTTP  httpclient.Dependencies
+	Files filesystem.Dependencies
+}
+
+func wget(dependencies wgetDependencies, url, filepath string) error {
+	resp, err := httpclient.Execute(dependencies.HTTP, httpclient.Request{URL: url})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
-	// Create the file
-	out, err := os.Create(filepath)
+	out, err := filesystem.Create(dependencies.Files, filepath)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() { _ = out.Close() }()
 
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
+	_, err = filesystem.Copy(dependencies.Files, out, resp.Body)
 	return err
 }
 
 func Wpost(downloadUrl, filePath string, formData url.Values) error {
+	return wpost(wpostDependencies{
+		HTTP:  httpclient.System(),
+		Files: filesystem.System(),
+	}, downloadUrl, filePath, formData)
+}
+
+type wpostDependencies struct {
+	HTTP  httpclient.Dependencies
+	Files filesystem.Dependencies
+}
+
+func wpost(dependencies wpostDependencies, downloadUrl, filePath string, formData url.Values) error {
 	log.Debugf("downloading %s to %s with %s", downloadUrl, filePath, formData)
-	resp, err := http.PostForm(downloadUrl, formData)
+	resp, err := httpclient.Execute(dependencies.HTTP, httpclient.Request{
+		URL: downloadUrl,
+		POST: &httpclient.POST{
+			Body:             []byte(formData.Encode()),
+			Header:           http.Header{"Content-Type": []string{"application/x-www-form-urlencoded"}},
+			UseDefaultClient: true,
+		},
+	})
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Create the file
-	out, err := os.Create(filePath)
+	out, err := filesystem.Create(dependencies.Files, filePath)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() { _ = out.Close() }()
 
 	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
+	_, err = filesystem.Copy(dependencies.Files, out, resp.Body)
 	return err
 }

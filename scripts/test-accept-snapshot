@@ -1,0 +1,325 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+work_root=$(mktemp -d "${TMPDIR:-/tmp}/ply-test-accept-snapshot.XXXXXX")
+cleanup_test_root() {
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$work_root"
+}
+trap cleanup_test_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+source "$repo_root/test/acceptance/meta-common.sh"
+fake_go="$work_root/fake-go"
+fake_goreleaser="$work_root/fake-goreleaser"
+substitute_artifact="$work_root/substitute-ply"
+mkdir -p "$work_root/modcache"
+
+cat >"$fake_go" <<'FAKE_GO'
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1-} ${2-}" in
+'env GOHOSTOS') printf 'darwin\n' ;;
+'env GOHOSTARCH') printf 'arm64\n' ;;
+'env GOMODCACHE') printf '%s\n' "${PLY_FAKE_MODCACHE:?}" ;;
+'version -m')
+	target=${3:?}
+	case ${target##*/} in
+	fake-goreleaser)
+		printf '%s\n' \
+			"$target: go1.test" \
+			$'\tpath\tgithub.com/goreleaser/goreleaser/v2' \
+			$'\tmod\tgithub.com/goreleaser/goreleaser/v2\tv2.17.1\th1:test' \
+			$'\tbuild\tGOOS=darwin' \
+			$'\tbuild\tGOARCH=arm64'
+		;;
+	*)
+		source_root=${target%%/dist/*}
+		commit=$(git -C "$source_root" rev-parse HEAD)
+		goos=darwin
+		goarch=arm64
+		[[ ${PLY_FAKE_SNAPSHOT_MODE:-good} != wrong-build-platform ]] || goos=linux
+		[[ ${PLY_FAKE_SNAPSHOT_MODE:-good} != foreign-artifact ]] || commit=0000000000000000000000000000000000000000
+		printf '%s\n' \
+			"$target: go1.test" \
+			$'\tpath\tgithub.com/devdimensionlab/plybuild' \
+			$'\tbuild\tGOOS='"$goos" \
+			$'\tbuild\tGOARCH='"$goarch" \
+			$'\tbuild\tvcs.revision='"$commit" \
+			$'\tbuild\tvcs.modified=false'
+		;;
+	esac
+	;;
+install\ *)
+	[[ "$*" == 'install ./cmd/ply' ]]
+	mkdir -p "$GOBIN"
+	cat >"$GOBIN/ply" <<'INSTALLED'
+#!/usr/bin/env bash
+exit 0
+INSTALLED
+	chmod +x "$GOBIN/ply"
+	;;
+*) exit 91 ;;
+esac
+FAKE_GO
+
+cat >"$fake_goreleaser" <<'FAKE_GORELEASER'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1-}" == --version ]]; then
+	printf '%s\n' \
+		'GitVersion:    2.17.1' \
+		'Platform:      darwin/arm64'
+	exit 0
+fi
+[[ "$*" == 'release --snapshot --clean --skip=publish' ]] || exit 92
+mode=${PLY_FAKE_SNAPSHOT_MODE:-good}
+commit=$(git rev-parse HEAD)
+mkdir -p dist
+printf '{"commit":"%s","runtime":{"goarch":"arm64","goos":"darwin"}}\n' \
+	"$commit" >dist/metadata.json
+
+write_artifact() {
+	local path=$1
+	mkdir -p "$(dirname "$path")"
+	cat >"$path" <<'ARTIFACT'
+#!/usr/bin/env bash
+exit 0
+ARTIFACT
+	chmod +x "$path"
+}
+
+case "$mode" in
+missing-artifact)
+	printf '%s\n' '[{"type":"Binary","goos":"darwin","goarch":"arm64","target":"darwin_arm64_v8.0","name":"ply","path":"dist/plybuild_darwin_arm64_v8.0/ply","extra":{"Binary":"ply","ID":"plybuild"}}]' >dist/artifacts.json
+	;;
+ambiguous-artifact)
+	write_artifact dist/plybuild_darwin_arm64_v8.0/ply
+	write_artifact dist/alternate_darwin_arm64_v8.0/ply
+	printf '%s\n' '[{"type":"Binary","goos":"darwin","goarch":"arm64","target":"darwin_arm64_v8.0","name":"ply","path":"dist/plybuild_darwin_arm64_v8.0/ply","extra":{"Binary":"ply","ID":"plybuild"}},{"type":"Binary","goos":"darwin","goarch":"arm64","target":"darwin_arm64_v8.0","name":"ply","path":"dist/alternate_darwin_arm64_v8.0/ply","extra":{"Binary":"ply","ID":"alternate"}}]' >dist/artifacts.json
+	;;
+wrong-platform-path)
+	write_artifact dist/plybuild_linux_arm64_v8.0/ply
+	printf '%s\n' '[{"type":"Binary","goos":"linux","goarch":"arm64","target":"linux_arm64_v8.0","name":"ply","path":"dist/plybuild_linux_arm64_v8.0/ply","extra":{"Binary":"ply","ID":"plybuild"}}]' >dist/artifacts.json
+	;;
+misplaced-artifact)
+	write_artifact dist/wrong/ply
+	printf '%s\n' '[{"type":"Binary","goos":"darwin","goarch":"arm64","target":"darwin_arm64_v8.0","name":"ply","path":"dist/wrong/ply","extra":{"Binary":"ply","ID":"plybuild"}}]' >dist/artifacts.json
+	;;
+*)
+	artifact=dist/plybuild_darwin_arm64_v8.0/ply
+	case "$mode" in
+	symlink-artifact)
+		write_artifact dist/real-ply
+		mkdir -p "$(dirname "$artifact")"
+		ln -s ../../real-ply "$artifact"
+		;;
+	*) write_artifact "$artifact" ;;
+	esac
+	[[ "$mode" != non-executable-artifact ]] || chmod -x "$artifact"
+	[[ "$mode" != stale-artifact ]] || touch -t 200001010000 "$artifact"
+	printf '%s\n' '[{"type":"Metadata","name":"metadata.json","path":"dist/metadata.json"},{"type":"Binary","goos":"darwin","goarch":"arm64","goarm64":"v8.0","target":"darwin_arm64_v8.0","name":"ply","path":"dist/plybuild_darwin_arm64_v8.0/ply","extra":{"Binary":"ply","Builder":"go","Ext":"","ID":"plybuild"}}]' >dist/artifacts.json
+	;;
+esac
+FAKE_GORELEASER
+
+cat >"$substitute_artifact" <<'SUBSTITUTE'
+#!/usr/bin/env bash
+exit 0
+SUBSTITUTE
+chmod +x "$fake_go" "$fake_goreleaser" "$substitute_artifact"
+
+write_makefile() {
+	local path=$1
+	local mode=$2
+	case "$mode" in
+	exact)
+		cat >"$path" <<'MAKEFILE'
+GO ?= go
+GORELEASER ?= goreleaser
+install:
+	$(GO) install ./cmd/ply
+snapshot:
+	GITHUB_TOKEN= GITLAB_TOKEN= GITEA_TOKEN= HOMEBREW_TAP_GITHUB_TOKEN= SNAPCRAFT_STORE_CREDENTIALS= \
+		"$(GORELEASER)" release --snapshot --clean --skip=publish
+MAKEFILE
+		;;
+	no-call)
+		cat >"$path" <<'MAKEFILE'
+GO ?= go
+install:
+	$(GO) install ./cmd/ply
+snapshot:
+	@true
+MAKEFILE
+		;;
+	wrong-argv)
+		cat >"$path" <<'MAKEFILE'
+GO ?= go
+GORELEASER ?= goreleaser
+install:
+	$(GO) install ./cmd/ply
+snapshot:
+	GITHUB_TOKEN= GITLAB_TOKEN= GITEA_TOKEN= HOMEBREW_TAP_GITHUB_TOKEN= SNAPCRAFT_STORE_CREDENTIALS= \
+		"$(GORELEASER)" release --clean --snapshot --skip=publish
+MAKEFILE
+		;;
+	publishing-argv)
+		cat >"$path" <<'MAKEFILE'
+GO ?= go
+GORELEASER ?= goreleaser
+install:
+	$(GO) install ./cmd/ply
+snapshot:
+	GITHUB_TOKEN= GITLAB_TOKEN= GITEA_TOKEN= HOMEBREW_TAP_GITHUB_TOKEN= SNAPCRAFT_STORE_CREDENTIALS= \
+		"$(GORELEASER)" release --clean
+MAKEFILE
+		;;
+	leaked-credentials)
+		cat >"$path" <<'MAKEFILE'
+GO ?= go
+GORELEASER ?= goreleaser
+install:
+	$(GO) install ./cmd/ply
+snapshot:
+	"$(GORELEASER)" release --snapshot --clean --skip=publish
+MAKEFILE
+		;;
+	*) return 1 ;;
+	esac
+}
+
+write_repository() {
+	local destination=$1
+	local make_mode=$2
+	mkdir -p "$destination/scripts" "$destination/test/acceptance"
+	cp "$repo_root/scripts/accept-snapshot" "$destination/scripts/"
+	cp "$repo_root/test/acceptance/snapshot_acceptance.py" "$destination/test/acceptance/"
+	cp "$repo_root/.gitignore" "$destination/.gitignore"
+	cat >"$destination/.goreleaser.yml" <<'CONFIG'
+# yaml-language-server: $schema=https://raw.githubusercontent.com/goreleaser/goreleaser/v2.17.1/www/static/schema.json
+version: 2
+builds:
+  - binary: ply
+release:
+  disable: true
+CONFIG
+	write_makefile "$destination/Makefile" "$make_mode"
+	cat >"$destination/scripts/verify-install" <<'INSTALL'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ -z ${PLY_VERIFY_ARTIFACT:-} ]]
+printf 'install command: PASS\ninstalled artifact: PASS\ninstalled --help: PASS\nbad-input exit=1\n'
+printf 'verify-install: PASS\n'
+INSTALL
+	for flow in status upgrade build; do
+		cat >"$destination/scripts/verify-$flow" <<'VERIFIER'
+#!/usr/bin/env bash
+set -euo pipefail
+flow=${0##*verify-}
+artifact=${PLY_VERIFY_ARTIFACT:?}
+"$artifact" "$flow" --help
+behavior_artifact=$artifact
+if [[ ${PLY_FAKE_VERIFIER_MODE:-good} == artifact-substitution && "$flow" == status ]]; then
+	behavior_artifact=${PLY_FAKE_SUBSTITUTE_ARTIFACT:?}
+fi
+"$behavior_artifact" "$flow" --target /private/tmp/fake-project
+if [[ ${PLY_FAKE_VERIFIER_MODE:-good} == verifier-failure && "$flow" == status ]]; then
+	exit 23
+fi
+printf '%s --help: PASS\n%s exit=0\n' "$flow" "$flow"
+printf 'verify-%s: PASS\n' "$flow"
+if [[ ${PLY_FAKE_VERIFIER_MODE:-good} == duplicate-terminal && "$flow" == status ]]; then
+	printf 'verify-%s: PASS\n' "$flow"
+fi
+VERIFIER
+	done
+	chmod +x "$destination/scripts/"* "$destination/test/acceptance/snapshot_acceptance.py"
+	git -C "$destination" init -q -b codex/upgrade-quality
+	git -C "$destination" config user.name 'Snapshot Meta'
+	git -C "$destination" config user.email snapshot@example.invalid
+	git -C "$destination" config commit.gpgsign false
+	git -C "$destination" add .
+	git -C "$destination" commit -q -m fixture
+}
+
+case_number=0
+run_case() {
+	local snapshot_mode=$1
+	local make_mode=$2
+	local selection=$3
+	local verifier_mode=$4
+	local root_mode=$5
+	local require_report=$6
+	case_number=$((case_number + 1))
+	local case_root="$work_root/case-$case_number"
+	local repository="$case_root/repo"
+	local evidence="$case_root/evidence"
+	mkdir -p "$case_root"
+	write_repository "$repository" "$make_mode"
+	case "$root_mode" in
+	stale) mkdir "$evidence" ;;
+	repository-local) evidence="$repository/local-evidence" ;;
+	external) ;;
+	*) return 97 ;;
+	esac
+	local -a environment=(
+		"PLY_SNAPSHOT_EVIDENCE_ROOT=$evidence"
+		"PLY_SNAPSHOT_GORELEASER=$fake_goreleaser"
+		"PLY_SNAPSHOT_GO=$fake_go"
+		"PLY_FAKE_MODCACHE=$work_root/modcache"
+		"PLY_FAKE_SNAPSHOT_MODE=$snapshot_mode"
+		"PLY_FAKE_VERIFIER_MODE=$verifier_mode"
+		"PLY_FAKE_SUBSTITUTE_ARTIFACT=$substitute_artifact"
+	)
+	if [[ "$selection" != default ]]; then
+		environment+=("PLY_SNAPSHOT_VERIFIERS=$selection")
+	fi
+	if ! env "${environment[@]}" "$repository/scripts/accept-snapshot"; then
+		return 1
+	fi
+	if [[ "$require_report" == yes ]]; then
+		local evidence_physical
+		evidence_physical=$(cd "$evidence" && pwd -P)
+		[[ -f "$evidence/report.txt" && -x "$evidence/source/dist/plybuild_darwin_arm64_v8.0/ply" ]]
+		grep -Fqx 'snapshot-verifier-count=3' "$evidence/report.txt"
+		grep -Fqx 'host-install-command=make install:go install ./cmd/ply' "$evidence/report.txt"
+		grep -Fqx 'snapshot-acceptance: PASS' "$evidence/report.txt"
+		[[ $(grep -c '^snapshot-verifier=' "$evidence/report.txt") -eq 3 ]]
+		for flow in status upgrade build; do
+			grep -F "snapshot-verifier=$flow:PASS:artifact=$evidence_physical/source/dist/plybuild_darwin_arm64_v8.0/ply:behavioral-traces=" \
+				"$evidence/report.txt" >/dev/null
+		done
+		for transient in source home cache go-tmp tmp host-install; do
+			[[ ! -e "$evidence/$transient" && ! -L "$evidence/$transient" ]]
+		done
+	fi
+}
+
+acceptance_meta_expect_pass good run_case good exact default good external yes
+acceptance_meta_expect_fail no-goreleaser-call run_case good no-call default good external no
+acceptance_meta_expect_fail wrong-argv run_case good wrong-argv default good external no
+acceptance_meta_expect_fail publishing-argv run_case good publishing-argv default good external no
+acceptance_meta_expect_fail leaked-credentials run_case good leaked-credentials default good external no
+acceptance_meta_expect_fail stale-root run_case good exact default good stale no
+acceptance_meta_expect_fail missing-artifact run_case missing-artifact exact default good external no
+acceptance_meta_expect_fail ambiguous-artifact run_case ambiguous-artifact exact default good external no
+acceptance_meta_expect_fail symlink-artifact run_case symlink-artifact exact default good external no
+acceptance_meta_expect_fail non-executable-artifact run_case non-executable-artifact exact default good external no
+acceptance_meta_expect_fail wrong-platform-path run_case wrong-platform-path exact default good external no
+acceptance_meta_expect_fail misplaced-artifact run_case misplaced-artifact exact default good external no
+acceptance_meta_expect_fail wrong-build-platform run_case wrong-build-platform exact default good external no
+acceptance_meta_expect_fail foreign-artifact run_case foreign-artifact exact default good external no
+acceptance_meta_expect_fail skipped-selection run_case good exact 'verify-status verify-build' good external no
+acceptance_meta_expect_fail duplicate-selection run_case good exact 'verify-status verify-status verify-build' good external no
+acceptance_meta_expect_fail artifact-substitution run_case good exact default artifact-substitution external no
+acceptance_meta_expect_fail verifier-failure run_case good exact default verifier-failure external no
+acceptance_meta_expect_fail duplicate-terminal run_case good exact default duplicate-terminal external no
+acceptance_meta_expect_fail repository-local-output run_case good exact default good repository-local no
+
+printf 'test-accept-snapshot: PASS (%s controls)\n' "$acceptance_meta_control"

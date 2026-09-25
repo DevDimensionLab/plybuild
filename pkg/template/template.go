@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/maven"
 	"github.com/devdimensionlab/plybuild/pkg/resources"
 	"os"
-	"path/filepath"
 	"strings"
 	"text/template"
 )
@@ -26,9 +26,21 @@ type CloudTemplateCategory struct {
 	Templates []config.CloudTemplate
 }
 
+type templateMarkdownWriteDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemTemplateMarkdownWriteDependencies() templateMarkdownWriteDependencies {
+	return templateMarkdownWriteDependencies{Files: filesystem.System()}
+}
+
 func SaveTemplateListMarkdown(gitCfg config.CloudConfig, markdownDocument string) (string, error) {
+	return saveTemplateListMarkdown(systemTemplateMarkdownWriteDependencies(), gitCfg, markdownDocument)
+}
+
+func saveTemplateListMarkdown(dependencies templateMarkdownWriteDependencies, gitCfg config.CloudConfig, markdownDocument string) (string, error) {
 	readmePath := gitCfg.Implementation().Dir() + "/" + TemplatesDir + "/README.md"
-	err := os.WriteFile(readmePath, []byte(markdownDocument), 0644)
+	err := filesystem.WriteFile(dependencies.Files, readmePath, []byte(markdownDocument), 0644)
 	return readmePath, err
 }
 
@@ -46,7 +58,7 @@ func ListAsMarkdown(gitCfg config.CloudConfig, templates []config.CloudTemplate)
 	data := createTemplateListRenderingModel(templates)
 
 	var tplOutput bytes.Buffer
-	err = tmpl.Execute(&tplOutput, data)
+	_ = tmpl.Execute(&tplOutput, data)
 
 	return tplOutput.String(), nil
 }
@@ -94,14 +106,35 @@ func MergeTemplate(cloudTemplate config.CloudTemplate, targetProject config.Proj
 	} else {
 		log.Info(fmt.Sprintf("merging template %s into %s", cloudTemplate.Name, targetProject.Path))
 	}
-	if err := merge(cloudTemplate.Project, targetProject, multiModuleCheck); err != nil {
+	if err := merge(templateCopyDependencies{Files: packageTemplateFiles{}}, cloudTemplate.Project, targetProject, multiModuleCheck); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func merge(sourceProject config.Project, targetProject config.Project, multiModuleCheck bool) error {
+type templateFiles interface {
+	CopyOrMerge(source string, destination string) error
+}
+
+type templateCopyDependencies struct {
+	Files templateFiles
+}
+
+func (dependencies templateCopyDependencies) CopyOrMerge(source string, destination string) error {
+	if dependencies.Files == nil {
+		return filesystem.ErrNoFilesystem
+	}
+	return dependencies.Files.CopyOrMerge(source, destination)
+}
+
+type packageTemplateFiles struct{}
+
+func (packageTemplateFiles) CopyOrMerge(source string, destination string) error {
+	return file.CopyOrMerge(source, destination)
+}
+
+func merge(dependencies templateCopyDependencies, sourceProject config.Project, targetProject config.Project, multiModuleCheck bool) error {
 	sourceDir := sourceProject.Path
 	filesFromTemplate, err := filteredFilesFromTemplate(sourceDir, getIgnores(sourceDir))
 	if err != nil {
@@ -117,7 +150,7 @@ func merge(sourceProject config.Project, targetProject config.Project, multiModu
 		sourceRelPath = replacePathForSource(sourceRelPath, sourceProject.Config, targetProject.Config)
 		targetPath := file.Path("%s/%s", targetProject.Path, sourceRelPath)
 
-		if err = file.CopyOrMerge(f, targetPath); err != nil {
+		if err = dependencies.CopyOrMerge(f, targetPath); err != nil {
 			return err
 		}
 
@@ -204,8 +237,20 @@ func cleanForMultiModule(targetProject config.Project) error {
 	return file.DeleteAll(file.Path("%s/src", targetProject.Path))
 }
 
+type filteredWalkDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemFilteredWalkDependencies() filteredWalkDependencies {
+	return filteredWalkDependencies{Files: filesystem.System()}
+}
+
 func filteredFilesFromTemplate(sourceDir string, filter []string) (files []string, err error) {
-	err = filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+	return filteredFilesFromTemplateWithDependencies(systemFilteredWalkDependencies(), sourceDir, filter)
+}
+
+func filteredFilesFromTemplateWithDependencies(dependencies filteredWalkDependencies, sourceDir string, filter []string) (files []string, err error) {
+	err = filesystem.Walk(dependencies.Files, sourceDir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}

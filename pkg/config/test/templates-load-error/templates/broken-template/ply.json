@@ -1,0 +1,10 @@
+{
+  "language": "",
+  "groupId": "no.ply.template",
+  "artifactId": "broken",
+  "package": "no.ply.template.broken",
+  "applicationName": "BrokenTemplateApplication",
+  "name": "broken-template",
+  "description": "project loading error fixture",
+  "dependencies": []
+}

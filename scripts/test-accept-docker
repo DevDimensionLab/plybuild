@@ -1,0 +1,330 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+work_root=$(mktemp -d "${TMPDIR:-/tmp}/ply-test-accept-docker.XXXXXX")
+cleanup_test_root() {
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$work_root"
+}
+trap cleanup_test_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+source "$repo_root/test/acceptance/meta-common.sh"
+fake_docker="$work_root/fake-docker"
+fake_go="$work_root/fake-go"
+fake_state="$work_root/fake-state"
+mkdir "$fake_state"
+
+cat >"$fake_go" <<'FAKE_GO'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$*" == 'install ./cmd/ply' ]] || exit 91
+mkdir -p "$GOBIN"
+cat >"$GOBIN/ply" <<'ARTIFACT'
+#!/usr/bin/env bash
+exit 0
+ARTIFACT
+chmod +x "$GOBIN/ply"
+FAKE_GO
+
+cat >"$fake_docker" <<'FAKE_DOCKER'
+#!/usr/bin/env bash
+set -euo pipefail
+mode=${PLY_FAKE_DOCKER_MODE:-good}
+state=${PLY_FAKE_DOCKER_STATE:?}
+tag=${PLY_DOCKER_EXPECTED_TAG:-ply-acceptance-meta:bootstrap}
+image_id='sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+wrong_id='sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+builder_id='sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd'
+
+image_json() {
+	local reference=$1
+	local selected_id=$image_id
+	local architecture=arm64
+	local entrypoint='["/bin/ply"]'
+	local environment='["PATH=/bin"]'
+	local user='""'
+	local count=0
+	if [[ "$reference" == "$tag" ]]; then
+		count=$(($(cat "$state/tag-inspects" 2>/dev/null || printf '0') + 1))
+		printf '%s\n' "$count" >"$state/tag-inspects"
+	fi
+	if [[ "$mode" == tag-retarget && "$reference" == "$tag" && "$count" -ge 3 ]]; then
+		selected_id=$wrong_id
+		: >"$state/retargeted"
+	fi
+	[[ "$mode" != wrong-platform ]] || architecture=amd64
+	[[ "$mode" != wrong-entrypoint ]] || entrypoint='["/usr/local/bin/ply"]'
+	if [[ "$mode" == wrong-config ]]; then
+		environment='["PATH=/bin","GOARCH=amd64"]'
+		user='"nobody"'
+	fi
+	printf '[{"Architecture":"%s","Config":{"Entrypoint":%s,"Env":%s,"User":%s,"WorkingDir":"/"},"Created":"2099-01-01T00:00:00Z","Descriptor":{"digest":"%s"},"Id":"%s","Os":"linux","RepoDigests":["ply-acceptance@%s"],"RepoTags":["%s"],"RootFS":{"Layers":["sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"],"Type":"layers"},"Size":123456}]\n' \
+		"$architecture" "$entrypoint" "$environment" "$user" "$selected_id" \
+		"$selected_id" "$selected_id" "$tag"
+}
+
+case "${1-} ${2-}" in
+'context show')
+	printf 'desktop-linux\n'
+	;;
+'version --format')
+	printf '%s\n' '{"Client":{"Version":"29.4.0"},"Server":{"Version":"29.4.0"}}'
+	;;
+'info --format')
+	printf '%s\n' '{"Architecture":"aarch64","ID":"fake-host-id","Name":"fake-host","OSType":"linux","ServerVersion":"29.4.0"}'
+	;;
+'context inspect')
+	printf '%s\n' '[{"Endpoints":{"docker":{"Host":"unix:///private/tmp/fake-docker.sock"}},"Name":"desktop-linux"}]'
+	;;
+'buildx version')
+	printf 'github.com/docker/buildx v0.33.0 fake\n'
+	;;
+'buildx inspect')
+	printf 'Name: desktop-linux\nDriver: docker\nPlatforms: linux/arm64, linux/amd64\n'
+	;;
+'build --no-cache')
+	[[ "$mode" != no-build ]] && : >"$state/built"
+	;;
+'image inspect')
+	reference=${3:?}
+	if [[ ! -e "$state/built" ]]; then
+		if [[ "$mode" == stale-image && "$reference" == "$tag" ]]; then
+			image_json "$reference"
+			exit 0
+		fi
+		exit 1
+	fi
+	[[ "$mode" != missing-image ]] || exit 1
+	if [[ "$mode" == ambiguous-image && "$reference" == "$tag" ]]; then
+		one=$(image_json "$reference")
+		printf '[%s,%s]\n' "${one:1:${#one}-2}" "${one:1:${#one}-2}"
+	else
+		image_json "$reference"
+	fi
+	;;
+'image ls')
+	if [[ " $* " == *' --filter label=org.plyproject.acceptance-run='* ]]; then
+		[[ ! -e "$state/built" ]] || printf '%s\n' "$builder_id"
+	elif [[ -e "$state/retargeted" ]]; then
+		printf '%s\n' "$wrong_id"
+	elif [[ "$mode" == ambiguous-tag ]]; then
+		printf '%s\n%s\n' "$image_id" "$wrong_id"
+	else
+		printf '%s\n' "$image_id"
+	fi
+	;;
+'image rm')
+	printf '%s\n' "${@:4}" >>"$state/removed-images"
+	;;
+'history --no-trunc')
+	printf '%s\n' '{"CreatedBy":"ENTRYPOINT [\\\"/bin/ply\\\"]","ID":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}'
+	;;
+'run --cidfile')
+	cidfile=${3:?}
+	[[ "$mode" != no-run ]] || exit 0
+	counter=$(($(cat "$state/run-counter" 2>/dev/null || printf '0') + 1))
+	printf '%s\n' "$counter" >"$state/run-counter"
+	printf '%064x\n' "$counter" >"$cidfile"
+	if [[ " $* " == *' --entrypoint /bin/sh '* ]]; then
+		case "$mode" in
+		missing-artifact) exit 41 ;;
+		symlink-artifact) printf 'path=/bin/ply\ntype=symlink\nmode=777\nsize=12\nsha256=%064d\n' 0 ;;
+		non-executable-artifact) printf 'path=/bin/ply\ntype=regular\nmode=644\nsize=12\nsha256=%064d\n' 0 ;;
+		*) printf 'path=/bin/ply\ntype=regular\nmode=755\nsize=12345\nsha256=%064d\n' 0 ;;
+		esac
+		exit 0
+	fi
+	if [[ "$mode" == verifier-failure && " $* " == *' status '* && " $* " == *' --target '* ]]; then
+		exit 23
+	fi
+	if [[ "$mode" == duplicate-terminal && " $* " == *' status '* && " $* " == *' --target '* ]]; then
+		printf 'verify-status: PASS\n'
+	fi
+	;;
+'container inspect')
+	[[ "$mode" != image-substitution ]] && printf '%s\n' "$image_id" || printf '%s\n' "$wrong_id"
+	;;
+'container rm')
+	printf '%s\n' "${3:?}"
+	;;
+*)
+	printf 'unexpected fake Docker argv:' >&2
+	printf ' <%s>' "$@" >&2
+	printf '\n' >&2
+	exit 97
+	;;
+esac
+FAKE_DOCKER
+
+chmod +x "$fake_go" "$fake_docker"
+
+write_repository() {
+	local destination=$1
+	mkdir -p "$destination/scripts" "$destination/test/acceptance" "$destination/cmd/ply"
+	cp "$repo_root/scripts/accept-docker" "$destination/scripts/"
+	cp "$repo_root/test/acceptance/docker_acceptance.py" "$destination/test/acceptance/"
+	cat >"$destination/Makefile" <<'MAKEFILE'
+GO ?= go
+install:
+	$(GO) install ./cmd/ply
+MAKEFILE
+	printf '%s\n' \
+		'FROM scratch AS build' \
+		'ARG PLY_ACCEPTANCE_RUN_ID=unmanaged' \
+		'LABEL org.plyproject.acceptance-run=$PLY_ACCEPTANCE_RUN_ID' \
+		'FROM scratch' >"$destination/Dockerfile"
+	printf 'module example.invalid/docker-meta\n\ngo 1.18\n' >"$destination/go.mod"
+	printf 'package main\nfunc main() {}\n' >"$destination/cmd/ply/main.go"
+	cat >"$destination/scripts/verify-install" <<'VERIFY_INSTALL'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ -z ${PLY_VERIFY_ARTIFACT:-} ]]
+printf 'install command: PASS\ninstalled artifact: PASS\ninstalled --help: PASS\nbad-input exit=1\n'
+printf 'verify-install: PASS\n'
+VERIFY_INSTALL
+	for flow in status upgrade build; do
+		cat >"$destination/scripts/verify-$flow" <<'VERIFIER'
+#!/usr/bin/env bash
+set -euo pipefail
+flow=${0##*verify-}
+artifact=${PLY_VERIFY_ARTIFACT:?}
+work=$(mktemp -d "$TMPDIR/fake-verifier.XXXXXX")
+mkdir -p "$work/home" "$work/project"
+"$artifact" "$flow" --help
+HOME="$work/home" "$artifact" "$flow" --target "$work/project" --cloud-sync=false
+HOME="$work/home" "$artifact" "$flow" --target "$work/project" --bad-input
+printf '%s --help: PASS\n%s exit=0\n' "$flow" "$flow"
+printf 'verify-%s: PASS\n' "$flow"
+VERIFIER
+	done
+	chmod +x "$destination/scripts/"* "$destination/test/acceptance/docker_acceptance.py"
+	git -C "$destination" init -q -b codex/upgrade-quality
+	git -C "$destination" config user.name 'Docker Acceptance Meta'
+	git -C "$destination" config user.email docker-meta@example.invalid
+	git -C "$destination" config commit.gpgsign false
+	git -C "$destination" add .
+	git -C "$destination" commit -q -m fixture
+}
+
+case_number=0
+run_case() {
+	local mode=$1
+	local selection=$2
+	local root_mode=$3
+	local require_report=$4
+	case_number=$((case_number + 1))
+	local case_root="$work_root/case-$case_number"
+	local repository="$case_root/repo"
+	local evidence="$case_root/evidence"
+	local state="$case_root/state"
+	mkdir -p "$case_root" "$state"
+	write_repository "$repository"
+	case "$root_mode" in
+	stale) mkdir "$evidence" ;;
+	repository-local) evidence="$repository/local-evidence" ;;
+	external) ;;
+	*) return 97 ;;
+	esac
+	local commit
+	commit=$(git -C "$repository" rev-parse HEAD)
+	local -a environment=(
+		"PLY_DOCKER_EVIDENCE_ROOT=$evidence"
+		"PLY_DOCKER_BIN=$fake_docker"
+		"PLY_DOCKER_GO=$fake_go"
+		"PLY_DOCKER_TAG=ply-acceptance-meta:${commit:0:12}"
+		"PLY_FAKE_DOCKER_MODE=$mode"
+		"PLY_FAKE_DOCKER_STATE=$state"
+	)
+	if [[ "$selection" != default ]]; then
+		environment+=("PLY_DOCKER_VERIFIERS=$selection")
+	fi
+	if ! env "${environment[@]}" "$repository/scripts/accept-docker"; then
+		return 1
+	fi
+	if [[ "$require_report" == yes ]]; then
+		grep -Fqx 'docker-verifier-count=3' "$evidence/report.txt"
+		grep -Fqx 'docker-build-count=1' "$evidence/report.txt"
+		grep -Fqx 'docker-run-count=10' "$evidence/report.txt"
+		grep -Fqx 'publish-operations=0' "$evidence/report.txt"
+		grep -Fqx 'docker-artifacts-cleaned-on-exit=tag-and-labeled-builder' "$evidence/report.txt"
+		grep -Eq "^builder-cleanup-label=org\\.plyproject\\.acceptance-run=${commit:0:12}-[0-9]{8}t[0-9]{6}-[0-9]+$" \
+			"$evidence/report.txt"
+		grep -Fqx 'docker-acceptance: PASS' "$evidence/report.txt"
+		[[ $(grep -c '^docker-verifier=' "$evidence/report.txt") -eq 3 ]]
+		[[ -s "$evidence/evidence-manifest.sha256" && -s "$evidence/evidence-manifest-digest.txt" ]]
+		for transient in source runtime cache tmp docker-config buildx-config host-install \
+			source.tar source.tar.sha256; do
+			[[ ! -e "$evidence/$transient" && ! -L "$evidence/$transient" ]]
+		done
+		grep -Fqx "ply-acceptance-meta:${commit:0:12}" "$state/removed-images"
+		grep -Fqx 'sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd' \
+			"$state/removed-images"
+	fi
+}
+
+proxy_rejects() {
+	local label=$1
+	shift
+	local record="$work_root/proxy-$label.jsonl"
+	: >"$record"
+	env \
+		PLY_DOCKER_REAL_BIN="$fake_docker" \
+		PLY_DOCKER_CALL_RECORD="$record" \
+		PLY_DOCKER_EXPECTED_TAG='ply-acceptance-meta:expected' \
+		PLY_DOCKER_EXPECTED_CONTEXT='/private/tmp/expected-context' \
+		PLY_DOCKER_EXPECTED_CONTEXT_NAME='desktop-linux' \
+		PLY_DOCKER_ACCEPTANCE_RUN_ID='proxy-run' \
+		PLY_DOCKER_EXPECTED_IMAGE_ID='sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
+		PLY_FAKE_DOCKER_STATE="$fake_state" \
+		"$repo_root/test/acceptance/docker_acceptance.py" docker "$@"
+}
+
+acceptance_meta_expect_pass good run_case good default external yes
+acceptance_meta_expect_fail no-build run_case no-build default external no
+acceptance_meta_expect_fail no-run run_case no-run default external no
+acceptance_meta_expect_fail stale-image run_case stale-image default external no
+[[ ! -e "$work_root/case-5/state/removed-images" ]] ||
+	fail 'stale pre-existing image was removed during failed acceptance cleanup'
+acceptance_meta_expect_fail missing-image run_case missing-image default external no
+acceptance_meta_expect_fail ambiguous-image run_case ambiguous-image default external no
+acceptance_meta_expect_fail ambiguous-tag run_case ambiguous-tag default external no
+acceptance_meta_expect_fail wrong-platform run_case wrong-platform default external no
+acceptance_meta_expect_fail wrong-entrypoint run_case wrong-entrypoint default external no
+acceptance_meta_expect_fail wrong-config run_case wrong-config default external no
+acceptance_meta_expect_fail missing-artifact run_case missing-artifact default external no
+acceptance_meta_expect_fail symlink-artifact run_case symlink-artifact default external no
+acceptance_meta_expect_fail non-executable-artifact run_case non-executable-artifact default external no
+acceptance_meta_expect_fail skipped-selection run_case good 'verify-status verify-build' external no
+acceptance_meta_expect_fail duplicate-selection run_case good 'verify-status verify-status verify-build' external no
+acceptance_meta_expect_fail tag-retarget run_case tag-retarget default external no
+acceptance_meta_expect_fail image-substitution run_case image-substitution default external no
+acceptance_meta_expect_fail verifier-failure run_case verifier-failure default external no
+acceptance_meta_expect_fail duplicate-terminal run_case duplicate-terminal default external no
+acceptance_meta_expect_fail stale-root run_case good default stale no
+acceptance_meta_expect_fail repository-local-output run_case good default repository-local no
+acceptance_meta_expect_fail wrong-build-argv proxy_rejects wrong-build \
+	build --no-cache --tag ply-acceptance-meta:wrong /private/tmp/expected-context
+acceptance_meta_expect_fail wrong-run-argv env \
+	PLY_DOCKER_EXPECTED_RUN_ARGV='["run","--cidfile","/private/tmp/expected.cid","sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]' \
+	PLY_DOCKER_REAL_BIN="$fake_docker" \
+	PLY_DOCKER_CALL_RECORD="$work_root/proxy-wrong-run.jsonl" \
+	PLY_DOCKER_EXPECTED_TAG='ply-acceptance-meta:expected' \
+	PLY_DOCKER_EXPECTED_CONTEXT='/private/tmp/expected-context' \
+	PLY_DOCKER_EXPECTED_CONTEXT_NAME='desktop-linux' \
+	PLY_DOCKER_ACCEPTANCE_RUN_ID='proxy-run' \
+	PLY_DOCKER_EXPECTED_IMAGE_ID='sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' \
+	PLY_FAKE_DOCKER_STATE="$fake_state" \
+	"$repo_root/test/acceptance/docker_acceptance.py" docker run --rm \
+	sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+acceptance_meta_expect_fail login-operation proxy_rejects login login
+acceptance_meta_expect_fail push-operation proxy_rejects push push ply-acceptance-meta:expected
+acceptance_meta_expect_fail publication-tag-operation proxy_rejects tag tag \
+	ply-acceptance-meta:expected registry.invalid/ply:latest
+
+printf 'test-accept-docker: PASS (%s controls)\n' "$acceptance_meta_control"

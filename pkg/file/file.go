@@ -5,15 +5,27 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
+type findFirstDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemFindFirstDependencies() findFirstDependencies {
+	return findFirstDependencies{Files: filesystem.System()}
+}
+
 func FindFirst(fileSuffix string, dir string) (result string, err error) {
-	err = filepath.Walk(dir,
+	return findFirst(systemFindFirstDependencies(), fileSuffix, dir)
+}
+
+func findFirst(dependencies findFirstDependencies, fileSuffix string, dir string) (result string, err error) {
+	err = filesystem.Walk(dependencies.Files, dir,
 		func(path string, fi os.FileInfo, errIn error) error {
 			if strings.HasSuffix(path, fileSuffix) {
 				result = path
@@ -28,8 +40,20 @@ func FindFirst(fileSuffix string, dir string) (result string, err error) {
 	return
 }
 
+type findAllDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemFindAllDependencies() findAllDependencies {
+	return findAllDependencies{Files: filesystem.System()}
+}
+
 func FindAll(suffix string, excludes []string, dir string) (result []string, err error) {
-	err = filepath.Walk(dir,
+	return findAll(systemFindAllDependencies(), suffix, excludes, dir)
+}
+
+func findAll(dependencies findAllDependencies, suffix string, excludes []string, dir string) (result []string, err error) {
+	err = filesystem.Walk(dependencies.Files, dir,
 		func(path string, fi os.FileInfo, errIn error) error {
 			if strings.HasSuffix(path, suffix) && !SuffixIn(path, excludes) {
 				result = append(result, path)
@@ -55,12 +79,12 @@ func SuffixIn(keyword string, list []string) bool {
 func ReadJson(file string, parsed interface{}) error {
 	byteValue, err := Open(file)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to read %s, %v", file, err))
+		return fmt.Errorf("Unable to read %s, %v", file, err)
 	}
 
 	err = json.Unmarshal(byteValue, &parsed)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to unmarshal %s, %v", file, err))
+		return fmt.Errorf("Unable to unmarshal %s, %v", file, err)
 	}
 
 	return nil
@@ -69,37 +93,50 @@ func ReadJson(file string, parsed interface{}) error {
 func ReadXml(file string, parsed interface{}) error {
 	byteValue, err := Open(file)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to open %s, %v", file, err))
+		return fmt.Errorf("Unable to open %s, %v", file, err)
 	}
 
 	err = xml.Unmarshal(byteValue, &parsed)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Unable to unmarshal %s, %v", file, err))
+		return fmt.Errorf("Unable to unmarshal %s, %v", file, err)
 	}
 
 	return nil
 }
 
+type existsDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemExistsDependencies() existsDependencies {
+	return existsDependencies{Files: filesystem.System()}
+}
+
 func Exists(filename string) bool {
-	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
+	return exists(systemExistsDependencies(), filename)
+}
+
+func exists(dependencies existsDependencies, filename string) bool {
+	return filesystem.Exists(dependencies.Files, filename)
+}
+
+type openDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemOpenDependencies() openDependencies {
+	return openDependencies{Files: filesystem.System()}
 }
 
 func Open(filePath string) ([]byte, error) {
-	file, err := os.Open(filePath)
+	return open(systemOpenDependencies(), filePath)
+}
+
+func open(dependencies openDependencies, filePath string) ([]byte, error) {
+	byteValue, err := filesystem.ReadFile(dependencies.Files, filePath)
 	if err != nil {
 		return []byte{}, err
 	}
-
-	byteValue, err := ioutil.ReadAll(file)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	defer file.Close()
 
 	return byteValue, nil
 }
@@ -122,16 +159,32 @@ func OpenLines(filePath string) ([]string, error) {
 	return strings.Split(string(b), "\n"), nil
 }
 
+type overwriteDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemOverwriteDependencies() overwriteDependencies {
+	return overwriteDependencies{Files: filesystem.System()}
+}
+
 func Overwrite(lines []string, filePath string) error {
-	return os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
+	return overwrite(systemOverwriteDependencies(), lines, filePath)
+}
+
+func overwrite(dependencies overwriteDependencies, lines []string, filePath string) error {
+	return filesystem.WriteFile(dependencies.Files, filePath, []byte(strings.Join(lines, "\n")), 0644)
 }
 
 func CopyOrMerge(sourceFile string, destinationFile string) error {
-	if Exists(destinationFile) {
+	return copyOrMerge(filesystem.System(), sourceFile, destinationFile)
+}
+
+func copyOrMerge(dependencies filesystem.Dependencies, sourceFile string, destinationFile string) error {
+	if filesystem.Exists(dependencies, destinationFile) {
 		return mergeFile(sourceFile, destinationFile)
 	}
 
-	return CopyFile(sourceFile, destinationFile)
+	return copyFile(dependencies, sourceFile, destinationFile)
 }
 
 func mergeFile(sourceFile string, destinationFile string) error {
@@ -150,7 +203,11 @@ func mergeFile(sourceFile string, destinationFile string) error {
 }
 
 func CopyFile(sourceFile string, destinationFile string) error {
-	input, err := os.ReadFile(sourceFile)
+	return copyFile(filesystem.System(), sourceFile, destinationFile)
+}
+
+func copyFile(dependencies filesystem.Dependencies, sourceFile string, destinationFile string) error {
+	input, err := filesystem.ReadFile(dependencies, sourceFile)
 	if err != nil {
 		return err
 	}
@@ -158,21 +215,33 @@ func CopyFile(sourceFile string, destinationFile string) error {
 	pathSeparator := string(os.PathSeparator)
 	destinationParts := strings.Split(destinationFile, pathSeparator)
 	destinationDir := strings.Join(destinationParts[:len(destinationParts)-1], pathSeparator)
-	if !Exists(destinationDir) {
-		err = CreateDirectory(destinationDir)
+	if !filesystem.Exists(dependencies, destinationDir) {
+		err = createDirectory(dependencies, destinationDir)
 		if err != nil {
 			return err
 		}
 	}
 
-	fileInfo, err := os.Stat(sourceFile)
+	fileInfo, err := filesystem.Stat(dependencies, sourceFile)
 	if err != nil {
 		return err
 	}
 
 	log.Debugf("copying FROM\t <= %s", sourceFile)
 	log.Debugf("copying TO\t => %s", destinationFile)
-	return os.WriteFile(destinationFile, input, fileInfo.Mode())
+	return filesystem.WriteFile(dependencies, destinationFile, input, fileInfo.Mode())
+}
+
+func createDirectory(dependencies filesystem.Dependencies, path string) error {
+	_, err := filesystem.Stat(dependencies, path)
+	if os.IsNotExist(err) {
+		errDir := filesystem.MkdirAll(dependencies, path, 0755)
+		if errDir != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func RelPath(sourceDirectory string, filePath string) (string, error) {
@@ -197,10 +266,22 @@ func RelPath(sourceDirectory string, filePath string) (string, error) {
 	return strings.Join(fileParts[cut:], pathSeparator), nil
 }
 
+type createDirectoryDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemCreateDirectoryDependencies() createDirectoryDependencies {
+	return createDirectoryDependencies{Files: filesystem.System()}
+}
+
 func CreateDirectory(path string) error {
-	_, err := os.Stat(path)
+	return createDirectoryWithDependencies(systemCreateDirectoryDependencies(), path)
+}
+
+func createDirectoryWithDependencies(dependencies createDirectoryDependencies, path string) error {
+	_, err := filesystem.Stat(dependencies.Files, path)
 	if os.IsNotExist(err) {
-		errDir := os.MkdirAll(path, 0755)
+		errDir := filesystem.MkdirAll(dependencies.Files, path, 0755)
 		if errDir != nil {
 			return err
 		}
@@ -209,19 +290,42 @@ func CreateDirectory(path string) error {
 	return nil
 }
 
+type createFileDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemCreateFileDependencies() createFileDependencies {
+	return createFileDependencies{Files: filesystem.System()}
+}
+
 func CreateFile(path, content string) error {
-	return os.WriteFile(path, []byte(content), 0644)
+	return createFile(systemCreateFileDependencies(), path, content)
+}
+
+func createFile(dependencies createFileDependencies, path, content string) error {
+	return filesystem.WriteFile(dependencies.Files, path, []byte(content), 0644)
+}
+
+type openFileDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemOpenFileDependencies() openFileDependencies {
+	return openFileDependencies{Files: filesystem.System()}
 }
 
 func OpenFile(fileName string) (*os.File, error) {
+	return openFile(systemOpenFileDependencies(), fileName)
+}
 
-	if !Exists(fileName) {
-		if err := CreateFile(fileName, ""); err != nil {
+func openFile(dependencies openFileDependencies, fileName string) (*os.File, error) {
+	if !filesystem.Exists(dependencies.Files, fileName) {
+		if err := filesystem.WriteFile(dependencies.Files, fileName, []byte{}, 0644); err != nil {
 			return nil, err
 		}
 	}
 
-	return os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, 0644)
+	return filesystem.OpenFile(dependencies.Files, fileName, os.O_APPEND|os.O_WRONLY, 0644)
 }
 
 func SearchReplace(filePath string, from string, to string) error {
@@ -335,16 +439,52 @@ func Equal(fileA string, fileB string) (bool, error) {
 	return true, nil
 }
 
+type deleteSingleFileDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemDeleteSingleFileDependencies() deleteSingleFileDependencies {
+	return deleteSingleFileDependencies{Files: filesystem.System()}
+}
+
 func DeleteSingleFile(filePath string) error {
-	return os.Remove(filePath)
+	return deleteSingleFile(systemDeleteSingleFileDependencies(), filePath)
+}
+
+func deleteSingleFile(dependencies deleteSingleFileDependencies, filePath string) error {
+	return filesystem.Remove(dependencies.Files, filePath)
+}
+
+type deleteAllDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemDeleteAllDependencies() deleteAllDependencies {
+	return deleteAllDependencies{Files: filesystem.System()}
 }
 
 func DeleteAll(dirPath string) error {
-	return os.RemoveAll(dirPath)
+	return deleteAll(systemDeleteAllDependencies(), dirPath)
+}
+
+func deleteAll(dependencies deleteAllDependencies, dirPath string) error {
+	return filesystem.RemoveAll(dependencies.Files, dirPath)
+}
+
+type clearDirDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemClearDirDependencies() clearDirDependencies {
+	return clearDirDependencies{Files: filesystem.System()}
 }
 
 func ClearDir(dirPath string, excludes []string) error {
-	files, err := filepath.Glob(filepath.Join(dirPath, "*"))
+	return clearDir(systemClearDirDependencies(), dirPath, excludes)
+}
+
+func clearDir(dependencies clearDirDependencies, dirPath string, excludes []string) error {
+	files, err := filesystem.Glob(dependencies.Files, filepath.Join(dirPath, "*"))
 	if err != nil {
 		return err
 	}
@@ -361,7 +501,7 @@ func ClearDir(dirPath string, excludes []string) error {
 			continue
 		}
 		log.Debugf("Removing: %s", file)
-		err = os.RemoveAll(file)
+		err = filesystem.RemoveAll(dependencies.Files, file)
 		if err != nil {
 			return err
 		}
@@ -369,6 +509,18 @@ func ClearDir(dirPath string, excludes []string) error {
 	return nil
 }
 
+type moveDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemMoveDependencies() moveDependencies {
+	return moveDependencies{Files: filesystem.System()}
+}
+
 func Move(source, destination string) error {
-	return os.Rename(source, destination)
+	return move(systemMoveDependencies(), source, destination)
+}
+
+func move(dependencies moveDependencies, source, destination string) error {
+	return filesystem.Rename(dependencies.Files, source, destination)
 }

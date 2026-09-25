@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "measured_source": {
+    "commit": "5635d50bd161a9a5aa81fc4332cc0c9d68885d08",
+    "commit_tree": "ad3b300e55a9ff08936c09fdbeb875a35bbcf376",
+    "inventory_overlay_sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d",
+    "reproduction_home": {
+      "active_profile_path": ".co-pilot/profiles/.active_profile",
+      "active_profile_type": "directory",
+      "marker_sha256": "cb95f24c35d3987f8aba51231aade19580ffe9242324804fcad2ccff350d1c9a"
+    }
+  },
+  "old": {
+    "instrument_source_commit": "8d2cc113241ad58ed21efda5c5a219f2d9ef24b6",
+    "manual_evidence_sha256": "0c09852920541621bffb8994335466c18ec7b8b33c53764b73136c709019d15b",
+    "scorecard_sha256": "d420887d73aabf496ff276fcc55d13ad379ac49c9322fad58808b5e28fdba7df",
+    "tool": {
+      "call_scanner_sha256": "73dba9d563fb0b3e85af032487d024c7f42b80fd76de9f928d2888fed7347879",
+      "parser_sha256": "277c2ed18ded263e883ef6ac1a94e10e4b721d16bdbf3f09299ee5aaa59fb071",
+      "q06_contract_sha256": "7881988a831b02e367b21aa0d2ad3d08e25afb7524a5c30f8bfa2a2533c64772",
+      "report_template_sha256": "3138b45cd2ad3f3e396ad3c5ea1325130619d6d2c61c2d2c64db262035c0f07d",
+      "upstream_sha256": "45787c231a0f07f27093824b19685aee4fb4cab5159cdb7864834b79fbc9cee9",
+      "upstream_version": "1",
+      "wrapper_sha256": "b896bb8fac4c81fd5c4aab40732b3064e8355fa0d320dbc4b797541192beda75",
+      "wrapper_version": 1
+    }
+  },
+  "new": {
+    "instrument_source_commit": "4887222d38f3dd45a5f61e4231f3b19c27583440",
+    "manual_evidence_sha256": "be738161fddc1d22ad4d2e9fb71bed502846df5060f1185020c1132dec338965",
+    "scorecard_sha256": "5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490",
+    "tool": {
+      "call_scanner_sha256": "73dba9d563fb0b3e85af032487d024c7f42b80fd76de9f928d2888fed7347879",
+      "parser_sha256": "f56dc96885c0f3ab5e18bdb3ccbe155411efc0ce7bacfeb4fe701d8a23d0c31a",
+      "q06_contract_sha256": "7881988a831b02e367b21aa0d2ad3d08e25afb7524a5c30f8bfa2a2533c64772",
+      "report_template_sha256": "3138b45cd2ad3f3e396ad3c5ea1325130619d6d2c61c2d2c64db262035c0f07d",
+      "upstream_sha256": "45787c231a0f07f27093824b19685aee4fb4cab5159cdb7864834b79fbc9cee9",
+      "upstream_version": "1",
+      "wrapper_sha256": "b896bb8fac4c81fd5c4aab40732b3064e8355fa0d320dbc4b797541192beda75",
+      "wrapper_version": 1
+    }
+  },
+  "comparison": {
+    "criteria_equal": true,
+    "denominators_equal": true,
+    "numeric_debt_leaves": 228,
+    "numeric_debt_scope": "all numeric leaves under denominators and criteria",
+    "q3_9_old_verdict": "PASS",
+    "q3_9_new_verdict": "PASS",
+    "raw_report_body_sha256": "cf23c9dca987acd3a966693f933c4c7eca9f7d11c51f0fbabfe1d697f3d7497f"
+  }
+}

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+: "${FAKE_GO_CALLS:?FAKE_GO_CALLS must name the recording file}"
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)
+recording_dir=$(dirname "$FAKE_GO_CALLS")
+recording_name=$(basename "$FAKE_GO_CALLS")
+
+if [[ -L "$FAKE_GO_CALLS" ]]; then
+	printf 'refusing symlink recording path: %s\n' "$FAKE_GO_CALLS" >&2
+	exit 1
+fi
+
+if ! recording_parent=$(cd "$recording_dir" 2>/dev/null && pwd -P); then
+	printf 'recording directory does not exist: %s\n' "$recording_dir" >&2
+	exit 1
+fi
+
+recording_path="$recording_parent/$recording_name"
+case "$recording_path" in
+	"$repo_root"|"$repo_root"/*)
+		printf 'refusing to write recording inside repository: %s\n' "$recording_path" >&2
+		exit 1
+		;;
+esac
+
+{
+	printf 'CALL\n'
+	printf 'GOBIN=%s\n' "${GOBIN-}"
+	printf 'GOPATH=%s\n' "${GOPATH-}"
+	printf 'argc=%s\n' "$#"
+	printf 'arg=%s\n' "$@"
+} >>"$recording_path"

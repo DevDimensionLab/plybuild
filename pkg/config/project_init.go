@@ -8,6 +8,31 @@ import (
 	"strings"
 )
 
+type projectCloudConfigOpener interface {
+	Open(profilePath string) CloudConfig
+}
+
+type projectCloudConfigDependencies struct {
+	Opener projectCloudConfigOpener
+}
+
+func systemProjectCloudConfigDependencies() projectCloudConfigDependencies {
+	return projectCloudConfigDependencies{Opener: gitProjectCloudConfigOpener{}}
+}
+
+type gitProjectCloudConfigOpener struct{}
+
+func (gitProjectCloudConfigOpener) Open(profilePath string) CloudConfig {
+	return OpenGitCloudConfig(profilePath)
+}
+
+func openProjectCloudConfig(dependencies projectCloudConfigDependencies, profilePath string) CloudConfig {
+	if dependencies.Opener == nil {
+		return nil
+	}
+	return dependencies.Opener.Open(profilePath)
+}
+
 func InitProjectConfigurationFromFile(filePath string) (ProjectConfiguration, error) {
 	config := ProjectConfiguration{}
 
@@ -17,8 +42,7 @@ func InitProjectConfigurationFromFile(filePath string) (ProjectConfiguration, er
 		return config, err
 	}
 
-	targetDir := strings.Replace(filePath, projectConfigFileName, "", 1)
-	targetDir = strings.Replace(filePath, legacyProjectConfigFileName, "", 1)
+	targetDir := strings.Replace(filePath, legacyProjectConfigFileName, "", 1)
 
 	err = config.Populate(targetDir)
 	return config, err
@@ -96,7 +120,7 @@ func InitProjectFromDirectory(targetDir string) (project Project, err error) {
 			return
 		}
 	}
-	project.CloudConfig = OpenGitCloudConfig(profilePath)
+	project.CloudConfig = openProjectCloudConfig(systemProjectCloudConfigDependencies(), profilePath)
 
 	pomFile := file.Path("%s/pom.xml", targetDir)
 	if file.Exists(pomFile) {
@@ -136,7 +160,7 @@ func findRootSourceFilePackageName(suffix string, path string) (packageName stri
 	}
 
 	if len(files) == 0 {
-		return packageName, errors.New(fmt.Sprintf("no files with suffix: %s in %s", suffix, path))
+		return packageName, fmt.Errorf("no files with suffix: %s in %s", suffix, path)
 	}
 
 	lines, err := file.OpenLines(files[0])
@@ -150,17 +174,17 @@ func findRootSourceFilePackageName(suffix string, path string) (packageName stri
 		}
 	}
 
-	return "",
-		errors.New(fmt.Sprintf("failed to get any files with suffix %s and a 'package' line in %s", suffix, path))
+	return "", fmt.Errorf("failed to get any files with suffix %s and a 'package' line in %s", suffix, path)
 }
 
 func projectConfigFile(targetDir string) string {
 	plyFile := file.Path("%s/%s", targetDir, projectConfigFileName)
 	if file.Exists(plyFile) {
-		// return ply.json file
 		return plyFile
-	} else {
-		// return co-pilot.json file for legacy projects
-		return file.Path("%s/%s", targetDir, legacyProjectConfigFileName)
 	}
+	legacyFile := file.Path("%s/%s", targetDir, legacyProjectConfigFileName)
+	if file.Exists(legacyFile) {
+		return legacyFile
+	}
+	return plyFile
 }

@@ -4,7 +4,7 @@
 spring-boot-project-starter
 spring-boot-co-pilot
 co-pilot
-ply
+/ply
 target
 webservice*
 !pkg/webservice
@@ -15,3 +15,4 @@ spring-*
 mvnw
 mvnw.cmd
 plybuild
+.agent-task/

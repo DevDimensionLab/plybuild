@@ -3,9 +3,9 @@ package maven
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/file"
-	"io/ioutil"
 	"strings"
 )
 
@@ -18,6 +18,18 @@ type GraphStyle struct {
 	Color     string `json:"color"`
 	FillColor string `json:"fill-color"`
 	Style     string `json:"style"`
+}
+
+type graphStylesWriteDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemGraphStylesWriteDependencies() graphStylesWriteDependencies {
+	return graphStylesWriteDependencies{Files: filesystem.System()}
+}
+
+func writeGraphStyles(dependencies graphStylesWriteDependencies, stylesFile string, jsonStyles []byte) error {
+	return filesystem.WriteFile(dependencies.Files, stylesFile, jsonStyles, 0644)
 }
 
 func GraphDefaultStyles() GraphStyles {
@@ -99,5 +111,5 @@ func WriteGraphStyles(styles GraphStyles, projectPath string) error {
 	if file.Exists(stylesFile) {
 		return nil
 	}
-	return ioutil.WriteFile(stylesFile, jsonStyles, 0644)
+	return writeGraphStyles(systemGraphStylesWriteDependencies(), stylesFile, jsonStyles)
 }

@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+source "$repo_root/test/acceptance/common.sh"
+tmp_base=${TMPDIR:-/tmp}
+tmp_base=${tmp_base%/}
+work_root=$(mktemp -d "$tmp_base/ply-verify-upgrade.XXXXXX")
+cleanup_work_root() {
+	acceptance_stop_server
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$work_root"
+}
+trap cleanup_work_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+log="$work_root/verdict.log"
+artifact=${PLY_VERIFY_ARTIFACT:-"$work_root/bin/ply"}
+failures=0
+guard_message='A help probe alone proves nothing without a measured dependency rewrite.'
+printf '%s\n' "$guard_message" | tee -a "$log" >/dev/null
+
+if [[ -z "${PLY_VERIFY_ARTIFACT:-}" ]]; then
+	acceptance_build_artifact "$repo_root" "$work_root" "$artifact"
+fi
+[[ -f "$artifact" && -x "$artifact" ]] || failures=$((failures + 1))
+
+if "$artifact" upgrade --help >"$work_root/help.stdout" 2>"$work_root/help.stderr" &&
+	grep -F 'Perform upgrade on existing projects' "$work_root/help.stdout" >/dev/null; then
+	printf 'upgrade --help: PASS\n' | tee -a "$log"
+else
+	printf 'upgrade --help: FAIL\n' | tee -a "$log"
+	failures=$((failures + 1))
+fi
+
+acceptance_start_server "$repo_root" "$work_root" '2.10.2'
+acceptance_prepare_home "$work_root/home" "$ACCEPTANCE_SERVER_URL"
+acceptance_copy_order_fixture "$repo_root" "$work_root/project"
+cp -R "$work_root/project" "$work_root/project-before"
+(cd "$work_root/project-before" && find . -type f -print | LC_ALL=C sort) \
+	>"$work_root/files-before"
+if HOME="$work_root/home" "$artifact" upgrade dependency \
+	--target "$work_root/project" --cloud-sync=false \
+	--groupId com.google.code.gson --artifactId gson 2>&1 |
+	tee -a "$log" >"$work_root/upgrade.stdout"; then
+	upgrade_exit=0
+else
+	upgrade_exit=${PIPESTATUS[0]}
+fi
+printf 'upgrade exit=%s\n' "$upgrade_exit" | tee -a "$log"
+if [[ "$upgrade_exit" -ne 0 ]] ||
+	! grep -F '<gson.version>2.10.2</gson.version>' "$work_root/project/pom.xml" >/dev/null ||
+	! grep -F 'outdated dependency com.google.code.gson:gson [2.10.1 vs 2.10.2]' \
+		"$work_root/upgrade.stdout" >/dev/null ||
+	cmp -s "$work_root/project-before/pom.xml" "$work_root/project/pom.xml"; then
+	failures=$((failures + 1))
+fi
+while IFS= read -r relative; do
+	[[ "$relative" == './pom.xml' ]] && continue
+	cmp -s "$work_root/project-before/${relative#./}" "$work_root/project/${relative#./}" ||
+		failures=$((failures + 1))
+done < <(cd "$work_root/project-before" && find . -type f -print | LC_ALL=C sort)
+(cd "$work_root/project" && find . -type f -print | LC_ALL=C sort) \
+	>"$work_root/files-after"
+cmp -s "$work_root/files-before" "$work_root/files-after" || failures=$((failures + 1))
+
+acceptance_copy_order_fixture "$repo_root" "$work_root/bad-project"
+bad_before=$(acceptance_tree_digest "$work_root/bad-project")
+set +e
+HOME="$work_root/home" "$artifact" upgrade dependency \
+	--target "$work_root/bad-project" --cloud-sync=false \
+	--artifactId gson 2>&1 | tee -a "$log" >"$work_root/bad.stdout"
+bad_exit=${PIPESTATUS[0]}
+set -e
+bad_after=$(acceptance_tree_digest "$work_root/bad-project")
+if [[ "$bad_exit" -eq 0 || "$bad_before" != "$bad_after" ]]; then
+	failures=$((failures + 1))
+fi
+
+[ "$failures" -eq 0 ]
+printf 'verify-upgrade: PASS\n'

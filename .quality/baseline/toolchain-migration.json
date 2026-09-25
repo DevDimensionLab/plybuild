@@ -1,0 +1,82 @@
+{
+  "comparison": {
+    "criteria_equal": true,
+    "denominators_equal": true,
+    "numeric_debt_equal": true,
+    "numeric_debt_leaves": 228,
+    "raw_report_body_sha256": "cf23c9dca987acd3a966693f933c4c7eca9f7d11c51f0fbabfe1d697f3d7497f",
+    "unexpected_differences": []
+  },
+  "declarations": {
+    "docker_builder": "golang:1.26.7-alpine3.24@sha256:28d89ee9cc0ff9fec75c82ca201e6bf7fdf9a679d4b7b24dfa04f2bb766bb468",
+    "go_language": "1.18",
+    "go_toolchain": "go1.26.7",
+    "release_workflow": "1.26.7"
+  },
+  "measured_source": {
+    "commit": "5635d50bd161a9a5aa81fc4332cc0c9d68885d08",
+    "commit_tree": "ad3b300e55a9ff08936c09fdbeb875a35bbcf376",
+    "inventory_overlay_sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d"
+  },
+  "module_selection": {
+    "non_standard_packages": 143,
+    "packages_equal": true,
+    "selected_modules": 233,
+    "selected_modules_equal": true,
+    "tidy_projection": {
+      "new_go_mod_checksums": [],
+      "post_declaration_lines": 207,
+      "pre_declaration_lines": 207,
+      "version_changes": []
+    }
+  },
+  "new": {
+    "archive": "go1.26.7.darwin-arm64.tar.gz",
+    "archive_sha256": "020a1e8224811be75163e920bc77e0926a1390a6aeea19bdcf23f74b9d749f6d",
+    "executable_sha256": "9da68c657a8344623d37fc9dc048d845011736409249bc924dd9af47a61594e6",
+    "scorecard_sha256": "9f044510ae95d1df85b6c0868323c11453f97015c16fc46721d70c9da0b3a463",
+    "version": "go version go1.26.7 darwin/arm64"
+  },
+  "old": {
+    "executable_sha256": "912f19a1a95ffe44a9e349d8283c74eb1d2eace37aad3ca6ef7b9ae321eb709f",
+    "scorecard_sha256": "5fb3226009cfbf0d29f63fa03592157cce4efcec6e38583b64a86f6288e89490",
+    "scorecard_source_commit": "097a9f15782c773e47a61d903f5d09f5c96408f0",
+    "version": "go version go1.26.2 darwin/arm64"
+  },
+  "pinned_tools": {
+    "golangci_lint": {
+      "executable_sha256": "3ba856c13833c4cda2182eb71bdbc7f96ddad339a1cdda8c36f88bfb1e34bd6f",
+      "go_build": "go1.26.2",
+      "version": "2.12.2"
+    },
+    "goreleaser": {
+      "executable_sha256": "f5f08a777bc1b9321fdebae0a03f6f20af3713c17d6089bf28061d7791ca578c",
+      "go_build": "go1.26.5",
+      "version": "2.17.1"
+    }
+  },
+  "schema_version": 1,
+  "selection": {
+    "rejected": {
+      "reason": "Go 1.27 is maintained, but pinned golangci-lint 2.12.2 is built with Go 1.26.2 and does not claim support for a newer target Go line.",
+      "version": "go1.27.0"
+    },
+    "selected": {
+      "reason": "Go 1.26 remains maintained; 1.26.7 is its current stable patch and is inside the line supported by both pinned quality binaries. The exact toolchain directive is separate from the retained Go 1.18 language-compatibility floor so this toolchain-only move does not introduce newer language, vet, or lint semantics.",
+      "version": "go1.26.7"
+    }
+  },
+  "support_evidence": {
+    "actions_go_versions": "https://raw.githubusercontent.com/actions/go-versions/main/versions-manifest.json",
+    "actions_setup_go_v2": "https://raw.githubusercontent.com/actions/setup-go/v2/README.md",
+    "docker_image": "https://hub.docker.com/_/golang",
+    "docker_source": "https://raw.githubusercontent.com/docker-library/golang/master/1.26/alpine3.24/Dockerfile",
+    "go_downloads": "https://go.dev/dl/?mode=json&include=all",
+    "go_release_policy": "https://go.dev/doc/devel/release",
+    "go_toolchain_selection": "https://go.dev/doc/toolchain",
+    "golangci_lint_go_mod": "https://raw.githubusercontent.com/golangci/golangci-lint/v2.12.2/go.mod",
+    "golangci_lint_policy": "https://golangci-lint.run/docs/welcome/faq/",
+    "goreleaser_go_mod": "https://raw.githubusercontent.com/goreleaser/goreleaser/v2.17.1/go.mod",
+    "retrieved_at": "2026-09-01"
+  }
+}
