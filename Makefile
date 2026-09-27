@@ -20,7 +20,7 @@ override PLY_QUALITY_MUTATIONS := cli-context config-cloud maven-sorting templat
 
 .DEFAULT_GOAL := all
 
-.PHONY: acceptance acceptance-docker acceptance-snapshot all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight quality release release-brew run snapshot test test-agent-auto test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight test-quality test-toolchain upgrade
+.PHONY: acceptance acceptance-docker acceptance-snapshot all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight quality release release-brew run snapshot test test-agent-auto test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight test-quality test-toolchain test-workflow-handoff upgrade
 
 build:
 	$(GO) build -o ply ./cmd/ply
@@ -103,6 +103,7 @@ compat-api:
 compat-cli:
 	$(BASH) "$(REPO_ROOT)/scripts/check-cli-compat.sh"
 	$(BASH) "$(REPO_ROOT)/test/cli_surface_contract_test.sh"
+	$(BASH) "$(REPO_ROOT)/test/workflow_handoff_roundtrip_test.sh"
 
 compatibility: compat-api compat-cli
 
@@ -112,6 +113,9 @@ test-compatibility:
 
 test-cli-surface:
 	$(BASH) "$(REPO_ROOT)/test/cli_surface_contract_test.sh"
+
+test-workflow-handoff:
+	$(BASH) "$(REPO_ROOT)/test/workflow_handoff_roundtrip_test.sh"
 
 acceptance:
 	$(BASH) "$(REPO_ROOT)/scripts/verify-install"

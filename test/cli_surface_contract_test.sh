@@ -62,9 +62,21 @@ run_help_surface workspace-project-help workspace project --help
 run_help_surface workspace-project-add-help workspace project add --help
 run_help_surface workspace-project-show-help workspace project show --help
 run_help_surface workspace-project-list-help workspace project list --help
+run_help_surface workflow-help workflow --help
+run_help_surface workflow-handoff-help workflow handoff --help
+run_help_surface workflow-handoff-create-help workflow handoff create --help
+run_help_surface workflow-handoff-show-help workflow handoff show --help
+run_help_surface workflow-handoff-inspect-help workflow handoff inspect --help
+run_help_surface workflow-handoff-submit-start-help workflow handoff submit-start --help
+run_help_surface workflow-handoff-submit-result-help workflow handoff submit-result --help
+run_help_surface workflow-handoff-cancel-help workflow handoff cancel --help
+run_help_surface workflow-handoff-supersede-help workflow handoff supersede --help
+run_help_surface workflow-handoff-abandon-help workflow handoff abandon --help
 
 grep -F '  workspace   Manage Ply workspaces' "$temp_root/root-help.stdout" >/dev/null ||
 	fail 'root help does not expose the workspace parent'
+grep -F '  workflow    Manage agent workflows' "$temp_root/root-help.stdout" >/dev/null ||
+	fail 'root help does not expose the workflow parent'
 grep -F 'Manage explicit local Ply workspaces.' "$temp_root/workspace-help.stdout" >/dev/null ||
 	fail 'workspace help lost its long description'
 grep -F 'ply workspace [command]' "$temp_root/workspace-help.stdout" >/dev/null ||
@@ -112,10 +124,48 @@ grep -F 'ply workspace project show <project-id> [flags]' \
 	"$temp_root/workspace-project-show-help.stdout" >/dev/null || fail 'project show usage changed'
 grep -F 'ply workspace project list [flags]' \
 	"$temp_root/workspace-project-list-help.stdout" >/dev/null || fail 'project list usage changed'
+
+grep -F 'Manage explicit local agent workflow transitions.' "$temp_root/workflow-help.stdout" >/dev/null ||
+	fail 'workflow help lost its long description'
+grep -F 'ply workflow [command]' "$temp_root/workflow-help.stdout" >/dev/null ||
+	fail 'workflow help usage changed'
+grep -F '  handoff     Manage file-based agent handoffs' "$temp_root/workflow-help.stdout" >/dev/null ||
+	fail 'workflow help does not expose handoff'
+grep -F '  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef' "$temp_root/workflow-help.stdout" >/dev/null ||
+	fail 'workflow help lost its example'
+grep -F 'Create, control, receive, and inspect immutable local agent handoffs.' "$temp_root/workflow-handoff-help.stdout" >/dev/null ||
+	fail 'handoff help lost its long description'
+for leaf in create show inspect submit-start submit-result cancel supersede abandon; do
+	grep -F "  $leaf" "$temp_root/workflow-handoff-help.stdout" >/dev/null ||
+		fail "handoff help does not expose $leaf"
+done
+grep -F 'Validate a handoff draft and publish one immutable handoff in the containing Ply workspace.' "$temp_root/workflow-handoff-create-help.stdout" >/dev/null ||
+	fail 'create help lost its long description'
+grep -F 'ply workflow handoff create [flags]' "$temp_root/workflow-handoff-create-help.stdout" >/dev/null ||
+	fail 'create help usage changed'
+grep -F -- '--file string' "$temp_root/workflow-handoff-create-help.stdout" >/dev/null || fail 'create file flag is unavailable'
+grep -F 'ply workflow handoff show <handoff-id> [flags]' "$temp_root/workflow-handoff-show-help.stdout" >/dev/null || fail 'show usage changed'
+grep -F 'ply workflow handoff inspect [flags]' "$temp_root/workflow-handoff-inspect-help.stdout" >/dev/null || fail 'inspect usage changed'
+for flag in '--handoff string' '--format string' '--raw string' '--acknowledge-secret-exposure'; do
+	grep -F -- "$flag" "$temp_root/workflow-handoff-inspect-help.stdout" >/dev/null || fail "inspect $flag is unavailable"
+done
+grep -F 'ply workflow handoff submit-start [flags]' "$temp_root/workflow-handoff-submit-start-help.stdout" >/dev/null || fail 'submit-start usage changed'
+grep -F 'start receipt draft JSON file' "$temp_root/workflow-handoff-submit-start-help.stdout" >/dev/null || fail 'submit-start file help changed'
+grep -F 'ply workflow handoff submit-result [flags]' "$temp_root/workflow-handoff-submit-result-help.stdout" >/dev/null || fail 'submit-result usage changed'
+grep -F 'terminal result draft JSON file' "$temp_root/workflow-handoff-submit-result-help.stdout" >/dev/null || fail 'submit-result file help changed'
+grep -F 'ply workflow handoff cancel <handoff-id> [flags]' "$temp_root/workflow-handoff-cancel-help.stdout" >/dev/null || fail 'cancel usage changed'
+grep -F 'human-readable cancellation reason' "$temp_root/workflow-handoff-cancel-help.stdout" >/dev/null || fail 'cancel reason help changed'
+grep -F 'ply workflow handoff supersede <handoff-id> [flags]' "$temp_root/workflow-handoff-supersede-help.stdout" >/dev/null || fail 'supersede usage changed'
+grep -F 'replacement handoff draft JSON file' "$temp_root/workflow-handoff-supersede-help.stdout" >/dev/null || fail 'supersede file help changed'
+grep -F 'human-readable superseding reason' "$temp_root/workflow-handoff-supersede-help.stdout" >/dev/null || fail 'supersede reason help changed'
+grep -F 'ply workflow handoff abandon <handoff-id> [flags]' "$temp_root/workflow-handoff-abandon-help.stdout" >/dev/null || fail 'abandon usage changed'
+grep -F -- '--acknowledge-effects-unknown' "$temp_root/workflow-handoff-abandon-help.stdout" >/dev/null || fail 'abandon acknowledgement is unavailable'
 [[ ! -e "$temp_root/home/.ply" ]] || fail 'help created a global Ply profile'
 
 grep -F '  workspace   Manage Ply workspaces' "$repo_root/README.md" >/dev/null ||
 	fail 'README root command overview does not expose workspace'
+grep -F '  workflow    Manage agent workflows' "$repo_root/README.md" >/dev/null ||
+	fail 'README root command overview does not expose workflow'
 printf '%s\n' \
 	'## Workspace' \
 	'Initialize the current directory as an explicit Ply workspace:' \
@@ -158,10 +208,21 @@ printf '%s\n' \
 	'Retrying the same registration is idempotent. Changing membership, relocating repositories, and' \
 	'`project init` are not part of this command.' \
 	'' >"$temp_root/readme-workspace.expected"
-sed -n '/^## Workspace$/,/^## Install$/p' "$repo_root/README.md" | sed '$d' \
+sed -n '/^## Workspace$/,/^## Workflow handoffs$/p' "$repo_root/README.md" | sed '$d' \
 	>"$temp_root/readme-workspace.actual"
 cmp -s "$temp_root/readme-workspace.expected" "$temp_root/readme-workspace.actual" ||
 	fail 'README workspace documentation changed'
+grep -F '## Workflow handoffs' "$repo_root/README.md" >/dev/null || fail 'README workflow section is missing'
+grep -F 'The human—not Ply—opens the recipient in that exact working directory' "$repo_root/README.md" >/dev/null ||
+	fail 'README does not state the human-start boundary'
+grep -F '`submit-start` before any target effect' "$repo_root/README.md" >/dev/null ||
+	fail 'README does not state the start-before-effect boundary'
+grep -F '`--acknowledge-secret-exposure`' "$repo_root/README.md" >/dev/null ||
+	fail 'README does not explain raw secret acknowledgement'
+grep -F '`complete` result never authorizes QA' "$repo_root/README.md" >/dev/null ||
+	fail 'README does not preserve downstream human gates'
+grep -F '"kind":"ply.workflow.handoff-draft"' "$repo_root/README.md" >/dev/null ||
+	fail 'README does not include a full draft example'
 
 set +e
 HOME="$temp_root/home" "$binary" definitely-not-a-command \
@@ -482,4 +543,4 @@ cmp -s "$temp_root/external.before" "$temp_root/external.after" || fail 'Ply cha
 	fail 'project journey created unexpected workspace files'
 [[ ! -e "$temp_root/home/.ply" ]] || fail 'project journey created a global Ply profile'
 
-printf 'cli surface contract: PASS (legacy behavior, workspace init, and project registration)\n'
+printf 'cli surface contract: PASS (legacy behavior, workspace, project, and workflow handoff)\n'
