@@ -1,6 +1,8 @@
 package canonicaljson
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"reflect"
 	"testing"
 )
@@ -63,5 +65,41 @@ func TestMarshalRejectsDuplicateMembersAndUnsupportedTypes(t *testing.T) {
 	}
 	if _, err := Marshal(1); err == nil {
 		t.Fatal("machine int accepted")
+	}
+}
+
+func TestCanonicalWhitespaceDigestAndInvalidUTF8Boundaries(t *testing.T) {
+	compact, err := DecodeStrict([]byte(`{"a":[true,null,"æ"],"n":1}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	spaced, err := DecodeStrict([]byte(" \n { \"n\" : 1, \"a\" : [ true, null, \"æ\" ] } \t"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	compactBytes, err := Marshal(compact)
+	if err != nil {
+		t.Fatal(err)
+	}
+	spacedBytes, err := Marshal(spaced)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(compactBytes, spacedBytes) || sha256.Sum256(compactBytes) != sha256.Sum256(spacedBytes) {
+		t.Fatalf("equivalent JSON did not produce the same canonical bytes: %q != %q", compactBytes, spacedBytes)
+	}
+	if bytes.HasSuffix(compactBytes, []byte{'\n'}) {
+		t.Fatal("canonical output has a trailing LF")
+	}
+
+	invalid := string([]byte{'x', 0xff, 'y'})
+	if _, err := DecodeStrict([]byte{'"', 0xff, '"'}); err == nil {
+		t.Fatal("DecodeStrict accepted invalid UTF-8")
+	}
+	if _, err := Marshal(invalid); err == nil {
+		t.Fatal("Marshal accepted invalid UTF-8 string value")
+	}
+	if _, err := Marshal(Object{{Name: invalid, Value: nil}}); err == nil {
+		t.Fatal("Marshal accepted invalid UTF-8 member name")
 	}
 }

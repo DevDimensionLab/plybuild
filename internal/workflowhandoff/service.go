@@ -286,6 +286,9 @@ func SubmitResultDocument(dependencies Dependencies, input SubmitInput) (SubmitR
 	}
 	finalDraft, artifacts, err := validateTerminalBinding(dependencies, snapshot, draft)
 	if err != nil {
+		if system, ok := dependencies.Store.(*systemStore); ok {
+			_ = system.publishReplyRejection(snapshot, "terminal", "conflict", draft.Canonical, classOf(err), err.Error())
+		}
 		return SubmitResult{}, err
 	}
 	final, bytes, err := addCapabilityProof(finalDraft, "ply.workflow.terminal-result", snapshot.Handoff.ReplyCapabilityID, snapshot.Handoff.ReplySecret)

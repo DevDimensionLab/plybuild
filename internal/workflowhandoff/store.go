@@ -110,6 +110,20 @@ func (store *systemStore) Create(input CreateStoreInput) (CreateStoreResult, err
 			if objectMapString(fields, "activity_id") != snapshot.Handoff.Identity.ActivityID || objectMapString(fields, "run_id") != snapshot.Handoff.Identity.RunID || objectMapString(fields, "handoff_id") != snapshot.Handoff.Identity.HandoffID || objectMapString(fields, "handoff_sha256") != snapshot.Handoff.SHA256 {
 				return storeConflict(publicationPath, "publication ref does not match the handoff", nil)
 			}
+			if !input.DeferActivityPublication {
+				headPath := filepath.Join(root, "activities", snapshot.Handoff.Identity.ActivityID, "head.ref")
+				if _, err := store.ops.lstat(headPath); errors.Is(err, fs.ErrNotExist) {
+					if err := store.reconcileInitialHead(root, snapshot.Handoff); err != nil {
+						return err
+					}
+					snapshot, err = store.ReadByLocator(resolved)
+					if err != nil {
+						return err
+					}
+				} else if err != nil {
+					return storeConflict(headPath, "cannot inspect activity head", err)
+				}
+			}
 			result = CreateStoreResult{Snapshot: snapshot, Created: false}
 			return nil
 		} else if !errors.Is(err, fs.ErrNotExist) {
@@ -361,6 +375,9 @@ func (store *systemStore) submit(input SubmitStoreInput, phase string) (SubmitSt
 				}
 				existing, err := store.readAccepted(resolved, snapshot.Handoff, phase)
 				if err != nil {
+					return err
+				}
+				if _, err := store.publishReplyEvent(snapshot, phase, "accepted", *existing, "", ""); err != nil {
 					return err
 				}
 				result = SubmitStoreResult{Document: *existing, Created: false}
@@ -1011,6 +1028,46 @@ func (store *systemStore) writeHead(root string, handoff handoffDocument, state 
 	return store.atomicReplace(filepath.Join(root, "activities", handoff.Identity.ActivityID, "head.ref"), bytes, 0o600)
 }
 
+func (store *systemStore) reconcileInitialHead(root string, handoff handoffDocument) error {
+	eventsDir := filepath.Join(root, "activities", handoff.Identity.ActivityID, "events")
+	entries, err := store.ops.readDir(eventsDir)
+	if err != nil {
+		return storeIO("read initial activity event", eventsDir, err)
+	}
+	if len(entries) != 1 || entries[0].IsDir() {
+		return storeConflict(eventsDir, "missing head is only recoverable from one initial activity event", nil)
+	}
+	eventPath := filepath.Join(eventsDir, entries[0].Name())
+	eventBytes, err := store.ops.readFile(eventPath)
+	if err != nil {
+		return storeIO("read initial activity event", eventPath, err)
+	}
+	value, err := canonicaljson.DecodeStrict(eventBytes)
+	if err != nil {
+		return storeConflict(eventPath, "initial activity event is invalid", err)
+	}
+	fields, fieldsErr := exactObject(value, "activity event", "kind", "schema_version", "format", "format_version", "canonicalization", "activity_id", "ordinal", "event_type", "occurred_at_utc", "run_id", "handoff_id", "document", "reason", "related_run_id", "error")
+	if fieldsErr != nil {
+		return storeConflict(eventPath, "initial activity event schema is invalid", fieldsErr)
+	}
+	if err := validateEnvelope(fields, "ply.workflow.activity-event", "activity event"); err != nil {
+		return storeConflict(eventPath, "initial activity event schema is invalid", err)
+	}
+	document, documentErr := exactObject(fields["document"], "activity event document", "document_kind", "document_id", "sha256", "locator")
+	ordinal, ordinalOK := fields["ordinal"].(int64)
+	wantName := fmt.Sprintf("%020d-%s.json", int64(1), strings.TrimPrefix(digestBytes(eventBytes), "sha256:"))
+	valid := documentErr == nil && ordinalOK && ordinal == 1 && entries[0].Name() == wantName &&
+		objectMapString(fields, "activity_id") == handoff.Identity.ActivityID && objectMapString(fields, "run_id") == handoff.Identity.RunID &&
+		objectMapString(fields, "handoff_id") == handoff.Identity.HandoffID && objectMapString(fields, "event_type") == "published" &&
+		validateUTC(objectMapString(fields, "occurred_at_utc")) && fields["reason"] == nil && fields["related_run_id"] == nil && fields["error"] == nil &&
+		objectMapString(document, "document_kind") == "ply.workflow.handoff" && objectMapString(document, "document_id") == handoff.Identity.HandoffID &&
+		objectMapString(document, "sha256") == handoff.SHA256 && objectMapString(document, "locator") == relativeLocator(root, handoff.Locator)
+	if !valid {
+		return storeConflict(eventPath, "initial activity event does not authorize head reconciliation", documentErr)
+	}
+	return store.writeHead(root, handoff, "ready")
+}
+
 func (store *systemStore) publishReplyRejection(snapshot Snapshot, phase, classification string, raw []byte, class ErrorClass, detail string) error {
 	lock, err := store.acquire(filepath.Join(snapshot.Handoff.ReplyRoot, "reply.lock"))
 	if err != nil {
@@ -1050,15 +1107,24 @@ func (store *systemStore) publishReplyRejection(snapshot Snapshot, phase, classi
 }
 
 func (store *systemStore) ensureDirectory(path string) error {
-	if err := store.ops.mkdirAll(path, 0o700); err != nil {
-		return storeIO("mkdir", path, err)
-	}
 	info, err := store.ops.lstat(path)
-	if err != nil {
+	if err == nil {
+		if !info.IsDir() || info.Mode()&fs.ModeSymlink != 0 {
+			return storeConflict(path, "store path is not a regular directory", nil)
+		}
+	} else if errors.Is(err, fs.ErrNotExist) {
+		if err := store.ops.mkdirAll(path, 0o700); err != nil {
+			return storeIO("mkdir", path, err)
+		}
+		info, err = store.ops.lstat(path)
+		if err != nil {
+			return storeIO("inspect directory", path, err)
+		}
+		if !info.IsDir() || info.Mode()&fs.ModeSymlink != 0 {
+			return storeConflict(path, "store path is not a regular directory", nil)
+		}
+	} else {
 		return storeIO("inspect directory", path, err)
-	}
-	if !info.IsDir() || info.Mode()&fs.ModeSymlink != 0 {
-		return storeConflict(path, "store path is not a regular directory", nil)
 	}
 	if err := store.ops.chmodPath(path, 0o700); err != nil {
 		return storeIO("chmod directory", path, err)
@@ -1066,9 +1132,32 @@ func (store *systemStore) ensureDirectory(path string) error {
 	return nil
 }
 func (store *systemStore) ensureLockFile(path string) error {
-	file, err := store.ops.openFile(path, os.O_RDWR|os.O_CREATE, 0o600)
+	flags := os.O_RDWR
+	if info, err := store.ops.lstat(path); err == nil {
+		if !info.Mode().IsRegular() || info.Mode()&fs.ModeSymlink != 0 {
+			return storeConflict(path, "lock path is not a regular non-symlink file", nil)
+		}
+	} else if errors.Is(err, fs.ErrNotExist) {
+		flags |= os.O_CREATE | os.O_EXCL
+	} else {
+		return storeIO("inspect lock", path, err)
+	}
+	file, err := store.ops.openFile(path, flags, 0o600)
+	if err != nil && flags&os.O_EXCL != 0 && errors.Is(err, fs.ErrExist) {
+		info, inspectErr := store.ops.lstat(path)
+		if inspectErr != nil || !info.Mode().IsRegular() || info.Mode()&fs.ModeSymlink != 0 {
+			return storeConflict(path, "lock path changed while it was created", inspectErr)
+		}
+		file, err = store.ops.openFile(path, os.O_RDWR, 0o600)
+	}
 	if err != nil {
 		return storeIO("open lock", path, err)
+	}
+	opened, statErr := store.ops.statFile(file)
+	actual, pathErr := store.ops.lstat(path)
+	if statErr != nil || pathErr != nil || !opened.Mode().IsRegular() || !actual.Mode().IsRegular() || actual.Mode()&fs.ModeSymlink != 0 || !os.SameFile(opened, actual) {
+		_ = store.ops.closeFile(file)
+		return storeConflict(path, "lock identity changed", firstError(statErr, pathErr))
 	}
 	if err := store.ops.chmodFile(file, 0o600); err != nil {
 		_ = store.ops.closeFile(file)
@@ -1108,13 +1197,34 @@ func (store *systemStore) release(file *os.File) error {
 	return nil
 }
 func (store *systemStore) atomicWriteOnce(destination string, contents []byte, mode fs.FileMode) (bool, error) {
-	if existing, err := store.ops.readFile(destination); err == nil {
+	if info, err := store.ops.lstat(destination); err == nil {
+		if !info.Mode().IsRegular() || info.Mode()&fs.ModeSymlink != 0 {
+			return false, storeConflict(destination, "immutable destination is not a regular non-symlink file", nil)
+		}
+		file, err := store.ops.openFile(destination, os.O_RDONLY, 0)
+		if err != nil {
+			return false, storeIO("open destination", destination, err)
+		}
+		opened, statErr := store.ops.statFile(file)
+		actual, pathErr := store.ops.lstat(destination)
+		if statErr != nil || pathErr != nil || !opened.Mode().IsRegular() || !actual.Mode().IsRegular() || actual.Mode()&fs.ModeSymlink != 0 || !os.SameFile(opened, actual) {
+			_ = store.ops.closeFile(file)
+			return false, storeConflict(destination, "immutable destination identity changed", firstError(statErr, pathErr))
+		}
+		existing, readErr := io.ReadAll(file)
+		closeErr := store.ops.closeFile(file)
+		if readErr != nil {
+			return false, storeIO("read destination", destination, readErr)
+		}
+		if closeErr != nil {
+			return false, storeIO("close destination", destination, closeErr)
+		}
 		if string(existing) == string(contents) {
 			return false, nil
 		}
 		return false, classified(ErrorConflict, fmt.Sprintf("immutable destination %s already contains different bytes", destination), nil)
 	} else if !errors.Is(err, fs.ErrNotExist) {
-		return false, storeIO("read destination", destination, err)
+		return false, storeIO("inspect destination", destination, err)
 	}
 	directory := filepath.Dir(destination)
 	temporary, err := store.ops.createTemp(directory, ".ply-*.tmp")

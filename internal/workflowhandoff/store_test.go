@@ -1,6 +1,7 @@
 package workflowhandoff
 
 import (
+	"bytes"
 	"errors"
 	"os"
 	"path/filepath"
@@ -99,6 +100,197 @@ func TestStoreAtomicWriteFaultsLeaveAbsentOrCompleteAuthority(t *testing.T) {
 	}
 }
 
+func TestStoreRejectsSymlinkAuthoritiesWithoutFollowingOrRepairingThem(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink authority assertions are Unix-specific")
+	}
+	t.Run("immutable destination", func(t *testing.T) {
+		directory := physicalTempDir(t)
+		external := filepath.Join(directory, "external.json")
+		contents := []byte(`{"complete":true}`)
+		if err := os.WriteFile(external, contents, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		destination := filepath.Join(directory, "authority.json")
+		if err := os.Symlink(external, destination); err != nil {
+			t.Fatal(err)
+		}
+		store := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+		if _, err := store.atomicWriteOnce(destination, contents, 0o400); !IsClass(err, ErrorWorkspaceConflict) {
+			t.Fatalf("symlink destination error = %v", err)
+		}
+		actual, err := os.ReadFile(external)
+		if err != nil || !bytes.Equal(actual, contents) {
+			t.Fatalf("external bytes changed: %q, %v", actual, err)
+		}
+	})
+
+	t.Run("lock path", func(t *testing.T) {
+		directory := physicalTempDir(t)
+		external := filepath.Join(directory, "external.lock")
+		if err := os.WriteFile(external, nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(external, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		lockPath := filepath.Join(directory, "authority.lock")
+		if err := os.Symlink(external, lockPath); err != nil {
+			t.Fatal(err)
+		}
+		store := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+		if _, err := store.acquire(lockPath); !IsClass(err, ErrorWorkspaceConflict) {
+			t.Fatalf("symlink lock error = %v", err)
+		}
+		info, err := os.Stat(external)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if info.Mode().Perm() != 0o644 {
+			t.Fatalf("external lock mode changed to %o", info.Mode().Perm())
+		}
+	})
+}
+
+func TestAtomicWriteOnceRejectsDestinationSwappedToSymlinkAfterInspection(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink swap assertion is Unix-specific")
+	}
+	directory := physicalTempDir(t)
+	contents := []byte(`{"complete":true}`)
+	destination := filepath.Join(directory, "authority.json")
+	backup := filepath.Join(directory, "authority.backup")
+	external := filepath.Join(directory, "external.json")
+	for _, path := range []string{destination, external} {
+		if err := os.WriteFile(path, contents, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	store := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+	originalLstat := store.ops.lstat
+	swapped := false
+	store.ops.lstat = func(path string) (os.FileInfo, error) {
+		info, err := originalLstat(path)
+		if path == destination && err == nil && !swapped {
+			swapped = true
+			if err := os.Rename(destination, backup); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Symlink(external, destination); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return info, err
+	}
+	if _, err := store.atomicWriteOnce(destination, contents, 0o400); !IsClass(err, ErrorWorkspaceConflict) {
+		t.Fatalf("swapped destination error = %v", err)
+	}
+	actual, err := os.ReadFile(external)
+	if err != nil || !bytes.Equal(actual, contents) {
+		t.Fatalf("external bytes changed: %q, %v", actual, err)
+	}
+}
+
+func TestCreateRetryDoesNotReopenActivityWhenHeadIsMissingAfterLaterEvent(t *testing.T) {
+	root := physicalTempDir(t)
+	store := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+	input := CreateStoreInput{WorkspaceRoot: root, PublicationKey: "wf01/test", SourceDraftSHA256: digestBytes([]byte("draft")), Handoff: testStoreHandoff(t, root)}
+	created, err := store.Create(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.publishActivityEvent(storeRoot(root), created.Snapshot.Handoff, "cancelled", nil, "A later lifecycle transition.", nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	headPath := filepath.Join(storeRoot(root), "activities", input.Handoff.Identity.ActivityID, "head.ref")
+	if err := os.Remove(headPath); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Create(input); !IsClass(err, ErrorWorkspaceConflict) {
+		t.Fatalf("retry with later event error = %v", err)
+	}
+	if _, err := os.Lstat(headPath); !os.IsNotExist(err) {
+		t.Fatalf("retry recreated head from ambiguous history: %v", err)
+	}
+}
+
+func TestStoreExactLayoutModesAndDirectoryAuthorityTypes(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix mode and symlink assertions")
+	}
+	t.Run("complete tree modes", func(t *testing.T) {
+		root := physicalTempDir(t)
+		store := newSystemStore(systemFileSystem{}, systemClock{})
+		created, err := store.Create(CreateStoreInput{WorkspaceRoot: root, PublicationKey: "wf01/test", SourceDraftSHA256: digestBytes([]byte("draft")), Handoff: testStoreHandoff(t, root)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		start := testAcceptedDocument(t, created.Snapshot.Handoff.Identity.StartReceiptID, "started")
+		if _, err := store.SubmitStart(SubmitStoreInput{Snapshot: created.Snapshot, Phase: "start", Document: start}); err != nil {
+			t.Fatal(err)
+		}
+		snapshot, err := store.ReadByLocator(created.Snapshot.Handoff.Locator)
+		if err != nil {
+			t.Fatal(err)
+		}
+		terminal := testAcceptedDocument(t, snapshot.Handoff.Identity.TerminalResultID, "complete")
+		if _, err := store.SubmitResult(SubmitStoreInput{Snapshot: snapshot, Phase: "terminal", Document: terminal}); err != nil {
+			t.Fatal(err)
+		}
+		if err := filepath.Walk(storeRoot(root), func(path string, info os.FileInfo, walkErr error) error {
+			if walkErr != nil {
+				return walkErr
+			}
+			if info.Mode()&os.ModeSymlink != 0 {
+				t.Errorf("store path is a symlink: %s", path)
+				return nil
+			}
+			if info.IsDir() {
+				if info.Mode().Perm() != 0o700 {
+					t.Errorf("directory %s mode = %o", path, info.Mode().Perm())
+				}
+				return nil
+			}
+			want := os.FileMode(0o400)
+			if strings.HasSuffix(path, ".lock") || filepath.Base(path) == "head.ref" {
+				want = 0o600
+			}
+			if info.Mode().Perm() != want {
+				t.Errorf("file %s mode = %o, want %o", path, info.Mode().Perm(), want)
+			}
+			return nil
+		}); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	for _, kind := range []string{"symlink", "regular file"} {
+		t.Run(kind+" store root", func(t *testing.T) {
+			root := physicalTempDir(t)
+			storePath := storeRoot(root)
+			if err := os.MkdirAll(filepath.Dir(storePath), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if kind == "symlink" {
+				external := filepath.Join(root, "external")
+				if err := os.Mkdir(external, 0o755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink(external, storePath); err != nil {
+					t.Fatal(err)
+				}
+			} else if err := os.WriteFile(storePath, []byte("wrong type"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			store := newSystemStore(systemFileSystem{}, systemClock{})
+			input := CreateStoreInput{WorkspaceRoot: root, PublicationKey: "wf01/test", SourceDraftSHA256: digestBytes([]byte("draft")), Handoff: testStoreHandoff(t, root)}
+			if _, err := store.Create(input); !IsClass(err, ErrorWorkspaceConflict) {
+				t.Fatalf("wrong store root type error = %v", err)
+			}
+		})
+	}
+}
+
 func TestStoreCreateInjectsDirectoryTempAndLockFaults(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -122,6 +314,87 @@ func TestStoreCreateInjectsDirectoryTempAndLockFaults(t *testing.T) {
 			input := CreateStoreInput{WorkspaceRoot: root, PublicationKey: "wf01/test", SourceDraftSHA256: digestBytes([]byte("draft")), Handoff: testStoreHandoff(t, root)}
 			if _, err := store.Create(input); !IsClass(err, ErrorIO) {
 				t.Fatalf("error = %v", err)
+			}
+		})
+	}
+}
+
+func TestStoreLockOpenIdentityUnlockAndCloseFaults(t *testing.T) {
+	t.Run("lock open", func(t *testing.T) {
+		root := physicalTempDir(t)
+		store := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+		original := store.ops.openFile
+		calls := 0
+		store.ops.openFile = func(path string, flag int, mode os.FileMode) (*os.File, error) {
+			calls++
+			if calls == 2 {
+				return nil, errors.New("injected lock reopen failure")
+			}
+			return original(path, flag, mode)
+		}
+		if _, err := store.acquire(filepath.Join(root, "lock")); !IsClass(err, ErrorIO) {
+			t.Fatalf("lock open error = %v", err)
+		}
+	})
+
+	t.Run("handle path identity", func(t *testing.T) {
+		root := physicalTempDir(t)
+		lockPath := filepath.Join(root, "lock")
+		otherPath := filepath.Join(root, "other")
+		if err := os.WriteFile(otherPath, nil, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		otherInfo, err := os.Stat(otherPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		store := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+		originalStat := store.ops.statFile
+		statCalls := 0
+		store.ops.statFile = func(file *os.File) (os.FileInfo, error) {
+			statCalls++
+			if statCalls == 2 {
+				return otherInfo, nil
+			}
+			return originalStat(file)
+		}
+		if _, err := store.acquire(lockPath); !IsClass(err, ErrorWorkspaceConflict) {
+			t.Fatalf("identity error = %v", err)
+		}
+	})
+
+	for _, test := range []struct {
+		name       string
+		inject     func(*systemStore, *bool)
+		wantClosed bool
+	}{
+		{name: "unlock", inject: func(store *systemStore, closed *bool) {
+			originalClose := store.ops.closeFile
+			store.ops.unlock = func(*os.File) error { return errors.New("injected unlock failure") }
+			store.ops.closeFile = func(file *os.File) error { *closed = true; return originalClose(file) }
+		}, wantClosed: true},
+		{name: "close", inject: func(store *systemStore, closed *bool) {
+			store.ops.closeFile = func(file *os.File) error {
+				*closed = true
+				_ = file.Close()
+				return errors.New("injected close failure")
+			}
+		}, wantClosed: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := physicalTempDir(t)
+			store := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+			lock, err := store.acquire(filepath.Join(root, "lock"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			closed := false
+			test.inject(store, &closed)
+			if err := store.release(lock); !IsClass(err, ErrorIO) {
+				t.Fatalf("release error = %v", err)
+			}
+			if test.wantClosed && !closed {
+				t.Fatal("release did not attempt close")
 			}
 		})
 	}
@@ -180,6 +453,72 @@ func TestStoreReconcilesCompleteRunAfterInterruptedPublication(t *testing.T) {
 	}
 }
 
+func TestStoreCreateEventPublicationAndHeadFaultsReconcileOnRetry(t *testing.T) {
+	for _, stage := range []string{"event temp", "event directory sync", "publication temp", "publication directory sync", "head temp", "head replace", "head directory sync"} {
+		t.Run(stage, func(t *testing.T) {
+			root := physicalTempDir(t)
+			store := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+			input := CreateStoreInput{WorkspaceRoot: root, PublicationKey: "wf01/test", SourceDraftSHA256: digestBytes([]byte("draft")), Handoff: testStoreHandoff(t, root)}
+			failed := false
+			if strings.Contains(stage, "temp") {
+				original := store.ops.createTemp
+				store.ops.createTemp = func(directory, pattern string) (*os.File, error) {
+					base := filepath.Base(directory)
+					match := (stage == "event temp" && base == "events") ||
+						(stage == "publication temp" && base == "publications") ||
+						(stage == "head temp" && base == input.Handoff.Identity.ActivityID)
+					if match && !failed {
+						failed = true
+						return nil, errors.New("injected " + stage)
+					}
+					return original(directory, pattern)
+				}
+			} else if stage == "head replace" {
+				original := store.ops.replace
+				store.ops.replace = func(source, destination string) error {
+					if filepath.Base(destination) == "head.ref" && !failed {
+						failed = true
+						return errors.New("injected head replace")
+					}
+					return original(source, destination)
+				}
+			} else {
+				original := store.ops.syncDirectory
+				store.ops.syncDirectory = func(directory string) error {
+					base := filepath.Base(directory)
+					match := (stage == "event directory sync" && base == "events") ||
+						(stage == "publication directory sync" && base == "publications") ||
+						(stage == "head directory sync" && base == input.Handoff.Identity.ActivityID)
+					if match && !failed {
+						failed = true
+						return errors.New("injected " + stage)
+					}
+					return original(directory)
+				}
+			}
+			if _, err := store.Create(input); !IsClass(err, ErrorIO) {
+				t.Fatalf("faulted create error = %v", err)
+			}
+			fresh := newSystemStore(systemFileSystem{}, systemClock{})
+			retried, err := fresh.Create(input)
+			if err != nil {
+				t.Fatalf("exact retry failed: %v", err)
+			}
+			if retried.Snapshot.HeadState != "ready" {
+				t.Fatalf("retry snapshot = %#v", retried.Snapshot)
+			}
+			activity := filepath.Join(storeRoot(root), "activities", input.Handoff.Identity.ActivityID)
+			if _, err := os.Stat(filepath.Join(activity, "head.ref")); err != nil {
+				t.Fatalf("head ref missing after retry: %v", err)
+			}
+			events, err := os.ReadDir(filepath.Join(activity, "events"))
+			if err != nil || len(events) != 1 {
+				t.Fatalf("activity events = %d, %v", len(events), err)
+			}
+		})
+	}
+}
+
 func TestStoreAcceptsOnlyOneStartDocument(t *testing.T) {
 	root := physicalTempDir(t)
 	store := newSystemStore(systemFileSystem{}, systemClock{})
@@ -199,6 +538,204 @@ func TestStoreAcceptsOnlyOneStartDocument(t *testing.T) {
 	other := testAcceptedDocument(t, "rcp_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "conflict")
 	if _, err := store.SubmitStart(SubmitStoreInput{Snapshot: created.Snapshot, Phase: "start", Document: other}); !IsClass(err, ErrorConflict) {
 		t.Fatalf("competing submit error = %v", err)
+	}
+}
+
+func TestStoreReplyPublicationFaultsReconcileOnExactRetry(t *testing.T) {
+	for _, phase := range []string{"start", "terminal"} {
+		for _, stage := range []string{"object temp", "event temp", "event directory sync", "accepted ref temp", "accepted ref directory sync"} {
+			t.Run(phase+"/"+stage, func(t *testing.T) {
+				root := physicalTempDir(t)
+				base := newSystemStore(systemFileSystem{}, systemClock{})
+				created, err := base.Create(CreateStoreInput{WorkspaceRoot: root, PublicationKey: "wf01/test", SourceDraftSHA256: digestBytes([]byte("draft")), Handoff: testStoreHandoff(t, root)})
+				if err != nil {
+					t.Fatal(err)
+				}
+				snapshot := created.Snapshot
+				if phase == "terminal" {
+					start := testAcceptedDocument(t, snapshot.Handoff.Identity.StartReceiptID, "started")
+					if _, err := base.SubmitStart(SubmitStoreInput{Snapshot: snapshot, Phase: "start", Document: start}); err != nil {
+						t.Fatal(err)
+					}
+					snapshot, err = base.ReadByLocator(snapshot.Handoff.Locator)
+					if err != nil {
+						t.Fatal(err)
+					}
+				}
+				id := snapshot.Handoff.Identity.StartReceiptID
+				outcome := "started"
+				if phase == "terminal" {
+					id = snapshot.Handoff.Identity.TerminalResultID
+					outcome = "complete"
+				}
+				document := testAcceptedDocument(t, id, outcome)
+				faulted := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+				failed := false
+				if strings.Contains(stage, "temp") {
+					original := faulted.ops.createTemp
+					faulted.ops.createTemp = func(directory, pattern string) (*os.File, error) {
+						match := (stage == "object temp" && filepath.Base(directory) == "objects") ||
+							(stage == "event temp" && filepath.Base(directory) == "events") ||
+							(stage == "accepted ref temp" && filepath.Base(directory) == phase)
+						if match && !failed {
+							failed = true
+							return nil, errors.New("injected " + stage)
+						}
+						return original(directory, pattern)
+					}
+				} else {
+					original := faulted.ops.syncDirectory
+					faulted.ops.syncDirectory = func(directory string) error {
+						match := (stage == "event directory sync" && filepath.Base(directory) == "events") ||
+							(stage == "accepted ref directory sync" && filepath.Base(directory) == phase)
+						if match && !failed {
+							failed = true
+							return errors.New("injected " + stage)
+						}
+						return original(directory)
+					}
+				}
+				input := SubmitStoreInput{Snapshot: snapshot, Phase: phase, Document: document}
+				var submit func(SubmitStoreInput) (SubmitStoreResult, error)
+				if phase == "start" {
+					submit = faulted.SubmitStart
+				} else {
+					submit = faulted.SubmitResult
+				}
+				if _, err := submit(input); !IsClass(err, ErrorIO) {
+					t.Fatalf("faulted submit error = %v", err)
+				}
+				fresh := newSystemStore(systemFileSystem{}, systemClock{})
+				if phase == "start" {
+					_, err = fresh.SubmitStart(input)
+				} else {
+					_, err = fresh.SubmitResult(input)
+				}
+				if err != nil {
+					t.Fatalf("exact retry failed: %v", err)
+				}
+				read, err := fresh.ReadByLocator(snapshot.Handoff.Locator)
+				if err != nil {
+					t.Fatal(err)
+				}
+				accepted := read.Start
+				if phase == "terminal" {
+					accepted = read.Terminal
+				}
+				if accepted == nil || accepted.DocumentID != id || accepted.SHA256 != document.SHA256 {
+					t.Fatalf("accepted %s after retry = %#v", phase, accepted)
+				}
+			})
+		}
+	}
+}
+
+func TestStoreArtifactPublicationFaultsNeverPublishPartialTerminal(t *testing.T) {
+	for _, stage := range []string{"temp", "write", "chmod", "file sync", "rename", "directory sync", "terminal object after artifact"} {
+		t.Run(stage, func(t *testing.T) {
+			root := physicalTempDir(t)
+			base := newSystemStore(systemFileSystem{}, systemClock{})
+			created, err := base.Create(CreateStoreInput{WorkspaceRoot: root, PublicationKey: "wf01/test", SourceDraftSHA256: digestBytes([]byte("draft")), Handoff: testStoreHandoff(t, root)})
+			if err != nil {
+				t.Fatal(err)
+			}
+			start := testAcceptedDocument(t, created.Snapshot.Handoff.Identity.StartReceiptID, "started")
+			if _, err := base.SubmitStart(SubmitStoreInput{Snapshot: created.Snapshot, Phase: "start", Document: start}); err != nil {
+				t.Fatal(err)
+			}
+			snapshot, err := base.ReadByLocator(created.Snapshot.Handoff.Locator)
+			if err != nil {
+				t.Fatal(err)
+			}
+			artifactBytes := []byte("complete artifact bytes\n")
+			artifact := managedArtifact{ID: "verifier-stdout", SHA256: digestBytes(artifactBytes), Bytes: artifactBytes}
+			document := testAcceptedDocument(t, snapshot.Handoff.Identity.TerminalResultID, "complete")
+			input := SubmitStoreInput{Snapshot: snapshot, Phase: "terminal", Document: document, Artifacts: []managedArtifact{artifact}}
+			faulted := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
+			failed := false
+			isArtifactPath := func(path string) bool { return filepath.Base(filepath.Dir(path)) == "sha256" }
+			switch stage {
+			case "temp", "terminal object after artifact":
+				original := faulted.ops.createTemp
+				faulted.ops.createTemp = func(directory, pattern string) (*os.File, error) {
+					match := (stage == "temp" && filepath.Base(directory) == "sha256") || (stage == "terminal object after artifact" && filepath.Base(directory) == "objects" && filepath.Base(filepath.Dir(directory)) == "terminal")
+					if match && !failed {
+						failed = true
+						return nil, errors.New("injected " + stage)
+					}
+					return original(directory, pattern)
+				}
+			case "write":
+				original := faulted.ops.write
+				faulted.ops.write = func(file *os.File, contents []byte) (int, error) {
+					if isArtifactPath(file.Name()) && !failed {
+						failed = true
+						return 0, errors.New("injected artifact write")
+					}
+					return original(file, contents)
+				}
+			case "chmod":
+				original := faulted.ops.chmodFile
+				faulted.ops.chmodFile = func(file *os.File, mode os.FileMode) error {
+					if isArtifactPath(file.Name()) && !failed {
+						failed = true
+						return errors.New("injected artifact chmod")
+					}
+					return original(file, mode)
+				}
+			case "file sync":
+				original := faulted.ops.syncFile
+				faulted.ops.syncFile = func(file *os.File) error {
+					if isArtifactPath(file.Name()) && !failed {
+						failed = true
+						return errors.New("injected artifact sync")
+					}
+					return original(file)
+				}
+			case "rename":
+				original := faulted.ops.rename
+				faulted.ops.rename = func(source, destination string) error {
+					if filepath.Base(filepath.Dir(destination)) == "sha256" && !failed {
+						failed = true
+						return errors.New("injected artifact rename")
+					}
+					return original(source, destination)
+				}
+			case "directory sync":
+				original := faulted.ops.syncDirectory
+				faulted.ops.syncDirectory = func(directory string) error {
+					if filepath.Base(directory) == "sha256" && !failed {
+						failed = true
+						return errors.New("injected artifact directory sync")
+					}
+					return original(directory)
+				}
+			}
+			if _, err := faulted.SubmitResult(input); !IsClass(err, ErrorIO) {
+				t.Fatalf("faulted terminal error = %v", err)
+			}
+			if _, err := os.Lstat(filepath.Join(snapshot.Handoff.ReplyRoot, "terminal", "accepted.ref")); !os.IsNotExist(err) {
+				t.Fatalf("terminal authority appeared after artifact fault: %v", err)
+			}
+			artifactPath := filepath.Join(snapshot.Handoff.ReplyRoot, "artifacts", "sha256", strings.TrimPrefix(artifact.SHA256, "sha256:"))
+			if actual, err := os.ReadFile(artifactPath); err == nil && !bytes.Equal(actual, artifactBytes) {
+				t.Fatalf("partial artifact = %q", actual)
+			} else if err != nil && !os.IsNotExist(err) {
+				t.Fatal(err)
+			}
+			fresh := newSystemStore(systemFileSystem{}, systemClock{})
+			if _, err := fresh.SubmitResult(input); err != nil {
+				t.Fatalf("exact retry failed: %v", err)
+			}
+			actual, err := os.ReadFile(artifactPath)
+			if err != nil || !bytes.Equal(actual, artifactBytes) {
+				t.Fatalf("final artifact = %q, %v", actual, err)
+			}
+			read, err := fresh.ReadByLocator(snapshot.Handoff.Locator)
+			if err != nil || read.Terminal == nil {
+				t.Fatalf("terminal after retry = %#v, %v", read.Terminal, err)
+			}
+		})
 	}
 }
 

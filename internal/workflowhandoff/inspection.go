@@ -142,10 +142,10 @@ func Inspect(dependencies Dependencies, input InspectInput) (InspectResult, erro
 	redacted := redactHandoff(snapshot.Handoff.Value)
 	documents := canonicaljson.Object{{Name: "handoff", Value: documentView(snapshot.Handoff.Locator, snapshot.Handoff.SHA256, snapshot.Handoff.Bytes, redacted)}, {Name: "start_receipt", Value: nil}, {Name: "terminal_result", Value: nil}}
 	if snapshot.Start != nil {
-		documents = replaceObjectMember(documents, "start_receipt", documentView(snapshot.Start.Locator, snapshot.Start.SHA256, snapshot.Start.Bytes, snapshot.Start.Value))
+		documents = replaceObjectMember(documents, "start_receipt", documentView(snapshot.Start.Locator, snapshot.Start.SHA256, snapshot.Start.Bytes, redactCapabilityProof(snapshot.Start.Value)))
 	}
 	if snapshot.Terminal != nil {
-		documents = replaceObjectMember(documents, "terminal_result", documentView(snapshot.Terminal.Locator, snapshot.Terminal.SHA256, snapshot.Terminal.Bytes, snapshot.Terminal.Value))
+		documents = replaceObjectMember(documents, "terminal_result", documentView(snapshot.Terminal.Locator, snapshot.Terminal.SHA256, snapshot.Terminal.Bytes, redactCapabilityProof(snapshot.Terminal.Value)))
 	}
 	valid := func(checked bool, reasons []string) canonicaljson.Object {
 		return canonicaljson.Object{{Name: "checked", Value: checked}, {Name: "valid", Value: checked && len(reasons) == 0}, {Name: "reasons", Value: stringValues(reasons)}}
@@ -283,15 +283,35 @@ func validateReportedPolicy(snapshot Snapshot) ([]string, []string) {
 			policy = append(policy, "missing verifier result: "+id)
 		}
 	}
-	sort.Strings(policy)
-	sort.Strings(evidence)
-	return policy, evidence
+	return uniqueSorted(policy), uniqueSorted(evidence)
+}
+func uniqueSorted(values []string) []string {
+	sort.Strings(values)
+	result := values[:0]
+	for _, value := range values {
+		if len(result) == 0 || result[len(result)-1] != value {
+			result = append(result, value)
+		}
+	}
+	return result
 }
 func redactHandoff(value canonicaljson.Object) canonicaljson.Object {
 	replyValue, _ := objectMember(value, "reply_capability")
 	reply, _ := replyValue.(canonicaljson.Object)
 	reply = replaceObjectMember(reply, "secret", "[REDACTED]")
 	return replaceObjectMember(value, "reply_capability", reply)
+}
+func redactCapabilityProof(value canonicaljson.Object) canonicaljson.Object {
+	proofValue, ok := objectMember(value, "capability_proof")
+	if !ok {
+		return value
+	}
+	proof, ok := proofValue.(canonicaljson.Object)
+	if !ok {
+		return value
+	}
+	proof = replaceObjectMember(proof, "value", "[REDACTED]")
+	return replaceObjectMember(value, "capability_proof", proof)
 }
 func documentView(locator, digest string, bytes []byte, content canonicaljson.Value) canonicaljson.Object {
 	return canonicaljson.Object{{Name: "locator", Value: locator}, {Name: "sha256", Value: digest}, {Name: "size_bytes", Value: int64(len(bytes))}, {Name: "format_version", Value: int64(1)}, {Name: "schema_version", Value: int64(1)}, {Name: "content", Value: content}}

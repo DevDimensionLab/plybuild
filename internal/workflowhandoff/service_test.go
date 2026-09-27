@@ -1,13 +1,56 @@
 package workflowhandoff
 
 import (
+	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
+
+type fixedWorkspaceObserver struct{ snapshot WorkspaceSnapshot }
+
+func (observer fixedWorkspaceObserver) ObserveContaining() (WorkspaceSnapshot, error) {
+	return observer.snapshot, nil
+}
+
+func (observer fixedWorkspaceObserver) ObserveRoot(string) (WorkspaceSnapshot, error) {
+	return observer.snapshot, nil
+}
+
+type countingRejectingGitObserver struct{ calls *int }
+
+func (observer countingRejectingGitObserver) ObserveTarget(TargetRequest) (TargetObservation, error) {
+	*observer.calls++
+	return TargetObservation{}, errors.New("unexpected target observation")
+}
+
+func (observer countingRejectingGitObserver) ObserveInputGit(InputGitRequest) (InputGitObservation, error) {
+	*observer.calls++
+	return InputGitObservation{}, errors.New("unexpected input observation")
+}
+
+type driftingTreeGitObserver struct {
+	base  GitObserver
+	calls int
+}
+
+func (observer *driftingTreeGitObserver) ObserveTarget(request TargetRequest) (TargetObservation, error) {
+	observed, err := observer.base.ObserveTarget(request)
+	observer.calls++
+	if err == nil && observer.calls > 1 {
+		observed.Tree = strings.Repeat("f", len(observed.Tree))
+	}
+	return observed, err
+}
+
+func (observer *driftingTreeGitObserver) ObserveInputGit(request InputGitRequest) (InputGitObservation, error) {
+	return observer.base.ObserveInputGit(request)
+}
 
 func TestCreatePublishesBoundHandoffAndRetriesIdentically(t *testing.T) {
 	workspaceRoot, target, ref, oid := prepareServiceWorkspace(t)
@@ -38,6 +81,57 @@ func TestCreatePublishesBoundHandoffAndRetriesIdentically(t *testing.T) {
 	}
 	if _, err := os.Stat(first.Locator); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestCreateRejectsUnknownOrUnboundProjectRepositoryBeforeStoreOrGit(t *testing.T) {
+	tests := []struct {
+		name      string
+		projectID string
+		repoID    string
+		wantClass ErrorClass
+		knownRepo bool
+	}{
+		{name: "unknown project", projectID: "missing-project", repoID: "ply", wantClass: ErrorProjectNotFound},
+		{name: "unknown repository", projectID: "ply", repoID: "missing-repo", wantClass: ErrorRepoNotFound},
+		{name: "known repository outside project", projectID: "ply", repoID: "other", wantClass: ErrorRepoNotFound, knownRepo: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			workspaceRoot, target, ref, oid := prepareServiceWorkspace(t)
+			draft := minimalHandoffDraftValue(target, ref, oid)
+			bindingValue, _ := objectMember(draft, "binding_request")
+			binding := bindingValue.(canonicaljson.Object)
+			binding = replaceObjectMember(binding, "project_id", test.projectID)
+			binding = replaceObjectMember(binding, "repo_id", test.repoID)
+			draft = replaceObjectMember(draft, "binding_request", binding)
+			draftPath := writeCanonicalTestFile(t, workspaceRoot, "invalid-binding-draft.json", draft)
+
+			dependencies := SystemDependencies()
+			snapshot, err := dependencies.Workspace.ObserveContaining()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if test.knownRepo {
+				snapshot.Repositories = append(snapshot.Repositories, workspace.RepoRecord{ID: "other", Locator: filepath.Join(workspaceRoot, "other"), GitCommonDir: filepath.Join(workspaceRoot, "other.git")})
+			}
+			dependencies.Workspace = fixedWorkspaceObserver{snapshot: snapshot}
+			gitCalls := 0
+			dependencies.Git = countingRejectingGitObserver{calls: &gitCalls}
+
+			if _, err := os.Stat(storeRoot(workspaceRoot)); !os.IsNotExist(err) {
+				t.Fatalf("store exists before create: %v", err)
+			}
+			if _, err := Create(dependencies, CreateInput{DraftPath: draftPath}); !IsClass(err, test.wantClass) {
+				t.Fatalf("Create() error = %v, want class %s", err, test.wantClass)
+			}
+			if gitCalls != 0 {
+				t.Fatalf("Git observation calls = %d, want 0", gitCalls)
+			}
+			if _, err := os.Stat(storeRoot(workspaceRoot)); !os.IsNotExist(err) {
+				t.Fatalf("store changed after rejected create: %v", err)
+			}
+		})
 	}
 }
 
@@ -163,6 +257,306 @@ func TestStartRejectsTargetDrift(t *testing.T) {
 	}
 	if _, err := SubmitStart(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: startPath}); !IsClass(err, ErrorConflict) {
 		t.Fatalf("drift error = %v", err)
+	}
+}
+
+func TestTerminalDraftExactLimitAndLimitPlusOne(t *testing.T) {
+	prepare := func(t *testing.T) (Dependencies, CreateResult, Snapshot, canonicaljson.Object, SubmitResult) {
+		t.Helper()
+		dependencies, created, snapshot, principal := createTestHandoff(t)
+		startPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "oversize-start.json", minimalStartDraftValue(t, snapshot, principal))
+		start, err := SubmitStart(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: startPath})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return dependencies, created, snapshot, principal, start
+	}
+
+	t.Run("exact limit", func(t *testing.T) {
+		dependencies, created, snapshot, principal, start := prepare(t)
+		canonical, err := canonicaljson.Marshal(minimalTerminalDraftValue(snapshot, principal, start))
+		if err != nil {
+			t.Fatal(err)
+		}
+		input := append(append([]byte(nil), canonical...), bytes.Repeat([]byte{' '}, maxResultBytes-len(canonical))...)
+		path := filepath.Join(snapshot.WorkspaceRoot, "terminal-exact-limit.json")
+		if err := os.WriteFile(path, input, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := SubmitResultDocument(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: path}); err != nil {
+			t.Fatalf("exact-limit terminal failed: %v", err)
+		}
+	})
+
+	t.Run("limit plus one", func(t *testing.T) {
+		dependencies, created, snapshot, principal, start := prepare(t)
+		canonical, err := canonicaljson.Marshal(minimalTerminalDraftValue(snapshot, principal, start))
+		if err != nil {
+			t.Fatal(err)
+		}
+		input := append(append([]byte(nil), canonical...), bytes.Repeat([]byte{' '}, maxResultBytes+1-len(canonical))...)
+		before := append([]byte(nil), input...)
+		path := filepath.Join(snapshot.WorkspaceRoot, "terminal-limit-plus-one.json")
+		if err := os.WriteFile(path, input, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := SubmitResultDocument(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: path}); !IsClass(err, ErrorPayloadTooLarge) {
+			t.Fatalf("limit+1 error = %v", err)
+		}
+		after, err := os.ReadFile(path)
+		if err != nil || !bytes.Equal(after, before) {
+			t.Fatalf("caller bytes changed: equal=%t error=%v", bytes.Equal(after, before), err)
+		}
+		read, err := dependencies.Store.ReadByLocator(created.Locator)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if read.Terminal != nil {
+			t.Fatalf("oversize terminal was accepted: %#v", read.Terminal)
+		}
+		if _, err := os.Lstat(filepath.Join(read.Handoff.ReplyRoot, "terminal", "accepted.ref")); !os.IsNotExist(err) {
+			t.Fatalf("terminal accepted ref exists: %v", err)
+		}
+	})
+}
+
+func TestCreateRejectsEachInputBindingDriftBeforeStore(t *testing.T) {
+	tests := []string{"bytes", "size", "sha256", "ref", "oid", "blob"}
+	for _, drift := range tests {
+		t.Run(drift, func(t *testing.T) {
+			workspaceRoot, target, targetRef, targetOID := prepareServiceWorkspace(t)
+			inputRepo := initObserverRepository(t)
+			locator := filepath.Join(inputRepo, "input.txt")
+			contents, err := os.ReadFile(locator)
+			if err != nil {
+				t.Fatal(err)
+			}
+			inputRef := gitOutput(t, inputRepo, "symbolic-ref", "HEAD")
+			inputOID := gitOutput(t, inputRepo, "rev-parse", "HEAD")
+			inputBlob := gitOutput(t, inputRepo, "rev-parse", "HEAD:input.txt")
+			inputCommon := gitOutput(t, inputRepo, "rev-parse", "--path-format=absolute", "--git-common-dir")
+			descriptor := canonicaljson.Object{
+				{Name: "id", Value: "contract"}, {Name: "role", Value: "spec"}, {Name: "locator", Value: locator},
+				{Name: "sha256", Value: digestBytes(contents)}, {Name: "size_bytes", Value: int64(len(contents))}, {Name: "media_type", Value: "text/plain"},
+				{Name: "git_binding", Value: canonicaljson.Object{{Name: "git_common_dir", Value: inputCommon}, {Name: "ref", Value: inputRef}, {Name: "oid", Value: inputOID}, {Name: "blob", Value: inputBlob}}},
+			}
+			switch drift {
+			case "bytes":
+				if err := os.WriteFile(locator, []byte("changed input\n"), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			case "size":
+				descriptor = replaceObjectMember(descriptor, "size_bytes", int64(len(contents)+1))
+			case "sha256":
+				descriptor = replaceObjectMember(descriptor, "sha256", digestBytes([]byte("different")))
+			case "ref", "oid", "blob":
+				bindingValue, _ := objectMember(descriptor, "git_binding")
+				binding := bindingValue.(canonicaljson.Object)
+				value := strings.Repeat("f", 40)
+				if drift == "ref" {
+					value = "refs/heads/missing"
+				}
+				binding = replaceObjectMember(binding, drift, value)
+				descriptor = replaceObjectMember(descriptor, "git_binding", binding)
+			}
+			draft := replaceObjectMember(minimalHandoffDraftValue(target, targetRef, targetOID), "inputs", []canonicaljson.Value{descriptor})
+			draftPath := writeCanonicalTestFile(t, workspaceRoot, "input-drift.json", draft)
+			if _, err := Create(SystemDependencies(), CreateInput{DraftPath: draftPath}); !IsClass(err, ErrorTargetConflict) {
+				t.Fatalf("Create() error = %v", err)
+			}
+			if _, err := os.Stat(storeRoot(workspaceRoot)); !os.IsNotExist(err) {
+				t.Fatalf("store changed after input drift: %v", err)
+			}
+		})
+	}
+}
+
+func TestCreateRejectsTargetIdentityAndStatusDriftBeforeStore(t *testing.T) {
+	for _, drift := range []string{"clone common directory", "wrong full ref", "wrong oid", "wrong tree", "unexpected dirty"} {
+		t.Run(drift, func(t *testing.T) {
+			workspaceRoot, target, ref, oid := prepareServiceWorkspace(t)
+			dependencies := SystemDependencies()
+			switch drift {
+			case "clone common directory":
+				clone := filepath.Join(workspaceRoot, "clone")
+				runGit(t, workspaceRoot, "clone", "--no-local", target, clone)
+				target = clone
+				ref = gitOutput(t, clone, "symbolic-ref", "HEAD")
+				oid = gitOutput(t, clone, "rev-parse", "HEAD")
+			case "wrong full ref":
+				ref = "refs/heads/missing"
+			case "wrong oid":
+				oid = strings.Repeat("f", len(oid))
+			case "wrong tree":
+				dependencies.Git = &driftingTreeGitObserver{base: dependencies.Git}
+			case "unexpected dirty":
+				if err := os.WriteFile(filepath.Join(target, "unexpected.txt"), []byte("dirty\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			draftPath := writeCanonicalTestFile(t, workspaceRoot, "target-drift.json", minimalHandoffDraftValue(target, ref, oid))
+			if _, err := Create(dependencies, CreateInput{DraftPath: draftPath}); !IsClass(err, ErrorTargetConflict) {
+				t.Fatalf("Create() error = %v", err)
+			}
+			if _, err := os.Stat(storeRoot(workspaceRoot)); !os.IsNotExist(err) {
+				t.Fatalf("store changed after target drift: %v", err)
+			}
+		})
+	}
+}
+
+func TestLifecycleRejectsPostStartControlsAndPreservesLateAttempts(t *testing.T) {
+	t.Run("cancel and supersede after start", func(t *testing.T) {
+		dependencies, created, snapshot, principal := createTestHandoff(t)
+		startPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "accepted-start.json", minimalStartDraftValue(t, snapshot, principal))
+		if _, err := SubmitStart(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: startPath}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Cancel(dependencies, ControlInput{HandoffID: created.HandoffID, Reason: "Too late to cancel."}); !IsClass(err, ErrorStale) {
+			t.Fatalf("cancel-after-start error = %v", err)
+		}
+		replacement := replaceObjectMember(minimalHandoffDraftValue(snapshot.Handoff.Target.Worktree, snapshot.Handoff.Target.Ref, snapshot.Handoff.Target.OID), "publication_key", "wf01/late-replacement")
+		replacementPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "late-replacement.json", replacement)
+		if _, err := Supersede(dependencies, SupersedeInput{HandoffID: created.HandoffID, DraftPath: replacementPath, Reason: "Too late to supersede."}); !IsClass(err, ErrorStale) {
+			t.Fatalf("supersede-after-start error = %v", err)
+		}
+		read, err := dependencies.Store.ReadByLocator(created.Locator)
+		if err != nil || read.Start == nil || read.Terminal != nil || read.HeadState != "ready" {
+			t.Fatalf("started snapshot changed = %#v, %v", read, err)
+		}
+		show, err := Show(dependencies, created.HandoffID)
+		if err != nil || show.Status != "The expected recipient reported a successful start." || show.Result != "No terminal result has been received." {
+			t.Fatalf("crash-without-terminal show = %#v, %v", show, err)
+		}
+	})
+
+	t.Run("late start after cancel", func(t *testing.T) {
+		dependencies, created, snapshot, principal := createTestHandoff(t)
+		startPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "late-start.json", minimalStartDraftValue(t, snapshot, principal))
+		if _, err := Cancel(dependencies, ControlInput{HandoffID: created.HandoffID, Reason: "Close before recipient start."}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := SubmitStart(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: startPath}); !IsClass(err, ErrorStale) {
+			t.Fatalf("late start error = %v", err)
+		}
+		read, err := dependencies.Store.ReadByLocator(created.Locator)
+		if err != nil || read.HeadState != "cancelled" || read.Start != nil || len(read.Attempts) != 1 || read.Attempts[0].Classification != "late" {
+			t.Fatalf("cancelled snapshot = %#v, %v", read, err)
+		}
+	})
+
+	t.Run("late result after abandon", func(t *testing.T) {
+		dependencies, created, snapshot, principal := createTestHandoff(t)
+		startPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "abandoned-start.json", minimalStartDraftValue(t, snapshot, principal))
+		start, err := SubmitStart(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: startPath})
+		if err != nil {
+			t.Fatal(err)
+		}
+		terminalPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "late-terminal.json", minimalTerminalDraftValue(snapshot, principal, start))
+		if _, err := Abandon(dependencies, ControlInput{HandoffID: created.HandoffID, Reason: "Recipient disappeared.", AcknowledgeEffectsUnknown: true}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := SubmitResultDocument(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: terminalPath}); !IsClass(err, ErrorStale) {
+			t.Fatalf("late terminal error = %v", err)
+		}
+		read, err := dependencies.Store.ReadByLocator(created.Locator)
+		if err != nil || read.HeadState != "abandoned_unknown" || read.Terminal != nil {
+			t.Fatalf("abandoned snapshot = %#v, %v", read, err)
+		}
+		late := false
+		for _, attempt := range read.Attempts {
+			late = late || (attempt.Phase == "terminal" && attempt.Classification == "late")
+		}
+		if !late {
+			t.Fatalf("late terminal attempt missing: %#v", read.Attempts)
+		}
+	})
+}
+
+func TestKnownRunRejectsInvalidCapabilityAndSchemaWithoutAcceptedAuthority(t *testing.T) {
+	dependencies, created, snapshot, principal := createTestHandoff(t)
+	startPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "valid-start.json", minimalStartDraftValue(t, snapshot, principal))
+	start, err := SubmitStart(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: startPath})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wrongCapability := replaceObjectMember(minimalTerminalDraftValue(snapshot, principal, start), "result_id", "res_00000000000000000000000000000000")
+	wrongPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "wrong-capability-result.json", wrongCapability)
+	if _, err := SubmitResultDocument(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: wrongPath}); !IsClass(err, ErrorCapabilityInvalid) {
+		t.Fatalf("wrong capability error = %v", err)
+	}
+
+	malformed := append(minimalTerminalDraftValue(snapshot, principal, start), canonicaljson.Member{Name: "unknown", Value: true})
+	malformedPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "schema-invalid-result.json", malformed)
+	if _, err := SubmitResultDocument(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: malformedPath}); !IsClass(err, ErrorSchemaInvalid) {
+		t.Fatalf("schema invalid error = %v", err)
+	}
+
+	read, err := dependencies.Store.ReadByLocator(created.Locator)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if read.Terminal != nil {
+		t.Fatalf("invalid terminal was accepted: %#v", read.Terminal)
+	}
+	classifications := map[string]bool{}
+	for _, attempt := range read.Attempts {
+		if attempt.Phase == "terminal" {
+			classifications[attempt.Classification+":"+attempt.ErrorClass] = true
+		}
+	}
+	if !classifications["conflict:"+string(ErrorCapabilityInvalid)] || !classifications["rejected:"+string(ErrorSchemaInvalid)] {
+		t.Fatalf("bounded terminal rejections = %#v, attempts %#v", classifications, read.Attempts)
+	}
+	if _, err := os.Lstat(filepath.Join(read.Handoff.ReplyRoot, "terminal", "accepted.ref")); !os.IsNotExist(err) {
+		t.Fatalf("accepted terminal authority exists: %v", err)
+	}
+}
+
+func TestSubmitStartPreservesConflictForProjectRefOIDAndTreeDrift(t *testing.T) {
+	for _, drift := range []string{"project", "ref", "oid", "tree"} {
+		t.Run(drift, func(t *testing.T) {
+			dependencies, created, snapshot, principal := createTestHandoff(t)
+			startPath := writeCanonicalTestFile(t, snapshot.WorkspaceRoot, "binding-drift-start.json", minimalStartDraftValue(t, snapshot, principal))
+			switch drift {
+			case "project":
+				observed, err := dependencies.Workspace.ObserveRoot(snapshot.WorkspaceRoot)
+				if err != nil {
+					t.Fatal(err)
+				}
+				observed.Projects = nil
+				dependencies.Workspace = fixedWorkspaceObserver{snapshot: observed}
+			case "ref":
+				runGit(t, snapshot.Handoff.Target.Worktree, "checkout", "-b", "drift")
+			case "oid":
+				runGit(t, snapshot.Handoff.Target.Worktree, "commit", "--allow-empty", "-m", "oid drift")
+			case "tree":
+				if err := os.WriteFile(filepath.Join(snapshot.Handoff.Target.Worktree, "README.md"), []byte("tree drift\n"), 0o644); err != nil {
+					t.Fatal(err)
+				}
+				runGit(t, snapshot.Handoff.Target.Worktree, "add", "README.md")
+				runGit(t, snapshot.Handoff.Target.Worktree, "commit", "-m", "tree drift")
+			}
+			_, err := SubmitStart(dependencies, SubmitInput{HandoffLocator: created.Locator, DraftPath: startPath})
+			if !IsClass(err, ErrorConflict) && !IsClass(err, ErrorTargetConflict) {
+				t.Fatalf("start drift error = %v", err)
+			}
+			read, readErr := dependencies.Store.ReadByLocator(created.Locator)
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			if read.Start != nil || read.Terminal != nil {
+				t.Fatalf("drift accepted authority: %#v", read)
+			}
+			found := false
+			for _, attempt := range read.Attempts {
+				found = found || (attempt.Phase == "start" && attempt.Classification == "conflict")
+			}
+			if !found {
+				t.Fatalf("conflict attempt missing: %#v", read.Attempts)
+			}
+		})
 	}
 }
 

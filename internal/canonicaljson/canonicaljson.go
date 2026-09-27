@@ -133,6 +133,9 @@ func appendValue(output *bytes.Buffer, value Value) error {
 			output.WriteString("false")
 		}
 	case string:
+		if !utf8.ValidString(typed) {
+			return errors.New("string value must be valid UTF-8")
+		}
 		appendString(output, typed)
 	case int64:
 		output.WriteString(strconv.FormatInt(typed, 10))
