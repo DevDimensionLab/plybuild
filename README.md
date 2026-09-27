@@ -53,6 +53,7 @@ Available Commands:
   status      Status functionality for a project
   tips        Use tips to learn information faster
   upgrade     Upgrade options
+  workspace   Manage Ply workspaces
 
 Flags:
       --debug   turn on debug output
@@ -64,6 +65,18 @@ Additional help topics:
 
 Use "ply [command] --help" for more information about a command.
 ```
+
+## Workspace
+Initialize the current directory as an explicit Ply workspace:
+
+```shell script
+ply workspace init
+```
+
+The command creates `.ply/workspace.yaml` with format version 1 and the canonical physical
+directory path. The directory does not need to be a Git repository. Re-running the command is
+safe and leaves an existing compatible marker unchanged. It does not create a Git repository,
+register repositories, or create workflows.
 
 ## Install
 ```shell script

@@ -94,8 +94,6 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
 	logrus.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
 	RootCmd.PersistentFlags().Bool("json", false, "turn on json output logging")
@@ -133,6 +131,7 @@ func initializeConfig() error {
 var ctx context.Context
 
 func InitGlobals(cmd *cobra.Command) error {
+	initConfig()
 	if initializationErr != nil {
 		return initializationErr
 	}

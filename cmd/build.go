@@ -18,8 +18,8 @@ var buildCmd = &cobra.Command{
 	Long:    `Builds a ply project with ply files and formatting`,
 	Aliases: []string{"generate"},
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if initializationErr != nil {
-			return initializationErr
+		if err := InitGlobals(cmd); err != nil {
+			return err
 		}
 		return OpenDocumentationWebsite(cmd, "commands/build")
 	},
