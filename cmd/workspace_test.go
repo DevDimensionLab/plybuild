@@ -36,7 +36,7 @@ func TestNewWorkspaceCommandShape(t *testing.T) {
 	if command.Use != "workspace" ||
 		command.Short != "Manage Ply workspaces" ||
 		command.Long != "Manage explicit local Ply workspaces." ||
-		command.Example != "  ply workspace init" ||
+		command.Example != "  ply workspace init\n  ply workspace project list" ||
 		command.CommandPath() != "ply workspace" ||
 		command.Runnable() {
 		t.Fatalf("workspace command metadata = Use %q, Short %q, Long %q, Example %q, path %q, runnable %t",
@@ -151,30 +151,40 @@ func TestWorkspaceCommandDoesNotPrintSuccessOnUseCaseError(t *testing.T) {
 }
 
 func TestWorkspaceHookShadowsLegacyInitialization(t *testing.T) {
-	rootDirectory := t.TempDir()
-	filesystem := &commandFileSystem{
-		FileSystem: workspace.SystemDependencies().Files,
-		cwd:        rootDirectory,
-	}
-	legacyCalls := 0
-	root := &cobra.Command{
-		Use: "ply",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			legacyCalls++
-			return errors.New("legacy initialization ran")
-		},
-	}
-	root.AddCommand(newWorkspaceCommand(workspace.Dependencies{Files: filesystem}))
-	root.SetArgs([]string{"workspace", "init"})
-	root.SilenceErrors = true
-	root.SilenceUsage = true
-	root.SetOut(&bytes.Buffer{})
-	root.SetErr(&bytes.Buffer{})
-	if err := root.Execute(); err != nil {
-		t.Fatalf("workspace hook did not isolate legacy initialization: %v", err)
-	}
-	if legacyCalls != 0 {
-		t.Fatalf("legacy initialization called %d times", legacyCalls)
+	for _, arguments := range [][]string{
+		{"workspace", "init"},
+		{"workspace", "project", "add", "ply", "--name", "Ply", "--wrapper", ".", "--repo", "ply=."},
+		{"workspace", "project", "show", "ply"},
+		{"workspace", "project", "list"},
+	} {
+		rootDirectory := t.TempDir()
+		filesystem := &commandFileSystem{FileSystem: workspace.SystemDependencies().Files, cwd: rootDirectory}
+		dependencies := workspace.SystemDependencies()
+		dependencies.Files = filesystem
+		legacyCalls := 0
+		root := &cobra.Command{
+			Use: "ply",
+			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+				legacyCalls++
+				return errors.New("legacy initialization ran")
+			},
+		}
+		root.AddCommand(newWorkspaceCommand(dependencies))
+		root.SetArgs(arguments)
+		root.SilenceErrors = true
+		root.SilenceUsage = true
+		root.SetOut(&bytes.Buffer{})
+		root.SetErr(&bytes.Buffer{})
+		err := root.Execute()
+		if arguments[1] == "init" && err != nil {
+			t.Fatalf("workspace hook did not isolate init: %v", err)
+		}
+		if err != nil && strings.Contains(err.Error(), "legacy initialization ran") {
+			t.Fatalf("workspace hook did not isolate %v: %v", arguments, err)
+		}
+		if legacyCalls != 0 {
+			t.Fatalf("legacy initialization called %d times for %v", legacyCalls, arguments)
+		}
 	}
 }
 

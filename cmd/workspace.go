@@ -12,7 +12,7 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 		Use:     "workspace",
 		Short:   "Manage Ply workspaces",
 		Long:    "Manage explicit local Ply workspaces.",
-		Example: "  ply workspace init",
+		Example: "  ply workspace init\n  ply workspace project list",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},
@@ -44,7 +44,7 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 	initCommand.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
 		return workspace.InvalidArguments(err.Error())
 	})
-	workspaceCommand.AddCommand(initCommand)
+	workspaceCommand.AddCommand(initCommand, newWorkspaceProjectCommand(dependencies))
 	return workspaceCommand
 }
 

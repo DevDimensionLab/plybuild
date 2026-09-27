@@ -75,8 +75,37 @@ ply workspace init
 
 The command creates `.ply/workspace.yaml` with format version 1 and the canonical physical
 directory path. The directory does not need to be a Git repository. Re-running the command is
-safe and leaves an existing compatible marker unchanged. It does not create a Git repository,
-register repositories, or create workflows.
+safe and leaves an existing compatible marker unchanged. It does not create a Git repository or
+create workflows.
+
+From an initialized workspace, or any directory below it, register a project with an explicit
+wrapper and one or more Git worktree roots:
+
+```shell script
+ply workspace project add ply \
+  --name Ply \
+  --wrapper ../ply \
+  --repo ply=../ply/main
+```
+
+Repeat `--repo` to register a multi-repository project:
+
+```shell script
+ply workspace project add trip \
+  --name Trip \
+  --wrapper ../trip \
+  --repo trip-frontend=../trip/trip-frontend/main \
+  --repo trip-openapi=../trip/trip-openapi/main \
+  --repo trip-service=../trip/trip-service/main
+```
+
+The wrapper and repository members are explicit and may be outside the workspace. Ply validates
+only the nominated worktree roots. Dirty repositories are accepted, and registration performs no
+discovery or Git mutation. Read registrations with `ply workspace project show <id>` and
+`ply workspace project list`.
+
+Retrying the same registration is idempotent. Changing membership, relocating repositories, and
+`project init` are not part of this command.
 
 ## Install
 ```shell script

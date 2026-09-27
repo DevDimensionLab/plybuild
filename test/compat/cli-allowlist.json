@@ -51,7 +51,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace init",
+        "example": "  ply workspace init\n  ply workspace project list",
         "flags": [
           {
             "annotations": {
@@ -87,6 +87,233 @@
       },
       "kind": "command_added",
       "path": "ply workspace"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project add ply --name Ply --wrapper ../ply --repo ply=../ply/main",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for add"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "name",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "n",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "project display name"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "[]",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "r",
+            "shorthand_deprecated": "",
+            "type": "stringArray",
+            "usage": "repository member as <repo-id>=<path>"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "wrapper",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "w",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "project wrapper directory"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Register one project, its wrapper, and one or more explicit Git repository members in the containing Ply workspace.",
+        "path": "ply workspace project add",
+        "runnable": true,
+        "short": "Register a project and its explicit repository members",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "add <project-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project add"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project add ply --name Ply --wrapper ../ply --repo ply=../ply/main\n  ply workspace project list",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for project"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Register and inspect projects owned by the containing Ply workspace.",
+        "path": "ply workspace project",
+        "runnable": false,
+        "short": "Manage projects in a Ply workspace",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "project"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project list",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for list"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "List projects registered in the containing Ply workspace.",
+        "path": "ply workspace project list",
+        "runnable": true,
+        "short": "List registered projects",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "list"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project list"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project show ply",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Show the stored wrapper and repository members for one project in the containing Ply workspace.",
+        "path": "ply workspace project show",
+        "runnable": true,
+        "short": "Show a registered project",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <project-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project show"
     }
   ],
   "base_ref": "v1.0.1",

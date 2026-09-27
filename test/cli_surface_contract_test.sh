@@ -58,6 +58,10 @@ run_help_surface() {
 run_help_surface root-help --help
 run_help_surface workspace-help workspace --help
 run_help_surface workspace-init-help workspace init --help
+run_help_surface workspace-project-help workspace project --help
+run_help_surface workspace-project-add-help workspace project add --help
+run_help_surface workspace-project-show-help workspace project show --help
+run_help_surface workspace-project-list-help workspace project list --help
 
 grep -F '  workspace   Manage Ply workspaces' "$temp_root/root-help.stdout" >/dev/null ||
 	fail 'root help does not expose the workspace parent'
@@ -67,8 +71,12 @@ grep -F 'ply workspace [command]' "$temp_root/workspace-help.stdout" >/dev/null 
 	fail 'workspace help usage changed'
 grep -F '  init        Initialize a Ply workspace in the current directory' \
 	"$temp_root/workspace-help.stdout" >/dev/null || fail 'workspace help does not expose init'
+grep -F '  project     Manage projects in a Ply workspace' \
+	"$temp_root/workspace-help.stdout" >/dev/null || fail 'workspace help does not expose project'
 grep -F '  ply workspace init' "$temp_root/workspace-help.stdout" >/dev/null ||
 	fail 'workspace help lost its example'
+grep -F '  ply workspace project list' "$temp_root/workspace-help.stdout" >/dev/null ||
+	fail 'workspace help lost its project example'
 grep -F 'Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml.' \
 	"$temp_root/workspace-init-help.stdout" >/dev/null || fail 'workspace init help lost its action'
 grep -F 'The current directory does not need to be a Git repository.' \
@@ -82,6 +90,28 @@ grep -F -- '-h, --help' "$temp_root/workspace-init-help.stdout" >/dev/null ||
 if grep -F -- '--name' "$temp_root/workspace-init-help.stdout" >/dev/null; then
 	fail 'workspace init help exposes --name'
 fi
+grep -F 'Register and inspect projects owned by the containing Ply workspace.' \
+	"$temp_root/workspace-project-help.stdout" >/dev/null || fail 'project help lost its long description'
+grep -F 'ply workspace project [command]' "$temp_root/workspace-project-help.stdout" >/dev/null ||
+	fail 'project help usage changed'
+grep -F '  add         Register a project and its explicit repository members' \
+	"$temp_root/workspace-project-help.stdout" >/dev/null || fail 'project help does not expose add'
+grep -F '  list        List registered projects' "$temp_root/workspace-project-help.stdout" >/dev/null ||
+	fail 'project help does not expose list'
+grep -F '  show        Show a registered project' "$temp_root/workspace-project-help.stdout" >/dev/null ||
+	fail 'project help does not expose show'
+grep -F 'ply workspace project add <project-id> [flags]' \
+	"$temp_root/workspace-project-add-help.stdout" >/dev/null || fail 'project add usage changed'
+grep -F -- '-n, --name string' "$temp_root/workspace-project-add-help.stdout" >/dev/null ||
+	fail 'project add name flag is unavailable'
+grep -F -- '-w, --wrapper string' "$temp_root/workspace-project-add-help.stdout" >/dev/null ||
+	fail 'project add wrapper flag is unavailable'
+grep -F -- '-r, --repo stringArray' "$temp_root/workspace-project-add-help.stdout" >/dev/null ||
+	fail 'project add repo flag is not a repeatable string array'
+grep -F 'ply workspace project show <project-id> [flags]' \
+	"$temp_root/workspace-project-show-help.stdout" >/dev/null || fail 'project show usage changed'
+grep -F 'ply workspace project list [flags]' \
+	"$temp_root/workspace-project-list-help.stdout" >/dev/null || fail 'project list usage changed'
 [[ ! -e "$temp_root/home/.ply" ]] || fail 'help created a global Ply profile'
 
 grep -F '  workspace   Manage Ply workspaces' "$repo_root/README.md" >/dev/null ||
@@ -96,8 +126,37 @@ printf '%s\n' \
 	'' \
 	'The command creates `.ply/workspace.yaml` with format version 1 and the canonical physical' \
 	'directory path. The directory does not need to be a Git repository. Re-running the command is' \
-	'safe and leaves an existing compatible marker unchanged. It does not create a Git repository,' \
-	'register repositories, or create workflows.' \
+	'safe and leaves an existing compatible marker unchanged. It does not create a Git repository or' \
+	'create workflows.' \
+	'' \
+	'From an initialized workspace, or any directory below it, register a project with an explicit' \
+	'wrapper and one or more Git worktree roots:' \
+	'' \
+	'```shell script' \
+	'ply workspace project add ply \' \
+	'  --name Ply \' \
+	'  --wrapper ../ply \' \
+	'  --repo ply=../ply/main' \
+	'```' \
+	'' \
+	'Repeat `--repo` to register a multi-repository project:' \
+	'' \
+	'```shell script' \
+	'ply workspace project add trip \' \
+	'  --name Trip \' \
+	'  --wrapper ../trip \' \
+	'  --repo trip-frontend=../trip/trip-frontend/main \' \
+	'  --repo trip-openapi=../trip/trip-openapi/main \' \
+	'  --repo trip-service=../trip/trip-service/main' \
+	'```' \
+	'' \
+	'The wrapper and repository members are explicit and may be outside the workspace. Ply validates' \
+	'only the nominated worktree roots. Dirty repositories are accepted, and registration performs no' \
+	'discovery or Git mutation. Read registrations with `ply workspace project show <id>` and' \
+	'`ply workspace project list`.' \
+	'' \
+	'Retrying the same registration is idempotent. Changing membership, relocating repositories, and' \
+	'`project init` are not part of this command.' \
 	'' >"$temp_root/readme-workspace.expected"
 sed -n '/^## Workspace$/,/^## Install$/p' "$repo_root/README.md" | sed '$d' \
 	>"$temp_root/readme-workspace.actual"
@@ -269,4 +328,158 @@ cmp -s "$temp_root/name.expected" "$temp_root/name.stderr" || fail '--name stder
 cmp -s "$temp_root/argument.expected" "$temp_root/argument.stderr" ||
 	fail 'positional argument stderr changed'
 
-printf 'cli surface contract: PASS (legacy help/error and workspace init behavior)\n'
+run_project_error() {
+	local label=$1
+	local expected_class=$2
+	local directory=$3
+	shift 3
+	set +e
+	(
+		cd "$directory"
+		HOME="$temp_root/home" "$binary" "$@"
+	) >"$temp_root/$label.stdout" 2>"$temp_root/$label.stderr"
+	local exit_status=$?
+	set -e
+	[[ "$exit_status" -eq 1 ]] || fail "$label exit is $exit_status, expected 1"
+	[[ ! -s "$temp_root/$label.stdout" ]] || fail "$label wrote to stdout"
+	grep -F "Error: $expected_class:" "$temp_root/$label.stderr" >/dev/null ||
+		fail "$label stderr lost class $expected_class"
+}
+
+single_wrapper="$temp_root/single"
+single_repo="$single_wrapper/main"
+multi_wrapper="$temp_root/multi"
+multi_repo="$multi_wrapper/service"
+external_repo="$temp_root/external-api"
+non_git="$temp_root/not-git"
+mkdir -p "$single_repo" "$multi_repo" "$external_repo" "$non_git"
+git -C "$single_repo" init -q
+git -C "$multi_repo" init -q
+git -C "$external_repo" init -q
+printf 'dirty\n' >"$multi_repo/dirty.txt"
+single_wrapper_root=$(cd "$single_wrapper" && pwd -P)
+single_repo_root=$(cd "$single_repo" && pwd -P)
+multi_wrapper_root=$(cd "$multi_wrapper" && pwd -P)
+multi_repo_root=$(cd "$multi_repo" && pwd -P)
+external_repo_root=$(cd "$external_repo" && pwd -P)
+single_common=$(git -C "$single_repo_root" rev-parse --path-format=absolute --git-common-dir)
+multi_common=$(git -C "$multi_repo_root" rev-parse --path-format=absolute --git-common-dir)
+external_common=$(git -C "$external_repo_root" rev-parse --path-format=absolute --git-common-dir)
+find "$single_wrapper" -mindepth 1 -print | LC_ALL=C sort >"$temp_root/single.before"
+find "$multi_wrapper" -mindepth 1 -print | LC_ALL=C sort >"$temp_root/multi.before"
+find "$external_repo" -mindepth 1 -print | LC_ALL=C sort >"$temp_root/external.before"
+
+(
+	cd "$work"
+	HOME="$temp_root/home" "$binary" workspace project list
+) >"$temp_root/project-empty.stdout" 2>"$temp_root/project-empty.stderr" ||
+	fail 'empty project list returned non-zero'
+printf 'No projects are registered in Ply workspace %s.\n' "$work_root" \
+	>"$temp_root/project-empty.expected"
+cmp -s "$temp_root/project-empty.expected" "$temp_root/project-empty.stdout" ||
+	fail 'empty project list stdout changed'
+[[ ! -s "$temp_root/project-empty.stderr" ]] || fail 'empty project list wrote to stderr'
+
+(
+	cd "$work"
+	HOME="$temp_root/home" "$binary" workspace project add single --name Single \
+		--wrapper "$single_wrapper_root" --repo "single=$single_repo_root"
+) >"$temp_root/project-single.stdout" 2>"$temp_root/project-single.stderr" ||
+	fail 'single-repository project add returned non-zero'
+printf 'Added project single (Single) to Ply workspace %s.\nWrapper: %s\nRepositories:\n  single:\n    locator: %s\n    git common directory: %s\n' \
+	"$work_root" "$single_wrapper_root" "$single_repo_root" "$single_common" \
+	>"$temp_root/project-single.expected"
+cmp -s "$temp_root/project-single.expected" "$temp_root/project-single.stdout" ||
+	fail 'single-repository project add stdout changed'
+[[ ! -s "$temp_root/project-single.stderr" ]] || fail 'single-repository project add wrote to stderr'
+printf 'format_version: 1\nprojects:\n  - id: single\n    name: Single\n    wrapper: %s\n    repo_ids:\n      - single\nrepos:\n  - id: single\n    locator: %s\n    git_common_dir: %s\n' \
+	"$single_wrapper_root" "$single_repo_root" "$single_common" >"$temp_root/projects-single.expected"
+cmp -s "$temp_root/projects-single.expected" "$work/.ply/projects.yaml" ||
+	fail 'single-repository registry bytes changed'
+[[ $(file_mode "$work/.ply/projects.yaml") == 644 ]] || fail 'project registry mode is not 0644'
+[[ $(file_mode "$work/.ply/projects.lock") == 600 ]] || fail 'project lock mode is not 0600'
+
+(
+	cd "$work"
+	HOME="$temp_root/home" "$binary" workspace project show single
+) >"$temp_root/project-show.stdout" 2>"$temp_root/project-show.stderr" ||
+	fail 'project show returned non-zero'
+printf 'Project single (Single) in Ply workspace %s.\nWrapper: %s\nRepositories:\n  single:\n    locator: %s\n    git common directory: %s\n' \
+	"$work_root" "$single_wrapper_root" "$single_repo_root" "$single_common" \
+	>"$temp_root/project-show.expected"
+cmp -s "$temp_root/project-show.expected" "$temp_root/project-show.stdout" ||
+	fail 'project show stdout changed'
+[[ ! -s "$temp_root/project-show.stderr" ]] || fail 'project show wrote to stderr'
+
+touch -t 200001010000 "$work/.ply/projects.yaml"
+project_mtime=$(file_mtime "$work/.ply/projects.yaml")
+cp "$work/.ply/projects.yaml" "$temp_root/projects.before-retry"
+single_alias="$temp_root/single-alias"
+ln -s "$single_repo_root" "$single_alias"
+(
+	cd "$work"
+	HOME="$temp_root/home" "$binary" workspace project add single --name Single \
+		--wrapper "$single_wrapper_root" --repo "single=$single_alias"
+) >"$temp_root/project-retry.stdout" 2>"$temp_root/project-retry.stderr" ||
+	fail 'idempotent project retry returned non-zero'
+sed '1s/^Added project/Project/; 1s/ to Ply workspace/ is already registered in Ply workspace/' \
+	"$temp_root/project-single.expected" >"$temp_root/project-retry.expected"
+cmp -s "$temp_root/project-retry.expected" "$temp_root/project-retry.stdout" ||
+	fail 'idempotent project retry stdout changed'
+[[ ! -s "$temp_root/project-retry.stderr" ]] || fail 'idempotent project retry wrote to stderr'
+cmp -s "$temp_root/projects.before-retry" "$work/.ply/projects.yaml" ||
+	fail 'idempotent project retry changed registry bytes'
+[[ $(file_mtime "$work/.ply/projects.yaml") == "$project_mtime" ]] ||
+	fail 'idempotent project retry changed registry mtime'
+
+(
+	cd "$work"
+	HOME="$temp_root/home" "$binary" workspace project add multi --name Multi \
+		--wrapper "$multi_wrapper_root" \
+		--repo "service=$multi_repo_root" --repo "api=$external_repo_root"
+) >"$temp_root/project-multi.stdout" 2>"$temp_root/project-multi.stderr" ||
+	fail 'multi-repository project add returned non-zero'
+[[ ! -s "$temp_root/project-multi.stderr" ]] || fail 'multi-repository project add wrote to stderr'
+grep -F 'Added project multi (Multi)' "$temp_root/project-multi.stdout" >/dev/null ||
+	fail 'multi-repository add lost success line'
+grep -F '  api:' "$temp_root/project-multi.stdout" >/dev/null || fail 'multi add lost api member'
+grep -F '  service:' "$temp_root/project-multi.stdout" >/dev/null || fail 'multi add lost service member'
+
+(
+	cd "$work"
+	HOME="$temp_root/home" "$binary" workspace project list
+) >"$temp_root/project-list.stdout" 2>"$temp_root/project-list.stderr" ||
+	fail 'project list returned non-zero'
+printf 'Projects in Ply workspace %s:\n  multi: Multi (2 repositories) %s\n  single: Single (1 repository) %s\n' \
+	"$work_root" "$multi_wrapper_root" "$single_wrapper_root" >"$temp_root/project-list.expected"
+cmp -s "$temp_root/project-list.expected" "$temp_root/project-list.stdout" ||
+	fail 'project list stdout changed'
+[[ ! -s "$temp_root/project-list.stderr" ]] || fail 'project list wrote to stderr'
+
+run_project_error missing-workspace workspace_not_found "$non_git" workspace project list
+run_project_error invalid-project workspace_project_invalid_arguments "$work" \
+	workspace project add Trip --name Trip --wrapper "$single_wrapper_root" --repo "single=$single_repo_root"
+run_project_error empty-repositories workspace_project_invalid_arguments "$work" \
+	workspace project add empty --name Empty --wrapper "$single_wrapper_root"
+run_project_error non-git workspace_project_repo_invalid "$work" \
+	workspace project add nongit --name NonGit --wrapper "$non_git" --repo "nongit=$non_git"
+run_project_error duplicate-common workspace_project_duplicate_repo "$work" \
+	workspace project add duplicate --name Duplicate --wrapper "$non_git" \
+	--repo "one=$single_repo_root" --repo "two=$single_alias"
+run_project_error unknown-show workspace_project_not_found "$work" workspace project show unknown
+run_project_error changed-members workspace_project_conflict "$work" \
+	workspace project add single --name Single --wrapper "$single_wrapper_root" --repo "single=$external_repo_root"
+run_project_error duplicate-wrapper workspace_project_conflict "$work" \
+	workspace project add other --name Other --wrapper "$single_wrapper_root" --repo "api=$external_repo_root"
+
+find "$single_wrapper" -mindepth 1 -print | LC_ALL=C sort >"$temp_root/single.after"
+find "$multi_wrapper" -mindepth 1 -print | LC_ALL=C sort >"$temp_root/multi.after"
+find "$external_repo" -mindepth 1 -print | LC_ALL=C sort >"$temp_root/external.after"
+cmp -s "$temp_root/single.before" "$temp_root/single.after" || fail 'Ply changed the single wrapper or repository'
+cmp -s "$temp_root/multi.before" "$temp_root/multi.after" || fail 'Ply changed the multi wrapper or repository'
+cmp -s "$temp_root/external.before" "$temp_root/external.after" || fail 'Ply changed the external repository'
+[[ $(cd "$work" && find . -mindepth 1 -print | LC_ALL=C sort) == $'./.ply\n./.ply/projects.lock\n./.ply/projects.yaml\n./.ply/workspace.yaml' ]] ||
+	fail 'project journey created unexpected workspace files'
+[[ ! -e "$temp_root/home/.ply" ]] || fail 'project journey created a global Ply profile'
+
+printf 'cli surface contract: PASS (legacy behavior, workspace init, and project registration)\n'
