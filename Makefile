@@ -20,7 +20,7 @@ override PLY_QUALITY_MUTATIONS := cli-context config-cloud maven-sorting templat
 
 .DEFAULT_GOAL := all
 
-.PHONY: acceptance acceptance-docker acceptance-snapshot all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight quality release release-brew run snapshot test test-agent-auto test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight test-quality test-toolchain test-workflow-handoff test-workspace-work-items upgrade
+.PHONY: acceptance acceptance-docker acceptance-snapshot all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight quality release release-brew run snapshot test test-agent-auto test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight test-quality test-toolchain test-workflow-handoff test-workspace-task-integration test-workspace-work-items upgrade
 
 build:
 	$(GO) build -o ply ./cmd/ply
@@ -105,6 +105,7 @@ compat-cli:
 	$(BASH) "$(REPO_ROOT)/test/cli_surface_contract_test.sh"
 	$(BASH) "$(REPO_ROOT)/test/workflow_handoff_roundtrip_test.sh"
 	$(BASH) "$(REPO_ROOT)/test/workspace_work_items_roundtrip_test.sh"
+	$(BASH) "$(REPO_ROOT)/test/workspace_task_integration_roundtrip_test.sh"
 
 compatibility: compat-api compat-cli
 
@@ -120,6 +121,9 @@ test-workflow-handoff:
 
 test-workspace-work-items:
 	$(BASH) "$(REPO_ROOT)/test/workspace_work_items_roundtrip_test.sh"
+
+test-workspace-task-integration:
+	$(BASH) "$(REPO_ROOT)/test/workspace_task_integration_roundtrip_test.sh"
 
 acceptance:
 	$(BASH) "$(REPO_ROOT)/scripts/verify-install"

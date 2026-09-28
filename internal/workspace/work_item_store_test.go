@@ -16,24 +16,48 @@ func TestWorkItemRegistryEncodingIsDeterministicAndStrict(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "format_version: 1\nepics: []\ntasks: []\nworktree_operations: []\n"
+	want := "format_version: 2\nepics: []\ntasks: []\nworktree_operations: []\ntask_results: []\nhuman_qa_records: []\nintegration_authorities: []\nintegration_intents: []\nintegration_attempts: []\nintegration_results: []\n"
 	if string(got) != want {
 		t.Fatalf("registry bytes:\n%s\nwant:\n%s", got, want)
 	}
 	decoded, err := decodeWorkItemRegistry(got)
-	if err != nil || decoded.FormatVersion != 1 {
+	if err != nil || decoded.FormatVersion != 2 {
 		t.Fatalf("decode = %#v, %v", decoded, err)
 	}
 	for name, invalid := range map[string]string{
-		"unknown field": strings.Replace(want, "format_version: 1", "format_version: 1\nunknown: true", 1),
-		"wrong version": strings.Replace(want, "format_version: 1", "format_version: 2", 1),
-		"missing list":  strings.Replace(want, "epics: []\n", "", 1),
+		"unknown field":   strings.Replace(want, "format_version: 2", "format_version: 2\nunknown: true", 1),
+		"wrong version":   strings.Replace(want, "format_version: 2", "format_version: 3", 1),
+		"missing list":    strings.Replace(want, "epics: []\n", "", 1),
+		"missing v2 list": strings.Replace(want, "task_results: []\n", "", 1),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := decodeWorkItemRegistry([]byte(invalid)); err == nil {
 				t.Fatalf("invalid registry accepted:\n%s", invalid)
 			}
 		})
+	}
+}
+
+func TestWorkItemRegistryDecodesAndPreservesFormatOne(t *testing.T) {
+	legacy := []byte("format_version: 1\nepics: []\ntasks: []\nworktree_operations: []\n")
+	registry, err := decodeWorkItemRegistry(legacy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if registry.FormatVersion != 1 || registry.TaskResults != nil || registry.HumanQARecords != nil || registry.IntegrationAuthorities != nil || registry.IntegrationIntents != nil || registry.IntegrationAttempts != nil || registry.IntegrationResults != nil {
+		t.Fatalf("legacy registry changed shape: %#v", registry)
+	}
+	encoded, err := encodeWorkItemRegistry(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(encoded) != string(legacy) {
+		t.Fatalf("format-1 round trip:\n%s\nwant:\n%s", encoded, legacy)
+	}
+
+	withLifecycleCollection := append(append([]byte(nil), legacy...), []byte("task_results: []\n")...)
+	if _, err := decodeWorkItemRegistry(withLifecycleCollection); err == nil {
+		t.Fatal("format-1 registry with a lifecycle collection was accepted")
 	}
 }
 
@@ -71,6 +95,206 @@ func TestWorkItemRegistryRejectsInvalidObservationShapes(t *testing.T) {
 			mutate(&candidate)
 			if _, err := encodeWorkItemRegistry(candidate); err == nil {
 				t.Fatalf("invalid observation accepted: %#v", candidate.WorktreeOperations[0].LastObservation)
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRejectsIntegrationPlanWithDifferentGitArgv(t *testing.T) {
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", TaskResultID: fixture.resultID, HumanQARecordID: fixture.qaID, ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	registry.IntegrationAuthorities[0].Plan.Effect.Argv = []string{"git", "reset", "--hard"}
+	registry.IntegrationAuthorities[0].PlanSHA256 = integrationPlanDigest(registry.IntegrationAuthorities[0].Plan)
+	registry.IntegrationIntents[0].PlanSHA256 = registry.IntegrationAuthorities[0].PlanSHA256
+	registry.IntegrationIntents[0].IntentSHA256 = integrationIntentDigest(registry.IntegrationIntents[0])
+	if _, err := encodeWorkItemRegistry(registry); err == nil {
+		t.Fatal("integration plan with non-contract Git argv was accepted")
+	}
+}
+
+func TestWorkItemRegistryRejectsIntegrationPlanWithDifferentRetryBinding(t *testing.T) {
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", TaskResultID: fixture.resultID, HumanQARecordID: fixture.qaID, ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	other := IntegrationResultID("ires_ffffffffffffffffffffffffffffffff")
+	registry.IntegrationAuthorities[0].Plan.RetryAfterResultID = &other
+	registry.IntegrationAuthorities[0].PlanSHA256 = integrationPlanDigest(registry.IntegrationAuthorities[0].Plan)
+	registry.IntegrationIntents[0].PlanSHA256 = registry.IntegrationAuthorities[0].PlanSHA256
+	registry.IntegrationIntents[0].IntentSHA256 = integrationIntentDigest(registry.IntegrationIntents[0])
+	if _, err := encodeWorkItemRegistry(registry); err == nil {
+		t.Fatal("integration plan with a different retry predecessor was accepted")
+	}
+}
+
+func TestWorkItemRegistryRejectsMalformedIntegrationCommandEvidence(t *testing.T) {
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", TaskResultID: fixture.resultID, HumanQARecordID: fixture.qaID, ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseline := registry.IntegrationResults[0]
+	for name, mutate := range map[string]func(*IntegrationResult){
+		"invalid base64":          func(result *IntegrationResult) { result.Command.Stdout.Base64 = "!" },
+		"captured size mismatch":  func(result *IntegrationResult) { result.Command.Stdout.CapturedBytes++ },
+		"invalid launch nullform": func(result *IntegrationResult) { result.Command.ExitCode = nil },
+		"invalid truncation":      func(result *IntegrationResult) { result.Command.Stdout.Truncated = !result.Command.Stdout.Truncated },
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate := baseline
+			mutate(&candidate)
+			if err := validateIntegrationResultShape(candidate); err == nil {
+				t.Fatalf("malformed command evidence accepted: %#v", candidate.Command)
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRejectsContradictoryIntegrationRecoveryActions(t *testing.T) {
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", TaskResultID: fixture.resultID, HumanQARecordID: fixture.qaID, ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseline, err := encodeWorkItemRegistry(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, mutate := range map[string]func(*IntegrationResult){
+		"wrong recovery status": func(result *IntegrationResult) { result.RecoveryStatus = "unknown" },
+		"unsafe next action": func(result *IntegrationResult) {
+			result.NextAction = IntegrationNextAction{Kind: "apply_confirmed_plan", Reason: "Apply again.", Argv: []string{"git", "merge"}}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate, err := decodeWorkItemRegistry(baseline)
+			if err != nil {
+				t.Fatal(err)
+			}
+			mutate(&candidate.IntegrationResults[0])
+			if _, err := encodeWorkItemRegistry(candidate); err == nil {
+				t.Fatalf("contradictory result accepted: %#v", candidate.IntegrationResults[0])
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRejectsBrokenIntegrationObservationChain(t *testing.T) {
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", TaskResultID: fixture.resultID, HumanQARecordID: fixture.qaID, ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseline, err := encodeWorkItemRegistry(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	otherOID := strings.Repeat("f", len(fixture.oid))
+	for name, mutate := range map[string]func(*WorkItemRegistry){
+		"result before differs from Attempt": func(candidate *WorkItemRegistry) {
+			candidate.IntegrationResults[0].BeforeObservation.OID = otherOID
+		},
+		"Attempt prestate differs from plan": func(candidate *WorkItemRegistry) {
+			candidate.IntegrationAttempts[0].PreObservation.OID = otherOID
+			candidate.IntegrationResults[0].BeforeObservation.OID = otherOID
+		},
+		"exact effect inventory differs": func(candidate *WorkItemRegistry) {
+			candidate.IntegrationResults[0].AfterObservation.InventoryEntries[0].OID = fixture.oid
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate, err := decodeWorkItemRegistry(baseline)
+			if err != nil {
+				t.Fatal(err)
+			}
+			mutate(&candidate)
+			if _, err := encodeWorkItemRegistry(candidate); err == nil {
+				t.Fatalf("broken observation chain accepted: %#v", candidate.IntegrationResults[0])
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRequiresExactNestedFieldsExplicitArraysAndNulls(t *testing.T) {
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", TaskResultID: fixture.resultID, HumanQARecordID: fixture.qaID, ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := encodeWorkItemRegistry(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseline := string(encoded)
+	for name, candidate := range map[string]string{
+		"missing nullable": strings.Replace(baseline, "    retry_after_result_id: null\n", "", 1),
+		"null array":       strings.Replace(baseline, "    verifier_results: []\n", "    verifier_results: null\n", 1),
+		"wrong root order": strings.Replace(baseline, "task_results:", "human_qa_records:", 1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			if candidate == baseline {
+				t.Fatalf("test mutation %q did not change encoded bytes", name)
+			}
+			if _, err := decodeWorkItemRegistry([]byte(candidate)); err == nil {
+				t.Fatalf("invalid exact shape accepted:\n%s", candidate)
 			}
 		})
 	}
@@ -281,7 +505,7 @@ func TestWorkItemStoreTreatsMissingRegistryAsEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if registry.FormatVersion != 1 || len(registry.Epics) != 0 || len(registry.Tasks) != 0 || len(registry.WorktreeOperations) != 0 {
+	if registry.FormatVersion != 2 || len(registry.Epics) != 0 || len(registry.Tasks) != 0 || len(registry.WorktreeOperations) != 0 || registry.TaskResults == nil || registry.IntegrationResults == nil {
 		t.Fatalf("registry = %#v", registry)
 	}
 	if filepath.Base(workItemsPath(root)) != "work-items.yaml" {

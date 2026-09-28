@@ -2,14 +2,19 @@ package workspace
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
+	"slices"
 	"sort"
+	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -35,9 +40,35 @@ type systemWorkItemStoreSession struct {
 	root  string
 }
 
+type workItemRegistryV1Wire struct {
+	FormatVersion      int                       `yaml:"format_version"`
+	Epics              []EpicRecord              `yaml:"epics"`
+	Tasks              []TaskRecord              `yaml:"tasks"`
+	WorktreeOperations []WorktreeOperationRecord `yaml:"worktree_operations"`
+}
+type workItemRegistryV2Wire struct {
+	FormatVersion          int                       `yaml:"format_version"`
+	Epics                  []EpicRecord              `yaml:"epics"`
+	Tasks                  []TaskRecord              `yaml:"tasks"`
+	WorktreeOperations     []WorktreeOperationRecord `yaml:"worktree_operations"`
+	TaskResults            []TaskResultRecord        `yaml:"task_results"`
+	HumanQARecords         []TaskHumanQARecord       `yaml:"human_qa_records"`
+	IntegrationAuthorities []IntegrationAuthority    `yaml:"integration_authorities"`
+	IntegrationIntents     []IntegrationIntent       `yaml:"integration_intents"`
+	IntegrationAttempts    []IntegrationAttempt      `yaml:"integration_attempts"`
+	IntegrationResults     []IntegrationResult       `yaml:"integration_results"`
+}
+
+func (registry WorkItemRegistry) MarshalYAML() (any, error) {
+	if registry.FormatVersion == 1 {
+		return workItemRegistryV1Wire{FormatVersion: 1, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations}, nil
+	}
+	return workItemRegistryV2Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults}, nil
+}
+
 func newSystemWorkItemStore() *systemWorkItemStore { return &systemWorkItemStore{} }
 func emptyWorkItemRegistry() WorkItemRegistry {
-	return WorkItemRegistry{FormatVersion: FormatVersion, Epics: []EpicRecord{}, Tasks: []TaskRecord{}, WorktreeOperations: []WorktreeOperationRecord{}}
+	return WorkItemRegistry{FormatVersion: 2, Epics: []EpicRecord{}, Tasks: []TaskRecord{}, WorktreeOperations: []WorktreeOperationRecord{}, TaskResults: []TaskResultRecord{}, HumanQARecords: []TaskHumanQARecord{}, IntegrationAuthorities: []IntegrationAuthority{}, IntegrationIntents: []IntegrationIntent{}, IntegrationAttempts: []IntegrationAttempt{}, IntegrationResults: []IntegrationResult{}}
 }
 func workItemsPath(root string) string { return filepath.Join(root, MarkerDirectory, WorkItemsFile) }
 
@@ -66,6 +97,23 @@ func (session *systemWorkItemStoreSession) Snapshot() (WorkItemRegistry, error) 
 }
 func (session *systemWorkItemStoreSession) Publish(registry WorkItemRegistry) error {
 	return session.store.publish(session.root, registry)
+}
+
+func publishWorkItemRegistryRecover(session WorkItemStoreSession, registry WorkItemRegistry) (WorkItemRegistry, error) {
+	err := session.Publish(registry)
+	if err == nil {
+		return registry, nil
+	}
+	observed, readErr := session.Snapshot()
+	if readErr != nil {
+		return WorkItemRegistry{}, err
+	}
+	want, wantErr := encodeWorkItemRegistry(registry)
+	got, gotErr := encodeWorkItemRegistry(observed)
+	if wantErr == nil && gotErr == nil && bytes.Equal(want, got) {
+		return observed, nil
+	}
+	return WorkItemRegistry{}, err
 }
 
 func (store *systemWorkItemStore) acquire(root string) (*os.File, error) {
@@ -148,6 +196,7 @@ func (store *systemWorkItemStore) read(root string) (WorkItemRegistry, error) {
 	if err != nil {
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("invalid work-item registry %s: %v", path, err), err)
 	}
+	registry.RawSHA256 = digestTaskBytes(contents)
 	return registry, nil
 }
 
@@ -259,7 +308,11 @@ func encodeWorkItemRegistry(registry WorkItemRegistry) ([]byte, error) {
 	if err := encoder.Close(); err != nil {
 		return nil, err
 	}
-	return output.Bytes(), nil
+	contents := output.Bytes()
+	if err := validateWorkItemRegistryYAMLShape(contents, registry.FormatVersion); err != nil {
+		return nil, err
+	}
+	return contents, nil
 }
 
 func decodeWorkItemRegistry(contents []byte) (WorkItemRegistry, error) {
@@ -282,10 +335,120 @@ func decodeWorkItemRegistry(contents []byte) (WorkItemRegistry, error) {
 	if registry.Epics == nil || registry.Tasks == nil || registry.WorktreeOperations == nil {
 		return WorkItemRegistry{}, errors.New("epics, tasks, and worktree_operations must be explicit arrays")
 	}
+	if registry.FormatVersion == 1 {
+		if registry.TaskResults != nil || registry.HumanQARecords != nil || registry.IntegrationAuthorities != nil || registry.IntegrationIntents != nil || registry.IntegrationAttempts != nil || registry.IntegrationResults != nil {
+			return WorkItemRegistry{}, errors.New("format 1 must not contain Task lifecycle collections")
+		}
+	} else if registry.FormatVersion == 2 {
+		if registry.TaskResults == nil || registry.HumanQARecords == nil || registry.IntegrationAuthorities == nil || registry.IntegrationIntents == nil || registry.IntegrationAttempts == nil || registry.IntegrationResults == nil {
+			return WorkItemRegistry{}, errors.New("format 2 Task lifecycle collections must be explicit arrays")
+		}
+	}
+	if err := validateWorkItemRegistryYAMLShape(contents, registry.FormatVersion); err != nil {
+		return WorkItemRegistry{}, err
+	}
 	if err := validateWorkItemRegistry(registry); err != nil {
 		return WorkItemRegistry{}, err
 	}
 	return registry, nil
+}
+
+type yamlShapeField struct {
+	name   string
+	typeOf reflect.Type
+}
+
+func validateWorkItemRegistryYAMLShape(contents []byte, version int) error {
+	var document yaml.Node
+	if err := yaml.Unmarshal(contents, &document); err != nil || len(document.Content) != 1 {
+		if err == nil {
+			err = errors.New("registry must contain one YAML document")
+		}
+		return err
+	}
+	fields := []yamlShapeField{
+		{name: "format_version", typeOf: reflect.TypeOf(int(0))},
+		{name: "epics", typeOf: reflect.TypeOf([]EpicRecord{})},
+		{name: "tasks", typeOf: reflect.TypeOf([]TaskRecord{})},
+		{name: "worktree_operations", typeOf: reflect.TypeOf([]WorktreeOperationRecord{})},
+	}
+	if version == 2 {
+		fields = append(fields,
+			yamlShapeField{name: "task_results", typeOf: reflect.TypeOf([]TaskResultRecord{})},
+			yamlShapeField{name: "human_qa_records", typeOf: reflect.TypeOf([]TaskHumanQARecord{})},
+			yamlShapeField{name: "integration_authorities", typeOf: reflect.TypeOf([]IntegrationAuthority{})},
+			yamlShapeField{name: "integration_intents", typeOf: reflect.TypeOf([]IntegrationIntent{})},
+			yamlShapeField{name: "integration_attempts", typeOf: reflect.TypeOf([]IntegrationAttempt{})},
+			yamlShapeField{name: "integration_results", typeOf: reflect.TypeOf([]IntegrationResult{})},
+		)
+	}
+	return validateYAMLMappingShape(document.Content[0], fields, "work-item registry")
+}
+
+func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context string) error {
+	if expected.Kind() == reflect.Pointer {
+		if node.Tag == "!!null" {
+			if node.Value != "null" {
+				return fmt.Errorf("%s must use explicit null", context)
+			}
+			return nil
+		}
+		return validateYAMLNodeShape(node, expected.Elem(), context)
+	}
+	switch expected.Kind() {
+	case reflect.Struct:
+		return validateYAMLMappingShape(node, yamlStructShapeFields(expected), context)
+	case reflect.Slice, reflect.Array:
+		if node.Kind != yaml.SequenceNode {
+			return fmt.Errorf("%s must be an explicit array", context)
+		}
+		for i, item := range node.Content {
+			if err := validateYAMLNodeShape(item, expected.Elem(), fmt.Sprintf("%s[%d]", context, i)); err != nil {
+				return err
+			}
+		}
+		return nil
+	default:
+		if node.Kind != yaml.ScalarNode || node.Tag == "!!null" {
+			return fmt.Errorf("%s must be a non-null scalar", context)
+		}
+		return nil
+	}
+}
+
+func validateYAMLMappingShape(node *yaml.Node, fields []yamlShapeField, context string) error {
+	if node.Kind != yaml.MappingNode || len(node.Content) != len(fields)*2 {
+		return fmt.Errorf("%s has missing or extra fields", context)
+	}
+	for i, field := range fields {
+		key := node.Content[i*2]
+		if key.Kind != yaml.ScalarNode || key.Value != field.name {
+			return fmt.Errorf("%s field %d must be %s", context, i, field.name)
+		}
+		if err := validateYAMLNodeShape(node.Content[i*2+1], field.typeOf, context+"."+field.name); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func yamlStructShapeFields(value reflect.Type) []yamlShapeField {
+	fields := make([]yamlShapeField, 0, value.NumField())
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Field(i)
+		if field.PkgPath != "" {
+			continue
+		}
+		name := strings.Split(field.Tag.Get("yaml"), ",")[0]
+		if name == "-" {
+			continue
+		}
+		if name == "" {
+			name = strings.ToLower(field.Name)
+		}
+		fields = append(fields, yamlShapeField{name: name, typeOf: field.Type})
+	}
+	return fields
 }
 
 var worktreeIDPattern = regexp.MustCompile(`^wt_[0-9a-f]{32}$`)
@@ -293,7 +456,7 @@ var operationIDPattern = regexp.MustCompile(`^wop_[0-9a-f]{32}$`)
 var digestPattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
 func validateWorkItemRegistry(registry WorkItemRegistry) error {
-	if registry.FormatVersion != FormatVersion {
+	if registry.FormatVersion != 1 && registry.FormatVersion != 2 {
 		return fmt.Errorf("unsupported format_version %d", registry.FormatVersion)
 	}
 	if !sortedUniqueEpics(registry.Epics) || !sortedUniqueTasks(registry.Tasks) || !sortedUniqueOperations(registry.WorktreeOperations) {
@@ -448,7 +611,537 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 			return fmt.Errorf("operation refers to missing Task %s", taskID)
 		}
 	}
+	if registry.FormatVersion == 2 {
+		if err := validateTaskLifecycleRegistry(registry); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
+	if !sortedTaskResults(registry.TaskResults) || !sortedHumanQA(registry.HumanQARecords) || !sortedAuthorities(registry.IntegrationAuthorities) || !sortedIntents(registry.IntegrationIntents) || !sortedAttempts(registry.IntegrationAttempts) || !sortedIntegrationResults(registry.IntegrationResults) {
+		return errors.New("Task lifecycle arrays must be sorted by unique IDs")
+	}
+	tasks := map[TaskID]TaskRecord{}
+	for _, task := range registry.Tasks {
+		tasks[task.ID] = task
+	}
+	results := map[TaskResultID]TaskResultRecord{}
+	publication := map[string]bool{}
+	triples := map[string]bool{}
+	for _, r := range registry.TaskResults {
+		task, ok := tasks[r.TaskID]
+		if !ok || task.Worktree == nil || task.Worktree.ID != r.TaskWorktreeID || task.ProjectID != r.ProjectID || task.RepoID != r.RepoID || task.GitCommonDir != r.GitCommonDir || task.Worktree.Locator != r.SourceLocator || task.Worktree.Ref != r.SourceRef {
+			return fmt.Errorf("Task result %s has invalid Task binding", r.ID)
+		}
+		if !lifecycleIDPatterns["task result"].MatchString(string(r.ID)) || publication[r.PublicationKey] || validateTaskResultRecordShape(r) != nil {
+			return fmt.Errorf("Task result %s has invalid identity or digest", r.ID)
+		}
+		if r.StoreTransition != "none" && r.StoreTransition != "format_1_to_2" {
+			return fmt.Errorf("Task result %s has invalid store transition", r.ID)
+		}
+		if !setString("passed", "good_enough_with_known_debt", "failed", "unknown")[r.TechnicalGate] {
+			return fmt.Errorf("Task result %s has invalid technical gate", r.ID)
+		}
+		key := string(r.TaskID) + "\x00" + r.TerminalResultID + "\x00" + r.ResultOID
+		if triples[key] {
+			return fmt.Errorf("duplicate Task result evidence")
+		}
+		publication[r.PublicationKey] = true
+		triples[key] = true
+		results[r.ID] = r
+	}
+	qaIDs := map[HumanQARecordID]TaskHumanQARecord{}
+	qaPub := map[string]bool{}
+	for _, q := range registry.HumanQARecords {
+		r, ok := results[q.TaskResultID]
+		if !ok || r.TaskID != q.TaskID || r.ResultOID != q.ResultOID || r.ResultTree != q.ResultTree {
+			return fmt.Errorf("human QA %s has invalid Task result binding", q.ID)
+		}
+		if !lifecycleIDPatterns["human QA"].MatchString(string(q.ID)) || qaPub[q.PublicationKey] || validateTaskHumanQARecordShape(q) != nil {
+			return fmt.Errorf("human QA %s has invalid identity", q.ID)
+		}
+		qaPub[q.PublicationKey] = true
+		qaIDs[q.ID] = q
+	}
+	authorities := map[IntegrationAuthorityID]IntegrationAuthority{}
+	planDigests := map[string]bool{}
+	for _, a := range registry.IntegrationAuthorities {
+		if !lifecycleIDPatterns["integration authority"].MatchString(string(a.ID)) || a.Mode != "human_cli_start" || !validTaskUTC(a.CreatedAtUTC) || !digestPattern.MatchString(a.PlanSHA256) || integrationPlanDigest(a.Plan) != a.PlanSHA256 || planDigests[a.PlanSHA256] {
+			return fmt.Errorf("integration authority %s is invalid", a.ID)
+		}
+		r, rok := results[a.TaskResultID]
+		q, qok := qaIDs[a.HumanQARecordID]
+		if !rok || !qok || r.TaskID != a.TaskID || q.TaskResultID != r.ID || q.Outcome != "pass" || !(r.TechnicalGate == "passed" || r.TechnicalGate == "good_enough_with_known_debt") {
+			return fmt.Errorf("integration authority %s has invalid gate binding", a.ID)
+		}
+		if err := validateStoredIntegrationPlan(a.Plan, registry, r, q); err != nil || a.Plan.Task.TaskID != a.TaskID || a.Plan.TaskResult.ID != a.TaskResultID || a.Plan.HumanQA.ID != a.HumanQARecordID || !sameOptionalIntegrationResultID(a.RetryAfterResultID, a.Plan.RetryAfterResultID) || !sameAllowedEffect(a.AllowedEffect, a.Plan.Effect) {
+			return fmt.Errorf("integration authority %s has invalid plan binding", a.ID)
+		}
+		planDigests[a.PlanSHA256] = true
+		authorities[a.ID] = a
+	}
+	intents := map[IntegrationIntentID]IntegrationIntent{}
+	intentByAuthority := map[IntegrationAuthorityID]bool{}
+	for _, i := range registry.IntegrationIntents {
+		a, ok := authorities[i.AuthorityID]
+		if !ok || intentByAuthority[i.AuthorityID] || !lifecycleIDPatterns["integration intent"].MatchString(string(i.ID)) || i.State != "prepared" || i.MaxAttempts != 1 || integrationIntentDigest(i) != i.IntentSHA256 || i.PlanSHA256 != a.PlanSHA256 || !intentMatchesAuthority(i, a) {
+			return fmt.Errorf("integration intent %s is invalid", i.ID)
+		}
+		intentByAuthority[i.AuthorityID] = true
+		intents[i.ID] = i
+	}
+	attemptByAuthority := map[IntegrationAuthorityID]bool{}
+	attempts := map[IntegrationAttemptID]IntegrationAttempt{}
+	for _, a := range registry.IntegrationAttempts {
+		authority, ok := authorities[a.AuthorityID]
+		if !ok || attemptByAuthority[a.AuthorityID] || !lifecycleIDPatterns["integration attempt"].MatchString(string(a.ID)) || a.Ordinal != 1 || (a.State != "prepared" && a.State != "result_recorded") {
+			return fmt.Errorf("integration attempt %s is invalid", a.ID)
+		}
+		intent, ok := intents[a.IntentID]
+		expectedPre := integrationObservation(a.PreparedAtUTC, worktreeFromPlan(authority.Plan.ObservedParent), authority.Plan.ObservedInventory)
+		if !ok || intent.AuthorityID != a.AuthorityID || a.CommandIdentity != "git-merge-ff-only" || a.ReflogAction != "ply-workspace-task-integrate:"+string(a.ID) || !validTaskUTC(a.PreparedAtUTC) || validateIntegrationObservation(a.PreObservation) != nil || !reflect.DeepEqual(a.PreObservation, expectedPre) || (a.State == "prepared") != (a.ResultID == nil) {
+			return fmt.Errorf("integration attempt %s has missing intent", a.ID)
+		}
+		attemptByAuthority[a.AuthorityID] = true
+		attempts[a.ID] = a
+	}
+	resultByAuthority := map[IntegrationAuthorityID]bool{}
+	for _, r := range registry.IntegrationResults {
+		if _, ok := authorities[r.AuthorityID]; !ok || resultByAuthority[r.AuthorityID] || !lifecycleIDPatterns["integration result"].MatchString(string(r.ID)) {
+			return fmt.Errorf("integration result %s is invalid", r.ID)
+		}
+		intent, ok := intents[r.IntentID]
+		authority := authorities[r.AuthorityID]
+		if !ok || intent.AuthorityID != r.AuthorityID || r.RetryAfterResultID == nil != (authority.RetryAfterResultID == nil) || (r.RetryAfterResultID != nil && *r.RetryAfterResultID != *authority.RetryAfterResultID) || validateIntegrationResultShape(r) != nil || validateIntegrationResultOutcomeContract(r, authority) != nil {
+			return fmt.Errorf("integration result %s has missing intent", r.ID)
+		}
+		if r.AttemptID != nil {
+			a, ok := attempts[*r.AttemptID]
+			if !ok || a.ResultID == nil || *a.ResultID != r.ID || a.State != "result_recorded" || !reflect.DeepEqual(r.BeforeObservation, a.PreObservation) {
+				return fmt.Errorf("integration result %s has invalid attempt", r.ID)
+			}
+		}
+		if r.Outcome == "exact_effect" {
+			authority := authorities[r.AuthorityID]
+			expectedParent := worktreeFromPlan(authority.Plan.ObservedParent)
+			expectedParent.OID = authority.Plan.Task.ResultOID
+			expectedParent.Tree = authority.Plan.Task.ResultTree
+			expectedInventory := inventoryAfterFastForward(authority.Plan.ObservedInventory, authority.Plan.Epic.ParentLocator, authority.Plan.Epic.ParentRef, authority.Plan.Task.ResultOID)
+			expectedAfter := integrationObservation(r.RecordedAtUTC, expectedParent, expectedInventory)
+			if r.AttemptID == nil || !reflogProves(r.Reflog, *r.AttemptID, authority.Plan.Epic.ExpectedParentOID, authority.Plan.Task.ResultOID) || !reflect.DeepEqual(r.AfterObservation, expectedAfter) {
+				return fmt.Errorf("integration result %s does not prove its exact effect", r.ID)
+			}
+		}
+		if r.Outcome == "no_effect" {
+			attempt := attempts[*r.AttemptID]
+			if !sameIntegrationObservation(r.BeforeObservation, r.AfterObservation) || reflogMentionsAttempt(r.Reflog, attempt.ID) {
+				return errors.New("no-effect integration result contains effect evidence")
+			}
+		}
+		resultByAuthority[r.AuthorityID] = true
+	}
+	retryUse := map[IntegrationResultID]bool{}
+	for _, authority := range registry.IntegrationAuthorities {
+		if authority.RetryAfterResultID == nil {
+			continue
+		}
+		prior, ok := integrationResultByID(registry.IntegrationResults, *authority.RetryAfterResultID)
+		if !ok || prior.Outcome != "no_effect" || retryUse[*authority.RetryAfterResultID] {
+			return fmt.Errorf("integration authority %s has invalid retry predecessor", authority.ID)
+		}
+		priorAuthority := authorities[prior.AuthorityID]
+		if priorAuthority.TaskID != authority.TaskID || priorAuthority.TaskResultID != authority.TaskResultID || priorAuthority.HumanQARecordID != authority.HumanQARecordID || priorAuthority.Plan.Epic.ParentRef != authority.Plan.Epic.ParentRef {
+			return fmt.Errorf("integration authority %s retry binding differs", authority.ID)
+		}
+		retryUse[*authority.RetryAfterResultID] = true
+	}
+	return nil
+}
+
+func validateTaskResultRecordShape(r TaskResultRecord) error {
+	if validatePublicationKey(r.PublicationKey) != nil || !digestPattern.MatchString(r.DraftSHA256) || !handoffEvidenceIDPatterns["activity"].MatchString(r.ActivityID) || !handoffEvidenceIDPatterns["run"].MatchString(r.RunID) || !handoffEvidenceIDPatterns["handoff"].MatchString(r.HandoffID) || !handoffEvidenceIDPatterns["start"].MatchString(r.StartReceiptID) || !handoffEvidenceIDPatterns["terminal"].MatchString(r.TerminalResultID) {
+		return errors.New("invalid result identity")
+	}
+	if !validAbsoluteCleanPath(r.HandoffLocator) || !validAbsoluteCleanPath(r.StartReceiptLocator) || !validAbsoluteCleanPath(r.TerminalResultLocator) || !digestPattern.MatchString(r.HandoffSHA256) || !digestPattern.MatchString(r.StartReceiptSHA256) || !digestPattern.MatchString(r.TerminalResultSHA256) || !digestPattern.MatchString(r.InspectionSHA256) || !validOIDText(r.ResultOID) || !validOIDText(r.ResultTree) || len(r.ResultOID) != len(r.ResultTree) {
+		return errors.New("invalid result evidence")
+	}
+	if !setString("complete", "blocked", "budget_exhausted", "unknown", "conflict")[r.ReportedOutcome] || !setString("passed", "good_enough_with_known_debt", "failed", "unknown")[r.TechnicalGate] || !validTaskText(r.Recorder.ActorClaim, 1, 256) || !validTaskText(r.Recorder.ControlSurface, 1, 256) || !validTaskUTC(r.Recorder.RecordedAtUTC) {
+		return errors.New("invalid result assessment")
+	}
+	last := ""
+	artifacts := map[string]bool{}
+	var total int64
+	for _, a := range r.Artifacts {
+		total += a.SizeBytes
+		if a.ArtifactID <= last || validatePublicationKey(a.ArtifactID) != nil || !setString("verifier_stdout", "verifier_stderr", "review", "debt_control", "other")[a.Role] || !validAbsoluteCleanPath(a.Locator) || !digestPattern.MatchString(a.SHA256) || a.SizeBytes < 0 || a.SizeBytes > 64<<20 || total > 256<<20 {
+			return errors.New("invalid result artifact")
+		}
+		last, artifacts[a.ArtifactID] = a.ArtifactID, true
+	}
+	last = ""
+	for _, v := range r.VerifierResults {
+		if v.VerifierID <= last || validatePublicationKey(v.VerifierID) != nil || !setString("passed", "failed")[v.Outcome] || len(v.Argv) == 0 || !validAbsoluteCleanPath(v.CWD) || (!validOIDText(v.BoundOIDOrSHA256) && !digestPattern.MatchString(v.BoundOIDOrSHA256)) || (v.StdoutArtifactID != nil && !artifacts[*v.StdoutArtifactID]) || (v.StderrArtifactID != nil && !artifacts[*v.StderrArtifactID]) {
+			return errors.New("invalid verifier result")
+		}
+		for _, arg := range v.Argv {
+			if !validTaskText(arg, 1, 4096) {
+				return errors.New("invalid verifier argv")
+			}
+		}
+		last = v.VerifierID
+	}
+	if err := validateTaskReview(r.Review, artifacts); err != nil {
+		return err
+	}
+	last = ""
+	for _, d := range r.AcceptedDebt {
+		if d.ID <= last || validatePublicationKey(d.ID) != nil || !setString("coverage", "evidence", "journal")[d.RiskClass] || !setString("low", "medium")[d.Severity] || !validTaskText(d.Summary, 1, 600) || !validTaskText(d.Control, 1, 2000) || !sortedNonemptyArtifactIDs(d.EvidenceArtifactIDs, artifacts) {
+			return errors.New("invalid accepted debt")
+		}
+		last = d.ID
+	}
+	return nil
+}
+
+func validateTaskReview(review TaskReviewRecord, artifacts map[string]bool) error {
+	for _, entries := range [][]TaskReviewEntry{review.Findings, review.Fixes, review.OpenActionableFindings} {
+		last := ""
+		for _, entry := range entries {
+			if entry.ID <= last || validatePublicationKey(entry.ID) != nil || !setString("low", "medium", "high", "critical")[entry.Severity] || !validTaskText(entry.Summary, 1, 600) || !sortedArtifactIDs(entry.EvidenceArtifactIDs, artifacts) {
+				return errors.New("invalid review entry")
+			}
+			last = entry.ID
+		}
+	}
+	return nil
+}
+
+func sortedArtifactIDs(ids []string, known map[string]bool) bool {
+	for i, id := range ids {
+		if validatePublicationKey(id) != nil || !known[id] || (i > 0 && ids[i-1] >= id) {
+			return false
+		}
+	}
+	return ids != nil
+}
+func sortedNonemptyArtifactIDs(ids []string, known map[string]bool) bool {
+	return len(ids) > 0 && sortedArtifactIDs(ids, known)
+}
+
+func validateTaskHumanQARecordShape(q TaskHumanQARecord) error {
+	if validatePublicationKey(q.PublicationKey) != nil || !digestPattern.MatchString(q.DraftSHA256) || !validOIDText(q.ResultOID) || !validOIDText(q.ResultTree) || len(q.ResultOID) != len(q.ResultTree) || !setString("pass", "fail", "blocked")[q.Outcome] || !validTaskText(q.Observation, 1, 2000) {
+		return errors.New("invalid QA record")
+	}
+	started, se := time.Parse(time.RFC3339Nano, q.Actor.StartedAtUTC)
+	completed, ce := time.Parse(time.RFC3339Nano, q.Actor.CompletedAtUTC)
+	if !validTaskText(q.Actor.ActorClaim, 1, 256) || !validTaskText(q.Actor.StartSurface, 1, 256) || se != nil || ce != nil || !strings.HasSuffix(q.Actor.StartedAtUTC, "Z") || !strings.HasSuffix(q.Actor.CompletedAtUTC, "Z") || completed.Before(started) {
+		return errors.New("invalid QA actor")
+	}
+	if len(q.Evidence) == 0 {
+		return errors.New("QA evidence is empty")
+	}
+	last := ""
+	var total int64
+	report := false
+	for _, e := range q.Evidence {
+		total += e.SizeBytes
+		if e.ID <= last || validatePublicationKey(e.ID) != nil || !setString("script", "report", "screenshot", "log", "other")[e.Role] || !validAbsoluteCleanPath(e.Locator) || !digestPattern.MatchString(e.SHA256) || e.SizeBytes < 0 || e.SizeBytes > 64<<20 || total > 256<<20 {
+			return errors.New("invalid QA evidence")
+		}
+		last = e.ID
+		report = report || e.Role == "report"
+	}
+	if q.Outcome == "pass" && !report {
+		return errors.New("QA pass has no report")
+	}
+	last = ""
+	for _, risk := range q.AcceptedResidualRisks {
+		if risk.ID <= last || validatePublicationKey(risk.ID) != nil || !setString("low", "medium")[risk.Severity] || !validTaskText(risk.Summary, 1, 600) {
+			return errors.New("invalid QA residual risk")
+		}
+		last = risk.ID
+	}
+	return nil
+}
+
+func validateStoredIntegrationPlan(p WorkspaceTaskIntegrationPlan, registry WorkItemRegistry, result TaskResultRecord, qa TaskHumanQARecord) error {
+	if p.Kind != "WorkspaceTaskIntegrationPlan@1" || p.SchemaVersion != 1 || p.Format != "json" || p.FormatVersion != 1 || p.Canonicalization != "RFC8785" || !validAbsoluteCleanPath(p.Workspace.Root) || !digestPattern.MatchString(p.Workspace.MarkerSHA256) || p.Project.ProjectID != result.ProjectID || p.Repository.RepoID != result.RepoID || !validAbsoluteCleanPath(p.Repository.RegisteredLocator) || p.Repository.GitCommonDir != result.GitCommonDir || !validAbsoluteCleanPath(p.Repository.GitCommonDir) || !setString("sha1", "sha256")[p.Repository.ObjectFormat] || p.Repository.RefFormat != "files" {
+		return errors.New("invalid integration plan envelope")
+	}
+	task, _ := findTask(registry, result.TaskID)
+	if task == nil || task.Worktree == nil {
+		return errors.New("integration plan Task binding is missing")
+	}
+	epic, _ := findEpic(registry, task.ParentEpicID)
+	if epic == nil {
+		return errors.New("integration plan Epic binding is missing")
+	}
+	parent, _ := findEpicRepo(*epic, result.RepoID)
+	if parent == nil || p.Task.TaskID != task.ID || p.Task.TaskWorktreeID != task.Worktree.ID || p.Task.SourceLocator != result.SourceLocator || p.Task.SourceRef != result.SourceRef || p.Task.ResultOID != result.ResultOID || p.Task.ResultTree != result.ResultTree || p.Epic.EpicID != epic.ID || p.Epic.ParentWorktreeID != parent.Worktree.ID || p.Epic.ParentLocator != parent.Worktree.Locator || p.Epic.ParentRef != parent.Worktree.Ref || p.Epic.ExpectedParentOID != task.Worktree.ParentOID || p.Epic.ExpectedParentTree != task.Worktree.ParentTree || p.TaskResult.ID != result.ID || p.TaskResult.DraftSHA256 != result.DraftSHA256 || p.TaskResult.TechnicalGate != result.TechnicalGate || p.HumanQA.ID != qa.ID || p.HumanQA.DraftSHA256 != qa.DraftSHA256 || p.HumanQA.Outcome != qa.Outcome || p.StoreTransition != result.StoreTransition || !digestPattern.MatchString(p.WorkItemsSHA256) {
+		return errors.New("integration plan binding differs")
+	}
+	if validatePlanObservation(p.ObservedSource) != nil || validatePlanObservation(p.ObservedParent) != nil || validateInventory(p.ObservedInventory) != nil || validateReflog(p.ObservedReflog) != nil || !setString("ready", "already_integrated", "blocked", "conflict", "unknown")[p.Readiness] || !sortedReasonTokens(p.Reasons) {
+		return errors.New("invalid integration plan observation")
+	}
+	source := worktreeFromPlan(p.ObservedSource)
+	parentObservation := worktreeFromPlan(p.ObservedParent)
+	if !setString("ready", "already_integrated")[p.Readiness] || len(p.Reasons) != 0 || !p.TechnicalGateReady || !p.HumanQAReady || !p.AncestryReady || p.Repository.Shallow || p.Repository.PartialClone || p.Repository.SparseCheckout || p.Epic.ParentRef == "refs/heads/main" || p.Epic.ParentRef == "refs/heads/master" || p.ObservedSource.OID != p.Task.ResultOID || p.ObservedSource.Tree != p.Task.ResultTree || !p.ObservedSource.Clean || len(p.ObservedSource.StatusEntries) != 0 || len(p.ObservedSource.InProgress) != 0 || !p.ObservedParent.Clean || len(p.ObservedParent.StatusEntries) != 0 || len(p.ObservedParent.InProgress) != 0 || (p.Readiness == "ready" && (p.ObservedParent.OID != p.Epic.ExpectedParentOID || p.ObservedParent.Tree != p.Epic.ExpectedParentTree)) || (p.Readiness == "already_integrated" && (p.ObservedParent.OID != p.Task.ResultOID || p.ObservedParent.Tree != p.Task.ResultTree)) || p.ObservedSource.GitCommonDir != p.Repository.GitCommonDir || p.ObservedParent.GitCommonDir != p.Repository.GitCommonDir || p.ObservedSource.ObjectFormat != p.Repository.ObjectFormat || p.ObservedParent.ObjectFormat != p.Repository.ObjectFormat || p.ObservedSource.RefFormat != p.Repository.RefFormat || p.ObservedParent.RefFormat != p.Repository.RefFormat || !integrationInventoryContains(p.ObservedInventory, source) || !integrationInventoryContains(p.ObservedInventory, parentObservation) || !objectIDsMatchFormat(p.Repository.ObjectFormat, p.Epic.ExpectedParentOID, p.Epic.ExpectedParentTree, p.Task.ResultOID, p.Task.ResultTree, p.ObservedSource.OID, p.ObservedSource.Tree, p.ObservedParent.OID, p.ObservedParent.Tree) {
+		return errors.New("integration authority plan is not a ready exact plan")
+	}
+	wantArgv := []string{"git", "-c", "core.hooksPath=" + os.DevNull, "-c", "merge.autoStash=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-c", "submodule.recurse=false", "-C", p.Epic.ParentLocator, "merge", "--ff-only", "--no-stat", "--no-autostash", p.Task.ResultOID}
+	if p.TechnicalGateReady != (result.TechnicalGate == "passed" || result.TechnicalGate == "good_enough_with_known_debt") || p.HumanQAReady != (qa.Outcome == "pass") || p.Effect.Kind != "local_ff_only" || p.Effect.ParentRef != p.Epic.ParentRef || p.Effect.ExpectedParentOID != p.Epic.ExpectedParentOID || p.Effect.ResultOID != p.Task.ResultOID || p.Effect.MaxOccurrences != 1 || !slices.Equal(p.Effect.Argv, wantArgv) {
+		return errors.New("invalid integration plan effect")
+	}
+	return nil
+}
+
+func validatePlanObservation(o PlanWorktreeObservation) error {
+	if !validAbsoluteCleanPath(o.WorktreeLocator) || !validFullBranchRef(o.Ref) || !validOIDText(o.OID) || !validOIDText(o.Tree) || len(o.OID) != len(o.Tree) || !validAbsoluteCleanPath(o.GitCommonDir) || !setString("sha1", "sha256")[o.ObjectFormat] || o.RefFormat != "files" || !o.Symbolic || validateStatusEntries(o.StatusEntries) != nil || o.InProgress == nil || !sort.StringsAreSorted(o.InProgress) {
+		return errors.New("invalid worktree observation")
+	}
+	return nil
+}
+func validateIntegrationObservation(o IntegrationObservation) error {
+	if !validTaskUTC(o.ObservedAtUTC) || validateInventory(o.InventoryEntries) != nil {
+		return errors.New("invalid integration observation")
+	}
+	if o.WorktreeLocator == "" {
+		if o.Ref != "" || o.OID != "" || o.Tree != "" || o.GitCommonDir != "" || o.ObjectFormat != "" || o.RefFormat != "" || o.Symbolic || o.Clean || o.StatusEntries == nil || o.InProgress == nil {
+			return errors.New("invalid unknown integration observation")
+		}
+		return nil
+	}
+	if validatePlanObservation(PlanWorktreeObservation{WorktreeLocator: o.WorktreeLocator, Ref: o.Ref, OID: o.OID, Tree: o.Tree, GitCommonDir: o.GitCommonDir, ObjectFormat: o.ObjectFormat, RefFormat: o.RefFormat, Symbolic: o.Symbolic, Clean: o.Clean, StatusEntries: o.StatusEntries, InProgress: o.InProgress}) != nil {
+		return errors.New("invalid integration observation")
+	}
+	return nil
+}
+func sameIntegrationObservation(a, b IntegrationObservation) bool {
+	a.ObservedAtUTC, b.ObservedAtUTC = "", ""
+	return reflect.DeepEqual(a, b)
+}
+func validateStatusEntries(entries []IntegrationStatusEntry) error {
+	if entries == nil {
+		return errors.New("status entries must be explicit")
+	}
+	var previous []byte
+	for i, e := range entries {
+		path, err := base64.StdEncoding.DecodeString(e.PathBase64)
+		if err != nil || len(path) == 0 || (i > 0 && bytes.Compare(previous, path) >= 0) || !setString("ordinary", "renamed", "copied", "unmerged", "untracked")[e.RecordKind] {
+			return errors.New("invalid status entry")
+		}
+		rename := e.RecordKind == "renamed" || e.RecordKind == "copied"
+		if rename != (e.OriginalPathBase64 != nil) || (rename && func() bool { _, err := base64.StdEncoding.DecodeString(*e.OriginalPathBase64); return err != nil }()) {
+			return errors.New("invalid status original path")
+		}
+		untracked := e.RecordKind == "untracked"
+		if untracked != (e.IndexState == nil && e.WorktreeState == nil && e.SubmoduleState == nil) {
+			return errors.New("invalid status state")
+		}
+		if !untracked && (e.IndexState == nil || e.WorktreeState == nil || e.SubmoduleState == nil || len(*e.IndexState) != 1 || len(*e.WorktreeState) != 1 || len(*e.SubmoduleState) != 4) {
+			return errors.New("invalid status state")
+		}
+		previous = path
+	}
+	return nil
+}
+func validateInventory(entries []IntegrationInventoryEntry) error {
+	if entries == nil {
+		return errors.New("inventory must be explicit")
+	}
+	for i, e := range entries {
+		if !validAbsoluteCleanPath(e.Locator) || !validOIDText(e.OID) || (!e.Bare && !e.Detached && !validFullBranchRef(e.Ref)) || (i > 0 && !inventoryLess(entries[i-1], e)) {
+			return errors.New("invalid inventory")
+		}
+	}
+	return nil
+}
+func inventoryLess(a, b IntegrationInventoryEntry) bool {
+	if a.Locator != b.Locator {
+		return a.Locator < b.Locator
+	}
+	if a.Ref != b.Ref {
+		return a.Ref < b.Ref
+	}
+	return a.OID < b.OID
+}
+func validateReflog(entries []IntegrationReflogEntry) error {
+	if entries == nil || len(entries) < 2 {
+		return errors.New("reflog must contain two entries")
+	}
+	for i, e := range entries {
+		if e.Ordinal != i || !validOIDText(e.OID) || !validTaskText(e.Selector, 1, 512) || !validTaskText(e.Action, 1, 2000) {
+			return errors.New("invalid reflog")
+		}
+	}
+	return nil
+}
+func sortedReasonTokens(reasons []string) bool {
+	if reasons == nil {
+		return false
+	}
+	for i, reason := range reasons {
+		if !regexp.MustCompile(`^[a-z0-9_]+$`).MatchString(reason) || (i > 0 && reasons[i-1] >= reason) {
+			return false
+		}
+	}
+	return true
+}
+func sameAllowedEffect(a IntegrationAllowedEffect, e IntegrationPlanEffect) bool {
+	return a.Kind == e.Kind && a.ParentRef == e.ParentRef && a.ExpectedParentOID == e.ExpectedParentOID && a.ResultOID == e.ResultOID && a.MaxOccurrences == e.MaxOccurrences
+}
+func sameOptionalIntegrationResultID(a, b *IntegrationResultID) bool {
+	return (a == nil && b == nil) || (a != nil && b != nil && *a == *b)
+}
+func intentMatchesAuthority(i IntegrationIntent, a IntegrationAuthority) bool {
+	p := a.Plan
+	return i.WorkspaceRoot == p.Workspace.Root && i.WorkspaceMarkerSHA256 == p.Workspace.MarkerSHA256 && i.ProjectID == p.Project.ProjectID && i.RepoID == p.Repository.RepoID && i.RegisteredRepoLocator == p.Repository.RegisteredLocator && i.GitCommonDir == p.Repository.GitCommonDir && i.ObjectFormat == p.Repository.ObjectFormat && i.RefFormat == p.Repository.RefFormat && i.EpicID == p.Epic.EpicID && i.ParentWorktreeID == p.Epic.ParentWorktreeID && i.ParentLocator == p.Epic.ParentLocator && i.ParentRef == p.Epic.ParentRef && i.ExpectedParentOID == p.Epic.ExpectedParentOID && i.ExpectedParentTree == p.Epic.ExpectedParentTree && i.TaskID == p.Task.TaskID && i.TaskWorktreeID == p.Task.TaskWorktreeID && i.SourceLocator == p.Task.SourceLocator && i.SourceRef == p.Task.SourceRef && i.ResultOID == p.Task.ResultOID && i.ResultTree == p.Task.ResultTree && i.TaskResultID == p.TaskResult.ID && i.HumanQARecordID == p.HumanQA.ID && sameAllowedEffect(i.Effect, p.Effect)
+}
+func validateIntegrationResultShape(r IntegrationResult) error {
+	if !setString("no_effect", "exact_effect", "already_integrated", "blocked", "conflict", "partial", "unknown")[r.Outcome] || !validTaskUTC(r.RecordedAtUTC) || validateIntegrationObservation(r.BeforeObservation) != nil || validateIntegrationObservation(r.AfterObservation) != nil || validateResultReflog(r.Reflog) != nil || !setString("complete", "safe-no-effect", "blocked", "conflict", "reconciliation-required", "unknown")[r.RecoveryStatus] || !validNextAction(r.NextAction) {
+		return errors.New("invalid integration result")
+	}
+	requiresAttempt := setString("no_effect", "exact_effect", "partial", "unknown")[r.Outcome]
+	if requiresAttempt != (r.AttemptID != nil) {
+		return errors.New("invalid result attempt nullform")
+	}
+	if (r.Outcome == "exact_effect" && (r.GitChanged == nil || !*r.GitChanged)) || (setString("no_effect", "already_integrated", "blocked", "conflict")[r.Outcome] && (r.GitChanged == nil || *r.GitChanged)) || (setString("partial", "unknown")[r.Outcome] && r.GitChanged != nil) {
+		return errors.New("invalid git_changed")
+	}
+	if (r.Command.Launched && (r.Command.ExitCode == nil || r.Command.LaunchError != nil || *r.Command.ExitCode < 0)) || (!r.Command.Launched && r.Command.ExitCode != nil) || (r.Command.LaunchError != nil && *r.Command.LaunchError != "launch_failed") || validateCommandStream(r.Command.Stdout) != nil || validateCommandStream(r.Command.Stderr) != nil {
+		return errors.New("invalid command evidence")
+	}
+	return nil
+}
+
+func validateIntegrationResultOutcomeContract(result IntegrationResult, authority IntegrationAuthority) error {
+	emptyArgv := len(result.NextAction.Argv) == 0
+	switch result.Outcome {
+	case "exact_effect", "already_integrated":
+		if result.RecoveryStatus != "complete" || result.NextAction.Kind != "none" || !emptyArgv {
+			return errors.New("successful integration result has contradictory recovery guidance")
+		}
+	case "no_effect":
+		want := []string{"ply", "workspace", "task", "integrate", string(authority.TaskID), "--result", string(authority.TaskResultID), "--qa", string(authority.HumanQARecordID), "--expected-result-oid", authority.Plan.Task.ResultOID, "--expected-parent-oid", authority.Plan.Epic.ExpectedParentOID, "--retry-after", string(result.ID), "--check"}
+		if result.RecoveryStatus != "safe-no-effect" || result.NextAction.Kind != "retry_after_no_effect" || !slices.Equal(result.NextAction.Argv, want) {
+			return errors.New("no-effect integration result has contradictory recovery guidance")
+		}
+	case "blocked":
+		if result.RecoveryStatus != "blocked" || result.NextAction.Kind != "resolve_blocker" || !emptyArgv {
+			return errors.New("blocked integration result has contradictory recovery guidance")
+		}
+	case "conflict":
+		if result.RecoveryStatus != "conflict" || result.NextAction.Kind != "refresh_or_reverify_parent" || !emptyArgv {
+			return errors.New("conflicting integration result has contradictory recovery guidance")
+		}
+	case "partial", "unknown":
+		wantRecovery := "reconciliation-required"
+		if result.Outcome == "unknown" {
+			wantRecovery = "unknown"
+		}
+		want := []string{"ply", "workspace", "task", "show", string(authority.TaskID), "--format", "json"}
+		if result.RecoveryStatus != wantRecovery || result.NextAction.Kind != "read_only_recovery_control" || !slices.Equal(result.NextAction.Argv, want) {
+			return errors.New("unresolved integration result has contradictory recovery guidance")
+		}
+	}
+	if result.AttemptID == nil && !reflect.DeepEqual(result.Command, emptyCommandEvidence()) {
+		return errors.New("integration result without an Attempt has command evidence")
+	}
+	return nil
+}
+
+func validateCommandStream(stream IntegrationCommandStream) error {
+	if stream.SizeBytes < 0 || stream.CapturedBytes < 0 || stream.CapturedBytes > 64<<10 || stream.CapturedBytes > stream.SizeBytes || !digestPattern.MatchString(stream.SHA256) {
+		return errors.New("invalid command stream sizes or digest")
+	}
+	decoded, err := base64.StdEncoding.DecodeString(stream.Base64)
+	if err != nil || int64(len(decoded)) != stream.CapturedBytes {
+		return errors.New("invalid command stream base64")
+	}
+	wantCaptured := stream.SizeBytes
+	if wantCaptured > 64<<10 {
+		wantCaptured = 64 << 10
+	}
+	if stream.CapturedBytes != wantCaptured || stream.Truncated != (stream.SizeBytes > stream.CapturedBytes) {
+		return errors.New("invalid command stream truncation")
+	}
+	if !stream.Truncated && digestTaskBytes(decoded) != stream.SHA256 {
+		return errors.New("invalid command stream digest")
+	}
+	return nil
+}
+func validateResultReflog(entries []IntegrationReflogEntry) error {
+	if entries == nil {
+		return errors.New("result reflog must be explicit")
+	}
+	for i, e := range entries {
+		if e.Ordinal != i || !validOIDText(e.OID) || !validTaskText(e.Selector, 1, 512) || !validTaskText(e.Action, 1, 2000) {
+			return errors.New("invalid result reflog")
+		}
+	}
+	return nil
+}
+func validNextAction(a IntegrationNextAction) bool {
+	return setString("record_task_result", "record_human_qa", "apply_confirmed_plan", "new_check", "retry_after_no_effect", "refresh_or_reverify_parent", "resolve_blocker", "read_only_recovery_control", "none")[a.Kind] && validTaskText(a.Reason, 1, 2000) && a.Argv != nil
+}
+func integrationResultByID(results []IntegrationResult, id IntegrationResultID) (IntegrationResult, bool) {
+	for _, result := range results {
+		if result.ID == id {
+			return result, true
+		}
+	}
+	return IntegrationResult{}, false
+}
+
+func sortedTaskResults(v []TaskResultRecord) bool {
+	for i := 1; i < len(v); i++ {
+		if v[i-1].ID >= v[i].ID {
+			return false
+		}
+	}
+	return true
+}
+func sortedHumanQA(v []TaskHumanQARecord) bool {
+	for i := 1; i < len(v); i++ {
+		if v[i-1].ID >= v[i].ID {
+			return false
+		}
+	}
+	return true
+}
+func sortedAuthorities(v []IntegrationAuthority) bool {
+	for i := 1; i < len(v); i++ {
+		if v[i-1].ID >= v[i].ID {
+			return false
+		}
+	}
+	return true
+}
+func sortedIntents(v []IntegrationIntent) bool {
+	for i := 1; i < len(v); i++ {
+		if v[i-1].ID >= v[i].ID {
+			return false
+		}
+	}
+	return true
+}
+func sortedAttempts(v []IntegrationAttempt) bool {
+	for i := 1; i < len(v); i++ {
+		if v[i-1].ID >= v[i].ID {
+			return false
+		}
+	}
+	return true
+}
+func sortedIntegrationResults(v []IntegrationResult) bool {
+	for i := 1; i < len(v); i++ {
+		if v[i-1].ID >= v[i].ID {
+			return false
+		}
+	}
+	return true
 }
 
 func validateObservation(observation WorktreeObservationRecord, state string) error {

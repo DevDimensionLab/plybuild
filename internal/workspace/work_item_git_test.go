@@ -173,6 +173,112 @@ func TestSystemWorkItemGitWriteArgvDisablesHooksAndNeverForces(t *testing.T) {
 	}
 }
 
+func TestSystemTaskIntegrationGitUsesTheOnlyAllowedWriteArgvAndSafeEnvironment(t *testing.T) {
+	var gotArgv, gotExtra []string
+	git := &systemTaskIntegrationGit{files: systemFileSystem{}, run: func(arguments []string, environment []string) GitCommandOutcome {
+		gotArgv = append([]string(nil), arguments...)
+		gotExtra = append([]string(nil), environment...)
+		return GitCommandOutcome{}
+	}}
+	input := IntegrationMergeInput{Repository: RepoRecord{Locator: "/repo"}, ParentWorktree: "/repo/epic", ResultOID: strings.Repeat("a", 40), AttemptID: "iat_11111111111111111111111111111111"}
+	git.MergeFastForward(input)
+	want := []string{"-c", "core.hooksPath=" + os.DevNull, "-c", "merge.autoStash=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-c", "submodule.recurse=false", "-C", input.ParentWorktree, "merge", "--ff-only", "--no-stat", "--no-autostash", input.ResultOID}
+	if strings.Join(gotArgv, "\x00") != strings.Join(want, "\x00") {
+		t.Fatalf("write argv = %#v, want %#v", gotArgv, want)
+	}
+	wantAction := "GIT_REFLOG_ACTION=ply-workspace-task-integrate:" + string(input.AttemptID)
+	if len(gotExtra) != 1 || gotExtra[0] != wantAction {
+		t.Fatalf("write extra environment = %#v", gotExtra)
+	}
+
+	t.Setenv("HOME", "/secret-home")
+	t.Setenv("GIT_SSH_COMMAND", "exfiltrate")
+	t.Setenv("GIT_CONFIG_GLOBAL", "/unsafe")
+	environment := safeIntegrationEnvironment(gotExtra)
+	joined := strings.Join(environment, "\n")
+	for _, forbidden := range []string{"HOME=/secret-home", "GIT_SSH_COMMAND=", "GIT_CONFIG_GLOBAL=/unsafe"} {
+		if strings.Contains(joined, forbidden) {
+			t.Fatalf("unsafe environment leaked %q in %#v", forbidden, environment)
+		}
+	}
+	for _, required := range []string{"GIT_NO_LAZY_FETCH=1", "GIT_NO_REPLACE_OBJECTS=1", "GIT_ALLOW_PROTOCOL=file", "GIT_TERMINAL_PROMPT=0", "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL=" + os.DevNull, wantAction} {
+		if !containsExact(environment, required) {
+			t.Fatalf("safe environment missing %q: %#v", required, environment)
+		}
+	}
+}
+
+func TestTaskIntegrationGitParsersFailClosedAndBoundStreams(t *testing.T) {
+	for version, want := range map[string]bool{"git version 2.44.9": false, "git version 2.45.0": true, "git version 3.0.0": true, "localized": false} {
+		if got := supportedGitVersion(version); got != want {
+			t.Fatalf("supportedGitVersion(%q)=%t, want %t", version, got, want)
+		}
+	}
+	status, err := parseIntegrationStatus([]byte("? untracked file\x001 M. N... 100644 100644 100644 a b tracked\x00"))
+	if err != nil || len(status) != 2 || status[0].RecordKind != "ordinary" || status[1].RecordKind != "untracked" {
+		t.Fatalf("status=%#v error=%v", status, err)
+	}
+	for _, malformed := range [][]byte{[]byte("x unknown\x00"), []byte("1 malformed\x00"), []byte("2 R. N... 100644 100644 100644 a b R100 new\x00")} {
+		if _, err := parseIntegrationStatus(malformed); err == nil {
+			t.Fatalf("malformed status accepted: %q", malformed)
+		}
+	}
+	stream := commandStream([]byte(strings.Repeat("x", (64<<10)+17)))
+	if !stream.Truncated || stream.SizeBytes != (64<<10)+17 || stream.CapturedBytes != 64<<10 || len(stream.Base64) == 0 || !digestPattern.MatchString(stream.SHA256) {
+		t.Fatalf("bounded stream = %#v", stream)
+	}
+}
+
+func TestTaskIntegrationChangedPathsUseNULTerminatedCheckAttrStdin(t *testing.T) {
+	var calls [][]string
+	var inputs [][]byte
+	respond := func(arguments []string) GitCommandOutcome {
+		calls = append(calls, append([]string(nil), arguments...))
+		joined := strings.Join(arguments, " ")
+		switch {
+		case strings.Contains(joined, "merge-base --is-ancestor"):
+			return GitCommandOutcome{Exit: 0}
+		case strings.Contains(joined, "diff-tree"):
+			return GitCommandOutcome{Exit: 0, Stdout: []byte("path with spaces\x00")}
+		case strings.Contains(joined, "check-attr"):
+			return GitCommandOutcome{Exit: 0, Stdout: []byte("path with spaces\x00filter\x00unspecified\x00")}
+		default:
+			return GitCommandOutcome{Exit: 1, Err: errors.New("unexpected call")}
+		}
+	}
+	git := &systemTaskIntegrationGit{files: systemFileSystem{}, run: func(arguments []string, environment []string) GitCommandOutcome {
+		return respond(arguments)
+	}, runInput: func(arguments []string, environment []string, stdin []byte) GitCommandOutcome {
+		inputs = append(inputs, append([]byte(nil), stdin...))
+		return respond(arguments)
+	}}
+	repo := RepoRecord{Locator: "/repo"}
+	if ok, err := git.CheckAncestor(repo, strings.Repeat("a", 40), strings.Repeat("b", 40)); err != nil || !ok {
+		t.Fatalf("ancestor=%t error=%v calls=%#v", ok, err, calls)
+	}
+	if len(calls) != 4 {
+		t.Fatalf("calls=%#v", calls)
+	}
+	for _, call := range calls[2:] {
+		joined := strings.Join(call, "\x00")
+		if !strings.Contains(joined, "\x00-z\x00--stdin\x00filter") || strings.Contains(joined, "path with spaces") {
+			t.Fatalf("check-attr did not use exact --stdin argv: %#v", call)
+		}
+	}
+	if len(inputs) != 2 || string(inputs[0]) != "path with spaces\x00" || string(inputs[1]) != "path with spaces\x00" {
+		t.Fatalf("check-attr stdin = %#v", inputs)
+	}
+}
+
+func containsExact(values []string, want string) bool {
+	for _, value := range values {
+		if value == want {
+			return true
+		}
+	}
+	return false
+}
+
 func TestSystemWorkItemGitInventoryToleratesUnrelatedDetachedWorktree(t *testing.T) {
 	repository := initWorkItemGitRepository(t)
 	detached := filepath.Join(t.TempDir(), "detached")

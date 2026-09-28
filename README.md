@@ -152,6 +152,32 @@ Use `ply workspace epic list`, `ply workspace epic show <id>`, `ply workspace ta
 versioned deterministic machine readback. `worktree_ready` only records a clean local bootstrap
 binding: it does not start an agent, select a workflow, or grant execution authority.
 
+After a workflow handoff has an immutable terminal result, record its exact technical evidence
+without creating a new Activity or Run identity:
+
+```shell script
+ply workspace task result record workspace-work-item-bootstrap \
+  --file /absolute/task-result.json
+ply workspace task qa record workspace-work-item-bootstrap \
+  --file /absolute/human-qa.json
+```
+
+Human QA is a separate, locally claimed product judgment. Recording `pass` does not start
+integration. First run a read-only check with the selected TaskResult, QA record, result commit,
+and current Epic-parent commit. The check returns a canonical confirmation digest; a human starts
+a separate `--apply --confirm <digest>` invocation. Apply permits exactly one local `ff-only`
+move of the registered Epic parent. It never fetches, pushes, targets `main` or `master`, or cleans
+worktrees.
+
+The first accepted TaskResult upgrades a legacy format-1 work-item store atomically to format 2;
+all existing facts remain immutable. A no-effect attempt can only be retried through a new check
+that names `--retry-after`. Lost responses are reconciled from the durable authority, attempt,
+Git state, and reflog; partial or unknown effects stop for read-only recovery control.
+
+Format-2 `task show` presents the same integration state as check/apply in text or canonical JSON.
+Treat `git_changed` and the single `next_action` as the authoritative outcome. Integration v1
+requires Git 2.45.0 or newer, a `sha1` or `sha256` object format, and the `files` ref backend.
+
 Sub-tasks, additional repository anchors on an Epic, editing, rebinding, refreshing, cleanup, and
 WorkflowRun creation are outside this first workspace work-item version.
 

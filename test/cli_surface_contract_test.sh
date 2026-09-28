@@ -72,6 +72,11 @@ run_help_surface workspace-task-show-help workspace task show --help
 run_help_surface workspace-task-list-help workspace task list --help
 run_help_surface workspace-task-worktree-help workspace task worktree --help
 run_help_surface workspace-task-worktree-create-help workspace task worktree create --help
+run_help_surface workspace-task-result-help workspace task result --help
+run_help_surface workspace-task-result-record-help workspace task result record --help
+run_help_surface workspace-task-qa-help workspace task qa --help
+run_help_surface workspace-task-qa-record-help workspace task qa record --help
+run_help_surface workspace-task-integrate-help workspace task integrate --help
 run_help_surface workflow-help workflow --help
 run_help_surface workflow-handoff-help workflow handoff --help
 run_help_surface workflow-handoff-create-help workflow handoff create --help
@@ -147,6 +152,9 @@ grep -F 'ply workspace epic show <epic-id> [flags]' "$temp_root/workspace-epic-s
 grep -F -- '--format string' "$temp_root/workspace-epic-show-help.stdout" >/dev/null || fail 'Epic show format is unavailable'
 grep -F 'ply workspace epic list [flags]' "$temp_root/workspace-epic-list-help.stdout" >/dev/null || fail 'Epic list usage changed'
 grep -F 'ply workspace task [command]' "$temp_root/workspace-task-help.stdout" >/dev/null || fail 'Task usage changed'
+for leaf in create integrate list qa result show worktree; do
+	grep -F "  $leaf" "$temp_root/workspace-task-help.stdout" >/dev/null || fail "Task help does not expose $leaf"
+done
 grep -F 'ply workspace task create <task-id> [flags]' "$temp_root/workspace-task-create-help.stdout" >/dev/null || fail 'Task create usage changed'
 for flag in '--title string' '--description string' '--epic string' '--project string' '--repo string'; do
 	grep -F -- "$flag" "$temp_root/workspace-task-create-help.stdout" >/dev/null || fail "Task create $flag is unavailable"
@@ -157,6 +165,20 @@ grep -F 'ply workspace task worktree [command]' "$temp_root/workspace-task-workt
 grep -F 'ply workspace task worktree create <task-id> [flags]' "$temp_root/workspace-task-worktree-create-help.stdout" >/dev/null || fail 'Task worktree create usage changed'
 for flag in '--branch string' '--path string' '--expected-parent-oid string'; do
 	grep -F -- "$flag" "$temp_root/workspace-task-worktree-create-help.stdout" >/dev/null || fail "Task worktree create $flag is unavailable"
+done
+grep -F 'ply workspace task result [command]' "$temp_root/workspace-task-result-help.stdout" >/dev/null || fail 'Task result usage changed'
+grep -F 'ply workspace task result record <task-id> [flags]' "$temp_root/workspace-task-result-record-help.stdout" >/dev/null || fail 'Task result record usage changed'
+for flag in '--file string' '--format string'; do
+	grep -F -- "$flag" "$temp_root/workspace-task-result-record-help.stdout" >/dev/null || fail "Task result record $flag is unavailable"
+done
+grep -F 'ply workspace task qa [command]' "$temp_root/workspace-task-qa-help.stdout" >/dev/null || fail 'Task QA usage changed'
+grep -F 'ply workspace task qa record <task-id> [flags]' "$temp_root/workspace-task-qa-record-help.stdout" >/dev/null || fail 'Task QA record usage changed'
+for flag in '--file string' '--format string'; do
+	grep -F -- "$flag" "$temp_root/workspace-task-qa-record-help.stdout" >/dev/null || fail "Task QA record $flag is unavailable"
+done
+grep -F 'ply workspace task integrate <task-id> [flags]' "$temp_root/workspace-task-integrate-help.stdout" >/dev/null || fail 'Task integrate usage changed'
+for flag in '--result string' '--qa string' '--expected-result-oid string' '--expected-parent-oid string' '--check' '--apply' '--confirm string' '--retry-after string' '--format string'; do
+	grep -F -- "$flag" "$temp_root/workspace-task-integrate-help.stdout" >/dev/null || fail "Task integrate $flag is unavailable"
 done
 
 grep -F 'Manage explicit local agent workflow transitions.' "$temp_root/workflow-help.stdout" >/dev/null ||
@@ -258,6 +280,11 @@ for text in \
 	'Ply persists a durable create intent before the additive branch/worktree operation.' \
 	'are never reset, removed,' \
 	'`ply workspace task show <id>`' \
+	'ply workspace task result record workspace-work-item-bootstrap \' \
+	'ply workspace task qa record workspace-work-item-bootstrap \' \
+	'confirmation digest' \
+	'exactly one local `ff-only`' \
+	'Git 2.45.0 or newer' \
 	'Both show commands accept `--format json`' \
 	'it does not start an agent, select a workflow, or grant execution authority.' \
 	'Sub-tasks, additional repository anchors on an Epic, editing, rebinding, refreshing, cleanup, and'; do

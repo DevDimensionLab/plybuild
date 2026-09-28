@@ -1404,7 +1404,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply\n  ply workspace task list --epic ply-agentic-workflow-support",
+        "example": "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply\n  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check",
         "flags": [
           {
             "annotations": {
@@ -1430,7 +1430,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Create and inspect repository-bound Tasks owned by workspace Epics.",
+        "long": "Create, inspect, and advance repository-bound Tasks owned by workspace Epics.",
         "path": "ply workspace task",
         "runnable": false,
         "short": "Manage Tasks in a Ply workspace",
@@ -1440,6 +1440,183 @@
       },
       "kind": "command_added",
       "path": "ply workspace task"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check\n  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --apply --confirm sha256:<64hex>",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "apply",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "apply one confirmed local fast-forward"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "check the exact integration plan without writing state"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "confirm",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "confirmed integration plan SHA-256"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-parent-oid",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "expected current Epic parent commit object ID"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-result-oid",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "expected exact Task result commit object ID"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for integrate"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "qa",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "human QA record ID"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "result",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "controlled Task result ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "retry-after",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact prior no-effect integration result ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Check or apply one confirmed local fast-forward from an exact Task result to its registered Epic parent.",
+        "path": "ply workspace task integrate",
+        "runnable": true,
+        "short": "Integrate a Task into its Epic parent",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "integrate <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task integrate"
     },
     {
       "after": {
@@ -1505,6 +1682,242 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workspace task qa record workspace-work-item-bootstrap --file /absolute/human-qa.json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for qa"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record a human product QA outcome for an exact controlled Task result.",
+        "path": "ply workspace task qa",
+        "runnable": false,
+        "short": "Manage human QA records for Tasks",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "qa"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task qa"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task qa record workspace-work-item-bootstrap --file /absolute/human-qa.json\n  ply workspace task qa record workspace-work-item-bootstrap --file /absolute/human-qa.json --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "human QA draft JSON file"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for record"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Validate a human QA draft and record its outcome without starting integration.",
+        "path": "ply workspace task qa record",
+        "runnable": true,
+        "short": "Record human QA for a Task result",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "record <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task qa record"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task result record workspace-work-item-bootstrap --file /absolute/task-result.json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for result"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record immutable delivery evidence as typed results for workspace Tasks.",
+        "path": "ply workspace task result",
+        "runnable": false,
+        "short": "Manage controlled Task results",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "result"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task result"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task result record workspace-work-item-bootstrap --file /absolute/task-result.json\n  ply workspace task result record workspace-work-item-bootstrap --file /absolute/task-result.json --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Task result draft JSON file"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for record"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Validate immutable handoff evidence and record one typed result for an exact Task worktree commit.",
+        "path": "ply workspace task result record",
+        "runnable": true,
+        "short": "Record a controlled Task result",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "record <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task result record"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workspace task show workspace-work-item-bootstrap\n  ply workspace task show workspace-work-item-bootstrap --format json",
         "flags": [
           {
@@ -1544,7 +1957,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Show persisted Task intent and a fresh read-only observation of its parent and Task worktree.",
+        "long": "Show persisted Task, delivery, QA, and local integration state with a fresh read-only Git observation.",
         "path": "ply workspace task show",
         "runnable": true,
         "short": "Show a registered Task",

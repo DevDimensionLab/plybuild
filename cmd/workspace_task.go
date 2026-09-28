@@ -12,6 +12,9 @@ type workspaceTaskServices struct {
 	show           func(workspace.TaskID) (workspace.TaskReadbackResult, error)
 	list           func(*workspace.EpicID) (workspace.TaskListResult, error)
 	createWorktree func(workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error)
+	recordResult   func(workspace.TaskResultRecordInput) (workspace.TaskResultMutationResult, error)
+	recordQA       func(workspace.TaskHumanQARecordInput) (workspace.TaskHumanQAMutationResult, error)
+	integrate      func(workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error)
 }
 
 func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command {
@@ -23,11 +26,20 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 		return workspace.ListTasks(dependencies, id)
 	}, createWorktree: func(input workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error) {
 		return workspace.CreateTaskWorktree(dependencies, input)
+	}, recordResult: func(input workspace.TaskResultRecordInput) (workspace.TaskResultMutationResult, error) {
+		return workspace.RecordTaskResult(dependencies, input)
+	}, recordQA: func(input workspace.TaskHumanQARecordInput) (workspace.TaskHumanQAMutationResult, error) {
+		return workspace.RecordTaskHumanQA(dependencies, input)
+	}, integrate: func(input workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error) {
+		if input.Apply {
+			return workspace.ApplyTaskIntegration(dependencies, input)
+		}
+		return workspace.CheckTaskIntegration(dependencies, input)
 	}})
 }
 
 func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.Command {
-	command := &cobra.Command{Use: "task", Short: "Manage Tasks in a Ply workspace", Long: "Create and inspect repository-bound Tasks owned by workspace Epics.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply\n  ply workspace task list --epic ply-agentic-workflow-support"}
+	command := &cobra.Command{Use: "task", Short: "Manage Tasks in a Ply workspace", Long: "Create, inspect, and advance repository-bound Tasks owned by workspace Epics.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply\n  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check"}
 	var title, description, epicID, projectID, repoID string
 	create := &cobra.Command{Use: "create <task-id>", Short: "Create a repository-bound Task", Long: "Create one Task under an existing Epic and bind it to one registered repository.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
@@ -56,7 +68,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 	}
 	setWorkFlagErrors(create)
 	var format string
-	show := &cobra.Command{Use: "show <task-id>", Short: "Show a registered Task", Long: "Show persisted Task intent and a fresh read-only observation of its parent and Task worktree.", Example: "  ply workspace task show workspace-work-item-bootstrap\n  ply workspace task show workspace-work-item-bootstrap --format json", Args: func(cmd *cobra.Command, args []string) error {
+	show := &cobra.Command{Use: "show <task-id>", Short: "Show a registered Task", Long: "Show persisted Task, delivery, QA, and local integration state with a fresh read-only Git observation.", Example: "  ply workspace task show workspace-work-item-bootstrap\n  ply workspace task show workspace-work-item-bootstrap --format json", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
 		}
@@ -113,8 +125,164 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 	list.Flags().StringVar(&filterEpic, "epic", "", "limit Tasks to one parent Epic ID")
 	setWorkFlagErrors(list)
 	worktree := newWorkspaceTaskWorktreeCommand(services)
-	command.AddCommand(create, show, list, worktree)
+	command.AddCommand(create, show, list, worktree, newWorkspaceTaskResultCommand(services), newWorkspaceTaskQACommand(services), newWorkspaceTaskIntegrateCommand(services))
 	return command
+}
+
+func newWorkspaceTaskResultCommand(services workspaceTaskServices) *cobra.Command {
+	parent := &cobra.Command{Use: "result", Short: "Manage controlled Task results", Long: "Record immutable delivery evidence as typed results for workspace Tasks.", Example: "  ply workspace task result record workspace-work-item-bootstrap --file /absolute/task-result.json"}
+	var file, format string
+	record := &cobra.Command{Use: "record <task-id>", Short: "Record a controlled Task result", Long: "Validate immutable handoff evidence and record one typed result for an exact Task worktree commit.", Example: "  ply workspace task result record workspace-work-item-bootstrap --file /absolute/task-result.json\n  ply workspace task result record workspace-work-item-bootstrap --file /absolute/task-result.json --format json", Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) != 1 {
+			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
+		}
+		if _, err := workspace.ParseTaskID(args[0]); err != nil {
+			return err
+		}
+		return validateWorkFormat(format)
+	}, RunE: func(cmd *cobra.Command, args []string) error {
+		id, _ := workspace.ParseTaskID(args[0])
+		result, err := services.recordResult(workspace.TaskResultRecordInput{TaskID: id, File: file})
+		if err != nil {
+			return err
+		}
+		if format == "json" {
+			b, err := workspace.MarshalTaskResultReadback(result)
+			if err != nil {
+				return err
+			}
+			_, err = cmd.OutOrStdout().Write(append(b, '\n'))
+			return err
+		}
+		first := "Recorded Task result"
+		if !result.Created {
+			first = "Task result"
+		}
+		if result.Created {
+			fmt.Fprintf(cmd.OutOrStdout(), "%s %s.\n", first, result.Record.ID)
+		} else {
+			fmt.Fprintf(cmd.OutOrStdout(), "%s %s already exists with identical content.\n", first, result.Record.ID)
+		}
+		_, err = fmt.Fprintf(cmd.OutOrStdout(), "Task: %s / %s\nTechnical gate: %s\nHandoff evidence: %s / %s (validated)\nStore transition: %s\nNext action: %s\n", result.Record.TaskID, result.Record.ResultOID, result.Record.TechnicalGate, result.Record.HandoffID, result.Record.TerminalResultID, result.Record.StoreTransition, taskResultNextActionText(result.Record))
+		return err
+	}}
+	record.Flags().StringVar(&file, "file", "", "Task result draft JSON file")
+	record.Flags().StringVar(&format, "format", "text", "output format (text or json)")
+	_ = record.MarkFlagRequired("file")
+	setWorkFlagErrors(record)
+	parent.AddCommand(record)
+	return parent
+}
+
+func newWorkspaceTaskQACommand(services workspaceTaskServices) *cobra.Command {
+	parent := &cobra.Command{Use: "qa", Short: "Manage human QA records for Tasks", Long: "Record a human product QA outcome for an exact controlled Task result.", Example: "  ply workspace task qa record workspace-work-item-bootstrap --file /absolute/human-qa.json"}
+	var file, format string
+	record := &cobra.Command{Use: "record <task-id>", Short: "Record human QA for a Task result", Long: "Validate a human QA draft and record its outcome without starting integration.", Example: "  ply workspace task qa record workspace-work-item-bootstrap --file /absolute/human-qa.json\n  ply workspace task qa record workspace-work-item-bootstrap --file /absolute/human-qa.json --format json", Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) != 1 {
+			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
+		}
+		if _, err := workspace.ParseTaskID(args[0]); err != nil {
+			return err
+		}
+		return validateWorkFormat(format)
+	}, RunE: func(cmd *cobra.Command, args []string) error {
+		id, _ := workspace.ParseTaskID(args[0])
+		result, err := services.recordQA(workspace.TaskHumanQARecordInput{TaskID: id, File: file})
+		if err != nil {
+			return err
+		}
+		if format == "json" {
+			b, err := workspace.MarshalTaskHumanQAReadback(result)
+			if err != nil {
+				return err
+			}
+			_, err = cmd.OutOrStdout().Write(append(b, '\n'))
+			return err
+		}
+		if result.Created {
+			fmt.Fprintf(cmd.OutOrStdout(), "Recorded human QA %s.\n", result.Record.ID)
+		} else {
+			fmt.Fprintf(cmd.OutOrStdout(), "Human QA %s already exists with identical content.\n", result.Record.ID)
+		}
+		_, err = fmt.Fprintf(cmd.OutOrStdout(), "Task result: %s / %s\nOutcome: %s\nHuman identity: locally claimed; not cryptographically attested\nGit changed by this command: no\nNext action: %s\n", result.Record.TaskResultID, result.Record.ResultOID, result.Record.Outcome, taskQANextActionText(result.Record))
+		return err
+	}}
+	record.Flags().StringVar(&file, "file", "", "human QA draft JSON file")
+	record.Flags().StringVar(&format, "format", "text", "output format (text or json)")
+	_ = record.MarkFlagRequired("file")
+	setWorkFlagErrors(record)
+	parent.AddCommand(record)
+	return parent
+}
+
+func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Command {
+	var resultID, qaID, resultOID, parentOID, confirm, retry, format string
+	var check, apply bool
+	command := &cobra.Command{Use: "integrate <task-id>", Short: "Integrate a Task into its Epic parent", Long: "Check or apply one confirmed local fast-forward from an exact Task result to its registered Epic parent.", Example: "  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check\n  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --apply --confirm sha256:<64hex>", Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) != 1 {
+			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
+		}
+		if check == apply {
+			return workspace.WorkInvalidArguments("exactly one of --check or --apply is required")
+		}
+		if check && confirm != "" {
+			return workspace.WorkInvalidArguments("--confirm is forbidden with --check")
+		}
+		if apply && confirm == "" {
+			return workspace.WorkInvalidArguments("--confirm is required with --apply")
+		}
+		if err := validateWorkFormat(format); err != nil {
+			return err
+		}
+		_, err := workspace.ParseTaskIntegrationInput(args[0], resultID, qaID, resultOID, parentOID, retry, apply, confirm)
+		return err
+	}, RunE: func(cmd *cobra.Command, args []string) error {
+		input, err := workspace.ParseTaskIntegrationInput(args[0], resultID, qaID, resultOID, parentOID, retry, apply, confirm)
+		if err != nil {
+			return err
+		}
+		out, err := services.integrate(input)
+		if err != nil {
+			return err
+		}
+		if format == "json" {
+			b, err := workspace.MarshalTaskIntegrationReadback(out.Readback)
+			if err != nil {
+				return err
+			}
+			_, err = cmd.OutOrStdout().Write(append(b, '\n'))
+			return err
+		}
+		_, err = fmt.Fprint(cmd.OutOrStdout(), workspace.RenderTaskIntegrationText(out.Readback))
+		return err
+	}}
+	command.Flags().StringVar(&resultID, "result", "", "controlled Task result ID")
+	command.Flags().StringVar(&qaID, "qa", "", "human QA record ID")
+	command.Flags().StringVar(&resultOID, "expected-result-oid", "", "expected exact Task result commit object ID")
+	command.Flags().StringVar(&parentOID, "expected-parent-oid", "", "expected current Epic parent commit object ID")
+	command.Flags().BoolVar(&check, "check", false, "check the exact integration plan without writing state")
+	command.Flags().BoolVar(&apply, "apply", false, "apply one confirmed local fast-forward")
+	command.Flags().StringVar(&confirm, "confirm", "", "confirmed integration plan SHA-256")
+	command.Flags().StringVar(&retry, "retry-after", "", "exact prior no-effect integration result ID")
+	command.Flags().StringVar(&format, "format", "text", "output format (text or json)")
+	for _, n := range []string{"result", "qa", "expected-result-oid", "expected-parent-oid"} {
+		_ = command.MarkFlagRequired(n)
+	}
+	setWorkFlagErrors(command)
+	return command
+}
+
+func taskResultNextActionText(r workspace.TaskResultRecord) string {
+	if r.TechnicalGate == "passed" || r.TechnicalGate == "good_enough_with_known_debt" {
+		return fmt.Sprintf("Record human QA with `ply workspace task qa record %s --file <absolute-human-qa.json>`.", r.TaskID)
+	}
+	return "Start a separate result control before recording human QA."
+}
+func taskQANextActionText(r workspace.TaskHumanQARecord) string {
+	if r.Outcome == "pass" {
+		return fmt.Sprintf("Run `ply workspace task integrate %s --result %s --qa %s --expected-result-oid %s --expected-parent-oid <oid> --check`.", r.TaskID, r.TaskResultID, r.ID, r.ResultOID)
+	}
+	return "Start a separate delivery or QA clarification before integration."
 }
 
 func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Command {
@@ -169,9 +337,14 @@ func renderTaskShow(command *cobra.Command, result workspace.TaskReadbackResult)
 		if _, err := fmt.Fprint(command.OutOrStdout(), "Worktree: not created\nState: unbound\nFresh observation: not requested\nReady for handoff: no\nReason: Task worktree has not been created.\nAgent started by this command: no\n"); err != nil {
 			return err
 		}
-		return nil
+	} else if err := renderTaskWorktreeBlock(command, result.Task, result.Operation, result.ReadyForHandoff, result.Reasons); err != nil {
+		return err
 	}
-	return renderTaskWorktreeBlock(command, result.Task, result.Operation, result.ReadyForHandoff, result.Reasons)
+	if result.Integration != nil {
+		_, err := fmt.Fprint(command.OutOrStdout(), workspace.RenderTaskIntegrationText(*result.Integration))
+		return err
+	}
+	return nil
 }
 func renderTaskWorktreeBlock(command *cobra.Command, task workspace.TaskRecord, operation *workspace.WorktreeOperationRecord, ready bool, reasons []string) error {
 	locator := ""

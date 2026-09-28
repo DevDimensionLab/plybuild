@@ -136,10 +136,17 @@ type WorktreeOperationRecord struct {
 }
 
 type WorkItemRegistry struct {
-	FormatVersion      int                       `yaml:"format_version"`
-	Epics              []EpicRecord              `yaml:"epics"`
-	Tasks              []TaskRecord              `yaml:"tasks"`
-	WorktreeOperations []WorktreeOperationRecord `yaml:"worktree_operations"`
+	FormatVersion          int                       `yaml:"format_version"`
+	Epics                  []EpicRecord              `yaml:"epics"`
+	Tasks                  []TaskRecord              `yaml:"tasks"`
+	WorktreeOperations     []WorktreeOperationRecord `yaml:"worktree_operations"`
+	TaskResults            []TaskResultRecord        `yaml:"task_results,omitempty"`
+	HumanQARecords         []TaskHumanQARecord       `yaml:"human_qa_records,omitempty"`
+	IntegrationAuthorities []IntegrationAuthority    `yaml:"integration_authorities,omitempty"`
+	IntegrationIntents     []IntegrationIntent       `yaml:"integration_intents,omitempty"`
+	IntegrationAttempts    []IntegrationAttempt      `yaml:"integration_attempts,omitempty"`
+	IntegrationResults     []IntegrationResult       `yaml:"integration_results,omitempty"`
+	RawSHA256              string                    `yaml:"-"`
 }
 
 type EpicAdoptInput struct {
@@ -202,20 +209,31 @@ type TaskListResult struct {
 type WorkItemErrorClass string
 
 const (
-	ErrorWorkInvalidArguments  WorkItemErrorClass = "workspace_work_invalid_arguments"
-	ErrorWorkWorkspaceConflict WorkItemErrorClass = "workspace_work_workspace_conflict"
-	ErrorWorkNotFound          WorkItemErrorClass = "workspace_work_not_found"
-	ErrorWorkProjectConflict   WorkItemErrorClass = "workspace_work_project_conflict"
-	ErrorWorkIdentityConflict  WorkItemErrorClass = "workspace_work_identity_conflict"
-	ErrorWorkGitObservation    WorkItemErrorClass = "workspace_work_git_observation_error"
-	ErrorWorkGitEffect         WorkItemErrorClass = "workspace_work_git_effect_error"
-	ErrorWorkParentDirty       WorkItemErrorClass = "workspace_work_parent_dirty"
-	ErrorWorkParentStale       WorkItemErrorClass = "workspace_work_parent_stale"
-	ErrorWorkPathConflict      WorkItemErrorClass = "workspace_work_path_conflict"
-	ErrorWorkRefConflict       WorkItemErrorClass = "workspace_work_ref_conflict"
-	ErrorWorkReconciliation    WorkItemErrorClass = "workspace_work_reconciliation_required"
-	ErrorWorkStoreConflict     WorkItemErrorClass = "workspace_work_store_conflict"
-	ErrorWorkIO                WorkItemErrorClass = "workspace_work_io_error"
+	ErrorWorkInvalidArguments                  WorkItemErrorClass = "workspace_work_invalid_arguments"
+	ErrorWorkWorkspaceConflict                 WorkItemErrorClass = "workspace_work_workspace_conflict"
+	ErrorWorkNotFound                          WorkItemErrorClass = "workspace_work_not_found"
+	ErrorWorkProjectConflict                   WorkItemErrorClass = "workspace_work_project_conflict"
+	ErrorWorkIdentityConflict                  WorkItemErrorClass = "workspace_work_identity_conflict"
+	ErrorWorkGitObservation                    WorkItemErrorClass = "workspace_work_git_observation_error"
+	ErrorWorkGitEffect                         WorkItemErrorClass = "workspace_work_git_effect_error"
+	ErrorWorkParentDirty                       WorkItemErrorClass = "workspace_work_parent_dirty"
+	ErrorWorkParentStale                       WorkItemErrorClass = "workspace_work_parent_stale"
+	ErrorWorkPathConflict                      WorkItemErrorClass = "workspace_work_path_conflict"
+	ErrorWorkRefConflict                       WorkItemErrorClass = "workspace_work_ref_conflict"
+	ErrorWorkReconciliation                    WorkItemErrorClass = "workspace_work_reconciliation_required"
+	ErrorWorkStoreConflict                     WorkItemErrorClass = "workspace_work_store_conflict"
+	ErrorWorkIO                                WorkItemErrorClass = "workspace_work_io_error"
+	ErrorTaskResultSchemaInvalid               WorkItemErrorClass = "workspace_task_result_schema_invalid"
+	ErrorTaskResultEvidenceConflict            WorkItemErrorClass = "workspace_task_result_evidence_conflict"
+	ErrorTaskResultConflict                    WorkItemErrorClass = "workspace_task_result_conflict"
+	ErrorTaskQASchemaInvalid                   WorkItemErrorClass = "workspace_task_qa_schema_invalid"
+	ErrorTaskQAEvidenceConflict                WorkItemErrorClass = "workspace_task_qa_evidence_conflict"
+	ErrorTaskQAConflict                        WorkItemErrorClass = "workspace_task_qa_conflict"
+	ErrorTaskIntegrationBlocked                WorkItemErrorClass = "workspace_task_integration_blocked"
+	ErrorTaskIntegrationConflict               WorkItemErrorClass = "workspace_task_integration_conflict"
+	ErrorTaskIntegrationConfirmationMismatch   WorkItemErrorClass = "workspace_task_integration_confirmation_mismatch"
+	ErrorTaskIntegrationReconciliationRequired WorkItemErrorClass = "workspace_task_integration_reconciliation_required"
+	ErrorTaskIntegrationUnsupportedRepository  WorkItemErrorClass = "workspace_task_integration_unsupported_repository"
 )
 
 type WorkItemError struct {
@@ -551,6 +569,14 @@ func sortWorkRegistry(registry *WorkItemRegistry) {
 	}
 	sort.Slice(registry.Tasks, func(i, j int) bool { return registry.Tasks[i].ID < registry.Tasks[j].ID })
 	sort.Slice(registry.WorktreeOperations, func(i, j int) bool { return registry.WorktreeOperations[i].ID < registry.WorktreeOperations[j].ID })
+	sort.Slice(registry.TaskResults, func(i, j int) bool { return registry.TaskResults[i].ID < registry.TaskResults[j].ID })
+	sort.Slice(registry.HumanQARecords, func(i, j int) bool { return registry.HumanQARecords[i].ID < registry.HumanQARecords[j].ID })
+	sort.Slice(registry.IntegrationAuthorities, func(i, j int) bool {
+		return registry.IntegrationAuthorities[i].ID < registry.IntegrationAuthorities[j].ID
+	})
+	sort.Slice(registry.IntegrationIntents, func(i, j int) bool { return registry.IntegrationIntents[i].ID < registry.IntegrationIntents[j].ID })
+	sort.Slice(registry.IntegrationAttempts, func(i, j int) bool { return registry.IntegrationAttempts[i].ID < registry.IntegrationAttempts[j].ID })
+	sort.Slice(registry.IntegrationResults, func(i, j int) bool { return registry.IntegrationResults[i].ID < registry.IntegrationResults[j].ID })
 }
 
 func AdoptEpic(dependencies Dependencies, input EpicAdoptInput) (EpicMutationResult, error) {

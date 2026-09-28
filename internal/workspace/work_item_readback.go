@@ -53,6 +53,7 @@ type TaskReadbackResult struct {
 	TargetFreshness                TaskFreshnessTarget
 	WorktreeReady, ReadyForHandoff bool
 	Reasons                        []string
+	Integration                    *WorkspaceTaskIntegrationReadback
 }
 
 func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) {
@@ -275,6 +276,10 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 	}
 	result.Reasons = sortedReasons(result.Reasons)
 	result.ReadyForHandoff = result.WorktreeReady && len(result.Reasons) == 0 && result.ProjectFreshness == "fresh"
+	if registry.FormatVersion == 2 {
+		integration := buildTaskShowIntegrationReadback(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repositories}, registry, *task, *epic, *binding)
+		result.Integration = &integration
+	}
 	return result, nil
 }
 
@@ -291,6 +296,9 @@ func MarshalEpicReadback(result EpicReadbackResult) ([]byte, error) {
 }
 
 func MarshalTaskReadback(result TaskReadbackResult) ([]byte, error) {
+	if result.Integration != nil {
+		return MarshalTaskIntegrationReadback(*result.Integration)
+	}
 	persisted := canonicaljson.Object{{Name: "task_id", Value: string(result.Task.ID)}, {Name: "title", Value: result.Task.Title}, {Name: "description", Value: result.Task.Description}, {Name: "parent_epic_id", Value: string(result.Task.ParentEpicID)}, {Name: "project_id", Value: string(result.Task.ProjectID)}, {Name: "repo_id", Value: string(result.Task.RepoID)}, {Name: "git_common_dir", Value: result.Task.GitCommonDir}, {Name: "worktree_state", Value: string(result.Task.WorktreeState)}, {Name: "worktree", Value: taskWorktreeCanonical(result.Task.Worktree)}, {Name: "operation", Value: operationCanonical(result.Operation)}}
 	observed := canonicaljson.Object{{Name: "project_git_common_dir", Value: pointerValue(result.ProjectGitCommonDir)}, {Name: "parent", Value: observedWorktreeCanonical(result.Parent)}, {Name: "source", Value: observedSourceCanonical(result.Source)}, {Name: "target", Value: observedTargetCanonical(result.Target)}}
 	fresh := canonicaljson.Object{{Name: "project_git_common_dir", Value: result.ProjectFreshness}, {Name: "parent", Value: freshWorktreeCanonical(result.ParentFreshness)}, {Name: "source", Value: freshSourceCanonical(result.SourceFreshness)}, {Name: "target", Value: freshTargetCanonical(result.TargetFreshness)}}

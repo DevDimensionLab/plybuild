@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -38,6 +39,44 @@ func TestWorkspaceTaskCommandsRenderHumanAndMachineReadback(t *testing.T) {
 		t.Fatalf("json stdout=%q error=%v", stdout, err)
 	}
 }
+
+func TestWorkspaceTaskLifecycleCommandsCallOneServiceAndPreserveStreams(t *testing.T) {
+	resultCalls, qaCalls, integrationCalls := 0, 0, 0
+	resultRecord := workspace.TaskResultRecord{ID: "trs_11111111111111111111111111111111", TaskID: "task", ResultOID: strings.Repeat("b", 40), TechnicalGate: "passed", HandoffID: "hnd_11111111111111111111111111111111", TerminalResultID: "res_11111111111111111111111111111111", StoreTransition: "none"}
+	qaRecord := workspace.TaskHumanQARecord{ID: "hqa_11111111111111111111111111111111", TaskID: "task", TaskResultID: resultRecord.ID, ResultOID: resultRecord.ResultOID, Outcome: "pass"}
+	readback := workspace.WorkspaceTaskIntegrationReadback{Value: canonicaljson.Object{{Name: "kind", Value: "WorkspaceTaskIntegrationReadback@1"}}, Classification: "ready", GitChanged: boolCommandPointer(false), RecoveryStatus: "safe-no-effect", NextAction: workspace.IntegrationNextAction{Kind: "apply_confirmed_plan", Reason: "Apply the exact plan.", Argv: []string{"ply", "workspace", "task", "integrate"}}, TaskID: "task", ResultOID: resultRecord.ResultOID, TechnicalGate: "passed", HumanQAOutcome: "pass", EpicID: "epic", ParentRef: "refs/heads/epic", ParentOID: strings.Repeat("a", 40)}
+	services := workspaceTaskServices{
+		recordResult: func(input workspace.TaskResultRecordInput) (workspace.TaskResultMutationResult, error) {
+			resultCalls++
+			return workspace.TaskResultMutationResult{Workspace: "/workspace", Record: resultRecord, Created: true}, nil
+		},
+		recordQA: func(input workspace.TaskHumanQARecordInput) (workspace.TaskHumanQAMutationResult, error) {
+			qaCalls++
+			return workspace.TaskHumanQAMutationResult{Workspace: "/workspace", Record: qaRecord, Created: true}, nil
+		},
+		integrate: func(input workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error) {
+			integrationCalls++
+			return workspace.TaskIntegrationResult{Readback: readback}, nil
+		},
+	}
+	stdout, err := executeTaskCommand(t, services, "result", "record", "task", "--file", "/tmp/result.json")
+	if err != nil || resultCalls != 1 || !strings.Contains(stdout, "Recorded Task result trs_") || strings.Count(stdout, "\n") != 6 {
+		t.Fatalf("result stdout=%q calls=%d error=%v", stdout, resultCalls, err)
+	}
+	stdout, err = executeTaskCommand(t, services, "qa", "record", "task", "--file", "/tmp/qa.json")
+	if err != nil || qaCalls != 1 || !strings.Contains(stdout, "Recorded human QA hqa_") || strings.Count(stdout, "\n") != 6 {
+		t.Fatalf("qa stdout=%q calls=%d error=%v", stdout, qaCalls, err)
+	}
+	stdout, err = executeTaskCommand(t, services, "integrate", "task", "--result", string(resultRecord.ID), "--qa", string(qaRecord.ID), "--expected-result-oid", resultRecord.ResultOID, "--expected-parent-oid", strings.Repeat("a", 40), "--check", "--format", "json")
+	if err != nil || integrationCalls != 1 || stdout != "{\"kind\":\"WorkspaceTaskIntegrationReadback@1\"}\n" {
+		t.Fatalf("integrate stdout=%q calls=%d error=%v", stdout, integrationCalls, err)
+	}
+	if stdout, err = executeTaskCommand(t, services, "integrate", "task", "--result", string(resultRecord.ID), "--qa", string(qaRecord.ID), "--expected-result-oid", resultRecord.ResultOID, "--expected-parent-oid", strings.Repeat("a", 40), "--check", "--apply"); err == nil || stdout != "" || integrationCalls != 1 {
+		t.Fatalf("invalid mode stdout=%q calls=%d error=%v", stdout, integrationCalls, err)
+	}
+}
+
+func boolCommandPointer(value bool) *bool { return &value }
 
 func executeTaskCommand(t *testing.T, services workspaceTaskServices, args ...string) (string, error) {
 	t.Helper()
