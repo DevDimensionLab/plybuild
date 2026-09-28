@@ -77,9 +77,13 @@ func (err *Error) Error() string {
 func (err *Error) Unwrap() error { return err.Err }
 
 type Dependencies struct {
-	Files    FileSystem
-	Repos    RepoObserver
-	Projects ProjectStore
+	Files        FileSystem
+	Repos        RepoObserver
+	Projects     ProjectStore
+	ProjectLocks ProjectSnapshotLocker
+	WorkItems    WorkItemStore
+	WorkGit      WorkItemGit
+	WorkIDs      WorkItemIDSource
 }
 
 func InvalidArguments(detail string) error {
@@ -88,10 +92,15 @@ func InvalidArguments(detail string) error {
 
 func SystemDependencies() Dependencies {
 	files := systemFileSystem{}
+	projects := newSystemProjectStore()
 	return Dependencies{
-		Files:    files,
-		Repos:    newSystemRepoObserver(files),
-		Projects: newSystemProjectStore(),
+		Files:        files,
+		Repos:        newSystemRepoObserver(files),
+		Projects:     projects,
+		ProjectLocks: projects,
+		WorkItems:    newSystemWorkItemStore(),
+		WorkGit:      newSystemWorkItemGit(files),
+		WorkIDs:      cryptoWorkItemIDSource{},
 	}
 }
 

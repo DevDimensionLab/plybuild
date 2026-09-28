@@ -24,6 +24,15 @@ type ProjectStore interface {
 	Snapshot(workspaceRoot string) ([]ProjectRecord, []RepoRecord, error)
 }
 
+type ProjectSnapshot struct {
+	Projects []ProjectRecord
+	Repos    []RepoRecord
+}
+
+type ProjectSnapshotLocker interface {
+	WithSnapshotLock(string, func(ProjectSnapshot) error) error
+}
+
 type projectRegistry struct {
 	FormatVersion int             `yaml:"format_version"`
 	Projects      []ProjectRecord `yaml:"projects"`
@@ -39,7 +48,29 @@ type systemProjectStore struct {
 	faults *storeFaults
 }
 
-func newSystemProjectStore() ProjectStore { return &systemProjectStore{} }
+func newSystemProjectStore() *systemProjectStore { return &systemProjectStore{} }
+
+func (store *systemProjectStore) WithSnapshotLock(workspaceRoot string, operation func(ProjectSnapshot) error) error {
+	lock, err := store.acquire(workspaceRoot)
+	if err != nil {
+		return err
+	}
+	operationErr := func() error {
+		registry, err := store.read(workspaceRoot)
+		if err != nil {
+			return err
+		}
+		return operation(ProjectSnapshot{Projects: cloneProjects(registry.Projects), Repos: cloneRepos(registry.Repos)})
+	}()
+	releaseErr := store.release(lock)
+	if operationErr != nil {
+		if releaseErr != nil {
+			return projectIOError("release after failure", lock.Name(), fmt.Errorf("%v; %w", operationErr, releaseErr))
+		}
+		return operationErr
+	}
+	return releaseErr
+}
 
 func (store *systemProjectStore) Add(workspaceRoot string, project ProjectRecord, repositories []RepoRecord) (ProjectRecord, []RepoRecord, bool, error) {
 	lock, err := store.acquire(workspaceRoot)

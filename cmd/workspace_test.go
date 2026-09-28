@@ -36,7 +36,7 @@ func TestNewWorkspaceCommandShape(t *testing.T) {
 	if command.Use != "workspace" ||
 		command.Short != "Manage Ply workspaces" ||
 		command.Long != "Manage explicit local Ply workspaces." ||
-		command.Example != "  ply workspace init\n  ply workspace project list" ||
+		command.Example != "  ply workspace init\n  ply workspace project list\n  ply workspace epic list\n  ply workspace task list" ||
 		command.CommandPath() != "ply workspace" ||
 		command.Runnable() {
 		t.Fatalf("workspace command metadata = Use %q, Short %q, Long %q, Example %q, path %q, runnable %t",

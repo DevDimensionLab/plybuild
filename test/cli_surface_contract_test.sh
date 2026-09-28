@@ -62,6 +62,16 @@ run_help_surface workspace-project-help workspace project --help
 run_help_surface workspace-project-add-help workspace project add --help
 run_help_surface workspace-project-show-help workspace project show --help
 run_help_surface workspace-project-list-help workspace project list --help
+run_help_surface workspace-epic-help workspace epic --help
+run_help_surface workspace-epic-adopt-help workspace epic adopt --help
+run_help_surface workspace-epic-show-help workspace epic show --help
+run_help_surface workspace-epic-list-help workspace epic list --help
+run_help_surface workspace-task-help workspace task --help
+run_help_surface workspace-task-create-help workspace task create --help
+run_help_surface workspace-task-show-help workspace task show --help
+run_help_surface workspace-task-list-help workspace task list --help
+run_help_surface workspace-task-worktree-help workspace task worktree --help
+run_help_surface workspace-task-worktree-create-help workspace task worktree create --help
 run_help_surface workflow-help workflow --help
 run_help_surface workflow-handoff-help workflow handoff --help
 run_help_surface workflow-handoff-create-help workflow handoff create --help
@@ -85,6 +95,10 @@ grep -F '  init        Initialize a Ply workspace in the current directory' \
 	"$temp_root/workspace-help.stdout" >/dev/null || fail 'workspace help does not expose init'
 grep -F '  project     Manage projects in a Ply workspace' \
 	"$temp_root/workspace-help.stdout" >/dev/null || fail 'workspace help does not expose project'
+grep -F '  epic        Manage Epics in a Ply workspace' \
+	"$temp_root/workspace-help.stdout" >/dev/null || fail 'workspace help does not expose Epic'
+grep -F '  task        Manage Tasks in a Ply workspace' \
+	"$temp_root/workspace-help.stdout" >/dev/null || fail 'workspace help does not expose Task'
 grep -F '  ply workspace init' "$temp_root/workspace-help.stdout" >/dev/null ||
 	fail 'workspace help lost its example'
 grep -F '  ply workspace project list' "$temp_root/workspace-help.stdout" >/dev/null ||
@@ -124,6 +138,26 @@ grep -F 'ply workspace project show <project-id> [flags]' \
 	"$temp_root/workspace-project-show-help.stdout" >/dev/null || fail 'project show usage changed'
 grep -F 'ply workspace project list [flags]' \
 	"$temp_root/workspace-project-list-help.stdout" >/dev/null || fail 'project list usage changed'
+grep -F 'ply workspace epic [command]' "$temp_root/workspace-epic-help.stdout" >/dev/null || fail 'Epic usage changed'
+grep -F 'ply workspace epic adopt <epic-id> [flags]' "$temp_root/workspace-epic-adopt-help.stdout" >/dev/null || fail 'Epic adopt usage changed'
+for flag in '--title string' '--project string' '--repo string' '--worktree string' '--ref string' '--expected-oid string'; do
+	grep -F -- "$flag" "$temp_root/workspace-epic-adopt-help.stdout" >/dev/null || fail "Epic adopt $flag is unavailable"
+done
+grep -F 'ply workspace epic show <epic-id> [flags]' "$temp_root/workspace-epic-show-help.stdout" >/dev/null || fail 'Epic show usage changed'
+grep -F -- '--format string' "$temp_root/workspace-epic-show-help.stdout" >/dev/null || fail 'Epic show format is unavailable'
+grep -F 'ply workspace epic list [flags]' "$temp_root/workspace-epic-list-help.stdout" >/dev/null || fail 'Epic list usage changed'
+grep -F 'ply workspace task [command]' "$temp_root/workspace-task-help.stdout" >/dev/null || fail 'Task usage changed'
+grep -F 'ply workspace task create <task-id> [flags]' "$temp_root/workspace-task-create-help.stdout" >/dev/null || fail 'Task create usage changed'
+for flag in '--title string' '--description string' '--epic string' '--project string' '--repo string'; do
+	grep -F -- "$flag" "$temp_root/workspace-task-create-help.stdout" >/dev/null || fail "Task create $flag is unavailable"
+done
+grep -F 'ply workspace task show <task-id> [flags]' "$temp_root/workspace-task-show-help.stdout" >/dev/null || fail 'Task show usage changed'
+grep -F 'ply workspace task list [flags]' "$temp_root/workspace-task-list-help.stdout" >/dev/null || fail 'Task list usage changed'
+grep -F 'ply workspace task worktree [command]' "$temp_root/workspace-task-worktree-help.stdout" >/dev/null || fail 'Task worktree usage changed'
+grep -F 'ply workspace task worktree create <task-id> [flags]' "$temp_root/workspace-task-worktree-create-help.stdout" >/dev/null || fail 'Task worktree create usage changed'
+for flag in '--branch string' '--path string' '--expected-parent-oid string'; do
+	grep -F -- "$flag" "$temp_root/workspace-task-worktree-create-help.stdout" >/dev/null || fail "Task worktree create $flag is unavailable"
+done
 
 grep -F 'Manage explicit local agent workflow transitions.' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help lost its long description'
@@ -210,8 +244,25 @@ printf '%s\n' \
 	'' >"$temp_root/readme-workspace.expected"
 sed -n '/^## Workspace$/,/^## Workflow handoffs$/p' "$repo_root/README.md" | sed '$d' \
 	>"$temp_root/readme-workspace.actual"
-cmp -s "$temp_root/readme-workspace.expected" "$temp_root/readme-workspace.actual" ||
-	fail 'README workspace documentation changed'
+expected_workspace_bytes=$(wc -c <"$temp_root/readme-workspace.expected" | tr -d ' ')
+dd if="$temp_root/readme-workspace.actual" of="$temp_root/readme-workspace.prefix" bs=1 count="$expected_workspace_bytes" 2>/dev/null
+cmp -s "$temp_root/readme-workspace.expected" "$temp_root/readme-workspace.prefix" ||
+	fail 'README existing workspace documentation changed'
+for text in \
+	'ply workspace epic adopt ply-agentic-workflow-support \' \
+	'It performs no Git change.' \
+	'ply workspace task create workspace-work-item-bootstrap \' \
+	'binds exactly one registered' \
+	'ply workspace task worktree create workspace-work-item-bootstrap \' \
+	'--expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df' \
+	'Ply persists a durable create intent before the additive branch/worktree operation.' \
+	'are never reset, removed,' \
+	'`ply workspace task show <id>`' \
+	'Both show commands accept `--format json`' \
+	'it does not start an agent, select a workflow, or grant execution authority.' \
+	'Sub-tasks, additional repository anchors on an Epic, editing, rebinding, refreshing, cleanup, and'; do
+	grep -F -- "$text" "$temp_root/readme-workspace.actual" >/dev/null || fail "README work-item text is missing: $text"
+done
 grep -F '## Workflow handoffs' "$repo_root/README.md" >/dev/null || fail 'README workflow section is missing'
 grep -F 'The human—not Ply—opens the recipient in that exact working directory' "$repo_root/README.md" >/dev/null ||
 	fail 'README does not state the human-start boundary'

@@ -108,6 +108,53 @@ discovery or Git mutation. Read registrations with `ply workspace project show <
 Retrying the same registration is idempotent. Changing membership, relocating repositories, and
 `project init` are not part of this command.
 
+Adopt one existing clean worktree as the repository anchor for a workspace-owned Epic:
+
+```shell script
+ply workspace epic adopt ply-agentic-workflow-support \
+  --title "Ply agentic workflow support" \
+  --project ply \
+  --repo ply \
+  --worktree /Users/perottochristensen/github/ply/ply_agentic_workflow_support \
+  --ref refs/heads/ply_agentic_workflow_support \
+  --expected-oid 54f3631cbea789f25a4134945c7ca16d343139df
+```
+
+Adoption records the exact physical worktree, full local branch ref, commit, tree, and Git common
+directory. It performs no Git change. Each Task belongs to an Epic and binds exactly one registered
+repository and Git common directory:
+
+```shell script
+ply workspace task create workspace-work-item-bootstrap \
+  --title "Workspace-owned Epic, Task, and worktree support" \
+  --description "Add explicit workspace work items and prepare a Task worktree from the Epic base." \
+  --epic ply-agentic-workflow-support \
+  --project ply \
+  --repo ply
+```
+
+Create the Task worktree from the Epic branch's exact expected commit:
+
+```shell script
+ply workspace task worktree create workspace-work-item-bootstrap \
+  --branch ply_workspace_work_item_bootstrap \
+  --path /Users/perottochristensen/github/ply/ply_workspace_work_item_bootstrap \
+  --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df
+```
+
+Ply persists a durable create intent before the additive branch/worktree operation. Identical
+retries recover safe no-effect, matching branch-only, or exact-effect outcomes with the same IDs.
+Partial or unknown effects are preserved for explicit reconciliation and are never reset, removed,
+or otherwise cleaned up automatically.
+
+Use `ply workspace epic list`, `ply workspace epic show <id>`, `ply workspace task list`, and
+`ply workspace task show <id>` for human readback. Both show commands accept `--format json` for
+versioned deterministic machine readback. `worktree_ready` only records a clean local bootstrap
+binding: it does not start an agent, select a workflow, or grant execution authority.
+
+Sub-tasks, additional repository anchors on an Epic, editing, rebinding, refreshing, cleanup, and
+WorkflowRun creation are outside this first workspace work-item version.
+
 ## Workflow handoffs
 
 Workflow handoffs provide a local, immutable file protocol for giving one bounded task to a
