@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 )
 
 type GitRepoObservation struct{ Locator, GitCommonDir string }
@@ -81,6 +83,53 @@ func runWorkItemGit(arguments []string, environment []string) GitCommandOutcome 
 func (git *systemWorkItemGit) read(path string, arguments ...string) GitCommandOutcome {
 	argv := append([]string{"-C", path}, arguments...)
 	return git.run(argv, []string{"GIT_OPTIONAL_LOCKS=0", "LC_ALL=C", "LANG=C"})
+}
+
+func (git *systemWorkItemGit) contentRead(directory string, args ...string) GitCommandOutcome {
+	prefix := []string{"-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-C", directory}
+	return git.run(append(prefix, args...), []string{"GIT_OPTIONAL_LOCKS=0", "LC_ALL=C", "LANG=C"})
+}
+func (git *systemWorkItemGit) ObserveContentCommit(repo RepoRecord, oid string) (string, error) {
+	out := git.contentRead(repo.Locator, "rev-parse", "--verify", oid+"^{commit}")
+	if out.Err != nil || strings.TrimSpace(string(out.Stdout)) != oid {
+		return "", contentError("task_spec_binding_conflict", "planned start commit is unavailable", out.Err)
+	}
+	out = git.contentRead(repo.Locator, "rev-parse", "--verify", oid+"^{tree}")
+	if out.Err != nil {
+		return "", out.Err
+	}
+	tree := strings.TrimSpace(string(out.Stdout))
+	if !validOIDText(tree) {
+		return "", contentError("task_spec_binding_conflict", "start tree is invalid", nil)
+	}
+	return tree, nil
+}
+func (git *systemWorkItemGit) ObserveContentDocument(value canonicaljson.Value, data []byte) error {
+	m := contentFields(value)
+	common := contentString(m, "git_common_dir")
+	if e := contentPhysical(common); e != nil {
+		return e
+	}
+	read := func(args ...string) GitCommandOutcome {
+		prefix := []string{"-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "--git-dir=" + common}
+		return git.run(append(prefix, args...), []string{"GIT_OPTIONAL_LOCKS=0", "LC_ALL=C", "LANG=C"})
+	}
+	for _, pair := range [][2]string{{contentString(m, "ref"), contentString(m, "oid")}, {contentString(m, "oid") + "^{tree}", contentString(m, "tree")}} {
+		o := read("rev-parse", "--verify", pair[0])
+		if o.Err != nil || strings.TrimSpace(string(o.Stdout)) != pair[1] {
+			return contentError("task_content_integrity_conflict", "Git provenance ref, commit or tree differs", o.Err)
+		}
+	}
+	o := read("ls-tree", "-z", contentString(m, "oid"), "--", contentString(m, "repo_path"))
+	want := " blob " + contentString(m, "blob") + "\t" + contentString(m, "repo_path") + "\x00"
+	if o.Err != nil || !(string(o.Stdout) == "100644"+want || string(o.Stdout) == "100755"+want) {
+		return contentError("task_content_integrity_conflict", "Git provenance does not identify a regular blob at the commit path", o.Err)
+	}
+	o = read("cat-file", "blob", contentString(m, "blob"))
+	if o.Err != nil || !bytes.Equal(o.Stdout, data) {
+		return contentError("task_content_integrity_conflict", "source bytes differ from Git provenance blob", o.Err)
+	}
+	return nil
 }
 
 func (git *systemWorkItemGit) ValidateBranch(branch string) error {

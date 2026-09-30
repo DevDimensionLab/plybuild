@@ -152,11 +152,11 @@ grep -F 'ply workspace epic show <epic-id> [flags]' "$temp_root/workspace-epic-s
 grep -F -- '--format string' "$temp_root/workspace-epic-show-help.stdout" >/dev/null || fail 'Epic show format is unavailable'
 grep -F 'ply workspace epic list [flags]' "$temp_root/workspace-epic-list-help.stdout" >/dev/null || fail 'Epic list usage changed'
 grep -F 'ply workspace task [command]' "$temp_root/workspace-task-help.stdout" >/dev/null || fail 'Task usage changed'
-for leaf in create integrate list qa result show worktree; do
+for leaf in create integrate list problem publication qa result show spec worktree; do
 	grep -F "  $leaf" "$temp_root/workspace-task-help.stdout" >/dev/null || fail "Task help does not expose $leaf"
 done
 grep -F 'ply workspace task create <task-id> [flags]' "$temp_root/workspace-task-create-help.stdout" >/dev/null || fail 'Task create usage changed'
-for flag in '--title string' '--description string' '--epic string' '--project string' '--repo string'; do
+for flag in '--title string' '--description string' '--epic string' '--project string' '--repo string' '--format string' '--upgrade-store string'; do
 	grep -F -- "$flag" "$temp_root/workspace-task-create-help.stdout" >/dev/null || fail "Task create $flag is unavailable"
 done
 grep -F 'ply workspace task show <task-id> [flags]' "$temp_root/workspace-task-show-help.stdout" >/dev/null || fail 'Task show usage changed'

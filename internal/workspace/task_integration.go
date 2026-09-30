@@ -104,6 +104,7 @@ type WorkspaceTaskIntegrationPlan struct {
 	Readiness          string                      `yaml:"readiness" json:"readiness"`
 	Reasons            []string                    `yaml:"reasons" json:"reasons"`
 	Effect             IntegrationPlanEffect       `yaml:"effect" json:"effect"`
+	TaskSpecGuard      *TaskSpecRelevance          `yaml:"task_spec_guard,omitempty" json:"task_spec_guard"`
 }
 
 type IntegrationPlanWorkspace struct {
@@ -350,6 +351,7 @@ func CheckTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 			if err := revalidateIntegrationEvidence(dependencies, ctx.Result, ctx.QA); err != nil {
 				return TaskIntegrationResult{}, err
 			}
+			ctx.TaskSpecRelevance = taskResultSpecRelevance(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repos}, registry, ctx.Task, ctx.Result.ID)
 			ctx.PersistedBefore = integrationPersistedView(registry, authority, intent, attempt, result)
 			return TaskIntegrationResult{Readback: newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, result)}, nil
 		}
@@ -394,9 +396,7 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 				if err != nil {
 					return err
 				}
-				if err := revalidateIntegrationEvidence(dependencies, ctx.Result, ctx.QA); err != nil {
-					return err
-				}
+				ctx.TaskSpecRelevance = taskResultSpecRelevance(dependencies, root, projects, registry, ctx.Task, ctx.Result.ID)
 				ctx.PersistedBefore = integrationPersistedView(registry, authority, intent, attempt, stored)
 				if stored != nil {
 					output = newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, stored)
@@ -405,7 +405,14 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 				if attempt != nil {
 					return reconcileIntegrationAttempt(dependencies, session, &registry, root, ctx, *authority, *intent, *attempt, &output)
 				}
+				if err := revalidateIntegrationEvidence(dependencies, ctx.Result, ctx.QA); err != nil {
+					return err
+				}
 				ctx.PreconditionReason = authorityProjectBindingReason(projects, authority.Plan)
+				ctx.TaskSpecRelevance = taskResultSpecRelevance(dependencies, root, projects, registry, ctx.Task, ctx.Result.ID)
+				if ctx.TaskSpecRelevance != nil && ctx.TaskSpecRelevance.Relevance != "current" {
+					ctx.PreconditionReason = "task_spec_result_not_current"
+				}
 				return continueIntegrationAuthority(dependencies, session, &registry, root, ctx, *authority, *intent, &output, true)
 			}
 			plan, digest, ctx, err := buildIntegrationPlan(dependencies, root, projects, registry, input)
@@ -444,12 +451,13 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 		})
 	})
 	if err != nil {
-		return TaskIntegrationResult{}, mapMutationError(err)
+		return TaskIntegrationResult{Readback: output}, mapMutationError(err)
 	}
 	return TaskIntegrationResult{Readback: output}, nil
 }
 
 type integrationContext struct {
+	TaskSpecRelevance         *TaskSpecRelevance
 	Task                      TaskRecord
 	Epic                      EpicRecord
 	Parent                    EpicRepoBinding
@@ -493,8 +501,8 @@ func requireIntegrationDependencies(d Dependencies) error {
 }
 
 func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, input TaskIntegrationInput) (WorkspaceTaskIntegrationPlan, string, integrationContext, error) {
-	if registry.FormatVersion != 2 {
-		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "work-item store is not format 2", nil)
+	if registry.FormatVersion != 2 && registry.FormatVersion != 3 {
+		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "work-item store must be format 2 or 3", nil)
 	}
 	task, _ := findTask(registry, input.TaskID)
 	if task == nil || task.Worktree == nil || task.WorktreeState != WorkItemReady {
@@ -661,6 +669,16 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	}
 	argv := []string{"git", "-c", "core.hooksPath=" + os.DevNull, "-c", "merge.autoStash=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-c", "submodule.recurse=false", "-C", parent.Worktree.Locator, "merge", "--ff-only", "--no-stat", "--no-autostash", tr.ResultOID}
 	plan := WorkspaceTaskIntegrationPlan{Kind: "WorkspaceTaskIntegrationPlan@1", SchemaVersion: 1, Format: "json", FormatVersion: 1, Canonicalization: "RFC8785", Workspace: IntegrationPlanWorkspace{Root: root, MarkerSHA256: digestTaskBytes(markerBytes)}, Project: IntegrationPlanProject{ProjectID: task.ProjectID}, Repository: IntegrationPlanRepository{RepoID: task.RepoID, RegisteredLocator: repo.Locator, GitCommonDir: repo.GitCommonDir, GitVersion: repository.GitVersion, ObjectFormat: repository.ObjectFormat, RefFormat: repository.RefFormat, Shallow: repository.Shallow, PartialClone: repository.PartialClone, SparseCheckout: repository.SparseCheckout}, Epic: IntegrationPlanEpic{EpicID: epic.ID, ParentWorktreeID: parent.Worktree.ID, ParentLocator: parent.Worktree.Locator, ParentRef: parent.Worktree.Ref, ExpectedParentOID: task.Worktree.ParentOID, ExpectedParentTree: task.Worktree.ParentTree}, Task: IntegrationPlanTask{TaskID: task.ID, TaskWorktreeID: task.Worktree.ID, SourceLocator: task.Worktree.Locator, SourceRef: task.Worktree.Ref, ResultOID: tr.ResultOID, ResultTree: tr.ResultTree}, TaskResult: IntegrationPlanTaskResult{ID: tr.ID, DraftSHA256: tr.DraftSHA256, TechnicalGate: tr.TechnicalGate}, HumanQA: IntegrationPlanHumanQA{ID: qa.ID, DraftSHA256: qa.DraftSHA256, Outcome: qa.Outcome}, RetryAfterResultID: input.RetryAfterResultID, WorkItemsSHA256: storeDigest, StoreTransition: tr.StoreTransition, ObservedSource: planObservation(source), ObservedParent: planObservation(parentObs), ObservedInventory: repository.Inventory, ObservedReflog: reflog, TechnicalGateReady: technical, HumanQAReady: human, AncestryReady: ancestor, Readiness: readiness, Reasons: reasons, Effect: IntegrationPlanEffect{Kind: "local_ff_only", ParentRef: parent.Worktree.Ref, ExpectedParentOID: task.Worktree.ParentOID, ResultOID: tr.ResultOID, MaxOccurrences: 1, Argv: argv}}
+	if taskRequiresSpec(registry, task.ID) {
+		plan.Kind = "WorkspaceTaskIntegrationPlan@2"
+		plan.SchemaVersion = 2
+		plan.TaskSpecGuard = taskResultSpecRelevance(d, root, projects, registry, *task, tr.ID)
+		ctx.TaskSpecRelevance = plan.TaskSpecGuard
+		if plan.TaskSpecGuard.Relevance != "current" {
+			plan.Readiness = "blocked"
+			plan.Reasons = sortedReasons(append(plan.Reasons, plan.TaskSpecGuard.Reasons...))
+		}
+	}
 	digest := integrationPlanDigest(plan)
 	return plan, digest, ctx, nil
 }
@@ -811,7 +829,24 @@ func finishIntegrationAttempt(d Dependencies, session WorkItemStoreSession, regi
 	sortWorkRegistry(registry)
 	published, err := publishWorkItemRegistryRecover(session, *registry)
 	if err != nil {
-		return err
+		// Git has already been attempted. Content corruption can prevent the
+		// result write, but cannot erase the independently observed Git effect.
+		observed, readErr := session.Snapshot()
+		var observedAttempt *IntegrationAttempt
+		if readErr == nil {
+			observedAttempt = findAttemptForAuthority(observed, authority.ID)
+		}
+		*output = newIntegrationReadback(root, observed, ctx, authority.Plan, authority.PlanSHA256, &authority, &intent, observedAttempt, nil)
+		if readErr != nil {
+			replaceReadbackMember(&output.Value, "persisted_after", canonicaljson.Object{{Name: "format_version", Value: nil}, {Name: "sha256", Value: nil}, {Name: "authority_id", Value: nil}, {Name: "intent_id", Value: nil}, {Name: "attempt_id", Value: nil}, {Name: "integration_result_id", Value: nil}, {Name: "freshness", Value: "unknown"}})
+		}
+		output.Classification, output.GitChanged, output.RecoveryStatus = outcome, changed, "unknown"
+		output.NextAction = IntegrationNextAction{Kind: "read_only_recovery_control", Reason: "The Git effect was observed, but its result could not be persisted. Inspect the Task before recovery.", Argv: []string{"ply", "workspace", "task", "show", string(ctx.Task.ID), "--format", "json"}}
+		replaceReadbackMember(&output.Value, "classification", outcome)
+		replaceReadbackMember(&output.Value, "git_changed", pointerValue(changed))
+		replaceReadbackMember(&output.Value, "recovery_status", output.RecoveryStatus)
+		replaceReadbackMember(&output.Value, "next_action", structCanonical(output.NextAction))
+		return workError(ErrorWorkIO, fmt.Sprintf("observed integration outcome %s; result persistence failed; inspect with ply workspace task show %s --format json", outcome, ctx.Task.ID), err)
 	}
 	*registry = published
 	*output = newIntegrationReadback(root, *registry, ctx, authority.Plan, authority.PlanSHA256, &authority, &intent, &attempt, &res)

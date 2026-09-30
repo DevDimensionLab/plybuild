@@ -261,13 +261,21 @@ type integrationJourneyFixture struct {
 }
 
 func newIntegrationJourneyFixture(t *testing.T) integrationJourneyFixture {
+	return newIntegrationJourneyFixtureVersion(t, false)
+}
+func newIntegrationJourneyFixtureVersion(t *testing.T, legacy bool) integrationJourneyFixture {
 	t.Helper()
-	base := newWorkItemJourneyFixture(t)
+	base := newWorkItemJourneyFixtureVersion(t, legacy)
 	taskPath := filepath.Join(base.wrapper, "task")
 	input, _ := ParseTaskWorktreeCreateInput("task", "task", taskPath, base.oid)
 	ready, err := CreateTaskWorktree(base.dependencies, input)
 	if err != nil {
 		t.Fatal(err)
+	}
+	var basis *TaskSpecBasis
+	if !legacy {
+		b := fixtureSelectTaskSpec(t, base)
+		basis = &b
 	}
 	if err := os.WriteFile(filepath.Join(taskPath, "result.txt"), []byte("result\n"), 0o644); err != nil {
 		t.Fatal(err)
@@ -294,8 +302,14 @@ func newIntegrationJourneyFixture(t *testing.T) integrationJourneyFixture {
 		if err != nil {
 			return err
 		}
+		if legacy {
+			upgradeRegistryToV2(&registry)
+		}
 		registry.TaskResults = append(registry.TaskResults, TaskResultRecord{ID: resultID, PublicationKey: "task/result", DraftSHA256: digest, StoreTransition: "none", TaskID: "task", TaskWorktreeID: ready.Task.Worktree.ID, ProjectID: "ply", RepoID: "ply", GitCommonDir: ready.Task.GitCommonDir, SourceLocator: taskPath, SourceRef: "refs/heads/task", ResultOID: resultOID, ResultTree: resultTree, ActivityID: "act_11111111111111111111111111111111", RunID: "run_11111111111111111111111111111111", HandoffID: "hnd_11111111111111111111111111111111", HandoffLocator: filepath.Join(root, "handoff"), HandoffSHA256: digest, StartReceiptID: "rcp_11111111111111111111111111111111", StartReceiptLocator: filepath.Join(root, "start"), StartReceiptSHA256: digest, TerminalResultID: "res_11111111111111111111111111111111", TerminalResultLocator: filepath.Join(root, "terminal"), TerminalResultSHA256: digest, InspectionSHA256: digest, ReportedOutcome: "complete", TechnicalGate: "passed", VerifierResults: []TaskVerifierResultRecord{}, Review: TaskReviewRecord{Findings: []TaskReviewEntry{}, Fixes: []TaskReviewEntry{}, OpenActionableFindings: []TaskReviewEntry{}}, AcceptedDebt: []TaskAcceptedDebtRecord{}, Artifacts: []TaskArtifactRecord{}, Recorder: TaskRecorderRecord{ActorClaim: "test", ControlSurface: "test", RecordedAtUTC: "2026-09-28T12:00:00Z"}})
-		registry.HumanQARecords = append(registry.HumanQARecords, TaskHumanQARecord{ID: qaID, PublicationKey: "task/qa", DraftSHA256: digest, TaskID: "task", TaskResultID: resultID, ResultOID: resultOID, ResultTree: resultTree, Outcome: "pass", Actor: TaskHumanActorRecord{ActorClaim: "tester", StartSurface: "test", StartedAtUTC: "2026-09-28T12:00:00Z", CompletedAtUTC: "2026-09-28T12:01:00Z"}, Evidence: []TaskHumanQAEvidenceRecord{{ID: "report", Role: "report", Locator: qaReport, SHA256: digestTaskBytes(qaReportBytes), SizeBytes: int64(len(qaReportBytes))}}, Observation: "looks good", AcceptedResidualRisks: []TaskResidualRiskRecord{}})
+		if basis != nil {
+			registry.TaskResultSpecBindings = append(registry.TaskResultSpecBindings, TaskResultSpecBinding{TaskID: "task", TaskResultID: resultID, Basis: *basis, HandoffSHA256: digest, StartReceiptSHA256: digest})
+		}
+		registry.HumanQARecords = append(registry.HumanQARecords, TaskHumanQARecord{ID: qaID, PublicationKey: "task/qa", DraftSHA256: digest, TaskID: "task", TaskResultID: resultID, ResultOID: resultOID, ResultTree: resultTree, Outcome: "pass", Actor: TaskHumanActorRecord{ActorClaim: "fixture human, not actual approval", StartSurface: "test", StartedAtUTC: "2026-09-28T12:00:00Z", CompletedAtUTC: "2026-09-28T12:01:00Z"}, Evidence: []TaskHumanQAEvidenceRecord{{ID: "report", Role: "report", Locator: qaReport, SHA256: digestTaskBytes(qaReportBytes), SizeBytes: int64(len(qaReportBytes))}}, Observation: "looks good", AcceptedResidualRisks: []TaskResidualRiskRecord{}})
 		sortWorkRegistry(&registry)
 		return session.Publish(registry)
 	})
@@ -304,6 +318,7 @@ func newIntegrationJourneyFixture(t *testing.T) integrationJourneyFixture {
 	}
 	ids := &sequenceTaskLifecycleIDs{}
 	evidenceReader := &fixedTaskEvidenceReader{evidence: TaskHandoffEvidence{
+		TaskSpecBasis: basis, TaskSpecValid: basis != nil, TaskRequirementsValid: basis != nil, AcceptedStartOutcome: "started",
 		ActivityID: "act_11111111111111111111111111111111", RunID: "run_11111111111111111111111111111111", HandoffID: "hnd_11111111111111111111111111111111", HandoffLocator: filepath.Join(root, "handoff"), HandoffSHA256: digest,
 		StartReceiptID: "rcp_11111111111111111111111111111111", StartReceiptLocator: filepath.Join(root, "start"), StartReceiptSHA256: digest,
 		TerminalResultID: "res_11111111111111111111111111111111", TerminalResultLocator: filepath.Join(root, "terminal"), TerminalResultSHA256: digest, InspectionSHA256: digest,

@@ -139,12 +139,14 @@ type GitObserver interface {
 type Clock interface{ Now() time.Time }
 
 type Dependencies struct {
-	Files     FileSystem
-	Workspace WorkspaceObserver
-	Git       GitObserver
-	Clock     Clock
-	Random    io.Reader
-	Store     Store
+	TaskWorkspace   *workspace.Dependencies
+	taskSpecSession *workspace.TaskSpecSession
+	Files           FileSystem
+	Workspace       WorkspaceObserver
+	Git             GitObserver
+	Clock           Clock
+	Random          io.Reader
+	Store           Store
 }
 
 type identity struct {

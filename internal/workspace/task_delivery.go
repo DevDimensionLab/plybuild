@@ -146,6 +146,10 @@ type TaskHumanQARecord struct {
 // TaskHandoffEvidence is the redacted, rehashed projection supplied by the workflow-handoff
 // package. It deliberately contains no reply capability or secret material.
 type TaskHandoffEvidence struct {
+	TaskRequirementsValid                                                      bool
+	TaskSpecBasis                                                              *TaskSpecBasis
+	TaskSpecValid                                                              bool
+	AcceptedStartOutcome                                                       string
 	ActivityID, RunID, HandoffID, HandoffLocator, HandoffSHA256                string
 	StartReceiptID, StartReceiptLocator, StartReceiptSHA256                    string
 	TerminalResultID, TerminalResultLocator, TerminalResultSHA256              string
@@ -232,9 +236,11 @@ type TaskHumanQARecordInput struct {
 	File   string
 }
 type TaskResultMutationResult struct {
-	Workspace string
-	Record    TaskResultRecord
-	Created   bool
+	RegistryVersion int
+	SpecBinding     *TaskResultSpecBinding
+	Workspace       string
+	Record          TaskResultRecord
+	Created         bool
 }
 type TaskHumanQAMutationResult struct {
 	Workspace string
@@ -332,6 +338,7 @@ func RecordTaskResult(dependencies Dependencies, input TaskResultRecordInput) (T
 			if err != nil {
 				return err
 			}
+			result.RegistryVersion = registry.FormatVersion
 			task, _ := findTask(registry, input.TaskID)
 			if task == nil {
 				return workError(ErrorWorkNotFound, fmt.Sprintf("Task %s is not registered", input.TaskID), nil)
@@ -343,7 +350,8 @@ func RecordTaskResult(dependencies Dependencies, input TaskResultRecordInput) (T
 				if existing.PublicationKey == draft.PublicationKey {
 					if existing.DraftSHA256 == draft.Digest {
 						result.Record = existing
-						return nil
+						result.SpecBinding = taskResultSpecLink(registry, existing.ID)
+						return validateTaskContentClosure(dependencies.TaskContent, root, registry, false)
 					}
 					return workError(ErrorTaskResultConflict, "Task result publication_key already exists with different content", nil)
 				}
@@ -358,6 +366,14 @@ func RecordTaskResult(dependencies Dependencies, input TaskResultRecordInput) (T
 			if err := validateTaskResultBindings(*task, repo, draft, evidence, dependencies); err != nil {
 				return err
 			}
+			if taskRequiresSpec(registry, task.ID) {
+				if evidence.TaskSpecBasis == nil || !evidence.TaskSpecValid || evidence.AcceptedStartOutcome != "started" || evidence.TaskSpecBasis.TaskID != task.ID {
+					return contentError("task_spec_result_basis_missing", "a controlled started Task Spec basis is required", nil)
+				}
+				if _, err := historicalTaskSpec(dependencies, root, registry, *evidence.TaskSpecBasis); err != nil {
+					return err
+				}
+			}
 			id, err := dependencies.TaskLifecycleIDs.NewTaskResultID()
 			if err != nil {
 				return err
@@ -369,6 +385,11 @@ func RecordTaskResult(dependencies Dependencies, input TaskResultRecordInput) (T
 			}
 			record := TaskResultRecord{ID: id, PublicationKey: draft.PublicationKey, DraftSHA256: draft.Digest, StoreTransition: transition, TaskID: draft.TaskID, TaskWorktreeID: draft.TaskWorktreeID, ProjectID: draft.ProjectID, RepoID: draft.RepoID, GitCommonDir: draft.GitCommonDir, SourceLocator: draft.WorktreeLocator, SourceRef: draft.SourceRef, ResultOID: draft.ResultOID, ResultTree: draft.ResultTree, ActivityID: evidence.ActivityID, RunID: evidence.RunID, HandoffID: evidence.HandoffID, HandoffLocator: evidence.HandoffLocator, HandoffSHA256: evidence.HandoffSHA256, StartReceiptID: evidence.StartReceiptID, StartReceiptLocator: evidence.StartReceiptLocator, StartReceiptSHA256: evidence.StartReceiptSHA256, TerminalResultID: evidence.TerminalResultID, TerminalResultLocator: evidence.TerminalResultLocator, TerminalResultSHA256: evidence.TerminalResultSHA256, InspectionSHA256: evidence.InspectionSHA256, ReportedOutcome: evidence.ReportedOutcome, TechnicalGate: draft.TechnicalGate, VerifierResults: evidence.VerifierResults, Review: evidence.Review, AcceptedDebt: draft.AcceptedDebt, Artifacts: draft.EvidenceArtifacts, Recorder: draft.Recorder}
 			registry.TaskResults = append(registry.TaskResults, record)
+			if evidence.TaskSpecBasis != nil {
+				link := TaskResultSpecBinding{TaskResultID: id, TaskID: task.ID, Basis: *evidence.TaskSpecBasis, HandoffSHA256: evidence.HandoffSHA256, StartReceiptSHA256: evidence.StartReceiptSHA256}
+				registry.TaskResultSpecBindings = append(registry.TaskResultSpecBindings, link)
+				result.SpecBinding = &link
+			}
 			sortWorkRegistry(&registry)
 			if _, err := publishWorkItemRegistryRecover(session, registry); err != nil {
 				return err
@@ -411,8 +432,8 @@ func RecordTaskHumanQA(dependencies Dependencies, input TaskHumanQARecordInput) 
 			if err != nil {
 				return err
 			}
-			if registry.FormatVersion != 2 {
-				return workError(ErrorTaskQAConflict, "Task result store has not been upgraded to format 2", nil)
+			if registry.FormatVersion != 2 && registry.FormatVersion != 3 {
+				return workError(ErrorTaskQAConflict, "Task result store has not been upgraded to format 2 or 3", nil)
 			}
 			task, _ := findTask(registry, draft.TaskID)
 			if task == nil {
@@ -499,6 +520,9 @@ func validateTaskEvidence(draft taskResultDraft, evidence TaskHandoffEvidence) e
 		}
 	}
 	green := draft.TechnicalGate == "passed" || draft.TechnicalGate == "good_enough_with_known_debt"
+	if green && evidence.TaskSpecBasis != nil && !evidence.TaskRequirementsValid {
+		return workError(ErrorTaskResultEvidenceConflict, "a green selected-Spec result requires complete passing functional requirement coverage", nil)
+	}
 	if green && (!evidence.PolicyValid || evidence.ReportedOutcome != "complete") {
 		return workError(ErrorTaskResultEvidenceConflict, "green gate requires a policy-valid complete result", nil)
 	}
@@ -1018,6 +1042,13 @@ func resultSchemaError(err error) error {
 func qaSchemaError(err error) error { return workError(ErrorTaskQASchemaInvalid, err.Error(), err) }
 
 func MarshalTaskResultReadback(result TaskResultMutationResult) ([]byte, error) {
+	if result.RegistryVersion == 3 {
+		status := "not_recorded"
+		if result.SpecBinding != nil {
+			status = "bound"
+		}
+		return canonicaljson.Marshal(contentObject(map[string]canonicaljson.Value{"kind": "WorkspaceTaskResultRecordReadback@2", "schema_version": int64(2), "format": "json", "format_version": int64(1), "canonicalization": "RFC8785", "workspace": result.Workspace, "record": taskResultCanonical(result.Record), "created": result.Created, "next_action": taskResultNextAction(result.Record), "spec_binding": contentRefValue(result.SpecBinding), "basis_status": status, "next_transition_authorized": false}))
+	}
 	return canonicaljson.Marshal(canonicaljson.Object{{Name: "kind", Value: "WorkspaceTaskResultRecordReadback@1"}, {Name: "schema_version", Value: int64(1)}, {Name: "format", Value: "json"}, {Name: "format_version", Value: int64(1)}, {Name: "canonicalization", Value: "RFC8785"}, {Name: "workspace", Value: result.Workspace}, {Name: "record", Value: taskResultCanonical(result.Record)}, {Name: "created", Value: result.Created}, {Name: "next_action", Value: taskResultNextAction(result.Record)}})
 }
 func MarshalTaskHumanQAReadback(result TaskHumanQAMutationResult) ([]byte, error) {

@@ -99,11 +99,12 @@ func SystemDependencies() Dependencies {
 	workspaceDependencies := workspace.SystemDependencies()
 	clock := systemClock{}
 	dependencies := Dependencies{
-		Files:     files,
-		Workspace: systemWorkspaceObserver{dependencies: workspaceDependencies},
-		Git:       systemGitObserver{files: files, run: runGitCommand},
-		Clock:     clock,
-		Random:    rand.Reader,
+		TaskWorkspace: &workspaceDependencies,
+		Files:         files,
+		Workspace:     systemWorkspaceObserver{dependencies: workspaceDependencies},
+		Git:           systemGitObserver{files: files, run: runGitCommand},
+		Clock:         clock,
+		Random:        rand.Reader,
 	}
 	dependencies.Store = newSystemStore(files, clock)
 	return dependencies

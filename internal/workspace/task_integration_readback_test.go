@@ -19,7 +19,7 @@ func TestTaskIntegrationReadbackIsCanonicalAndHasOneAction(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := canonicaljson.DecodeStrict(encoded); err != nil || !bytes.Contains(encoded, []byte(`"kind":"WorkspaceTaskIntegrationReadback@1"`)) || bytes.HasSuffix(encoded, []byte("\n")) {
+	if _, err := canonicaljson.DecodeStrict(encoded); err != nil || !bytes.Contains(encoded, []byte(`"kind":"WorkspaceTaskIntegrationReadback@2"`)) || bytes.HasSuffix(encoded, []byte("\n")) {
 		t.Fatalf("readback = %s, error = %v", encoded, err)
 	}
 	text := RenderTaskIntegrationText(result.Readback)
@@ -28,7 +28,7 @@ func TestTaskIntegrationReadbackIsCanonicalAndHasOneAction(t *testing.T) {
 	}
 }
 
-func TestFormatTwoTaskShowUsesNullableIntegrationReadback(t *testing.T) {
+func TestFormatThreeTaskShowPreservesNullableIntegrationReadback(t *testing.T) {
 	fixture := newWorkItemJourneyFixture(t)
 	result, err := ShowTask(fixture.dependencies, "task")
 	if err != nil {

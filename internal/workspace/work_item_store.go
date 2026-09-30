@@ -58,17 +58,39 @@ type workItemRegistryV2Wire struct {
 	IntegrationAttempts    []IntegrationAttempt      `yaml:"integration_attempts"`
 	IntegrationResults     []IntegrationResult       `yaml:"integration_results"`
 }
+type workItemRegistryV3Wire struct {
+	FormatVersion           int                       `yaml:"format_version"`
+	Epics                   []EpicRecord              `yaml:"epics"`
+	Tasks                   []TaskRecord              `yaml:"tasks"`
+	WorktreeOperations      []WorktreeOperationRecord `yaml:"worktree_operations"`
+	TaskResults             []TaskResultRecord        `yaml:"task_results"`
+	HumanQARecords          []TaskHumanQARecord       `yaml:"human_qa_records"`
+	IntegrationAuthorities  []IntegrationAuthority    `yaml:"integration_authorities"`
+	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents"`
+	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts"`
+	IntegrationResults      []IntegrationResult       `yaml:"integration_results"`
+	TaskSpecPolicies        []TaskSpecPolicy          `yaml:"task_spec_policies"`
+	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
+	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
+	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
+	TaskSolutionSelections  []TaskSelectionReference  `yaml:"task_solution_selections"`
+	TaskResultSpecBindings  []TaskResultSpecBinding   `yaml:"task_result_spec_bindings"`
+	TaskContentPublications []TaskContentPublication  `yaml:"task_content_publications"`
+}
 
 func (registry WorkItemRegistry) MarshalYAML() (any, error) {
 	if registry.FormatVersion == 1 {
 		return workItemRegistryV1Wire{FormatVersion: 1, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations}, nil
+	}
+	if registry.FormatVersion == 3 {
+		return workItemRegistryV3Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults, TaskSpecPolicies: registry.TaskSpecPolicies, TaskProblemRevisions: registry.TaskProblemRevisions, TaskSpecRevisions: registry.TaskSpecRevisions, TaskSpecAssessments: registry.TaskSpecAssessments, TaskSolutionSelections: registry.TaskSolutionSelections, TaskResultSpecBindings: registry.TaskResultSpecBindings, TaskContentPublications: registry.TaskContentPublications}, nil
 	}
 	return workItemRegistryV2Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults}, nil
 }
 
 func newSystemWorkItemStore() *systemWorkItemStore { return &systemWorkItemStore{} }
 func emptyWorkItemRegistry() WorkItemRegistry {
-	return WorkItemRegistry{FormatVersion: 2, Epics: []EpicRecord{}, Tasks: []TaskRecord{}, WorktreeOperations: []WorktreeOperationRecord{}, TaskResults: []TaskResultRecord{}, HumanQARecords: []TaskHumanQARecord{}, IntegrationAuthorities: []IntegrationAuthority{}, IntegrationIntents: []IntegrationIntent{}, IntegrationAttempts: []IntegrationAttempt{}, IntegrationResults: []IntegrationResult{}}
+	return WorkItemRegistry{FormatVersion: 3, TaskSpecPolicies: []TaskSpecPolicy{}, TaskProblemRevisions: []TaskProblemReference{}, TaskSpecRevisions: []TaskSpecReference{}, TaskSpecAssessments: []TaskAssessmentReference{}, TaskSolutionSelections: []TaskSelectionReference{}, TaskResultSpecBindings: []TaskResultSpecBinding{}, TaskContentPublications: []TaskContentPublication{}, Epics: []EpicRecord{}, Tasks: []TaskRecord{}, WorktreeOperations: []WorktreeOperationRecord{}, TaskResults: []TaskResultRecord{}, HumanQARecords: []TaskHumanQARecord{}, IntegrationAuthorities: []IntegrationAuthority{}, IntegrationIntents: []IntegrationIntent{}, IntegrationAttempts: []IntegrationAttempt{}, IntegrationResults: []IntegrationResult{}}
 }
 func workItemsPath(root string) string { return filepath.Join(root, MarkerDirectory, WorkItemsFile) }
 
@@ -201,6 +223,9 @@ func (store *systemWorkItemStore) read(root string) (WorkItemRegistry, error) {
 }
 
 func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry) error {
+	if err := validateTaskContentClosure(&TaskContentStorage{}, root, registry, false); err != nil {
+		return err
+	}
 	contents, err := encodeWorkItemRegistry(registry)
 	if err != nil {
 		return workError(ErrorWorkStoreConflict, fmt.Sprintf("cannot encode work-item registry: %v", err), err)
@@ -339,7 +364,7 @@ func decodeWorkItemRegistry(contents []byte) (WorkItemRegistry, error) {
 		if registry.TaskResults != nil || registry.HumanQARecords != nil || registry.IntegrationAuthorities != nil || registry.IntegrationIntents != nil || registry.IntegrationAttempts != nil || registry.IntegrationResults != nil {
 			return WorkItemRegistry{}, errors.New("format 1 must not contain Task lifecycle collections")
 		}
-	} else if registry.FormatVersion == 2 {
+	} else if registry.FormatVersion >= 2 {
 		if registry.TaskResults == nil || registry.HumanQARecords == nil || registry.IntegrationAuthorities == nil || registry.IntegrationIntents == nil || registry.IntegrationAttempts == nil || registry.IntegrationResults == nil {
 			return WorkItemRegistry{}, errors.New("format 2 Task lifecycle collections must be explicit arrays")
 		}
@@ -372,7 +397,7 @@ func validateWorkItemRegistryYAMLShape(contents []byte, version int) error {
 		{name: "tasks", typeOf: reflect.TypeOf([]TaskRecord{})},
 		{name: "worktree_operations", typeOf: reflect.TypeOf([]WorktreeOperationRecord{})},
 	}
-	if version == 2 {
+	if version >= 2 {
 		fields = append(fields,
 			yamlShapeField{name: "task_results", typeOf: reflect.TypeOf([]TaskResultRecord{})},
 			yamlShapeField{name: "human_qa_records", typeOf: reflect.TypeOf([]TaskHumanQARecord{})},
@@ -381,6 +406,9 @@ func validateWorkItemRegistryYAMLShape(contents []byte, version int) error {
 			yamlShapeField{name: "integration_attempts", typeOf: reflect.TypeOf([]IntegrationAttempt{})},
 			yamlShapeField{name: "integration_results", typeOf: reflect.TypeOf([]IntegrationResult{})},
 		)
+	}
+	if version == 3 {
+		fields = append(fields, yamlShapeField{name: "task_spec_policies", typeOf: reflect.TypeOf([]TaskSpecPolicy{})}, yamlShapeField{name: "task_problem_revisions", typeOf: reflect.TypeOf([]TaskProblemReference{})}, yamlShapeField{name: "task_spec_revisions", typeOf: reflect.TypeOf([]TaskSpecReference{})}, yamlShapeField{name: "task_spec_assessments", typeOf: reflect.TypeOf([]TaskAssessmentReference{})}, yamlShapeField{name: "task_solution_selections", typeOf: reflect.TypeOf([]TaskSelectionReference{})}, yamlShapeField{name: "task_result_spec_bindings", typeOf: reflect.TypeOf([]TaskResultSpecBinding{})}, yamlShapeField{name: "task_content_publications", typeOf: reflect.TypeOf([]TaskContentPublication{})})
 	}
 	return validateYAMLMappingShape(document.Content[0], fields, "work-item registry")
 }
@@ -397,7 +425,25 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 	}
 	switch expected.Kind() {
 	case reflect.Struct:
-		return validateYAMLMappingShape(node, yamlStructShapeFields(expected), context)
+		fields := yamlStructShapeFields(expected)
+		if expected == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) {
+			version := ""
+			for i := 0; i+1 < len(node.Content); i += 2 {
+				if node.Content[i].Value == "schema_version" {
+					version = node.Content[i+1].Value
+				}
+			}
+			if version == "1" {
+				filtered := []yamlShapeField{}
+				for _, f := range fields {
+					if f.name != "task_spec_guard" {
+						filtered = append(filtered, f)
+					}
+				}
+				fields = filtered
+			}
+		}
+		return validateYAMLMappingShape(node, fields, context)
 	case reflect.Slice, reflect.Array:
 		if node.Kind != yaml.SequenceNode {
 			return fmt.Errorf("%s must be an explicit array", context)
@@ -456,7 +502,10 @@ var operationIDPattern = regexp.MustCompile(`^wop_[0-9a-f]{32}$`)
 var digestPattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
 func validateWorkItemRegistry(registry WorkItemRegistry) error {
-	if registry.FormatVersion != 1 && registry.FormatVersion != 2 {
+	if err := validateTaskContentRegistry(registry); err != nil {
+		return err
+	}
+	if registry.FormatVersion != 1 && registry.FormatVersion != 2 && registry.FormatVersion != 3 {
 		return fmt.Errorf("unsupported format_version %d", registry.FormatVersion)
 	}
 	if !sortedUniqueEpics(registry.Epics) || !sortedUniqueTasks(registry.Tasks) || !sortedUniqueOperations(registry.WorktreeOperations) {
@@ -611,7 +660,7 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 			return fmt.Errorf("operation refers to missing Task %s", taskID)
 		}
 	}
-	if registry.FormatVersion == 2 {
+	if registry.FormatVersion >= 2 {
 		if err := validateTaskLifecycleRegistry(registry); err != nil {
 			return err
 		}
@@ -867,7 +916,7 @@ func validateTaskHumanQARecordShape(q TaskHumanQARecord) error {
 }
 
 func validateStoredIntegrationPlan(p WorkspaceTaskIntegrationPlan, registry WorkItemRegistry, result TaskResultRecord, qa TaskHumanQARecord) error {
-	if p.Kind != "WorkspaceTaskIntegrationPlan@1" || p.SchemaVersion != 1 || p.Format != "json" || p.FormatVersion != 1 || p.Canonicalization != "RFC8785" || !validAbsoluteCleanPath(p.Workspace.Root) || !digestPattern.MatchString(p.Workspace.MarkerSHA256) || p.Project.ProjectID != result.ProjectID || p.Repository.RepoID != result.RepoID || !validAbsoluteCleanPath(p.Repository.RegisteredLocator) || p.Repository.GitCommonDir != result.GitCommonDir || !validAbsoluteCleanPath(p.Repository.GitCommonDir) || !setString("sha1", "sha256")[p.Repository.ObjectFormat] || p.Repository.RefFormat != "files" {
+	if validateStoredTaskSpecGuard(registry, p) != nil || p.Format != "json" || p.FormatVersion != 1 || p.Canonicalization != "RFC8785" || !validAbsoluteCleanPath(p.Workspace.Root) || !digestPattern.MatchString(p.Workspace.MarkerSHA256) || p.Project.ProjectID != result.ProjectID || p.Repository.RepoID != result.RepoID || !validAbsoluteCleanPath(p.Repository.RegisteredLocator) || p.Repository.GitCommonDir != result.GitCommonDir || !validAbsoluteCleanPath(p.Repository.GitCommonDir) || !setString("sha1", "sha256")[p.Repository.ObjectFormat] || p.Repository.RefFormat != "files" {
 		return errors.New("invalid integration plan envelope")
 	}
 	task, _ := findTask(registry, result.TaskID)

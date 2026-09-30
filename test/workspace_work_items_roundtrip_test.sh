@@ -60,7 +60,7 @@ grep -F 'Adopted Epic epic: Epic' "$temp_root/journey.stdout" >/dev/null || fail
 grep -F 'Created Task task: Task' "$temp_root/journey.stdout" >/dev/null || fail 'Task output missing'
 grep -F 'Created Task worktree for task.' "$temp_root/journey.stdout" >/dev/null || fail 'worktree output missing'
 grep -F '"kind":"WorkspaceEpicReadback@1"' "$temp_root/journey.stdout" >/dev/null || fail 'Epic JSON missing'
-grep -F '"kind":"WorkspaceTaskIntegrationReadback@1"' "$temp_root/journey.stdout" >/dev/null || fail 'Task integration JSON missing'
+grep -F '"kind":"WorkspaceTaskIntegrationReadback@2"' "$temp_root/journey.stdout" >/dev/null || fail 'Task integration JSON missing'
 grep -F '"kind":"record_task_result"' "$temp_root/journey.stdout" >/dev/null || fail 'Task result next action missing'
 
 [[ $(git -C "$epic" rev-parse HEAD) == "$oid" ]] || fail 'Epic HEAD changed'
@@ -72,7 +72,7 @@ grep -F '"kind":"record_task_result"' "$temp_root/journey.stdout" >/dev/null || 
 [[ $(shasum -a 256 "$workspace/.ply/projects.yaml") == "$projects_before" ]] || fail 'Project registry changed'
 
 store="$workspace/.ply/work-items.yaml"
-grep -F 'format_version: 2' "$store" >/dev/null || fail 'work-item format version missing'
+grep -F 'format_version: 3' "$store" >/dev/null || fail 'work-item format version missing'
 grep -F 'task_results: []' "$store" >/dev/null || fail 'Task result collection missing'
 grep -F 'integration_results: []' "$store" >/dev/null || fail 'integration result collection missing'
 grep -F 'worktree_state: worktree_ready' "$store" >/dev/null || fail 'ready state missing'

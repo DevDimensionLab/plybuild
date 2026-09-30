@@ -93,6 +93,9 @@ func Show(dependencies Dependencies, id HandoffID) (ShowResult, error) {
 		result.Meaning = "No lifecycle transition is safe until a separate control resolves the preserved evidence."
 		result.NextAction = inspectAction
 	}
+	if basis, err := taskSpecBasis(snapshot.Handoff.Value); err == nil && basis != nil {
+		result.Meaning += fmt.Sprintf(" Historical Task %s basis: problem revision %d, solution %s revision %d. Inspect current relevance with `ply workspace task show %s`; this history grants no current integration authority.", basis.TaskID, basis.Problem.Revision, basis.SpecID, basis.Spec.Revision, basis.TaskID)
+	}
 	return result, nil
 }
 
@@ -163,6 +166,22 @@ func Inspect(dependencies Dependencies, input InspectInput) (InspectResult, erro
 	}
 	action, reason := recommendation(state)
 	inspection := envelope("ply.workflow.handoff-inspection", canonicaljson.Member{Name: "derived_state", Value: state}, canonicaljson.Member{Name: "integrity", Value: canonicaljson.Object{{Name: "valid", Value: len(snapshot.IntegrityReasons) == 0}, {Name: "reasons", Value: stringValues(snapshot.IntegrityReasons)}}}, canonicaljson.Member{Name: "identities", Value: identityValue(snapshot.Handoff.Identity)}, canonicaljson.Member{Name: "documents", Value: documents}, canonicaljson.Member{Name: "validations", Value: validations}, canonicaljson.Member{Name: "attempts", Value: attempts}, canonicaljson.Member{Name: "artifacts", Value: snapshotArtifacts(snapshot)}, canonicaljson.Member{Name: "next_transition_authorized", Value: false}, canonicaljson.Member{Name: "control_recommendation", Value: canonicaljson.Object{{Name: "action", Value: action}, {Name: "reason", Value: reason}, {Name: "argv", Value: []canonicaljson.Value{}}}})
+	if taskSpecVersion(snapshot.Handoff.Value) == 2 {
+		basis, eval, specErr := historicalHandoffTaskSpec(dependencies, snapshot)
+		reasons := []string{}
+		if specErr != nil {
+			reasons = append(reasons, "task_spec_binding_conflict")
+		}
+		validations = append(validations, canonicaljson.Member{Name: "task_spec", Value: valid(true, reasons)})
+		if coverageErr := taskRequirementsCoverage(dependencies, snapshot, basis, eval); coverageErr != nil && snapshot.Terminal != nil {
+			evidenceReasons = append(evidenceReasons, "task_spec_requirement_evidence")
+			validations = replaceObjectMember(validations, "evidence_coverage", valid(true, evidenceReasons))
+		}
+		inspection = replaceObjectMember(inspection, "schema_version", int64(2))
+		inspection = replaceObjectMember(inspection, "validations", validations)
+		basisValue, _ := objectMember(snapshot.Handoff.Value, "task_spec_binding")
+		inspection = append(inspection, canonicaljson.Member{Name: "task_spec_basis", Value: basisValue})
+	}
 	bytes, err := canonicaljson.Marshal(inspection)
 	if err != nil {
 		return InspectResult{}, schemaError("inspection", err)

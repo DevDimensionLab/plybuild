@@ -144,7 +144,7 @@ const (
 	maxResultBytes  = 1 << 20
 )
 
-func decodeHandoffDraft(input []byte) (handoffDraft, error) {
+func decodeHandoffDraftV1(input []byte) (handoffDraft, error) {
 	if len(input) > maxHandoffBytes {
 		return handoffDraft{}, classified(ErrorPayloadTooLarge, "handoff draft exceeds 256 KiB", nil)
 	}
@@ -223,7 +223,7 @@ func decodeHandoffDraft(input []byte) (handoffDraft, error) {
 	}, nil
 }
 
-func validateStoredHandoff(value canonicaljson.Object) error {
+func validateStoredHandoffV1(value canonicaljson.Object) error {
 	fields, err := exactObject(value, "handoff", "kind", "schema_version", "format", "format_version", "canonicalization", "identity", "source_draft_sha256", "goal", "recipient", "workspace_binding", "project_binding", "target_binding", "inputs", "authority", "budget", "procedure", "verifiers", "stop_conditions", "reporting", "reply_capability")
 	if err != nil {
 		return err
@@ -949,7 +949,7 @@ func validateReporting(value canonicaljson.Value) (canonicaljson.Object, error) 
 	return value.(canonicaljson.Object), nil
 }
 
-func decodeStartDraft(input []byte) (startDraft, error) {
+func decodeStartDraftV1(input []byte) (startDraft, error) {
 	if len(input) > maxStartBytes {
 		return startDraft{}, classified(ErrorPayloadTooLarge, "start receipt draft exceeds 128 KiB", nil)
 	}
@@ -1526,7 +1526,7 @@ func validateFinalDocument(value canonicaljson.Value, kind string, draftFields [
 var startDocumentFields = []string{"kind", "schema_version", "format", "format_version", "canonicalization", "receipt_id", "binding", "principal", "observed_workspace", "observed_project", "observed_target", "observed_inputs", "contract_digests", "sandbox", "acceptance", "issues"}
 var terminalDocumentFields = []string{"kind", "schema_version", "format", "format_version", "canonicalization", "result_id", "binding", "start_binding", "principal", "reported_outcome", "rounds_used", "stop_reasons", "summary", "meaning", "final_target", "observed_effects", "verifier_results", "review", "artifacts", "evidence_gaps", "forbidden_effects_observed"}
 
-func validateStoredAccepted(value canonicaljson.Object, phase, capabilityID, secret string) error {
+func validateStoredAcceptedV1(value canonicaljson.Object, phase, capabilityID, secret string) error {
 	kind := map[string]string{"start": "ply.workflow.start-receipt", "terminal": "ply.workflow.terminal-result"}[phase]
 	fields := startDocumentFields
 	if phase == "terminal" {

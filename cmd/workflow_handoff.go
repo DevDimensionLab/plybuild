@@ -53,7 +53,7 @@ func newWorkflowHandoffCommandWithServices(services workflowHandoffServices) *co
 	setHandoffFlagErrors(parent)
 
 	var createFile string
-	create := &cobra.Command{Use: "create", Short: "Create an immutable agent handoff", Long: "Validate a handoff draft and publish one immutable handoff in the containing Ply workspace.", Example: "  ply workflow handoff create --file /absolute/handoff-draft.json", Args: noArguments(func() error {
+	create := &cobra.Command{Use: "create", Short: "Create an immutable agent handoff", Long: "Validate a handoff draft and publish one immutable handoff in the containing Ply workspace. A Task requiring a selected solution uses schema version 2 and the exact task_spec_binding and required_inputs from task spec show. This does not start an agent.", Example: "  ply workflow handoff create --file /absolute/handoff-draft.json", Args: noArguments(func() error {
 		if createFile == "" {
 			return fmt.Errorf("--file is required")
 		}
@@ -74,7 +74,7 @@ func newWorkflowHandoffCommandWithServices(services workflowHandoffServices) *co
 	_ = create.MarkFlagRequired("file")
 	setHandoffFlagErrors(create)
 
-	show := &cobra.Command{Use: "show <handoff-id>", Short: "Show an agent handoff for a human", Long: "Show the lifecycle result, practical meaning, and one next action for an agent handoff.", Example: "  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef", Args: oneHandoffID, RunE: func(cmd *cobra.Command, args []string) error {
+	show := &cobra.Command{Use: "show <handoff-id>", Short: "Show an agent handoff for a human", Long: "Show the lifecycle result, practical meaning, and one next action for an agent handoff. Selected Task basis is historical; task show reports its current relevance.", Example: "  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef", Args: oneHandoffID, RunE: func(cmd *cobra.Command, args []string) error {
 		id, _ := workflowhandoff.ParseHandoffID(args[0])
 		result, err := services.show(id)
 		if err != nil {

@@ -77,6 +77,8 @@ func (err *Error) Error() string {
 func (err *Error) Unwrap() error { return err.Err }
 
 type Dependencies struct {
+	TaskContent      *TaskContentStorage
+	TaskContentIDs   TaskContentIDSource
 	Files            FileSystem
 	Repos            RepoObserver
 	Projects         ProjectStore
@@ -98,6 +100,8 @@ func SystemDependencies() Dependencies {
 	files := systemFileSystem{}
 	projects := newSystemProjectStore()
 	return Dependencies{
+		TaskContent:      &TaskContentStorage{},
+		TaskContentIDs:   cryptoTaskContentIDs{},
 		Files:            files,
 		Repos:            newSystemRepoObserver(files),
 		Projects:         projects,

@@ -940,6 +940,9 @@ func (store *systemStore) readAccepted(locator string, handoff handoffDocument, 
 			return nil, storeConflict(locator, "accepted document schema or proof is invalid", err)
 		}
 	}
+	if phase == "start" && taskSpecVersion(object) != taskSpecVersion(handoff.Value) {
+		return nil, storeConflict(locator, "start and handoff schema versions differ", nil)
+	}
 	document := &acceptedDocument{Value: object, Bytes: bytes, SHA256: digestBytes(bytes), Locator: locator}
 	if filepath.Base(locator) != strings.TrimPrefix(document.SHA256, "sha256:")+".json" {
 		return nil, storeConflict(locator, "accepted document filename digest does not match bytes", nil)

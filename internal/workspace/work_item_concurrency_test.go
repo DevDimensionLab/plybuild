@@ -84,6 +84,10 @@ type workItemJourneyFixture struct {
 }
 
 func newWorkItemJourneyFixture(t *testing.T) workItemJourneyFixture {
+	return newWorkItemJourneyFixtureVersion(t, false)
+}
+
+func newWorkItemJourneyFixtureVersion(t *testing.T, legacy bool) workItemJourneyFixture {
 	t.Helper()
 	root := createProjectWorkspace(t)
 	wrapper := filepath.Join(root, "ply")
@@ -119,9 +123,38 @@ func newWorkItemJourneyFixture(t *testing.T) workItemJourneyFixture {
 	if _, err := AdoptEpic(dependencies, adopt); err != nil {
 		t.Fatal(err)
 	}
-	task, _ := ParseTaskCreateInput("task", "Task", "Description", "epic", "ply", "ply")
-	if _, err := CreateTask(dependencies, task); err != nil {
-		t.Fatal(err)
+	if legacy {
+		// Seed an explicit pre-WS05 registry; do not weaken the policy of new Tasks.
+		err := dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+			r, err := session.Snapshot()
+			if err != nil {
+				return err
+			}
+			r.FormatVersion = 1
+			r.TaskSpecPolicies = nil
+			r.TaskProblemRevisions = nil
+			r.TaskSpecRevisions = nil
+			r.TaskSpecAssessments = nil
+			r.TaskSolutionSelections = nil
+			r.TaskResultSpecBindings = nil
+			r.TaskContentPublications = nil
+			r.TaskResults = nil
+			r.HumanQARecords = nil
+			r.IntegrationAuthorities = nil
+			r.IntegrationIntents = nil
+			r.IntegrationAttempts = nil
+			r.IntegrationResults = nil
+			r.Tasks = append(r.Tasks, TaskRecord{ID: "task", Title: "Task", Description: "Description", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply", GitCommonDir: common, WorktreeState: WorkItemUnbound})
+			return session.Publish(r)
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		task, _ := ParseTaskCreateInput("task", "Task", "Description", "epic", "ply", "ply")
+		if _, err := CreateTask(dependencies, task); err != nil {
+			t.Fatal(err)
+		}
 	}
 	return workItemJourneyFixture{dependencies: dependencies, wrapper: wrapper, oid: oid}
 }

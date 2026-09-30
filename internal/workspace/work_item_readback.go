@@ -39,6 +39,7 @@ type TaskFreshnessWorktree struct{ Locator, Ref, OID, Tree, GitCommonDir, Clean,
 type TaskFreshnessSource struct{ Ref, OID, Tree, CheckedOutAt string }
 type TaskFreshnessTarget struct{ Kind, Locator, Ref, OID, Tree, GitCommonDir, Clean, InventoryMatch string }
 type TaskReadbackResult struct {
+	Content                        canonicaljson.Object
 	Workspace                      string
 	Task                           TaskRecord
 	Epic                           EpicRecord
@@ -276,9 +277,12 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 	}
 	result.Reasons = sortedReasons(result.Reasons)
 	result.ReadyForHandoff = result.WorktreeReady && len(result.Reasons) == 0 && result.ProjectFreshness == "fresh"
-	if registry.FormatVersion == 2 {
+	if registry.FormatVersion >= 2 {
 		integration := buildTaskShowIntegrationReadback(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repositories}, registry, *task, *epic, *binding)
 		result.Integration = &integration
+	}
+	if registry.FormatVersion == 3 {
+		result.Content = buildTaskContentReadback(dependencies, registry, ProjectSnapshot{Projects: projects, Repos: repositories}, result)
 	}
 	return result, nil
 }
@@ -296,6 +300,9 @@ func MarshalEpicReadback(result EpicReadbackResult) ([]byte, error) {
 }
 
 func MarshalTaskReadback(result TaskReadbackResult) ([]byte, error) {
+	if result.Content != nil {
+		return canonicaljson.Marshal(result.Content)
+	}
 	if result.Integration != nil {
 		return MarshalTaskIntegrationReadback(*result.Integration)
 	}

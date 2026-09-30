@@ -185,7 +185,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Validate a handoff draft and publish one immutable handoff in the containing Ply workspace.",
+        "long": "Validate a handoff draft and publish one immutable handoff in the containing Ply workspace. A Task requiring a selected solution uses schema version 2 and the exact task_spec_binding and required_inputs from task spec show. This does not start an agent.",
         "path": "ply workflow handoff create",
         "runnable": true,
         "short": "Create an immutable agent handoff",
@@ -373,7 +373,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Show the lifecycle result, practical meaning, and one next action for an agent handoff.",
+        "long": "Show the lifecycle result, practical meaning, and one next action for an agent handoff. Selected Task basis is historical; task show reports its current relevance.",
         "path": "ply workflow handoff show",
         "runnable": true,
         "short": "Show an agent handoff for a human",
@@ -1312,6 +1312,19 @@
             "usage": "parent Epic ID"
           },
           {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
             "annotations": {
               "cobra_annotation_flag_set_by_cobra": [
                 "true"
@@ -1378,6 +1391,19 @@
             "shorthand_deprecated": "",
             "type": "string",
             "usage": "Task display title"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "upgrade-store",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "acknowledge the exact SHA-256 digest of a format 1 or 2 registry"
           }
         ],
         "has_args_validator": true,
@@ -1386,10 +1412,10 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Create one Task under an existing Epic and bind it to one registered repository.",
+        "long": "Create one Task under an existing Epic and record its initial problem. A format 1 or 2 registry requires --upgrade-store with its exact digest. Solution selection, worktree creation, agent start, QA and integration remain separate actions.",
         "path": "ply workspace task create",
         "runnable": true,
-        "short": "Create a repository-bound Task",
+        "short": "Create a repository-bound Task and record its initial problem",
         "suggest_for": null,
         "traverse_children": false,
         "use": "create <task-id>"
@@ -1674,6 +1700,312 @@
       },
       "kind": "command_added",
       "path": "ply workspace task list"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task problem --help",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for problem"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record or inspect Task metadata and preserved documents. A selection records a human claim. Worktree creation, agent start, product QA, and integration remain separate actions.",
+        "path": "ply workspace task problem",
+        "runnable": true,
+        "short": "Preserve Task problem revisions",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "problem"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task problem"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task problem record explain-start-errors --file /absolute/record.json --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical path to a complete JSON draft (maximum 256 KiB)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for record"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": true,
+        "hidden": false,
+        "long": "Record an immutable problem revision. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.",
+        "path": "ply workspace task problem record",
+        "runnable": true,
+        "short": "Record an immutable problem revision",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "record <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task problem record"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task problem show explain-start-errors --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          },
+          {
+            "annotations": {},
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "exact positive revision number"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": true,
+        "hidden": false,
+        "long": "Show the recorded problem and preserved sources. This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.",
+        "path": "ply workspace task problem show",
+        "runnable": true,
+        "short": "Show the recorded problem and preserved sources",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task problem show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task publication --help",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for publication"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record or inspect Task metadata and preserved documents. A selection records a human claim. Worktree creation, agent start, product QA, and integration remain separate actions.",
+        "path": "ply workspace task publication",
+        "runnable": true,
+        "short": "Inspect Task content publication outcomes",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "publication"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task publication"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task publication show explain-start-errors --key solution/r1 --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "key",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact publication key"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": true,
+        "hidden": false,
+        "long": "Inspect the outcome of a Task content publication. This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.",
+        "path": "ply workspace task publication show",
+        "runnable": true,
+        "short": "Inspect the outcome of a Task content publication",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task publication show"
     },
     {
       "after": {
@@ -1967,6 +2299,494 @@
       },
       "kind": "command_added",
       "path": "ply workspace task show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task spec --help",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for spec"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record or inspect Task metadata and preserved documents. A selection records a human claim. Worktree creation, agent start, product QA, and integration remain separate actions.",
+        "path": "ply workspace task spec",
+        "runnable": true,
+        "short": "Record, assess, and select a Task solution",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "spec"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task spec"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task spec assess explain-start-errors --file /absolute/assess.json --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical path to a complete JSON draft (maximum 256 KiB)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for assess"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": true,
+        "hidden": false,
+        "long": "Record a readiness assessment without selecting a solution. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.",
+        "path": "ply workspace task spec assess",
+        "runnable": true,
+        "short": "Record a readiness assessment without selecting a solution",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "assess <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task spec assess"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task spec list explain-start-errors --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for list"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": true,
+        "hidden": false,
+        "long": "List solution revisions and their assessments. This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.",
+        "path": "ply workspace task spec list",
+        "runnable": true,
+        "short": "List solution revisions and their assessments",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "list <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task spec list"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task spec record explain-start-errors --file /absolute/record.json --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical path to a complete JSON draft (maximum 256 KiB)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for record"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": true,
+        "hidden": false,
+        "long": "Record a solution revision with three parts. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.",
+        "path": "ply workspace task spec record",
+        "runnable": true,
+        "short": "Record a solution revision with three parts",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "record <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task spec record"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task spec select explain-start-errors --file /absolute/select.json --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical path to a complete JSON draft (maximum 256 KiB)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for select"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": true,
+        "hidden": false,
+        "long": "Record the human's exact solution choice. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.",
+        "path": "ply workspace task spec select",
+        "runnable": true,
+        "short": "Record the human's exact solution choice",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "select <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task spec select"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task spec show explain-start-errors --spec explain-errors --revision 1 --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "exact positive revision number"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "spec",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Task-owned Spec ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": true,
+        "hidden": false,
+        "long": "Show an exact solution revision and its preserved inputs. This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.",
+        "path": "ply workspace task spec show",
+        "runnable": true,
+        "short": "Show an exact solution revision and its preserved inputs",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task spec show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task spec withdraw explain-start-errors --file /absolute/withdraw.json --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical path to a complete JSON draft (maximum 256 KiB)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for withdraw"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": true,
+        "hidden": false,
+        "long": "Withdraw the current choice without deleting its history. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.",
+        "path": "ply workspace task spec withdraw",
+        "runnable": true,
+        "short": "Withdraw the current choice without deleting its history",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "withdraw <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task spec withdraw"
     },
     {
       "after": {

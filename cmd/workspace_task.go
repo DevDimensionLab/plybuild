@@ -18,7 +18,7 @@ type workspaceTaskServices struct {
 }
 
 func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command {
-	return newWorkspaceTaskCommandWithServices(workspaceTaskServices{create: func(input workspace.TaskCreateInput) (workspace.TaskMutationResult, error) {
+	command := newWorkspaceTaskCommandWithServices(workspaceTaskServices{create: func(input workspace.TaskCreateInput) (workspace.TaskMutationResult, error) {
 		return workspace.CreateTask(dependencies, input)
 	}, show: func(id workspace.TaskID) (workspace.TaskReadbackResult, error) {
 		return workspace.ShowTask(dependencies, id)
@@ -36,12 +36,14 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 		}
 		return workspace.CheckTaskIntegration(dependencies, input)
 	}})
+	addWorkspaceTaskContentCommands(command, dependencies)
+	return command
 }
 
 func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.Command {
 	command := &cobra.Command{Use: "task", Short: "Manage Tasks in a Ply workspace", Long: "Create, inspect, and advance repository-bound Tasks owned by workspace Epics.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply\n  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check"}
-	var title, description, epicID, projectID, repoID string
-	create := &cobra.Command{Use: "create <task-id>", Short: "Create a repository-bound Task", Long: "Create one Task under an existing Epic and bind it to one registered repository.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply", Args: func(cmd *cobra.Command, args []string) error {
+	var title, description, epicID, projectID, repoID, createFormat, upgradeStore string
+	create := &cobra.Command{Use: "create <task-id>", Short: "Create a repository-bound Task and record its initial problem", Long: "Create one Task under an existing Epic and record its initial problem. A format 1 or 2 registry requires --upgrade-store with its exact digest. Solution selection, worktree creation, agent start, QA and integration remain separate actions.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
 		}
@@ -52,12 +54,48 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 		if err != nil {
 			return err
 		}
+		if err := validateWorkFormat(createFormat); err != nil {
+			return err
+		}
+		if upgradeStore != "" {
+			input.RegistryUpgrade = &workspace.TaskRegistryUpgrade{RegistrySHA256: upgradeStore}
+		}
 		result, err := services.create(input)
+		if createFormat == "json" && result.Content != nil {
+			b, marshalErr := workspace.MarshalTaskContentMutation(*result.Content)
+			if marshalErr != nil {
+				return marshalErr
+			}
+			if _, writeErr := cmd.OutOrStdout().Write(append(b, '\n')); writeErr != nil {
+				return fmt.Errorf("%w; inspect with ply workspace task publication show %s --key %s", writeErr, input.TaskID, result.Content.PublicationKey)
+			}
+			return err
+		}
 		if err != nil {
 			return err
 		}
-		return renderTaskMutation(cmd, result)
+		if createFormat == "json" {
+			readback, readErr := services.show(input.TaskID)
+			if readErr != nil {
+				return readErr
+			}
+			b, marshalErr := workspace.MarshalTaskReadback(readback)
+			if marshalErr != nil {
+				return marshalErr
+			}
+			_, writeErr := cmd.OutOrStdout().Write(append(b, '\n'))
+			return writeErr
+		}
+		if writeErr := renderTaskMutation(cmd, result); writeErr != nil {
+			if result.Content != nil {
+				return fmt.Errorf("%w; inspect with ply workspace task publication show %s --key %s", writeErr, input.TaskID, result.Content.PublicationKey)
+			}
+			return writeErr
+		}
+		return nil
 	}}
+	create.Flags().StringVar(&createFormat, "format", "text", "output format (text or json)")
+	create.Flags().StringVar(&upgradeStore, "upgrade-store", "", "acknowledge the exact SHA-256 digest of a format 1 or 2 registry")
 	create.Flags().StringVar(&title, "title", "", "Task display title")
 	create.Flags().StringVar(&description, "description", "", "one-line Task description")
 	create.Flags().StringVar(&epicID, "epic", "", "parent Epic ID")
@@ -242,18 +280,22 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 			return err
 		}
 		out, err := services.integrate(input)
-		if err != nil {
+		if err != nil && out.Readback.Value == nil {
 			return err
 		}
 		if format == "json" {
-			b, err := workspace.MarshalTaskIntegrationReadback(out.Readback)
-			if err != nil {
-				return err
+			b, marshalErr := workspace.MarshalTaskIntegrationReadback(out.Readback)
+			if marshalErr != nil {
+				return marshalErr
 			}
-			_, err = cmd.OutOrStdout().Write(append(b, '\n'))
+			if _, writeErr := cmd.OutOrStdout().Write(append(b, '\n')); writeErr != nil {
+				return fmt.Errorf("%w; inspect with ply workspace task show %s --format json", writeErr, input.TaskID)
+			}
 			return err
 		}
-		_, err = fmt.Fprint(cmd.OutOrStdout(), workspace.RenderTaskIntegrationText(out.Readback))
+		if _, writeErr := fmt.Fprint(cmd.OutOrStdout(), workspace.RenderTaskIntegrationText(out.Readback)); writeErr != nil {
+			return fmt.Errorf("%w; inspect with ply workspace task show %s --format json", writeErr, input.TaskID)
+		}
 		return err
 	}}
 	command.Flags().StringVar(&resultID, "result", "", "controlled Task result ID")
@@ -409,7 +451,7 @@ func renderTaskList(command *cobra.Command, result workspace.TaskListResult) err
 			return err
 		}
 		for _, task := range result.Tasks {
-			if _, err := fmt.Fprintf(command.OutOrStdout(), "  %s: %s (%s / %s; %s)\n", task.ID, task.Title, task.ProjectID, task.RepoID, task.WorktreeState); err != nil {
+			if _, err := fmt.Fprintf(command.OutOrStdout(), "  %s: %s (%s / %s; %s)\n", task.ID, currentTaskTitle(result, task), task.ProjectID, task.RepoID, task.WorktreeState); err != nil {
 				return err
 			}
 		}
@@ -419,7 +461,7 @@ func renderTaskList(command *cobra.Command, result workspace.TaskListResult) err
 		return err
 	}
 	for _, task := range result.Tasks {
-		if _, err := fmt.Fprintf(command.OutOrStdout(), "  %s: %s (Epic %s; %s / %s; %s)\n", task.ID, task.Title, task.ParentEpicID, task.ProjectID, task.RepoID, task.WorktreeState); err != nil {
+		if _, err := fmt.Fprintf(command.OutOrStdout(), "  %s: %s (Epic %s; %s / %s; %s)\n", task.ID, currentTaskTitle(result, task), task.ParentEpicID, task.ProjectID, task.RepoID, task.WorktreeState); err != nil {
 			return err
 		}
 	}
@@ -444,4 +486,11 @@ func workReasonText(reason string) string {
 		return value
 	}
 	return reason
+}
+
+func currentTaskTitle(result workspace.TaskListResult, task workspace.TaskRecord) string {
+	if title, ok := result.CurrentTitles[task.ID]; ok {
+		return title
+	}
+	return task.Title
 }

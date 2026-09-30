@@ -19,6 +19,22 @@ func Create(dependencies Dependencies, input CreateInput) (CreateResult, error) 
 }
 
 func createWithActivity(dependencies Dependencies, input CreateInput, existingActivityID string, prepared *CreateStoreInput) (CreateResult, error) {
+	if dependencies.taskSpecSession == nil {
+		if err := requireDependencies(dependencies); err != nil {
+			return CreateResult{}, err
+		}
+		observed, err := dependencies.Workspace.ObserveContaining()
+		if err != nil {
+			return CreateResult{}, err
+		}
+		var result CreateResult
+		err = withTaskSpecWorkspace(dependencies, observed.Observation.Root, func(locked Dependencies) error {
+			var e error
+			result, e = createWithActivity(locked, input, existingActivityID, prepared)
+			return e
+		})
+		return result, err
+	}
 	if err := requireDependencies(dependencies); err != nil {
 		return CreateResult{}, err
 	}
@@ -96,6 +112,10 @@ func createWithActivity(dependencies Dependencies, input CreateInput, existingAc
 			{Name: "allowed_operations", Value: []canonicaljson.Value{"submit-result", "submit-start"}},
 		}},
 	)
+	if taskSpecVersion(draft.Value) == 2 {
+		basis, _ := objectMember(draft.Value, "task_spec_binding")
+		handoffValue = append(replaceObjectMember(handoffValue, "schema_version", int64(2)), canonicaljson.Member{Name: "task_spec_binding", Value: basis})
+	}
 	handoffBytes, err := canonicaljson.Marshal(handoffValue)
 	if err != nil {
 		return CreateResult{}, schemaError("handoff", err)
@@ -209,6 +229,9 @@ func observeCreateBindings(dependencies Dependencies, draft handoffDraft) (creat
 		}
 		inputs = append(inputs, observed)
 	}
+	if err := validateCreateTaskSpec(dependencies, draft, target); err != nil {
+		return createObservation{}, err
+	}
 	return createObservation{workspace: snapshot, repository: repository, target: target, inputs: inputs}, nil
 }
 
@@ -236,13 +259,35 @@ func SubmitStart(dependencies Dependencies, input SubmitInput) (SubmitResult, er
 		}
 		return SubmitResult{}, err
 	}
+	if snapshot.Start != nil {
+		original := replaceObjectMember(removeObjectMember(snapshot.Start.Value, "capability_proof"), "kind", "ply.workflow.start-receipt-draft")
+		if taskSpecVersion(original) == 2 {
+			original = removeObjectMember(original, "task_spec_observation")
+		}
+		if canonicalEqual(original, draft.Value) {
+			return SubmitResult{Phase: "start", DocumentID: snapshot.Start.DocumentID, Locator: snapshot.Start.Locator, SHA256: snapshot.Start.SHA256, Created: false}, nil
+		}
+	}
+	if dependencies.taskSpecSession == nil {
+		var result SubmitResult
+		err = withTaskSpecWorkspace(dependencies, snapshot.Handoff.Workspace.Root, func(locked Dependencies) error { var e error; result, e = SubmitStart(locked, input); return e })
+		return result, err
+	}
 	if err := validateStartBinding(dependencies, snapshot, draft); err != nil {
 		if system, ok := dependencies.Store.(*systemStore); ok {
 			_ = system.publishReplyRejection(snapshot, "start", "conflict", draft.Canonical, classOf(err), err.Error())
 		}
 		return SubmitResult{}, err
 	}
-	final, bytes, err := addCapabilityProof(draft.Value, "ply.workflow.start-receipt", snapshot.Handoff.ReplyCapabilityID, snapshot.Handoff.ReplySecret)
+	finalInput := draft.Value
+	if taskSpecVersion(draft.Value) == 2 {
+		observation, err := validateTaskSpecStart(dependencies, snapshot, draft)
+		if err != nil {
+			return SubmitResult{}, err
+		}
+		finalInput = append(append(canonicaljson.Object{}, draft.Value...), canonicaljson.Member{Name: "task_spec_observation", Value: observation})
+	}
+	final, bytes, err := addCapabilityProof(finalInput, "ply.workflow.start-receipt", snapshot.Handoff.ReplyCapabilityID, snapshot.Handoff.ReplySecret)
 	if err != nil {
 		return SubmitResult{}, schemaError("start receipt", err)
 	}
@@ -341,6 +386,18 @@ func Abandon(dependencies Dependencies, input ControlInput) (ControlResult, erro
 	return ControlResult{HandoffID: input.HandoffID, Reason: input.Reason, Locator: stored.Snapshot.Handoff.Locator}, nil
 }
 func Supersede(dependencies Dependencies, input SupersedeInput) (CreateResult, error) {
+	if dependencies.taskSpecSession == nil {
+		if err := requireDependencies(dependencies); err != nil {
+			return CreateResult{}, err
+		}
+		observed, err := dependencies.Workspace.ObserveContaining()
+		if err != nil {
+			return CreateResult{}, err
+		}
+		var result CreateResult
+		err = withTaskSpecWorkspace(dependencies, observed.Observation.Root, func(locked Dependencies) error { var e error; result, e = Supersede(locked, input); return e })
+		return result, err
+	}
 	if err := requireDependencies(dependencies); err != nil {
 		return CreateResult{}, err
 	}
@@ -380,6 +437,9 @@ func Supersede(dependencies Dependencies, input SupersedeInput) (CreateResult, e
 }
 
 func validateStartBinding(dependencies Dependencies, snapshot Snapshot, draft startDraft) error {
+	if _, err := validateTaskSpecStart(dependencies, snapshot, draft); err != nil {
+		return err
+	}
 	if draft.ReceiptID != snapshot.Handoff.Identity.StartReceiptID {
 		return classified(ErrorCapabilityInvalid, "receipt_id does not match the handoff", nil)
 	}
@@ -445,7 +505,18 @@ func validateStartBinding(dependencies Dependencies, snapshot Snapshot, draft st
 	}
 	sandboxValue, _ := objectMember(draft.Value, "sandbox")
 	sandbox := sandboxValue.(canonicaljson.Object)
-	sandboxErr := validateSandboxContract(dependencies.Files, snapshot, sandbox)
+	var taskReadPaths []string
+	if taskSpecVersion(snapshot.Handoff.Value) == 2 {
+		basis, err := taskSpecBasis(snapshot.Handoff.Value)
+		if err != nil {
+			return err
+		}
+		taskReadPaths, err = dependencies.taskSpecSession.TaskSpecReadPaths(basis)
+		if err != nil {
+			return err
+		}
+	}
+	sandboxErr := validateSandboxContract(dependencies.Files, snapshot, sandbox, taskReadPaths...)
 	sandboxActual := sandboxErr == nil
 	if objectBool(sandbox, "matches_contract") != sandboxActual {
 		detail := "sandbox matches_contract does not match reported roots"
@@ -758,7 +829,7 @@ func validateObservedInputsAtStart(dependencies Dependencies, snapshot Snapshot,
 	return all, nil
 }
 
-func validateSandboxContract(files FileSystem, snapshot Snapshot, sandbox canonicaljson.Object) error {
+func validateSandboxContract(files FileSystem, snapshot Snapshot, sandbox canonicaljson.Object, taskReadPaths ...string) error {
 	readValue, _ := objectMember(sandbox, "read_roots")
 	readRoots, _ := stringArray(readValue, "sandbox.read_roots")
 	writeValue, _ := objectMember(sandbox, "write_roots")
@@ -775,6 +846,18 @@ func validateSandboxContract(files FileSystem, snapshot Snapshot, sandbox canoni
 		return fmt.Errorf("sandbox temp_root must be a private directory")
 	}
 	requiredReads := []string{snapshot.Handoff.Locator, snapshot.Handoff.Target.Worktree}
+	requiredReads = append(requiredReads, taskReadPaths...)
+	if taskSpecVersion(snapshot.Handoff.Value) == 2 {
+		root := snapshot.Handoff.Workspace.Root
+		requiredReads = append(requiredReads, filepath.Join(root, ".ply", "workspace.yaml"), filepath.Join(root, ".ply", "projects.yaml"), filepath.Join(root, ".ply", "projects.lock"), snapshot.Handoff.Target.GitCommonDir)
+		for _, name := range []string{"work-items.yaml", "work-items.lock", "task-content"} {
+			path := filepath.Join(root, ".ply", name)
+			if _, err := files.Lstat(path); err == nil {
+				requiredReads = append(requiredReads, path)
+			}
+		}
+	}
+
 	inputsValue, _ := objectMember(snapshot.Handoff.Value, "inputs")
 	if inputs, ok := inputsValue.([]canonicaljson.Value); ok {
 		for _, value := range inputs {

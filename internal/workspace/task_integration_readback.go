@@ -76,6 +76,18 @@ func newIntegrationReadback(root string, registry WorkItemRegistry, ctx integrat
 		{Name: "persisted_before", Value: persistedBefore}, {Name: "persisted_after", Value: persistedAfter}, {Name: "observed_source", Value: observedSource}, {Name: "observed_parent", Value: observedParent}, {Name: "observed_inventory", Value: canonicaljson.Object{{Name: "entries", Value: structCanonical(observedInventory)}, {Name: "freshness", Value: collectionFreshness(ctx.RepositoryObserved)}}}, {Name: "observed_reflog", Value: canonicaljson.Object{{Name: "entries", Value: structCanonical(observedReflog)}, {Name: "freshness", Value: collectionFreshness(ctx.ReflogObserved)}}},
 		{Name: "classification", Value: classification}, {Name: "git_changed", Value: pointerValue(changed)}, {Name: "recovery_status", Value: recovery}, {Name: "next_action", Value: structCanonical(next)},
 	}
+	if plan.SchemaVersion == 2 || taskRequiresSpec(registry, ctx.Task.ID) {
+		guard := ctx.TaskSpecRelevance
+		if guard == nil {
+			guard = plan.TaskSpecGuard
+		}
+		if guard == nil {
+			guard = &TaskSpecRelevance{Relevance: "unknown", Reasons: []string{"task_spec_result_basis_missing"}}
+		}
+		replaceReadbackMember(&readback, "kind", "WorkspaceTaskIntegrationReadback@2")
+		replaceReadbackMember(&readback, "schema_version", int64(2))
+		readback = append(readback, canonicaljson.Member{Name: "task_spec_relevance", Value: contentRefValue(guard)})
+	}
 	parentOID := plan.Epic.ExpectedParentOID
 	if ctx.ParentObserved && ctx.ParentObservation.OID != "" {
 		parentOID = ctx.ParentObservation.OID
@@ -92,7 +104,25 @@ func integrationPersistedView(registry WorkItemRegistry, authority *IntegrationA
 	return canonicaljson.Object{{Name: "format_version", Value: int64(registry.FormatVersion)}, {Name: "sha256", Value: digestTaskBytes(storeBytes)}, {Name: "authority_id", Value: nullableID(authority)}, {Name: "intent_id", Value: nullableID(intent)}, {Name: "attempt_id", Value: nullableID(attempt)}, {Name: "integration_result_id", Value: nullableID(result)}, {Name: "freshness", Value: "fresh"}}
 }
 
-func buildTaskShowIntegrationReadback(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, task TaskRecord, epic EpicRecord, parent EpicRepoBinding) WorkspaceTaskIntegrationReadback {
+func buildTaskShowIntegrationReadback(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, task TaskRecord, epic EpicRecord, parent EpicRepoBinding) (out WorkspaceTaskIntegrationReadback) {
+	defer func() {
+		if !taskRequiresSpec(registry, task.ID) || out.Value == nil {
+			return
+		}
+		var id TaskResultID
+		if out.TaskResult != nil {
+			id = out.TaskResult.ID
+		}
+		guard := taskResultSpecRelevance(d, root, projects, registry, task, id)
+		replaceReadbackMember(&out.Value, "kind", "WorkspaceTaskIntegrationReadback@2")
+		replaceReadbackMember(&out.Value, "schema_version", int64(2))
+		if contentFields(out.Value)["task_spec_relevance"] == nil {
+			out.Value = append(out.Value, canonicaljson.Member{Name: "task_spec_relevance", Value: contentRefValue(guard)})
+		} else {
+			replaceReadbackMember(&out.Value, "task_spec_relevance", contentRefValue(guard))
+		}
+	}()
+
 	tr, qa, authority, ambiguous := selectTaskIntegrationLeaf(registry, task.ID)
 	if ambiguous {
 		return newNullableIntegrationReadback(d, root, projects, registry, task, epic, parent, "conflict", IntegrationNextAction{Kind: "refresh_or_reverify_parent", Reason: "Select exact Task result and human QA records in a separate check.", Argv: []string{}})
@@ -407,6 +437,9 @@ func canonicalReflectValue(v reflect.Value) canonicaljson.Value {
 		for i := 0; i < v.NumField(); i++ {
 			field := t.Field(i)
 			if field.PkgPath != "" {
+				continue
+			}
+			if t == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) && field.Name == "TaskSpecGuard" && v.FieldByName("SchemaVersion").Int() == 1 {
 				continue
 			}
 			tag := field.Tag.Get("json")

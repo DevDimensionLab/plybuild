@@ -8,6 +8,7 @@ import (
 type ErrorClass string
 
 const (
+	ErrorTaskSpec          ErrorClass = "task_spec_binding_conflict"
 	ErrorInvalidArguments  ErrorClass = "workflow_handoff_invalid_arguments"
 	ErrorWorkspaceNotFound ErrorClass = "workspace_not_found"
 	ErrorWorkspaceConflict ErrorClass = "workflow_handoff_workspace_conflict"

@@ -136,17 +136,24 @@ type WorktreeOperationRecord struct {
 }
 
 type WorkItemRegistry struct {
-	FormatVersion          int                       `yaml:"format_version"`
-	Epics                  []EpicRecord              `yaml:"epics"`
-	Tasks                  []TaskRecord              `yaml:"tasks"`
-	WorktreeOperations     []WorktreeOperationRecord `yaml:"worktree_operations"`
-	TaskResults            []TaskResultRecord        `yaml:"task_results,omitempty"`
-	HumanQARecords         []TaskHumanQARecord       `yaml:"human_qa_records,omitempty"`
-	IntegrationAuthorities []IntegrationAuthority    `yaml:"integration_authorities,omitempty"`
-	IntegrationIntents     []IntegrationIntent       `yaml:"integration_intents,omitempty"`
-	IntegrationAttempts    []IntegrationAttempt      `yaml:"integration_attempts,omitempty"`
-	IntegrationResults     []IntegrationResult       `yaml:"integration_results,omitempty"`
-	RawSHA256              string                    `yaml:"-"`
+	FormatVersion           int                       `yaml:"format_version"`
+	Epics                   []EpicRecord              `yaml:"epics"`
+	Tasks                   []TaskRecord              `yaml:"tasks"`
+	WorktreeOperations      []WorktreeOperationRecord `yaml:"worktree_operations"`
+	TaskResults             []TaskResultRecord        `yaml:"task_results,omitempty"`
+	HumanQARecords          []TaskHumanQARecord       `yaml:"human_qa_records,omitempty"`
+	IntegrationAuthorities  []IntegrationAuthority    `yaml:"integration_authorities,omitempty"`
+	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents,omitempty"`
+	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts,omitempty"`
+	IntegrationResults      []IntegrationResult       `yaml:"integration_results,omitempty"`
+	TaskSpecPolicies        []TaskSpecPolicy          `yaml:"task_spec_policies"`
+	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
+	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
+	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
+	TaskSolutionSelections  []TaskSelectionReference  `yaml:"task_solution_selections"`
+	TaskResultSpecBindings  []TaskResultSpecBinding   `yaml:"task_result_spec_bindings"`
+	TaskContentPublications []TaskContentPublication  `yaml:"task_content_publications"`
+	RawSHA256               string                    `yaml:"-"`
 }
 
 type EpicAdoptInput struct {
@@ -160,12 +167,13 @@ type EpicAdoptInput struct {
 }
 
 type TaskCreateInput struct {
-	TaskID       TaskID
-	Title        string
-	Description  string
-	ParentEpicID EpicID
-	ProjectID    ProjectID
-	RepoID       RepoID
+	RegistryUpgrade *TaskRegistryUpgrade
+	TaskID          TaskID
+	Title           string
+	Description     string
+	ParentEpicID    EpicID
+	ProjectID       ProjectID
+	RepoID          RepoID
 }
 
 type TaskWorktreeCreateInput struct {
@@ -182,6 +190,7 @@ type EpicMutationResult struct {
 }
 
 type TaskMutationResult struct {
+	Content   *TaskContentMutationResult
 	Workspace string
 	Task      TaskRecord
 	Epic      EpicRecord
@@ -201,9 +210,10 @@ type EpicListResult struct {
 	Epics     []EpicRecord
 }
 type TaskListResult struct {
-	Workspace string
-	Tasks     []TaskRecord
-	Epic      *EpicRecord
+	CurrentTitles map[TaskID]string
+	Workspace     string
+	Tasks         []TaskRecord
+	Epic          *EpicRecord
 }
 
 type WorkItemErrorClass string
@@ -561,6 +571,7 @@ func findEpicRepo(epic EpicRecord, repoID RepoID) (*EpicRepoBinding, int) {
 }
 
 func sortWorkRegistry(registry *WorkItemRegistry) {
+	sortTaskContentRegistry(registry)
 	sort.Slice(registry.Epics, func(i, j int) bool { return registry.Epics[i].ID < registry.Epics[j].ID })
 	for i := range registry.Epics {
 		sort.Slice(registry.Epics[i].RepoBindings, func(a, b int) bool {
@@ -718,14 +729,26 @@ func CreateTask(dependencies Dependencies, input TaskCreateInput) (TaskMutationR
 				if existing.Title == input.Title && existing.Description == input.Description && existing.ParentEpicID == input.ParentEpicID && existing.ProjectID == input.ProjectID && existing.RepoID == input.RepoID && existing.GitCommonDir == repository.GitCommonDir {
 					result.Task = *existing
 					result.Epic = *epic
+					if pub := taskPublication(registry, "task-create/"+string(input.TaskID)); pub != nil {
+						content := newTaskContentMutation(root, input.TaskID, pub.PublicationKey, pub.IntentSHA256)
+						content.PreState = taskContentState(registry, input.TaskID)
+						content.PostState = content.PreState
+						content.Classification = "existing"
+						content.OutcomeRef = &pub.OutcomeRef
+						result.Content = &content
+						if err := validateTaskContentClosure(dependencies.TaskContent, root, registry, true); err != nil {
+							return err
+						}
+						return syncTaskRegistry(root)
+					}
 					return nil
 				}
 				return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Task %s already exists with different fields", input.TaskID), nil)
 			}
 			task := TaskRecord{ID: input.TaskID, Title: input.Title, Description: input.Description, ParentEpicID: input.ParentEpicID, ProjectID: input.ProjectID, RepoID: input.RepoID, GitCommonDir: repository.GitCommonDir, WorktreeState: WorkItemUnbound, Worktree: nil}
-			registry.Tasks = append(registry.Tasks, task)
-			sortWorkRegistry(&registry)
-			if err := session.Publish(registry); err != nil {
+			content, err := createTaskProblem(dependencies, root, session, registry, projects, task, input.RegistryUpgrade)
+			result.Content = &content
+			if err != nil {
 				return err
 			}
 			result.Task = task
@@ -734,8 +757,15 @@ func CreateTask(dependencies Dependencies, input TaskCreateInput) (TaskMutationR
 			return nil
 		})
 	})
+	if result.Content != nil {
+		finished, finishErr := finishTaskContentMutation(dependencies, *result.Content, err)
+		result.Content = &finished
+		if finishErr != nil {
+			return result, finishErr
+		}
+	}
 	if err != nil {
-		return TaskMutationResult{}, mapMutationError(err)
+		return result, mapMutationError(err)
 	}
 	return result, nil
 }
@@ -1162,7 +1192,7 @@ func ListTasks(dependencies Dependencies, epicID *EpicID) (TaskListResult, error
 	if err != nil {
 		return TaskListResult{}, err
 	}
-	result := TaskListResult{Workspace: root}
+	result := TaskListResult{Workspace: root, CurrentTitles: map[TaskID]string{}}
 	if epicID != nil {
 		epic, _ := findEpic(registry, *epicID)
 		if epic == nil {
@@ -1174,6 +1204,14 @@ func ListTasks(dependencies Dependencies, epicID *EpicID) (TaskListResult, error
 	for _, task := range registry.Tasks {
 		if epicID == nil || task.ParentEpicID == *epicID {
 			result.Tasks = append(result.Tasks, task)
+			if head := taskContentState(registry, task.ID).ProblemHead; head != nil {
+				m, err := readRegisteredTaskManifest(dependencies.TaskContent, root, registry, head.ManifestSHA256)
+				if err == nil {
+					result.CurrentTitles[task.ID] = contentString(contentFields(m), "title")
+				} else {
+					result.CurrentTitles[task.ID] = "Problem content unavailable"
+				}
+			}
 		}
 	}
 	return result, nil

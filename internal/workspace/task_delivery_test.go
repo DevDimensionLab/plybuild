@@ -26,12 +26,17 @@ type taskDeliveryFixture struct {
 
 func newTaskDeliveryFixture(t *testing.T, legacy bool) taskDeliveryFixture {
 	t.Helper()
-	base := newWorkItemJourneyFixture(t)
+	base := newWorkItemJourneyFixtureVersion(t, legacy)
 	root := filepath.Dir(base.wrapper)
 	taskPath := filepath.Join(base.wrapper, "task")
 	created, err := CreateTaskWorktree(base.dependencies, TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: taskPath, ExpectedParentOID: base.oid})
 	if err != nil {
 		t.Fatal(err)
+	}
+	var basis *TaskSpecBasis
+	if !legacy {
+		selected := fixtureSelectTaskSpec(t, base)
+		basis = &selected
 	}
 	if err := os.WriteFile(filepath.Join(taskPath, "delivery.txt"), []byte("delivered\n"), 0o644); err != nil {
 		t.Fatal(err)
@@ -49,6 +54,7 @@ func newTaskDeliveryFixture(t *testing.T, legacy bool) taskDeliveryFixture {
 		InspectionSHA256: digest,
 	}
 	evidence := TaskHandoffEvidence{
+		TaskSpecBasis: basis, TaskSpecValid: basis != nil, TaskRequirementsValid: true, AcceptedStartOutcome: "started",
 		ActivityID: handoff.ActivityID, RunID: handoff.RunID, HandoffID: handoff.HandoffID, HandoffLocator: handoff.HandoffLocator, HandoffSHA256: handoff.HandoffSHA256,
 		StartReceiptID: handoff.StartReceiptID, StartReceiptLocator: handoff.StartReceiptLocator, StartReceiptSHA256: handoff.StartReceiptSHA256,
 		TerminalResultID: handoff.TerminalResultID, TerminalResultLocator: handoff.TerminalResultLocator, TerminalResultSHA256: handoff.TerminalResultSHA256, InspectionSHA256: handoff.InspectionSHA256,
@@ -62,22 +68,6 @@ func newTaskDeliveryFixture(t *testing.T, legacy bool) taskDeliveryFixture {
 	if err := os.WriteFile(draftPath, []byte(draft), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if legacy {
-		err := base.dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-			registry, err := session.Snapshot()
-			if err != nil {
-				return err
-			}
-			registry.FormatVersion = 1
-			registry.TaskResults, registry.HumanQARecords = nil, nil
-			registry.IntegrationAuthorities, registry.IntegrationIntents = nil, nil
-			registry.IntegrationAttempts, registry.IntegrationResults = nil, nil
-			return session.Publish(registry)
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
 	reader := &fixedTaskEvidenceReader{evidence: evidence}
 	base.dependencies.HandoffEvidence = reader
 	base.dependencies.TaskLifecycleIDs = &sequenceTaskLifecycleIDs{}
@@ -87,11 +77,11 @@ func newTaskDeliveryFixture(t *testing.T, legacy bool) taskDeliveryFixture {
 func writeHumanQADraft(t *testing.T, fixture taskDeliveryFixture, result TaskResultRecord, outcome, role string) (string, string) {
 	t.Helper()
 	evidencePath := filepath.Join(fixture.root, "human-qa-report.txt")
-	evidenceBytes := []byte("human QA observation\n")
+	evidenceBytes := []byte("fixture human QA observation\n")
 	if err := os.WriteFile(evidencePath, evidenceBytes, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	draft := fmt.Sprintf(`{"kind":"WorkspaceTaskHumanQARecordDraft@1","schema_version":1,"format":"json","format_version":1,"canonicalization":"RFC8785","publication_key":"task/qa-delivery","task_id":"task","task_result_id":%q,"result_oid":%q,"result_tree":%q,"outcome":%q,"actor":{"actor_claim":"human tester","start_surface":"test CLI","started_at_utc":"2026-09-28T12:01:00Z","completed_at_utc":"2026-09-28T12:02:00Z"},"evidence":[{"id":"report","role":%q,"locator":%q,"sha256":%q,"size_bytes":%d}],"observation":"The product behavior is correct.","accepted_residual_risks":[]}`,
+	draft := fmt.Sprintf(`{"kind":"WorkspaceTaskHumanQARecordDraft@1","schema_version":1,"format":"json","format_version":1,"canonicalization":"RFC8785","publication_key":"task/qa-delivery","task_id":"task","task_result_id":%q,"result_oid":%q,"result_tree":%q,"outcome":%q,"actor":{"actor_claim":"fixture human tester, not actual approval","start_surface":"test CLI","started_at_utc":"2026-09-28T12:01:00Z","completed_at_utc":"2026-09-28T12:02:00Z"},"evidence":[{"id":"report","role":%q,"locator":%q,"sha256":%q,"size_bytes":%d}],"observation":"The product behavior is correct.","accepted_residual_risks":[]}`,
 		result.ID, result.ResultOID, result.ResultTree, outcome, role, evidencePath, digestTaskBytes(evidenceBytes), len(evidenceBytes))
 	draftPath := filepath.Join(fixture.root, "human-qa.json")
 	if err := os.WriteFile(draftPath, []byte(draft), 0o600); err != nil {

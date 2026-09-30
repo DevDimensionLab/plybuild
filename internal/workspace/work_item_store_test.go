@@ -11,7 +11,11 @@ import (
 )
 
 func TestWorkItemRegistryEncodingIsDeterministicAndStrict(t *testing.T) {
-	registry := emptyWorkItemRegistry()
+	legacy := []byte("format_version: 2\nepics: []\ntasks: []\nworktree_operations: []\ntask_results: []\nhuman_qa_records: []\nintegration_authorities: []\nintegration_intents: []\nintegration_attempts: []\nintegration_results: []\n")
+	registry, err := decodeWorkItemRegistry(legacy)
+	if err != nil {
+		t.Fatal(err)
+	}
 	got, err := encodeWorkItemRegistry(registry)
 	if err != nil {
 		t.Fatal(err)
@@ -505,7 +509,7 @@ func TestWorkItemStoreTreatsMissingRegistryAsEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if registry.FormatVersion != 2 || len(registry.Epics) != 0 || len(registry.Tasks) != 0 || len(registry.WorktreeOperations) != 0 || registry.TaskResults == nil || registry.IntegrationResults == nil {
+	if registry.FormatVersion != 3 || len(registry.Epics) != 0 || len(registry.Tasks) != 0 || len(registry.WorktreeOperations) != 0 || registry.TaskResults == nil || registry.IntegrationResults == nil {
 		t.Fatalf("registry = %#v", registry)
 	}
 	if filepath.Base(workItemsPath(root)) != "work-items.yaml" {

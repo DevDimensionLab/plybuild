@@ -179,7 +179,406 @@ Treat `git_changed` and the single `next_action` as the authoritative outcome. I
 requires Git 2.45.0 or newer, a `sha1` or `sha256` object format, and the `files` ref backend.
 
 Sub-tasks, additional repository anchors on an Epic, editing, rebinding, refreshing, cleanup, and
-WorkflowRun creation are outside this first workspace work-item version.
+WorkflowRun creation are outside the resource-binding commands. Problem and solution revisions
+are recorded separately, as described below.
+
+### Preserve a problem and choose a solution
+
+A new Task atomically records its initial problem (P1) and a `spec_required` policy.
+A problem is the need; a Spec is a proposed solution with abstract, functional and technical
+parts. A readiness assessment and a human selection are separate immutable records.
+Selection records the reported human claim. Worktree creation, agent start, product QA and
+integration each remain separate actions.
+
+```shell script
+ply workspace task problem record explain-start-errors --file /absolute/problem.json
+ply workspace task spec record explain-start-errors --file /absolute/solution-r1.json
+ply workspace task spec assess explain-start-errors --file /absolute/ready-r1.json
+ply workspace task spec select explain-start-errors --file /absolute/choose-r1.json
+ply workspace task spec show explain-start-errors --spec explain-errors --revision 1 --format json
+ply workspace task show explain-start-errors
+```
+
+The complete drafts below illustrate a Task that already has P1. Copy the exact predecessor
+references from `problem show`, `spec show` and each mutation's JSON `outcome_ref`. Replace the
+example hashes, WorktreeID, Git paths, OIDs and trees with those from your own readback. These
+example claims are documentation data, not human approval. Write the following source files
+as UTF-8 with LF line endings and a final newline; their exact hashes and sizes are included
+in the corresponding drafts.
+
+`/absolute/problem.md`:
+
+```markdown
+# Make start errors actionable
+
+Explain the failed precondition and one safe next action.
+```
+
+`/absolute/solution.md`:
+
+```markdown
+# Explain start errors
+
+## Purpose
+Help the user understand a blocked start.
+
+## Behavior
+Show the failed precondition and one safe next action.
+
+## Implementation
+Change the error renderer only. Preserve exit codes and stored history.
+No migration. Run start-error tests and inspect help. On failure, retain state.
+```
+
+`/absolute/problem.json` (replace all referenced identities with the exact prior readback):
+
+```json
+{
+  "kind": "WorkspaceTaskProblemDraft@1",
+  "schema_version": 1,
+  "format": "json",
+  "format_version": 1,
+  "canonicalization": "RFC8785",
+  "publication_key": "problem/p2",
+  "task_id": "explain-start-errors",
+  "registry_upgrade": null,
+  "recorder": {
+    "actor_claim": "example author",
+    "control_surface": "local CLI",
+    "recorded_at_utc": "2026-09-29T12:00:00Z"
+  },
+  "expected_previous": {
+    "revision": 1,
+    "manifest_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "origin": {
+    "kind": "authored"
+  },
+  "title": "Make start errors actionable",
+  "summary": "Explain the failed precondition and one safe next action.",
+  "problem_document_id": "problem",
+  "documents": [
+    {
+      "id": "problem",
+      "source": {
+        "kind": "file",
+        "locator": "/absolute/problem.md",
+        "sha256": "sha256:6216623ed48782578b432043428c91cbc98922da756fc23474331d45fa27c33a",
+        "size_bytes": 90,
+        "media_type": "text/markdown",
+        "git_provenance": null
+      }
+    }
+  ],
+  "sources": [],
+  "claims": [],
+  "deadline": null,
+  "change_reason": "Clarify the user-visible need."
+}
+```
+
+`/absolute/solution-r1.json` (replace all referenced identities with the exact prior readback):
+
+```json
+{
+  "kind": "WorkspaceTaskSpecDraft@1",
+  "schema_version": 1,
+  "format": "json",
+  "format_version": 1,
+  "canonicalization": "RFC8785",
+  "publication_key": "solution/r1",
+  "task_id": "explain-start-errors",
+  "registry_upgrade": null,
+  "recorder": {
+    "actor_claim": "example author",
+    "control_surface": "local CLI",
+    "recorded_at_utc": "2026-09-29T12:00:00Z"
+  },
+  "spec_id": "explain-errors",
+  "expected_previous": null,
+  "problem": {
+    "revision": 2,
+    "manifest_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "title": "Explain start errors",
+  "parts": {
+    "abstract": {
+      "state": "present",
+      "reason": null,
+      "documents": [
+        {
+          "document_id": "solution",
+          "section": null
+        }
+      ]
+    },
+    "functional": {
+      "state": "present",
+      "reason": null,
+      "documents": [
+        {
+          "document_id": "solution",
+          "section": null
+        }
+      ]
+    },
+    "technical": {
+      "state": "present",
+      "reason": null,
+      "documents": [
+        {
+          "document_id": "solution",
+          "section": null
+        }
+      ]
+    }
+  },
+  "documents": [
+    {
+      "id": "solution",
+      "source": {
+        "kind": "file",
+        "locator": "/absolute/solution.md",
+        "sha256": "sha256:3827cb23c3fe23f45e2c544a42061be969b31baf66e544ae5af7e5426a62c5aa",
+        "size_bytes": 316,
+        "media_type": "text/markdown",
+        "git_provenance": null
+      }
+    }
+  ],
+  "supporting": [],
+  "requirements": [
+    {
+      "id": "f-01",
+      "functional_refs": [
+        {
+          "document_id": "solution",
+          "section": null
+        }
+      ],
+      "acceptance": "A blocked start names its failed precondition and one safe next action.",
+      "verification_ids": [
+        "start-errors"
+      ],
+      "technical_refs": [
+        {
+          "document_id": "solution",
+          "section": null
+        }
+      ]
+    }
+  ],
+  "removed_requirement_ids": [],
+  "phases": [
+    {
+      "id": "implement",
+      "purpose": "Change and verify error rendering.",
+      "requirement_ids": [
+        "f-01"
+      ],
+      "entry_criteria": [],
+      "exit_criteria": [
+        "Start-error tests pass."
+      ],
+      "verification_ids": [
+        "start-errors"
+      ]
+    }
+  ],
+  "implementation_basis": {
+    "project_id": "ply",
+    "repo_id": "ply",
+    "git_common_dir": "/absolute/ply/main/.git",
+    "epic_id": "ply-agentic-workflow-support",
+    "parent_worktree_id": "wt_66666666666666666666666666666666",
+    "parent_ref": "refs/heads/ply_agentic_workflow_support",
+    "parent_oid": "2222222222222222222222222222222222222222",
+    "parent_tree": "3333333333333333333333333333333333333333",
+    "start_oid": "2222222222222222222222222222222222222222",
+    "start_tree": "3333333333333333333333333333333333333333"
+  },
+  "dependencies": [],
+  "change_reason": "Record the proposed solution."
+}
+```
+
+`/absolute/ready-r1.json` (replace all referenced identities with the exact prior readback):
+
+```json
+{
+  "kind": "WorkspaceTaskSpecAssessmentDraft@1",
+  "schema_version": 1,
+  "format": "json",
+  "format_version": 1,
+  "canonicalization": "RFC8785",
+  "publication_key": "solution/ready-r1",
+  "task_id": "explain-start-errors",
+  "registry_upgrade": null,
+  "recorder": {
+    "actor_claim": "example author",
+    "control_surface": "local CLI",
+    "recorded_at_utc": "2026-09-29T12:00:00Z"
+  },
+  "spec_id": "explain-errors",
+  "spec": {
+    "revision": 1,
+    "manifest_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "expected_previous_assessment": null,
+  "outcome": "ready",
+  "reason": "The documented solution is ready for a separate human choice.",
+  "open_questions": [],
+  "checks": [
+    {
+      "id": "acceptance_coverage",
+      "outcome": "pass",
+      "reason": "Reviewed against the preserved problem, solution and local basis.",
+      "evidence_document_ids": []
+    },
+    {
+      "id": "implementation_basis",
+      "outcome": "pass",
+      "reason": "Reviewed against the preserved problem, solution and local basis.",
+      "evidence_document_ids": []
+    },
+    {
+      "id": "problem_coverage",
+      "outcome": "pass",
+      "reason": "Reviewed against the preserved problem, solution and local basis.",
+      "evidence_document_ids": []
+    },
+    {
+      "id": "recovery",
+      "outcome": "pass",
+      "reason": "Reviewed against the preserved problem, solution and local basis.",
+      "evidence_document_ids": []
+    },
+    {
+      "id": "scope_and_phases",
+      "outcome": "pass",
+      "reason": "Reviewed against the preserved problem, solution and local basis.",
+      "evidence_document_ids": []
+    },
+    {
+      "id": "three_parts",
+      "outcome": "pass",
+      "reason": "Reviewed against the preserved problem, solution and local basis.",
+      "evidence_document_ids": []
+    }
+  ],
+  "documents": []
+}
+```
+
+`/absolute/choose-r1.json` (replace all referenced identities with the exact prior readback):
+
+```json
+{
+  "kind": "WorkspaceTaskSolutionSelectionDraft@1",
+  "schema_version": 1,
+  "format": "json",
+  "format_version": 1,
+  "canonicalization": "RFC8785",
+  "publication_key": "solution/choose-r1",
+  "task_id": "explain-start-errors",
+  "registry_upgrade": null,
+  "recorder": {
+    "actor_claim": "example author",
+    "control_surface": "local CLI",
+    "recorded_at_utc": "2026-09-29T12:00:00Z"
+  },
+  "expected_previous_selection": null,
+  "action": "select",
+  "solution": {
+    "spec_id": "explain-errors",
+    "spec": {
+      "revision": 1,
+      "manifest_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "problem": {
+      "revision": 2,
+      "manifest_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "assessment": {
+      "id": "asm_44444444444444444444444444444444",
+      "manifest_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    }
+  },
+  "reason": "Record the explicit human choice.",
+  "human_decision": {
+    "actor_claim": "example human claim; replace with the actual instruction",
+    "decided_at_utc": "2026-09-29T12:00:00Z",
+    "source": "explicit_human_instruction",
+    "statement": "Select explain-errors revision 1 for the separately authorized delivery."
+  }
+}
+```
+
+All new leaves accept `--format text|json`. `problem show` optionally accepts `--revision`;
+`spec show` requires `--spec` and `--revision`. `spec list` shows revisions and choices.
+`spec withdraw --file /absolute/withdraw.json` uses the same selection draft: a new publication
+key, `expected_previous_selection` from the latest event, `action="withdraw"`, `solution=null`,
+and an explicit human withdrawal claim. It preserves all previous choices and starts or stops
+no process.
+
+To record r2, name r1 in `expected_previous`, keep the same `spec_id`, and use a new key.
+Unchanged documents may use `source={"kind":"snapshot","manifest_sha256":"<exact prior
+manifest digest>","document_id":"<prior document ID>"}` instead of a file source. A new draft
+never changes the selected revision. A new problem, latest assessment, selection or withdrawal
+can make the previous basis stale. Changing a problem requires a new solution revision and
+human choice before another start; an old result remains historical evidence.
+
+Imports preserve exact source bytes under private `.ply/task-content` paths. The source may
+later move or disappear. Reads rehash snapshots and never repair or migrate them. A repeated
+publication key with identical draft content finds the original outcome before predecessor
+checks or source reads; different content conflicts. After an uncertain publication, inspect
+`ply workspace task publication show explain-start-errors --key solution/r1 --format json`.
+An identical retry may confirm durability without creating another revision. JSON mutations
+also emit their observed outcome when an error follows a possible registry replacement;
+inspect that outcome together with stderr and the nonzero exit.
+
+New stores use format 3. Existing format-1/2 registries and legacy Task results remain readable.
+Creating another Task or explicitly recording a legacy Task's first problem requires the exact
+current registry SHA-256: `task create --upgrade-store sha256:<64 lowercase hex>`, or
+`registry_upgrade={"from_version":1,"registry_sha256":"sha256:<64 lowercase hex>"}` in the
+problem draft (use 2 for format 2). Ply preserves a byte-for-byte backup and upgrades atomically.
+An identical legacy create retry never fabricates P1. A legacy summary import uses
+`origin={"kind":"legacy_summary_import","legacy_summary_sha256":"<canonical summary digest>"}`,
+its original title/description, empty documents/sources/claims, null deadline and
+`problem_document_id="problem"`; it makes no historical approval claim.
+
+Drafts and manifests are strict JSON, at most 256 KiB each. Documents are 1 byte–4 MiB of UTF-8
+text/plain or text/markdown, without BOM or NUL. Limits are 32 documents, 128 requirements,
+32 phases, 32 sources and 128 claims per applicable manifest. Titles allow 128 codepoints,
+summaries 2048, and reasons/acceptance 2000. Redact known secrets before import; a withheld
+source can preserve a claim without preserving its bytes. No remote URL is fetched.
+
+Task show at format 3 includes the original resource view, integration state, current problem,
+choice and every historical result. Its readiness is observation, never execution authority.
+For a selected Task, prepare a schema-version-2 handoff with the exact `task_spec_binding` and
+all `required_inputs` from Spec show. The closure includes all four manifests and every preserved
+document, with at most 96 unique documents and 64 MiB of document bytes. Additional spec/design
+inputs cannot replace the selected solution. Declare every requirement's verification ID and
+explicitly require a managed application/json `task-requirements` artifact in the procedure.
+
+The version-2 start repeats the exact basis; Ply adds and signs its own observation under the
+existing Project/work-item locks. Version-1 handoffs remain supported for general or legacy
+work, and version-2 null bindings only for those targets. Required Tasks cannot bypass the
+choice through version 1 or null. A version-1 terminal works with either matching handoff/start
+pair. Accepted start retries preserve the original slot after a later choice change.
+
+A bound terminal's `task-requirements` artifact uses `WorkspaceTaskRequirementEvidence@1` with
+`task_id`, `spec_id`, the exact `spec` revision reference, `result_oid`, `result_tree`, and one
+`requirements` entry per selected requirement. Each entry has `id`, `outcome` (passed, failed,
+not_run or unknown), sorted `verifier_ids`, sorted `artifact_ids`, and `reason`. References must
+resolve in the same terminal and cannot refer to the requirement artifact itself. Missing or
+non-passing functional coverage cannot produce a green Task result. Report failures honestly.
+
+Result records bind the immutable accepted start, even after P2. Historical inspection does
+not change merely because a later problem or choice exists. Spec-aware integration plans hash
+the current relevance guard; a stale basis blocks a new attempt. Recovery of an already
+attempted integration observes Git first and reports later relevance separately. Legacy plans
+retain their original bytes and digests. Technical pass never means human QA or integration.
 
 ## Workflow handoffs
 

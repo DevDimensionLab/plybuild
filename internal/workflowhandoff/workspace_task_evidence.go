@@ -51,6 +51,19 @@ func (reader *workspaceTaskEvidenceReader) ReadTaskEvidence(request workspace.Ta
 	result.VerifierResults = workspaceVerifierProjection(snapshot)
 	result.Review = workspaceReviewProjection(snapshot)
 	result.Artifacts = workspaceArtifactProjection(snapshot, result.VerifierResults, result.Review)
+	result.AcceptedStartOutcome = snapshot.Start.Outcome
+	basis, eval, specErr := historicalHandoffTaskSpec(reader.dependencies, snapshot)
+	result.TaskSpecBasis = basis
+	result.TaskSpecValid = specErr == nil
+	if specErr != nil {
+		result.TaskSpecValid = false
+	}
+	if coverageErr := taskRequirementsCoverage(reader.dependencies, snapshot, basis, eval); coverageErr != nil {
+		result.EvidenceCoverageValid = false
+		result.EvidenceGaps = append(result.EvidenceGaps, "task_spec_requirement_evidence: "+coverageErr.Error())
+	} else {
+		result.TaskRequirementsValid = true
+	}
 	return result, nil
 }
 
