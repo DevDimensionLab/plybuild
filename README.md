@@ -178,9 +178,76 @@ Format-2 `task show` presents the same integration state as check/apply in text 
 Treat `git_changed` and the single `next_action` as the authoritative outcome. Integration v1
 requires Git 2.45.0 or newer, a `sha1` or `sha256` object format, and the `files` ref backend.
 
-Sub-tasks, additional repository anchors on an Epic, editing, rebinding, refreshing, cleanup, and
-WorkflowRun creation are outside the resource-binding commands. Problem and solution revisions
+Sub-tasks, additional repository anchors on an Epic, editing, rebinding, cleanup, and
+WorkflowRun creation are outside the resource-binding commands. Refresh is explicit only through
+`workspace epic base update`; it appends a metadata base and never moves Git refs or old worktrees. Problem and solution revisions
 are recorded separately, as described below.
+
+### Prioritize Tasks and prepare a separate worktree
+
+`task list` keeps its registered-Task meaning and existing `--epic` filter. The queue is a
+separate, explicitly prioritized list of exact human selections. Run from the registered
+Epic worktree (including a subdirectory), or supply all three target flags. A Task worktree
+never implicitly selects its parent Epic.
+
+```shell
+ply workspace task queue list --project ply --repo ply --epic ply-agentic-workflow-support --format json
+ply workspace task queue set --file /absolute/queue.json --format json
+ply workspace task list --ready --project ply --repo ply --epic ply-agentic-workflow-support
+ply workspace task prepare --next --check --format json
+ply workspace task prepare --next --apply --confirm sha256:<preview-digest>
+ply workspace task preparation show pre_<digest> --format json
+```
+
+`queue set` takes a strict `WorkspaceTaskQueueDraft@1` JSON object with `schema_version: 1`,
+a unique `publication_key`, `project_id`, `repo_id`, `epic_id`, `expected_revision`, ordered
+`entries`, `human_decision`, and `registry_upgrade`. Each entry is `{task_id, selection}`;
+selection is null or the exact `{id, manifest_sha256}` of a Task-owned select event.
+The human decision supplies `actor_claim`, UTC `decided_at_utc`, `source` (`human_cli` or
+`explicit_human_instruction`), and `statement`. Copy `registry.required_upgrade` from
+queue readback for the first format-4 mutation; use null thereafter. Migration preserves
+an exact registry backup. Preview and list never migrate or create a queue.
+
+A null, stale or blocked selection remains visible. `--ready` filters pending entries
+without changing their ranks, and always shows the current preparation. A newer unselected
+Spec draft does not replace the chosen solution. Set replaces the entire pending order;
+it must omit the current reserved Task. Priority, selection, base or destination drift
+invalidates a confirmation. Preview shows the exact separate branch/path and input hashes.
+If preview includes a registry upgrade, apply additionally requires
+`--upgrade-registry sha256:<registry-digest>`.
+
+After a lost response, repeat the identical apply or inspect the preparation ID. One
+reserved choice owns one durable intent. Normal later work does not erase `prepared`.
+Partial or unknown effects retain that choice until explicitly recovered. Close it with
+one metadata transition; neither command prepares the next Task:
+
+```shell
+ply workspace task queue advance --preparation pre_<digest> --expected-revision 2 --reason "Continue the queue"
+ply workspace task queue release --preparation pre_<digest> --expected-revision 2 --reason "Stop this choice"
+ply workspace task prepare --next --check
+```
+
+Advance requires a known prepared worktree. Release accepts known no-effect or prepared
+state, keeps all refs/worktrees/evidence, and does not claim completion. Released Tasks
+cannot be resumed or adopted in this version. Prepared and advanced do not imply technical
+delivery, human QA, integration authority or agent start.
+
+After separately integrating a delivered Task, explicitly register the clean descendant
+Epic base before preparing the next Task:
+
+```shell
+ply workspace epic base show ply-agentic-workflow-support --repo ply --format json
+ply workspace epic base update ply-agentic-workflow-support --repo ply --check --format json
+ply workspace epic base update ply-agentic-workflow-support --repo ply --apply --confirm sha256:<preview-digest>
+ply workspace epic base operation show ebu_<digest> --format json
+```
+
+The adopted base and old Task bindings stay immutable. Older selections become stale for
+new effects. Record the next Task's new Spec revision against the current base, reuse
+unchanged documents via snapshot references, assess it ready, explicitly select it, then
+set the queue entry to that new selection. Historical Specs, results, QA and integration
+retries retain their original digests. No command rebases worktrees, integrates code,
+starts an agent, installs the CLI or selects a human QA outcome.
 
 ### Preserve a problem and choose a solution
 

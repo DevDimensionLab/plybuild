@@ -107,6 +107,8 @@ compat-cli:
 	$(BASH) "$(REPO_ROOT)/test/workspace_work_items_roundtrip_test.sh"
 	$(BASH) "$(REPO_ROOT)/test/workspace_task_integration_roundtrip_test.sh"
 
+	$(BASH) "$(REPO_ROOT)/test/workspace_task_queue_roundtrip_test.sh"
+
 compatibility: compat-api compat-cli
 
 test-compatibility:

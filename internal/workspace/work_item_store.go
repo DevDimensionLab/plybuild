@@ -79,6 +79,9 @@ type workItemRegistryV3Wire struct {
 }
 
 func (registry WorkItemRegistry) MarshalYAML() (any, error) {
+	if registry.FormatVersion == 4 {
+		return workItemRegistryV4(registry), nil
+	}
 	if registry.FormatVersion == 1 {
 		return workItemRegistryV1Wire{FormatVersion: 1, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations}, nil
 	}
@@ -218,11 +221,31 @@ func (store *systemWorkItemStore) read(root string) (WorkItemRegistry, error) {
 	if err != nil {
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("invalid work-item registry %s: %v", path, err), err)
 	}
+	if registry.FormatVersion == 4 {
+		storage := &TaskContentStorage{}
+		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
+			return WorkItemRegistry{}, err
+		}
+		if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
+			return WorkItemRegistry{}, err
+		}
+	}
 	registry.RawSHA256 = digestTaskBytes(contents)
 	return registry, nil
 }
 
 func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry) error {
+	old, err := store.read(root)
+	if err != nil {
+		return err
+	}
+	if err := validateQueueTransition(old, registry); err != nil {
+		return workError(ErrorWorkStoreConflict, err.Error(), err)
+	}
+	if err := validateQueueClosure(Dependencies{TaskContent: &TaskContentStorage{}}, root, registry); err != nil {
+		return err
+	}
+
 	if err := validateTaskContentClosure(&TaskContentStorage{}, root, registry, false); err != nil {
 		return err
 	}
@@ -407,8 +430,15 @@ func validateWorkItemRegistryYAMLShape(contents []byte, version int) error {
 			yamlShapeField{name: "integration_results", typeOf: reflect.TypeOf([]IntegrationResult{})},
 		)
 	}
-	if version == 3 {
+	if version >= 3 {
 		fields = append(fields, yamlShapeField{name: "task_spec_policies", typeOf: reflect.TypeOf([]TaskSpecPolicy{})}, yamlShapeField{name: "task_problem_revisions", typeOf: reflect.TypeOf([]TaskProblemReference{})}, yamlShapeField{name: "task_spec_revisions", typeOf: reflect.TypeOf([]TaskSpecReference{})}, yamlShapeField{name: "task_spec_assessments", typeOf: reflect.TypeOf([]TaskAssessmentReference{})}, yamlShapeField{name: "task_solution_selections", typeOf: reflect.TypeOf([]TaskSelectionReference{})}, yamlShapeField{name: "task_result_spec_bindings", typeOf: reflect.TypeOf([]TaskResultSpecBinding{})}, yamlShapeField{name: "task_content_publications", typeOf: reflect.TypeOf([]TaskContentPublication{})})
+	}
+	if version == 4 {
+		for _, f := range yamlStructShapeFields(reflect.TypeOf(WorkItemRegistry{})) {
+			if f.name == "epic_base_versions" || f.name == "epic_base_updates" || f.name == "task_queue_events" || f.name == "task_preparations" {
+				fields = append(fields, f)
+			}
+		}
 	}
 	return validateYAMLMappingShape(document.Content[0], fields, "work-item registry")
 }
@@ -424,6 +454,8 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 		return validateYAMLNodeShape(node, expected.Elem(), context)
 	}
 	switch expected.Kind() {
+	case reflect.Map:
+		return validateQueueYAMLMap(node)
 	case reflect.Struct:
 		fields := yamlStructShapeFields(expected)
 		if expected == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) {
@@ -502,10 +534,13 @@ var operationIDPattern = regexp.MustCompile(`^wop_[0-9a-f]{32}$`)
 var digestPattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
 func validateWorkItemRegistry(registry WorkItemRegistry) error {
+	if err := validateQueueRegistry(registry); err != nil {
+		return err
+	}
 	if err := validateTaskContentRegistry(registry); err != nil {
 		return err
 	}
-	if registry.FormatVersion != 1 && registry.FormatVersion != 2 && registry.FormatVersion != 3 {
+	if registry.FormatVersion != 1 && registry.FormatVersion != 2 && registry.FormatVersion != 3 && registry.FormatVersion != 4 {
 		return fmt.Errorf("unsupported format_version %d", registry.FormatVersion)
 	}
 	if !sortedUniqueEpics(registry.Epics) || !sortedUniqueTasks(registry.Tasks) || !sortedUniqueOperations(registry.WorktreeOperations) {
@@ -613,7 +648,7 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 			return fmt.Errorf("Task %s has invalid repository binding", task.ID)
 		}
 		operation, hasOperation := operations[task.ID]
-		if hasOperation && (operation.ProjectID != task.ProjectID || operation.RepoID != task.RepoID || operation.GitCommonDir != task.GitCommonDir || operation.ParentEpicID != task.ParentEpicID || operation.ParentWorktreeID != binding.Worktree.ID || operation.ParentRef != binding.Worktree.Ref || operation.ParentOID != binding.Worktree.OID || operation.ParentTree != binding.Worktree.Tree) {
+		if hasOperation && (operation.ProjectID != task.ProjectID || operation.RepoID != task.RepoID || operation.GitCommonDir != task.GitCommonDir || operation.ParentEpicID != task.ParentEpicID || operation.ParentWorktreeID != binding.Worktree.ID || operation.ParentRef != binding.Worktree.Ref || !historicalEpicBaseMatches(registry, task.ParentEpicID, task.RepoID, operation.ParentWorktreeID, operation.ParentRef, operation.ParentOID, operation.ParentTree)) {
 			return fmt.Errorf("Task %s operation differs from its parent repository binding", task.ID)
 		}
 		switch task.WorktreeState {
@@ -1274,4 +1309,32 @@ func sortedUniqueOperations(values []WorktreeOperationRecord) bool {
 		}
 	}
 	return true
+}
+
+type workItemRegistryV4Wire struct {
+	FormatVersion           int                       `yaml:"format_version"`
+	Epics                   []EpicRecord              `yaml:"epics"`
+	Tasks                   []TaskRecord              `yaml:"tasks"`
+	WorktreeOperations      []WorktreeOperationRecord `yaml:"worktree_operations"`
+	TaskResults             []TaskResultRecord        `yaml:"task_results"`
+	HumanQARecords          []TaskHumanQARecord       `yaml:"human_qa_records"`
+	IntegrationAuthorities  []IntegrationAuthority    `yaml:"integration_authorities"`
+	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents"`
+	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts"`
+	IntegrationResults      []IntegrationResult       `yaml:"integration_results"`
+	TaskSpecPolicies        []TaskSpecPolicy          `yaml:"task_spec_policies"`
+	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
+	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
+	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
+	TaskSolutionSelections  []TaskSelectionReference  `yaml:"task_solution_selections"`
+	TaskResultSpecBindings  []TaskResultSpecBinding   `yaml:"task_result_spec_bindings"`
+	TaskContentPublications []TaskContentPublication  `yaml:"task_content_publications"`
+	EpicBaseVersions        []EpicBaseVersion         `yaml:"epic_base_versions"`
+	EpicBaseUpdates         []EpicBaseUpdate          `yaml:"epic_base_updates"`
+	TaskQueueEvents         []TaskQueueEvent          `yaml:"task_queue_events"`
+	TaskPreparations        []TaskPreparation         `yaml:"task_preparations"`
+}
+
+func workItemRegistryV4(r WorkItemRegistry) workItemRegistryV4Wire {
+	return workItemRegistryV4Wire{FormatVersion: r.FormatVersion, Epics: r.Epics, Tasks: r.Tasks, WorktreeOperations: r.WorktreeOperations, TaskResults: r.TaskResults, HumanQARecords: r.HumanQARecords, IntegrationAuthorities: r.IntegrationAuthorities, IntegrationIntents: r.IntegrationIntents, IntegrationAttempts: r.IntegrationAttempts, IntegrationResults: r.IntegrationResults, TaskSpecPolicies: r.TaskSpecPolicies, TaskProblemRevisions: r.TaskProblemRevisions, TaskSpecRevisions: r.TaskSpecRevisions, TaskSpecAssessments: r.TaskSpecAssessments, TaskSolutionSelections: r.TaskSolutionSelections, TaskResultSpecBindings: r.TaskResultSpecBindings, TaskContentPublications: r.TaskContentPublications, EpicBaseVersions: r.EpicBaseVersions, EpicBaseUpdates: r.EpicBaseUpdates, TaskQueueEvents: r.TaskQueueEvents, TaskPreparations: r.TaskPreparations}
 }

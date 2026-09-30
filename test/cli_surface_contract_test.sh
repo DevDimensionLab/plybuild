@@ -287,7 +287,7 @@ for text in \
 	'Git 2.45.0 or newer' \
 	'Both show commands accept `--format json`' \
 	'it does not start an agent, select a workflow, or grant execution authority.' \
-	'Sub-tasks, additional repository anchors on an Epic, editing, rebinding, refreshing, cleanup, and'; do
+	'Sub-tasks, additional repository anchors on an Epic, editing, rebinding, cleanup, and'; do
 	grep -F -- "$text" "$temp_root/readme-workspace.actual" >/dev/null || fail "README work-item text is missing: $text"
 done
 grep -F '## Workflow handoffs' "$repo_root/README.md" >/dev/null || fail 'README workflow section is missing'
@@ -622,3 +622,18 @@ cmp -s "$temp_root/external.before" "$temp_root/external.after" || fail 'Ply cha
 [[ ! -e "$temp_root/home/.ply" ]] || fail 'project journey created a global Ply profile'
 
 printf 'cli surface contract: PASS (legacy behavior, workspace, project, and workflow handoff)\n'
+
+
+for path in 'task queue' 'task queue list' 'task queue set' 'task queue advance' 'task queue release' 'task prepare' 'task preparation' 'task preparation show' 'epic base' 'epic base show' 'epic base update' 'epic base operation' 'epic base operation show' 'task spec' 'task spec record' 'task spec assess' 'task spec select'; do
+ read -r -a words <<<"$path"
+ label="ws06-${path// /-}"
+ run_help_surface "$label" workspace "${words[@]}" --help
+ grep -F "ply workspace $path" "$temp_root/$label.stdout" >/dev/null || fail "$path help lost its workspace prefix"
+ done
+for path in 'task queue list' 'task queue set' 'task queue advance' 'task queue release' 'task prepare' 'task preparation show' 'epic base show' 'epic base update' 'epic base operation show'; do
+ label="ws06-${path// /-}"
+ grep -F -- '--format' "$temp_root/$label.stdout" >/dev/null || fail "$path has no format flag"
+done
+for text in 'workspace task queue set --file /absolute/queue.json' 'workspace task prepare --next --check' 'workspace task preparation show' 'workspace epic base update' 'Historical Specs, results, QA and integration' 'Released Tasks'; do
+ grep -F "$text" "$repo_root/README.md" >/dev/null || fail "README queue contract is missing: $text"
+done

@@ -859,6 +859,377 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workspace epic base operation show ebu_<digest> --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for operation"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Inspect a preserved base update request. Inspect command help before an explicit mutation. Prepared is not delivery, human QA, or integration approval.",
+        "path": "ply workspace epic base operation",
+        "runnable": true,
+        "short": "Inspect a preserved base update request",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "operation"
+      },
+      "kind": "command_added",
+      "path": "ply workspace epic base operation"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace epic base operation show ebu_<digest> --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read-only recovery inspection after a lost response. An intent is not_committed; a committed request remains historical after later Git drift. Use the same explicit apply to recover an intent.",
+        "path": "ply workspace epic base operation show",
+        "runnable": true,
+        "short": "Show the preserved base request and metadata outcome",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <operation-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace epic base operation show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace epic base show agentic-workflow --repo ply --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read the exact registered Epic and repository. Base updates publish append-only metadata after confirmation and never move Git refs. Old Specs, worktrees and results remain historical. New work requires a new Spec revision, ready assessment, explicit selection and queue binding on the current base.",
+        "path": "ply workspace epic base show",
+        "runnable": true,
+        "short": "Show adopted and current Epic bases",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <epic-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace epic base show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace epic base show agentic-workflow --repo ply\n  ply workspace epic base update agentic-workflow --repo ply --check",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for base"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Inspect and explicitly update the versioned Epic base. Inspect command help before an explicit mutation. Prepared is not delivery, human QA, or integration approval.",
+        "path": "ply workspace epic base",
+        "runnable": true,
+        "short": "Inspect and explicitly update the versioned Epic base",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "base"
+      },
+      "kind": "command_added",
+      "path": "ply workspace epic base"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace epic base update agentic-workflow --repo ply --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "apply",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "publish the confirmed metadata base"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "read-only preview (the default)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "confirm",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact sha256: preview digest"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for update"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "upgrade-registry",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "explicit legacy registry digest shown in the preview"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read the exact registered Epic and repository. Base updates publish append-only metadata after confirmation and never move Git refs. Old Specs, worktrees and results remain historical. New work requires a new Spec revision, ready assessment, explicit selection and queue binding on the current base.",
+        "path": "ply workspace epic base update",
+        "runnable": true,
+        "short": "Preview or confirm a clean descendant as the new Epic base",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "update <epic-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace epic base update"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workspace epic list",
         "flags": [
           {
@@ -1667,6 +2038,19 @@
             "usage": "limit Tasks to one parent Epic ID"
           },
           {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "ready queue output format (text or json)"
+          },
+          {
             "annotations": {
               "cobra_annotation_flag_set_by_cobra": [
                 "true"
@@ -1682,6 +2066,45 @@
             "shorthand_deprecated": "",
             "type": "bool",
             "usage": "help for list"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "explicit queue Project ID (requires --ready, --repo and --epic)"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "ready",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "show the ready queue instead of the registered-Task list"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "explicit queue repository ID (requires --ready, --project and --epic)"
           }
         ],
         "has_args_validator": true,
@@ -1690,7 +2113,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "List Tasks registered in the containing Ply workspace, optionally limited to one Epic.",
+        "long": "List Tasks registered in the containing Ply workspace, optionally limited to one Epic. Use --ready for the prioritized queue; an explicit queue target requires all three of --project, --repo and --epic.",
         "path": "ply workspace task list",
         "runnable": true,
         "short": "List registered Tasks",
@@ -1700,6 +2123,281 @@
       },
       "kind": "command_added",
       "path": "ply workspace task list"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task preparation show pre_<digest> --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for preparation"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Inspect preserved Task preparations. Inspect command help before an explicit mutation. Prepared is not delivery, human QA, or integration approval.",
+        "path": "ply workspace task preparation",
+        "runnable": true,
+        "short": "Inspect preserved Task preparations",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "preparation"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task preparation"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task preparation show pre_<digest> --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read the immutable request, outcome and queue disposition without recovery or metadata writes. Later commits and dirty files do not erase a historical prepared outcome.",
+        "path": "ply workspace task preparation show",
+        "runnable": true,
+        "short": "Show a preparation and a separate fresh worktree observation",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <preparation-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task preparation show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task prepare --next --check --format json\n  ply workspace task prepare --next --apply --confirm sha256:<digest>\n  ply workspace task prepare explain-errors --project ply --repo ply --epic agentic-workflow",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "apply",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "confirm the exact preview and create or recover its worktree"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "read-only preview (the default)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "confirm",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact sha256: preview digest"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "epic",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Epic ID (requires --project and --repo)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for prepare"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "next",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "use the current preparation or highest ranked ready Task"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Project ID (requires --repo and --epic)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID (requires --project and --epic)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "upgrade-registry",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "explicit legacy registry digest shown in the preview"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Default and --check are read-only. Choose --next or one pending Task ID. --apply requires the exact preview digest and, for a legacy registry, --upgrade-registry. A retry returns the preserved request before ranking pending Tasks. Prepared does not authorize agent start, delivery, human QA or integration.",
+        "path": "ply workspace task prepare",
+        "runnable": true,
+        "short": "Preview or confirm one exact queued Task worktree",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "prepare [task-id]"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task prepare"
     },
     {
       "after": {
@@ -2132,6 +2830,540 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workspace task queue advance --preparation pre_<digest> --expected-revision 2 --reason \"Human queue decision\"",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "epic",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Epic ID (requires --project and --repo)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "exact current queue revision"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for advance"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "preparation",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact current preparation ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Project ID (requires --repo and --epic)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "reason",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "human reason for closing this choice (maximum 2000 characters)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID (requires --project and --epic)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Close the exact current preparation with an expected queue revision and a reason. Advance requires a known prepared worktree. Release accepts known no-effect or prepared state. Partial and unknown effects must be resolved first. A released Task cannot be resumed or adopted in this version. No worktree or evidence is deleted; no next Task is prepared.",
+        "path": "ply workspace task queue advance",
+        "runnable": true,
+        "short": "Close a prepared choice without preparing the next Task",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "advance"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task queue advance"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task queue list --ready --project ply --repo ply --epic agentic-workflow",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "epic",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Epic ID (requires --project and --repo)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for list"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Project ID (requires --repo and --epic)"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "ready",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "show only ready pending Tasks while retaining the current preparation"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID (requires --project and --epic)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read the queue without creating locks or upgrading the registry. --ready filters pending entries and preserves ranks; the current preparation remains visible. Omit target flags only from the registered Epic worktree.",
+        "path": "ply workspace task queue list",
+        "runnable": true,
+        "short": "Show the prioritized queue and current preparation",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "list"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task queue list"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task queue list --ready\n  ply workspace task queue set --file /absolute/queue.json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for queue"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Inspect and explicitly prioritize pending Tasks. Inspect command help before an explicit mutation. Prepared is not delivery, human QA, or integration approval.",
+        "path": "ply workspace task queue",
+        "runnable": true,
+        "short": "Inspect and explicitly prioritize pending Tasks",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "queue"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task queue"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task queue release --preparation pre_<digest> --expected-revision 2 --reason \"Human queue decision\"",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "epic",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Epic ID (requires --project and --repo)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "exact current queue revision"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for release"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "preparation",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact current preparation ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Project ID (requires --repo and --epic)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "reason",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "human reason for closing this choice (maximum 2000 characters)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID (requires --project and --epic)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Close the exact current preparation with an expected queue revision and a reason. Advance requires a known prepared worktree. Release accepts known no-effect or prepared state. Partial and unknown effects must be resolved first. A released Task cannot be resumed or adopted in this version. No worktree or evidence is deleted; no next Task is prepared.",
+        "path": "ply workspace task queue release",
+        "runnable": true,
+        "short": "Release a known choice while preserving its worktree and history",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "release"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task queue release"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task queue set --file /absolute/queue.json --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical JSON draft path (maximum 256 KiB)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for set"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read a strict WorkspaceTaskQueueDraft@1 from an absolute physical JSON file. Bind exact selections and expected_revision. A legacy registry requires registry_upgrade. The current preparation is retained and must not occur in entries.",
+        "path": "ply workspace task queue set",
+        "runnable": true,
+        "short": "Replace the pending order with an exact human priority claim",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "set"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task queue set"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workspace task result record workspace-work-item-bootstrap --file /absolute/task-result.json",
         "flags": [
           {
@@ -2407,7 +3639,7 @@
         "has_post_run": false,
         "has_pre_run": true,
         "hidden": false,
-        "long": "Record a readiness assessment without selecting a solution. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.",
+        "long": "Record a readiness assessment without selecting a solution. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim. New work uses the current Epic base. After a base update, record a new revision with snapshot references to unchanged documents, then assess and select it. Historical revisions remain immutable.",
         "path": "ply workspace task spec assess",
         "runnable": true,
         "short": "Record a readiness assessment without selecting a solution",
@@ -2538,7 +3770,7 @@
         "has_post_run": false,
         "has_pre_run": true,
         "hidden": false,
-        "long": "Record a solution revision with three parts. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.",
+        "long": "Record a solution revision with three parts. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim. New work uses the current Epic base. After a base update, record a new revision with snapshot references to unchanged documents, then assess and select it. Historical revisions remain immutable.",
         "path": "ply workspace task spec record",
         "runnable": true,
         "short": "Record a solution revision with three parts",
@@ -2612,7 +3844,7 @@
         "has_post_run": false,
         "has_pre_run": true,
         "hidden": false,
-        "long": "Record the human's exact solution choice. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.",
+        "long": "Record the human's exact solution choice. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim. New work uses the current Epic base. After a base update, record a new revision with snapshot references to unchanged documents, then assess and select it. Historical revisions remain immutable.",
         "path": "ply workspace task spec select",
         "runnable": true,
         "short": "Record the human's exact solution choice",

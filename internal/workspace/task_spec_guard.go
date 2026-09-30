@@ -36,6 +36,23 @@ func validateSpecImplementationBasis(d Dependencies, projects ProjectSnapshot, r
 		return contentError("task_spec_binding_conflict", "Task Epic is missing", nil)
 	}
 	parent, _ := findEpicRepo(*epic, t.RepoID)
+	if parent != nil {
+		historical, ok := historicalEpicBinding(r, *epic, *parent, contentString(m, "parent_oid"), contentString(m, "parent_tree"))
+		if !ok {
+			return contentError("task_spec_binding_conflict", "implementation basis is not a preserved Epic base", nil)
+		}
+		if fresh {
+			current := currentEpicBase(r, *epic, *parent)
+			if current.OID != historical.Worktree.OID || current.Tree != historical.Worktree.Tree {
+				return contentError("epic_base_changed", "implementation basis is older than the current Epic base", nil)
+			}
+			if pendingBaseUpdate(r, t.ParentEpicID, t.RepoID) {
+				return contentError("epic_base_pending", "resolve the pending base request first", nil)
+			}
+		}
+		parent = &historical
+	}
+
 	if parent == nil || repo.GitCommonDir != t.GitCommonDir || contentString(m, "project_id") != string(t.ProjectID) || contentString(m, "repo_id") != string(t.RepoID) || contentString(m, "git_common_dir") != t.GitCommonDir || contentString(m, "epic_id") != string(t.ParentEpicID) || contentString(m, "parent_worktree_id") != string(parent.Worktree.ID) || contentString(m, "parent_ref") != parent.Worktree.Ref || contentString(m, "parent_oid") != parent.Worktree.OID || contentString(m, "parent_tree") != parent.Worktree.Tree {
 		return contentError("task_spec_binding_conflict", "implementation basis differs from registered Task and Epic", nil)
 	}
@@ -133,13 +150,13 @@ func validateTaskSpecBasisRegistry(r WorkItemRegistry, b TaskSpecBasis) error {
 }
 
 type TaskSpecRequiredInput struct {
-	ID         string  `json:"id"`
-	Role       string  `json:"role"`
-	Locator    string  `json:"locator"`
-	SHA256     string  `json:"sha256"`
-	SizeBytes  int64   `json:"size_bytes"`
-	MediaType  string  `json:"media_type"`
-	GitBinding *string `json:"git_binding"`
+	ID         string  `yaml:"id" json:"id"`
+	Role       string  `yaml:"role" json:"role"`
+	Locator    string  `yaml:"locator" json:"locator"`
+	SHA256     string  `yaml:"sha256" json:"sha256"`
+	SizeBytes  int64   `yaml:"size_bytes" json:"size_bytes"`
+	MediaType  string  `yaml:"media_type" json:"media_type"`
+	GitBinding *string `yaml:"git_binding" json:"git_binding"`
 }
 type TaskSpecEvaluation struct {
 	Basis                                                 *TaskSpecBasis
@@ -278,15 +295,29 @@ func currentTaskSpec(d Dependencies, root string, r WorkItemRegistry, projects P
 		out.SelectionFreshness = "stale"
 		out.Reasons = append(out.Reasons, "task_spec_selection_stale")
 	}
+	if ep, _ := findEpic(r, t.ParentEpicID); ep != nil {
+		if parent, _ := findEpicRepo(*ep, t.RepoID); parent != nil {
+			base := currentEpicBase(r, *ep, *parent)
+			basis := contentFields(contentFields(out.Spec)["implementation_basis"])
+			if contentString(basis, "parent_oid") != base.OID || contentString(basis, "parent_tree") != base.Tree {
+				out.TargetFreshness = "stale"
+				out.Reasons = append(out.Reasons, "epic_base_changed")
+			}
+		}
+	}
 	if fresh {
 		if e = validateSpecImplementationBasis(d, projects, r, t, contentFields(out.Spec)["implementation_basis"], true); e != nil {
 			out.TargetFreshness = "unknown"
-			out.SelectionFreshness = "unknown"
+			if r.FormatVersion < 4 {
+				out.SelectionFreshness = "unknown"
+			}
 			reason := "task_content_observation_unknown"
 			var contentErr *TaskContentError
-			if errors.As(e, &contentErr) && (contentErr.Code == "task_spec_basis_stale" || contentErr.Code == "task_spec_binding_conflict") {
+			if errors.As(e, &contentErr) && (contentErr.Code == "task_spec_basis_stale" || contentErr.Code == "task_spec_binding_conflict" || contentErr.Code == "epic_base_changed") {
 				out.TargetFreshness = "stale"
-				out.SelectionFreshness = "stale"
+				if r.FormatVersion < 4 {
+					out.SelectionFreshness = "stale"
+				}
 				reason = contentErr.Code
 			}
 			out.Reasons = append(out.Reasons, reason)
@@ -544,10 +575,31 @@ func taskResultSpecRelevance(d Dependencies, root string, projects ProjectSnapsh
 		out.Reasons = append(out.Reasons, "task_content_observation_unknown")
 		return out
 	}
-	if cur.SelectionFreshness == "current" && cur.ContentIntegrity == "valid" && contentTypedEqual(cur.Basis, &link.Basis) {
+	if cur.SelectionFreshness == "current" && cur.ContentIntegrity == "valid" && cur.TargetFreshness != "stale" && contentTypedEqual(cur.Basis, &link.Basis) {
 		out.Relevance = "current"
+		if r.FormatVersion == 4 {
+			ep, _ := findEpic(r, t.ParentEpicID)
+			parent, _ := findEpicRepo(*ep, t.RepoID)
+			base := currentEpicBase(r, *ep, *parent)
+			target := QueueTarget{ProjectID: t.ProjectID, RepoID: t.RepoID, EpicID: ep.ID, GitCommonDir: parent.GitCommonDir, ParentWorktreeID: parent.Worktree.ID, ParentLocator: parent.Worktree.Locator, ParentRef: parent.Worktree.Ref}
+			observed, err := queueParentObservation(d, target)
+			if err != nil {
+				out.Relevance = "unknown"
+				out.Reasons = append(out.Reasons, "task_content_observation_unknown")
+				var contentErr *TaskContentError
+				if errors.As(err, &contentErr) && contentErr.Code == "epic_base_stale" {
+					out.Relevance = "stale"
+					out.Reasons = []string{"epic_base_changed"}
+				}
+			} else if observed.OID != base.OID || observed.Tree != base.Tree {
+				out.Relevance = "stale"
+				out.Reasons = append(out.Reasons, "epic_base_changed")
+			}
+		}
 	} else {
 		out.Reasons = append(out.Reasons, "task_spec_result_not_current")
+		out.Reasons = append(out.Reasons, cur.Reasons...)
+		out.Reasons = sortedReasons(out.Reasons)
 	}
 	return out
 }

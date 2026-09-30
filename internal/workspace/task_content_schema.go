@@ -623,7 +623,7 @@ func sortTaskContentRegistry(r *WorkItemRegistry) {
 	})
 }
 func validateTaskContentRegistry(r WorkItemRegistry) error {
-	if r.FormatVersion != 3 {
+	if r.FormatVersion < 3 {
 		if r.TaskSpecPolicies != nil || r.TaskProblemRevisions != nil || r.TaskSpecRevisions != nil || r.TaskSpecAssessments != nil || r.TaskSolutionSelections != nil || r.TaskResultSpecBindings != nil || r.TaskContentPublications != nil {
 			return fmt.Errorf("legacy registry cannot contain Task content collections")
 		}
@@ -686,7 +686,7 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 	}
 	last = ""
 	for _, p := range r.TaskProblemRevisions {
-		key := fmt.Sprintf("%s/%010d", p.TaskID, p.Revision)
+		key := fmt.Sprintf("%s\x00%010d", p.TaskID, p.Revision)
 		if key <= last || p.Revision != problemHeads[p.TaskID]+1 || p.Revision > 2147483647 {
 			return fmt.Errorf("invalid problem revision chain")
 		}
@@ -699,7 +699,7 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 	}
 	last = ""
 	for _, p := range r.TaskSpecRevisions {
-		key := fmt.Sprintf("%s/%s/%010d", p.TaskID, p.SpecID, p.Revision)
+		key := fmt.Sprintf("%s\x00%s\x00%010d", p.TaskID, p.SpecID, p.Revision)
 		if key <= last || p.Revision != specHeads[p.TaskID]+1 || p.Revision > 2147483647 || contentSlug(p.SpecID) != nil || specIDs[p.TaskID] != "" && specIDs[p.TaskID] != p.SpecID || problemHeads[p.TaskID] == 0 {
 			return fmt.Errorf("invalid Spec revision chain")
 		}
@@ -713,8 +713,8 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 	}
 	last = ""
 	for _, p := range r.TaskSpecAssessments {
-		group := fmt.Sprintf("%s/%s/%010d", p.TaskID, p.SpecID, p.SpecRevision)
-		key := fmt.Sprintf("%s/%010d", group, p.Ordinal)
+		group := fmt.Sprintf("%s\x00%s\x00%010d", p.TaskID, p.SpecID, p.SpecRevision)
+		key := fmt.Sprintf("%s\x00%010d", group, p.Ordinal)
 		if key <= last || p.Ordinal != assessmentHeads[group]+1 || p.Ordinal > 2147483647 || p.SpecRevision < 1 || p.SpecRevision > specHeads[p.TaskID] || p.SpecID != specIDs[p.TaskID] || decisionIDs[p.ID] || !regexp.MustCompile(`^asm_[0-9a-f]{32}$`).MatchString(p.ID) {
 			return fmt.Errorf("invalid assessment chain")
 		}
@@ -728,7 +728,7 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 	}
 	last = ""
 	for _, p := range r.TaskSolutionSelections {
-		key := fmt.Sprintf("%s/%010d", p.TaskID, p.Ordinal)
+		key := fmt.Sprintf("%s\x00%010d", p.TaskID, p.Ordinal)
 		if key <= last || p.Ordinal != selectionHeads[p.TaskID]+1 || p.Ordinal > 2147483647 || decisionIDs[p.ID] || !regexp.MustCompile(`^sel_[0-9a-f]{32}$`).MatchString(p.ID) {
 			return fmt.Errorf("invalid selection chain")
 		}

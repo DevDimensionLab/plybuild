@@ -501,8 +501,8 @@ func requireIntegrationDependencies(d Dependencies) error {
 }
 
 func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, input TaskIntegrationInput) (WorkspaceTaskIntegrationPlan, string, integrationContext, error) {
-	if registry.FormatVersion != 2 && registry.FormatVersion != 3 {
-		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "work-item store must be format 2 or 3", nil)
+	if registry.FormatVersion < 2 || registry.FormatVersion > 4 {
+		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "work-item store must be format 2, 3 or 4", nil)
 	}
 	task, _ := findTask(registry, input.TaskID)
 	if task == nil || task.Worktree == nil || task.WorktreeState != WorkItemReady {
@@ -566,6 +566,15 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 		reasons = append(reasons, reason)
 		if readiness != "conflict" {
 			readiness = "blocked"
+		}
+	}
+	if registry.FormatVersion == 4 {
+		base := currentEpicBase(registry, *epic, *parent)
+		if task.Worktree.ParentOID != base.OID || task.Worktree.ParentTree != base.Tree {
+			block("epic_base_changed")
+		}
+		if pendingBaseUpdate(registry, epic.ID, task.RepoID) {
+			block("epic_base_update_pending")
 		}
 	}
 	if tr.TaskID != task.ID || tr.TaskWorktreeID != task.Worktree.ID || tr.ResultOID != input.ExpectedResultOID || tr.ResultTree == "" || tr.SourceLocator != task.Worktree.Locator || tr.SourceRef != task.Worktree.Ref {

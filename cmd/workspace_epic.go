@@ -16,11 +16,13 @@ type workspaceEpicServices struct {
 }
 
 func newWorkspaceEpicCommand(dependencies workspace.Dependencies) *cobra.Command {
-	return newWorkspaceEpicCommandWithServices(workspaceEpicServices{adopt: func(input workspace.EpicAdoptInput) (workspace.EpicMutationResult, error) {
+	command := newWorkspaceEpicCommandWithServices(workspaceEpicServices{adopt: func(input workspace.EpicAdoptInput) (workspace.EpicMutationResult, error) {
 		return workspace.AdoptEpic(dependencies, input)
 	}, show: func(id workspace.EpicID) (workspace.EpicReadbackResult, error) {
 		return workspace.ShowEpic(dependencies, id)
 	}, list: func() (workspace.EpicListResult, error) { return workspace.ListEpics(dependencies) }})
+	addWorkspaceEpicBaseCommands(command, dependencies)
+	return command
 }
 
 func newWorkspaceEpicCommandWithServices(services workspaceEpicServices) *cobra.Command {

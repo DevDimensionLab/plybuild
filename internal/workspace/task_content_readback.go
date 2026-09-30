@@ -401,10 +401,15 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 				cur, e := currentTaskSpec(d, root, r, projects, t, false)
 				if e != nil {
 					relevance = "unknown"
-				} else if cur.SelectionFreshness == "current" && contentTypedEqual(cur.Basis, &link.Basis) {
+				} else if cur.SelectionFreshness == "current" && cur.TargetFreshness != "stale" && contentTypedEqual(cur.Basis, &link.Basis) {
 					relevance = "current"
 				}
 			}
+		}
+		if r.FormatVersion == 4 && link != nil {
+			observed := taskResultSpecRelevance(d, root, projects, r, t, v.ID)
+			relevance = observed.Relevance
+			reasons = append(reasons, observed.Reasons...)
 		}
 		var locator canonicaljson.Value
 		for _, a := range v.Artifacts {

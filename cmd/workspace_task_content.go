@@ -47,6 +47,9 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 			}
 			return mutationErr
 		}}
+		if entry.parent == "spec" && (entry.name == "record" || entry.name == "assess" || entry.name == "select") {
+			c.Long += " New work uses the current Epic base. After a base update, record a new revision with snapshot references to unchanged documents, then assess and select it. Historical revisions remain immutable."
+		}
 		c.Flags().StringVar(&file, "file", "", "absolute physical path to a complete JSON draft (maximum 256 KiB)")
 		_ = c.MarkFlagRequired("file")
 		c.Flags().StringVar(&format, "format", "text", "output format (text or json)")

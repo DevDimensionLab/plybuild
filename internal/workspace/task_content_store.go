@@ -370,7 +370,7 @@ func contentResolveDocuments(d Dependencies, root string, r WorkItemRegistry, id
 }
 
 func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRegistry, sync bool) error {
-	if r.FormatVersion != 3 {
+	if r.FormatVersion < 3 {
 		return nil
 	}
 	for _, pub := range r.TaskContentPublications {

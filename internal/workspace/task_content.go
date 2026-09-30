@@ -92,8 +92,8 @@ type TaskContentPublication struct {
 	RecordedAtUTC        string                `yaml:"recorded_at_utc" json:"recorded_at_utc"`
 }
 type TaskRegistryUpgrade struct {
-	FromVersion    int    `json:"from_version"`
-	RegistrySHA256 string `json:"registry_sha256"`
+	FromVersion    int    `yaml:"from_version" json:"from_version"`
+	RegistrySHA256 string `yaml:"registry_sha256" json:"registry_sha256"`
 }
 type TaskContentInput struct {
 	TaskID TaskID
@@ -514,7 +514,7 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		if !contentEqual(sortedContentStrings(removed), m["removed_requirement_ids"]) {
 			return contentError("task_content_invalid_input", "removed_requirement_ids must exactly describe removed predecessor requirements", nil)
 		}
-		if e := validateSpecImplementationBasis(d, projects, r, task, m["implementation_basis"], false); e != nil {
+		if e := validateSpecImplementationBasis(d, projects, r, task, m["implementation_basis"], r.FormatVersion >= 4); e != nil {
 			return e
 		}
 	case "spec_assess":

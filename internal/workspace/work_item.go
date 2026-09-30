@@ -153,6 +153,10 @@ type WorkItemRegistry struct {
 	TaskSolutionSelections  []TaskSelectionReference  `yaml:"task_solution_selections"`
 	TaskResultSpecBindings  []TaskResultSpecBinding   `yaml:"task_result_spec_bindings"`
 	TaskContentPublications []TaskContentPublication  `yaml:"task_content_publications"`
+	EpicBaseVersions        []EpicBaseVersion         `yaml:"epic_base_versions"`
+	EpicBaseUpdates         []EpicBaseUpdate          `yaml:"epic_base_updates"`
+	TaskQueueEvents         []TaskQueueEvent          `yaml:"task_queue_events"`
+	TaskPreparations        []TaskPreparation         `yaml:"task_preparations"`
 	RawSHA256               string                    `yaml:"-"`
 }
 
@@ -572,6 +576,7 @@ func findEpicRepo(epic EpicRecord, repoID RepoID) (*EpicRepoBinding, int) {
 
 func sortWorkRegistry(registry *WorkItemRegistry) {
 	sortTaskContentRegistry(registry)
+	sortQueueRegistry(registry)
 	sort.Slice(registry.Epics, func(i, j int) bool { return registry.Epics[i].ID < registry.Epics[j].ID })
 	for i := range registry.Epics {
 		sort.Slice(registry.Epics[i].RepoBindings, func(a, b int) bool {
@@ -652,6 +657,9 @@ func AdoptEpic(dependencies Dependencies, input EpicAdoptInput) (EpicMutationRes
 			}
 			epic := EpicRecord{ID: input.EpicID, Title: input.Title, ProjectID: input.ProjectID, RepoBindings: []EpicRepoBinding{{RepoID: input.RepoID, GitCommonDir: repository.GitCommonDir, Worktree: EpicWorktreeBinding{ID: id, OwnerKind: "epic", OwnerID: input.EpicID, Origin: "adopted", Locator: locator, Ref: input.Ref, OID: input.ExpectedOID, Tree: observation.Tree, GitCommonDir: repository.GitCommonDir}}}}
 			registry.Epics = append(registry.Epics, epic)
+			if registry.FormatVersion == 4 {
+				registry.EpicBaseVersions = append(registry.EpicBaseVersions, adoptedEpicBase(epic, epic.RepoBindings[0]))
+			}
 			sortWorkRegistry(&registry)
 			if err := session.Publish(registry); err != nil {
 				return err
@@ -799,138 +807,7 @@ func CreateTaskWorktree(dependencies Dependencies, input TaskWorktreeCreateInput
 			if err != nil {
 				return err
 			}
-			task, taskIndex := findTask(registry, input.TaskID)
-			if task == nil {
-				return workError(ErrorWorkNotFound, fmt.Sprintf("Task %s is not registered", input.TaskID), nil)
-			}
-			epic, _ := findEpic(registry, task.ParentEpicID)
-			if epic == nil {
-				return workError(ErrorWorkStoreConflict, fmt.Sprintf("Task %s refers to missing Epic %s", task.ID, task.ParentEpicID), nil)
-			}
-			binding, _ := findEpicRepo(*epic, task.RepoID)
-			if binding == nil {
-				return workError(ErrorWorkStoreConflict, fmt.Sprintf("Task %s has no matching Epic repository binding", task.ID), nil)
-			}
-			_, repository, err := projectAndRepo(projects, task.ProjectID, task.RepoID)
-			if err != nil {
-				return err
-			}
-			if repository.GitCommonDir != task.GitCommonDir || binding.GitCommonDir != task.GitCommonDir {
-				return workError(ErrorWorkProjectConflict, fmt.Sprintf("Task %s repository common directory changed", task.ID), nil)
-			}
-			sourceRef := "refs/heads/" + input.Branch
-			operation, operationIndex := findOperation(registry, task.ID)
-			intentCreated := false
-			if operation != nil {
-				if operation.SourceRef != sourceRef || operation.TargetLocator != target || operation.ParentOID != input.ExpectedParentOID {
-					return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Task %s already has a different worktree intent", task.ID), nil)
-				}
-				if task.WorktreeState == WorkItemReconciliationRequired {
-					return reconciliationError(task.ID)
-				}
-			} else if task.WorktreeState != WorkItemUnbound || task.Worktree != nil {
-				return workError(ErrorWorkStoreConflict, fmt.Sprintf("Task %s has inconsistent worktree state", task.ID), nil)
-			}
-			if operation == nil {
-				if targetExists {
-					return workError(ErrorWorkPathConflict, fmt.Sprintf("target path %s already exists", target), nil)
-				}
-				if input.ExpectedParentOID != binding.Worktree.OID {
-					return workError(ErrorWorkParentStale, fmt.Sprintf("expected parent %s differs from recorded Epic commit %s", input.ExpectedParentOID, binding.Worktree.OID), nil)
-				}
-				if err := precheckParentAndResources(dependencies, repository, *binding, sourceRef, target); err != nil {
-					return err
-				}
-				for _, candidate := range registry.WorktreeOperations {
-					if candidate.GitCommonDir == task.GitCommonDir && (candidate.SourceRef == sourceRef || candidate.TargetLocator == target) {
-						return workError(ErrorWorkIdentityConflict, fmt.Sprintf("branch or path is reserved by Task %s", candidate.TaskID), nil)
-					}
-				}
-				worktreeID, err := dependencies.WorkIDs.NewWorktreeID()
-				if err != nil {
-					return err
-				}
-				operationID, err := dependencies.WorkIDs.NewOperationID()
-				if err != nil {
-					return err
-				}
-				created := WorktreeOperationRecord{ID: operationID, TaskID: task.ID, WorktreeID: worktreeID, State: "creating", ProjectID: task.ProjectID, RepoID: task.RepoID, GitCommonDir: task.GitCommonDir, ParentEpicID: task.ParentEpicID, ParentWorktreeID: binding.Worktree.ID, ParentRef: binding.Worktree.Ref, ParentOID: binding.Worktree.OID, ParentTree: binding.Worktree.Tree, SourceRef: sourceRef, TargetLocator: target, LastObservation: emptyCreateObservation("no_effect")}
-				digest, err := intentDigest(created)
-				if err != nil {
-					return workError(ErrorWorkIO, "compute Task worktree intent digest", err)
-				}
-				created.IntentDigest = digest
-				registry.Tasks[taskIndex].WorktreeState = WorkItemCreating
-				registry.WorktreeOperations = append(registry.WorktreeOperations, created)
-				sortWorkRegistry(&registry)
-				if err := session.Publish(registry); err != nil {
-					return err
-				}
-				operation, operationIndex = findOperation(registry, task.ID)
-				task = &registry.Tasks[taskIndex]
-				intentCreated = true
-			}
-			classification, observation := observeTaskCreate(dependencies, repository, *binding, *operation)
-			if classification == "exact_effect" {
-				if task.WorktreeState == WorkItemReady && task.Worktree != nil && operation.State == "ready" {
-					result.Task = *task
-					result.Epic = *epic
-					result.Operation = *operation
-					result.Outcome = "already_ready"
-					return nil
-				}
-				if err := finalizeReady(session, &registry, taskIndex, operationIndex, *epic, *operation, observation); err != nil {
-					return err
-				}
-				result.Task = registry.Tasks[taskIndex]
-				result.Epic = *epic
-				result.Operation = registry.WorktreeOperations[operationIndex]
-				result.Outcome = "recovered"
-				return nil
-			}
-			if task.WorktreeState == WorkItemReady {
-				return workError(ErrorWorkReconciliation, fmt.Sprintf("Task %s recorded ready but Git no longer matches. Run `ply workspace task show %s --format json` to inspect the preserved intent and observation.", task.ID, task.ID), nil)
-			}
-			gitInput := GitCreateInput{Repository: repository, Branch: input.Branch, SourceRef: sourceRef, TargetLocator: target, ParentOID: operation.ParentOID}
-			var outcome GitCommandOutcome
-			switch classification {
-			case "no_effect":
-				outcome = dependencies.WorkGit.CreateBranchAndWorktree(gitInput)
-			case "branch_only":
-				outcome = dependencies.WorkGit.AddWorktreeForExistingBranch(gitInput)
-			default:
-				if err := persistReconciliation(session, &registry, taskIndex, operationIndex, observation); err != nil {
-					return err
-				}
-				return reconciliationError(task.ID)
-			}
-			postClass, postObservation := observeTaskCreate(dependencies, repository, *binding, *operation)
-			switch postClass {
-			case "exact_effect":
-				if err := finalizeReady(session, &registry, taskIndex, operationIndex, *epic, *operation, postObservation); err != nil {
-					return err
-				}
-				result.Task = registry.Tasks[taskIndex]
-				result.Epic = *epic
-				result.Operation = registry.WorktreeOperations[operationIndex]
-				if outcome.Err == nil && intentCreated && classification == "no_effect" {
-					result.Outcome = "created"
-				} else {
-					result.Outcome = "recovered"
-				}
-				return nil
-			case "no_effect", "branch_only":
-				registry.WorktreeOperations[operationIndex].LastObservation = postObservation
-				if err := session.Publish(registry); err != nil {
-					return err
-				}
-				return workError(ErrorWorkGitEffect, fmt.Sprintf("Git worktree creation for Task %s did not complete (exit %d); identical retry is safe", task.ID, outcome.Exit), outcome.Err)
-			default:
-				if err := persistReconciliation(session, &registry, taskIndex, operationIndex, postObservation); err != nil {
-					return err
-				}
-				return reconciliationError(task.ID)
-			}
+			return createTaskWorktreeLocked(dependencies, root, projects, session, registry, input, target, targetExists, &result, nil)
 		})
 	})
 	if err != nil {
@@ -1149,6 +1026,12 @@ func finalizeReady(session WorkItemStoreSession, registry *WorkItemRegistry, tas
 	registry.WorktreeOperations[operationIndex].LastObservation = observation
 	registry.Tasks[taskIndex].WorktreeState = WorkItemReady
 	registry.Tasks[taskIndex].Worktree = &TaskWorktreeBinding{ID: operation.WorktreeID, OwnerKind: "task", OwnerID: operation.TaskID, Origin: "ply_created", Locator: operation.TargetLocator, Ref: operation.SourceRef, OID: operation.ParentOID, Tree: operation.ParentTree, GitCommonDir: operation.GitCommonDir, ParentEpicID: operation.ParentEpicID, ParentWorktreeID: operation.ParentWorktreeID, ParentRef: operation.ParentRef, ParentOID: operation.ParentOID, ParentTree: operation.ParentTree, OperationID: operation.ID, IntentDigest: operation.IntentDigest}
+	for i := range registry.TaskPreparations {
+		p := &registry.TaskPreparations[i]
+		if p.OperationID == operation.ID && p.Outcome == nil {
+			p.Outcome = &TaskPreparationOutcome{Kind: "prepared", WorktreeID: operation.WorktreeID, ObservedOID: operation.ParentOID, ObservedTree: operation.ParentTree, RecordedAtUTC: p.CreatedAtUTC}
+		}
+	}
 	return session.Publish(*registry)
 }
 func persistReconciliation(session WorkItemStoreSession, registry *WorkItemRegistry, taskIndex, operationIndex int, observation WorktreeObservationRecord) error {
@@ -1215,4 +1098,180 @@ func ListTasks(dependencies Dependencies, epicID *EpicID) (TaskListResult, error
 		}
 	}
 	return result, nil
+}
+
+// The caller owns Project -> work-items locks. Reservation joins the first intent write.
+func createTaskWorktreeLocked(dependencies Dependencies, root string, projects ProjectSnapshot, session WorkItemStoreSession, registry WorkItemRegistry, input TaskWorktreeCreateInput, target string, targetExists bool, result *TaskWorktreeMutationResult, reserve func(*WorkItemRegistry, WorktreeOperationRecord) error) error {
+	task, taskIndex := findTask(registry, input.TaskID)
+	if task == nil {
+		return workError(ErrorWorkNotFound, fmt.Sprintf("Task %s is not registered", input.TaskID), nil)
+	}
+	epic, _ := findEpic(registry, task.ParentEpicID)
+	if epic == nil {
+		return workError(ErrorWorkStoreConflict, fmt.Sprintf("Task %s refers to missing Epic %s", task.ID, task.ParentEpicID), nil)
+	}
+	adopted, _ := findEpicRepo(*epic, task.RepoID)
+	binding := adopted
+	if adopted != nil {
+		current := currentEpicBinding(registry, *epic, *adopted)
+		binding = &current
+	}
+	if binding == nil {
+		return workError(ErrorWorkStoreConflict, fmt.Sprintf("Task %s has no matching Epic repository binding", task.ID), nil)
+	}
+	_, repository, err := projectAndRepo(projects, task.ProjectID, task.RepoID)
+	if err != nil {
+		return err
+	}
+	if repository.GitCommonDir != task.GitCommonDir || binding.GitCommonDir != task.GitCommonDir {
+		return workError(ErrorWorkProjectConflict, fmt.Sprintf("Task %s repository common directory changed", task.ID), nil)
+	}
+	sourceRef := "refs/heads/" + input.Branch
+	operation, operationIndex := findOperation(registry, task.ID)
+	intentCreated := false
+	if prep := preparationForTask(registry, task.ID); prep != nil {
+		disposition := preparationDisposition(registry, prep.ID)
+		if disposition != "current" || prep.Outcome != nil {
+			result.Task = *task
+			result.Epic = *epic
+			if operation != nil {
+				result.Operation = *operation
+			}
+			result.Outcome = "historical_" + disposition
+			return nil
+		}
+		if reserve == nil {
+			return queueError("task_preparation_recovery_required", "use ply workspace task prepare --next --apply --confirm "+prep.PlanSHA256+" to recover the preserved preparation")
+		}
+	}
+	if operation != nil {
+		historical, ok := historicalEpicBinding(registry, *epic, *adopted, operation.ParentOID, operation.ParentTree)
+		if !ok {
+			return queueError("epic_base_conflict", "intent parent is not a historical base")
+		}
+		binding = &historical
+	}
+	if pendingBaseUpdate(registry, task.ParentEpicID, task.RepoID) {
+		return queueError("epic_base_pending", "resolve the base update before creating a worktree")
+	}
+
+	if operation != nil {
+		if operation.SourceRef != sourceRef || operation.TargetLocator != target || operation.ParentOID != input.ExpectedParentOID {
+			return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Task %s already has a different worktree intent", task.ID), nil)
+		}
+		if task.WorktreeState == WorkItemReconciliationRequired && reserve == nil {
+			return reconciliationError(task.ID)
+		}
+	} else if task.WorktreeState != WorkItemUnbound || task.Worktree != nil {
+		return workError(ErrorWorkStoreConflict, fmt.Sprintf("Task %s has inconsistent worktree state", task.ID), nil)
+	}
+	if operation == nil {
+		if targetExists {
+			return workError(ErrorWorkPathConflict, fmt.Sprintf("target path %s already exists", target), nil)
+		}
+		if input.ExpectedParentOID != binding.Worktree.OID {
+			return workError(ErrorWorkParentStale, fmt.Sprintf("expected parent %s differs from recorded Epic commit %s", input.ExpectedParentOID, binding.Worktree.OID), nil)
+		}
+		if err := precheckParentAndResources(dependencies, repository, *binding, sourceRef, target); err != nil {
+			return err
+		}
+		for _, candidate := range registry.WorktreeOperations {
+			if candidate.GitCommonDir == task.GitCommonDir && (candidate.SourceRef == sourceRef || candidate.TargetLocator == target) {
+				return workError(ErrorWorkIdentityConflict, fmt.Sprintf("branch or path is reserved by Task %s", candidate.TaskID), nil)
+			}
+		}
+		worktreeID, err := dependencies.WorkIDs.NewWorktreeID()
+		if err != nil {
+			return err
+		}
+		operationID, err := dependencies.WorkIDs.NewOperationID()
+		if err != nil {
+			return err
+		}
+		created := WorktreeOperationRecord{ID: operationID, TaskID: task.ID, WorktreeID: worktreeID, State: "creating", ProjectID: task.ProjectID, RepoID: task.RepoID, GitCommonDir: task.GitCommonDir, ParentEpicID: task.ParentEpicID, ParentWorktreeID: binding.Worktree.ID, ParentRef: binding.Worktree.Ref, ParentOID: binding.Worktree.OID, ParentTree: binding.Worktree.Tree, SourceRef: sourceRef, TargetLocator: target, LastObservation: emptyCreateObservation("no_effect")}
+		digest, err := intentDigest(created)
+		if err != nil {
+			return workError(ErrorWorkIO, "compute Task worktree intent digest", err)
+		}
+		created.IntentDigest = digest
+		registry.Tasks[taskIndex].WorktreeState = WorkItemCreating
+		registry.WorktreeOperations = append(registry.WorktreeOperations, created)
+		if reserve != nil {
+			if err := reserve(&registry, created); err != nil {
+				return err
+			}
+		}
+		sortWorkRegistry(&registry)
+		if err := session.Publish(registry); err != nil {
+			return err
+		}
+		operation, operationIndex = findOperation(registry, task.ID)
+		task = &registry.Tasks[taskIndex]
+		intentCreated = true
+	}
+	classification, observation := observeTaskCreate(dependencies, repository, *binding, *operation)
+	if classification == "exact_effect" {
+		if task.WorktreeState == WorkItemReady && task.Worktree != nil && operation.State == "ready" {
+			result.Task = *task
+			result.Epic = *epic
+			result.Operation = *operation
+			result.Outcome = "already_ready"
+			return nil
+		}
+		if err := finalizeReady(session, &registry, taskIndex, operationIndex, *epic, *operation, observation); err != nil {
+			return err
+		}
+		result.Task = registry.Tasks[taskIndex]
+		result.Epic = *epic
+		result.Operation = registry.WorktreeOperations[operationIndex]
+		result.Outcome = "recovered"
+		return nil
+	}
+	if task.WorktreeState == WorkItemReady {
+		return workError(ErrorWorkReconciliation, fmt.Sprintf("Task %s recorded ready but Git no longer matches. Run `ply workspace task show %s --format json` to inspect the preserved intent and observation.", task.ID, task.ID), nil)
+	}
+	currentBase := currentEpicBase(registry, *epic, *adopted)
+	if currentBase.OID != operation.ParentOID || currentBase.Tree != operation.ParentTree {
+		return queueError("epic_base_changed", "intent base is no longer current; no new Git effect is permitted")
+	}
+	gitInput := GitCreateInput{Repository: repository, Branch: input.Branch, SourceRef: sourceRef, TargetLocator: target, ParentOID: operation.ParentOID}
+	var outcome GitCommandOutcome
+	switch classification {
+	case "no_effect":
+		outcome = dependencies.WorkGit.CreateBranchAndWorktree(gitInput)
+	case "branch_only":
+		outcome = dependencies.WorkGit.AddWorktreeForExistingBranch(gitInput)
+	default:
+		if err := persistReconciliation(session, &registry, taskIndex, operationIndex, observation); err != nil {
+			return err
+		}
+		return reconciliationError(task.ID)
+	}
+	postClass, postObservation := observeTaskCreate(dependencies, repository, *binding, *operation)
+	switch postClass {
+	case "exact_effect":
+		if err := finalizeReady(session, &registry, taskIndex, operationIndex, *epic, *operation, postObservation); err != nil {
+			return err
+		}
+		result.Task = registry.Tasks[taskIndex]
+		result.Epic = *epic
+		result.Operation = registry.WorktreeOperations[operationIndex]
+		if outcome.Err == nil && intentCreated && classification == "no_effect" {
+			result.Outcome = "created"
+		} else {
+			result.Outcome = "recovered"
+		}
+		return nil
+	case "no_effect", "branch_only":
+		registry.WorktreeOperations[operationIndex].LastObservation = postObservation
+		if err := session.Publish(registry); err != nil {
+			return err
+		}
+		return workError(ErrorWorkGitEffect, fmt.Sprintf("Git worktree creation for Task %s did not complete (exit %d); identical retry is safe", task.ID, outcome.Exit), outcome.Err)
+	default:
+		if err := persistReconciliation(session, &registry, taskIndex, operationIndex, postObservation); err != nil {
+			return err
+		}
+		return reconciliationError(task.ID)
+	}
 }

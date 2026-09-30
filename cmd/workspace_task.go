@@ -37,6 +37,7 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 		return workspace.CheckTaskIntegration(dependencies, input)
 	}})
 	addWorkspaceTaskContentCommands(command, dependencies)
+	addWorkspaceTaskQueueCommands(command, dependencies)
 	return command
 }
 

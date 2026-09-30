@@ -16,7 +16,15 @@ type EpicFreshnessRepo struct {
 	RepoID                                                       RepoID
 	Locator, Ref, OID, Tree, GitCommonDir, Clean, InventoryMatch string
 }
+type EpicBaseSummary struct {
+	RepoID    RepoID `json:"repo_id"`
+	Revision  int    `json:"revision"`
+	OID       string `json:"oid"`
+	Tree      string `json:"tree"`
+	Freshness string `json:"freshness"`
+}
 type EpicReadbackResult struct {
+	Base      []EpicBaseSummary
 	Workspace string
 	Epic      EpicRecord
 	Observed  []EpicObservedRepo
@@ -140,6 +148,20 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 	}
 	result.Reasons = sortedReasons(result.Reasons)
 	result.Ready = result.Ready && len(result.Reasons) == 0
+	if registry.FormatVersion == 4 {
+		result.Base = []EpicBaseSummary{}
+		result.Ready = true
+		for _, binding := range epic.RepoBindings {
+			base := currentEpicBase(registry, *epic, binding)
+			fresh := "unknown"
+			if o, e := dependencies.WorkGit.ObserveWorktree(base.Locator); e == nil {
+				fresh = freshness(o.Locator == base.Locator && o.Ref == base.Ref && o.OID == base.OID && o.Tree == base.Tree && o.GitCommonDir == base.GitCommonDir && o.Clean && o.InventoryMatch)
+			}
+			result.Base = append(result.Base, EpicBaseSummary{binding.RepoID, base.Revision, base.OID, base.Tree, fresh})
+			result.Ready = result.Ready && fresh == "fresh" && !pendingBaseUpdate(registry, epic.ID, binding.RepoID)
+		}
+	}
+
 	return result, nil
 }
 
@@ -281,7 +303,7 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 		integration := buildTaskShowIntegrationReadback(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repositories}, registry, *task, *epic, *binding)
 		result.Integration = &integration
 	}
-	if registry.FormatVersion == 3 {
+	if registry.FormatVersion >= 3 {
 		result.Content = buildTaskContentReadback(dependencies, registry, ProjectSnapshot{Projects: projects, Repos: repositories}, result)
 	}
 	return result, nil
@@ -296,7 +318,16 @@ func MarshalEpicReadback(result EpicReadbackResult) ([]byte, error) {
 	for _, item := range result.Freshness {
 		fresh = append(fresh, canonicaljson.Object{{Name: "repo_id", Value: string(item.RepoID)}, {Name: "locator", Value: item.Locator}, {Name: "ref", Value: item.Ref}, {Name: "oid", Value: item.OID}, {Name: "tree", Value: item.Tree}, {Name: "git_common_dir", Value: item.GitCommonDir}, {Name: "clean", Value: item.Clean}, {Name: "inventory_match", Value: item.InventoryMatch}})
 	}
-	return canonicaljson.Marshal(canonicaljson.Object{{Name: "kind", Value: "WorkspaceEpicReadback@1"}, {Name: "workspace", Value: result.Workspace}, {Name: "persisted", Value: epicCanonical(result.Epic)}, {Name: "observed", Value: observed}, {Name: "freshness", Value: fresh}, {Name: "ready_for_task_worktree_create", Value: result.Ready}, {Name: "reasons", Value: stringValues(result.Reasons)}})
+	value := canonicaljson.Object{{Name: "kind", Value: "WorkspaceEpicReadback@1"}, {Name: "workspace", Value: result.Workspace}, {Name: "persisted", Value: epicCanonical(result.Epic)}, {Name: "observed", Value: observed}, {Name: "freshness", Value: fresh}, {Name: "ready_for_task_worktree_create", Value: result.Ready}, {Name: "reasons", Value: stringValues(result.Reasons)}}
+	if result.Base != nil {
+		value[0].Value = "WorkspaceEpicReadback@2"
+		bases, e := contentValue(result.Base)
+		if e != nil {
+			return nil, e
+		}
+		value = append(value, canonicaljson.Member{Name: "base", Value: bases})
+	}
+	return canonicaljson.Marshal(value)
 }
 
 func MarshalTaskReadback(result TaskReadbackResult) ([]byte, error) {

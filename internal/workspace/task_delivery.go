@@ -432,7 +432,7 @@ func RecordTaskHumanQA(dependencies Dependencies, input TaskHumanQARecordInput) 
 			if err != nil {
 				return err
 			}
-			if registry.FormatVersion != 2 && registry.FormatVersion != 3 {
+			if registry.FormatVersion < 2 || registry.FormatVersion > 4 {
 				return workError(ErrorTaskQAConflict, "Task result store has not been upgraded to format 2 or 3", nil)
 			}
 			task, _ := findTask(registry, draft.TaskID)
