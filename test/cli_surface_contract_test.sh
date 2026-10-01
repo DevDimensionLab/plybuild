@@ -67,6 +67,10 @@ run_help_surface workspace-epic-adopt-help workspace epic adopt --help
 run_help_surface workspace-epic-show-help workspace epic show --help
 run_help_surface workspace-epic-list-help workspace epic list --help
 run_help_surface workspace-task-help workspace task --help
+run_help_surface workspace-task-run-help workspace task run --help
+for run_leaf in start show collect accept report; do
+	run_help_surface "workspace-task-run-$run_leaf-help" workspace task run "$run_leaf" --help
+done
 run_help_surface workspace-task-create-help workspace task create --help
 run_help_surface workspace-task-show-help workspace task show --help
 run_help_surface workspace-task-list-help workspace task list --help

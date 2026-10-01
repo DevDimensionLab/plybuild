@@ -236,3 +236,19 @@ func ShowTaskPreparation(d Dependencies, id string) (TaskPreparationReadback, er
 	})
 	return out, e
 }
+
+// TaskRunPreparation reads the selected preparation under the caller's existing
+// Project/work-item snapshot locks. It never upgrades or repairs a registry.
+func (s *TaskSpecSession) TaskRunPreparation(id string) (TaskPreparationReadback, error) {
+	if e := queuePrefixedID("pre_")(id); e != nil {
+		return TaskPreparationReadback{}, e
+	}
+	if e := validateQueueClosure(s.Dependencies, s.Root, s.Registry); e != nil {
+		return TaskPreparationReadback{}, e
+	}
+	p := findPreparation(s.Registry, id)
+	if p == nil {
+		return TaskPreparationReadback{}, queueError("task_preparation_not_found", "preparation is not recorded")
+	}
+	return preparationReadback(s.Dependencies, s.Root, s.Registry, *p), nil
+}

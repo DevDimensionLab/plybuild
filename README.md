@@ -249,6 +249,58 @@ set the queue entry to that new selection. Historical Specs, results, QA and int
 retries retain their original digests. No command rebases worktrees, integrates code,
 starts an agent, installs the CLI or selects a human QA outcome.
 
+### Start one interactive Codex run and preserve its return
+
+After preparing a Task, use a private `ply.workspace.task-run-request` JSON document
+(schema version 1) with the exact preparation ID and canonical SHA-256 of the whole
+preserved preparation. Include its HandoffDraft@2, selected Spec and required inputs,
+clean target, four total rounds, agreement A, human start claim and return policy.
+The runtime binds physical Codex and Ply executables by SHA-256, the requested model,
+an optional Codex **config** profile, and private evidence of the effective permission
+policy. A permission profile name alone does not establish authority. Relative paths,
+symlinks, unknown fields and unbound runtime overrides are rejected.
+
+```shell
+ply workspace task run start --file /absolute/request.json --check
+ply workspace task run start --file /absolute/request.json --apply --confirm sha256:<preview-digest>
+ply workspace task run show trn_<request-key-digest> --format json
+ply workspace task run collect trn_<request-key-digest> --check --format json
+```
+
+Preview is read-only and prints a complete confirmation command. `--check` is the
+default; `--apply` requires that exact confirmation. Interactive apply accepts text
+output and a foreground macOS terminal. Codex inherits stdin, stdout and stderr;
+Ply restores terminal ownership and state when possible. Other operating systems
+support schema and readback, and reject interactive start before writing.
+
+Ply reserves the request, run and target before its single launch attempt. Retrying
+an already reserved request reads its preserved state, including after legitimate
+Task changes. An unknown attempt is never automatically restarted. `show` and
+`collect --check` create no files or locks. Recovery publication uses the confirmation
+printed by `collect --check`; it cannot create a new launch attempt.
+
+The recipient receives private instructions and `PLY_TASK_RUN_CONTEXT`. Its first
+action is `run accept RUN_ID --file /absolute/claim.json`; its final action is
+`run report RUN_ID --file /absolute/report.json`. These typed callbacks bind the
+transport session, cwd, model and policy. The reported scope contract and effective
+OS policy are separate facts. No reply secret is placed in argv or stdout.
+A received report does not mean that the interactive session has ended: the human
+can exit Codex normally after reporting, and Ply collects automatically after Wait.
+
+Agreement A allows an initial execution, at most three correction rounds, 5400 active
+seconds and two environment measures. Reported active time and observed elapsed time
+remain separate. A complete return needs a valid started receipt, exact clean candidate,
+required verification and review evidence, and proven process/group quiescence.
+A nonzero child exit, missing report, live group or unknown identity cannot qualify.
+Ply records at most one qualifying TaskResult; raw blocked or incomplete reports remain
+visible. Plan result control is the next gate, followed by separately authorized human
+QA and integration. No queue advance or Epic base update happens automatically.
+
+Run commands use exit 0 for preview/readback/idempotent return and qualified completion,
+2 for invalid usage/schema, 3 for drift or policy conflicts, 4 for known start/I/O failure,
+and 5 for missing or unknown process/delivery outcomes. The child exit is retained
+separately. JSON output is one document on stdout; diagnostics go to stderr.
+
 ### Preserve a problem and choose a solution
 
 A new Task atomically records its initial problem (P1) and a `spec_required` policy.

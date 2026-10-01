@@ -23,6 +23,6 @@ var execute = cmd.ExecuteE
 
 func main() {
 	if err := execute(); err != nil {
-		os.Exit(1)
+		os.Exit(cmd.ExitCode(err))
 	}
 }

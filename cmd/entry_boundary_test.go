@@ -105,8 +105,8 @@ func assertEntrypoint(t *testing.T, repositoryRoot, relativePath string) {
 	if executionPath != wantPath {
 		t.Errorf("%s delegates to %q, want %q", relativePath, executionPath, wantPath)
 	}
-	if mainFunction == nil || !handlesExecutionError(mainFunction) {
-		t.Errorf("%s main does not convert the shared execution error to exit 1", relativePath)
+	if mainFunction == nil || !handlesExecutionError(mainFunction) || aliases["cmd"] != commandPackagePath {
+		t.Errorf("%s main does not convert the shared execution error through cmd.ExitCode", relativePath)
 	}
 }
 
@@ -123,27 +123,37 @@ func handlesExecutionError(function *ast.FuncDecl) bool {
 		}
 		errName, ok := assignment.Lhs[0].(*ast.Ident)
 		call, callOK := assignment.Rhs[0].(*ast.CallExpr)
+		if !ok || !callOK {
+			return true
+		}
 		callee, calleeOK := call.Fun.(*ast.Ident)
-		if !ok || !callOK || !calleeOK || errName.Name != "err" || callee.Name != "execute" {
+		if !calleeOK || errName.Name != "err" || callee.Name != "execute" || len(call.Args) != 0 {
 			return true
 		}
 		condition, ok := statement.Cond.(*ast.BinaryExpr)
-		left, leftOK := condition.X.(*ast.Ident)
-		right, rightOK := condition.Y.(*ast.Ident)
-		if !ok || !leftOK || !rightOK || left.Name != errName.Name || right.Name != "nil" {
+		if !ok || condition.Op != token.NEQ {
 			return true
 		}
-		hasExitOne := false
+		left, leftOK := condition.X.(*ast.Ident)
+		right, rightOK := condition.Y.(*ast.Ident)
+		if !leftOK || !rightOK || left.Name != errName.Name || right.Name != "nil" {
+			return true
+		}
+		hasMappedExit := false
 		ast.Inspect(statement.Body, func(node ast.Node) bool {
 			call, ok := node.(*ast.CallExpr)
 			if !ok || !isSelectorCall(call, "os", "Exit") || len(call.Args) != 1 {
 				return true
 			}
-			literal, ok := call.Args[0].(*ast.BasicLit)
-			hasExitOne = ok && literal.Value == "1"
+			mapping, ok := call.Args[0].(*ast.CallExpr)
+			if !ok || !isSelectorCall(mapping, "cmd", "ExitCode") || len(mapping.Args) != 1 {
+				return true
+			}
+			argument, ok := mapping.Args[0].(*ast.Ident)
+			hasMappedExit = ok && argument.Name == errName.Name
 			return true
 		})
-		handled = hasExitOne
+		handled = hasMappedExit
 		return true
 	})
 	return handled

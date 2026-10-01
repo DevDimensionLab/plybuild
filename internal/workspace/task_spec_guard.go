@@ -683,3 +683,24 @@ func ValidateTaskRequirementEvidence(raw []byte, b TaskSpecBasis, spec canonical
 	}
 	return nil
 }
+
+// ValidateTaskRunTechnicalAssessment keeps the TaskResult gate and debt schema
+// authoritative for semantic reports without creating a TaskResult draft.
+func ValidateTaskRunTechnicalAssessment(raw []byte) error {
+	v, e := canonicaljson.DecodeStrict(raw)
+	if e != nil {
+		return e
+	}
+	f, e := exactTaskObject(v, "technical_assessment", "gate", "required_verifier_ids", "accepted_debt")
+	if e != nil {
+		return e
+	}
+	if !setString("passed", "good_enough_with_known_debt", "failed", "unknown")[mustTaskString(f, "gate")] {
+		return fmt.Errorf("invalid technical gate")
+	}
+	if _, e = taskStringArray(f["required_verifier_ids"], true); e != nil {
+		return e
+	}
+	_, e = parseAcceptedDebt(f["accepted_debt"])
+	return e
+}
