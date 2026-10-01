@@ -29,7 +29,7 @@ func addWorkspaceTaskRunCommands(task *cobra.Command, w workspace.Dependencies) 
 	task.AddCommand(newTaskRunCommand(taskrun.SystemDependencies(w)))
 }
 func newTaskRunCommand(d taskrun.Dependencies) *cobra.Command {
-	run := &cobra.Command{Use: "run", Short: "Start one interactive Codex run and preserve its return", Long: "Preview an exact prepared Task, confirm one interactive Codex start, and collect its typed return. Plan result control, human QA and integration are separate gates.", Example: "  ply workspace task run start --file /absolute/request.json\n  ply workspace task run show trn_<digest>", Args: func(c *cobra.Command, a []string) error {
+	run := &cobra.Command{Use: "run", Short: "Start one interactive Codex run and preserve its return", Long: "Preview an exact prepared Task, confirm one interactive Codex start, and collect its typed return. Callbacks use a bound --context path; reported model may be unknown. Client exit and human-observed task inactivity are separate facts. Plan result control, human QA and integration are separate gates.", Example: "  ply workspace task run start --file /absolute/request.json\n  ply workspace task run show trn_<digest>", Args: func(c *cobra.Command, a []string) error {
 		if len(a) != 0 {
 			return runUsage(c, "expected a run subcommand")
 		}
@@ -38,7 +38,7 @@ func newTaskRunCommand(d taskrun.Dependencies) *cobra.Command {
 	run.SetFlagErrorFunc(func(c *cobra.Command, e error) error { return runUsage(c, e.Error()) })
 	for _, name := range []string{"start", "show", "collect", "accept", "report"} {
 		name := name
-		var file, format, confirm string
+		var file, format, confirm, contextPath, statusPath string
 		var check, apply bool
 		use := name
 		if name != "start" {
@@ -48,17 +48,17 @@ func newTaskRunCommand(d taskrun.Dependencies) *cobra.Command {
 		long := short + ". "
 		switch name {
 		case "start":
-			long += "--check is the default and writes nothing. --apply requires --confirm with the exact preview digest, text output and a foreground macOS terminal. The child inherits the terminal; result collection runs after it exits. A reserved run is never relaunched."
+			long += "--check is the default and writes nothing. --apply requires --confirm with the exact preview digest, text output and a foreground macOS terminal. The child inherits the terminal; result collection runs after it exits. Without a human task observation, exit 5 with task_run_task_status_unknown means collection is waiting for that observation. A reserved run is never relaunched."
 		case "show":
-			long += "Shows process, acceptance, delivery and collection separately. Unknown is a successful readback, not completion. No locks or recovery files are created."
+			long += "Shows requested and reported model provenance, client process, task execution source, acceptance, delivery and collection separately. Unknown is a successful readback, not completion. No locks or recovery files are created."
 		case "collect":
-			long += "--check is the default. --apply --confirm publishes only an already received return with proven process quiescence. It never starts an agent. Historical TaskResults remain immutable."
+			long += "--check is the default. --apply --confirm publishes only an already received return with proven client quiescence and an inactive task observation after the report. Use --task-status with a private canonical task-run-task-status@1 JSON document built by a return helper from the bound run and an explicit human observation. This source is an attestation, not provider authentication or human QA. Check is read-only; apply confirms the status digest and journal tip. It never starts an agent. Historical TaskResults remain immutable."
 		case "accept":
-			long += "Use --file with a private ply.workspace.task-run-acceptance document. PLY_TASK_RUN_CONTEXT, cwd, model, policy and the exact run session must match. This is the recipient's first action before target writes."
+			long += "Use --file with a private ply.workspace.task-run-acceptance document. Use --context for the exact private context path; PLY_TASK_RUN_CONTEXT remains supported and must agree when both are set. Acceptance@2 permits a null model; known model mismatch or unknown necessary authority cannot start. Bound cwd, executable, policy and run session are checked. Negative claims are preserved even when missing facts prevent a WF receipt. This is the recipient's first action before target writes."
 		case "report":
-			long += "Use --file with a private ply.workspace.task-run-report document after the last correction. Identical submissions are idempotent. Report received does not mean that the interactive process has exited."
+			long += "Use --file with a private ply.workspace.task-run-report document after the last correction. Use --context for the bound private context path, or the matching PLY_TASK_RUN_CONTEXT environment value. Identical submissions are idempotent. Report received does not mean that the interactive process has exited."
 		}
-		c := &cobra.Command{Use: use, Short: short, Long: long, Example: "  ply workspace task run " + name + map[string]string{"start": " --file /absolute/request.json --check", "show": " trn_<digest> --format json", "collect": " trn_<digest> --check", "accept": " trn_<digest> --file /absolute/acceptance.json", "report": " trn_<digest> --file /absolute/report.json"}[name]}
+		c := &cobra.Command{Use: use, Short: short, Long: long, Example: "  ply workspace task run " + name + map[string]string{"start": " --file /absolute/request.json --check", "show": " trn_<digest> --format json", "collect": " trn_<digest> --check", "accept": " trn_<digest> --context /absolute/run/tmp/context.json --file /absolute/acceptance.json", "report": " trn_<digest> --context /absolute/run/tmp/context.json --file /absolute/report.json"}[name]}
 		c.Args = func(c *cobra.Command, a []string) error {
 			want := 1
 			if name == "start" {
@@ -82,12 +82,25 @@ func newTaskRunCommand(d taskrun.Dependencies) *cobra.Command {
 			if name == "start" && apply && format == "json" {
 				return runUsage(c, "interactive apply requires text output")
 			}
+			if c.Flags().Changed("context") && contextPath == "" {
+				return runUsage(c, "--context must not be empty")
+			}
+			if c.Flags().Changed("task-status") && statusPath == "" {
+				return runUsage(c, "--task-status must not be empty")
+			}
 			if f := c.Flag("force"); f != nil && f.Changed {
 				return runUsage(c, "--force cannot authorize a Task run")
 			}
 			return nil
 		}
 		c.RunE = func(c *cobra.Command, a []string) error {
+			d := d
+			if c.Flags().Changed("context") {
+				d.CallbackContext = &contextPath
+			}
+			if c.Flags().Changed("task-status") {
+				d.TaskStatusPath = statusPath
+			}
 			var result any
 			var e error
 			if name == "start" {
@@ -131,6 +144,12 @@ func newTaskRunCommand(d taskrun.Dependencies) *cobra.Command {
 			}
 			return e
 		}
+		if name == "accept" || name == "report" {
+			c.Flags().StringVar(&contextPath, "context", "", "exact absolute private callback context path (must agree with environment)")
+		}
+		if name == "collect" {
+			c.Flags().StringVar(&statusPath, "task-status", "", "absolute private canonical JSON with an explicit human task observation")
+		}
 		c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 		if name == "start" || name == "collect" {
 			c.Flags().BoolVar(&check, "check", true, "preview without writing (default)")
@@ -162,16 +181,24 @@ func renderTaskRun(c *cobra.Command, format string, v any) error {
 			} `json:"goal"`
 		}
 		_ = json.Unmarshal(x.Request.HandoffDraft, &draft)
-		fmt.Fprintf(c.OutOrStdout(), "Task: %s — %s\nSpec: %s revision %d\nBase: %s\nWorktree: %s\nProvider: %s; requested model: %s\nBudget: initial execution + 3 correction rounds, 5400 active seconds, 2 environment measures\nEffects: bounded Task work; one run reservation and WF handoff; at most one qualified TaskResult.\nReturn: %s\n", x.Preparation.Plan.TaskID, draft.Goal.Title, x.Preparation.Plan.SpecID, x.Preparation.Plan.Spec.Revision, x.Preparation.Plan.ParentOID, x.Preparation.Plan.WorktreePath, x.Request.Runtime.Provider, x.Request.Runtime.Model, x.Paths.ReportPath)
+		fmt.Fprintf(c.OutOrStdout(), "Task: %s — %s\nSpec: %s revision %d\nBase: %s\nWorktree: %s\nProvider: %s; Requested model: %s\nBudget: initial execution + 3 correction rounds, 5400 active seconds, 2 environment measures\nEffects: bounded Task work; one run reservation and WF handoff; at most one qualified TaskResult.\nReturn: %s\n", x.Preparation.Plan.TaskID, draft.Goal.Title, x.Preparation.Plan.SpecID, x.Preparation.Plan.Spec.Revision, x.Preparation.Plan.ParentOID, x.Preparation.Plan.WorktreePath, x.Request.Runtime.Provider, x.Request.Runtime.Model, x.Paths.ReportPath)
 		return renderRunNext(c, x.NextArgv, x.Reasons)
 	case taskrun.Result:
 		if x.Kind == "" {
 			return nil
 		}
-		_, e := fmt.Fprintf(c.OutOrStdout(), "Run: %s\nLaunch: %s; acceptance: %s\nProcess: %s; delivery: %s; collection: %s\nNext action: %s\n", x.RunID, x.Launch.State, x.Acceptance.State, x.Process.State, x.Delivery.State, x.Collection.State, x.NextAction)
+		_, e := fmt.Fprintf(c.OutOrStdout(), "Run: %s\nLaunch: %s; acceptance: %s\nClient process: %s; delivery: %s; collection: %s\nNext action: %s\n", x.RunID, x.Launch.State, x.Acceptance.State, x.Process.State, x.Delivery.State, x.Collection.State, x.NextAction)
 		if e != nil {
 			return e
 		}
+		reported := "missing"
+		if x.RuntimeFacts.Source != nil {
+			reported = "unknown (recipient claim)"
+			if x.RuntimeFacts.ReportedModel != nil {
+				reported = *x.RuntimeFacts.ReportedModel + " (recipient claim; " + x.RuntimeFacts.ModelState + ")"
+			}
+		}
+		fmt.Fprintf(c.OutOrStdout(), "Requested model: %s\nReported model: %s\nTask execution: %s (source: %s)\n", x.RuntimeFacts.RequestedModel, reported, x.TaskExecution.State, x.TaskExecution.Source)
 		for _, r := range x.Reasons {
 			fmt.Fprintf(c.OutOrStdout(), "Needs attention: %s\n", r.Detail)
 		}
@@ -180,7 +207,7 @@ func renderTaskRun(c *cobra.Command, format string, v any) error {
 			return renderTaskRun(c, format, *x)
 		}
 	case taskrun.CollectPreview:
-		fmt.Fprintf(c.OutOrStdout(), "Run: %s\nProcess: %s\nCollection checks: %d unresolved reasons\n", x.RunID, x.Process.State, len(x.Reasons))
+		fmt.Fprintf(c.OutOrStdout(), "Run: %s\nClient process: %s\nTask execution: %s (source: %s)\nCollection checks: %d unresolved reasons\n", x.RunID, x.Process.State, x.TaskExecution.State, x.TaskExecution.Source, len(x.Reasons))
 		return renderRunNext(c, x.NextArgv, x.Reasons)
 	}
 	return nil

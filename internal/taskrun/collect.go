@@ -21,17 +21,38 @@ func collectPreview(d Dependencies, root, id string) (CollectPreview, journal, e
 	} else if record != nil {
 		j.Result.Collection = historicalCollection(record)
 		j.Result.ObservedTarget = historicalTarget(record)
+		if j.Result.TaskExecution.StatusSHA256 == nil {
+			j.Result.TaskExecution.HistoricalQualification = true
+		}
+	}
+	proposed, e := proposedStatus(d, j)
+	if e != nil {
+		return p, j, e
 	}
 	r := j.Result
+	p.BasisEventSHA256 = r.LastEventSHA256
+	p.TaskExecution = r.TaskExecution
+	inactive := taskInactive(j)
+	if proposed != nil {
+		h := digest(proposed)
+		p.ProposedTaskStatusSHA256 = &h
+		if !statusAlreadyRecorded(j, h) {
+			p.TaskExecution = executionFromStatus(*proposed, h)
+			inactive = proposed.State == "inactive"
+		}
+	}
 	p.RequestSHA256 = r.RequestSHA256
 	p.Process = r.Process
 	p.ReportSHA256 = r.Delivery.ReportSHA256
 	p.TerminalSHA256 = r.Delivery.TerminalSHA256
 	if r.Collection.State == "qualified" {
-		p.Confirmation = ptr(confirmation(p))
+		finishCollectPreview(&p, j.Request, d.TaskStatusPath)
 		return p, j, nil
 	}
 	add := func(code, detail string) { p.Reasons = append(p.Reasons, Reason{code, detail}) }
+	if !inactive {
+		add("task_run_task_status_"+p.TaskExecution.State, "Task execution needs a fresh, unambiguous human observation of inactive after the received report. Preview collect with --task-status, then apply its confirmation.")
+	}
 	if !quiescent(r.Process) || r.Process.State != "exited" {
 		add("task_run_process_unknown", "Process and group quiescence are not proven.")
 	}
@@ -68,7 +89,9 @@ func collectPreview(d Dependencies, root, id string) (CollectPreview, journal, e
 		} else {
 			p.Target = &workspace.PlanWorktreeObservation{WorktreeLocator: x.Locator, Ref: x.Ref, OID: x.OID, Tree: x.Tree, GitCommonDir: x.GitCommonDir, ObjectFormat: x.ObjectFormat, RefFormat: x.RefFormat, Symbolic: x.Symbolic, Clean: x.Clean, StatusEntries: x.StatusEntries, InProgress: x.InProgress}
 			f := facts.FinalTarget
-			if f == nil || !x.Clean || !x.Symbolic || len(x.InProgress) != 0 || x.Locator != f.WorktreeLocator || x.Ref != f.Ref || x.OID != f.OID || x.Tree != f.Tree || x.GitCommonDir != f.GitCommonDir {
+			if f == nil {
+				add("task_run_final_target_missing", "No reported final target evidence is available.")
+			} else if !x.Clean || !x.Symbolic || len(x.InProgress) != 0 || x.Locator != f.WorktreeLocator || x.Ref != f.Ref || x.OID != f.OID || x.Tree != f.Tree || x.GitCommonDir != f.GitCommonDir {
 				add("task_run_candidate_drift", "Current target differs from the reported clean candidate.")
 			}
 		}
@@ -79,9 +102,15 @@ func collectPreview(d Dependencies, root, id string) (CollectPreview, journal, e
 		p.InspectionSHA256 = ptr(hash(inspection.Bytes))
 	}
 	p.Reasons = sortedReasons(p.Reasons)
-	p.Confirmation = ptr(confirmation(p))
-	p.NextArgv = []string{j.Request.Runtime.PlyExecutable.Path, "workspace", "task", "run", "collect", id, "--apply", "--confirm", *p.Confirmation}
+	finishCollectPreview(&p, j.Request, d.TaskStatusPath)
 	return p, j, nil
+}
+func finishCollectPreview(p *CollectPreview, r Request, statusPath string) {
+	p.Confirmation = ptr(confirmation(*p))
+	p.NextArgv = []string{r.Runtime.PlyExecutable.Path, "workspace", "task", "run", "collect", p.RunID, "--apply", "--confirm", *p.Confirmation}
+	if statusPath != "" {
+		p.NextArgv = append(p.NextArgv, "--task-status", statusPath)
+	}
 }
 func PreviewCollect(d Dependencies, root, id string) (CollectPreview, error) {
 	if e := containing(d, root); e != nil {
@@ -101,7 +130,7 @@ func collectApply(d Dependencies, root, id, confirm string, parent bool) (Result
 	if e != nil {
 		return Result{}, e
 	}
-	if j.Result.Collection.State == "qualified" {
+	if j.Result.Collection.State == "qualified" && d.TaskStatusPath == "" {
 		if !parent && (p.Confirmation == nil || *p.Confirmation != confirm) {
 			return Result{}, conflict("collect confirmation differs from preview")
 		}
@@ -115,11 +144,27 @@ func collectApply(d Dependencies, root, id, confirm string, parent bool) (Result
 		if e != nil {
 			return e
 		}
-		if j.Result.Collection.State == "qualified" {
-			return nil
-		}
 		if !parent && confirmation(fresh) != confirm {
 			return conflict("collect bindings changed")
+		}
+		if e = publishTaskStatus(d, j, fresh.ProposedTaskStatusSHA256); e != nil {
+			return e
+		}
+		// The status is now durable. Re-read without proposing it against a later tip.
+		d.TaskStatusPath = ""
+		fresh, j, e = collectPreview(d, root, id)
+		if e != nil {
+			return e
+		}
+		if j.Result.Collection.State == "qualified" {
+			persisted, err := readJournal(root, id)
+			if err != nil {
+				return err
+			}
+			if persisted.Result.Collection.State == "qualified" {
+				return nil
+			}
+			return appendEvent(d, j.Request, "collection", map[string]any{"collection": j.Result.Collection, "observed_target": j.Result.ObservedTarget, "reasons": []Reason{}})
 		}
 		if e = recoverAcceptance(d, j); e != nil {
 			return e

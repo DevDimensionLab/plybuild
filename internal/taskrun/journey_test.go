@@ -86,7 +86,7 @@ func TestR6CompleteSyntheticReturnAndHistoricalRetry(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	out, e := Start(d, f, *p.(Preview).Confirmation)
+	out, e := startAndObserve(t, d, r, f, *p.(Preview).Confirmation)
 	if e != nil {
 		t.Fatalf("%v; child=%v\n%+v", e, runner.lastErr, out)
 	}

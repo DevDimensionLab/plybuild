@@ -24,7 +24,7 @@ func TestR8FrozenDraftRecoversBeforeAndAfterTaskResultWrite(t *testing.T) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			_, e = Start(d, f, *p.(Preview).Confirmation)
+			_, e = startAndObserve(t, d, r, f, *p.(Preview).Confirmation)
 			if e == nil {
 				t.Fatal("fault did not fire")
 			}
@@ -149,7 +149,7 @@ func TestR12LaterSelectionPreservesHistoricalReturn(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	out, e := Start(d, f, *p.(Preview).Confirmation)
+	out, e := startAndObserve(t, d, r, f, *p.(Preview).Confirmation)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -189,7 +189,7 @@ func TestR6KnownDebtGateRetainsExistingSemantics(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	out, e := Start(d, f, *p.(Preview).Confirmation)
+	out, e := startAndObserve(t, d, r, f, *p.(Preview).Confirmation)
 	if e != nil || out.Collection.State != "qualified" {
 		t.Fatalf("known debt rejected: %v %+v child=%v", e, out, d.Runner.(*fakeRunner).lastErr)
 	}

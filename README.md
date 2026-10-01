@@ -279,22 +279,58 @@ Task changes. An unknown attempt is never automatically restarted. `show` and
 `collect --check` create no files or locks. Recovery publication uses the confirmation
 printed by `collect --check`; it cannot create a new launch attempt.
 
-The recipient receives private instructions and `PLY_TASK_RUN_CONTEXT`. Its first
-action is `run accept RUN_ID --file /absolute/claim.json`; its final action is
-`run report RUN_ID --file /absolute/report.json`. These typed callbacks bind the
-transport session, cwd, model and policy. The reported scope contract and effective
-OS policy are separate facts. No reply secret is placed in argv or stdout.
+The recipient receives private instructions with the exact physical callback context:
+`run accept RUN_ID --context /absolute/run/tmp/context.json --file /absolute/claim.json`
+and `run report RUN_ID --context /absolute/run/tmp/context.json --file /absolute/report.json`.
+These commands work in a clean tool shell. The legacy `PLY_TASK_RUN_CONTEXT` environment
+value remains supported; when both locators are supplied they must be identical. The
+flag does not expand authority: context bytes, run, request, session, cwd and the bound
+Ply executable are still checked. No reply secret is placed in argv or stdout.
+
+Acceptance schema version 2 separates the requested model from the recipient's claim.
+A null reported model means unknown and does not alone block work. A known mismatch
+cannot start. Runtime, profile, effective policy and scope must be known and match for
+positive acceptance. Negative claims may honestly omit those facts and remain visible
+even when the existing WF format cannot represent a StartReceipt. Acceptance@1 remains
+readable; its literal model `unknown` also means unknown. Scope and effective OS policy
+remain separate facts. No model is inferred from the requested `--model` value.
 A received report does not mean that the interactive session has ended: the human
 can exit Codex normally after reporting, and Ply collects automatically after Wait.
+`Client process` describes the local client; `Task execution` describes the managed
+task and names its evidence source. Without an explicit task observation, parent
+collection preserves the return and exits 5 with `task_run_task_status_unknown`.
+This is expected waiting for an observation; a return helper should handle that exact
+code separately from other failures.
+
+The return helper builds a private canonical `ply.workspace.task-run-task-status`
+schema version 1 JSON document from the bound run and the human's explicit status
+choice. Use `collect RUN_ID --task-status /absolute/task-status.json --check`, then
+the complete apply/confirm command printed by that preview. The document binds the
+run, request, Ply session, current journal tip, physical worktree, actor, UTC observation
+time, visible group, task label, match count and optional native session ID. Its source
+is `human_observation`, an attestation rather than provider authentication. An inactive
+observation requires exactly one identified task in the matching group. A hidden native
+ID is not required; a missing or ambiguous row remains unknown. The observation can be
+collected with the human's final product assessment, but those are separate facts.
+Check writes nothing. Apply rechecks the status digest and journal basis under lock;
+changed evidence requires a new preview. Status history is immutable and exact retries
+do not add duplicate observations.
 
 Agreement A allows an initial execution, at most three correction rounds, 5400 active
 seconds and two environment measures. Reported active time and observed elapsed time
 remain separate. A complete return needs a valid started receipt, exact clean candidate,
-required verification and review evidence, and proven process/group quiescence.
+required verification and review evidence, client exit 0 and proven process/group
+quiescence, plus an inactive human task observation after the last received report.
 A nonzero child exit, missing report, live group or unknown identity cannot qualify.
 Ply records at most one qualifying TaskResult; raw blocked or incomplete reports remain
 visible. Plan result control is the next gate, followed by separately authorized human
 QA and integration. No queue advance or Epic base update happens automatically.
+Active or unknown task execution retains the target reservation even after client exit.
+Only a proven non-start or an inactive task with local quiescence can release it.
+Historical qualified TaskResults remain readable and idempotent, with task execution
+shown as unknown until observed. An explicit status can resolve that old reservation
+without rewriting or requalifying the historical result. An unregistered old draft
+still needs today's task status evidence before publication.
 
 Run commands use exit 0 for preview/readback/idempotent return and qualified completion,
 2 for invalid usage/schema, 3 for drift or policy conflicts, 4 for known start/I/O failure,

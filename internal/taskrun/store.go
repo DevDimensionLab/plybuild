@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
@@ -149,15 +150,21 @@ func withStore(root string, fn func() error) error {
 }
 
 type journal struct {
-	Request Request
-	Binding *Binding
-	Events  []Event
-	Hashes  []string
-	Result  Result
+	Request              Request
+	Binding              *Binding
+	Events               []Event
+	Hashes               []string
+	Result               Result
+	Claim                *Acceptance
+	LatestActivityAt     time.Time
+	LatestStatusAt       time.Time
+	LatestReportSequence int
+	LatestStatusSequence int
+	LastTaskStatus       *TaskStatus
 }
 
 func initial(r Request) Result {
-	return Result{Envelope: env("result"), RunID: RunID(r.RequestKey), RequestSHA256: digest(r), Launch: Launch{State: "reserved"}, Acceptance: AcceptanceState{State: "missing"}, Process: Process{State: "not_started"}, Delivery: Delivery{State: "missing"}, Collection: Collection{State: "pending"}, Reasons: []Reason{}, NextAction: "Start plan result control before separate human QA or integration."}
+	return Result{Envelope: env("result"), RunID: RunID(r.RequestKey), RequestSHA256: digest(r), RuntimeFacts: RuntimeFacts{RequestedModel: r.Runtime.Model, ModelState: "missing"}, TaskExecution: TaskExecution{State: "unknown", Source: "none"}, Launch: Launch{State: "reserved"}, Acceptance: AcceptanceState{State: "missing"}, Process: Process{State: "not_started"}, Delivery: Delivery{State: "missing"}, Collection: Collection{State: "pending"}, Reasons: []Reason{}, NextAction: "Start plan result control before separate human QA or integration."}
 }
 func readJournal(root, id string) (journal, error) {
 	var j journal
@@ -240,7 +247,11 @@ func readJournal(root, id string) (journal, error) {
 	}
 	// A cache must name a known chain prefix and exactly match its derived state.
 	var cache Result
-	e = readValue(filepath.Join(run, "result.json"), 4<<20, &cache)
+	rawCache, cacheErr := readFile(filepath.Join(run, "result.json"), 4<<20, true)
+	e = cacheErr
+	if e == nil {
+		cache, e = decodeResultCache(rawCache)
+	}
 	if e == nil {
 		if cache.LastEventSHA256 == nil {
 			return j, integrity("cache has no event binding")
@@ -261,7 +272,23 @@ func readJournal(root, id string) (journal, error) {
 			}
 			prefix.Result.LastEventSHA256 = &j.Hashes[i]
 		}
-		if !equal(cache, prefix.Result) {
+		expected := prefix.Result
+		if cache.SchemaVersion == 1 {
+			// The old producer collapsed negative states in the event/cache. Validate
+			// those exact historical bytes, while current readback follows the claim.
+			for _, ev := range j.Events[:idx+1] {
+				if ev.Type == "acceptance_received" {
+					var p struct {
+						State string `json:"state"`
+					}
+					if err := json.Unmarshal(ev.Payload, &p); err != nil {
+						return j, integrity(err.Error())
+					}
+					expected.Acceptance.State = p.State
+				}
+			}
+		}
+		if !equal(resultCacheValue(cache, cache.SchemaVersion), resultCacheValue(expected, cache.SchemaVersion)) {
 			return j, integrity("cache contradicts its event prefix")
 		}
 	} else if !os.IsNotExist(e) {
@@ -322,6 +349,7 @@ func fold(j *journal, e Event) error {
 		}
 		r.Launch.State = "failed"
 		r.Process = Process{State: "not_started", Quiescence: ptr(true)}
+		r.TaskExecution = TaskExecution{State: "not_started", Source: "spawn_failure"}
 		r.Reasons = append(r.Reasons, Reason{p.Code, p.Detail})
 	case "process_started", "process_exited":
 		var p struct {
@@ -350,6 +378,7 @@ func fold(j *journal, e Event) error {
 				return integrity("process identity changed")
 			}
 		}
+		j.LatestActivityAt, _ = time.Parse(time.RFC3339Nano, e.RecordedAtUTC)
 		r.Process = x
 	case "acceptance_received":
 		var p struct {
@@ -366,7 +395,38 @@ func fold(j *journal, e Event) error {
 		if p.ReceiptSHA256 != nil && !digestPattern.MatchString(*p.ReceiptSHA256) || p.State == "started" && p.ReceiptSHA256 == nil || r.Launch.Attempts != 1 {
 			return integrity("invalid acceptance facts")
 		}
-		r.Acceptance = AcceptanceState{p.State, p.ReceiptSHA256}
+		raw, err := readFile(filepath.Join(runPaths(j.Request).RunRoot, "claims", strings.TrimPrefix(p.ClaimSHA256, "sha256:")+".json"), 256<<10, true)
+		if err != nil || hash(raw) != p.ClaimSHA256 {
+			return integrity("accepted claim bytes differ")
+		}
+		claim, err := parseAcceptance(raw)
+		if err != nil || claimBinding(claim.RunID, claim.RequestSHA256, claim.SessionID, *j) != nil {
+			return integrity("invalid accepted claim")
+		}
+		// Older transports collapsed all negative event states to rejected. Preserve
+		// those bytes, but derive the actual claim state for current readback.
+		if claim.Acceptance != p.State && !(claim.SchemaVersion == 1 && p.State == "rejected" && claim.Acceptance != "started") {
+			return integrity("acceptance state differs from claim")
+		}
+		if claim.Acceptance == "started" {
+			if err = positiveClaim(claim, j.Request); err != nil {
+				return integrity(err.Error())
+			}
+		}
+		if j.LastTaskStatus != nil && j.LastTaskStatus.NativeSessionID != nil && claim.RuntimeClaim.NativeSessionID != nil && *j.LastTaskStatus.NativeSessionID != *claim.RuntimeClaim.NativeSessionID {
+			return integrity("claim and task status native sessions differ")
+		}
+		j.Claim = &claim
+		model := reportedModel(claim)
+		state := "unknown"
+		if model != nil {
+			state = "reported"
+			if *model != j.Request.Runtime.Model {
+				state = "mismatch"
+			}
+		}
+		r.RuntimeFacts = RuntimeFacts{RequestedModel: j.Request.Runtime.Model, ReportedModel: model, ModelState: state, Source: ptr("recipient_claim"), ClaimSHA256: &p.ClaimSHA256}
+		r.Acceptance = AcceptanceState{claim.Acceptance, p.ReceiptSHA256}
 	case "report_received":
 		var p struct {
 			ReportSHA256   string  `json:"report_sha256"`
@@ -388,9 +448,38 @@ func fold(j *journal, e Event) error {
 		if err != nil {
 			return integrity(err.Error())
 		}
+		j.LatestActivityAt, _ = time.Parse(time.RFC3339Nano, e.RecordedAtUTC)
+		j.LatestReportSequence = e.Sequence
 		r.Delivery = Delivery{p.State, &p.ReportSHA256, p.TerminalSHA256, &report.Outcome}
 		r.Budget.Reported = report.BudgetUsage
 		r.Budget.WithinAgreement = budgetValid(report.BudgetUsage)
+	case "task_status_observed":
+		var p struct {
+			StatusSHA256 string `json:"status_sha256"`
+		}
+		if decode(e.Payload, 64<<10, &p) != nil || !digestPattern.MatchString(p.StatusSHA256) {
+			return integrity("invalid task status event")
+		}
+		raw, err := readFile(taskStatusPath(j.Request, p.StatusSHA256), 64<<10, true)
+		if err != nil || hash(raw) != p.StatusSHA256 {
+			return integrity("task status bytes differ")
+		}
+		status, err := parseTaskStatus(raw)
+		if err != nil {
+			return integrity(err.Error())
+		}
+		if err = validateTaskStatus(status, *j); err != nil {
+			return integrity(err.Error())
+		}
+		observed, _ := time.Parse(time.RFC3339Nano, status.ObservedAtUTC)
+		recorded, _ := time.Parse(time.RFC3339Nano, e.RecordedAtUTC)
+		if recorded.Before(observed) {
+			return integrity("task status event predates observation")
+		}
+		j.LatestStatusAt = observed
+		j.LatestStatusSequence = e.Sequence
+		j.LastTaskStatus = &status
+		r.TaskExecution = executionFromStatus(status, p.StatusSHA256)
 	case "collection":
 		var p struct {
 			Collection     Collection            `json:"collection"`
@@ -407,6 +496,9 @@ func fold(j *journal, e Event) error {
 		}
 		if p.Collection.State == "qualified" && (p.Collection.TaskResultID == nil || p.Collection.TaskResultDraftSHA256 == nil || !digestPattern.MatchString(*p.Collection.TaskResultDraftSHA256) || !quiescent(r.Process) || r.Process.State != "exited" || r.Process.ExitCode == nil || *r.Process.ExitCode != 0 || r.Process.Signal != nil || r.Acceptance.State != "started" || r.Delivery.State != "received" || r.Delivery.ReportedOutcome == nil || *r.Delivery.ReportedOutcome != "complete" || r.Budget.WithinAgreement == nil || !*r.Budget.WithinAgreement) {
 			return integrity("collection contradicts qualifying facts")
+		}
+		if p.Collection.State == "qualified" && r.TaskExecution.StatusSHA256 == nil {
+			r.TaskExecution.HistoricalQualification = true
 		}
 		r.Collection = p.Collection
 		r.ObservedTarget = p.ObservedTarget
@@ -429,7 +521,8 @@ func appendEvent(d Dependencies, r Request, typ string, payload any) error {
 	if e != nil {
 		return e
 	}
-	j.Result = initial(r)
+	events, hashes := j.Events, j.Hashes
+	j = journal{Request: r, Binding: j.Binding, Result: initial(r), Events: events, Hashes: hashes}
 	for i, x := range j.Events {
 		if e = fold(&j, x); e != nil {
 			return e

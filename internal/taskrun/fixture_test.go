@@ -358,7 +358,7 @@ func acceptance(t *testing.T, d Dependencies, r Request) Acceptance {
 	roots := []string{j.Binding.Preparation.Plan.WorktreePath, cap.ReplyRoot}
 	sort.Strings(roots)
 	sb, _ := Canonical(map[string]any{"read_roots": []string{r.WorkspaceRoot}, "write_roots": roots, "temp_root": runPaths(r).TempRoot, "matches_contract": true})
-	return Acceptance{env("acceptance"), RunID(r.RequestKey), digest(r), "ply:" + RunID(r.RequestKey), RuntimeClaim{"codex", r.Runtime.Model, r.Runtime.PermissionBinding.ProfileID, r.Runtime.PermissionBinding.EffectivePolicySHA256, nil}, sb, "started", json.RawMessage("[]")}
+	return Acceptance{env("acceptance"), RunID(r.RequestKey), digest(r), "ply:" + RunID(r.RequestKey), RuntimeClaim{ptr("codex"), ptr(r.Runtime.Model), ptr(r.Runtime.PermissionBinding.ProfileID), ptr(r.Runtime.PermissionBinding.EffectivePolicySHA256), nil}, sb, "started", json.RawMessage("[]")}
 }
 func semanticReport(t *testing.T, d Dependencies, r Request) Report {
 	t.Helper()

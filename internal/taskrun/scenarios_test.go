@@ -92,11 +92,11 @@ func TestR5CallbackBindingsAndImmutableAcceptance(t *testing.T) {
 			old := d.CWD
 			switch field {
 			case "runtime":
-				bad.RuntimeClaim.RuntimeID = "other"
+				bad.RuntimeClaim.RuntimeID = ptr("other")
 			case "model":
-				bad.RuntimeClaim.ModelID = "other"
+				bad.RuntimeClaim.ModelID = ptr("other")
 			case "policy":
-				bad.RuntimeClaim.EffectivePolicySHA256 = hash([]byte("other"))
+				bad.RuntimeClaim.EffectivePolicySHA256 = ptr(hash([]byte("other")))
 			case "session":
 				bad.SessionID = "other"
 			case "cwd":

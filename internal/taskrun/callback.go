@@ -17,7 +17,22 @@ func callbackContext(d Dependencies, root, id string) (journal, Context, error) 
 	if j.Binding == nil || j.Result.Launch.Attempts != 1 {
 		return j, ctx, conflict("run has no bound launch intent")
 	}
-	cp := d.ContextPath()
+	cp := ""
+	if d.ContextPath != nil {
+		cp = d.ContextPath()
+	}
+	if d.CallbackContext != nil {
+		if *d.CallbackContext == "" {
+			return j, ctx, invalid("--context must not be empty")
+		}
+		if cp != "" && cp != *d.CallbackContext {
+			return j, ctx, conflict("--context and PLY_TASK_RUN_CONTEXT differ")
+		}
+		cp = *d.CallbackContext
+	}
+	if cp == "" {
+		return j, ctx, invalid("callback requires --context or PLY_TASK_RUN_CONTEXT")
+	}
 	expected := filepath.Join(runPaths(j.Request).TempRoot, "context.json")
 	if cp != expected {
 		return j, ctx, conflict("callback requires its bound private context")
@@ -26,7 +41,11 @@ func callbackContext(d Dependencies, root, id string) (journal, Context, error) 
 		return j, ctx, e
 	}
 	want := Context{env("context"), id, digest(j.Request), "ply:" + id, root, digest(j.Binding), j.Request.Runtime.PlyExecutable}
-	if !equal(ctx, want) {
+	rawContext, err := readFile(cp, 1<<20, true)
+	if err != nil {
+		return j, ctx, err
+	}
+	if !equal(ctx, want) || hash(rawContext) != digest(want) {
 		return j, ctx, conflict("callback context differs from binding")
 	}
 	cwd, e := d.CWD()
@@ -61,6 +80,48 @@ func claimBinding(id, request, session string, j journal) error {
 	}
 	return nil
 }
+func parseAcceptance(raw []byte) (Acceptance, error) {
+	var a Acceptance
+	if e := decode(raw, 256<<10, &a); e != nil {
+		return a, e
+	}
+	if a.Kind != "ply.workspace.task-run-acceptance" || (a.SchemaVersion != 1 && a.SchemaVersion != 2) {
+		return a, invalid("unsupported acceptance version")
+	}
+	c := a.RuntimeClaim
+	for _, v := range []*string{c.RuntimeID, c.ModelID, c.ProfileID, c.EffectivePolicySHA256} {
+		if v == nil && a.SchemaVersion == 1 {
+			return a, invalid("Acceptance@1 requires non-null runtime facts")
+		}
+		if v != nil && !plain(*v, 1, 256) {
+			return a, invalid("invalid runtime fact")
+		}
+	}
+	if c.EffectivePolicySHA256 != nil && !digestPattern.MatchString(*c.EffectivePolicySHA256) {
+		return a, invalid("invalid effective policy digest")
+	}
+	if c.NativeSessionID != nil && !plain(*c.NativeSessionID, 1, 256) {
+		return a, invalid("invalid native session ID")
+	}
+	if e := workflowhandoff.ValidateTaskRunClaimFields(a.Sandbox, a.Issues, a.Acceptance, a.SchemaVersion == 2); e != nil {
+		return a, invalid(e.Error())
+	}
+	return a, nil
+}
+func reportedModel(a Acceptance) *string {
+	if a.SchemaVersion == 1 && a.RuntimeClaim.ModelID != nil && *a.RuntimeClaim.ModelID == "unknown" {
+		return nil
+	}
+	return a.RuntimeClaim.ModelID
+}
+func positiveClaim(a Acceptance, r Request) error {
+	c := a.RuntimeClaim
+	model := reportedModel(a)
+	if c.RuntimeID == nil || *c.RuntimeID != r.Runtime.Provider || c.ProfileID == nil || *c.ProfileID != r.Runtime.PermissionBinding.ProfileID || c.EffectivePolicySHA256 == nil || *c.EffectivePolicySHA256 != r.Runtime.PermissionBinding.EffectivePolicySHA256 || model != nil && *model != r.Runtime.Model {
+		return conflict("runtime, reported model or necessary effective authority differs from request")
+	}
+	return nil
+}
 func Accept(d Dependencies, root, id, file string) (Result, error) {
 	if e := containing(d, root); e != nil {
 		return Result{}, e
@@ -69,11 +130,11 @@ func Accept(d Dependencies, root, id, file string) (Result, error) {
 	if e != nil {
 		return Result{}, e
 	}
-	var claim Acceptance
-	if e = decode(raw, 256<<10, &claim); e != nil {
+	claim, e := parseAcceptance(raw)
+	if e != nil {
 		return Result{}, e
 	}
-	if e = checkEnvelope(claim.Envelope, "acceptance"); e != nil {
+	if _, _, e = callbackContext(d, root, id); e != nil {
 		return Result{}, e
 	}
 	canonical, _ := Canonical(claim)
@@ -86,56 +147,131 @@ func Accept(d Dependencies, root, id, file string) (Result, error) {
 		if e = claimBinding(claim.RunID, claim.RequestSHA256, claim.SessionID, j); e != nil {
 			return e
 		}
+		if j.LastTaskStatus != nil && j.LastTaskStatus.NativeSessionID != nil && claim.RuntimeClaim.NativeSessionID != nil && *j.LastTaskStatus.NativeSessionID != *claim.RuntimeClaim.NativeSessionID {
+			return conflict("claim native session differs from the preserved task observation")
+		}
+		if j.Result.RuntimeFacts.ClaimSHA256 != nil {
+			if *j.Result.RuntimeFacts.ClaimSHA256 == ch {
+				return nil
+			}
+			return conflict("accepted claim is immutable")
+		}
 		r := j.Request
-		c := claim.RuntimeClaim
-		if c.RuntimeID != r.Runtime.Provider || c.ModelID != r.Runtime.Model || c.ProfileID != r.Runtime.PermissionBinding.ProfileID || c.EffectivePolicySHA256 != r.Runtime.PermissionBinding.EffectivePolicySHA256 || c.NativeSessionID != nil && !plain(*c.NativeSessionID, 1, 256) {
-			return conflict("runtime, model or effective policy claim differs from request")
-		}
-		if _, e = runtimeBindings(r.Runtime); e != nil {
-			return e
-		}
-		for _, ev := range j.Events {
-			if ev.Type == "acceptance_received" {
-				var p struct {
-					ClaimSHA256 string `json:"claim_sha256"`
-				}
-				_ = json.Unmarshal(ev.Payload, &p)
-				if p.ClaimSHA256 == ch {
-					return nil
-				}
+		run := runPaths(r).RunRoot
+		slot := filepath.Join(run, "claims", "accepted.json")
+		old, err := readFile(slot, 256<<10, true)
+		if err == nil {
+			if hash(old) != ch {
 				return conflict("accepted claim is immutable")
 			}
+			return publishAcceptance(d, j, claim, canonical)
 		}
-		path := filepath.Join(runPaths(r).RunRoot, "claims", strings.TrimPrefix(ch, "sha256:")+".json")
-		draftPath := filepath.Join(runPaths(r).TempRoot, "start-"+strings.TrimPrefix(ch, "sha256:")+".json")
-		draft, e := readFile(draftPath, 256<<10, true)
-		if os.IsNotExist(e) {
-			draft, e = workflowhandoff.BuildTaskRunStart(d.Workflow, j.Binding.Handoff.Locator, r.HumanAuthority.ActorClaim, r.HumanAuthority.StartSurface, claim.SessionID, c.RuntimeID, c.ModelID, claim.Sandbox, claim.Issues, claim.Acceptance)
+		if !os.IsNotExist(err) {
+			return err
 		}
+		// Recover an old receipt before allowing a new claim to occupy the slot.
+		if e = recoverAcceptance(d, j); e != nil {
+			return e
+		}
+		j, e = readJournal(root, id)
 		if e != nil {
-			return invalid(e.Error())
-		}
-		if e = d.writeOnce(path, canonical); e != nil {
 			return e
 		}
-		if e = d.writeOnce(draftPath, draft); e != nil {
-			return e
+		if j.Result.RuntimeFacts.ClaimSHA256 != nil {
+			if *j.Result.RuntimeFacts.ClaimSHA256 == ch {
+				return nil
+			}
+			return conflict("accepted claim is immutable")
 		}
-		start, e := workflowhandoff.SubmitStart(d.Workflow, workflowhandoff.SubmitInput{HandoffLocator: j.Binding.Handoff.Locator, DraftPath: draftPath})
-		if e != nil {
-			return conflict(e.Error())
-		}
-		if e = d.fault("after_submit_start"); e != nil {
-			return e
-		}
-		state := "rejected"
+		c := claim.RuntimeClaim
 		if claim.Acceptance == "started" {
-			state = "started"
+			if e = positiveClaim(claim, r); e != nil {
+				return e
+			}
+			if _, e = runtimeBindings(r.Runtime); e != nil {
+				return e
+			}
 		}
-		return appendEvent(d, r, "acceptance_received", map[string]any{"claim_sha256": ch, "receipt_sha256": start.SHA256, "state": state})
+		var draft []byte
+		draftPath := acceptanceDraftPath(r, ch)
+		if c.RuntimeID != nil && string(claim.Sandbox) != "null" {
+			model := "unknown"
+			if reportedModel(claim) != nil {
+				model = *reportedModel(claim)
+			}
+			draft, e = readFile(draftPath, 256<<10, true)
+			if os.IsNotExist(e) {
+				draft, e = workflowhandoff.BuildTaskRunStart(d.Workflow, j.Binding.Handoff.Locator, r.HumanAuthority.ActorClaim, r.HumanAuthority.StartSurface, claim.SessionID, *c.RuntimeID, model, claim.Sandbox, claim.Issues, claim.Acceptance)
+			}
+			if e == nil {
+				e = workflowhandoff.ValidateTaskRunStart(d.Workflow, j.Binding.Handoff.Locator, draft)
+			}
+			if e != nil {
+				if claim.Acceptance == "started" {
+					return conflict(e.Error())
+				}
+				draft = nil
+			}
+		} else if claim.Acceptance == "started" {
+			return conflict("positive acceptance lacks runtime or sandbox")
+		}
+		if draft != nil {
+			if e = d.writeOnce(draftPath, draft); e != nil {
+				return e
+			}
+		}
+		if e = d.writeOnce(filepath.Join(run, "claims", strings.TrimPrefix(ch, "sha256:")+".json"), canonical); e != nil {
+			return e
+		}
+		if e = d.writeOnce(slot, canonical); e != nil {
+			return e
+		}
+		if e = d.fault("after_acceptance_claim"); e != nil {
+			return e
+		}
+		return publishAcceptance(d, j, claim, canonical)
 	})
 	out, _ := Show(d, root, id)
 	return out, e
+}
+func acceptanceDraftPath(r Request, h string) string {
+	return filepath.Join(runPaths(r).TempRoot, "start-"+strings.TrimPrefix(h, "sha256:")+".json")
+}
+func publishAcceptance(d Dependencies, j journal, a Acceptance, raw []byte) error {
+	h := hash(raw)
+	var receipt *string
+	path := acceptanceDraftPath(j.Request, h)
+	if draft, e := readFile(path, 256<<10, true); e == nil {
+		recovered, err := workflowhandoff.RecoverTaskRunStart(d.Workflow, j.Binding.Handoff.Locator, draft)
+		if err != nil {
+			return conflict(err.Error())
+		}
+		representable := true
+		if recovered != nil {
+			receipt = &recovered.SHA256
+		} else if a.Acceptance != "started" {
+			// An interrupted negative draft can become unrepresentable after drift.
+			// Preserve the claim and the representation gap without a new WF write.
+			representable = workflowhandoff.ValidateTaskRunStart(d.Workflow, j.Binding.Handoff.Locator, draft) == nil
+		}
+		if receipt == nil && representable {
+			start, err := workflowhandoff.SubmitStart(d.Workflow, workflowhandoff.SubmitInput{HandoffLocator: j.Binding.Handoff.Locator, DraftPath: path})
+			if err != nil {
+				return conflict(err.Error())
+			}
+			receipt = &start.SHA256
+		}
+		if receipt != nil {
+			if e = d.fault("after_submit_start"); e != nil {
+				return e
+			}
+		}
+	} else if !os.IsNotExist(e) {
+		return e
+	} else if a.Acceptance == "started" {
+		return integrity("positive claim lacks its frozen receipt draft")
+	}
+	return appendEvent(d, j.Request, "acceptance_received", map[string]any{"claim_sha256": h, "receipt_sha256": receipt, "state": a.Acceptance})
 }
 func SubmitReport(d Dependencies, root, id, file string) (Result, error) {
 	if e := containing(d, root); e != nil {
@@ -147,6 +283,9 @@ func SubmitReport(d Dependencies, root, id, file string) (Result, error) {
 	}
 	report, e := validateReport(raw)
 	if e != nil {
+		return Result{}, e
+	}
+	if _, _, e = callbackContext(d, root, id); e != nil {
 		return Result{}, e
 	}
 	canonical, _ := Canonical(report)
@@ -290,6 +429,23 @@ func recoverAcceptance(d Dependencies, j journal) error {
 	if j.Binding == nil || j.Result.Acceptance.State != "missing" {
 		return nil
 	}
+	slot := filepath.Join(runPaths(j.Request).RunRoot, "claims", "accepted.json")
+	raw, e := readFile(slot, 256<<10, true)
+	if e == nil {
+		a, e := parseAcceptance(raw)
+		if e != nil {
+			return e
+		}
+		if e = claimBinding(a.RunID, a.RequestSHA256, a.SessionID, j); e != nil {
+			return e
+		}
+		return publishAcceptance(d, j, a, raw)
+	}
+	if !os.IsNotExist(e) {
+		return e
+	}
+	// Legacy crash recovery: only the draft matching a published WF receipt may
+	// select a claim from the old unreserved staging directory.
 	facts, e := workflowhandoff.ReadTaskRunReturnFacts(d.Workflow, j.Binding.Handoff.Locator)
 	if e != nil {
 		return e
@@ -309,23 +465,21 @@ func recoverAcceptance(d Dependencies, j journal) error {
 		if e != nil {
 			return e
 		}
-		var a Acceptance
-		if e = decode(raw, 256<<10, &a); e != nil {
+		a, e := parseAcceptance(raw)
+		if e != nil {
 			return e
 		}
 		if e = claimBinding(a.RunID, a.RequestSHA256, a.SessionID, j); e != nil {
 			return e
 		}
 		h := hash(raw)
-		draftPath := filepath.Join(runPaths(j.Request).TempRoot, "start-"+strings.TrimPrefix(h, "sha256:")+".json")
-		// SubmitStart's existing immutable equality path executes before freshness.
-		start, e := workflowhandoff.SubmitStart(d.Workflow, workflowhandoff.SubmitInput{HandoffLocator: j.Binding.Handoff.Locator, DraftPath: draftPath})
-		if e == nil && start.SHA256 == facts.Start.SHA256 {
-			state := "rejected"
-			if a.Acceptance == "started" {
-				state = "started"
-			}
-			return appendEvent(d, j.Request, "acceptance_received", map[string]any{"claim_sha256": h, "receipt_sha256": start.SHA256, "state": state})
+		draft, e := readFile(acceptanceDraftPath(j.Request, h), 256<<10, true)
+		if e != nil {
+			continue
+		}
+		recovered, e := workflowhandoff.RecoverTaskRunStart(d.Workflow, j.Binding.Handoff.Locator, draft)
+		if e == nil && recovered != nil && recovered.SHA256 == facts.Start.SHA256 {
+			return appendEvent(d, j.Request, "acceptance_received", map[string]any{"claim_sha256": h, "receipt_sha256": facts.Start.SHA256, "state": a.Acceptance})
 		}
 	}
 	return integrity("WF start exists without its matching preserved claim")

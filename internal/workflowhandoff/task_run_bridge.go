@@ -225,6 +225,65 @@ func BuildTaskRunStart(d Dependencies, locator, actor, surface, session, runtime
 	return b, e
 }
 
+// ValidateTaskRunStart checks the unchanged WF binding and sandbox authority
+// before the transport freezes a positive claim. It publishes nothing.
+func ValidateTaskRunStart(d Dependencies, locator string, raw []byte) error {
+	s, e := d.Store.ReadByLocator(locator)
+	if e != nil {
+		return e
+	}
+	draft, e := decodeStartDraft(raw)
+	if e != nil {
+		return e
+	}
+	return WithTaskRunSnapshot(d, s.Handoff.Workspace.Root, func(locked Dependencies) error {
+		return validateStartBinding(locked, s, draft)
+	})
+}
+
+// ValidateTaskRunClaimFields uses the WF sandbox and issue vocabulary even when
+// missing runtime facts prevent constructing a complete StartReceipt.
+func ValidateTaskRunClaimFields(sandbox, issues []byte, acceptance string, nullableSandbox bool) error {
+	if !setOf("started", "rejected", "conflict", "unknown")[acceptance] {
+		return fmt.Errorf("invalid acceptance")
+	}
+	sb, e := canonicaljson.DecodeStrict(sandbox)
+	if e != nil {
+		return e
+	}
+	if sb != nil || !nullableSandbox || acceptance == "started" {
+		if e = validateSandbox(sb); e != nil {
+			return e
+		}
+	}
+	value, e := canonicaljson.DecodeStrict(issues)
+	if e != nil {
+		return e
+	}
+	entries, ok := value.([]canonicaljson.Value)
+	if !ok || (acceptance == "started") != (len(entries) == 0) {
+		return fmt.Errorf("started alone has no issues")
+	}
+	last := ""
+	for _, item := range entries {
+		fields, err := exactObject(item, "issue", "type", "detail")
+		if err != nil {
+			return err
+		}
+		kind, _ := stringField(fields, "type", "issue")
+		detail, _ := stringField(fields, "detail", "issue")
+		if !setOf("binding", "workspace", "project", "target", "input", "contract", "sandbox", "principal", "unknown")[kind] || validatePlainText("issue detail", detail, 1, 2000) != nil {
+			return fmt.Errorf("invalid issue")
+		}
+		key := kind + "\x00" + detail
+		if last != "" && key <= last {
+			return fmt.Errorf("issues must be sorted")
+		}
+		last = key
+	}
+	return nil
+}
+
 // ValidateTaskRunSemantics reuses the terminal field validators without inventing
 // missing verifier executions or requiring a representable WF terminal envelope.
 func ValidateTaskRunSemantics(raw []byte) error {
@@ -419,4 +478,26 @@ func RecoverTaskRunTerminal(d Dependencies, locator string, raw []byte) (*Submit
 		return nil, fmt.Errorf("preserved terminal draft differs from accepted terminal")
 	}
 	return &SubmitResult{Phase: "terminal", DocumentID: s.Terminal.DocumentID, Locator: s.Terminal.Locator, SHA256: s.Terminal.SHA256}, nil
+}
+
+func RecoverTaskRunStart(d Dependencies, locator string, raw []byte) (*SubmitResult, error) {
+	s, e := d.Store.ReadByLocator(locator)
+	if e != nil {
+		return nil, e
+	}
+	if s.Start == nil {
+		return nil, nil
+	}
+	draft, e := decodeStartDraft(raw)
+	if e != nil {
+		return nil, e
+	}
+	original := replaceObjectMember(removeObjectMember(s.Start.Value, "capability_proof"), "kind", "ply.workflow.start-receipt-draft")
+	if taskSpecVersion(original) == 2 {
+		original = removeObjectMember(original, "task_spec_observation")
+	}
+	if !canonicalEqual(original, draft.Value) {
+		return nil, fmt.Errorf("preserved start draft differs from accepted receipt")
+	}
+	return &SubmitResult{Phase: "start", DocumentID: s.Start.DocumentID, Locator: s.Start.Locator, SHA256: s.Start.SHA256}, nil
 }

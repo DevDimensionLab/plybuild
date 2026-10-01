@@ -175,6 +175,36 @@ type Budget struct {
 	ElapsedSeconds  *int64       `json:"elapsed_seconds"`
 	WithinAgreement *bool        `json:"within_agreement"`
 }
+type RuntimeFacts struct {
+	RequestedModel string  `json:"requested_model"`
+	ReportedModel  *string `json:"reported_model"`
+	ModelState     string  `json:"model_state"`
+	Source         *string `json:"source"`
+	ClaimSHA256    *string `json:"claim_sha256"`
+}
+type TaskExecution struct {
+	State                   string  `json:"state"`
+	Source                  string  `json:"source"`
+	StatusSHA256            *string `json:"status_sha256"`
+	ObservedAtUTC           *string `json:"observed_at_utc"`
+	HistoricalQualification bool    `json:"historical_qualification"`
+}
+type TaskStatus struct {
+	Envelope
+	RunID            string  `json:"run_id"`
+	RequestSHA256    string  `json:"request_sha256"`
+	SessionID        string  `json:"session_id"`
+	BasisEventSHA256 string  `json:"basis_event_sha256"`
+	Source           string  `json:"source"`
+	ActorClaim       string  `json:"actor_claim"`
+	ObservedAtUTC    string  `json:"observed_at_utc"`
+	State            string  `json:"state"`
+	WorktreePath     string  `json:"worktree_path"`
+	VisibleGroupPath *string `json:"visible_group_path"`
+	TaskLabel        *string `json:"task_label"`
+	MatchingTasks    *int    `json:"matching_tasks"`
+	NativeSessionID  *string `json:"native_session_id"`
+}
 type Result struct {
 	Envelope
 	RunID           string                             `json:"run_id"`
@@ -189,13 +219,15 @@ type Result struct {
 	Budget          Budget                             `json:"budget"`
 	ObservedTarget  *workspace.PlanWorktreeObservation `json:"observed_target"`
 	Reasons         []Reason                           `json:"reasons"`
+	RuntimeFacts    RuntimeFacts                       `json:"runtime_facts"`
+	TaskExecution   TaskExecution                      `json:"task_execution"`
 	NextAction      string                             `json:"next_action"`
 }
 type RuntimeClaim struct {
-	RuntimeID             string  `json:"runtime_id"`
-	ModelID               string  `json:"model_id"`
-	ProfileID             string  `json:"profile_id"`
-	EffectivePolicySHA256 string  `json:"effective_policy_sha256"`
+	RuntimeID             *string `json:"runtime_id"`
+	ModelID               *string `json:"model_id"`
+	ProfileID             *string `json:"profile_id"`
+	EffectivePolicySHA256 *string `json:"effective_policy_sha256"`
 	NativeSessionID       *string `json:"native_session_id"`
 }
 type Acceptance struct {
@@ -235,16 +267,19 @@ type Report struct {
 }
 type CollectPreview struct {
 	Envelope
-	RunID            string                             `json:"run_id"`
-	RequestSHA256    string                             `json:"request_sha256"`
-	Process          Process                            `json:"process"`
-	ReportSHA256     *string                            `json:"report_sha256"`
-	TerminalSHA256   *string                            `json:"terminal_sha256"`
-	Target           *workspace.PlanWorktreeObservation `json:"target"`
-	InspectionSHA256 *string                            `json:"inspection_sha256"`
-	Reasons          []Reason                           `json:"reasons"`
-	Confirmation     *string                            `json:"confirmation"`
-	NextArgv         []string                           `json:"next_argv"`
+	TaskExecution            TaskExecution                      `json:"task_execution"`
+	BasisEventSHA256         *string                            `json:"basis_event_sha256"`
+	ProposedTaskStatusSHA256 *string                            `json:"proposed_task_status_sha256"`
+	RunID                    string                             `json:"run_id"`
+	RequestSHA256            string                             `json:"request_sha256"`
+	Process                  Process                            `json:"process"`
+	ReportSHA256             *string                            `json:"report_sha256"`
+	TerminalSHA256           *string                            `json:"terminal_sha256"`
+	Target                   *workspace.PlanWorktreeObservation `json:"target"`
+	InspectionSHA256         *string                            `json:"inspection_sha256"`
+	Reasons                  []Reason                           `json:"reasons"`
+	Confirmation             *string                            `json:"confirmation"`
+	NextArgv                 []string                           `json:"next_argv"`
 }
 
 type Error struct {
@@ -258,8 +293,14 @@ func invalid(detail string) error                        { return failure("task_
 func conflict(detail string) error                       { return failure("task_run_conflict", 3, detail) }
 func integrity(detail string) error                      { return failure("task_run_integrity", 3, detail) }
 func ioError(e error) error                              { return failure("task_run_io", 4, fmt.Sprint(e)) }
-func env(kind string) Envelope                           { return Envelope{"ply.workspace.task-run-" + kind, 1} }
-func ptr[T any](v T) *T                                  { return &v }
+func env(kind string) Envelope {
+	version := 1
+	if kind == "result" || kind == "collect-preview" {
+		version = 2
+	}
+	return Envelope{"ply.workspace.task-run-" + kind, version}
+}
+func ptr[T any](v T) *T { return &v }
 
 type LaunchSpec struct {
 	Executable       Executable
@@ -274,15 +315,17 @@ type ProcessRunner interface {
 	Run(LaunchSpec, func(Process) error) (Process, error)
 }
 type Dependencies struct {
-	Executable  func() (string, error)
-	Files       FileSystem
-	Workspace   workspace.Dependencies
-	Workflow    workflowhandoff.Dependencies
-	Runner      ProcessRunner
-	Now         func() time.Time
-	ContextPath func() string
-	CWD         func() (string, error)
-	Fault       func(string) error
+	Executable      func() (string, error)
+	Files           FileSystem
+	Workspace       workspace.Dependencies
+	Workflow        workflowhandoff.Dependencies
+	Runner          ProcessRunner
+	Now             func() time.Time
+	CallbackContext *string
+	TaskStatusPath  string
+	ContextPath     func() string
+	CWD             func() (string, error)
+	Fault           func(string) error
 }
 
 func (d Dependencies) fault(point string) error {

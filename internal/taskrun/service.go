@@ -117,7 +117,7 @@ func previewLocked(d Dependencies, r Request, file string) (p Preview, err error
 		}
 		if rr.Target.WorktreeLocator == obs.Target.WorktreeLocator || rr.Target.GitCommonDir == obs.Target.GitCommonDir && rr.Target.Ref == obs.Target.Ref {
 			old, err := readJournal(r.WorkspaceRoot, rr.RunID)
-			if err != nil || !quiescent(old.Result.Process) {
+			if err != nil || !reservationReleased(old) {
 				return p, conflict("an active or unknown reservation owns this target")
 			}
 		}
@@ -132,7 +132,7 @@ func previewLocked(d Dependencies, r Request, file string) (p Preview, err error
 		if e != nil {
 			return p, e
 		}
-		if !quiescent(j.Result.Process) {
+		if !reservationReleased(j) {
 			return p, conflict("another active or unknown run reserves this worktree")
 		}
 	} else if !os.IsNotExist(e) {
@@ -332,13 +332,16 @@ func Start(d Dependencies, file, confirm string) (Result, error) {
 	if runErr != nil && process.State == "not_started" {
 		return out, failure("task_run_launch_failed", 4, "Provider start failed; attempt preserved.")
 	}
+	if out.Collection.State != "qualified" && out.TaskExecution.State == "unknown" {
+		return out, failure("task_run_task_status_unknown", 5, "Client outcome and return are preserved. Obtain an explicit human task observation, then preview collect --task-status and apply its confirmation; plan result control remains the next gate.")
+	}
 	if out.Collection.State != "qualified" {
 		return out, failure("task_run_outcome_unknown", 5, "Delivery is preserved and requires plan result control.")
 	}
 	return out, nil
 }
 func recipientInstructions(r Request, b Binding) string {
-	return fmt.Sprintf("# Task run delivery\n\nRead %s for the exact preserved Task Spec inputs, procedure, verifiers, authority and human gates. Read %s for the immutable request and agreement. Do not select a newer Spec.\n\nYour first action, before target writes, is to report your actual runtime facts and scope contract in ply.workspace.task-run-acceptance schema version 1. Use run_id %s, request_sha256 %s, session_id %s. Native provider session may be null; never invent one. runtime_claim has runtime_id, model_id, profile_id, effective_policy_sha256, native_session_id. sandbox and issues use the existing WF types; sandbox is the reported contract, not an OS policy claim. Acceptance must be negative when authority is unknown. Do not read or print raw WF reply secrets.\n\nRun: %s workspace task run accept %s --file <absolute-private-claim.json>\n\nAgreement A: initial execution plus at most three correction rounds, 5400 active seconds, and two environment measures. Stop at the first limit. No other agent, nested provider, human QA, integration, install, deployment or remote effects. The provider contact is owned by the parent transport only.\n\nAfter your last correction, write the semantic ply.workspace.task-run-report schema version 1 to %s and run: %s workspace task run report %s --file %s\nRequired fields: run_id, request_sha256, session_id, outcome, summary, meaning, budget_usage, stop_reasons, observed_effects, verifier_results, review, artifacts, evidence_gaps, forbidden_effects_observed, technical_assessment, process_observation, preventive_followup. WF terminal fields retain existing types. budget_usage is initial_execution_started, correction_rounds, active_seconds, environment_measures, or null when unknown. technical_assessment is gate, required_verifier_ids, accepted_debt. Last two fields are null for none. Never report an unexecuted verifier as exit 0. No TaskResult or human QA claim is yours to manufacture.\n\nThe parent collects after the interactive process exits. After reporting, make no more target writes. Tell the human the report was received and they can exit Codex normally. Plan result control is the next gate.\n", filepath.Join(b.TempRoot, "mandate.json"), filepath.Join(b.RunRoot, "request.json"), b.RunID, b.RequestSHA256, b.SessionID, ShellQuote(r.Runtime.PlyExecutable.Path), b.RunID, b.ReportPath, ShellQuote(r.Runtime.PlyExecutable.Path), b.RunID, ShellQuote(b.ReportPath))
+	return fmt.Sprintf("# Task run delivery\n\nRead %s for the exact preserved Task Spec inputs, procedure, verifiers, authority and human gates. Read %s for the immutable request and agreement. Do not select a newer Spec.\n\nYour first action, before target writes, is to report your actual runtime facts and scope contract in ply.workspace.task-run-acceptance schema version 2. Use run_id %s, request_sha256 %s, session_id %s. Model may be null when unknown; never infer it from the requested model. Known runtime, profile and effective policy are required for started. Negative claims may use null for unknown runtime, model, profile, policy and sandbox and must explain issues. Native provider session may be null; never invent one. runtime_claim has runtime_id, model_id, profile_id, effective_policy_sha256, native_session_id. sandbox and issues use the existing WF types; sandbox is the reported contract, not an OS policy claim. Acceptance must be negative when authority is unknown. Do not read or print raw WF reply secrets.\n\nRun: %s workspace task run accept %s --context %s --file <absolute-private-claim.json>\n\nAgreement A: initial execution plus at most three correction rounds, 5400 active seconds, and two environment measures. Stop at the first limit. No other agent, nested provider, human QA, integration, install, deployment or remote effects. The provider contact is owned by the parent transport only.\n\nAfter your last correction, write the semantic ply.workspace.task-run-report schema version 1 to %s and run: %s workspace task run report %s --context %s --file %s\nRequired fields: run_id, request_sha256, session_id, outcome, summary, meaning, budget_usage, stop_reasons, observed_effects, verifier_results, review, artifacts, evidence_gaps, forbidden_effects_observed, technical_assessment, process_observation, preventive_followup. WF terminal fields retain existing types. budget_usage is initial_execution_started, correction_rounds, active_seconds, environment_measures, or null when unknown. technical_assessment is gate, required_verifier_ids, accepted_debt. Last two fields are null for none. Never report an unexecuted verifier as exit 0. No TaskResult or human QA claim is yours to manufacture.\n\nThe explicit context works in a clean tool shell without inherited environment. The parent collects after the client process exits. Client exit alone does not prove the managed task inactive; a separate explicit human observation is required for qualification. Pending task status is expected. After reporting, make no more target writes. Tell the human the report was received and they can exit Codex normally. Plan result control is the next gate.\n", filepath.Join(b.TempRoot, "mandate.json"), filepath.Join(b.RunRoot, "request.json"), b.RunID, b.RequestSHA256, b.SessionID, ShellQuote(r.Runtime.PlyExecutable.Path), b.RunID, ShellQuote(filepath.Join(b.TempRoot, "context.json")), b.ReportPath, ShellQuote(r.Runtime.PlyExecutable.Path), b.RunID, ShellQuote(filepath.Join(b.TempRoot, "context.json")), ShellQuote(b.ReportPath))
 }
 func ShellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'" }
 func quiescent(p Process) bool {
@@ -360,6 +363,9 @@ func Show(d Dependencies, root, id string) (Result, error) {
 		return Result{}, err
 	} else if record != nil {
 		out.Collection = historicalCollection(record)
+		if out.TaskExecution.StatusSHA256 == nil {
+			out.TaskExecution.HistoricalQualification = true
+		}
 		if out.ObservedTarget == nil {
 			out.ObservedTarget = historicalTarget(record)
 		}
@@ -390,6 +396,12 @@ func Show(d Dependencies, root, id string) (Result, error) {
 			secs = 0
 		}
 		out.Budget.ElapsedSeconds = &secs
+	}
+	if out.Acceptance.State != "missing" && out.Acceptance.ReceiptSHA256 == nil {
+		out.Reasons = append(out.Reasons, Reason{"task_run_acceptance_not_representable", "The recipient claim was received; missing facts prevent a WF StartReceipt. This is a representation gap, not permission to work."})
+	}
+	if out.TaskExecution.State == "unknown" || out.TaskExecution.State == "active" {
+		out.NextAction = "Obtain an explicit human task observation; use collect --task-status with check, then apply its confirmation. Plan result control precedes separate human QA or integration."
 	}
 	out.Reasons = sortedReasons(out.Reasons)
 	return out, nil
