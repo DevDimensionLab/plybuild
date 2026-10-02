@@ -284,7 +284,11 @@ Exec result and collect-preview use schema **3**, including a hash-bound referen
 runner-owned `ProviderCompletion@1` and runtime facts. `provider_terminal_event` can mark
 the task inactive only after exactly one consistent native thread/turn completes with
 all started items finished, complete valid JSONL, reaped exit 0 and an empty owned
-process group. Timeout, truncation, contradiction or unobservable lifetime stays
+process group. A completed command with status `failed` is closed and its failure stays
+in the bound stream; a later correction and terminal turn can establish inactivity.
+Verifier and report gates still decide whether the product result qualifies. Existing
+negative completion projections remain unknown and byte-identical on readback.
+Timeout, truncation, contradiction or unobservable lifetime stays
 unknown. Timeout sends TERM to the still-owned group, waits five seconds, then sends
 KILL only while ownership remains valid. Manual `--task-status` is rejected for exec.
 An unknown run is preserved without restart or teardown.
@@ -292,6 +296,12 @@ An unknown run is preserved without restart or teardown.
 Both modes require typed acceptance, a report with the mandatory `task-requirements`
 artifact, real verifiers, correct clean Git state and agreement A. The explicit callback
 `--context` works without inherited environment, and an unknown reported model is valid.
+New reports undergo the existing workflow authority, verifier-binding and artifact
+validation before the immutable report slot is reserved. Unknown budget or invalid
+terminal input returns a concrete error that can be corrected in the same run. Accepted
+reports retain their original bytes, including older unrepresentable reports. A terminal
+rejection is reported with its workflow reason; clients must check `delivery.state` and
+`terminal_sha256`, then the parent's collection result.
 Exit codes remain 2/3/4/5. Existing schema 1 requests, interactive schema 2 results,
 receipts, historical hashes and human task observations keep their original format.
 Plan result control precedes separately authorized product QA or Ply integration.

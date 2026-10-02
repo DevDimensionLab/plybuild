@@ -48,6 +48,10 @@ type providerSequence struct {
 }
 
 func parseProviderEvents(raw []byte) providerSequence {
+	return parseProviderSequence(raw, true)
+}
+
+func parseProviderSequence(raw []byte, completedFailures bool) providerSequence {
 	s := providerSequence{Valid: true, Usage: json.RawMessage("null")}
 	fail := func(reason string) providerSequence { s.Valid = false; s.Reason = reason; return s }
 	if len(raw) == 0 || raw[len(raw)-1] != '\n' {
@@ -114,8 +118,13 @@ func parseProviderEvents(raw []byte) providerSequence {
 			} else if typ != "agent_message" && typ != "reasoning" && typ != "todo_list" {
 				return fail("tool completion without start")
 			}
-			if ev.Item.Status == "in_progress" || ev.Item.Status == "failed" {
+			// A completed failed command is still closed. Its failure stays in
+			// the bound stream; verifier/report checks decide delivery quality.
+			if !completedFailures && (ev.Item.Status == "in_progress" || ev.Item.Status == "failed") {
 				return fail("unfinished or failed tool item")
+			}
+			if ev.Item.Status == "in_progress" {
+				return fail("unfinished tool item")
 			}
 			finished[ev.Item.ID] = true
 		case "turn.completed":
@@ -209,6 +218,11 @@ func foldProviderCompletion(j *journal, e Event) error {
 		return integrity("provider stderr changed")
 	}
 	seq := parseProviderEvents(stdout)
+	// Old negative projections stopped at the first failed item. Validate those
+	// original facts without rewriting their bytes or upgrading them to inactive.
+	if !c.SequenceValid && c.Reason == "unfinished or failed tool item" {
+		seq = parseProviderSequence(stdout, false)
+	}
 	if c.SequenceValid != seq.Valid || !equal(c.ThreadID, seq.ThreadID) || c.TurnsStarted != seq.Started || c.TurnsCompleted != seq.Completed || !equal(c.TokenUsage, seq.Usage) {
 		return integrity("provider sequence projection differs")
 	}

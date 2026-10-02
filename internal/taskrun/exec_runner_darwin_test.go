@@ -119,3 +119,31 @@ func TestFactoryPipeStreamLimit(t *testing.T) {
 		t.Fatal(result, info.Size())
 	}
 }
+
+func TestReturnClosureRunnerReapsAfterCorrectedCommand(t *testing.T) {
+	raw, err := os.ReadFile("testdata/qa_v4_return_events.jsonl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, "synthetic-provider")
+	if err = os.WriteFile(path, []byte("#!/bin/sh\nprintf '%s' "+ShellQuote(string(raw))+"\n"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	completion := &ProviderCompletion{}
+	p, err := systemExecRunner().Run(LaunchSpec{Executable: Executable{path, hashFileTest(t, path)}, Argv: []string{path}, CWD: root, Timeout: 15 * time.Second, StreamsRoot: filepath.Join(root, "streams"), Completion: completion}, func(Process) error { return nil })
+	if err != nil || p.PID == nil || !providerInactive(*completion) {
+		t.Fatalf("closed command failure did not yield known completion: %v %+v", err, completion)
+	}
+	var status unix.WaitStatus
+	if _, err = unix.Wait4(*p.PID, &status, unix.WNOHANG, nil); !errors.Is(err, unix.ECHILD) {
+		t.Fatalf("child not reaped: %v", err)
+	}
+	preserved, err := os.ReadFile(completion.Stdout.Locator)
+	if err != nil || string(preserved) != string(raw) || completion.Stdout.SHA256 != hash(raw) {
+		t.Fatal("tool failure data changed")
+	}
+}

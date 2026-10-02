@@ -363,6 +363,28 @@ func BuildTaskRunTerminal(d Dependencies, locator string, raw []byte, rounds int
 	return b, e
 }
 
+// ValidateTaskRunTerminal checks representability before a caller reserves its
+// immutable report slot. SubmitResultDocument reuses these checks at publication.
+func ValidateTaskRunTerminal(d Dependencies, locator string, raw []byte) error {
+	s, e := d.Store.ReadByLocator(locator)
+	if e != nil {
+		return e
+	}
+	if s.Start == nil {
+		return fmt.Errorf("start receipt missing")
+	}
+	if s.Terminal != nil {
+		_, e = RecoverTaskRunTerminal(d, locator, raw)
+		return e
+	}
+	draft, e := decodeTerminalDraft(raw)
+	if e != nil {
+		return e
+	}
+	_, _, e = validateTerminalBinding(d, s, draft)
+	return e
+}
+
 // BuildTaskRunResult freezes the exact existing TaskResult draft, including the
 // inspection digest and recorder time. RecordTaskResult remains the final gate.
 func BuildTaskRunResult(d Dependencies, locator, runID string, technical []byte) ([]byte, string, error) {

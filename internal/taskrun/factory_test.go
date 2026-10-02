@@ -277,6 +277,19 @@ func TestFactoryCompletionRequiredForInactive(t *testing.T) {
 			t.Fatal("uncertain evidence qualified")
 		}
 	}
+	for _, process := range []Process{
+		{State: "unknown", ExitCode: ptr(0), Quiescence: ptr(true)},
+		{State: "running", ExitCode: ptr(0), Quiescence: ptr(true)},
+		{State: "exited", ExitCode: ptr(1), Quiescence: ptr(true)},
+		{State: "exited", Quiescence: ptr(true)},
+		{State: "exited", ExitCode: ptr(0), Quiescence: ptr(false)},
+	} {
+		bad := c
+		bad.Process = process
+		if providerInactive(bad) {
+			t.Fatal("process uncertainty qualified", process)
+		}
+	}
 }
 func TestFactoryFreshBinaryCallbacks(t *testing.T) {
 	bin := os.Getenv("PLY_TASK_RUN_TEST_BINARY")

@@ -208,7 +208,14 @@ func TestR10BudgetBoundaryAndUnknown(t *testing.T) {
 			if e == nil || out.Collection.State == "qualified" {
 				t.Fatalf("budget falsely qualified: %+v", out)
 			}
-			if d.Runner.(*fakeRunner).lastErr != nil {
+			if change == "unknown" {
+				if err := d.Runner.(*fakeRunner).lastErr; err == nil || !strings.Contains(err.Error(), "budget usage is unknown") {
+					t.Fatalf("unknown budget did not remain correctable: %v", err)
+				}
+				if _, err := os.Stat(filepath.Join(runPaths(r).RunRoot, "reports", "accepted.json")); !os.IsNotExist(err) {
+					t.Fatal("unknown budget froze a report")
+				}
+			} else if d.Runner.(*fakeRunner).lastErr != nil {
 				t.Fatal(d.Runner.(*fakeRunner).lastErr)
 			}
 		})
@@ -233,7 +240,7 @@ func TestR9StrictDocumentsAndSymlinks(t *testing.T) {
 		t.Fatal("executable drift accepted")
 	}
 }
-func TestR9BlockedReportDoesNotFabricateVerifier(t *testing.T) {
+func TestR9UnrepresentableBlockedReportDoesNotFreezeOrFabricateVerifier(t *testing.T) {
 	d, r, f := fixture(t)
 	completeInside(t, &d, r, func(p *Report) {
 		p.Outcome = "blocked"
@@ -246,10 +253,10 @@ func TestR9BlockedReportDoesNotFabricateVerifier(t *testing.T) {
 		t.Fatal(e)
 	}
 	out, _ := Start(d, f, *p.(Preview).Confirmation)
-	if d.Runner.(*fakeRunner).lastErr != nil {
-		t.Fatal(d.Runner.(*fakeRunner).lastErr)
+	if err := d.Runner.(*fakeRunner).lastErr; err == nil || !strings.Contains(err.Error(), "verifier results do not cover") {
+		t.Fatalf("missing verifier was not rejected before acceptance: %v", err)
 	}
-	if out.Delivery.State != "not_representable" || out.Collection.State == "qualified" {
+	if out.Delivery.ReportSHA256 != nil || out.Collection.State == "qualified" {
 		t.Fatalf("blocked report: %+v", out)
 	}
 }

@@ -1,0 +1,14 @@
+{
+  "source": {
+    "path": "/private/tmp/ply-factory-rig-human-qa-v4/rig/evidence/provider/iteration-1-slot-1/stdout.jsonl",
+    "bytes": 79132,
+    "sha256": "b4b1ea151b6e279d0de122f8acfb2cbdb8de689199f43288cd632545af879e19"
+  },
+  "fixture_sha256": "2d36fdcb26142255285cef601a049f9a47e8b6091714a657564f6d4ba7472407",
+  "transformation": "Preserve all 37 events in order, event type/thread/usage and item id/type/status/exit_code. Keep only the non-secret item_5 schema-error output. Omit commands, other output and messages; no provider replay.",
+  "failed_items": [
+    "item_5",
+    "item_15"
+  ],
+  "coverage": "Historical source-derived lifecycle fixture; not a new real provider run."
+}

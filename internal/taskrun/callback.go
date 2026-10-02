@@ -310,23 +310,33 @@ func SubmitReport(d Dependencies, root, id, file string) (Result, error) {
 		// Recovery may use these bytes; it must never observe a newer candidate
 		// and attach it to an already received report.
 		acceptedPath := filepath.Join(run, "reports", "accepted.json")
-		if _, err := os.Lstat(acceptedPath); os.IsNotExist(err) && report.BudgetUsage != nil {
+		if _, err := os.Lstat(acceptedPath); os.IsNotExist(err) {
+			if report.BudgetUsage == nil {
+				return conflict("report budget usage is unknown; supply actual usage before accepting an immutable report")
+			}
 			rounds := report.BudgetUsage.CorrectionRounds
 			if report.BudgetUsage.InitialExecutionStarted {
 				rounds++
 			}
 			draftPath := terminalDraftPath(r, rh)
-			if _, err = os.Lstat(draftPath); os.IsNotExist(err) {
-				draft, buildErr := workflowhandoff.BuildTaskRunTerminal(d.Workflow, j.Binding.Handoff.Locator, canonical, rounds)
-				if buildErr == nil {
-					if e = d.writeOnce(draftPath, draft); e != nil {
-						return e
-					}
-				}
+			draft, err := readFile(draftPath, 2<<20, true)
+			if os.IsNotExist(err) {
+				draft, err = workflowhandoff.BuildTaskRunTerminal(d.Workflow, j.Binding.Handoff.Locator, canonical, rounds)
 			}
+			if err != nil {
+				return conflict("terminal report rejected before acceptance: " + err.Error())
+			}
+			if err = workflowhandoff.ValidateTaskRunTerminal(d.Workflow, j.Binding.Handoff.Locator, draft); err != nil {
+				return conflict("terminal report rejected before acceptance: " + err.Error())
+			}
+			if e = d.writeOnce(draftPath, draft); e != nil {
+				return e
+			}
+		} else if err != nil {
+			return err
 		}
-		// This write-once slot reserves the first schema-valid bound semantic report,
-		// including blocked/unknown reports that cannot become a WF terminal result.
+		// New reports must be representable before reserving the slot. Existing
+		// accepted reports (including legacy representation gaps) stay immutable.
 		if e = d.writeOnce(filepath.Join(run, "reports", "accepted.json"), canonical); e != nil {
 			return e
 		}
@@ -339,6 +349,15 @@ func SubmitReport(d Dependencies, root, id, file string) (Result, error) {
 		return publishReport(d, j, report, canonical)
 	})
 	out, _ := Show(d, root, id)
+	if e == nil && out.Delivery.State != "received" {
+		detail := "workflow terminal was not received"
+		for _, reason := range out.Reasons {
+			if reason.Code == "task_run_terminal_not_representable" {
+				detail += ": " + reason.Detail
+			}
+		}
+		e = conflict(detail)
+	}
 	return out, e
 }
 func publishReport(d Dependencies, j journal, report Report, raw []byte) error {
@@ -366,7 +385,7 @@ func publishReport(d Dependencies, j journal, report Report, raw []byte) error {
 				terminal = &result.SHA256
 				state = "received"
 			} else {
-				if e = d.writeValue(filepath.Join(runPaths(r).RunRoot, "reports", "terminal-diagnostic.json"), map[string]any{"code": "task_run_terminal_not_representable", "detail": "The existing workflow validator did not accept the semantic report; no qualifying TaskResult was created."}); e != nil {
+				if e = d.writeValue(filepath.Join(runPaths(r).RunRoot, "reports", "terminal-diagnostic.json"), map[string]any{"code": "task_run_terminal_not_representable", "detail": submitErr.Error()}); e != nil {
 					return e
 				}
 			}
