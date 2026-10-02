@@ -321,7 +321,10 @@ func Start(d Dependencies, file, confirm string) (Result, error) {
 				if err != nil {
 					return err
 				}
-				argv = execArgv(r, policy, spec.CWD, ip)
+				argv, err = execArgv(r, policy, spec.CWD, ip)
+				if err != nil {
+					return err
+				}
 				spec.Argv = argv
 				spec.Timeout = time.Duration(r.FactoryTest.TimeoutSeconds) * time.Second
 				deadline, _ := time.Parse(time.RFC3339Nano, a.DeadlineUTC)

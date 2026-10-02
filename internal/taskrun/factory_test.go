@@ -15,6 +15,72 @@ import (
 
 var completedEvents = []byte("{\"type\":\"thread.started\",\"thread_id\":\"fixture-thread\"}\n{\"type\":\"turn.started\"}\n{\"type\":\"item.started\",\"item\":{\"id\":\"cmd\",\"type\":\"command_execution\",\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"cmd\",\"type\":\"command_execution\",\"status\":\"completed\"}}\n{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":12,\"output_tokens\":8}}\n")
 
+func TestFactoryExecIncludesPlatformRuntimeWithoutBroadWrites(t *testing.T) {
+	var r Request
+	r.Runtime.PermissionBinding.ProfileID = "factory-test"
+	p := FactoryPolicy{ReadRoots: []string{"/runtime"}, WriteRoots: []string{"/fixture/task"}}
+	args, err := execArgv(r, p, "/fixture/task", "/fixture/instructions.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `permissions.factory-test={filesystem={":root"="none",":minimal"="read","/runtime"="read","/fixture/task"="write"},network={enabled=false}}`
+	for i, arg := range args {
+		if arg == want && i > 0 && args[i-1] == "-c" {
+			return
+		}
+	}
+	t.Fatalf("missing scoped profile with the platform runtime baseline: %q", args)
+}
+
+func TestFactoryProfileLinkedGitMetadataStaysWithinWriteRoots(t *testing.T) {
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, common := filepath.Join(root, "task"), filepath.Join(root, "main", ".git")
+	metadata := filepath.Join(common, "worktrees", "task")
+	for _, path := range []string{task, metadata} {
+		if err := os.MkdirAll(path, 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	marker := filepath.Join(task, ".git")
+	p := FactoryPolicy{WriteRoots: []string{task, common}}
+	for _, pointer := range []string{metadata, "../main/.git/worktrees/task"} {
+		if err := os.WriteFile(marker, []byte("gitdir: "+pointer+"\n"), 0600); err != nil {
+			t.Fatal(err)
+		}
+		roots, err := factoryProfileWriteRoots(p)
+		want := []string{task, common, metadata}
+		sort.Strings(want)
+		if err != nil || !equal(roots, want) {
+			t.Fatalf("roots=%q, err=%v; want %q", roots, err, want)
+		}
+	}
+	if !equal(p.WriteRoots, []string{task, common}) {
+		t.Fatal("profile generation mutated the bound policy")
+	}
+	escaped := filepath.Join(root, "main", ".git-outside", "worktrees", "task")
+	if err := os.MkdirAll(escaped, 0700); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(common, "worktrees", "redirect")
+	if err := os.Symlink(metadata, link); err != nil {
+		t.Fatal(err)
+	}
+	for _, content := range []string{"gitdir: " + escaped + "\n", "invalid pointer\n", "gitdir: \n", "gitdir: " + link + "\n"} {
+		if err := os.WriteFile(marker, []byte(content), 0600); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := factoryProfileWriteRoots(p); err == nil {
+			t.Fatalf("accepted Git metadata pointer %q", content)
+		}
+		if _, err := execArgv(Request{}, p, task, "/fixture/instructions.md"); err == nil {
+			t.Fatal("exec adapter did not propagate the profile error")
+		}
+	}
+}
+
 func TestFactoryNativeSequence(t *testing.T) {
 	for _, tc := range []struct {
 		name  string

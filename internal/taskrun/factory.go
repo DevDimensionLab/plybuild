@@ -250,14 +250,89 @@ func reserveFactory(d Dependencies, r Request, p workspace.TaskPreparation, file
 	return d.writeValue(slot, factoryReservation{r.FactoryTest.AuthorizationSHA256, digest(r), r.RequestKey, r.FactoryTest.Iteration, r.FactoryTest.TaskSlot, d.Now().UTC().Format(time.RFC3339Nano)})
 }
 func tomlQuote(s string) string { b, _ := json.Marshal(s); return string(b) }
-func execArgv(r Request, p FactoryPolicy, cwd, instructions string) []string {
+
+func factoryProfileWriteRoots(p FactoryPolicy) ([]string, error) {
+	// A linked worktree's .git pointer makes its resolved metadata directory
+	// read-only in Codex unless it is named explicitly, even below a write root.
+	// Only add descendants already authorized by the hash-bound factory policy.
+	seen := map[string]bool{}
+	for _, root := range p.WriteRoots {
+		seen[root] = true
+		info, err := os.Lstat(root)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		if !info.IsDir() {
+			continue
+		}
+		marker := filepath.Join(root, ".git")
+		info, err = os.Lstat(marker)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		if info.IsDir() {
+			continue
+		}
+		data, err := readFile(marker, 4096, false)
+		if err != nil {
+			return nil, err
+		}
+		if !strings.HasPrefix(string(data), "gitdir: ") {
+			return nil, invalid("invalid linked Git metadata pointer")
+		}
+		directory := strings.TrimSpace(string(data[len("gitdir: "):]))
+		if directory == "" {
+			return nil, invalid("empty linked Git metadata pointer")
+		}
+		if !filepath.IsAbs(directory) {
+			directory = filepath.Join(root, directory)
+		}
+		directory = filepath.Clean(directory)
+		allowed := false
+		for _, authorized := range p.WriteRoots {
+			allowed = allowed || directory == authorized || within(authorized, directory)
+		}
+		if !allowed {
+			return nil, conflict("linked Git metadata is outside the named write roots")
+		}
+		if err := physical(directory, false); err != nil {
+			return nil, err
+		}
+		info, err = os.Stat(directory)
+		if err != nil || !info.IsDir() {
+			return nil, conflict("linked Git metadata must be a directory")
+		}
+		seen[directory] = true
+	}
+	roots := make([]string, 0, len(seen))
+	for root := range seen {
+		roots = append(roots, root)
+	}
+	sort.Strings(roots)
+	return roots, nil
+}
+
+func execArgv(r Request, p FactoryPolicy, cwd, instructions string) ([]string, error) {
+	writes, err := factoryProfileWriteRoots(p)
+	if err != nil {
+		return nil, err
+	}
 	// The managed profile is passed explicitly; no inherited developer profile,
 	// resume, search, MCP configuration, hook or daemon is part of this adapter.
-	entries := []string{`":root"="none"`}
+	// The named roots do not replace platform startup requirements such as
+	// macOS dyld's read of the root directory itself. Keep Codex's runtime
+	// baseline without granting recursive root access or additional work roots.
+	entries := []string{`":root"="none"`, `":minimal"="read"`}
 	for _, path := range p.ReadRoots {
 		entries = append(entries, tomlQuote(path)+`="read"`)
 	}
-	for _, path := range p.WriteRoots {
+	for _, path := range writes {
 		entries = append(entries, tomlQuote(path)+`="write"`)
 	}
 	profile := r.Runtime.PermissionBinding.ProfileID
@@ -266,7 +341,7 @@ func execArgv(r Request, p FactoryPolicy, cwd, instructions string) []string {
 	for _, c := range config {
 		args = append(args, "-c", c)
 	}
-	return append(args, "Read and execute the private Task run instructions at "+instructions+". Your first action is the typed accept callback before any target write. Complete one turn and stop.")
+	return append(args, "Read and execute the private Task run instructions at "+instructions+". Your first action is the typed accept callback before any target write. Complete one turn and stop."), nil
 }
 
 // A slot reserved before request publication is still spent. Same-request retry
