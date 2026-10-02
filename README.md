@@ -249,6 +249,53 @@ set the queue entry to that new selection. Historical Specs, results, QA and int
 retries retain their original digests. No command rebases worktrees, integrates code,
 starts an agent, installs the CLI or selects a human QA outcome.
 
+### Run the local factory scenario with Codex exec
+
+The separate `ply-factory-tests` repository owns the Python standard library rig,
+scenario and independent oracle. Supply an explicitly built Ply binary; no installation
+is required. `make build PLY_BUILD_OUTPUT=/absolute/private/ply` writes that binary.
+The rig's `run --check` is read-only. Its later `run --human-start` is a separate human
+authorization; development tests never prove native isolation or real provider behavior.
+
+The same `workspace task run start --file` command supports request schema **2** with
+`runtime.provider=codex`, `runtime.mode=exec`, `config_profile=null` and
+`human_authority.start_surface=human_started_factory_test`. Its required `factory_test`
+object contains `authorization_path`, `authorization_sha256`, `iteration` (1–2),
+`task_slot` (1–2), `reasoning_effort=low` and `timeout_seconds` (1–240). The private
+`PlyFactoryTestAuthorization@1` binds the output/work roots, actor, activity, scenario,
+model, four executable hashes, effective policy hash and a deadline no more than 1200
+seconds after first effect. Per-slot authorization files share one immutable root
+budget ledger; changing a request key or authorization cannot reuse a spent slot.
+Requests, preparations and independent fixture Git metadata must be inside the exact
+iteration root. Symlinks, alternates, remotes and broader write policies are rejected.
+
+```shell
+ply workspace task run start --file /absolute/exec-request.json --check --format json
+ply workspace task run start --file /absolute/exec-request.json --apply --confirm sha256:<preview-digest> --format json
+```
+
+Exec uses pipes, fresh `exec --json --ephemeral --ignore-user-config`, `--no-daemon`,
+an explicit model, low reasoning and a private managed permission profile. Provider
+JSONL and stderr are stored outside the recipient's write scope; each stream is limited
+to 10 MiB and each JSONL line to 1 MiB. Stdout contains one Ply result. No resume,
+interactive fallback, model upgrade or permission bypass is available.
+
+Exec result and collect-preview use schema **3**, including a hash-bound reference to
+runner-owned `ProviderCompletion@1` and runtime facts. `provider_terminal_event` can mark
+the task inactive only after exactly one consistent native thread/turn completes with
+all started items finished, complete valid JSONL, reaped exit 0 and an empty owned
+process group. Timeout, truncation, contradiction or unobservable lifetime stays
+unknown. Timeout sends TERM to the still-owned group, waits five seconds, then sends
+KILL only while ownership remains valid. Manual `--task-status` is rejected for exec.
+An unknown run is preserved without restart or teardown.
+
+Both modes require typed acceptance, a report with the mandatory `task-requirements`
+artifact, real verifiers, correct clean Git state and agreement A. The explicit callback
+`--context` works without inherited environment, and an unknown reported model is valid.
+Exit codes remain 2/3/4/5. Existing schema 1 requests, interactive schema 2 results,
+receipts, historical hashes and human task observations keep their original format.
+Plan result control precedes separately authorized product QA or Ply integration.
+
 ### Start one interactive Codex run and preserve its return
 
 After preparing a Task, use a private `ply.workspace.task-run-request` JSON document

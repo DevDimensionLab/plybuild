@@ -88,6 +88,7 @@ func exactShape(v any, t reflect.Type) error {
 			return fmt.Errorf("expected object")
 		}
 		fields := map[string]reflect.Type{}
+		optional := map[string]bool{}
 		var add func(reflect.Type)
 		add = func(t reflect.Type) {
 			for i := 0; i < t.NumField(); i++ {
@@ -99,16 +100,20 @@ func exactShape(v any, t reflect.Type) error {
 				name := strings.Split(f.Tag.Get("json"), ",")[0]
 				if name != "-" {
 					fields[name] = f.Type
+					optional[name] = strings.Contains(f.Tag.Get("json"), ",omitempty")
 				}
 			}
 		}
 		add(t)
-		if len(m) != len(fields) {
+		if len(m) > len(fields) {
 			return fmt.Errorf("missing or unknown fields for %s", t)
 		}
 		for n, ft := range fields {
 			x, ok := m[n]
 			if !ok {
+				if optional[n] {
+					continue
+				}
 				return fmt.Errorf("missing %s", n)
 			}
 			if e := exactShape(x, ft); e != nil {
@@ -220,8 +225,14 @@ func parseRequest(b []byte) (Request, error) {
 	if e := decode(b, 1<<20, &r); e != nil {
 		return r, e
 	}
-	if e := checkEnvelope(r.Envelope, "request"); e != nil {
-		return r, e
+	if r.Kind != env("request").Kind || (r.SchemaVersion != 1 && r.SchemaVersion != 2) {
+		return r, invalid("unsupported request version")
+	}
+	var fields map[string]json.RawMessage
+	_ = json.Unmarshal(b, &fields)
+	_, hasFactory := fields["factory_test"]
+	if (r.SchemaVersion == 1 && hasFactory) || (r.SchemaVersion == 2 && r.FactoryTest == nil) {
+		return r, invalid("factory_test is required only for request schema 2")
 	}
 	if !key(r.RequestKey) || !regexp.MustCompile(`^pre_[0-9a-f]{64}$`).MatchString(r.PreparationID) || !digestPattern.MatchString(r.PreparationSHA256) {
 		return r, invalid("invalid request key or preparation binding")
@@ -231,7 +242,7 @@ func parseRequest(b []byte) (Request, error) {
 	}
 	rt := r.Runtime
 	p := rt.PermissionBinding
-	if rt.Provider != "codex" || rt.Mode != "interactive" || !plain(rt.Model, 1, 256) || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) {
+	if rt.Provider != "codex" || (r.SchemaVersion == 1 && rt.Mode != "interactive" || r.SchemaVersion == 2 && (rt.Mode != "exec" || rt.ConfigProfile != nil)) || !plain(rt.Model, 1, 256) || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) {
 		return r, invalid("invalid interactive Codex runtime")
 	}
 	if p.AuthorityKind != "reported_contract_with_effective_policy" || !plain(p.ProfileID, 1, 256) || !digestPattern.MatchString(p.EffectivePolicySHA256) || len(p.Evidence) == 0 {
@@ -244,8 +255,17 @@ func parseRequest(b []byte) (Request, error) {
 		}
 		last = x.Locator
 	}
-	if r.Agreement != (Agreement{"A", 3, 5400, 2}) || r.ReturnPolicy != (ReturnPolicy{true, true, "separate", "separate"}) || !r.HumanAuthority.Authorized || r.HumanAuthority.StartSurface != "human_ordinary_terminal" || !plain(r.HumanAuthority.ActorClaim, 1, 256) {
+	if r.Agreement != (Agreement{"A", 3, 5400, 2}) || r.ReturnPolicy != (ReturnPolicy{true, true, "separate", "separate"}) || !r.HumanAuthority.Authorized || (r.SchemaVersion == 1 && r.HumanAuthority.StartSurface != "human_ordinary_terminal" || r.SchemaVersion == 2 && r.HumanAuthority.StartSurface != "human_started_factory_test") || !plain(r.HumanAuthority.ActorClaim, 1, 256) {
 		return r, invalid("agreement A, separate human gates and human start authority are required")
+	}
+	if r.SchemaVersion == 2 {
+		if p.ProfileID != "factory-test" {
+			return r, invalid("exec requires the factory-test managed profile")
+		}
+		f := r.FactoryTest
+		if !digestPattern.MatchString(f.AuthorizationSHA256) || !filepath.IsAbs(f.AuthorizationPath) || f.Iteration < 1 || f.Iteration > 2 || f.TaskSlot < 1 || f.TaskSlot > 2 || f.ReasoningEffort != "low" || f.TimeoutSeconds < 1 || f.TimeoutSeconds > 240 {
+			return r, invalid("invalid factory slot or budget")
+		}
 	}
 	for _, x := range []Executable{rt.Executable, rt.PlyExecutable} {
 		if !digestPattern.MatchString(x.SHA256) || !filepath.IsAbs(x.Path) || filepath.Clean(x.Path) != x.Path {

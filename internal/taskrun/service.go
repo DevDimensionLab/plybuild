@@ -14,7 +14,7 @@ func SystemDependencies(w workspace.Dependencies) Dependencies {
 	f := workflowhandoff.SystemDependencies()
 	f.TaskWorkspace = &w
 	w.HandoffEvidence = workflowhandoff.NewTaskHandoffEvidenceReader(f)
-	return Dependencies{Executable: os.Executable, Workspace: w, Workflow: f, Runner: systemRunner(), Now: time.Now, ContextPath: func() string { return os.Getenv("PLY_TASK_RUN_CONTEXT") }, CWD: os.Getwd}
+	return Dependencies{Executable: os.Executable, Workspace: w, Workflow: f, Runner: systemRunner(), ExecRunner: systemExecRunner(), Now: time.Now, ContextPath: func() string { return os.Getenv("PLY_TASK_RUN_CONTEXT") }, CWD: os.Getwd}
 }
 func containing(d Dependencies, root string) error {
 	o, e := d.Workflow.Workspace.ObserveContaining()
@@ -42,6 +42,12 @@ func existing(r Request) (*Result, error) {
 	}
 	_, e := os.Lstat(path)
 	if os.IsNotExist(e) {
+		if r.SchemaVersion == 2 {
+			out, err := existingFactoryReservation(r)
+			if out != nil || err != nil {
+				return out, err
+			}
+		}
 		if ie == nil {
 			out := initial(r)
 			out.Launch.State = "unknown"
@@ -94,6 +100,11 @@ func previewLocked(d Dependencies, r Request, file string) (p Preview, err error
 		return p, conflict("whole preparation digest differs")
 	}
 	p.Preparation = obs.Preparation
+	if r.SchemaVersion == 2 {
+		if _, _, e = validateFactory(r, p.Preparation, file, d.Now()); e != nil {
+			return p, e
+		}
+	}
 	bindings, e := runtimeBindings(r.Runtime)
 	if e != nil {
 		return p, e
@@ -193,7 +204,14 @@ func Start(d Dependencies, file, confirm string) (Result, error) {
 	if p.Confirmation == nil || confirm != *p.Confirmation {
 		return Result{}, conflict("start confirmation differs from preview")
 	}
-	if e = d.Runner.Check(); e != nil {
+	runner := d.Runner
+	if r.SchemaVersion == 2 {
+		runner = d.ExecRunner
+	}
+	if runner == nil {
+		return Result{}, conflict("exec runner is unavailable")
+	}
+	if e = runner.Check(); e != nil {
 		return Result{}, e
 	}
 	launched := false
@@ -212,10 +230,15 @@ func Start(d Dependencies, file, confirm string) (Result, error) {
 			if fresh.Confirmation == nil || confirm != *fresh.Confirmation {
 				return conflict("start bindings changed before reservation")
 			}
-			if e = d.Runner.Check(); e != nil {
+			if e = runner.Check(); e != nil {
 				return e
 			}
 			paths := runPaths(r)
+			if r.SchemaVersion == 2 {
+				if e = reserveFactory(d, r, fresh.Preparation, file); e != nil {
+					return e
+				}
+			}
 			requestIndex := filepath.Join(storeRoot(r.WorkspaceRoot), "requests", strings.TrimPrefix(hash([]byte(r.RequestKey)), "sha256:")+".json")
 			ref := targetRef{RunID(r.RequestKey), digest(r), fresh.Observed.Target}
 			if e = d.writeValue(requestIndex, ref); e != nil {
@@ -292,7 +315,25 @@ func Start(d Dependencies, file, confirm string) (Result, error) {
 				argv = append(argv, "--profile", *r.Runtime.ConfigProfile)
 			}
 			argv = append(argv, "--no-alt-screen", "Read and execute the private Task run instructions at "+ip+". Your first action is the typed accept callback before any target write.")
-			spec = LaunchSpec{r.Runtime.Executable, argv, fresh.Observed.Target.WorktreeLocator, cp}
+			spec = LaunchSpec{Executable: r.Runtime.Executable, Argv: argv, CWD: fresh.Observed.Target.WorktreeLocator, ContextPath: cp}
+			if r.SchemaVersion == 2 {
+				a, policy, err := validateFactory(r, fresh.Preparation, file, d.Now())
+				if err != nil {
+					return err
+				}
+				argv = execArgv(r, policy, spec.CWD, ip)
+				spec.Argv = argv
+				spec.Timeout = time.Duration(r.FactoryTest.TimeoutSeconds) * time.Second
+				deadline, _ := time.Parse(time.RFC3339Nano, a.DeadlineUTC)
+				if remaining := deadline.Sub(d.Now()); remaining < spec.Timeout {
+					spec.Timeout = remaining
+				}
+				spec.StreamsRoot = factorySlotRoot(r, a)
+				spec.Completion = &ProviderCompletion{}
+				if e = d.writeValue(filepath.Join(spec.StreamsRoot, "launch.json"), ExecLaunch{r.Runtime.Executable, argv, spec.CWD, digest(r), spec.Timeout.Milliseconds()}); e != nil {
+					return e
+				}
+			}
 			if _, e = runtimeBindings(r.Runtime); e != nil {
 				return e
 			}
@@ -313,14 +354,20 @@ func Start(d Dependencies, file, confirm string) (Result, error) {
 	if !launched {
 		return Show(d, r.WorkspaceRoot, RunID(r.RequestKey))
 	}
-	process, runErr := d.Runner.Run(spec, func(p Process) error {
+	process, runErr := runner.Run(spec, func(p Process) error {
 		return withStore(r.WorkspaceRoot, func() error { return appendEvent(d, r, "process_started", map[string]any{"process": p}) })
 	})
 	e = withStore(r.WorkspaceRoot, func() error {
 		if runErr != nil && process.State == "not_started" {
 			return appendEvent(d, r, "launch_failed", map[string]any{"code": "task_run_launch_failed", "detail": "The bound provider could not be started."})
 		}
-		return appendEvent(d, r, "process_exited", map[string]any{"process": process})
+		if e := appendEvent(d, r, "process_exited", map[string]any{"process": process}); e != nil {
+			return e
+		}
+		if r.SchemaVersion == 2 && spec.Completion != nil && spec.Completion.Kind != "" {
+			return publishProviderCompletion(d, r, spec, process)
+		}
+		return nil
 	})
 	if e != nil {
 		return Result{}, failure("task_run_process_unknown", 5, "Unable to preserve process outcome: "+e.Error())
@@ -333,6 +380,9 @@ func Start(d Dependencies, file, confirm string) (Result, error) {
 		return out, failure("task_run_launch_failed", 4, "Provider start failed; attempt preserved.")
 	}
 	if out.Collection.State != "qualified" && out.TaskExecution.State == "unknown" {
+		if r.SchemaVersion == 2 {
+			return out, failure("task_run_provider_completion_unknown", 5, "Exec completion is unknown; preserve the run and work environment without restart or teardown.")
+		}
 		return out, failure("task_run_task_status_unknown", 5, "Client outcome and return are preserved. Obtain an explicit human task observation, then preview collect --task-status and apply its confirmation; plan result control remains the next gate.")
 	}
 	if out.Collection.State != "qualified" {
@@ -341,7 +391,12 @@ func Start(d Dependencies, file, confirm string) (Result, error) {
 	return out, nil
 }
 func recipientInstructions(r Request, b Binding) string {
-	return fmt.Sprintf("# Task run delivery\n\nRead %s for the exact preserved Task Spec inputs, procedure, verifiers, authority and human gates. Read %s for the immutable request and agreement. Do not select a newer Spec.\n\nYour first action, before target writes, is to report your actual runtime facts and scope contract in ply.workspace.task-run-acceptance schema version 2. Use run_id %s, request_sha256 %s, session_id %s. Model may be null when unknown; never infer it from the requested model. Known runtime, profile and effective policy are required for started. Negative claims may use null for unknown runtime, model, profile, policy and sandbox and must explain issues. Native provider session may be null; never invent one. runtime_claim has runtime_id, model_id, profile_id, effective_policy_sha256, native_session_id. sandbox and issues use the existing WF types; sandbox is the reported contract, not an OS policy claim. Acceptance must be negative when authority is unknown. Do not read or print raw WF reply secrets.\n\nRun: %s workspace task run accept %s --context %s --file <absolute-private-claim.json>\n\nAgreement A: initial execution plus at most three correction rounds, 5400 active seconds, and two environment measures. Stop at the first limit. No other agent, nested provider, human QA, integration, install, deployment or remote effects. The provider contact is owned by the parent transport only.\n\nAfter your last correction, write the semantic ply.workspace.task-run-report schema version 1 to %s and run: %s workspace task run report %s --context %s --file %s\nRequired fields: run_id, request_sha256, session_id, outcome, summary, meaning, budget_usage, stop_reasons, observed_effects, verifier_results, review, artifacts, evidence_gaps, forbidden_effects_observed, technical_assessment, process_observation, preventive_followup. WF terminal fields retain existing types. budget_usage is initial_execution_started, correction_rounds, active_seconds, environment_measures, or null when unknown. technical_assessment is gate, required_verifier_ids, accepted_debt. Last two fields are null for none. Never report an unexecuted verifier as exit 0. No TaskResult or human QA claim is yours to manufacture.\n\nThe explicit context works in a clean tool shell without inherited environment. The parent collects after the client process exits. Client exit alone does not prove the managed task inactive; a separate explicit human observation is required for qualification. Pending task status is expected. After reporting, make no more target writes. Tell the human the report was received and they can exit Codex normally. Plan result control is the next gate.\n", filepath.Join(b.TempRoot, "mandate.json"), filepath.Join(b.RunRoot, "request.json"), b.RunID, b.RequestSHA256, b.SessionID, ShellQuote(r.Runtime.PlyExecutable.Path), b.RunID, ShellQuote(filepath.Join(b.TempRoot, "context.json")), b.ReportPath, ShellQuote(r.Runtime.PlyExecutable.Path), b.RunID, ShellQuote(filepath.Join(b.TempRoot, "context.json")), ShellQuote(b.ReportPath))
+	text := fmt.Sprintf("# Task run delivery\n\nRead %s for the exact preserved Task Spec inputs, procedure, verifiers, authority and human gates. Read %s for the immutable request and agreement. Do not select a newer Spec.\n\nYour first action, before target writes, is to report your actual runtime facts and scope contract in ply.workspace.task-run-acceptance schema version 2. Use run_id %s, request_sha256 %s, session_id %s. Model may be null when unknown; never infer it from the requested model. Known runtime, profile and effective policy are required for started. Negative claims may use null for unknown runtime, model, profile, policy and sandbox and must explain issues. Native provider session may be null; never invent one. runtime_claim has runtime_id, model_id, profile_id, effective_policy_sha256, native_session_id. sandbox and issues use the existing WF types; sandbox is the reported contract, not an OS policy claim. Acceptance must be negative when authority is unknown. Do not read or print raw WF reply secrets.\n\nRun: %s workspace task run accept %s --context %s --file <absolute-private-claim.json>\n\nAgreement A: initial execution plus at most three correction rounds, 5400 active seconds, and two environment measures. Stop at the first limit. No other agent, nested provider, human QA, integration, install, deployment or remote effects. The provider contact is owned by the parent transport only.\n\nAfter your last correction, write the semantic ply.workspace.task-run-report schema version 1 to %s and run: %s workspace task run report %s --context %s --file %s\nRequired fields: run_id, request_sha256, session_id, outcome, summary, meaning, budget_usage, stop_reasons, observed_effects, verifier_results, review, artifacts, evidence_gaps, forbidden_effects_observed, technical_assessment, process_observation, preventive_followup. WF terminal fields retain existing types. budget_usage is initial_execution_started, correction_rounds, active_seconds, environment_measures, or null when unknown. technical_assessment is gate, required_verifier_ids, accepted_debt. Last two fields are null for none. Never report an unexecuted verifier as exit 0. No TaskResult or human QA claim is yours to manufacture.\n\nThe explicit context works in a clean tool shell without inherited environment. The parent collects after the client process exits. Client exit alone does not prove the managed task inactive; a separate explicit human observation is required for qualification. Pending task status is expected. After reporting, make no more target writes. Tell the human the report was received and they can exit Codex normally. Plan result control is the next gate.\n", filepath.Join(b.TempRoot, "mandate.json"), filepath.Join(b.RunRoot, "request.json"), b.RunID, b.RequestSHA256, b.SessionID, ShellQuote(r.Runtime.PlyExecutable.Path), b.RunID, ShellQuote(filepath.Join(b.TempRoot, "context.json")), b.ReportPath, ShellQuote(r.Runtime.PlyExecutable.Path), b.RunID, ShellQuote(filepath.Join(b.TempRoot, "context.json")), ShellQuote(b.ReportPath))
+	if r.SchemaVersion == 2 {
+		text = strings.Replace(text, "Client exit alone does not prove the managed task inactive; a separate explicit human observation is required for qualification. Pending task status is expected. After reporting, make no more target writes. Tell the human the report was received and they can exit Codex normally.", "The parent validates native provider completion and process group quiescence. After reporting, make no more target writes and finish this single turn. Never submit manual task status.", 1)
+		text += fmt.Sprintf("\nFactory limit: %d seconds for this one call, reasoning low; no retries or other agent starts. Report the required task-requirements artifact with all requirement IDs, phases and verifier IDs from the frozen Spec. Preserve unknown model as null.\n", r.FactoryTest.TimeoutSeconds)
+	}
+	return text
 }
 func ShellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'" }
 func quiescent(p Process) bool {
@@ -363,7 +418,7 @@ func Show(d Dependencies, root, id string) (Result, error) {
 		return Result{}, err
 	} else if record != nil {
 		out.Collection = historicalCollection(record)
-		if out.TaskExecution.StatusSHA256 == nil {
+		if out.TaskExecution.StatusSHA256 == nil && j.Request.SchemaVersion == 1 {
 			out.TaskExecution.HistoricalQualification = true
 		}
 		if out.ObservedTarget == nil {
@@ -400,7 +455,7 @@ func Show(d Dependencies, root, id string) (Result, error) {
 	if out.Acceptance.State != "missing" && out.Acceptance.ReceiptSHA256 == nil {
 		out.Reasons = append(out.Reasons, Reason{"task_run_acceptance_not_representable", "The recipient claim was received; missing facts prevent a WF StartReceipt. This is a representation gap, not permission to work."})
 	}
-	if out.TaskExecution.State == "unknown" || out.TaskExecution.State == "active" {
+	if j.Request.SchemaVersion == 1 && (out.TaskExecution.State == "unknown" || out.TaskExecution.State == "active") {
 		out.NextAction = "Obtain an explicit human task observation; use collect --task-status with check, then apply its confirmation. Plan result control precedes separate human QA or integration."
 	}
 	out.Reasons = sortedReasons(out.Reasons)

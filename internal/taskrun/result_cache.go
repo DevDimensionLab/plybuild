@@ -12,7 +12,7 @@ func decodeResultCache(raw []byte) (Result, error) {
 	if e := json.Unmarshal(raw, &header); e != nil {
 		return Result{}, integrity(e.Error())
 	}
-	if header.Kind != "ply.workspace.task-run-result" || header.SchemaVersion != 1 && header.SchemaVersion != 2 {
+	if header.Kind != "ply.workspace.task-run-result" || header.SchemaVersion != 1 && header.SchemaVersion != 2 && header.SchemaVersion != 3 {
 		return Result{}, integrity("unsupported result cache version")
 	}
 	if header.SchemaVersion == 1 {
@@ -42,7 +42,7 @@ func decodeResultCache(raw []byte) (Result, error) {
 }
 func resultCacheValue(r Result, version int) any {
 	r.SchemaVersion = version
-	if version == 2 {
+	if version == 2 || version == 3 {
 		return r
 	}
 	raw, _ := Canonical(r)

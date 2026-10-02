@@ -1,5 +1,6 @@
 GO ?= go
 GOFMT ?= gofmt
+PLY_BUILD_OUTPUT ?= ply
 BASH ?= /bin/bash
 GORELEASER ?= goreleaser
 GOLANGCI_LINT_VERSION := 2.12.2
@@ -23,7 +24,7 @@ override PLY_QUALITY_MUTATIONS := cli-context config-cloud maven-sorting templat
 .PHONY: acceptance acceptance-docker acceptance-snapshot all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight quality release release-brew run snapshot test test-agent-auto test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight test-quality test-toolchain test-workflow-handoff test-workspace-task-integration test-workspace-work-items upgrade
 
 build:
-	$(GO) build -o ply ./cmd/ply
+	$(GO) build -o $(PLY_BUILD_OUTPUT) ./cmd/ply
 
 docker-build:
 	docker build --tag ply:latest .

@@ -12,9 +12,18 @@ import (
 	"testing"
 )
 
-func prepareServiceWorkspace(t *testing.T) (string, string, string, string) {
+func prepareServiceWorkspace(t *testing.T, roots ...string) (string, string, string, string) {
 	t.Helper()
-	root, err := filepath.EvalSymlinks(t.TempDir())
+	var requested string
+	if len(roots) == 0 {
+		requested = t.TempDir()
+	} else {
+		requested = roots[0]
+		if err := os.MkdirAll(requested, 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	root, err := filepath.EvalSymlinks(requested)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,9 +155,9 @@ func gitOutput(t *testing.T, directory string, arguments ...string) string {
 	}
 	return string(output[:len(output)-1])
 }
-func fixture(t *testing.T) (Dependencies, Request, string) {
+func fixture(t *testing.T, roots ...string) (Dependencies, Request, string) {
 	t.Helper()
-	root, epic, ref, oid := prepareServiceWorkspace(t)
+	root, epic, ref, oid := prepareServiceWorkspace(t, roots...)
 	w := workspace.SystemDependencies()
 	if _, err := workspace.AdoptEpic(w, workspace.EpicAdoptInput{EpicID: "epic", Title: "Fixture Epic", ProjectID: "ply", RepoID: "ply", Worktree: epic, Ref: ref, ExpectedOID: oid}); err != nil {
 		t.Fatal(err)

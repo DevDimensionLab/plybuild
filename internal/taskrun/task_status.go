@@ -75,6 +75,9 @@ func taskStatusPath(r Request, h string) string {
 // proposedStatus never writes. A previously journaled digest is an exact retry;
 // all other observations must bind the current tip, even after a file-only crash.
 func proposedStatus(d Dependencies, j journal) (*TaskStatus, error) {
+	if j.Request.SchemaVersion == 2 && d.TaskStatusPath != "" {
+		return nil, invalid("exec rejects --task-status; provider evidence is runner-owned")
+	}
 	if d.TaskStatusPath == "" {
 		return nil, nil
 	}

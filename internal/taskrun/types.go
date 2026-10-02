@@ -1,4 +1,4 @@
-// Package taskrun owns one interactive provider attempt and its durable return.
+// Package taskrun owns one bounded provider attempt and its durable return.
 // Workflow receipts and TaskResult validation remain owned by their existing packages.
 package taskrun
 
@@ -55,6 +55,14 @@ type HumanAuthority struct {
 	StartSurface string `json:"start_surface"`
 	Authorized   bool   `json:"authorized"`
 }
+type FactoryTest struct {
+	AuthorizationPath   string `json:"authorization_path"`
+	AuthorizationSHA256 string `json:"authorization_sha256"`
+	Iteration           int    `json:"iteration"`
+	TaskSlot            int    `json:"task_slot"`
+	ReasoningEffort     string `json:"reasoning_effort"`
+	TimeoutSeconds      int    `json:"timeout_seconds"`
+}
 type Request struct {
 	Envelope
 	RequestKey        string          `json:"request_key"`
@@ -66,6 +74,7 @@ type Request struct {
 	Agreement         Agreement       `json:"agreement"`
 	ReturnPolicy      ReturnPolicy    `json:"return_policy"`
 	HumanAuthority    HumanAuthority  `json:"human_authority"`
+	FactoryTest       *FactoryTest    `json:"factory_test,omitempty"`
 }
 type Reason struct {
 	Code   string `json:"code"`
@@ -207,21 +216,22 @@ type TaskStatus struct {
 }
 type Result struct {
 	Envelope
-	RunID           string                             `json:"run_id"`
-	RequestSHA256   string                             `json:"request_sha256"`
-	LastEventSHA256 *string                            `json:"last_event_sha256"`
-	Handoff         *Handoff                           `json:"handoff"`
-	Launch          Launch                             `json:"launch"`
-	Acceptance      AcceptanceState                    `json:"acceptance"`
-	Process         Process                            `json:"process"`
-	Delivery        Delivery                           `json:"delivery"`
-	Collection      Collection                         `json:"collection"`
-	Budget          Budget                             `json:"budget"`
-	ObservedTarget  *workspace.PlanWorktreeObservation `json:"observed_target"`
-	Reasons         []Reason                           `json:"reasons"`
-	RuntimeFacts    RuntimeFacts                       `json:"runtime_facts"`
-	TaskExecution   TaskExecution                      `json:"task_execution"`
-	NextAction      string                             `json:"next_action"`
+	RunID              string                             `json:"run_id"`
+	RequestSHA256      string                             `json:"request_sha256"`
+	LastEventSHA256    *string                            `json:"last_event_sha256"`
+	Handoff            *Handoff                           `json:"handoff"`
+	Launch             Launch                             `json:"launch"`
+	Acceptance         AcceptanceState                    `json:"acceptance"`
+	Process            Process                            `json:"process"`
+	Delivery           Delivery                           `json:"delivery"`
+	Collection         Collection                         `json:"collection"`
+	Budget             Budget                             `json:"budget"`
+	ObservedTarget     *workspace.PlanWorktreeObservation `json:"observed_target"`
+	Reasons            []Reason                           `json:"reasons"`
+	RuntimeFacts       RuntimeFacts                       `json:"runtime_facts"`
+	TaskExecution      TaskExecution                      `json:"task_execution"`
+	NextAction         string                             `json:"next_action"`
+	ProviderCompletion *FileBinding                       `json:"provider_completion,omitempty"`
 }
 type RuntimeClaim struct {
 	RuntimeID             *string `json:"runtime_id"`
@@ -267,6 +277,8 @@ type Report struct {
 }
 type CollectPreview struct {
 	Envelope
+	ProviderCompletion       *FileBinding                       `json:"provider_completion,omitempty"`
+	RuntimeFacts             *RuntimeFacts                      `json:"runtime_facts,omitempty"`
 	TaskExecution            TaskExecution                      `json:"task_execution"`
 	BasisEventSHA256         *string                            `json:"basis_event_sha256"`
 	ProposedTaskStatusSHA256 *string                            `json:"proposed_task_status_sha256"`
@@ -306,6 +318,9 @@ type LaunchSpec struct {
 	Executable       Executable
 	Argv             []string
 	CWD, ContextPath string
+	Timeout          time.Duration
+	StreamsRoot      string
+	Completion       *ProviderCompletion
 }
 
 // ProcessRunner must call started only after a successful spawn and release all
@@ -320,6 +335,7 @@ type Dependencies struct {
 	Workspace       workspace.Dependencies
 	Workflow        workflowhandoff.Dependencies
 	Runner          ProcessRunner
+	ExecRunner      ProcessRunner
 	Now             func() time.Time
 	CallbackContext *string
 	TaskStatusPath  string
