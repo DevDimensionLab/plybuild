@@ -968,3 +968,15 @@ make build
 ```shell script
 ply
 ```
+
+## Report-ready Slack notifications
+
+`ply workflow notification` previews and sends a report-ready human gate to one fixed
+Slack channel. When separately authorized, create an Incoming Webhook for that channel,
+put its URL in a named environment variable such as `PLY_SLACK_WEBHOOK` using your usual
+secret practice, and create a route JSON containing the variable name and a private
+state root, without the URL. No global Ply configuration or native workspace is needed.
+
+See [the complete validated route/request example and check → apply → show procedure](docs/workflow-notification.md).
+A preserved transport acknowledgement is not report control or human QA. Unknown
+outcomes cannot be resent; local report and return instructions remain available.

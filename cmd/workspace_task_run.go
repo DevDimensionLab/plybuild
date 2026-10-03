@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
+	"github.com/devdimensionlab/plybuild/internal/workflownotification"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 	"strings"
@@ -15,6 +16,10 @@ import (
 func ExitCode(err error) int {
 	if err == nil {
 		return 0
+	}
+	var notificationError *workflownotification.Error
+	if errors.As(err, &notificationError) && notificationError != nil {
+		return notificationError.Exit
 	}
 	var typed *taskrun.Error
 	if errors.As(err, &typed) && typed != nil && typed.Exit >= 2 && typed.Exit <= 5 {

@@ -193,11 +193,11 @@ for flag in '--result string' '--qa string' '--expected-result-oid string' '--ex
 	grep -F -- "$flag" "$temp_root/workspace-task-integrate-help.stdout" >/dev/null || fail "Task integrate $flag is unavailable"
 done
 
-grep -F 'Manage explicit local agent workflow transitions.' "$temp_root/workflow-help.stdout" >/dev/null ||
+grep -F 'Manage explicit local agent workflow transitions and report-ready notifications.' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help lost its long description'
 grep -F 'ply workflow [command]' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help usage changed'
-grep -F '  handoff     Manage file-based agent handoffs' "$temp_root/workflow-help.stdout" >/dev/null ||
+grep -E '^  handoff +Manage file-based agent handoffs$' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help does not expose handoff'
 grep -F '  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help lost its example'

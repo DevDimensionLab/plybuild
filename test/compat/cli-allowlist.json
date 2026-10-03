@@ -417,7 +417,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Manage explicit local agent workflow transitions.",
+        "long": "Manage explicit local agent workflow transitions and report-ready notifications.",
         "path": "ply workflow",
         "runnable": false,
         "short": "Manage agent workflows",
@@ -661,6 +661,351 @@
       },
       "kind": "command_added",
       "path": "ply workflow handoff supersede"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow notification retry ID --route ./slack-route.json --check --format json\n  ply workflow notification retry ID --route ./slack-route.json --apply --confirm 'sha256:<new-retry-confirmation>' --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "apply",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "Apply one confirmed attempt or read an exact duplicate"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "Read-only preview (the default)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "confirm",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Exact confirmation digest from the corresponding preview"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Output format: text or json"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for retry"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "route",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Explicit non-secret route JSON file"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preview or explicitly retry proven non-delivery. A fresh preview and its new --confirm digest are required for a new attempt. Only rejected, not_sent, or rate_limited after its deadline can retry. Acknowledged or unknown delivery cannot retry. No automatic retries, sleeping, force or gate-revision recovery exist. Recheck the human gate before apply.",
+        "path": "ply workflow notification retry",
+        "runnable": true,
+        "short": "Preview or explicitly retry proven non-delivery",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "retry ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow notification retry"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow notification send --file ./report-ready.json --route ./slack-route.json --check --format json\n  ply workflow notification send --file ./report-ready.json --route ./slack-route.json --apply --confirm 'sha256:<confirmation-from-preview>' --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "apply",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "Apply one confirmed attempt or read an exact duplicate"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "Read-only preview (the default)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "confirm",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Exact confirmation digest from the corresponding preview"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Strict report-ready request JSON file"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Output format: text or json"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for send"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "route",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Explicit non-secret route JSON file"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preview or send one report-ready notification. Read-only preview is the default. --apply requires the exact --confirm digest from preview and performs at most one Slack POST after durable reservation. Exact duplicate sends read the preserved result without another POST. Recheck that the gate still requires human action before apply.",
+        "path": "ply workflow notification send",
+        "runnable": true,
+        "short": "Preview or send one report-ready notification",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "send"
+      },
+      "kind": "command_added",
+      "path": "ply workflow notification send"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow notification send --file ./report-ready.json --route ./slack-route.json --check\n  ply workflow notification show NOTIFICATION_ID --route ./slack-route.json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for notification"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": true,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Notify one fixed Slack channel that a report is ready for human result control. Source, sender, gate and channel are claims; transport acknowledgement does not attest product correctness or human QA. No automatic detection or retry occurs.",
+        "path": "ply workflow notification",
+        "runnable": true,
+        "short": "Preview and deliver a report-ready human gate",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "notification"
+      },
+      "kind": "command_added",
+      "path": "ply workflow notification"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow notification show ID --route ./slack-route.json --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Output format: text or json"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "route",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Explicit non-secret route JSON file"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read a preserved notification without credentials or writes. Show separates transport state from source freshness. Unknown is a successful readback, never permission to resend. No locks, credentials, recovery writes or Slack calls are used.",
+        "path": "ply workflow notification show",
+        "runnable": true,
+        "short": "Read a preserved notification without credentials or writes",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow notification show"
     },
     {
       "after": {
