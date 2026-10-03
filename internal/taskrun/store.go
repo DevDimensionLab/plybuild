@@ -17,13 +17,12 @@ type workspaceObservation = workspace.PlanWorktreeObservation
 
 func storeRoot(root string) string { return filepath.Join(root, ".ply", "task-runs", "v1") }
 func privateDir(path string) error {
-	if e := physical(path, true); e != nil {
+	root, e := physicalRoot(path, true)
+	if e != nil {
 		return e
 	}
-	if e := os.MkdirAll(path, 0700); e != nil {
-		return e
-	}
-	info, e := os.Lstat(path)
+	defer root.Close()
+	info, e := root.Stat(".")
 	if e != nil {
 		return e
 	}
@@ -66,7 +65,7 @@ func publishFile(path string, b []byte, replace bool) error {
 	if e != nil {
 		return e
 	}
-	root, e := os.OpenRoot(parent)
+	root, e := physicalRoot(parent, false)
 	if e != nil {
 		return e
 	}

@@ -7,9 +7,9 @@ import (
 	"os"
 )
 
-func openRead(p string) (*os.File, error) { return os.OpenFile(p, os.O_RDONLY|unix.O_NOFOLLOW, 0) }
+func openRead(p string) (*os.File, error) { return physicalOpenFile(p, os.O_RDONLY|unix.O_NOFOLLOW, 0) }
 func lockFile(p string) (*os.File, error) {
-	f, e := os.OpenFile(p, os.O_RDWR|os.O_CREATE|unix.O_NOFOLLOW, 0600)
+	f, e := physicalOpenFile(p, os.O_RDWR|os.O_CREATE|unix.O_NOFOLLOW, 0600)
 	if e != nil {
 		return nil, e
 	}

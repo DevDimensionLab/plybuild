@@ -342,6 +342,9 @@ type Dependencies struct {
 	ContextPath     func() string
 	CWD             func() (string, error)
 	Fault           func(string) error
+	// HerdrTimeout bounds the transport CLI, never the provider's task lifetime.
+	// Zero selects the documented adapter timeouts.
+	HerdrTimeout time.Duration
 }
 
 func (d Dependencies) fault(point string) error {

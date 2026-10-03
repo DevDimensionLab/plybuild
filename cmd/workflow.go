@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +16,7 @@ func newWorkflowCommand(dependencies workflowhandoff.Dependencies) *cobra.Comman
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
 	}
 	command.AddCommand(newWorkflowHandoffCommand(dependencies))
+	command.AddCommand(newWorkflowRunCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
 	setHandoffFlagErrors(command)
 	return command
 }

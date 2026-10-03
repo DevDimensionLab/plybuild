@@ -110,6 +110,9 @@ func previewLocked(d Dependencies, r Request, file string) (p Preview, err error
 		return p, e
 	}
 	p.Observed = Observed{obs.MarkerSHA256, obs.RegistrySHA256, obs.Target, obs.Epic, bindings}
+	if e = workflowReservations(d, r.WorkspaceRoot, obs.Target); e != nil {
+		return p, e
+	}
 	if e = physical(p.Paths.RunRoot, true); e != nil {
 		return p, e
 	}

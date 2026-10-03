@@ -249,6 +249,21 @@ set the queue entry to that new selection. Historical Specs, results, QA and int
 retries retain their original digests. No command rebases worktrees, integrates code,
 starts an agent, installs the CLI or selects a human QA outcome.
 
+### Run a prepared Task in Herdr
+
+`ply workflow run` previews and confirms one Herdr/Codex start from an existing
+Task preparation, follows immutable round reports, and lets the named coordinator
+accept, block or request bounded corrections in the same session. It returns a
+reviewed report without publishing TaskResult or attesting provider inactivity.
+Human QA and integration remain separate. See the [request, callbacks and recovery
+guide](docs/workflow-run.md).
+
+```shell
+ply workflow run start --file /absolute/prepared-task-request.json --check
+ply workflow run follow wfr_<digest> --timeout 60
+ply workflow run review wfr_<digest> --file /absolute/review.json
+```
+
 ### Run the local factory scenario with Codex exec
 
 The separate `ply-factory-tests` repository owns the Python standard library rig,

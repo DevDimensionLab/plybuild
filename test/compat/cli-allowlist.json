@@ -669,6 +669,522 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workflow run accept wfr_<digest> --context /absolute/current/context.json --file /absolute/acceptance.json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact private context path for the current round"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical JSON input path"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for accept"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Accept the actual bound runtime before Task writes. This is the recipient's first action. Supply private Acceptance@2 fields using kind ply.workflow.run-acceptance, schema_version 1. The exact context, executable, cwd, native session and necessary permission facts must match. A null actual model is permitted; known mismatch is rejected.",
+        "path": "ply workflow run accept",
+        "runnable": true,
+        "short": "Accept the actual bound runtime before Task writes",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "accept RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow run accept"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow run follow wfr_<digest> --timeout 60",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for follow"
+          },
+          {
+            "annotations": {},
+            "default": "60",
+            "deprecated": "",
+            "hidden": false,
+            "name": "timeout",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "positive observation timeout in seconds (does not stop the agent)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Observe the same session until its round is ready for review. Waits for the correct round report and two fresh idle/done observations of the exact same Codex session. --timeout defaults to 60 seconds. Timeout ends observation, not the agent. A finished tab is transport status, not technical or human approval.",
+        "path": "ply workflow run follow",
+        "runnable": true,
+        "short": "Observe the same session until its round is ready for review",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "follow RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow run follow"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow run report wfr_<digest> --context /absolute/current/context.json --file /absolute/round-report.json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact private context path for the current round"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical JSON input path"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for report"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preserve an immutable report for the current round. Submit native TaskRun report fields using kind ply.workflow.round-report, schema_version 1, plus the current round, control_id and previous_report_sha256. Include cumulative usage and the frozen Spec's task-requirements artifact. Run after the last target write of this round. No native terminal is published until review accepts.",
+        "path": "ply workflow run report",
+        "runnable": true,
+        "short": "Preserve an immutable report for the current round",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "report RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow run report"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow run review wfr_<digest> --file /absolute/review.json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical JSON input path"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for review"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Accept, block or request one bounded correction. Bind the named coordinator's accepted, blocked or changes_requested decision to the current immutable report. Corrections reserve shared agreement A before one prompt attempt. A repeated decision never resends input. Accepted seals a native terminal but does not publish TaskResult, attest provider inactivity, perform human QA or integrate the candidate.",
+        "path": "ply workflow run review",
+        "runnable": true,
+        "short": "Accept, block or request one bounded correction",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "review RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow run review"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow run show wfr_<digest> --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read preserved run and artifact freshness without effects. Reads saved state and current artifact hashes without Herdr calls, locks or recovery. Cached transport is not a fresh provider observation.",
+        "path": "ply workflow run show",
+        "runnable": true,
+        "short": "Read preserved run and artifact freshness without effects",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow run show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow run start --file /absolute/prepared-task-request.json --check",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "apply",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "apply the exact confirmed preview"
+          },
+          {
+            "annotations": {},
+            "default": "true",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "preview without writing (default)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "confirm",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact sha256 preview confirmation"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute physical JSON input path"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for start"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preview or confirm one prepared Task start in Herdr. --check is the read-only default. --apply requires --confirm with the exact preview digest and the local HERDR_ENV=1 context. The request must bind an existing native Task preparation, Spec and permission evidence. Repeated starts reuse the reservation without launching again. No TaskResult is published.",
+        "path": "ply workflow run start",
+        "runnable": true,
+        "short": "Preview or confirm one prepared Task start in Herdr",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "start"
+      },
+      "kind": "command_added",
+      "path": "ply workflow run start"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow run start --file /absolute/prepared-task-request.json --check\n  ply workflow run show wfr_<digest>",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for run"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Start one authorized Codex session for an existing Task preparation, follow immutable round reports, and request bounded corrections in the same session. Reviewed reports do not publish TaskResult or attest provider inactivity. Human QA and integration remain separate gates.",
+        "path": "ply workflow run",
+        "runnable": true,
+        "short": "Run a prepared Task in Herdr and review its reports",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "run"
+      },
+      "kind": "command_added",
+      "path": "ply workflow run"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workspace epic adopt ply-agentic-workflow-support --title \"Ply agentic workflow support\" --project ply --repo ply --worktree ../ply/ply_agentic_workflow_support --ref refs/heads/ply_agentic_workflow_support --expected-oid 54f3631cbea789f25a4134945c7ca16d343139df",
         "flags": [
           {
