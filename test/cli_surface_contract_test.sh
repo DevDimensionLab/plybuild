@@ -67,6 +67,14 @@ run_help_surface workspace-epic-adopt-help workspace epic adopt --help
 run_help_surface workspace-epic-show-help workspace epic show --help
 run_help_surface workspace-epic-list-help workspace epic list --help
 run_help_surface workspace-task-help workspace task --help
+run_help_surface workspace-task-journal-help workspace task journal --help
+for journal_leaf in show record observe; do
+	run_help_surface "workspace-task-journal-$journal_leaf-help" workspace task journal "$journal_leaf" --help
+done
+grep -F 'journal' "$temp_root/workspace-task-help.stdout" >/dev/null || fail 'task help lost journal'
+grep -F 'immutable' "$temp_root/workspace-task-journal-record-help.stdout" >/dev/null || fail 'journal record help lost immutable contract'
+grep -F -- '--snapshot' "$temp_root/workspace-task-journal-show-help.stdout" >/dev/null || fail 'journal show help lost offline snapshot'
+grep -F -- '--file' "$temp_root/workspace-task-journal-observe-help.stdout" >/dev/null || fail 'journal observe help lost file input'
 run_help_surface workspace-task-run-help workspace task run --help
 for run_leaf in start show collect accept report; do
 	run_help_surface "workspace-task-run-$run_leaf-help" workspace task run "$run_leaf" --help

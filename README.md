@@ -792,6 +792,128 @@ the current relevance guard; a stale basis blocks a new attempt. Recovery of an 
 attempted integration observes Git first and reports later relevance separately. Legacy plans
 retain their original bytes and digests. Technical pass never means human QA or integration.
 
+## Task process journal
+
+An existing Task can retain process notes and steps across several native runs.
+The journal combines validated native Task, problem, solution, preparation, run,
+result, human QA and integration facts with immutable self-reported contributions.
+It changes no native state and authorizes no next transition.
+
+```sh
+ply workspace task journal show my-task
+ply workspace task journal show my-task --view timeline
+ply workspace task journal show my-task --view details --order recorded
+ply workspace task journal show my-task --run trn_<digest> --actor developer-session
+ply workspace task journal show my-task --format json > /absolute/snapshot.json
+ply workspace task journal show my-task --snapshot /absolute/snapshot.json --view timeline
+```
+
+`show` discovers the workspace from the current directory. It never creates a
+journal directory, lock, cache, receipt or repair. `--snapshot` instead validates
+and renders the saved snapshot without workspace discovery, source reads or a
+new observation. JSON always contains the full evidence; filters change only
+`selection`. Offline rendering preserves `snapshot_id` and `as_of`.
+
+The banner separates Transport, Reported, Technical, Human QA and Integration.
+Old judgments remain attached to their exact candidate. A dirty, missing or new
+candidate does not inherit an earlier pass. Coverage describes the available
+sources read, not a complete work or conversation history. Missing or changed
+optional sources produce explicit partial coverage and a successful readback;
+an unknown Task or invalid snapshot fails.
+
+The timeline uses a shared UTC axis and one lane per actor/run. It preserves
+occurrence and registration clocks, original offsets, source sequence and
+uncertainty. `No end recorded`, `Unknown time` and `Time conflict` are explicit.
+Only compatible known step endpoints have durations. Parent and child intervals
+and parallel lanes are never added into an active-time or productivity total.
+Waiting requires an explicit waiting step with reason, dependency and next actor.
+
+To append a note, put the following in `/absolute/event.json`, replacing the Task,
+source path and the source's 64 lowercase hexadecimal SHA-256. Every field is
+required, including explicit `null` values and empty arrays. The source must be
+an existing physical regular file whose bytes match the digest.
+
+```json
+{
+  "kind": "ply.workspace.task-journal-event-input",
+  "schema_version": 1,
+  "publication_key": "delivery-1:verified",
+  "task_id": "my-task",
+  "actor": {"id": "developer-session", "role": "developer", "session_id": "external-session-1"},
+  "activity_id": "delivery-1",
+  "run_binding": null,
+  "occurred_at": "2026-10-03T10:00:00+02:00",
+  "time_basis": {"kind": "reported", "clock": "session-clock", "precision": "second", "uncertainty": null},
+  "sources": [{"locator": "/absolute/test-report.txt", "sha256": "<64-lowercase-hex-digest>"}],
+  "type": "note",
+  "title": "Verification completed",
+  "detail": "",
+  "step": null,
+  "outcome": "pass",
+  "candidate": null,
+  "relations": [],
+  "waiting": null
+}
+```
+
+```sh
+ply workspace task journal record my-task --file /absolute/event.json --format json
+```
+
+`detail` is empty in v1. A native `run_binding`, when present, contains all four
+exact fields: `run_id`, `request_sha256`, `preparation_id`, `preparation_sha256`.
+An external session uses `null` and `actor.session_id`; a matching title is not a
+run binding. Actor identities and roles are self-reported metadata.
+
+Use `step_started` and `step_finished` with the same `{id, kind, parent_step_id}`
+and actor/run for an interval. Step kinds are `clarification`, `planning`,
+`implementation`, `verification`, `review`, `correction`, `coordination`, and
+`waiting`. An original start and finish occur at most once; another correction
+round gets a new step. Relations (`responds_to`, `corrects`, `verifies`,
+`supersedes`) refer to existing events in this Task. A correcting note or decision
+may supersede another contribution; native judgments cannot be superseded.
+Conflicting successors are retained as a conflict, not resolved by timestamp.
+
+An observer uses the same common fields, changes `kind` to
+`ply.workspace.task-journal-observation-input`, and replaces the event-specific
+fields (`type` through `waiting`) with this proposal body. Replace the target with
+an `event_id` returned by `record` or `show`:
+
+```json
+{
+  "type": "proposal",
+  "proposal_event_id": null,
+  "targets": {"event_ids": ["<existing-event-id>"], "step_ids": [], "interval": null},
+  "finding": "The recorded review followed verification",
+  "hypothesis": "An earlier review may shorten the next correction",
+  "action": "Compare the next delivery with its review evidence",
+  "owner": "planner",
+  "next_signal": "The next comparable delivery",
+  "decision": null,
+  "assessment": null
+}
+```
+
+```sh
+ply workspace task journal observe my-task --file /absolute/observation.json --format json
+```
+
+A follow-up names its `proposal_event_id`. A `decision` uses `accepted` or
+`rejected`; `applied` requires an unconflicted accepted decision; `assessment`
+requires an applied record and uses `better`, `unchanged`, `worse`, or
+`inconclusive`. Facts, hypotheses and proposals remain separate. Observer claims
+of success never become native Technical, Human QA or Integration judgments.
+
+Both append commands accept one UTF-8 JSON object of at most 64 KiB, reject
+duplicates and unknown fields, and share a Task-local `publication_key` namespace.
+An identical canonical retry returns the same event, registration time and digest
+with `created=false`, even after a source disappears. Different input conflicts.
+A post-publication error reports an unknown result and the key/readback path;
+retry only the contribution, not the work it describes. Records are published
+atomically under a local append lock in private `.ply/task-process/v1/` storage.
+Sources are referenced and hashed, never executed or copied into the journal.
+Do not submit transcripts, credentials, secrets or arbitrary payloads.
+
 ## Workflow handoffs
 
 Workflow handoffs provide a local, immutable file protocol for giving one bounded task to a
