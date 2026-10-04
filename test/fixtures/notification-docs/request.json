@@ -1,0 +1,39 @@
+{
+  "kind": "ply.workflow.notification-request",
+  "schema_version": 1,
+  "route": "report-ready",
+  "source": {
+    "kind": "external",
+    "activity": "example/report-ready",
+    "run": "example-delivery-001",
+    "worktree": "/private/tmp/ply-notification-example/worktree",
+    "handoff": {
+      "path": "/private/tmp/ply-notification-example/handoff.md",
+      "sha256": "sha256:c0647fa48ec41ea53dcf95c11628d7471241d4d12b9449c55ec17b8f028b206a"
+    },
+    "start_receipt": {
+      "path": "/private/tmp/ply-notification-example/start-receipt.json",
+      "sha256": "sha256:5a00a3af794163b5b2093954b7ffa4a602d50b952dade47fa2ecaed1d0439ea4",
+      "kind": "ExampleDeliveryStart@1"
+    },
+    "report": {
+      "path": "/private/tmp/ply-notification-example/report.json",
+      "sha256": "sha256:733ad44e4e463dd6d61510f1e0fc429254f7749bf1a6cbdd6bcd5ccafcd5ba61",
+      "kind": "ExampleDeliveryReport@1"
+    }
+  },
+  "gate": {
+    "id": "result-control",
+    "revision": 1,
+    "opened_at": "2026-10-03T19:00:00Z",
+    "reason": "result_control",
+    "state": "waiting_for_human"
+  },
+  "sender": {
+    "actor_claim": "delivery agent"
+  },
+  "public": {
+    "task_title": "Example delivery",
+    "next_action": "Start the planning launcher on your development machine for result control."
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "kind": "ExampleDeliveryStart@1",
+  "activity": "example/report-ready",
+  "run": "example-delivery-001"
+}

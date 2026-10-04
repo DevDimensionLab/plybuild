@@ -67,6 +67,14 @@ run_help_surface workspace-epic-adopt-help workspace epic adopt --help
 run_help_surface workspace-epic-show-help workspace epic show --help
 run_help_surface workspace-epic-list-help workspace epic list --help
 run_help_surface workspace-task-help workspace task --help
+run_help_surface workspace-task-journal-help workspace task journal --help
+for journal_leaf in show record observe; do
+	run_help_surface "workspace-task-journal-$journal_leaf-help" workspace task journal "$journal_leaf" --help
+done
+grep -F 'journal' "$temp_root/workspace-task-help.stdout" >/dev/null || fail 'task help lost journal'
+grep -F 'immutable' "$temp_root/workspace-task-journal-record-help.stdout" >/dev/null || fail 'journal record help lost immutable contract'
+grep -F -- '--snapshot' "$temp_root/workspace-task-journal-show-help.stdout" >/dev/null || fail 'journal show help lost offline snapshot'
+grep -F -- '--file' "$temp_root/workspace-task-journal-observe-help.stdout" >/dev/null || fail 'journal observe help lost file input'
 run_help_surface workspace-task-run-help workspace task run --help
 for run_leaf in start show collect accept report; do
 	run_help_surface "workspace-task-run-$run_leaf-help" workspace task run "$run_leaf" --help
@@ -185,11 +193,11 @@ for flag in '--result string' '--qa string' '--expected-result-oid string' '--ex
 	grep -F -- "$flag" "$temp_root/workspace-task-integrate-help.stdout" >/dev/null || fail "Task integrate $flag is unavailable"
 done
 
-grep -F 'Manage explicit local agent workflow transitions.' "$temp_root/workflow-help.stdout" >/dev/null ||
+grep -F 'Manage explicit local agent workflow transitions and report-ready notifications.' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help lost its long description'
 grep -F 'ply workflow [command]' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help usage changed'
-grep -F '  handoff     Manage file-based agent handoffs' "$temp_root/workflow-help.stdout" >/dev/null ||
+grep -E '^  handoff +Manage file-based agent handoffs$' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help does not expose handoff'
 grep -F '  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help lost its example'

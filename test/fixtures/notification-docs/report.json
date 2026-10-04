@@ -1,0 +1,7 @@
+{
+  "kind": "ExampleDeliveryReport@1",
+  "activity": "example/report-ready",
+  "run": "example-delivery-001",
+  "outcome": "reported",
+  "next_action": "Start the planning launcher for result control."
+}

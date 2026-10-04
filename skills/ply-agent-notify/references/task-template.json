@@ -1,0 +1,11 @@
+{
+  "kind": "PlyAgentNotificationTask@1",
+  "activity": "replace-with-agreed-activity",
+  "run": "replace-with-agreed-run",
+  "worktree": "/absolute/physical/worktree",
+  "handoff": "/absolute/physical/handoff.md",
+  "route": "/Users/perottochristensen/.config/ply/notifications/ply-log/route.json",
+  "event_root": "/absolute/private/task-return/notification-events",
+  "actor_claim": "delivery-agent",
+  "notification_authorized": true
+}
