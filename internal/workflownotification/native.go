@@ -40,7 +40,7 @@ func checkNative(s Source) error {
 	if json.Unmarshal(v.Bytes, &r) != nil || !r.Integrity.Valid || r.Identities.Activity != s.Activity || r.Identities.Run != s.Run || s.HandoffID == nil || r.Identities.Handoff != *s.HandoffID {
 		return fail(2, "native_binding", "Native handoff integrity or binding is invalid.")
 	}
-	for name, loc := range map[string]Locator{"handoff": s.Handoff, "start_receipt": s.Start, "terminal_result": s.Report} {
+	for name, loc := range map[string]Locator{"handoff": s.Handoff, "start_receipt": *s.Start, "terminal_result": *s.Report} {
 		d := r.Documents[name]
 		if d == nil || d.Locator != loc.Path || d.SHA256 != loc.SHA256 {
 			return fail(2, "native_binding", "Native document locators or digests do not match.")

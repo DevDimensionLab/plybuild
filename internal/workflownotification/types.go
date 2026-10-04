@@ -1,4 +1,4 @@
-// Package workflownotification delivers an explicitly claimed report-ready gate.
+// Package workflownotification delivers explicitly claimed human gates and agent events.
 // Transport acknowledgement never attests product correctness or human approval.
 package workflownotification
 
@@ -37,8 +37,8 @@ type Source struct {
 	Run       string          `json:"run"`
 	Worktree  string          `json:"worktree"`
 	Handoff   Locator         `json:"handoff"`
-	Start     Locator         `json:"start_receipt"`
-	Report    Locator         `json:"report"`
+	Start     *Locator        `json:"start_receipt,omitempty"`
+	Report    *Locator        `json:"report,omitempty"`
 	HandoffID *string         `json:"handoff_id,omitempty"`
 	TaskID    json.RawMessage `json:"task_id,omitempty"`
 }
@@ -52,17 +52,20 @@ type Gate struct {
 type Public struct {
 	TaskTitle  string `json:"task_title"`
 	NextAction string `json:"next_action"`
+	Summary    string `json:"summary,omitempty"`
+	NextActor  string `json:"next_actor,omitempty"`
 }
 type Request struct {
 	Kind          string `json:"kind"`
 	SchemaVersion int    `json:"schema_version"`
 	Route         string `json:"route"`
 	Source        Source `json:"source"`
-	Gate          Gate   `json:"gate"`
+	Gate          *Gate  `json:"gate,omitempty"`
 	Sender        struct {
 		ActorClaim string `json:"actor_claim"`
 	} `json:"sender"`
 	Public Public `json:"public"`
+	Event  *Event `json:"event,omitempty"`
 }
 type Route struct {
 	Kind          string `json:"kind"`
@@ -122,7 +125,7 @@ type Result struct {
 	RequestSHA     string    `json:"request_sha256"`
 	Source         Source    `json:"source_binding"`
 	Route          RouteView `json:"route"`
-	Gate           Gate      `json:"gate"`
+	Gate           *Gate     `json:"gate,omitempty"`
 	Knowledge      string    `json:"knowledge"`
 	State          string    `json:"state"`
 	Freshness      string    `json:"freshness"`
@@ -132,6 +135,7 @@ type Result struct {
 	Reasons        []Reason  `json:"reasons"`
 	NextAction     string    `json:"next_action"`
 	Persistence    string    `json:"persistence"`
+	Event          *Event    `json:"event,omitempty"`
 }
 type ErrorResult struct {
 	Kind          string   `json:"kind"`

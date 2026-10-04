@@ -980,3 +980,39 @@ state root, without the URL. No global Ply configuration or native workspace is 
 See [the complete validated route/request example and check → apply → show procedure](docs/workflow-notification.md).
 A preserved transport acknowledgement is not report control or human QA. Unknown
 outcomes cannot be resent; local report and return instructions remain available.
+
+
+### Agent completion and necessary feedback notifications
+
+`ply workflow notification send` also accepts strict request schema version 2 for
+`agent_finished`, `agent_stopped`, and `feedback_required`. These bind an external
+activity/run and a preserved `PlyAgentNotificationEvent@1`; completion requires an
+actual report, while a before-start stop needs no fabricated report or receipt.
+The event is a sender claim. Transport acknowledgement does not attest product
+correctness, result control, human QA, or that anyone read the message. Existing
+v1 human-gate requests and stored state retain their contract.
+
+The repository provides [ply-agent-notify](skills/ply-agent-notify/SKILL.md), with a
+[task context and operational procedure](skills/ply-agent-notify/references/usage.md).
+An authorized task adopts that procedure to preserve its return/question, preview,
+apply at most once and read back through Ply. Optional questions, internal corrections
+and an ending still waiting for the same answer send nothing. The same logical event
+keeps its ID across restarts and port revisions. Unknown delivery never permits a new
+ID, route or state root to resend. The skill provides no crash watcher.
+
+During a separately authorized installation activity, run `make install-agent-notify`,
+then run the installed skill's `scripts/bootstrap.py`. Bootstrap accepts the existing
+webhook from `PLY_SLACK_WEBHOOK_URL` or hidden terminal input and stores it privately
+at `/Users/perottochristensen/.config/ply/notifications/ply-log/webhook`. It creates
+the adjacent non-secret `route.json` for `ply-log` and uses the fixed private state
+root `/Users/perottochristensen/.local/state/ply/agent-notifications/ply-log`.
+Normal helper invocations prefer the environment, otherwise read only that named
+0600 file in its 0700 directory, and pass the credential only to Ply send/check.
+Invalid environment values never fall back; conflicts and unsafe files are preserved.
+No webhook belongs in a prompt, argv, repository, report or ordinary log.
+
+Run `make test-agent-notify` for isolated installation, bootstrap and actual
+helper/CLI interaction with controlled fake transport. Set `AGENT_NOTIFY_TEST_ROOT`
+to a new private fixture path and `AGENT_NOTIFY_DEST` for fixture-only installation.
+The technical tests use no Slack service. Personal installation and the useful,
+human-observed agent journey remain a separate QA activity.

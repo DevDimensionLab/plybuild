@@ -402,3 +402,13 @@ upgrade:
 	$(GO) clean
 
 all: build
+
+# Agent notification skill: installation is an explicit, separate effect.
+AGENT_NOTIFY_DEST ?= /Users/perottochristensen/.agents/skills/ply-agent-notify
+AGENT_NOTIFY_TEST_ROOT ?=
+.PHONY: install-agent-notify test-agent-notify
+install-agent-notify:
+	$(PYTHON) skills/ply-agent-notify/scripts/install.py --destination "$(AGENT_NOTIFY_DEST)"
+
+test-agent-notify:
+	$(PYTHON) test/agent_notify_acceptance.py $(if $(AGENT_NOTIFY_TEST_ROOT),--root "$(AGENT_NOTIFY_TEST_ROOT)",)

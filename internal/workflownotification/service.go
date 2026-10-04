@@ -106,7 +106,11 @@ func prepare(d Dependencies, in Input) (*prepared, error) {
 	if req.Source.Worktree == p.route.StateRoot {
 		return p, invalid()
 	}
-	for _, path := range []string{req.Source.Handoff.Path, req.Source.Start.Path, req.Source.Report.Path, requestPath, routePath, req.Source.Worktree} {
+	paths := []string{requestPath, routePath, req.Source.Worktree}
+	for _, item := range sourceLocators(req) {
+		paths = append(paths, item.loc.Path)
+	}
+	for _, path := range paths {
 		if strings.HasPrefix(path, p.route.StateRoot+string(filepath.Separator)) {
 			return p, invalid()
 		}
@@ -205,7 +209,9 @@ func freshness(p *prepared) string {
 		return "unavailable"
 	}
 	changed := p.routeSHA != r.RouteSHA
-	for path, want := range map[string]string{r.RequestPath: Digest(r.RequestBytes), r.Request.Source.Handoff.Path: r.Request.Source.Handoff.SHA256, r.Request.Source.Start.Path: r.Request.Source.Start.SHA256, r.Request.Source.Report.Path: r.Request.Source.Report.SHA256} {
+	locators := append(sourceLocators(r.Request), sourceFile{Locator{Path: r.RequestPath, SHA256: Digest(r.RequestBytes)}, 64 << 10})
+	for _, item := range locators {
+		path, want := item.loc.Path, item.loc.SHA256
 		b, e := readFile(path, 16<<20, false)
 		if e != nil {
 			return "unavailable"
@@ -227,6 +233,7 @@ func failureOutput(p *prepared, err error) any {
 		id := p.input.ID
 		var source any
 		var gate any
+		var event any
 		var requestSHA any
 		if p.input.Operation == "send" {
 			path, e := filepath.Abs(p.input.File)
@@ -236,12 +243,20 @@ func failureOutput(p *prepared, err error) any {
 						id = identity(req)
 						source = req.Source
 						gate = req.Gate
+						if req.Event != nil {
+							event = req.Event
+						}
 						requestSHA = Digest(raw)
 					}
 				}
 			}
 		}
-		return map[string]any{"kind": "ply.workflow.notification", "schema_version": 1, "notification_id": id, "request_sha256": requestSHA, "source_binding": source, "route": RouteView{p.route.Name, p.route.ChannelLabel, "claimed", p.routeSHA}, "gate": gate, "knowledge": "reported", "state": "unknown", "freshness": "unavailable", "payload_sha256": nil, "attempts": []Attempt{}, "retry_not_before": nil, "reasons": []Reason{{"state_unavailable", "Existing attempt state cannot be established. No new receipt was created; do not resend."}}, "next_action": "Preserve the local return and inspect the existing state.", "persistence": "not_created"}
+		out := map[string]any{"kind": "ply.workflow.notification", "schema_version": 1, "notification_id": id, "request_sha256": requestSHA, "source_binding": source, "route": RouteView{p.route.Name, p.route.ChannelLabel, "claimed", p.routeSHA}, "gate": gate, "knowledge": "reported", "state": "unknown", "freshness": "unavailable", "payload_sha256": nil, "attempts": []Attempt{}, "retry_not_before": nil, "reasons": []Reason{{"state_unavailable", "Existing attempt state cannot be established. No new receipt was created; do not resend."}}, "next_action": "Preserve the local return and inspect the existing state.", "persistence": "not_created"}
+		if event != nil {
+			delete(out, "gate")
+			out["event"] = event
+		}
+		return out
 	}
 
 	if p != nil && p.prior != nil {

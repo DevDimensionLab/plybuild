@@ -74,7 +74,7 @@ func readDatabase(dir *os.File) (*database, error) {
 		return nil, fail(4, "state_changed", "The state root binding is incomplete or changed.")
 	}
 	for id, r := range db.Records {
-		if r == nil || id != identity(r.Request) || r.Route.Name != db.Route || r.RouteSHA != db.RouteSHA || r.Basis == "" || !digestPattern.MatchString(r.CredentialSHA) || !digestPattern.MatchString(r.SendConfirmation) || len(r.Attempts) == 0 || digestValue(r.Payload) != digestValue(message(r.Request)) {
+		if r == nil || !idPattern.MatchString(id) || id != identity(r.Request) || r.Route.Name != db.Route || r.RouteSHA != db.RouteSHA || r.Basis == "" || !digestPattern.MatchString(r.CredentialSHA) || !digestPattern.MatchString(r.SendConfirmation) || len(r.Attempts) == 0 || digestValue(r.Payload) != digestValue(message(r.Request)) {
 			return nil, fail(1, "state_corrupt", "Notification state is incomplete or corrupt.")
 		}
 		req, e := parseRequest(r.RequestBytes, "")
@@ -144,5 +144,5 @@ func result(id string, r *record, freshness string) Result {
 	if last.State == "unknown" && len(reasons) == 0 {
 		reasons = append(reasons, Reason{"transport_unconfirmed", "Delivery is unknown. Preserve the local return and check Slack separately; do not resend."})
 	}
-	return Result{"ply.workflow.notification", 1, id, Digest(r.RequestBytes), r.Request.Source, RouteView{r.Route.Name, r.Route.ChannelLabel, "claimed", r.RouteSHA}, r.Request.Gate, "reported", last.State, freshness, digestValue(r.Payload), attempts, last.RetryNotBefore, reasons, r.Request.Public.NextAction, persistence}
+	return Result{"ply.workflow.notification", 1, id, Digest(r.RequestBytes), r.Request.Source, RouteView{r.Route.Name, r.Route.ChannelLabel, "claimed", r.RouteSHA}, r.Request.Gate, "reported", last.State, freshness, digestValue(r.Payload), attempts, last.RetryNotBefore, reasons, r.Request.Public.NextAction, persistence, r.Request.Event}
 }

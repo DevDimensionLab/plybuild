@@ -13,7 +13,7 @@ import (
 // NewWorkflowNotificationCommand is the production command graph with an internal
 // effect boundary for native tests and the separate, network-free fixture driver.
 func NewWorkflowNotificationCommand(d notification.Dependencies) *cobra.Command {
-	parent := &cobra.Command{Use: "notification", Short: "Preview and deliver a report-ready human gate", Long: "Notify one fixed Slack channel that a report is ready for human result control. Source, sender, gate and channel are claims; transport acknowledgement does not attest product correctness or human QA. No automatic detection or retry occurs.", Example: "  ply workflow notification send --file ./report-ready.json --route ./slack-route.json --check\n  ply workflow notification show NOTIFICATION_ID --route ./slack-route.json", PersistentPreRunE: func(*cobra.Command, []string) error { return nil }}
+	parent := &cobra.Command{Use: "notification", Short: "Preview and deliver human gates or agent events", Long: "Notify one fixed Slack channel about a v1 report-ready human gate or a v2 agent_finished, agent_stopped, or feedback_required event. V2 external sources bind a preserved event; agent_finished requires a report, and before_start is only valid for agent_stopped without a start receipt. Source, sender, gate, event and channel are claims; transport acknowledgement does not attest product correctness or human QA. No automatic detection or retry occurs.", Example: "  ply workflow notification send --file ./report-ready.json --route ./slack-route.json --check\n  ply workflow notification show NOTIFICATION_ID --route ./slack-route.json", PersistentPreRunE: func(*cobra.Command, []string) error { return nil }}
 	parent.Args = func(c *cobra.Command, a []string) error {
 		if len(a) != 0 {
 			return notificationUsage(c, "Expected a notification subcommand.")
@@ -35,15 +35,15 @@ func NewWorkflowNotificationCommand(d notification.Dependencies) *cobra.Command 
 		if operation != "send" {
 			use += " ID"
 		}
-		short := map[string]string{"send": "Preview or send one report-ready notification", "show": "Read a preserved notification without credentials or writes", "retry": "Preview or explicitly retry proven non-delivery"}[operation]
+		short := map[string]string{"send": "Preview or send one human-gate or agent-event notification", "show": "Read a preserved notification without credentials or writes", "retry": "Preview or explicitly retry proven non-delivery"}[operation]
 		long := short + ". "
 		switch operation {
 		case "send":
-			long += "Read-only preview is the default. --apply requires the exact --confirm digest from preview and performs at most one Slack POST after durable reservation. Exact duplicate sends read the preserved result without another POST. Recheck that the gate still requires human action before apply."
+			long += "Read-only preview is the default. --apply requires the exact --confirm digest from preview and performs at most one Slack POST after durable reservation. Exact duplicate sends read the preserved result without another POST. Recheck that the gate or event is current and the route is authorized before apply. Feedback requires a necessary answer; optional questions and internal corrections do not trigger notifications."
 		case "show":
 			long += "Show separates transport state from source freshness. Unknown is a successful readback, never permission to resend. No locks, credentials, recovery writes or Slack calls are used."
 		case "retry":
-			long += "A fresh preview and its new --confirm digest are required for a new attempt. Only rejected, not_sent, or rate_limited after its deadline can retry. Acknowledged or unknown delivery cannot retry. No automatic retries, sleeping, force or gate-revision recovery exist. Recheck the human gate before apply."
+			long += "A fresh preview and its new --confirm digest are required for a new attempt. Only rejected, not_sent, or rate_limited after its deadline can retry. Acknowledged or unknown delivery cannot retry. No automatic retries, sleeping, force or gate-revision recovery exist. Recheck the gate or event before apply; never change event identity or route to bypass unknown."
 		}
 		example := "  ply workflow notification " + operation + " ID --route ./slack-route.json --format json"
 		if operation == "send" {
@@ -86,7 +86,7 @@ func NewWorkflowNotificationCommand(d notification.Dependencies) *cobra.Command 
 		c.Flags().StringVar(&route, "route", "", "Explicit non-secret route JSON file")
 		c.Flags().StringVar(&format, "format", "text", "Output format: text or json")
 		if operation == "send" {
-			c.Flags().StringVar(&file, "file", "", "Strict report-ready request JSON file")
+			c.Flags().StringVar(&file, "file", "", "Strict v1 human-gate or v2 agent-event request JSON file")
 		}
 		if operation != "show" {
 			c.Flags().BoolVar(&check, "check", false, "Read-only preview (the default)")

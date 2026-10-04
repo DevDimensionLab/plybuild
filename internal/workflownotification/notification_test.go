@@ -48,7 +48,7 @@ func newFixture(t *testing.T) *fixture {
 		t.Fatal(e)
 	}
 	startKind, reportKind := "FixtureStart@1", "FixtureReport@1"
-	f.request = Request{Kind: "ply.workflow.notification-request", SchemaVersion: 1, Route: "fixture", Source: Source{Kind: "external", Activity: "notification/tests", Run: "run-1", Worktree: work}, Gate: Gate{ID: "result-control", Revision: 1, OpenedAt: "2026-10-03T19:00:00Z", Reason: "result_control", State: "waiting_for_human"}, Public: Public{"Test delivery", "Start the planning launcher for result control."}}
+	f.request = Request{Kind: "ply.workflow.notification-request", SchemaVersion: 1, Route: "fixture", Source: Source{Kind: "external", Activity: "notification/tests", Run: "run-1", Worktree: work}, Gate: &Gate{ID: "result-control", Revision: 1, OpenedAt: "2026-10-03T19:00:00Z", Reason: "result_control", State: "waiting_for_human"}, Public: Public{TaskTitle: "Test delivery", NextAction: "Start the planning launcher for result control."}}
 	f.request.Sender.ActorClaim = "fixture-only"
 	for name, kind := range map[string]*string{"handoff": nil, "start": &startKind, "report": &reportKind} {
 		p := filepath.Join(root, name)
@@ -66,9 +66,9 @@ func newFixture(t *testing.T) *fixture {
 		case "handoff":
 			f.request.Source.Handoff = loc
 		case "start":
-			f.request.Source.Start = loc
+			f.request.Source.Start = &loc
 		case "report":
-			f.request.Source.Report = loc
+			f.request.Source.Report = &loc
 		}
 	}
 	f.route = Route{"ply.workflow.notification-route", 1, "fixture", "slack_incoming_webhook", "#fixture", "FIXTURE_WEBHOOK", filepath.Join(root, "state")}

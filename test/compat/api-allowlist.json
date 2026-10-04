@@ -2,7 +2,10 @@
   "base_ref": "v1.0.1",
   "compatible_changes": [
     "./cmd.ExecuteE: added",
-    "package github.com/devdimensionlab/plybuild/cmd/ply: added"
+    "./cmd.ExitCode: added",
+    "./cmd.NewWorkflowNotificationCommand: added",
+    "package github.com/devdimensionlab/plybuild/cmd/ply: added",
+    "package github.com/devdimensionlab/plybuild/test/notification-driver: added"
   ],
   "incompatible_changes": [],
   "module": "github.com/devdimensionlab/plybuild",

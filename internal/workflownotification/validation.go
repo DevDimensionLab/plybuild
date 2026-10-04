@@ -102,7 +102,10 @@ func parseRequest(raw []byte, secret string) (Request, error) {
 	if err != nil {
 		return r, err
 	}
-	if !keys(m, "kind", "schema_version", "route", "source", "gate", "sender", "public") || !keys(m["gate"], "id", "revision", "opened_at", "reason", "state") || !keys(m["sender"], "actor_claim") || !keys(m["public"], "task_title", "next_action") {
+	if r.SchemaVersion == 2 {
+		return parseAgentRequest(r, m, secret)
+	}
+	if r.Gate == nil || r.Source.Start == nil || r.Source.Report == nil || !keys(m, "kind", "schema_version", "route", "source", "gate", "sender", "public") || !keys(m["gate"], "id", "revision", "opened_at", "reason", "state") || !keys(m["sender"], "actor_claim") || !keys(m["public"], "task_title", "next_action") {
 		return r, invalid()
 	}
 	source, ok := m["source"].(map[string]any)
@@ -127,7 +130,7 @@ func parseRequest(raw []byte, secret string) (Request, error) {
 			return r, invalid()
 		}
 	}
-	if r.Kind != "ply.workflow.notification-request" || r.SchemaVersion != 1 || !routePattern.MatchString(r.Route) || !cleanText(r.Source.Activity, 200) || !cleanText(r.Source.Run, 200) || !validPath(r.Source.Worktree) || !validLocator(r.Source.Handoff) || !validLocator(r.Source.Start) || !validLocator(r.Source.Report) || !cleanText(r.Gate.ID, 80) || r.Gate.Revision < 1 || r.Gate.Revision > 2147483647 || r.Gate.Reason != "result_control" || r.Gate.State != "waiting_for_human" || !cleanText(r.Sender.ActorClaim, 100) || !cleanText(r.Public.TaskTitle, 100) || !cleanText(r.Public.NextAction, 300) {
+	if r.Kind != "ply.workflow.notification-request" || r.SchemaVersion != 1 || !routePattern.MatchString(r.Route) || !cleanText(r.Source.Activity, 200) || !cleanText(r.Source.Run, 200) || !validPath(r.Source.Worktree) || !validLocator(r.Source.Handoff) || !validLocator(*r.Source.Start) || !validLocator(*r.Source.Report) || !cleanText(r.Gate.ID, 80) || r.Gate.Revision < 1 || r.Gate.Revision > 2147483647 || r.Gate.Reason != "result_control" || r.Gate.State != "waiting_for_human" || !cleanText(r.Sender.ActorClaim, 100) || !cleanText(r.Public.TaskTitle, 100) || !cleanText(r.Public.NextAction, 300) {
 		return r, invalid()
 	}
 	t, e := time.Parse("2006-01-02T15:04:05Z", r.Gate.OpenedAt)
@@ -175,12 +178,24 @@ func credential(s string) bool {
 	return err == nil && !strings.ContainsAny(s, "?#") && u.Scheme == "https" && u.Host == "hooks.slack.com" && u.User == nil && u.RawQuery == "" && !u.ForceQuery && u.Fragment == "" && u.RawFragment == "" && u.RawPath == "" && webhookPath.MatchString(u.Path)
 }
 func identity(r Request) string {
+	if r.SchemaVersion == 2 && r.Event == nil || r.SchemaVersion != 2 && r.Gate == nil {
+		return ""
+	}
+	if r.SchemaVersion == 2 {
+		return "ntf_" + strings.TrimPrefix(gateFamily(r), "sha256:")
+	}
 	return "ntf_" + strings.TrimPrefix(digestValue([]any{r.Source.Kind, r.Source.Activity, r.Source.Run, r.Gate.ID, r.Gate.Revision, r.Route}), "sha256:")
 }
 func gateFamily(r Request) string {
+	if r.SchemaVersion == 2 {
+		return digestValue([]any{"agent-event-v2", r.Source.Activity, r.Source.Run, r.Event.ID, r.Route})
+	}
 	return digestValue([]any{r.Source.Kind, r.Source.Activity, r.Source.Run, r.Gate.ID, r.Route})
 }
 func message(r Request) Payload {
+	if r.SchemaVersion == 2 {
+		return agentMessage(r)
+	}
 	return Payload{Text: fmt.Sprintf("Ply needs your attention\n%s — report ready\nReported only; not yet controlled. Human QA is not attested.\nNext: %s\nRun: %s · Gate: %s/%d\nOpened: %s", r.Public.TaskTitle, r.Public.NextAction, r.Source.Run, r.Gate.ID, r.Gate.Revision, r.Gate.OpenedAt), Parse: "none"}
 }
 func checkSources(r Request) error {
@@ -189,10 +204,7 @@ func checkSources(r Request) error {
 		return invalid()
 	}
 	d.Close()
-	for _, item := range []struct {
-		loc   Locator
-		limit int64
-	}{{r.Source.Handoff, 1 << 20}, {r.Source.Start, 16 << 20}, {r.Source.Report, 16 << 20}} {
+	for _, item := range sourceLocators(r) {
 		raw, err := readFile(item.loc.Path, item.limit, false)
 		if err != nil {
 			return err
@@ -200,7 +212,11 @@ func checkSources(r Request) error {
 		if Digest(raw) != item.loc.SHA256 {
 			return fail(2, "source_changed", "Source bytes do not match the bound digest.")
 		}
-		if r.Source.Kind == "external" && item.loc.Kind != nil {
+		if r.SchemaVersion == 2 && item.loc == r.Event.Record {
+			if e := checkEventRecord(raw, r); e != nil {
+				return e
+			}
+		} else if r.Source.Kind == "external" && item.loc.Kind != nil {
 			m, e := strictSource(raw)
 			if e != nil {
 				return e

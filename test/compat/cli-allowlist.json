@@ -760,7 +760,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Preview or explicitly retry proven non-delivery. A fresh preview and its new --confirm digest are required for a new attempt. Only rejected, not_sent, or rate_limited after its deadline can retry. Acknowledged or unknown delivery cannot retry. No automatic retries, sleeping, force or gate-revision recovery exist. Recheck the human gate before apply.",
+        "long": "Preview or explicitly retry proven non-delivery. A fresh preview and its new --confirm digest are required for a new attempt. Only rejected, not_sent, or rate_limited after its deadline can retry. Acknowledged or unknown delivery cannot retry. No automatic retries, sleeping, force or gate-revision recovery exist. Recheck the gate or event before apply; never change event identity or route to bypass unknown.",
         "path": "ply workflow notification retry",
         "runnable": true,
         "short": "Preview or explicitly retry proven non-delivery",
@@ -830,7 +830,7 @@
             "shorthand": "",
             "shorthand_deprecated": "",
             "type": "string",
-            "usage": "Strict report-ready request JSON file"
+            "usage": "Strict v1 human-gate or v2 agent-event request JSON file"
           },
           {
             "annotations": {},
@@ -882,10 +882,10 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Preview or send one report-ready notification. Read-only preview is the default. --apply requires the exact --confirm digest from preview and performs at most one Slack POST after durable reservation. Exact duplicate sends read the preserved result without another POST. Recheck that the gate still requires human action before apply.",
+        "long": "Preview or send one human-gate or agent-event notification. Read-only preview is the default. --apply requires the exact --confirm digest from preview and performs at most one Slack POST after durable reservation. Exact duplicate sends read the preserved result without another POST. Recheck that the gate or event is current and the route is authorized before apply. Feedback requires a necessary answer; optional questions and internal corrections do not trigger notifications.",
         "path": "ply workflow notification send",
         "runnable": true,
-        "short": "Preview or send one report-ready notification",
+        "short": "Preview or send one human-gate or agent-event notification",
         "suggest_for": null,
         "traverse_children": false,
         "use": "send"
@@ -926,10 +926,10 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Notify one fixed Slack channel that a report is ready for human result control. Source, sender, gate and channel are claims; transport acknowledgement does not attest product correctness or human QA. No automatic detection or retry occurs.",
+        "long": "Notify one fixed Slack channel about a v1 report-ready human gate or a v2 agent_finished, agent_stopped, or feedback_required event. V2 external sources bind a preserved event; agent_finished requires a report, and before_start is only valid for agent_stopped without a start receipt. Source, sender, gate, event and channel are claims; transport acknowledgement does not attest product correctness or human QA. No automatic detection or retry occurs.",
         "path": "ply workflow notification",
         "runnable": true,
-        "short": "Preview and deliver a report-ready human gate",
+        "short": "Preview and deliver human gates or agent events",
         "suggest_for": null,
         "traverse_children": false,
         "use": "notification"
