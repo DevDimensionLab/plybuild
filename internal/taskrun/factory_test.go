@@ -107,13 +107,18 @@ func TestFactoryNativeSequence(t *testing.T) {
 }
 func factoryFixture(t *testing.T) (Dependencies, Request, string, FactoryAuthorization) {
 	t.Helper()
-	output, e := filepath.EvalSymlinks(t.TempDir())
+	// Factory authorization intentionally confines effects to /private/tmp.
+	// macOS's ambient TMPDIR normally resolves under /private/var/folders, so
+	// resolving t.TempDir() alone does not put this fixture in the allowed root.
+	output, e := os.MkdirTemp("/private/tmp", "ply-factory-test-")
 	if e != nil {
 		t.Fatal(e)
 	}
-	if e = os.Chmod(output, 0700); e != nil {
-		t.Fatal(e)
-	}
+	t.Cleanup(func() {
+		if err := os.RemoveAll(output); err != nil {
+			t.Errorf("remove private factory fixture: %v", err)
+		}
+	})
 	iteration := filepath.Join(output, "work", "iteration-1")
 	if e = os.MkdirAll(iteration, 0700); e != nil {
 		t.Fatal(e)
@@ -155,6 +160,26 @@ func factoryFixture(t *testing.T) (Dependencies, Request, string, FactoryAuthori
 	d.ExecRunner = &fakeRunner{}
 	return d, r, writeAny(t, r.WorkspaceRoot, "request.json", r), a
 }
+
+func TestFactoryFixtureOwnsPrivateTempRoot(t *testing.T) {
+	// A fresh subtest makes the fixture independent of both the parent's cached
+	// testing.TempDir root and an unusable ambient temporary directory.
+	unavailable := filepath.Join(t.TempDir(), "not-created")
+	t.Run("ambient_temp_is_not_factory_authority", func(t *testing.T) {
+		t.Setenv("TMPDIR", unavailable)
+		d, _, file, a := factoryFixture(t)
+		if !within("/private/tmp", a.OutputRoot) {
+			t.Fatalf("factory output escaped its authorized root: %s", a.OutputRoot)
+		}
+		if _, err := PreviewStart(d, file); err != nil {
+			t.Fatalf("valid private factory fixture rejected: %v", err)
+		}
+		if _, err := os.Stat(unavailable); !os.IsNotExist(err) {
+			t.Fatal("factory fixture used the ambient temporary directory")
+		}
+	})
+}
+
 func fakeCompletion(t *testing.T, s LaunchSpec) {
 	t.Helper()
 	writeAny(t, s.StreamsRoot, "unused.json", map[string]string{"evidence": "synthetic provider only"})

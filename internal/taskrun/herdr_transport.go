@@ -9,15 +9,16 @@ import (
 )
 
 type workflowAgent struct {
-	WorkspaceID   string `json:"workspace_id"`
-	TabID         string `json:"tab_id"`
-	PaneID        string `json:"pane_id"`
-	TerminalID    string `json:"terminal_id"`
-	Name          string `json:"name"`
-	Agent         string `json:"agent"`
-	Status        string `json:"agent_status"`
-	LaunchPending *bool  `json:"launch_pending"`
-	Session       *struct {
+	WorkspaceID      string `json:"workspace_id"`
+	TabID            string `json:"tab_id"`
+	PaneID           string `json:"pane_id"`
+	TerminalID       string `json:"terminal_id"`
+	Name             string `json:"name"`
+	Agent            string `json:"agent"`
+	Status           string `json:"agent_status"`
+	InteractiveReady *bool  `json:"interactive_ready"`
+	LaunchPending    *bool  `json:"launch_pending"`
+	Session          *struct {
 		Agent string `json:"agent"`
 		Kind  string `json:"kind"`
 		Value string `json:"value"`
@@ -194,7 +195,9 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 		return e
 	}
 	argv := workflowStartArgv(r, s.Observed.Target.WorktreeLocator, a.PaneID)
-	limit := 35 * time.Second
+	// SessionStart can be deferred until a first, tool-free readiness turn.
+	// Keep launch, that exchange, session binding and Task input in one window.
+	limit := 90 * time.Second
 	if d.HerdrTimeout > 0 {
 		limit = d.HerdrTimeout
 	}
@@ -248,7 +251,7 @@ func workflowPromptUntil(d Dependencies, root, id string, findings []WorkflowFin
 	prompt := workflowInstructions(s, findings)
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
 		if !deadline.IsZero() && !time.Now().Before(deadline) {
-			return workflowError(5, "Herdr startup deadline expired before prompt reservation; no prompt sent")
+			return workflowError(5, "Herdr startup deadline expired before prompt reservation; no Task prompt sent")
 		}
 		if s.Phase != "session_bound" && s.Phase != "correction_reserved" {
 			return workflowError(4, "prompt already attempted or not authorized")

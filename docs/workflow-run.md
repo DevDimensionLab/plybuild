@@ -67,12 +67,21 @@ that could become active prevent a new grant before any tab is created. Inspect
 the reported path and effective policy before requesting a new preview.
 
 Ply reserves the target before creating a background tab, binds its pane and
-terminal, starts Codex once, then binds the actual native session before prompting.
-Agent start and its fresh readiness observations share one 35-second window. If
+terminal, starts Codex once, then binds the actual native session before sending
+the Task. Codex versions that defer their `SessionStart` hook until the first turn
+need a short readiness exchange. When Herdr explicitly reports an interactive,
+settled Codex without a session, Ply sends one fixed message asking for `PLY_READY`
+without tools or file changes. This message contains no Task instructions. The
+attempt is recorded before input in `startup-bootstrap-attempt.json`; it is never
+replayed. Ply then waits for the real hook session and a fresh settled observation.
+It neither invents a session ID nor parses terminal text to obtain one.
+
+Agent start, the optional readiness exchange and fresh observations share one
+90-second window. If
 an ungranted legacy request encounters native onboarding, the attempt remains
 subject to the same deadline. A confirmed process-local grant handles project trust
-before launch. Ply only
-observes the exact reserved workspace/tab/pane/terminal and named Codex agent;
+before launch. Ply addresses only the exact reserved workspace/tab/pane/terminal
+and named Codex agent;
 it never answers trust dialogs. An early nonzero start reply can be followed by
 these same-attempt observations within the remaining time. Missing `launch_pending`
 is not proof that the provider exited. Only a full fresh,

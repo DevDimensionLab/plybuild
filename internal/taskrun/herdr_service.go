@@ -71,7 +71,7 @@ func workflowExisting(r WorkflowRequest) (*WorkflowRun, error) {
 	return &s.Result, nil
 }
 func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPreview, error) {
-	p := WorkflowPreview{Envelope: workflowEnv("run-preview"), RunID: workflowID(r), RequestSHA256: digest(r), Reasons: []Reason{}, Effects: []string{"Reserve this Task target and one native handoff", "Create one background Herdr tab and one Codex session", "Preserve acceptance, immutable round reports and coordinator review", "Return a reviewed report; do not publish TaskResult or attest provider inactivity"}, Paths: workflowPaths(r, 0)}
+	p := WorkflowPreview{Envelope: workflowEnv("run-preview"), RunID: workflowID(r), RequestSHA256: digest(r), Reasons: []Reason{}, Effects: []string{"Reserve this Task target and one native handoff", "Create one background Herdr tab and one Codex session", "If needed, send one tool-free readiness message before binding the native session and sending the Task", "Preserve acceptance, immutable round reports and coordinator review", "Return a reviewed report; do not publish TaskResult or attest provider inactivity"}, Paths: workflowPaths(r, 0)}
 	n, e := previewLocked(d, workflowNativeRequest(r), file)
 	p.Observed = n.Observed
 	if e == nil {

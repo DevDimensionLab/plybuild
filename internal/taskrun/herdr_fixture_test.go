@@ -19,8 +19,17 @@ root = Path(__file__).parent
 path = root / "herdr-model.json"
 model = json.loads(path.read_text())
 args = sys.argv[1:]
+call = {"argv": args, "at_ns": time.time_ns()}
+if model.get("bootstrap_mode"):
+    run_root = Path(model["bootstrap_run_root"])
+    state_path = run_root / "state.json"
+    state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    call.update(bootstrap_reserved=(run_root / "startup-bootstrap-attempt.json").is_file(),
+                phase_before_call=state.get("phase"),
+                session_before_call=state.get("result", {}).get("transport", {}).get("agent_session_id"),
+                bootstrap_settled_before_call=model.get("bootstrap_settled_observed", False))
 with (root / "herdr-calls.jsonl").open("a") as f:
-    f.write(json.dumps({"argv": args, "at_ns": time.time_ns()}) + "\n")
+    f.write(json.dumps(call) + "\n")
 cmd = args[:2]
 if cmd == ["agent", "start"]:
     model["name"] = args[2]
@@ -28,6 +37,23 @@ agent = {"workspace_id":"w-fixture", "tab_id":"tab-fixture", "pane_id":"w-fixtur
          "terminal_id":"terminal-fixture", "name":model.get("name", "unstarted"),
          "agent":"codex", "agent_status":model["agent_status"],
          "agent_session":{"agent":"codex", "kind":"id", "value":model["agent_session_id"]}}
+bootstrap_mode = model.get("bootstrap_mode")
+if bootstrap_mode:
+    if "interactive_ready" in model:
+        agent["interactive_ready"] = model["interactive_ready"]
+    agent["launch_pending"] = model.get("launch_pending", False)
+    if not model.get("bootstrap_started") or bootstrap_mode == "no_session":
+        agent["agent_session"] = None
+    elif cmd == ["agent", "get"] and not model.get("task_prompt_count"):
+        count = model.get("bootstrap_gets", 0) + 1
+        model["bootstrap_gets"] = count
+        agent["agent_status"] = "working" if count < 2 or bootstrap_mode == "working_forever" else "idle"
+        if bootstrap_mode == "session_change" and count >= 2:
+            agent["agent_session"]["value"] = "replacement-session"
+        if bootstrap_mode == "session_change_before_task" and count >= 3:
+            agent["agent_session"]["value"] = "replacement-session"
+        if agent["agent_status"] == "idle":
+            model["bootstrap_settled_observed"] = True
 if cmd == ["agent", "get"] and model.get("observations"):
     index = model.get("observation_index", 0)
     observation = model["observations"][min(index, len(model["observations"]) - 1)]
@@ -41,14 +67,25 @@ if cmd == ["tab", "create"]:
 elif cmd in (["agent", "start"], ["agent", "get"]):
     result = {"agent": agent}
 elif cmd == ["agent", "prompt"]:
-    model["agent_status"] = "working"
-    result = {"acknowledged": True} if model["prompt_mode"] == "ack_without_agent" else {"agent":{**agent,"agent_status":"working"}}
+    if bootstrap_mode and args[3] == model["bootstrap_expected_prompt"]:
+        model["bootstrap_prompt_count"] = model.get("bootstrap_prompt_count", 0) + 1
+        model["bootstrap_started"] = True
+        result = {"acknowledged": True}
+    else:
+        if bootstrap_mode:
+            model["task_prompt_count"] = model.get("task_prompt_count", 0) + 1
+            if not model.get("bootstrap_settled_observed") or not call.get("session_before_call"):
+                model["premature_task_prompt"] = True
+        model["agent_status"] = "working"
+        result = {"acknowledged": True} if model["prompt_mode"] == "ack_without_agent" else {"agent":{**agent,"agent_status":"working"}}
 elif cmd == ["tab", "rename"]:
     model["label"] = args[3]
     result = {"ok": True}
 else:
     raise SystemExit("Unexpected stand-in command: " + repr(args))
 path.write_text(json.dumps(model))
+if bootstrap_mode == "lost_reply" and cmd == ["agent", "prompt"] and args[3] == model["bootstrap_expected_prompt"]:
+    raise SystemExit(7)
 failure = model.get("failure", {})
 if failure.get("command") == " ".join(cmd):
     sys.stderr.write(failure.get("stderr", ""))

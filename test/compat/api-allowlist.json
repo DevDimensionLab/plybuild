@@ -2,6 +2,7 @@
   "base_ref": "v1.0.1",
   "compatible_changes": [
     "./cmd.ExecuteE: added",
+    "./cmd.ExitCode: added",
     "package github.com/devdimensionlab/plybuild/cmd/ply: added"
   ],
   "incompatible_changes": [],
