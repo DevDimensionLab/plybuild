@@ -47,6 +47,20 @@ retain the requested model, optional config profile, managed permission profile,
 
 Ply reserves the target before creating a background tab, binds its pane and
 terminal, starts Codex once, then binds the actual native session before prompting.
+Agent start and its fresh readiness observations share one 35-second window. If
+native onboarding is pending, the human handles it in that same tab. Ply only
+observes the exact reserved workspace/tab/pane/terminal and named Codex agent;
+it never answers trust dialogs. An early nonzero start reply can be followed by
+these same-attempt observations within the remaining time. Only a full fresh,
+settled native session with no pending launch permits the first Task prompt.
+
+If readiness remains blocked, disappears, changes identity or reaches the deadline,
+the coordinator inspects the preserved attempt and last observation. An unbound
+recipient is never asked to accept. Safe diagnostics retain the phase, exit or
+timeout class, stream sizes and known provider error code; unknown details stay
+unknown. Raw child output, terminal contents and capabilities are not published.
+There is no automatic restart or later readiness recovery after this window.
+
 Every possibly submitted prompt has a durable attempt. A lost reply, timeout or
 crash never permits automatic replay. Repeat `start` to read the same reservation,
 or use `show` and `follow` to inspect it. Never delete state to manufacture a new

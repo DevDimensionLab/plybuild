@@ -9,14 +9,15 @@ import (
 )
 
 type workflowAgent struct {
-	WorkspaceID string `json:"workspace_id"`
-	TabID       string `json:"tab_id"`
-	PaneID      string `json:"pane_id"`
-	TerminalID  string `json:"terminal_id"`
-	Name        string `json:"name"`
-	Agent       string `json:"agent"`
-	Status      string `json:"agent_status"`
-	Session     *struct {
+	WorkspaceID   string `json:"workspace_id"`
+	TabID         string `json:"tab_id"`
+	PaneID        string `json:"pane_id"`
+	TerminalID    string `json:"terminal_id"`
+	Name          string `json:"name"`
+	Agent         string `json:"agent"`
+	Status        string `json:"agent_status"`
+	LaunchPending *bool  `json:"launch_pending"`
+	Session       *struct {
 		Agent string `json:"agent"`
 		Kind  string `json:"kind"`
 		Value string `json:"value"`
@@ -25,10 +26,12 @@ type workflowAgent struct {
 type workflowLimitedOutput struct {
 	data     []byte
 	overflow bool
+	bytes    int64
 }
 
 func (b *workflowLimitedOutput) Write(p []byte) (int, error) {
 	n := len(p)
+	b.bytes += int64(n)
 	left := (1 << 20) - len(b.data)
 	if n > left {
 		b.overflow = true
@@ -38,6 +41,9 @@ func (b *workflowLimitedOutput) Write(p []byte) (int, error) {
 	return n, nil
 }
 func workflowCall(d Dependencies, r WorkflowRequest, args ...string) (json.RawMessage, error) {
+	return workflowCallUntil(d, r, time.Time{}, args...)
+}
+func workflowCallUntil(d Dependencies, r WorkflowRequest, deadline time.Time, args ...string) (json.RawMessage, error) {
 	if e := verifyExecutable(r.Herdr.Executable); e != nil {
 		return nil, e
 	}
@@ -48,7 +54,11 @@ func workflowCall(d Dependencies, r WorkflowRequest, args ...string) (json.RawMe
 	if d.HerdrTimeout > 0 {
 		limit = d.HerdrTimeout
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), limit)
+	callDeadline := time.Now().Add(limit)
+	if !deadline.IsZero() && deadline.Before(callDeadline) {
+		callDeadline = deadline
+	}
+	ctx, cancel := context.WithDeadline(context.Background(), callDeadline)
 	defer cancel()
 	c := exec.CommandContext(ctx, r.Herdr.Executable.Path, args...)
 	c.WaitDelay = time.Second
@@ -56,20 +66,20 @@ func workflowCall(d Dependencies, r WorkflowRequest, args ...string) (json.RawMe
 	c.Stdout = &stdout
 	c.Stderr = &stderr
 	if e := c.Run(); e != nil {
-		return nil, workflowError(5, "Herdr response is unknown (transport failure or timeout); no retry was sent")
+		return nil, workflowCallFailure(args, ctx.Err(), e, stdout, stderr, "")
 	}
 	if stdout.overflow || stderr.overflow {
-		return nil, workflowError(5, "Herdr response exceeded the transport limit")
+		return nil, workflowCallFailure(args, nil, nil, stdout, stderr, "output_limit")
 	}
 	var envelope struct {
 		Result json.RawMessage `json:"result"`
 		Error  json.RawMessage `json:"error"`
 	}
 	if _, e := canonicalTransportJSON(stdout.data); e != nil {
-		return nil, e
+		return nil, workflowCallFailure(args, nil, nil, stdout, stderr, "invalid_response")
 	}
 	if e := json.Unmarshal(stdout.data, &envelope); e != nil || len(envelope.Result) == 0 || string(envelope.Result) == "null" || len(envelope.Error) > 0 && string(envelope.Error) != "null" {
-		return nil, workflowError(5, "Herdr did not return a successful result envelope")
+		return nil, workflowCallFailure(args, nil, nil, stdout, stderr, "unsuccessful_envelope")
 	}
 	return envelope.Result, nil
 }
@@ -83,29 +93,55 @@ func canonicalTransportJSON(b []byte) (any, error) {
 }
 func workflowAgentName(id string) string { return "ply-" + id[4:32] }
 func workflowIdentity(s workflowState, a workflowAgent, first bool) error {
+	if e := workflowLocation(s, a); e != nil {
+		return e
+	}
 	t := s.Result.Transport
-	if a.WorkspaceID != t.WorkspaceID || a.TabID != t.TabID || a.PaneID != t.PaneID || a.TerminalID != t.TerminalID || a.Name != workflowAgentName(s.Result.RunID) || a.Agent != "codex" || a.Session == nil || a.Session.Agent != "codex" || a.Session.Kind != "id" || !plain(a.Session.Value, 1, 256) || !first && a.Session.Value != t.AgentSessionID {
+	if a.Session == nil || a.Session.Agent != "codex" || a.Session.Kind != "id" || !plain(a.Session.Value, 1, 256) || (!first || t.AgentSessionID != "") && a.Session.Value != t.AgentSessionID {
 		return workflowError(4, "fresh Herdr identity or native Codex session differs from the bound run")
 	}
 	return nil
 }
+func workflowLocation(s workflowState, a workflowAgent) error {
+	t := s.Result.Transport
+	if !plain(a.WorkspaceID, 1, 128) || !plain(a.TabID, 1, 128) || !plain(a.PaneID, 1, 128) || !plain(a.TerminalID, 1, 128) || a.WorkspaceID != t.WorkspaceID || a.TabID != t.TabID || a.PaneID != t.PaneID || a.TerminalID != t.TerminalID || a.Name != workflowAgentName(s.Result.RunID) || a.Agent != "codex" {
+		return workflowError(4, "fresh Herdr location, name or agent differs from the reserved attempt")
+	}
+	return nil
+}
 func workflowAgentGet(d Dependencies, s workflowState, first bool) (workflowAgent, error) {
+	return workflowAgentGetUntil(d, s, first, time.Time{})
+}
+func workflowAgentGetUntil(d Dependencies, s workflowState, first bool, deadline time.Time) (workflowAgent, error) {
+	a, e := workflowAgentRead(d, s, deadline)
+	if e == nil {
+		e = workflowIdentity(s, a, first)
+	}
+	return a, e
+}
+func workflowAgentRead(d Dependencies, s workflowState, deadline time.Time) (workflowAgent, error) {
 	var response struct {
 		Agent workflowAgent `json:"agent"`
 	}
-	b, e := workflowCall(d, s.Request, "agent", "get", s.Result.Transport.PaneID)
+	b, e := workflowCallUntil(d, s.Request, deadline, "agent", "get", s.Result.Transport.PaneID)
 	if e != nil {
 		return response.Agent, e
 	}
 	if e = json.Unmarshal(b, &response); e != nil {
-		return response.Agent, e
+		return response.Agent, workflowError(5, "Herdr agent get failed: class=invalid_result exit=0; identity unknown; no prompt sent")
 	}
-	e = workflowIdentity(s, response.Agent, first)
-	return response.Agent, e
+	return response.Agent, nil
 }
-func workflowSettled(a workflowAgent) bool { return a.Status == "idle" || a.Status == "done" }
+func workflowSettled(a workflowAgent) bool {
+	return (a.Status == "idle" || a.Status == "done") && (a.LaunchPending == nil || !*a.LaunchPending)
+}
 func workflowObserve(d Dependencies, s *workflowState, a workflowAgent) {
-	s.Result.Transport.State = a.Status
+	s.Result.Transport.State = "unknown"
+	switch a.Status {
+	case "idle", "done", "working", "blocked":
+		s.Result.Transport.State = a.Status
+	}
+	s.Result.Transport.LaunchPending = a.LaunchPending
 	s.Result.Transport.Observation = "fresh"
 	s.Result.Transport.ObservedAt = d.Now().UTC().Format(time.RFC3339Nano)
 }
@@ -126,7 +162,7 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 		return e
 	}
 	if e = json.Unmarshal(b, &tab); e != nil {
-		return e
+		return workflowError(5, "Herdr tab create failed: class=invalid_result exit=0; created identity unknown")
 	}
 	a := tab.RootPane
 	if a.WorkspaceID != r.Herdr.WorkspaceID || !plain(a.PaneID, 1, 128) || !plain(a.TabID, 1, 128) || !plain(a.TerminalID, 1, 128) {
@@ -149,32 +185,30 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	if r.Runtime.ConfigProfile != nil {
 		argv = append(argv, "--profile", *r.Runtime.ConfigProfile)
 	}
-	if _, e = workflowCall(d, r, argv...); e != nil {
+	limit := 35 * time.Second
+	if d.HerdrTimeout > 0 {
+		limit = d.HerdrTimeout
+	}
+	deadline := time.Now().Add(limit)
+	if _, startErr := workflowCallUntil(d, r, deadline, argv...); startErr != nil {
+		// A failed reply does not undo the single reserved start. Only fresh
+		// read-only observations of this exact attempt may establish readiness.
+		if e = workflowUpdate(d, root, id, func(s *workflowState) error {
+			s.Result.Reasons = append(s.Result.Reasons, Reason{"herdr_start_response", startErr.Error()})
+			return nil
+		}); e != nil {
+			return e
+		}
+	}
+	if e = workflowAwaitReadiness(d, root, id, deadline); e != nil {
 		return e
 	}
-	s, e = workflowRead(root, id)
-	if e != nil {
-		return e
-	}
-	a, e = workflowAgentGet(d, s, true)
-	if e != nil {
-		return e
-	}
-	if !workflowSettled(a) {
-		return workflowError(5, "new session is not freshly idle; no prompt sent")
-	}
-	e = workflowUpdate(d, root, id, func(s *workflowState) error {
-		s.Result.Transport.AgentSessionID = a.Session.Value
-		workflowObserve(d, s, a)
-		s.Phase = "session_bound"
-		return nil
-	})
-	if e != nil {
-		return e
-	}
-	return workflowPrompt(d, root, id, nil)
+	return workflowPromptUntil(d, root, id, nil, deadline)
 }
 func workflowPrompt(d Dependencies, root, id string, findings []WorkflowFinding) error {
+	return workflowPromptUntil(d, root, id, findings, time.Time{})
+}
+func workflowPromptUntil(d Dependencies, root, id string, findings []WorkflowFinding, deadline time.Time) error {
 	s, e := workflowRead(root, id)
 	if e != nil {
 		return e
@@ -182,7 +216,7 @@ func workflowPrompt(d Dependencies, root, id string, findings []WorkflowFinding)
 	if e = workflowFresh(d, s, false); e != nil {
 		return e
 	}
-	a, e := workflowAgentGet(d, s, false)
+	a, e := workflowAgentGetUntil(d, s, false, deadline)
 	if e != nil {
 		return e
 	}
@@ -191,11 +225,17 @@ func workflowPrompt(d Dependencies, root, id string, findings []WorkflowFinding)
 	}
 	prompt := workflowInstructions(s, findings)
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
+		if !deadline.IsZero() && !time.Now().Before(deadline) {
+			return workflowError(5, "Herdr startup deadline expired before prompt reservation; no prompt sent")
+		}
 		if s.Phase != "session_bound" && s.Phase != "correction_reserved" {
 			return workflowError(4, "prompt already attempted or not authorized")
 		}
 		if e := d.writeValue(filepathForRound(*s, "prompt-attempt.json"), map[string]any{"argv": []string{"agent", "prompt", s.Result.Transport.PaneID, prompt, "--wait", "--until", "working", "--timeout", "10000"}, "round": s.Result.Round.Number}); e != nil {
 			return e
+		}
+		if s.Result.Round.Number == 0 && s.Acceptance == nil {
+			s.Result.NextAction = WorkflowAction{"recipient", "Accept the bound runtime before target writes, then report this round."}
 		}
 		s.Phase = "prompt_attempted"
 		return nil
@@ -206,11 +246,20 @@ func workflowPrompt(d Dependencies, root, id string, findings []WorkflowFinding)
 	if e = d.fault("workflow_before_prompt_send"); e != nil {
 		return e
 	}
-	_, callErr := workflowCall(d, s.Request, "agent", "prompt", s.Result.Transport.PaneID, prompt, "--wait", "--until", "working", "--timeout", "10000")
+	_, callErr := workflowCallUntil(d, s.Request, deadline, "agent", "prompt", s.Result.Transport.PaneID, prompt, "--wait", "--until", "working", "--timeout", "10000")
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
+		if callErr != nil {
+			s.Result.Reasons = append(s.Result.Reasons, Reason{"herdr_prompt_response", callErr.Error()})
+		}
+		if s.Phase != "prompt_attempted" {
+			return nil
+		}
 		if callErr != nil {
 			s.Phase = "prompt_unknown"
 			s.Result.Transport.State = "unknown"
+			if s.Result.Round.ReportSHA256 == nil && s.Result.FinalReturn.State == "pending" {
+				s.Result.NextAction = WorkflowAction{"coordinator", "Inspect the preserved prompt attempt in the same session; do not resend input."}
+			}
 		} else {
 			s.Phase = "following"
 			s.Result.Transport.State = "working"

@@ -248,6 +248,11 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 	}
 	o := s.Result
 	o.Transport.Observation = "cached"
+	if o.Transport.AgentSessionID == "" && o.NextAction.Actor == "recipient" {
+		// Older saved attempts may still advise acceptance before session binding.
+		// Correct the readback without rewriting those historical artifacts.
+		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved startup and any native onboarding in the same tab; no native session is bound. Do not restart or resend input."}
+	}
 	if e = workflowFresh(d, s, true); e != nil {
 		o.Reasons = append(o.Reasons, Reason{"workflow_run_drift", e.Error()})
 		o.Round.State = "unknown"

@@ -20,7 +20,7 @@ path = root / "herdr-model.json"
 model = json.loads(path.read_text())
 args = sys.argv[1:]
 with (root / "herdr-calls.jsonl").open("a") as f:
-    f.write(json.dumps({"argv": args}) + "\n")
+    f.write(json.dumps({"argv": args, "at_ns": time.time_ns()}) + "\n")
 cmd = args[:2]
 if cmd == ["agent", "start"]:
     model["name"] = args[2]
@@ -28,6 +28,13 @@ agent = {"workspace_id":"w-fixture", "tab_id":"tab-fixture", "pane_id":"w-fixtur
          "terminal_id":"terminal-fixture", "name":model.get("name", "unstarted"),
          "agent":"codex", "agent_status":model["agent_status"],
          "agent_session":{"agent":"codex", "kind":"id", "value":model["agent_session_id"]}}
+if cmd == ["agent", "get"] and model.get("observations"):
+    index = model.get("observation_index", 0)
+    observation = model["observations"][min(index, len(model["observations"]) - 1)]
+    agent.update({k: v for k, v in observation.items() if k != "drop_fields"})
+    for field in observation.get("drop_fields", []):
+        agent.pop(field, None)
+    model["observation_index"] = index + 1
 result = {}
 if cmd == ["tab", "create"]:
     result = {"root_pane": agent}
@@ -42,8 +49,16 @@ elif cmd == ["tab", "rename"]:
 else:
     raise SystemExit("Unexpected stand-in command: " + repr(args))
 path.write_text(json.dumps(model))
+failure = model.get("failure", {})
+if failure.get("command") == " ".join(cmd):
+    sys.stderr.write(failure.get("stderr", ""))
+    sys.stdout.write(failure.get("stdout", ""))
+    sys.stdout.flush()
+    sys.stderr.flush()
+    time.sleep(failure.get("delay_seconds", 0))
+    raise SystemExit(failure.get("exit", 0))
 if model.get("delay_command") == " ".join(cmd):
-    time.sleep(model.get("delay_seconds", 2))
+    time.sleep(model["delay_millis"] / 1000 if "delay_millis" in model else model.get("delay_seconds", 2))
 if cmd == ["agent", "prompt"] and model["prompt_mode"] == "lost_reply":
     raise SystemExit(7)
 if model.get("lost_command") == " ".join(cmd):

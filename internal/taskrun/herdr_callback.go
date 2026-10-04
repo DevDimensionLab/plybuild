@@ -84,6 +84,9 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		if s.Result.Round.Number != 0 || s.Result.Transport.AgentSessionID == "" {
 			return workflowError(4, "run has no bound initial session")
 		}
+		if s.Phase != "prompt_attempted" && s.Phase != "prompt_unknown" && s.Phase != "following" {
+			return workflowError(4, "initial prompt has not been attempted; coordinator inspection is required before recipient acceptance")
+		}
 		c := a.RuntimeClaim
 		if c.NativeSessionID != nil && *c.NativeSessionID != s.Result.Transport.AgentSessionID {
 			return workflowError(4, "native session claim differs from Herdr")

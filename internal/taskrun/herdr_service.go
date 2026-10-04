@@ -44,7 +44,7 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 }
 func workflowInitial(r WorkflowRequest, observed Observed) workflowState {
 	id := workflowID(r)
-	o := WorkflowRun{Envelope: workflowEnv("run"), RunID: id, RequestSHA256: digest(r), SessionID: "ply:" + id, Paths: workflowPaths(r, 0), Transport: WorkflowTransport{WorkspaceID: r.Herdr.WorkspaceID, State: "unknown", Observation: "cached"}, Round: WorkflowRound{State: "awaiting_acceptance"}, Budget: WorkflowBudget{MeasurementSource: "unknown"}, FinalReturn: WorkflowFinal{State: "pending"}, TaskResultState: "not_published", Reasons: []Reason{}, NextAction: WorkflowAction{"recipient", "Accept the bound runtime before target writes, then report this round."}, RuntimeFacts: RuntimeFacts{RequestedModel: r.Runtime.Model, ModelState: "unknown"}}
+	o := WorkflowRun{Envelope: workflowEnv("run"), RunID: id, RequestSHA256: digest(r), SessionID: "ply:" + id, Paths: workflowPaths(r, 0), Transport: WorkflowTransport{WorkspaceID: r.Herdr.WorkspaceID, State: "unknown", Observation: "cached"}, Round: WorkflowRound{State: "awaiting_acceptance"}, Budget: WorkflowBudget{MeasurementSource: "unknown"}, FinalReturn: WorkflowFinal{State: "pending"}, TaskResultState: "not_published", Reasons: []Reason{}, NextAction: WorkflowAction{"coordinator", "Inspect the reserved startup and any native onboarding in the same tab; wait for a bound session and prompt before recipient acceptance. Do not restart."}, RuntimeFacts: RuntimeFacts{RequestedModel: r.Runtime.Model, ModelState: "unknown"}}
 	return workflowState{Request: r, Observed: observed, Result: o, Phase: "reserved", Records: []workflowRecord{}}
 }
 func workflowExisting(r WorkflowRequest) (*WorkflowRun, error) {
@@ -184,6 +184,21 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 	})
 	if e == nil && owned {
 		e = workflowLaunch(d, r)
+		if e != nil {
+			launchErr := e
+			if saveErr := workflowUpdate(d, r.WorkspaceRoot, workflowID(r), func(s *workflowState) error {
+				s.Result.Reasons = append(s.Result.Reasons, Reason{"herdr_start_stopped", "Startup stopped at phase=" + s.Phase + ": " + launchErr.Error()})
+				// A recipient can accept or report while the prompt CLI is still
+				// waiting. A late failed reply must not replace that evidence.
+				if s.Result.Round.ReportSHA256 == nil && s.Result.FinalReturn.State == "pending" {
+					s.Result.Round.State = "unknown"
+					s.Result.NextAction = WorkflowAction{"coordinator", "Inspect the preserved startup, last observation and any native onboarding in the same tab. Readiness or prompt delivery is uncertain; do not restart or resend input."}
+				}
+				return nil
+			}); saveErr != nil {
+				e = workflowError(5, "Start attempt preserved, but saving its stop diagnosis failed; inspect the same run without restarting")
+			}
+		}
 	}
 	o, se := WorkflowShow(d, r.WorkspaceRoot, workflowID(r))
 	if e == nil {

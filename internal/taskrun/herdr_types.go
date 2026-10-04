@@ -47,6 +47,7 @@ type WorkflowTransport struct {
 	State          string `json:"state"`
 	Observation    string `json:"observation"`
 	ObservedAt     string `json:"observed_at"`
+	LaunchPending  *bool  `json:"launch_pending,omitempty"`
 }
 type WorkflowRound struct {
 	Number               int     `json:"number"`
