@@ -23,6 +23,16 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if e = decode(b, 1<<20, &r); e != nil {
 		return r, e
 	}
+	var fields map[string]json.RawMessage
+	if e = json.Unmarshal(b, &fields); e != nil {
+		return r, e
+	}
+	if _, present := fields["codex_project_trust"]; present && r.CodexProjectTrust == nil {
+		return r, workflowError(2, "codex_project_trust must be an object, not null")
+	}
+	if e = workflowValidateTrust(r); e != nil {
+		return r, e
+	}
 	if r.Envelope != workflowEnv("herdr-run-request") || r.ReturnMode != "reviewed_report_only" || r.HumanAuthority.StartSurface != "human_authorized_herdr" || !r.Coordinator.MayRequestChanges || !plain(r.Coordinator.ActorClaim, 1, 256) || !plain(r.Herdr.TabLabel, 1, 80) || !plain(r.Herdr.WorkspaceID, 1, 128) {
 		return r, workflowError(2, "invalid workflow request, authority or Herdr binding")
 	}
@@ -67,6 +77,12 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 	if e == nil {
 		e = verifyExecutable(r.Herdr.Executable)
 	}
+	if e == nil && r.CodexProjectTrust != nil {
+		p.CodexTrust, e = workflowObserveTrust(r, p.Observed.Target.WorktreeLocator)
+		if e == nil {
+			p.Effects = append(p.Effects, "Trust only Codex repository "+r.CodexProjectTrust.RepositoryRoot+" for this process (process-local); preserve the bound model, config profile, permission profile, sandbox, on-request and auto_review. No persistent configuration change.")
+		}
+	}
 	if e != nil {
 		p.Reasons = append(p.Reasons, Reason{"workflow_start_blocked", e.Error()})
 		return p, e
@@ -76,7 +92,8 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 		Observed Observed
 		Paths    WorkflowPaths
 		Effects  []string
-	}{r, p.Observed, p.Paths, p.Effects}))
+		Trust    *workflowTrustFacts `json:"codex_project_trust,omitempty"`
+	}{r, p.Observed, p.Paths, p.Effects, p.CodexTrust}))
 	return p, nil
 }
 func WorkflowPreviewStart(d Dependencies, file string) (any, error) {
@@ -142,6 +159,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 				return workflowError(4, "start bindings changed before reservation")
 			}
 			s := workflowInitial(r, fresh.Observed)
+			s.CodexTrust = fresh.CodexTrust
 			if e = d.writeValue(workflowIndex(r.WorkspaceRoot, s.Result.RunID), s); e != nil {
 				return e
 			}

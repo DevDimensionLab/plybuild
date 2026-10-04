@@ -10,14 +10,15 @@ import (
 
 type WorkflowRequest struct {
 	Envelope
-	RequestKey        string          `json:"request_key"`
-	WorkspaceRoot     string          `json:"workspace_root"`
-	PreparationID     string          `json:"preparation_id"`
-	PreparationSHA256 string          `json:"preparation_sha256"`
-	HandoffDraft      json.RawMessage `json:"handoff_draft"`
-	Runtime           Runtime         `json:"runtime"`
-	Agreement         Agreement       `json:"agreement"`
-	HumanAuthority    HumanAuthority  `json:"human_authority"`
+	RequestKey        string             `json:"request_key"`
+	WorkspaceRoot     string             `json:"workspace_root"`
+	PreparationID     string             `json:"preparation_id"`
+	PreparationSHA256 string             `json:"preparation_sha256"`
+	HandoffDraft      json.RawMessage    `json:"handoff_draft"`
+	Runtime           Runtime            `json:"runtime"`
+	CodexProjectTrust *CodexProjectTrust `json:"codex_project_trust,omitempty"`
+	Agreement         Agreement          `json:"agreement"`
+	HumanAuthority    HumanAuthority     `json:"human_authority"`
 	Herdr             struct {
 		Executable  Executable `json:"executable"`
 		WorkspaceID string     `json:"workspace_id"`
@@ -95,13 +96,14 @@ type WorkflowRun struct {
 }
 type WorkflowPreview struct {
 	Envelope
-	RunID         string        `json:"run_id"`
-	RequestSHA256 string        `json:"request_sha256"`
-	Confirmation  *string       `json:"confirmation"`
-	Reasons       []Reason      `json:"reasons"`
-	Effects       []string      `json:"effects"`
-	Observed      Observed      `json:"observed"`
-	Paths         WorkflowPaths `json:"paths"`
+	RunID         string              `json:"run_id"`
+	RequestSHA256 string              `json:"request_sha256"`
+	Confirmation  *string             `json:"confirmation"`
+	Reasons       []Reason            `json:"reasons"`
+	Effects       []string            `json:"effects"`
+	Observed      Observed            `json:"observed"`
+	Paths         WorkflowPaths       `json:"paths"`
+	CodexTrust    *workflowTrustFacts `json:"codex_project_trust,omitempty"`
 }
 type WorkflowReport struct {
 	Report
@@ -145,15 +147,16 @@ type workflowRecord struct {
 	Review       *FileBinding `json:"review"`
 }
 type workflowState struct {
-	Request       WorkflowRequest  `json:"request"`
-	Observed      Observed         `json:"observed"`
-	Result        WorkflowRun      `json:"result"`
-	Phase         string           `json:"phase"`
-	ContextSHA256 string           `json:"context_sha256"`
-	Acceptance    *FileBinding     `json:"acceptance"`
-	StartDraft    *FileBinding     `json:"start_draft"`
-	StartSHA256   *string          `json:"start_sha256"`
-	Records       []workflowRecord `json:"records"`
+	Request       WorkflowRequest     `json:"request"`
+	Observed      Observed            `json:"observed"`
+	Result        WorkflowRun         `json:"result"`
+	Phase         string              `json:"phase"`
+	ContextSHA256 string              `json:"context_sha256"`
+	Acceptance    *FileBinding        `json:"acceptance"`
+	StartDraft    *FileBinding        `json:"start_draft"`
+	StartSHA256   *string             `json:"start_sha256"`
+	Records       []workflowRecord    `json:"records"`
+	CodexTrust    *workflowTrustFacts `json:"codex_project_trust,omitempty"`
 }
 
 func workflowEnv(kind string) Envelope { return Envelope{"ply.workflow." + kind, 1} }

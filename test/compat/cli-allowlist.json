@@ -1123,7 +1123,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Preview or confirm one prepared Task start in Herdr. --check is the read-only default. --apply requires --confirm with the exact preview digest and the local HERDR_ENV=1 context. The request must bind an existing native Task preparation, Spec and permission evidence. Repeated starts reuse the reservation without launching again. No TaskResult is published.",
+        "long": "Preview or confirm one prepared Task start in Herdr. --check is the read-only default. --apply requires --confirm with the exact preview digest and the local HERDR_ENV=1 context. The request must bind an existing native Task preparation, Spec and permission evidence. An optional codex_project_trust grant confirms only the exact physical repository root for this process, before launch. Preview binds the trust effect and policy; sandbox and approvals remain enforced and no persistent config is changed. Project execution layers, explicit distrust or unknown policy stop before a tab is created. Repeated starts reuse the reservation without launching again. No TaskResult is published.",
         "path": "ply workflow run start",
         "runnable": true,
         "short": "Preview or confirm one prepared Task start in Herdr",

@@ -88,16 +88,22 @@ func TestWorkflowReadinessStopsPreserveDiagnosis(t *testing.T) {
 		want  string
 	}{
 		{"blocked", map[string]any{"observations": []any{workflowPendingObservation()}}, "deadline"},
-		{"rejected", map[string]any{"observations": []any{map[string]any{"agent_status": "blocked", "launch_pending": false, "agent_session": nil}}}, "readiness"},
+		{"blocked_without_pending", map[string]any{"observations": []any{map[string]any{"agent_status": "blocked", "launch_pending": false, "agent_session": nil}}}, "deadline"},
 		{"absent", map[string]any{"failure": map[string]any{"command": "agent get", "exit": 4, "stdout": `{"error":{"code":"agent_not_found","message":"synthetic-secret"}}`}}, "agent_not_found"},
 		{"invalid_reply", map[string]any{"failure": map[string]any{"command": "agent get", "stdout": "synthetic-secret raw-terminal-transcript"}}, "invalid_response"},
 		{"oversized_reply", map[string]any{"failure": map[string]any{"command": "agent get", "stderr": strings.Repeat("synthetic-capability", 60000)}}, "output_limit"},
-		{"slow_start", map[string]any{"delay_command": "agent start", "delay_seconds": 2}, "timeout"},
+		{"slow_start", map[string]any{"delay_command": "agent start", "delay_seconds": 3}, "timeout"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			f := workflowTestFixture(t)
-			f.D.HerdrTimeout = 700 * time.Millisecond
+			// Diagnostic cases need time to reach the intended agent-get failure,
+			// including when the full suite also compiles subprocess fixtures.
+			// Only deadline cases deliberately exhaust the shared startup window.
+			f.D.HerdrTimeout = 5 * time.Second
+			if tc.name == "blocked" || tc.name == "blocked_without_pending" || tc.name == "slow_start" {
+				f.D.HerdrTimeout = 2 * time.Second
+			}
 			workflowTestModel(t, f, tc.model)
 			o, err := workflowReadinessStart(t, f)
 			if err == nil || o.RunID == "" {
@@ -109,7 +115,7 @@ func TestWorkflowReadinessStopsPreserveDiagnosis(t *testing.T) {
 			b, _ := json.Marshal(o.Reasons)
 			// The shared deadline can expire between observations or inside the
 			// last subprocess; both must retain the actual timeout diagnosis.
-			deadlineInChild := tc.name == "blocked" && strings.Contains(string(b), "class=timeout")
+			deadlineInChild := (tc.name == "blocked" || tc.name == "blocked_without_pending") && strings.Contains(string(b), "class=timeout")
 			if !strings.Contains(string(b), tc.want) && !deadlineInChild {
 				t.Errorf("missing preserved %s diagnosis: %s", tc.want, b)
 			}

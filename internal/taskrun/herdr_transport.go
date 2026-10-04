@@ -154,10 +154,19 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	if e != nil {
 		return e
 	}
+	if e = workflowTrustFresh(s); e != nil {
+		return e
+	}
 	var tab struct {
 		RootPane workflowAgent `json:"root_pane"`
 	}
-	b, e := workflowCall(d, r, "tab", "create", "--workspace", r.Herdr.WorkspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run "+r.Herdr.TabLabel, "--env", "PATH="+os.Getenv("PATH"), "--no-focus")
+	tabArgs := []string{"tab", "create", "--workspace", r.Herdr.WorkspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + os.Getenv("PATH"), "--no-focus"}
+	if s.CodexTrust != nil {
+		// Use the exact existing user/config locations observed by preview.
+		// No alternate home or persistent configuration is created.
+		tabArgs = append(tabArgs, "--env", "HOME="+s.CodexTrust.UserHome, "--env", "CODEX_HOME="+s.CodexTrust.CodexHome)
+	}
+	b, e := workflowCall(d, r, tabArgs...)
 	if e != nil {
 		return e
 	}
@@ -181,10 +190,10 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	if e = d.fault("workflow_before_agent_send"); e != nil {
 		return e
 	}
-	argv := []string{"agent", "start", workflowAgentName(id), "--kind", "codex", "--pane", a.PaneID, "--timeout", "30000", "--", "-C", s.Observed.Target.WorktreeLocator, "--model", r.Runtime.Model, "-a", "on-request", "-c", `approvals_reviewer="auto_review"`, "-c", "default_permissions=" + workflowJSON(r.Runtime.PermissionBinding.ProfileID)}
-	if r.Runtime.ConfigProfile != nil {
-		argv = append(argv, "--profile", *r.Runtime.ConfigProfile)
+	if e = workflowTrustFresh(s); e != nil {
+		return e
 	}
+	argv := workflowStartArgv(r, s.Observed.Target.WorktreeLocator, a.PaneID)
 	limit := 35 * time.Second
 	if d.HerdrTimeout > 0 {
 		limit = d.HerdrTimeout
@@ -204,6 +213,19 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 		return e
 	}
 	return workflowPromptUntil(d, root, id, nil, deadline)
+}
+
+func workflowStartArgv(r WorkflowRequest, cwd, pane string) []string {
+	argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "codex", "--pane", pane, "--timeout", "30000", "--", "-C", cwd, "--model", r.Runtime.Model, "-a", "on-request", "-c", `approvals_reviewer="auto_review"`, "-c", "default_permissions=" + workflowJSON(r.Runtime.PermissionBinding.ProfileID)}
+	if r.Runtime.ConfigProfile != nil {
+		argv = append(argv, "--profile", *r.Runtime.ConfigProfile)
+	}
+	if r.CodexProjectTrust != nil {
+		// The inline table keeps dots, quotes and backslashes in a path inside
+		// one TOML key, rather than treating them as CLI dotted-path separators.
+		argv = append(argv, "-c", "projects={"+tomlQuote(r.CodexProjectTrust.RepositoryRoot)+`={trust_level="trusted"}}`)
+	}
+	return argv
 }
 func workflowPrompt(d Dependencies, root, id string, findings []WorkflowFinding) error {
 	return workflowPromptUntil(d, root, id, findings, time.Time{})

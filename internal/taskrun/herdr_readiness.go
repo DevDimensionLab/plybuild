@@ -28,7 +28,6 @@ func workflowAwaitReadiness(d Dependencies, root, id string, deadline time.Time)
 			observedSession = a.Session.Value
 		}
 		ready := a.Session != nil && workflowSettled(a)
-		pending := a.LaunchPending != nil && *a.LaunchPending
 		if e = workflowUpdate(d, root, id, func(s *workflowState) error {
 			if s.Phase != "agent_start_attempted" {
 				return workflowError(4, "launch attempt is no longer awaiting readiness")
@@ -51,9 +50,9 @@ func workflowAwaitReadiness(d Dependencies, root, id string, deadline time.Time)
 		if ready {
 			return nil
 		}
-		if !pending {
-			return workflowError(5, "Herdr agent get readiness unavailable: no freshly settled native session and launch is not pending; no prompt sent")
-		}
+		// A missing/false launch_pending flag is only an observation. Herdr can
+		// report idle before it discovers the Codex session after an early exit.
+		// Keep observing this one identity within the original shared deadline.
 		pause := 250 * time.Millisecond
 		if remaining := time.Until(deadline); remaining < pause {
 			pause = remaining

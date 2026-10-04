@@ -23,7 +23,7 @@ observations as cached and checks artifact freshness even after acceptance.
 `follow` makes fresh observations; its timeout stops observation, not the agent.
 
 The request is strict JSON with kind `ply.workflow.herdr-run-request` and
-`schema_version: 1`. Supply all these fields:
+`schema_version: 1`. Supply these required fields:
 
 | Field | Value |
 | --- | --- |
@@ -45,13 +45,37 @@ the recipient still reports its actual runtime before making Task writes. Starts
 retain the requested model, optional config profile, managed permission profile,
 `on-request`, and `approvals_reviewer="auto_review"`. No global config is changed.
 
+The optional top-level `codex_project_trust` field has exactly this shape:
+
+```json
+{"mode":"process-local","repository_root":"/absolute/physical/repository"}
+```
+
+Omit it to preserve existing request bytes, digests and launch behavior. A supplied
+null, another mode or extra field is rejected. For a linked worktree, the trust
+root is the main repository owning the shared `.git` directory, which may differ
+from the Task worktree and its cwd. Preview verifies both Git links and the physical
+identities before offering a confirmation. The same confirmation covers this one
+root and the process lifetime; apply rechecks the repository, executable and policy
+bindings before effects. Changing trust under an existing request key conflicts.
+
+The grant uses Codex CLI configuration before startup and makes no persistent trust
+change. It preserves the requested model, configuration and permission profiles,
+sandbox, `on-request` and `auto_review`. Explicit distrust, incompatible managed
+policy, unknown search roots, symlinks or project config/hooks/rules/instructions
+that could become active prevent a new grant before any tab is created. Inspect
+the reported path and effective policy before requesting a new preview.
+
 Ply reserves the target before creating a background tab, binds its pane and
 terminal, starts Codex once, then binds the actual native session before prompting.
 Agent start and its fresh readiness observations share one 35-second window. If
-native onboarding is pending, the human handles it in that same tab. Ply only
+an ungranted legacy request encounters native onboarding, the attempt remains
+subject to the same deadline. A confirmed process-local grant handles project trust
+before launch. Ply only
 observes the exact reserved workspace/tab/pane/terminal and named Codex agent;
 it never answers trust dialogs. An early nonzero start reply can be followed by
-these same-attempt observations within the remaining time. Only a full fresh,
+these same-attempt observations within the remaining time. Missing `launch_pending`
+is not proof that the provider exited. Only a full fresh,
 settled native session with no pending launch permits the first Task prompt.
 
 If readiness remains blocked, disappears, changes identity or reaches the deadline,

@@ -36,7 +36,7 @@ func workflowRead(root, id string) (workflowState, error) {
 	if e != nil {
 		return s, e
 	}
-	if !equal(s.Request, saved.Request) || saved.Result.RunID != id || !equal(s.Observed, saved.Observed) || saved.Result.Paths.RunRoot != s.Result.Paths.RunRoot || saved.Result.RequestSHA256 != digest(s.Request) || saved.Result.SessionID != "ply:"+id {
+	if !equal(s.Request, saved.Request) || !equal(s.CodexTrust, saved.CodexTrust) || saved.Result.RunID != id || !equal(s.Observed, saved.Observed) || saved.Result.Paths.RunRoot != s.Result.Paths.RunRoot || saved.Result.RequestSHA256 != digest(s.Request) || saved.Result.SessionID != "ply:"+id {
 		return s, workflowError(4, "preserved state differs from reservation")
 	}
 	return saved, nil
@@ -127,6 +127,9 @@ func workflowReservations(d Dependencies, root string, target workspace.PlanWork
 }
 
 func workflowFresh(d Dependencies, s workflowState, target bool) error {
+	if e := workflowTrustFresh(s); e != nil {
+		return e
+	}
 	if _, e := runtimeBindings(s.Request.Runtime); e != nil {
 		return e
 	}
