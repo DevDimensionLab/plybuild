@@ -1,7 +1,9 @@
 package plantemplate
 
 import (
+	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -430,5 +432,114 @@ func TestCodeSpanSurvivesBackticksAndEdgeSpaces(t *testing.T) {
 func TestQuoteBlockPrefixesEveryLineAndNormalizesLineEndings(t *testing.T) {
 	if got, want := quoteBlock("one\r\n\r\ntwo\rthree"), "> one\n>\n> two\n> three"; got != want {
 		t.Errorf("quoteBlock = %q, want %q", got, want)
+	}
+}
+
+func bundleBytes(bundle Bundle) int {
+	total := 0
+	for _, file := range bundle.Files {
+		total += len(file.Content)
+	}
+	return total
+}
+
+func manyRepositories(count int) []Repository {
+	var repositories []Repository
+	for i := 0; i < count; i++ {
+		repositories = append(repositories, Repository{
+			Path:         fmt.Sprintf("/work/root/product-service-%03d/main", i),
+			GitCommonDir: fmt.Sprintf("/work/root/product-service-%03d/main/.git", i),
+		})
+	}
+	return repositories
+}
+
+func assertRejectedWithEmptyBundle(t *testing.T, input Input, what string) {
+	t.Helper()
+	bundle, err := Render(input)
+	if err == nil {
+		t.Fatalf("Render accepted %s (bundle %d bytes, AGENTS.md %d bytes)", what, bundleBytes(bundle), len(bundle.content(t, "AGENTS.md")))
+	}
+	if bundle.Files != nil || bundle.TemplateID != "" || bundle.TemplateVersion != "" {
+		t.Fatalf("Render returned %+v together with error %v", bundle, err)
+	}
+}
+
+func TestRenderRejectsGoalThatPushesBundleOverLimit(t *testing.T) {
+	for _, language := range languages {
+		input := testInput(language, strings.Repeat("x", 40000))
+
+		assertRejectedWithEmptyBundle(t, input, "a 40000-byte goal")
+	}
+}
+
+func TestRenderBundleLimitIsMeasuredInUTF8BytesNotCharacters(t *testing.T) {
+	for _, language := range languages {
+		// 25000 characters of 2 bytes each: under 40000 characters, over 40000 bytes.
+		input := testInput(language, strings.Repeat("å", 25000))
+
+		assertRejectedWithEmptyBundle(t, input, "a goal of 25000 two-byte characters")
+	}
+}
+
+func TestRenderBundleLimitIsExactlyBelow40000Bytes(t *testing.T) {
+	for _, language := range languages {
+		for _, fill := range []string{"x", "å"} {
+			accepted := sort.Search(40000, func(n int) bool {
+				_, err := Render(testInput(language, strings.Repeat(fill, n+1)))
+				return err != nil
+			})
+			// accepted is the largest goal length that renders.
+			bundle := mustRender(t, testInput(language, strings.Repeat(fill, accepted)))
+			if size := bundleBytes(bundle); size >= 40000 || size < 39900 {
+				t.Errorf("%s fill %q: largest accepted bundle is %d bytes, want just below 40000", language, fill, size)
+			}
+			if _, err := Render(testInput(language, strings.Repeat(fill, accepted+1))); err == nil {
+				t.Errorf("%s fill %q: Render accepted one more character than the limit allows", language, fill)
+			}
+		}
+	}
+}
+
+func TestRenderRejectsManyRepositoriesThatPushAgentsOverLimit(t *testing.T) {
+	for _, language := range languages {
+		input := testInput(language, "")
+		input.Repositories = manyRepositories(64)
+
+		assertRejectedWithEmptyBundle(t, input, "64 repositories")
+	}
+}
+
+func TestRenderAgentsLimitIsMeasuredInUTF8BytesNotCharacters(t *testing.T) {
+	for _, language := range languages {
+		input := testInput(language, "")
+		// About 3000 extra characters (6000 bytes) in AGENTS.md: below 8000 characters, above 8000 bytes.
+		input.Repositories = []Repository{{
+			Path:         "/work/" + strings.Repeat("å", 2000),
+			GitCommonDir: "/work/" + strings.Repeat("å", 1000),
+		}}
+
+		assertRejectedWithEmptyBundle(t, input, "AGENTS.md of fewer than 8000 characters but more than 8000 bytes")
+	}
+}
+
+func TestRenderAgentsLimitIsExactlyBelow8000Bytes(t *testing.T) {
+	for _, language := range languages {
+		accepted := sort.Search(500, func(n int) bool {
+			input := testInput(language, "")
+			input.Repositories = manyRepositories(n + 1)
+			_, err := Render(input)
+			return err != nil
+		})
+		input := testInput(language, "")
+		input.Repositories = manyRepositories(accepted)
+		bundle := mustRender(t, input)
+		if size := len(bundle.content(t, "AGENTS.md")); size >= 8000 || size < 7800 {
+			t.Errorf("%s: largest accepted AGENTS.md is %d bytes with %d repositories, want just below 8000", language, size, accepted)
+		}
+		input.Repositories = manyRepositories(accepted + 1)
+		if _, err := Render(input); err == nil {
+			t.Errorf("%s: Render accepted %d repositories beyond the AGENTS.md limit", language, accepted+1)
+		}
 	}
 }

@@ -22,6 +22,10 @@ const (
 
 	languageNorwegian = "nb"
 	languageEnglish   = "en"
+
+	// Both limits are strict upper bounds on UTF-8 bytes, not characters.
+	maxAgentsBytes = 8000
+	maxBundleBytes = 40000
 )
 
 //go:embed templates
@@ -134,7 +138,26 @@ func Render(input Input) (Bundle, error) {
 	if err != nil {
 		return Bundle{}, err
 	}
+	if err := checkSize(files); err != nil {
+		return Bundle{}, err
+	}
 	return Bundle{TemplateID: templateID, TemplateVersion: templateVersion, Files: files}, nil
+}
+
+// checkSize enforces the small-bundle contract: AGENTS.md below maxAgentsBytes
+// and all files together below maxBundleBytes.
+func checkSize(files []File) error {
+	total := 0
+	for _, f := range files {
+		total += len(f.Content)
+		if f.Path == "AGENTS.md" && len(f.Content) >= maxAgentsBytes {
+			return fmt.Errorf("rendered AGENTS.md is %d UTF-8 bytes, want fewer than %d; bind fewer repositories or shorten paths", len(f.Content), maxAgentsBytes)
+		}
+	}
+	if total >= maxBundleBytes {
+		return fmt.Errorf("rendered bundle is %d UTF-8 bytes, want fewer than %d; shorten the goal or bind fewer repositories", total, maxBundleBytes)
+	}
+	return nil
 }
 
 func renderFiles(sources fs.FS, roles []role, language string, v view) ([]File, error) {
