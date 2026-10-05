@@ -56,6 +56,26 @@ Additional help topics:
 Use "ply [command] --help" for more information about a command.
 ```
 
+## Planning repositories
+
+Create a standalone planning Git repository at an explicit root, without starting an agent:
+
+```shell
+ply workflow epic plan --repo /work/example/main --root /work/example --check
+ply workflow epic plan --repo /work/example/main --root /work/example --goal "Plan the next release"
+ply workflow epic plan --project ply --language nb
+```
+
+Project mode selects all registered members and defaults to the registered wrapper. Explicit
+`--repo` paths require `--root` and work without a Ply workspace. The default document language
+is English (`en`); Norwegian Bokmål is `nb`. CLI messages and help remain English.
+
+Creation validates and renders first, then creates `<root>/planning` and one clean initial
+commit on `main`. `--check` performs a read-only preview. Every existing target stops creation;
+existing planning repositories receive a reminder to use the existing plan. Partial failures
+are preserved for inspection. See the [command guide](docs/workflow-epic-plan.md) for all flags,
+Git prerequisites, machine output and recovery behavior.
+
 ## Workspace
 Initialize the current directory as an explicit Ply workspace:
 
