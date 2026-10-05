@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ply:read-contract:workspace-task-list-readback-v1",
+  "title": "WorkspaceTaskListReadback@1",
+  "description": "Public CLI response contract. Every named field is required; unknown additive fields are allowed.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schema_version",
+    "workspace",
+    "scope",
+    "tasks"
+  ],
+  "properties": {
+    "kind": {
+      "const": "WorkspaceTaskListReadback@1",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "workspace": {
+      "$ref": "#/$defs/workspace"
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "repo_id",
+        "epic_id"
+      ],
+      "properties": {
+        "project_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repo_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "epic_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/task"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "workspace": {
+      "type": "object",
+      "required": [
+        "root"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "description": "Physical absolute workspace root from the validated workspace marker."
+        }
+      },
+      "additionalProperties": true
+    },
+    "task": {
+      "type": "object",
+      "required": [
+        "task_id",
+        "project_id",
+        "repo_id",
+        "parent_epic_id",
+        "worktree_state",
+        "title",
+        "title_source",
+        "title_status"
+      ],
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "repo_id": {
+          "type": "string"
+        },
+        "parent_epic_id": {
+          "type": "string"
+        },
+        "worktree_state": {
+          "type": "string",
+          "description": "Raw registered state; not a fresh observation of the checkout."
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title_source": {
+          "type": "string",
+          "enum": [
+            "problem_revision",
+            "registration"
+          ]
+        },
+        "title_status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "unavailable"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "oneOf": [
+        {
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "title_source": {
+              "const": "problem_revision"
+            },
+            "title_status": {
+              "const": "available"
+            }
+          }
+        },
+        {
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "title_source": {
+              "const": "registration"
+            },
+            "title_status": {
+              "const": "available"
+            }
+          }
+        },
+        {
+          "properties": {
+            "title": {
+              "type": "null"
+            },
+            "title_source": {
+              "const": "problem_revision"
+            },
+            "title_status": {
+              "const": "unavailable"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

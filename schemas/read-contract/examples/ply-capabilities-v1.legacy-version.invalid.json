@@ -1,0 +1,145 @@
+{
+  "kind": "PlyCapabilities@1",
+  "schema_version": 1,
+  "build": {
+    "version": "v1.0.1",
+    "vcs_revision": "75aeb3af7349c135d2f881d99d45ad4819d186a8",
+    "vcs_modified": false
+  },
+  "coverage": "workspace-core-read",
+  "operations": [
+    {
+      "id": "project.list",
+      "command": [
+        "workspace",
+        "project",
+        "list"
+      ],
+      "mode": "default",
+      "selectors": [],
+      "formats": [
+        "text",
+        "json"
+      ],
+      "filters": [],
+      "filter_policy": "none",
+      "result_schemas": [
+        {
+          "kind": "WorkspaceProjectListReadback@1",
+          "schema_version": 1
+        }
+      ],
+      "effect": "read"
+    },
+    {
+      "id": "project.show",
+      "command": [
+        "workspace",
+        "project",
+        "show"
+      ],
+      "mode": "default",
+      "selectors": [],
+      "formats": [
+        "text",
+        "json"
+      ],
+      "filters": [],
+      "filter_policy": "none",
+      "result_schemas": [
+        {
+          "kind": "WorkspaceProjectReadback@1",
+          "schema_version": 1
+        }
+      ],
+      "effect": "read"
+    },
+    {
+      "id": "task.list",
+      "command": [
+        "workspace",
+        "task",
+        "list"
+      ],
+      "mode": "ready",
+      "selectors": [
+        "--ready"
+      ],
+      "formats": [
+        "text",
+        "json"
+      ],
+      "filters": [
+        "project",
+        "repo",
+        "epic"
+      ],
+      "filter_policy": "all_or_none",
+      "result_schemas": [
+        {
+          "kind": "WorkspaceTaskQueueReadback@1",
+          "schema_version": 1
+        }
+      ],
+      "effect": "read"
+    },
+    {
+      "id": "task.list",
+      "command": [
+        "workspace",
+        "task",
+        "list"
+      ],
+      "mode": "registered",
+      "selectors": [],
+      "formats": [
+        "text",
+        "json"
+      ],
+      "filters": [
+        "project",
+        "repo",
+        "epic"
+      ],
+      "filter_policy": "independent_and",
+      "result_schemas": [
+        {
+          "kind": "WorkspaceTaskListReadback@1",
+          "schema_version": 1
+        }
+      ],
+      "effect": "read"
+    },
+    {
+      "id": "task.show",
+      "command": [
+        "workspace",
+        "task",
+        "show"
+      ],
+      "mode": "default",
+      "selectors": [],
+      "formats": [
+        "text",
+        "json"
+      ],
+      "filters": [],
+      "filter_policy": "none",
+      "result_schemas": [
+        {
+          "kind": "WorkspaceTaskReadback@1",
+          "schema_version": 1
+        },
+        {
+          "kind": "WorkspaceTaskIntegrationReadback@1",
+          "schema_version": 1
+        },
+        {
+          "kind": "WorkspaceTaskReadback@3",
+          "schema_version": 3
+        }
+      ],
+      "effect": "read"
+    }
+  ]
+}

@@ -1,0 +1,515 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ply:read-contract:ply-capabilities-v1",
+  "title": "PlyCapabilities@1",
+  "description": "Public CLI response contract. Every named field is required; unknown additive fields are allowed.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schema_version",
+    "build",
+    "coverage",
+    "operations"
+  ],
+  "properties": {
+    "kind": {
+      "const": "PlyCapabilities@1",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "build": {
+      "type": "object",
+      "required": [
+        "version",
+        "vcs_revision",
+        "vcs_modified"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "vcs_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "vcs_modified": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "coverage": {
+      "type": "string",
+      "const": "workspace-core-read"
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 5,
+      "items": false,
+      "description": "Complete workspace-core-read catalog, ordered by (id, mode). Existing task-show schema_version null means the response omits that field.",
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/operation"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "project.list"
+                },
+                "command": {
+                  "const": [
+                    "workspace",
+                    "project",
+                    "list"
+                  ]
+                },
+                "mode": {
+                  "const": "default"
+                },
+                "selectors": {
+                  "const": []
+                },
+                "formats": {
+                  "const": [
+                    "text",
+                    "json"
+                  ]
+                },
+                "filters": {
+                  "const": []
+                },
+                "filter_policy": {
+                  "const": "none"
+                },
+                "effect": {
+                  "const": "read"
+                },
+                "result_schemas": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "schema_version"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "WorkspaceProjectListReadback@1"
+                        },
+                        "schema_version": {
+                          "const": 1
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/operation"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "project.show"
+                },
+                "command": {
+                  "const": [
+                    "workspace",
+                    "project",
+                    "show"
+                  ]
+                },
+                "mode": {
+                  "const": "default"
+                },
+                "selectors": {
+                  "const": []
+                },
+                "formats": {
+                  "const": [
+                    "text",
+                    "json"
+                  ]
+                },
+                "filters": {
+                  "const": []
+                },
+                "filter_policy": {
+                  "const": "none"
+                },
+                "effect": {
+                  "const": "read"
+                },
+                "result_schemas": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "schema_version"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "WorkspaceProjectReadback@1"
+                        },
+                        "schema_version": {
+                          "const": 1
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/operation"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "task.list"
+                },
+                "command": {
+                  "const": [
+                    "workspace",
+                    "task",
+                    "list"
+                  ]
+                },
+                "mode": {
+                  "const": "ready"
+                },
+                "selectors": {
+                  "const": [
+                    "--ready"
+                  ]
+                },
+                "formats": {
+                  "const": [
+                    "text",
+                    "json"
+                  ]
+                },
+                "filters": {
+                  "const": [
+                    "project",
+                    "repo",
+                    "epic"
+                  ]
+                },
+                "filter_policy": {
+                  "const": "all_or_none"
+                },
+                "effect": {
+                  "const": "read"
+                },
+                "result_schemas": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "schema_version"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "WorkspaceTaskQueueReadback@1"
+                        },
+                        "schema_version": {
+                          "const": 1
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/operation"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "task.list"
+                },
+                "command": {
+                  "const": [
+                    "workspace",
+                    "task",
+                    "list"
+                  ]
+                },
+                "mode": {
+                  "const": "registered"
+                },
+                "selectors": {
+                  "const": []
+                },
+                "formats": {
+                  "const": [
+                    "text",
+                    "json"
+                  ]
+                },
+                "filters": {
+                  "const": [
+                    "project",
+                    "repo",
+                    "epic"
+                  ]
+                },
+                "filter_policy": {
+                  "const": "independent_and"
+                },
+                "effect": {
+                  "const": "read"
+                },
+                "result_schemas": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "schema_version"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "WorkspaceTaskListReadback@1"
+                        },
+                        "schema_version": {
+                          "const": 1
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/operation"
+            },
+            {
+              "properties": {
+                "id": {
+                  "const": "task.show"
+                },
+                "command": {
+                  "const": [
+                    "workspace",
+                    "task",
+                    "show"
+                  ]
+                },
+                "mode": {
+                  "const": "default"
+                },
+                "selectors": {
+                  "const": []
+                },
+                "formats": {
+                  "const": [
+                    "text",
+                    "json"
+                  ]
+                },
+                "filters": {
+                  "const": []
+                },
+                "filter_policy": {
+                  "const": "none"
+                },
+                "effect": {
+                  "const": "read"
+                },
+                "result_schemas": {
+                  "type": "array",
+                  "minItems": 3,
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "schema_version"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "WorkspaceTaskReadback@1"
+                        },
+                        "schema_version": {
+                          "const": null
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "schema_version"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "WorkspaceTaskIntegrationReadback@1"
+                        },
+                        "schema_version": {
+                          "const": 1
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "schema_version"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "WorkspaceTaskReadback@3"
+                        },
+                        "schema_version": {
+                          "const": 3
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "operation": {
+      "type": "object",
+      "required": [
+        "id",
+        "command",
+        "mode",
+        "selectors",
+        "formats",
+        "filters",
+        "filter_policy",
+        "result_schemas",
+        "effect"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mode": {
+          "type": "string"
+        },
+        "selectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "formats": {
+          "const": [
+            "text",
+            "json"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "filter_policy": {
+          "type": "string"
+        },
+        "result_schemas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/result_schema"
+          }
+        },
+        "effect": {
+          "type": "string",
+          "const": "read"
+        }
+      },
+      "additionalProperties": true
+    },
+    "result_schema": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

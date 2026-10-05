@@ -1,0 +1,13 @@
+{
+  "kind": "WorkspaceTaskListReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": {
+    "project_id": "alpha",
+    "repo_id": null,
+    "epic_id": null
+  },
+  "tasks": []
+}

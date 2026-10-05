@@ -21,6 +21,7 @@ import (
 
 type WorkItemStore interface {
 	Snapshot(string) (WorkItemRegistry, error)
+	SnapshotRegistrations(string) (WorkItemRegistry, error)
 	WithLock(string, func(WorkItemStoreSession) error) error
 }
 
@@ -202,6 +203,18 @@ func (store *systemWorkItemStore) release(file *os.File) error {
 }
 
 func (store *systemWorkItemStore) read(root string) (WorkItemRegistry, error) {
+	return store.readRegistry(root, true)
+}
+
+// SnapshotRegistrations validates the registry itself without requiring the
+// content of unrelated workflow/queue objects. Registered lists verify current
+// problem heads individually so an unavailable title does not hide its Task.
+// Snapshot and every mutation retain their existing full closure checks.
+func (store *systemWorkItemStore) SnapshotRegistrations(root string) (WorkItemRegistry, error) {
+	return store.readRegistry(root, false)
+}
+
+func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool) (WorkItemRegistry, error) {
 	path := workItemsPath(root)
 	info, err := os.Lstat(path)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -221,7 +234,7 @@ func (store *systemWorkItemStore) read(root string) (WorkItemRegistry, error) {
 	if err != nil {
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("invalid work-item registry %s: %v", path, err), err)
 	}
-	if registry.FormatVersion == 4 {
+	if requireClosure && registry.FormatVersion == 4 {
 		storage := &TaskContentStorage{}
 		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
 			return WorkItemRegistry{}, err

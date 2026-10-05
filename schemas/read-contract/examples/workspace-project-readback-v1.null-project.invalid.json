@@ -1,0 +1,23 @@
+{
+  "kind": "WorkspaceProjectReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": {
+    "project_id": "alpha"
+  },
+  "project": null,
+  "repositories": [
+    {
+      "repo_id": "core",
+      "locator": "/work/alpha wrapper/core",
+      "git_common_dir": "/work/alpha wrapper/core/.git"
+    },
+    {
+      "repo_id": "missing",
+      "locator": "/work/missing checkout",
+      "git_common_dir": "/work/registered common-dir/.git"
+    }
+  ]
+}

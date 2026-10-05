@@ -56,6 +56,7 @@ run_help_surface() {
 }
 
 run_help_surface root-help --help
+run_help_surface capabilities-help capabilities --help
 run_help_surface workspace-help workspace --help
 run_help_surface workspace-init-help workspace init --help
 run_help_surface workspace-project-help workspace project --help
@@ -100,10 +101,15 @@ run_help_surface workflow-handoff-cancel-help workflow handoff cancel --help
 run_help_surface workflow-handoff-supersede-help workflow handoff supersede --help
 run_help_surface workflow-handoff-abandon-help workflow handoff abandon --help
 
-grep -F '  workspace   Manage Ply workspaces' "$temp_root/root-help.stdout" >/dev/null ||
+grep -F '  workspace    Manage Ply workspaces' "$temp_root/root-help.stdout" >/dev/null ||
 	fail 'root help does not expose the workspace parent'
-grep -F '  workflow    Manage agent workflows' "$temp_root/root-help.stdout" >/dev/null ||
+grep -F '  workflow     Manage agent workflows' "$temp_root/root-help.stdout" >/dev/null ||
 	fail 'root help does not expose the workflow parent'
+grep -F '  capabilities Show supported workspace core read contracts' "$temp_root/root-help.stdout" >/dev/null ||
+	fail 'root help does not expose capabilities'
+for label in capabilities-help workspace-project-list-help workspace-project-show-help workspace-task-list-help; do
+	grep -F -- '--format string' "$temp_root/$label.stdout" >/dev/null || fail "$label lost its output format"
+done
 grep -F 'Manage explicit local Ply workspaces.' "$temp_root/workspace-help.stdout" >/dev/null ||
 	fail 'workspace help lost its long description'
 grep -F 'ply workspace [command]' "$temp_root/workspace-help.stdout" >/dev/null ||
@@ -230,9 +236,9 @@ grep -F 'ply workflow handoff abandon <handoff-id> [flags]' "$temp_root/workflow
 grep -F -- '--acknowledge-effects-unknown' "$temp_root/workflow-handoff-abandon-help.stdout" >/dev/null || fail 'abandon acknowledgement is unavailable'
 [[ ! -e "$temp_root/home/.ply" ]] || fail 'help created a global Ply profile'
 
-grep -F '  workspace   Manage Ply workspaces' "$repo_root/README.md" >/dev/null ||
+grep -F '  workspace    Manage Ply workspaces' "$repo_root/README.md" >/dev/null ||
 	fail 'README root command overview does not expose workspace'
-grep -F '  workflow    Manage agent workflows' "$repo_root/README.md" >/dev/null ||
+grep -F '  workflow     Manage agent workflows' "$repo_root/README.md" >/dev/null ||
 	fail 'README root command overview does not expose workflow'
 printf '%s\n' \
 	'## Workspace' \
@@ -271,7 +277,9 @@ printf '%s\n' \
 	'The wrapper and repository members are explicit and may be outside the workspace. Ply validates' \
 	'only the nominated worktree roots. Dirty repositories are accepted, and registration performs no' \
 	'discovery or Git mutation. Read registrations with `ply workspace project show <id>` and' \
-	'`ply workspace project list`.' \
+	'`ply workspace project list`. These commands also accept `--format json`.' \
+	'See the [workspace read contract](docs/read-contract.md) for independent Task filters,' \
+	'versioned JSON schemas, and `ply capabilities`.' \
 	'' \
 	'Retrying the same registration is idempotent. Changing membership, relocating repositories, and' \
 	'`project init` are not part of this command.' \

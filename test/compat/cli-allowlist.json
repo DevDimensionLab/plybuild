@@ -7,6 +7,63 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply capabilities\n  ply capabilities --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for capabilities"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": true,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Show the built-in catalog for project list/show and Task list/show, including the separate ready mode. Coverage is workspace-core-read, not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
+        "path": "ply capabilities",
+        "runnable": true,
+        "short": "Show supported workspace core read contracts",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "capabilities"
+      },
+      "kind": "command_added",
+      "path": "ply capabilities"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workflow handoff abandon hnd_0123456789abcdef0123456789abcdef --reason \"Recipient disappeared after start\" --acknowledge-effects-unknown",
         "flags": [
           {
@@ -2419,8 +2476,21 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace project list",
+        "example": "  ply workspace project list\n  ply workspace project list --format json",
         "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
           {
             "annotations": {
               "cobra_annotation_flag_set_by_cobra": [
@@ -2463,8 +2533,21 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace project show ply",
+        "example": "  ply workspace project show ply\n  ply workspace project show --format json -- ply",
         "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
           {
             "annotations": {
               "cobra_annotation_flag_set_by_cobra": [
@@ -3189,7 +3272,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace task list\n  ply workspace task list --epic ply-agentic-workflow-support",
+        "example": "  ply workspace task list\n  ply workspace task list --project ply --repo ply\n  ply workspace task list --epic ply-agentic-workflow-support --format json",
         "flags": [
           {
             "annotations": {},
@@ -3202,7 +3285,7 @@
             "shorthand": "",
             "shorthand_deprecated": "",
             "type": "string",
-            "usage": "limit Tasks to one parent Epic ID"
+            "usage": "filter by parent Epic ID; with --ready, requires --project and --repo"
           },
           {
             "annotations": {},
@@ -3215,7 +3298,7 @@
             "shorthand": "",
             "shorthand_deprecated": "",
             "type": "string",
-            "usage": "ready queue output format (text or json)"
+            "usage": "output format (text or json)"
           },
           {
             "annotations": {
@@ -3245,7 +3328,7 @@
             "shorthand": "",
             "shorthand_deprecated": "",
             "type": "string",
-            "usage": "explicit queue Project ID (requires --ready, --repo and --epic)"
+            "usage": "filter by Project ID; with --ready, requires --repo and --epic"
           },
           {
             "annotations": {},
@@ -3271,7 +3354,7 @@
             "shorthand": "",
             "shorthand_deprecated": "",
             "type": "string",
-            "usage": "explicit queue repository ID (requires --ready, --project and --epic)"
+            "usage": "filter by repository ID; with --ready, requires --project and --epic"
           }
         ],
         "has_args_validator": true,
@@ -3280,7 +3363,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "List Tasks registered in the containing Ply workspace, optionally limited to one Epic. Use --ready for the prioritized queue; an explicit queue target requires all three of --project, --repo and --epic.",
+        "long": "List all Tasks registered in the containing Ply workspace. Project, repository and Epic filters work independently and combine as exact AND filters, without an implicit working-directory selection. Use --ready for the prioritized queue; an explicit queue target requires all three of --project, --repo and --epic.",
         "path": "ply workspace task list",
         "runnable": true,
         "short": "List registered Tasks",

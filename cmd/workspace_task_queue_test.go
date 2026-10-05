@@ -15,7 +15,7 @@ func TestTaskQueueInvalidCLIStopsBeforeDependencies(t *testing.T) {
 		{"prepare", "--next", "--project", "ply"}, {"prepare", "--next", "--format", "yaml"},
 		{"queue", "list", "--repo", "ply"}, {"queue", "list", "surprise"}, {"queue", "set"},
 		{"queue", "advance", "--preparation", "pre_x", "--expected-revision", "1"},
-		{"list", "--ready", "--epic", "epic"}, {"list", "--project", "ply"}, {"list", "--ready", "--format", "yaml"},
+		{"list", "--ready", "--epic", "epic"}, {"list", "--project", ""}, {"list", "--ready", "--format", "yaml"},
 	}
 	for _, args := range cases {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
@@ -34,9 +34,9 @@ func TestTaskQueueInvalidCLIStopsBeforeDependencies(t *testing.T) {
 }
 func TestQueueReadyAliasPreservesOrdinaryListService(t *testing.T) {
 	calls := 0
-	c := newWorkspaceTaskCommandWithServices(workspaceTaskServices{list: func(id *workspace.EpicID) (workspace.TaskListResult, error) {
+	c := newWorkspaceTaskCommandWithServices(workspaceTaskServices{list: func(filters workspace.TaskListFilters) (workspace.TaskListResult, error) {
 		calls++
-		if id == nil || *id != "epic" {
+		if filters.EpicID == nil || *filters.EpicID != "epic" {
 			t.Fatal("legacy Epic filter changed")
 		}
 		return workspace.TaskListResult{Workspace: "/fixture", Tasks: []workspace.TaskRecord{}}, nil

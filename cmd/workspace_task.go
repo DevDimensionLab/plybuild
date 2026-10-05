@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
@@ -10,7 +11,7 @@ import (
 type workspaceTaskServices struct {
 	create         func(workspace.TaskCreateInput) (workspace.TaskMutationResult, error)
 	show           func(workspace.TaskID) (workspace.TaskReadbackResult, error)
-	list           func(*workspace.EpicID) (workspace.TaskListResult, error)
+	list           func(workspace.TaskListFilters) (workspace.TaskListResult, error)
 	createWorktree func(workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error)
 	recordResult   func(workspace.TaskResultRecordInput) (workspace.TaskResultMutationResult, error)
 	recordQA       func(workspace.TaskHumanQARecordInput) (workspace.TaskHumanQAMutationResult, error)
@@ -22,8 +23,8 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 		return workspace.CreateTask(dependencies, input)
 	}, show: func(id workspace.TaskID) (workspace.TaskReadbackResult, error) {
 		return workspace.ShowTask(dependencies, id)
-	}, list: func(id *workspace.EpicID) (workspace.TaskListResult, error) {
-		return workspace.ListTasks(dependencies, id)
+	}, list: func(filters workspace.TaskListFilters) (workspace.TaskListResult, error) {
+		return workspace.ListTasksWithFilters(dependencies, filters)
 	}, createWorktree: func(input workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error) {
 		return workspace.CreateTaskWorktree(dependencies, input)
 	}, recordResult: func(input workspace.TaskResultRecordInput) (workspace.TaskResultMutationResult, error) {
@@ -138,32 +139,58 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 	}}
 	show.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	setWorkFlagErrors(show)
-	var filterEpic string
-	list := &cobra.Command{Use: "list", Short: "List registered Tasks", Long: "List Tasks registered in the containing Ply workspace, optionally limited to one Epic.", Example: "  ply workspace task list\n  ply workspace task list --epic ply-agentic-workflow-support", Args: func(cmd *cobra.Command, args []string) error {
+	var filterEpic, filterProject, filterRepo, listFormat string
+	filters := func(cmd *cobra.Command) workspace.TaskListFilters {
+		var f workspace.TaskListFilters
+		if cmd.Flags().Changed("project") {
+			id := workspace.ProjectID(filterProject)
+			f.ProjectID = &id
+		}
+		if cmd.Flags().Changed("repo") {
+			id := workspace.RepoID(filterRepo)
+			f.RepoID = &id
+		}
+		if cmd.Flags().Changed("epic") {
+			id := workspace.EpicID(filterEpic)
+			f.EpicID = &id
+		}
+		return f
+	}
+	list := &cobra.Command{Use: "list", Short: "List registered Tasks", Long: "List all Tasks registered in the containing Ply workspace. Project, repository and Epic filters work independently and combine as exact AND filters, without an implicit working-directory selection.", Example: "  ply workspace task list\n  ply workspace task list --project ply --repo ply\n  ply workspace task list --epic ply-agentic-workflow-support --format json", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 0 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected no positional arguments, got %d", len(args)))
 		}
-		if filterEpic != "" {
-			_, err := workspace.ParseEpicID(filterEpic)
+		// Ready retains its original argument validation and separate target semantics.
+		if ready, _ := cmd.Flags().GetBool("ready"); ready {
+			if filterEpic != "" {
+				_, err := workspace.ParseEpicID(filterEpic)
+				return err
+			}
+			return nil
+		}
+		if err := validateWorkFormat(listFormat); err != nil {
 			return err
 		}
-		return nil
+		return filters(cmd).Validate()
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		var filter *workspace.EpicID
-		if filterEpic != "" {
-			id, err := workspace.ParseEpicID(filterEpic)
+		result, err := services.list(filters(cmd))
+		if err != nil {
+			return err
+		}
+		if listFormat == "json" {
+			b, err := workspace.MarshalTaskList(result)
 			if err != nil {
 				return err
 			}
-			filter = &id
-		}
-		result, err := services.list(filter)
-		if err != nil {
+			_, err = cmd.OutOrStdout().Write(append(b, '\n'))
 			return err
 		}
 		return renderTaskList(cmd, result)
 	}}
-	list.Flags().StringVar(&filterEpic, "epic", "", "limit Tasks to one parent Epic ID")
+	list.Flags().StringVar(&filterEpic, "epic", "", "filter by parent Epic ID; with --ready, requires --project and --repo")
+	list.Flags().StringVar(&filterProject, "project", "", "filter by Project ID; with --ready, requires --repo and --epic")
+	list.Flags().StringVar(&filterRepo, "repo", "", "filter by repository ID; with --ready, requires --project and --epic")
+	list.Flags().StringVar(&listFormat, "format", "text", "output format (text or json)")
 	setWorkFlagErrors(list)
 	worktree := newWorkspaceTaskWorktreeCommand(services)
 	command.AddCommand(create, show, list, worktree, newWorkspaceTaskResultCommand(services), newWorkspaceTaskQACommand(services), newWorkspaceTaskIntegrateCommand(services))
@@ -441,6 +468,32 @@ func renderTaskWorktreeBlock(command *cobra.Command, task workspace.TaskRecord, 
 	return err
 }
 func renderTaskList(command *cobra.Command, result workspace.TaskListResult) error {
+	if result.Filters.ProjectID != nil || result.Filters.RepoID != nil {
+		labels := []string{}
+		if result.Filters.ProjectID != nil {
+			labels = append(labels, "Project "+string(*result.Filters.ProjectID))
+		}
+		if result.Filters.RepoID != nil {
+			labels = append(labels, "repository "+string(*result.Filters.RepoID))
+		}
+		if result.Filters.EpicID != nil {
+			labels = append(labels, "Epic "+string(*result.Filters.EpicID))
+		}
+		scope := strings.Join(labels, ", ")
+		if len(result.Tasks) == 0 {
+			_, err := fmt.Fprintf(command.OutOrStdout(), "No Tasks for %s are registered in Ply workspace %s.\n", scope, result.Workspace)
+			return err
+		}
+		if _, err := fmt.Fprintf(command.OutOrStdout(), "Tasks for %s in Ply workspace %s:\n", scope, result.Workspace); err != nil {
+			return err
+		}
+		for _, task := range result.Tasks {
+			if _, err := fmt.Fprintf(command.OutOrStdout(), "  %s: %s (Epic %s; %s / %s; %s)\n", task.ID, currentTaskTitle(result, task), task.ParentEpicID, task.ProjectID, task.RepoID, task.WorktreeState); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	if len(result.Tasks) == 0 {
 		if result.Epic != nil {
 			_, err := fmt.Fprintf(command.OutOrStdout(), "No Tasks for Epic %s are registered in Ply workspace %s.\n", result.Epic.ID, result.Workspace)

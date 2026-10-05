@@ -32,37 +32,26 @@ Usage:
   ply [command]
 
 Available Commands:
-  bitbucket   Bitbucket functionality
-  clean       Clean files and folder in a project
-  completion  Generate the autocompletion script for the specified shell
-  diagrams    Various tools for generating diagrams
-  doc         Opens documentation in default browser
-  examples    Examples found in cloud-config
-  format      Format functionality for a project
-  generate    Initializes a maven project with ply files and formatting
-  git         Git commands
-  help        Help about any command
-  info        Prints info on spring version, dependencies etc
-  init        Initializes a maven project with ply files and formatting
-  install     Various install options for generating autocompletion etc
-  lint        Linting commands
-  maven       Run maven (mvn) commands
-  merge       Merge functionalities for files to a project
-  profiles    Manage profiles settings for ply
-  query       Query dependencies in a project
-  status      Status functionality for a project
-  tips        Use tips to learn information faster
-  upgrade     Upgrade options
-  workflow    Manage agent workflows
-  workspace   Manage Ply workspaces
+  build        Builds a ply project with ply files and formatting
+  capabilities Show supported workspace core read contracts
+  help         Help about any command
+  plugin       Plugin functionality for plybuild
+  profile      Manage profiles settings for ply
+  status       Status functionality for a project
+  tips         Use tips to learn information faster
+  upgrade      Upgrade options
+  workflow     Manage agent workflows
+  workspace    Manage Ply workspaces
 
 Flags:
       --debug   turn on debug output
+      --doc     open documentation website
+      --force   uses default for prompts
   -h, --help    help for ply
       --json    turn on json output logging
 
 Additional help topics:
-  ply about      About ply
+  ply about        About ply
 
 Use "ply [command] --help" for more information about a command.
 ```
@@ -103,7 +92,9 @@ ply workspace project add trip \
 The wrapper and repository members are explicit and may be outside the workspace. Ply validates
 only the nominated worktree roots. Dirty repositories are accepted, and registration performs no
 discovery or Git mutation. Read registrations with `ply workspace project show <id>` and
-`ply workspace project list`.
+`ply workspace project list`. These commands also accept `--format json`.
+See the [workspace read contract](docs/read-contract.md) for independent Task filters,
+versioned JSON schemas, and `ply capabilities`.
 
 Retrying the same registration is idempotent. Changing membership, relocating repositories, and
 `project init` are not part of this command.

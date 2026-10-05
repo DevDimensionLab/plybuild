@@ -71,17 +71,20 @@ func newWorkspaceProjectCommandWithServices(services workspaceProjectServices) *
 	_ = addCommand.MarkFlagRequired("repo")
 	setProjectFlagErrors(addCommand)
 
+	var showFormat string
 	showCommand := &cobra.Command{
 		Use:     "show <project-id>",
 		Short:   "Show a registered project",
 		Long:    "Show the stored wrapper and repository members for one project in the containing Ply workspace.",
-		Example: "  ply workspace project show ply",
+		Example: "  ply workspace project show ply\n  ply workspace project show --format json -- ply",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return workspace.ProjectInvalidArguments(fmt.Sprintf("expected exactly one project ID, got %d arguments", len(args)))
 			}
-			_, err := workspace.ParseProjectID(args[0])
-			return err
+			if _, err := workspace.ParseProjectID(args[0]); err != nil {
+				return err
+			}
+			return validateProjectFormat(showFormat)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := workspace.ParseProjectID(args[0])
@@ -92,25 +95,43 @@ func newWorkspaceProjectCommandWithServices(services workspaceProjectServices) *
 			if err != nil {
 				return err
 			}
+			if showFormat == "json" {
+				b, err := workspace.MarshalProject(result)
+				if err != nil {
+					return err
+				}
+				_, err = cmd.OutOrStdout().Write(append(b, '\n'))
+				return err
+			}
 			return renderProject(cmd, result, false)
 		},
 	}
+	showCommand.Flags().StringVar(&showFormat, "format", "text", "output format (text or json)")
 	setProjectFlagErrors(showCommand)
 
+	var listFormat string
 	listCommand := &cobra.Command{
 		Use:     "list",
 		Short:   "List registered projects",
 		Long:    "List projects registered in the containing Ply workspace.",
-		Example: "  ply workspace project list",
+		Example: "  ply workspace project list\n  ply workspace project list --format json",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 0 {
 				return workspace.ProjectInvalidArguments(fmt.Sprintf("expected no positional arguments, got %d", len(args)))
 			}
-			return nil
+			return validateProjectFormat(listFormat)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			result, err := services.list()
 			if err != nil {
+				return err
+			}
+			if listFormat == "json" {
+				b, err := workspace.MarshalProjectList(result)
+				if err != nil {
+					return err
+				}
+				_, err = cmd.OutOrStdout().Write(append(b, '\n'))
 				return err
 			}
 			if len(result.Projects) == 0 {
@@ -134,6 +155,7 @@ func newWorkspaceProjectCommandWithServices(services workspaceProjectServices) *
 			return nil
 		},
 	}
+	listCommand.Flags().StringVar(&listFormat, "format", "text", "output format (text or json)")
 	setProjectFlagErrors(listCommand)
 
 	projectCommand.AddCommand(addCommand, showCommand, listCommand)
@@ -165,6 +187,13 @@ func renderProject(command *cobra.Command, result workspace.ProjectResult, add b
 		if _, err := fmt.Fprintf(command.OutOrStdout(), "  %s:\n    locator: %s\n    git common directory: %s\n", repository.ID, repository.Locator, repository.GitCommonDir); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func validateProjectFormat(format string) error {
+	if format != "text" && format != "json" {
+		return workspace.ProjectInvalidArguments("--format must be text or json")
 	}
 	return nil
 }

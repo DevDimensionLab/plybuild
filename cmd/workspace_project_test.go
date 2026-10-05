@@ -34,8 +34,8 @@ func TestWorkspaceProjectCommandShape(t *testing.T) {
 		example string
 	}{
 		{name: "add", use: "add <project-id>", short: "Register a project and its explicit repository members", long: "Register one project, its wrapper, and one or more explicit Git repository members in the containing Ply workspace.", example: "  ply workspace project add ply --name Ply --wrapper ../ply --repo ply=../ply/main"},
-		{name: "show", use: "show <project-id>", short: "Show a registered project", long: "Show the stored wrapper and repository members for one project in the containing Ply workspace.", example: "  ply workspace project show ply"},
-		{name: "list", use: "list", short: "List registered projects", long: "List projects registered in the containing Ply workspace.", example: "  ply workspace project list"},
+		{name: "show", use: "show <project-id>", short: "Show a registered project", long: "Show the stored wrapper and repository members for one project in the containing Ply workspace.", example: "  ply workspace project show ply\n  ply workspace project show --format json -- ply"},
+		{name: "list", use: "list", short: "List registered projects", long: "List projects registered in the containing Ply workspace.", example: "  ply workspace project list\n  ply workspace project list --format json"},
 	}
 	for _, test := range tests {
 		child, _, err := command.Find([]string{test.name})
@@ -66,7 +66,7 @@ func TestWorkspaceProjectCommandShape(t *testing.T) {
 		child.InitDefaultHelpFlag()
 		count := 0
 		child.LocalNonPersistentFlags().VisitAll(func(flag *pflag.Flag) { count++ })
-		if count != 1 {
+		if count != 2 || child.Flags().Lookup("format").DefValue != "text" {
 			t.Fatalf("%s local flag count = %d", name, count)
 		}
 	}

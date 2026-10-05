@@ -19,7 +19,7 @@ func TestWorkspaceTaskCommandsRenderHumanAndMachineReadback(t *testing.T) {
 		show: func(id workspace.TaskID) (workspace.TaskReadbackResult, error) {
 			return workspace.TaskReadbackResult{Workspace: "/workspace", Task: task, Epic: epic, ProjectFreshness: "fresh", ParentFreshness: workspace.TaskFreshnessWorktree{Locator: "unknown", Ref: "unknown", OID: "unknown", Tree: "unknown", GitCommonDir: "unknown", Clean: "unknown", InventoryMatch: "unknown"}, SourceFreshness: workspace.TaskFreshnessSource{Ref: "unknown", OID: "unknown", Tree: "unknown", CheckedOutAt: "unknown"}, TargetFreshness: workspace.TaskFreshnessTarget{Kind: "fresh", Locator: "unknown", Ref: "unknown", OID: "unknown", Tree: "unknown", GitCommonDir: "unknown", Clean: "unknown", InventoryMatch: "unknown"}, Target: workspace.TaskObservedTarget{Kind: "absent"}, Reasons: []string{"task_worktree_unbound"}}, nil
 		},
-		list: func(id *workspace.EpicID) (workspace.TaskListResult, error) {
+		list: func(filters workspace.TaskListFilters) (workspace.TaskListResult, error) {
 			return workspace.TaskListResult{Workspace: "/workspace", Tasks: []workspace.TaskRecord{task}}, nil
 		},
 		createWorktree: func(input workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error) {

@@ -111,28 +111,24 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 		setWorkFlagErrors(c)
 		queue.AddCommand(c)
 	}
-	// Keep the original registered-Task list, including its independent --epic filter.
+	// Ready dispatch is separate from the independent registered-Task filters.
 	for _, c := range task.Commands() {
 		if c.Name() != "list" {
 			continue
 		}
 		var ready bool
-		var project, repo, format string
 		old := c.RunE
 		c.Flags().BoolVar(&ready, "ready", false, "show the ready queue instead of the registered-Task list")
-		c.Flags().StringVar(&project, "project", "", "explicit queue Project ID (requires --ready, --repo and --epic)")
-		c.Flags().StringVar(&repo, "repo", "", "explicit queue repository ID (requires --ready, --project and --epic)")
-		c.Flags().StringVar(&format, "format", "text", "ready queue output format (text or json)")
 		c.RunE = func(c *cobra.Command, args []string) error {
+			format, _ := c.Flags().GetString("format")
 			if e := validateWorkFormat(format); e != nil {
 				return e
 			}
 			if !ready {
-				if project != "" || repo != "" || c.Flags().Changed("format") {
-					return workspace.WorkInvalidArguments("--project, --repo and --format require --ready on task list")
-				}
 				return old(c, args)
 			}
+			project, _ := c.Flags().GetString("project")
+			repo, _ := c.Flags().GetString("repo")
 			epic, _ := c.Flags().GetString("epic")
 			in, e := (queueTargetFlags{project, repo, epic}).input()
 			if e != nil {
