@@ -1,0 +1,42 @@
+# Planrepo
+
+Dette repoet inneholder planarbeidet for ett valgt mål: analyse, beslutninger og beslutningsferdige Specs. Produktkode ligger i de bundne produktworktreene, ikke her. Reglene for agenter står i [AGENTS.md](AGENTS.md).
+
+## Binding
+
+- Rot: {{.RootCode}}
+- Planrepo: {{.PlanningCode}}
+{{- if .HasRepositories}}
+- Produktrepoer (eksplisitte):
+{{- range .Repositories}}
+  - {{.PathCode}} (Git common dir {{.CommonDirCode}})
+{{- end}}
+{{- else}}
+- Produktrepoer: ingen er bundet ennå.
+{{- end}}
+
+## Dokumentroller
+
+| Fil | Rolle |
+|---|---|
+| [AGENTS.md](AGENTS.md) | Stående regler for agenter som arbeider her |
+| [goal.md](goal.md) | Det valgte målet og dets grenser |
+| [next-task.md](next-task.md) | Neste primærutfall; les den først |
+| [status.md](status.md) | Nåtilstand; eneste eier av «hvor er vi» |
+| [log.md](log.md) | Historikk over hva som faktisk skjedde |
+| [session-end.md](session-end.md) | Sjekkliste før du melder ferdig |
+| [process-checks.md](process-checks.md) | Betingede kontroller; bruk et avsnitt bare når utløseren inntreffer |
+| [design/](design/README.md) | Analyse og designbeslutninger |
+| [specs/](specs/README.md) | Beslutningsferdige Specs, det normale resultatet |
+| [koe/](koe/README.md) | Kø med relevant arbeid som ikke er bestilt |
+| [archive/](archive/README.md) | Ferdige oppgaver |
+
+## Start
+
+{{if .HasGoal -}}
+Et mål er oppgitt og står i [goal.md](goal.md). Det er ikke avklart ennå; neste steg står i [next-task.md](next-task.md).
+{{- else -}}
+Ingen mål er valgt ennå. Neste steg er å velge eller avklare målet sammen med mennesket; se [next-task.md](next-task.md).
+{{- end}}
+
+Å opprette dette repoet starter ingen agent.

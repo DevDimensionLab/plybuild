@@ -1,0 +1,42 @@
+# Planning repository
+
+This repository holds the planning work for one chosen goal: analysis, decisions and decision-complete Specs. Product code lives in the bound product worktrees, not here. The rules for agents are in [AGENTS.md](AGENTS.md).
+
+## Binding
+
+- Root: {{.RootCode}}
+- Planning repository: {{.PlanningCode}}
+{{- if .HasRepositories}}
+- Product repositories (explicit):
+{{- range .Repositories}}
+  - {{.PathCode}} (Git common dir {{.CommonDirCode}})
+{{- end}}
+{{- else}}
+- Product repositories: none bound yet.
+{{- end}}
+
+## Document roles
+
+| File | Role |
+|---|---|
+| [AGENTS.md](AGENTS.md) | Standing rules for agents working here |
+| [goal.md](goal.md) | The chosen goal and its boundaries |
+| [next-task.md](next-task.md) | The next primary outcome; read it first |
+| [status.md](status.md) | Current state; the one owner of "where are we" |
+| [log.md](log.md) | History of what actually happened |
+| [session-end.md](session-end.md) | Checklist to run before reporting done |
+| [process-checks.md](process-checks.md) | Conditional checks; use a section only when its trigger occurs |
+| [design/](design/README.md) | Analysis and design decisions |
+| [specs/](specs/README.md) | Decision-complete Specs, the normal result |
+| [koe/](koe/README.md) | Queue of relevant work that was not requested |
+| [archive/](archive/README.md) | Finished task records |
+
+## Starting
+
+{{if .HasGoal -}}
+A goal was supplied and is recorded in [goal.md](goal.md). It has not been clarified yet; the next step is in [next-task.md](next-task.md).
+{{- else -}}
+No goal has been chosen yet. The next step is to choose or clarify the goal with the human; see [next-task.md](next-task.md).
+{{- end}}
+
+Creating this repository starts no agent.
