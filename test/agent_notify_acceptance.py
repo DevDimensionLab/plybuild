@@ -16,7 +16,7 @@ import tempfile
 import time
 
 REPO = Path(__file__).resolve().parents[1]
-BASE = 'fd864af8b2bbe09726f85297b169f43dca958599'
+BASE = 'c8f9dd00ee36d3f57191355c278d982808d421a8'
 ENV = 'PLY_SLACK_WEBHOOK_URL'
 
 
@@ -138,8 +138,8 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
         if receipt: args += ['--start-receipt',folder/'start.json']
         return [str(x) for x in [*args,*extra]]
 
-    def notify(self, folder, extra=(), expected=(0,), env=None, **kwargs):
-        c = self.command(self.notify_args(folder, extra, **kwargs),env=env,expected=expected)
+    def notify(self, folder, extra=(), expected=(0,), env=None, cwd=REPO, **kwargs):
+        c = self.command(self.notify_args(folder, extra, **kwargs),env=env,expected=expected,cwd=cwd)
         return json.loads(c.stdout)
 
     def posts(self, folder):
@@ -282,38 +282,160 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
         assert not self.posts(f)
         self.checks.append('bootstrap/install conflicts, directory/leaf symlinks, unsafe modes, and injected foreign-owner observation are rejected without repair')
 
-    def v1_state(self):
-        # Materialize and compile the exact prior candidate as an isolated fixture.
+    def legacy_state(self):
+        # Build the exact pre-change command graph. Every old state byte below
+        # comes from that binary, never a hand-crafted database or new serializer.
         baseline=self.root/'baseline-source';baseline.mkdir(mode=0o700)
         c=subprocess.run(['git','archive',BASE],cwd=REPO,env=self.env,capture_output=True,check=True)
         with tarfile.open(fileobj=io.BytesIO(c.stdout)) as archive:
             archive.extractall(baseline,filter='data')
         old=self.root/'baseline-driver'
         self.command(['go','test','-c','-o',old,'./test/notification-driver'],cwd=baseline)
-        for response in [200,403]:
-            f=self.fixture('legacy-'+str(response),response={'kind':'http','status':response,'body':'ok' if response==200 else 'action_prohibited'})
-            source={'kind':'external','activity':'fixture/activity','run':'run-1','worktree':str(f/'work'), 'handoff':loc(f/'handoff.md'),'start_receipt':loc(f/'start.json',True),'report':loc(f/'report.json',True)}
-            req={'kind':'ply.workflow.notification-request','schema_version':1,'route':'ply-log','source':source,
-                 'gate':{'id':'gate-1','revision':1,'opened_at':'2026-10-04T14:00:00Z','reason':'result_control','state':'waiting_for_human'},
-                 'sender':{'actor_claim':'legacy-fixture'},'public':{'task_title':'Legacy report','next_action':'Start result control.'}}
-            put(f/'v1.json',req)
-            route=f/'config/route.json';baseargs=['--config',f/'driver.json','--','workflow','notification']
-            send=['send','--file',f/'v1.json','--route',route,'--format','json']
-            p=json.loads(self.command([old,*baseargs,*send,'--check'],env=self.secret_env()).stdout)
-            self.command([old,*baseargs,*send,'--apply','--confirm',p['confirmation']],env=self.secret_env(),expected=(0,5))
-            state=(f/'state/state.json').read_bytes()
+        f=self.fixture('legacy-mixed')
+        route=f/'config/route.json';baseargs=['--config',f/'driver.json','--','workflow','notification']
+        records=[]
+        for version in [1,2]:
+            for state,transport in [('transport_acknowledged',{'kind':'http','status':200,'body':'ok'}),('rejected',{'kind':'http','status':403,'body':'action_prohibited'}),('unknown',{'kind':'unknown'})]:
+                name='v%d-%s'%(version,state)
+                cfg=json.loads((f/'driver.json').read_bytes());cfg['transport']=transport;put(f/'driver.json',cfg)
+                source={'kind':'external','activity':'fixture/activity','run':'run-1','worktree':str(f/'work'),'handoff':loc(f/'handoff.md'),'start_receipt':loc(f/'start.json',True),'report':loc(f/'report.json',True)}
+                req={'kind':'ply.workflow.notification-request','schema_version':version,'route':'ply-log','source':source,'sender':{'actor_claim':'legacy-fixture'}}
+                if version==1:
+                    req['gate']={'id':name,'revision':1,'opened_at':'2026-10-04T14:00:00Z','reason':'result_control','state':'waiting_for_human'}
+                    req['public']={'task_title':'Legacy report','next_action':'Start result control.'}
+                else:
+                    event=json.loads((f/'event.json').read_bytes());event['event_id']=name
+                    event_path=put(f/(name+'-event.json'),event)
+                    req['public']=event['public']
+                    req['event']={'id':name,'type':event['event_type'],'phase':event['phase'],'occurred_at':event['occurred_at'],'record':loc(event_path,True)}
+                path=put(f/(name+'.json'),req)
+                send=['send','--file',path,'--route',route,'--format','json']
+                p=json.loads(self.command([old,*baseargs,*send,'--check'],env=self.secret_env()).stdout)
+                old_result=self.command([old,*baseargs,*send,'--apply','--confirm',p['confirmation']],env=self.secret_env(),expected=(0,5)).stdout
+                records.append({'version':version,'state':state,'path':str(path),'preview':p,'result':json.loads(old_result)})
+        original=(f/'state/state.json').read_bytes()
+        put(f/'baseline-state.json',original)
+        put(f/'baseline-provenance.json',{'base_oid':BASE,'producer_sha256':sha(old),'state_sha256':sha(f/'baseline-state.json'),'records':records,'network':False})
+        for record in records:
+            p=record['preview'];send=['send','--file',record['path'],'--route',route,'--format','json']
             r=json.loads(self.command([self.driver,*baseargs,'show',p['notification_id'],'--route',route,'--format','json']).stdout)
-            assert r['state']==('transport_acknowledged' if response==200 else 'rejected')
+            assert r==record['result'],(record['version'],record['state'],r)
+            preview=json.loads(self.command([self.driver,*baseargs,*send,'--check'],env=self.secret_env()).stdout)
+            assert preview['payload']==p['payload'] and preview['payload_sha256']==p['payload_sha256']
             self.command([self.driver,*baseargs,*send,'--apply','--confirm',p['confirmation']],env=self.secret_env())
-            assert len(self.posts(f))==1 and (f/'state/state.json').read_bytes()==state
-            if response==403:
-                retry=['retry',p['notification_id'],'--route',route,'--format','json']
-                p2=json.loads(self.command([self.driver,*baseargs,*retry,'--check'],env=self.secret_env()).stdout)
-                self.command([self.driver,*baseargs,*retry,'--apply','--confirm',p2['confirmation']],env=self.secret_env(),expected=(5,))
-                assert len(self.posts(f))==2
-                self.command([self.driver,*baseargs,*retry,'--apply','--confirm',p2['confirmation']],env=self.secret_env())
-                assert len(self.posts(f))==2
-        self.checks.append('actual v1 baseline state reads byte-for-byte, replays and explicitly retries under the new binary')
+            assert len(self.posts(f))==6 and (f/'state/state.json').read_bytes()==original
+        for record in records:
+            p=record['preview'];retry=['retry',p['notification_id'],'--route',route,'--format','json']
+            if record['state']!='rejected':
+                self.command([self.driver,*baseargs,*retry,'--check'],env=self.secret_env(),expected=(4,))
+                continue
+            cfg=json.loads((f/'driver.json').read_bytes());cfg['transport']={'kind':'http','status':200,'body':'ok'};put(f/'driver.json',cfg)
+            p2=json.loads(self.command([self.driver,*baseargs,*retry,'--check'],env=self.secret_env()).stdout)
+            self.command([self.driver,*baseargs,*retry,'--apply','--confirm',p2['confirmation']],env=self.secret_env())
+            count=len(self.posts(f))
+            assert self.posts(f)[-1]['payload']==p['payload']
+            self.command([self.driver,*baseargs,*retry,'--apply','--confirm',p2['confirmation']],env=self.secret_env())
+            assert len(self.posts(f))==count
+        assert len(self.posts(f))==8
+        # Add v3 to this same unchanged route/state; older records must still show.
+        task,event=self.compact_task(f,'codex','done','mixed-new')
+        result=self.notify(f,cwd=task['origin_cwd'])
+        assert result['state']=='transport_acknowledged' and len(self.posts(f))==9
+        for record in records:
+            self.command([self.driver,*baseargs,'show',record['preview']['notification_id'],'--route',route,'--format','json'])
+        # Recast the exact prior v2 identity, including unknown, as v3.
+        for record in records:
+            if record['version']!=2:continue
+            task,event=self.compact_task(f,'codex','done',json.loads(Path(record['path']).read_bytes())['event']['id'])
+            result=self.notify(f,cwd=task['origin_cwd'],expected=(0,5))
+            assert result['reason']=='preview_rejected' and result['preview_exit']==4 and len(self.posts(f))==9
+        # The old helper first writes an immutable v2 request; the new helper
+        # must read that exact byte sequence without another apply.
+        old_helper=self.fixture('legacy-helper')
+        wrapper=old_helper/'ply-fixture'
+        wrapper.write_text(wrapper.read_text().replace(str(self.driver),str(old)))
+        argv=self.notify_args(old_helper);argv[1]=str(baseline/'skills/ply-agent-notify/scripts/notify.py')
+        result=json.loads(self.command(argv).stdout)
+        request=Path(result['request']);original_request=request.read_bytes()
+        wrapper.write_text(wrapper.read_text().replace(str(old),str(self.driver)))
+        repeated=self.notify(old_helper)
+        assert repeated['reason']=='preserved_attempt_readback' and request.read_bytes()==original_request and len(self.posts(old_helper))==1
+        # Exercise the actual explicit upgrade command only in this private fixture.
+        installed=self.root/'installed'/'old-notify';backup=self.root/'installed'/'old-notify-backup'
+        self.command([sys.executable,baseline/'skills/ply-agent-notify/scripts/install.py','--destination',installed])
+        self.command([sys.executable,REPO/'skills/ply-agent-notify/scripts/install.py','--destination',installed,'--upgrade-from',baseline/'skills/ply-agent-notify','--backup',backup])
+        for path in self.skill.rglob('*'):
+            if not path.is_file():continue
+            name=path.relative_to(self.skill)
+            assert (installed/name).read_bytes()==path.read_bytes()
+            assert (backup/name).read_bytes()==(baseline/'skills/ply-agent-notify'/name).read_bytes()
+            assert stat.S_IMODE((installed/name).stat().st_mode)==stat.S_IMODE(path.stat().st_mode)
+            assert stat.S_IMODE((backup/name).stat().st_mode)==stat.S_IMODE(path.stat().st_mode)
+        self.checks.append('base c8f9dd0 binary produced mixed v1/v2 acknowledged/rejected/unknown state; exact readback/payload/replay, permitted retry, mixed v3 and version conflicts pass')
+
+    def compact_task(self,f,provider,status,event_id=None):
+        origin=f/'ply'/('planning' if provider=='codex' else 'varsler');origin.mkdir(mode=0o700,parents=True,exist_ok=True)
+        task=json.loads((f/'task.json').read_bytes())
+        task.update(kind='PlyAgentNotificationTask@2',provider=provider,origin_cwd=str(origin),context_root=str(f),timezone='Europe/Oslo');put(f/'task.json',task)
+        event=json.loads((f/'event.json').read_bytes());event['kind']='PlyAgentNotificationEvent@2';event['public']['status']=status
+        if event_id:event['event_id']=event_id
+        put(f/'event.json',event)
+        return task,event
+
+    def compact_journeys(self):
+        for provider in ['codex','claude']:
+            for status,label,event_type in [('ready_for_review','Ready for review','agent_finished'),('ready_for_your_check','Ready for your check','agent_finished'),('done','Done','agent_finished'),('stopped','Stopped','agent_stopped'),('needs_answer','Needs answer','feedback_required')]:
+                f=self.fixture('compact-'+provider+'-'+status,event_type)
+                task,event=self.compact_task(f,provider,status)
+                result=self.notify(f,cwd=task['origin_cwd'])
+                payload=self.posts(f)[0]['payload']
+                assert payload['text']=='16:00:00 · '+provider+' · '+('ply/planning' if provider=='codex' else 'ply/varsler')+'\n'+label+': '+event['public']['task_title']+' — '+event['public']['summary']+'\nNext: '+event['public']['next_action']
+                request=Path(result['request']);before=request.read_bytes()
+                assert json.loads(before)['source']['worktree']!=task['origin_cwd']
+                self.notify(f,cwd=task['origin_cwd'],env={**self.env,'TZ':'Pacific/Honolulu'})
+                assert len(self.posts(f))==1 and request.read_bytes()==before
+                # The same helper event key prevents replay during a schema switch.
+                event['kind']='PlyAgentNotificationEvent@1';del event['public']['status'];put(f/'event.json',event)
+                task['kind']='PlyAgentNotificationTask@1'
+                for key in ['provider','origin_cwd','context_root','timezone']:del task[key]
+                put(f/'task.json',task)
+                replay=self.notify(f,expected=(5,));assert replay['state']=='unknown' and len(self.posts(f))==1
+        f=self.fixture('compact-wrong-cwd');task,event=self.compact_task(f,'codex','done')
+        assert self.notify(f,expected=(2,))['reason']=='origin_cwd_mismatch'
+        assert not (f/'events').exists() and not self.posts(f)
+        self.checks.append('real helper/command payloads for both providers and five statuses, origin distinct from target, TZ-independent replay, cross-version helper conflict and wrong cwd rejection')
+
+    def frozen_timezone(self):
+        import zipfile
+        f=self.fixture('frozen-zone',response={'kind':'http','status':403,'body':'action_prohibited'})
+        task,event=self.compact_task(f,'codex','done')
+        # Both runtimes see a private named zone for the first attempt. Removing
+        # this zone simulates a tzdata update without touching host configuration.
+        tz=f/'tz';(tz/'Fixture').mkdir(parents=True,mode=0o700)
+        goroot=self.command(['go','env','GOROOT']).stdout.decode().strip()
+        with zipfile.ZipFile(Path(goroot)/'lib/time/zoneinfo.zip') as z:
+            (tz/'Fixture/Frozen').write_bytes(z.read('Europe/Oslo'))
+        task['timezone']='Fixture/Frozen';put(f/'task.json',task)
+        env={**self.env,'ZONEINFO':str(tz),'PYTHONTZPATH':str(tz)}
+        result=self.notify(f,cwd=task['origin_cwd'],env=env,expected=(5,))
+        assert result['state']=='rejected'
+        req=Path(result['request']);request_bytes=req.read_bytes();state=(f/'state/state.json').read_bytes()
+        (tz/'Fixture/Frozen').rename(tz/'Fixture/Retired')
+        repeat=self.notify(f,cwd=task['origin_cwd'],env=env,expected=(5,))
+        assert repeat['state']=='rejected' and len(self.posts(f))==1
+        assert req.read_bytes()==request_bytes and (f/'state/state.json').read_bytes()==state
+        cfg=json.loads((f/'driver.json').read_bytes());cfg['now']='2026-10-12T01:00:00Z';put(f/'driver.json',cfg)
+        env['TZ']='Pacific/Honolulu'
+        args=[self.driver,'--config',f/'driver.json','--','workflow','notification']
+        route=f/'config/route.json'
+        retry=['retry',result['notification_id'],'--route',route,'--format','json']
+        p=json.loads(self.command([*args,*retry,'--check'],env={**env,ENV:self.secret}).stdout)
+        self.command([*args,*retry,'--apply','--confirm',p['confirmation']],env={**env,ENV:self.secret},expected=(5,))
+        assert len(self.posts(f))==2 and self.posts(f)[0]['payload']==self.posts(f)[1]['payload']
+        # A genuinely fresh event with the retired zone must fail, not use UTC.
+        event['event_id']='new-retired-zone-event';put(f/'event.json',event)
+        assert self.notify(f,cwd=task['origin_cwd'],env=env,expected=(2,))['reason']=='unknown_timezone_or_unrepresentable_time'
+        self.checks.append('removed IANA zone leaves historical database, helper replay, explicit retry and frozen payload intact; fresh input rejects the unavailable zone')
 
     def privacy(self):
         for directory in [self.root/'commands',self.root/'installed',*[p for p in self.root.iterdir() if p.is_dir() and (p/'task.json').exists()]]:
@@ -328,17 +450,19 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
 
     def run(self):
         self.command([sys.executable,REPO/'test/agent_notify_regression_test.py'])
-        self.setup();self.journeys();self.failures();self.incomplete_attempt_record();self.concurrency();self.unsafe_setup();self.v1_state();self.privacy()
+        self.setup();self.journeys();self.failures();self.incomplete_attempt_record();self.concurrency();self.unsafe_setup();self.compact_journeys();self.frozen_timezone();self.legacy_state();self.privacy()
         # Production executable help and preview are exercised without transport.
         for parts in [[],['workflow'],['workflow','notification'],['workflow','notification','send'],['workflow','notification','show'],['workflow','notification','retry']]:
             self.command([self.ply,*parts,'--help'])
+        for script in ['notify.py','install.py']:
+            self.command([sys.executable,self.skill/'scripts'/script,'--help'])
         f=self.fixture('production-preview')
         # Create/preserve a request through the real helper, then production check.
         r=self.notify(f,['--credential-file',str(f/'config/missing')],expected=(2,))
         c=self.command([self.ply,'workflow','notification','send','--file',r['request'],'--route',f/'config/route.json','--check','--format','json'],env=self.secret_env())
         assert json.loads(c.stdout)['allowed'] is True and not self.posts(f) and not (f/'state/state.json').exists()
         self.privacy()
-        put(self.root/'result.json',{'kind':'PlyAgentNotificationAcceptance@1','outcome':'passed','checks':self.checks,'commands':'commands.json','root':str(self.root),'live_network':False,'v1_baseline':BASE})
+        put(self.root/'result.json',{'kind':'PlyAgentNotificationAcceptance@1','outcome':'passed','checks':self.checks,'commands':'commands.json','root':str(self.root),'live_network':False,'legacy_baseline':BASE})
         print(json.dumps({'outcome':'passed','checks':len(self.checks),'fixture':str(self.root),'commands':len(self.commands)}))
 
 

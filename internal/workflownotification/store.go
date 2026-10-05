@@ -77,7 +77,7 @@ func readDatabase(dir *os.File) (*database, error) {
 		if r == nil || !idPattern.MatchString(id) || id != identity(r.Request) || r.Route.Name != db.Route || r.RouteSHA != db.RouteSHA || r.Basis == "" || !digestPattern.MatchString(r.CredentialSHA) || !digestPattern.MatchString(r.SendConfirmation) || len(r.Attempts) == 0 || digestValue(r.Payload) != digestValue(message(r.Request)) {
 			return nil, fail(1, "state_corrupt", "Notification state is incomplete or corrupt.")
 		}
-		req, e := parseRequest(r.RequestBytes, "")
+		req, e := parseStoredRequest(r.RequestBytes, "")
 		if e != nil || digestValue(req) != digestValue(r.Request) {
 			return nil, fail(1, "state_corrupt", "Notification state is incomplete or corrupt.")
 		}

@@ -78,7 +78,7 @@ func prepare(d Dependencies, in Input) (*prepared, error) {
 		if e != nil {
 			return p, sourceError(e, false, in.Apply)
 		}
-		req, e = parseRequest(raw, "")
+		req, e = parseStoredRequest(raw, "")
 		if e != nil {
 			return p, e
 		}
@@ -97,7 +97,7 @@ func prepare(d Dependencies, in Input) (*prepared, error) {
 	if _, e = parseRoute(routeBytes, p.secret); e != nil {
 		return p, e
 	}
-	if _, e = parseRequest(raw, p.secret); e != nil {
+	if _, e = parseRequestMode(raw, p.secret, p.prior == nil); e != nil {
 		return p, e
 	}
 	if req.Route != p.route.Name {
@@ -239,7 +239,7 @@ func failureOutput(p *prepared, err error) any {
 			path, e := filepath.Abs(p.input.File)
 			if e == nil {
 				if raw, e := readFile(path, 64<<10, false); e == nil {
-					if req, e := parseRequest(raw, ""); e == nil {
+					if req, e := parseStoredRequest(raw, ""); e == nil {
 						id = identity(req)
 						source = req.Source
 						gate = req.Gate

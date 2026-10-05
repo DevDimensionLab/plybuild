@@ -8,6 +8,7 @@ import (
 )
 
 const agentEventKind = "PlyAgentNotificationEvent@1"
+const compactEventKind = "PlyAgentNotificationEvent@2"
 
 type Event struct {
 	ID         string  `json:"id"`
@@ -28,17 +29,25 @@ type eventRecord struct {
 	Public     Public `json:"public"`
 }
 
-func parseAgentRequest(r Request, m map[string]any, secret string) (Request, error) {
-	if !keys(m, "kind", "schema_version", "route", "source", "event", "sender", "public") ||
+func parseAgentRequest(r Request, m map[string]any, secret string, fresh bool) (Request, error) {
+	fields := []string{"kind", "schema_version", "route", "source", "event", "sender", "public"}
+	publicFields := []string{"task_title", "summary", "next_action", "next_actor"}
+	eventKind := agentEventKind
+	if r.SchemaVersion == 3 {
+		fields = append(fields, "presentation")
+		publicFields = append(publicFields, "status")
+		eventKind = compactEventKind
+	}
+	if !keys(m, fields...) ||
 		!keys(m["event"], "id", "type", "occurred_at", "phase", "record") ||
-		!keys(m["sender"], "actor_claim") || !keys(m["public"], "task_title", "summary", "next_action", "next_actor") || r.Event == nil {
+		!keys(m["sender"], "actor_claim") || !keys(m["public"], publicFields...) || r.Event == nil {
 		return r, invalid()
 	}
 	source, ok := m["source"].(map[string]any)
 	if !ok {
 		return r, invalid()
 	}
-	fields := []string{"kind", "activity", "run", "worktree", "handoff"}
+	fields = []string{"kind", "activity", "run", "worktree", "handoff"}
 	for _, name := range []string{"start_receipt", "report"} {
 		if value, exists := source[name]; exists {
 			fields = append(fields, name)
@@ -54,7 +63,7 @@ func parseAgentRequest(r Request, m map[string]any, secret string) (Request, err
 	e := r.Event
 	if r.Kind != "ply.workflow.notification-request" || r.Source.Kind != "external" || !routePattern.MatchString(r.Route) ||
 		!cleanText(r.Source.Activity, 200) || !cleanText(r.Source.Run, 200) || !validPath(r.Source.Worktree) ||
-		!validLocator(r.Source.Handoff) || !validLocator(e.Record) || e.Record.Kind == nil || *e.Record.Kind != agentEventKind ||
+		!validLocator(r.Source.Handoff) || !validLocator(e.Record) || e.Record.Kind == nil || *e.Record.Kind != eventKind ||
 		!cleanText(e.ID, 80) || !cleanText(r.Sender.ActorClaim, 100) || !cleanText(r.Public.TaskTitle, 100) ||
 		!cleanText(r.Public.Summary, 300) || !cleanText(r.Public.NextAction, 300) ||
 		(r.Public.NextActor != "user" && r.Public.NextActor != "coordinator") {
@@ -98,17 +107,26 @@ func parseAgentRequest(r Request, m map[string]any, secret string) (Request, err
 	if !privateSafe(m, secret) {
 		return r, invalid()
 	}
+	if r.SchemaVersion == 3 && (!keys(m["presentation"], "provider", "origin_cwd", "context_root", "context", "timezone", "local_occurred_at") || !validCompact(r, fresh)) {
+		return r, invalid()
+	}
 	return r, nil
 }
 
 func checkEventRecord(raw []byte, r Request) error {
 	var actual eventRecord
 	m, err := strict(raw, &actual)
+	publicFields := []string{"task_title", "summary", "next_action", "next_actor"}
+	eventKind := agentEventKind
+	if r.SchemaVersion == 3 {
+		publicFields = append(publicFields, "status")
+		eventKind = compactEventKind
+	}
 	if err != nil || !keys(m, "kind", "activity", "run", "event_id", "event_type", "phase", "occurred_at", "public") ||
-		!keys(m["public"], "task_title", "summary", "next_action", "next_actor") {
+		!keys(m["public"], publicFields...) {
 		return invalid()
 	}
-	want := eventRecord{agentEventKind, r.Source.Activity, r.Source.Run, r.Event.ID, r.Event.Type, r.Event.Phase, r.Event.OccurredAt, r.Public}
+	want := eventRecord{eventKind, r.Source.Activity, r.Source.Run, r.Event.ID, r.Event.Type, r.Event.Phase, r.Event.OccurredAt, r.Public}
 	if !reflect.DeepEqual(actual, want) {
 		return fail(2, "source_changed", "Event record does not match the request.")
 	}

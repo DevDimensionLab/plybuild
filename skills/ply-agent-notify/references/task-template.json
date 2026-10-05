@@ -1,5 +1,5 @@
 {
-  "kind": "PlyAgentNotificationTask@1",
+  "kind": "PlyAgentNotificationTask@2",
   "activity": "replace-with-agreed-activity",
   "run": "replace-with-agreed-run",
   "worktree": "/absolute/physical/worktree",
@@ -7,5 +7,9 @@
   "route": "/Users/perottochristensen/.config/ply/notifications/ply-log/route.json",
   "event_root": "/absolute/private/task-return/notification-events",
   "actor_claim": "delivery-agent",
-  "notification_authorized": true
+  "notification_authorized": true,
+  "provider": "codex",
+  "origin_cwd": "/absolute/physical/origin",
+  "context_root": "/absolute/physical/context-root",
+  "timezone": "Europe/Oslo"
 }

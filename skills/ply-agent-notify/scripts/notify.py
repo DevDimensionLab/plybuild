@@ -9,13 +9,75 @@ import re
 import subprocess
 import sys
 import uuid
+import unicodedata
+from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 sys.dont_write_bytecode = True
 from common import CONFIG, ENV, Failure, credential, decode, directory, encode, locator, physical, private, read_file, safe_public, write_once
 
 STATES = {'transport_acknowledged', 'rejected', 'not_sent', 'rate_limited', 'unknown'}
 ID = re.compile(r'ntf_[0-9a-f]{64}\Z')
 DIGEST = re.compile(r'sha256:[0-9a-f]{64}\Z')
+ZONE = re.compile(r'[A-Za-z0-9_+-]+(?:/[A-Za-z0-9_+-]+)*\Z')
+STATUS = {'agent_finished': {'ready_for_review', 'ready_for_your_check', 'done'},
+          'agent_stopped': {'stopped'}, 'feedback_required': {'needs_answer'}}
+
+
+def compact_text(value, limit):
+    if not isinstance(value, str) or not value or value.strip() != value or len(value) > limit:
+        raise Failure('invalid_compact_text')
+    if any(unicodedata.category(c) in {'Cc', 'Cf', 'Cs', 'Zl', 'Zp'} for c in value) or any(c in value for c in '<>') or any(s in value.lower() for s in ['@channel', '@here', '@everyone']):
+        raise Failure('unsafe_compact_text')
+
+
+def compact_presentation(task, event, args):
+    if task['provider'] not in {'codex', 'claude'}:
+        raise Failure('explicit_provider_required')
+    origin, root = physical(task['origin_cwd']), physical(task['context_root'])
+    for path in [root, origin]:
+        with directory(path):
+            pass
+    if Path.cwd() != origin:
+        raise Failure('origin_cwd_mismatch')
+    try:
+        context = origin.relative_to(root).as_posix()
+    except ValueError:
+        raise Failure('origin_outside_context_root') from None
+    compact_text(context, 96)
+    zone = task['timezone']
+    if not isinstance(zone, str) or not ZONE.fullmatch(zone) or zone == 'Local' or len(zone) > 128:
+        raise Failure('invalid_timezone')
+    if set(event) != {'kind', 'activity', 'run', 'event_id', 'event_type', 'phase', 'occurred_at', 'public'}:
+        raise Failure('invalid_event_fields')
+    public = event['public']
+    if not isinstance(public, dict) or set(public) != {'task_title', 'summary', 'next_action', 'next_actor', 'status'}:
+        raise Failure('invalid_public_fields')
+    for name, limit in [('task_title', 60), ('summary', 100), ('next_action', 140)]:
+        compact_text(public[name], limit)
+    if public['status'] not in STATUS.get(event['event_type'], set()) or public['next_actor'] not in {'user', 'coordinator'}:
+        raise Failure('invalid_event_status')
+    if event['phase'] not in {'before_start', 'after_start'} or event['phase'] == 'before_start' and (event['event_type'] != 'agent_stopped' or args.start_receipt):
+        raise Failure('invalid_event_phase')
+    if event['event_type'] == 'agent_finished' and not args.report:
+        raise Failure('report_required')
+    if event['event_type'] == 'feedback_required' and (public['next_actor'] != 'user' or '?' not in public['summary']):
+        raise Failure('necessary_question_required')
+    try:
+        instant = datetime.strptime(event['occurred_at'], '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=timezone.utc)
+        if instant.strftime('%Y-%m-%dT%H:%M:%SZ') != event['occurred_at']:
+            raise ValueError()
+    except (ValueError, TypeError):
+        raise Failure('invalid_event_time') from None
+    return {'provider': task['provider'], 'origin_cwd': str(origin), 'context_root': str(root),
+            'context': context, 'timezone': zone}, instant
+
+
+def local_stamp(instant, zone):
+    try:
+        return instant.astimezone(ZoneInfo(zone)).isoformat(timespec='seconds').replace('+00:00', 'Z')
+    except (ZoneInfoNotFoundError, ValueError, OverflowError):
+        raise Failure('unknown_timezone_or_unrepresentable_time') from None
 
 
 def outcome(state, reason, **fields):
@@ -51,27 +113,44 @@ def deliver(args):
         return outcome('suppressed', args.trigger)
     task = decode(read_file(args.task, 64 << 10))
     required = {'kind', 'activity', 'run', 'worktree', 'handoff', 'route', 'event_root', 'actor_claim', 'notification_authorized'}
-    if set(task) != required or task['kind'] != 'PlyAgentNotificationTask@1' or task['notification_authorized'] is not True:
+    compact = task.get('kind') == 'PlyAgentNotificationTask@2'
+    if compact:
+        required |= {'provider', 'origin_cwd', 'context_root', 'timezone'}
+    if set(task) != required or task['kind'] not in {'PlyAgentNotificationTask@1', 'PlyAgentNotificationTask@2'} or task['notification_authorized'] is not True:
         raise Failure('task_route_authority_required')
     event = decode(read_file(args.event))
-    if event.get('kind') != 'PlyAgentNotificationEvent@1' or event.get('activity') != task['activity'] or event.get('run') != task['run']:
+    event_kind = 'PlyAgentNotificationEvent@2' if compact else 'PlyAgentNotificationEvent@1'
+    if event.get('kind') != event_kind or event.get('activity') != task['activity'] or event.get('run') != task['run']:
         raise Failure('event_identity_mismatch')
+    if compact:
+        presentation, instant = compact_presentation(task, event, args)
     route = decode(read_file(task['route'], 16 << 10))
     if route.get('webhook_env') != ENV:
         raise Failure('named_credential_required')
     record = locator(args.event)
-    record['kind'] = 'PlyAgentNotificationEvent@1'
+    record['kind'] = event_kind
     source = {k: task[k] for k in ['activity', 'run', 'worktree']}
     source.update(kind='external', handoff=locator(task['handoff']))
     for name in ['start_receipt', 'report']:
         path = getattr(args, name)
         if path:
             source[name] = locator(path, metadata=True)
-    request = {'kind':'ply.workflow.notification-request', 'schema_version':2,
+    request = {'kind':'ply.workflow.notification-request', 'schema_version':3 if compact else 2,
                'route':route['name'], 'source':source,
                'event':{'id':event['event_id'], 'type':event['event_type'], 'phase':event['phase'],
                         'occurred_at':event['occurred_at'], 'record':record},
                'sender':{'actor_claim':task['actor_claim']}, 'public':event['public']}
+    root = physical(task['event_root'])
+    # The version-independent key is also used by older Task@1 callers.
+    key = hashlib.sha256(encode({'activity':task['activity'], 'run':task['run'], 'event':event['event_id']})).hexdigest()
+    folder = root/key
+    if compact:
+        request['presentation'] = presentation
+        request_path = folder/'request.json'
+        if not os.path.lexists(request_path):
+            # Reject an unknown zone on a fresh event before creating its folder.
+            # An existing request is read only after taking the event lock below.
+            presentation['local_occurred_at'] = local_stamp(instant, presentation['timezone'])
     secret, credential_error = None, None
     try:
         secret = credential(args.credential_file)
@@ -79,13 +158,10 @@ def deliver(args):
         credential_error = 'credential_missing_invalid_or_unsafe'
     if not all(safe_public(value, secret or os.environ.get(ENV, '')) for value in [request, task, route]):
         raise Failure('unsafe_notification_text')
-    root = physical(task['event_root'])
     # Route and port revision deliberately do not change this identity. Keep this
     # event root fixed across callers and restarts, just like the route state root.
-    key = hashlib.sha256(encode({'activity':task['activity'], 'run':task['run'], 'event':event['event_id']})).hexdigest()
     with directory(root, create=True, secure=True):
         pass
-    folder = root/key
     with directory(folder, create=True, secure=True) as fd:
         try:
             lock = os.open('.lock', os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600, dir_fd=fd)
@@ -105,6 +181,24 @@ def deliver(args):
                 return outcome('unknown', 'event_busy_preserve_local_return')
             request_path = folder/'request.json'
             attempt_path = folder/'apply-started.json'
+            if compact:
+                if os.path.lexists(request_path):
+                    prior = decode(read_file(request_path, mode=0o600))
+                    stored = prior.get('presentation')
+                    if prior.get('schema_version') != 3 or not isinstance(stored, dict):
+                        raise Failure('existing_bytes_conflict')
+                    frozen = stored.get('local_occurred_at')
+                    try:
+                        local = datetime.fromisoformat(frozen.replace('Z', '+00:00'))
+                        if local.utcoffset() is None or local != instant or local.isoformat(timespec='seconds').replace('+00:00', 'Z') != frozen:
+                            raise ValueError()
+                    except (AttributeError, TypeError, ValueError):
+                        raise Failure('invalid_preserved_local_time') from None
+                    presentation['local_occurred_at'] = frozen
+                elif 'local_occurred_at' not in presentation:
+                    presentation['local_occurred_at'] = local_stamp(instant, presentation['timezone'])
+                if not safe_public(request, secret or os.environ.get(ENV, '')):
+                    raise Failure('unsafe_notification_text')
             # Freeze route locator as well as request bytes, before any send.
             write_once(folder/'binding.json', encode({'route':task['route'], 'state_root':route['state_root'], 'route_sha256':locator(task['route'])['sha256']}))
             write_once(request_path, encode(request))

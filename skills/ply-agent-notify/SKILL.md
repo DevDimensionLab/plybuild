@@ -10,7 +10,14 @@ handoff. Merely loading this skill or starting an agent does not grant outgoing
 authority when no such preference exists. A narrower current instruction takes priority.
 
 At task start, bind one notification owner (normally root), the authority source,
-activity/run, physical worktree, stable mandate, report location, route and event root.
+activity/run, physical target worktree, stable mandate, report location, route and event root.
+Use Task@2 and bind the actual provider (`codex` or `claude`), physical `origin_cwd`,
+physical containing `context_root`, and the recipient's IANA `timezone` at task start.
+Provider comes from the actual agent context or controlled native identity, never a
+model name, actor claim or executable lookup. Origin is separate from target worktree.
+The helper must run from that physical origin. A separately authorized native proxy
+keeps the provider's actual origin; root must not label its own work as Claude.
+Use Europe/Oslo for this user; select other recipients' zones explicitly.
 Use the existing task context template; keep owner/authority notes in the mandate,
 not extra fields in its strict JSON. A short task note can preserve a chat request;
 no separate developer handoff or invented start receipt is required.
@@ -26,10 +33,21 @@ response or genuine wait. Do not notify for each technical step while the coordi
 can continue. A completed delivery is an event even when there is no remaining user
 action; describe the actual next actor rather than inventing a new start/approval gate.
 
-Preserve the actual local report before `agent_finished`. For a real stop use
-`agent_stopped`; before-start stops omit a nonexistent receipt and report. Include an
-available agreed start receipt. For `feedback_required`, preserve the actual necessary
-question first, address the user, then notify before waiting. Optional clarification
+Write short task/result/next text for a three-line notice: local event time, provider
+and relative context; status and result; next action. Limits are 60/100/140 Unicode
+characters for title/summary/action and 96 for derived context. Do not truncate a
+necessary question. Keep the UTC event instant unchanged; the helper freezes its
+local timestamp and offset for replay.
+
+Preserve the actual local report before `agent_finished`. Choose `ready_for_review`
+when returning work for coordinator review, `ready_for_your_check` when technical
+control is complete and the human must judge the product, or `done` when the agreed
+task is complete. These are reported statuses, not native approvals or QA evidence.
+For done with no remaining action, use `No action required.` For a real stop use
+`agent_stopped` with status `stopped`; before-start stops omit a nonexistent receipt
+and report. Include an available agreed start receipt. For `feedback_required` with
+status `needs_answer`, preserve the actual necessary question first, address the user,
+then notify before waiting. Optional clarification
 and a test failure that can be corrected within the task send no notification.
 
 Read [usage and invocation](references/usage.md) for the helper and event shape. Use
@@ -45,8 +63,9 @@ uses actual `ply workflow notification send --check`, applies at most once, and 
 `show`. It never evaluates question text or performs automatic retries. Keep the
 agreed local return and user question intact even if notification fails. Report its
 JSON `state` separately from the product outcome: an acknowledged transport does not
-mean read, approved, controlled, or product QA passed. A coordinator continuation must
-say “Coordinator continues”; ask the user to act only when the user is the next actor.
+mean read, approved, controlled, or product QA passed. Keep `next_actor=coordinator`
+for coordinator continuation and `user` when the user is next. The compact message displays only the concrete action. Necessary answers
+point to the active agent conversation; Slack thread replies are not connected.
 
 Runtime restrictions still apply. If the fixed notification state or transport cannot
 be used, keep the local return and report the actual blocked/not-attempted/unknown

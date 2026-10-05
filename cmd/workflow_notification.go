@@ -13,7 +13,7 @@ import (
 // NewWorkflowNotificationCommand is the production command graph with an internal
 // effect boundary for native tests and the separate, network-free fixture driver.
 func NewWorkflowNotificationCommand(d notification.Dependencies) *cobra.Command {
-	parent := &cobra.Command{Use: "notification", Short: "Preview and deliver human gates or agent events", Long: "Notify one fixed Slack channel about a v1 report-ready human gate or a v2 agent_finished, agent_stopped, or feedback_required event. V2 external sources bind a preserved event; agent_finished requires a report, and before_start is only valid for agent_stopped without a start receipt. Source, sender, gate, event and channel are claims; transport acknowledgement does not attest product correctness or human QA. No automatic detection or retry occurs.", Example: "  ply workflow notification send --file ./report-ready.json --route ./slack-route.json --check\n  ply workflow notification show NOTIFICATION_ID --route ./slack-route.json", PersistentPreRunE: func(*cobra.Command, []string) error { return nil }}
+	parent := &cobra.Command{Use: "notification", Short: "Preview and deliver human gates or agent events", Long: "Notify one fixed Slack channel about a v1 report-ready human gate or a v2 legacy agent event or a compact v3 agent_finished, agent_stopped, or feedback_required event. V3 binds an explicit codex/claude provider, physical origin/context root, IANA timezone and frozen local event time. Public status is ready_for_review, ready_for_your_check, done, stopped or needs_answer, matched to the event. Title/summary/action/context limits are 60/100/140/96 Unicode characters; the plain-text message has three lines and at most 480 characters. V2/v3 external sources bind a preserved event; agent_finished requires a report, and before_start is only valid for agent_stopped without a start receipt. Source, sender, gate, event and channel are claims; transport acknowledgement does not attest product correctness or human QA. No automatic detection or retry occurs.", Example: "  ply workflow notification send --file ./report-ready.json --route ./slack-route.json --check\n  ply workflow notification show NOTIFICATION_ID --route ./slack-route.json", PersistentPreRunE: func(*cobra.Command, []string) error { return nil }}
 	parent.Args = func(c *cobra.Command, a []string) error {
 		if len(a) != 0 {
 			return notificationUsage(c, "Expected a notification subcommand.")
@@ -43,7 +43,7 @@ func NewWorkflowNotificationCommand(d notification.Dependencies) *cobra.Command 
 		case "show":
 			long += "Show separates transport state from source freshness. Unknown is a successful readback, never permission to resend. No locks, credentials, recovery writes or Slack calls are used."
 		case "retry":
-			long += "A fresh preview and its new --confirm digest are required for a new attempt. Only rejected, not_sent, or rate_limited after its deadline can retry. Acknowledged or unknown delivery cannot retry. No automatic retries, sleeping, force or gate-revision recovery exist. Recheck the gate or event before apply; never change event identity or route to bypass unknown."
+			long += "A fresh preview and its new --confirm digest are required for a new attempt. Only rejected, not_sent, or rate_limited after its deadline can retry. Acknowledged or unknown delivery cannot retry. No automatic retries, sleeping, force or gate-revision recovery exist. V3 retains the original local event timestamp and offset even if timezone data changes. Recheck the gate or event before apply; never change event identity or route to bypass unknown."
 		}
 		example := "  ply workflow notification " + operation + " ID --route ./slack-route.json --format json"
 		if operation == "send" {
@@ -86,7 +86,7 @@ func NewWorkflowNotificationCommand(d notification.Dependencies) *cobra.Command 
 		c.Flags().StringVar(&route, "route", "", "Explicit non-secret route JSON file")
 		c.Flags().StringVar(&format, "format", "text", "Output format: text or json")
 		if operation == "send" {
-			c.Flags().StringVar(&file, "file", "", "Strict v1 human-gate or v2 agent-event request JSON file")
+			c.Flags().StringVar(&file, "file", "", "Strict v1 human-gate, v2 legacy-event or v3 compact-event request JSON file")
 		}
 		if operation != "show" {
 			c.Flags().BoolVar(&check, "check", false, "Read-only preview (the default)")

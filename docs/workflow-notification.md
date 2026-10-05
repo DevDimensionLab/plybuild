@@ -1,4 +1,4 @@
-# Report-ready notifications
+# Workflow notifications
 
 ## Agent completion notifications
 
@@ -19,6 +19,118 @@ See [the skill](../skills/ply-agent-notify/SKILL.md) and
 [its invocation contract](../skills/ply-agent-notify/references/usage.md). The helper
 preserves the local outcome when Slack is unavailable. Transport acknowledgement
 is separate from human acceptance; a skill cannot detect a dead agent or closed tab.
+
+## Compact agent requests (v3)
+
+A new Task@2/Event@2 pair produces exactly three plain-text lines, at most 480 Unicode
+characters. For this user's Europe/Oslo preference, a summer event at 14:00:00 UTC
+looks like this:
+
+```text
+16:00:00 · codex · ply/planning
+Done: Varsler — Felles regel lagt inn.
+Next: No action required.
+```
+
+A separately authorized Claude event uses `claude` and its own bound origin. Fixed
+labels are English; title, summary and action may follow the conversation language.
+When title and summary are identical, the second line omits the repeated summary
+and separator. No IDs, absolute paths, UTC footer or generic control banner appear.
+The local request/database retains the source facts and `show` still reports transport
+knowledge independently of product correctness or human QA.
+
+| Event | Allowed public status | Label |
+| --- | --- | --- |
+| agent_finished | ready_for_review | Ready for review |
+| agent_finished | ready_for_your_check | Ready for your check |
+| agent_finished | done | Done |
+| agent_stopped | stopped | Stopped |
+| feedback_required | needs_answer | Needs answer |
+
+Review means a worker return awaiting control. Your-check means technical control is
+complete and the human must judge the product. Done means the agreed task is complete.
+These remain declared statuses, not new native approvals. `next_actor` is still `user`
+or `coordinator`; the compact payload shows the concrete action without an actor prefix.
+Use `No action required.` when done has no remaining action. Necessary feedback requires
+an actual question containing `?`, `next_actor=user`, and `phase=after_start`. Point the
+answer to the active agent conversation. Slack thread replies are not connected.
+
+The strict request-v3 fields are:
+
+| Field | Contract and source |
+| --- | --- |
+| kind, schema_version | `ply.workflow.notification-request`, integer `3` |
+| route | Exact unchanged route-v1 name |
+| source | `kind=external`, activity, run, target worktree, handoff locator; optional start_receipt and report locators |
+| sender | Exactly `actor_claim`; a declaration, not authentication |
+| event | Exactly id, type, phase, UTC occurred_at and record locator |
+| public | Exactly task_title, summary, next_action, next_actor and status |
+| presentation | Exactly provider, origin_cwd, context_root, context, timezone and local_occurred_at |
+
+Source locators contain absolute physical `path` and `sha256`; event/start/report
+locators also contain their exact `kind`. Event record kind is
+`PlyAgentNotificationEvent@2`. Its exact fields are `kind`, `activity`, `run`,
+`event_id`, `event_type`, `phase`, `occurred_at`, and `public`. Activity/run, event
+identity/type/phase/time and every public field must match the request. The preserved
+source bytes must match their digests before an attempt. `agent_finished` requires a
+report. Before-start stops must omit a nonexistent start receipt.
+
+Example of the v3-specific public and presentation objects (these are fragments,
+not a standalone send request):
+
+```json
+{
+  "public": {
+    "task_title": "Varsler",
+    "summary": "Felles regel lagt inn.",
+    "next_action": "No action required.",
+    "next_actor": "user",
+    "status": "done"
+  },
+  "presentation": {
+    "provider": "codex",
+    "origin_cwd": "/Users/perottochristensen/github/ply/planning",
+    "context_root": "/Users/perottochristensen/github",
+    "context": "ply/planning",
+    "timezone": "Europe/Oslo",
+    "local_occurred_at": "2026-07-04T16:00:00+02:00"
+  }
+}
+```
+
+This fragment corresponds to `event.occurred_at=2026-07-04T14:00:00Z`. Origin is separate
+from the target `source.worktree`. Provider must be explicitly bound as `codex` or
+`claude` from the actual agent context or controlled native identity, never inferred
+from model, actor or executable names. Presentation remains declared source information,
+not provider authentication. The helper requires its actual physical cwd to equal
+origin_cwd. Both origin and context root must be absolute physical directories, with
+origin inside root. `context` is checked against their relative path, or `.` at the root;
+caller labels, traversal, mentions and absolute display paths are rejected.
+
+The title, summary, action and context limits are 60, 100, 140 and 96 Unicode characters.
+Inputs must be nonempty, trimmed and single-line. Invalid Unicode, control/format/line
+separator characters, mentions, webhook URLs and credential text fail before reservation.
+Overlong text is rejected rather than shortened. The final rendered length is checked.
+
+`timezone` is a required IANA name, with no `Local` or silent UTC fallback. Choose the
+recipient's zone explicitly; Europe/Oslo is this user's preference. Fresh v3 input checks
+the frozen RFC3339 local timestamp and offset against the canonical UTC event instant
+and that zone's conversion, including DST and date rollover. Existing immutable requests
+use structural and instant validation on readback, duplicate send and explicit retry;
+they never depend on the process TZ, current clock or later timezone data.
+
+Task@1/Event@1 continues to generate request-v2 exactly, with its original six-line
+renderer. V1 human-gate payloads are also unchanged. Absent new fields are omitted from
+Go serialization so old database integrity digests remain valid. Route-v1 bytes and the
+state root do not change. No migration or receipt rewriting is needed. The historical
+`agent-event-v2` identity namespace is shared by v2 and v3, and the helper key contains
+only activity/run/event ID. Recasting an existing event as v3 conflicts or reads its
+existing state; unknown delivery never gains another attempt.
+
+The skill [usage contract](../skills/ply-agent-notify/references/usage.md) supplies the
+complete Event@2 example, Task@2 field list, invocation and separately authorized upgrade
+procedure with an exact previous-source check and preserved private backup. The installer
+updates only its owned files; it does not change the route, credential or state root.
 
 ## Report-ready human gates
 
@@ -146,7 +258,7 @@ identical send with its original confirmation reads the existing receipt without
 another POST. A source, path, route, public-text or credential change conflicts even
 when the environment variable name stays the same.
 
-A new request prints exactly this six-line message, without a final newline:
+A legacy v1 request prints exactly this six-line message, without a final newline:
 
 ```text
 Ply needs your attention

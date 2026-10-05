@@ -54,6 +54,7 @@ type Public struct {
 	NextAction string `json:"next_action"`
 	Summary    string `json:"summary,omitempty"`
 	NextActor  string `json:"next_actor,omitempty"`
+	Status     string `json:"status,omitempty"`
 }
 type Request struct {
 	Kind          string `json:"kind"`
@@ -64,8 +65,9 @@ type Request struct {
 	Sender        struct {
 		ActorClaim string `json:"actor_claim"`
 	} `json:"sender"`
-	Public Public `json:"public"`
-	Event  *Event `json:"event,omitempty"`
+	Public       Public        `json:"public"`
+	Event        *Event        `json:"event,omitempty"`
+	Presentation *Presentation `json:"presentation,omitempty"`
 }
 type Route struct {
 	Kind          string `json:"kind"`

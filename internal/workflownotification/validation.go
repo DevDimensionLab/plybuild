@@ -97,13 +97,22 @@ func validLocator(l Locator) bool {
 	return validPath(l.Path) && digestPattern.MatchString(l.SHA256) && (l.Kind == nil || cleanText(*l.Kind, 200))
 }
 func parseRequest(raw []byte, secret string) (Request, error) {
+	return parseRequestMode(raw, secret, true)
+}
+
+// Historical requests freeze their local offset. Revalidating with today's
+// tzdata would invalidate an otherwise intact database after a zone rule change.
+func parseStoredRequest(raw []byte, secret string) (Request, error) {
+	return parseRequestMode(raw, secret, false)
+}
+func parseRequestMode(raw []byte, secret string, fresh bool) (Request, error) {
 	var r Request
 	m, err := strict(raw, &r)
 	if err != nil {
 		return r, err
 	}
-	if r.SchemaVersion == 2 {
-		return parseAgentRequest(r, m, secret)
+	if r.SchemaVersion == 2 || r.SchemaVersion == 3 {
+		return parseAgentRequest(r, m, secret, fresh)
 	}
 	if r.Gate == nil || r.Source.Start == nil || r.Source.Report == nil || !keys(m, "kind", "schema_version", "route", "source", "gate", "sender", "public") || !keys(m["gate"], "id", "revision", "opened_at", "reason", "state") || !keys(m["sender"], "actor_claim") || !keys(m["public"], "task_title", "next_action") {
 		return r, invalid()
@@ -178,21 +187,26 @@ func credential(s string) bool {
 	return err == nil && !strings.ContainsAny(s, "?#") && u.Scheme == "https" && u.Host == "hooks.slack.com" && u.User == nil && u.RawQuery == "" && !u.ForceQuery && u.Fragment == "" && u.RawFragment == "" && u.RawPath == "" && webhookPath.MatchString(u.Path)
 }
 func identity(r Request) string {
-	if r.SchemaVersion == 2 && r.Event == nil || r.SchemaVersion != 2 && r.Gate == nil {
+	agent := r.SchemaVersion == 2 || r.SchemaVersion == 3
+	if agent && r.Event == nil || !agent && r.Gate == nil {
 		return ""
 	}
-	if r.SchemaVersion == 2 {
+	if agent {
 		return "ntf_" + strings.TrimPrefix(gateFamily(r), "sha256:")
 	}
 	return "ntf_" + strings.TrimPrefix(digestValue([]any{r.Source.Kind, r.Source.Activity, r.Source.Run, r.Gate.ID, r.Gate.Revision, r.Route}), "sha256:")
 }
 func gateFamily(r Request) string {
-	if r.SchemaVersion == 2 {
+	if r.SchemaVersion == 2 || r.SchemaVersion == 3 {
+		// This historical namespace is intentionally independent of new schema versions.
 		return digestValue([]any{"agent-event-v2", r.Source.Activity, r.Source.Run, r.Event.ID, r.Route})
 	}
 	return digestValue([]any{r.Source.Kind, r.Source.Activity, r.Source.Run, r.Gate.ID, r.Route})
 }
 func message(r Request) Payload {
+	if r.SchemaVersion == 3 {
+		return compactMessage(r)
+	}
 	if r.SchemaVersion == 2 {
 		return agentMessage(r)
 	}
@@ -212,7 +226,7 @@ func checkSources(r Request) error {
 		if Digest(raw) != item.loc.SHA256 {
 			return fail(2, "source_changed", "Source bytes do not match the bound digest.")
 		}
-		if r.SchemaVersion == 2 && item.loc == r.Event.Record {
+		if (r.SchemaVersion == 2 || r.SchemaVersion == 3) && item.loc == r.Event.Record {
 			if e := checkEventRecord(raw, r); e != nil {
 				return e
 			}

@@ -11,6 +11,22 @@ example activity/run and physical paths. Reuse an existing context for a continu
 `notification_authorized` records the existing choice for that exact route; it is a
 claim, not authentication. The task JSON has a strict schema: ownership and authority
 notes belong in the mandate, not additional JSON fields.
+New tasks use `PlyAgentNotificationTask@2`. Its exact fields are the Task@1 fields
+`kind`, `activity`, `run`, `worktree`, `handoff`, `route`, `event_root`, `actor_claim`,
+`notification_authorized`, plus required `provider`, `origin_cwd`, `context_root`
+and `timezone`. No other fields are accepted. Provider is explicitly `codex` or
+`claude` from the actual runtime or controlled native session, never inferred from
+model/actor names. `worktree` remains the target. Origin and context root are physical
+absolute directories; origin must be inside the root and match the helper's actual
+cwd. The display context is derived as a relative path, or `.` at the root.
+
+The template's Europe/Oslo is this user's selected zone, not a universal default.
+Set another recipient's actual IANA zone explicitly. Unknown zones and `Local` fail;
+no fallback to UTC occurs. Requires Python 3.9+ with IANA timezone data available.
+The helper converts UTC `occurred_at` once and retains the RFC3339 local timestamp
+and offset in request-v3. Subsequent helper readback and explicit CLI retries keep
+that value even after TZ or timezone data changes.
+
 The event directory and route state root must remain fixed across callers/restarts.
 The event directory's parent must exist; the helper creates it privately if absent.
 The task's completion procedure preserves its report, then calls the helper before
@@ -35,14 +51,41 @@ a real stop. Do not turn an authorized coordinator continuation into a human sta
 When no human action is required, say so plainly in `next_action`; `next_actor` still
 identifies the actor responsible for any remaining follow-up. The only supported
 values are `user` and `coordinator`. For completed work with no required follow-up,
-use `user` with, for example, `The requested work is complete. No action is required.`
+use `user` with, for example, `No action required.`
 This identifies the recipient of the return without inventing a new task or approval.
+
+Task@2 requires Event@2 and generates request-v3. Task@1 still requires Event@1 and
+generates exactly the old request-v2. Mixed pairs and unknown new fields fail.
+Do not recast an existing event to upgrade its appearance; event IDs and event-root
+keys remain version independent, so a schema change conflicts without another send.
+
+| Event | Public status | Visible label |
+| --- | --- | --- |
+| agent_finished | ready_for_review | Ready for review |
+| agent_finished | ready_for_your_check | Ready for your check |
+| agent_finished | done | Done |
+| agent_stopped | stopped | Stopped |
+| feedback_required | needs_answer | Needs answer |
+
+Use review for a worker return, your-check for a human product judgment after technical
+control, and done for completion of the agreed task. None creates native approval or
+QA state. Each notice has exactly three plain-text lines and at most 480 Unicode
+characters. Title/summary/action limits are 60/100/140; derived context is at most 96.
+All text is nonempty and single-line; controls, format characters, mentions, webhook
+URLs, secrets and invalid Unicode are refused. Long input is rejected, never truncated.
+The summary is omitted from the result line when identical to the title.
+
+```text
+16:00:00 · codex · ply/planning
+Done: Varsler — Felles regel lagt inn.
+Next: No action required.
+```
 
 Preserve a strict event JSON file at the agreed return location, for example:
 
 ```json
 {
-  "kind": "PlyAgentNotificationEvent@1",
+  "kind": "PlyAgentNotificationEvent@2",
   "activity": "example/delivery/1",
   "run": "example-run-1",
   "event_id": "target-question-1",
@@ -50,9 +93,10 @@ Preserve a strict event JSON file at the agreed return location, for example:
   "phase": "after_start",
   "occurred_at": "2026-10-04T14:00:00Z",
   "public": {
+    "status": "needs_answer",
     "task_title": "Choose the deployment target",
     "summary": "Which of the two agreed targets should I use?",
-    "next_action": "Answer in the active agent task so work can continue.",
+    "next_action": "Reply in the active agent conversation.",
     "next_actor": "user"
   }
 }
@@ -112,6 +156,20 @@ Credential: the `webhook` file alongside it (0600 in a 0700 directory).
 State: `/Users/perottochristensen/.local/state/ply/agent-notifications/ply-log` (0700).
 The helper passes the credential only to send/check children, never to show. Ply's
 CLI still stores no secret. Historical QA fixtures are not operational state.
+
+An explicit upgrade of an owned installation uses the reviewed previous skill source
+and a new separate backup path. It first checks the complete installed file set,
+exact previous bytes, ownership and modes, then preserves a complete private backup
+before replacing only owned files. Customizations or unsafe modes fail without repair.
+After any interrupted upgrade, inspect the destination and preserved backup; do not
+blindly rerun or overwrite a mixed installation. This never changes route or credentials.
+
+```sh
+python3 skills/ply-agent-notify/scripts/install.py \
+  --destination /absolute/installed/ply-agent-notify \
+  --upgrade-from /absolute/reviewed-base/skills/ply-agent-notify \
+  --backup /absolute/private/ply-agent-notify-before-upgrade
+```
 
 Fixture installation uses `make install-agent-notify AGENT_NOTIFY_DEST=/absolute/private/fixture/ply-agent-notify`.
 Bootstrap accepts explicit `--config-dir` and `--state-root`; notify accepts the exact
