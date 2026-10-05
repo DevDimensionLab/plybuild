@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
@@ -29,6 +30,11 @@ type DeliveryCandidateResult struct {
 	Handoff         TaskRunLink
 	Start, Terminal SubmitResult
 	TaskResult      workspace.TaskResultRecord
+}
+
+type deliveryCandidateArtifact struct {
+	id, media string
+	raw       []byte
 }
 
 // DeliveryCandidateReviewTemplate is a schema-shaped starting point, not review
@@ -108,6 +114,22 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 	}
 	_, eval, e := historicalHandoffTaskSpec(d, parent)
 	if e != nil {
+		return out, e
+	}
+	// Assemble the actual managed evidence before any candidate handoff or
+	// staging write. Review references must resolve against this same set.
+	artifactInputs := []deliveryCandidateArtifact{{"acceptance-script", "text/plain", acceptanceSnapshot}, {"candidate-review", "application/json", reviewRaw}, {"verification-receipt", "application/json", verification}, {"verifier-stderr", "text/plain", stderr}, {"verifier-stdout", "text/plain", stdout}}
+	reqs, _ := objectMember(eval.Spec, "requirements")
+	coverage := []canonicaljson.Value{}
+	for _, r := range reqs.([]canonicaljson.Value) {
+		coverage = append(coverage, deliveryObject(map[string]any{"id": objectString(r.(canonicaljson.Object), "id"), "outcome": "passed", "verifier_ids": []string{in.VerifierID}, "artifact_ids": []string{"candidate-review", "verifier-stderr", "verifier-stdout"}, "reason": "The goal's executable acceptance passed for this exact candidate; explicit candidate review is preserved."}))
+	}
+	coverageRaw, e := canonicaljson.Marshal(deliveryObject(map[string]any{"kind": "WorkspaceTaskRequirementEvidence@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "task_id": basis.TaskID, "spec_id": basis.SpecID, "spec": basis.Spec, "result_oid": in.CandidateOID, "result_tree": in.CandidateTree, "requirements": coverage}))
+	if e != nil {
+		return out, e
+	}
+	artifactInputs = append(artifactInputs, deliveryCandidateArtifact{"task-requirements", "application/json", coverageRaw})
+	if e = deliveryCandidateReviewEvidence(review, artifactInputs); e != nil {
 		return out, e
 	}
 	draft := bridgeEnvelope("ply.workflow.handoff-draft")
@@ -195,25 +217,10 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 		artifacts = append(artifacts, deliveryObject(map[string]any{"artifact_id": id, "kind": "managed", "description": "Observed delivery candidate " + id, "media_type": media, "classification": "workspace_internal", "size_bytes": len(b), "sha256": digestBytes(b), "locator": path}))
 		return nil
 	}
-	for _, a := range []struct {
-		id, media string
-		raw       []byte
-	}{{"acceptance-script", "text/plain", acceptanceSnapshot}, {"candidate-review", "application/json", reviewRaw}, {"verification-receipt", "application/json", verification}, {"verifier-stderr", "text/plain", stderr}, {"verifier-stdout", "text/plain", stdout}} {
+	for _, a := range artifactInputs {
 		if e = addArtifact(a.id, a.media, a.raw); e != nil {
 			return out, e
 		}
-	}
-	reqs, _ := objectMember(eval.Spec, "requirements")
-	coverage := []canonicaljson.Value{}
-	for _, r := range reqs.([]canonicaljson.Value) {
-		coverage = append(coverage, deliveryObject(map[string]any{"id": objectString(r.(canonicaljson.Object), "id"), "outcome": "passed", "verifier_ids": []string{in.VerifierID}, "artifact_ids": []string{"candidate-review", "verifier-stderr", "verifier-stdout"}, "reason": "The goal's executable acceptance passed for this exact candidate; explicit candidate review is preserved."}))
-	}
-	coverageRaw, e := canonicaljson.Marshal(deliveryObject(map[string]any{"kind": "WorkspaceTaskRequirementEvidence@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "task_id": basis.TaskID, "spec_id": basis.SpecID, "spec": basis.Spec, "result_oid": in.CandidateOID, "result_tree": in.CandidateTree, "requirements": coverage}))
-	if e != nil {
-		return out, e
-	}
-	if e = addArtifact("task-requirements", "application/json", coverageRaw); e != nil {
-		return out, e
 	}
 	sort.Slice(artifacts, func(i, j int) bool {
 		return objectString(artifacts[i].(canonicaljson.Object), "artifact_id") < objectString(artifacts[j].(canonicaljson.Object), "artifact_id")
@@ -357,8 +364,15 @@ func deliveryCandidateReview(raw []byte, in DeliveryCandidateInput, ownerSession
 		return nil, e
 	}
 	version, e := intField(m, "schema_version", "candidate review")
-	if e != nil || version != 1 || objectMapString(m, "kind") != "DeliveryCandidateReview@1" || objectMapString(m, "candidate_oid") != in.CandidateOID || objectMapString(m, "candidate_tree") != in.CandidateTree || objectMapString(m, "decision") != "passed" || validatePlainText("reviewer_claim", objectMapString(m, "reviewer_claim"), 1, 256) != nil {
+	if e != nil || version != 1 || objectMapString(m, "kind") != "DeliveryCandidateReview@1" || objectMapString(m, "candidate_oid") != in.CandidateOID || objectMapString(m, "candidate_tree") != in.CandidateTree || objectMapString(m, "decision") != "passed" {
 		return nil, fmt.Errorf("candidate review must explicitly pass this exact candidate")
+	}
+	claim, e := stringField(m, "reviewer_claim", "candidate review")
+	if e != nil {
+		return nil, e
+	}
+	if e = validatePlainText("candidate review reviewer_claim", claim, 1, 256); e != nil {
+		return nil, e
 	}
 	session, ok := m["reviewer_session_id"].(string)
 	if m["reviewer_session_id"] != nil && (!ok || validatePlainText("reviewer_session_id", session, 1, 256) != nil) {
@@ -378,6 +392,29 @@ func deliveryCandidateReview(raw []byte, in DeliveryCandidateInput, ownerSession
 		return nil, fmt.Errorf("candidate review has open actionable findings")
 	}
 	return review, nil
+}
+
+func deliveryCandidateReviewEvidence(review canonicaljson.Object, artifacts []deliveryCandidateArtifact) error {
+	known := make(map[string]bool, len(artifacts))
+	ids := make([]string, 0, len(artifacts))
+	for _, artifact := range artifacts {
+		known[artifact.id] = true
+		ids = append(ids, artifact.id)
+	}
+	sort.Strings(ids)
+	// deliveryCandidateReview has already validated entry and array shapes.
+	for _, list := range review {
+		for i, value := range list.Value.([]canonicaljson.Value) {
+			entry := value.(canonicaljson.Object)
+			refs, _ := objectMember(entry, "evidence_ids")
+			for _, ref := range refs.([]canonicaljson.Value) {
+				if !known[ref.(string)] {
+					return fmt.Errorf("candidate review %s[%d].evidence_ids references unavailable artifact %q; available artifacts: %s", list.Name, i, ref, strings.Join(ids, ", "))
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func deliveryReadFile(files FileSystem, path string, limit int64) ([]byte, error) {

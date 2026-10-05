@@ -150,6 +150,20 @@ qualification executes the declared script and checks actual review evidence and
 the clean exact candidate. It produces technical evidence and a TaskResult while
 the same owner remains responsible for product QA and local integration.
 
+Use the supplied review template and bind its exact candidate OID and tree.
+`reviewer_claim` is a short actual identity claim (1–256 Unicode code points).
+Finding and fix `evidence_ids` refer to managed candidate artifacts, such as
+`candidate-review` for the review record itself or `verifier-stdout` and
+`verifier-stderr` for actual command output. They are not arbitrary note labels.
+The callback guide lists the available artifacts. Invalid review references are
+rejected before a candidate handoff is created. Preserve rejected inputs; a
+corrected review uses a new private file and a new verification after the prior
+attempt has a known recorded outcome. Never replay an uncertain attempt.
+
+After a later candidate qualifies, resolved qualification failures remain in
+the saved event history; the current readback describes the qualified candidate.
+Current drift or a newer failed attempt still remains visible.
+
 The owner presents one installed product journey and preserves the actual human
 answer as `DeliveryHumanAttestation@1`. That record binds `task_id`,
 `task_result_id`, `result_oid`, `result_tree`, `outcome`, `actor_claim`,

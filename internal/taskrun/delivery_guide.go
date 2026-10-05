@@ -122,12 +122,19 @@ Reporting progress does not qualify a candidate or a human verdict.
 Implement the declared acceptance entrypoint at %s with meaningful executable
 checks. Preserve an actual local review using templates/review.json. Bind
 candidate_oid and candidate_tree to the clean committed candidate. Set the
-reviewer_claim, actual reviewer_session_id (or null) and observed decision. A
+reviewer_claim (1..256 Unicode codepoints, with no surrounding whitespace),
+actual reviewer_session_id (or null) and observed decision. A
 passed decision with no open actionable findings is required for qualification;
 an empty template is not a review. Findings/fixes use the existing native review
 schema: id, severity (low, medium, high or critical), summary and evidence_ids
-(sorted unique strings). Entries are sorted by id, with IDs unique across all
-three arrays. An empty array is appropriate only when the actual review found none.
+(sorted unique managed artifact IDs). Available IDs are acceptance-script,
+candidate-review, task-requirements, verification-receipt, verifier-stderr and
+verifier-stdout. For an observation preserved in this review, cite candidate-review;
+an arbitrary note name or file path is not a managed artifact ID. Keep all actual
+findings and fixes with truthful summaries and supported evidence references;
+never delete them to make validation pass. Entries are sorted by id, with IDs
+unique across all three arrays. An empty array is appropriate only when the
+actual review found none.
 The callback itself executes /bin/sh against the declared acceptance entrypoint,
 captures output, checks candidate stability and preserves a separate candidate.
 

@@ -286,6 +286,17 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 			o.Round.State = o.Delivery.Phase
 		}
 	}
+	if deliveryCurrentCandidateQualified(s) {
+		// A later qualified candidate resolves earlier qualification failures.
+		// Keep those attempts in raw state/events and keep every other reason.
+		reasons := make([]Reason, 0, len(o.Reasons))
+		for _, reason := range o.Reasons {
+			if reason.Code != "delivery_candidate_not_qualified" {
+				reasons = append(reasons, reason)
+			}
+		}
+		o.Reasons = reasons
+	}
 	if deliveryStartupPending(s) {
 		// Derive a useful recovery action for pre-prompt v2 starts saved by an
 		// older control binary, without rewriting their frozen startup history.
@@ -305,4 +316,29 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved binding drift; do not restart or delete run state."}
 	}
 	return o, nil
+}
+
+func deliveryCurrentCandidateQualified(s workflowState) bool {
+	d := s.Result.Delivery
+	if !deliveryRun(s.Request) || d == nil || d.Attempt == nil || d.Attempt.State != "recorded" || len(d.Candidates) == 0 {
+		return false
+	}
+	switch d.Phase {
+	case "awaiting_human_qa", "human_qa_passed", "integrating", "completed":
+	default:
+		return false
+	}
+	c := d.Candidates[len(d.Candidates)-1]
+	if c.TaskResult.ID == "" || d.Attempt.CandidateOID != c.OID || d.Attempt.CandidateTree != c.Tree {
+		return false
+	}
+	switch d.Attempt.Kind {
+	case "verification":
+		return d.Attempt.ID == c.Key
+	case "human_qa":
+		return c.HumanQA != nil && c.HumanQA.TaskResultID == c.TaskResult.ID
+	case "integration":
+		return c.Integration != nil && d.Phase == "completed"
+	}
+	return false
 }
