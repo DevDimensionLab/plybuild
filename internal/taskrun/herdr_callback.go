@@ -98,6 +98,14 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 			if e := positiveClaim(native, workflowNativeRequest(s.Request)); e != nil {
 				return e
 			}
+			// The recipient's claim cannot establish that Herdr still hosts the
+			// selected provider/session. Observe it before granting Task writes.
+			// A callback normally runs while the agent is working, not idle.
+			fresh, e := workflowAgentGet(d, *s, false)
+			if e != nil {
+				return e
+			}
+			workflowObserve(d, s, fresh)
 		}
 		path := filepath.Join(s.Result.Paths.RunRoot, "start-draft.json")
 		draft, err := readFile(path, 1<<20, true)

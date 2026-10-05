@@ -65,7 +65,7 @@ func workflowAwaitReadiness(d Dependencies, root, id string, deadline time.Time)
 				return e
 			}
 			if observedSession != "" && observedSession != a.Session.Value {
-				return workflowError(4, "native Codex session changed during startup; no Task prompt sent")
+				return workflowError(4, "native "+s.Request.Runtime.Provider+" session changed during startup; no Task prompt sent")
 			}
 			observedSession = a.Session.Value
 		}

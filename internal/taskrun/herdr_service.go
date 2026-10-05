@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 )
 
@@ -20,11 +21,28 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if e != nil {
 		return r, e
 	}
-	if e = decode(b, 1<<20, &r); e != nil {
-		return r, e
+	// Default only a missing choice in new Herdr input. Strict decoding happens
+	// before insertion so duplicate keys, null and invalid choices cannot become
+	// a silent fallback. Existing explicit Codex requests keep canonical bytes.
+	if _, e = canonicaljson.DecodeStrict(b); e != nil {
+		return r, invalid(e.Error())
 	}
 	var fields map[string]json.RawMessage
 	if e = json.Unmarshal(b, &fields); e != nil {
+		return r, invalid(e.Error())
+	}
+	var runtime map[string]json.RawMessage
+	if json.Unmarshal(fields["runtime"], &runtime) == nil && runtime != nil {
+		if _, present := runtime["provider"]; !present {
+			runtime["provider"] = json.RawMessage(`"codex"`)
+			fields["runtime"], _ = json.Marshal(runtime)
+			b, e = json.Marshal(fields)
+			if e != nil {
+				return r, e
+			}
+		}
+	}
+	if e = decode(b, 1<<20, &r); e != nil {
 		return r, e
 	}
 	if _, present := fields["codex_project_trust"]; present && r.CodexProjectTrust == nil {
@@ -36,12 +54,12 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if r.Envelope != workflowEnv("herdr-run-request") || r.ReturnMode != "reviewed_report_only" || r.HumanAuthority.StartSurface != "human_authorized_herdr" || !r.Coordinator.MayRequestChanges || !plain(r.Coordinator.ActorClaim, 1, 256) || !plain(r.Herdr.TabLabel, 1, 80) || !plain(r.Herdr.WorkspaceID, 1, 128) {
 		return r, workflowError(2, "invalid workflow request, authority or Herdr binding")
 	}
-	// Reuse the unchanged native schema on an in-memory projection only.
+	// Reuse native Task validation through the explicitly Herdr-only surface.
 	b, e = Canonical(workflowNativeRequest(r))
 	if e != nil {
 		return r, e
 	}
-	if _, e = parseRequest(b); e != nil {
+	if _, e = parseRequestForSurface(b, true); e != nil {
 		return r, e
 	}
 	if !digestPattern.MatchString(r.Herdr.Executable.SHA256) {
@@ -55,6 +73,7 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 func workflowInitial(r WorkflowRequest, observed Observed) workflowState {
 	id := workflowID(r)
 	o := WorkflowRun{Envelope: workflowEnv("run"), RunID: id, RequestSHA256: digest(r), SessionID: "ply:" + id, Paths: workflowPaths(r, 0), Transport: WorkflowTransport{WorkspaceID: r.Herdr.WorkspaceID, State: "unknown", Observation: "cached"}, Round: WorkflowRound{State: "awaiting_acceptance"}, Budget: WorkflowBudget{MeasurementSource: "unknown"}, FinalReturn: WorkflowFinal{State: "pending"}, TaskResultState: "not_published", Reasons: []Reason{}, NextAction: WorkflowAction{"coordinator", "Inspect the reserved startup and any native onboarding in the same tab; wait for a bound session and prompt before recipient acceptance. Do not restart."}, RuntimeFacts: RuntimeFacts{RequestedModel: r.Runtime.Model, ModelState: "unknown"}}
+	o.Provider = r.Runtime.Provider
 	return workflowState{Request: r, Observed: observed, Result: o, Phase: "reserved", Records: []workflowRecord{}}
 }
 func workflowExisting(r WorkflowRequest) (*WorkflowRun, error) {
@@ -72,6 +91,10 @@ func workflowExisting(r WorkflowRequest) (*WorkflowRun, error) {
 }
 func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPreview, error) {
 	p := WorkflowPreview{Envelope: workflowEnv("run-preview"), RunID: workflowID(r), RequestSHA256: digest(r), Reasons: []Reason{}, Effects: []string{"Reserve this Task target and one native handoff", "Create one background Herdr tab and one Codex session", "If needed, send one tool-free readiness message before binding the native session and sending the Task", "Preserve acceptance, immutable round reports and coordinator review", "Return a reviewed report; do not publish TaskResult or attest provider inactivity"}, Paths: workflowPaths(r, 0)}
+	p.Provider = r.Runtime.Provider
+	if r.Runtime.Provider == "claude" {
+		p.Effects[1] = "Create one background Herdr tab and one Claude session in manual permission mode"
+	}
 	n, e := previewLocked(d, workflowNativeRequest(r), file)
 	p.Observed = n.Observed
 	if e == nil {
@@ -136,12 +159,12 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 	if os.Getenv("HERDR_ENV") != "1" {
 		return WorkflowRun{}, workflowError(4, "apply requires the local Herdr context (HERDR_ENV=1)")
 	}
-	resolved, e := exec.LookPath("codex")
+	resolved, e := exec.LookPath(r.Runtime.Provider)
 	if e == nil {
 		resolved, e = filepath.EvalSymlinks(resolved)
 	}
 	if e != nil || resolved != r.Runtime.Executable.Path {
-		return WorkflowRun{}, workflowError(4, "local codex executable differs from the bound runtime")
+		return WorkflowRun{}, workflowError(4, "local "+r.Runtime.Provider+" executable is missing or differs from the bound runtime")
 	}
 	owned := false
 	e = withStore(r.WorkspaceRoot, func() error {

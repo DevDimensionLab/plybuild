@@ -221,6 +221,12 @@ func ReadRequest(path string) (Request, error) {
 	return parseRequest(b)
 }
 func parseRequest(b []byte) (Request, error) {
+	return parseRequestForSurface(b, false)
+}
+
+// Herdr shares the native Task contract, but owns its provider-specific launch.
+// Ordinary terminal and factory requests must remain Codex-only.
+func parseRequestForSurface(b []byte, herdr bool) (Request, error) {
 	var r Request
 	if e := decode(b, 1<<20, &r); e != nil {
 		return r, e
@@ -242,8 +248,9 @@ func parseRequest(b []byte) (Request, error) {
 	}
 	rt := r.Runtime
 	p := rt.PermissionBinding
-	if rt.Provider != "codex" || (r.SchemaVersion == 1 && rt.Mode != "interactive" || r.SchemaVersion == 2 && (rt.Mode != "exec" || rt.ConfigProfile != nil)) || !plain(rt.Model, 1, 256) || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) {
-		return r, invalid("invalid interactive Codex runtime")
+	providerOK := rt.Provider == "codex" || herdr && r.SchemaVersion == 1 && rt.Provider == "claude" && rt.ConfigProfile == nil && p.ProfileID == "manual"
+	if !providerOK || (r.SchemaVersion == 1 && rt.Mode != "interactive" || r.SchemaVersion == 2 && (rt.Mode != "exec" || rt.ConfigProfile != nil)) || !plain(rt.Model, 1, 256) || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) {
+		return r, invalid("invalid provider runtime; Herdr supports codex or claude (null config_profile, manual permission mode); native starts require Codex")
 	}
 	if p.AuthorityKind != "reported_contract_with_effective_policy" || !plain(p.ProfileID, 1, 256) || !digestPattern.MatchString(p.EffectivePolicySHA256) || len(p.Evidence) == 0 {
 		return r, invalid("effective policy evidence is required")

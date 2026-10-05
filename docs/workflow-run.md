@@ -1,6 +1,6 @@
 # Prepared Task runs in Herdr
 
-`ply workflow run` starts one interactive Codex session for an existing, prepared
+`ply workflow run` starts one interactive Claude or Codex session for an existing, prepared
 Ply Task. It binds the frozen Task Spec, native handoff, runtime, Herdr identity,
 reports and coordinator decisions. Its result is a reviewed report. It does not
 publish TaskResult, attest provider inactivity, install a candidate, perform human
@@ -31,28 +31,62 @@ The request is strict JSON with kind `ply.workflow.herdr-run-request` and
 | `workspace_root` | Absolute physical containing workspace |
 | `preparation_id`, `preparation_sha256` | Exact current native Task preparation |
 | `handoff_draft` | Native Handoff@2 bound to that preparation and frozen Task Spec, four total rounds |
-| `runtime` | Native TaskRun Runtime: interactive Codex, requested model, nullable config profile, physical hash-bound Codex/Ply executables and full permission evidence |
+| `runtime` | Interactive runtime: selected provider, requested model, nullable config profile, physical hash-bound agent/Ply executables and full permission evidence |
 | `agreement` | Native A: 3 corrections, 5400 active seconds, 2 environment measures |
 | `human_authority` | Nonempty `actor_claim`, `start_surface: "human_authorized_herdr"`, `authorized: true` |
 | `herdr` | Physical hash-bound `executable`, `workspace_id`, and `tab_label` of 1–80 characters |
 | `coordinator` | Named `actor_claim` and `may_request_changes: true` |
 | `return_mode` | `"reviewed_report_only"` |
 
-Digests use `sha256:` plus 64 lowercase hexadecimal characters. Apply requires
-`HERDR_ENV=1`, the exact fresh preview confirmation, and local `codex` resolving
-to the requested executable. The new tab receives the caller's validated PATH;
-the recipient still reports its actual runtime before making Task writes. Starts
-retain the requested model, optional config profile, managed permission profile,
-`on-request`, and `approvals_reviewer="auto_review"`. No global config is changed.
+### Choose Claude or Codex
 
-The optional top-level `codex_project_trust` field has exactly this shape:
+Set `runtime.provider` in the request file to `"claude"` or `"codex"`.
+Omitting this field defaults to Codex before the request is hashed. An explicit
+null, empty string or unknown provider is rejected. Existing explicit Codex
+requests and saved runs keep their bindings. There is no provider fallback.
+The request is the single source for the choice; no separate CLI flag overrides it.
+`runtime.model` selects the model within that provider and is always required.
+Prefer the full model identifier when known: a CLI alias can resolve to a different
+identifier, and acceptance still rejects a known literal model mismatch.
+Preview and run readback expose `provider` in JSON and `Agent` in text.
+
+| Runtime field | Codex | Claude |
+| --- | --- | --- |
+| `provider` | `"codex"` or omitted | `"claude"` |
+| `mode` | `"interactive"` | `"interactive"` |
+| `model` | An installed Codex model name | A Claude model name or supported alias, such as `"sonnet"` |
+| `executable` | Physical path and SHA-256 of the selected Codex binary | Physical path and SHA-256 of the selected Claude binary |
+| `config_profile` | Null or a Codex config profile | Null |
+| `permission_binding.profile_id` | Bound Codex managed permission profile | `"manual"`, Claude's native permission mode |
+
+Both providers still require the full effective-policy evidence and hash-bound
+Ply executable. A mode name alone is not permission evidence. Claude's `manual`
+mode retains its normal approval prompts. Other Claude permission modes are not
+part of this contract. The separate native terminal and factory starts remain
+Codex-only.
+
+Digests use `sha256:` plus 64 lowercase hexadecimal characters. Apply requires
+`HERDR_ENV=1`, the exact fresh preview confirmation, and the selected local
+`claude` or `codex` resolving to the bound executable. A missing or different
+binary stops before reservation or tab creation. The new tab receives the caller's
+PATH and exact physical Task worktree. The recipient reports its actual runtime
+before making Task writes.
+
+Codex retains the requested model, optional config profile, managed permission
+profile, `on-request`, and `approvals_reviewer="auto_review"`. Claude receives
+`--model MODEL --permission-mode manual` and inherits the tab's cwd; fresh Herdr
+observations must also report that exact foreground cwd. Codex flags and trust
+grants are never sent to Claude. Ply changes no global configuration and never
+answers native login, trust or permission dialogs.
+
+The optional, Codex-only top-level `codex_project_trust` field has exactly this shape:
 
 ```json
 {"mode":"process-local","repository_root":"/absolute/physical/repository"}
 ```
 
 Omit it to preserve existing request bytes, digests and launch behavior. A supplied
-null, another mode or extra field is rejected. For a linked worktree, the trust
+null, another mode, a Claude provider or extra field is rejected. For a linked worktree, the trust
 root is the main repository owning the shared `.git` directory, which may differ
 from the Task worktree and its cwd. Preview verifies both Git links and the physical
 identities before offering a confirmation. The same confirmation covers this one
@@ -67,10 +101,10 @@ that could become active prevent a new grant before any tab is created. Inspect
 the reported path and effective policy before requesting a new preview.
 
 Ply reserves the target before creating a background tab, binds its pane and
-terminal, starts Codex once, then binds the actual native session before sending
+terminal, starts the selected agent once, then binds the actual native session before sending
 the Task. Codex versions that defer their `SessionStart` hook until the first turn
 need a short readiness exchange. When Herdr explicitly reports an interactive,
-settled Codex without a session, Ply sends one fixed message asking for `PLY_READY`
+settled selected agent without a session, Ply sends one fixed message asking for `PLY_READY`
 without tools or file changes. This message contains no Task instructions. The
 attempt is recorded before input in `startup-bootstrap-attempt.json`; it is never
 replayed. Ply then waits for the real hook session and a fresh settled observation.
@@ -81,7 +115,7 @@ Agent start, the optional readiness exchange and fresh observations share one
 an ungranted legacy request encounters native onboarding, the attempt remains
 subject to the same deadline. A confirmed process-local grant handles project trust
 before launch. Ply addresses only the exact reserved workspace/tab/pane/terminal
-and named Codex agent;
+and named agent, checking both Herdr's provider and the native session's provider;
 it never answers trust dialogs. An early nonzero start reply can be followed by
 these same-attempt observations within the remaining time. Missing `launch_pending`
 is not proof that the provider exited. Only a full fresh,
@@ -111,7 +145,9 @@ ply workflow run report wfr_<digest> --context /absolute/current/context.json --
 Acceptance uses native Acceptance@2 fields with kind
 `ply.workflow.run-acceptance`, schema version 1. A known different model is rejected;
 an unknown actual model may be null. Necessary runtime and permission facts must
-be known for positive acceptance. Negative claims remain visible without an
+be known for positive acceptance. Before the first positive acceptance, Ply also
+checks the fresh Herdr provider, session and location; the agent may be working
+while its callback runs. Negative claims remain visible without an
 invented start receipt.
 
 A round report uses all native TaskRun Report fields with kind
@@ -154,4 +190,4 @@ JSON argv file containing `python3`, the absolute
 `test/fixtures/workflow_run/fixture.py` path, `--builder`, and the test executable.
 Pass that file as `--fixture-command-file` to `wh01_acceptance.py`, along with
 `--ply` and a private `--artifact-root`. Case directories are retained. These
-tests use subprocess stand-ins and do not start real Herdr/Codex agents.
+tests use subprocess stand-ins and do not start real Herdr/Claude/Codex agents.

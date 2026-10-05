@@ -35,8 +35,11 @@ if cmd == ["agent", "start"]:
     model["name"] = args[2]
 agent = {"workspace_id":"w-fixture", "tab_id":"tab-fixture", "pane_id":"w-fixture:p1",
          "terminal_id":"terminal-fixture", "name":model.get("name", "unstarted"),
-         "agent":"codex", "agent_status":model["agent_status"],
-         "agent_session":{"agent":"codex", "kind":"id", "value":model["agent_session_id"]}}
+         "agent":model.get("provider", "codex"), "agent_status":model["agent_status"],
+         "agent_session":{"agent":model.get("session_provider", model.get("provider", "codex")),
+                          "kind":"id", "value":model["agent_session_id"]}}
+if "foreground_cwd" in model:
+    agent["foreground_cwd"] = model["foreground_cwd"]
 bootstrap_mode = model.get("bootstrap_mode")
 if bootstrap_mode:
     if "interactive_ready" in model:
@@ -197,7 +200,7 @@ func newWorkflowFixture(t *testing.T, root, ply string) workflowFixture {
 	info, _ := os.Stat(artifact)
 	raw := func(v any) json.RawMessage { b, _ := Canonical(v); return b }
 	report := WorkflowReport{Report: Report{Envelope: workflowEnv("round-report"), RunID: workflowID(r), RequestSHA256: digest(r), SessionID: "ply:" + workflowID(r), Outcome: "complete", Summary: "Synthetic Task report.", Meaning: "Stand-in evidence; no actual provider or human QA was run.", BudgetUsage: &BudgetUsage{true, 0, 10, 0}, StopReasons: raw([]any{}), ObservedEffects: syntheticEffects(t, mandate["authority"]), VerifierResults: raw([]any{map[string]any{"verifier_id": "test", "argv": []string{"go", "test", "./..."}, "cwd": p.WorktreePath, "exit": 0, "bound_oid_or_sha256": p.ParentOID, "stdout_artifact_id": nil, "stderr_artifact_id": nil}}), Review: raw(map[string]any{"findings": []any{}, "fixes": []any{}, "open_actionable_findings": []any{}}), Artifacts: raw([]any{map[string]any{"artifact_id": "task-requirements", "kind": "managed", "description": "Fixture requirements", "media_type": "application/json", "classification": "workspace_internal", "size_bytes": info.Size(), "sha256": hashFileTest(t, artifact), "locator": artifact}}), EvidenceGaps: raw([]any{}), ForbiddenEffectsObserved: raw([]any{}), TechnicalAssessment: TechnicalAssessment{"passed", []string{"test"}, []workspace.TaskAcceptedDebtRecord{}}}}
-	model := writeAny(t, root, "herdr-model.json", map[string]any{"agent_status": "idle", "agent_session_id": "fixture-session", "prompt_mode": "normal"})
+	model := writeAny(t, root, "herdr-model.json", map[string]any{"agent_status": "idle", "agent_session_id": "fixture-session", "prompt_mode": "normal", "foreground_cwd": obs.Target.WorktreeLocator})
 	d.Executable = func() (string, error) { return r.Runtime.PlyExecutable.Path, nil }
 	d.CWD = func() (string, error) { return obs.Target.WorktreeLocator, nil }
 	return workflowFixture{d, r, f, a, report, model, filepath.Join(root, "herdr-calls.jsonl"), h.Locator}

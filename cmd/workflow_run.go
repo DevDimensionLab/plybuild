@@ -23,7 +23,7 @@ func workflowRunError(e error) error {
 	return e
 }
 func newWorkflowRunCommand(d taskrun.Dependencies) *cobra.Command {
-	run := &cobra.Command{Use: "run", Short: "Run a prepared Task in Herdr and review its reports", Long: "Start one authorized Codex session for an existing Task preparation, follow immutable round reports, and request bounded corrections in the same session. Reviewed reports do not publish TaskResult or attest provider inactivity. Human QA and integration remain separate gates.", Example: "  ply workflow run start --file /absolute/prepared-task-request.json --check\n  ply workflow run show wfr_<digest>", Args: cobra.NoArgs, RunE: func(c *cobra.Command, a []string) error { return c.Help() }}
+	run := &cobra.Command{Use: "run", Short: "Run a prepared Task in Herdr and review its reports", Long: "Start one authorized Claude or Codex session for an existing Task preparation, follow immutable round reports, and request bounded corrections in the same session. Reviewed reports do not publish TaskResult or attest provider inactivity. Human QA and integration remain separate gates.", Example: "  ply workflow run start --file /absolute/prepared-task-request.json --check\n  ply workflow run show wfr_<digest>", Args: cobra.NoArgs, RunE: func(c *cobra.Command, a []string) error { return c.Help() }}
 	usage := func(detail string) error {
 		return &taskrun.Error{Code: "workflow_run_invalid_arguments", Detail: detail, Exit: 2}
 	}
@@ -39,9 +39,9 @@ func newWorkflowRunCommand(d taskrun.Dependencies) *cobra.Command {
 		}
 		short := map[string]string{"start": "Preview or confirm one prepared Task start in Herdr", "show": "Read preserved run and artifact freshness without effects", "follow": "Observe the same session until its round is ready for review", "accept": "Accept the actual bound runtime before Task writes", "report": "Preserve an immutable report for the current round", "review": "Accept, block or request one bounded correction"}[name]
 		detail := map[string]string{
-			"start":  " --check is the read-only default. --apply requires --confirm with the exact preview digest and the local HERDR_ENV=1 context. The request must bind an existing native Task preparation, Spec and permission evidence. An optional codex_project_trust grant confirms only the exact physical repository root for this process, before launch. Preview binds the trust effect and policy; sandbox and approvals remain enforced and no persistent config is changed. Project execution layers, explicit distrust or unknown policy stop before a tab is created. Repeated starts reuse the reservation without launching again. No TaskResult is published.",
+			"start":  " Select runtime.provider in the request: codex (default when omitted) or claude. runtime.model is a separate choice. Claude requires null config_profile and the manual permission mode; Codex keeps its managed permission profile. --check is the read-only default. --apply requires --confirm with the exact preview digest and the local HERDR_ENV=1 context. The request must bind an existing native Task preparation, Spec and permission evidence. An optional codex_project_trust grant confirms only the exact physical repository root for this process, before launch. Preview binds the trust effect and policy; sandbox and approvals remain enforced and no persistent config is changed. Project execution layers, explicit distrust or unknown policy stop before a tab is created. Repeated starts reuse the reservation without launching again. No TaskResult is published.",
 			"show":   " Reads saved state and current artifact hashes without Herdr calls, locks or recovery. Cached transport is not a fresh provider observation.",
-			"follow": " Waits for the correct round report and two fresh idle/done observations of the exact same Codex session. --timeout defaults to 60 seconds. Timeout ends observation, not the agent. A finished tab is transport status, not technical or human approval.",
+			"follow": " Waits for the correct round report and two fresh idle/done observations of the exact same selected agent session. --timeout defaults to 60 seconds. Timeout ends observation, not the agent. A finished tab is transport status, not technical or human approval.",
 			"accept": " This is the recipient's first action. Supply private Acceptance@2 fields using kind ply.workflow.run-acceptance, schema_version 1. The exact context, executable, cwd, native session and necessary permission facts must match. A null actual model is permitted; known mismatch is rejected.",
 			"report": " Submit native TaskRun report fields using kind ply.workflow.round-report, schema_version 1, plus the current round, control_id and previous_report_sha256. Include cumulative usage and the frozen Spec's task-requirements artifact. Run after the last target write of this round. No native terminal is published until review accepts.",
 			"review": " Bind the named coordinator's accepted, blocked or changes_requested decision to the current immutable report. Corrections reserve shared agreement A before one prompt attempt. A repeated decision never resends input. Accepted seals a native terminal but does not publish TaskResult, attest provider inactivity, perform human QA or integrate the candidate.",
@@ -121,12 +121,12 @@ func newWorkflowRunCommand(d taskrun.Dependencies) *cobra.Command {
 			} else {
 				switch v := result.(type) {
 				case taskrun.WorkflowRun:
-					fmt.Fprintf(c.OutOrStdout(), "Run: %s\nTransport: %s (%s); round %d: %s\nReport review: %s\nTaskResult: not published. Provider inactivity: not attested. Human QA and integration: separate pending gates.\nNext: %s — %s\n", v.RunID, v.Transport.State, v.Transport.Observation, v.Round.Number, v.Round.State, v.FinalReturn.State, v.NextAction.Actor, v.NextAction.Message)
+					fmt.Fprintf(c.OutOrStdout(), "Run: %s\nAgent: %s\nTransport: %s (%s); round %d: %s\nReport review: %s\nTaskResult: not published. Provider inactivity: not attested. Human QA and integration: separate pending gates.\nNext: %s — %s\n", v.RunID, v.Provider, v.Transport.State, v.Transport.Observation, v.Round.Number, v.Round.State, v.FinalReturn.State, v.NextAction.Actor, v.NextAction.Message)
 					for _, r := range v.Reasons {
 						fmt.Fprintln(c.OutOrStdout(), "Needs attention: "+r.Detail)
 					}
 				case taskrun.WorkflowPreview:
-					fmt.Fprintf(c.OutOrStdout(), "Run: %s\nRead-only preview for the existing Task preparation.\n", v.RunID)
+					fmt.Fprintf(c.OutOrStdout(), "Run: %s\nAgent: %s\nRead-only preview for the existing Task preparation.\n", v.RunID, v.Provider)
 					for _, effect := range v.Effects {
 						fmt.Fprintln(c.OutOrStdout(), effect)
 					}

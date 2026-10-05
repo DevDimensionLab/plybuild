@@ -79,6 +79,7 @@ type WorkflowAction struct {
 }
 type WorkflowRun struct {
 	Envelope
+	Provider        string              `json:"provider,omitempty"`
 	RunID           string              `json:"run_id"`
 	RequestSHA256   string              `json:"request_sha256"`
 	SessionID       string              `json:"session_id"`
@@ -96,6 +97,7 @@ type WorkflowRun struct {
 }
 type WorkflowPreview struct {
 	Envelope
+	Provider      string              `json:"provider,omitempty"`
 	RunID         string              `json:"run_id"`
 	RequestSHA256 string              `json:"request_sha256"`
 	Confirmation  *string             `json:"confirmation"`

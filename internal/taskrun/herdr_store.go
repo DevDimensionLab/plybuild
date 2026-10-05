@@ -250,6 +250,9 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		return WorkflowRun{}, e
 	}
 	o := s.Result
+	// Project the choice from the bound request, including historical state
+	// written before the optional readback field existed. No state rewrite.
+	o.Provider = s.Request.Runtime.Provider
 	o.Transport.Observation = "cached"
 	if o.Transport.AgentSessionID == "" && o.NextAction.Actor == "recipient" {
 		// Older saved attempts may still advise acceptance before session binding.

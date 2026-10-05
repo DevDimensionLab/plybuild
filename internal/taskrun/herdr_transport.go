@@ -13,6 +13,7 @@ type workflowAgent struct {
 	TabID            string `json:"tab_id"`
 	PaneID           string `json:"pane_id"`
 	TerminalID       string `json:"terminal_id"`
+	ForegroundCWD    string `json:"foreground_cwd"`
 	Name             string `json:"name"`
 	Agent            string `json:"agent"`
 	Status           string `json:"agent_status"`
@@ -98,15 +99,18 @@ func workflowIdentity(s workflowState, a workflowAgent, first bool) error {
 		return e
 	}
 	t := s.Result.Transport
-	if a.Session == nil || a.Session.Agent != "codex" || a.Session.Kind != "id" || !plain(a.Session.Value, 1, 256) || (!first || t.AgentSessionID != "") && a.Session.Value != t.AgentSessionID {
-		return workflowError(4, "fresh Herdr identity or native Codex session differs from the bound run")
+	if a.Session == nil || a.Session.Agent != s.Request.Runtime.Provider || a.Session.Kind != "id" || !plain(a.Session.Value, 1, 256) || (!first || t.AgentSessionID != "") && a.Session.Value != t.AgentSessionID {
+		return workflowError(4, "fresh Herdr identity or native "+s.Request.Runtime.Provider+" session differs from the bound run")
 	}
 	return nil
 }
 func workflowLocation(s workflowState, a workflowAgent) error {
 	t := s.Result.Transport
-	if !plain(a.WorkspaceID, 1, 128) || !plain(a.TabID, 1, 128) || !plain(a.PaneID, 1, 128) || !plain(a.TerminalID, 1, 128) || a.WorkspaceID != t.WorkspaceID || a.TabID != t.TabID || a.PaneID != t.PaneID || a.TerminalID != t.TerminalID || a.Name != workflowAgentName(s.Result.RunID) || a.Agent != "codex" {
+	if !plain(a.WorkspaceID, 1, 128) || !plain(a.TabID, 1, 128) || !plain(a.PaneID, 1, 128) || !plain(a.TerminalID, 1, 128) || a.WorkspaceID != t.WorkspaceID || a.TabID != t.TabID || a.PaneID != t.PaneID || a.TerminalID != t.TerminalID || a.Name != workflowAgentName(s.Result.RunID) || a.Agent != s.Request.Runtime.Provider {
 		return workflowError(4, "fresh Herdr location, name or agent differs from the reserved attempt")
+	}
+	if s.Request.Runtime.Provider == "claude" && a.ForegroundCWD != s.Observed.Target.WorktreeLocator {
+		return workflowError(4, "fresh Claude foreground cwd differs from the bound Task worktree")
 	}
 	return nil
 }
@@ -219,6 +223,11 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 }
 
 func workflowStartArgv(r WorkflowRequest, cwd, pane string) []string {
+	if r.Runtime.Provider == "claude" {
+		// Claude inherits the exact tab cwd. Its native permission mode is not
+		// a Codex profile; never forward Codex config, trust or approval flags.
+		return []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "claude", "--pane", pane, "--timeout", "30000", "--", "--model", r.Runtime.Model, "--permission-mode", "manual"}
+	}
 	argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "codex", "--pane", pane, "--timeout", "30000", "--", "-C", cwd, "--model", r.Runtime.Model, "-a", "on-request", "-c", `approvals_reviewer="auto_review"`, "-c", "default_permissions=" + workflowJSON(r.Runtime.PermissionBinding.ProfileID)}
 	if r.Runtime.ConfigProfile != nil {
 		argv = append(argv, "--profile", *r.Runtime.ConfigProfile)
