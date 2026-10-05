@@ -166,7 +166,7 @@ func Inspect(dependencies Dependencies, input InspectInput) (InspectResult, erro
 	}
 	action, reason := recommendation(state)
 	inspection := envelope("ply.workflow.handoff-inspection", canonicaljson.Member{Name: "derived_state", Value: state}, canonicaljson.Member{Name: "integrity", Value: canonicaljson.Object{{Name: "valid", Value: len(snapshot.IntegrityReasons) == 0}, {Name: "reasons", Value: stringValues(snapshot.IntegrityReasons)}}}, canonicaljson.Member{Name: "identities", Value: identityValue(snapshot.Handoff.Identity)}, canonicaljson.Member{Name: "documents", Value: documents}, canonicaljson.Member{Name: "validations", Value: validations}, canonicaljson.Member{Name: "attempts", Value: attempts}, canonicaljson.Member{Name: "artifacts", Value: snapshotArtifacts(snapshot)}, canonicaljson.Member{Name: "next_transition_authorized", Value: false}, canonicaljson.Member{Name: "control_recommendation", Value: canonicaljson.Object{{Name: "action", Value: action}, {Name: "reason", Value: reason}, {Name: "argv", Value: []canonicaljson.Value{}}}})
-	if taskSpecVersion(snapshot.Handoff.Value) == 2 {
+	if taskSpecVersion(snapshot.Handoff.Value) >= 2 {
 		basis, eval, specErr := historicalHandoffTaskSpec(dependencies, snapshot)
 		reasons := []string{}
 		if specErr != nil {
@@ -222,7 +222,7 @@ func validateReportedPolicy(snapshot Snapshot) ([]string, []string) {
 	if value, ok := objectMember(snapshot.Terminal.Value, "rounds_used"); ok {
 		rounds, _ = value.(int64)
 	}
-	if rounds > snapshot.Handoff.MaxRounds {
+	if rounds > snapshot.Handoff.MaxRounds && !unlimitedDeliveryBudget(snapshot.Handoff.Value) {
 		policy = append(policy, "rounds_used exceeds handoff budget")
 	}
 	if reviewValue, ok := objectMember(snapshot.Terminal.Value, "review"); ok {

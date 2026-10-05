@@ -78,6 +78,9 @@ func existing(r Request) (*Result, error) {
 	return &j.Result, nil
 }
 func previewLocked(d Dependencies, r Request, file string) (p Preview, err error) {
+	return previewLockedWithObservation(d, r, file, workflowhandoff.ObserveTaskRun)
+}
+func previewLockedWithObservation(d Dependencies, r Request, file string, observe func(workflowhandoff.Dependencies, string, string, []byte) (workflowhandoff.TaskRunObservation, error)) (p Preview, err error) {
 	defer func() {
 		if err != nil {
 			code := "task_run_preflight_blocked"
@@ -90,7 +93,7 @@ func previewLocked(d Dependencies, r Request, file string) (p Preview, err error
 		}
 	}()
 	p = Preview{Envelope: env("preview"), RequestSHA256: digest(r), RunID: RunID(r.RequestKey), Request: r, Paths: runPaths(r), Reasons: []Reason{}, NextArgv: []string{}}
-	obs, e := workflowhandoff.ObserveTaskRun(d.Workflow, r.WorkspaceRoot, r.PreparationID, r.HandoffDraft)
+	obs, e := observe(d.Workflow, r.WorkspaceRoot, r.PreparationID, r.HandoffDraft)
 	p.Preparation = obs.Preparation
 	p.Observed = Observed{obs.MarkerSHA256, obs.RegistrySHA256, obs.Target, obs.Epic, []FileBinding{}}
 	if e != nil {

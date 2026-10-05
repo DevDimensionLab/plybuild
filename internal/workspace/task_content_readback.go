@@ -258,6 +258,16 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 			}
 		}
 	}
+	if err == nil && isTaskGoalSpec(o) {
+		goal, e := loadTaskGoal(d, root, r, q.TaskID, TaskGoalRef{SpecID: q.SpecID, Spec: *ref})
+		if e != nil {
+			return TaskContentReadbackResult{}, e
+		}
+		if !contentTypedEqual(taskContentState(r, q.TaskID).ProblemHead, &goal.Problem) {
+			reasons = append(reasons, "task_goal_problem_changed")
+		}
+		return contentReadEnvelope("WorkspaceTaskSpecReadback@2", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": o, "goal": contentRefValue(goal), "assessments": assessments, "selection_history": selections, "integrity": integrity, "selection_freshness": "not_selected", "target_freshness": "late_bound", "required_inputs": contentRefValue(goal.RequiredInputs), "task_spec_binding": nil, "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(TaskNextAction{Kind: "inspect", Reason: "Choose the queued goal with ply workflow execute --spec " + q.SpecID, Argv: []string{"ply", "workflow", "execute", "--spec", q.SpecID}})}), nil
+	}
 	_, selectionFresh := selectionReadback(d, root, r, q.TaskID)
 	targetFresh := "unknown"
 	inputs := []TaskSpecRequiredInput{}
@@ -526,7 +536,7 @@ func TaskContentText(o canonicaljson.Object) string {
 	} else {
 		write("Task: %s\n", contentString(m, "task_id"))
 		switch kind {
-		case "WorkspaceTaskProblemReadback@1", "WorkspaceTaskSpecReadback@1":
+		case "WorkspaceTaskProblemReadback@1", "WorkspaceTaskSpecReadback@1", "WorkspaceTaskSpecReadback@2":
 			r := contentFields(m["revision"])
 			if len(r) == 0 {
 				legacy := contentFields(m["legacy_problem_summary"])
@@ -560,7 +570,10 @@ func TaskContentText(o canonicaljson.Object) string {
 				}
 			}
 			write("Documents: %s\n", contentString(m, "integrity"))
-			if kind == "WorkspaceTaskSpecReadback@1" {
+			if kind == "WorkspaceTaskSpecReadback@2" {
+				write("Goal contract: implementation details belong to the executor; the execution base is bound at start.\n")
+			}
+			if kind == "WorkspaceTaskSpecReadback@1" || kind == "WorkspaceTaskSpecReadback@2" {
 				write("Selection: %s; target: %s\n", contentString(m, "selection_freshness"), contentString(m, "target_freshness"))
 				write("Required handoff inputs: %d preserved files\n", len(contentArray(m, "required_inputs")))
 			}

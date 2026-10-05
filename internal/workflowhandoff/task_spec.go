@@ -19,13 +19,13 @@ func taskSpecBasis(value canonicaljson.Object) (*workspace.TaskSpecBasis, error)
 		}
 		return nil, nil
 	}
-	if taskSpecVersion(value) != 2 || !found {
-		return nil, fmt.Errorf("version 2 requires explicit task_spec_binding")
+	if (taskSpecVersion(value) != 2 && taskSpecVersion(value) != 3) || !found {
+		return nil, fmt.Errorf("version 2 or 3 requires explicit task_spec_binding")
 	}
 	return workspace.ValidateTaskSpecBasisValue(v)
 }
 func taskSpecLegacyProjection(value canonicaljson.Object) canonicaljson.Object {
-	return replaceObjectMember(removeObjectMember(value, "task_spec_binding"), "schema_version", int64(1))
+	return replaceObjectMember(removeObjectMember(removeObjectMember(value, "task_spec_binding"), "delivery_binding"), "schema_version", int64(1))
 }
 func decodeHandoffDraft(input []byte) (handoffDraft, error) {
 	v, e := canonicaljson.DecodeStrict(input)
@@ -46,11 +46,14 @@ func decodeHandoffDraft(input []byte) (handoffDraft, error) {
 	if e != nil {
 		return handoffDraft{}, schemaError("handoff draft", e)
 	}
+	if e = validateDeliveryBinding(o); e != nil {
+		return handoffDraft{}, schemaError("handoff draft", e)
+	}
 	legacy, e := canonicaljson.Marshal(taskSpecLegacyProjection(o))
 	if e != nil {
 		return handoffDraft{}, e
 	}
-	d, e := decodeHandoffDraftV1(legacy)
+	d, e := decodeHandoffDraftWithBudget(legacy, taskSpecVersion(o) == 3)
 	if e != nil {
 		return d, e
 	}
@@ -75,7 +78,10 @@ func validateStoredHandoff(o canonicaljson.Object) error {
 	if _, e := taskSpecBasis(o); e != nil {
 		return e
 	}
-	return validateStoredHandoffV1(taskSpecLegacyProjection(o))
+	if e := validateDeliveryBinding(o); e != nil {
+		return e
+	}
+	return validateStoredHandoffWithBudget(taskSpecLegacyProjection(o), taskSpecVersion(o) == 3)
 }
 func decodeStartDraft(input []byte) (startDraft, error) {
 	v, e := canonicaljson.DecodeStrict(input)
@@ -94,6 +100,9 @@ func decodeStartDraft(input []byte) (startDraft, error) {
 	}
 	if _, e = taskSpecBasis(o); e != nil {
 		return startDraft{}, schemaError("start draft", e)
+	}
+	if _, found := objectMember(o, "delivery_binding"); found {
+		return startDraft{}, schemaError("start draft", fmt.Errorf("delivery_binding belongs to the handoff, not a start receipt"))
 	}
 	projected := taskSpecLegacyProjection(o)
 	// Validate the added issue type with the same strict shape and ordering before
@@ -318,7 +327,7 @@ func validateCreateTaskSpec(d Dependencies, draft handoffDraft, target TargetObs
 	if e != nil {
 		return e
 	}
-	evaluation, e := d.taskSpecSession.ValidateTarget(target.Worktree, target.Ref, target.GitCommonDir, basis)
+	evaluation, e := validateDeliveryOrTaskTarget(d, draft.Value, target, basis)
 	if e != nil {
 		return classified(ErrorTaskSpec, e.Error(), e)
 	}
@@ -356,7 +365,7 @@ func validateTaskSpecStart(d Dependencies, snapshot Snapshot, draft startDraft) 
 	if d.taskSpecSession == nil {
 		return nil, classified(ErrorTaskSpec, "locked workspace Task snapshot is required", nil)
 	}
-	eval, e := d.taskSpecSession.ValidateTarget(snapshot.Handoff.Target.Worktree, snapshot.Handoff.Target.Ref, snapshot.Handoff.Target.GitCommonDir, basis)
+	eval, e := validateDeliveryOrTaskTarget(d, snapshot.Handoff.Value, snapshot.Handoff.Target, basis)
 	if e == nil && basis != nil {
 		e = validateTaskSpecInputs(snapshot.Handoff.Value, eval.RequiredInputs, eval.Spec)
 	}
@@ -402,7 +411,7 @@ func historicalHandoffTaskSpec(d Dependencies, snapshot Snapshot) (*workspace.Ta
 		return b, &eval, e
 	}
 	if snapshot.Start != nil {
-		if taskSpecVersion(snapshot.Start.Value) != 2 {
+		if taskSpecVersion(snapshot.Start.Value) < 2 {
 			return b, &eval, fmt.Errorf("Task basis requires version 2 start")
 		}
 		v, _ := objectMember(snapshot.Start.Value, "task_spec_binding")

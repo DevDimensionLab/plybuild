@@ -33,7 +33,7 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	}
 	var runtime map[string]json.RawMessage
 	if json.Unmarshal(fields["runtime"], &runtime) == nil && runtime != nil {
-		if _, present := runtime["provider"]; !present {
+		if _, present := runtime["provider"]; !present && string(fields["schema_version"]) == "1" {
 			runtime["provider"] = json.RawMessage(`"codex"`)
 			fields["runtime"], _ = json.Marshal(runtime)
 			b, e = json.Marshal(fields)
@@ -50,6 +50,12 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	}
 	if e = workflowValidateTrust(r); e != nil {
 		return r, e
+	}
+	if r.SchemaVersion == 2 {
+		return r, validateDeliveryWorkflowRequest(r)
+	}
+	if r.Delivery != nil {
+		return r, workflowError(2, "legacy workflow requests cannot acquire delivery-owner authority")
 	}
 	if r.Envelope != workflowEnv("herdr-run-request") || r.ReturnMode != "reviewed_report_only" || r.HumanAuthority.StartSurface != "human_authorized_herdr" || !r.Coordinator.MayRequestChanges || !plain(r.Coordinator.ActorClaim, 1, 256) || !plain(r.Herdr.TabLabel, 1, 80) || !plain(r.Herdr.WorkspaceID, 1, 128) {
 		return r, workflowError(2, "invalid workflow request, authority or Herdr binding")
@@ -74,6 +80,11 @@ func workflowInitial(r WorkflowRequest, observed Observed) workflowState {
 	id := workflowID(r)
 	o := WorkflowRun{Envelope: workflowEnv("run"), RunID: id, RequestSHA256: digest(r), SessionID: "ply:" + id, Paths: workflowPaths(r, 0), Transport: WorkflowTransport{WorkspaceID: r.Herdr.WorkspaceID, State: "unknown", Observation: "cached"}, Round: WorkflowRound{State: "awaiting_acceptance"}, Budget: WorkflowBudget{MeasurementSource: "unknown"}, FinalReturn: WorkflowFinal{State: "pending"}, TaskResultState: "not_published", Reasons: []Reason{}, NextAction: WorkflowAction{"coordinator", "Inspect the reserved startup and any native onboarding in the same tab; wait for a bound session and prompt before recipient acceptance. Do not restart."}, RuntimeFacts: RuntimeFacts{RequestedModel: r.Runtime.Model, ModelState: "unknown"}}
 	o.Provider = r.Runtime.Provider
+	if deliveryRun(r) {
+		o.Envelope = deliveryEnv("run")
+		o.Delivery = &DeliveryState{Phase: "awaiting_acceptance", OwnerClaim: r.Delivery.OwnerClaim, PermissionState: "pending_runtime_acceptance", ActualPolicyEvidence: []Evidence{}, Events: []DeliveryEventRecord{}, Candidates: []DeliveryCandidate{}}
+		o.NextAction = WorkflowAction{"recipient", "Confirm the actual runtime and permissions in this same interactive session before Task writes."}
+	}
 	return workflowState{Request: r, Observed: observed, Result: o, Phase: "reserved", Records: []workflowRecord{}}
 }
 func workflowExisting(r WorkflowRequest) (*WorkflowRun, error) {
@@ -95,7 +106,15 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 	if r.Runtime.Provider == "claude" {
 		p.Effects[1] = "Create one background Herdr tab and one Claude session in manual permission mode"
 	}
-	n, e := previewLocked(d, workflowNativeRequest(r), file)
+	var n Preview
+	var e error
+	if deliveryRun(r) {
+		p.Envelope = deliveryEnv("run-preview")
+		p.Effects = []string{"Reserve the selected goal, prepared Task and one delivery owner", "Create one interactive Herdr tab and bind the actual selected provider session", "Keep a stable control executable while the owner designs, delegates, verifies and installs within the bound authority", "Preserve incomplete reports, qualified candidates, actual human QA and authorized local integration as separate facts", "Retain ownership until local delivery actually completes; never infer human approval or provider inactivity"}
+		n, e = previewLockedWithObservation(d, workflowNativeRequest(r), file, workflowhandoff.ObserveDeliveryTaskRun)
+	} else {
+		n, e = previewLocked(d, workflowNativeRequest(r), file)
+	}
 	p.Observed = n.Observed
 	if e == nil {
 		e = verifyExecutable(r.Herdr.Executable)
@@ -234,6 +253,9 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 				if s.Result.Round.ReportSHA256 == nil && s.Result.FinalReturn.State == "pending" {
 					s.Result.Round.State = "unknown"
 					s.Result.NextAction = WorkflowAction{"coordinator", "Inspect the preserved startup, last observation and any native onboarding in the same tab. Readiness or prompt delivery is uncertain; do not restart or resend input."}
+					if deliveryRun(s.Request) {
+						s.Result.NextAction = deliveryStartupAction(*s)
+					}
 				}
 				return nil
 			}); saveErr != nil {
@@ -262,6 +284,9 @@ func workflowNewContext(d Dependencies, s *workflowState) error {
 	return nil
 }
 func workflowInstructions(s workflowState, findings []WorkflowFinding) string {
+	if deliveryRun(s.Request) {
+		return deliveryInstructions(s)
+	}
 	o := s.Result
 	return fmt.Sprintf("Execute only the frozen prepared Task mandate at %s and its exact Spec inputs. The private context is %s. Read the immutable request reservation at %s. Keep its scope, human gates and agreement unchanged. Your first action before target writes is: %s workflow run accept %s --context %s --file <private-acceptance.json>. Acceptance kind ply.workflow.run-acceptance schema_version 1 uses native Acceptance@2 fields. Report actual runtime, policy and native session %s; unknown model is null, never infer it. Negative authority stops work. After your last write in each round submit kind ply.workflow.round-report schema_version 1 with all native TaskRun Report fields, the task-requirements artifact and this binding: run_id=%s request_sha256=%s session_id=%s round=%d control_id=%s previous_report_sha256=%s. Run: %s workflow run report %s --context %s --file <private-round-report.json>. Agreement A: initial execution, at most 3 corrections, 5400 active seconds, 2 environment measures; cumulative usage includes internal corrections. Budget floor: %s. Remaining budget: %s. Stop at the first reached limit. No new agents, scope expansion, TaskResult publication, installation, human QA or integration. After reporting, wait for coordinator review in this same session. Findings: %s", filepath.Join(o.Paths.RunRoot, "mandate.json"), o.Paths.Context, workflowIndex(s.Request.WorkspaceRoot, o.RunID), ShellQuote(s.Request.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), o.Transport.AgentSessionID, o.RunID, o.RequestSHA256, o.SessionID, o.Round.Number, workflowJSON(o.Round.ControlID), workflowJSON(o.Round.PreviousReportSHA256), ShellQuote(s.Request.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), workflowJSON(o.Budget.Floor), workflowJSON(map[string]int{"correction_rounds": 3 - o.Budget.Floor.CorrectionRounds, "active_seconds": 5400 - o.Budget.Floor.ActiveSeconds, "environment_measures": 2 - o.Budget.Floor.EnvironmentMeasures}), workflowJSON(findings))
 }

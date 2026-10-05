@@ -471,6 +471,23 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 		return validateQueueYAMLMap(node)
 	case reflect.Struct:
 		fields := yamlStructShapeFields(expected)
+		if expected == reflect.TypeOf(IntegrationAuthority{}) {
+			mode := ""
+			for i := 0; i+1 < len(node.Content); i += 2 {
+				if node.Content[i].Value == "mode" {
+					mode = node.Content[i+1].Value
+				}
+			}
+			if mode == "human_cli_start" {
+				filtered := []yamlShapeField{}
+				for _, f := range fields {
+					if f.name != "delivery_owner" {
+						filtered = append(filtered, f)
+					}
+				}
+				fields = filtered
+			}
+		}
 		if expected == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) {
 			version := ""
 			for i := 0; i+1 < len(node.Content); i += 2 {
@@ -765,7 +782,8 @@ func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
 	authorities := map[IntegrationAuthorityID]IntegrationAuthority{}
 	planDigests := map[string]bool{}
 	for _, a := range registry.IntegrationAuthorities {
-		if !lifecycleIDPatterns["integration authority"].MatchString(string(a.ID)) || a.Mode != "human_cli_start" || !validTaskUTC(a.CreatedAtUTC) || !digestPattern.MatchString(a.PlanSHA256) || integrationPlanDigest(a.Plan) != a.PlanSHA256 || planDigests[a.PlanSHA256] {
+		validMode := a.Mode == "human_cli_start" && a.DeliveryOwner == nil || a.Mode == "delivery_owner_after_human_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner)
+		if !lifecycleIDPatterns["integration authority"].MatchString(string(a.ID)) || !validMode || !validTaskUTC(a.CreatedAtUTC) || !digestPattern.MatchString(a.PlanSHA256) || integrationPlanDigest(a.Plan) != a.PlanSHA256 || planDigests[a.PlanSHA256] {
 			return fmt.Errorf("integration authority %s is invalid", a.ID)
 		}
 		r, rok := results[a.TaskResultID]

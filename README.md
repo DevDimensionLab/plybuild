@@ -264,6 +264,21 @@ set the queue entry to that new selection. Historical Specs, results, QA and int
 retries retain their original digests. No command rebases worktrees, integrates code,
 starts an agent, installs the CLI or selects a human QA outcome.
 
+### Deliver a goal with its assigned implementor
+
+From a registered Epic worktree, `ply workflow execute` selects the next queued
+goal or an explicit `--spec`, creates a feature worktree and starts the assigned
+interactive Claude/Codex owner. The owner defines the detailed solution and tests,
+handles review and corrections, and follows an actual human pass through local
+return. Planners can continue publishing independent goals. See the
+[goal registration, execution and recovery guide](docs/workflow-execute.md).
+
+```shell
+ply workflow execute --check
+ply workflow execute
+ply workflow execute --spec explain-start-errors
+```
+
 ### Run a prepared Task in Herdr
 
 `ply workflow run` previews and confirms one Herdr/Codex start from an existing

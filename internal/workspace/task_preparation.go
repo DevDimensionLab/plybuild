@@ -78,13 +78,19 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 	}
 	fold := foldQueue(r, q.QueueID)
 	found := false
+	readyGoal := false
 	for i, entry := range fold.Pending {
 		if in.Selector.Kind == "task" && entry.TaskID != *in.Selector.TaskID {
 			continue
 		}
 		found = true
-		row, p := queueEntryEvaluation(d, root, r, projects, q.Target, q.QueueID, entry, i+1)
+		row, p := queueMixedEntryEvaluation(d, root, r, projects, q.Target, q.QueueID, entry, i+1)
 		if p == nil {
+			if entry.Goal != nil && row.State == "ready" {
+				readyGoal = true
+				row.State = "blocked"
+				row.Reasons = queueReasons("task_goal_requires_execute", "choose this base-free goal with ply workflow execute; prepare requires a selected execution solution")
+			}
 			if in.Selector.Kind == "task" {
 				out.State = row.State
 				out.Reasons = row.Reasons
@@ -102,6 +108,11 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 	}
 	if !found && in.Selector.Kind == "task" {
 		return out, queueError("task_queue_task_not_pending", "named Task is not an active pending entry")
+	}
+	if readyGoal {
+		out.State = "blocked"
+		out.Reasons = queueReasons("task_goal_requires_execute", "choose the next base-free goal with ply workflow execute; prepare requires a selected execution solution")
+		return out, nil
 	}
 	out.Reasons = queueReasons("task_queue_no_ready", "no eligible pending Task; inspect the queue reasons")
 	return out, nil

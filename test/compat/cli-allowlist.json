@@ -1,6 +1,332 @@
 {
   "allowed_deltas": [
     {
+      "after": "  ply workflow epic plan --repo /work/example/main --root /work/example --check",
+      "before": "",
+      "field": "example",
+      "kind": "command_changed",
+      "path": "ply"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  /absolute/preserved/ply-control workflow execute integrate wfr_<digest> --context /absolute/context.json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact private execution context (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for integrate"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Complete the authorized local return after a matching human pass. Owner callback: use the frozen control executable, exact Task cwd and --context. Requires the exact qualified candidate and recorded human pass, unchanged clean parent, and the original local delivery authority. Preserves integration evidence, advances this preparation and updates the Epic base. Does not push, merge master or delete worktrees.",
+        "path": "ply workflow execute integrate",
+        "runnable": true,
+        "short": "Complete the authorized local return after a matching human pass",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "integrate RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute integrate"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  /absolute/preserved/ply-control workflow execute qa wfr_<digest> pass --context /absolute/context.json --evidence /absolute/human-answer.json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact private execution context (required)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "evidence",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute evidence of the actual human answer (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for qa"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record an actual human answer for the exact candidate. Owner callback: use the frozen control executable, exact Task cwd and --context. --evidence preserves the actual user's answer and candidate binding. The answer is a local human attestation, not cryptographic identity proof. Never infer pass from tests, silence or a provider's claim.",
+        "path": "ply workflow execute qa",
+        "runnable": true,
+        "short": "Record an actual human answer for the exact candidate",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "qa RUN_ID pass|fail|blocked"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute qa"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  /absolute/preserved/ply-control workflow execute report wfr_<digest> --context /absolute/context.json --file /absolute/report.json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact private execution context (required)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute immutable delivery report file (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for report"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preserve truthful progress, questions or incomplete results. Owner callback: use the frozen control executable, exact Task cwd and --context. --file is a delivery-report@2; failed, not_run and unknown facts remain readable and do not qualify a candidate.",
+        "path": "ply workflow execute report",
+        "runnable": true,
+        "short": "Preserve truthful progress, questions or incomplete results",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "report RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute report"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  /absolute/preserved/ply-control workflow execute verify wfr_<digest> --context /absolute/context.json --review /absolute/review.json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact private execution context (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for verify"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "review",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute candidate-bound review evidence (required)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Run the owner's acceptance entrypoint and qualify this candidate. Owner callback: use the frozen control executable, exact Task cwd and --context. --review supplies an actual candidate-bound DeliveryCandidateReview@1 record. Execute the declared acceptance script and preserve real evidence. Missing or failed tests cannot produce a technical pass. Human product judgment remains separate.",
+        "path": "ply workflow execute verify",
+        "runnable": true,
+        "short": "Run the owner's acceptance entrypoint and qualify this candidate",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "verify RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute verify"
+    },
+    {
       "after": {
         "aliases": null,
         "annotations": {},
@@ -56,6 +382,600 @@
       },
       "kind": "command_added",
       "path": "ply capabilities"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow epic plan --project ply --language nb\n  ply workflow epic plan --repo /work/example/main --root /work/example --check",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for epic"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Prepare a standalone planning repository for one or more future Epics without starting an agent.",
+        "path": "ply workflow epic",
+        "runnable": false,
+        "short": "Prepare local Epic planning",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "epic"
+      },
+      "kind": "command_added",
+      "path": "ply workflow epic"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow epic plan --project ply --language nb\n  ply workflow epic plan --repo /work/example/main --root /work/example --goal \"Plan the next release\"\n  ply workflow epic plan --repo \"/work/trip/service main\" --repo /work/trip/api/main --root /work/trip --language nb --check --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "validate and render without creating files or Git state"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "goal",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "optional initial planning goal, treated as text"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for plan"
+          },
+          {
+            "annotations": {},
+            "default": "en",
+            "deprecated": "",
+            "hidden": false,
+            "name": "language",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "planning document language (en or nb)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Project ID (all explicit members)"
+          },
+          {
+            "annotations": {},
+            "default": "[]",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "stringArray",
+            "usage": "existing Git worktree root (repeatable; requires --root)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "root",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "existing root directory (default: Project wrapper)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": true,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Create <root>/planning from the bundled agentic/planning template.\nSelect every registered member of a Project, or repeat --repo for explicit Git\nworktree roots. Explicit repositories require --root; Project mode defaults to\nthe registered wrapper. All paths are resolved to physical absolute paths.\n\nValidation, complete rendering and Git identity checks precede creation. --check\npreviews the same checks without writes. Creation commits the generated files on\nmain using available Git identity. Every existing planning path stops creation;\nthere is no overwrite, update or continue mode. A partial failure is preserved.\nNo agent, workspace, Project, Epic, product worktree or remote is created.\nPlanning prose uses --language; CLI, help and errors remain English.",
+        "path": "ply workflow epic plan",
+        "runnable": true,
+        "short": "Create a standalone local planning Git repository",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "plan"
+      },
+      "kind": "command_added",
+      "path": "ply workflow epic plan"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute --check\n  ply workflow epic plan --project ply --language nb\n  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for workflow"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": true,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Create local planning repositories, execute queued goals with an assigned agent, and manage workflow transitions and notifications.",
+        "path": "ply workflow",
+        "runnable": false,
+        "short": "Manage agent workflows",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "workflow"
+      },
+      "kind": "command_added",
+      "path": "ply workflow"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute show wfr_<digest>",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "preview goal, base, worktree and runtime without creating or starting anything"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "epic",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Epic ID (requires --project and --repo)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for execute"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "herdr-workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Herdr workspace ID (default: current Herdr workspace)"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "next",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "select the first eligible goal in this Epic's queue (default)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "notification-context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "optional existing owner notification context to freeze into the execution"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "permission-profile",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "existing Codex permission profile; Claude uses native manual mode"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Project ID (requires --repo and --epic)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID (requires --project and --epic)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "spec",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact pending goal Spec ID in this Epic; ambiguous IDs are rejected"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. --check is read-only. Repeated starts inspect the preserved execution; an unknown start never launches another agent. Legacy workflow run contracts retain their original limits.",
+        "path": "ply workflow execute",
+        "runnable": true,
+        "short": "Deliver the next goal from this Epic with its assigned agent",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "execute"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute follow wfr_<digest> --timeout 60",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for follow"
+          },
+          {
+            "annotations": {},
+            "default": "60",
+            "deprecated": "",
+            "hidden": false,
+            "name": "timeout",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "wait timeout in seconds; never stops the agent"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Observe the same interactive delivery session. The observation timeout does not stop the provider. Reuse the existing tab when startup or return is unknown.",
+        "path": "ply workflow execute follow",
+        "runnable": true,
+        "short": "Observe the same interactive delivery session",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "follow RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute follow"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute resume wfr_<digest> --timeout 60",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for resume"
+          },
+          {
+            "annotations": {},
+            "default": "60",
+            "deprecated": "",
+            "hidden": false,
+            "name": "timeout",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "wait timeout in seconds; never stops the agent"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Continue the same startup after native onboarding without restarting it. Continue an existing delivery startup after the human resolves native onboarding in its preserved tab. Verify the same provider and terminal, bind readiness, and send the first Task prompt only when it was never attempted. Never create another tab, start another agent, grant permissions or replay uncertain input.",
+        "path": "ply workflow execute resume",
+        "runnable": true,
+        "short": "Continue the same startup after native onboarding without restarting it",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "resume RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute resume"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute show wfr_<digest>",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read the preserved delivery and its next action. Read-only. Cached provider state is not a fresh observation or product approval.",
+        "path": "ply workflow execute show",
+        "runnable": true,
+        "short": "Read the preserved delivery and its next action",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute show"
     },
     {
       "after": {
@@ -448,50 +1368,6 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef",
-        "flags": [
-          {
-            "annotations": {
-              "cobra_annotation_flag_set_by_cobra": [
-                "true"
-              ]
-            },
-            "default": "false",
-            "deprecated": "",
-            "hidden": false,
-            "name": "help",
-            "no_opt_default": "true",
-            "scope": "local",
-            "shorthand": "h",
-            "shorthand_deprecated": "",
-            "type": "bool",
-            "usage": "help for workflow"
-          }
-        ],
-        "has_args_validator": false,
-        "has_persistent_post_run": false,
-        "has_persistent_pre_run": true,
-        "has_post_run": false,
-        "has_pre_run": false,
-        "hidden": false,
-        "long": "Manage explicit local agent workflow transitions and report-ready notifications.",
-        "path": "ply workflow",
-        "runnable": false,
-        "short": "Manage agent workflows",
-        "suggest_for": null,
-        "traverse_children": false,
-        "use": "workflow"
-      },
-      "kind": "command_added",
-      "path": "ply workflow"
-    },
-    {
-      "after": {
-        "aliases": null,
-        "annotations": {},
-        "deprecated": "",
-        "disable_flag_parsing": false,
-        "disable_flags_in_use_line": false,
         "example": "  ply workflow handoff submit-result --handoff /absolute/handoff.json --file /absolute/result.json",
         "flags": [
           {
@@ -817,7 +1693,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Preview or explicitly retry proven non-delivery. A fresh preview and its new --confirm digest are required for a new attempt. Only rejected, not_sent, or rate_limited after its deadline can retry. Acknowledged or unknown delivery cannot retry. No automatic retries, sleeping, force or gate-revision recovery exist. Recheck the gate or event before apply; never change event identity or route to bypass unknown.",
+        "long": "Preview or explicitly retry proven non-delivery. A fresh preview and its new --confirm digest are required for a new attempt. Only rejected, not_sent, or rate_limited after its deadline can retry. Acknowledged or unknown delivery cannot retry. No automatic retries, sleeping, force or gate-revision recovery exist. V3 retains the original local event timestamp and offset even if timezone data changes. Recheck the gate or event before apply; never change event identity or route to bypass unknown.",
         "path": "ply workflow notification retry",
         "runnable": true,
         "short": "Preview or explicitly retry proven non-delivery",
@@ -887,7 +1763,7 @@
             "shorthand": "",
             "shorthand_deprecated": "",
             "type": "string",
-            "usage": "Strict v1 human-gate or v2 agent-event request JSON file"
+            "usage": "Strict v1 human-gate, v2 legacy-event or v3 compact-event request JSON file"
           },
           {
             "annotations": {},
@@ -983,7 +1859,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Notify one fixed Slack channel about a v1 report-ready human gate or a v2 agent_finished, agent_stopped, or feedback_required event. V2 external sources bind a preserved event; agent_finished requires a report, and before_start is only valid for agent_stopped without a start receipt. Source, sender, gate, event and channel are claims; transport acknowledgement does not attest product correctness or human QA. No automatic detection or retry occurs.",
+        "long": "Notify one fixed Slack channel about a v1 report-ready human gate or a v2 legacy agent event or a compact v3 agent_finished, agent_stopped, or feedback_required event. V3 binds an explicit codex/claude provider, physical origin/context root, IANA timezone and frozen local event time. Public status is ready_for_review, ready_for_your_check, done, stopped or needs_answer, matched to the event. Title/summary/action/context limits are 60/100/140/96 Unicode characters; the plain-text message has three lines and at most 480 characters. V2/v3 external sources bind a preserved event; agent_finished requires a report, and before_start is only valid for agent_stopped without a start receipt. Source, sender, gate, event and channel are claims; transport acknowledgement does not attest product correctness or human QA. No automatic detection or retry occurs.",
         "path": "ply workflow notification",
         "runnable": true,
         "short": "Preview and deliver human gates or agent events",
@@ -3682,7 +4558,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Record or inspect Task metadata and preserved documents. A selection records a human claim. Worktree creation, agent start, product QA, and integration remain separate actions.",
+        "long": "Record or inspect Task metadata and preserved documents. Goal Spec@2 keeps the objective, design, acceptance criteria and assigned implementor without an early Git base. A solution selection records a human claim. Goal recording does not start an agent; use workflow execute from the registered Epic to select and deliver a queued goal.",
         "path": "ply workspace task problem",
         "runnable": true,
         "short": "Preserve Task problem revisions",
@@ -3870,7 +4746,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Record or inspect Task metadata and preserved documents. A selection records a human claim. Worktree creation, agent start, product QA, and integration remain separate actions.",
+        "long": "Record or inspect Task metadata and preserved documents. Goal Spec@2 keeps the objective, design, acceptance criteria and assigned implementor without an early Git base. A solution selection records a human claim. Goal recording does not start an agent; use workflow execute from the registered Epic to select and deliver a queued goal.",
         "path": "ply workspace task publication",
         "runnable": true,
         "short": "Inspect Task content publication outcomes",
@@ -4596,10 +5472,10 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Read a strict WorkspaceTaskQueueDraft@1 from an absolute physical JSON file. Bind exact selections and expected_revision. A legacy registry requires registry_upgrade. The current preparation is retained and must not occur in entries.",
+        "long": "Read strict WorkspaceTaskQueueDraft@1 (selected solutions with a human priority claim) or @2 (goal references with planner provenance) from an absolute physical JSON file. Bind expected_revision and every exact revision/hash. Goal publication does not claim a human start; workflow execute supplies that choice from the return worktree. A legacy registry requires registry_upgrade. The current preparation is retained and must not occur in entries.",
         "path": "ply workspace task queue set",
         "runnable": true,
-        "short": "Replace the pending order with an exact human priority claim",
+        "short": "Replace the pending order with exact goal or solution references",
         "suggest_for": null,
         "traverse_children": false,
         "use": "set"
@@ -5300,10 +6176,10 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Record or inspect Task metadata and preserved documents. A selection records a human claim. Worktree creation, agent start, product QA, and integration remain separate actions.",
+        "long": "Record or inspect Task metadata and preserved documents. Goal Spec@2 keeps the objective, design, acceptance criteria and assigned implementor without an early Git base. A solution selection records a human claim. Goal recording does not start an agent; use workflow execute from the registered Epic to select and deliver a queued goal.",
         "path": "ply workspace task spec",
         "runnable": true,
-        "short": "Record, assess, and select a Task solution",
+        "short": "Record Task goals and assess or select detailed solutions",
         "suggest_for": null,
         "traverse_children": false,
         "use": "spec"
@@ -5374,7 +6250,7 @@
         "has_post_run": false,
         "has_pre_run": true,
         "hidden": false,
-        "long": "Record a readiness assessment without selecting a solution. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim. New work uses the current Epic base. After a base update, record a new revision with snapshot references to unchanged documents, then assess and select it. Historical revisions remain immutable.",
+        "long": "Record a readiness assessment without selecting a solution. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim. Solution Spec@1 uses the current Epic base; after a base update record, assess and select a new solution revision. Goal Spec@2 (contract_kind goal) has no implementation_basis or detailed technical plan: queue its exact revision with QueueDraft@2, then workflow execute binds the current base and preserves a derived execution Spec. Planner goal publication does not claim human selection. Historical revisions remain immutable.",
         "path": "ply workspace task spec assess",
         "runnable": true,
         "short": "Record a readiness assessment without selecting a solution",
@@ -5431,10 +6307,10 @@
         "has_post_run": false,
         "has_pre_run": true,
         "hidden": false,
-        "long": "List solution revisions and their assessments. This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.",
+        "long": "List goal and solution revisions and their assessments. This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.",
         "path": "ply workspace task spec list",
         "runnable": true,
-        "short": "List solution revisions and their assessments",
+        "short": "List goal and solution revisions and their assessments",
         "suggest_for": null,
         "traverse_children": false,
         "use": "list <task-id>"
@@ -5505,10 +6381,10 @@
         "has_post_run": false,
         "has_pre_run": true,
         "hidden": false,
-        "long": "Record a solution revision with three parts. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim. New work uses the current Epic base. After a base update, record a new revision with snapshot references to unchanged documents, then assess and select it. Historical revisions remain immutable.",
+        "long": "Record an immutable goal or solution revision. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim. Solution Spec@1 uses the current Epic base; after a base update record, assess and select a new solution revision. Goal Spec@2 (contract_kind goal) has no implementation_basis or detailed technical plan: queue its exact revision with QueueDraft@2, then workflow execute binds the current base and preserves a derived execution Spec. Planner goal publication does not claim human selection. Historical revisions remain immutable.",
         "path": "ply workspace task spec record",
         "runnable": true,
-        "short": "Record a solution revision with three parts",
+        "short": "Record an immutable goal or solution revision",
         "suggest_for": null,
         "traverse_children": false,
         "use": "record <task-id>"
@@ -5579,7 +6455,7 @@
         "has_post_run": false,
         "has_pre_run": true,
         "hidden": false,
-        "long": "Record the human's exact solution choice. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim. New work uses the current Epic base. After a base update, record a new revision with snapshot references to unchanged documents, then assess and select it. Historical revisions remain immutable.",
+        "long": "Record the human's exact solution choice. Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim. Solution Spec@1 uses the current Epic base; after a base update record, assess and select a new solution revision. Goal Spec@2 (contract_kind goal) has no implementation_basis or detailed technical plan: queue its exact revision with QueueDraft@2, then workflow execute binds the current base and preserves a derived execution Spec. Planner goal publication does not claim human selection. Historical revisions remain immutable.",
         "path": "ply workspace task spec select",
         "runnable": true,
         "short": "Record the human's exact solution choice",
@@ -5670,10 +6546,10 @@
         "has_post_run": false,
         "has_pre_run": true,
         "hidden": false,
-        "long": "Show an exact solution revision and its preserved inputs. This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.",
+        "long": "Show an exact goal or solution revision and its preserved inputs. This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.",
         "path": "ply workspace task spec show",
         "runnable": true,
-        "short": "Show an exact solution revision and its preserved inputs",
+        "short": "Show an exact goal or solution revision and its preserved inputs",
         "suggest_for": null,
         "traverse_children": false,
         "use": "show <task-id>"

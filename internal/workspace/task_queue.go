@@ -48,6 +48,12 @@ func queueTaskNames(qid string, id TaskID, title, parent string) (string, string
 	return "ply-task/" + leaf, filepath.Join(filepath.Dir(parent), "ply-task-"+leaf)
 }
 func queueEntryEvaluation(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, tgt QueueTarget, qid string, entry QueueEntry, rank int) (QueuePending, *WorkspaceTaskPreparePlan) {
+	return queueMixedEntryEvaluation(d, root, r, projects, tgt, qid, TaskGoalQueueEntry{TaskID: entry.TaskID, Selection: entry.Selection}, rank)
+}
+func queueMixedEntryEvaluation(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, tgt QueueTarget, qid string, entry TaskGoalQueueEntry, rank int) (QueuePending, *WorkspaceTaskPreparePlan) {
+	if entry.Goal != nil {
+		return queueGoalEvaluation(d, root, r, entry, rank), nil
+	}
 	t, _ := findTask(r, entry.TaskID)
 	row := QueuePending{Rank: rank, TaskID: entry.TaskID, Selection: entry.Selection, State: "blocked", Reasons: []QueueReason{}}
 	block := func(e error) (QueuePending, *WorkspaceTaskPreparePlan) {
@@ -198,7 +204,7 @@ func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, project
 		out.Current = &c
 	}
 	for i, v := range q.Pending {
-		row, _ := queueEntryEvaluation(d, root, r, projects, t, id, v, i+1)
+		row, _ := queueMixedEntryEvaluation(d, root, r, projects, t, id, v, i+1)
 		if !ready || row.State == "ready" {
 			out.Pending = append(out.Pending, row)
 		}
@@ -248,16 +254,13 @@ func SetTaskQueue(d Dependencies, file string) (WorkspaceTaskQueueReadback, erro
 	if e = queueDraftRule()(v); e != nil {
 		return out, queueError("task_queue_invalid_input", e.Error())
 	}
-	var draft WorkspaceTaskQueueDraft
-	if e = contentDecode(v, &draft); e != nil {
-		return out, e
-	}
+	draft := decodeQueueDraft(v)
 	root, e := containingWorkItemWorkspace(d)
 	if e != nil {
 		return out, e
 	}
 	in := QueueTargetInput{draft.ProjectID, draft.RepoID, draft.EpicID}
-	request := queueRequest(draft)
+	request := queueRequest(v)
 	e = d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
 		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
 			r, e := session.Snapshot()
@@ -295,6 +298,11 @@ func SetTaskQueue(d Dependencies, file string) (WorkspaceTaskQueueReadback, erro
 				}
 				if e = validateQueueSelection(r, task.ID, entry.Selection); e != nil {
 					return e
+				}
+				if entry.Goal != nil {
+					if _, e = loadTaskGoal(d, root, r, task.ID, *entry.Goal); e != nil {
+						return e
+					}
 				}
 				if entry.Selection != nil {
 					m, err := readRegisteredTaskManifest(d.TaskContent, root, r, entry.Selection.ManifestSHA256)
@@ -339,12 +347,14 @@ func validateQueueClosure(d Dependencies, root string, r WorkItemRegistry) error
 		if ev.Kind != "set" {
 			continue
 		}
-		var draft WorkspaceTaskQueueDraft
-		if e := contentDecode(queueRequestValue(ev.Request), &draft); e != nil {
-			return e
-		}
+		draft := decodeQueueDraft(queueRequestValue(ev.Request))
 		t := QueueTarget{ProjectID: draft.ProjectID, RepoID: draft.RepoID, EpicID: draft.EpicID}
 		for _, entry := range draft.Entries {
+			if entry.Goal != nil {
+				if _, e := loadTaskGoal(d, root, r, entry.TaskID, *entry.Goal); e != nil {
+					return e
+				}
+			}
 			if entry.Selection != nil {
 				m, e := readRegisteredTaskManifest(d.TaskContent, root, r, entry.Selection.ManifestSHA256)
 				if e != nil {

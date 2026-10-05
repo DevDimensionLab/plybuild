@@ -10,7 +10,7 @@ import (
 func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependencies) {
 	parents := map[string]*cobra.Command{}
 	for _, name := range []string{"problem", "spec", "publication"} {
-		p := &cobra.Command{Use: name, Short: map[string]string{"problem": "Preserve Task problem revisions", "spec": "Record, assess, and select a Task solution", "publication": "Inspect Task content publication outcomes"}[name], Long: "Record or inspect Task metadata and preserved documents. A selection records a human claim. Worktree creation, agent start, product QA, and integration remain separate actions.", Example: "  ply workspace task " + name + " --help", RunE: func(cmd *cobra.Command, args []string) error { return cmd.Help() }}
+		p := &cobra.Command{Use: name, Short: map[string]string{"problem": "Preserve Task problem revisions", "spec": "Record Task goals and assess or select detailed solutions", "publication": "Inspect Task content publication outcomes"}[name], Long: "Record or inspect Task metadata and preserved documents. Goal Spec@2 keeps the objective, design, acceptance criteria and assigned implementor without an early Git base. A solution selection records a human claim. Goal recording does not start an agent; use workflow execute from the registered Epic to select and deliver a queued goal.", Example: "  ply workspace task " + name + " --help", RunE: func(cmd *cobra.Command, args []string) error { return cmd.Help() }}
 		task.AddCommand(p)
 		parents[name] = p
 	}
@@ -18,7 +18,7 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 		parent, name, short string
 		run                 func(workspace.Dependencies, workspace.TaskContentInput) (workspace.TaskContentMutationResult, error)
 	}
-	for _, entry := range []mutation{{"problem", "record", "Record an immutable problem revision", workspace.RecordTaskProblem}, {"spec", "record", "Record a solution revision with three parts", workspace.RecordTaskSpec}, {"spec", "assess", "Record a readiness assessment without selecting a solution", workspace.AssessTaskSpec}, {"spec", "select", "Record the human's exact solution choice", workspace.SelectTaskSolution}, {"spec", "withdraw", "Withdraw the current choice without deleting its history", workspace.WithdrawTaskSolution}} {
+	for _, entry := range []mutation{{"problem", "record", "Record an immutable problem revision", workspace.RecordTaskProblem}, {"spec", "record", "Record an immutable goal or solution revision", workspace.RecordTaskSpec}, {"spec", "assess", "Record a readiness assessment without selecting a solution", workspace.AssessTaskSpec}, {"spec", "select", "Record the human's exact solution choice", workspace.SelectTaskSolution}, {"spec", "withdraw", "Withdraw the current choice without deleting its history", workspace.WithdrawTaskSolution}} {
 		entry := entry
 		var file, format string
 		c := &cobra.Command{Use: entry.name + " <task-id>", Short: entry.short, Long: entry.short + ". Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.", Example: "  ply workspace task " + entry.parent + " " + entry.name + " explain-start-errors --file /absolute/" + entry.name + ".json --format json", Args: cobra.ExactArgs(1), PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -48,7 +48,7 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 			return mutationErr
 		}}
 		if entry.parent == "spec" && (entry.name == "record" || entry.name == "assess" || entry.name == "select") {
-			c.Long += " New work uses the current Epic base. After a base update, record a new revision with snapshot references to unchanged documents, then assess and select it. Historical revisions remain immutable."
+			c.Long += " Solution Spec@1 uses the current Epic base; after a base update record, assess and select a new solution revision. Goal Spec@2 (contract_kind goal) has no implementation_basis or detailed technical plan: queue its exact revision with QueueDraft@2, then workflow execute binds the current base and preserves a derived execution Spec. Planner goal publication does not claim human selection. Historical revisions remain immutable."
 		}
 		c.Flags().StringVar(&file, "file", "", "absolute physical path to a complete JSON draft (maximum 256 KiB)")
 		_ = c.MarkFlagRequired("file")
@@ -60,7 +60,7 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 		parent, name, short string
 		run                 func(workspace.Dependencies, workspace.TaskContentQuery) (workspace.TaskContentReadbackResult, error)
 	}
-	for _, entry := range []query{{"problem", "show", "Show the recorded problem and preserved sources", workspace.ShowTaskProblem}, {"spec", "list", "List solution revisions and their assessments", workspace.ListTaskSpecs}, {"spec", "show", "Show an exact solution revision and its preserved inputs", workspace.ShowTaskSpec}, {"publication", "show", "Inspect the outcome of a Task content publication", workspace.ShowTaskPublication}} {
+	for _, entry := range []query{{"problem", "show", "Show the recorded problem and preserved sources", workspace.ShowTaskProblem}, {"spec", "list", "List goal and solution revisions and their assessments", workspace.ListTaskSpecs}, {"spec", "show", "Show an exact goal or solution revision and its preserved inputs", workspace.ShowTaskSpec}, {"publication", "show", "Inspect the outcome of a Task content publication", workspace.ShowTaskPublication}} {
 		entry := entry
 		var format, spec, key string
 		var revision int

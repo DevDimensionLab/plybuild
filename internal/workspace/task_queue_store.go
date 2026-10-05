@@ -42,19 +42,30 @@ func validateQueueYAMLMap(n *yaml.Node) error {
 	return walk(n)
 }
 func queueRequest(v any) map[string]any {
-	b, _ := contentCanonical(v)
+	var b []byte
+	if object, ok := v.(canonicaljson.Object); ok {
+		b, _ = canonicaljson.Marshal(object)
+	} else {
+		b, _ = contentCanonical(v)
+	}
 	var out map[string]any
 	_ = yaml.Unmarshal(b, &out)
 	return out
 }
 func queueRequestValue(m map[string]any) canonicaljson.Value { v, _ := contentValue(m); return v }
 func queueDraftRule() contentRule {
-	return contentExact(map[string]contentRule{
+	legacy := contentExact(map[string]contentRule{
 		"kind": contentEnum("WorkspaceTaskQueueDraft@1"), "schema_version": contentInteger(1, 1), "publication_key": contentKey, "project_id": contentSlug, "repo_id": contentSlug, "epic_id": contentSlug, "expected_revision": contentInteger(0, 2147483647),
 		"entries":          contentList(256, contentExact(map[string]contentRule{"task_id": contentSlug, "selection": contentNullable(contentDecisionRule("sel_"))}), func(v canonicaljson.Value) string { return contentString(contentFields(v), "task_id") }, true),
 		"human_decision":   contentExact(map[string]contentRule{"actor_claim": contentText(256), "decided_at_utc": contentUTC, "source": contentEnum("human_cli", "explicit_human_instruction"), "statement": contentText(2000)}),
 		"registry_upgrade": contentNullable(contentExact(map[string]contentRule{"from_version": contentInteger(1, 3), "registry_sha256": contentDigest})),
 	})
+	return func(v canonicaljson.Value) error {
+		if contentInt(contentFields(v), "schema_version") == 2 {
+			return goalQueueDraftRule()(v)
+		}
+		return legacy(v)
+	}
 }
 func queueCloseRule(close bool) contentRule {
 	m := map[string]contentRule{"preparation_id": queuePrefixedID("pre_"), "expected_revision": contentInteger(0, 2147483647)}
@@ -96,21 +107,20 @@ func sortQueueRegistry(r *WorkItemRegistry) {
 
 type queueFold struct {
 	Revision int
-	Pending  []QueueEntry
+	Pending  []TaskGoalQueueEntry
 	Current  *string
 	Terminal map[string]string
 }
 
 func emptyQueueFold() queueFold {
-	return queueFold{Pending: []QueueEntry{}, Terminal: map[string]string{}}
+	return queueFold{Pending: []TaskGoalQueueEntry{}, Terminal: map[string]string{}}
 }
 func applyQueueEvent(q *queueFold, e TaskQueueEvent) {
 	m := contentFields(queueRequestValue(e.Request))
 	q.Revision = e.Revision
 	switch e.Kind {
 	case "set":
-		var d WorkspaceTaskQueueDraft
-		_ = contentDecode(queueRequestValue(e.Request), &d)
+		d := decodeQueueDraft(queueRequestValue(e.Request))
 		q.Pending = d.Entries
 	case "reserve":
 		id := contentString(m, "preparation_id")
@@ -129,7 +139,7 @@ func foldQueue(r WorkItemRegistry, id string) queueFold {
 			if e.Kind == "reserve" {
 				p := findPreparation(r, *q.Current)
 				if p != nil {
-					pending := []QueueEntry{}
+					pending := []TaskGoalQueueEntry{}
 					for _, v := range q.Pending {
 						if v.TaskID != p.Plan.TaskID {
 							pending = append(pending, v)
@@ -420,8 +430,7 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 				return fmt.Errorf("duplicate queue publication key")
 			}
 			keys[key] = true
-			var draft WorkspaceTaskQueueDraft
-			_ = contentDecode(v, &draft)
+			draft := decodeQueueDraft(v)
 			ep, _ := findEpic(r, draft.EpicID)
 			if ep == nil || ep.ProjectID != draft.ProjectID {
 				return fmt.Errorf("foreign queue target")
@@ -436,6 +445,9 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 					return fmt.Errorf("foreign queue Task")
 				}
 				if err := validateQueueSelection(r, t.ID, entry.Selection); err != nil {
+					return err
+				}
+				if err := validateRegisteredGoalRef(r, t.ID, entry.Goal); err != nil {
 					return err
 				}
 				if q.Current != nil && findPreparation(r, *q.Current).Plan.TaskID == t.ID {
@@ -457,7 +469,7 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 				return fmt.Errorf("invalid reservation")
 			}
 			found := false
-			pending := []QueueEntry{}
+			pending := []TaskGoalQueueEntry{}
 			for _, entry := range q.Pending {
 				if entry.TaskID == p.Plan.TaskID && contentTypedEqual(entry.Selection, &p.Plan.Selection) {
 					found = true

@@ -72,7 +72,7 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 	setWorkFlagErrors(list)
 	queue.AddCommand(list)
 	var file, setFormat string
-	set := &cobra.Command{Use: "set", Short: "Replace the pending order with an exact human priority claim", Long: "Read a strict WorkspaceTaskQueueDraft@1 from an absolute physical JSON file. Bind exact selections and expected_revision. A legacy registry requires registry_upgrade. The current preparation is retained and must not occur in entries.", Example: "  ply workspace task queue set --file /absolute/queue.json --format json", Args: cobra.NoArgs, RunE: func(c *cobra.Command, args []string) error {
+	set := &cobra.Command{Use: "set", Short: "Replace the pending order with exact goal or solution references", Long: "Read strict WorkspaceTaskQueueDraft@1 (selected solutions with a human priority claim) or @2 (goal references with planner provenance) from an absolute physical JSON file. Bind expected_revision and every exact revision/hash. Goal publication does not claim a human start; workflow execute supplies that choice from the return worktree. A legacy registry requires registry_upgrade. The current preparation is retained and must not occur in entries.", Example: "  ply workspace task queue set --file /absolute/queue.json --format json", Args: cobra.NoArgs, RunE: func(c *cobra.Command, args []string) error {
 		if e := validateWorkFormat(setFormat); e != nil {
 			return e
 		}

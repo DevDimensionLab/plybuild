@@ -171,6 +171,16 @@ type IntegrationAuthority struct {
 	TaskResultID       TaskResultID                 `yaml:"task_result_id" json:"task_result_id"`
 	HumanQARecordID    HumanQARecordID              `yaml:"human_qa_record_id" json:"human_qa_record_id"`
 	AllowedEffect      IntegrationAllowedEffect     `yaml:"allowed_effect" json:"allowed_effect"`
+	DeliveryOwner      *DeliveryIntegrationOwner    `yaml:"delivery_owner,omitempty" json:"delivery_owner,omitempty"`
+}
+
+// DeliveryIntegrationOwner records the existing delivery mandate's provenance.
+// It does not replace the exact TaskResult, actual human QA, plan or effect guard.
+type DeliveryIntegrationOwner struct {
+	RunID         string `yaml:"run_id" json:"run_id"`
+	RequestSHA256 string `yaml:"request_sha256" json:"request_sha256"`
+	ActorClaim    string `yaml:"actor_claim" json:"actor_claim"`
+	PreparationID string `yaml:"preparation_id" json:"preparation_id"`
 }
 
 type IntegrationIntent struct {
@@ -289,6 +299,7 @@ type TaskIntegrationInput struct {
 	RetryAfterResultID                   *IntegrationResultID
 	Apply                                bool
 	Confirmation                         string
+	DeliveryOwner                        *DeliveryIntegrationOwner
 }
 
 type TaskIntegrationResult struct {
@@ -342,8 +353,16 @@ func CheckTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 	if err != nil {
 		return TaskIntegrationResult{}, err
 	}
+	if input.DeliveryOwner != nil {
+		if recovered, found, err := checkPersistedDeliveryIntegration(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repos}, registry, input); found || err != nil {
+			return recovered, err
+		}
+	}
 	if input.RetryAfterResultID == nil {
 		if authority, intent, attempt, result := unresolvedIntegrationLeaf(registry, input); result != nil {
+			if !contentTypedEqual(authority.DeliveryOwner, input.DeliveryOwner) {
+				return TaskIntegrationResult{}, workError(ErrorTaskIntegrationConflict, "integration delivery owner differs", nil)
+			}
 			ctx, err := contextFromPlan(registry, authority.Plan)
 			if err != nil {
 				return TaskIntegrationResult{}, err
@@ -437,6 +456,11 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 			}
 			now := dependencies.WorkClock.Now().UTC().Format(time.RFC3339Nano)
 			authority := IntegrationAuthority{ID: authorityID, Mode: "human_cli_start", CreatedAtUTC: now, PlanSHA256: digest, Plan: plan, RetryAfterResultID: input.RetryAfterResultID, TaskID: input.TaskID, TaskResultID: input.TaskResultID, HumanQARecordID: input.HumanQARecordID, AllowedEffect: IntegrationAllowedEffect{Kind: "local_ff_only", ParentRef: plan.Epic.ParentRef, ExpectedParentOID: plan.Epic.ExpectedParentOID, ResultOID: plan.Task.ResultOID, MaxOccurrences: 1}}
+			if input.DeliveryOwner != nil {
+				authority.Mode = "delivery_owner_after_human_pass"
+				copy := *input.DeliveryOwner
+				authority.DeliveryOwner = &copy
+			}
 			intent := intentFromPlan(intentID, authorityID, plan, digest)
 			intent.IntentSHA256 = integrationIntentDigest(intent)
 			registry.IntegrationAuthorities = append(registry.IntegrationAuthorities, authority)
@@ -476,6 +500,9 @@ type integrationContext struct {
 }
 
 func validateIntegrationInput(input TaskIntegrationInput) error {
+	if input.DeliveryOwner != nil && !validDeliveryIntegrationOwner(input.DeliveryOwner) {
+		return WorkInvalidArguments("invalid delivery owner provenance")
+	}
 	if _, err := ParseTaskID(string(input.TaskID)); err != nil {
 		return err
 	}
@@ -1062,11 +1089,71 @@ func findAuthorityByPlan(r WorkItemRegistry, digest string, input TaskIntegratio
 		if retryMatches && a.RetryAfterResultID != nil {
 			retryMatches = *a.RetryAfterResultID == *input.RetryAfterResultID
 		}
-		if a.PlanSHA256 == digest && a.TaskID == input.TaskID && a.TaskResultID == input.TaskResultID && a.HumanQARecordID == input.HumanQARecordID && retryMatches && a.Plan.Task.ResultOID == input.ExpectedResultOID && a.Plan.Epic.ExpectedParentOID == input.ExpectedParentOID {
+		if a.PlanSHA256 == digest && a.TaskID == input.TaskID && a.TaskResultID == input.TaskResultID && a.HumanQARecordID == input.HumanQARecordID && retryMatches && contentTypedEqual(a.DeliveryOwner, input.DeliveryOwner) && a.Plan.Task.ResultOID == input.ExpectedResultOID && a.Plan.Epic.ExpectedParentOID == input.ExpectedParentOID {
 			return a
 		}
 	}
 	return nil
+}
+
+func validDeliveryIntegrationOwner(o *DeliveryIntegrationOwner) bool {
+	return o != nil && validTaskText(o.RunID, 1, 256) && digestPattern.MatchString(o.RequestSHA256) && validTaskText(o.ActorClaim, 1, 256) && validTaskText(o.PreparationID, 1, 256)
+}
+
+// A delivery owner may resume after the merge, queue close or base update. Its
+// original authority remains the sole effect ledger even when the current Epic
+// basis has advanced to the delivered candidate. Never build a second plan for
+// the same return, and never present stored before-state as a fresh observation.
+func checkPersistedDeliveryIntegration(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, input TaskIntegrationInput) (TaskIntegrationResult, bool, error) {
+	var authority *IntegrationAuthority
+	for i := range registry.IntegrationAuthorities {
+		a := &registry.IntegrationAuthorities[i]
+		if a.TaskID != input.TaskID || a.TaskResultID != input.TaskResultID || a.HumanQARecordID != input.HumanQARecordID || a.Plan.Task.ResultOID != input.ExpectedResultOID || a.Plan.Epic.ExpectedParentOID != input.ExpectedParentOID || !contentTypedEqual(a.RetryAfterResultID, input.RetryAfterResultID) {
+			continue
+		}
+		if !contentTypedEqual(a.DeliveryOwner, input.DeliveryOwner) || authority != nil {
+			return TaskIntegrationResult{}, false, workError(ErrorTaskIntegrationConflict, "delivery return authority is different or ambiguous", nil)
+		}
+		authority = a
+	}
+	if authority == nil {
+		return TaskIntegrationResult{}, false, nil
+	}
+	if reason := authorityProjectBindingReason(projects, authority.Plan); reason != "" {
+		return TaskIntegrationResult{}, true, workError(ErrorTaskIntegrationConflict, reason, nil)
+	}
+	ctx, err := contextFromPlan(registry, authority.Plan)
+	if err != nil {
+		return TaskIntegrationResult{}, true, err
+	}
+	if err = revalidateIntegrationEvidence(d, ctx.Result, ctx.QA); err != nil {
+		return TaskIntegrationResult{}, true, err
+	}
+	intent := findIntentForAuthority(registry, authority.ID)
+	if intent == nil {
+		return TaskIntegrationResult{}, true, workError(ErrorTaskIntegrationConflict, "delivery return authority has no intent", nil)
+	}
+	attempt, result := findAttemptForAuthority(registry, authority.ID), findIntegrationResultForAuthority(registry, authority.ID)
+	ctx.Source, err = d.IntegrationGit.ObserveIntegrationWorktree(authority.Plan.Task.SourceLocator, authority.Plan.Task.SourceRef)
+	if err != nil {
+		return TaskIntegrationResult{}, true, err
+	}
+	ctx.SourceObserved = true
+	ctx.ParentObservation, err = d.IntegrationGit.ObserveIntegrationWorktree(authority.Plan.Epic.ParentLocator, authority.Plan.Epic.ParentRef)
+	if err != nil {
+		return TaskIntegrationResult{}, true, err
+	}
+	ctx.ParentObserved = true
+	if result != nil && result.RecoveryStatus == "complete" {
+		for _, observed := range []IntegrationWorktreeObservation{ctx.Source, ctx.ParentObservation} {
+			if observed.OID != input.ExpectedResultOID || observed.Tree != ctx.Result.ResultTree || observed.GitCommonDir != authority.Plan.Repository.GitCommonDir || !observed.Clean || !observed.Symbolic || len(observed.InProgress) != 0 {
+				return TaskIntegrationResult{}, true, workError(ErrorTaskIntegrationConflict, "completed delivery return has subsequent source or parent drift", nil)
+			}
+		}
+	}
+	ctx.TaskSpecRelevance = taskResultSpecRelevance(d, root, projects, registry, ctx.Task, ctx.Result.ID)
+	ctx.PersistedBefore = integrationPersistedView(registry, authority, intent, attempt, result)
+	return TaskIntegrationResult{Readback: newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, result)}, true, nil
 }
 func findIntentForAuthority(r WorkItemRegistry, id IntegrationAuthorityID) *IntegrationIntent {
 	for i := range r.IntegrationIntents {

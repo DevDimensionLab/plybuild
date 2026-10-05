@@ -199,7 +199,7 @@ for flag in '--result string' '--qa string' '--expected-result-oid string' '--ex
 	grep -F -- "$flag" "$temp_root/workspace-task-integrate-help.stdout" >/dev/null || fail "Task integrate $flag is unavailable"
 done
 
-grep -F 'Manage explicit local agent workflow transitions and report-ready notifications.' "$temp_root/workflow-help.stdout" >/dev/null ||
+grep -F 'Create local planning repositories, execute queued goals with an assigned agent, and manage workflow transitions and notifications.' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help lost its long description'
 grep -F 'ply workflow [command]' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help usage changed'

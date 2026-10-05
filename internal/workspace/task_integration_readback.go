@@ -439,6 +439,9 @@ func canonicalReflectValue(v reflect.Value) canonicaljson.Value {
 			if field.PkgPath != "" {
 				continue
 			}
+			if t == reflect.TypeOf(IntegrationAuthority{}) && field.Name == "DeliveryOwner" && v.Field(i).IsNil() {
+				continue
+			}
 			if t == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) && field.Name == "TaskSpecGuard" && v.FieldByName("SchemaVersion").Int() == 1 {
 				continue
 			}

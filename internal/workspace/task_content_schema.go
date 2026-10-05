@@ -346,8 +346,20 @@ func decodeTaskContent(raw []byte, operation string, published, internal bool) (
 	if err != nil {
 		return nil, contentError("task_content_invalid_input", err.Error(), err)
 	}
-	if err = contentExact(taskContentSchema(operation, published, internal))(v); err == nil {
-		err = validateTaskContentSemantics(contentFields(v), operation, published, internal)
+	schema := taskContentSchema(operation, published, internal)
+	if operation == "spec_record" && contentInt(contentFields(v), "schema_version") == 2 {
+		if isTaskGoalSpec(v) {
+			schema = taskGoalSpecSchema(published)
+		} else {
+			schema = taskExecutionSpecSchema(published)
+		}
+	}
+	if err = contentExact(schema)(v); err == nil {
+		if isTaskGoalSpec(v) {
+			err = validateTaskGoalSemantics(contentFields(v))
+		} else {
+			err = validateTaskContentSemantics(contentFields(v), operation, published, internal)
+		}
 	}
 	if err != nil {
 		return nil, contentError("task_content_invalid_input", err.Error(), err)
@@ -535,6 +547,9 @@ func validateTaskContentSemantics(m map[string]canonicaljson.Value, operation st
 }
 
 func taskSpecStructurallyReady(spec canonicaljson.Object) error {
+	if isTaskGoalSpec(spec) {
+		return contentError("task_goal_requires_execute", "choose this goal with workflow execute; publication is not human solution selection", nil)
+	}
 	m := contentFields(spec)
 	p := contentFields(m["parts"])
 	for _, name := range []string{"abstract", "functional", "technical"} {

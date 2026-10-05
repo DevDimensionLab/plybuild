@@ -28,7 +28,8 @@ type WorkflowRequest struct {
 		ActorClaim        string `json:"actor_claim"`
 		MayRequestChanges bool   `json:"may_request_changes"`
 	} `json:"coordinator"`
-	ReturnMode string `json:"return_mode"`
+	ReturnMode string            `json:"return_mode"`
+	Delivery   *DeliveryContract `json:"delivery,omitempty"`
 }
 type WorkflowPaths struct {
 	RunRoot string `json:"run_root"`
@@ -94,6 +95,7 @@ type WorkflowRun struct {
 	RuntimeFacts    RuntimeFacts        `json:"runtime_facts"`
 	Reasons         []Reason            `json:"reasons"`
 	NextAction      WorkflowAction      `json:"next_action"`
+	Delivery        *DeliveryState      `json:"delivery,omitempty"`
 }
 type WorkflowPreview struct {
 	Envelope

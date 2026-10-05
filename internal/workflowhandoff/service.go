@@ -112,9 +112,13 @@ func createWithActivity(dependencies Dependencies, input CreateInput, existingAc
 			{Name: "allowed_operations", Value: []canonicaljson.Value{"submit-result", "submit-start"}},
 		}},
 	)
-	if taskSpecVersion(draft.Value) == 2 {
+	if taskSpecVersion(draft.Value) >= 2 {
 		basis, _ := objectMember(draft.Value, "task_spec_binding")
-		handoffValue = append(replaceObjectMember(handoffValue, "schema_version", int64(2)), canonicaljson.Member{Name: "task_spec_binding", Value: basis})
+		handoffValue = append(replaceObjectMember(handoffValue, "schema_version", taskSpecVersion(draft.Value)), canonicaljson.Member{Name: "task_spec_binding", Value: basis})
+		if taskSpecVersion(draft.Value) == 3 {
+			delivery, _ := objectMember(draft.Value, "delivery_binding")
+			handoffValue = append(handoffValue, canonicaljson.Member{Name: "delivery_binding", Value: delivery})
+		}
 	}
 	handoffBytes, err := canonicaljson.Marshal(handoffValue)
 	if err != nil {
@@ -261,7 +265,7 @@ func SubmitStart(dependencies Dependencies, input SubmitInput) (SubmitResult, er
 	}
 	if snapshot.Start != nil {
 		original := replaceObjectMember(removeObjectMember(snapshot.Start.Value, "capability_proof"), "kind", "ply.workflow.start-receipt-draft")
-		if taskSpecVersion(original) == 2 {
+		if taskSpecVersion(original) >= 2 {
 			original = removeObjectMember(original, "task_spec_observation")
 		}
 		if canonicalEqual(original, draft.Value) {
@@ -280,7 +284,7 @@ func SubmitStart(dependencies Dependencies, input SubmitInput) (SubmitResult, er
 		return SubmitResult{}, err
 	}
 	finalInput := draft.Value
-	if taskSpecVersion(draft.Value) == 2 {
+	if taskSpecVersion(draft.Value) >= 2 {
 		observation, err := validateTaskSpecStart(dependencies, snapshot, draft)
 		if err != nil {
 			return SubmitResult{}, err
@@ -506,7 +510,7 @@ func validateStartBinding(dependencies Dependencies, snapshot Snapshot, draft st
 	sandboxValue, _ := objectMember(draft.Value, "sandbox")
 	sandbox := sandboxValue.(canonicaljson.Object)
 	var taskReadPaths []string
-	if taskSpecVersion(snapshot.Handoff.Value) == 2 {
+	if taskSpecVersion(snapshot.Handoff.Value) >= 2 {
 		basis, err := taskSpecBasis(snapshot.Handoff.Value)
 		if err != nil {
 			return err
@@ -847,7 +851,7 @@ func validateSandboxContract(files FileSystem, snapshot Snapshot, sandbox canoni
 	}
 	requiredReads := []string{snapshot.Handoff.Locator, snapshot.Handoff.Target.Worktree}
 	requiredReads = append(requiredReads, taskReadPaths...)
-	if taskSpecVersion(snapshot.Handoff.Value) == 2 {
+	if taskSpecVersion(snapshot.Handoff.Value) >= 2 {
 		root := snapshot.Handoff.Workspace.Root
 		requiredReads = append(requiredReads, filepath.Join(root, ".ply", "workspace.yaml"), filepath.Join(root, ".ply", "projects.yaml"), filepath.Join(root, ".ply", "projects.lock"), snapshot.Handoff.Target.GitCommonDir)
 		for _, name := range []string{"work-items.yaml", "work-items.lock", "task-content"} {
@@ -889,6 +893,21 @@ func validateSandboxContract(files FileSystem, snapshot Snapshot, sandbox canoni
 	}
 	sort.Strings(writes)
 	writes = uniqueStrings(writes)
+	if taskSpecVersion(snapshot.Handoff.Value) == 3 {
+		for _, required := range writes {
+			covered := false
+			for _, root := range writeRoots {
+				if root == required || strings.HasPrefix(required, strings.TrimSuffix(root, string(filepath.Separator))+string(filepath.Separator)) {
+					covered = true
+					break
+				}
+			}
+			if !covered {
+				return fmt.Errorf("sandbox write roots do not cover %s", required)
+			}
+		}
+		return nil
+	}
 	if !equalStrings(writes, writeRoots) {
 		return fmt.Errorf("sandbox write roots do not exactly match the contract")
 	}

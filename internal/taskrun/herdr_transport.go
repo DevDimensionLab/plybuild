@@ -109,8 +109,8 @@ func workflowLocation(s workflowState, a workflowAgent) error {
 	if !plain(a.WorkspaceID, 1, 128) || !plain(a.TabID, 1, 128) || !plain(a.PaneID, 1, 128) || !plain(a.TerminalID, 1, 128) || a.WorkspaceID != t.WorkspaceID || a.TabID != t.TabID || a.PaneID != t.PaneID || a.TerminalID != t.TerminalID || a.Name != workflowAgentName(s.Result.RunID) || a.Agent != s.Request.Runtime.Provider {
 		return workflowError(4, "fresh Herdr location, name or agent differs from the reserved attempt")
 	}
-	if s.Request.Runtime.Provider == "claude" && a.ForegroundCWD != s.Observed.Target.WorktreeLocator {
-		return workflowError(4, "fresh Claude foreground cwd differs from the bound Task worktree")
+	if (s.Request.Runtime.Provider == "claude" || deliveryRun(s.Request) && a.ForegroundCWD != "") && a.ForegroundCWD != s.Observed.Target.WorktreeLocator {
+		return workflowError(4, "fresh "+s.Request.Runtime.Provider+" foreground cwd differs from the bound Task worktree")
 	}
 	return nil
 }
@@ -226,11 +226,18 @@ func workflowStartArgv(r WorkflowRequest, cwd, pane string) []string {
 	if r.Runtime.Provider == "claude" {
 		// Claude inherits the exact tab cwd. Its native permission mode is not
 		// a Codex profile; never forward Codex config, trust or approval flags.
-		return []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "claude", "--pane", pane, "--timeout", "30000", "--", "--model", r.Runtime.Model, "--permission-mode", "manual"}
+		argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "claude", "--pane", pane, "--timeout", "30000", "--", "--model", r.Runtime.Model, "--permission-mode", "manual"}
+		if deliveryRun(r) && r.Delivery.ReasoningEffort != "" {
+			argv = append(argv, "--effort", r.Delivery.ReasoningEffort)
+		}
+		return argv
 	}
 	argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "codex", "--pane", pane, "--timeout", "30000", "--", "-C", cwd, "--model", r.Runtime.Model, "-a", "on-request", "-c", `approvals_reviewer="auto_review"`, "-c", "default_permissions=" + workflowJSON(r.Runtime.PermissionBinding.ProfileID)}
 	if r.Runtime.ConfigProfile != nil {
 		argv = append(argv, "--profile", *r.Runtime.ConfigProfile)
+	}
+	if deliveryRun(r) && r.Delivery.ReasoningEffort != "" {
+		argv = append(argv, "-c", "model_reasoning_effort="+workflowJSON(r.Delivery.ReasoningEffort))
 	}
 	if r.CodexProjectTrust != nil {
 		// The inline table keeps dots, quotes and backslashes in a path inside
@@ -256,6 +263,9 @@ func workflowPromptUntil(d Dependencies, root, id string, findings []WorkflowFin
 	}
 	if !workflowSettled(a) {
 		return workflowError(4, "same session must be freshly idle before input")
+	}
+	if e = workflowDeliveryGuide(d, s); e != nil {
+		return e
 	}
 	prompt := workflowInstructions(s, findings)
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
@@ -307,6 +317,9 @@ func workflowPromptUntil(d Dependencies, root, id string, findings []WorkflowFin
 }
 
 func WorkflowFollow(d Dependencies, root, id string, timeout time.Duration) (WorkflowRun, error) {
+	if s, e := workflowRead(root, id); e == nil && deliveryRun(s.Request) {
+		return workflowDeliveryFollow(d, root, id, timeout)
+	}
 	if timeout <= 0 {
 		return WorkflowRun{}, workflowError(2, "timeout must be positive")
 	}

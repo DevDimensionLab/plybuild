@@ -49,11 +49,15 @@ type TaskRunObservation struct {
 }
 
 func ObserveTaskRun(d Dependencies, root, preparationID string, raw []byte) (TaskRunObservation, error) {
+	return observeTaskRun(d, root, preparationID, raw, false)
+}
+
+func observeTaskRun(d Dependencies, root, preparationID string, raw []byte, delivery bool) (TaskRunObservation, error) {
 	var out TaskRunObservation
 	if d.taskSpecSession == nil {
 		e := WithTaskRunSnapshot(d, root, func(locked Dependencies) error {
 			var e error
-			out, e = ObserveTaskRun(locked, root, preparationID, raw)
+			out, e = observeTaskRun(locked, root, preparationID, raw, delivery)
 			return e
 		})
 		return out, e
@@ -63,6 +67,9 @@ func ObserveTaskRun(d Dependencies, root, preparationID string, raw []byte) (Tas
 		return out, e
 	}
 	projection, e := ValidateTaskRunDraft(raw)
+	if delivery {
+		projection, e = ValidateDeliveryTaskRunDraft(raw)
+	}
 	if e != nil {
 		return out, e
 	}
@@ -212,7 +219,11 @@ func BuildTaskRunStart(d Dependencies, locator, actor, surface, session, runtime
 	}
 	p := bridgeObject(map[string]any{"expected_principal_id": handoffNestedString(h.Value, "recipient", "principal_id"), "human_start_principal": actor, "start_surface": surface, "session_id": session, "runtime_id": runtime, "model_id": model, "started_at_utc": d.Clock.Now().UTC().Format("2006-01-02T15:04:05.999999999Z07:00")})
 	o := bridgeEnvelope("ply.workflow.start-receipt-draft")
-	o = replaceObjectMember(o, "schema_version", int64(2))
+	version := int64(2)
+	if taskSpecVersion(h.Value) == 3 {
+		version = 3
+	}
+	o = replaceObjectMember(o, "schema_version", version)
 	basis, _ := objectMember(h.Value, "task_spec_binding")
 	for k, v := range map[string]canonicaljson.Value{"receipt_id": h.Identity.StartReceiptID, "binding": bridgeBinding(h), "principal": p, "observed_workspace": bridgeObject(map[string]any{"root": ws.Observation.Root, "marker_format_version": ws.Observation.MarkerFormatVersion, "marker_sha256": ws.Observation.MarkerSHA256, "matches_expected": ws.Observation == h.Workspace}), "observed_project": bridgeObject(map[string]any{"project_id": string(h.ProjectID), "repo_id": string(h.RepoID), "registered_locator": repo.Locator, "registered_git_common_dir": repo.GitCommonDir, "matches_expected": member && repo.Locator == h.RegisteredLocator && repo.GitCommonDir == h.RegisteredGitCommonDir}), "observed_target": append(targetValue(target), canonicaljson.Member{Name: "matches_expected", Value: sameTarget(target, h.Target)}), "observed_inputs": observed, "contract_digests": contract, "sandbox": sb, "acceptance": acceptance, "issues": is, "task_spec_binding": basis} {
 		o = append(o, canonicaljson.Member{Name: k, Value: v})
@@ -388,6 +399,10 @@ func ValidateTaskRunTerminal(d Dependencies, locator string, raw []byte) error {
 // BuildTaskRunResult freezes the exact existing TaskResult draft, including the
 // inspection digest and recorder time. RecordTaskResult remains the final gate.
 func BuildTaskRunResult(d Dependencies, locator, runID string, technical []byte) ([]byte, string, error) {
+	return buildTaskRunResult(d, locator, "task-run/"+runID, technical, workspace.TaskRecorderRecord{ActorClaim: "ply-task-run", ControlSurface: "ply workspace task run collect", RecordedAtUTC: d.Clock.Now().UTC().Format("2006-01-02T15:04:05.999999999Z07:00")})
+}
+
+func buildTaskRunResult(d Dependencies, locator, publicationKey string, technical []byte, recorder workspace.TaskRecorderRecord) ([]byte, string, error) {
 	s, e := d.Store.ReadByLocator(locator)
 	if e != nil {
 		return nil, "", e
@@ -426,9 +441,9 @@ func BuildTaskRunResult(d Dependencies, locator, runID string, technical []byte)
 			}
 		}
 	}
-	draft := map[string]any{"kind": "WorkspaceTaskResultRecordDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": "task-run/" + runID, "task_id": basis.TaskID, "task_worktree_id": basis.TaskWorktreeID,
+	draft := map[string]any{"kind": "WorkspaceTaskResultRecordDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": publicationKey, "task_id": basis.TaskID, "task_worktree_id": basis.TaskWorktreeID,
 		"handoff": map[string]any{"activity_id": evidence.ActivityID, "run_id": evidence.RunID, "handoff_id": evidence.HandoffID, "handoff_locator": evidence.HandoffLocator, "handoff_sha256": evidence.HandoffSHA256, "start_receipt_id": evidence.StartReceiptID, "start_receipt_locator": evidence.StartReceiptLocator, "start_receipt_sha256": evidence.StartReceiptSHA256, "terminal_result_id": evidence.TerminalResultID, "terminal_result_locator": evidence.TerminalResultLocator, "terminal_result_sha256": evidence.TerminalResultSHA256, "inspection_sha256": digest},
-		"source":  map[string]any{"project_id": h.ProjectID, "repo_id": h.RepoID, "git_common_dir": evidence.GitCommonDir, "worktree_locator": evidence.TargetWorktree, "source_ref": evidence.TargetRef, "result_oid": evidence.ResultOID, "result_tree": evidence.ResultTree}, "technical_assessment": json.RawMessage(technical), "evidence_artifacts": evidence.Artifacts, "recorder": map[string]any{"actor_claim": "ply-task-run", "control_surface": "ply workspace task run collect", "recorded_at_utc": d.Clock.Now().UTC().Format("2006-01-02T15:04:05.999999999Z07:00")}}
+		"source":  map[string]any{"project_id": h.ProjectID, "repo_id": h.RepoID, "git_common_dir": evidence.GitCommonDir, "worktree_locator": evidence.TargetWorktree, "source_ref": evidence.TargetRef, "result_oid": evidence.ResultOID, "result_tree": evidence.ResultTree}, "technical_assessment": json.RawMessage(technical), "evidence_artifacts": evidence.Artifacts, "recorder": recorder}
 	b, e := json.Marshal(draft)
 	if e != nil {
 		return nil, "", e
@@ -515,7 +530,7 @@ func RecoverTaskRunStart(d Dependencies, locator string, raw []byte) (*SubmitRes
 		return nil, e
 	}
 	original := replaceObjectMember(removeObjectMember(s.Start.Value, "capability_proof"), "kind", "ply.workflow.start-receipt-draft")
-	if taskSpecVersion(original) == 2 {
+	if taskSpecVersion(original) >= 2 {
 		original = removeObjectMember(original, "task_spec_observation")
 	}
 	if !canonicalEqual(original, draft.Value) {

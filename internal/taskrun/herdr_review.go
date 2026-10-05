@@ -62,6 +62,9 @@ func workflowSeal(d Dependencies, s *workflowState, r WorkflowReview) error {
 	return nil
 }
 func WorkflowReviewRun(d Dependencies, root, id, file string) (WorkflowRun, error) {
+	if s, e := workflowRead(root, id); e == nil && deliveryRun(s.Request) {
+		return WorkflowRun{}, workflowError(4, "delivery owners qualify candidates and record actual human QA; legacy coordinator review cannot control this run")
+	}
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}

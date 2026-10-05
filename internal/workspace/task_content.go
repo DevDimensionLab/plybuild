@@ -511,11 +511,16 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 				}
 			}
 		}
-		if !contentEqual(sortedContentStrings(removed), m["removed_requirement_ids"]) {
+		if !isTaskGoalSpec(draft) && !contentEqual(sortedContentStrings(removed), m["removed_requirement_ids"]) {
 			return contentError("task_content_invalid_input", "removed_requirement_ids must exactly describe removed predecessor requirements", nil)
 		}
-		if e := validateSpecImplementationBasis(d, projects, r, task, m["implementation_basis"], r.FormatVersion >= 4); e != nil {
-			return e
+		if !isTaskGoalSpec(draft) {
+			if e := validateSpecImplementationBasis(d, projects, r, task, m["implementation_basis"], r.FormatVersion >= 4); e != nil {
+				return e
+			}
+			if e := validateExecutionGoalOrigin(d, root, r, task.ID, draft); e != nil {
+				return e
+			}
 		}
 	case "spec_assess":
 		spec, e := registeredTaskSpec(d, root, r, task.ID, specID, valueRevision(m["spec"]))
@@ -644,6 +649,9 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		manifest["documents"] = docs
 	case "spec_record":
 		manifest["kind"] = "WorkspaceTaskSpecRevision@1"
+		if contentInt(m, "schema_version") == 2 {
+			manifest["kind"] = "WorkspaceTaskSpecRevision@2"
+		}
 		outcome.Kind = "spec"
 		outcome.SpecID = &specID
 		manifest["documents"] = docs

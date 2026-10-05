@@ -122,9 +122,9 @@ func upgradeQueueRegistry(d Dependencies, root string, r *WorkItemRegistry, u *T
 }
 
 type QueueTargetInput struct {
-	ProjectID ProjectID
-	RepoID    RepoID
-	EpicID    EpicID
+	ProjectID ProjectID `json:"project_id"`
+	RepoID    RepoID    `json:"repo_id"`
+	EpicID    EpicID    `json:"epic_id"`
 }
 
 func resolveQueueTarget(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput) (QueueTarget, RepoRecord, error) {

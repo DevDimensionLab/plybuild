@@ -145,6 +145,10 @@ const (
 )
 
 func decodeHandoffDraftV1(input []byte) (handoffDraft, error) {
+	return decodeHandoffDraftWithBudget(input, false)
+}
+
+func decodeHandoffDraftWithBudget(input []byte, delivery bool) (handoffDraft, error) {
 	if len(input) > maxHandoffBytes {
 		return handoffDraft{}, classified(ErrorPayloadTooLarge, "handoff draft exceeds 256 KiB", nil)
 	}
@@ -194,11 +198,11 @@ func decodeHandoffDraftV1(input []byte) (handoffDraft, error) {
 	if err != nil {
 		return handoffDraft{}, schemaError("handoff draft", err)
 	}
-	authority, err := validateAuthority(fields["authority"], procedureIDs, verifierIDs)
+	authority, err := validateHandoffAuthority(fields["authority"], procedureIDs, verifierIDs, delivery)
 	if err != nil {
 		return handoffDraft{}, schemaError("handoff draft", err)
 	}
-	budget, maxRounds, err := validateBudget(fields["budget"])
+	budget, maxRounds, err := validateHandoffBudget(fields["budget"], delivery)
 	if err != nil {
 		return handoffDraft{}, schemaError("handoff draft", err)
 	}
@@ -224,6 +228,10 @@ func decodeHandoffDraftV1(input []byte) (handoffDraft, error) {
 }
 
 func validateStoredHandoffV1(value canonicaljson.Object) error {
+	return validateStoredHandoffWithBudget(value, false)
+}
+
+func validateStoredHandoffWithBudget(value canonicaljson.Object, delivery bool) error {
 	fields, err := exactObject(value, "handoff", "kind", "schema_version", "format", "format_version", "canonicalization", "identity", "source_draft_sha256", "goal", "recipient", "workspace_binding", "project_binding", "target_binding", "inputs", "authority", "budget", "procedure", "verifiers", "stop_conditions", "reporting", "reply_capability")
 	if err != nil {
 		return err
@@ -308,10 +316,10 @@ func validateStoredHandoffV1(value canonicaljson.Object) error {
 		return err
 	}
 	_ = verifiers
-	if _, err := validateAuthority(fields["authority"], procedureIDs, verifierIDs); err != nil {
+	if _, err := validateHandoffAuthority(fields["authority"], procedureIDs, verifierIDs, delivery); err != nil {
 		return err
 	}
-	if _, _, err := validateBudget(fields["budget"]); err != nil {
+	if _, _, err := validateHandoffBudget(fields["budget"], delivery); err != nil {
 		return err
 	}
 	if _, err := validateStopConditions(fields["stop_conditions"]); err != nil {
@@ -730,6 +738,10 @@ func validateEnv(value canonicaljson.Value) error {
 }
 
 func validateAuthority(value canonicaljson.Value, procedureIDs, verifierIDs map[string]bool) (canonicaljson.Object, error) {
+	return validateHandoffAuthority(value, procedureIDs, verifierIDs, false)
+}
+
+func validateHandoffAuthority(value canonicaljson.Value, procedureIDs, verifierIDs map[string]bool, delivery bool) (canonicaljson.Object, error) {
 	fields, err := exactObject(value, "authority", "allowed_effects", "forbidden_effects", "human_gates")
 	if err != nil {
 		return nil, err
@@ -750,10 +762,17 @@ func validateAuthority(value canonicaljson.Value, procedureIDs, verifierIDs map[
 		typeName, _ := stringField(ef, "type", "allowed effect")
 		max, _ := intField(ef, "max_occurrences", "allowed effect")
 		sequence, _ := intField(ef, "sequence", "allowed effect")
-		if validateKey("effect.id", id) != nil || seenIDs[id] || !effectTypes[typeName] || max < 1 || max > 99 || sequence != int64(index+1) {
+		unlimited := delivery && ef["max_occurrences"] == nil && setOf("filesystem_write", "git_ref_write", "git_index_write", "git_commit", "command_execute", "process_start", "install")[typeName]
+		if validateKey("effect.id", id) != nil || seenIDs[id] || !effectTypes[typeName] || (!unlimited && (max < 1 || max > 99)) || sequence != int64(index+1) {
 			return nil, fmt.Errorf("invalid allowed effect")
 		}
-		if err := validateEffectScope(typeName, ef["scope"], procedureIDs, verifierIDs); err != nil {
+		scope, _ := ef["scope"].(canonicaljson.Object)
+		wholeTask := delivery && typeName == "filesystem_write" && objectString(scope, "kind") == "task_worktree"
+		if wholeTask {
+			if _, err := exactObject(scope, "Task worktree scope", "kind"); err != nil {
+				return nil, err
+			}
+		} else if err := validateEffectScope(typeName, ef["scope"], procedureIDs, verifierIDs); err != nil {
 			return nil, err
 		}
 		seenIDs[id], seenTypes[typeName] = true, true
@@ -877,12 +896,19 @@ func validateEffectScope(effectType string, value canonicaljson.Value, procedure
 }
 
 func validateBudget(value canonicaljson.Value) (canonicaljson.Object, int64, error) {
+	return validateHandoffBudget(value, false)
+}
+
+func validateHandoffBudget(value canonicaljson.Value, delivery bool) (canonicaljson.Object, int64, error) {
 	fields, err := exactObject(value, "budget", "max_rounds", "round_definition")
 	if err != nil {
 		return nil, 0, err
 	}
 	max, err := intField(fields, "max_rounds", "budget")
-	if err != nil || max < 1 || max > 99 {
+	if delivery && fields["max_rounds"] == nil {
+		max, err = 0, nil
+	}
+	if err != nil || (!delivery && (max < 1 || max > 99)) || (delivery && (max < 0 || max > 2147483647 || (max == 0 && fields["max_rounds"] != nil))) {
 		return nil, 0, fmt.Errorf("budget.max_rounds must be 1..99")
 	}
 	rd, err := exactObject(fields["round_definition"], "round_definition", "unit", "command_retry_consumes_round", "retry_condition")
@@ -892,7 +918,11 @@ func validateBudget(value canonicaljson.Value) (canonicaljson.Object, int64, err
 	unit, _ := stringField(rd, "unit", "round_definition")
 	retry, _ := stringField(rd, "retry_condition", "round_definition")
 	consumes, ok := rd["command_retry_consumes_round"].(bool)
-	if unit != "implementation_or_review_fix_iteration" || !ok || consumes || retry != "only_if_no_effect_started" {
+	wantUnit := "implementation_or_review_fix_iteration"
+	if delivery {
+		wantUnit = "candidate_verification_attempt"
+	}
+	if unit != wantUnit || !ok || consumes || retry != "only_if_no_effect_started" {
 		return nil, 0, fmt.Errorf("invalid round_definition")
 	}
 	return value.(canonicaljson.Object), max, nil

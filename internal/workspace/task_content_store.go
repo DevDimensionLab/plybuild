@@ -255,7 +255,7 @@ func contentManifestOperation(kind string) string {
 	switch kind {
 	case "WorkspaceTaskProblemRevision@1":
 		return "problem_record"
-	case "WorkspaceTaskSpecRevision@1":
+	case "WorkspaceTaskSpecRevision@1", "WorkspaceTaskSpecRevision@2":
 		return "spec_record"
 	case "WorkspaceTaskSpecAssessment@1":
 		return "spec_assess"
@@ -379,6 +379,9 @@ func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRe
 			return e
 		}
 		m := contentFields(manifest)
+		if e := validateExecutionGoalOrigin(Dependencies{TaskContent: s}, root, r, pub.TaskID, manifest); e != nil {
+			return e
+		}
 		if contentString(m, "task_id") != string(pub.TaskID) || contentString(m, "publication_key") != pub.PublicationKey || contentString(m, "source_draft_sha256") != pub.IntentSHA256 {
 			return contentError("task_content_integrity_conflict", "publication and manifest binding differ", nil)
 		}

@@ -55,10 +55,21 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		return WorkflowRun{}, e
 	}
 	var a Acceptance
-	if e = decode(b, 256<<10, &a); e != nil {
+	var version Envelope
+	if e = json.Unmarshal(b, &version); e != nil {
 		return WorkflowRun{}, e
 	}
-	if a.Envelope != workflowEnv("run-acceptance") {
+	var permission *DeliveryPermissionAcceptance
+	if version == deliveryEnv("run-acceptance") {
+		var delivery DeliveryAcceptance
+		if e = decode(b, 256<<10, &delivery); e != nil {
+			return WorkflowRun{}, e
+		}
+		a, permission = delivery.Acceptance, &delivery.DeliveryPermission
+	} else if e = decode(b, 256<<10, &a); e != nil {
+		return WorkflowRun{}, e
+	}
+	if a.Envelope != workflowEnv("run-acceptance") && a.Envelope != deliveryEnv("run-acceptance") {
 		return WorkflowRun{}, workflowError(2, "invalid workflow acceptance kind or version")
 	}
 	native := a
@@ -68,13 +79,20 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		return WorkflowRun{}, e
 	}
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
+		if deliveryRun(s.Request) != (permission != nil) {
+			return workflowError(4, "acceptance contract version differs from the bound run")
+		}
 		if e := workflowCallback(d, *s, contextPath); e != nil {
 			return e
 		}
 		if e := workflowClaim(*s, a.RunID, a.RequestSHA256, a.SessionID); e != nil {
 			return e
 		}
-		canonical, _ := Canonical(a)
+		var acceptanceValue any = a
+		if permission != nil {
+			acceptanceValue = DeliveryAcceptance{a, *permission}
+		}
+		canonical, _ := Canonical(acceptanceValue)
 		if s.Acceptance != nil && s.Acceptance.SHA256 != hash(canonical) {
 			return workflowError(4, "acceptance slot is immutable")
 		}
@@ -95,7 +113,11 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 			if c.NativeSessionID == nil {
 				return workflowError(4, "positive acceptance requires the bound native session")
 			}
-			if e := positiveClaim(native, workflowNativeRequest(s.Request)); e != nil {
+			if permission != nil {
+				if e := positiveDeliveryClaim(a, *permission, s.Request); e != nil {
+					return e
+				}
+			} else if e := positiveClaim(native, workflowNativeRequest(s.Request)); e != nil {
 				return e
 			}
 			// The recipient's claim cannot establish that Herdr still hosts the
@@ -114,7 +136,11 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 			if c.ModelID != nil {
 				model = *c.ModelID
 			}
-			draft, err = workflowhandoff.BuildTaskRunStart(d.Workflow, s.Result.Handoff.Locator, s.Request.HumanAuthority.ActorClaim, s.Request.HumanAuthority.StartSurface, a.SessionID, *c.RuntimeID, model, a.Sandbox, a.Issues, a.Acceptance)
+			if permission != nil {
+				draft, err = workflowhandoff.BuildDeliveryTaskRunStart(d.Workflow, s.Result.Handoff.Locator, s.Request.HumanAuthority.ActorClaim, s.Request.HumanAuthority.StartSurface, a.SessionID, *c.RuntimeID, model, a.Sandbox, a.Issues, a.Acceptance)
+			} else {
+				draft, err = workflowhandoff.BuildTaskRunStart(d.Workflow, s.Result.Handoff.Locator, s.Request.HumanAuthority.ActorClaim, s.Request.HumanAuthority.StartSurface, a.SessionID, *c.RuntimeID, model, a.Sandbox, a.Issues, a.Acceptance)
+			}
 		}
 		if err == nil {
 			err = workflowhandoff.ValidateTaskRunStart(d.Workflow, s.Result.Handoff.Locator, draft)
@@ -128,14 +154,14 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 			}
 			s.StartDraft = &FileBinding{path, hash(draft)}
 		}
-		binding, e := workflowKeep(d, filepath.Join(s.Result.Paths.RunRoot, "acceptance.json"), a)
+		binding, e := workflowKeep(d, filepath.Join(s.Result.Paths.RunRoot, "acceptance.json"), acceptanceValue)
 		if e != nil {
 			return e
 		}
 		s.Acceptance = &binding
 		s.Result.RuntimeFacts = RuntimeFacts{s.Request.Runtime.Model, c.ModelID, "unknown", ptr("recipient_claim"), ptr(binding.SHA256)}
 		if c.ModelID != nil {
-			if *c.ModelID == s.Request.Runtime.Model {
+			if *c.ModelID == s.Request.Runtime.Model || permission != nil && deliveryModelMatches(s.Request.Runtime.Provider, s.Request.Runtime.Model, *c.ModelID) {
 				s.Result.RuntimeFacts.ModelState = "matches"
 			} else {
 				s.Result.RuntimeFacts.ModelState = "differs"
@@ -163,10 +189,21 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		}
 		if a.Acceptance == "started" {
 			s.Result.Round.State = "working"
+			if permission != nil {
+				s.Result.Delivery.Phase = "working"
+				s.Result.Delivery.PermissionState = "recipient_confirmed_contract"
+				s.Result.Delivery.ActualPolicySHA256 = c.EffectivePolicySHA256
+				s.Result.Delivery.ActualPolicyEvidence = permission.ActualPolicyEvidence
+				s.Result.NextAction = WorkflowAction{"recipient", "Own design, implementation, verification and the actual human QA through authorized local completion."}
+			}
 		} else {
 			s.Result.Round.State = "unknown"
 			s.Result.FinalReturn.State = "blocked"
 			s.Result.NextAction = WorkflowAction{"coordinator", "Runtime acceptance stopped the run; inspect the recipient's issues."}
+			if permission != nil {
+				s.Result.Delivery.Phase = "stopped"
+				s.Result.Delivery.PermissionState = "not_confirmed"
+			}
 		}
 		return nil
 	})
@@ -204,6 +241,9 @@ type workflowReportSlot struct {
 }
 
 func WorkflowReportRound(d Dependencies, root, id, contextPath, file string) (WorkflowRun, error) {
+	if s, e := workflowRead(root, id); e == nil && deliveryRun(s.Request) {
+		return WorkflowRun{}, workflowError(4, "delivery owners report with workflow execute report, not legacy correction rounds")
+	}
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}

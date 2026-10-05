@@ -165,16 +165,18 @@ type QueueCurrent struct {
 }
 
 type QueuePending struct {
-	Rank         int              `yaml:"rank" json:"rank"`
-	TaskID       TaskID           `yaml:"task_id" json:"task_id"`
-	Title        string           `yaml:"title" json:"title"`
-	Selection    *TaskDecisionRef `yaml:"selection" json:"selection"`
-	SpecID       *string          `yaml:"spec_id" json:"spec_id"`
-	SpecRevision *int             `yaml:"spec_revision" json:"spec_revision"`
-	BaseRevision *int             `yaml:"base_revision" json:"base_revision"`
-	ParentOID    *string          `yaml:"parent_oid" json:"parent_oid"`
-	State        string           `yaml:"state" json:"state"`
-	Reasons      []QueueReason    `yaml:"reasons" json:"reasons"`
+	Goal         *TaskGoalRef            `yaml:"goal,omitempty" json:"goal,omitempty"`
+	Executor     *TaskExecutorAssignment `yaml:"executor,omitempty" json:"executor,omitempty"`
+	Rank         int                     `yaml:"rank" json:"rank"`
+	TaskID       TaskID                  `yaml:"task_id" json:"task_id"`
+	Title        string                  `yaml:"title" json:"title"`
+	Selection    *TaskDecisionRef        `yaml:"selection" json:"selection"`
+	SpecID       *string                 `yaml:"spec_id" json:"spec_id"`
+	SpecRevision *int                    `yaml:"spec_revision" json:"spec_revision"`
+	BaseRevision *int                    `yaml:"base_revision" json:"base_revision"`
+	ParentOID    *string                 `yaml:"parent_oid" json:"parent_oid"`
+	State        string                  `yaml:"state" json:"state"`
+	Reasons      []QueueReason           `yaml:"reasons" json:"reasons"`
 }
 
 type WorkspaceTaskQueueReadback struct {

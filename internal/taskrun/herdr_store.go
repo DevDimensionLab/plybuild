@@ -108,6 +108,19 @@ func workflowReservations(d Dependencies, root string, target workspace.PlanWork
 			continue
 		}
 		released := false
+		if deliveryRun(s.Request) {
+			// A technical candidate exists while its owner is still active through
+			// human QA and integration. It never releases the goal by itself.
+			if s.Result.Delivery == nil || s.Result.Delivery.Phase != "completed" {
+				return workflowError(4, "A delivery owner still owns this target through human QA and local integration")
+			}
+			// Completion ends this mandate, not the provider session. A later
+			// start still needs the native qualified result below.
+			if len(s.Result.Delivery.Candidates) > 0 {
+				c := s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
+				released = c.TaskResult.ID != "" && c.Integration != nil
+			}
+		}
 		if s.Result.FinalReturn.TerminalSHA256 != nil {
 			registry, err := d.Workspace.WorkItems.Snapshot(root)
 			if err != nil {
@@ -238,6 +251,9 @@ func workflowFresh(d Dependencies, s workflowState, target bool) error {
 			}
 		}
 	}
+	if deliveryRun(s.Request) {
+		return workflowDeliveryFresh(d, s, target)
+	}
 	return nil
 }
 
@@ -254,6 +270,11 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 	// written before the optional readback field existed. No state rewrite.
 	o.Provider = s.Request.Runtime.Provider
 	o.Transport.Observation = "cached"
+	if deliveryStartupPending(s) {
+		// Derive a useful recovery action for pre-prompt v2 starts saved by an
+		// older control binary, without rewriting their frozen startup history.
+		o.NextAction = deliveryStartupAction(s)
+	}
 	if o.Transport.AgentSessionID == "" && o.NextAction.Actor == "recipient" {
 		// Older saved attempts may still advise acceptance before session binding.
 		// Correct the readback without rewriting those historical artifacts.
