@@ -62,12 +62,17 @@ Otherwise honor the existing notification contract in the delivery instructions.
 ## Accept the actual runtime before Task writes
 
 Copy templates/acceptance.json. The runtime_claim fields are actual observations:
-runtime_id, model_id (null when unknown), profile_id, effective_policy_sha256,
-native_session_id. The native session must equal the Herdr observation above.
+runtime_id (the canonical provider codex or claude, not a CLI version), model_id
+(null when unknown), profile_id (the actual profile/mode label, or null when
+unavailable), effective_policy_sha256, native_session_id. Put CLI versions in
+the policy evidence. The native session must equal the Herdr observation above.
 Do not copy a requested model or policy into an actual claim without evidence.
 delivery_permission.launch_contract_sha256 identifies the requested launch
-contract. It is distinct from runtime_claim.effective_policy_sha256. Preserve
-actual policy evidence as physical files, hash their exact bytes, and set
+contract. It is distinct from runtime_claim.effective_policy_sha256. Keep
+the requested launch profile in the request; the actual label need not match
+that selector. A differing label or null does not by itself establish or deny
+authority. Actual policy evidence and contract scope must still be confirmed.
+Preserve actual policy evidence as physical files, hash their exact bytes, and set
 delivery_permission.actual_policy_evidence to objects with locator, sha256 and
 role (effective_policy, permission_proof or runtime_contract), sorted by locator.
 At least one evidence hash must equal the actual effective_policy_sha256.
@@ -76,8 +81,10 @@ The evidence is the recipient's preserved observation, not OS attestation.
 An existing config/profile name or writable-directory check alone is not proof
 of effective authority. Preserve the actual runtime policy/context available to
 this session without secrets. Never alter permission configuration to make the
-acceptance pass. Unknown necessary authority means a negative acceptance; an
-unknown model alone is model_id=null. Selected provider and session stay exact.
+acceptance pass. While necessary authority is unresolved, report needs_input or
+stopped without claiming acceptance; use a negative acceptance only to preserve
+an actual negative decision. Unknown model alone is model_id=null. Selected
+provider and session stay exact.
 
 sandbox is an object with read_roots and write_roots (sorted absolute physical
 paths), temp_root (absolute physical path) and matches_contract (boolean).
@@ -99,6 +106,9 @@ necessary question; other phases use question=null. Read current delivery state
 with workflow run show and copy delivery.last_event_sha256 into
 previous_event_sha256 (null before the first delivery event). This predecessor
 changes after verification, QA and integration as well as reports.
+needs_input and stopped may be submitted before runtime acceptance so that an
+actual permission blocker can be reported truthfully. They grant no Task-write,
+verification, QA or integration authority. working requires positive acceptance.
 Evidence entries use locator and sha256. Each verifier_results entry has id,
 outcome (passed, failed, not_run or unknown), argv, cwd, exit, evidence and reason.
 not_run and unknown require exit=null; never fabricate an unrun exit code.

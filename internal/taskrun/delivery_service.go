@@ -26,8 +26,8 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 		return e
 	}
 	rt, p := r.Runtime, r.Runtime.PermissionBinding
-	if rt.Mode != "interactive" || !plain(rt.Model, 1, 256) || (rt.Provider != "codex" && rt.Provider != "claude") || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) || rt.Provider == "claude" && (rt.ConfigProfile != nil || p.ProfileID != "manual") {
-		return workflowError(2, "delivery requires the explicitly selected interactive Codex or manual Claude runtime")
+	if rt.Mode != "interactive" || !plain(rt.Model, 1, 256) || (rt.Provider != "codex" && rt.Provider != "claude") || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) || rt.Provider == "claude" && (rt.ConfigProfile != nil || p.ProfileID != "manual" && p.ProfileID != "auto") {
+		return workflowError(2, "delivery requires the explicitly selected interactive Codex or manual/auto Claude runtime")
 	}
 	if p.AuthorityKind != "reported_contract_with_effective_policy" && p.AuthorityKind != "launch_contract_pending_runtime_acceptance" || !plain(p.ProfileID, 1, 256) || !digestPattern.MatchString(p.EffectivePolicySHA256) || len(p.Evidence) == 0 {
 		return workflowError(2, "delivery requires an explicit launch contract and runtime evidence; actual permission acceptance remains pending")
@@ -152,11 +152,23 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 		return WorkflowRun{}, e
 	}
 	deadline, quiet, previous := time.Now().Add(timeout), 0, ""
+	observationTimeout := func() error {
+		return workflowError(5, "Delivery continues in the same session; observation timed out without stopping or restarting it")
+	}
 	for {
+		if !time.Now().Before(deadline) {
+			return deliveryReadback(d, root, id, observationTimeout())
+		}
 		ready := false
 		e := workflowUpdate(d, root, id, func(s *workflowState) error {
 			if e := workflowFresh(d, *s, true); e != nil {
 				return e
+			}
+			// Freshness checks or the interval between observations may consume
+			// the observer's budget. That does not make the delivery unknown and
+			// must not start a transport call with an already expired deadline.
+			if !time.Now().Before(deadline) {
+				return observationTimeout()
 			}
 			a, e := workflowAgentGetUntil(d, *s, false, deadline)
 			if e != nil {
@@ -196,10 +208,6 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 			o, e := WorkflowShow(d, root, id)
 			o.Transport.Observation = "fresh"
 			return o, e
-		}
-		if !time.Now().Before(deadline) {
-			o, _ := WorkflowShow(d, root, id)
-			return o, workflowError(5, "Delivery continues in the same session; observation timed out without stopping or restarting it")
 		}
 		pause := 250 * time.Millisecond
 		if left := time.Until(deadline); left < pause {

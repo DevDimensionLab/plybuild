@@ -46,7 +46,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().BoolVar(&in.Check, "check", false, "preview goal, base, worktree and runtime without creating or starting anything")
 	target.bind(c)
 	c.Flags().StringVar(&in.Runtime.HerdrWorkspace, "herdr-workspace", "", "Herdr workspace ID (default: current Herdr workspace)")
-	c.Flags().StringVar(&in.Runtime.PermissionProfile, "permission-profile", "", "existing Codex permission profile; Claude uses native manual mode")
+	c.Flags().StringVar(&in.Runtime.PermissionProfile, "permission-profile", "", "existing Codex permission profile; Claude uses native auto mode")
 	c.Flags().StringVar(&in.NotificationContext, "notification-context", "", "optional existing owner notification context to freeze into the execution")
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	c.SetFlagErrorFunc(func(c *cobra.Command, e error) error { return workspace.WorkInvalidArguments(e.Error()) })

@@ -84,16 +84,29 @@ cannot pass verification.
 When the goal omits its provider, the compatibility default is Codex. Its model,
 effort and existing permission profile come from the local Codex settings. An
 explicit model or effort in the goal wins. Claude defaults to `opus` with
-`medium` effort and its native `manual` permission mode. Model and effort remain
-separate from the provider identity checked against the actual Herdr session.
+`medium` effort. New Claude executions request its native auto permission mode
+with the documented [`--permission-mode auto`](https://code.claude.com/docs/en/cli-reference)
+argument. Omit `--permission-profile` for Claude, or specify `auto`; other values
+are rejected. Model and effort remain separate from the provider identity checked
+against the actual Herdr session.
 
 The selected binaries are resolved and hash-bound before a worktree is created.
 Herdr uses the current workspace, or `--herdr-workspace`. Codex uses its selected
 managed permission profile with on-request automatic approval review; its
 native project-trust and onboarding remain under Codex control. Execute does
-not grant project trust or activate project configuration on the caller's behalf. Claude receives its own supported model, effort and permission arguments.
-No Codex trust/config flags are forwarded to Claude. Existing onboarding or
-permission questions may still require attention in the same tab.
+not grant project trust or activate project configuration on the caller's behalf.
+Claude receives its own supported model, effort and permission arguments.
+No Codex trust/config flags are forwarded to Claude.
+
+Claude's [auto mode](https://code.claude.com/docs/en/permission-modes) reviews actions
+with a classifier instead of asking about routine commands. Explicit ask rules,
+denials, hooks and sandbox enforcement still apply. Auto mode can be unavailable
+or fall back to prompts under the provider's policy. The interactive
+[workspace trust dialog](https://code.claude.com/docs/en/security) also remains
+under Claude's control. Handle these cases in the same tab; Ply does not change
+provider configuration or bypass an approval. Preserved launches retain their
+original requested mode, including earlier manual-mode requests. Repeating
+execute or resuming startup does not switch an existing session's permission mode.
 
 The launch-policy snapshot describes requested settings. It is not an OS
 permission grant. Before Task writes, the recipient reports its actual runtime,

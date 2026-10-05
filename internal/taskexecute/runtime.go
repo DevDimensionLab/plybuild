@@ -73,7 +73,7 @@ func PreviewRuntime(assignment workspace.TaskExecutorAssignment, control string,
 		Sources:   []taskrun.FileBinding{},
 		Assurance: "Requested launch contract only; recipient must confirm actual permissions before Task writes. Runtime enforcement remains authoritative.",
 	}
-	model, effort, profile := "opus", "medium", "manual"
+	model, effort, profile := "opus", "medium", "auto"
 	if provider == "codex" {
 		codexHome := opts.CodexHome
 		if codexHome == "" {
@@ -118,8 +118,8 @@ func PreviewRuntime(assignment workspace.TaskExecutorAssignment, control string,
 		out.Policy.Sources = append(out.Policy.Sources, taskrun.FileBinding{Locator: physical, SHA256: digestBytes(b)})
 		out.Policy.ApprovalPolicy = "on-request"
 		out.Policy.ApprovalReviewer = "auto_review"
-	} else if opts.PermissionProfile != "" && opts.PermissionProfile != "manual" {
-		return out, fmt.Errorf("Claude uses its native manual permission mode; a Codex permission profile cannot be forwarded")
+	} else if opts.PermissionProfile != "" && opts.PermissionProfile != "auto" {
+		return out, fmt.Errorf("new Claude executions use native auto permission mode; omit --permission-profile or use auto")
 	}
 	model = stringChoice(assignment.Model, model)
 	effort = stringChoice(assignment.Effort, effort)

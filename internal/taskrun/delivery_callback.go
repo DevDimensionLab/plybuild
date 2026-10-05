@@ -14,7 +14,11 @@ import (
 
 func positiveDeliveryClaim(a Acceptance, permission DeliveryPermissionAcceptance, r WorkflowRequest) error {
 	c := a.RuntimeClaim
-	if permission.LaunchContractSHA256 != r.Runtime.PermissionBinding.EffectivePolicySHA256 || !permission.PermissionConfirmed || c.RuntimeID == nil || *c.RuntimeID != r.Runtime.Provider || c.ProfileID == nil || *c.ProfileID != r.Runtime.PermissionBinding.ProfileID || c.EffectivePolicySHA256 == nil || c.ModelID != nil && !deliveryModelMatches(r.Runtime.Provider, r.Runtime.Model, *c.ModelID) || len(permission.ActualPolicyEvidence) == 0 {
+	// The request's profile is a launch selector. The actual runtime may expose
+	// another label (or none), particularly after native permission onboarding.
+	// Authority comes from confirmed, bound actual policy and validated scope,
+	// never from equating the requested selector with an observed profile name.
+	if permission.LaunchContractSHA256 != r.Runtime.PermissionBinding.EffectivePolicySHA256 || !permission.PermissionConfirmed || c.RuntimeID == nil || *c.RuntimeID != r.Runtime.Provider || c.EffectivePolicySHA256 == nil || c.ModelID != nil && !deliveryModelMatches(r.Runtime.Provider, r.Runtime.Model, *c.ModelID) || len(permission.ActualPolicyEvidence) == 0 {
 		return workflowError(4, "delivery runtime and actual permissions are not confirmed against the launch contract")
 	}
 	if e := deliveryEvidence(permission.ActualPolicyEvidence); e != nil {
@@ -182,7 +186,9 @@ func WorkflowDeliveryReport(d Dependencies, root, id, contextPath, file string) 
 				return nil
 			}
 		}
-		if e := deliveryCallback(d, *s, contextPath, report.Phase != "stopped"); e != nil {
+		// An owner must be able to report unresolved runtime authority without
+		// first claiming that authority. Incomplete reports grant no Task effects.
+		if e := deliveryCallback(d, *s, contextPath, report.Phase == "working"); e != nil {
 			return e
 		}
 		if s.Result.Delivery.Attempt != nil && s.Result.Delivery.Attempt.State == "attempted" {

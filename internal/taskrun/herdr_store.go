@@ -270,6 +270,22 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 	// written before the optional readback field existed. No state rewrite.
 	o.Provider = s.Request.Runtime.Provider
 	o.Transport.Observation = "cached"
+	if deliveryRun(s.Request) && o.Delivery != nil && o.Transport.AgentSessionID != "" && (s.Phase == "following" || s.StartSHA256 != nil && o.Delivery.PermissionState == "recipient_confirmed_contract") {
+		// Keep the immutable startup evidence in saved state. Once the first
+		// Task prompt is known to have arrived, these are history, not current
+		// instructions to repair startup. Unrelated/current problems remain.
+		o.Reasons = make([]Reason, 0, len(s.Result.Reasons))
+		for _, reason := range s.Result.Reasons {
+			switch reason.Code {
+			case "herdr_start_response", "herdr_start_stopped", "herdr_bootstrap_response", "delivery_start_resume_stopped":
+				continue
+			}
+			o.Reasons = append(o.Reasons, reason)
+		}
+		if o.Round.State == "unknown" && o.Delivery.Phase == "awaiting_acceptance" && s.Phase == "following" {
+			o.Round.State = o.Delivery.Phase
+		}
+	}
 	if deliveryStartupPending(s) {
 		// Derive a useful recovery action for pre-prompt v2 starts saved by an
 		// older control binary, without rewriting their frozen startup history.

@@ -239,6 +239,13 @@ func TestExecuteChecksBeforeWorktreeOrLaunchAndReusesReservation(t *testing.T) {
 	if first.Run == nil || first.Run.RunID == "" || first.Run.Transport.TabID != "" {
 		t.Fatalf("bad preserved startup: %+v", first)
 	}
+	var request taskrun.WorkflowRequest
+	if _, err = readPreservedJSON(first.RequestPath, &request); err != nil {
+		t.Fatal(err)
+	}
+	if request.Runtime.Provider != "claude" || request.Runtime.PermissionBinding.ProfileID != "auto" || request.Runtime.PermissionBinding.AuthorityKind != "launch_contract_pending_runtime_acceptance" || request.CodexProjectTrust != nil {
+		t.Fatalf("new Claude request must ask for native auto mode without granting runtime authority or trust: %+v", request.Runtime)
+	}
 	after := fixtureGit(t, epic, "worktree", "list", "--porcelain")
 	if after == before {
 		t.Fatal("no Task worktree created")
@@ -258,6 +265,75 @@ func TestExecuteChecksBeforeWorktreeOrLaunchAndReusesReservation(t *testing.T) {
 	}
 	if got := fixtureGit(t, epic, "worktree", "list", "--porcelain"); got != after {
 		t.Fatal("retry created another worktree")
+	}
+}
+
+func TestExecuteKeepsEarlierManualLaunchWhenAutoBecomesDefault(t *testing.T) {
+	d, in, _, _ := launcherFixture(t)
+	in.Check = true
+	preview, err := Execute(d, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Construct a historical intent in this private fixture before publishing
+	// any request. Real preserved launches are never rewritten by this test.
+	intent := launchIntent{
+		Kind: "ply.workflow.execute-intent", SchemaVersion: 1,
+		Goal: *preview.Goal, Runtime: *preview.Runtime,
+		Human: workspace.QueueHumanDecision{ActorClaim: "Fixture caller", DecidedAtUTC: "2026-10-05T00:00:00Z", Source: "explicit_human_instruction", Statement: "Fixture of a preserved earlier manual-mode launch."},
+	}
+	intent.Runtime.Policy.PermissionProfile = "manual"
+	intent.Runtime.Runtime.PermissionBinding.ProfileID = "manual"
+	directory := filepath.Dir(preview.RequestPath)
+	intent.Runtime, err = preserveRuntime(intent.Runtime, directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	intentBytes, err := taskrun.Canonical(intent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	intentPath := filepath.Join(directory, "intent.json")
+	if err = writeOnce(intentPath, intentBytes, 0600); err != nil {
+		t.Fatal(err)
+	}
+	before := map[string][]byte{}
+	for _, path := range []string{intentPath, filepath.Join(directory, "launch-policy.json"), intent.Runtime.Runtime.PlyExecutable.Path} {
+		before[path], err = os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	calls := 0
+	d.Fault = func(point string) error {
+		if point == "workflow_after_reservation" {
+			calls++
+			return errors.New("fixture interrupted before native effects")
+		}
+		return nil
+	}
+	in.Check = false
+	in.Runtime.PermissionProfile = "auto"
+	first, err := Execute(d, in)
+	if err == nil || !strings.Contains(err.Error(), "fixture interrupted before native effects") || calls != 1 || first.Run == nil || first.Run.Transport.TabID != "" {
+		t.Fatalf("historical launch did not reach its one reservation: calls=%d error=%v", calls, err)
+	}
+	var request taskrun.WorkflowRequest
+	before[first.RequestPath], err = readPreservedJSON(first.RequestPath, &request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if request.Runtime.PermissionBinding.ProfileID != "manual" {
+		t.Fatal("new default changed the preserved launch request")
+	}
+	second, err := Execute(d, in)
+	if err != nil || second.State != "existing" || second.Run.RunID != first.Run.RunID || calls != 1 {
+		t.Fatalf("historical reservation was not reused: calls=%d error=%v result=%+v", calls, err, second)
+	}
+	for path, original := range before {
+		if after, err := os.ReadFile(path); err != nil || string(after) != string(original) {
+			t.Fatalf("preserved launch artifact changed: %s", path)
+		}
 	}
 }
 

@@ -226,7 +226,11 @@ func workflowStartArgv(r WorkflowRequest, cwd, pane string) []string {
 	if r.Runtime.Provider == "claude" {
 		// Claude inherits the exact tab cwd. Its native permission mode is not
 		// a Codex profile; never forward Codex config, trust or approval flags.
-		argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "claude", "--pane", pane, "--timeout", "30000", "--", "--model", r.Runtime.Model, "--permission-mode", "manual"}
+		mode := "manual"
+		if deliveryRun(r) {
+			mode = r.Runtime.PermissionBinding.ProfileID
+		}
+		argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "claude", "--pane", pane, "--timeout", "30000", "--", "--model", r.Runtime.Model, "--permission-mode", mode}
 		if deliveryRun(r) && r.Delivery.ReasoningEffort != "" {
 			argv = append(argv, "--effort", r.Delivery.ReasoningEffort)
 		}

@@ -721,7 +721,7 @@
             "shorthand": "",
             "shorthand_deprecated": "",
             "type": "string",
-            "usage": "existing Codex permission profile; Claude uses native manual mode"
+            "usage": "existing Codex permission profile; Claude uses native auto mode"
           },
           {
             "annotations": {},

@@ -871,7 +871,7 @@ func validateSandboxContract(files FileSystem, snapshot Snapshot, sandbox canoni
 	for _, required := range requiredReads {
 		covered := false
 		for _, root := range readRoots {
-			if root == required || strings.HasPrefix(required, root+string(filepath.Separator)) {
+			if root == required || strings.HasPrefix(required, strings.TrimSuffix(root, string(filepath.Separator))+string(filepath.Separator)) {
 				covered = true
 				break
 			}
