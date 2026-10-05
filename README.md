@@ -872,6 +872,10 @@ uncertainty. `No end recorded`, `Unknown time` and `Time conflict` are explicit.
 Only compatible known step endpoints have durations. Parent and child intervals
 and parallel lanes are never added into an active-time or productivity total.
 Waiting requires an explicit waiting step with reason, dependency and next actor.
+The JSON `duration_seconds` field preserves fractional seconds, including subsecond
+intervals. Offline validation checks the duration against its original timestamp
+evidence. Existing whole-second snapshot digests remain compatible; other journal
+numeric fields retain their strict integer contract.
 
 To append a note, put the following in `/absolute/event.json`, replacing the Task,
 source path and the source's 64 lowercase hexadecimal SHA-256. Every field is

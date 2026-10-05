@@ -27,7 +27,7 @@ func Canonical(v any) ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	x, e := canonicaljson.DecodeStrict(b)
+	x, e := decodeJournalJSON(b)
 	if e != nil {
 		return nil, e
 	}
@@ -122,7 +122,7 @@ func decode(b []byte, limit int, out any) error {
 	if len(b) > limit {
 		return invalid("document exceeds size limit")
 	}
-	x, e := canonicaljson.DecodeStrict(b)
+	x, e := decodeJournalJSON(b)
 	if e != nil {
 		return invalid(e.Error())
 	}

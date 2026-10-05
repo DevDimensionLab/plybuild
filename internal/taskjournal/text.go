@@ -2,6 +2,7 @@ package taskjournal
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -132,7 +133,7 @@ func Text(s Snapshot, view string) string {
 			}
 			fmt.Fprintf(&b, "|%s| %s / run %s — %s (%s): %s\n  %s .. %s", bar, value(l.ActorID, "native"), value(l.RunID, "unknown"), p.StepID, p.Kind, label, value(a.OccurredAt, "Unknown time"), value(end, "No end recorded"))
 			if p.DurationSeconds != nil {
-				fmt.Fprintf(&b, "; %.9g seconds", *p.DurationSeconds)
+				fmt.Fprintf(&b, "; %s seconds", strconv.FormatFloat(*p.DurationSeconds, 'f', -1, 64))
 			}
 			if p.ParentStepID != nil {
 				fmt.Fprintf(&b, "; parent %s", *p.ParentStepID)

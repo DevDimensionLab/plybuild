@@ -221,7 +221,8 @@ func validateSnapshotSemantics(s Snapshot) error {
 				}
 			}
 		}
-		if p.State != state || !equal(p.DurationSeconds, duration) {
+		sameDuration := p.DurationSeconds == nil && duration == nil || p.DurationSeconds != nil && duration != nil && *p.DurationSeconds == *duration
+		if p.State != state || !sameDuration {
 			return invalid("step duration or state differs from its evidence")
 		}
 	}

@@ -1,5 +1,6 @@
 // Package canonicaljson implements the deliberately small RFC 8785 JSON
-// domain used by workflow handoffs. Numbers are restricted to signed integers.
+// domain used by workflow handoffs. DecodeStrict restricts numbers to signed
+// integers. A caller may explicitly provide a field-specific number policy.
 package canonicaljson
 
 import (
@@ -8,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"strconv"
 	"unicode/utf16"
@@ -23,7 +25,21 @@ type Member struct {
 
 type Object []Member
 
+// NumberPolicy handles numbers outside the default signed-integer domain.
+// Paths contain object member names and decimal array indices. Returning an
+// error rejects the number; the policy must explicitly validate its own scope
+// and any precision constraints. Other decoding checks remain unchanged.
+type NumberPolicy func(path []string, number string) (float64, error)
+
+// policyNumber cannot be constructed outside this package; only an explicit
+// number policy can introduce a finite fractional number into a decoded value.
+type policyNumber float64
+
 func DecodeStrict(input []byte) (Value, error) {
+	return DecodeStrictWithNumberPolicy(input, nil)
+}
+
+func DecodeStrictWithNumberPolicy(input []byte, policy NumberPolicy) (Value, error) {
 	if len(input) >= 3 && bytes.Equal(input[:3], []byte{0xef, 0xbb, 0xbf}) {
 		return nil, errors.New("JSON BOM is not allowed")
 	}
@@ -35,7 +51,7 @@ func DecodeStrict(input []byte) (Value, error) {
 	}
 	decoder := json.NewDecoder(bytes.NewReader(input))
 	decoder.UseNumber()
-	value, err := decodeValue(decoder)
+	value, err := decodeValue(decoder, nil, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +64,7 @@ func DecodeStrict(input []byte) (Value, error) {
 	return value, nil
 }
 
-func decodeValue(decoder *json.Decoder) (Value, error) {
+func decodeValue(decoder *json.Decoder, path []string, policy NumberPolicy) (Value, error) {
 	token, err := decoder.Token()
 	if err != nil {
 		return nil, fmt.Errorf("decode JSON: %w", err)
@@ -59,6 +75,19 @@ func decodeValue(decoder *json.Decoder) (Value, error) {
 	case json.Number:
 		text := typed.String()
 		if text == "-0" || bytes.ContainsAny([]byte(text), ".eE") {
+			if policy != nil {
+				value, err := policy(append([]string(nil), path...), text)
+				if err != nil {
+					return nil, err
+				}
+				if math.IsNaN(value) || math.IsInf(value, 0) {
+					return nil, fmt.Errorf("number policy returned a non-finite value for %q", text)
+				}
+				if value == 0 {
+					value = 0 // RFC 8785 renders either sign of zero as 0.
+				}
+				return policyNumber(value), nil
+			}
 			return nil, fmt.Errorf("unsupported JSON number %q", text)
 		}
 		value, err := strconv.ParseInt(text, 10, 64)
@@ -84,7 +113,11 @@ func decodeValue(decoder *json.Decoder) (Value, error) {
 					return nil, fmt.Errorf("duplicate object member %q", name)
 				}
 				seen[name] = struct{}{}
-				value, err := decodeValue(decoder)
+				child := path
+				if policy != nil {
+					child = append(path, name)
+				}
+				value, err := decodeValue(decoder, child, policy)
 				if err != nil {
 					return nil, err
 				}
@@ -98,7 +131,11 @@ func decodeValue(decoder *json.Decoder) (Value, error) {
 		case '[':
 			array := []Value{}
 			for decoder.More() {
-				value, err := decodeValue(decoder)
+				child := path
+				if policy != nil {
+					child = append(path, strconv.Itoa(len(array)))
+				}
+				value, err := decodeValue(decoder, child, policy)
 				if err != nil {
 					return nil, err
 				}
@@ -139,6 +176,12 @@ func appendValue(output *bytes.Buffer, value Value) error {
 		appendString(output, typed)
 	case int64:
 		output.WriteString(strconv.FormatInt(typed, 10))
+	case policyNumber:
+		encoded, err := json.Marshal(float64(typed))
+		if err != nil {
+			return err
+		}
+		output.Write(encoded)
 	case []Value:
 		output.WriteByte('[')
 		for index, element := range typed {
