@@ -180,6 +180,10 @@ a separate `--apply --confirm <digest>` invocation. Apply permits exactly one lo
 move of the registered Epic parent. It never fetches, pushes, targets `main` or `master`, or cleans
 worktrees.
 
+A newly created Epic may have only its creation reflog entry before integration.
+A confirmed effect still requires the real result and preceding parent entries,
+with the exact integration attempt marker in the reflog.
+
 The first accepted TaskResult upgrades a legacy format-1 work-item store atomically to format 2;
 all existing facts remain immutable. A no-effect attempt can only be retried through a new check
 that names `--retry-after`. Lost responses are reconciled from the durable authority, attempt,

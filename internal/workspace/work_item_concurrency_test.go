@@ -88,6 +88,10 @@ func newWorkItemJourneyFixture(t *testing.T) workItemJourneyFixture {
 }
 
 func newWorkItemJourneyFixtureVersion(t *testing.T, legacy bool) workItemJourneyFixture {
+	return newWorkItemJourneyFixtureHistory(t, legacy, false)
+}
+
+func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool) workItemJourneyFixture {
 	t.Helper()
 	root := createProjectWorkspace(t)
 	wrapper := filepath.Join(root, "ply")
@@ -109,6 +113,14 @@ func newWorkItemJourneyFixtureVersion(t *testing.T, legacy bool) workItemJourney
 	epicPath := filepath.Join(wrapper, "epic")
 	runLocalGit(t, repository, "worktree", "add", "-b", "epic", epicPath, oid)
 	epicPath = physicalPath(t, epicPath)
+	if priorEpicWork {
+		if err := os.WriteFile(filepath.Join(epicPath, "prior.txt"), []byte("prior Epic work\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		runLocalGit(t, epicPath, "add", "prior.txt")
+		runLocalGit(t, epicPath, "commit", "-m", "prior Epic work")
+		oid = runLocalGit(t, epicPath, "rev-parse", "HEAD")
+	}
 	projects := newSystemProjectStore()
 	project := ProjectRecord{ID: "ply", Name: "Ply", Wrapper: physicalPath(t, wrapper), RepoIDs: []RepoID{"ply"}}
 	repo := RepoRecord{ID: "ply", Locator: repository, GitCommonDir: common}

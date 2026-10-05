@@ -72,9 +72,7 @@ b1 = git(repo, 'rev-parse', 'HEAD')
 git(repo, 'worktree', 'add', '-b', 'epic', epic, b1)
 ply('workspace', 'project', 'add', 'ply', '--name', 'Ply', '--wrapper', workspace / 'ply', '--repo', f'ply={repo}')
 ply('workspace', 'epic', 'adopt', 'epic', '--title', 'Epic', '--project', 'ply', '--repo', 'ply', '--worktree', epic, '--ref', 'refs/heads/epic', '--expected-oid', b1)
-git(epic, 'commit', '--allow-empty', '-m', 'seed integration reflog')
-seed = git(epic, 'rev-parse', 'HEAD')
-git(epic, 'update-ref', '-m', 'restore synthetic base', 'refs/heads/epic', b1, seed)
+assert git(epic, 'reflog', 'show', '--format=%H', 'refs/heads/epic').splitlines() == [b1]
 for task_id in ['task', 'task-b']:
     ply('workspace', 'task', 'create', task_id, '--title', 'Same title', '--description', 'Synthetic H2 task', '--epic', 'epic', '--project', 'ply', '--repo', 'ply')
 target = ['--project', 'ply', '--repo', 'ply', '--epic', 'epic']
@@ -172,9 +170,15 @@ result_path = write('result-readback.json', result)
 qa_draft = generate('qa', 'qa.json', result_path, workspace / 'qa.txt')
 qa = js('workspace', 'task', 'qa', 'record', 'task', '--file', qa_draft)
 args = ['workspace', 'task', 'integrate', 'task', '--result', result['record']['id'], '--qa', qa['record']['id'], '--expected-result-oid', b2, '--expected-parent-oid', b1]
+before_check = state_bytes()
 plan = js(*args, '--check')
+assert state_bytes() == before_check, 'integration check changed state'
 integrated = js(*args, '--apply', '--confirm', plan['plan']['sha256'])
 assert integrated['classification'] == 'exact_effect' and git(epic, 'rev-parse', 'HEAD') == b2
+after_apply = state_bytes()
+assert js(*args, '--apply', '--confirm', plan['plan']['sha256'])['classification'] == 'exact_effect'
+assert state_bytes() == after_apply, 'identical integration retry changed state'
+assert git(epic, 'reflog', 'show', '--format=%H', 'refs/heads/epic').splitlines() == [b2, b1]
 preserved = contents()
 persisted_a = js('workspace', 'task', 'show', 'task')['resource']['persisted']
 q = js('workspace', 'task', 'queue', 'list', *target)

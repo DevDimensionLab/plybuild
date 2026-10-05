@@ -171,9 +171,7 @@ git -C "$task" add delivery.txt
 git -C "$task" -c user.name='Ply tests' -c user.email=tests@example.invalid commit -m delivery >/dev/null
 result_oid=$(git -C "$task" rev-parse HEAD)
 result_tree=$(git -C "$task" rev-parse 'HEAD^{tree}')
-git -C "$epic" -c user.name='Ply tests' -c user.email=tests@example.invalid commit --allow-empty -m 'seed integration reflog' >/dev/null
-seed_oid=$(git -C "$epic" rev-parse HEAD)
-git -C "$epic" update-ref -m 'restore integration base' refs/heads/epic "$base_oid" "$seed_oid"
+[[ $(git -C "$epic" reflog show --format=%H refs/heads/epic) == "$base_oid" ]] || fail 'new Epic does not have exactly its creation entry'
 printf 'immutable input\n' >"$workspace/input.txt"
 
 run_ok content-initial "$workspace" workspace task show task --format json
@@ -231,9 +229,11 @@ printf 'Fixture human QA passed; not actual human approval.\n' >"$workspace/qa-r
 run_ok qa-record "$workspace" workspace task qa record task --file "$workspace/qa.json" --format json
 task_result_id=$("$helper" field "$temp_root/result-record.stdout" record.id)
 qa_id=$("$helper" field "$temp_root/qa-record.stdout" record.id)
+check_store_sha=$(file_sha256 "$store")
 run_ok integrate-check "$workspace" workspace task integrate task --result "$task_result_id" --qa "$qa_id" --expected-result-oid "$result_oid" --expected-parent-oid "$base_oid" --check --format json
 confirm=$("$helper" field "$temp_root/integrate-check.stdout" plan.sha256)
 [[ $(git -C "$epic" rev-parse HEAD) == "$base_oid" ]] || fail 'read-only check changed the Epic parent'
+[[ $(file_sha256 "$store") == "$check_store_sha" && $(git -C "$epic" reflog show --format=%H refs/heads/epic) == "$base_oid" ]] || fail 'read-only check changed the store or initial reflog'
 run_ok integrate-apply "$workspace" workspace task integrate task --result "$task_result_id" --qa "$qa_id" --expected-result-oid "$result_oid" --expected-parent-oid "$base_oid" --apply --confirm "$confirm" --format json
 grep -F '"classification":"exact_effect"' "$temp_root/integrate-apply.stdout" >/dev/null || fail 'confirmed apply was not exact_effect'
 [[ $(git -C "$epic" rev-parse HEAD) == "$result_oid" && $(git -C "$epic" rev-parse 'HEAD^{tree}') == "$result_tree" ]] || fail 'Epic parent did not fast-forward to the exact result'
@@ -243,6 +243,7 @@ apply_store_sha=$(file_sha256 "$store")
 apply_store_mtime=$(file_mtime "$store")
 run_ok integrate-retry "$workspace" workspace task integrate task --result "$task_result_id" --qa "$qa_id" --expected-result-oid "$result_oid" --expected-parent-oid "$base_oid" --apply --confirm "$confirm" --format json
 [[ $(file_sha256 "$store") == "$apply_store_sha" && $(file_mtime "$store") == "$apply_store_mtime" ]] || fail 'confirmed retry rewrote the store'
+[[ $(git -C "$epic" reflog show --format=%H refs/heads/epic) == "$result_oid"$'\n'"$base_oid" ]] || fail 'apply/retry did not preserve exactly one fast-forward'
 run_ok task-show-after "$workspace" workspace task show task --format json
 grep -F '"kind":"WorkspaceTaskIntegrationReadback@2"' "$temp_root/task-show-after.stdout" >/dev/null || fail 'Spec-aware Task integration readback is missing'
 grep -F '"classification":"exact_effect"' "$temp_root/task-show-after.stdout" >/dev/null || fail 'Task show lost the exact integration result'

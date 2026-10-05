@@ -264,8 +264,11 @@ func newIntegrationJourneyFixture(t *testing.T) integrationJourneyFixture {
 	return newIntegrationJourneyFixtureVersion(t, false)
 }
 func newIntegrationJourneyFixtureVersion(t *testing.T, legacy bool) integrationJourneyFixture {
+	return newIntegrationJourneyFixtureHistory(t, legacy, false)
+}
+func newIntegrationJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool) integrationJourneyFixture {
 	t.Helper()
-	base := newWorkItemJourneyFixtureVersion(t, legacy)
+	base := newWorkItemJourneyFixtureHistory(t, legacy, priorEpicWork)
 	taskPath := filepath.Join(base.wrapper, "task")
 	input, _ := ParseTaskWorktreeCreateInput("task", "task", taskPath, base.oid)
 	ready, err := CreateTaskWorktree(base.dependencies, input)
@@ -284,10 +287,6 @@ func newIntegrationJourneyFixtureVersion(t *testing.T, legacy bool) integrationJ
 	runLocalGit(t, taskPath, "commit", "-m", "task result")
 	resultOID := runLocalGit(t, taskPath, "rev-parse", "HEAD")
 	resultTree := runLocalGit(t, taskPath, "rev-parse", "HEAD^{tree}")
-	epicPath := filepath.Join(base.wrapper, "epic")
-	runLocalGit(t, epicPath, "commit", "--allow-empty", "-m", "seed integration reflog")
-	seedOID := runLocalGit(t, epicPath, "rev-parse", "HEAD")
-	runLocalGit(t, epicPath, "update-ref", "-m", "restore integration base", "refs/heads/epic", base.oid, seedOID)
 	resultID := TaskResultID("trs_11111111111111111111111111111111")
 	qaID := HumanQARecordID("hqa_11111111111111111111111111111111")
 	digest := "sha256:" + strings.Repeat("1", 64)
@@ -334,6 +333,14 @@ func newIntegrationJourneyFixtureVersion(t *testing.T, legacy bool) integrationJ
 
 func TestTaskIntegrationCheckAndSingleConfirmedApply(t *testing.T) {
 	fixture := newIntegrationJourneyFixture(t)
+	epicPath := filepath.Join(fixture.wrapper, "epic")
+	initialReflog := runLocalGit(t, epicPath, "reflog", "show", "--format=%H", "refs/heads/epic")
+	if initialReflog != fixture.oid {
+		t.Fatalf("new Epic must have only its genuine creation entry: %q", initialReflog)
+	}
+	mainOID := runLocalGit(t, filepath.Join(fixture.wrapper, "main"), "rev-parse", "HEAD")
+	git := &countingIntegrationGit{TaskIntegrationGit: fixture.dependencies.IntegrationGit}
+	fixture.dependencies.IntegrationGit = git
 	input := TaskIntegrationInput{TaskID: "task", TaskResultID: fixture.resultID, HumanQARecordID: fixture.qaID, ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
 	before, err := os.ReadFile(workItemsPath(fixture.root))
 	if err != nil {
@@ -359,6 +366,9 @@ func TestTaskIntegrationCheckAndSingleConfirmedApply(t *testing.T) {
 	if string(before) != string(afterCheck) || runLocalGit(t, filepath.Join(fixture.wrapper, "epic"), "rev-parse", "HEAD") != fixture.oid {
 		t.Fatal("check changed persisted or Git state")
 	}
+	if got := runLocalGit(t, epicPath, "reflog", "show", "--format=%H", "refs/heads/epic"); got != initialReflog || git.count() != 0 {
+		t.Fatal("check changed the parent reflog or attempted a merge")
+	}
 	confirmation := checked.Readback.NextAction.Argv[len(checked.Readback.NextAction.Argv)-1]
 	input.Apply, input.Confirmation = true, confirmation
 	applied, err := ApplyTaskIntegration(fixture.dependencies, input)
@@ -383,6 +393,16 @@ func TestTaskIntegrationCheckAndSingleConfirmedApply(t *testing.T) {
 	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
 	if err != nil || len(registry.IntegrationAuthorities) != 1 || len(registry.IntegrationAttempts) != 1 || len(registry.IntegrationResults) != 1 {
 		t.Fatalf("registry = %#v, %v", registry, err)
+	}
+	if git.count() != 1 || len(registry.IntegrationAuthorities[0].Plan.ObservedReflog) != 1 ||
+		!reflogProves(registry.IntegrationResults[0].Reflog, registry.IntegrationAttempts[0].ID, fixture.oid, fixture.resultOID) {
+		t.Fatal("first integration did not preserve its initial plan and exact effect proof")
+	}
+	if got := runLocalGit(t, epicPath, "reflog", "show", "--format=%H", "refs/heads/epic"); got != fixture.resultOID+"\n"+fixture.oid {
+		t.Fatalf("apply/replay changed the reflog beyond one fast-forward: %q", got)
+	}
+	if runLocalGit(t, fixture.taskPath, "rev-parse", "HEAD") != fixture.resultOID || runLocalGit(t, filepath.Join(fixture.wrapper, "main"), "rev-parse", "HEAD") != mainOID {
+		t.Fatal("integration changed a ref other than the exact Epic parent")
 	}
 }
 

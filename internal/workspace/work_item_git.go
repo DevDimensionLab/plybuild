@@ -779,8 +779,8 @@ func (git *systemTaskIntegrationGit) ObserveParentReflog(path, ref string, limit
 		}
 		entries = append(entries, IntegrationReflogEntry{Ordinal: len(entries), OID: values[i], Selector: values[i+1], Action: values[i+2]})
 	}
-	if len(entries) < 2 {
-		return nil, fmt.Errorf("parent reflog requires two parseable entries")
+	if len(entries) == 0 {
+		return nil, fmt.Errorf("parent reflog requires at least one parseable entry")
 	}
 	return entries, nil
 }

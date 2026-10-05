@@ -1065,8 +1065,9 @@ func inventoryLess(a, b IntegrationInventoryEntry) bool {
 	return a.OID < b.OID
 }
 func validateReflog(entries []IntegrationReflogEntry) error {
-	if entries == nil || len(entries) < 2 {
-		return errors.New("reflog must contain two entries")
+	// A new parent has only its creation entry; exact effects use reflogProves.
+	if len(entries) == 0 {
+		return errors.New("reflog must contain at least one entry")
 	}
 	for i, e := range entries {
 		if e.Ordinal != i || !validOIDText(e.OID) || !validTaskText(e.Selector, 1, 512) || !validTaskText(e.Action, 1, 2000) {
