@@ -1,5 +1,27 @@
 # Report-ready notifications
 
+## Agent completion notifications
+
+The installed `ply-agent-notify` skill also supports `agent_finished`, `agent_stopped`
+and `feedback_required` events through the same notification CLI. At the start of
+human-requested work, bind the standing or explicit authorization for the named route,
+one notification owner, and a stable task context. A standing preference does not
+need to be repeated in every handoff. Without that authorization, the skill sends nothing.
+
+Root normally owns the notification. Internal delegates, including Herdr tasks, return
+to root without sending their own message. At the agreed delivery boundary root
+preserves the report and invokes the helper before returning to the user. Necessary
+human questions are preserved and notified before waiting; optional questions and
+internal corrections stay local. Continuation and restart retain the task/event
+identity so an existing attempt is read back rather than sent again.
+
+See [the skill](../skills/ply-agent-notify/SKILL.md) and
+[its invocation contract](../skills/ply-agent-notify/references/usage.md). The helper
+preserves the local outcome when Slack is unavailable. Transport acknowledgement
+is separate from human acceptance; a skill cannot detect a dead agent or closed tab.
+
+## Report-ready human gates
+
 `ply workflow notification` sends an explicitly authorized report-ready signal to one
 fixed Slack channel. The procedure owner first preserves the report and local return,
 then checks that the gate still needs a human to start result control. An active

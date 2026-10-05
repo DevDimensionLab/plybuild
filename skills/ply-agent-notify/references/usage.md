@@ -1,13 +1,42 @@
 # Task binding and normal use
 
+At human task start, check the current request and standing user/project preference
+for the named Slack route. A standing choice is reusable authorization, not a reason
+to ask again. Without one, do not send. Bind the single notification owner and that
+source in the stable task mandate. For a chat task this may be a short local task
+note; a separate agent handoff is not required.
+
 Copy `task-template.json` to the task's agreed return directory and replace the
-example activity/run and physical paths. `notification_authorized` records an
-existing task mandate for that exact route; it is a claim, not authentication.
+example activity/run and physical paths. Reuse an existing context for a continuation.
+`notification_authorized` records the existing choice for that exact route; it is a
+claim, not authentication. The task JSON has a strict schema: ownership and authority
+notes belong in the mandate, not additional JSON fields.
 The event directory and route state root must remain fixed across callers/restarts.
 The event directory's parent must exist; the helper creates it privately if absent.
 The task's completion procedure preserves its report, then calls the helper before
 the human-readable final response. Its necessary-feedback procedure preserves the
 question, calls the helper, then waits for the answer in the active task.
+
+The root/coordinator owns the parent task's notification. Tell internal delegates to
+return locally without sending Slack; opening a Herdr tab is not a separate human
+notification request. If the user separately chooses a delegated notification boundary,
+bind one owner for it and avoid sending the same completion again from root.
+
+Reuse the same task context and event file when resuming, restarting, or receiving a
+QA answer. Do not recreate a sent completion or still-pending question. A later real
+completion after an answered question is a new event within the same activity/run.
+Keep the original event/request bytes and let the helper read back an existing attempt.
+Record transport status separately; a final local result is still usable if sending fails.
+
+For an agent that the user asked to deliver work, `agent_finished` means that the
+agreed delivery boundary is reached, not that each internal coding/review step ended.
+Use `feedback_required` for an actual required human decision, and `agent_stopped` for
+a real stop. Do not turn an authorized coordinator continuation into a human start gate.
+When no human action is required, say so plainly in `next_action`; `next_actor` still
+identifies the actor responsible for any remaining follow-up. The only supported
+values are `user` and `coordinator`. For completed work with no required follow-up,
+use `user` with, for example, `The requested work is complete. No action is required.`
+This identifies the recipient of the return without inventing a new task or approval.
 
 Preserve a strict event JSON file at the agreed return location, for example:
 
