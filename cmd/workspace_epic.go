@@ -22,6 +22,8 @@ func newWorkspaceEpicCommand(dependencies workspace.Dependencies) *cobra.Command
 		return workspace.ShowEpic(dependencies, id)
 	}, list: func() (workspace.EpicListResult, error) { return workspace.ListEpics(dependencies) }})
 	addWorkspaceEpicBaseCommands(command, dependencies)
+	addWorkspaceEpicReadCommands(command, dependencies)
+	command.AddCommand(newWorkspaceLifecycleCommand(dependencies, "epic"))
 	return command
 }
 

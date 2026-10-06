@@ -424,6 +424,13 @@
           ]
         }
       ]
+    },
+    "read_extensions": {
+      "type": "array",
+      "description": "Additional read operations, sorted by (id, mode). Old consumers may ignore this field.",
+      "items": {
+        "$ref": "#/$defs/operation"
+      }
     }
   },
   "additionalProperties": true,

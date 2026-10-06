@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime/debug"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -32,11 +33,12 @@ type capabilityOperation struct {
 	Effect        string             `json:"effect"`
 }
 type capabilityCatalog struct {
-	Kind          string                `json:"kind"`
-	SchemaVersion int                   `json:"schema_version"`
-	Build         capabilityBuild       `json:"build"`
-	Coverage      string                `json:"coverage"`
-	Operations    []capabilityOperation `json:"operations"`
+	Kind           string                `json:"kind"`
+	SchemaVersion  int                   `json:"schema_version"`
+	Build          capabilityBuild       `json:"build"`
+	Coverage       string                `json:"coverage"`
+	Operations     []capabilityOperation `json:"operations"`
+	ReadExtensions []capabilityOperation `json:"read_extensions"`
 }
 
 func embeddedCapabilityBuild(info *debug.BuildInfo) capabilityBuild {
@@ -60,8 +62,9 @@ func embeddedCapabilityBuild(info *debug.BuildInfo) capabilityBuild {
 	return build
 }
 
-// This intentionally catalogs only the four workspace core read operations.
-// Its fixed IDs and modes are not a generic CLI or permission discovery API.
+// The original, closed core catalog stays stable. New read modes are advertised
+// additively in read_extensions, so existing @1 consumers keep their exact core
+// IDs, modes and coverage while newer consumers can discover richer projections.
 func coreCapabilities(build capabilityBuild) capabilityCatalog {
 	one, three := workspace.CoreReadSchemaVersion, 3
 	operation := func(id, mode, kind string, selectors, filters []string, policy string) capabilityOperation {
@@ -75,7 +78,27 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		operation("task.show", "default", "WorkspaceTaskReadback@1", []string{}, []string{}, "none"),
 	}
 	ops[4].ResultSchemas = []capabilitySchema{{"WorkspaceTaskReadback@1", nil}, {"WorkspaceTaskIntegrationReadback@1", &one}, {"WorkspaceTaskReadback@3", &three}}
-	return capabilityCatalog{"PlyCapabilities@1", workspace.CoreReadSchemaVersion, build, "workspace-core-read", ops}
+	extensions := []capabilityOperation{
+		operation("attention", "default", "WorkspaceAttentionReadback@1", []string{}, []string{"project", "repo", "epic"}, "independent_and"),
+		operation("epic.list", "default", "WorkspaceEpicListReadback@1", []string{}, []string{"project"}, "independent_and"),
+		operation("epic.lifecycle.show", "default", "WorkspaceWorkItemLifecycleReadback@1", []string{}, []string{}, "none"),
+		operation("journal.recent", "default", "WorkspaceActivityReadback@1", []string{}, []string{"project", "since", "limit"}, "independent_and"),
+		operation("overview", "default", "WorkspaceOverviewReadback@1", []string{}, []string{"project"}, "independent_and"),
+		operation("project.metadata.show", "default", "WorkspaceProjectMetadataReadback@1", []string{}, []string{}, "none"),
+		operation("run.list", "default", "WorkspaceRunListReadback@1", []string{}, []string{"project", "active"}, "independent_and"),
+		operation("status", "default", "WorkspaceStatusReadback@1", []string{}, []string{}, "none"),
+		operation("task.lifecycle.show", "default", "WorkspaceWorkItemLifecycleReadback@1", []string{}, []string{}, "none"),
+		operation("task.list", "progress", "WorkspaceTaskProgressListReadback@1", []string{"--progress"}, []string{"project", "repo", "epic"}, "independent_and"),
+		operation("task.show", "progress", "WorkspaceTaskProgressReadback@1", []string{"--progress"}, []string{}, "none"),
+		operation("worktree.list", "default", "WorkspaceWorktreeListReadback@1", []string{}, []string{"project", "repo"}, "independent_and"),
+	}
+	sort.Slice(extensions, func(i, j int) bool {
+		if extensions[i].ID != extensions[j].ID {
+			return extensions[i].ID < extensions[j].ID
+		}
+		return extensions[i].Mode < extensions[j].Mode
+	})
+	return capabilityCatalog{"PlyCapabilities@1", workspace.CoreReadSchemaVersion, build, "workspace-core-read", ops, extensions}
 }
 
 func newCapabilitiesCommand(build func() capabilityBuild) *cobra.Command {
@@ -83,7 +106,7 @@ func newCapabilitiesCommand(build func() capabilityBuild) *cobra.Command {
 	invalid := func(detail string) error { return fmt.Errorf("capabilities_invalid_arguments: %s", detail) }
 	command := &cobra.Command{
 		Use: "capabilities", Short: "Show supported workspace core read contracts",
-		Long:    "Show the built-in catalog for project list/show and Task list/show, including the separate ready mode. Coverage is workspace-core-read, not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
+		Long:    "Show the stable workspace-core-read catalog and additive read_extensions for progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
 		Example: "  ply capabilities\n  ply capabilities --format json",
 		// Do not inherit the root's profile initializer, even with global logging flags.
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
@@ -112,6 +135,14 @@ func newCapabilitiesCommand(build func() capabilityBuild) *cobra.Command {
 				return err
 			}
 			for _, op := range catalog.Operations {
+				if _, err := fmt.Fprintf(cmd.OutOrStdout(), "  %s (%s): %s; formats: %s\n", op.ID, op.Mode, strings.Join(op.Command, " "), strings.Join(op.Formats, ", ")); err != nil {
+					return err
+				}
+			}
+			if _, err := fmt.Fprintln(cmd.OutOrStdout(), "Read extensions:"); err != nil {
+				return err
+			}
+			for _, op := range catalog.ReadExtensions {
 				if _, err := fmt.Fprintf(cmd.OutOrStdout(), "  %s (%s): %s; formats: %s\n", op.ID, op.Mode, strings.Join(op.Command, " "), strings.Join(op.Formats, ", ")); err != nil {
 					return err
 				}

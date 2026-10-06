@@ -1,0 +1,38 @@
+{
+  "kind": "WorkspaceWorkItemLifecycleReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "subject_kind": "epic",
+  "subject_id": "e0",
+  "lifecycle": "active",
+  "revision": 4,
+  "events": [
+    {
+      "event_id": "lce_bd9c66bb7636957749240d773f24d5b2d62877d838d373f4a62222003bcc734e",
+      "sequence": 3,
+      "subject_kind": "epic",
+      "subject_id": "e0",
+      "from": "active",
+      "to": "archived",
+      "actor_claim": "acceptance fixture",
+      "recorded_at_utc": "2026-10-06T04:31:57.942337Z"
+    },
+    {
+      "event_id": "lce_35d8590cf923c7dfcc88a821df51b84a62dd582ca0fde96877de651c20647771",
+      "sequence": 4,
+      "subject_kind": "epic",
+      "subject_id": "e0",
+      "from": "archived",
+      "to": "active",
+      "actor_claim": "acceptance fixture",
+      "recorded_at_utc": "2026-10-06T04:31:58.051722Z"
+    }
+  ],
+  "source": {
+    "locator": "/work/.ply/work-item-lifecycle.json",
+    "sha256": "sha256:2904f1ca37683adc3acf34b30ec122791519497a897d31af32403724a38787a6",
+    "exists": true
+  }
+}

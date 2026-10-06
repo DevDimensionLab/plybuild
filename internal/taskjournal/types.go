@@ -225,27 +225,29 @@ type Task struct {
 	RecordSHA256 string                         `json:"record_sha256"`
 }
 type Snapshot struct {
-	Kind                     string        `json:"kind"`
-	SchemaVersion            int           `json:"schema_version"`
-	SnapshotID               string        `json:"snapshot_id"`
-	AsOf                     string        `json:"as_of"`
-	Workspace                Workspace     `json:"workspace"`
-	Task                     Task          `json:"task"`
-	Sources                  []Source      `json:"sources"`
-	Events                   []Event       `json:"events"`
-	Steps                    []Step        `json:"steps"`
-	Lanes                    []Lane        `json:"lanes"`
-	Observations             []Observation `json:"observations"`
-	Current                  Current       `json:"current"`
-	Coverage                 Coverage      `json:"coverage"`
-	Selection                Selection     `json:"selection"`
-	NextTransitionAuthorized bool          `json:"next_transition_authorized"`
+	Kind                     string                `json:"kind"`
+	SchemaVersion            int                   `json:"schema_version"`
+	SnapshotID               string                `json:"snapshot_id"`
+	AsOf                     string                `json:"as_of"`
+	Workspace                Workspace             `json:"workspace"`
+	Task                     Task                  `json:"task"`
+	Sources                  []Source              `json:"sources"`
+	Events                   []Event               `json:"events"`
+	Steps                    []Step                `json:"steps"`
+	Lanes                    []Lane                `json:"lanes"`
+	Observations             []Observation         `json:"observations"`
+	Current                  Current               `json:"current"`
+	Coverage                 Coverage              `json:"coverage"`
+	Selection                Selection             `json:"selection"`
+	NextTransitionAuthorized bool                  `json:"next_transition_authorized"`
+	sourceCache              map[string]sourceRead `json:"-"`
 }
 type Options struct{ View, Order, RunID, ActorID string }
 type Service struct {
 	Workspace workspace.Dependencies
 	Now       func() time.Time
 	fault     func(string) error
+	readBatch *eventBatchReader
 }
 
 func New(d workspace.Dependencies) Service { return Service{Workspace: d, Now: time.Now} }

@@ -4,6 +4,7 @@
     "./cmd.ExecuteE: added",
     "./cmd.ExitCode: added",
     "./cmd.NewWorkflowNotificationCommand: added",
+    "./pkg/file.RenderBytes: added",
     "package github.com/devdimensionlab/plybuild/cmd/ply: added",
     "package github.com/devdimensionlab/plybuild/test/notification-driver: added"
   ],

@@ -214,6 +214,7 @@ type EpicListResult struct {
 	Epics     []EpicRecord
 }
 type TaskListResult struct {
+	Lifecycles    WorkItemLifecycleSnapshot
 	CurrentTitles map[TaskID]string
 	Titles        map[TaskID]TaskListTitle
 	Filters       TaskListFilters
@@ -1089,7 +1090,11 @@ func ListTasksWithFilters(dependencies Dependencies, filters TaskListFilters) (T
 	if err := validateTaskListProjectFilters(dependencies, root, filters); err != nil {
 		return TaskListResult{}, err
 	}
-	result := TaskListResult{Workspace: root, Filters: filters, CurrentTitles: map[TaskID]string{}, Titles: map[TaskID]TaskListTitle{}}
+	lifecycles, err := readWorkItemLifecycle(root)
+	if err != nil {
+		return TaskListResult{}, err
+	}
+	result := TaskListResult{Workspace: root, Filters: filters, CurrentTitles: map[TaskID]string{}, Titles: map[TaskID]TaskListTitle{}, Lifecycles: lifecycles}
 	epicID := filters.EpicID
 	if epicID != nil {
 		epic, _ := findEpic(registry, *epicID)
@@ -1104,28 +1109,10 @@ func ListTasksWithFilters(dependencies Dependencies, filters TaskListFilters) (T
 			(filters.ProjectID == nil || task.ProjectID == *filters.ProjectID) &&
 			(filters.RepoID == nil || task.RepoID == *filters.RepoID) {
 			result.Tasks = append(result.Tasks, task)
-			registeredTitle := task.Title
-			title := TaskListTitle{Title: &registeredTitle, Source: "registration", Status: "available"}
-			if head := taskContentState(registry, task.ID).ProblemHead; head != nil {
-				title = TaskListTitle{Source: "problem_revision", Status: "unavailable"}
-				m, err := readRegisteredTaskManifest(dependencies.TaskContent, root, registry, head.ManifestSHA256)
-				if err == nil {
-					for _, publication := range registry.TaskContentPublications {
-						if publication.OutcomeRef.ManifestSHA256 == head.ManifestSHA256 {
-							fields := contentFields(m)
-							if contentString(fields, "task_id") != string(task.ID) ||
-								contentString(fields, "publication_key") != publication.PublicationKey ||
-								contentString(fields, "source_draft_sha256") != publication.IntentSHA256 {
-								err = contentError("task_content_integrity_conflict", "problem publication and manifest binding differ", nil)
-							}
-							break
-						}
-					}
-				}
-				if err == nil {
-					value := contentString(contentFields(m), "title")
-					title.Title, title.Status = &value, "available"
-					result.CurrentTitles[task.ID] = value
+			title := readTaskListTitle(dependencies, root, registry, task)
+			if title.Source == "problem_revision" {
+				if title.Title != nil {
+					result.CurrentTitles[task.ID] = *title.Title
 				} else {
 					result.CurrentTitles[task.ID] = "Problem content unavailable"
 				}

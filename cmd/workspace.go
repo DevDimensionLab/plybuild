@@ -46,6 +46,8 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 		return workspace.InvalidArguments(err.Error())
 	})
 	workspaceCommand.AddCommand(initCommand, newWorkspaceProjectCommand(dependencies), newWorkspaceEpicCommand(dependencies), newWorkspaceTaskCommand(dependencies))
+	workspaceCommand.AddCommand(newWorkspaceStatusCommand(dependencies), newWorkspaceAttentionCommand(dependencies), newWorkspaceActivityCommand(dependencies), newWorkspaceRunsCommand(dependencies), newWorkspaceWorktreesCommand(dependencies))
+	workspaceCommand.AddCommand(newWorkspaceOverviewCommand(dependencies))
 	return workspaceCommand
 }
 

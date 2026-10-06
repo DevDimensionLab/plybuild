@@ -1,0 +1,2550 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ply:read-contract:workspace-views-v1",
+  "title": "Ply workspace read projections and metadata responses",
+  "description": "Versioned response contracts. Named fields are required, including explicit nullable facts. Unknown additive object fields are tolerated. Opaque historical event/state strings are not instructions or current runtime assertions.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "scope",
+        "tasks",
+        "freshness",
+        "source_basis",
+        "reasons"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceTaskProgressListReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/task"
+          }
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "source_basis": {
+          "type": "string",
+          "enum": [
+            "registered"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "task",
+        "freshness",
+        "source_basis",
+        "reasons"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceTaskProgressReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "task": {
+          "$ref": "#/$defs/task"
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "source_basis": {
+          "type": "string",
+          "enum": [
+            "registered"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "scope",
+        "epics",
+        "freshness",
+        "source_basis",
+        "reasons"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceEpicListReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "scope": {
+          "$ref": "#/$defs/epic_scope"
+        },
+        "epics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/epic"
+          }
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "source_basis": {
+          "type": "string",
+          "enum": [
+            "registered"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "scope",
+        "items",
+        "freshness",
+        "source_basis",
+        "reasons"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceAttentionReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attention"
+          }
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "source_basis": {
+          "type": "string",
+          "enum": [
+            "registered"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "scope",
+        "tasks",
+        "epics",
+        "attention",
+        "freshness",
+        "source_basis",
+        "reasons"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceOverviewReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "scope": {
+          "$ref": "#/$defs/epic_scope"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/task"
+          }
+        },
+        "epics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/epic"
+          }
+        },
+        "attention": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attention"
+          }
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "source_basis": {
+          "type": "string",
+          "enum": [
+            "registered"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "as_of",
+        "since_utc",
+        "events",
+        "sources",
+        "unknown_time_count",
+        "truncated",
+        "freshness",
+        "coverage",
+        "reasons"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceActivityReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "since_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/activity"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/journal_source"
+          }
+        },
+        "unknown_time_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "coverage": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "as_of",
+        "active_only",
+        "active_meaning",
+        "runs",
+        "freshness",
+        "reasons"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceRunListReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "active_only": {
+          "type": "boolean"
+        },
+        "active_meaning": {
+          "type": "string",
+          "enum": [
+            "unresolved_including_unknown"
+          ]
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run"
+          }
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "as_of",
+        "worktrees",
+        "repositories",
+        "freshness",
+        "reasons"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceWorktreeListReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "worktrees": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/worktree"
+          }
+        },
+        "repositories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "project_id",
+              "repo_id",
+              "freshness",
+              "reasons"
+            ],
+            "properties": {
+              "project_id": {
+                "type": "string"
+              },
+              "repo_id": {
+                "type": "string"
+              },
+              "freshness": {
+                "type": "string",
+                "enum": [
+                  "fresh",
+                  "stale",
+                  "unknown"
+                ]
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "scope",
+        "registry_sha256",
+        "freshness",
+        "registers"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceStatusReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "registered_ply_facts"
+          ]
+        },
+        "registry_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "registers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "registry_sha256",
+              "freshness",
+              "file_count",
+              "reasons"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "enum": [
+                  "projects",
+                  "work_items",
+                  "journal",
+                  "runs"
+                ]
+              },
+              "registry_sha256": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "freshness": {
+                "type": "string",
+                "enum": [
+                  "fresh",
+                  "stale",
+                  "unknown"
+                ]
+              },
+              "file_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "subject_kind",
+        "subject_id",
+        "lifecycle",
+        "revision",
+        "events",
+        "source"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceWorkItemLifecycleReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "subject_kind": {
+          "type": "string",
+          "enum": [
+            "task",
+            "epic"
+          ]
+        },
+        "subject_id": {
+          "type": "string"
+        },
+        "lifecycle": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/lifecycle_event"
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "subject_kind",
+        "subject_id",
+        "lifecycle",
+        "revision",
+        "events",
+        "source",
+        "changed",
+        "event"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceWorkItemLifecycleMutation@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "subject_kind": {
+          "type": "string",
+          "enum": [
+            "task",
+            "epic"
+          ]
+        },
+        "subject_id": {
+          "type": "string"
+        },
+        "lifecycle": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/lifecycle_event"
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "event": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/lifecycle_event"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "project_id",
+        "revision",
+        "companions",
+        "repositories",
+        "events",
+        "source"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceProjectMetadataReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "companions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/companion"
+          }
+        },
+        "repositories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "repo_id",
+              "wrapper"
+            ],
+            "properties": {
+              "repo_id": {
+                "type": "string"
+              },
+              "wrapper": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/metadata_event"
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "project_id",
+        "revision",
+        "companions",
+        "repositories",
+        "events",
+        "source",
+        "changed",
+        "event"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceProjectMetadataMutation@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "companions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/companion"
+          }
+        },
+        "repositories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "repo_id",
+              "wrapper"
+            ],
+            "properties": {
+              "repo_id": {
+                "type": "string"
+              },
+              "wrapper": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/metadata_event"
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "event": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/metadata_event"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  ],
+  "$defs": {
+    "workspace": {
+      "type": "object",
+      "required": [
+        "root"
+      ],
+      "properties": {
+        "root": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "repo_id",
+        "epic_id"
+      ],
+      "properties": {
+        "project_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repo_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "epic_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "epic_scope": {
+      "type": "object",
+      "required": [
+        "project_id"
+      ],
+      "properties": {
+        "project_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "action": {
+      "type": "object",
+      "required": [
+        "source",
+        "kind",
+        "actor",
+        "reason",
+        "severity",
+        "since_utc",
+        "evidence_ids"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "content",
+            "integration",
+            "journal",
+            "readiness"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "resolve_integration_conflict",
+            "inspect_integration",
+            "correct_task_result",
+            "follow_human_qa",
+            "record_human_qa",
+            "check_integration",
+            "inspect_worktree",
+            "inspect_task_basis",
+            "recorded_wait",
+            "resolve_wait"
+          ]
+        },
+        "actor": {
+          "type": "string",
+          "enum": [
+            "human",
+            "agent",
+            "ply"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "attention",
+            "next_step"
+          ]
+        },
+        "since_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "progress": {
+      "type": "object",
+      "required": [
+        "state",
+        "has_progress",
+        "integration_classification",
+        "technical_gate",
+        "human_qa_outcome",
+        "result_count",
+        "task_result_id",
+        "integration_result_id",
+        "next_actions",
+        "last_activity_utc",
+        "freshness",
+        "source_basis",
+        "reasons"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "integrated",
+            "attention",
+            "in_progress",
+            "nothing"
+          ]
+        },
+        "has_progress": {
+          "type": "boolean"
+        },
+        "integration_classification": {
+          "type": "string",
+          "enum": [
+            "exact_effect",
+            "already_integrated",
+            "no_effect",
+            "blocked",
+            "conflict",
+            "partial",
+            "unknown"
+          ]
+        },
+        "technical_gate": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "passed",
+                "good_enough_with_known_debt",
+                "failed",
+                "unknown"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "human_qa_outcome": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "pass",
+                "fail",
+                "blocked"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "task_result_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "integration_result_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        },
+        "last_activity_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "source_basis": {
+          "type": "string",
+          "enum": [
+            "registered"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "task": {
+      "type": "object",
+      "required": [
+        "task_id",
+        "project_id",
+        "repo_id",
+        "parent_epic_id",
+        "worktree_state",
+        "lifecycle",
+        "epic_lifecycle",
+        "title",
+        "title_source",
+        "title_status",
+        "progress"
+      ],
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "repo_id": {
+          "type": "string"
+        },
+        "parent_epic_id": {
+          "type": "string"
+        },
+        "worktree_state": {
+          "type": "string"
+        },
+        "lifecycle": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "epic_lifecycle": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title_source": {
+          "type": "string",
+          "enum": [
+            "registration",
+            "problem_revision"
+          ]
+        },
+        "title_status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "unavailable"
+          ]
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        }
+      },
+      "additionalProperties": true
+    },
+    "epic": {
+      "type": "object",
+      "required": [
+        "epic_id",
+        "project_id",
+        "title",
+        "lifecycle",
+        "base",
+        "worktrees",
+        "task_count",
+        "progress_counts",
+        "last_activity_utc"
+      ],
+      "properties": {
+        "epic_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "lifecycle": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "base": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "repo_id",
+              "revision",
+              "oid",
+              "tree",
+              "freshness",
+              "source_basis"
+            ],
+            "properties": {
+              "repo_id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "oid": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+              },
+              "tree": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+              },
+              "freshness": {
+                "type": "string",
+                "enum": [
+                  "fresh",
+                  "stale",
+                  "unknown"
+                ]
+              },
+              "source_basis": {
+                "type": "string",
+                "enum": [
+                  "registered"
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "worktrees": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "repo_id",
+              "worktree_id",
+              "locator",
+              "ref",
+              "freshness",
+              "source_basis"
+            ],
+            "properties": {
+              "repo_id": {
+                "type": "string"
+              },
+              "worktree_id": {
+                "type": "string"
+              },
+              "locator": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string"
+              },
+              "freshness": {
+                "type": "string",
+                "enum": [
+                  "fresh",
+                  "stale",
+                  "unknown"
+                ]
+              },
+              "source_basis": {
+                "type": "string",
+                "enum": [
+                  "registered"
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "task_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "progress_counts": {
+          "type": "object",
+          "required": [
+            "integrated",
+            "attention",
+            "in_progress",
+            "nothing"
+          ],
+          "properties": {
+            "integrated": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "attention": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "in_progress": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nothing": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        "last_activity_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "attention": {
+      "type": "object",
+      "required": [
+        "subject",
+        "subject_id",
+        "project_id",
+        "epic_id",
+        "title",
+        "kind",
+        "actor",
+        "reason",
+        "severity",
+        "since_utc",
+        "source",
+        "freshness",
+        "evidence_ids"
+      ],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "enum": [
+            "task"
+          ]
+        },
+        "subject_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "epic_id": {
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "resolve_integration_conflict",
+            "inspect_integration",
+            "correct_task_result",
+            "follow_human_qa",
+            "record_human_qa",
+            "check_integration",
+            "inspect_worktree",
+            "recorded_wait",
+            "resolve_wait"
+          ]
+        },
+        "actor": {
+          "type": "string",
+          "enum": [
+            "human"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "attention",
+            "next_step"
+          ]
+        },
+        "since_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "content",
+            "integration",
+            "journal",
+            "readiness"
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "actor": {
+      "type": "object",
+      "required": [
+        "id",
+        "role",
+        "session_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "human",
+            "planner",
+            "developer",
+            "observer",
+            "tool"
+          ]
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "journal_source": {
+      "type": "object",
+      "required": [
+        "source_id",
+        "kind",
+        "locator",
+        "sha256",
+        "sequence",
+        "previous_sha256",
+        "status"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "locator": {
+          "type": "string"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sequence": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "previous_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "activity": {
+      "type": "object",
+      "required": [
+        "event_id",
+        "subject_kind",
+        "subject_id",
+        "task_id",
+        "epic_id",
+        "project_id",
+        "type",
+        "origin",
+        "recorded_at_utc",
+        "occurred_at_utc",
+        "summary",
+        "actor",
+        "run_id",
+        "source_ids",
+        "freshness"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string"
+        },
+        "subject_kind": {
+          "type": "string",
+          "enum": [
+            "task",
+            "epic"
+          ]
+        },
+        "subject_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "epic_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "string",
+          "enum": [
+            "native",
+            "contribution"
+          ]
+        },
+        "recorded_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurred_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "summary": {
+          "type": "string"
+        },
+        "actor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/actor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "task_id",
+        "project_id",
+        "epic_id",
+        "provider",
+        "transport",
+        "logical_session_id",
+        "herdr",
+        "state",
+        "state_freshness",
+        "historical_state",
+        "unresolved",
+        "started_at_utc",
+        "last_seen_utc",
+        "freshness",
+        "sources",
+        "reasons",
+        "return"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "project_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "epic_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "codex",
+                "claude"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transport": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "herdr",
+                "terminal",
+                "headless"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "logical_session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "herdr": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "workspace_id",
+                "tab_id",
+                "pane_id",
+                "terminal_id",
+                "agent_session_id"
+              ],
+              "properties": {
+                "workspace_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "tab_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pane_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "terminal_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "agent_session_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "returned",
+            "stopped",
+            "unknown"
+          ]
+        },
+        "state_freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "unknown"
+          ]
+        },
+        "historical_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unresolved": {
+          "type": "boolean"
+        },
+        "started_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_seen_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "locator",
+              "sha256"
+            ],
+            "properties": {
+              "locator": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "code",
+              "detail"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "detail": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "return": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "state",
+                "report_sha256",
+                "terminal_sha256",
+                "reported_outcome"
+              ],
+              "properties": {
+                "state": {
+                  "type": "string"
+                },
+                "report_sha256": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^sha256:[0-9a-f]{64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "terminal_sha256": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^sha256:[0-9a-f]{64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "reported_outcome": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "worktree": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "repo_id",
+        "locator",
+        "ref",
+        "oid",
+        "clean",
+        "owner",
+        "owner_id",
+        "owner_freshness",
+        "base",
+        "ahead",
+        "behind",
+        "merged_into_base",
+        "last_commit_utc",
+        "locked",
+        "prunable",
+        "bare",
+        "detached",
+        "freshness",
+        "reasons"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "repo_id": {
+          "type": "string"
+        },
+        "locator": {
+          "type": "string"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "oid": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "clean": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "enum": [
+            "project_main",
+            "epic",
+            "task",
+            "none"
+          ]
+        },
+        "owner_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner_freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "base": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "locator",
+                "ref",
+                "oid",
+                "revision"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "registered_epic_base"
+                  ]
+                },
+                "locator": {
+                  "type": "string"
+                },
+                "ref": {
+                  "type": "string"
+                },
+                "oid": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ahead": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "behind": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "merged_into_base": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_commit_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "prunable": {
+          "type": "boolean"
+        },
+        "bare": {
+          "type": "boolean"
+        },
+        "detached": {
+          "type": "boolean"
+        },
+        "freshness": {
+          "type": "object",
+          "required": [
+            "inventory",
+            "identity",
+            "clean",
+            "base_relation",
+            "last_commit_utc"
+          ],
+          "properties": {
+            "inventory": {
+              "type": "string",
+              "enum": [
+                "fresh",
+                "stale",
+                "unknown"
+              ]
+            },
+            "identity": {
+              "type": "string",
+              "enum": [
+                "fresh",
+                "stale",
+                "unknown"
+              ]
+            },
+            "clean": {
+              "type": "string",
+              "enum": [
+                "fresh",
+                "stale",
+                "unknown"
+              ]
+            },
+            "base_relation": {
+              "type": "string",
+              "enum": [
+                "fresh",
+                "stale",
+                "unknown"
+              ]
+            },
+            "last_commit_utc": {
+              "type": "string",
+              "enum": [
+                "fresh",
+                "stale",
+                "unknown"
+              ]
+            }
+          },
+          "additionalProperties": true
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "locator",
+        "sha256",
+        "exists"
+      ],
+      "properties": {
+        "locator": {
+          "type": "string"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exists": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "lifecycle_event": {
+      "type": "object",
+      "required": [
+        "event_id",
+        "sequence",
+        "subject_kind",
+        "subject_id",
+        "from",
+        "to",
+        "actor_claim",
+        "recorded_at_utc"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "subject_kind": {
+          "type": "string",
+          "enum": [
+            "task",
+            "epic"
+          ]
+        },
+        "subject_id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "to": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "actor_claim": {
+          "type": "string"
+        },
+        "recorded_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    },
+    "companion": {
+      "type": "object",
+      "required": [
+        "role",
+        "locator"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "planning",
+            "docs",
+            "other"
+          ]
+        },
+        "locator": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "metadata_event": {
+      "type": "object",
+      "required": [
+        "event_id",
+        "sequence",
+        "operation",
+        "project_id",
+        "repo_id",
+        "role",
+        "locator",
+        "actor_claim",
+        "recorded_at_utc"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "companion_add",
+            "companion_remove",
+            "repo_wrapper_set",
+            "repo_wrapper_clear"
+          ]
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "repo_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "planning",
+                "docs",
+                "other"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "locator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actor_claim": {
+          "type": "string"
+        },
+        "recorded_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -24,6 +24,7 @@ type EpicBaseSummary struct {
 	Freshness string `json:"freshness"`
 }
 type EpicReadbackResult struct {
+	Lifecycle LifecycleState
 	Base      []EpicBaseSummary
 	Workspace string
 	Epic      EpicRecord
@@ -47,6 +48,7 @@ type TaskFreshnessWorktree struct{ Locator, Ref, OID, Tree, GitCommonDir, Clean,
 type TaskFreshnessSource struct{ Ref, OID, Tree, CheckedOutAt string }
 type TaskFreshnessTarget struct{ Kind, Locator, Ref, OID, Tree, GitCommonDir, Clean, InventoryMatch string }
 type TaskReadbackResult struct {
+	Lifecycle                      LifecycleState
 	Content                        canonicaljson.Object
 	Workspace                      string
 	Task                           TaskRecord
@@ -84,7 +86,11 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 	if epic == nil {
 		return EpicReadbackResult{}, workError(ErrorWorkNotFound, fmt.Sprintf("Epic %s is not registered", id), nil)
 	}
-	result := EpicReadbackResult{Workspace: root, Epic: *epic, Ready: true, Reasons: []string{}}
+	lifecycles, err := readWorkItemLifecycle(root)
+	if err != nil {
+		return EpicReadbackResult{}, err
+	}
+	result := EpicReadbackResult{Workspace: root, Epic: *epic, Ready: true, Reasons: []string{}, Lifecycle: lifecycles.Epic(id)}
 	var projects []ProjectRecord
 	var repos []RepoRecord
 	if dependencies.Projects != nil {
@@ -193,6 +199,11 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 		return TaskReadbackResult{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("Task %s has no parent repository binding", id), nil)
 	}
 	result := TaskReadbackResult{Workspace: root, Task: *task, Epic: *epic, ProjectFreshness: "unknown", ParentFreshness: unknownWorktreeFreshness(), SourceFreshness: TaskFreshnessSource{Ref: "unknown", OID: "unknown", Tree: "unknown", CheckedOutAt: "unknown"}, TargetFreshness: unknownTargetFreshness(), Reasons: []string{}, WorktreeReady: task.WorktreeState == WorkItemReady && task.Worktree != nil}
+	lifecycles, err := readWorkItemLifecycle(root)
+	if err != nil {
+		return TaskReadbackResult{}, err
+	}
+	result.Lifecycle = lifecycles.Task(id)
 	if operation, _ := findOperation(registry, id); operation != nil {
 		copyOperation := *operation
 		result.Operation = &copyOperation
@@ -327,30 +338,36 @@ func MarshalEpicReadback(result EpicReadbackResult) ([]byte, error) {
 		}
 		value = append(value, canonicaljson.Member{Name: "base", Value: bases})
 	}
-	return canonicaljson.Marshal(value)
+	return canonicaljson.Marshal(readbackWithLifecycle(value, result.Lifecycle))
 }
 
 func MarshalTaskReadback(result TaskReadbackResult) ([]byte, error) {
 	if result.Content != nil {
-		return canonicaljson.Marshal(result.Content)
+		return canonicaljson.Marshal(readbackWithLifecycle(result.Content, result.Lifecycle))
 	}
 	if result.Integration != nil {
-		return MarshalTaskIntegrationReadback(*result.Integration)
+		return canonicaljson.Marshal(readbackWithLifecycle(result.Integration.Value, result.Lifecycle))
 	}
 	persisted := canonicaljson.Object{{Name: "task_id", Value: string(result.Task.ID)}, {Name: "title", Value: result.Task.Title}, {Name: "description", Value: result.Task.Description}, {Name: "parent_epic_id", Value: string(result.Task.ParentEpicID)}, {Name: "project_id", Value: string(result.Task.ProjectID)}, {Name: "repo_id", Value: string(result.Task.RepoID)}, {Name: "git_common_dir", Value: result.Task.GitCommonDir}, {Name: "worktree_state", Value: string(result.Task.WorktreeState)}, {Name: "worktree", Value: taskWorktreeCanonical(result.Task.Worktree)}, {Name: "operation", Value: operationCanonical(result.Operation)}}
 	observed := canonicaljson.Object{{Name: "project_git_common_dir", Value: pointerValue(result.ProjectGitCommonDir)}, {Name: "parent", Value: observedWorktreeCanonical(result.Parent)}, {Name: "source", Value: observedSourceCanonical(result.Source)}, {Name: "target", Value: observedTargetCanonical(result.Target)}}
 	fresh := canonicaljson.Object{{Name: "project_git_common_dir", Value: result.ProjectFreshness}, {Name: "parent", Value: freshWorktreeCanonical(result.ParentFreshness)}, {Name: "source", Value: freshSourceCanonical(result.SourceFreshness)}, {Name: "target", Value: freshTargetCanonical(result.TargetFreshness)}}
-	return canonicaljson.Marshal(canonicaljson.Object{{Name: "kind", Value: "WorkspaceTaskReadback@1"}, {Name: "workspace", Value: result.Workspace}, {Name: "persisted", Value: persisted}, {Name: "observed", Value: observed}, {Name: "freshness", Value: fresh}, {Name: "worktree_ready", Value: result.WorktreeReady}, {Name: "ready_for_handoff", Value: result.ReadyForHandoff}, {Name: "reasons", Value: stringValues(result.Reasons)}, {Name: "agent_started_by_this_command", Value: false}})
+	return canonicaljson.Marshal(readbackWithLifecycle(canonicaljson.Object{{Name: "kind", Value: "WorkspaceTaskReadback@1"}, {Name: "workspace", Value: result.Workspace}, {Name: "persisted", Value: persisted}, {Name: "observed", Value: observed}, {Name: "freshness", Value: fresh}, {Name: "worktree_ready", Value: result.WorktreeReady}, {Name: "ready_for_handoff", Value: result.ReadyForHandoff}, {Name: "reasons", Value: stringValues(result.Reasons)}, {Name: "agent_started_by_this_command", Value: false}}, result.Lifecycle))
 }
 
-func repoByID(repositories []RepoRecord, id RepoID) (RepoRecord, bool) {
-	for _, repository := range repositories {
-		if repository.ID == id {
-			return repository, true
+func readbackWithLifecycle(value canonicaljson.Object, lifecycle LifecycleState) canonicaljson.Object {
+	if lifecycle == "" {
+		lifecycle = LifecycleActive
+	}
+	out := append(canonicaljson.Object{}, value...)
+	for i := range out {
+		if out[i].Name == "lifecycle" {
+			out[i].Value = string(lifecycle)
+			return out
 		}
 	}
-	return RepoRecord{}, false
+	return append(out, canonicaljson.Member{Name: "lifecycle", Value: string(lifecycle)})
 }
+
 func freshness(value bool) string {
 	if value {
 		return "fresh"

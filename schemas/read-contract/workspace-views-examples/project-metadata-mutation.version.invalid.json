@@ -1,0 +1,62 @@
+{
+  "kind": "WorkspaceProjectMetadataMutation@1",
+  "schema_version": "1",
+  "workspace": {
+    "root": "/work"
+  },
+  "project_id": "p0",
+  "revision": 2,
+  "companions": [
+    {
+      "role": "planning",
+      "locator": "/work/project-0/planning"
+    }
+  ],
+  "repositories": [
+    {
+      "repo_id": "r0",
+      "wrapper": "/work/project-0"
+    }
+  ],
+  "events": [
+    {
+      "event_id": "pme_876b71f4b0c51b47c31ad77048beed84c3eacdc5b396d199cce727cbff029d93",
+      "sequence": 1,
+      "operation": "companion_add",
+      "project_id": "p0",
+      "repo_id": null,
+      "role": "planning",
+      "locator": "/work/project-0/planning",
+      "actor_claim": "acceptance fixture",
+      "recorded_at_utc": "2026-10-06T04:31:58.166496Z"
+    },
+    {
+      "event_id": "pme_118114a5047b8c54680316900a489bea0027910e7c883381892d91aa0710baf4",
+      "sequence": 2,
+      "operation": "repo_wrapper_set",
+      "project_id": "p0",
+      "repo_id": "r0",
+      "role": null,
+      "locator": "/work/project-0",
+      "actor_claim": "acceptance fixture",
+      "recorded_at_utc": "2026-10-06T04:31:58.183193Z"
+    }
+  ],
+  "source": {
+    "locator": "/work/.ply/project-metadata.json",
+    "sha256": "sha256:6f2e660e57f450baf2fd357436b58ede0d20161ac9bd1a29b6d3ec18ebaf3323",
+    "exists": true
+  },
+  "changed": true,
+  "event": {
+    "event_id": "pme_118114a5047b8c54680316900a489bea0027910e7c883381892d91aa0710baf4",
+    "sequence": 2,
+    "operation": "repo_wrapper_set",
+    "project_id": "p0",
+    "repo_id": "r0",
+    "role": null,
+    "locator": "/work/project-0",
+    "actor_claim": "acceptance fixture",
+    "recorded_at_utc": "2026-10-06T04:31:58.183193Z"
+  }
+}

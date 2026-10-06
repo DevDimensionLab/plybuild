@@ -4,6 +4,10 @@ Use the registered Project and Task lists to inspect workspace registrations. Th
 lists include Tasks without queue positions, available worktrees or readable problem
 content. The ready queue remains a separate view.
 
+For richer Home data, progress, lifecycle, activity and inventory, see
+[Workspace views for applications](workspace-views.md). The core modes below retain
+their existing behavior; richer progress is an explicit `--progress` mode.
+
 ```sh
 ply capabilities
 ply capabilities --format json
@@ -63,8 +67,9 @@ No Tasks for Project alpha, repository other-repo are registered in Ply workspac
 
 Successful JSON reads emit one UTF-8 JSON object followed by a newline. No logs or
 progress text are written to stdout. Each new response has a `kind` and integer
-`schema_version: 1`. All documented fields are required, including fields whose value
-is `null`. Consumers must tolerate unknown additive fields. Incompatible shapes or
+`schema_version: 1`. Original fields are required, including fields whose value is
+`null`. Additive lifecycle and navigation fields can be absent in earlier binaries.
+Consumers must tolerate unknown additive fields. Incompatible shapes or
 meanings require a new schema version; storage versions are independent.
 
 Workspace responses contain `workspace.root`, the physical absolute root from the
@@ -86,6 +91,9 @@ nonnegative integer `repo_count`. The count reflects registered repository IDs. 
 Repository contains string `repo_id`, `locator` and `git_common_dir`. Wrapper, locator
 and Git common directory are registered absolute paths. Reading them performs no
 existence check or new Git observation; missing checkouts remain in the results.
+Projects now also include `companions`, and repositories include nullable `wrapper`,
+from explicit [project metadata](workspace-views.md#places-metadata). Older examples
+without these additive fields remain valid.
 
 For example, a registered Project with two repositories produces:
 
@@ -142,6 +150,10 @@ the explicit fields instead of interpreting title text. The Task remains in the 
 when its title is unavailable; this is successful readback with no separate stderr
 warning.
 
+Task rows now also include `lifecycle` (`active`, `parked`, `frozen` or `archived`).
+Older registrations read as `active` without writes. Existing Task/Epic show JSON
+also receives this additive field; ordinary text and ready-mode semantics are unchanged.
+
 Argument, scope and registry failures return a nonzero exit code, empty stdout and an
 English error on stderr. Project operations retain their existing error classes;
 invalid Project output formats use `workspace_project_invalid_arguments`. An
@@ -155,7 +167,10 @@ guaranteed atomic.
 `ply capabilities` works outside a workspace, without profiles, credentials, network
 access, initialization or new files. It reports an explicit
 `coverage: "workspace-core-read"` catalog, complete for the four operation IDs below.
-Other commands, including Spec and Journal operations, are outside this catalog.
+The original `operations` array stays fixed. Additive `read_extensions` advertises
+the [workspace views](workspace-views.md), including progress modes, lifecycle reads
+and the workspace journal. It uses the same operation shape and is independently
+sorted. Other commands, including Spec operations, remain outside the catalog.
 
 The JSON `build` object contains string `version`, nullable string `vcs_revision` and
 nullable boolean `vcs_modified`. Metadata comes from the binary, never from a Git
@@ -190,7 +205,8 @@ has cases that return a JSON body with a nonzero exit.
 
 Invalid capabilities arguments and formats fail with `capabilities_invalid_arguments`,
 nonzero exit, empty stdout and English stderr. Text capabilities output reports the
-build, catalog coverage, operations, modes and formats with stable English labels.
+build, catalog coverage, operations, modes and formats with stable English labels,
+followed by the additive read extensions.
 
 ## Schemas and examples
 

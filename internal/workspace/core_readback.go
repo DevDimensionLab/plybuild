@@ -92,25 +92,27 @@ type projectReadScope struct {
 	ProjectID *ProjectID `json:"project_id"`
 }
 type projectReadRecord struct {
-	ID        ProjectID `json:"project_id"`
-	Name      string    `json:"name"`
-	Wrapper   string    `json:"wrapper"`
-	RepoCount int       `json:"repo_count"`
+	ID         ProjectID          `json:"project_id"`
+	Name       string             `json:"name"`
+	Wrapper    string             `json:"wrapper"`
+	RepoCount  int                `json:"repo_count"`
+	Companions []ProjectCompanion `json:"companions"`
 }
 type repositoryReadRecord struct {
-	ID           RepoID `json:"repo_id"`
-	Locator      string `json:"locator"`
-	GitCommonDir string `json:"git_common_dir"`
+	ID           RepoID  `json:"repo_id"`
+	Locator      string  `json:"locator"`
+	GitCommonDir string  `json:"git_common_dir"`
+	Wrapper      *string `json:"wrapper"`
 }
 
-func projectRead(p ProjectRecord) projectReadRecord {
-	return projectReadRecord{p.ID, p.Name, p.Wrapper, len(p.RepoIDs)}
+func projectRead(p ProjectRecord, metadata ProjectMetadataSnapshot) projectReadRecord {
+	return projectReadRecord{p.ID, p.Name, p.Wrapper, len(p.RepoIDs), metadata.Companions(p.ID)}
 }
 
 func MarshalProjectList(result ProjectListResult) ([]byte, error) {
 	projects := make([]projectReadRecord, 0, len(result.Projects))
 	for _, p := range result.Projects {
-		projects = append(projects, projectRead(p))
+		projects = append(projects, projectRead(p, result.Metadata))
 	}
 	sort.Slice(projects, func(i, j int) bool { return projects[i].ID < projects[j].ID })
 	return json.Marshal(struct {
@@ -125,7 +127,7 @@ func MarshalProjectList(result ProjectListResult) ([]byte, error) {
 func MarshalProject(result ProjectResult) ([]byte, error) {
 	repos := make([]repositoryReadRecord, 0, len(result.Repos))
 	for _, r := range result.Repos {
-		repos = append(repos, repositoryReadRecord{r.ID, r.Locator, r.GitCommonDir})
+		repos = append(repos, repositoryReadRecord{r.ID, r.Locator, r.GitCommonDir, result.Metadata.RepositoryWrapper(r.ID)})
 	}
 	sort.Slice(repos, func(i, j int) bool { return repos[i].ID < repos[j].ID })
 	return json.Marshal(struct {
@@ -135,16 +137,17 @@ func MarshalProject(result ProjectResult) ([]byte, error) {
 		Scope         projectReadScope       `json:"scope"`
 		Project       projectReadRecord      `json:"project"`
 		Repositories  []repositoryReadRecord `json:"repositories"`
-	}{ProjectReadbackKind, CoreReadSchemaVersion, coreReadWorkspace{result.Workspace}, projectReadScope{&result.Project.ID}, projectRead(result.Project), repos})
+	}{ProjectReadbackKind, CoreReadSchemaVersion, coreReadWorkspace{result.Workspace}, projectReadScope{&result.Project.ID}, projectRead(result.Project, result.Metadata), repos})
 }
 
 func MarshalTaskList(result TaskListResult) ([]byte, error) {
 	type taskReadRecord struct {
-		ID            TaskID        `json:"task_id"`
-		ProjectID     ProjectID     `json:"project_id"`
-		RepoID        RepoID        `json:"repo_id"`
-		ParentEpicID  EpicID        `json:"parent_epic_id"`
-		WorktreeState WorkItemState `json:"worktree_state"`
+		ID            TaskID         `json:"task_id"`
+		ProjectID     ProjectID      `json:"project_id"`
+		RepoID        RepoID         `json:"repo_id"`
+		ParentEpicID  EpicID         `json:"parent_epic_id"`
+		WorktreeState WorkItemState  `json:"worktree_state"`
+		Lifecycle     LifecycleState `json:"lifecycle"`
 		TaskListTitle
 	}
 	tasks := make([]taskReadRecord, 0, len(result.Tasks))
@@ -153,7 +156,7 @@ func MarshalTaskList(result TaskListResult) ([]byte, error) {
 		if !ok {
 			return nil, workError(ErrorWorkIO, fmt.Sprintf("Task %s title read facts are missing", t.ID), nil)
 		}
-		tasks = append(tasks, taskReadRecord{t.ID, t.ProjectID, t.RepoID, t.ParentEpicID, t.WorktreeState, title})
+		tasks = append(tasks, taskReadRecord{t.ID, t.ProjectID, t.RepoID, t.ParentEpicID, t.WorktreeState, result.Lifecycles.Task(t.ID), title})
 	}
 	sort.Slice(tasks, func(i, j int) bool { return tasks[i].ID < tasks[j].ID })
 	return json.Marshal(struct {

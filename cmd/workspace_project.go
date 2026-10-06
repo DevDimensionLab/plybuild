@@ -15,7 +15,7 @@ type workspaceProjectServices struct {
 }
 
 func newWorkspaceProjectCommand(dependencies workspace.Dependencies) *cobra.Command {
-	return newWorkspaceProjectCommandWithServices(workspaceProjectServices{
+	command := newWorkspaceProjectCommandWithServices(workspaceProjectServices{
 		add: func(input workspace.ProjectAddInput) (workspace.ProjectResult, error) {
 			return workspace.AddProject(dependencies, input)
 		},
@@ -26,6 +26,8 @@ func newWorkspaceProjectCommand(dependencies workspace.Dependencies) *cobra.Comm
 			return workspace.ListProjects(dependencies)
 		},
 	})
+	addWorkspaceProjectMetadataCommands(command, dependencies)
+	return command
 }
 
 func newWorkspaceProjectCommandWithServices(services workspaceProjectServices) *cobra.Command {

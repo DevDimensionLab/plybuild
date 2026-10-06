@@ -29,7 +29,7 @@ func (s *Snapshot) source(kind, path string, expected *string, seq *int, prev *s
 	}
 	status := "valid"
 	var observed *string
-	h, e := sourceHash(path)
+	h, e := cachedSourceHash(s.sourceCache, path)
 	if e != nil {
 		status = "invalid"
 		if os.IsNotExist(e) {
@@ -70,18 +70,27 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, map[string]RunB
 	root := b.Workspace.Root
 	t := b.Task
 	out := Snapshot{Kind: "ply.workspace.task-journal-snapshot", SchemaVersion: 1, AsOf: s.Now().UTC().Format(time.RFC3339Nano), Workspace: Workspace{workspaceID(root, b.Workspace.MarkerSHA256), root, b.Workspace.MarkerSHA256}, Task: Task{string(t.ID), t.Title, string(t.ProjectID), string(t.RepoID), string(t.ParentEpicID), t.Worktree, digest(t)}, Sources: []Source{}, Events: []Event{}, Steps: []Step{}, Lanes: []Lane{}, Observations: []Observation{}, Coverage: Coverage{"complete", []Reason{}, []string{}, []string{}}, Selection: Selection{Order: "occurred", EventIDs: []string{}}, Current: Current{Axes: map[string]Axis{}, NextAction: NextAction{"Inspect the evidence and clarify the next action with the Task owner.", nil, []string{}}}}
+	if s.readBatch != nil {
+		out.sourceCache = s.readBatch.sources
+	}
 	marker := out.source("workspace", filepath.Join(root, ".ply", "workspace.yaml"), &b.Workspace.MarkerSHA256, nil, nil)
 	registry := out.source("task_registry", b.RegistryLocator, &b.Registry.RawSHA256, nil, nil)
 	state := nativeEvent("task_state", string(t.ID), "Task state: "+t.Title, t, registry, nil)
 	state.SourceIDs = append(state.SourceIDs, marker)
 	out.Events = append(out.Events, state)
-	if t.Worktree != nil {
+	if t.Worktree != nil && s.readBatch == nil {
 		g, e := workspace.ObserveTaskJournalWorktree(s.Workspace, t.Worktree.Locator)
 		if e == nil && g.Clean && g.InventoryMatch && g.Locator == t.Worktree.Locator && g.Ref == t.Worktree.Ref && g.GitCommonDir == t.GitCommonDir {
 			out.Current.Candidate = candidate(t, g.OID, g.Tree)
 		} else {
 			out.reason("candidate_unknown", "The Task worktree is missing, dirty, changed in identity, or could not be observed.", registry)
 		}
+	}
+	lifecycle, lifecycleErr := s.lifecycle(root)
+	if lifecycleErr != nil {
+		out.reason("lifecycle_unavailable", lifecycleErr.Error())
+	} else {
+		appendLifecycleEvents(&out, lifecycle, "task", string(t.ID))
 	}
 	for _, p := range b.Registry.TaskContentPublications {
 		if p.TaskID != t.ID {
@@ -106,7 +115,7 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, map[string]RunB
 		if p.Plan.TaskID != t.ID {
 			continue
 		}
-		if _, e := workspace.ValidateTaskJournalPreparation(s.Workspace, b, p.ID); e != nil {
+		if _, e := s.validatePreparation(b, p.ID); e != nil {
 			out.reason("source_invalid", e.Error(), registry)
 			continue
 		}
@@ -182,21 +191,15 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, map[string]RunB
 	}
 	runs := map[string]RunBinding{}
 	dir := filepath.Join(root, ".ply", "task-runs", "v1", "runs")
-	fd, e := openDir(dir, false)
+	entries, e := s.nativeRunEntries(dir)
 	if e != nil && !os.IsNotExist(e) {
 		out.reason("source_invalid", e.Error())
 	}
 	if e == nil {
-		entries, err := fd.ReadDir(-1)
-		fd.Close()
-		if err != nil {
-			out.reason("source_invalid", err.Error())
-		}
-		sortEntries(entries)
 		for _, entry := range entries {
 			id := entry.Name()
 			path := filepath.Join(dir, id, "request.json")
-			rb, re := readFile(path, 1<<20)
+			rb, re := s.nativeRunRequest(path)
 			if re != nil {
 				out.reason("source_invalid", "Run request unavailable: "+path)
 				continue
@@ -211,12 +214,12 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, map[string]RunB
 				continue
 			}
 			rs := out.source("run_request", path, ptr("sha256:"+hash(rb)), nil, nil)
-			prep, ve := workspace.ValidateTaskJournalPreparation(s.Workspace, b, request.PreparationID)
+			prep, ve := s.validatePreparation(b, request.PreparationID)
 			if pe != nil || projection.Basis == nil || ve != nil || request.WorkspaceRoot != root || request.PreparationSHA256 != "sha256:"+digest(prep) || prep.Plan.Workspace.Root != root || prep.Plan.Workspace.MarkerSHA256 != b.Workspace.MarkerSHA256 || projection.Basis.TaskID != t.ID || prep.Outcome == nil || projection.Basis.TaskWorktreeID != prep.Outcome.WorktreeID || projection.Worktree != prep.Plan.WorktreePath || projection.OID != prep.Plan.ParentOID || projection.Ref != "refs/heads/"+prep.Plan.Branch || projection.Basis.Spec != prep.Plan.Spec || projection.Basis.Selection != prep.Plan.Selection || projection.Basis.Problem != prep.Plan.Problem || projection.Basis.Assessment != prep.Plan.Assessment {
 				out.markUnbound(rs, "Run request does not match the exact historical Task preparation")
 				continue
 			}
-			j, je := taskrun.ReadProcessJournal(taskrun.SystemDependencies(s.Workspace), root, id)
+			j, je := s.nativeRunJournal(root, id)
 			if j.Request.RequestKey == "" || taskrun.RunID(request.RequestKey) != id || !equal(request, j.Request) || j.Binding != nil && !equal(j.Binding.Preparation, prep) {
 				out.markUnbound(rs, "Run identity or preserved preparation differs")
 				continue

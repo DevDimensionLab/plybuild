@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ply:read-contract:workspace-task-list-readback-v1",
   "title": "WorkspaceTaskListReadback@1",
-  "description": "Public CLI response contract. Every named field is required; unknown additive fields are allowed.",
+  "description": "Public CLI response contract. Original required fields are retained; additive navigation and lifecycle fields are optional for compatibility with earlier binaries. Unknown additive fields are allowed.",
   "type": "object",
   "required": [
     "kind",
@@ -121,6 +121,15 @@
           "enum": [
             "available",
             "unavailable"
+          ]
+        },
+        "lifecycle": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
           ]
         }
       },

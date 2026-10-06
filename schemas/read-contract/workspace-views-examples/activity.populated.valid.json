@@ -1,0 +1,222 @@
+{
+  "kind": "WorkspaceActivityReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "as_of": "2026-10-06T04:31:58.785026Z",
+  "since_utc": "2026-10-06T04:31:57Z",
+  "events": [
+    {
+      "event_id": "lce_35d8590cf923c7dfcc88a821df51b84a62dd582ca0fde96877de651c20647771",
+      "subject_kind": "epic",
+      "subject_id": "e0",
+      "task_id": null,
+      "epic_id": "e0",
+      "project_id": "p0",
+      "type": "lifecycle_changed",
+      "origin": "native",
+      "recorded_at_utc": "2026-10-06T04:31:58.051722Z",
+      "occurred_at_utc": null,
+      "summary": "Lifecycle: archived -> active",
+      "actor": {
+        "id": "acceptance fixture",
+        "role": "tool",
+        "session_id": null
+      },
+      "run_id": null,
+      "source_ids": [
+        "src_9d850860cad0d002400f282905fed0934870ed58cd82c822e31d9c31971c1e78"
+      ],
+      "freshness": "fresh"
+    },
+    {
+      "event_id": "lce_bd9c66bb7636957749240d773f24d5b2d62877d838d373f4a62222003bcc734e",
+      "subject_kind": "epic",
+      "subject_id": "e0",
+      "task_id": null,
+      "epic_id": "e0",
+      "project_id": "p0",
+      "type": "lifecycle_changed",
+      "origin": "native",
+      "recorded_at_utc": "2026-10-06T04:31:57.942337Z",
+      "occurred_at_utc": null,
+      "summary": "Lifecycle: active -> archived",
+      "actor": {
+        "id": "acceptance fixture",
+        "role": "tool",
+        "session_id": null
+      },
+      "run_id": null,
+      "source_ids": [
+        "src_9d850860cad0d002400f282905fed0934870ed58cd82c822e31d9c31971c1e78"
+      ],
+      "freshness": "fresh"
+    },
+    {
+      "event_id": "lce_2f678c0291f6e71ea2d3bc515be07697bbab948529130560bc95eb2cb1f8e852",
+      "subject_kind": "task",
+      "subject_id": "t0-0",
+      "task_id": "t0-0",
+      "epic_id": "e0",
+      "project_id": "p0",
+      "type": "lifecycle_changed",
+      "origin": "native",
+      "recorded_at_utc": "2026-10-06T04:31:57.922335Z",
+      "occurred_at_utc": null,
+      "summary": "Lifecycle: frozen -> active",
+      "actor": {
+        "id": "acceptance fixture",
+        "role": "tool",
+        "session_id": null
+      },
+      "run_id": null,
+      "source_ids": [
+        "src_9d850860cad0d002400f282905fed0934870ed58cd82c822e31d9c31971c1e78"
+      ],
+      "freshness": "fresh"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "src_0ba8780b5180915131a6afe37be2486f3b9087603ed739da25aa4f775366ab7a",
+      "kind": "task_content_document",
+      "locator": "/work/.ply/task-content/v1/objects/sha256/296f80ca781c09f153d26c6e9eb1267cc22842b553e586aabd5b7d81ca165b81",
+      "sha256": "296f80ca781c09f153d26c6e9eb1267cc22842b553e586aabd5b7d81ca165b81",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_29208a22dd68a92bfae328816ac4ca0c5b13647ce3629550cf0776db06280ee8",
+      "kind": "task_content",
+      "locator": "/work/.ply/task-content/v1/manifests/sha256/976cfd594b380c6fdaef721aafde0334a53cfeb01bdf1470688daddf3e8dd7b1.json",
+      "sha256": "976cfd594b380c6fdaef721aafde0334a53cfeb01bdf1470688daddf3e8dd7b1",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_6e83d04bf43330923af5282b5719e251c5915fc8f204770588a96216702473d6",
+      "kind": "contribution",
+      "locator": "/work/.ply/task-process/v1/t0-0/000000001.json",
+      "sha256": "3a56febd8fc69f1f31f77bfe4106bf06890233635b8c5aee38e49d0e74c96681",
+      "sequence": 1,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_712255682d002245d09da911989ae6f2fc48ac7460bec0a6bf5310d40bdd5f56",
+      "kind": "task_content_request",
+      "locator": "/work/.ply/task-content/v1/requests/sha256/ca343922abd75b937eda5572d2b6f409d5116d8581d0406a0634efad2d89c8ba.json",
+      "sha256": "ca343922abd75b937eda5572d2b6f409d5116d8581d0406a0634efad2d89c8ba",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_7dfa784331b7e6cd250a6755e1ca2280bccdf3ce5a42361d6f72c7fc88faf4ed",
+      "kind": "task_content_request",
+      "locator": "/work/.ply/task-content/v1/requests/sha256/bae209a1940c7e4f759f0604317855d4f96e04ecd2620c2d7aa7827fba504e88.json",
+      "sha256": "bae209a1940c7e4f759f0604317855d4f96e04ecd2620c2d7aa7827fba504e88",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_9d850860cad0d002400f282905fed0934870ed58cd82c822e31d9c31971c1e78",
+      "kind": "lifecycle",
+      "locator": "/work/.ply/work-item-lifecycle.json",
+      "sha256": "2904f1ca37683adc3acf34b30ec122791519497a897d31af32403724a38787a6",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_9f7f35a25cbd826c32a0262b922b39c7c5469cc6bc830187741e7f5fd487fc87",
+      "kind": "artifact",
+      "locator": "/fixture-inputs/synthetic-wait.md",
+      "sha256": "1b14c2e22b9a6178b1375eaf78f719c19a20444884abb1eccfbc64855712cc69",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_aa9e8c247856d1d9d486b9329fb1c3e386407183b17a3876bc71d01897311f52",
+      "kind": "task_content_request",
+      "locator": "/work/.ply/task-content/v1/requests/sha256/320177b944eac93dd3702641c3d534c06920127581a6cec73c1097bf63e9d12a.json",
+      "sha256": "320177b944eac93dd3702641c3d534c06920127581a6cec73c1097bf63e9d12a",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_ab047f9f5bbfe0ab44996769c1a96c9c7bc94efa42287f4a9d5c6ecd4cc9e474",
+      "kind": "task_content_request",
+      "locator": "/work/.ply/task-content/v1/requests/sha256/d10e8832231be4fbce258b2842ad9fd7deecb03ac4dc17244312076b4832d006.json",
+      "sha256": "d10e8832231be4fbce258b2842ad9fd7deecb03ac4dc17244312076b4832d006",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_ab7a4a60d74b575fc6d96e58ef996e3c5caa25ef99c2a5c81611fd0b5b49f65a",
+      "kind": "task_content_document",
+      "locator": "/work/.ply/task-content/v1/objects/sha256/dee08e855ae468a8d585e43c108ec2d81be1a023f11504b70b545634c16cca8c",
+      "sha256": "dee08e855ae468a8d585e43c108ec2d81be1a023f11504b70b545634c16cca8c",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_b422e64f817ef1ece70ac356ae9380c01ca631f0909ba8011f822a73d1bfcc39",
+      "kind": "task_content_document",
+      "locator": "/work/.ply/task-content/v1/objects/sha256/798898cf650fe455fa51d8e50a625d0ed3abd17347deba77948c40c474010f35",
+      "sha256": "798898cf650fe455fa51d8e50a625d0ed3abd17347deba77948c40c474010f35",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_b73a4a8533bf97926f546cceb4476386e7e84719ea958804919cbbd34fa760c5",
+      "kind": "task_content_document",
+      "locator": "/work/.ply/task-content/v1/objects/sha256/921fda8e04c186c89ed506cad64b05d21fe1c86286ace64d0f28d3f7f86ee4fd",
+      "sha256": "921fda8e04c186c89ed506cad64b05d21fe1c86286ace64d0f28d3f7f86ee4fd",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_b9b190c77069aa57b5bfaf19774f99f0be14a52d656b9034c0f59a201edbd68a",
+      "kind": "task_content",
+      "locator": "/work/.ply/task-content/v1/manifests/sha256/8e4e87e688c06b9429a2cfd6d43bc855ee689219b972ae2205b48d9a94392993.json",
+      "sha256": "8e4e87e688c06b9429a2cfd6d43bc855ee689219b972ae2205b48d9a94392993",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_dc2b3a27fbbf18d1b5662f7bdf81b809dc6992e9b755c2d71fa509fc81f20cbe",
+      "kind": "task_content",
+      "locator": "/work/.ply/task-content/v1/manifests/sha256/f2651fbed55cefd8eb1d1d745d17b3f624b8fe3c94175c1ce9c2d0a6bdc403fc.json",
+      "sha256": "f2651fbed55cefd8eb1d1d745d17b3f624b8fe3c94175c1ce9c2d0a6bdc403fc",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    },
+    {
+      "source_id": "src_f7d6ef3eb6724cd66820b7b4c408f7b47539583904bdc9ea6299a6d4d6f00a62",
+      "kind": "task_content",
+      "locator": "/work/.ply/task-content/v1/manifests/sha256/1529c53b09c6fc6de532c87c3b091d7964aa24d40d381ad234e272ac2d7f0973.json",
+      "sha256": "1529c53b09c6fc6de532c87c3b091d7964aa24d40d381ad234e272ac2d7f0973",
+      "sequence": null,
+      "previous_sha256": null,
+      "status": "valid"
+    }
+  ],
+  "unknown_time_count": 50,
+  "truncated": false,
+  "freshness": "fresh",
+  "coverage": "complete",
+  "reasons": []
+}

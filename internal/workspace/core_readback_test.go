@@ -159,7 +159,12 @@ func TestCoreReadSerializersPreserveStoredPathsSortAndEmptyArrays(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(b), `"repositories":[{"repo_id":"a","locator":"/missing A","git_common_dir":"/A.git"}`) {
+	if err := json.Unmarshal(b, &value); err != nil {
+		t.Fatal(err)
+	}
+	repoRows := value["repositories"].([]any)
+	firstRepo := repoRows[0].(map[string]any)
+	if firstRepo["repo_id"] != "a" || firstRepo["locator"] != "/missing A" || firstRepo["git_common_dir"] != "/A.git" || firstRepo["wrapper"] != nil {
 		t.Fatalf("repos=%s", b)
 	}
 	for _, tc := range []struct {

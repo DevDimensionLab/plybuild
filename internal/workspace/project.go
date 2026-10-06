@@ -49,11 +49,13 @@ type ProjectResult struct {
 	Project   ProjectRecord
 	Repos     []RepoRecord
 	Created   bool
+	Metadata  ProjectMetadataSnapshot
 }
 
 type ProjectListResult struct {
 	Workspace string
 	Projects  []ProjectRecord
+	Metadata  ProjectMetadataSnapshot
 }
 
 const (
@@ -242,7 +244,11 @@ func ShowProject(dependencies Dependencies, id ProjectID) (ProjectResult, error)
 	}
 	for _, project := range projects {
 		if project.ID == id {
-			return ProjectResult{Workspace: workspaceRoot, Project: project, Repos: repositoriesForProject(project, repositories)}, nil
+			metadata, err := readProjectMetadata(workspaceRoot)
+			if err != nil {
+				return ProjectResult{}, err
+			}
+			return ProjectResult{Workspace: workspaceRoot, Project: project, Repos: repositoriesForProject(project, repositories), Metadata: metadata}, nil
 		}
 	}
 	return ProjectResult{}, projectError(ErrorProjectNotFound, fmt.Sprintf("project %s is not registered in Ply workspace %s", id, workspaceRoot), nil)
@@ -253,7 +259,11 @@ func ListProjects(dependencies Dependencies) (ProjectListResult, error) {
 	if err != nil {
 		return ProjectListResult{}, err
 	}
-	return ProjectListResult{Workspace: workspaceRoot, Projects: projects}, nil
+	metadata, err := readProjectMetadata(workspaceRoot)
+	if err != nil {
+		return ProjectListResult{}, err
+	}
+	return ProjectListResult{Workspace: workspaceRoot, Projects: projects, Metadata: metadata}, nil
 }
 
 func projectSnapshot(dependencies Dependencies) (string, []ProjectRecord, []RepoRecord, error) {

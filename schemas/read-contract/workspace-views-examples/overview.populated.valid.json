@@ -1,0 +1,109 @@
+{
+  "kind": "WorkspaceOverviewReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": {
+    "project_id": null
+  },
+  "tasks": [
+    {
+      "task_id": "t0-0",
+      "project_id": "p0",
+      "repo_id": "r0",
+      "parent_epic_id": "e0",
+      "worktree_state": "unbound",
+      "lifecycle": "active",
+      "epic_lifecycle": "active",
+      "title": "Task 0-0",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "progress": {
+        "state": "in_progress",
+        "has_progress": true,
+        "integration_classification": "unknown",
+        "technical_gate": null,
+        "human_qa_outcome": null,
+        "result_count": 0,
+        "task_result_id": null,
+        "integration_result_id": null,
+        "next_actions": [
+          {
+            "source": "journal",
+            "kind": "recorded_wait",
+            "actor": "human",
+            "reason": "Synthetic question for acceptance",
+            "severity": "next_step",
+            "since_utc": "2026-10-06T04:31:57.700551Z",
+            "evidence_ids": [
+              "jev_2c415ecf219c1a8d13d803c83b959f89e574a314dd05555c4390f76da8776b9a"
+            ]
+          }
+        ],
+        "last_activity_utc": "2026-10-06T04:31:57.922335Z",
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      }
+    }
+  ],
+  "epics": [
+    {
+      "epic_id": "e0",
+      "project_id": "p0",
+      "title": "Epic 0",
+      "lifecycle": "active",
+      "base": [
+        {
+          "repo_id": "r0",
+          "revision": 1,
+          "oid": "c8d9a11986f4d04f6ad5fd0ddf449064a184bdf3",
+          "tree": "4b825dc642cb6eb9a060e54bf8d69288fbee4904",
+          "freshness": "fresh",
+          "source_basis": "registered"
+        }
+      ],
+      "worktrees": [
+        {
+          "repo_id": "r0",
+          "worktree_id": "wt_cf5673e6170b9eec56fdd3e91d94155e",
+          "locator": "/work/project-0/epic",
+          "ref": "refs/heads/epic",
+          "freshness": "fresh",
+          "source_basis": "registered"
+        }
+      ],
+      "task_count": 1,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 1,
+        "nothing": 0
+      },
+      "last_activity_utc": "2026-10-06T04:31:58.051722Z"
+    }
+  ],
+  "attention": [
+    {
+      "subject": "task",
+      "subject_id": "t0-0",
+      "project_id": "p0",
+      "epic_id": "e0",
+      "title": "Task 0-0",
+      "kind": "recorded_wait",
+      "actor": "human",
+      "reason": "Synthetic question for acceptance",
+      "severity": "next_step",
+      "since_utc": "2026-10-06T04:31:57.700551Z",
+      "source": "journal",
+      "freshness": "fresh",
+      "evidence_ids": [
+        "jev_2c415ecf219c1a8d13d803c83b959f89e574a314dd05555c4390f76da8776b9a"
+      ]
+    }
+  ],
+  "source_basis": "registered",
+  "freshness": "fresh",
+  "reasons": []
+}

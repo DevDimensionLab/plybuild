@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ply:read-contract:workspace-project-readback-v1",
   "title": "WorkspaceProjectReadback@1",
-  "description": "Public CLI response contract. Every named field is required; unknown additive fields are allowed.",
+  "description": "Public CLI response contract. Original required fields are retained; additive navigation and lifecycle fields are optional for compatibility with earlier binaries. Unknown additive fields are allowed.",
   "type": "object",
   "required": [
     "kind",
@@ -83,6 +83,30 @@
         "repo_count": {
           "type": "integer",
           "minimum": 0
+        },
+        "companions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "role",
+              "locator"
+            ],
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "planning",
+                  "docs",
+                  "other"
+                ]
+              },
+              "locator": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
         }
       },
       "additionalProperties": true
@@ -105,6 +129,13 @@
         "git_common_dir": {
           "type": "string",
           "description": "Registered absolute Git common directory; no new Git observation."
+        },
+        "wrapper": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Explicit registered repository wrapper; not a current filesystem observation."
         }
       },
       "additionalProperties": true

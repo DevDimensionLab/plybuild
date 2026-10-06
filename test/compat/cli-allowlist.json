@@ -372,7 +372,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Show the built-in catalog for project list/show and Task list/show, including the separate ready mode. Coverage is workspace-core-read, not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
+        "long": "Show the stable workspace-core-read catalog and additive read_extensions for progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
         "path": "ply capabilities",
         "runnable": true,
         "short": "Show supported workspace core read contracts",
@@ -2463,6 +2463,102 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workspace attention --format json\n  ply workspace attention --project ply",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "epic",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by Epic ID"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for attention"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by Project ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by repository ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read explicit human actions for active Tasks in active Epics. Tasks without execution progress and parked, frozen or archived work are excluded. Registered results and process reports keep separate provenance; this command does not perform live Git or agent checks.",
+        "path": "ply workspace attention",
+        "runnable": true,
+        "short": "List active Tasks that need a human action",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "attention"
+      },
+      "kind": "command_added",
+      "path": "ply workspace attention"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workspace epic adopt ply-agentic-workflow-support --title \"Ply agentic workflow support\" --project ply --repo ply --worktree ../ply/ply_agentic_workflow_support --ref refs/heads/ply_agentic_workflow_support --expected-oid 54f3631cbea789f25a4134945c7ca16d343139df",
         "flags": [
           {
@@ -3024,7 +3120,151 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace epic list",
+        "example": "  ply workspace epic lifecycle set an-item archived --actor codex\n  ply workspace epic lifecycle set an-item active --actor human --expected-revision 3 --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "actor",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "recorder identity or actor claim"
+          },
+          {
+            "annotations": {},
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "require this workspace lifecycle revision before writing"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for set"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record one lifecycle change and the supplied actor claim in an atomic history update. Repeating the current state writes nothing. --expected-revision checks the shared workspace lifecycle revision, including changes to other items. Actor claims describe the recorder and do not attest human QA or grant authority.",
+        "path": "ply workspace epic lifecycle set",
+        "runnable": true,
+        "short": "Record an explicit lifecycle change",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "set <epic-id> <active|parked|frozen|archived>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace epic lifecycle set"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace epic lifecycle show an-item --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read the current lifecycle and complete change history for one registered Epic. Older items default to active without writing metadata. Revision is the shared workspace lifecycle revision.",
+        "path": "ply workspace epic lifecycle show",
+        "runnable": true,
+        "short": "Show lifecycle and its recorded changes",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <epic-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace epic lifecycle show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace epic lifecycle show an-item\n  ply workspace epic lifecycle set an-item archived --actor codex",
         "flags": [
           {
             "annotations": {
@@ -3041,7 +3281,77 @@
             "shorthand": "h",
             "shorthand_deprecated": "",
             "type": "bool",
+            "usage": "help for lifecycle"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record active, parked, frozen, or archived lifecycle with an actor and durable history. Lifecycle organizes lists and attention; it does not stop agents, change Git, or authorize workflow transitions.",
+        "path": "ply workspace epic lifecycle",
+        "runnable": false,
+        "short": "Organize Epic lifecycle",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "lifecycle"
+      },
+      "kind": "command_added",
+      "path": "ply workspace epic lifecycle"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace epic list\n  ply workspace epic list --format json\n  ply workspace epic list --project ply",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
             "usage": "help for list"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by Project ID"
           }
         ],
         "has_args_validator": true,
@@ -3050,7 +3360,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "List Epics registered in the containing Ply workspace.",
+        "long": "List Epics registered in the containing Ply workspace. JSON includes current registered bases, worktrees, lifecycle and Task progress counts, including empty Epics. No live Git checks are performed.",
         "path": "ply workspace epic list",
         "runnable": true,
         "short": "List registered Epics",
@@ -3213,6 +3523,172 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workspace journal recent --since 24h --format json\n  ply workspace journal recent --project ply --limit 50",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for recent"
+          },
+          {
+            "annotations": {},
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "limit",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "maximum events (0 means all)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by Project ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "since",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "inclusive UTC timestamp or positive duration (for example 24h)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read recorded activity across Tasks and Epic lifecycle changes. Use --since with an inclusive UTC timestamp or a positive duration, such as 24h. Undated events are shown last without a time filter and counted separately when filtered. A limit is explicit; zero means all events. This is a registered history, not a live Git log.",
+        "path": "ply workspace journal recent",
+        "runnable": true,
+        "short": "List workspace activity in reverse recorded order",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "recent"
+      },
+      "kind": "command_added",
+      "path": "ply workspace journal recent"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace overview --format json\n  ply workspace overview --project ply",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for overview"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by Project ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read registered Task progress, Epic summaries and human attention from one shared source capture. This is the inexpensive Home view: no live Git, Herdr or process checks, locks or writes. Progress keeps native facts separate from agent reports.",
+        "path": "ply workspace overview",
+        "runnable": true,
+        "short": "Read Tasks, Epics and human attention together",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "overview"
+      },
+      "kind": "command_added",
+      "path": "ply workspace overview"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workspace project add ply --name Ply --wrapper ../ply --repo ply=../ply/main",
         "flags": [
           {
@@ -3352,6 +3828,292 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workspace project companion add ply --role planning --path ./ply/planning --actor codex",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "actor",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "recorder identity or actor claim"
+          },
+          {
+            "annotations": {},
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "require this workspace project metadata revision before writing"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for add"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "path",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "companion directory path"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "role",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "companion role (planning, docs, or other)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Register an explicit companion directory. The actor is a recorded claim. An unchanged registration creates no history. --expected-revision checks the shared workspace project metadata revision before a change. No directories or Git state are changed.",
+        "path": "ply workspace project companion add",
+        "runnable": true,
+        "short": "Register an explicit companion directory",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "add <project-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project companion add"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project companion add ply --role planning --path ./ply/planning --actor codex",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for companion"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Manage explicit companion directory metadata without creating directories or registering repositories. Registration validates a physical directory and survives later directory removal.",
+        "path": "ply workspace project companion",
+        "runnable": false,
+        "short": "Register planning, documentation, and other companion directories",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "companion"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project companion"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project companion remove ply --role planning --path ./ply/planning --actor codex",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "actor",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "recorder identity or actor claim"
+          },
+          {
+            "annotations": {},
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "require this workspace project metadata revision before writing"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for remove"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "path",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "companion directory path"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "role",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "companion role (planning, docs, or other)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Remove a companion registration without deleting its directory. The actor is a recorded claim. An unchanged registration creates no history. --expected-revision checks the shared workspace project metadata revision before a change. No directories or Git state are changed.",
+        "path": "ply workspace project companion remove",
+        "runnable": true,
+        "short": "Remove a companion registration without deleting its directory",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "remove <project-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project companion remove"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workspace project list\n  ply workspace project list --format json",
         "flags": [
           {
@@ -3409,6 +4171,376 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workspace project metadata show ply --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for metadata"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Inspect registered project navigation metadata. Reading does not scan or require the registered directories to exist.",
+        "path": "ply workspace project metadata",
+        "runnable": false,
+        "short": "Inspect explicit project companions and repository wrappers",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "metadata"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project metadata"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project metadata show ply --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read explicit companion directories and repository wrappers with their recorded change history. Missing metadata gives empty companions and null repository wrappers. Revision is shared across project metadata in this workspace.",
+        "path": "ply workspace project metadata show",
+        "runnable": true,
+        "short": "Show project navigation metadata and its history",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <project-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project metadata show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project repo-wrapper clear ply --repo ply --actor codex",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "actor",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "recorder identity or actor claim"
+          },
+          {
+            "annotations": {},
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "require this workspace project metadata revision before writing"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for clear"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID belonging to the project"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Clear a repository wrapper registration without deleting files. The actor is a recorded claim. An unchanged registration creates no history. --expected-revision checks the shared workspace project metadata revision before a change. No directories or Git state are changed.",
+        "path": "ply workspace project repo-wrapper clear",
+        "runnable": true,
+        "short": "Clear a repository wrapper registration without deleting files",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "clear <project-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project repo-wrapper clear"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply --actor codex",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "actor",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "recorder identity or actor claim"
+          },
+          {
+            "annotations": {},
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "require this workspace project metadata revision before writing"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for set"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID belonging to the project"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "wrapper",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "existing directory containing the registered repository locator"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Register the physical directory enclosing a repository. The actor is a recorded claim. An unchanged registration creates no history. --expected-revision checks the shared workspace project metadata revision before a change. No directories or Git state are changed.",
+        "path": "ply workspace project repo-wrapper set",
+        "runnable": true,
+        "short": "Register the physical directory enclosing a repository",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "set <project-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project repo-wrapper set"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply --actor codex",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for repo-wrapper"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Manage explicit repository wrapper metadata. A registered wrapper must contain the repository locator. It does not change project or Git identity and remains registered if the directory later disappears.",
+        "path": "ply workspace project repo-wrapper",
+        "runnable": false,
+        "short": "Register a repository's enclosing directory",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "repo-wrapper"
+      },
+      "kind": "command_added",
+      "path": "ply workspace project repo-wrapper"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workspace project show ply\n  ply workspace project show --format json -- ply",
         "flags": [
           {
@@ -3458,6 +4590,146 @@
       },
       "kind": "command_added",
       "path": "ply workspace project show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace run list --format json\n  ply workspace run list --active --project ply",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "active",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "show unresolved runs, including unknown live state"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for list"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by Project ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "List registered Codex and Claude runs across the workspace. Transport is herdr, terminal or headless. Cached active states are unknown as live process evidence. --active selects unresolved runs, including unknown ones; it does not claim they are currently running.",
+        "path": "ply workspace run list",
+        "runnable": true,
+        "short": "List registered runs and their agent identity",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "list"
+      },
+      "kind": "command_added",
+      "path": "ply workspace run list"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace status --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for status"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read content digests for Project, work-item, process-journal and run registers without locks or writes. Stable digests allow clients to skip unchanged registered data. They do not detect external Git changes or prove that a process is running. A changing or unreadable source has no cacheable digest.",
+        "path": "ply workspace status",
+        "runnable": true,
+        "short": "Read change digests for registered workspace facts",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "status"
+      },
+      "kind": "command_added",
+      "path": "ply workspace status"
     },
     {
       "after": {
@@ -4148,7 +5420,195 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace task list\n  ply workspace task list --project ply --repo ply\n  ply workspace task list --epic ply-agentic-workflow-support --format json",
+        "example": "  ply workspace task lifecycle set an-item archived --actor codex\n  ply workspace task lifecycle set an-item active --actor human --expected-revision 3 --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "actor",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "recorder identity or actor claim"
+          },
+          {
+            "annotations": {},
+            "default": "0",
+            "deprecated": "",
+            "hidden": false,
+            "name": "expected-revision",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "require this workspace lifecycle revision before writing"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for set"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record one lifecycle change and the supplied actor claim in an atomic history update. Repeating the current state writes nothing. --expected-revision checks the shared workspace lifecycle revision, including changes to other items. Actor claims describe the recorder and do not attest human QA or grant authority.",
+        "path": "ply workspace task lifecycle set",
+        "runnable": true,
+        "short": "Record an explicit lifecycle change",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "set <task-id> <active|parked|frozen|archived>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task lifecycle set"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task lifecycle show an-item --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read the current lifecycle and complete change history for one registered Task. Older items default to active without writing metadata. Revision is the shared workspace lifecycle revision.",
+        "path": "ply workspace task lifecycle show",
+        "runnable": true,
+        "short": "Show lifecycle and its recorded changes",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task lifecycle show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task lifecycle show an-item\n  ply workspace task lifecycle set an-item archived --actor codex",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for lifecycle"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Record active, parked, frozen, or archived lifecycle with an actor and durable history. Lifecycle organizes lists and attention; it does not stop agents, change Git, or authorize workflow transitions.",
+        "path": "ply workspace task lifecycle",
+        "runnable": false,
+        "short": "Organize Task lifecycle",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "lifecycle"
+      },
+      "kind": "command_added",
+      "path": "ply workspace task lifecycle"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace task list\n  ply workspace task list --project ply --repo ply\n  ply workspace task list --epic ply-agentic-workflow-support --format json\n  ply workspace task list --progress --format json",
         "flags": [
           {
             "annotations": {},
@@ -4192,6 +5652,19 @@
             "shorthand_deprecated": "",
             "type": "bool",
             "usage": "help for list"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "progress",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "read registered progress without live Git or agent checks"
           },
           {
             "annotations": {},
@@ -4239,7 +5712,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "List all Tasks registered in the containing Ply workspace. Project, repository and Epic filters work independently and combine as exact AND filters, without an implicit working-directory selection. Use --ready for the prioritized queue; an explicit queue target requires all three of --project, --repo and --epic.",
+        "long": "List all Tasks registered in the containing Ply workspace. Project, repository and Epic filters work independently and combine as exact AND filters, without an implicit working-directory selection. Use --ready for the prioritized queue; an explicit queue target requires all three of --project, --repo and --epic. Use --progress for a versioned registered progress projection with explicit lifecycle and provenance; the ordinary mode keeps its existing contract.",
         "path": "ply workspace task list",
         "runnable": true,
         "short": "List registered Tasks",
@@ -6093,7 +7566,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace task show workspace-work-item-bootstrap\n  ply workspace task show workspace-work-item-bootstrap --format json",
+        "example": "  ply workspace task show workspace-work-item-bootstrap\n  ply workspace task show workspace-work-item-bootstrap --format json\n  ply workspace task show my-task --progress --format json",
         "flags": [
           {
             "annotations": {},
@@ -6124,6 +7597,19 @@
             "shorthand_deprecated": "",
             "type": "bool",
             "usage": "help for show"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "progress",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "read registered progress without live Git or agent checks"
           }
         ],
         "has_args_validator": true,
@@ -6132,7 +7618,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Show persisted Task, delivery, QA, and local integration state with a fresh read-only Git observation.",
+        "long": "Show persisted Task, delivery, QA, and local integration state with a fresh read-only Git observation. Use --progress for a versioned registered progress projection with explicit lifecycle and provenance; the ordinary mode keeps its existing contract.",
         "path": "ply workspace task show",
         "runnable": true,
         "short": "Show a registered Task",
@@ -6769,6 +8255,221 @@
       },
       "kind": "command_added",
       "path": "ply workspace task worktree"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workspace worktree list --format json\n  ply workspace worktree list --project ply --repo ply",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for list"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by Project ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by repository ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read the local Git worktree inventory, registered ownership and available base comparisons. This explicit observation can cost more than registered Home data. Missing or inaccessible facts remain unknown; no fetch, locks or cleanup are performed.",
+        "path": "ply workspace worktree list",
+        "runnable": true,
+        "short": "Observe worktrees in registered local repositories",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "list"
+      },
+      "kind": "command_added",
+      "path": "ply workspace worktree list"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for journal"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read registered native facts and process contributions across Tasks without starting agents or changing state.",
+        "path": "ply workspace journal",
+        "runnable": false,
+        "short": "Read activity across the workspace",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "journal"
+      },
+      "kind": "command_added",
+      "path": "ply workspace journal"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for run"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read preserved run bindings and observed state without contacting Herdr or any provider.",
+        "path": "ply workspace run",
+        "runnable": false,
+        "short": "Inspect registered workspace agent runs",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "run"
+      },
+      "kind": "command_added",
+      "path": "ply workspace run"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for worktree"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Inspect worktrees in registered repositories. This inventory never fetches, prunes, repairs or removes worktrees.",
+        "path": "ply workspace worktree",
+        "runnable": false,
+        "short": "Inspect local worktrees and their registered owners",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "worktree"
+      },
+      "kind": "command_added",
+      "path": "ply workspace worktree"
     }
   ],
   "base_ref": "v1.0.1",

@@ -1,0 +1,49 @@
+{
+  "kind": "WorkspaceEpicListReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": {
+    "project_id": null
+  },
+  "epics": [
+    {
+      "epic_id": "e0",
+      "project_id": "p0",
+      "title": "Epic 0",
+      "lifecycle": "active",
+      "base": [
+        {
+          "repo_id": "r0",
+          "revision": 1,
+          "oid": "c8d9a11986f4d04f6ad5fd0ddf449064a184bdf3",
+          "tree": "4b825dc642cb6eb9a060e54bf8d69288fbee4904",
+          "freshness": "fresh",
+          "source_basis": "registered"
+        }
+      ],
+      "worktrees": [
+        {
+          "repo_id": "r0",
+          "worktree_id": "wt_cf5673e6170b9eec56fdd3e91d94155e",
+          "locator": "/work/project-0/epic",
+          "ref": "refs/heads/epic",
+          "freshness": "fresh",
+          "source_basis": "registered"
+        }
+      ],
+      "task_count": 10,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 1,
+        "nothing": 9
+      },
+      "last_activity_utc": "2026-10-06T04:31:58.051722Z"
+    }
+  ],
+  "freshness": "fresh",
+  "source_basis": "registered",
+  "reasons": []
+}

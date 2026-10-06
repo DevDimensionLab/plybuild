@@ -143,11 +143,11 @@ grep -F 'Register and inspect projects owned by the containing Ply workspace.' \
 	"$temp_root/workspace-project-help.stdout" >/dev/null || fail 'project help lost its long description'
 grep -F 'ply workspace project [command]' "$temp_root/workspace-project-help.stdout" >/dev/null ||
 	fail 'project help usage changed'
-grep -F '  add         Register a project and its explicit repository members' \
+grep -E '^  add +Register a project and its explicit repository members$' \
 	"$temp_root/workspace-project-help.stdout" >/dev/null || fail 'project help does not expose add'
-grep -F '  list        List registered projects' "$temp_root/workspace-project-help.stdout" >/dev/null ||
+grep -E '^  list +List registered projects$' "$temp_root/workspace-project-help.stdout" >/dev/null ||
 	fail 'project help does not expose list'
-grep -F '  show        Show a registered project' "$temp_root/workspace-project-help.stdout" >/dev/null ||
+grep -E '^  show +Show a registered project$' "$temp_root/workspace-project-help.stdout" >/dev/null ||
 	fail 'project help does not expose show'
 grep -F 'ply workspace project add <project-id> [flags]' \
 	"$temp_root/workspace-project-add-help.stdout" >/dev/null || fail 'project add usage changed'

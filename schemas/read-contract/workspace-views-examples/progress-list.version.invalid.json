@@ -1,0 +1,56 @@
+{
+  "kind": "WorkspaceTaskProgressListReadback@1",
+  "schema_version": "1",
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": {
+    "project_id": null,
+    "repo_id": null,
+    "epic_id": null
+  },
+  "tasks": [
+    {
+      "task_id": "t0-0",
+      "project_id": "p0",
+      "repo_id": "r0",
+      "parent_epic_id": "e0",
+      "worktree_state": "unbound",
+      "lifecycle": "active",
+      "epic_lifecycle": "active",
+      "title": "Task 0-0",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "progress": {
+        "state": "in_progress",
+        "has_progress": true,
+        "integration_classification": "unknown",
+        "technical_gate": null,
+        "human_qa_outcome": null,
+        "result_count": 0,
+        "task_result_id": null,
+        "integration_result_id": null,
+        "next_actions": [
+          {
+            "source": "journal",
+            "kind": "recorded_wait",
+            "actor": "human",
+            "reason": "Synthetic question for acceptance",
+            "severity": "next_step",
+            "since_utc": "2026-10-06T04:31:57.700551Z",
+            "evidence_ids": [
+              "jev_2c415ecf219c1a8d13d803c83b959f89e574a314dd05555c4390f76da8776b9a"
+            ]
+          }
+        ],
+        "last_activity_utc": "2026-10-06T04:31:57.922335Z",
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      }
+    }
+  ],
+  "freshness": "fresh",
+  "source_basis": "registered",
+  "reasons": []
+}

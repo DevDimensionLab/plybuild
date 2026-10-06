@@ -1,0 +1,88 @@
+{
+  "kind": "WorkspaceWorktreeListReadback@1",
+  "schema_version": "1",
+  "workspace": {
+    "root": "/work"
+  },
+  "as_of": "2026-10-06T04:32:01.364239Z",
+  "worktrees": [
+    {
+      "project_id": "p0",
+      "repo_id": "r0",
+      "locator": "/work/project-0/empty",
+      "ref": "refs/heads/empty",
+      "oid": "c8d9a11986f4d04f6ad5fd0ddf449064a184bdf3",
+      "clean": true,
+      "owner": "epic",
+      "owner_id": "empty",
+      "owner_freshness": "fresh",
+      "base": {
+        "kind": "registered_epic_base",
+        "locator": "/work/project-0/empty",
+        "ref": "refs/heads/empty",
+        "oid": "c8d9a11986f4d04f6ad5fd0ddf449064a184bdf3",
+        "revision": 1
+      },
+      "ahead": 0,
+      "behind": 0,
+      "merged_into_base": true,
+      "last_commit_utc": "2026-10-06T04:31:52Z",
+      "locked": false,
+      "prunable": false,
+      "bare": false,
+      "detached": false,
+      "freshness": {
+        "inventory": "fresh",
+        "identity": "fresh",
+        "clean": "fresh",
+        "base_relation": "fresh",
+        "last_commit_utc": "fresh"
+      },
+      "reasons": []
+    },
+    {
+      "project_id": "p0",
+      "repo_id": "r0",
+      "locator": "/work/project-0/epic",
+      "ref": "refs/heads/epic",
+      "oid": "c8d9a11986f4d04f6ad5fd0ddf449064a184bdf3",
+      "clean": true,
+      "owner": "epic",
+      "owner_id": "e0",
+      "owner_freshness": "fresh",
+      "base": {
+        "kind": "registered_epic_base",
+        "locator": "/work/project-0/epic",
+        "ref": "refs/heads/epic",
+        "oid": "c8d9a11986f4d04f6ad5fd0ddf449064a184bdf3",
+        "revision": 1
+      },
+      "ahead": 0,
+      "behind": 0,
+      "merged_into_base": true,
+      "last_commit_utc": "2026-10-06T04:31:52Z",
+      "locked": false,
+      "prunable": false,
+      "bare": false,
+      "detached": false,
+      "freshness": {
+        "inventory": "fresh",
+        "identity": "fresh",
+        "clean": "fresh",
+        "base_relation": "fresh",
+        "last_commit_utc": "fresh"
+      },
+      "reasons": []
+    }
+  ],
+  "repositories": [
+    {
+      "project_id": "p0",
+      "repo_id": "r0",
+      "freshness": "fresh",
+      "reasons": []
+    }
+  ],
+  "freshness": "fresh",
+  "reasons": []
+}
