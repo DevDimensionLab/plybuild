@@ -35,10 +35,14 @@ func workflowCallback(d Dependencies, s workflowState, contextPath string) error
 	if e == nil {
 		actual, e = filepath.EvalSymlinks(actual)
 	}
-	if e != nil || actual != s.Request.Runtime.PlyExecutable.Path {
+	runtime, runtimeErr := workflowEffectiveRuntime(s)
+	if runtimeErr != nil {
+		return runtimeErr
+	}
+	if e != nil || actual != runtime.PlyExecutable.Path {
 		return workflowError(4, "callback is not the bound Ply executable")
 	}
-	return verifyExecutable(s.Request.Runtime.PlyExecutable)
+	return verifyExecutable(runtime.PlyExecutable)
 }
 func workflowClaim(s workflowState, id, request, session string) error {
 	if id != s.Result.RunID || request != s.Result.RequestSHA256 || session != s.Result.SessionID {

@@ -52,6 +52,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	c.SetFlagErrorFunc(func(c *cobra.Command, e error) error { return workspace.WorkInvalidArguments(e.Error()) })
 	addExecuteOwnerCommands(c, d)
+	c.AddCommand(newWorkflowExecuteRecoverStartCommand(d))
 	return c
 }
 
@@ -72,6 +73,17 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 		return e
 	}
 	switch v := result.(type) {
+	case taskexecute.RecoveryResult:
+		fmt.Fprintf(c.OutOrStdout(), "Startup recovery: %s\n", v.State)
+		if v.Preview != nil && v.Preview.State != "existing" {
+			fmt.Fprintf(c.OutOrStdout(), "Run: %s\nReplacement Codex: %s\nPreserved control: %s\n", v.Preview.RunID, v.Preview.ProviderExecutable.Path, v.Preview.ControlExecutable.Path)
+		}
+		if v.Run != nil {
+			return writeExecuteResult(c, format, *v.Run)
+		}
+		if v.NextAction != "" {
+			fmt.Fprintln(c.OutOrStdout(), "Next: "+v.NextAction)
+		}
 	case taskexecute.Result:
 		if v.Goal != nil {
 			fmt.Fprintf(c.OutOrStdout(), "Task: %s — %s\nReturn worktree: %s\nFeature worktree: %s\n", v.Goal.Goal.TaskID, v.Goal.Goal.Title, v.Goal.Target.ParentLocator, v.Goal.WorktreePath)

@@ -81,23 +81,24 @@ type WorkflowAction struct {
 }
 type WorkflowRun struct {
 	Envelope
-	Provider        string              `json:"provider,omitempty"`
-	RunID           string              `json:"run_id"`
-	RequestSHA256   string              `json:"request_sha256"`
-	SessionID       string              `json:"session_id"`
-	Handoff         WorkflowHandoff     `json:"handoff"`
-	Paths           WorkflowPaths       `json:"paths"`
-	Transport       WorkflowTransport   `json:"transport"`
-	Round           WorkflowRound       `json:"round"`
-	Review          WorkflowReviewState `json:"review"`
-	Budget          WorkflowBudget      `json:"budget"`
-	FinalReturn     WorkflowFinal       `json:"final_return"`
-	TaskResultState string              `json:"task_result_state"`
-	RuntimeFacts    RuntimeFacts        `json:"runtime_facts"`
-	Reasons         []Reason            `json:"reasons"`
-	NextAction      WorkflowAction      `json:"next_action"`
-	Delivery        *DeliveryState      `json:"delivery,omitempty"`
-	ClaudeTrust     *ClaudeTrustEffect  `json:"claude_project_trust,omitempty"`
+	Provider        string                         `json:"provider,omitempty"`
+	RunID           string                         `json:"run_id"`
+	RequestSHA256   string                         `json:"request_sha256"`
+	SessionID       string                         `json:"session_id"`
+	Handoff         WorkflowHandoff                `json:"handoff"`
+	Paths           WorkflowPaths                  `json:"paths"`
+	Transport       WorkflowTransport              `json:"transport"`
+	Round           WorkflowRound                  `json:"round"`
+	Review          WorkflowReviewState            `json:"review"`
+	Budget          WorkflowBudget                 `json:"budget"`
+	FinalReturn     WorkflowFinal                  `json:"final_return"`
+	TaskResultState string                         `json:"task_result_state"`
+	RuntimeFacts    RuntimeFacts                   `json:"runtime_facts"`
+	Reasons         []Reason                       `json:"reasons"`
+	NextAction      WorkflowAction                 `json:"next_action"`
+	Delivery        *DeliveryState                 `json:"delivery,omitempty"`
+	ClaudeTrust     *ClaudeTrustEffect             `json:"claude_project_trust,omitempty"`
+	StartupRecovery *DeliveryStartRecoveryReadback `json:"startup_recovery,omitempty"`
 }
 type WorkflowPreview struct {
 	Envelope
@@ -165,6 +166,7 @@ type workflowState struct {
 	Records       []workflowRecord    `json:"records"`
 	CodexTrust    *workflowTrustFacts `json:"codex_project_trust,omitempty"`
 	ClaudeTrust   *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
+	Recovery      *FileBinding        `json:"startup_recovery,omitempty"`
 }
 
 func workflowEnv(kind string) Envelope { return Envelope{"ply.workflow." + kind, 1} }

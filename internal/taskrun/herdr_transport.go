@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 )
 
@@ -44,6 +45,40 @@ func (b *workflowLimitedOutput) Write(p []byte) (int, error) {
 }
 func workflowCall(d Dependencies, r WorkflowRequest, args ...string) (json.RawMessage, error) {
 	return workflowCallUntil(d, r, time.Time{}, args...)
+}
+
+// Serialize a startup send with explicit generation replacement. A delayed
+// observer of the original start cannot send into its replacement generation.
+func workflowStartupCall(d Dependencies, s workflowState, deadline time.Time, args ...string) (json.RawMessage, error) {
+	var result json.RawMessage
+	err := withStore(s.Request.WorkspaceRoot, func() error {
+		current, err := workflowRead(s.Request.WorkspaceRoot, s.Result.RunID)
+		if err != nil {
+			return err
+		}
+		if workflowStartupGeneration(current) != workflowStartupGeneration(s) {
+			return workflowError(4, "startup generation changed; no input or start sent")
+		}
+		if current.Recovery != nil && len(args) > 1 && args[0] == "agent" && args[1] == "start" {
+			runtime, err := workflowEffectiveRuntime(current)
+			if err != nil {
+				return err
+			}
+			if err = verifyExecutable(runtime.Executable); err != nil {
+				return err
+			}
+			resolved, err := exec.LookPath(runtime.Provider)
+			if err == nil {
+				resolved, err = filepath.EvalSymlinks(resolved)
+			}
+			if err != nil || resolved != runtime.Executable.Path {
+				return workflowError(4, "provider changed before reserved recovery start")
+			}
+		}
+		result, err = workflowCallUntil(d, s.Request, deadline, args...)
+		return err
+	})
+	return result, err
 }
 func workflowCallUntil(d Dependencies, r WorkflowRequest, deadline time.Time, args ...string) (json.RawMessage, error) {
 	if e := verifyExecutable(r.Herdr.Executable); e != nil {
@@ -227,17 +262,20 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 		limit = d.HerdrTimeout
 	}
 	deadline := time.Now().Add(limit)
-	if _, startErr := workflowCallUntil(d, r, deadline, argv...); startErr != nil {
+	if _, startErr := workflowStartupCall(d, s, deadline, argv...); startErr != nil {
 		// A failed reply does not undo the single reserved start. Only fresh
 		// read-only observations of this exact attempt may establish readiness.
 		if e = workflowUpdate(d, root, id, func(s *workflowState) error {
+			if s.Recovery != nil {
+				return workflowError(4, "original startup was replaced; its sender has stopped")
+			}
 			s.Result.Reasons = append(s.Result.Reasons, Reason{"herdr_start_response", startErr.Error()})
 			return nil
 		}); e != nil {
 			return e
 		}
 	}
-	if e = workflowAwaitReadiness(d, root, id, deadline); e != nil {
+	if e = workflowAwaitReadinessGeneration(d, root, id, deadline, workflowStartupGeneration(s)); e != nil {
 		return e
 	}
 	return workflowPromptUntil(d, root, id, nil, deadline)
@@ -293,7 +331,11 @@ func workflowPromptUntil(d Dependencies, root, id string, findings []WorkflowFin
 		return e
 	}
 	prompt := workflowInstructions(s, findings)
+	generation := workflowStartupGeneration(s)
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
+		if workflowStartupGeneration(*s) != generation {
+			return workflowError(4, "startup generation changed before Task prompt")
+		}
 		if !deadline.IsZero() && !time.Now().Before(deadline) {
 			return workflowError(5, "Herdr startup deadline expired before prompt reservation; no Task prompt sent")
 		}

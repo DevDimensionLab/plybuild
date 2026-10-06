@@ -14,7 +14,7 @@ func workflowDeliveryGuide(d Dependencies, s workflowState) error {
 	if !deliveryRun(s.Request) {
 		return nil
 	}
-	dir := filepath.Join(s.Result.Paths.RunRoot, "delivery", "templates")
+	dir := filepath.Join(workflowDeliveryGuideDirectory(s), "templates")
 	a := DeliveryAcceptance{
 		Acceptance:         Acceptance{Envelope: deliveryEnv("run-acceptance"), RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, SessionID: s.Result.SessionID, RuntimeClaim: RuntimeClaim{NativeSessionID: ptr(s.Result.Transport.AgentSessionID)}, Sandbox: json.RawMessage("null"), Issues: json.RawMessage("[]")},
 		DeliveryPermission: DeliveryPermissionAcceptance{LaunchContractSHA256: s.Request.Runtime.PermissionBinding.EffectivePolicySHA256, ActualPolicyEvidence: []Evidence{}},
@@ -41,7 +41,11 @@ func workflowDeliveryGuide(d Dependencies, s workflowState) error {
 			return err
 		}
 	}
-	control, id, context := ShellQuote(s.Request.Runtime.PlyExecutable.Path), s.Result.RunID, ShellQuote(s.Result.Paths.Context)
+	runtime, err := workflowEffectiveRuntime(s)
+	if err != nil {
+		return err
+	}
+	control, id, context := ShellQuote(runtime.PlyExecutable.Path), s.Result.RunID, ShellQuote(s.Result.Paths.Context)
 	guide := fmt.Sprintf(`# Delivery callback guide
 
 This guide and the adjacent templates describe the frozen callback contract.
@@ -158,6 +162,6 @@ keeps this same delivery owner: correct and qualify a new candidate.
 Integration requires actual pass on the exact candidate and unchanged parent.
 Follow any unknown effect through the preserved same attempt. Never replay an
 unknown start, verifier or integration and never replace the control executable.
-`, s.Observed.Target.WorktreeLocator, s.Request.Runtime.PlyExecutable.Path, id, s.Result.Paths.Context, s.Request.Runtime.Provider, s.Result.Transport.AgentSessionID, control, id, context, control, id, context, s.Request.Delivery.AcceptancePath, control, id, context, control, id, context, control, id, context)
-	return d.writeOnce(filepath.Join(s.Result.Paths.RunRoot, "delivery", "callback-guide.md"), []byte(guide))
+`, s.Observed.Target.WorktreeLocator, runtime.PlyExecutable.Path, id, s.Result.Paths.Context, s.Request.Runtime.Provider, s.Result.Transport.AgentSessionID, control, id, context, control, id, context, s.Request.Delivery.AcceptancePath, control, id, context, control, id, context, control, id, context)
+	return d.writeOnce(filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), []byte(guide))
 }

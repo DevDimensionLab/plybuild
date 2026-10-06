@@ -262,6 +262,11 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 		if e != nil {
 			launchErr := e
 			if saveErr := workflowUpdate(d, r.WorkspaceRoot, workflowID(r), func(s *workflowState) error {
+				// This call owns only the original startup. A replacement may have
+				// progressed while its old transport call was finishing.
+				if s.Recovery != nil {
+					return nil
+				}
 				s.Result.Reasons = append(s.Result.Reasons, Reason{"herdr_start_stopped", "Startup stopped at phase=" + s.Phase + ": " + launchErr.Error()})
 				// A recipient can accept or report while the prompt CLI is still
 				// waiting. A late failed reply must not replace that evidence.
@@ -289,8 +294,14 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 }
 func workflowNewContext(d Dependencies, s *workflowState) error {
 	o := &s.Result
-	o.Paths = workflowPaths(s.Request, o.Round.Number)
-	c := workflowContext{workflowEnv("run-context"), o.RunID, o.RequestSHA256, o.SessionID, o.Handoff.SHA256, o.Round.Number, o.Round.ControlID, o.Round.PreviousReportSHA256, s.Request.Runtime.PlyExecutable}
+	if s.Recovery == nil {
+		o.Paths = workflowPaths(s.Request, o.Round.Number)
+	}
+	runtime, e := workflowEffectiveRuntime(*s)
+	if e != nil {
+		return e
+	}
+	c := workflowContext{workflowEnv("run-context"), o.RunID, o.RequestSHA256, o.SessionID, o.Handoff.SHA256, o.Round.Number, o.Round.ControlID, o.Round.PreviousReportSHA256, runtime.PlyExecutable}
 	b, e := workflowKeep(d, o.Paths.Context, c)
 	if e != nil {
 		return e
