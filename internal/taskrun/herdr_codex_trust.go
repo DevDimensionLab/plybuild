@@ -43,6 +43,9 @@ type workflowTrustFacts struct {
 }
 
 func workflowValidateTrust(r WorkflowRequest) error {
+	if e := workflowValidateClaudeTrust(r); e != nil {
+		return e
+	}
 	g := r.CodexProjectTrust
 	if g == nil {
 		return nil

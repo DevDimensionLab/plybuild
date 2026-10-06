@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/taskexecute"
@@ -16,7 +17,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	var target queueTargetFlags
 	c := &cobra.Command{
 		Use: "execute", Short: "Deliver the next goal from this Epic with its assigned agent",
-		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. --check is read-only. Repeated starts inspect the preserved execution; an unknown start never launches another agent. Legacy workflow run contracts retain their original limits.",
+		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration; --check previews the config path and project key without writing. Tool permissions and other native prompts remain under provider control. Repeated starts inspect the preserved execution; an unknown start never launches another agent. Older preserved launches retain their original trust and permission choices.",
 		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute show wfr_<digest>",
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
@@ -43,7 +44,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	}
 	c.Flags().BoolVar(&in.Next, "next", false, "select the first eligible goal in this Epic's queue (default)")
 	c.Flags().StringVar(&in.SpecID, "spec", "", "exact pending goal Spec ID in this Epic; ambiguous IDs are rejected")
-	c.Flags().BoolVar(&in.Check, "check", false, "preview goal, base, worktree and runtime without creating or starting anything")
+	c.Flags().BoolVar(&in.Check, "check", false, "preview goal, base, worktree, runtime and Claude folder trust effect without writes or startup")
 	target.bind(c)
 	c.Flags().StringVar(&in.Runtime.HerdrWorkspace, "herdr-workspace", "", "Herdr workspace ID (default: current Herdr workspace)")
 	c.Flags().StringVar(&in.Runtime.PermissionProfile, "permission-profile", "", "existing Codex permission profile; Claude uses native auto mode")
@@ -78,6 +79,16 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 		if v.Runtime != nil {
 			fmt.Fprintf(c.OutOrStdout(), "Implementor: %s · model %s · effort %s\n", v.Runtime.Runtime.Provider, v.Runtime.Runtime.Model, v.Runtime.ReasoningEffort)
 		}
+		if trust := v.ClaudeProjectTrust; trust != nil && (v.Run == nil || v.Run.ClaudeTrust == nil) {
+			config := trust.ConfigPath
+			if config == "" {
+				config = "unresolved"
+			}
+			fmt.Fprintf(c.OutOrStdout(), "Claude folder trust: planned persistent trust for %s\nClaude configuration: %s\n", trust.ProjectKey, config)
+			if trust.Reason != "" {
+				fmt.Fprintln(c.OutOrStdout(), "Trust configuration warning: "+trust.Reason)
+			}
+		}
 		fmt.Fprintf(c.OutOrStdout(), "Execution: %s\n", v.State)
 		if v.Run != nil {
 			return writeExecuteResult(c, format, *v.Run)
@@ -90,12 +101,26 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 		if v.Delivery != nil {
 			fmt.Fprintf(c.OutOrStdout(), "Delivery: %s\nRuntime permission: %s\n", v.Delivery.Phase, v.Delivery.PermissionState)
 		}
+		writeWorkflowClaudeTrust(c.OutOrStdout(), v.ClaudeTrust)
 		for _, r := range v.Reasons {
 			fmt.Fprintln(c.OutOrStdout(), "Needs attention: "+r.Detail)
 		}
 		fmt.Fprintf(c.OutOrStdout(), "Next: %s — %s\n", v.NextAction.Actor, v.NextAction.Message)
 	}
 	return nil
+}
+
+// writeWorkflowClaudeTrust renders only the performed effect. Locations and
+// backup references remain available in JSON for inspection and recovery.
+func writeWorkflowClaudeTrust(out io.Writer, trust *taskrun.ClaudeTrustEffect) {
+	if trust == nil {
+		return
+	}
+	fmt.Fprintf(out, "Claude trust: %s", trust.State)
+	if trust.State != "written" && trust.State != "already" && trust.Reason != "" {
+		fmt.Fprint(out, " — "+trust.Reason)
+	}
+	fmt.Fprintln(out)
 }
 
 func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {

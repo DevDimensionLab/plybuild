@@ -162,6 +162,9 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	if e = workflowTrustFresh(s); e != nil {
 		return e
 	}
+	if e = workflowClaudeTrustFresh(d, s); e != nil {
+		return e
+	}
 	var tab struct {
 		RootPane workflowAgent `json:"root_pane"`
 	}
@@ -170,6 +173,12 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 		// Use the exact existing user/config locations observed by preview.
 		// No alternate home or persistent configuration is created.
 		tabArgs = append(tabArgs, "--env", "HOME="+s.CodexTrust.UserHome, "--env", "CODEX_HOME="+s.CodexTrust.CodexHome)
+	}
+	if s.ClaudeTrust != nil && s.ClaudeTrust.Reason == "" {
+		tabArgs = append(tabArgs, "--env", "HOME="+s.ClaudeTrust.UserHome)
+		if s.ClaudeTrust.ConfigDir != "" {
+			tabArgs = append(tabArgs, "--env", "CLAUDE_CONFIG_DIR="+s.ClaudeTrust.ConfigDir)
+		}
 	}
 	b, e := workflowCall(d, r, tabArgs...)
 	if e != nil {
@@ -196,6 +205,18 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 		return e
 	}
 	if e = workflowTrustFresh(s); e != nil {
+		return e
+	}
+	if e = workflowClaudeTrustFresh(d, s); e != nil {
+		return e
+	}
+	if e = workflowBindClaudeEnvironment(d, s, a.PaneID); e != nil {
+		return e
+	}
+	if e = workflowClaudeTrustFresh(d, s); e != nil {
+		return e
+	}
+	if e = workflowLaunchClaudeTrust(d, s); e != nil {
 		return e
 	}
 	argv := workflowStartArgv(r, s.Observed.Target.WorktreeLocator, a.PaneID)

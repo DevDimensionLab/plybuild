@@ -16,10 +16,12 @@ ply workflow execute
 ply workflow execute --spec explain-start-errors
 ```
 
-`--check` reads the exact goal, current base and local runtime without creating a
-worktree, launch file or agent. Without it, the command records the caller's exact
-choice, creates one sibling feature worktree, preserves a control executable and
-starts the assigned Claude or Codex in Herdr. The caller must be inside the return
+`--check` reads the exact goal, current base and local runtime. For a new Claude
+launch it also shows the planned persistent folder trust effect, including the
+effective configuration file and exact project key. It creates no worktree,
+launch file or agent and writes no provider configuration. Without it, the command
+records the caller's exact choice, creates one sibling feature worktree, preserves
+a control executable and starts the assigned Claude or Codex in Herdr. The caller must be inside the return
 worktree, including when explicit `--project`, `--repo`, `--epic` flags are supplied.
 Supply all three target flags or none.
 
@@ -93,20 +95,35 @@ against the actual Herdr session.
 The selected binaries are resolved and hash-bound before a worktree is created.
 Herdr uses the current workspace, or `--herdr-workspace`. Codex uses its selected
 managed permission profile with on-request automatic approval review; its
-native project-trust and onboarding remain under Codex control. Execute does
-not grant project trust or activate project configuration on the caller's behalf.
+native project-trust and onboarding remain under Codex control.
 Claude receives its own supported model, effort and permission arguments.
 No Codex trust/config flags are forwarded to Claude.
+
+New Claude launches preserve an explicit folder trust choice with the exact
+physical Task worktree. Before its single provider start, Ply attempts to set
+`projects[worktree_path].hasTrustDialogAccepted` to `true` in Claude's effective
+configuration. The project key is the Task worktree's physical path; Ply does not
+add a trust entry for the main checkout, parent Epic or another worktree. The
+configuration path follows the actual launch environment, including supported
+`CLAUDE_CONFIG_DIR` behavior. `--check` reports that path instead of assuming the
+default personal configuration.
+
+The update preserves unrelated configuration and creates a private backup before
+changing an existing file. Already accepted trust is a file no-op. A missing
+configuration file keeps normal onboarding. A failed or skipped trust update is
+reported and the same ordinary Claude startup continues; its own trust dialog may
+still need an answer. Ply does not repair malformed configuration or override
+separate settings, MCP, authentication or tool-permission prompts.
 
 Claude's [auto mode](https://code.claude.com/docs/en/permission-modes) reviews actions
 with a classifier instead of asking about routine commands. Explicit ask rules,
 denials, hooks and sandbox enforcement still apply. Auto mode can be unavailable
-or fall back to prompts under the provider's policy. The interactive
-[workspace trust dialog](https://code.claude.com/docs/en/security) also remains
-under Claude's control. Handle these cases in the same tab; Ply does not change
-provider configuration or bypass an approval. Preserved launches retain their
-original requested mode, including earlier manual-mode requests. Repeating
-execute or resuming startup does not switch an existing session's permission mode.
+or fall back to prompts under the provider's policy. Handle remaining native
+prompts in the same tab; folder trust does not bypass tool approvals. Preserved
+launches retain their original trust choice and requested mode, including earlier
+manual-mode requests. Older intents and requests without a trust choice never
+gain one when read or resumed. Repeating execute or resuming startup does not
+repeat the configuration update or switch an existing session's permission mode.
 
 The launch-policy snapshot describes requested settings. It is not an OS
 permission grant. Before Task writes, the recipient reports its actual runtime,

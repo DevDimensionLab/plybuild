@@ -76,8 +76,59 @@ Codex retains the requested model, optional config profile, managed permission
 profile, `on-request`, and `approvals_reviewer="auto_review"`. Claude receives
 `--model MODEL --permission-mode manual` and inherits the tab's cwd; fresh Herdr
 observations must also report that exact foreground cwd. Codex flags and trust
-grants are never sent to Claude. Ply changes no global configuration and never
-answers native login, trust or permission dialogs.
+grants are never sent to Claude. Ply never answers native login or permission dialogs.
+Persistent Claude folder trust requires the separate grant below.
+
+### Optional Claude folder trust
+
+The Claude-only top-level `claude_project_trust` field has this shape:
+
+```json
+{"mode":"configuration","worktree_root":"/absolute/physical/task-worktree"}
+```
+
+Omission preserves existing requests and runs. Null, unknown modes, a different
+provider or a path other than the prepared physical Task worktree are rejected.
+The read-only preview shows the exact project key and configuration location.
+After reserving the single start, immediately before launching Claude, Ply merges
+only `projects[project_key].hasTrustDialogAccepted=true`. The key is the physical
+Task worktree in Unicode NFC, supported by Claude Code 2.1.285's cwd trust fallback.
+No main-checkout or other-worktree entry is added. The trust persists and allows
+that folder's native project settings/hooks to become active; it is separate from
+tool permissions, model selection and runtime acceptance.
+
+The usual location is `~/.claude.json`, or `CLAUDE_CONFIG_DIR/.claude.json` with an
+explicit absolute override. An existing `.config.json` inside the Claude config
+directory has native legacy priority. Empty/relative overrides and custom OAuth
+configuration are skipped with a reason. The tab receives the current home and
+any explicit supported config directory. Before writing trust, Ply sends one
+reserved shell setup in the new pane, using Bash/zsh builtins to remove inherited
+overrides and confirm the intended environment. A private nonce acknowledgement
+binds completion; terminal echo alone is insufficient. Unsupported shells, readonly
+variables or an unconfirmed setup leave the same tab preserved without a trust
+write or provider start. Ply never retries uncertain shell input. Shell hooks that
+change environment again after this acknowledgement remain outside this binding.
+
+The configuration writer preserves other JSON values and file permissions, keeps
+a private unique backup, and atomically replaces the file in its own directory.
+An already-true entry is a file no-op. A missing file is left to native onboarding.
+Invalid JSON, duplicate keys, unexpected structures and unsafe paths are not repaired.
+The normal native `.lock` directory coordinates concurrent writers; Ply never
+steals an existing lock. Native fallback/exit writers can ignore it, so complete
+exclusion from another Claude process is not guaranteed.
+
+Run readback reports `claude_project_trust.state` as `written`, `already`, `skipped`,
+`failed` or `unknown`, with paths, available hashes and a reason. It never returns
+configuration contents or claims native readiness. A failed or uncertain trust
+write produces a warning and continues the same ordinary Claude start. Any remaining
+native dialog must be inspected in that tab. There is no automatic restart, rollback
+or trust retry; check, show, follow and repeated start never write trust. Later normal
+config changes do not invalidate the preserved run or its callbacks.
+
+New Claude goals launched through [`workflow execute`](workflow-execute.md) bind
+this grant in their launch intent. Previously saved intents are never upgraded.
+
+### Optional Codex process trust
 
 The optional, Codex-only top-level `codex_project_trust` field has exactly this shape:
 

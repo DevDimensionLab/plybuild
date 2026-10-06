@@ -181,6 +181,12 @@ func TestExecuteCodexPreservesNativeTrustForRepositoryInstructions(t *testing.T)
 	if request.CodexProjectTrust != nil {
 		t.Fatal("goal execution must leave repository trust to the native provider")
 	}
+	if request.ClaudeProjectTrust != nil || result.ClaudeProjectTrust != nil {
+		t.Fatal("Codex execution received Claude configuration authority")
+	}
+	if grant := recordedClaudeTrust(t, filepath.Join(filepath.Dir(result.RequestPath), "intent.json")); grant != nil {
+		t.Fatal("Codex intent recorded Claude configuration authority")
+	}
 	if request.Runtime.Provider != "codex" || request.Runtime.Model != "fixture-model" || request.Runtime.PermissionBinding.ProfileID != "fixture" || request.Delivery.ReasoningEffort != "medium" {
 		t.Fatal("native trust changed the assigned runtime or permission profile")
 	}
@@ -244,7 +250,7 @@ func TestExecuteChecksBeforeWorktreeOrLaunchAndReusesReservation(t *testing.T) {
 		t.Fatal(err)
 	}
 	if request.Runtime.Provider != "claude" || request.Runtime.PermissionBinding.ProfileID != "auto" || request.Runtime.PermissionBinding.AuthorityKind != "launch_contract_pending_runtime_acceptance" || request.CodexProjectTrust != nil {
-		t.Fatalf("new Claude request must ask for native auto mode without granting runtime authority or trust: %+v", request.Runtime)
+		t.Fatalf("new Claude request must ask for native auto mode without granting runtime tool authority: %+v", request.Runtime)
 	}
 	after := fixtureGit(t, epic, "worktree", "list", "--porcelain")
 	if after == before {
@@ -304,6 +310,10 @@ func TestExecuteKeepsEarlierManualLaunchWhenAutoBecomesDefault(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	checked, err := Execute(d, in)
+	if err != nil || checked.ClaudeProjectTrust != nil {
+		t.Fatalf("checking an earlier intent introduced Claude trust: preview=%+v error=%v", checked.ClaudeProjectTrust, err)
+	}
 	calls := 0
 	d.Fault = func(point string) error {
 		if point == "workflow_after_reservation" {
@@ -325,6 +335,9 @@ func TestExecuteKeepsEarlierManualLaunchWhenAutoBecomesDefault(t *testing.T) {
 	}
 	if request.Runtime.PermissionBinding.ProfileID != "manual" {
 		t.Fatal("new default changed the preserved launch request")
+	}
+	if request.ClaudeProjectTrust != nil || first.ClaudeProjectTrust != nil || strings.Contains(string(before[first.RequestPath]), `"claude_project_trust"`) {
+		t.Fatal("earlier launch acquired new Claude configuration authority")
 	}
 	second, err := Execute(d, in)
 	if err != nil || second.State != "existing" || second.Run.RunID != first.Run.RunID || calls != 1 {

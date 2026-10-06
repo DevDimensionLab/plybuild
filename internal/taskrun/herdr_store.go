@@ -36,7 +36,7 @@ func workflowRead(root, id string) (workflowState, error) {
 	if e != nil {
 		return s, e
 	}
-	if !equal(s.Request, saved.Request) || !equal(s.CodexTrust, saved.CodexTrust) || saved.Result.RunID != id || !equal(s.Observed, saved.Observed) || saved.Result.Paths.RunRoot != s.Result.Paths.RunRoot || saved.Result.RequestSHA256 != digest(s.Request) || saved.Result.SessionID != "ply:"+id {
+	if !equal(s.Request, saved.Request) || !equal(s.CodexTrust, saved.CodexTrust) || !equal(s.ClaudeTrust, saved.ClaudeTrust) || saved.Result.RunID != id || !equal(s.Observed, saved.Observed) || saved.Result.Paths.RunRoot != s.Result.Paths.RunRoot || saved.Result.RequestSHA256 != digest(s.Request) || saved.Result.SessionID != "ply:"+id {
 		return s, workflowError(4, "preserved state differs from reservation")
 	}
 	return saved, nil

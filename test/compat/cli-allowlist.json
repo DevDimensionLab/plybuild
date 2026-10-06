@@ -626,7 +626,7 @@
             "shorthand": "",
             "shorthand_deprecated": "",
             "type": "bool",
-            "usage": "preview goal, base, worktree and runtime without creating or starting anything"
+            "usage": "preview goal, base, worktree, runtime and Claude folder trust effect without writes or startup"
           },
           {
             "annotations": {},
@@ -769,7 +769,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. --check is read-only. Repeated starts inspect the preserved execution; an unknown start never launches another agent. Legacy workflow run contracts retain their original limits.",
+        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration; --check previews the config path and project key without writing. Tool permissions and other native prompts remain under provider control. Repeated starts inspect the preserved execution; an unknown start never launches another agent. Older preserved launches retain their original trust and permission choices.",
         "path": "ply workflow execute",
         "runnable": true,
         "short": "Deliver the next goal from this Epic with its assigned agent",
@@ -2401,7 +2401,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Preview or confirm one prepared Task start in Herdr. Select runtime.provider in the request: codex (default when omitted) or claude. runtime.model is a separate choice. Claude requires null config_profile and the manual permission mode; Codex keeps its managed permission profile. --check is the read-only default. --apply requires --confirm with the exact preview digest and the local HERDR_ENV=1 context. The request must bind an existing native Task preparation, Spec and permission evidence. An optional codex_project_trust grant confirms only the exact physical repository root for this process, before launch. Preview binds the trust effect and policy; sandbox and approvals remain enforced and no persistent config is changed. Project execution layers, explicit distrust or unknown policy stop before a tab is created. Repeated starts reuse the reservation without launching again. No TaskResult is published.",
+        "long": "Preview or confirm one prepared Task start in Herdr. Select runtime.provider in the request: codex (default when omitted) or claude. runtime.model is a separate choice. Claude requires null config_profile and the manual permission mode; Codex keeps its managed permission profile. --check is the read-only default. --apply requires --confirm with the exact preview digest and the local HERDR_ENV=1 context. The request must bind an existing native Task preparation, Spec and permission evidence. An optional codex_project_trust grant confirms only the exact physical repository root for this process, before launch. Preview binds the trust effect and policy; sandbox and approvals remain enforced and no persistent config is changed. Project execution layers, explicit distrust or unknown policy stop before a tab is created. An optional Claude-only claude_project_trust grant with mode configuration persists folder trust for the exact prepared worktree before launch. Preview shows the config path and effect; failed trust writes warn and continue the same native start. Tool permissions remain unchanged. Repeated starts reuse the reservation without launching or writing trust again. No TaskResult is published.",
         "path": "ply workflow run start",
         "runnable": true,
         "short": "Preview or confirm one prepared Task start in Herdr",

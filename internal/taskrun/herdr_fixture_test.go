@@ -13,13 +13,16 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
-const workflowStandin = `import json, sys, time
+const workflowStandin = `import json, sys, time, subprocess
 from pathlib import Path
 root = Path(__file__).parent
 path = root / "herdr-model.json"
 model = json.loads(path.read_text())
 args = sys.argv[1:]
 call = {"argv": args, "at_ns": time.time_ns()}
+if model.get("claude_trust_config") and args[:2] == ["agent", "start"]:
+    cfg = json.loads(Path(model["claude_trust_config"]).read_text())
+    call["claude_trusted_before_start"] = cfg.get("projects", {}).get(model["claude_trust_key"], {}).get("hasTrustDialogAccepted") is True
 if model.get("bootstrap_mode"):
     run_root = Path(model["bootstrap_run_root"])
     state_path = run_root / "state.json"
@@ -67,6 +70,10 @@ if cmd == ["agent", "get"] and model.get("observations"):
 result = {}
 if cmd == ["tab", "create"]:
     result = {"root_pane": agent}
+elif cmd == ["pane", "run"]:
+    if not model.get("claude_environment_no_ack"):
+        subprocess.run(["/bin/bash", "--noprofile", "--norc", "-c", args[3]], check=True)
+    result = {"ok": True}
 elif cmd in (["agent", "start"], ["agent", "get"]):
     result = {"agent": agent}
 elif cmd == ["agent", "prompt"]:

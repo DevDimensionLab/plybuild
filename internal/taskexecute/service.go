@@ -2,6 +2,7 @@ package taskexecute
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,23 +25,25 @@ type Input struct {
 }
 
 type Result struct {
-	Kind          string                            `json:"kind"`
-	SchemaVersion int                               `json:"schema_version"`
-	State         string                            `json:"state"`
-	Goal          *workspace.TaskGoalExecutePreview `json:"goal"`
-	Runtime       *RuntimePreview                   `json:"runtime"`
-	Run           *taskrun.WorkflowRun              `json:"run"`
-	RequestPath   string                            `json:"request_path"`
-	NextAction    string                            `json:"next_action"`
+	Kind               string                            `json:"kind"`
+	SchemaVersion      int                               `json:"schema_version"`
+	State              string                            `json:"state"`
+	Goal               *workspace.TaskGoalExecutePreview `json:"goal"`
+	Runtime            *RuntimePreview                   `json:"runtime"`
+	ClaudeProjectTrust *taskrun.ClaudeTrustPreview       `json:"claude_project_trust,omitempty"`
+	Run                *taskrun.WorkflowRun              `json:"run"`
+	RequestPath        string                            `json:"request_path"`
+	NextAction         string                            `json:"next_action"`
 }
 
 type launchIntent struct {
-	Kind          string                           `json:"kind"`
-	SchemaVersion int                              `json:"schema_version"`
-	Goal          workspace.TaskGoalExecutePreview `json:"goal"`
-	Runtime       RuntimePreview                   `json:"runtime"`
-	Human         workspace.QueueHumanDecision     `json:"human"`
-	Notification  *taskrun.FileBinding             `json:"notification"`
+	Kind               string                           `json:"kind"`
+	SchemaVersion      int                              `json:"schema_version"`
+	Goal               workspace.TaskGoalExecutePreview `json:"goal"`
+	Runtime            RuntimePreview                   `json:"runtime"`
+	Human              workspace.QueueHumanDecision     `json:"human"`
+	Notification       *taskrun.FileBinding             `json:"notification"`
+	ClaudeProjectTrust *taskrun.ClaudeProjectTrust      `json:"claude_project_trust,omitempty"`
 }
 
 func checkOrigin(d taskrun.Dependencies, target workspace.QueueTarget) error {
@@ -121,6 +124,10 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		if os.IsNotExist(err) {
 			// The immutable request may have been written before the transport was
 			// called. Its native reservation logic owns any subsequent first start.
+			out.ClaudeProjectTrust, err = taskrun.PreviewClaudeProjectTrust(request.ClaudeProjectTrust)
+			if err != nil {
+				return out, err
+			}
 			return startRequest(d, out, input.Check)
 		}
 		if err != nil {
@@ -140,6 +147,15 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	var intent launchIntent
 	old, err := readPreservedJSON(intentPath, &intent)
 	if err == nil {
+		// An omitted field keeps old launch authority unchanged. Explicit null
+		// is malformed and must not disguise a new or changed trust choice.
+		var fields map[string]json.RawMessage
+		if err = json.Unmarshal(old, &fields); err != nil {
+			return out, err
+		}
+		if _, exists := fields["claude_project_trust"]; exists && intent.ClaudeProjectTrust == nil {
+			return out, fmt.Errorf("preserved Claude project trust must be an explicit configuration grant or omitted")
+		}
 		actual, actualErr := taskrun.Canonical(intent.Goal)
 		expected, expectedErr := taskrun.Canonical(plan)
 		if intent.Kind != "ply.workflow.execute-intent" || intent.SchemaVersion != 1 || actualErr != nil || expectedErr != nil || !bytes.Equal(actual, expected) {
@@ -169,8 +185,23 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		intent = launchIntent{Kind: "ply.workflow.execute-intent", SchemaVersion: 1, Goal: plan, Runtime: runtime, Notification: notice,
 			Human: workspace.QueueHumanDecision{ActorClaim: "Local execute caller", DecidedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Source: "explicit_human_instruction", Statement: "The local caller requested this exact goal from its registered return worktree through ply workflow execute; caller identity is a local attestation."},
 		}
+		if runtime.Runtime.Provider == "claude" {
+			intent.ClaudeProjectTrust = &taskrun.ClaudeProjectTrust{Mode: "configuration", WorktreeRoot: plan.WorktreePath}
+		}
 	}
 	out.Runtime = &intent.Runtime
+	if grant := intent.ClaudeProjectTrust; grant != nil {
+		if intent.Runtime.Runtime.Provider != "claude" || grant.Mode != "configuration" || grant.WorktreeRoot != plan.WorktreePath {
+			return out, fmt.Errorf("preserved Claude project trust differs from its assigned provider or exact Task worktree")
+		}
+		if err = physicalPath(grant.WorktreeRoot); err != nil {
+			return out, err
+		}
+	}
+	out.ClaudeProjectTrust, err = taskrun.PreviewClaudeProjectTrust(intent.ClaudeProjectTrust)
+	if err != nil {
+		return out, err
+	}
 	if input.Check {
 		out.State, out.NextAction = "ready", "Run the same execute command without --check to create the worktree and start the assigned interactive owner."
 		return out, nil
@@ -229,13 +260,14 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		RequestKey: key, WorkspaceRoot: plan.Workspace, PreparationID: preparation.ID, PreparationSHA256: digestBytes(pbytes), HandoffDraft: draft, Runtime: r.Runtime,
 		HumanAuthority:  taskrun.HumanAuthority{ActorClaim: intent.Human.ActorClaim, StartSurface: "human_authorized_herdr", Authorized: true},
 		HerdrExecutable: r.Herdr, HerdrWorkspaceID: r.HerdrWorkspace, TabLabel: tabLabel(plan.Goal.Title),
-		Delivery: taskrun.DeliveryContract{OwnerClaim: r.Runtime.Provider + " delivery owner", Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: true, AllowLocalInstall: true, LocalIntegration: "after_human_pass", NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort},
+		ClaudeProjectTrust: intent.ClaudeProjectTrust,
+		Delivery:           taskrun.DeliveryContract{OwnerClaim: r.Runtime.Provider + " delivery owner", Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: true, AllowLocalInstall: true, LocalIntegration: "after_human_pass", NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort},
 	})
 	if err != nil {
 		return out, err
 	}
-	// Repository trust remains with the provider's existing configuration and
-	// interactive onboarding. A delivery goal does not grant project trust.
+	// Reuse only the intent's explicit grant. Reading an older intent must never
+	// add new configuration authority to its request.
 	b, err := taskrun.Canonical(request)
 	if err != nil {
 		return out, err

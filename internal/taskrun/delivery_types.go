@@ -27,6 +27,7 @@ type DeliveryRequestInput struct {
 	HerdrExecutable                                             Executable
 	HerdrWorkspaceID, TabLabel                                  string
 	CodexProjectTrust                                           *CodexProjectTrust
+	ClaudeProjectTrust                                          *ClaudeProjectTrust
 	Delivery                                                    DeliveryContract
 }
 

@@ -48,6 +48,9 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if _, present := fields["codex_project_trust"]; present && r.CodexProjectTrust == nil {
 		return r, workflowError(2, "codex_project_trust must be an object, not null")
 	}
+	if _, present := fields["claude_project_trust"]; present && r.ClaudeProjectTrust == nil {
+		return r, workflowError(2, "claude_project_trust must be an object, not null")
+	}
 	if e = workflowValidateTrust(r); e != nil {
 		return r, e
 	}
@@ -125,17 +128,28 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 			p.Effects = append(p.Effects, "Trust only Codex repository "+r.CodexProjectTrust.RepositoryRoot+" for this process (process-local); preserve the bound model, config profile, permission profile, sandbox, on-request and auto_review. No persistent configuration change.")
 		}
 	}
+	if e == nil && r.ClaudeProjectTrust != nil {
+		p.ClaudeTrust, e = workflowObserveClaudeTrust(r, p.Observed.Target.WorktreeLocator)
+		if e == nil {
+			if p.ClaudeTrust.Reason != "" {
+				p.Effects = append(p.Effects, "Skip automatic Claude folder trust: "+p.ClaudeTrust.Reason)
+			} else {
+				p.Effects = append(p.Effects, "Bind the new tab's Claude configuration environment with one acknowledged shell setup. Before starting Claude, persist folder trust for only "+p.ClaudeTrust.ProjectKey+" in "+p.ClaudeTrust.ConfigPath+". Preserve all other configuration and native permissions. If trust cannot be saved, report the outcome and continue the single normal start; inspect any native dialog in the same tab.")
+			}
+		}
+	}
 	if e != nil {
 		p.Reasons = append(p.Reasons, Reason{"workflow_start_blocked", e.Error()})
 		return p, e
 	}
 	p.Confirmation = ptr(digest(struct {
-		Request  WorkflowRequest
-		Observed Observed
-		Paths    WorkflowPaths
-		Effects  []string
-		Trust    *workflowTrustFacts `json:"codex_project_trust,omitempty"`
-	}{r, p.Observed, p.Paths, p.Effects, p.CodexTrust}))
+		Request     WorkflowRequest
+		Observed    Observed
+		Paths       WorkflowPaths
+		Effects     []string
+		Trust       *workflowTrustFacts `json:"codex_project_trust,omitempty"`
+		ClaudeTrust *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
+	}{r, p.Observed, p.Paths, p.Effects, p.CodexTrust, p.ClaudeTrust}))
 	return p, nil
 }
 func WorkflowPreviewStart(d Dependencies, file string) (any, error) {
@@ -202,6 +216,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 			}
 			s := workflowInitial(r, fresh.Observed)
 			s.CodexTrust = fresh.CodexTrust
+			s.ClaudeTrust = fresh.ClaudeTrust
 			if e = d.writeValue(workflowIndex(r.WorkspaceRoot, s.Result.RunID), s); e != nil {
 				return e
 			}

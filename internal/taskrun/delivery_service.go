@@ -12,6 +12,7 @@ import (
 func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, error) {
 	r := WorkflowRequest{Envelope: deliveryEnv("herdr-run-request"), RequestKey: in.RequestKey, WorkspaceRoot: in.WorkspaceRoot, PreparationID: in.PreparationID, PreparationSHA256: in.PreparationSHA256, HandoffDraft: in.HandoffDraft, Runtime: in.Runtime, HumanAuthority: in.HumanAuthority, CodexProjectTrust: in.CodexProjectTrust, ReturnMode: "delivery_owner", Delivery: &in.Delivery}
 	r.Herdr.Executable, r.Herdr.WorkspaceID, r.Herdr.TabLabel = in.HerdrExecutable, in.HerdrWorkspaceID, in.TabLabel
+	r.ClaudeProjectTrust = in.ClaudeProjectTrust
 	return r, validateDeliveryWorkflowRequest(r)
 }
 
