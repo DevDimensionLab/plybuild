@@ -857,6 +857,89 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute recover-start wfr_<digest> --check\n  ply workflow execute recover-start wfr_<digest>\n  ply workflow execute show wfr_<digest>",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "preview the replacement binding and inspect the existing pane without writes or startup"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for recover-start"
+          },
+          {
+            "annotations": {},
+            "default": "60",
+            "deprecated": "",
+            "hidden": false,
+            "name": "timeout",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "wait timeout in seconds; never stops the agent"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Explicitly recover one exited Codex startup in its existing Herdr tab. Require the original Task and return worktrees, no Task-prompt attempt or runtime acceptance, and fresh pane and process-tree evidence of an idle shell without a background provider. Unavailable process inspection stops recovery before startup. Bind the installed Codex and Ply control executables without changing the goal, model, effort, permissions or original records. One replacement is allowed; repeated calls inspect it and never start another agent. Use --check to inspect readiness without writes or startup.",
+        "path": "ply workflow execute recover-start",
+        "runnable": true,
+        "short": "Replace an exited Codex startup before its first Task prompt",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "recover-start RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute recover-start"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workflow execute resume wfr_<digest> --timeout 60",
         "flags": [
           {
