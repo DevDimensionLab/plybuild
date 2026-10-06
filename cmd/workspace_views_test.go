@@ -8,7 +8,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/spf13/cobra"
 )
 
 type viewCWD struct {
@@ -138,9 +140,11 @@ func TestCapabilitiesRetainCoreAndAdvertiseReadExtensions(t *testing.T) {
 	if len(v.Operations) != 5 {
 		t.Fatal("legacy core catalog changed")
 	}
-	want := map[string]bool{"task.list:progress": false, "task.show:progress": false, "attention:default": false, "epic.list:default": false, "journal.recent:default": false, "run.list:default": false, "worktree.list:default": false, "status:default": false}
+	want := map[string]bool{"task.list:progress": false, "task.show:progress": false, "attention:default": false, "epic.list:default": false, "journal.recent:default": false, "run.list:default": false, "worktree.list:default": false, "status:default": false, "workflow.status:default": false}
+	tree := &cobra.Command{Use: "ply"}
+	tree.AddCommand(newWorkspaceCommand(workspace.Dependencies{}), newWorkflowCommand(workflowhandoff.Dependencies{}))
 	for _, op := range v.Extensions {
-		command, remaining, err := newWorkspaceCommand(workspace.Dependencies{}).Find(op.Command[1:])
+		command, remaining, err := tree.Find(op.Command)
 		if err != nil || len(remaining) != 0 || command.Flags().Lookup("format") == nil {
 			t.Fatalf("extension does not resolve: %+v, %v", op, err)
 		}
@@ -150,6 +154,14 @@ func TestCapabilitiesRetainCoreAndAdvertiseReadExtensions(t *testing.T) {
 		}
 		if op.Effect != "read" {
 			t.Fatalf("advertised a mutation: %+v", op)
+		}
+		if op.ID == "workflow.status" && (command.CommandPath() != "ply workflow status" || len(op.ResultSchemas) != 1 || op.ResultSchemas[0].Kind != "WorkflowStatusReadback@1") {
+			t.Fatalf("workflow status advertised the wrong command or contract: %+v", op)
+		}
+		for _, flag := range append(append([]string{}, op.Filters...), op.Selectors...) {
+			if command.Flags().Lookup(strings.TrimPrefix(flag, "--")) == nil {
+				t.Fatalf("extension advertises unsupported flag %s: %+v", flag, op)
+			}
 		}
 	}
 	for id, present := range want {

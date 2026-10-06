@@ -1,0 +1,510 @@
+{
+  "kind": "WorkflowStatusReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "filters": {
+    "project_id": null,
+    "repo_id": null,
+    "epic_id": null
+  },
+  "include_all": false,
+  "observed_at_utc": "2026-10-06T18:00:00Z",
+  "source_basis": "registered",
+  "freshness": "fresh",
+  "projects": [
+    {
+      "project_id": "ply",
+      "name": "Ply",
+      "repo_ids": [
+        "cli"
+      ]
+    },
+    {
+      "project_id": "plyapp",
+      "name": "Plyapp",
+      "repo_ids": [
+        "app"
+      ]
+    },
+    {
+      "project_id": "empty",
+      "name": "Empty project",
+      "repo_ids": []
+    }
+  ],
+  "epics": [
+    {
+      "epic_id": "cli",
+      "project_id": "ply",
+      "title": "CLI",
+      "lifecycle": "active",
+      "base": [],
+      "worktrees": [],
+      "task_count": 3,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 0,
+        "nothing": 3
+      },
+      "last_activity_utc": null
+    },
+    {
+      "epic_id": "home",
+      "project_id": "plyapp",
+      "title": "Home",
+      "lifecycle": "active",
+      "base": [],
+      "worktrees": [],
+      "task_count": 1,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 0,
+        "nothing": 1
+      },
+      "last_activity_utc": null
+    },
+    {
+      "epic_id": "later",
+      "project_id": "plyapp",
+      "title": "Empty Epic",
+      "lifecycle": "active",
+      "base": [],
+      "worktrees": [],
+      "task_count": 0,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 0,
+        "nothing": 0
+      },
+      "last_activity_utc": null
+    }
+  ],
+  "items": [
+    {
+      "task_id": "clarify-output",
+      "project_id": "ply",
+      "repo_id": "cli",
+      "epic_id": "cli",
+      "title": "Clarify the output",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "worktree_ready",
+      "task_lifecycle": "active",
+      "epic_lifecycle": "active",
+      "category": "needs_you",
+      "progress": {
+        "state": "in_progress",
+        "has_progress": true,
+        "integration_classification": "unknown",
+        "technical_gate": null,
+        "human_qa_outcome": null,
+        "result_count": 0,
+        "task_result_id": null,
+        "integration_result_id": null,
+        "next_actions": [],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [
+        {
+          "source": "delivery_report",
+          "kind": "answer_question",
+          "actor": "human",
+          "reason": "Which output should be the default?",
+          "severity": "next_step",
+          "since_utc": null,
+          "evidence_ids": [
+            "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+            "question-event-a"
+          ],
+          "current": true,
+          "run_id": "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+          "queue_id": null
+        }
+      ],
+      "runs": [
+        {
+          "run_id": "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+          "task_id": "clarify-output",
+          "provider": "codex",
+          "transport": "herdr",
+          "logical_session_id": "recorded-session-a",
+          "herdr": {
+            "workspace_id": "workspace-a",
+            "tab_id": "tab-a",
+            "pane_id": null,
+            "terminal_id": null,
+            "agent_session_id": "agent-a"
+          },
+          "state": "unknown",
+          "state_freshness": "unknown",
+          "historical_state": "working",
+          "unresolved": true,
+          "started_at_utc": null,
+          "last_seen_utc": null,
+          "return": null,
+          "freshness": "fresh",
+          "sources": [
+            {
+              "locator": "/work/.ply/workflow-runs/requests/wfr_1111111111111111111111111111111111111111111111111111111111111111.json",
+              "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ],
+          "reasons": [],
+          "delivery": {
+            "phase": "needs_input",
+            "basis": {
+              "task_id": "clarify-output",
+              "problem": {
+                "revision": 1,
+                "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "spec_id": "output-goal",
+              "spec": {
+                "revision": 1,
+                "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "assessment": {
+                "id": "",
+                "manifest_sha256": ""
+              },
+              "selection": {
+                "id": "",
+                "manifest_sha256": ""
+              },
+              "task_worktree_id": "worktree-a",
+              "delivery_binding_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "dependencies": []
+            },
+            "goal": {
+              "spec_id": "output-goal",
+              "spec": {
+                "revision": 1,
+                "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            },
+            "goal_source": {
+              "locator": "/work/.ply/task-content/v1/manifests/sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+              "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "report": {
+              "event_id": "question-event-a",
+              "binding": {
+                "locator": "/work/.ply/workflow-runs/runs/wfr_1111111111111111111111111111111111111111111111111111111111111111/delivery/question-event-a.json",
+                "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "phase": "needs_input",
+              "summary": "Output behavior needs a product decision.",
+              "meaning": "No candidate has been qualified.",
+              "question": "Which output should be the default?",
+              "process_observation": null,
+              "preventive_followup": null,
+              "current": true,
+              "recorded_at_utc": null
+            },
+            "reports": [
+              {
+                "event_id": "question-event-a",
+                "binding": {
+                  "locator": "/work/.ply/workflow-runs/runs/wfr_1111111111111111111111111111111111111111111111111111111111111111/delivery/question-event-a.json",
+                  "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                },
+                "phase": "needs_input",
+                "summary": "Output behavior needs a product decision.",
+                "meaning": "No candidate has been qualified.",
+                "question": "Which output should be the default?",
+                "process_observation": null,
+                "preventive_followup": null,
+                "current": true,
+                "recorded_at_utc": null
+              }
+            ],
+            "next_action": {
+              "actor": "human",
+              "recorded_actor": "human",
+              "kind": "answer_question",
+              "reason": "Which output should be the default?",
+              "event_id": "question-event-a",
+              "since_utc": null,
+              "evidence_ids": [
+                "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+                "question-event-a"
+              ]
+            },
+            "last_activity_utc": null,
+            "freshness": "fresh",
+            "reasons": []
+          }
+        }
+      ],
+      "queues": []
+    },
+    {
+      "task_id": "repair-output",
+      "project_id": "ply",
+      "repo_id": "cli",
+      "epic_id": "cli",
+      "title": "Repair the output",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "worktree_ready",
+      "task_lifecycle": "active",
+      "epic_lifecycle": "active",
+      "category": "follow_up",
+      "progress": {
+        "state": "attention",
+        "has_progress": true,
+        "integration_classification": "unknown",
+        "technical_gate": "passed",
+        "human_qa_outcome": "fail",
+        "result_count": 1,
+        "task_result_id": "task-result-a",
+        "integration_result_id": null,
+        "next_actions": [
+          {
+            "source": "content",
+            "kind": "follow_human_qa",
+            "actor": "agent",
+            "reason": "Address the recorded QA failure.",
+            "severity": "next_step",
+            "since_utc": null,
+            "evidence_ids": [
+              "qa-result-a"
+            ]
+          }
+        ],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [
+        {
+          "source": "content",
+          "kind": "follow_human_qa",
+          "actor": "agent",
+          "reason": "Address the recorded QA failure.",
+          "severity": "next_step",
+          "since_utc": null,
+          "evidence_ids": [
+            "qa-result-a"
+          ],
+          "current": true,
+          "run_id": null,
+          "queue_id": null
+        }
+      ],
+      "runs": [],
+      "queues": []
+    },
+    {
+      "task_id": "navigation",
+      "project_id": "plyapp",
+      "repo_id": "app",
+      "epic_id": "home",
+      "title": "Implement navigation",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "worktree_ready",
+      "task_lifecycle": "active",
+      "epic_lifecycle": "active",
+      "category": "in_progress",
+      "progress": {
+        "state": "in_progress",
+        "has_progress": true,
+        "integration_classification": "unknown",
+        "technical_gate": null,
+        "human_qa_outcome": null,
+        "result_count": 0,
+        "task_result_id": null,
+        "integration_result_id": null,
+        "next_actions": [],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [],
+      "runs": [
+        {
+          "run_id": "wfr_2222222222222222222222222222222222222222222222222222222222222222",
+          "task_id": "navigation",
+          "provider": "codex",
+          "transport": "herdr",
+          "logical_session_id": null,
+          "herdr": null,
+          "state": "unknown",
+          "state_freshness": "unknown",
+          "historical_state": "working",
+          "unresolved": true,
+          "started_at_utc": null,
+          "last_seen_utc": null,
+          "return": null,
+          "freshness": "fresh",
+          "sources": [
+            {
+              "locator": "/work/.ply/workflow-runs/requests/wfr_2222222222222222222222222222222222222222222222222222222222222222.json",
+              "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ],
+          "reasons": [],
+          "delivery": {
+            "phase": "working",
+            "basis": {
+              "task_id": "navigation",
+              "problem": {
+                "revision": 1,
+                "manifest_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              "spec_id": "navigation-goal",
+              "spec": {
+                "revision": 1,
+                "manifest_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              "assessment": {
+                "id": "",
+                "manifest_sha256": ""
+              },
+              "selection": {
+                "id": "",
+                "manifest_sha256": ""
+              },
+              "task_worktree_id": "worktree-b",
+              "delivery_binding_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "dependencies": []
+            },
+            "goal": {
+              "spec_id": "navigation-goal",
+              "spec": {
+                "revision": 1,
+                "manifest_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            },
+            "goal_source": {
+              "locator": "/work/.ply/task-content/v1/manifests/sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+              "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "report": null,
+            "reports": [],
+            "next_action": {
+              "actor": "agent",
+              "recorded_actor": "agent",
+              "kind": "continue_work",
+              "reason": "Continue recorded work.",
+              "event_id": null,
+              "since_utc": null,
+              "evidence_ids": []
+            },
+            "last_activity_utc": null,
+            "freshness": "fresh",
+            "reasons": []
+          }
+        }
+      ],
+      "queues": []
+    },
+    {
+      "task_id": "workflow-status",
+      "project_id": "ply",
+      "repo_id": "cli",
+      "epic_id": "cli",
+      "title": "Workspace workflow status",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "unbound",
+      "task_lifecycle": "active",
+      "epic_lifecycle": "active",
+      "category": "ready_next",
+      "progress": {
+        "state": "nothing",
+        "has_progress": false,
+        "integration_classification": "unknown",
+        "technical_gate": null,
+        "human_qa_outcome": null,
+        "result_count": 0,
+        "task_result_id": null,
+        "integration_result_id": null,
+        "next_actions": [],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [],
+      "runs": [],
+      "queues": [
+        {
+          "queue_id": "queue-a",
+          "revision": 3,
+          "target": {
+            "project_id": "ply",
+            "repo_id": "cli",
+            "epic_id": "cli",
+            "git_common_dir": "/work/ply/main/.git",
+            "parent_worktree_id": "epic-worktree-a",
+            "parent_locator": "/work/ply/cli",
+            "parent_ref": "refs/heads/cli"
+          },
+          "state": "pending",
+          "rank": 1,
+          "spec_id": "status-goal",
+          "spec": {
+            "revision": 1,
+            "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "readiness": "ready",
+          "current": null,
+          "freshness": "fresh",
+          "since_utc": "2026-10-06T17:00:00Z",
+          "reasons": [],
+          "evidence_ids": [
+            "queue-a",
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ],
+          "goal": {
+            "spec_id": "status-goal",
+            "spec": {
+              "revision": 1,
+              "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          "selection": null
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "total": 17,
+    "visible": 4,
+    "hidden": {
+      "inactive": 3,
+      "completed": 2,
+      "backlog": 8
+    },
+    "categories": {
+      "needs_you": 1,
+      "follow_up": 1,
+      "in_progress": 1,
+      "ready_next": 1,
+      "inactive": 0,
+      "completed": 0,
+      "backlog": 0
+    }
+  },
+  "diagnostics": []
+}

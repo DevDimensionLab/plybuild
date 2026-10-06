@@ -1,0 +1,2013 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://plybuild.io/schemas/read-contract/workflow-status-v1.schema.json",
+  "title": "WorkflowStatusReadback@1",
+  "description": "Read-only registered workspace workflow overview. Objects permit additive fields. Required fields, nullability, enum meanings and ordering form version 1; incompatible changes require a new kind/version. Identity comes from the physical discovered workspace and validated registry IDs. Counts satisfy total = visible + hidden.inactive + hidden.completed + hidden.backlog; each Task has exactly one category. --all has zero hidden counts. Source freshness is not live process freshness. No whole-response cache guarantee or cross-store transaction is asserted.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schema_version",
+    "workspace",
+    "filters",
+    "include_all",
+    "observed_at_utc",
+    "source_basis",
+    "freshness",
+    "projects",
+    "epics",
+    "items",
+    "counts",
+    "diagnostics"
+  ],
+  "properties": {
+    "kind": {
+      "const": "WorkflowStatusReadback@1",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "workspace": {
+      "$ref": "#/$defs/workspace"
+    },
+    "filters": {
+      "$ref": "#/$defs/scope"
+    },
+    "include_all": {
+      "type": "boolean"
+    },
+    "observed_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "source_basis": {
+      "const": "registered",
+      "type": "string"
+    },
+    "freshness": {
+      "type": "string",
+      "enum": [
+        "fresh",
+        "stale",
+        "unknown"
+      ]
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "project_id",
+          "name",
+          "repo_ids"
+        ],
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "repo_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "description": "Sorted by project_id. Each repo_ids array is sorted by repository ID."
+    },
+    "epics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/epic"
+      },
+      "description": "Sorted by project_id, then epic_id."
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      },
+      "description": "Sorted by category priority: needs_you, follow_up, in_progress, ready_next, inactive, completed, backlog. For needs_you and follow_up, when both rows have a current action, the first current action determines severity (attention before next_step), then oldest known since_utc (null last). Ties and other categories use project_id, repo_id, epic_id, then task_id. Within ready_next rows sharing the first queue binding queue_id, non-null rank sorts before task_id; no priority is invented across unrelated queues."
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "total",
+        "visible",
+        "hidden",
+        "categories"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "visible": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hidden": {
+          "type": "object",
+          "required": [
+            "inactive",
+            "completed",
+            "backlog"
+          ],
+          "properties": {
+            "inactive": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "completed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "backlog": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        "categories": {
+          "type": "object",
+          "required": [
+            "needs_you",
+            "follow_up",
+            "in_progress",
+            "ready_next",
+            "inactive",
+            "completed",
+            "backlog"
+          ],
+          "properties": {
+            "needs_you": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "follow_up": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "in_progress": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ready_next": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "inactive": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "completed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "backlog": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      },
+      "description": "Sorted lexically by source, task_id, run_id, queue_id, code, reason. Nullable identity fields sort as empty strings. Diagnostics remain visible independently of Task lifecycle filtering."
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "workspace": {
+      "type": "object",
+      "required": [
+        "root"
+      ],
+      "properties": {
+        "root": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "repo_id",
+        "epic_id"
+      ],
+      "properties": {
+        "project_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repo_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "epic_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "action": {
+      "type": "object",
+      "required": [
+        "source",
+        "kind",
+        "actor",
+        "reason",
+        "severity",
+        "since_utc",
+        "evidence_ids"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "content",
+            "integration",
+            "journal",
+            "readiness",
+            "delivery_report",
+            "queue",
+            "run"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable owner action code. This vocabulary is open; unknown codes retain their explicit actor, source and reason."
+        },
+        "actor": {
+          "type": "string",
+          "enum": [
+            "human",
+            "agent",
+            "ply",
+            "unknown"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "attention",
+            "next_step"
+          ]
+        },
+        "since_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "progress": {
+      "type": "object",
+      "required": [
+        "state",
+        "has_progress",
+        "integration_classification",
+        "technical_gate",
+        "human_qa_outcome",
+        "result_count",
+        "task_result_id",
+        "integration_result_id",
+        "next_actions",
+        "last_activity_utc",
+        "freshness",
+        "source_basis",
+        "reasons"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "integrated",
+            "attention",
+            "in_progress",
+            "nothing"
+          ]
+        },
+        "has_progress": {
+          "type": "boolean"
+        },
+        "integration_classification": {
+          "type": "string",
+          "enum": [
+            "exact_effect",
+            "already_integrated",
+            "no_effect",
+            "blocked",
+            "conflict",
+            "partial",
+            "unknown"
+          ]
+        },
+        "technical_gate": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "passed",
+                "good_enough_with_known_debt",
+                "failed",
+                "unknown"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "human_qa_outcome": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "pass",
+                "fail",
+                "blocked"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "task_result_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "integration_result_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        },
+        "last_activity_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "source_basis": {
+          "type": "string",
+          "enum": [
+            "registered"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "epic": {
+      "type": "object",
+      "required": [
+        "epic_id",
+        "project_id",
+        "title",
+        "lifecycle",
+        "base",
+        "worktrees",
+        "task_count",
+        "progress_counts",
+        "last_activity_utc"
+      ],
+      "properties": {
+        "epic_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "lifecycle": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "base": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "repo_id",
+              "revision",
+              "oid",
+              "tree",
+              "freshness",
+              "source_basis"
+            ],
+            "properties": {
+              "repo_id": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "oid": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+              },
+              "tree": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+              },
+              "freshness": {
+                "type": "string",
+                "enum": [
+                  "fresh",
+                  "stale",
+                  "unknown"
+                ]
+              },
+              "source_basis": {
+                "type": "string",
+                "enum": [
+                  "registered"
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "worktrees": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "repo_id",
+              "worktree_id",
+              "locator",
+              "ref",
+              "freshness",
+              "source_basis"
+            ],
+            "properties": {
+              "repo_id": {
+                "type": "string"
+              },
+              "worktree_id": {
+                "type": "string"
+              },
+              "locator": {
+                "type": "string"
+              },
+              "ref": {
+                "type": "string"
+              },
+              "freshness": {
+                "type": "string",
+                "enum": [
+                  "fresh",
+                  "stale",
+                  "unknown"
+                ]
+              },
+              "source_basis": {
+                "type": "string",
+                "enum": [
+                  "registered"
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "task_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "progress_counts": {
+          "type": "object",
+          "required": [
+            "integrated",
+            "attention",
+            "in_progress",
+            "nothing"
+          ],
+          "properties": {
+            "integrated": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "attention": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "in_progress": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nothing": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        "last_activity_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "task_id",
+        "provider",
+        "transport",
+        "logical_session_id",
+        "herdr",
+        "state",
+        "state_freshness",
+        "historical_state",
+        "unresolved",
+        "started_at_utc",
+        "last_seen_utc",
+        "freshness",
+        "sources",
+        "reasons",
+        "return"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "codex",
+                "claude"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transport": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "herdr",
+                "terminal",
+                "headless"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "logical_session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "herdr": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "workspace_id",
+                "tab_id",
+                "pane_id",
+                "terminal_id",
+                "agent_session_id"
+              ],
+              "properties": {
+                "workspace_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "tab_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pane_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "terminal_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "agent_session_id": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "returned",
+            "stopped",
+            "unknown"
+          ]
+        },
+        "state_freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "unknown"
+          ]
+        },
+        "historical_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unresolved": {
+          "type": "boolean"
+        },
+        "started_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_seen_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "locator",
+              "sha256"
+            ],
+            "properties": {
+              "locator": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "code",
+              "detail"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "detail": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "return": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "state",
+                "report_sha256",
+                "terminal_sha256",
+                "reported_outcome"
+              ],
+              "properties": {
+                "state": {
+                  "type": "string"
+                },
+                "report_sha256": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^sha256:[0-9a-f]{64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "terminal_sha256": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^sha256:[0-9a-f]{64}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "reported_outcome": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "delivery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/delivery"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "startup_recovery": {
+          "$ref": "#/$defs/startup_recovery"
+        }
+      },
+      "additionalProperties": true,
+      "description": "Preserved run identity and provenance. delivery and startup_recovery are optional declared fields, omitted when unavailable or inapplicable. state_freshness is separate from source freshness; no live process, executable or permission probe occurs."
+    },
+    "workflow_action": {
+      "type": "object",
+      "required": [
+        "source",
+        "kind",
+        "actor",
+        "reason",
+        "severity",
+        "since_utc",
+        "evidence_ids",
+        "current",
+        "run_id",
+        "queue_id"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "content",
+            "integration",
+            "journal",
+            "readiness",
+            "delivery_report",
+            "queue",
+            "run"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable owner action code. This vocabulary is open; unknown codes retain their explicit actor, source and reason."
+        },
+        "actor": {
+          "type": "string",
+          "enum": [
+            "human",
+            "agent",
+            "ply",
+            "unknown"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "attention",
+            "next_step"
+          ]
+        },
+        "since_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "queue_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "description": "Current actions affect classification; current=false preserves history without creating a present need. Actor is explicit and never inferred by the client."
+    },
+    "file_binding": {
+      "type": "object",
+      "required": [
+        "locator",
+        "sha256"
+      ],
+      "properties": {
+        "locator": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": true
+    },
+    "reason": {
+      "type": "object",
+      "required": [
+        "code",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "detail": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "queue_reason": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "revision": {
+      "type": "object",
+      "required": [
+        "revision",
+        "manifest_sha256"
+      ],
+      "properties": {
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "manifest_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": true
+    },
+    "decision": {
+      "type": "object",
+      "required": [
+        "id",
+        "manifest_sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "manifest_sha256": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true,
+      "description": "Native Task basis decision reference. Goal execution may retain an empty decision reference where no human solution selection exists."
+    },
+    "goal": {
+      "type": "object",
+      "required": [
+        "spec_id",
+        "spec"
+      ],
+      "properties": {
+        "spec_id": {
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/$defs/revision"
+        }
+      },
+      "additionalProperties": true
+    },
+    "basis": {
+      "type": "object",
+      "required": [
+        "task_id",
+        "problem",
+        "spec_id",
+        "spec",
+        "assessment",
+        "selection",
+        "task_worktree_id",
+        "delivery_binding_sha256",
+        "dependencies"
+      ],
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "problem": {
+          "$ref": "#/$defs/revision"
+        },
+        "spec_id": {
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/$defs/revision"
+        },
+        "assessment": {
+          "$ref": "#/$defs/decision"
+        },
+        "selection": {
+          "$ref": "#/$defs/decision"
+        },
+        "task_worktree_id": {
+          "type": "string"
+        },
+        "delivery_binding_sha256": {
+          "type": "string"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "delivery_action": {
+      "type": "object",
+      "required": [
+        "actor",
+        "recorded_actor",
+        "kind",
+        "reason",
+        "event_id",
+        "since_utc",
+        "evidence_ids"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string",
+          "enum": [
+            "human",
+            "agent",
+            "ply",
+            "unknown"
+          ]
+        },
+        "recorded_actor": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string"
+        },
+        "event_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "since_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "delivery_report": {
+      "type": "object",
+      "required": [
+        "event_id",
+        "binding",
+        "phase",
+        "summary",
+        "meaning",
+        "question",
+        "process_observation",
+        "preventive_followup",
+        "current",
+        "recorded_at_utc"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string"
+        },
+        "binding": {
+          "$ref": "#/$defs/file_binding"
+        },
+        "phase": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string"
+        },
+        "meaning": {
+          "type": "string"
+        },
+        "question": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "process_observation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "preventive_followup": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "recorded_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "description": "Preserved delivery report. Its phase and meaning are owner vocabulary, not technical gate, human QA or integration verdicts. Current report/event formats have no event timestamp: recorded_at_utc is null."
+    },
+    "delivery": {
+      "type": "object",
+      "required": [
+        "phase",
+        "basis",
+        "goal",
+        "goal_source",
+        "report",
+        "reports",
+        "next_action",
+        "last_activity_utc",
+        "freshness",
+        "reasons"
+      ],
+      "properties": {
+        "phase": {
+          "type": "string",
+          "minLength": 1
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/basis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/goal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal_source": {
+          "$ref": "#/$defs/file_binding"
+        },
+        "report": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/delivery_report"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/delivery_report"
+          }
+        },
+        "next_action": {
+          "$ref": "#/$defs/delivery_action"
+        },
+        "last_activity_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reason"
+          }
+        }
+      },
+      "additionalProperties": true,
+      "description": "Optional historical execute delivery projection. Omitted on runs without a delivery contract. Multiple reports retain their own bindings; reported work cannot supply native verdicts."
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "repo_id",
+        "epic_id",
+        "git_common_dir",
+        "parent_worktree_id",
+        "parent_locator",
+        "parent_ref"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "repo_id": {
+          "type": "string"
+        },
+        "epic_id": {
+          "type": "string"
+        },
+        "git_common_dir": {
+          "type": "string"
+        },
+        "parent_worktree_id": {
+          "type": "string"
+        },
+        "parent_locator": {
+          "type": "string"
+        },
+        "parent_ref": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "queue_current": {
+      "type": "object",
+      "required": [
+        "preparation_id",
+        "task_id",
+        "state",
+        "disposition",
+        "worktree_path",
+        "reasons"
+      ],
+      "properties": {
+        "preparation_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disposition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "worktree_path": {
+          "type": "string"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/queue_reason"
+          }
+        }
+      },
+      "additionalProperties": true,
+      "description": "Preserved queue owner preparation state and disposition; an open vocabulary, not a new claim of live readiness."
+    },
+    "queue": {
+      "type": "object",
+      "required": [
+        "queue_id",
+        "revision",
+        "target",
+        "state",
+        "rank",
+        "spec_id",
+        "spec",
+        "readiness",
+        "current",
+        "freshness",
+        "since_utc",
+        "reasons",
+        "evidence_ids",
+        "goal",
+        "selection"
+      ],
+      "properties": {
+        "queue_id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "current"
+          ]
+        },
+        "rank": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spec_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spec": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/revision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "readiness": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "blocked",
+            "unknown"
+          ]
+        },
+        "current": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/queue_current"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "since_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/queue_reason"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "goal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/goal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Exact frozen goal reference for goal queues; current preparation spec may refer to the execution Spec separately."
+        },
+        "selection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/decision"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Exact selected-solution decision when this is a legacy solution queue binding."
+        }
+      },
+      "additionalProperties": true,
+      "description": "Rank is local to this Project/Repo/Epic queue. Ready denotes a registered goal without known registered blockers; actual start still requires execute preflight. Legacy solution entries retain unknown readiness when live checks would be needed."
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "task_id",
+        "project_id",
+        "repo_id",
+        "epic_id",
+        "title",
+        "title_source",
+        "title_status",
+        "worktree_state",
+        "task_lifecycle",
+        "epic_lifecycle",
+        "category",
+        "progress",
+        "last_activity_utc",
+        "freshness",
+        "next_actions",
+        "runs",
+        "queues"
+      ],
+      "properties": {
+        "task_id": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string"
+        },
+        "repo_id": {
+          "type": "string"
+        },
+        "epic_id": {
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title_source": {
+          "type": "string",
+          "enum": [
+            "registration",
+            "problem_revision"
+          ]
+        },
+        "title_status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "unavailable"
+          ]
+        },
+        "worktree_state": {
+          "type": "string"
+        },
+        "task_lifecycle": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "epic_lifecycle": {
+          "type": "string",
+          "enum": [
+            "active",
+            "parked",
+            "frozen",
+            "archived"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "needs_you",
+            "follow_up",
+            "in_progress",
+            "ready_next",
+            "inactive",
+            "completed",
+            "backlog"
+          ]
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "last_activity_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "next_actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/workflow_action"
+          },
+          "description": "Sorted by current=true first, severity (attention before next_step), then oldest known since_utc (null last). Remaining keys compare lexically: source, kind, actor, run_id, queue_id, reason. Null run_id and queue_id sort as empty strings."
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/run"
+          },
+          "description": "Sorted by run_id. Each run retains its own request, delivery and optional recovery provenance."
+        },
+        "queues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/queue"
+          },
+          "description": "Sorted by queue_id, then state. Rank has meaning only within its Project/Repo/Epic queue."
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "title_status": {
+                "const": "available"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "title": {
+                "type": "string"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "title": {
+                "type": "null"
+              },
+              "title_source": {
+                "const": "problem_revision"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": [
+        "code",
+        "source",
+        "actor",
+        "severity",
+        "reason",
+        "since_utc",
+        "task_id",
+        "run_id",
+        "queue_id",
+        "evidence_ids"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "workspace",
+            "progress",
+            "content",
+            "run",
+            "queue",
+            "delivery_report"
+          ]
+        },
+        "actor": {
+          "type": "string",
+          "enum": [
+            "human",
+            "agent",
+            "ply",
+            "unknown"
+          ]
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "attention",
+            "next_step"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "since_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "task_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "queue_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true,
+      "description": "Identifiable source problem, retained even when a related Task is hidden by lifecycle. Code is open owner vocabulary; subject IDs are null if safe binding is unavailable."
+    },
+    "executable_binding": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": true,
+      "description": "Historical executable path and digest from the preserved recovery record. Status does not inspect these binaries, attest the current runtime, or grant permission to execute them."
+    },
+    "recorded_transport": {
+      "type": "object",
+      "required": [
+        "workspace_id",
+        "tab_id",
+        "pane_id",
+        "terminal_id",
+        "agent_session_id",
+        "state",
+        "observation",
+        "observed_at"
+      ],
+      "properties": {
+        "workspace_id": {
+          "type": "string"
+        },
+        "tab_id": {
+          "type": "string"
+        },
+        "pane_id": {
+          "type": "string"
+        },
+        "terminal_id": {
+          "type": "string"
+        },
+        "agent_session_id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "observation": {
+          "type": "string"
+        },
+        "observed_at": {
+          "type": "string",
+          "description": "Raw original transport observation timestamp from the recovery source, possibly empty in older records. Retained as historical metadata; it is not a current liveness or report activity timestamp."
+        },
+        "launch_pending": {
+          "type": "boolean",
+          "description": "Optional recorded transport claim; it does not authorize a launch or indicate present liveness."
+        }
+      },
+      "additionalProperties": true,
+      "description": "Typed original transport metadata retained by startup recovery. State and observation preserve the owner vocabulary from that record; they are not fresh process observations."
+    },
+    "startup_recovery": {
+      "type": "object",
+      "required": [
+        "generation",
+        "binding",
+        "original_provider_executable",
+        "original_control_executable",
+        "provider_executable",
+        "control_executable"
+      ],
+      "properties": {
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "binding": {
+          "$ref": "#/$defs/file_binding"
+        },
+        "original_provider_executable": {
+          "$ref": "#/$defs/executable_binding"
+        },
+        "original_control_executable": {
+          "$ref": "#/$defs/executable_binding"
+        },
+        "provider_executable": {
+          "$ref": "#/$defs/executable_binding"
+        },
+        "control_executable": {
+          "$ref": "#/$defs/executable_binding"
+        },
+        "transport_mode": {
+          "type": "string",
+          "enum": [
+            "reuse_terminal",
+            "replace_missing_terminal"
+          ],
+          "description": "Optional historical recovery mode. Absence preserves the older format; it does not authorize another recovery."
+        },
+        "original_transport": {
+          "$ref": "#/$defs/recorded_transport"
+        },
+        "replacement_transport": {
+          "$ref": "#/$defs/file_binding"
+        }
+      },
+      "additionalProperties": true,
+      "description": "Optional source-bound startup recovery history. The read-only adapter verifies preserved record, before-state, context and transport identities without probing binaries or changing runtime/permission authority. Recovery timestamps do not fill missing delivery report times."
+    }
+  }
+}

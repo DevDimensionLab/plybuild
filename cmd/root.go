@@ -96,7 +96,7 @@ func Execute() {
 func init() {
 	logrus.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
-	RootCmd.PersistentFlags().Bool("json", false, "turn on json output logging")
+	RootCmd.PersistentFlags().Bool("json", false, "turn on json output logging; workflow status selects JSON result data")
 	RootCmd.PersistentFlags().Bool("force", false, "uses default for prompts")
 	RootCmd.PersistentFlags().Bool("doc", false, "open documentation website")
 }

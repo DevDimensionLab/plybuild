@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/workspaceview"
 	"github.com/spf13/cobra"
 )
 
@@ -92,6 +93,12 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		operation("task.show", "progress", "WorkspaceTaskProgressReadback@1", []string{"--progress"}, []string{}, "none"),
 		operation("worktree.list", "default", "WorkspaceWorktreeListReadback@1", []string{}, []string{"project", "repo"}, "independent_and"),
 	}
+	extensions = append(extensions, capabilityOperation{
+		ID: "workflow.status", Command: []string{"workflow", "status"}, Mode: "default",
+		Selectors: []string{"--all"}, Formats: []string{"text", "json"},
+		Filters: []string{"project", "repo", "epic"}, FilterPolicy: "independent_and",
+		ResultSchemas: []capabilitySchema{{workspaceview.WorkflowStatusKind, &one}}, Effect: "read",
+	})
 	sort.Slice(extensions, func(i, j int) bool {
 		if extensions[i].ID != extensions[j].ID {
 			return extensions[i].ID < extensions[j].ID
@@ -106,7 +113,7 @@ func newCapabilitiesCommand(build func() capabilityBuild) *cobra.Command {
 	invalid := func(detail string) error { return fmt.Errorf("capabilities_invalid_arguments: %s", detail) }
 	command := &cobra.Command{
 		Use: "capabilities", Short: "Show supported workspace core read contracts",
-		Long:    "Show the stable workspace-core-read catalog and additive read_extensions for progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
+		Long:    "Show the stable workspace-core-read catalog and additive read_extensions for workflow status, progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
 		Example: "  ply capabilities\n  ply capabilities --format json",
 		// Do not inherit the root's profile initializer, even with global logging flags.
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },

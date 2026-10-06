@@ -1,0 +1,227 @@
+{
+  "kind": "WorkflowStatusReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "filters": {
+    "project_id": null,
+    "repo_id": null,
+    "epic_id": null
+  },
+  "include_all": true,
+  "observed_at_utc": "2026-10-06T18:00:00Z",
+  "source_basis": "registered",
+  "freshness": "fresh",
+  "projects": [
+    {
+      "project_id": "ply",
+      "name": "Ply",
+      "repo_ids": [
+        "cli"
+      ]
+    }
+  ],
+  "epics": [
+    {
+      "epic_id": "cli",
+      "project_id": "ply",
+      "title": "CLI",
+      "lifecycle": "active",
+      "base": [],
+      "worktrees": [],
+      "task_count": 3,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 0,
+        "nothing": 3
+      },
+      "last_activity_utc": null
+    }
+  ],
+  "items": [
+    {
+      "task_id": "clarify-output",
+      "project_id": "ply",
+      "repo_id": "cli",
+      "epic_id": "cli",
+      "title": "Clarify the output",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "worktree_ready",
+      "task_lifecycle": "parked",
+      "epic_lifecycle": "active",
+      "category": "inactive",
+      "progress": {
+        "state": "in_progress",
+        "has_progress": true,
+        "integration_classification": "unknown",
+        "technical_gate": null,
+        "human_qa_outcome": null,
+        "result_count": 0,
+        "task_result_id": null,
+        "integration_result_id": null,
+        "next_actions": [],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [
+        {
+          "source": "delivery_report",
+          "kind": "answer_question",
+          "actor": "human",
+          "reason": "Which output should be the default?",
+          "severity": "next_step",
+          "since_utc": null,
+          "evidence_ids": [
+            "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+            "question-event-a"
+          ],
+          "current": false,
+          "run_id": "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+          "queue_id": null
+        }
+      ],
+      "runs": [
+        {
+          "run_id": "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+          "task_id": "clarify-output",
+          "provider": "codex",
+          "transport": "herdr",
+          "logical_session_id": "recorded-session-a",
+          "herdr": {
+            "workspace_id": "workspace-a",
+            "tab_id": "tab-a",
+            "pane_id": null,
+            "terminal_id": null,
+            "agent_session_id": "agent-a"
+          },
+          "state": "unknown",
+          "state_freshness": "unknown",
+          "historical_state": "working",
+          "unresolved": true,
+          "started_at_utc": null,
+          "last_seen_utc": null,
+          "return": null,
+          "freshness": "fresh",
+          "sources": [
+            {
+              "locator": "/work/.ply/workflow-runs/requests/wfr_1111111111111111111111111111111111111111111111111111111111111111.json",
+              "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ],
+          "reasons": [],
+          "delivery": {
+            "phase": "needs_input",
+            "basis": {
+              "task_id": "clarify-output",
+              "problem": {
+                "revision": 1,
+                "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "spec_id": "output-goal",
+              "spec": {
+                "revision": 1,
+                "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "assessment": {
+                "id": "",
+                "manifest_sha256": ""
+              },
+              "selection": {
+                "id": "",
+                "manifest_sha256": ""
+              },
+              "task_worktree_id": "worktree-a",
+              "delivery_binding_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "dependencies": []
+            },
+            "goal": {
+              "spec_id": "output-goal",
+              "spec": {
+                "revision": 1,
+                "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            },
+            "goal_source": {
+              "locator": "/work/.ply/task-content/v1/manifests/sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+              "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "report": {
+              "event_id": "question-event-a",
+              "binding": {
+                "locator": "/work/.ply/workflow-runs/runs/wfr_1111111111111111111111111111111111111111111111111111111111111111/delivery/question-event-a.json",
+                "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              "phase": "needs_input",
+              "summary": "Output behavior needs a product decision.",
+              "meaning": "No candidate has been qualified.",
+              "question": "Which output should be the default?",
+              "process_observation": null,
+              "preventive_followup": null,
+              "current": true,
+              "recorded_at_utc": null
+            },
+            "reports": [
+              {
+                "event_id": "question-event-a",
+                "binding": {
+                  "locator": "/work/.ply/workflow-runs/runs/wfr_1111111111111111111111111111111111111111111111111111111111111111/delivery/question-event-a.json",
+                  "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                },
+                "phase": "needs_input",
+                "summary": "Output behavior needs a product decision.",
+                "meaning": "No candidate has been qualified.",
+                "question": "Which output should be the default?",
+                "process_observation": null,
+                "preventive_followup": null,
+                "current": true,
+                "recorded_at_utc": null
+              }
+            ],
+            "next_action": {
+              "actor": "human",
+              "recorded_actor": "human",
+              "kind": "answer_question",
+              "reason": "Which output should be the default?",
+              "event_id": "question-event-a",
+              "since_utc": null,
+              "evidence_ids": [
+                "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+                "question-event-a"
+              ]
+            },
+            "last_activity_utc": null,
+            "freshness": "fresh",
+            "reasons": []
+          }
+        }
+      ],
+      "queues": []
+    }
+  ],
+  "counts": {
+    "total": 1,
+    "visible": 1,
+    "hidden": {
+      "inactive": 0,
+      "completed": 0,
+      "backlog": 0
+    },
+    "categories": {
+      "needs_you": 0,
+      "follow_up": 0,
+      "in_progress": 0,
+      "ready_next": 0,
+      "inactive": 1,
+      "completed": 0,
+      "backlog": 0
+    }
+  },
+  "diagnostics": []
+}

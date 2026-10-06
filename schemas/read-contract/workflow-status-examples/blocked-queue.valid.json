@@ -1,0 +1,163 @@
+{
+  "kind": "WorkflowStatusReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "filters": {
+    "project_id": null,
+    "repo_id": null,
+    "epic_id": null
+  },
+  "include_all": false,
+  "observed_at_utc": "2026-10-06T18:00:00Z",
+  "source_basis": "registered",
+  "freshness": "fresh",
+  "projects": [
+    {
+      "project_id": "ply",
+      "name": "Ply",
+      "repo_ids": [
+        "cli"
+      ]
+    }
+  ],
+  "epics": [
+    {
+      "epic_id": "cli",
+      "project_id": "ply",
+      "title": "CLI",
+      "lifecycle": "active",
+      "base": [],
+      "worktrees": [],
+      "task_count": 3,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 0,
+        "nothing": 3
+      },
+      "last_activity_utc": null
+    }
+  ],
+  "items": [
+    {
+      "task_id": "workflow-status",
+      "project_id": "ply",
+      "repo_id": "cli",
+      "epic_id": "cli",
+      "title": "Workspace workflow status",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "unbound",
+      "task_lifecycle": "active",
+      "epic_lifecycle": "active",
+      "category": "follow_up",
+      "progress": {
+        "state": "nothing",
+        "has_progress": false,
+        "integration_classification": "unknown",
+        "technical_gate": null,
+        "human_qa_outcome": null,
+        "result_count": 0,
+        "task_result_id": null,
+        "integration_result_id": null,
+        "next_actions": [],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [
+        {
+          "source": "queue",
+          "kind": "inspect_queue",
+          "actor": "agent",
+          "reason": "Follow the existing preparation before selecting another goal.",
+          "severity": "next_step",
+          "since_utc": "2026-10-06T17:00:00Z",
+          "evidence_ids": [
+            "queue-a",
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ],
+          "current": true,
+          "run_id": null,
+          "queue_id": "queue-a"
+        }
+      ],
+      "runs": [],
+      "queues": [
+        {
+          "queue_id": "queue-a",
+          "revision": 3,
+          "target": {
+            "project_id": "ply",
+            "repo_id": "cli",
+            "epic_id": "cli",
+            "git_common_dir": "/work/ply/main/.git",
+            "parent_worktree_id": "epic-worktree-a",
+            "parent_locator": "/work/ply/cli",
+            "parent_ref": "refs/heads/cli"
+          },
+          "state": "pending",
+          "rank": 1,
+          "spec_id": "status-goal",
+          "spec": {
+            "revision": 1,
+            "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "readiness": "blocked",
+          "current": {
+            "preparation_id": "preparation-a",
+            "task_id": "preparing-other",
+            "state": "preparing",
+            "disposition": "current",
+            "worktree_path": "/work/ply/preparing-other",
+            "reasons": []
+          },
+          "freshness": "fresh",
+          "since_utc": "2026-10-06T17:00:00Z",
+          "reasons": [
+            {
+              "code": "task_queue_current_preparation",
+              "message": "Follow the existing preparation before selecting another goal."
+            }
+          ],
+          "evidence_ids": [
+            "queue-a",
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ],
+          "goal": {
+            "spec_id": "status-goal",
+            "spec": {
+              "revision": 1,
+              "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          "selection": null
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "total": 2,
+    "visible": 1,
+    "hidden": {
+      "inactive": 1,
+      "completed": 0,
+      "backlog": 0
+    },
+    "categories": {
+      "needs_you": 0,
+      "follow_up": 1,
+      "in_progress": 0,
+      "ready_next": 0,
+      "inactive": 0,
+      "completed": 0,
+      "backlog": 0
+    }
+  },
+  "diagnostics": []
+}

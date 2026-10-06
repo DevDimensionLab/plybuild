@@ -14,7 +14,10 @@ import (
 
 // TaskContentStorage owns bounded, physical reads and publish-once content. Its
 // fault boundary is injected per dependency instance, never through environment.
-type TaskContentStorage struct{ fault func(string) error }
+type TaskContentStorage struct {
+	fault        func(string) error
+	readCaptured func(root, kind, digest string) ([]byte, error)
+}
 
 func (s *TaskContentStorage) check(stage string) error {
 	if s == nil {
@@ -132,6 +135,9 @@ func (s *TaskContentStorage) directories(root, kind string, create bool) error {
 	return nil
 }
 func (s *TaskContentStorage) Read(root, kind, digest string) ([]byte, error) {
+	if s != nil && s.readCaptured != nil {
+		return s.readCaptured(root, kind, digest)
+	}
 	if !digestPattern.MatchString(digest) {
 		return nil, contentError("task_content_integrity_conflict", "invalid managed digest", nil)
 	}
@@ -158,6 +164,9 @@ func (s *TaskContentStorage) Read(root, kind, digest string) ([]byte, error) {
 	return b, nil
 }
 func (s *TaskContentStorage) Publish(root, kind string, b []byte) (string, error) {
+	if s != nil && s.readCaptured != nil {
+		return "", contentError("task_content_read_only", "captured content is read-only", nil)
+	}
 	digest := digestTaskBytes(b)
 	if e := s.directories(root, kind, true); e != nil {
 		return "", e
@@ -232,6 +241,9 @@ func (s *TaskContentStorage) Publish(root, kind string, b []byte) (string, error
 	return digest, nil
 }
 func (s *TaskContentStorage) Sync(root, kind, digest string) error {
+	if s != nil && s.readCaptured != nil {
+		return contentError("task_content_read_only", "captured content is read-only", nil)
+	}
 	if _, e := s.Read(root, kind, digest); e != nil {
 		return e
 	}

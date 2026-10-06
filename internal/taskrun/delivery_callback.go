@@ -114,6 +114,28 @@ func deliveryAppendEvent(d Dependencies, s *workflowState, id, kind string, valu
 }
 
 func validateDeliveryReport(r DeliveryReport) error {
+	if err := validateDeliveryReportContent(r); err != nil {
+		return err
+	}
+	for _, b := range r.Evidence {
+		if _, e := workflowBound(b, 64<<20); e != nil {
+			return e
+		}
+	}
+	for _, v := range r.VerifierResults {
+		for _, b := range v.Evidence {
+			if _, e := workflowBound(b, 64<<20); e != nil {
+				return e
+			}
+		}
+	}
+	return nil
+}
+
+// The historical inventory validates the preserved report itself. Referenced
+// working artifacts are checked at publication, not reread as live inputs by a
+// bulk status query. They never qualify native results in that projection.
+func validateDeliveryReportContent(r DeliveryReport) error {
 	if r.Envelope != deliveryEnv("delivery-report") || !key(r.EventID) || !plain(r.Summary, 1, 240) || !plain(r.Meaning, 1, 2000) || r.Phase != "working" && r.Phase != "needs_input" && r.Phase != "stopped" {
 		return workflowError(2, "invalid delivery progress report")
 	}
@@ -122,11 +144,6 @@ func validateDeliveryReport(r DeliveryReport) error {
 	}
 	if r.PreviousEventSHA256 != nil && !digestPattern.MatchString(*r.PreviousEventSHA256) {
 		return workflowError(2, "invalid delivery predecessor digest")
-	}
-	for _, b := range r.Evidence {
-		if _, e := workflowBound(b, 64<<20); e != nil {
-			return e
-		}
 	}
 	seen := map[string]bool{}
 	for _, v := range r.VerifierResults {
@@ -145,11 +162,6 @@ func validateDeliveryReport(r DeliveryReport) error {
 			}
 		default:
 			return workflowError(2, "unknown verifier outcome")
-		}
-		for _, b := range v.Evidence {
-			if _, e := workflowBound(b, 64<<20); e != nil {
-				return e
-			}
 		}
 	}
 	return nil

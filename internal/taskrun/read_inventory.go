@@ -34,22 +34,24 @@ type InventoryReturn struct {
 }
 
 type InventoryRun struct {
-	RunID            string           `json:"run_id"`
-	TaskID           *string          `json:"task_id"`
-	Provider         *string          `json:"provider"`
-	Transport        *string          `json:"transport"`
-	LogicalSessionID *string          `json:"logical_session_id"`
-	Herdr            *InventoryHerdr  `json:"herdr"`
-	State            string           `json:"state"`
-	StateFreshness   string           `json:"state_freshness"`
-	HistoricalState  *string          `json:"historical_state"`
-	Unresolved       bool             `json:"unresolved"`
-	StartedAtUTC     *string          `json:"started_at_utc"`
-	LastSeenUTC      *string          `json:"last_seen_utc"`
-	Return           *InventoryReturn `json:"return"`
-	Freshness        string           `json:"freshness"`
-	Sources          []FileBinding    `json:"sources"`
-	Reasons          []Reason         `json:"reasons"`
+	RunID            string                    `json:"run_id"`
+	TaskID           *string                   `json:"task_id"`
+	Provider         *string                   `json:"provider"`
+	Transport        *string                   `json:"transport"`
+	LogicalSessionID *string                   `json:"logical_session_id"`
+	Herdr            *InventoryHerdr           `json:"herdr"`
+	State            string                    `json:"state"`
+	StateFreshness   string                    `json:"state_freshness"`
+	HistoricalState  *string                   `json:"historical_state"`
+	Unresolved       bool                      `json:"unresolved"`
+	StartedAtUTC     *string                   `json:"started_at_utc"`
+	LastSeenUTC      *string                   `json:"last_seen_utc"`
+	Return           *InventoryReturn          `json:"return"`
+	Freshness        string                    `json:"freshness"`
+	Sources          []FileBinding             `json:"sources"`
+	Reasons          []Reason                  `json:"reasons"`
+	Delivery         *InventoryDelivery        `json:"delivery,omitempty"`
+	StartupRecovery  *InventoryStartupRecovery `json:"startup_recovery,omitempty"`
 }
 
 type Inventory struct {
@@ -72,6 +74,7 @@ func ReadInventory(d Dependencies, root string) (Inventory, error) {
 	if observed.Root != root {
 		return out, conflict("inventory root is not the physical workspace root")
 	}
+	workflowIDs := map[string]bool{}
 	for _, store := range []struct{ path, kind string }{
 		{filepath.Join(storeRoot(root), "runs"), "native"},
 		{filepath.Join(workflowRoot(root), "requests"), "herdr"},
@@ -100,15 +103,56 @@ func ReadInventory(d Dependencies, root string) (Inventory, error) {
 			}
 			var row InventoryRun
 			if store.kind == "herdr" {
+				workflowIDs[id] = true
 				row = readHerdrInventoryRun(d, root, id)
 			} else {
 				row = readNativeInventoryRun(d, root, id)
 			}
 			out.Runs = append(out.Runs, row)
 		}
+		inventoryCheckEntries(&out, store.path, entries)
+	}
+	// A run directory without its request cannot safely acquire a Task identity.
+	// Keep it as an identifiable orphan instead of silently dropping evidence.
+	path := filepath.Join(workflowRoot(root), "runs")
+	entries, err := inventoryEntries(path)
+	if err != nil && !os.IsNotExist(err) {
+		out.Reasons = append(out.Reasons, Reason{"run_store_unavailable", "herdr run directories could not be read: " + err.Error()})
+	}
+	for _, entry := range entries {
+		id := entry.Name()
+		if strings.HasPrefix(id, ".publish-") || workflowIDs[id] {
+			continue
+		}
+		if !workflowRunIDPattern.MatchString(id) {
+			out.Reasons = append(out.Reasons, Reason{"run_entry_unrecognized", fmt.Sprintf("Unrecognized entry in herdr run directories: %q", id)})
+			continue
+		}
+		row := inventoryEmpty(id, "herdr")
+		row.Reasons = append(row.Reasons, Reason{"run_source_orphaned", "Preserved run directory has no captured request: " + filepath.Join(path, id)})
+		out.Runs = append(out.Runs, row)
+	}
+	if err == nil {
+		inventoryCheckEntries(&out, path, entries)
 	}
 	sort.Slice(out.Runs, func(i, j int) bool { return out.Runs[i].RunID < out.Runs[j].RunID })
 	return out, nil
+}
+
+func inventoryCheckEntries(out *Inventory, path string, before []os.DirEntry) {
+	after, err := inventoryEntries(path)
+	same := err == nil && len(before) == len(after)
+	if same {
+		for i := range before {
+			if before[i].Name() != after[i].Name() || before[i].Type() != after[i].Type() {
+				same = false
+				break
+			}
+		}
+	}
+	if !same {
+		out.Reasons = append(out.Reasons, Reason{"run_store_changed", "Run store entries changed during reading: " + path})
+	}
 }
 
 func inventoryEntries(path string) ([]os.DirEntry, error) {
@@ -154,7 +198,10 @@ func inventoryTask(draft []byte) (*string, error) {
 	return ptr(string(x.Basis.TaskID)), nil
 }
 func inventoryProblem(row *InventoryRun, err error) {
-	row.State, row.StateFreshness, row.Freshness, row.Unresolved = "unknown", "unknown", "unknown", true
+	row.State, row.StateFreshness, row.Unresolved = "unknown", "unknown", true
+	if row.Freshness != "stale" {
+		row.Freshness = "unknown"
+	}
 	row.Reasons = append(row.Reasons, Reason{"run_evidence_unavailable", err.Error()})
 }
 func inventorySource(row *InventoryRun, path string, before []byte, max int) {
@@ -230,18 +277,34 @@ func readNativeInventoryRun(d Dependencies, root, id string) InventoryRun {
 	return row
 }
 
-func readHerdrInventoryRun(d Dependencies, root, id string) InventoryRun {
-	row := inventoryEmpty(id, "herdr")
+func readHerdrInventoryRun(d Dependencies, root, id string) (row InventoryRun) {
+	row = inventoryEmpty(id, "herdr")
+	defer func() {
+		if row.Delivery != nil && row.Freshness != "fresh" {
+			row.Delivery.Freshness = row.Freshness
+			if row.Freshness == "stale" {
+				row.Delivery.NextAction = InventoryDeliveryAction{Actor: "unknown", RecordedActor: row.Delivery.NextAction.RecordedActor, Kind: "inspect_delivery", Reason: "Run sources changed during reading; inspect a new read before acting.", EvidenceIDs: []string{row.RunID}}
+				for i := range row.Delivery.Reports {
+					row.Delivery.Reports[i].Current = false
+				}
+			}
+		}
+	}()
 	reservation := workflowIndex(root, id)
 	b, err := readFile(reservation, 4<<20, true)
 	if err != nil {
 		inventoryProblem(&row, err)
 		return row
 	}
+	defer func() { inventorySource(&row, reservation, b, 4<<20) }()
 	// Do not follow a stored run path until it matches its request-derived path.
 	var reserved workflowState
 	if err = decode(b, 4<<20, &reserved); err != nil {
 		inventoryProblem(&row, err)
+		return row
+	}
+	if workflowID(reserved.Request) != id || reserved.Request.WorkspaceRoot != root || reserved.Result.RunID != id || reserved.Result.RequestSHA256 != digest(reserved.Request) || reserved.Result.SessionID != "ply:"+id {
+		inventoryProblem(&row, integrity("reservation binding changed"))
 		return row
 	}
 	expected := filepath.Join(workflowRoot(root), "runs", id)
@@ -251,16 +314,46 @@ func readHerdrInventoryRun(d Dependencies, root, id string) InventoryRun {
 	}
 	statePath := filepath.Join(expected, "state.json")
 	stateBytes, stateErr := readFile(statePath, 8<<20, true)
-	s, err := workflowRead(root, id)
+	// Decode the bytes captured here instead of rereading mutable state through
+	// WorkflowShow/workflowRead. The immutable request supplies identity even when
+	// its later state is unavailable; a bad state must not hide valid siblings.
+	s := reserved
+	if stateErr == nil {
+		defer func() { inventorySource(&row, statePath, stateBytes, 8<<20) }()
+		var captured inventoryWorkflowState
+		if stateErr = decode(stateBytes, 8<<20, &captured); stateErr == nil {
+			saved := captured.state()
+			if !equal(reserved.Request, saved.Request) || !equal(reserved.CodexTrust, saved.CodexTrust) || !equal(reserved.ClaudeTrust, saved.ClaudeTrust) || saved.Result.RunID != id || !equal(reserved.Observed, saved.Observed) || saved.Result.Paths.RunRoot != expected || saved.Result.RequestSHA256 != digest(reserved.Request) || saved.Result.SessionID != "ply:"+id {
+				stateErr = integrity("preserved state differs from reservation")
+			} else {
+				var sources []inventoryCapturedSource
+				sources, stateErr = readInventoryRecovery(captured)
+				defer func() {
+					for _, source := range sources {
+						inventorySource(&row, source.binding.Locator, source.bytes, source.max)
+					}
+				}()
+				if stateErr == nil {
+					s, row.StartupRecovery = saved, captured.Result.StartupRecovery
+				}
+			}
+		}
+	}
+	var draft workflowhandoff.TaskRunDraft
+	if deliveryRun(s.Request) {
+		draft, err = workflowhandoff.ValidateDeliveryTaskRunDraft(s.Request.HandoffDraft)
+	} else {
+		draft, err = workflowhandoff.ValidateTaskRunDraft(s.Request.HandoffDraft)
+	}
 	if err != nil {
 		inventoryProblem(&row, err)
 		return row
 	}
-	row.TaskID, err = inventoryTask(s.Request.HandoffDraft)
-	if err != nil {
-		inventoryProblem(&row, err)
+	if draft.Basis == nil {
+		inventoryProblem(&row, integrity("run has no registered Task binding"))
 		return row
 	}
+	row.TaskID = ptr(string(draft.Basis.TaskID))
 	if s.Request.Runtime.Provider != "codex" && s.Request.Runtime.Provider != "claude" {
 		inventoryProblem(&row, integrity("unknown bound provider"))
 		return row
@@ -296,12 +389,10 @@ func readHerdrInventoryRun(d Dependencies, root, id string) InventoryRun {
 	if err := workflowInventoryReturn(d, s, &row); err != nil {
 		inventoryProblem(&row, err)
 	}
+	if deliveryRun(s.Request) {
+		readInventoryDelivery(s, draft.Basis, &row)
+	}
 	if s.Result.Delivery != nil {
-		for _, event := range s.Result.Delivery.Events {
-			if _, err := workflowBound(event.Binding, 8<<20); err != nil {
-				inventoryProblem(&row, err)
-			}
-		}
 		for _, candidate := range s.Result.Delivery.Candidates {
 			if _, err := workflowBound(candidate.Verification, 8<<20); err != nil {
 				inventoryProblem(&row, err)
@@ -316,10 +407,11 @@ func readHerdrInventoryRun(d Dependencies, root, id string) InventoryRun {
 	row.Reasons = append(row.Reasons, s.Result.Reasons...)
 	if stateErr != nil {
 		inventoryProblem(&row, stateErr)
-	} else {
-		inventorySource(&row, statePath, stateBytes, 8<<20)
+		if row.Delivery != nil {
+			inventoryDeliveryProblem(&row, "delivery_state_unavailable", stateErr.Error())
+			row.Delivery.NextAction = inventoryDeliveryUnknownAction(s, "Preserved delivery state could not be read or bound; inspect the recorded source.")
+		}
 	}
-	inventorySource(&row, reservation, b, 4<<20)
 	return row
 }
 

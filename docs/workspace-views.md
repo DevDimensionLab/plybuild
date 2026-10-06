@@ -35,6 +35,9 @@ not fields to infer from a filesystem scan.
 All commands below support `--format text|json` and default to text. Successful JSON
 output is one object followed by a newline, with `kind` and `schema_version: 1`.
 Use `--format json`; the global `--json` logging option is not a result selector.
+The separate [`workflow status`](workflow-status.md) command provides a registered
+workspace action overview and deliberately accepts `--json` as a local result
+shortcut; the workspace commands in this table retain their existing behavior.
 
 | Command after `ply workspace` | JSON kind | Filters |
 | --- | --- | --- |
