@@ -9,12 +9,15 @@ import (
 )
 
 // RecoveryInput keeps the original goal and launch choices. Only the installed
-// provider and control executable are rebound for an explicitly requested start.
+// provider, control executable and (when missing) terminal are rebound for an
+// explicitly requested startup generation.
 type RecoveryInput struct {
-	RunID              string
-	Check              bool
-	Timeout            time.Duration
-	ProviderExecutable string
+	RunID                  string
+	Check                  bool
+	Restart                bool
+	Timeout                time.Duration
+	ProviderExecutable     string
+	DestinationWorkspaceID string
 }
 
 type RecoveryResult struct {
@@ -44,7 +47,7 @@ func RecoverStartup(d taskrun.Dependencies, input RecoveryInput) (RecoveryResult
 	}
 	// Readback of a reserved replacement must not depend on today's PATH or
 	// start a second provider after an earlier caller lost its response.
-	if run.StartupRecovery != nil {
+	if run.StartupRecovery != nil && !input.Restart {
 		out.State, out.Run, out.NextAction = "existing", &run, run.NextAction.Message
 		return out, nil
 	}
@@ -63,7 +66,11 @@ func RecoverStartup(d taskrun.Dependencies, input RecoveryInput) (RecoveryResult
 	if err != nil {
 		return out, err
 	}
-	in := taskrun.DeliveryStartRecoveryInput{RunID: input.RunID, ProviderExecutable: provider, ControlExecutable: control, Timeout: input.Timeout}
+	destination := input.DestinationWorkspaceID
+	if destination == "" {
+		destination = os.Getenv("HERDR_WORKSPACE_ID")
+	}
+	in := taskrun.DeliveryStartRecoveryInput{RunID: input.RunID, ProviderExecutable: provider, ControlExecutable: control, Timeout: input.Timeout, DestinationWorkspaceID: destination}
 	preview, err := taskrun.WorkflowPreviewDeliveryStartRecovery(d, root, in)
 	out.Preview = &preview
 	if err != nil {
@@ -77,7 +84,7 @@ func RecoverStartup(d taskrun.Dependencies, input RecoveryInput) (RecoveryResult
 		return out, fmt.Errorf("startup recovery did not provide a controlled preview")
 	}
 	out.State = "ready"
-	out.NextAction = "Run the same recover-start command without --check to make one replacement startup in the existing Task tab."
+	out.NextAction = "Run the same command without --check to attempt startup in the checked Task terminal, creating a replacement tab when the previous terminal is missing."
 	if input.Check {
 		return out, nil
 	}

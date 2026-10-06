@@ -613,7 +613,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute show wfr_<digest>",
+        "example": "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check",
         "flags": [
           {
             "annotations": {},
@@ -751,6 +751,19 @@
           },
           {
             "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "restart",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "recover this --spec's interrupted Codex startup before Task input, preserving its worktree and history"
+          },
+          {
+            "annotations": {},
             "default": "",
             "deprecated": "",
             "hidden": false,
@@ -769,7 +782,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration; --check previews the config path and project key without writing. Tool permissions and other native prompts remain under provider control. Repeated starts inspect the preserved execution; an unknown start never launches another agent. Older preserved launches retain their original trust and permission choices.",
+        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
         "path": "ply workflow execute",
         "runnable": true,
         "short": "Deliver the next goal from this Epic with its assigned agent",
@@ -870,7 +883,7 @@
             "shorthand": "",
             "shorthand_deprecated": "",
             "type": "bool",
-            "usage": "preview the replacement binding and inspect the existing pane without writes or startup"
+            "usage": "preview the next startup attempt and inspect preserved transport without writes or startup"
           },
           {
             "annotations": {},
@@ -922,10 +935,10 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Explicitly recover one exited Codex startup in its existing Herdr tab. Require the original Task and return worktrees, no Task-prompt attempt or runtime acceptance, and fresh pane and process-tree evidence of an idle shell without a background provider. Unavailable process inspection stops recovery before startup. Bind the installed Codex and Ply control executables without changing the goal, model, effort, permissions or original records. One replacement is allowed; repeated calls inspect it and never start another agent. Use --check to inspect readiness without writes or startup.",
+        "long": "Recover a preserved run by ID. For normal use, repeat ply workflow execute --spec SPEC_ID --restart instead. Recovery preserves the Task, worktree, goal and original records. Fresh checks can reuse an idle terminal or replace a closed terminal; missing transport is not proof of process exit. Only the new attempt may receive the Task prompt or accept callbacks. Each explicit recovery preserves a separate attempt; unknown effects and possible Task input prevent duplicate starts. Model and permissions remain unchanged. Use --check to preview without writes or startup.",
         "path": "ply workflow execute recover-start",
         "runnable": true,
-        "short": "Replace an exited Codex startup before its first Task prompt",
+        "short": "Recover an interrupted Codex startup before its first Task prompt",
         "suggest_for": null,
         "traverse_children": false,
         "use": "recover-start RUN_ID"

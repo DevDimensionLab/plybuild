@@ -211,46 +211,56 @@ preserved after failures. Follow or inspect the existing execution first. Missin
 evidence, an unknown provider session, changed candidate, dirty/moved parent or
 uncertain merge effect cannot be treated as success or authorization to replay.
 
-### Codex exited before the Task started
+### Restart an interrupted Codex startup
 
-Codex can update itself during startup, exit, and leave the tab at its shell.
-If the update removed the executable bound to that run, ordinary `resume`
-cannot continue: it requires the original provider binding and never restarts a
-process. Inspect the same run, then explicitly recover that startup:
+Use the same Spec selection when Codex exits during startup or its Task tab has
+been closed before Task input:
 
 ```shell
-ply workflow execute recover-start wfr_<digest> --check
-ply workflow execute recover-start wfr_<digest>
+ply workflow execute --spec explain-errors --restart
 ```
 
-Run from the original Task or return worktree; apply requires a Herdr terminal.
-`--check` is read-only. Apply repeats the checks, preserves the installed Ply
-control executable, and reserves **one** replacement startup in the existing
-tab. A separate check is optional: the apply command includes it. Codex is
-resolved from the current `PATH`; model, effort, permission profile, trust and
-goal remain the original choices.
+Ply finds the preserved attempt; no run ID is needed. Run from the registered
+return worktree in a Herdr terminal. `--restart --check` previews the next attempt
+without writing or starting anything. The ordinary command without `--restart`
+continues to inspect an existing attempt. If this Spec has no attempt yet,
+`--restart` performs the ordinary first start. The global `--force` flag retains
+its existing prompt-default behavior and does not reset an execution.
 
-Recovery requires fresh, matching pane/terminal identity and typed process
-evidence that the pane's shell is its sole foreground process. A bounded local
-process-tree inspection must also confirm that the shell has no descendants,
-including a suspended or backgrounded provider. If process inspection is
-unavailable, recovery stops before startup. A cached idle status or visible
-shell text is insufficient. The Task must still be clean on
-its original base, with no native session, Task-prompt attempt, acceptance,
-start receipt or delivery result. Both saved state and artifacts are checked.
-Changed goal inputs, an active or unknown process, or an uncertain Task-prompt
-send leave the original run intact and prevent another start.
+Apply repeats the checks, preserves the installed Ply control executable, and
+reserves a new startup generation. The run, Task, preparation, feature worktree
+and queue ownership stay the same. Codex is resolved from the current `PATH`;
+model, effort, permission profile, trust and goal retain their original choices.
+A provider update is supported, but changing the provider binary is not required.
 
-The run, Task, preparation, feature worktree and queue ownership stay the same.
-The original request, context, control binary and failed attempt are preserved;
-a versioned recovery record binds the replacement provider, control and context.
-New callbacks use that context and control. Old callbacks cannot act on the new
-attempt. `show --format json` exposes the original and effective executables in
-`startup_recovery`.
+When the previous terminal still exists, fresh Herdr and process observations
+must show an unclaimed idle shell with no pending managed agent, foreground
+provider or descendants. Unavailable process inspection prevents reuse. When the
+pane is missing, a successful global pane inventory must also show that its
+terminal has not moved elsewhere. Ply then creates a new Task tab in the current
+Herdr workspace (or `--herdr-workspace`). Missing terminal evidence does not prove
+that every old OS process exited: replacement depends on the old attempt never
+having been authorized to receive Task input.
 
-Repeating `recover-start` reads the reserved replacement instead of launching
-again, including after a lost response. If its startup is still awaiting native
-onboarding, use the next action shown for that same attempt. Recovery does not
-add a second replacement, change provider permissions, release the queue, remove
-old evidence, or qualify the product. The actual human product pass and local
+Both paths require a clean Task on its original base, with no Task-prompt attempt,
+acceptance, start receipt or delivery result. A readiness session alone is not
+Task authority. Changed goal inputs, an active or unknown existing startup,
+possible Task input, or unconfirmed creation of a replacement tab prevent another
+start. Closing a tab after implementation started does not qualify it for this
+startup recovery.
+
+Each replacement is recorded under a new generation. Original requests, contexts,
+control binaries, transport identities and failed attempts remain available.
+A delayed controller or callback from an older generation cannot send the Task or
+change the current attempt. A later interrupted startup can be recovered again
+with the same Spec command when these checks establish that it is safe; there is
+no single-use recovery limit. An uncertain effect is kept for inspection rather
+than silently retried. `show --format json` exposes `startup_recovery`, including
+the original and effective executable and transport bindings.
+
+For callers that already have a run ID, `execute recover-start RUN_ID` provides
+the same guarded startup recovery, with optional `--check` and `--timeout`.
+Ordinary `resume` still uses the bound provider and never restarts a process.
+Startup recovery does not release the queue, delete evidence, change provider
+permissions or qualify the product. The actual human product pass and local
 integration still belong to the owner's delivery journey.

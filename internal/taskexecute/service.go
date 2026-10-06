@@ -20,6 +20,7 @@ type Input struct {
 	Next                bool
 	SpecID              string
 	Check               bool
+	Restart             bool
 	Runtime             RuntimeOptions
 	NotificationContext string
 }
@@ -32,6 +33,7 @@ type Result struct {
 	Runtime            *RuntimePreview                   `json:"runtime"`
 	ClaudeProjectTrust *taskrun.ClaudeTrustPreview       `json:"claude_project_trust,omitempty"`
 	Run                *taskrun.WorkflowRun              `json:"run"`
+	Recovery           *RecoveryResult                   `json:"startup_recovery,omitempty"`
 	RequestPath        string                            `json:"request_path"`
 	NextAction         string                            `json:"next_action"`
 }
@@ -88,6 +90,9 @@ func boundFile(path string) (*taskrun.FileBinding, error) {
 // creation and reuses an existing request before selecting or starting again.
 func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	out := Result{Kind: "ply.workflow.execute", SchemaVersion: 1, State: "unknown"}
+	if input.Restart && (input.SpecID == "" || input.Next) {
+		return out, workspace.WorkInvalidArguments("--restart requires an explicit --spec and cannot select --next")
+	}
 	goalInput := workspace.TaskGoalExecuteInput{Target: input.Target, Next: input.Next, SpecID: input.SpecID}
 	plan, err := workspace.PreviewTaskGoalExecution(d.Workspace, goalInput)
 	if err != nil {
@@ -138,6 +143,29 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 			return out, fmt.Errorf("preserved request differs from the existing native reservation")
 		}
 		out.State, out.Run, out.NextAction = "existing", &run, run.NextAction.Message
+		if input.Restart {
+			if input.Runtime.PermissionProfile != "" && input.Runtime.PermissionProfile != request.Runtime.PermissionBinding.ProfileID {
+				return out, workspace.WorkInvalidArguments("--restart keeps the original permission profile")
+			}
+			destination := input.Runtime.HerdrWorkspace
+			if destination == "" {
+				destination = os.Getenv("HERDR_WORKSPACE_ID")
+			}
+			recovery, recoveryErr := RecoverStartup(d, RecoveryInput{
+				RunID: id, Check: input.Check, Restart: true, Timeout: time.Minute,
+				ProviderExecutable:     input.Runtime.ProviderExecutable,
+				DestinationWorkspaceID: destination,
+			})
+			out.State, out.Recovery, out.NextAction = recovery.State, &recovery, recovery.NextAction
+			if recovery.Run != nil {
+				out.Run = recovery.Run
+			}
+			if recovery.State == "ready" {
+				out.Recovery.NextAction = "Run the same execute --spec command with --restart and without --check to apply this checked startup recovery."
+				out.NextAction = out.Recovery.NextAction
+			}
+			return out, recoveryErr
+		}
 		return out, nil
 	} else if !os.IsNotExist(err) {
 		return out, err

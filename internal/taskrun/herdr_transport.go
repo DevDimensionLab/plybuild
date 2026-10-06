@@ -15,6 +15,7 @@ type workflowAgent struct {
 	PaneID           string `json:"pane_id"`
 	TerminalID       string `json:"terminal_id"`
 	ForegroundCWD    string `json:"foreground_cwd"`
+	CWD              string `json:"cwd"`
 	Name             string `json:"name"`
 	Agent            string `json:"agent"`
 	Status           string `json:"agent_status"`
@@ -203,18 +204,7 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	var tab struct {
 		RootPane workflowAgent `json:"root_pane"`
 	}
-	tabArgs := []string{"tab", "create", "--workspace", r.Herdr.WorkspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + os.Getenv("PATH"), "--no-focus"}
-	if s.CodexTrust != nil {
-		// Use the exact existing user/config locations observed by preview.
-		// No alternate home or persistent configuration is created.
-		tabArgs = append(tabArgs, "--env", "HOME="+s.CodexTrust.UserHome, "--env", "CODEX_HOME="+s.CodexTrust.CodexHome)
-	}
-	if s.ClaudeTrust != nil && s.ClaudeTrust.Reason == "" {
-		tabArgs = append(tabArgs, "--env", "HOME="+s.ClaudeTrust.UserHome)
-		if s.ClaudeTrust.ConfigDir != "" {
-			tabArgs = append(tabArgs, "--env", "CLAUDE_CONFIG_DIR="+s.ClaudeTrust.ConfigDir)
-		}
-	}
+	tabArgs := workflowTabCreateArgv(s, r.Herdr.WorkspaceID)
 	b, e := workflowCall(d, r, tabArgs...)
 	if e != nil {
 		return e
@@ -278,7 +268,24 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	if e = workflowAwaitReadinessGeneration(d, root, id, deadline, workflowStartupGeneration(s)); e != nil {
 		return e
 	}
-	return workflowPromptUntil(d, root, id, nil, deadline)
+	return workflowPromptGenerationUntil(d, root, id, nil, deadline, workflowStartupGeneration(s))
+}
+
+func workflowTabCreateArgv(s workflowState, workspaceID string) []string {
+	r := s.Request
+	tabArgs := []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + os.Getenv("PATH"), "--no-focus"}
+	if s.CodexTrust != nil {
+		// Use the exact existing user/config locations observed by preview.
+		// No alternate home or persistent configuration is created.
+		tabArgs = append(tabArgs, "--env", "HOME="+s.CodexTrust.UserHome, "--env", "CODEX_HOME="+s.CodexTrust.CodexHome)
+	}
+	if s.ClaudeTrust != nil && s.ClaudeTrust.Reason == "" {
+		tabArgs = append(tabArgs, "--env", "HOME="+s.ClaudeTrust.UserHome)
+		if s.ClaudeTrust.ConfigDir != "" {
+			tabArgs = append(tabArgs, "--env", "CLAUDE_CONFIG_DIR="+s.ClaudeTrust.ConfigDir)
+		}
+	}
+	return tabArgs
 }
 
 func workflowStartArgv(r WorkflowRequest, cwd, pane string) []string {
@@ -313,9 +320,19 @@ func workflowPrompt(d Dependencies, root, id string, findings []WorkflowFinding)
 	return workflowPromptUntil(d, root, id, findings, time.Time{})
 }
 func workflowPromptUntil(d Dependencies, root, id string, findings []WorkflowFinding, deadline time.Time) error {
+	s, err := workflowRead(root, id)
+	if err != nil {
+		return err
+	}
+	return workflowPromptGenerationUntil(d, root, id, findings, deadline, workflowStartupGeneration(s))
+}
+func workflowPromptGenerationUntil(d Dependencies, root, id string, findings []WorkflowFinding, deadline time.Time, expectedGeneration string) error {
 	s, e := workflowRead(root, id)
 	if e != nil {
 		return e
+	}
+	if workflowStartupGeneration(s) != expectedGeneration {
+		return workflowError(4, "startup generation changed before Task prompt preparation")
 	}
 	if e = workflowFresh(d, s, false); e != nil {
 		return e

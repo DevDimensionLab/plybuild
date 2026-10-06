@@ -155,18 +155,19 @@ type workflowRecord struct {
 	Review       *FileBinding `json:"review"`
 }
 type workflowState struct {
-	Request       WorkflowRequest     `json:"request"`
-	Observed      Observed            `json:"observed"`
-	Result        WorkflowRun         `json:"result"`
-	Phase         string              `json:"phase"`
-	ContextSHA256 string              `json:"context_sha256"`
-	Acceptance    *FileBinding        `json:"acceptance"`
-	StartDraft    *FileBinding        `json:"start_draft"`
-	StartSHA256   *string             `json:"start_sha256"`
-	Records       []workflowRecord    `json:"records"`
-	CodexTrust    *workflowTrustFacts `json:"codex_project_trust,omitempty"`
-	ClaudeTrust   *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
-	Recovery      *FileBinding        `json:"startup_recovery,omitempty"`
+	Request           WorkflowRequest     `json:"request"`
+	Observed          Observed            `json:"observed"`
+	Result            WorkflowRun         `json:"result"`
+	Phase             string              `json:"phase"`
+	ContextSHA256     string              `json:"context_sha256"`
+	Acceptance        *FileBinding        `json:"acceptance"`
+	StartDraft        *FileBinding        `json:"start_draft"`
+	StartSHA256       *string             `json:"start_sha256"`
+	Records           []workflowRecord    `json:"records"`
+	CodexTrust        *workflowTrustFacts `json:"codex_project_trust,omitempty"`
+	ClaudeTrust       *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
+	Recovery          *FileBinding        `json:"startup_recovery,omitempty"`
+	RecoveryTransport *FileBinding        `json:"startup_recovery_transport,omitempty"`
 }
 
 func workflowEnv(kind string) Envelope { return Envelope{"ply.workflow." + kind, 1} }

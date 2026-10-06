@@ -84,7 +84,7 @@ func WorkflowResumeDeliveryStart(d Dependencies, root, id string, timeout time.D
 		err = workflowAwaitReadinessGeneration(d, root, id, deadline, generation)
 	}
 	if err == nil {
-		err = workflowPromptUntil(d, root, id, nil, deadline)
+		err = workflowPromptGenerationUntil(d, root, id, nil, deadline, generation)
 	}
 	if err != nil {
 		cause := err

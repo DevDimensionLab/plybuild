@@ -2,9 +2,11 @@ package taskrun
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
@@ -13,32 +15,40 @@ import (
 // DeliveryStartRecoveryInput replaces only executable identities, before any
 // Task prompt. ControlExecutable is the source binary, not its preserved copy.
 type DeliveryStartRecoveryInput struct {
-	RunID              string
-	ProviderExecutable Executable
-	ControlExecutable  Executable
-	Timeout            time.Duration
+	RunID                  string
+	ProviderExecutable     Executable
+	ControlExecutable      Executable
+	Timeout                time.Duration
+	DestinationWorkspaceID string
 }
 
 type DeliveryStartRecoveryReadback struct {
-	Generation                 int         `json:"generation"`
-	Binding                    FileBinding `json:"binding"`
-	OriginalProviderExecutable Executable  `json:"original_provider_executable"`
-	OriginalControlExecutable  Executable  `json:"original_control_executable"`
-	ProviderExecutable         Executable  `json:"provider_executable"`
-	ControlExecutable          Executable  `json:"control_executable"`
+	Generation                 int                `json:"generation"`
+	Binding                    FileBinding        `json:"binding"`
+	OriginalProviderExecutable Executable         `json:"original_provider_executable"`
+	OriginalControlExecutable  Executable         `json:"original_control_executable"`
+	ProviderExecutable         Executable         `json:"provider_executable"`
+	ControlExecutable          Executable         `json:"control_executable"`
+	TransportMode              string             `json:"transport_mode,omitempty"`
+	OriginalTransport          *WorkflowTransport `json:"original_transport,omitempty"`
+	ReplacementTransport       *FileBinding       `json:"replacement_transport,omitempty"`
 }
 
 type DeliveryStartRecoveryPreview struct {
-	Kind               string                       `json:"kind"`
-	SchemaVersion      int                          `json:"schema_version"`
-	RunID              string                       `json:"run_id"`
-	State              string                       `json:"state"`
-	Confirmation       string                       `json:"confirmation"`
-	ProviderExecutable Executable                   `json:"provider_executable"`
-	ControlExecutable  Executable                   `json:"control_executable"`
-	RecoveryDirectory  string                       `json:"recovery_directory"`
-	Run                *WorkflowRun                 `json:"run"`
-	ExitEvidence       *DeliveryStartupExitEvidence `json:"exit_evidence"`
+	Kind                   string                           `json:"kind"`
+	SchemaVersion          int                              `json:"schema_version"`
+	RunID                  string                           `json:"run_id"`
+	State                  string                           `json:"state"`
+	Confirmation           string                           `json:"confirmation"`
+	ProviderExecutable     Executable                       `json:"provider_executable"`
+	ControlExecutable      Executable                       `json:"control_executable"`
+	RecoveryDirectory      string                           `json:"recovery_directory"`
+	Run                    *WorkflowRun                     `json:"run"`
+	ExitEvidence           *DeliveryStartupExitEvidence     `json:"exit_evidence"`
+	Generation             int                              `json:"generation"`
+	TransportMode          string                           `json:"transport_mode"`
+	DestinationWorkspaceID string                           `json:"destination_workspace_id"`
+	AbsentTransport        *DeliveryAbsentTransportEvidence `json:"absent_transport,omitempty"`
 }
 
 // Only typed process and pane facts are kept. Terminal text, argv and process
@@ -53,25 +63,45 @@ type DeliveryStartupExitEvidence struct {
 	ForegroundProcessGroupID int              `json:"foreground_process_group_id"`
 	ShellName                string           `json:"shell_name"`
 	ProcessTree              []StartupProcess `json:"process_tree"`
+	ManagedAgentState        string           `json:"managed_agent_state,omitempty"`
 }
 
 type deliveryStartRecoveryRecord struct {
-	Kind               string                      `json:"kind"`
-	SchemaVersion      int                         `json:"schema_version"`
-	RunID              string                      `json:"run_id"`
-	RequestSHA256      string                      `json:"request_sha256"`
-	BeforeState        FileBinding                 `json:"before_state"`
-	SourceControl      Executable                  `json:"source_control"`
-	ProviderExecutable Executable                  `json:"provider_executable"`
-	ControlExecutable  Executable                  `json:"control_executable"`
-	Context            FileBinding                 `json:"context"`
-	ExitEvidence       DeliveryStartupExitEvidence `json:"exit_evidence"`
-	Confirmation       string                      `json:"confirmation"`
-	RecordedAtUTC      string                      `json:"recorded_at_utc"`
+	Kind                   string                           `json:"kind"`
+	SchemaVersion          int                              `json:"schema_version"`
+	RunID                  string                           `json:"run_id"`
+	RequestSHA256          string                           `json:"request_sha256"`
+	BeforeState            FileBinding                      `json:"before_state"`
+	SourceControl          Executable                       `json:"source_control"`
+	ProviderExecutable     Executable                       `json:"provider_executable"`
+	ControlExecutable      Executable                       `json:"control_executable"`
+	Context                FileBinding                      `json:"context"`
+	ExitEvidence           *DeliveryStartupExitEvidence     `json:"exit_evidence,omitempty"`
+	Confirmation           string                           `json:"confirmation"`
+	RecordedAtUTC          string                           `json:"recorded_at_utc"`
+	Generation             int                              `json:"generation,omitempty"`
+	TransportMode          string                           `json:"transport_mode,omitempty"`
+	DestinationWorkspaceID string                           `json:"destination_workspace_id,omitempty"`
+	AbsentTransport        *DeliveryAbsentTransportEvidence `json:"absent_transport,omitempty"`
 }
 
 func deliveryRecoveryDirectory(s workflowState) string {
+	if s.Recovery != nil {
+		return filepath.Dir(s.Recovery.Locator)
+	}
 	return filepath.Join(s.Result.Paths.RunRoot, "startup-recovery", "001")
+}
+
+func deliveryRecoveryGeneration(s workflowState) int {
+	if s.Recovery == nil {
+		return 0
+	}
+	n, _ := strconv.Atoi(filepath.Base(filepath.Dir(s.Recovery.Locator)))
+	return n
+}
+
+func deliveryRecoveryNextDirectory(s workflowState) string {
+	return filepath.Join(s.Result.Paths.RunRoot, "startup-recovery", fmt.Sprintf("%03d", deliveryRecoveryGeneration(s)+1))
 }
 
 func workflowStartupPath(s workflowState, name string) string {
@@ -97,14 +127,15 @@ func workflowDeliveryGuideDirectory(s workflowState) string {
 
 func workflowRecoveryRecord(s workflowState) (*deliveryStartRecoveryRecord, error) {
 	if s.Recovery == nil {
-		if s.Result.StartupRecovery != nil {
+		if s.Result.StartupRecovery != nil || s.RecoveryTransport != nil {
 			return nil, workflowError(4, "startup recovery readback has no bound record")
 		}
 		return nil, nil
 	}
-	dir := deliveryRecoveryDirectory(s)
-	if s.Recovery.Locator != filepath.Join(dir, "recovery.json") {
-		return nil, workflowError(4, "startup recovery path differs")
+	generation := deliveryRecoveryGeneration(s)
+	dir := filepath.Join(s.Result.Paths.RunRoot, "startup-recovery", fmt.Sprintf("%03d", generation))
+	if generation < 1 || s.Recovery.Locator != filepath.Join(dir, "recovery.json") {
+		return nil, workflowError(4, "startup recovery generation or path differs")
 	}
 	b, err := workflowBound(*s.Recovery, 1<<20)
 	if err != nil {
@@ -114,7 +145,11 @@ func workflowRecoveryRecord(s workflowState) (*deliveryStartRecoveryRecord, erro
 	if err = decode(b, 1<<20, &r); err != nil {
 		return nil, err
 	}
-	if r.Kind != "PlyDeliveryStartupRecovery@1" || r.SchemaVersion != 1 || r.RunID != s.Result.RunID || r.RequestSHA256 != s.Result.RequestSHA256 || r.BeforeState.Locator != filepath.Join(dir, "before-state.json") || r.ControlExecutable.Path != filepath.Join(dir, "ply-control") || r.Context.Locator != filepath.Join(dir, "context.json") || s.Result.Paths.Context != r.Context.Locator || s.ContextSHA256 != r.Context.SHA256 {
+	recordedGeneration := r.Generation
+	if recordedGeneration == 0 {
+		recordedGeneration = 1
+	}
+	if r.Kind != "PlyDeliveryStartupRecovery@1" || r.SchemaVersion != 1 || recordedGeneration != generation || r.RunID != s.Result.RunID || r.RequestSHA256 != s.Result.RequestSHA256 || r.BeforeState.Locator != filepath.Join(dir, "before-state.json") || r.ControlExecutable.Path != filepath.Join(dir, "ply-control") || r.Context.Locator != filepath.Join(dir, "context.json") || s.Result.Paths.Context != r.Context.Locator || s.ContextSHA256 != r.Context.SHA256 {
 		return nil, workflowError(4, "startup recovery differs from its original run")
 	}
 	before, err := workflowBound(r.BeforeState, 8<<20)
@@ -128,14 +163,36 @@ func workflowRecoveryRecord(s workflowState) (*deliveryStartRecoveryRecord, erro
 	if err = decode(before, 8<<20, &old); err != nil {
 		return nil, err
 	}
-	if old.Recovery != nil || !equal(old.Request, s.Request) || !equal(old.Observed, s.Observed) || old.Result.RunID != s.Result.RunID || old.Result.Handoff != s.Result.Handoff || old.Result.Transport.AgentSessionID != "" || old.Acceptance != nil || old.StartSHA256 != nil || old.StartDraft != nil || old.Result.Delivery == nil || len(old.Result.Delivery.Events) != 0 || len(old.Result.Delivery.Candidates) != 0 {
-		return nil, workflowError(4, "startup recovery before-state is not the original unstarted delivery")
+	if deliveryRecoveryGeneration(old) != generation-1 || !equal(old.Request, s.Request) || !equal(old.Observed, s.Observed) || old.Result.RunID != s.Result.RunID || old.Result.Handoff != s.Result.Handoff || !deliveryRecoveryStateEligible(old) {
+		return nil, workflowError(4, "startup recovery before-state is not an unstarted delivery generation")
 	}
-	want := DeliveryStartRecoveryReadback{1, *s.Recovery, s.Request.Runtime.Executable, s.Request.Runtime.PlyExecutable, r.ProviderExecutable, r.ControlExecutable}
+	if _, err = workflowRecoveryRecord(old); err != nil {
+		return nil, err
+	}
+	if err = deliveryRecoveryValidateTransport(s, old, r); err != nil {
+		return nil, err
+	}
+	want := deliveryRecoveryReadback(s, old, r)
 	if s.Result.StartupRecovery == nil || !equal(*s.Result.StartupRecovery, want) {
 		return nil, workflowError(4, "startup recovery readback binding differs")
 	}
 	return &r, nil
+}
+
+func deliveryRecoveryReadback(s, old workflowState, r deliveryStartRecoveryRecord) DeliveryStartRecoveryReadback {
+	out := DeliveryStartRecoveryReadback{Generation: deliveryRecoveryGeneration(s), Binding: *s.Recovery, OriginalProviderExecutable: s.Request.Runtime.Executable, OriginalControlExecutable: s.Request.Runtime.PlyExecutable, ProviderExecutable: r.ProviderExecutable, ControlExecutable: r.ControlExecutable, TransportMode: r.TransportMode, ReplacementTransport: s.RecoveryTransport}
+	if r.TransportMode != "" {
+		previous := old.Result.Transport
+		out.OriginalTransport = &previous
+	}
+	return out
+}
+
+func deliveryRecoveryStateEligible(s workflowState) bool {
+	if !deliveryRun(s.Request) || s.Request.Runtime.Provider != "codex" || s.Result.Delivery == nil || s.Acceptance != nil || s.StartDraft != nil || s.StartSHA256 != nil || s.Result.Round.Number != 0 || len(s.Records) != 0 || len(s.Result.Delivery.Events) != 0 || len(s.Result.Delivery.Candidates) != 0 || s.Result.Delivery.Attempt != nil || s.Result.Delivery.PermissionState != "pending_runtime_acceptance" || s.Result.Delivery.Phase != "awaiting_acceptance" {
+		return false
+	}
+	return s.Phase == "agent_start_attempted" || s.Phase == "bootstrap_attempted" || s.Phase == "session_bound"
 }
 
 // The immutable request remains the original mandate. Only this resolver may
@@ -162,19 +219,20 @@ func deliveryRecoveryExisting(d Dependencies, root string, s workflowState) (Del
 		return p, workflowError(4, "startup recovery is not bound")
 	}
 	p.Confirmation, p.ProviderExecutable, p.ControlExecutable = r.Confirmation, r.ProviderExecutable, r.ControlExecutable
+	p.Generation, p.TransportMode, p.DestinationWorkspaceID, p.AbsentTransport = deliveryRecoveryGeneration(s), r.TransportMode, r.DestinationWorkspaceID, r.AbsentTransport
+	if p.TransportMode == "" {
+		p.TransportMode = deliveryRecoveryReuseTerminal
+	}
 	o, err := WorkflowShow(d, root, s.Result.RunID)
 	p.Run = &o
 	return p, err
 }
 
 func deliveryRecoveryPreTask(d Dependencies, s workflowState) error {
-	if !deliveryRun(s.Request) || s.Request.Runtime.Provider != "codex" || s.Recovery != nil || s.Result.Delivery == nil || s.Acceptance != nil || s.StartDraft != nil || s.StartSHA256 != nil || s.Result.Transport.AgentSessionID != "" || s.Result.Round.Number != 0 || len(s.Records) != 0 || len(s.Result.Delivery.Events) != 0 || len(s.Result.Delivery.Candidates) != 0 || s.Result.Delivery.Attempt != nil || s.Result.Delivery.PermissionState != "pending_runtime_acceptance" || s.Result.Delivery.Phase != "awaiting_acceptance" {
-		return workflowError(4, "startup recovery requires the original Codex delivery before any Task prompt, session or acceptance")
+	if !deliveryRecoveryStateEligible(s) {
+		return workflowError(4, "startup recovery requires a Codex delivery generation before any Task prompt, session or acceptance")
 	}
-	if s.Phase != "agent_start_attempted" && s.Phase != "bootstrap_attempted" {
-		return workflowError(4, "startup recovery is not available at this phase")
-	}
-	for _, path := range []string{filepathForRound(s, "prompt-attempt.json"), filepath.Join(s.Result.Paths.RunRoot, "acceptance.json"), filepath.Join(s.Result.Paths.RunRoot, "start-draft.json"), filepath.Join(deliveryRecoveryDirectory(s), "recovery.json")} {
+	for _, path := range []string{filepathForRound(s, "prompt-attempt.json"), filepath.Join(s.Result.Paths.RunRoot, "acceptance.json"), filepath.Join(s.Result.Paths.RunRoot, "start-draft.json"), filepath.Join(deliveryRecoveryNextDirectory(s), "recovery.json")} {
 		if _, err := os.Lstat(path); !os.IsNotExist(err) {
 			return workflowError(4, "startup recovery cannot replace existing or unreadable Task/start artifacts: "+path)
 		}
@@ -249,6 +307,9 @@ func deliveryRecoveryExit(d Dependencies, s workflowState) (DeliveryStartupExitE
 	if p.WorkspaceID != t.WorkspaceID || p.TabID != t.TabID || p.PaneID != t.PaneID || p.TerminalID != t.TerminalID || p.Agent != nil || len(p.Session) > 0 && string(p.Session) != "null" || p.Status != "unknown" || p.ForegroundCWD != s.Observed.Target.WorktreeLocator {
 		return out, workflowError(4, "recovery requires the exact preserved terminal without a provider or native session")
 	}
+	if err = deliveryRecoveryNoManagedAgent(d, s); err != nil {
+		return out, err
+	}
 	var process struct {
 		Info struct {
 			PaneID    string `json:"pane_id"`
@@ -280,11 +341,11 @@ func deliveryRecoveryExit(d Dependencies, s workflowState) (DeliveryStartupExitE
 	if err != nil {
 		return out, err
 	}
-	return DeliveryStartupExitEvidence{p.WorkspaceID, p.TabID, p.PaneID, p.TerminalID, p.ForegroundCWD, *i.ShellPID, *i.Group, name, tree}, nil
+	return DeliveryStartupExitEvidence{p.WorkspaceID, p.TabID, p.PaneID, p.TerminalID, p.ForegroundCWD, *i.ShellPID, *i.Group, name, tree, "not_found"}, nil
 }
 
 func deliveryRecoveryPreview(d Dependencies, root string, in DeliveryStartRecoveryInput, s workflowState) (DeliveryStartRecoveryPreview, error) {
-	p := DeliveryStartRecoveryPreview{Kind: "PlyDeliveryStartupRecoveryPreview@1", SchemaVersion: 1, RunID: in.RunID, State: "blocked", RecoveryDirectory: deliveryRecoveryDirectory(s), ProviderExecutable: in.ProviderExecutable, ControlExecutable: Executable{filepath.Join(deliveryRecoveryDirectory(s), "ply-control"), in.ControlExecutable.SHA256}}
+	p := DeliveryStartRecoveryPreview{Kind: "PlyDeliveryStartupRecoveryPreview@1", SchemaVersion: 1, RunID: in.RunID, State: "blocked", Generation: deliveryRecoveryGeneration(s) + 1, RecoveryDirectory: deliveryRecoveryNextDirectory(s), ProviderExecutable: in.ProviderExecutable, ControlExecutable: Executable{filepath.Join(deliveryRecoveryNextDirectory(s), "ply-control"), in.ControlExecutable.SHA256}}
 	if err := deliveryRecoveryPreTask(d, s); err != nil {
 		return p, err
 	}
@@ -303,9 +364,6 @@ func deliveryRecoveryPreview(d Dependencies, root string, in DeliveryStartRecove
 	}
 	if err := verifyExecutable(in.ControlExecutable); err != nil {
 		return p, err
-	}
-	if in.ProviderExecutable == s.Request.Runtime.Executable {
-		return p, workflowError(4, "recovery requires an explicit replacement provider executable")
 	}
 	if err := physical(p.RecoveryDirectory, true); err != nil {
 		return p, err
@@ -351,11 +409,24 @@ func deliveryRecoveryPreview(d Dependencies, root string, in DeliveryStartRecove
 	if x.OID != s.Observed.Target.OID || x.Tree != s.Observed.Target.Tree {
 		return p, workflowError(4, "Task target changed before recovery")
 	}
-	exit, err := deliveryRecoveryExit(d, s)
+	p.DestinationWorkspaceID = in.DestinationWorkspaceID
+	if p.DestinationWorkspaceID == "" {
+		p.DestinationWorkspaceID = s.Request.Herdr.WorkspaceID
+	}
+	if !plain(p.DestinationWorkspaceID, 1, 128) {
+		return p, workflowError(2, "invalid replacement destination workspace")
+	}
+	exit, absent, err := deliveryRecoveryObserveTransport(d, s, p.DestinationWorkspaceID)
 	if err != nil {
 		return p, err
 	}
-	p.ExitEvidence = &exit
+	p.ExitEvidence, p.AbsentTransport = exit, absent
+	p.TransportMode = deliveryRecoveryReuseTerminal
+	if absent != nil {
+		p.TransportMode = deliveryRecoveryReplaceTerminal
+	} else {
+		p.DestinationWorkspaceID = s.Result.Transport.WorkspaceID
+	}
 	state, err := readFile(filepath.Join(s.Result.Paths.RunRoot, "state.json"), 8<<20, true)
 	if err != nil {
 		return p, err
@@ -367,11 +438,21 @@ func deliveryRecoveryPreview(d Dependencies, root string, in DeliveryStartRecove
 	if !equal(captured, s) {
 		return p, workflowError(4, "startup state changed during recovery preview")
 	}
+	// Recheck complete inventory on apply, but an unrelated tab opening or
+	// closing cannot alter authority over this one absent terminal.
+	absenceAuthority := absent
+	if absent != nil {
+		value := *absent
+		value.InventorySHA256 = ""
+		absenceAuthority = &value
+	}
 	p.Confirmation = digest(struct {
 		State                            string
 		Provider, SourceControl, Control Executable
-		Exit                             DeliveryStartupExitEvidence
-	}{hash(state), in.ProviderExecutable, in.ControlExecutable, p.ControlExecutable, exit})
+		Mode, Destination                string
+		Exit                             *DeliveryStartupExitEvidence
+		Absent                           *DeliveryAbsentTransportEvidence
+	}{hash(state), in.ProviderExecutable, in.ControlExecutable, p.ControlExecutable, p.TransportMode, p.DestinationWorkspaceID, exit, absenceAuthority})
 	p.State = "ready"
 	return p, nil
 }
@@ -386,7 +467,7 @@ func WorkflowPreviewDeliveryStartRecovery(d Dependencies, root string, in Delive
 	if err != nil {
 		return DeliveryStartRecoveryPreview{}, err
 	}
-	if s.Recovery != nil {
+	if s.Recovery != nil && !deliveryRecoveryStateEligible(s) {
 		return deliveryRecoveryExisting(d, root, s)
 	}
 	return deliveryRecoveryPreview(d, root, in, s)
@@ -396,14 +477,20 @@ func WorkflowRecoverDeliveryStart(d Dependencies, root string, in DeliveryStartR
 	if err := containing(d, root); err != nil {
 		return WorkflowRun{}, err
 	}
-	owned := false
+	var owned *workflowState
 	err := withStore(root, func() error {
 		s, err := workflowRead(root, in.RunID)
 		if err != nil {
 			return err
 		}
 		if s.Recovery != nil {
-			return nil
+			current, err := workflowRecoveryRecord(s)
+			if err != nil {
+				return err
+			}
+			if current.Confirmation == confirmation || !deliveryRecoveryStateEligible(s) {
+				return nil
+			}
 		}
 		if os.Getenv("HERDR_ENV") != "1" {
 			return workflowError(4, "recovery start requires the local Herdr context")
@@ -432,55 +519,81 @@ func WorkflowRecoverDeliveryStart(d Dependencies, root string, in DeliveryStartR
 		if err != nil {
 			return err
 		}
-		r := deliveryStartRecoveryRecord{"PlyDeliveryStartupRecovery@1", 1, in.RunID, s.Result.RequestSHA256, beforeBinding, in.ControlExecutable, in.ProviderExecutable, p.ControlExecutable, contextBinding, *p.ExitEvidence, p.Confirmation, d.Now().UTC().Format(time.RFC3339Nano)}
+		r := deliveryStartRecoveryRecord{Kind: "PlyDeliveryStartupRecovery@1", SchemaVersion: 1, RunID: in.RunID, RequestSHA256: s.Result.RequestSHA256, BeforeState: beforeBinding, SourceControl: in.ControlExecutable, ProviderExecutable: in.ProviderExecutable, ControlExecutable: p.ControlExecutable, Context: contextBinding, Confirmation: p.Confirmation, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Generation: p.Generation, TransportMode: p.TransportMode, DestinationWorkspaceID: p.DestinationWorkspaceID, AbsentTransport: p.AbsentTransport}
+		if p.ExitEvidence != nil {
+			r.ExitEvidence = p.ExitEvidence
+		}
 		binding, err := workflowKeep(d, filepath.Join(p.RecoveryDirectory, "recovery.json"), r)
 		if err != nil {
 			return err
 		}
-		s.Recovery = &binding
-		s.Result.StartupRecovery = &DeliveryStartRecoveryReadback{1, binding, s.Request.Runtime.Executable, s.Request.Runtime.PlyExecutable, in.ProviderExecutable, p.ControlExecutable}
+		old := s
+		s.Recovery, s.RecoveryTransport = &binding, nil
+		s.Result.StartupRecovery = ptr(deliveryRecoveryReadback(s, old, r))
 		s.Result.Paths.Context, s.ContextSHA256 = contextPath, contextBinding.SHA256
-		// Reserve the one new start before its external effect. A lost reply or
-		// crash never permits another start on repetition of this operation.
-		if err = d.writeValue(workflowStartupPath(s, "agent-start-attempt.json"), map[string]any{"recovery_sha256": binding.SHA256, "argv": workflowStartArgv(s.Request, s.Observed.Target.WorktreeLocator, s.Result.Transport.PaneID)}); err != nil {
-			return err
+		// Reserve each external effect before its send. Unknown replies stay
+		// attached to this generation; repeating its confirmation never replays.
+		if p.TransportMode == deliveryRecoveryReplaceTerminal {
+			s.Phase = "recovery_tab_create_attempted"
+			if err = d.writeValue(workflowStartupPath(s, "tab-create-attempt.json"), map[string]any{"recovery_sha256": binding.SHA256, "destination_workspace_id": p.DestinationWorkspaceID, "argv": workflowTabCreateArgv(s, p.DestinationWorkspaceID)}); err != nil {
+				return err
+			}
+		} else {
+			if err = d.writeValue(workflowStartupPath(s, "agent-start-attempt.json"), map[string]any{"recovery_sha256": binding.SHA256, "argv": workflowStartArgv(s.Request, s.Observed.Target.WorktreeLocator, s.Result.Transport.PaneID)}); err != nil {
+				return err
+			}
+			s.Phase = "agent_start_attempted"
 		}
-		s.Phase = "agent_start_attempted"
+		s.Result.Transport.AgentSessionID = ""
 		s.Result.Transport.State = "unknown"
 		s.Result.Transport.Observation = "cached"
 		s.Result.NextAction = WorkflowAction{"coordinator", "Follow this one recovery startup; do not restart or resend uncertain input."}
 		if err = workflowSave(d, s); err != nil {
 			return err
 		}
-		owned = true
+		owned = &s
 		return nil
 	})
 	if err != nil {
 		return deliveryReadback(d, root, in.RunID, err)
 	}
-	if !owned {
+	if owned == nil {
 		return WorkflowShow(d, root, in.RunID)
 	}
+	deadline := time.Now().Add(in.Timeout)
+	s := *owned
+	if s.Phase == "recovery_tab_create_attempted" {
+		s, err = deliveryRecoveryCreateTab(d, s, deadline)
+		if err != nil {
+			return deliveryReadback(d, root, in.RunID, err)
+		}
+	}
+	generation := workflowStartupGeneration(s)
 	if err = d.fault("delivery_recovery_before_agent_send"); err != nil {
 		return deliveryReadback(d, root, in.RunID, err)
 	}
-	s, err := workflowRead(root, in.RunID)
+	current, err := workflowRead(root, in.RunID)
 	if err != nil {
 		return WorkflowRun{}, err
 	}
-	deadline := time.Now().Add(in.Timeout)
+	if workflowStartupGeneration(current) != generation {
+		return deliveryReadback(d, root, in.RunID, workflowError(4, "startup generation changed; prior recovery owner has stopped"))
+	}
 	_, startErr := workflowStartupCall(d, s, deadline, workflowStartArgv(s.Request, s.Observed.Target.WorktreeLocator, s.Result.Transport.PaneID)...)
 	if startErr != nil {
 		if err = workflowUpdate(d, root, in.RunID, func(s *workflowState) error {
+			if workflowStartupGeneration(*s) != generation {
+				return workflowError(4, "startup generation changed after reserved start")
+			}
 			s.Result.Reasons = append(s.Result.Reasons, Reason{"delivery_recovery_start_response", startErr.Error()})
 			return nil
 		}); err != nil {
 			return deliveryReadback(d, root, in.RunID, err)
 		}
 	}
-	err = workflowAwaitReadinessGeneration(d, root, in.RunID, deadline, workflowStartupGeneration(s))
+	err = workflowAwaitReadinessGeneration(d, root, in.RunID, deadline, generation)
 	if err == nil {
-		err = workflowPromptUntil(d, root, in.RunID, nil, deadline)
+		err = workflowPromptGenerationUntil(d, root, in.RunID, nil, deadline, generation)
 	}
 	return deliveryReadback(d, root, in.RunID, err)
 }

@@ -23,11 +23,22 @@ path = root / "recovery-model.json"
 model = json.loads(path.read_text()) if path.exists() else {}
 args = sys.argv[1:]
 cmd = args[:2]
-pane = {"workspace_id":"w-fixture", "tab_id":"tab-fixture", "pane_id":"w-fixture:p1", "terminal_id":"terminal-fixture", "agent_status":"unknown", "cwd":model.get("cwd", ""), "foreground_cwd":model.get("cwd", "")}
+pane = {"workspace_id":model.get("workspace", "w-fixture"), "tab_id":model.get("tab", "tab-fixture"), "pane_id":model.get("pane", "w-fixture:p1"), "terminal_id":model.get("terminal", "terminal-fixture"), "agent_status":"unknown", "cwd":model.get("cwd", ""), "foreground_cwd":model.get("cwd", "")}
 if cmd == ["tab", "create"]:
+    model["tabs"] = model.get("tabs", 0) + 1
+    if model.get("closed"):
+        model.update(closed=False, workspace=args[args.index("--workspace") + 1], tab="replacement-tab", pane="replacement-pane", terminal="replacement-terminal")
+        pane.update(workspace_id=model["workspace"], tab_id=model["tab"], pane_id=model["pane"], terminal_id=model["terminal"])
     model["cwd"] = args[args.index("--cwd") + 1]
     pane.update(cwd=model["cwd"], foreground_cwd=model["cwd"])
     result = {"root_pane":pane}
+elif cmd == ["pane", "get"] and model.get("closed"):
+    print(json.dumps({"error":{"code":"pane_not_found","message":"synthetic closed Task tab"}}), file=sys.stderr)
+    raise SystemExit(1)
+elif cmd == ["pane", "list"]:
+    result = {"panes": [] if model.get("closed") else [pane]}
+elif cmd == ["workspace", "get"]:
+    result = {"workspace":{"workspace_id":args[2]}}
 elif cmd == ["pane", "get"]:
     result = {"pane":pane}
 elif cmd == ["pane", "process-info"]:

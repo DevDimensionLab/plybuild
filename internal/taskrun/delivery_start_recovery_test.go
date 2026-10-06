@@ -27,7 +27,11 @@ if cmd == ["pane", "process-info"]:
     info.update(model.get("recovery_process_info", {}))
     print(json.dumps({"id":"fixture", "result":{"process_info":info}}))
     raise SystemExit(0)
+if cmd == ["agent", "get"] and model.get("recovery_armed") and not model.get("recovery_started") and not model.get("recovery_managed_present"):
+    print(json.dumps({"id":"fixture", "error":{"code":"agent_not_found", "message":"no managed agent"}}), file=sys.stderr)
+    raise SystemExit(1)
 if cmd == ["agent", "start"] and model.get("recovery_armed"):
+    model["recovery_started"] = True
     model["bootstrap_mode"] = "normal"
     model["bootstrap_started"] = False
     model["bootstrap_gets"] = 0
