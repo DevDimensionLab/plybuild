@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type workflowAgent struct {
 	PaneID           string `json:"pane_id"`
 	TerminalID       string `json:"terminal_id"`
 	ForegroundCWD    string `json:"foreground_cwd"`
+	CWD              string `json:"cwd"`
 	Name             string `json:"name"`
 	Agent            string `json:"agent"`
 	Status           string `json:"agent_status"`
@@ -44,6 +46,40 @@ func (b *workflowLimitedOutput) Write(p []byte) (int, error) {
 }
 func workflowCall(d Dependencies, r WorkflowRequest, args ...string) (json.RawMessage, error) {
 	return workflowCallUntil(d, r, time.Time{}, args...)
+}
+
+// Serialize a startup send with explicit generation replacement. A delayed
+// observer of the original start cannot send into its replacement generation.
+func workflowStartupCall(d Dependencies, s workflowState, deadline time.Time, args ...string) (json.RawMessage, error) {
+	var result json.RawMessage
+	err := withStore(s.Request.WorkspaceRoot, func() error {
+		current, err := workflowRead(s.Request.WorkspaceRoot, s.Result.RunID)
+		if err != nil {
+			return err
+		}
+		if workflowStartupGeneration(current) != workflowStartupGeneration(s) {
+			return workflowError(4, "startup generation changed; no input or start sent")
+		}
+		if current.Recovery != nil && len(args) > 1 && args[0] == "agent" && args[1] == "start" {
+			runtime, err := workflowEffectiveRuntime(current)
+			if err != nil {
+				return err
+			}
+			if err = verifyExecutable(runtime.Executable); err != nil {
+				return err
+			}
+			resolved, err := exec.LookPath(runtime.Provider)
+			if err == nil {
+				resolved, err = filepath.EvalSymlinks(resolved)
+			}
+			if err != nil || resolved != runtime.Executable.Path {
+				return workflowError(4, "provider changed before reserved recovery start")
+			}
+		}
+		result, err = workflowCallUntil(d, s.Request, deadline, args...)
+		return err
+	})
+	return result, err
 }
 func workflowCallUntil(d Dependencies, r WorkflowRequest, deadline time.Time, args ...string) (json.RawMessage, error) {
 	if e := verifyExecutable(r.Herdr.Executable); e != nil {
@@ -168,18 +204,7 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	var tab struct {
 		RootPane workflowAgent `json:"root_pane"`
 	}
-	tabArgs := []string{"tab", "create", "--workspace", r.Herdr.WorkspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + os.Getenv("PATH"), "--no-focus"}
-	if s.CodexTrust != nil {
-		// Use the exact existing user/config locations observed by preview.
-		// No alternate home or persistent configuration is created.
-		tabArgs = append(tabArgs, "--env", "HOME="+s.CodexTrust.UserHome, "--env", "CODEX_HOME="+s.CodexTrust.CodexHome)
-	}
-	if s.ClaudeTrust != nil && s.ClaudeTrust.Reason == "" {
-		tabArgs = append(tabArgs, "--env", "HOME="+s.ClaudeTrust.UserHome)
-		if s.ClaudeTrust.ConfigDir != "" {
-			tabArgs = append(tabArgs, "--env", "CLAUDE_CONFIG_DIR="+s.ClaudeTrust.ConfigDir)
-		}
-	}
+	tabArgs := workflowTabCreateArgv(s, r.Herdr.WorkspaceID)
 	b, e := workflowCall(d, r, tabArgs...)
 	if e != nil {
 		return e
@@ -227,20 +252,40 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 		limit = d.HerdrTimeout
 	}
 	deadline := time.Now().Add(limit)
-	if _, startErr := workflowCallUntil(d, r, deadline, argv...); startErr != nil {
+	if _, startErr := workflowStartupCall(d, s, deadline, argv...); startErr != nil {
 		// A failed reply does not undo the single reserved start. Only fresh
 		// read-only observations of this exact attempt may establish readiness.
 		if e = workflowUpdate(d, root, id, func(s *workflowState) error {
+			if s.Recovery != nil {
+				return workflowError(4, "original startup was replaced; its sender has stopped")
+			}
 			s.Result.Reasons = append(s.Result.Reasons, Reason{"herdr_start_response", startErr.Error()})
 			return nil
 		}); e != nil {
 			return e
 		}
 	}
-	if e = workflowAwaitReadiness(d, root, id, deadline); e != nil {
+	if e = workflowAwaitReadinessGeneration(d, root, id, deadline, workflowStartupGeneration(s)); e != nil {
 		return e
 	}
-	return workflowPromptUntil(d, root, id, nil, deadline)
+	return workflowPromptGenerationUntil(d, root, id, nil, deadline, workflowStartupGeneration(s))
+}
+
+func workflowTabCreateArgv(s workflowState, workspaceID string) []string {
+	r := s.Request
+	tabArgs := []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + os.Getenv("PATH"), "--no-focus"}
+	if s.CodexTrust != nil {
+		// Use the exact existing user/config locations observed by preview.
+		// No alternate home or persistent configuration is created.
+		tabArgs = append(tabArgs, "--env", "HOME="+s.CodexTrust.UserHome, "--env", "CODEX_HOME="+s.CodexTrust.CodexHome)
+	}
+	if s.ClaudeTrust != nil && s.ClaudeTrust.Reason == "" {
+		tabArgs = append(tabArgs, "--env", "HOME="+s.ClaudeTrust.UserHome)
+		if s.ClaudeTrust.ConfigDir != "" {
+			tabArgs = append(tabArgs, "--env", "CLAUDE_CONFIG_DIR="+s.ClaudeTrust.ConfigDir)
+		}
+	}
+	return tabArgs
 }
 
 func workflowStartArgv(r WorkflowRequest, cwd, pane string) []string {
@@ -275,9 +320,19 @@ func workflowPrompt(d Dependencies, root, id string, findings []WorkflowFinding)
 	return workflowPromptUntil(d, root, id, findings, time.Time{})
 }
 func workflowPromptUntil(d Dependencies, root, id string, findings []WorkflowFinding, deadline time.Time) error {
+	s, err := workflowRead(root, id)
+	if err != nil {
+		return err
+	}
+	return workflowPromptGenerationUntil(d, root, id, findings, deadline, workflowStartupGeneration(s))
+}
+func workflowPromptGenerationUntil(d Dependencies, root, id string, findings []WorkflowFinding, deadline time.Time, expectedGeneration string) error {
 	s, e := workflowRead(root, id)
 	if e != nil {
 		return e
+	}
+	if workflowStartupGeneration(s) != expectedGeneration {
+		return workflowError(4, "startup generation changed before Task prompt preparation")
 	}
 	if e = workflowFresh(d, s, false); e != nil {
 		return e
@@ -293,7 +348,11 @@ func workflowPromptUntil(d Dependencies, root, id string, findings []WorkflowFin
 		return e
 	}
 	prompt := workflowInstructions(s, findings)
+	generation := workflowStartupGeneration(s)
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
+		if workflowStartupGeneration(*s) != generation {
+			return workflowError(4, "startup generation changed before Task prompt")
+		}
 		if !deadline.IsZero() && !time.Now().Before(deadline) {
 			return workflowError(5, "Herdr startup deadline expired before prompt reservation; no Task prompt sent")
 		}

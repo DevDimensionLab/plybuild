@@ -17,8 +17,8 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	var target queueTargetFlags
 	c := &cobra.Command{
 		Use: "execute", Short: "Deliver the next goal from this Epic with its assigned agent",
-		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration; --check previews the config path and project key without writing. Tool permissions and other native prompts remain under provider control. Repeated starts inspect the preserved execution; an unknown start never launches another agent. Older preserved launches retain their original trust and permission choices.",
-		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute show wfr_<digest>",
+		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
+		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check",
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			if err := executeFormat(format); err != nil {
@@ -26,6 +26,9 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 			}
 			if c.Flags().Changed("next") && (!in.Next || in.SpecID != "") {
 				return workspace.WorkInvalidArguments("--next selects the next goal and cannot be combined with --spec")
+			}
+			if in.Restart && in.SpecID == "" {
+				return workspace.WorkInvalidArguments("--restart requires an explicit --spec")
 			}
 			if in.SpecID == "" {
 				in.Next = true
@@ -45,6 +48,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().BoolVar(&in.Next, "next", false, "select the first eligible goal in this Epic's queue (default)")
 	c.Flags().StringVar(&in.SpecID, "spec", "", "exact pending goal Spec ID in this Epic; ambiguous IDs are rejected")
 	c.Flags().BoolVar(&in.Check, "check", false, "preview goal, base, worktree, runtime and Claude folder trust effect without writes or startup")
+	c.Flags().BoolVar(&in.Restart, "restart", false, "recover this --spec's interrupted Codex startup before Task input, preserving its worktree and history")
 	target.bind(c)
 	c.Flags().StringVar(&in.Runtime.HerdrWorkspace, "herdr-workspace", "", "Herdr workspace ID (default: current Herdr workspace)")
 	c.Flags().StringVar(&in.Runtime.PermissionProfile, "permission-profile", "", "existing Codex permission profile; Claude uses native auto mode")
@@ -52,6 +56,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	c.SetFlagErrorFunc(func(c *cobra.Command, e error) error { return workspace.WorkInvalidArguments(e.Error()) })
 	addExecuteOwnerCommands(c, d)
+	c.AddCommand(newWorkflowExecuteRecoverStartCommand(d))
 	return c
 }
 
@@ -72,6 +77,25 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 		return e
 	}
 	switch v := result.(type) {
+	case taskexecute.RecoveryResult:
+		fmt.Fprintf(c.OutOrStdout(), "Startup recovery: %s\n", v.State)
+		if v.Preview != nil && v.Preview.State != "existing" && v.Run == nil {
+			fmt.Fprintf(c.OutOrStdout(), "Run: %s\nReplacement Codex: %s\n", v.Preview.RunID, v.Preview.ProviderExecutable.Path)
+			if v.Preview.State == "ready" {
+				if v.Preview.TransportMode == "replace_missing_terminal" {
+					fmt.Fprintf(c.OutOrStdout(), "Task terminal: missing; a new tab is planned in Herdr workspace %s\n", v.Preview.DestinationWorkspaceID)
+				} else {
+					fmt.Fprintln(c.OutOrStdout(), "Task terminal: existing idle shell will be reused")
+				}
+				fmt.Fprintf(c.OutOrStdout(), "Planned control: %s\n", v.Preview.ControlExecutable.Path)
+			}
+		}
+		if v.Run != nil {
+			return writeExecuteResult(c, format, *v.Run)
+		}
+		if v.NextAction != "" {
+			fmt.Fprintln(c.OutOrStdout(), "Next: "+v.NextAction)
+		}
 	case taskexecute.Result:
 		if v.Goal != nil {
 			fmt.Fprintf(c.OutOrStdout(), "Task: %s — %s\nReturn worktree: %s\nFeature worktree: %s\n", v.Goal.Goal.TaskID, v.Goal.Goal.Title, v.Goal.Target.ParentLocator, v.Goal.WorktreePath)
@@ -90,6 +114,9 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 			}
 		}
 		fmt.Fprintf(c.OutOrStdout(), "Execution: %s\n", v.State)
+		if v.Recovery != nil {
+			return writeExecuteResult(c, format, *v.Recovery)
+		}
 		if v.Run != nil {
 			return writeExecuteResult(c, format, *v.Run)
 		}

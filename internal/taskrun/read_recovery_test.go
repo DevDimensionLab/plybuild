@@ -13,6 +13,9 @@ import (
 func deliveryInventoryRecovery(t *testing.T, f deliveryFixture) (workflowState, map[string]any) {
 	t.Helper()
 	s := deliveryInventoryState(t, f, "recovered")
+	// Recovery records the interrupted pre-Task generation, not an unused
+	// reservation. This fixture is readable by both native and history readers.
+	s.Phase = "bootstrap_attempted"
 	dir := filepath.Join(s.Result.Paths.RunRoot, "startup-recovery", "001")
 	before, err := workflowKeep(f.D, filepath.Join(dir, "before-state.json"), s)
 	if err != nil {
@@ -93,8 +96,20 @@ func TestReadInventoryPreservesDeliveryReportAfterBoundStartupRecovery(t *testin
 		t.Fatal(err)
 	}
 	var mutationState workflowState
-	if decode(raw, 8<<20, &mutationState) == nil {
-		t.Fatal("read compatibility silently broadened the mutation state schema")
+	if err := decode(raw, 8<<20, &mutationState); err != nil {
+		t.Fatalf("installed native recovery schema must remain readable: %v", err)
+	}
+	var unknown map[string]any
+	if err := json.Unmarshal(raw, &unknown); err != nil {
+		t.Fatal(err)
+	}
+	unknown["unrecognized_authority"] = true
+	changed, err := Canonical(unknown)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if decode(changed, 8<<20, &mutationState) == nil {
+		t.Fatal("native recovery compatibility accepted an unknown authority field")
 	}
 }
 

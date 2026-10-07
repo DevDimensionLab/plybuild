@@ -2,7 +2,6 @@ package taskrun
 
 import (
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -42,11 +41,12 @@ func WorkflowResumeDeliveryStart(d Dependencies, root, id string, timeout time.D
 	}
 	deadline := time.Now().Add(timeout)
 	var phase string
+	var generation string
 	err := workflowUpdate(d, root, id, func(s *workflowState) error {
 		if !deliveryStartupPending(*s) {
 			return workflowError(4, "resume requires an existing delivery startup with no attempted Task prompt; inspect the same run without restarting or resending")
 		}
-		_, bootstrapErr := os.Lstat(filepath.Join(s.Result.Paths.RunRoot, "startup-bootstrap-attempt.json"))
+		_, bootstrapErr := os.Lstat(workflowStartupPath(*s, "startup-bootstrap-attempt.json"))
 		if s.Phase == "agent_start_attempted" && !os.IsNotExist(bootstrapErr) {
 			return workflowError(4, "a readiness exchange is already reserved or unknown; inspect its preserved state without replaying it")
 		}
@@ -74,20 +74,24 @@ func WorkflowResumeDeliveryStart(d Dependencies, root, id string, timeout time.D
 			return workflowError(4, "Task start target changed before its first prompt")
 		}
 		phase = s.Phase
+		generation = workflowStartupGeneration(*s)
 		return nil
 	})
 	if err != nil {
 		return deliveryReadback(d, root, id, err)
 	}
 	if phase != "session_bound" {
-		err = workflowAwaitReadiness(d, root, id, deadline)
+		err = workflowAwaitReadinessGeneration(d, root, id, deadline, generation)
 	}
 	if err == nil {
-		err = workflowPromptUntil(d, root, id, nil, deadline)
+		err = workflowPromptGenerationUntil(d, root, id, nil, deadline, generation)
 	}
 	if err != nil {
 		cause := err
 		if saveErr := workflowUpdate(d, root, id, func(s *workflowState) error {
+			if workflowStartupGeneration(*s) != generation {
+				return workflowError(4, "startup generation changed; prior resume has stopped")
+			}
 			s.Result.Reasons = append(s.Result.Reasons, Reason{"delivery_start_resume_stopped", cause.Error()})
 			// A competing successful first prompt or acceptance owns subsequent
 			// progress; a late observer must not replace its next action.

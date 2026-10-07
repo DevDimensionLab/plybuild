@@ -1,11 +1,18 @@
 {
   "allowed_deltas": [
     {
-      "after": "  ply workflow epic plan --repo /work/example/main --root /work/example --check",
+      "after": "  ply workflow status --json\n  ply workflow epic plan --repo /work/example/main --root /work/example --check",
       "before": "",
       "field": "example",
       "kind": "command_changed",
       "path": "ply"
+    },
+    {
+      "after": "turn on json output logging; workflow status selects JSON result data",
+      "before": "turn on json output logging",
+      "field": "usage",
+      "kind": "flag_changed",
+      "path": "ply#persistent:json"
     },
     {
       "after": {
@@ -372,7 +379,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Show the stable workspace-core-read catalog and additive read_extensions for progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
+        "long": "Show the stable workspace-core-read catalog and additive read_extensions for workflow status, progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
         "path": "ply capabilities",
         "runnable": true,
         "short": "Show supported workspace core read contracts",
@@ -569,51 +576,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workflow execute --check\n  ply workflow epic plan --project ply --language nb\n  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef",
-        "flags": [
-          {
-            "annotations": {
-              "cobra_annotation_flag_set_by_cobra": [
-                "true"
-              ]
-            },
-            "default": "false",
-            "deprecated": "",
-            "hidden": false,
-            "name": "help",
-            "no_opt_default": "true",
-            "scope": "local",
-            "shorthand": "h",
-            "shorthand_deprecated": "",
-            "type": "bool",
-            "usage": "help for workflow"
-          }
-        ],
-        "has_args_validator": false,
-        "has_persistent_post_run": false,
-        "has_persistent_pre_run": true,
-        "has_post_run": false,
-        "has_pre_run": false,
-        "hidden": false,
-        "long": "Create local planning repositories, execute queued goals with an assigned agent, and manage workflow transitions and notifications.",
-        "path": "ply workflow",
-        "runnable": false,
-        "short": "Manage agent workflows",
-        "suggest_for": null,
-        "traverse_children": false,
-        "use": "workflow"
-      },
-      "kind": "command_added",
-      "path": "ply workflow"
-    },
-    {
-      "after": {
-        "aliases": null,
-        "annotations": {},
-        "deprecated": "",
-        "disable_flag_parsing": false,
-        "disable_flags_in_use_line": false,
-        "example": "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute show wfr_<digest>",
+        "example": "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check",
         "flags": [
           {
             "annotations": {},
@@ -751,6 +714,19 @@
           },
           {
             "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "restart",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "recover this --spec's interrupted Codex startup before Task input, preserving its worktree and history"
+          },
+          {
+            "annotations": {},
             "default": "",
             "deprecated": "",
             "hidden": false,
@@ -769,7 +745,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration; --check previews the config path and project key without writing. Tool permissions and other native prompts remain under provider control. Repeated starts inspect the preserved execution; an unknown start never launches another agent. Older preserved launches retain their original trust and permission choices.",
+        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
         "path": "ply workflow execute",
         "runnable": true,
         "short": "Deliver the next goal from this Epic with its assigned agent",
@@ -849,6 +825,89 @@
       },
       "kind": "command_added",
       "path": "ply workflow execute follow"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute recover-start wfr_<digest> --check\n  ply workflow execute recover-start wfr_<digest>\n  ply workflow execute show wfr_<digest>",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "preview the next startup attempt and inspect preserved transport without writes or startup"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for recover-start"
+          },
+          {
+            "annotations": {},
+            "default": "60",
+            "deprecated": "",
+            "hidden": false,
+            "name": "timeout",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "wait timeout in seconds; never stops the agent"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Recover a preserved run by ID. For normal use, repeat ply workflow execute --spec SPEC_ID --restart instead. Recovery preserves the Task, worktree, goal and original records. Fresh checks can reuse an idle terminal or replace a closed terminal; missing transport is not proof of process exit. Only the new attempt may receive the Task prompt or accept callbacks. Each explicit recovery preserves a separate attempt; unknown effects and possible Task input prevent duplicate starts. Model and permissions remain unchanged. Use --check to preview without writes or startup.",
+        "path": "ply workflow execute recover-start",
+        "runnable": true,
+        "short": "Recover an interrupted Codex startup before its first Task prompt",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "recover-start RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute recover-start"
     },
     {
       "after": {
@@ -2455,6 +2514,159 @@
       },
       "kind": "command_added",
       "path": "ply workflow run"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow status\n  ply workflow status --all --json\n  ply workflow execute --check\n  ply workflow epic plan --project ply --language nb\n  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for workflow"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": true,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read registered workspace workflow status, create local planning repositories, execute queued goals with an assigned agent, and manage workflow transitions and notifications.",
+        "path": "ply workflow",
+        "runnable": false,
+        "short": "Manage agent workflows",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "workflow"
+      },
+      "kind": "command_added",
+      "path": "ply workflow"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow status\n  ply workflow status --project ply --epic cli\n  ply workflow status --all --json\n  ply --json workflow status\n  ply workflow status --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "all",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "include untouched backlog, inactive work and registered completed work"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "epic",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact registered Epic ID"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json); --json is a local result shortcut"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for status"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact registered project ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact registered repository ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": true,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Show registered work across all projects and Epics in the discovered workspace. Prioritize Needs you, Follow-up, In progress (recorded), and Ready next (registered). Untouched backlog, inactive work and registered completed work are hidden by default and counted; --all includes their history.\n\nExact project, repository and Epic filters are independently optional and combined with AND. Unknown IDs fail; known disjoint filters return an empty result. Run from any directory inside the workspace, including outside an Epic worktree.\n\nThis reads recorded sources without Git, provider or live process checks, initialization, locks or writes. Source freshness does not prove that an agent is alive. Ready next still requires execute preflight.\n\nFor this command, --json selects the same result data as --format json, including when --json precedes workflow. --json=false does not select a format; --json with explicit --format text is an error. JSON success is one WorkflowStatusReadback@1 object followed by a newline. Fatal errors write stderr with empty stdout. Other commands retain their existing --json logging behavior.",
+        "path": "ply workflow status",
+        "runnable": true,
+        "short": "Show registered work and next actions across the workspace",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "status"
+      },
+      "kind": "command_added",
+      "path": "ply workflow status"
     },
     {
       "after": {

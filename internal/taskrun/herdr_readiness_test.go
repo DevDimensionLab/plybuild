@@ -278,7 +278,8 @@ func TestWorkflowTransportDiagnosticsAreBoundedAndSafe(t *testing.T) {
 		failure map[string]any
 		want    []string
 	}{
-		{"exit", map[string]any{"exit": 7, "stderr": secret, "stdout": `{"error":{"code":"agent_not_found","message":"` + secret + `"},"terminal":"` + secret + `"}`}, []string{"agent get", "exit=7", "agent_not_found"}},
+		{"exit", map[string]any{"exit": 7, "stderr": `{"detail":"` + secret + `"}`, "stdout": `{"error":{"code":"agent_not_found","message":"` + secret + `"},"terminal":"` + secret + `"}`}, []string{"agent get", "exit=7", "agent_not_found"}},
+		{"mixed_invalid", map[string]any{"exit": 7, "stderr": secret, "stdout": `{"error":{"code":"agent_not_found"}}`}, []string{"agent get", "exit=7", "provider_code=unknown"}},
 		{"timeout", map[string]any{"delay_seconds": 2, "stderr": secret}, []string{"agent get", "timeout"}},
 		{"invalid", map[string]any{"stdout": secret}, []string{"agent get", "invalid_response"}},
 		{"large", map[string]any{"exit": 7, "stderr": strings.Repeat(secret, 40000)}, []string{"agent get", "exit=7", "truncated"}},

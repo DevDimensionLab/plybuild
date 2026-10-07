@@ -329,6 +329,15 @@ type ProcessRunner interface {
 	Check() error
 	Run(LaunchSpec, func(Process) error) (Process, error)
 }
+
+// StartupProcess contains only the local identities needed to rule out a
+// provider still running under the preserved terminal shell.
+type StartupProcess struct {
+	PID            int `json:"pid"`
+	ParentPID      int `json:"parent_pid"`
+	ProcessGroupID int `json:"process_group_id"`
+}
+
 type Dependencies struct {
 	Executable      func() (string, error)
 	Files           FileSystem
@@ -342,6 +351,9 @@ type Dependencies struct {
 	ContextPath     func() string
 	CWD             func() (string, error)
 	Fault           func(string) error
+	// StartupProcessTree observes the shell and all of its descendants. A nil
+	// observer uses a bounded local process-table read, without command lines.
+	StartupProcessTree func(shellPID int) ([]StartupProcess, error)
 	// HerdrTimeout bounds transport calls and the shared start/readiness window,
 	// never the provider's task lifetime.
 	// Zero selects the documented adapter timeouts.

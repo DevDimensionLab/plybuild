@@ -90,6 +90,10 @@ func deliveryReadback(d Dependencies, root, id string, operationErr error) (Work
 
 func deliveryInstructions(s workflowState) string {
 	r, o := s.Request, s.Result
+	// The prompt path validates this binding before generating instructions.
+	if runtime, err := workflowEffectiveRuntime(s); err == nil {
+		r.Runtime = runtime
+	}
 	c := r.Delivery
 	// The per-run guide supplies the exact callback schemas with unobserved
 	// templates, so native recipients need not guess protocol fields.
@@ -97,7 +101,7 @@ func deliveryInstructions(s workflowState) string {
 	if c.NotificationContext != nil {
 		notify = "You own the one notification context at " + c.NotificationContext.Locator + ". Use the installed ply-agent-notify skill for a necessary human answer, a real stop, or the agreed completion. Internal delegates stay quiet; preserve and reuse event identity."
 	}
-	notify += " Read the callback guide before accepting or reporting: " + filepath.Join(o.Paths.RunRoot, "delivery", "callback-guide.md") + ". Copy its adjacent unobserved templates into new private files and fill actual observations."
+	notify += " Read the callback guide before accepting or reporting: " + filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md") + ". Copy its adjacent unobserved templates into new private files and fill actual observations."
 	return fmt.Sprintf("You own this selected delivery through local completion. Read the frozen goal %s, the native mandate %s, the immutable request %s and private context %s. The goal constrains the outcome; you own design, implementation, meaningful tests, review and fixes. Subagents allowed: %t. Local installation allowed: %t. These choices grant no new runtime permissions, remote effects or unrelated goals. Before target writes submit ply.workflow.run-acceptance schema_version 2 using %s workflow run accept %s --context %s --file <private-acceptance.json>. Include delivery_permission with the bound launch_contract_sha256, actual permission_confirmed and actual_policy_evidence; report actual runtime/session/policy, not requested facts as observations. Unknown authority stops dependent work. There is no inherited Agreement A or fixed correction budget. Implement the acceptance entrypoint at %s; do not treat its placeholder as a passed test. Preserve an actual review record and run %s workflow execute verify %s --context %s --review <review.json>. The verifier preserves execution evidence and qualifies a technical candidate; it does not claim human QA. Report work, necessary questions or incomplete outcomes with ply.workflow.delivery-report schema_version 2 via %s workflow execute report %s --context %s --file <report.json>. Never fabricate unrun verifier exits. After candidate qualification, prepare the actual installed human journey. Preserve the human's exact answer through execute qa; only an exact candidate pass permits execute integrate. Keep the same interactive session and own corrections after fail. Continue local integration and base update when the actual pass and original authority cover them. Technical candidate, human judgment and final delivery are separate events. Do not publish a second terminal into an existing candidate handoff. The bound control executable %s is immutable and separate from the installed candidate. Do not restart, resend uncertain input, or overwrite this control executable. %s", c.Goal.Locator, filepath.Join(o.Paths.RunRoot, "mandate.json"), workflowIndex(r.WorkspaceRoot, o.RunID), o.Paths.Context, c.AllowSubagents, c.AllowLocalInstall, ShellQuote(r.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), ShellQuote(c.AcceptancePath), ShellQuote(r.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), ShellQuote(r.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), ShellQuote(r.Runtime.PlyExecutable.Path), notify)
 }
 

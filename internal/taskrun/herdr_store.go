@@ -39,6 +39,9 @@ func workflowRead(root, id string) (workflowState, error) {
 	if !equal(s.Request, saved.Request) || !equal(s.CodexTrust, saved.CodexTrust) || !equal(s.ClaudeTrust, saved.ClaudeTrust) || saved.Result.RunID != id || !equal(s.Observed, saved.Observed) || saved.Result.Paths.RunRoot != s.Result.Paths.RunRoot || saved.Result.RequestSHA256 != digest(s.Request) || saved.Result.SessionID != "ply:"+id {
 		return s, workflowError(4, "preserved state differs from reservation")
 	}
+	if _, e = workflowRecoveryRecord(saved); e != nil {
+		return saved, e
+	}
 	return saved, nil
 }
 func workflowSave(d Dependencies, s workflowState) error {
@@ -140,10 +143,17 @@ func workflowReservations(d Dependencies, root string, target workspace.PlanWork
 }
 
 func workflowFresh(d Dependencies, s workflowState, target bool) error {
+	runtime, err := workflowEffectiveRuntime(s)
+	if err != nil {
+		return err
+	}
+	return workflowFreshRuntime(d, s, target, runtime)
+}
+func workflowFreshRuntime(d Dependencies, s workflowState, target bool, runtime Runtime) error {
 	if e := workflowTrustFresh(s); e != nil {
 		return e
 	}
-	if _, e := runtimeBindings(s.Request.Runtime); e != nil {
+	if _, e := runtimeBindings(runtime); e != nil {
 		return e
 	}
 	if e := verifyExecutable(s.Request.Herdr.Executable); e != nil {
@@ -277,7 +287,7 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		o.Reasons = make([]Reason, 0, len(s.Result.Reasons))
 		for _, reason := range s.Result.Reasons {
 			switch reason.Code {
-			case "herdr_start_response", "herdr_start_stopped", "herdr_bootstrap_response", "delivery_start_resume_stopped":
+			case "herdr_start_response", "herdr_start_stopped", "herdr_bootstrap_response", "delivery_start_resume_stopped", "delivery_recovery_start_response":
 				continue
 			}
 			o.Reasons = append(o.Reasons, reason)

@@ -1,9 +1,9 @@
 package taskrun
 
-// Startup recovery is a known additive historical format. These read-only
-// types deliberately do not extend workflowState or any mutation validator.
-// Executable identities are preserved metadata, never a present runtime probe
-// or permission observation.
+// Startup recovery has both a native contract and a historical projection.
+// These read-only types preserve recorded metadata without running native
+// preflight or extending mutation authority. Executable identities are never
+// a present runtime probe or permission observation.
 import (
 	"fmt"
 	"path/filepath"
