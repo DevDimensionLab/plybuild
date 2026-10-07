@@ -1,0 +1,34 @@
+{
+  "kind": "WorkflowTraceReadback@1",
+  "schema_version": 1,
+  "workspace": "/example/work",
+  "task": {
+    "id": "trace-example",
+    "title": "Investigate recorded correction loops",
+    "project_id": "project",
+    "repo_id": "repo",
+    "epic_id": "epic"
+  },
+  "observed_at_utc": "2026-10-07T10:00:00Z",
+  "freshness": "fresh",
+  "live_state": "unknown",
+  "history_state": "empty",
+  "ordering": "Source chains preserve their own sequence. Independent chains have no asserted global chronology. Sorted IDs and tied positions are presentation only; spacing is not time.",
+  "current_goals": [],
+  "runs": [],
+  "sources": [],
+  "events": [],
+  "chains": [],
+  "relations": [],
+  "candidates": [],
+  "analysis": [],
+  "coverage": {
+    "state": "complete",
+    "read": [],
+    "unknowns": [
+      "Unrecorded work is unknown."
+    ]
+  },
+  "diagnostics": [],
+  "next_transition_authorized": true
+}

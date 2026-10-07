@@ -1,0 +1,928 @@
+{
+  "kind": "WorkflowTraceReadback@1",
+  "schema_version": 1,
+  "workspace": "/example/work",
+  "task": {
+    "id": "trace-example",
+    "title": "Investigate recorded correction loops",
+    "project_id": "project",
+    "repo_id": "repo",
+    "epic_id": "epic"
+  },
+  "observed_at_utc": "2026-10-07T10:00:00Z",
+  "freshness": "fresh",
+  "live_state": "unknown",
+  "history_state": "recorded",
+  "ordering": "Source chains preserve their own sequence. Independent chains have no asserted global chronology. Sorted IDs and tied positions are presentation only; spacing is not time.",
+  "current_goals": [
+    {
+      "spec_id": "analysis",
+      "revision": 2,
+      "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "status": "valid",
+      "source_ids": [
+        "goal-head"
+      ],
+      "declaration": {
+        "kind": "WorkspaceTaskSpecRevision@2",
+        "revision": 2,
+        "objective": "Analyze one Task with a changed goal"
+      }
+    }
+  ],
+  "runs": [
+    {
+      "id": "trn_example",
+      "family": "legacy_task_run",
+      "provider": null,
+      "session_id": null,
+      "request_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "frozen_basis": null,
+      "frozen_goal": null,
+      "declared_process": null,
+      "coverage": "complete",
+      "source_ids": [
+        "source-trn_example"
+      ],
+      "event_ids": [
+        "legacy-report"
+      ]
+    },
+    {
+      "id": "wfr_older",
+      "family": "workflow_run_v1",
+      "provider": null,
+      "session_id": null,
+      "request_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "frozen_basis": null,
+      "frozen_goal": null,
+      "declared_process": null,
+      "coverage": "complete",
+      "source_ids": [
+        "source-wfr_older"
+      ],
+      "event_ids": [
+        "older-review"
+      ]
+    },
+    {
+      "id": "wfr_goal",
+      "family": "goal_execute_v2",
+      "provider": "codex",
+      "session_id": "session-example",
+      "request_sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "frozen_basis": null,
+      "frozen_goal": {
+        "kind": "WorkspaceTaskSpecRevision@2",
+        "revision": 1,
+        "objective": "Analyze one Task",
+        "constraints": [
+          "No workflow transitions"
+        ]
+      },
+      "declared_process": {
+        "requirements": [
+          {
+            "id": "verify",
+            "acceptance": "Run relevant checks"
+          }
+        ]
+      },
+      "coverage": "complete",
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "event_ids": [
+        "question",
+        "working",
+        "verify-c1-fail",
+        "correction",
+        "verify-c2",
+        "qa-c2-fail",
+        "verify-c3",
+        "qa-c3-pass",
+        "integrate-c3",
+        "wait-start",
+        "wait-end"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-trn_example",
+      "kind": "native_run",
+      "locator": "/example/work/.ply/trn_example/request.json",
+      "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "status": "valid"
+    },
+    {
+      "id": "source-wfr_older",
+      "kind": "native_run",
+      "locator": "/example/work/.ply/wfr_older/request.json",
+      "sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "status": "valid"
+    },
+    {
+      "id": "source-wfr_goal",
+      "kind": "native_run",
+      "locator": "/example/work/.ply/wfr_goal/request.json",
+      "sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "status": "valid"
+    },
+    {
+      "id": "goal-head",
+      "kind": "goal",
+      "locator": "/example/work/.ply/task-content/current.json",
+      "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "status": "valid"
+    }
+  ],
+  "events": [
+    {
+      "id": "legacy-report",
+      "native_id": "native-legacy-report",
+      "type": "delivery_report",
+      "title": "Historical report with unknown actor",
+      "role": "unknown",
+      "actor_claim": null,
+      "recorder": "Ply native record",
+      "evidence_class": "unknown",
+      "run_ids": [
+        "trn_example"
+      ],
+      "candidate_id": null,
+      "result_id": null,
+      "outcome": null,
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-trn_example"
+      ],
+      "positions": [
+        {
+          "chain_id": "legacy-events",
+          "sequence": 1
+        }
+      ],
+      "data": {
+        "reported_outcome": "done"
+      }
+    },
+    {
+      "id": "older-review",
+      "native_id": "native-older-review",
+      "type": "review",
+      "title": "Preserved older review round",
+      "role": "agent",
+      "actor_claim": "Agent report",
+      "recorder": "Ply native record",
+      "evidence_class": "reported",
+      "run_ids": [
+        "wfr_older"
+      ],
+      "candidate_id": null,
+      "result_id": null,
+      "outcome": null,
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_older"
+      ],
+      "positions": [
+        {
+          "chain_id": "older-rounds",
+          "sequence": 0
+        }
+      ],
+      "data": {
+        "round": 0,
+        "findings": [
+          "Check unknown time"
+        ]
+      }
+    },
+    {
+      "id": "question",
+      "native_id": "native-question",
+      "type": "delivery_report",
+      "title": "Needs input",
+      "role": "agent",
+      "actor_claim": "Agent report",
+      "recorder": "Ply native record",
+      "evidence_class": "reported",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": null,
+      "result_id": null,
+      "outcome": null,
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "goal-delivery",
+          "sequence": 1
+        }
+      ],
+      "data": {
+        "phase": "needs_input",
+        "question": "Which output should be the default?\nKeep café and 🧭 unchanged."
+      }
+    },
+    {
+      "id": "working",
+      "native_id": "native-working",
+      "type": "delivery_report",
+      "title": "Working resumed",
+      "role": "agent",
+      "actor_claim": "Agent report",
+      "recorder": "Ply native record",
+      "evidence_class": "reported",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": null,
+      "result_id": null,
+      "outcome": null,
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "goal-delivery",
+          "sequence": 2
+        }
+      ],
+      "data": {
+        "phase": "working",
+        "summary": "Continued independent checks; no answer recorded."
+      }
+    },
+    {
+      "id": "verify-c1-fail",
+      "native_id": "native-verify-c1-fail",
+      "type": "verification",
+      "title": "Verifier failed",
+      "role": "ply",
+      "actor_claim": null,
+      "recorder": "Ply native record",
+      "evidence_class": "controlled",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": "C1",
+      "result_id": null,
+      "outcome": "failed",
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "goal-delivery",
+          "sequence": 3
+        }
+      ],
+      "data": {
+        "verifier_id": "acceptance",
+        "exit_code": 1,
+        "candidate_oid": "1111111111111111111111111111111111111111"
+      }
+    },
+    {
+      "id": "correction",
+      "native_id": "native-correction",
+      "type": "delivery_report",
+      "title": "Reported correction",
+      "role": "agent",
+      "actor_claim": "Agent report",
+      "recorder": "Ply native record",
+      "evidence_class": "reported",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": "C2",
+      "result_id": null,
+      "outcome": null,
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "goal-delivery",
+          "sequence": 4
+        }
+      ],
+      "data": {
+        "phase": "working",
+        "summary": "Corrected missing output branch"
+      }
+    },
+    {
+      "id": "verify-c2",
+      "native_id": "native-verify-c2",
+      "type": "task_result_technical",
+      "title": "Candidate C2 qualified",
+      "role": "ply",
+      "actor_claim": null,
+      "recorder": "Ply native record",
+      "evidence_class": "controlled",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": "C2",
+      "result_id": "result-c2",
+      "outcome": "qualified",
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "goal-delivery",
+          "sequence": 5
+        }
+      ],
+      "data": {
+        "verifier_id": "acceptance",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "qa-c2-fail",
+      "native_id": "native-qa-c2-fail",
+      "type": "human_qa",
+      "title": "Human failed C2",
+      "role": "human",
+      "actor_claim": "Person entered this answer",
+      "recorder": "Ply native record",
+      "evidence_class": "human_attestation",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": "C2",
+      "result_id": "result-c2",
+      "outcome": "fail",
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "goal-delivery",
+          "sequence": 6
+        }
+      ],
+      "data": {
+        "answer": "fail: question text was missing"
+      }
+    },
+    {
+      "id": "verify-c3",
+      "native_id": "native-verify-c3",
+      "type": "task_result_technical",
+      "title": "Candidate C3 qualified",
+      "role": "ply",
+      "actor_claim": null,
+      "recorder": "Ply native record",
+      "evidence_class": "controlled",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": "C3",
+      "result_id": "result-c3",
+      "outcome": "qualified",
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "goal-delivery",
+          "sequence": 7
+        }
+      ],
+      "data": {
+        "verifier_id": "acceptance",
+        "exit_code": 0
+      }
+    },
+    {
+      "id": "qa-c3-pass",
+      "native_id": "native-qa-c3-pass",
+      "type": "human_qa",
+      "title": "Human passed C3",
+      "role": "human",
+      "actor_claim": "Person entered this answer",
+      "recorder": "Ply native record",
+      "evidence_class": "human_attestation",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": "C3",
+      "result_id": "result-c3",
+      "outcome": "pass",
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "goal-delivery",
+          "sequence": 8
+        }
+      ],
+      "data": {
+        "answer": "pass"
+      }
+    },
+    {
+      "id": "integrate-c3",
+      "native_id": "native-integrate-c3",
+      "type": "integration",
+      "title": "Recorded local integration of C3",
+      "role": "ply",
+      "actor_claim": null,
+      "recorder": "Ply native record",
+      "evidence_class": "controlled",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": "C3",
+      "result_id": "result-c3",
+      "outcome": "integrated",
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "goal-delivery",
+          "sequence": 9
+        }
+      ],
+      "data": {
+        "candidate_oid": "3333333333333333333333333333333333333333",
+        "local_effect": "base updated"
+      }
+    },
+    {
+      "id": "wait-start",
+      "native_id": "native-wait-start",
+      "type": "step_started",
+      "title": "Reported wait",
+      "role": "agent",
+      "actor_claim": "Agent report",
+      "recorder": "Ply native record",
+      "evidence_class": "reported",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": null,
+      "result_id": null,
+      "outcome": null,
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "journal",
+          "sequence": 1
+        }
+      ],
+      "data": {
+        "step": {
+          "id": "waiting",
+          "kind": "waiting",
+          "parent_step_id": null
+        },
+        "waiting": {
+          "reason": "Waiting for fixture answer",
+          "dependency": "design-question",
+          "next_actor": "human"
+        }
+      }
+    },
+    {
+      "id": "wait-end",
+      "native_id": "native-wait-end",
+      "type": "step_finished",
+      "title": "Reported wait ended without a known time",
+      "role": "agent",
+      "actor_claim": "Agent report",
+      "recorder": "Ply native record",
+      "evidence_class": "reported",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "candidate_id": null,
+      "result_id": null,
+      "outcome": null,
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "positions": [
+        {
+          "chain_id": "journal",
+          "sequence": 2
+        }
+      ],
+      "data": {
+        "step": {
+          "id": "waiting",
+          "kind": "waiting",
+          "parent_step_id": null
+        }
+      }
+    }
+  ],
+  "chains": [
+    {
+      "id": "legacy-events",
+      "ordering": "source sequence; equal positions have no asserted order",
+      "event_ids": [
+        "legacy-report"
+      ]
+    },
+    {
+      "id": "older-rounds",
+      "ordering": "source sequence; equal positions have no asserted order",
+      "event_ids": [
+        "older-review"
+      ]
+    },
+    {
+      "id": "goal-delivery",
+      "ordering": "source sequence; equal positions have no asserted order",
+      "event_ids": [
+        "question",
+        "working",
+        "verify-c1-fail",
+        "correction",
+        "verify-c2",
+        "qa-c2-fail",
+        "verify-c3",
+        "qa-c3-pass",
+        "integrate-c3"
+      ]
+    },
+    {
+      "id": "journal",
+      "ordering": "source sequence; equal positions have no asserted order",
+      "event_ids": [
+        "wait-start",
+        "wait-end"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "type": "corrects",
+      "from": "correction",
+      "to": "verify-c1-fail",
+      "basis": "explicit reported correction",
+      "source_ids": [
+        "source-wfr_goal"
+      ]
+    },
+    {
+      "type": "verifies",
+      "from": "verify-c2",
+      "to": "correction",
+      "basis": "explicit registered verification relation",
+      "source_ids": [
+        "source-wfr_goal"
+      ]
+    },
+    {
+      "type": "handoff",
+      "from": "verify-c3",
+      "to": "qa-c3-pass",
+      "basis": "explicit reported handoff",
+      "source_ids": [
+        "source-wfr_goal"
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "id": "C1",
+      "oid": "1111111111111111111111111111111111111111",
+      "tree": "4444444444444444444444444444444444444444",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "result_ids": [],
+      "event_ids": [
+        "verify-c1-fail"
+      ],
+      "axes": {
+        "reported": {
+          "state": "not_recorded",
+          "outcomes": [],
+          "evidence_ids": []
+        },
+        "technical": {
+          "state": "recorded",
+          "outcomes": [
+            "failed"
+          ],
+          "evidence_ids": [
+            "verify-c1-fail"
+          ]
+        },
+        "human_qa": {
+          "state": "not_recorded",
+          "outcomes": [],
+          "evidence_ids": []
+        },
+        "integration": {
+          "state": "not_recorded",
+          "outcomes": [],
+          "evidence_ids": []
+        }
+      }
+    },
+    {
+      "id": "C2",
+      "oid": "2222222222222222222222222222222222222222",
+      "tree": "5555555555555555555555555555555555555555",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "result_ids": [
+        "result-c2"
+      ],
+      "event_ids": [
+        "correction",
+        "verify-c2",
+        "qa-c2-fail"
+      ],
+      "axes": {
+        "reported": {
+          "state": "not_recorded",
+          "outcomes": [],
+          "evidence_ids": []
+        },
+        "technical": {
+          "state": "recorded",
+          "outcomes": [
+            "qualified"
+          ],
+          "evidence_ids": [
+            "verify-c2"
+          ]
+        },
+        "human_qa": {
+          "state": "recorded",
+          "outcomes": [
+            "fail"
+          ],
+          "evidence_ids": [
+            "qa-c2-fail"
+          ]
+        },
+        "integration": {
+          "state": "not_recorded",
+          "outcomes": [],
+          "evidence_ids": []
+        }
+      }
+    },
+    {
+      "id": "C3",
+      "oid": "3333333333333333333333333333333333333333",
+      "tree": "6666666666666666666666666666666666666666",
+      "run_ids": [
+        "wfr_goal"
+      ],
+      "result_ids": [
+        "result-c3"
+      ],
+      "event_ids": [
+        "verify-c3",
+        "qa-c3-pass",
+        "integrate-c3"
+      ],
+      "axes": {
+        "reported": {
+          "state": "not_recorded",
+          "outcomes": [],
+          "evidence_ids": []
+        },
+        "technical": {
+          "state": "recorded",
+          "outcomes": [
+            "qualified"
+          ],
+          "evidence_ids": [
+            "verify-c3"
+          ]
+        },
+        "human_qa": {
+          "state": "recorded",
+          "outcomes": [
+            "pass"
+          ],
+          "evidence_ids": [
+            "qa-c3-pass"
+          ]
+        },
+        "integration": {
+          "state": "recorded",
+          "outcomes": [
+            "integrated"
+          ],
+          "evidence_ids": [
+            "integrate-c3"
+          ]
+        }
+      }
+    }
+  ],
+  "analysis": [
+    {
+      "id": "count-verification",
+      "kind": "count",
+      "definition": "Number of recorded verifier attempts in validated source records; qualification and human QA are separate facts.",
+      "value": 3,
+      "unit": "attempts",
+      "coverage": "exact",
+      "evidence_ids": [
+        "verify-c1-fail",
+        "verify-c2",
+        "verify-c3"
+      ],
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "question": null,
+      "unknowns": [
+        "Unrecorded attempts remain unknown."
+      ]
+    },
+    {
+      "id": "wait-interval",
+      "kind": "interval",
+      "definition": "Reported elapsed interval between explicit waiting step endpoints on a compatible clock.",
+      "value": null,
+      "unit": "seconds",
+      "coverage": "unknown",
+      "evidence_ids": [
+        "wait-start",
+        "wait-end"
+      ],
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "question": null,
+      "unknowns": [
+        "Both endpoint times are unknown; no interval can be computed."
+      ]
+    },
+    {
+      "id": "inspect-loop",
+      "kind": "pattern",
+      "definition": "Recorded qualification and candidate-bound human QA across candidate generations.",
+      "value": null,
+      "unit": "",
+      "coverage": "exact",
+      "evidence_ids": [
+        "verify-c2",
+        "qa-c2-fail",
+        "verify-c3",
+        "qa-c3-pass"
+      ],
+      "source_ids": [
+        "source-wfr_goal"
+      ],
+      "question": "Could an earlier product check expose the missing question text?",
+      "unknowns": [
+        "Candidate change alone does not establish a correction or its cause.",
+        "No effort or time savings was measured."
+      ]
+    }
+  ],
+  "coverage": {
+    "state": "complete",
+    "read": [
+      "source-trn_example",
+      "source-wfr_older",
+      "source-wfr_goal",
+      "goal-head"
+    ],
+    "unknowns": [
+      "Unrecorded work is unknown."
+    ]
+  },
+  "diagnostics": [],
+  "next_transition_authorized": false
+}

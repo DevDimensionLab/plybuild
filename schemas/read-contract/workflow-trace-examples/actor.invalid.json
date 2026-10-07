@@ -1,0 +1,143 @@
+{
+  "kind": "WorkflowTraceReadback@1",
+  "schema_version": 1,
+  "workspace": "/example/work",
+  "task": {
+    "id": "trace-example",
+    "title": "Investigate recorded correction loops",
+    "project_id": "project",
+    "repo_id": "repo",
+    "epic_id": "epic"
+  },
+  "observed_at_utc": "2026-10-07T10:00:00Z",
+  "freshness": "unknown",
+  "live_state": "unknown",
+  "history_state": "partial",
+  "ordering": "Source chains preserve their own sequence. Independent chains have no asserted global chronology. Sorted IDs and tied positions are presentation only; spacing is not time.",
+  "current_goals": [],
+  "runs": [
+    {
+      "id": "trn_example",
+      "family": "legacy_task_run",
+      "provider": null,
+      "session_id": null,
+      "request_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "frozen_basis": null,
+      "frozen_goal": null,
+      "declared_process": null,
+      "coverage": "partial",
+      "source_ids": [
+        "source-trn_example"
+      ],
+      "event_ids": [
+        "legacy-report"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source-trn_example",
+      "kind": "native_run",
+      "locator": "/example/work/.ply/trn_example/request.json",
+      "sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "status": "valid"
+    },
+    {
+      "id": "missing-history",
+      "kind": "delivery_report",
+      "locator": "/example/work/.ply/trn_example/reports/001.json",
+      "sha256": null,
+      "status": "missing"
+    }
+  ],
+  "events": [
+    {
+      "id": "legacy-report",
+      "native_id": "native-legacy-report",
+      "type": "delivery_report",
+      "title": "Historical report with unknown actor",
+      "role": "provider",
+      "actor_claim": null,
+      "recorder": "Ply native record",
+      "evidence_class": "unknown",
+      "run_ids": [
+        "trn_example"
+      ],
+      "candidate_id": null,
+      "result_id": null,
+      "outcome": null,
+      "occurred_at_utc": null,
+      "reported_at_utc": null,
+      "registered_at_utc": null,
+      "time_basis": {
+        "kind": "unknown",
+        "clock": null,
+        "precision": "unknown",
+        "uncertainty": null
+      },
+      "source_ids": [
+        "source-trn_example"
+      ],
+      "positions": [
+        {
+          "chain_id": "legacy-events",
+          "sequence": 1
+        }
+      ],
+      "data": {
+        "reported_outcome": "done"
+      }
+    }
+  ],
+  "chains": [
+    {
+      "id": "legacy-events",
+      "ordering": "source sequence; equal positions have no asserted order",
+      "event_ids": [
+        "legacy-report"
+      ]
+    }
+  ],
+  "relations": [],
+  "candidates": [],
+  "analysis": [
+    {
+      "id": "reports-lower-bound",
+      "kind": "count",
+      "definition": "Number of safely bound report records retained from readable history.",
+      "value": 1,
+      "unit": "records",
+      "coverage": "lower_bound",
+      "evidence_ids": [
+        "legacy-report"
+      ],
+      "source_ids": [
+        "source-trn_example"
+      ],
+      "question": null,
+      "unknowns": [
+        "A missing source can contain additional report records."
+      ]
+    }
+  ],
+  "coverage": {
+    "state": "partial",
+    "read": [
+      "legacy_task_runs"
+    ],
+    "unknowns": [
+      "One bound report is missing; independent valid history is retained."
+    ]
+  },
+  "diagnostics": [
+    {
+      "code": "trace_source_missing",
+      "detail": "The registered report cannot be read.",
+      "source_ids": [
+        "missing-history"
+      ],
+      "event_ids": []
+    }
+  ],
+  "next_transition_authorized": false
+}

@@ -99,6 +99,12 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		Filters: []string{"project", "repo", "epic"}, FilterPolicy: "independent_and",
 		ResultSchemas: []capabilitySchema{{workspaceview.WorkflowStatusKind, &one}}, Effect: "read",
 	})
+	extensions = append(extensions, capabilityOperation{
+		ID: "workflow.trace", Command: []string{"workflow", "trace"}, Mode: "default",
+		Selectors: []string{}, Formats: []string{"text", "json"},
+		Filters: []string{}, FilterPolicy: "none",
+		ResultSchemas: []capabilitySchema{{"WorkflowTraceReadback@1", &one}}, Effect: "read",
+	})
 	sort.Slice(extensions, func(i, j int) bool {
 		if extensions[i].ID != extensions[j].ID {
 			return extensions[i].ID < extensions[j].ID
@@ -113,7 +119,7 @@ func newCapabilitiesCommand(build func() capabilityBuild) *cobra.Command {
 	invalid := func(detail string) error { return fmt.Errorf("capabilities_invalid_arguments: %s", detail) }
 	command := &cobra.Command{
 		Use: "capabilities", Short: "Show supported workspace core read contracts",
-		Long:    "Show the stable workspace-core-read catalog and additive read_extensions for workflow status, progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
+		Long:    "Show the stable workspace-core-read catalog and additive read_extensions for workflow status and trace, progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
 		Example: "  ply capabilities\n  ply capabilities --format json",
 		// Do not inherit the root's profile initializer, even with global logging flags.
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },

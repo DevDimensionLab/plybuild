@@ -1,0 +1,1039 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://plybuild.io/schemas/read-contract/workflow-trace-v1.schema.json",
+  "title": "WorkflowTraceReadback@1",
+  "description": "Read-only evidence projection for one registered Task. Source ordering is deterministic presentation, not global chronology, causality, effort or authority. All arrays are explicit, untruncated collections. References resolve inside this response; native result IDs remain their original identities.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schema_version",
+    "workspace",
+    "task",
+    "observed_at_utc",
+    "freshness",
+    "live_state",
+    "history_state",
+    "ordering",
+    "current_goals",
+    "runs",
+    "sources",
+    "events",
+    "chains",
+    "relations",
+    "candidates",
+    "analysis",
+    "coverage",
+    "diagnostics",
+    "next_transition_authorized"
+  ],
+  "properties": {
+    "kind": {
+      "const": "WorkflowTraceReadback@1"
+    },
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task": {
+      "$ref": "#/$defs/task"
+    },
+    "observed_at_utc": {
+      "$ref": "#/$defs/time"
+    },
+    "freshness": {
+      "type": "string",
+      "enum": [
+        "fresh",
+        "unknown"
+      ]
+    },
+    "live_state": {
+      "const": "unknown"
+    },
+    "history_state": {
+      "type": "string",
+      "enum": [
+        "empty",
+        "recorded",
+        "partial"
+      ]
+    },
+    "ordering": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A required explanation of deterministic presentation versus source sequence, causal relations and unasserted global chronology."
+    },
+    "current_goals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/goal"
+      }
+    },
+    "runs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/run"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    },
+    "chains": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/chain"
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relation"
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/candidate"
+      }
+    },
+    "analysis": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/analysis"
+      }
+    },
+    "coverage": {
+      "$ref": "#/$defs/coverage"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "next_transition_authorized": {
+      "const": false,
+      "type": "boolean",
+      "description": "Read authority only; never permission to execute, retry, qualify, attest QA or integrate."
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "time_basis": {
+      "type": "object",
+      "required": [
+        "kind",
+        "clock",
+        "precision",
+        "uncertainty"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "observed",
+            "reported",
+            "unknown"
+          ]
+        },
+        "clock": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "precision": {
+          "type": "string",
+          "enum": [
+            "second",
+            "millisecond",
+            "microsecond",
+            "nanosecond",
+            "unknown"
+          ]
+        },
+        "uncertainty": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "earliest",
+                "latest"
+              ],
+              "properties": {
+                "earliest": {
+                  "$ref": "#/$defs/source_time"
+                },
+                "latest": {
+                  "$ref": "#/$defs/source_time"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "revision": {
+      "type": "object",
+      "required": [
+        "revision",
+        "manifest_sha256"
+      ],
+      "properties": {
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "additionalProperties": false
+    },
+    "decision": {
+      "type": "object",
+      "required": [
+        "id",
+        "manifest_sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "project_id",
+        "repo_id",
+        "epic_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repo_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "epic_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "goal": {
+      "type": "object",
+      "required": [
+        "spec_id",
+        "revision",
+        "manifest_sha256",
+        "status",
+        "source_ids",
+        "declaration"
+      ],
+      "properties": {
+        "spec_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "valid",
+            "unknown"
+          ]
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "declaration": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "description": "Preserved safe source payload, governed by its native versioned contract. This projection does not reinterpret or authenticate reported claims."
+        }
+      },
+      "additionalProperties": false
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "id",
+        "family",
+        "provider",
+        "session_id",
+        "request_sha256",
+        "frozen_basis",
+        "frozen_goal",
+        "declared_process",
+        "coverage",
+        "source_ids",
+        "event_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "family": {
+          "type": "string",
+          "enum": [
+            "legacy_task_run",
+            "workflow_run_v1",
+            "goal_execute_v2"
+          ]
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "frozen_basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/frozen_basis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frozen_goal": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "description": "Preserved safe source payload, governed by its native versioned contract. This projection does not reinterpret or authenticate reported claims."
+        },
+        "declared_process": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "description": "Preserved safe source payload, governed by its native versioned contract. This projection does not reinterpret or authenticate reported claims."
+        },
+        "coverage": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial",
+            "unknown"
+          ]
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "locator",
+        "sha256",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "valid",
+            "missing",
+            "changed",
+            "invalid",
+            "unbound",
+            "unknown"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "id",
+        "native_id",
+        "type",
+        "title",
+        "role",
+        "actor_claim",
+        "recorder",
+        "evidence_class",
+        "run_ids",
+        "candidate_id",
+        "result_id",
+        "outcome",
+        "occurred_at_utc",
+        "reported_at_utc",
+        "registered_at_utc",
+        "time_basis",
+        "source_ids",
+        "data",
+        "positions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "native_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "human",
+            "agent",
+            "ply",
+            "unknown"
+          ]
+        },
+        "actor_claim": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recorder": {
+          "type": "string"
+        },
+        "evidence_class": {
+          "type": "string",
+          "enum": [
+            "reported",
+            "human_attestation",
+            "controlled",
+            "registered",
+            "unknown"
+          ]
+        },
+        "run_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "candidate_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurred_at_utc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reported_at_utc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "registered_at_utc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time_basis": {
+          "$ref": "#/$defs/time_basis"
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "data": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "description": "Complete safe source payload. Exact question text, waiting fields and native run aliases may be present here. Native contracts govern this object; strings are claims, not fresh observations or authority."
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/position"
+          },
+          "description": "Original positions in independent source chains; equal positions assert no relative order. More than one position can preserve deduplicated provenance."
+        }
+      },
+      "additionalProperties": false
+    },
+    "chain": {
+      "type": "object",
+      "required": [
+        "id",
+        "ordering",
+        "event_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ordering": {
+          "type": "string",
+          "minLength": 1
+        },
+        "event_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "relation": {
+      "type": "object",
+      "required": [
+        "type",
+        "from",
+        "to",
+        "basis",
+        "source_ids"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "basis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "axis": {
+      "type": "object",
+      "required": [
+        "state",
+        "outcomes",
+        "evidence_ids"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "not_recorded",
+            "recorded",
+            "conflicting"
+          ]
+        },
+        "outcomes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "required": [
+        "id",
+        "oid",
+        "tree",
+        "run_ids",
+        "result_ids",
+        "event_ids",
+        "axes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "oid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tree": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "result_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "axes": {
+          "type": "object",
+          "required": [
+            "reported",
+            "technical",
+            "human_qa",
+            "integration"
+          ],
+          "properties": {
+            "reported": {
+              "$ref": "#/$defs/axis"
+            },
+            "technical": {
+              "$ref": "#/$defs/axis"
+            },
+            "human_qa": {
+              "$ref": "#/$defs/axis"
+            },
+            "integration": {
+              "$ref": "#/$defs/axis"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "analysis": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "definition",
+        "value",
+        "unit",
+        "coverage",
+        "evidence_ids",
+        "source_ids",
+        "question",
+        "unknowns"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "count",
+            "interval",
+            "pattern"
+          ]
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "coverage": {
+          "type": "string",
+          "enum": [
+            "exact",
+            "lower_bound",
+            "unknown"
+          ],
+          "description": "Exact concerns this defined recorded evidence only. Lower bound allows missing records; unknown cannot justify a measured value."
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "question": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "required": [
+        "state",
+        "read",
+        "unknowns"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial"
+          ]
+        },
+        "read": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Names of source families consulted; these are not source IDs."
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": [
+        "code",
+        "detail",
+        "source_ids",
+        "event_ids"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "event_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "frozen_basis": {
+      "type": "object",
+      "required": [
+        "task_id",
+        "problem",
+        "spec_id",
+        "spec",
+        "assessment",
+        "selection",
+        "task_worktree_id",
+        "delivery_binding_sha256",
+        "dependencies"
+      ],
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "problem": {
+          "$ref": "#/$defs/revision"
+        },
+        "spec_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spec": {
+          "$ref": "#/$defs/revision"
+        },
+        "assessment": {
+          "$ref": "#/$defs/decision"
+        },
+        "selection": {
+          "$ref": "#/$defs/decision"
+        },
+        "task_worktree_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "delivery_binding_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true,
+      "description": "Original native TaskSpecBasis; preserved independently from the current goal declarations."
+    },
+    "position": {
+      "type": "object",
+      "required": [
+        "chain_id",
+        "sequence"
+      ],
+      "properties": {
+        "chain_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_time": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$",
+      "description": "An original source uncertainty endpoint. Its explicit offset is retained; this is not a normalized event or observation timestamp."
+    }
+  }
+}

@@ -1,14 +1,14 @@
 {
   "allowed_deltas": [
     {
-      "after": "  ply workflow status --json\n  ply workflow epic plan --repo /work/example/main --root /work/example --check",
+      "after": "  ply workflow status --json\n  ply workflow trace task-id --format json\n  ply workflow epic plan --repo /work/example/main --root /work/example --check",
       "before": "",
       "field": "example",
       "kind": "command_changed",
       "path": "ply"
     },
     {
-      "after": "turn on json output logging; workflow status selects JSON result data",
+      "after": "turn on json output logging; workflow status and trace select JSON result data",
       "before": "turn on json output logging",
       "field": "usage",
       "kind": "flag_changed",
@@ -379,7 +379,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Show the stable workspace-core-read catalog and additive read_extensions for workflow status, progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
+        "long": "Show the stable workspace-core-read catalog and additive read_extensions for workflow status and trace, progress, attention, lifecycle, Epics, activity, runs, worktrees and change digests. Each operation advertises its result kind and decoder version. This is not the entire CLI. No workspace, profile, credentials or network access is required. Entries describe read contracts, not permission to start agents or change workflow state.",
         "path": "ply capabilities",
         "runnable": true,
         "short": "Show supported workspace core read contracts",
@@ -2522,7 +2522,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workflow status\n  ply workflow status --all --json\n  ply workflow execute --check\n  ply workflow epic plan --project ply --language nb\n  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef",
+        "example": "  ply workflow status\n  ply workflow status --all --json\n  ply workflow trace task-id --format json\n  ply workflow execute --check\n  ply workflow epic plan --project ply --language nb\n  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef",
         "flags": [
           {
             "annotations": {
@@ -2548,7 +2548,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Read registered workspace workflow status, create local planning repositories, execute queued goals with an assigned agent, and manage workflow transitions and notifications.",
+        "long": "Read registered workspace workflow status, trace one Task's recorded process across its runs, create local planning repositories, execute queued goals with an assigned agent, and manage workflow transitions and notifications.",
         "path": "ply workflow",
         "runnable": false,
         "short": "Manage agent workflows",
@@ -2667,6 +2667,63 @@
       },
       "kind": "command_added",
       "path": "ply workflow status"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow trace task-id\n  ply workflow trace task-id --format json\n  ply --json workflow trace task-id",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json); --json is a local result shortcut"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for trace"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": true,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read one registered Task's current goal declarations, frozen run contracts, source chains, Human/Agent/Ply/Unknown history, candidate facts and evidence-linked analysis. Includes inactive and completed Tasks. Independent chains have no asserted global chronology; presentation order is deterministic, not causal. Missing history and uncertain times stay explicit. No history is silently truncated.\n\nThis read-only projection performs no Git, provider, network or process probes, initialization, locks or workflow transitions. It grants no start, retry, QA or integration authority. A fresh source read does not establish live activity or active effort.\n\n--format json emits one WorkflowTraceReadback@1 object and newline. --json is a local result shortcut, including before workflow. --json=false selects no format; --json with explicit --format text is an error. Fatal errors write stderr with empty stdout. See docs/workflow-trace.md for ordering, evidence and coverage semantics.",
+        "path": "ply workflow trace",
+        "runnable": true,
+        "short": "Trace one Task's recorded process across its runs",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "trace <task-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workflow trace"
     },
     {
       "after": {
