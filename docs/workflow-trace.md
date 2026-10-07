@@ -8,18 +8,63 @@ Ply workspace; an Epic worktree is not required.
 
 ```sh
 ply workflow trace task-id
+ply workflow trace task-id --details
 ply workflow trace task-id --format json
 ply --json workflow trace task-id
 ```
 
-The text starts with evidence-linked analysis and a source-position map using
-Human, Agent, Ply and Unknown roles. Full declarations, event payloads, candidate
-facts, relations, sources, coverage and diagnostics follow. No history is silently
-truncated. Strings use JSON escapes to preserve exact whitespace and safely show
-control characters and Unicode in an ASCII terminal. For example, `\n` represents
-an original newline in a question; `null` is missing information, not zero.
+The default diagram uses ASCII boxes and arrows. Vertical event boxes have a left
+actor rail showing Human, Agent, Ply and Unknown roles within independent source
+chains. Short labels keep the diagram readable; arrows show only recorded order
+inside a source chain. Separate question boxes keep recorded requests visible.
 The leading summary explains that coverage concerns selected records, and that
 reported QA/wait and verifier elapsed time are not active effort or time savings.
+
+Use `--details` to append a local-label key and full evidence text after the
+diagram: declarations, event payloads, exact identities, candidate facts,
+relations, source locators and hashes, analysis definitions, coverage and
+diagnostics. `--format json` always returns the full versioned projection.
+Neither format silently drops recorded events.
+
+## Diagram summary policy
+
+Every recorded event has a local label and a box. `E1`, `E2`, and so on identify
+events; `C1` identifies an exact repository/commit/tree candidate; `R1` identifies
+a native TaskResult; `Run1` identifies an outer run; and `S1` identifies a source
+chain. These are presentation labels, not chronological or candidate-generation
+numbers. The key appended by `--details` maps them to exact identities.
+
+Events with known positions appear in their source chains; events without a
+source position remain visible without an ordering arrow. A deduplicated native
+event can appear in several chains with the same label. Those boxes are views of
+one recorded event, not additional actions. Local labels identify items within
+this readback and are not durable native IDs.
+
+The diagram separates the process view from full payloads, hashes and
+declarations. Event text fields longer than 180 Unicode codepoints are excerpted
+with `[excerpt: N chars omitted; --details]`, and the diagram reports an overall
+excerpt count. Omitted character counts refer to original codepoints, not the
+rendered display width. Question occurrences keep separate boxes even when their
+full text is identical. Repetition is annotated only after
+comparing the full original questions; unequal questions with the same excerpt
+are not labelled repeats. An excerpt does not merge questions or stand in for an
+answer. Inspect `--details` or JSON for the exact original text and every
+underlying field.
+
+| Output | Contents |
+| --- | --- |
+| Default text | Boxes, source-order arrows, role labels, recorded questions, candidate/analysis summaries and uncertainty. Long fields are explicitly excerpted. All recorded events remain represented. |
+| `--details` | The default diagram followed by its local-label key and full evidence text, including exact identities, declarations, payloads, hashes, relations and analysis definitions. |
+| `--format json` | Full `WorkflowTraceReadback@1` object, unchanged by the text presentation. |
+
+Printable Unicode text remains readable in the diagram, including `Når`, `kjør`,
+`café` and emoji. Wrapping and padding use terminal cell width to align text with
+the ASCII borders. Control and direction characters are escaped so source text
+cannot change the diagram's structure or reading direction.
+
+The full evidence section in `--details` retains JSON escapes for exact
+whitespace, control characters and Unicode. For example, `\n` represents an
+original newline in a question; `null` is missing information, not zero.
 
 ## What is recorded
 
@@ -58,7 +103,8 @@ explain its cause.
 
 ## Reading the process
 
-Begin with the analysis questions and their `evidence_ids`. Find those IDs in the
+Begin with the diagram's event and question boxes and its analysis questions.
+Open `--details` or JSON to follow an analysis entry's `evidence_ids` to exact
 history, inspect each event's `data` and `source_ids`, then follow the source
 locator and digest. Candidate and result references keep a failure or pass tied
 to the actual candidate. Exact questions and explicit waiting fields (`reason`,
@@ -103,18 +149,28 @@ remain unmeasured.
 `events`, `runs`, `sources`, `chains`, `candidates` and `analysis` use deterministic
 ID sorting. Current goals sort by Spec ID. Relations sort by source event, type
 and destination; diagnostics sort by code and detail. These are presentation
-orders, not a global chronology. Text's source map follows each chain's own
-`event_ids`; full event details use the deterministic event-ID order.
+orders, not a global chronology. The diagram and detailed text's source map follow
+each chain's own `event_ids`; full event details use the deterministic event-ID
+order. For readability, the default diagram puts delivery chains first, then
+other chains, sorting chain IDs within those groups. Event labels follow their
+first appearance in that diagram and then unpositioned events. This placement
+does not order independent chains. Local labels can change when the recorded
+evidence changes.
 
 `events[].positions` gives the authoritative source chain and original sequence.
 Each `chains[].event_ids` list follows that chain's sequence, with tied positions
 sorted by event ID solely for presentation. Equal positions assert no relative
 order. An event may have several positions when exact identity is reached through
-several source paths. Independent chains with missing or overlapping clocks do
-not establish a global event order. Diagram spacing does not represent duration.
+several source paths. Within a chain, an arrow connects strictly ordered source
+positions; tied positions do not create an order. There are no global or causal
+arrows joining independent chains. Explicit relations preserve what their sources
+state without creating an inferred cause. Independent chains with missing or
+overlapping clocks do not establish a global event order. Box spacing does not
+represent duration.
 
-The same exact native QA, result axis or integration record reached through
-multiple adapters is represented once with its provenance retained. A result's
+In the JSON event table, the same exact native QA, result axis or integration
+record reached through multiple adapters is represented once with its provenance
+retained. Repeated diagram boxes keep that event's shared local label. A result's
 reported and technical axes remain separate facts. Equal text or different,
 ambiguously related IDs are not silently treated as one action, or as proof of
 different real actions.
@@ -132,6 +188,11 @@ Missing, reversed, uncertain or incomparable endpoints yield an unknown value
 and explanatory evidence or diagnostics. None of these intervals measures active
 work, human attention, cost, waiting cause, efficiency or time savings.
 
+The diagram formats known durations as compact hours, minutes and seconds,
+rounded to milliseconds: `22367` seconds becomes `6h12m47s`, and `87.29266`
+seconds becomes `1m27.293s`. This changes presentation only. Exact recorded
+seconds remain available in `--details` and JSON; unknown intervals stay unknown.
+
 ## JSON contract and failures
 
 The self-contained [schema](../schemas/read-contract/workflow-trace-v1.schema.json)
@@ -141,7 +202,7 @@ all three run families with candidate-bound QA and questions, partial history,
 and invalid actor/authority claims. These examples are synthetic technical
 fixtures, not actual human QA.
 
-All projection fields are required and collections are arrays, including `[]`.
+All projection fields are required and list fields are arrays, including `[]`.
 Missing scalar evidence uses explicit `null`. The projection envelope, roles,
 versions, clocks, source references and analysis fields are strict. Safe native
 payloads in `data`, `declaration`, `frozen_goal`, `declared_process` and
@@ -172,7 +233,9 @@ For trace, `--json` and `--format json` select the same result, including when
 with explicit `--format text` is an error. A successful JSON read emits exactly
 one object and a newline to stdout. Logging stays on stderr, including with
 `--debug`; diagnostics are also retained as structured facts in the result.
-Other commands keep their existing global logging behavior.
+`--details` has no effect with `--json` or `--format json`, because JSON already
+contains the complete projection. Other commands keep their existing global
+logging behavior.
 
 Unknown Tasks, missing workspaces and fatal authoritative registry failures exit
 nonzero with empty stdout and an explanation on stderr. Corrupt, missing,
@@ -182,8 +245,9 @@ history remains visible. Re-reading an old file does not prove live activity.
 
 Discover the additive operation in `ply capabilities --format json` under
 `read_extensions`, with `id: "workflow.trace"` and
-`command: ["workflow", "trace"]`. The existing core catalog, status, journal,
-execute and write contracts remain unchanged.
+`command: ["workflow", "trace"]`. The operation advertises `--details` in `selectors`.
+The existing core catalog, status, journal, execute and write contracts remain
+unchanged.
 
 ## Observation boundary and validation
 

@@ -101,7 +101,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 	})
 	extensions = append(extensions, capabilityOperation{
 		ID: "workflow.trace", Command: []string{"workflow", "trace"}, Mode: "default",
-		Selectors: []string{}, Formats: []string{"text", "json"},
+		Selectors: []string{"--details"}, Formats: []string{"text", "json"},
 		Filters: []string{}, FilterPolicy: "none",
 		ResultSchemas: []capabilitySchema{{"WorkflowTraceReadback@1", &one}}, Effect: "read",
 	})

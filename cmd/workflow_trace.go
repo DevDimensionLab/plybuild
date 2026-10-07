@@ -21,12 +21,13 @@ func newWorkflowTraceCommand(d workspace.Dependencies) *cobra.Command {
 
 func newWorkflowTraceCommandWithReader(read func(string) (workflowtrace.Result, error)) *cobra.Command {
 	var format string
+	var details bool
 	invalid := func(reason string) error { return fmt.Errorf("workflow_trace_invalid_arguments: %s", reason) }
 	command := &cobra.Command{
 		Use:               "trace <task-id>",
 		Short:             "Trace one Task's recorded process across its runs",
-		Long:              "Read one registered Task's current goal declarations, frozen run contracts, source chains, Human/Agent/Ply/Unknown history, candidate facts and evidence-linked analysis. Includes inactive and completed Tasks. Independent chains have no asserted global chronology; presentation order is deterministic, not causal. Missing history and uncertain times stay explicit. No history is silently truncated.\n\nThis read-only projection performs no Git, provider, network or process probes, initialization, locks or workflow transitions. It grants no start, retry, QA or integration authority. A fresh source read does not establish live activity or active effort.\n\n--format json emits one WorkflowTraceReadback@1 object and newline. --json is a local result shortcut, including before workflow. --json=false selects no format; --json with explicit --format text is an error. Fatal errors write stderr with empty stdout. See docs/workflow-trace.md for ordering, evidence and coverage semantics.",
-		Example:           "  ply workflow trace task-id\n  ply workflow trace task-id --format json\n  ply --json workflow trace task-id",
+		Long:              "Draw one registered Task's recorded workflow as ASCII step boxes with Human/Agent/Ply/Unknown actor labels. Arrows within a source chain mean recorded order, not causality; independent chains stay disconnected. Every event is shown. Long text excerpts are marked and counted. Current and frozen declarations remain separate from recorded steps.\n\n--details appends full evidence and a key from local diagram labels to exact IDs, hashes, declarations and payloads. --format json is always the unchanged full WorkflowTraceReadback@1 object and newline; --details has no effect on JSON. --json is a local result shortcut, including before workflow. --json=false selects no format; --json with explicit --format text is an error.\n\nThis read-only projection performs no Git, provider, network or process probes, initialization, locks or workflow transitions. It grants no start, retry, QA or integration authority. Fresh sources do not establish live activity or active effort. Fatal errors write stderr with empty stdout. See docs/workflow-trace.md for summary, ordering, evidence and coverage semantics.",
+		Example:           "  ply workflow trace task-id\n  ply workflow trace task-id --details\n  ply workflow trace task-id --format json\n  ply --json workflow trace task-id",
 		PersistentPreRunE: func(*cobra.Command, []string) error { return nil },
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 || strings.TrimSpace(args[0]) == "" {
@@ -54,11 +55,16 @@ func newWorkflowTraceCommandWithReader(read func(string) (workflowtrace.Result, 
 			if format == "json" || workflowStatusJSON(cmd) {
 				return json.NewEncoder(cmd.OutOrStdout()).Encode(result)
 			}
+			if details {
+				_, err = fmt.Fprint(cmd.OutOrStdout(), workflowTraceDetails(result))
+				return err
+			}
 			_, err = fmt.Fprint(cmd.OutOrStdout(), workflowTraceText(result))
 			return err
 		},
 	}
 	command.Flags().StringVar(&format, "format", "text", "output format (text or json); --json is a local result shortcut")
+	command.Flags().BoolVar(&details, "details", false, "append full evidence and diagram label key; JSON is always full")
 	command.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return invalid(err.Error()) })
 	return command
 }
@@ -66,7 +72,7 @@ func newWorkflowTraceCommandWithReader(read func(string) (workflowtrace.Result, 
 // Text is an unabridged presentation of the same projection. Quoted source
 // strings preserve whitespace and escape controls/non-ASCII for a safe ASCII
 // terminal view. JSON payloads are retained, not reduced to selected fields.
-func workflowTraceText(result workflowtrace.Result) string {
+func workflowTraceEvidenceText(result workflowtrace.Result) string {
 	var out strings.Builder
 	line := func(label string, value any) { fmt.Fprintf(&out, "    %s: %s\n", label, workflowTraceJSON(value)) }
 	fmt.Fprintf(&out, "Workflow trace - %s: %s\n", workflowTraceJSON(result.Task.ID), workflowTraceJSON(result.Task.Title))

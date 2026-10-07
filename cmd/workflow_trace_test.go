@@ -59,6 +59,7 @@ func TestWorkflowTraceJSONFlagsOneObjectAndSameFacts(t *testing.T) {
 		{"workflow", "trace", "trace-example", "--format", "json", "--json"},
 		{"workflow", "trace", "trace-example", "--json=false", "--format", "json"},
 		{"--debug", "--json", "workflow", "trace", "trace-example"},
+		{"workflow", "trace", "trace-example", "--details", "--json"},
 	} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
 			var calls int
@@ -181,9 +182,9 @@ func TestWorkflowTraceActualUnknownTaskAndMissingWorkspaceDoNotInitialize(t *tes
 	}
 }
 
-func TestWorkflowTraceTextPreservesQuestionsEvidenceAndUncertainty(t *testing.T) {
+func TestWorkflowTraceDetailsPreservesQuestionsEvidenceAndUncertainty(t *testing.T) {
 	value := workflowTraceFixture(t, "multi-family")
-	text := workflowTraceText(value)
+	text := workflowTraceDetails(value)
 	for _, expected := range []string{
 		"Current goal declarations", "Frozen run contracts", "Source chains",
 		"Human | Agent | Ply | Unknown", "[Human]", "[Agent]", "[Ply]", "[Unknown]",
@@ -202,7 +203,7 @@ func TestWorkflowTraceTextPreservesQuestionsEvidenceAndUncertainty(t *testing.T)
 			t.Errorf("text omitted %q", expected)
 		}
 	}
-	for _, r := range text {
+	for _, r := range workflowTraceEvidenceText(value) {
 		if r > 127 || (r < 32 && r != '\n') {
 			t.Fatalf("text is not safe ASCII: %U", r)
 		}
@@ -218,7 +219,7 @@ func TestWorkflowTraceTextPreservesQuestionsEvidenceAndUncertainty(t *testing.T)
 			t.Fatalf("source omitted: %+v", s)
 		}
 	}
-	partial := workflowTraceText(workflowTraceFixture(t, "partial"))
+	partial := workflowTraceDetails(workflowTraceFixture(t, "partial"))
 	for _, expected := range []string{"lower_bound", "trace_source_missing", "missing-history", "independent valid history is retained"} {
 		if !strings.Contains(partial, expected) {
 			t.Fatalf("partial text omitted %q", expected)
@@ -230,17 +231,26 @@ func TestWorkflowTraceTextDoesNotTruncateHistory(t *testing.T) {
 	value := workflowTraceFixture(t, "multi-family")
 	original := value.Events[0]
 	value.Events = nil
+	value.Chains = nil
+	value.Relations = nil
 	for i := 0; i < 250; i++ {
 		event := original
 		event.ID = strings.Repeat("x", i+1) + "-last-marker"
+		event.Positions = nil
 		value.Events = append(value.Events, event)
 	}
 	text := workflowTraceText(value)
-	if strings.Count(text, "last-marker") != 250 || !strings.Contains(text, "Recorded history (250)") {
+	if strings.Count(text, "| E") != 250 || !strings.Contains(text, "250 unique events") {
 		t.Fatal("history was silently truncated")
 	}
 	if workflowTraceText(value) != text {
 		t.Fatal("text presentation is unstable")
+	}
+	details := workflowTraceDetails(value)
+	for _, event := range value.Events {
+		if !strings.Contains(details, workflowTraceJSON(event.ID)) || !strings.Contains(details, workflowTraceJSON(event.Data)) {
+			t.Fatal("full evidence was truncated")
+		}
 	}
 }
 
@@ -249,7 +259,7 @@ func TestWorkflowTraceEmptyExecutionAndAbsentProcessStayExplicit(t *testing.T) {
 	// A native Task-state event does not mean a run was executed.
 	empty.Events = workflowTraceFixture(t, "multi-family").Events[:1]
 	text := workflowTraceText(empty)
-	for _, expected := range []string{"No execution recorded", "Declared process unknown", "legacy-report"} {
+	for _, expected := range []string{"No execution recorded", "Declared process unknown", "E1 Work reported"} {
 		if !strings.Contains(text, expected) {
 			t.Fatalf("empty execution omitted %q", expected)
 		}
@@ -272,24 +282,24 @@ func TestWorkflowTraceSummaryExplainsCoverageAndElapsedTimeBeforeChains(t *testi
 		Value: &elapsed, Unit: "seconds", Coverage: "exact",
 	})
 	text := workflowTraceText(value)
-	index := strings.Index(text, "Source chains (")
+	index := strings.Index(text, "\nS1 /")
 	if index < 0 {
 		t.Fatal("source chains heading missing")
 	}
 	summary := text[:index]
 	for _, expected := range []string{
-		`22367 "seconds" | coverage "exact"`,
-		"exact covers the defined selected records",
-		"lower_bound means at least these records",
-		"unknown means insufficient evidence",
-		"None proves complete real work history",
-		"reported QA/wait intervals may include waiting",
+		"QA/wait intervals may include waiting",
 		"verifier elapsed is not active agent or human effort",
-		"No time savings are measured",
+		"No savings measured",
+		"recorded-source coverage",
+		"not a global timeline",
 	} {
 		if !strings.Contains(summary, expected) {
 			t.Errorf("leading summary omitted %q", expected)
 		}
+	}
+	if !strings.Contains(text, "not complete work or conversation history") || !strings.Contains(text, "? = unknown") {
+		t.Fatal("summary coverage meaning missing")
 	}
 }
 

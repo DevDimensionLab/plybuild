@@ -2675,8 +2675,21 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workflow trace task-id\n  ply workflow trace task-id --format json\n  ply --json workflow trace task-id",
+        "example": "  ply workflow trace task-id\n  ply workflow trace task-id --details\n  ply workflow trace task-id --format json\n  ply --json workflow trace task-id",
         "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "details",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "append full evidence and diagram label key; JSON is always full"
+          },
           {
             "annotations": {},
             "default": "text",
@@ -2714,7 +2727,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Read one registered Task's current goal declarations, frozen run contracts, source chains, Human/Agent/Ply/Unknown history, candidate facts and evidence-linked analysis. Includes inactive and completed Tasks. Independent chains have no asserted global chronology; presentation order is deterministic, not causal. Missing history and uncertain times stay explicit. No history is silently truncated.\n\nThis read-only projection performs no Git, provider, network or process probes, initialization, locks or workflow transitions. It grants no start, retry, QA or integration authority. A fresh source read does not establish live activity or active effort.\n\n--format json emits one WorkflowTraceReadback@1 object and newline. --json is a local result shortcut, including before workflow. --json=false selects no format; --json with explicit --format text is an error. Fatal errors write stderr with empty stdout. See docs/workflow-trace.md for ordering, evidence and coverage semantics.",
+        "long": "Draw one registered Task's recorded workflow as ASCII step boxes with Human/Agent/Ply/Unknown actor labels. Arrows within a source chain mean recorded order, not causality; independent chains stay disconnected. Every event is shown. Long text excerpts are marked and counted. Current and frozen declarations remain separate from recorded steps.\n\n--details appends full evidence and a key from local diagram labels to exact IDs, hashes, declarations and payloads. --format json is always the unchanged full WorkflowTraceReadback@1 object and newline; --details has no effect on JSON. --json is a local result shortcut, including before workflow. --json=false selects no format; --json with explicit --format text is an error.\n\nThis read-only projection performs no Git, provider, network or process probes, initialization, locks or workflow transitions. It grants no start, retry, QA or integration authority. Fresh sources do not establish live activity or active effort. Fatal errors write stderr with empty stdout. See docs/workflow-trace.md for summary, ordering, evidence and coverage semantics.",
         "path": "ply workflow trace",
         "runnable": true,
         "short": "Trace one Task's recorded process across its runs",
