@@ -3,6 +3,7 @@ set -eu
 
 delivery_repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
 delivery_test_root=$(mktemp -d "${TMPDIR:-/tmp}/ply-delivery-acceptance.XXXXXX")
+delivery_test_root=$(CDPATH='' cd -- "$delivery_test_root" && pwd -P)
 trap 'delivery_status=$?; if [ "$delivery_status" -eq 0 ]; then rm -rf "$delivery_test_root"; else printf "Acceptance did not pass; temporary evidence retained at %s\n" "$delivery_test_root"; fi' EXIT
 trap 'exit 130' HUP INT TERM
 cd "$delivery_repo_root"
