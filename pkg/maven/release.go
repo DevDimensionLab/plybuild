@@ -3,9 +3,16 @@ package maven
 import (
 	"errors"
 	"sort"
+	"strings"
 )
 
+var errNoSuitableRelease = errors.New("could not find a suitable release version")
+
 func (meta RepositoryMetadata) LatestRelease() (JavaVersion, error) {
+	if strings.TrimSpace(meta.Versioning.Release) == "" {
+		return getLatestRelease(meta.Versioning.Versions.Version)
+	}
+
 	version, err := ParseVersion(meta.Versioning.Release)
 	if err != nil {
 		return JavaVersion{}, err
@@ -36,5 +43,5 @@ func getLatestRelease(versions []string) (JavaVersion, error) {
 		}
 	}
 
-	return JavaVersion{}, errors.New("could not find a suitable release version")
+	return JavaVersion{}, errNoSuitableRelease
 }

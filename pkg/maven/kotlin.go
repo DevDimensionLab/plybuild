@@ -46,12 +46,7 @@ func (repository Repository) upgradeKotlinOnModel(model *pom.Model, action func(
 		return err
 	}
 
-	latestKotlinJdk8, err := repository.GetMetaData("org.jetbrains.kotlin", "kotlin-maven-plugin")
-	if err != nil {
-		return err
-	}
-
-	latestVersion, err := latestKotlinJdk8.LatestRelease()
+	latestVersion, err := repository.latestRelease("org.jetbrains.kotlin", "kotlin-maven-plugin")
 	if err != nil {
 		return err
 	}
