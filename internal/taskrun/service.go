@@ -13,8 +13,13 @@ import (
 func SystemDependencies(w workspace.Dependencies) Dependencies {
 	f := workflowhandoff.SystemDependencies()
 	f.TaskWorkspace = &w
-	w.HandoffEvidence = workflowhandoff.NewTaskHandoffEvidenceReader(f)
-	return Dependencies{Executable: os.Executable, Workspace: w, Workflow: f, Runner: systemRunner(), ExecRunner: systemExecRunner(), Now: time.Now, ContextPath: func() string { return os.Getenv("PLY_TASK_RUN_CONTEXT") }, CWD: os.Getwd}
+	d := Dependencies{Executable: os.Executable, Workspace: w, Workflow: f, Runner: systemRunner(), ExecRunner: systemExecRunner(), Now: time.Now, ContextPath: func() string { return os.Getenv("PLY_TASK_RUN_CONTEXT") }, CWD: os.Getwd}
+	d.Workflow.DeliveryAuthorization = func(request workspace.TaskHandoffEvidenceRequest) (*workspace.DeliveryAuthorization, error) {
+		return deliveryEvidenceAuthorization(d, request)
+	}
+	d.Workspace.HandoffEvidence = workflowhandoff.NewTaskHandoffEvidenceReader(d.Workflow)
+	d.Workflow.TaskWorkspace = &d.Workspace
+	return d
 }
 func containing(d Dependencies, root string) error {
 	o, e := d.Workflow.Workspace.ObserveContaining()

@@ -11,7 +11,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 )
 
-func goalFixture(t *testing.T, f workItemJourneyFixture, task TaskID, key string) TaskGoalRef {
+func goalFixture(t *testing.T, f workItemJourneyFixture, task TaskID, key string, agreement ...DeliveryAgreement) TaskGoalRef {
 	t.Helper()
 	in := contentFixtureSpec(t, f, key, nil)
 	raw, e := os.ReadFile(in.File)
@@ -39,6 +39,9 @@ func goalFixture(t *testing.T, f workItemJourneyFixture, task TaskID, key string
 	m["design"] = []canonicaljson.Value{contentObject(map[string]canonicaljson.Value{"document_id": first, "section": nil})}
 	m["constraints"] = []canonicaljson.Value{"Preserve existing behavior outside this goal."}
 	m["executor"] = contentObject(map[string]canonicaljson.Value{"provider": "codex", "model": "fixture-model", "effort": "high"})
+	if len(agreement) != 0 {
+		m["delivery"] = contentRefValue(agreement[0])
+	}
 	raw, e = canonicaljson.Marshal(contentObject(m))
 	if e != nil {
 		t.Fatal(e)

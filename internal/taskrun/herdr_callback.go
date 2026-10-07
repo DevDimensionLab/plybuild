@@ -199,6 +199,9 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 				s.Result.Delivery.ActualPolicySHA256 = c.EffectivePolicySHA256
 				s.Result.Delivery.ActualPolicyEvidence = permission.ActualPolicyEvidence
 				s.Result.NextAction = WorkflowAction{"recipient", "Own design, implementation, verification and the actual human QA through authorized local completion."}
+				if s.Request.Delivery.Agreement != nil {
+					s.Result.NextAction = WorkflowAction{"recipient", "Own design, implementation, verification and actual human QA through the frozen delivery boundary."}
+				}
 			}
 		} else {
 			s.Result.Round.State = "unknown"

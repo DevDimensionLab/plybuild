@@ -76,7 +76,7 @@ func newIntegrationReadback(root string, registry WorkItemRegistry, ctx integrat
 		{Name: "persisted_before", Value: persistedBefore}, {Name: "persisted_after", Value: persistedAfter}, {Name: "observed_source", Value: observedSource}, {Name: "observed_parent", Value: observedParent}, {Name: "observed_inventory", Value: canonicaljson.Object{{Name: "entries", Value: structCanonical(observedInventory)}, {Name: "freshness", Value: collectionFreshness(ctx.RepositoryObserved)}}}, {Name: "observed_reflog", Value: canonicaljson.Object{{Name: "entries", Value: structCanonical(observedReflog)}, {Name: "freshness", Value: collectionFreshness(ctx.ReflogObserved)}}},
 		{Name: "classification", Value: classification}, {Name: "git_changed", Value: pointerValue(changed)}, {Name: "recovery_status", Value: recovery}, {Name: "next_action", Value: structCanonical(next)},
 	}
-	if plan.SchemaVersion == 2 || taskRequiresSpec(registry, ctx.Task.ID) {
+	if plan.SchemaVersion >= 2 || taskRequiresSpec(registry, ctx.Task.ID) {
 		guard := ctx.TaskSpecRelevance
 		if guard == nil {
 			guard = plan.TaskSpecGuard
@@ -437,6 +437,12 @@ func canonicalReflectValue(v reflect.Value) canonicaljson.Value {
 		for i := 0; i < v.NumField(); i++ {
 			field := t.Field(i)
 			if field.PkgPath != "" {
+				continue
+			}
+			if t == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) && field.Name == "DeliveryAuthorization" && v.Field(i).IsNil() {
+				continue
+			}
+			if t == reflect.TypeOf(DeliveryAgreement{}) && strings.Contains(field.Tag.Get("json"), ",omitempty") && v.Field(i).IsZero() {
 				continue
 			}
 			if t == reflect.TypeOf(IntegrationAuthority{}) && field.Name == "DeliveryOwner" && v.Field(i).IsNil() {

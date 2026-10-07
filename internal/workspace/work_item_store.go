@@ -471,6 +471,20 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 		return validateQueueYAMLMap(node)
 	case reflect.Struct:
 		fields := yamlStructShapeFields(expected)
+		if expected == reflect.TypeOf(DeliveryAgreement{}) {
+			present := map[string]bool{}
+			for i := 0; i+1 < len(node.Content); i += 2 {
+				present[node.Content[i].Value] = true
+			}
+			filtered := []yamlShapeField{}
+			for _, field := range fields {
+				optional := field.name == "source_ref" || field.name == "target_worktree" || field.name == "github_repository" || field.name == "remote"
+				if !optional || present[field.name] {
+					filtered = append(filtered, field)
+				}
+			}
+			fields = filtered
+		}
 		if expected == reflect.TypeOf(IntegrationAuthority{}) {
 			mode := ""
 			for i := 0; i+1 < len(node.Content); i += 2 {
@@ -494,6 +508,15 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 				if node.Content[i].Value == "schema_version" {
 					version = node.Content[i+1].Value
 				}
+			}
+			if version != "3" {
+				filtered := []yamlShapeField{}
+				for _, field := range fields {
+					if field.name != "delivery_authorization" {
+						filtered = append(filtered, field)
+					}
+				}
+				fields = filtered
 			}
 			if version == "1" {
 				filtered := []yamlShapeField{}
@@ -783,6 +806,9 @@ func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
 	planDigests := map[string]bool{}
 	for _, a := range registry.IntegrationAuthorities {
 		validMode := a.Mode == "human_cli_start" && a.DeliveryOwner == nil || a.Mode == "delivery_owner_after_human_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner)
+		if a.Plan.DeliveryAuthorization != nil && a.DeliveryOwner != nil && (a.DeliveryOwner.RunID != a.Plan.DeliveryAuthorization.RunID || a.DeliveryOwner.RequestSHA256 != a.Plan.DeliveryAuthorization.RequestSHA256) {
+			validMode = false
+		}
 		if !lifecycleIDPatterns["integration authority"].MatchString(string(a.ID)) || !validMode || !validTaskUTC(a.CreatedAtUTC) || !digestPattern.MatchString(a.PlanSHA256) || integrationPlanDigest(a.Plan) != a.PlanSHA256 || planDigests[a.PlanSHA256] {
 			return fmt.Errorf("integration authority %s is invalid", a.ID)
 		}
@@ -997,12 +1023,21 @@ func validateStoredIntegrationPlan(p WorkspaceTaskIntegrationPlan, registry Work
 	if parent == nil || p.Task.TaskID != task.ID || p.Task.TaskWorktreeID != task.Worktree.ID || p.Task.SourceLocator != result.SourceLocator || p.Task.SourceRef != result.SourceRef || p.Task.ResultOID != result.ResultOID || p.Task.ResultTree != result.ResultTree || p.Epic.EpicID != epic.ID || p.Epic.ParentWorktreeID != parent.Worktree.ID || p.Epic.ParentLocator != parent.Worktree.Locator || p.Epic.ParentRef != parent.Worktree.Ref || p.Epic.ExpectedParentOID != task.Worktree.ParentOID || p.Epic.ExpectedParentTree != task.Worktree.ParentTree || p.TaskResult.ID != result.ID || p.TaskResult.DraftSHA256 != result.DraftSHA256 || p.TaskResult.TechnicalGate != result.TechnicalGate || p.HumanQA.ID != qa.ID || p.HumanQA.DraftSHA256 != qa.DraftSHA256 || p.HumanQA.Outcome != qa.Outcome || p.StoreTransition != result.StoreTransition || !digestPattern.MatchString(p.WorkItemsSHA256) {
 		return errors.New("integration plan binding differs")
 	}
+	if p.DeliveryAuthorization != nil {
+		auth := p.DeliveryAuthorization
+		target := QueueTarget{ProjectID: p.Project.ProjectID, RepoID: p.Repository.RepoID, EpicID: p.Epic.EpicID, GitCommonDir: p.Repository.GitCommonDir, ParentWorktreeID: p.Epic.ParentWorktreeID, ParentLocator: p.Epic.ParentLocator, ParentRef: p.Epic.ParentRef}
+		bound, err := BindDeliveryAgreement(auth.Agreement, target, p.Task.SourceRef)
+		if err != nil || ValidateDeliveryAuthorization(*auth) != nil || auth.CandidateRunID != result.RunID || auth.Agreement.Mode == DeliveryPullRequest || !contentTypedEqual(bound, auth.Agreement) {
+			return errors.New("integration plan delivery authority differs from exact result and target")
+		}
+	}
 	if validatePlanObservation(p.ObservedSource) != nil || validatePlanObservation(p.ObservedParent) != nil || validateInventory(p.ObservedInventory) != nil || validateReflog(p.ObservedReflog) != nil || !setString("ready", "already_integrated", "blocked", "conflict", "unknown")[p.Readiness] || !sortedReasonTokens(p.Reasons) {
 		return errors.New("invalid integration plan observation")
 	}
 	source := worktreeFromPlan(p.ObservedSource)
 	parentObservation := worktreeFromPlan(p.ObservedParent)
-	if !setString("ready", "already_integrated")[p.Readiness] || len(p.Reasons) != 0 || !p.TechnicalGateReady || !p.HumanQAReady || !p.AncestryReady || p.Repository.Shallow || p.Repository.PartialClone || p.Repository.SparseCheckout || p.Epic.ParentRef == "refs/heads/main" || p.Epic.ParentRef == "refs/heads/master" || p.ObservedSource.OID != p.Task.ResultOID || p.ObservedSource.Tree != p.Task.ResultTree || !p.ObservedSource.Clean || len(p.ObservedSource.StatusEntries) != 0 || len(p.ObservedSource.InProgress) != 0 || !p.ObservedParent.Clean || len(p.ObservedParent.StatusEntries) != 0 || len(p.ObservedParent.InProgress) != 0 || (p.Readiness == "ready" && (p.ObservedParent.OID != p.Epic.ExpectedParentOID || p.ObservedParent.Tree != p.Epic.ExpectedParentTree)) || (p.Readiness == "already_integrated" && (p.ObservedParent.OID != p.Task.ResultOID || p.ObservedParent.Tree != p.Task.ResultTree)) || p.ObservedSource.GitCommonDir != p.Repository.GitCommonDir || p.ObservedParent.GitCommonDir != p.Repository.GitCommonDir || p.ObservedSource.ObjectFormat != p.Repository.ObjectFormat || p.ObservedParent.ObjectFormat != p.Repository.ObjectFormat || p.ObservedSource.RefFormat != p.Repository.RefFormat || p.ObservedParent.RefFormat != p.Repository.RefFormat || !integrationInventoryContains(p.ObservedInventory, source) || !integrationInventoryContains(p.ObservedInventory, parentObservation) || !objectIDsMatchFormat(p.Repository.ObjectFormat, p.Epic.ExpectedParentOID, p.Epic.ExpectedParentTree, p.Task.ResultOID, p.Task.ResultTree, p.ObservedSource.OID, p.ObservedSource.Tree, p.ObservedParent.OID, p.ObservedParent.Tree) {
+	mainForbidden := ordinaryProductRef(p.Epic.ParentRef) && (p.DeliveryAuthorization == nil || p.DeliveryAuthorization.Agreement.Mode != DeliveryLocalBranch)
+	if !setString("ready", "already_integrated")[p.Readiness] || len(p.Reasons) != 0 || !p.TechnicalGateReady || !p.HumanQAReady || !p.AncestryReady || p.Repository.Shallow || p.Repository.PartialClone || p.Repository.SparseCheckout || mainForbidden || p.ObservedSource.OID != p.Task.ResultOID || p.ObservedSource.Tree != p.Task.ResultTree || !p.ObservedSource.Clean || len(p.ObservedSource.StatusEntries) != 0 || len(p.ObservedSource.InProgress) != 0 || !p.ObservedParent.Clean || len(p.ObservedParent.StatusEntries) != 0 || len(p.ObservedParent.InProgress) != 0 || (p.Readiness == "ready" && (p.ObservedParent.OID != p.Epic.ExpectedParentOID || p.ObservedParent.Tree != p.Epic.ExpectedParentTree)) || (p.Readiness == "already_integrated" && (p.ObservedParent.OID != p.Task.ResultOID || p.ObservedParent.Tree != p.Task.ResultTree)) || p.ObservedSource.GitCommonDir != p.Repository.GitCommonDir || p.ObservedParent.GitCommonDir != p.Repository.GitCommonDir || p.ObservedSource.ObjectFormat != p.Repository.ObjectFormat || p.ObservedParent.ObjectFormat != p.Repository.ObjectFormat || p.ObservedSource.RefFormat != p.Repository.RefFormat || p.ObservedParent.RefFormat != p.Repository.RefFormat || !integrationInventoryContains(p.ObservedInventory, source) || !integrationInventoryContains(p.ObservedInventory, parentObservation) || !objectIDsMatchFormat(p.Repository.ObjectFormat, p.Epic.ExpectedParentOID, p.Epic.ExpectedParentTree, p.Task.ResultOID, p.Task.ResultTree, p.ObservedSource.OID, p.ObservedSource.Tree, p.ObservedParent.OID, p.ObservedParent.Tree) {
 		return errors.New("integration authority plan is not a ready exact plan")
 	}
 	wantArgv := []string{"git", "-c", "core.hooksPath=" + os.DevNull, "-c", "merge.autoStash=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-c", "submodule.recurse=false", "-C", p.Epic.ParentLocator, "merge", "--ff-only", "--no-stat", "--no-autostash", p.Task.ResultOID}

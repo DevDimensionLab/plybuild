@@ -156,15 +156,17 @@ type QueueRegistryReadback struct {
 }
 
 type QueueCurrent struct {
-	PreparationID string        `yaml:"preparation_id" json:"preparation_id"`
-	TaskID        TaskID        `yaml:"task_id" json:"task_id"`
-	State         string        `yaml:"state" json:"state"`
-	Disposition   string        `yaml:"disposition" json:"disposition"`
-	WorktreePath  string        `yaml:"worktree_path" json:"worktree_path"`
-	Reasons       []QueueReason `yaml:"reasons" json:"reasons"`
+	Delivery      *DeliveryAgreement `yaml:"delivery,omitempty" json:"delivery,omitempty"`
+	PreparationID string             `yaml:"preparation_id" json:"preparation_id"`
+	TaskID        TaskID             `yaml:"task_id" json:"task_id"`
+	State         string             `yaml:"state" json:"state"`
+	Disposition   string             `yaml:"disposition" json:"disposition"`
+	WorktreePath  string             `yaml:"worktree_path" json:"worktree_path"`
+	Reasons       []QueueReason      `yaml:"reasons" json:"reasons"`
 }
 
 type QueuePending struct {
+	Delivery     *DeliveryAgreement      `yaml:"delivery,omitempty" json:"delivery,omitempty"`
 	Goal         *TaskGoalRef            `yaml:"goal,omitempty" json:"goal,omitempty"`
 	Executor     *TaskExecutorAssignment `yaml:"executor,omitempty" json:"executor,omitempty"`
 	Rank         int                     `yaml:"rank" json:"rank"`

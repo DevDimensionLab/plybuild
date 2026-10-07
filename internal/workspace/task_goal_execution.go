@@ -18,6 +18,10 @@ type TaskGoalExecuteInput struct {
 }
 
 type TaskGoalExecutePreview struct {
+	Delivery          *DeliveryAgreement      `json:"delivery,omitempty"`
+	DeliveryGates     []string                `json:"delivery_gates,omitempty"`
+	DeliveryEffects   []string                `json:"delivery_effects,omitempty"`
+	DeliveryStopAfter string                  `json:"delivery_stop_after,omitempty"`
 	Kind              string                  `json:"kind"`
 	SchemaVersion     int                     `json:"schema_version"`
 	Workspace         string                  `json:"workspace"`
@@ -40,6 +44,7 @@ type TaskGoalExecutePreview struct {
 }
 
 type TaskGoalPreparedExecution struct {
+	Delivery       *DeliveryAgreement      `json:"delivery,omitempty"`
 	Goal           TaskGoalRef             `json:"goal"`
 	Preparation    TaskPreparationReadback `json:"preparation"`
 	Basis          TaskSpecBasis           `json:"basis"`
@@ -240,6 +245,14 @@ func buildGoalExecutionPreview(d Dependencies, root string, r WorkItemRegistry, 
 		return out, e
 	}
 	out.Branch, out.WorktreePath = queueTaskNames(out.QueueID, chosen.TaskID, title, target.ParentLocator)
+	if out.Goal.Delivery != nil {
+		bound, err := BindDeliveryAgreement(*out.Goal.Delivery, target, "refs/heads/"+out.Branch)
+		if err != nil {
+			return out, queueError("task_delivery_binding_conflict", err.Error())
+		}
+		out.Delivery = &bound
+		out.DeliveryGates, out.DeliveryEffects, out.DeliveryStopAfter = bound.RequiredGates(), bound.AllowedEffects(), bound.StopAfter()
+	}
 	if e = precheckParentAndResources(d, repo, currentEpicBinding(r, epic, binding), "refs/heads/"+out.Branch, out.WorktreePath); e != nil {
 		return out, e
 	}
@@ -397,6 +410,29 @@ func goalExecutionRequestRule(v canonicaljson.Value) error {
 	if e := validateQueuePlanObservation(p.ObservedParent, p.Target, p.ParentOID, p.ParentTree); e != nil {
 		return e
 	}
+	if e := validateGoalDeliveryBinding(p); e != nil {
+		return e
+	}
+	return nil
+}
+
+func validateGoalDeliveryBinding(p TaskGoalExecutePreview) error {
+	if p.Goal.Delivery == nil {
+		if p.Delivery != nil || len(p.DeliveryGates) != 0 || len(p.DeliveryEffects) != 0 || p.DeliveryStopAfter != "" {
+			return fmt.Errorf("legacy goal cannot acquire a delivery agreement during execution")
+		}
+		return nil
+	}
+	bound, e := BindDeliveryAgreement(*p.Goal.Delivery, p.Target, "refs/heads/"+p.Branch)
+	if e != nil {
+		return e
+	}
+	if p.Delivery == nil || !contentTypedEqual(bound, *p.Delivery) {
+		return fmt.Errorf("preserved delivery differs from exact goal/source/target")
+	}
+	if !contentTypedEqual(p.DeliveryGates, bound.RequiredGates()) || !contentTypedEqual(p.DeliveryEffects, bound.AllowedEffects()) || p.DeliveryStopAfter != bound.StopAfter() {
+		return fmt.Errorf("preserved delivery gates, effects or stop point differ from agreement")
+	}
 	return nil
 }
 
@@ -423,6 +459,15 @@ func buildGoalExecutionSpec(d Dependencies, root string, r WorkItemRegistry, p T
 		text += "- " + req.ID + ": " + req.Acceptance + "\n"
 	}
 	text += "\n## Implementation ownership\n\nThe implementing owner investigates the code, chooses and revises the detailed design, implements meaningful acceptance tests, and owns verification and correction within this goal and actual runtime permissions. The planner has not chosen these technical details.\n\nThe declared acceptance entrypoint is /bin/sh " + p.AcceptancePath + " with the Task worktree as cwd. The owner must implement this script and meaningful tests, execute it, and preserve the actual script and output as artifacts. A declaration is not an executed test or a passing result.\n\nPreserve work and evidence on interruption. Do not reset, remove worktrees, expand scope, or claim human judgment. Human product judgment and local integration are later distinct facts.\n"
+	if p.Delivery != nil {
+		text += "\n## Delivery agreement\n\nMode: " + p.Delivery.Mode + ". Source: " + p.Delivery.SourceRef + ". Target: " + p.Delivery.TargetRef + ".\n\nGates: " + strings.Join(p.DeliveryGates, ", ") + ". Allowed effects require matching accepted native runtime authority: " + strings.Join(p.DeliveryEffects, ", ") + ". Stop after " + p.DeliveryStopAfter + ".\n"
+		if p.Delivery.TargetWorktree != "" {
+			text += "\nExact local target worktree: " + p.Delivery.TargetWorktree + ".\n"
+		}
+		if p.Delivery.GitHubRepository != "" {
+			text += "\nExact GitHub repository: " + p.Delivery.GitHubRepository + "; remote: " + p.Delivery.Remote + ".\n"
+		}
+	}
 	if len(p.Goal.Constraints) > 0 {
 		text += "\n## Constraints\n\n"
 		for _, c := range p.Goal.Constraints {
@@ -474,6 +519,9 @@ func buildGoalExecutionSpec(d Dependencies, root string, r WorkItemRegistry, p T
 		"goal_origin": contentRefValue(p.Goal.Goal), "execution_request_sha256": p.Confirmation, "execution_request": contentRefValue(frozen), "acceptance_path": p.AcceptancePath,
 	} {
 		m[k] = v
+	}
+	if p.Delivery != nil {
+		m["delivery"] = contentRefValue(*p.Delivery)
 	}
 	return m, nil
 }
@@ -634,7 +682,7 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 			return e
 		}
 		plan := prepared.Preparation.Plan
-		out = TaskGoalPreparedExecution{Goal: p.Goal.Goal, Preparation: prepared, Basis: TaskSpecBasis{TaskID: id, Problem: plan.Problem, SpecID: plan.SpecID, Spec: plan.Spec, Assessment: plan.Assessment, Selection: plan.Selection, TaskWorktreeID: task.Worktree.ID, DeliveryBindingSHA256: digest, Dependencies: []string{}}, Executor: p.Goal.Executor, AcceptancePath: p.AcceptancePath}
+		out = TaskGoalPreparedExecution{Delivery: p.Delivery, Goal: p.Goal.Goal, Preparation: prepared, Basis: TaskSpecBasis{TaskID: id, Problem: plan.Problem, SpecID: plan.SpecID, Spec: plan.Spec, Assessment: plan.Assessment, Selection: plan.Selection, TaskWorktreeID: task.Worktree.ID, DeliveryBindingSHA256: digest, Dependencies: []string{}}, Executor: p.Goal.Executor, AcceptancePath: p.AcceptancePath}
 		return nil
 	})
 	return out, e

@@ -146,6 +146,7 @@ type TaskHumanQARecord struct {
 // TaskHandoffEvidence is the redacted, rehashed projection supplied by the workflow-handoff
 // package. It deliberately contains no reply capability or secret material.
 type TaskHandoffEvidence struct {
+	DeliveryAuthorization                                                      *DeliveryAuthorization
 	TaskRequirementsValid                                                      bool
 	TaskSpecBasis                                                              *TaskSpecBasis
 	TaskSpecValid                                                              bool

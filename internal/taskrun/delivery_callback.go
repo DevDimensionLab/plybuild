@@ -33,6 +33,14 @@ func positiveDeliveryClaim(a Acceptance, permission DeliveryPermissionAcceptance
 	if !bound {
 		return workflowError(4, "actual policy digest is not bound by recipient evidence")
 	}
+	if r.Delivery != nil && r.Delivery.Agreement != nil {
+		agreement := *r.Delivery.Agreement
+		if permission.DeliveryAgreementSHA256 != workspace.DeliveryAgreementDigest(agreement) || !equal(permission.AllowedEffects, workflowhandoff.DeliveryAllowedEffects(agreement)) {
+			return workflowError(4, "actual permission acceptance does not cover the exact frozen delivery mode, target and effects")
+		}
+	} else if permission.DeliveryAgreementSHA256 != "" || len(permission.AllowedEffects) != 0 {
+		return workflowError(4, "historical delivery cannot acquire new delivery authority")
+	}
 	return nil
 }
 

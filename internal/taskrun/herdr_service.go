@@ -114,6 +114,12 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 	if deliveryRun(r) {
 		p.Envelope = deliveryEnv("run-preview")
 		p.Effects = []string{"Reserve the selected goal, prepared Task and one delivery owner", "Create one interactive Herdr tab and bind the actual selected provider session", "Keep a stable control executable while the owner designs, delegates, verifies and installs within the bound authority", "Preserve incomplete reports, qualified candidates, actual human QA and authorized local integration as separate facts", "Retain ownership until local delivery actually completes; never infer human approval or provider inactivity"}
+		if r.Delivery.Agreement != nil {
+			p.DeliveryAgreement = r.Delivery.Agreement
+			p.DeliveryAllowedEffects = workflowhandoff.DeliveryAllowedEffects(*r.Delivery.Agreement)
+			p.Effects[3] = "Require meaningful tests, review and actual human pass for the exact candidate before delivery effects"
+			p.Effects[4] = fmt.Sprintf("Deliver %s from %s to %s within the exact frozen agreement; no merge or target-branch push", r.Delivery.Agreement.Mode, r.Delivery.Agreement.SourceRef, r.Delivery.Agreement.TargetRef)
+		}
 		n, e = previewLockedWithObservation(d, workflowNativeRequest(r), file, workflowhandoff.ObserveDeliveryTaskRun)
 	} else {
 		n, e = previewLocked(d, workflowNativeRequest(r), file)

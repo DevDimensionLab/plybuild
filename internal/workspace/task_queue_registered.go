@@ -286,6 +286,7 @@ func registeredQueuePending(d Dependencies, root string, r WorkItemRegistry, ind
 			return unknownRegisteredPending(row, err)
 		}
 		row.Title, row.Executor = goal.Title, &goal.Executor
+		row.Delivery = goal.Delivery
 		if !contentTypedEqual(taskContentState(r, task.ID).ProblemHead, &goal.Problem) {
 			row.State = "blocked"
 			row.Reasons = append(row.Reasons, QueueReason{"task_goal_problem_changed", "queued goal no longer refers to the current registered Problem"})
@@ -333,6 +334,10 @@ func registeredQueueSelection(d Dependencies, root string, r WorkItemRegistry, t
 	}
 	if contentString(contentFields(spec), "task_id") != string(task.ID) || contentString(contentFields(spec), "spec_id") != *row.SpecID || contentInt(contentFields(spec), "revision") != row.Spec.Revision {
 		return queueError("task_spec_binding_conflict", "selected Spec identity differs from its registered reference")
+	}
+	row.Delivery, err = DeliveryAgreementFromSpec(spec)
+	if err != nil {
+		return err
 	}
 	if contentString(contentFields(spec), "contract_kind") == "execution" {
 		var goal TaskGoalRef
@@ -390,6 +395,7 @@ func registeredCurrentPreparation(d Dependencies, root string, r WorkItemRegistr
 	basis := TaskSpecBasis{TaskID: p.TaskID, Problem: p.Problem, SpecID: p.SpecID, Spec: p.Spec, Assessment: p.Assessment, Selection: p.Selection, Dependencies: []string{}}
 	eval, err := loadTaskSpecContent(d, root, r, basis)
 	if err == nil {
+		row.Delivery, err = DeliveryAgreementFromSpec(eval.Spec)
 		implementation := contentFields(contentFields(eval.Spec)["implementation_basis"])
 		if contentString(implementation, "parent_oid") != p.ParentOID || contentString(implementation, "parent_tree") != p.ParentTree || contentString(implementation, "start_oid") != p.ParentOID || contentString(implementation, "start_tree") != p.ParentTree {
 			err = queueError("task_queue_integrity_conflict", "preparation plan differs from the selected registered implementation basis")

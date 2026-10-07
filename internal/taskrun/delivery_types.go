@@ -9,14 +9,15 @@ import (
 // DeliveryContract is an explicit v2 ownership contract. It never upgrades an
 // existing v1 run, its Agreement A, or the permissions of a provider process.
 type DeliveryContract struct {
-	OwnerClaim          string       `json:"owner_claim"`
-	Goal                FileBinding  `json:"goal"`
-	AcceptancePath      string       `json:"acceptance_path"`
-	AllowSubagents      bool         `json:"allow_subagents"`
-	AllowLocalInstall   bool         `json:"allow_local_install"`
-	LocalIntegration    string       `json:"local_integration"`
-	NotificationContext *FileBinding `json:"notification_context"`
-	ReasoningEffort     string       `json:"reasoning_effort,omitempty"`
+	OwnerClaim          string                       `json:"owner_claim"`
+	Goal                FileBinding                  `json:"goal"`
+	AcceptancePath      string                       `json:"acceptance_path"`
+	AllowSubagents      bool                         `json:"allow_subagents"`
+	AllowLocalInstall   bool                         `json:"allow_local_install"`
+	LocalIntegration    string                       `json:"local_integration"`
+	NotificationContext *FileBinding                 `json:"notification_context"`
+	ReasoningEffort     string                       `json:"reasoning_effort,omitempty"`
+	Agreement           *workspace.DeliveryAgreement `json:"agreement,omitempty"`
 }
 
 type DeliveryRequestInput struct {
@@ -32,9 +33,11 @@ type DeliveryRequestInput struct {
 }
 
 type DeliveryPermissionAcceptance struct {
-	LaunchContractSHA256 string     `json:"launch_contract_sha256"`
-	PermissionConfirmed  bool       `json:"permission_confirmed"`
-	ActualPolicyEvidence []Evidence `json:"actual_policy_evidence"`
+	LaunchContractSHA256    string     `json:"launch_contract_sha256"`
+	PermissionConfirmed     bool       `json:"permission_confirmed"`
+	ActualPolicyEvidence    []Evidence `json:"actual_policy_evidence"`
+	DeliveryAgreementSHA256 string     `json:"delivery_agreement_sha256,omitempty"`
+	AllowedEffects          []string   `json:"allowed_effects,omitempty"`
 }
 
 type DeliveryAcceptance struct {
@@ -87,6 +90,7 @@ type DeliveryCandidate struct {
 	TaskResult   workspace.TaskResultRecord   `json:"task_result"`
 	HumanQA      *workspace.TaskHumanQARecord `json:"human_qa"`
 	Integration  *FileBinding                 `json:"integration"`
+	PullRequest  *FileBinding                 `json:"pull_request,omitempty"`
 }
 
 type DeliveryAttempt struct {

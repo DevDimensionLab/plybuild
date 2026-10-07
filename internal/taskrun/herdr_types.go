@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"path/filepath"
 	"strings"
+
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 type WorkflowRequest struct {
@@ -102,16 +104,18 @@ type WorkflowRun struct {
 }
 type WorkflowPreview struct {
 	Envelope
-	Provider      string              `json:"provider,omitempty"`
-	RunID         string              `json:"run_id"`
-	RequestSHA256 string              `json:"request_sha256"`
-	Confirmation  *string             `json:"confirmation"`
-	Reasons       []Reason            `json:"reasons"`
-	Effects       []string            `json:"effects"`
-	Observed      Observed            `json:"observed"`
-	Paths         WorkflowPaths       `json:"paths"`
-	CodexTrust    *workflowTrustFacts `json:"codex_project_trust,omitempty"`
-	ClaudeTrust   *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
+	Provider               string                       `json:"provider,omitempty"`
+	RunID                  string                       `json:"run_id"`
+	RequestSHA256          string                       `json:"request_sha256"`
+	Confirmation           *string                      `json:"confirmation"`
+	Reasons                []Reason                     `json:"reasons"`
+	Effects                []string                     `json:"effects"`
+	Observed               Observed                     `json:"observed"`
+	Paths                  WorkflowPaths                `json:"paths"`
+	CodexTrust             *workflowTrustFacts          `json:"codex_project_trust,omitempty"`
+	ClaudeTrust            *ClaudeTrustPreview          `json:"claude_project_trust,omitempty"`
+	DeliveryAgreement      *workspace.DeliveryAgreement `json:"delivery_agreement,omitempty"`
+	DeliveryAllowedEffects []string                     `json:"delivery_allowed_effects,omitempty"`
 }
 type WorkflowReport struct {
 	Report

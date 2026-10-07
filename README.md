@@ -279,6 +279,23 @@ ply workflow execute
 ply workflow execute --spec explain-start-errors
 ```
 
+### Deliver an exact candidate
+
+`ply workflow delivery` preserves the Task's frozen agreement, technical evidence
+and candidate-bound human QA. It supports a PR that stops before merge, local
+Epic integration, or an explicit local branch return including main/master
+without a remote. Registration is separate from execution and completion.
+
+```shell
+ply workflow delivery register --file /absolute/private/delivery.json --format json
+ply workflow delivery check dlv_<returned-id>
+ply workflow delivery execute dlv_<returned-id>
+ply workflow delivery show dlv_<returned-id> --format json
+```
+
+See [agreements, receipts and recovery](docs/workflow-delivery.md) and the
+[agent skill](skills/ply-delivery/SKILL.md).
+
 ### Run a prepared Task in Herdr
 
 `ply workflow run` previews and confirms one Herdr/Codex start from an existing

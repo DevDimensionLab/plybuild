@@ -385,6 +385,33 @@ func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRe
 	if r.FormatVersion < 3 {
 		return nil
 	}
+	// The stored integration exception must remain tied to the actual immutable
+	// Spec bytes. A plausible authority object cannot retrofit a delivery choice
+	// onto a historical contract, even if its plan digest was recomputed.
+	for _, authority := range r.IntegrationAuthorities {
+		auth := authority.Plan.DeliveryAuthorization
+		link := taskResultSpecLink(r, authority.TaskResultID)
+		if link == nil {
+			if auth != nil {
+				return contentError("task_delivery_binding_conflict", "stored delivery authority has no exact result Spec", nil)
+			}
+			continue
+		}
+		spec, err := readRegisteredTaskManifest(s, root, r, link.Basis.Spec.ManifestSHA256)
+		if err != nil {
+			return err
+		}
+		agreement, err := DeliveryAgreementFromSpec(spec)
+		if err != nil {
+			return err
+		}
+		if auth == nil && agreement == nil {
+			continue
+		}
+		if auth == nil || agreement == nil || !contentTypedEqual(auth.Agreement, *agreement) {
+			return contentError("task_delivery_binding_conflict", "stored delivery authority differs from the immutable result-bound Spec", nil)
+		}
+	}
 	for _, pub := range r.TaskContentPublications {
 		manifest, e := readContentManifest(s, root, pub.OutcomeRef.ManifestSHA256)
 		if e != nil {

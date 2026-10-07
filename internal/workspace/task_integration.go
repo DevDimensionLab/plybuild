@@ -79,32 +79,33 @@ type IntegrationAllowedEffect struct {
 }
 
 type WorkspaceTaskIntegrationPlan struct {
-	Kind               string                      `yaml:"kind" json:"kind"`
-	SchemaVersion      int                         `yaml:"schema_version" json:"schema_version"`
-	Format             string                      `yaml:"format" json:"format"`
-	FormatVersion      int                         `yaml:"format_version" json:"format_version"`
-	Canonicalization   string                      `yaml:"canonicalization" json:"canonicalization"`
-	Workspace          IntegrationPlanWorkspace    `yaml:"workspace" json:"workspace"`
-	Project            IntegrationPlanProject      `yaml:"project" json:"project"`
-	Repository         IntegrationPlanRepository   `yaml:"repository" json:"repository"`
-	Epic               IntegrationPlanEpic         `yaml:"epic" json:"epic"`
-	Task               IntegrationPlanTask         `yaml:"task" json:"task"`
-	TaskResult         IntegrationPlanTaskResult   `yaml:"task_result" json:"task_result"`
-	HumanQA            IntegrationPlanHumanQA      `yaml:"human_qa" json:"human_qa"`
-	RetryAfterResultID *IntegrationResultID        `yaml:"retry_after_result_id" json:"retry_after_result_id"`
-	WorkItemsSHA256    string                      `yaml:"work_items_sha256" json:"work_items_sha256"`
-	StoreTransition    string                      `yaml:"store_transition" json:"store_transition"`
-	ObservedSource     PlanWorktreeObservation     `yaml:"observed_source" json:"observed_source"`
-	ObservedParent     PlanWorktreeObservation     `yaml:"observed_parent" json:"observed_parent"`
-	ObservedInventory  []IntegrationInventoryEntry `yaml:"observed_inventory" json:"observed_inventory"`
-	ObservedReflog     []IntegrationReflogEntry    `yaml:"observed_reflog" json:"observed_reflog"`
-	TechnicalGateReady bool                        `yaml:"technical_gate_ready" json:"technical_gate_ready"`
-	HumanQAReady       bool                        `yaml:"human_qa_ready" json:"human_qa_ready"`
-	AncestryReady      bool                        `yaml:"ancestry_ready" json:"ancestry_ready"`
-	Readiness          string                      `yaml:"readiness" json:"readiness"`
-	Reasons            []string                    `yaml:"reasons" json:"reasons"`
-	Effect             IntegrationPlanEffect       `yaml:"effect" json:"effect"`
-	TaskSpecGuard      *TaskSpecRelevance          `yaml:"task_spec_guard,omitempty" json:"task_spec_guard"`
+	Kind                  string                      `yaml:"kind" json:"kind"`
+	SchemaVersion         int                         `yaml:"schema_version" json:"schema_version"`
+	Format                string                      `yaml:"format" json:"format"`
+	FormatVersion         int                         `yaml:"format_version" json:"format_version"`
+	Canonicalization      string                      `yaml:"canonicalization" json:"canonicalization"`
+	Workspace             IntegrationPlanWorkspace    `yaml:"workspace" json:"workspace"`
+	Project               IntegrationPlanProject      `yaml:"project" json:"project"`
+	Repository            IntegrationPlanRepository   `yaml:"repository" json:"repository"`
+	Epic                  IntegrationPlanEpic         `yaml:"epic" json:"epic"`
+	Task                  IntegrationPlanTask         `yaml:"task" json:"task"`
+	TaskResult            IntegrationPlanTaskResult   `yaml:"task_result" json:"task_result"`
+	HumanQA               IntegrationPlanHumanQA      `yaml:"human_qa" json:"human_qa"`
+	RetryAfterResultID    *IntegrationResultID        `yaml:"retry_after_result_id" json:"retry_after_result_id"`
+	WorkItemsSHA256       string                      `yaml:"work_items_sha256" json:"work_items_sha256"`
+	StoreTransition       string                      `yaml:"store_transition" json:"store_transition"`
+	ObservedSource        PlanWorktreeObservation     `yaml:"observed_source" json:"observed_source"`
+	ObservedParent        PlanWorktreeObservation     `yaml:"observed_parent" json:"observed_parent"`
+	ObservedInventory     []IntegrationInventoryEntry `yaml:"observed_inventory" json:"observed_inventory"`
+	ObservedReflog        []IntegrationReflogEntry    `yaml:"observed_reflog" json:"observed_reflog"`
+	TechnicalGateReady    bool                        `yaml:"technical_gate_ready" json:"technical_gate_ready"`
+	HumanQAReady          bool                        `yaml:"human_qa_ready" json:"human_qa_ready"`
+	AncestryReady         bool                        `yaml:"ancestry_ready" json:"ancestry_ready"`
+	Readiness             string                      `yaml:"readiness" json:"readiness"`
+	Reasons               []string                    `yaml:"reasons" json:"reasons"`
+	Effect                IntegrationPlanEffect       `yaml:"effect" json:"effect"`
+	TaskSpecGuard         *TaskSpecRelevance          `yaml:"task_spec_guard,omitempty" json:"task_spec_guard"`
+	DeliveryAuthorization *DeliveryAuthorization      `yaml:"delivery_authorization,omitempty" json:"delivery_authorization,omitempty"`
 }
 
 type IntegrationPlanWorkspace struct {
@@ -300,6 +301,7 @@ type TaskIntegrationInput struct {
 	Apply                                bool
 	Confirmation                         string
 	DeliveryOwner                        *DeliveryIntegrationOwner
+	DeliveryAuthorization                *DeliveryAuthorization
 }
 
 type TaskIntegrationResult struct {
@@ -353,14 +355,14 @@ func CheckTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 	if err != nil {
 		return TaskIntegrationResult{}, err
 	}
-	if input.DeliveryOwner != nil {
+	if input.DeliveryOwner != nil || input.DeliveryAuthorization != nil {
 		if recovered, found, err := checkPersistedDeliveryIntegration(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repos}, registry, input); found || err != nil {
 			return recovered, err
 		}
 	}
 	if input.RetryAfterResultID == nil {
 		if authority, intent, attempt, result := unresolvedIntegrationLeaf(registry, input); result != nil {
-			if !contentTypedEqual(authority.DeliveryOwner, input.DeliveryOwner) {
+			if !contentTypedEqual(authority.DeliveryOwner, input.DeliveryOwner) || !contentTypedEqual(authority.Plan.DeliveryAuthorization, input.DeliveryAuthorization) {
 				return TaskIntegrationResult{}, workError(ErrorTaskIntegrationConflict, "integration delivery owner differs", nil)
 			}
 			ctx, err := contextFromPlan(registry, authority.Plan)
@@ -503,6 +505,12 @@ func validateIntegrationInput(input TaskIntegrationInput) error {
 	if input.DeliveryOwner != nil && !validDeliveryIntegrationOwner(input.DeliveryOwner) {
 		return WorkInvalidArguments("invalid delivery owner provenance")
 	}
+	if input.DeliveryAuthorization != nil && ValidateDeliveryAuthorization(*input.DeliveryAuthorization) != nil {
+		return WorkInvalidArguments("invalid native delivery authorization")
+	}
+	if input.DeliveryAuthorization != nil && input.DeliveryOwner != nil && (input.DeliveryOwner.RunID != input.DeliveryAuthorization.RunID || input.DeliveryOwner.RequestSHA256 != input.DeliveryAuthorization.RequestSHA256) {
+		return WorkInvalidArguments("delivery owner differs from native authorized run")
+	}
 	if _, err := ParseTaskID(string(input.TaskID)); err != nil {
 		return err
 	}
@@ -554,6 +562,10 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	}
 	ctx := integrationContext{Task: *task, Epic: *epic, Parent: *parent, Result: *tr, QA: *qa, Repo: repo}
 	if err := revalidateIntegrationEvidence(d, *tr, *qa); err != nil {
+		return WorkspaceTaskIntegrationPlan{}, "", ctx, err
+	}
+	target := QueueTarget{ProjectID: task.ProjectID, RepoID: task.RepoID, EpicID: epic.ID, GitCommonDir: task.GitCommonDir, ParentWorktreeID: parent.Worktree.ID, ParentLocator: parent.Worktree.Locator, ParentRef: parent.Worktree.Ref}
+	if err := validateIntegrationDelivery(d, root, registry, *tr, qa.ID, input.DeliveryAuthorization, target); err != nil {
 		return WorkspaceTaskIntegrationPlan{}, "", ctx, err
 	}
 	repository, err := d.IntegrationGit.ObserveIntegrationRepository(repo)
@@ -616,7 +628,7 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	if input.ExpectedParentOID != task.Worktree.ParentOID || input.ExpectedResultOID != tr.ResultOID {
 		conflict("expected_oid_mismatch")
 	}
-	if parent.Worktree.Ref == "refs/heads/main" || parent.Worktree.Ref == "refs/heads/master" {
+	if ordinaryProductRef(parent.Worktree.Ref) && (input.DeliveryAuthorization == nil || input.DeliveryAuthorization.Agreement.Mode != DeliveryLocalBranch) {
 		block("ordinary_main_parent_forbidden")
 	}
 	if source.OID != tr.ResultOID || source.Tree != tr.ResultTree || source.Ref != task.Worktree.Ref || source.GitCommonDir != task.GitCommonDir {
@@ -715,36 +727,59 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 			plan.Reasons = sortedReasons(append(plan.Reasons, plan.TaskSpecGuard.Reasons...))
 		}
 	}
+	if input.DeliveryAuthorization != nil {
+		plan.Kind, plan.SchemaVersion = "WorkspaceTaskIntegrationPlan@3", 3
+		copy := *input.DeliveryAuthorization
+		copy.AllowedEffects = append([]string(nil), copy.AllowedEffects...)
+		plan.DeliveryAuthorization = &copy
+	}
 	digest := integrationPlanDigest(plan)
 	return plan, digest, ctx, nil
 }
 
-func revalidateIntegrationEvidence(d Dependencies, result TaskResultRecord, qa TaskHumanQARecord) error {
-	request := TaskHandoffEvidenceRequest{
+func taskResultEvidenceRequest(result TaskResultRecord) TaskHandoffEvidenceRequest {
+	return TaskHandoffEvidenceRequest{
 		ActivityID: result.ActivityID, RunID: result.RunID, HandoffID: result.HandoffID, HandoffLocator: result.HandoffLocator, HandoffSHA256: result.HandoffSHA256,
 		StartReceiptID: result.StartReceiptID, StartReceiptLocator: result.StartReceiptLocator, StartReceiptSHA256: result.StartReceiptSHA256,
 		TerminalResultID: result.TerminalResultID, TerminalResultLocator: result.TerminalResultLocator, TerminalResultSHA256: result.TerminalResultSHA256,
 		InspectionSHA256: result.InspectionSHA256,
 	}
-	evidence, err := d.HandoffEvidence.ReadTaskEvidence(request)
+}
+
+func revalidateIntegrationEvidence(d Dependencies, result TaskResultRecord, qa TaskHumanQARecord) error {
+	evidence, err := d.HandoffEvidence.ReadTaskEvidence(taskResultEvidenceRequest(result))
 	if err != nil {
 		return workError(ErrorTaskIntegrationBlocked, "immutable handoff evidence can no longer be validated", err)
 	}
-	required := make([]string, len(result.VerifierResults))
-	for i := range result.VerifierResults {
-		required[i] = result.VerifierResults[i].VerifierID
+	if err = ValidateTaskResultEvidence(result, evidence); err != nil {
+		return err
 	}
-	draft := taskResultDraft{Handoff: request, TechnicalGate: result.TechnicalGate, RequiredVerifierIDs: required, AcceptedDebt: result.AcceptedDebt, EvidenceArtifacts: result.Artifacts}
-	if err := validateTaskEvidence(draft, evidence); err != nil || result.ReportedOutcome != evidence.ReportedOutcome || !reflect.DeepEqual(result.VerifierResults, evidence.VerifierResults) || !reflect.DeepEqual(result.Review, evidence.Review) {
-		return workError(ErrorTaskIntegrationBlocked, "persisted Task result differs from revalidated handoff evidence", err)
-	}
-	if err := rehashQAEvidence(d.Files, qa.Evidence); err != nil {
+	if err = rehashQAEvidence(d.Files, qa.Evidence); err != nil {
 		return workError(ErrorTaskIntegrationBlocked, "human QA evidence can no longer be validated", err)
 	}
 	return nil
 }
 
+// ValidateTaskResultEvidence compares a preserved result to revalidated native
+// evidence using the original technical gate, including controlled evidence debt.
+// It does not read files or establish runtime permission or human acceptance.
+func ValidateTaskResultEvidence(result TaskResultRecord, evidence TaskHandoffEvidence) error {
+	required := make([]string, len(result.VerifierResults))
+	for i := range result.VerifierResults {
+		required[i] = result.VerifierResults[i].VerifierID
+	}
+	draft := taskResultDraft{Handoff: taskResultEvidenceRequest(result), TechnicalGate: result.TechnicalGate, RequiredVerifierIDs: required, AcceptedDebt: result.AcceptedDebt, EvidenceArtifacts: result.Artifacts}
+	if err := validateTaskEvidence(draft, evidence); err != nil || result.ReportedOutcome != evidence.ReportedOutcome || !reflect.DeepEqual(result.VerifierResults, evidence.VerifierResults) || !reflect.DeepEqual(result.Review, evidence.Review) {
+		return workError(ErrorTaskIntegrationBlocked, "persisted Task result differs from revalidated handoff evidence", err)
+	}
+	return nil
+}
+
 func continueIntegrationAuthority(d Dependencies, session WorkItemStoreSession, registry *WorkItemRegistry, root string, ctx integrationContext, authority IntegrationAuthority, intent IntegrationIntent, output *WorkspaceTaskIntegrationReadback, recovered bool) error {
+	target := QueueTarget{ProjectID: ctx.Task.ProjectID, RepoID: ctx.Task.RepoID, EpicID: ctx.Epic.ID, GitCommonDir: ctx.Task.GitCommonDir, ParentWorktreeID: ctx.Parent.Worktree.ID, ParentLocator: ctx.Parent.Worktree.Locator, ParentRef: ctx.Parent.Worktree.Ref}
+	if e := validateIntegrationDelivery(d, root, *registry, ctx.Result, authority.HumanQARecordID, authority.Plan.DeliveryAuthorization, target); e != nil {
+		return e
+	}
 	current, driftReason := observeAuthorityPrecondition(d, root, ctx, authority)
 	if driftReason != "" {
 		resultID, err := d.TaskLifecycleIDs.NewIntegrationResultID()
@@ -1089,7 +1124,7 @@ func findAuthorityByPlan(r WorkItemRegistry, digest string, input TaskIntegratio
 		if retryMatches && a.RetryAfterResultID != nil {
 			retryMatches = *a.RetryAfterResultID == *input.RetryAfterResultID
 		}
-		if a.PlanSHA256 == digest && a.TaskID == input.TaskID && a.TaskResultID == input.TaskResultID && a.HumanQARecordID == input.HumanQARecordID && retryMatches && contentTypedEqual(a.DeliveryOwner, input.DeliveryOwner) && a.Plan.Task.ResultOID == input.ExpectedResultOID && a.Plan.Epic.ExpectedParentOID == input.ExpectedParentOID {
+		if a.PlanSHA256 == digest && a.TaskID == input.TaskID && a.TaskResultID == input.TaskResultID && a.HumanQARecordID == input.HumanQARecordID && retryMatches && contentTypedEqual(a.DeliveryOwner, input.DeliveryOwner) && contentTypedEqual(a.Plan.DeliveryAuthorization, input.DeliveryAuthorization) && a.Plan.Task.ResultOID == input.ExpectedResultOID && a.Plan.Epic.ExpectedParentOID == input.ExpectedParentOID {
 			return a
 		}
 	}
@@ -1111,7 +1146,7 @@ func checkPersistedDeliveryIntegration(d Dependencies, root string, projects Pro
 		if a.TaskID != input.TaskID || a.TaskResultID != input.TaskResultID || a.HumanQARecordID != input.HumanQARecordID || a.Plan.Task.ResultOID != input.ExpectedResultOID || a.Plan.Epic.ExpectedParentOID != input.ExpectedParentOID || !contentTypedEqual(a.RetryAfterResultID, input.RetryAfterResultID) {
 			continue
 		}
-		if !contentTypedEqual(a.DeliveryOwner, input.DeliveryOwner) || authority != nil {
+		if !contentTypedEqual(a.DeliveryOwner, input.DeliveryOwner) || !contentTypedEqual(a.Plan.DeliveryAuthorization, input.DeliveryAuthorization) || authority != nil {
 			return TaskIntegrationResult{}, false, workError(ErrorTaskIntegrationConflict, "delivery return authority is different or ambiguous", nil)
 		}
 		authority = a
@@ -1134,6 +1169,15 @@ func checkPersistedDeliveryIntegration(d Dependencies, root string, projects Pro
 		return TaskIntegrationResult{}, true, workError(ErrorTaskIntegrationConflict, "delivery return authority has no intent", nil)
 	}
 	attempt, result := findAttemptForAuthority(registry, authority.ID), findIntegrationResultForAuthority(registry, authority.ID)
+	if attempt == nil && result == nil {
+		// An unattempted intent is a proposed effect, so its original pass must
+		// still be current. Completed or uncertain attempts remain historical
+		// observations and are not relabeled as a fresh permission to execute.
+		target := QueueTarget{ProjectID: ctx.Task.ProjectID, RepoID: ctx.Task.RepoID, EpicID: ctx.Epic.ID, GitCommonDir: ctx.Task.GitCommonDir, ParentWorktreeID: ctx.Parent.Worktree.ID, ParentLocator: ctx.Parent.Worktree.Locator, ParentRef: ctx.Parent.Worktree.Ref}
+		if err = validateIntegrationDelivery(d, root, registry, ctx.Result, authority.HumanQARecordID, authority.Plan.DeliveryAuthorization, target); err != nil {
+			return TaskIntegrationResult{}, true, err
+		}
+	}
 	ctx.Source, err = d.IntegrationGit.ObserveIntegrationWorktree(authority.Plan.Task.SourceLocator, authority.Plan.Task.SourceRef)
 	if err != nil {
 		return TaskIntegrationResult{}, true, err

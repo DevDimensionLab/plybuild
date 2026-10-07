@@ -81,7 +81,14 @@ func validateStoredHandoff(o canonicaljson.Object) error {
 	if e := validateDeliveryBinding(o); e != nil {
 		return e
 	}
-	return validateStoredHandoffWithBudget(taskSpecLegacyProjection(o), taskSpecVersion(o) == 3)
+	if err := validateStoredHandoffWithBudget(taskSpecLegacyProjection(o), taskSpecVersion(o) == 3); err != nil {
+		return err
+	}
+	a, err := deliveryAgreement(o)
+	if err != nil {
+		return err
+	}
+	return validateDeliveryAgreementEffects(o, a)
 }
 func decodeStartDraft(input []byte) (startDraft, error) {
 	v, e := canonicaljson.DecodeStrict(input)

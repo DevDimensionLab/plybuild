@@ -99,6 +99,13 @@ func WorkflowDeliveryQA(d Dependencies, root, id, contextPath, outcome, evidence
 		if outcome == "pass" {
 			s.Result.Delivery.Phase = "human_qa_passed"
 			s.Result.NextAction = WorkflowAction{"recipient", "Complete the already authorized local integration for this exact passed candidate and update the Epic base."}
+			if agreement := s.Request.Delivery.Agreement; agreement != nil {
+				if agreement.Mode == "pull_request" {
+					s.Result.NextAction = WorkflowAction{"recipient", "Use the delivery CLI to publish this exact passed candidate and open or update its agreed PR. Stop before merge; preserve the local target and Epic base."}
+				} else if agreement.Mode == "local_branch_integration" {
+					s.Result.NextAction = WorkflowAction{"recipient", "Complete the authorized local integration into " + agreement.TargetRef + " at " + agreement.TargetWorktree + ", then observe the registered base and Task queue closure."}
+				}
+			}
 		} else if outcome == "blocked" {
 			s.Result.Delivery.Phase = "awaiting_human_qa"
 			s.Result.NextAction = WorkflowAction{"recipient", "Resolve the recorded product-QA block within the selected goal and request an actual human judgment when ready."}
@@ -112,6 +119,29 @@ func WorkflowDeliveryQA(d Dependencies, root, id, contextPath, outcome, evidence
 func WorkflowDeliveryIntegrate(d Dependencies, root, id, contextPath string) (WorkflowRun, error) {
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
+	}
+	initial, initialErr := workflowRead(root, id)
+	if initialErr != nil {
+		return WorkflowRun{}, initialErr
+	}
+	if deliveryRun(initial.Request) && initial.Request.Delivery.Agreement != nil {
+		if initial.Request.Delivery.Agreement.Mode == "pull_request" {
+			return WorkflowRun{}, workflowError(4, "pull_request delivery grants no local integration; use delivery execute for its exact PR boundary")
+		}
+		if initial.Result.Delivery == nil || len(initial.Result.Delivery.Candidates) == 0 {
+			return WorkflowRun{}, workflowError(4, "local integration requires a qualified candidate")
+		}
+		if initial.Result.Delivery.Phase != "completed" {
+			if e := deliveryCallback(d, initial, contextPath, true); e != nil {
+				return WorkflowRun{}, e
+			}
+		}
+		c := initial.Result.Delivery.Candidates[len(initial.Result.Delivery.Candidates)-1]
+		if c.HumanQA == nil {
+			return WorkflowRun{}, workflowError(4, "local integration requires exact human pass")
+		}
+		_, e := CompleteLocalDelivery(d, root, id, c.TaskResult.ID, c.HumanQA.ID)
+		return deliveryReadback(d, root, id, e)
 	}
 	var state workflowState
 	var candidate DeliveryCandidate

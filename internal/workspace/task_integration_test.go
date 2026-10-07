@@ -266,17 +266,47 @@ func newIntegrationJourneyFixture(t *testing.T) integrationJourneyFixture {
 func newIntegrationJourneyFixtureVersion(t *testing.T, legacy bool) integrationJourneyFixture {
 	return newIntegrationJourneyFixtureHistory(t, legacy, false)
 }
-func newIntegrationJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool) integrationJourneyFixture {
+func newIntegrationJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, delivery ...DeliveryAgreement) integrationJourneyFixture {
 	t.Helper()
-	base := newWorkItemJourneyFixtureHistory(t, legacy, priorEpicWork)
-	taskPath := filepath.Join(base.wrapper, "task")
-	input, _ := ParseTaskWorktreeCreateInput("task", "task", taskPath, base.oid)
-	ready, err := CreateTaskWorktree(base.dependencies, input)
-	if err != nil {
-		t.Fatal(err)
+	parentBranch := "epic"
+	if len(delivery) > 0 {
+		parentBranch = strings.TrimPrefix(delivery[0].TargetRef, "refs/heads/")
 	}
+	base := newWorkItemJourneyFixtureHistory(t, legacy, priorEpicWork, parentBranch)
+	taskPath := filepath.Join(base.wrapper, "task")
 	var basis *TaskSpecBasis
-	if !legacy {
+	var bound *DeliveryAgreement
+	var readyTask *TaskRecord
+	var err error
+	if len(delivery) > 0 {
+		a := delivery[0]
+		r := mustQueueRegistry(t, base)
+		if a.Mode != DeliveryPullRequest {
+			a.TargetWorktree = r.Epics[0].RepoBindings[0].Worktree.Locator
+		}
+		goal := goalFixture(t, base, "task", "goal", a)
+		goalQueueFixture(t, base, []TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}})
+		preview, e := PreviewTaskGoalExecution(base.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), Next: true})
+		if e != nil {
+			t.Fatal(e)
+		}
+		prepared, e := PrepareTaskGoalExecution(base.dependencies, preview.Input, preview.Confirmation, goalHumanFixture())
+		if e != nil {
+			t.Fatal(e)
+		}
+		basis, bound = &prepared.Basis, prepared.Delivery
+		taskPath = prepared.Preparation.Plan.WorktreePath
+		r = mustQueueRegistry(t, base)
+		readyTask, _ = findTask(r, "task")
+	} else {
+		input, _ := ParseTaskWorktreeCreateInput("task", "task", taskPath, base.oid)
+		ready, e := CreateTaskWorktree(base.dependencies, input)
+		if e != nil {
+			t.Fatal(e)
+		}
+		readyTask = &ready.Task
+	}
+	if !legacy && basis == nil {
 		b := fixtureSelectTaskSpec(t, base)
 		basis = &b
 	}
@@ -304,7 +334,7 @@ func newIntegrationJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork boo
 		if legacy {
 			upgradeRegistryToV2(&registry)
 		}
-		registry.TaskResults = append(registry.TaskResults, TaskResultRecord{ID: resultID, PublicationKey: "task/result", DraftSHA256: digest, StoreTransition: "none", TaskID: "task", TaskWorktreeID: ready.Task.Worktree.ID, ProjectID: "ply", RepoID: "ply", GitCommonDir: ready.Task.GitCommonDir, SourceLocator: taskPath, SourceRef: "refs/heads/task", ResultOID: resultOID, ResultTree: resultTree, ActivityID: "act_11111111111111111111111111111111", RunID: "run_11111111111111111111111111111111", HandoffID: "hnd_11111111111111111111111111111111", HandoffLocator: filepath.Join(root, "handoff"), HandoffSHA256: digest, StartReceiptID: "rcp_11111111111111111111111111111111", StartReceiptLocator: filepath.Join(root, "start"), StartReceiptSHA256: digest, TerminalResultID: "res_11111111111111111111111111111111", TerminalResultLocator: filepath.Join(root, "terminal"), TerminalResultSHA256: digest, InspectionSHA256: digest, ReportedOutcome: "complete", TechnicalGate: "passed", VerifierResults: []TaskVerifierResultRecord{}, Review: TaskReviewRecord{Findings: []TaskReviewEntry{}, Fixes: []TaskReviewEntry{}, OpenActionableFindings: []TaskReviewEntry{}}, AcceptedDebt: []TaskAcceptedDebtRecord{}, Artifacts: []TaskArtifactRecord{}, Recorder: TaskRecorderRecord{ActorClaim: "test", ControlSurface: "test", RecordedAtUTC: "2026-09-28T12:00:00Z"}})
+		registry.TaskResults = append(registry.TaskResults, TaskResultRecord{ID: resultID, PublicationKey: "task/result", DraftSHA256: digest, StoreTransition: "none", TaskID: "task", TaskWorktreeID: readyTask.Worktree.ID, ProjectID: "ply", RepoID: "ply", GitCommonDir: readyTask.GitCommonDir, SourceLocator: taskPath, SourceRef: readyTask.Worktree.Ref, ResultOID: resultOID, ResultTree: resultTree, ActivityID: "act_11111111111111111111111111111111", RunID: "run_11111111111111111111111111111111", HandoffID: "hnd_11111111111111111111111111111111", HandoffLocator: filepath.Join(root, "handoff"), HandoffSHA256: digest, StartReceiptID: "rcp_11111111111111111111111111111111", StartReceiptLocator: filepath.Join(root, "start"), StartReceiptSHA256: digest, TerminalResultID: "res_11111111111111111111111111111111", TerminalResultLocator: filepath.Join(root, "terminal"), TerminalResultSHA256: digest, InspectionSHA256: digest, ReportedOutcome: "complete", TechnicalGate: "passed", VerifierResults: []TaskVerifierResultRecord{}, Review: TaskReviewRecord{Findings: []TaskReviewEntry{}, Fixes: []TaskReviewEntry{}, OpenActionableFindings: []TaskReviewEntry{}}, AcceptedDebt: []TaskAcceptedDebtRecord{}, Artifacts: []TaskArtifactRecord{}, Recorder: TaskRecorderRecord{ActorClaim: "test", ControlSurface: "test", RecordedAtUTC: "2026-09-28T12:00:00Z"}})
 		if basis != nil {
 			registry.TaskResultSpecBindings = append(registry.TaskResultSpecBindings, TaskResultSpecBinding{TaskID: "task", TaskResultID: resultID, Basis: *basis, HandoffSHA256: digest, StartReceiptSHA256: digest})
 		}
@@ -321,10 +351,17 @@ func newIntegrationJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork boo
 		ActivityID: "act_11111111111111111111111111111111", RunID: "run_11111111111111111111111111111111", HandoffID: "hnd_11111111111111111111111111111111", HandoffLocator: filepath.Join(root, "handoff"), HandoffSHA256: digest,
 		StartReceiptID: "rcp_11111111111111111111111111111111", StartReceiptLocator: filepath.Join(root, "start"), StartReceiptSHA256: digest,
 		TerminalResultID: "res_11111111111111111111111111111111", TerminalResultLocator: filepath.Join(root, "terminal"), TerminalResultSHA256: digest, InspectionSHA256: digest,
-		ReportedOutcome: "complete", TargetWorktree: taskPath, TargetRef: "refs/heads/task", ResultOID: resultOID, ResultTree: resultTree, GitCommonDir: ready.Task.GitCommonDir,
+		ReportedOutcome: "complete", TargetWorktree: taskPath, TargetRef: readyTask.Worktree.Ref, ResultOID: resultOID, ResultTree: resultTree, GitCommonDir: readyTask.GitCommonDir,
 		SchemaValid: true, DigestValid: true, LifecycleValid: true, BindingValid: true, CapabilityValid: true, PrincipalSessionValid: true, PolicyValid: true, EvidenceCoverageValid: true,
 		VerifierResults: []TaskVerifierResultRecord{}, ExpectedVerifierIDs: []string{}, Review: TaskReviewRecord{Findings: []TaskReviewEntry{}, Fixes: []TaskReviewEntry{}, OpenActionableFindings: []TaskReviewEntry{}}, Artifacts: []TaskArtifactRecord{}, EvidenceGaps: []string{},
 	}}
+	if bound != nil {
+		effects := []string{bound.Mode}
+		if bound.Mode == DeliveryPullRequest {
+			effects = []string{"push", "pull_request"}
+		}
+		evidenceReader.evidence.DeliveryAuthorization = &DeliveryAuthorization{Agreement: *bound, AgreementSHA256: DeliveryAgreementDigest(*bound), RunID: "wfr_fixture", CandidateRunID: evidenceReader.evidence.RunID, RequestSHA256: digest, MandateSHA256: digest, AllowedEffects: effects, PermissionConfirmed: true}
+	}
 	base.dependencies.TaskLifecycleIDs = ids
 	base.dependencies.WorkClock = fixedWorkClock{value: time.Date(2026, 9, 28, 12, 2, 0, 0, time.UTC)}
 	base.dependencies.HandoffEvidence = evidenceReader

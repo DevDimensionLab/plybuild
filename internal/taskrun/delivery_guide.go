@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 // These files describe input, not evidence. Runtime facts and human judgments
@@ -18,6 +20,9 @@ func workflowDeliveryGuide(d Dependencies, s workflowState) error {
 	a := DeliveryAcceptance{
 		Acceptance:         Acceptance{Envelope: deliveryEnv("run-acceptance"), RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, SessionID: s.Result.SessionID, RuntimeClaim: RuntimeClaim{NativeSessionID: ptr(s.Result.Transport.AgentSessionID)}, Sandbox: json.RawMessage("null"), Issues: json.RawMessage("[]")},
 		DeliveryPermission: DeliveryPermissionAcceptance{LaunchContractSHA256: s.Request.Runtime.PermissionBinding.EffectivePolicySHA256, ActualPolicyEvidence: []Evidence{}},
+	}
+	if s.Request.Delivery.Agreement != nil {
+		a.DeliveryPermission.DeliveryAgreementSHA256 = workspace.DeliveryAgreementDigest(*s.Request.Delivery.Agreement)
 	}
 	r := DeliveryReport{Envelope: deliveryEnv("delivery-report"), RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, SessionID: s.Result.SessionID, Phase: "working", Evidence: []FileBinding{}, VerifierResults: []DeliveryVerifierResult{}}
 	review, err := workflowhandoff.DeliveryCandidateReviewTemplate("", "")
@@ -163,5 +168,13 @@ Integration requires actual pass on the exact candidate and unchanged parent.
 Follow any unknown effect through the preserved same attempt. Never replay an
 unknown start, verifier or integration and never replace the control executable.
 `, s.Observed.Target.WorktreeLocator, runtime.PlyExecutable.Path, id, s.Result.Paths.Context, s.Request.Runtime.Provider, s.Result.Transport.AgentSessionID, control, id, context, control, id, context, s.Request.Delivery.AcceptancePath, control, id, context, control, id, context, control, id, context)
+	if a := s.Request.Delivery.Agreement; a != nil {
+		guide += fmt.Sprintf("\n## Frozen delivery agreement\n\nMode: %s. Source: %s. Target: %s. Repository: %s. Local target: %s.\nAgreement SHA256: %s.\n\nFor positive acceptance, delivery_permission.delivery_agreement_sha256 must name\nthis exact agreement. Set delivery_permission.allowed_effects to %s only after\nthe actual runtime policy covers those exact effects and targets. This is an\nactual permission claim; templates do not establish it. No mode or target\nsubstitution is allowed. An altered agreement requires a revised Spec and a new\nauthorized execution.\n", a.Mode, a.SourceRef, a.TargetRef, a.GitHubRepository, a.TargetWorktree, workspace.DeliveryAgreementDigest(*a), workflowJSON(workflowhandoff.DeliveryAllowedEffects(*a)))
+		if a.Mode == workspace.DeliveryPullRequest {
+			guide = strings.ReplaceAll(guide, "## Actual human QA and local integration", "## Actual human QA and PR delivery")
+			guide = strings.ReplaceAll(guide, control+" workflow execute integrate "+id+" --context "+context, "Use the delivery CLI to register, check and execute the exact pull_request agreement after actual candidate-bound human pass.")
+			guide = strings.ReplaceAll(guide, "Integration requires actual pass on the exact candidate and unchanged parent.", "PR delivery requires actual pass on the exact candidate and the agreed remote repository, source and base. It stops before merge and leaves the local parent and Epic base unchanged.")
+		}
+	}
 	return d.writeOnce(filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), []byte(guide))
 }

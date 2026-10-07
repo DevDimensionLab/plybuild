@@ -26,6 +26,7 @@ type TaskGoalRequirement struct {
 }
 
 type TaskGoalContract struct {
+	Delivery       *DeliveryAgreement      `json:"delivery,omitempty"`
 	TaskID         TaskID                  `json:"task_id"`
 	Goal           TaskGoalRef             `json:"goal"`
 	Problem        TaskRevisionRef         `json:"problem"`
@@ -138,6 +139,10 @@ func loadTaskGoal(d Dependencies, root string, r WorkItemRegistry, task TaskID, 
 	m := contentFields(v)
 	out.Problem = *valueRevision(m["problem"])
 	out.Title, out.Objective = contentString(m, "title"), contentString(m, "objective")
+	out.Delivery, e = DeliveryAgreementFromSpec(v)
+	if e != nil {
+		return out, e
+	}
 	if e = contentDecode(m["executor"], &out.Executor); e != nil {
 		return out, e
 	}
@@ -194,6 +199,13 @@ func validateExecutionGoalOrigin(d Dependencies, root string, r WorkItemRegistry
 	}
 	if goalExecutionDigest(p) != contentString(m, "execution_request_sha256") || !contentTypedEqual(goal, p.Goal) || contentString(m, "acceptance_path") != p.AcceptancePath {
 		return queueError("task_goal_binding_conflict", "execution request differs from its exact goal or acceptance path")
+	}
+	if e := validateGoalDeliveryBinding(p); e != nil {
+		return e
+	}
+	agreement, e := DeliveryAgreementFromSpec(spec)
+	if e != nil || !contentTypedEqual(agreement, p.Delivery) {
+		return queueError("task_goal_binding_conflict", "execution delivery differs from its preserved goal and request")
 	}
 	t, _ := findTask(r, task)
 	if t == nil || p.Workspace != root {

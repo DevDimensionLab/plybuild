@@ -121,7 +121,7 @@ func workflowReservations(d Dependencies, root string, target workspace.PlanWork
 			// start still needs the native qualified result below.
 			if len(s.Result.Delivery.Candidates) > 0 {
 				c := s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
-				released = c.TaskResult.ID != "" && c.Integration != nil
+				released = c.TaskResult.ID != "" && (c.Integration != nil || c.PullRequest != nil)
 			}
 		}
 		if s.Result.FinalReturn.TerminalSHA256 != nil {

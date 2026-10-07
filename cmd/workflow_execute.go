@@ -17,7 +17,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	var target queueTargetFlags
 	c := &cobra.Command{
 		Use: "execute", Short: "Deliver the next goal from this Epic with its assigned agent",
-		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
+		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after an actual candidate-bound human pass. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
 		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check",
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
@@ -99,6 +99,21 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 	case taskexecute.Result:
 		if v.Goal != nil {
 			fmt.Fprintf(c.OutOrStdout(), "Task: %s — %s\nReturn worktree: %s\nFeature worktree: %s\n", v.Goal.Goal.TaskID, v.Goal.Goal.Title, v.Goal.Target.ParentLocator, v.Goal.WorktreePath)
+			if a := v.Goal.Delivery; a != nil {
+				fmt.Fprintf(c.OutOrStdout(), "Delivery mode: %s\nSource: %s\nTarget: %s", a.Mode, a.SourceRef, a.TargetRef)
+				if a.TargetWorktree != "" {
+					fmt.Fprintf(c.OutOrStdout(), " at %s", a.TargetWorktree)
+				}
+				if a.GitHubRepository != "" {
+					fmt.Fprintf(c.OutOrStdout(), " in %s via %s", a.GitHubRepository, a.Remote)
+				}
+				fmt.Fprintln(c.OutOrStdout(), "\nDelivery gates: meaningful tests, review, exact candidate human pass, actual runtime authority")
+				if a.Mode == workspace.DeliveryPullRequest {
+					fmt.Fprintln(c.OutOrStdout(), "Delivery effects: publish source branch and open/update PR; stop before merge")
+				} else {
+					fmt.Fprintln(c.OutOrStdout(), "Delivery effects: exact local return, registered base update and current Task queue closure")
+				}
+			}
 		}
 		if v.Runtime != nil {
 			fmt.Fprintf(c.OutOrStdout(), "Implementor: %s · model %s · effort %s\n", v.Runtime.Runtime.Provider, v.Runtime.Runtime.Model, v.Runtime.ReasoningEffort)
@@ -168,7 +183,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 			"report":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --file is a delivery-report@2; failed, not_run and unknown facts remain readable and do not qualify a candidate.",
 			"verify":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --review supplies an actual candidate-bound DeliveryCandidateReview@1 record. Execute the declared acceptance script and preserve real evidence. Missing or failed tests cannot produce a technical pass. Human product judgment remains separate.",
 			"qa":        "Owner callback: use the frozen control executable, exact Task cwd and --context. --evidence preserves the actual user's answer and candidate binding. The answer is a local human attestation, not cryptographic identity proof. Never infer pass from tests, silence or a provider's claim.",
-			"integrate": "Owner callback: use the frozen control executable, exact Task cwd and --context. Requires the exact qualified candidate and recorded human pass, unchanged clean parent, and the original local delivery authority. Preserves integration evidence, advances this preparation and updates the Epic base. Does not push, merge master or delete worktrees.",
+			"integrate": "Owner callback: use the frozen control executable, exact Task cwd and --context. Requires the exact qualified candidate and recorded human pass, unchanged clean parent, and the original local delivery authority. Preserves integration evidence, advances this preparation and updates the registered base. Local main/master return requires an explicit local_branch_integration contract and matching runtime authority. PR mode cannot integrate locally. Does not push or delete worktrees.",
 		}[verb]
 		example := "  ply workflow execute " + verb + " wfr_<digest>"
 		if ownerCallback {

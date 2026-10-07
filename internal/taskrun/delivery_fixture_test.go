@@ -19,12 +19,30 @@ type deliveryFixture struct {
 	AcceptancePath string
 }
 
-func newDeliveryFixture(t *testing.T, provider string) deliveryFixture {
+type deliveryFixtureOptions struct {
+	Agreement *workspace.DeliveryAgreement
+	ParentRef string
+	Root      string
+}
+
+func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtureOptions) deliveryFixture {
 	t.Helper()
-	root, epic, _, oid := prepareServiceWorkspace(t)
-	runGit(t, epic, "branch", "-m", "epic")
+	var option deliveryFixtureOptions
+	if len(options) > 0 {
+		option = options[0]
+	}
+	var roots []string
+	if option.Root != "" {
+		roots = []string{option.Root}
+	}
+	root, epic, _, oid := prepareServiceWorkspace(t, roots...)
+	parent := option.ParentRef
+	if parent == "" {
+		parent = "epic"
+	}
+	runGit(t, epic, "branch", "-m", parent)
 	w := workspace.SystemDependencies()
-	if _, e := workspace.AdoptEpic(w, workspace.EpicAdoptInput{EpicID: "epic", Title: "Delivery fixture", ProjectID: "ply", RepoID: "ply", Worktree: epic, Ref: "refs/heads/epic", ExpectedOID: oid}); e != nil {
+	if _, e := workspace.AdoptEpic(w, workspace.EpicAdoptInput{EpicID: "epic", Title: "Delivery fixture", ProjectID: "ply", RepoID: "ply", Worktree: epic, Ref: "refs/heads/" + parent, ExpectedOID: oid}); e != nil {
 		t.Fatal(e)
 	}
 	if _, e := workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: "task", Title: "Delivery fixture", Description: "A synthetic goal tests delivery semantics; no native provider or human approval.", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); e != nil {
@@ -50,6 +68,17 @@ func newDeliveryFixture(t *testing.T, provider string) deliveryFixture {
 		"requirements": []any{map[string]any{"id": "behavior", "acceptance": "The actual acceptance entrypoint observes the fixture behavior."}},
 		"executor":     map[string]any{"provider": provider, "model": "fixture-model", "effort": "medium"},
 	}
+	if option.Agreement != nil {
+		a := *option.Agreement
+		a.SchemaVersion, a.ProjectID, a.RepoID, a.EpicID = 1, "ply", "ply", "epic"
+		if a.TargetRef == "" {
+			a.TargetRef = "refs/heads/" + parent
+		}
+		if a.Mode != workspace.DeliveryPullRequest {
+			a.TargetWorktree = epic
+		}
+		input["delivery"] = a
+	}
 	publication, e := workspace.RecordTaskSpec(w, workspace.TaskContentInput{TaskID: "task", File: writeAny(t, root, "goal-draft.json", input)})
 	if e != nil {
 		t.Fatal(e)
@@ -74,7 +103,7 @@ func newDeliveryFixture(t *testing.T, provider string) deliveryFixture {
 	}
 	d := SystemDependencies(w)
 	preparation := *p.Preparation.Preparation
-	draft, e := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, "synthetic human", "fixture owner", "fixture/delivery", acceptance, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: true})
+	draft, e := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, "synthetic human", "fixture owner", "fixture/delivery", acceptance, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: true, Agreement: p.Delivery})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -105,7 +134,11 @@ func newDeliveryFixture(t *testing.T, provider string) deliveryFixture {
 		profile = "manual"
 	}
 	runtime := Runtime{Provider: provider, Mode: "interactive", Model: "fixture-model", Executable: Executable{providerPath, hashFileTest(t, providerPath)}, PlyExecutable: Executable{ply, hashFileTest(t, ply)}, PermissionBinding: Permission{AuthorityKind: "launch_contract_pending_runtime_acceptance", ProfileID: profile, EffectivePolicySHA256: hashFileTest(t, policy), Evidence: []Evidence{{Locator: policy, SHA256: hashFileTest(t, policy), Role: "runtime_contract"}}}}
-	req, e := BuildDeliveryWorkflowRequest(DeliveryRequestInput{RequestKey: "fixture/delivery", WorkspaceRoot: root, PreparationID: preparation.ID, PreparationSHA256: digest(preparation), HandoffDraft: draft, Runtime: runtime, HumanAuthority: HumanAuthority{"synthetic human", "human_authorized_herdr", true}, HerdrExecutable: Executable{herdr, hashFileTest(t, herdr)}, HerdrWorkspaceID: "w-fixture", TabLabel: "Delivery fixture", Delivery: DeliveryContract{OwnerClaim: "fixture owner", Goal: FileBinding{doc, hashFileTest(t, doc)}, AcceptancePath: acceptance, AllowSubagents: true, AllowLocalInstall: true, LocalIntegration: "after_human_pass", ReasoningEffort: "medium"}})
+	boundary := "after_human_pass"
+	if p.Delivery != nil && p.Delivery.Mode == workspace.DeliveryPullRequest {
+		boundary = "none"
+	}
+	req, e := BuildDeliveryWorkflowRequest(DeliveryRequestInput{RequestKey: "fixture/delivery", WorkspaceRoot: root, PreparationID: preparation.ID, PreparationSHA256: digest(preparation), HandoffDraft: draft, Runtime: runtime, HumanAuthority: HumanAuthority{"synthetic human", "human_authorized_herdr", true}, HerdrExecutable: Executable{herdr, hashFileTest(t, herdr)}, HerdrWorkspaceID: "w-fixture", TabLabel: "Delivery fixture", Delivery: DeliveryContract{OwnerClaim: "fixture owner", Goal: FileBinding{doc, hashFileTest(t, doc)}, AcceptancePath: acceptance, AllowSubagents: true, AllowLocalInstall: true, LocalIntegration: boundary, ReasoningEffort: "medium", Agreement: p.Delivery}})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -152,7 +185,12 @@ func deliveryTestAcceptance(t *testing.T, f deliveryFixture, o WorkflowRun) Deli
 	}
 	sandbox, _ := Canonical(map[string]any{"read_roots": []string{f.R.WorkspaceRoot}, "write_roots": roots, "temp_root": tmp, "matches_contract": true})
 	a := Acceptance{Envelope: deliveryEnv("run-acceptance"), RunID: o.RunID, RequestSHA256: o.RequestSHA256, SessionID: o.SessionID, RuntimeClaim: RuntimeClaim{RuntimeID: ptr(f.R.Runtime.Provider), ProfileID: ptr(f.R.Runtime.PermissionBinding.ProfileID), EffectivePolicySHA256: ptr(hashFileTest(t, policy)), NativeSessionID: ptr(o.Transport.AgentSessionID)}, Sandbox: sandbox, Acceptance: "started", Issues: json.RawMessage("[]")}
-	return DeliveryAcceptance{a, DeliveryPermissionAcceptance{LaunchContractSHA256: f.R.Runtime.PermissionBinding.EffectivePolicySHA256, PermissionConfirmed: true, ActualPolicyEvidence: []Evidence{{Locator: policy, SHA256: hashFileTest(t, policy), Role: "effective_policy"}}}}
+	permission := DeliveryPermissionAcceptance{LaunchContractSHA256: f.R.Runtime.PermissionBinding.EffectivePolicySHA256, PermissionConfirmed: true, ActualPolicyEvidence: []Evidence{{Locator: policy, SHA256: hashFileTest(t, policy), Role: "effective_policy"}}}
+	if f.R.Delivery.Agreement != nil {
+		permission.DeliveryAgreementSHA256 = workspace.DeliveryAgreementDigest(*f.R.Delivery.Agreement)
+		permission.AllowedEffects = workflowhandoff.DeliveryAllowedEffects(*f.R.Delivery.Agreement)
+	}
+	return DeliveryAcceptance{a, permission}
 }
 
 func deliveryTestAccept(t *testing.T, f deliveryFixture, o WorkflowRun) WorkflowRun {

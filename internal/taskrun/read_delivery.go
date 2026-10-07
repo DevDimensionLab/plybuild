@@ -95,6 +95,9 @@ func inventoryDeliveryAction(s workflowState) InventoryDeliveryAction {
 		out.Kind = "prepare_human_qa"
 	case "human_qa_passed", "integrating":
 		out.Kind = "continue_integration"
+		if s.Request.Delivery.Agreement != nil && s.Request.Delivery.Agreement.Mode == workspace.DeliveryPullRequest {
+			out.Kind = "continue_pull_request"
+		}
 	case "completed":
 		out.Kind = "delivery_completed"
 	default:
@@ -316,7 +319,7 @@ func inventoryDeliveryEventIdentity(raw []byte, s workflowState, kind string) er
 	if err := json.Unmarshal(raw, &event); err != nil {
 		return err
 	}
-	expected := map[string]string{"verification": "PlyDeliveryVerification@1", "human_qa": "PlyDeliveryHumanQA@1", "integration": "PlyDeliveryIntegration@1"}[kind]
+	expected := map[string]string{"verification": "PlyDeliveryVerification@1", "human_qa": "PlyDeliveryHumanQA@1", "integration": "PlyDeliveryIntegration@1", "pull_request": "PlyDeliveryPullRequest@1"}[kind]
 	if expected == "" || event.Kind != expected || event.RunID != s.Result.RunID || event.RequestSHA256 != s.Result.RequestSHA256 {
 		return integrity("event kind, run or request binding differs")
 	}

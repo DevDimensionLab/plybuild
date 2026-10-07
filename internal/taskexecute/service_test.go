@@ -41,7 +41,7 @@ func launcherFixture(t *testing.T) (taskrun.Dependencies, Input, string, string)
 	return launcherFixtureForProvider(t, "claude")
 }
 
-func launcherFixtureForProvider(t *testing.T, provider string) (taskrun.Dependencies, Input, string, string) {
+func launcherFixtureForProvider(t *testing.T, provider string, delivery ...workspace.DeliveryAgreement) (taskrun.Dependencies, Input, string, string) {
 	t.Helper()
 	root := physicalTemp(t)
 	repo, epic := filepath.Join(root, "main"), filepath.Join(root, "epic")
@@ -102,6 +102,17 @@ func launcherFixtureForProvider(t *testing.T, provider string) (taskrun.Dependen
 		"documents": []any{map[string]any{"id": "design", "source": map[string]any{"kind": "file", "locator": doc, "sha256": digestBytes(body), "size_bytes": len(body), "media_type": "text/markdown", "git_provenance": nil}}},
 		"design":    []any{map[string]any{"document_id": "design", "section": nil}}, "requirements": []any{map[string]any{"id": "behavior", "acceptance": "Observe exact provider and worktree binding."}}, "constraints": []string{"No external effects."},
 		"executor": map[string]any{"provider": provider, "model": "fixture-model", "effort": "medium"}, "change_reason": "Isolated automated fixture; no real human product pass.",
+	}
+	if len(delivery) != 0 {
+		a := delivery[0]
+		a.SchemaVersion, a.ProjectID, a.RepoID, a.EpicID = 1, "fixture", "fixture", "epic"
+		if a.TargetRef == "" {
+			a.TargetRef = "refs/heads/epic"
+		}
+		if a.Mode != workspace.DeliveryPullRequest {
+			a.TargetWorktree = epic
+		}
+		draft["delivery"] = a
 	}
 	file := filepath.Join(root, "goal.json")
 	fixtureJSON(t, file, draft)

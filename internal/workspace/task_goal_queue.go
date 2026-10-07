@@ -99,6 +99,7 @@ func queueGoalEvaluation(d Dependencies, root string, r WorkItemRegistry, entry 
 	row.Title = goal.Title
 	row.SpecID, row.SpecRevision = &goal.Goal.SpecID, &goal.Goal.Spec.Revision
 	row.Executor = &goal.Executor
+	row.Delivery = goal.Delivery
 	if !contentTypedEqual(taskContentState(r, task.ID).ProblemHead, &goal.Problem) {
 		row.Reasons = queueReasons("task_goal_problem_changed", "queued goal no longer refers to the current problem")
 		return row

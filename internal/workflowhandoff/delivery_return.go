@@ -103,7 +103,10 @@ func ValidateDeliveryHumanAttestation(raw []byte, taskID string, result workspac
 	return attestation, nil
 }
 
-type DeliveryOwnerAuthority struct{ RunID, RequestSHA256, ActorClaim, PreparationID string }
+type DeliveryOwnerAuthority struct {
+	RunID, RequestSHA256, ActorClaim, PreparationID string
+	Authorization                                   *workspace.DeliveryAuthorization
+}
 
 type DeliveryIntegrationResult struct {
 	Integration workspace.TaskIntegrationResult
@@ -126,6 +129,7 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 		return out, e
 	}
 	in.DeliveryOwner = &workspace.DeliveryIntegrationOwner{RunID: owner.RunID, RequestSHA256: owner.RequestSHA256, ActorClaim: owner.ActorClaim, PreparationID: owner.PreparationID}
+	in.DeliveryAuthorization = owner.Authorization
 	preview, e := workspace.CheckTaskIntegration(wd, in)
 	out.Integration = preview
 	if e != nil {
@@ -173,18 +177,9 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 		return out, fmt.Errorf("integration is not observed complete: %s", out.Integration.Readback.Classification)
 	}
 	qt := workspace.QueueTargetInput{ProjectID: result.ProjectID, RepoID: result.RepoID, EpicID: out.Integration.Readback.EpicID}
-	out.Queue, e = workspace.ListTaskQueue(wd, qt, false)
+	out.Queue, e = CloseDeliveryTaskQueue(wd, qt, workspace.TaskID(taskID), owner.PreparationID, "Exact candidate integrated after recorded human pass.")
 	if e != nil {
 		return out, e
-	}
-	if out.Queue.Current != nil {
-		if out.Queue.Current.PreparationID != owner.PreparationID || string(out.Queue.Current.TaskID) != taskID {
-			return out, fmt.Errorf("another preparation is current; preserve it and inspect before base update")
-		}
-		out.Queue, e = workspace.CloseTaskQueue(wd, qt, owner.PreparationID, out.Queue.Revision, "Exact candidate integrated after recorded human pass.", "advance")
-		if e != nil {
-			return out, e
-		}
 	}
 	baseInput := workspace.EpicBaseInput{EpicID: qt.EpicID, RepoID: qt.RepoID}
 	out.Base, e = workspace.UpdateEpicBase(wd, baseInput)
@@ -207,4 +202,27 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 	}
 	out.Completed = true
 	return out, nil
+}
+
+// CloseDeliveryTaskQueue advances only its own preparation. On recovery, a
+// prior native advance proves closure even if an unrelated Task is now current.
+// An empty queue alone is never evidence that this Task was delivered.
+func CloseDeliveryTaskQueue(d workspace.Dependencies, target workspace.QueueTargetInput, taskID workspace.TaskID, preparationID, reason string) (workspace.WorkspaceTaskQueueReadback, error) {
+	out, err := workspace.ListTaskQueue(d, target, false)
+	if err != nil {
+		return out, err
+	}
+	if out.Current != nil && out.Current.PreparationID == preparationID && out.Current.TaskID == taskID {
+		return workspace.CloseTaskQueue(d, target, preparationID, out.Revision, reason, "advance")
+	}
+	registry, err := d.WorkItems.Snapshot(out.Workspace.Root)
+	if err != nil {
+		return out, err
+	}
+	for _, event := range registry.TaskQueueEvents {
+		if event.QueueID == out.QueueID && event.Kind == "advance" && event.Request["preparation_id"] == preparationID {
+			return out, nil
+		}
+	}
+	return out, fmt.Errorf("the exact delivery preparation is neither current nor observed advanced; preserve unrelated queue work and inspect its native history")
 }

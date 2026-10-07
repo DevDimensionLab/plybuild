@@ -149,6 +149,12 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 		"budget":          deliveryBudget(1), "procedure": []canonicaljson.Value{deliveryObject(map[string]any{"id": "verify-candidate", "instruction": "Control the preserved acceptance invocation executed under the already accepted delivery-owner handoff, explicit review and task-requirements artifact. This control starts now; prior command execution is not a new effect.", "required_before": []string{}})},
 		"delivery_binding": map[string]any{"mode": "candidate", "human_actor": objectString(ob, "human_actor"), "owner_claim": objectString(ob, "owner_claim"), "parent_handoff_locator": parent.Handoff.Locator, "parent_handoff_sha256": parent.Handoff.SHA256, "candidate_key": in.CandidateKey},
 	}
+	if a, err := deliveryAgreement(parent.Handoff.Value); err != nil {
+		return out, err
+	} else if a != nil {
+		b := fields["delivery_binding"].(map[string]any)
+		b["agreement"], b["workflow_run_id"], b["request_sha256"] = a, in.RunID, in.RequestSHA256
+	}
 	for k, v := range fields {
 		draft = append(draft, canonicaljson.Member{Name: k, Value: bridgeValue(v)})
 	}

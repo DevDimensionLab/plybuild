@@ -177,7 +177,7 @@ func currentPreparation(d Dependencies, r WorkItemRegistry, p TaskPreparation) Q
 			reasons = queueReasons("task_preparation_unknown", "preserved effect requires explicit inspection and recovery")
 		}
 	}
-	return QueueCurrent{p.ID, p.Plan.TaskID, state, "current", p.Plan.WorktreePath, reasons}
+	return QueueCurrent{PreparationID: p.ID, TaskID: p.Plan.TaskID, State: state, Disposition: "current", WorktreePath: p.Plan.WorktreePath, Reasons: reasons}
 }
 func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput, ready bool) (WorkspaceTaskQueueReadback, error) {
 	var out WorkspaceTaskQueueReadback
@@ -201,6 +201,14 @@ func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, project
 	if q.Current != nil {
 		p := findPreparation(r, *q.Current)
 		c := currentPreparation(d, r, *p)
+		spec, err := readRegisteredTaskManifest(d.TaskContent, root, r, p.Plan.Spec.ManifestSHA256)
+		if err != nil {
+			return out, err
+		}
+		c.Delivery, err = DeliveryAgreementFromSpec(spec)
+		if err != nil {
+			return out, err
+		}
 		out.Current = &c
 	}
 	for i, v := range q.Pending {
@@ -504,9 +512,15 @@ func TaskQueueText(r WorkspaceTaskQueueReadback) string {
 	s := fmt.Sprintf("Task queue %s, revision %d.\nTarget: %s / %s / %s\nWorkplace: %s\n", r.QueueID, r.Revision, r.Target.ProjectID, r.Target.RepoID, r.Target.EpicID, r.Target.ParentLocator)
 	if r.Current != nil {
 		s += fmt.Sprintf("Current: %s (%s), %s, %s\n", r.Current.TaskID, r.Current.State, r.Current.PreparationID, r.Current.WorktreePath)
+		if r.Current.Delivery != nil {
+			s += fmt.Sprintf("Delivery: %s to %s\n", r.Current.Delivery.Mode, r.Current.Delivery.TargetRef)
+		}
 	}
 	for _, p := range r.Pending {
 		s += fmt.Sprintf("%d. %s — %s [%s]\n", p.Rank, p.TaskID, p.Title, p.State)
+		if p.Delivery != nil {
+			s += fmt.Sprintf("   Delivery: %s to %s\n", p.Delivery.Mode, p.Delivery.TargetRef)
+		}
 		for _, reason := range p.Reasons {
 			s += "   " + reason.Code + ": " + reason.Message + "\n"
 		}

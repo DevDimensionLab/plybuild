@@ -64,6 +64,12 @@ func (reader *workspaceTaskEvidenceReader) ReadTaskEvidence(request workspace.Ta
 	} else {
 		result.TaskRequirementsValid = true
 	}
+	if reader.dependencies.DeliveryAuthorization != nil {
+		result.DeliveryAuthorization, err = reader.dependencies.DeliveryAuthorization(request)
+		if err != nil {
+			return workspace.TaskHandoffEvidence{}, err
+		}
+	}
 	return result, nil
 }
 

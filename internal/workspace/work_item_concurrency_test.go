@@ -91,7 +91,7 @@ func newWorkItemJourneyFixtureVersion(t *testing.T, legacy bool) workItemJourney
 	return newWorkItemJourneyFixtureHistory(t, legacy, false)
 }
 
-func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool) workItemJourneyFixture {
+func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, parentBranch ...string) workItemJourneyFixture {
 	t.Helper()
 	root := createProjectWorkspace(t)
 	wrapper := filepath.Join(root, "ply")
@@ -111,7 +111,18 @@ func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool) 
 	oid := runLocalGit(t, repository, "rev-parse", "HEAD")
 	common := physicalPath(t, filepath.Join(repository, ".git"))
 	epicPath := filepath.Join(wrapper, "epic")
-	runLocalGit(t, repository, "worktree", "add", "-b", "epic", epicPath, oid)
+	branch := "epic"
+	if len(parentBranch) > 0 {
+		branch = parentBranch[0]
+	}
+	if branch == "main" || branch == "master" {
+		epicPath = repository
+		if branch == "master" {
+			runLocalGit(t, repository, "branch", "-m", "master")
+		}
+	} else {
+		runLocalGit(t, repository, "worktree", "add", "-b", branch, epicPath, oid)
+	}
 	epicPath = physicalPath(t, epicPath)
 	if priorEpicWork {
 		if err := os.WriteFile(filepath.Join(epicPath, "prior.txt"), []byte("prior Epic work\n"), 0o644); err != nil {
@@ -131,7 +142,7 @@ func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool) 
 	dependencies.Files = projectCwdFileSystem{FileSystem: dependencies.Files, cwd: root}
 	dependencies.ProjectLocks = projects
 	dependencies.Projects = projects
-	adopt, _ := ParseEpicAdoptInput("epic", "Epic", "ply", "ply", epicPath, "refs/heads/epic", oid)
+	adopt, _ := ParseEpicAdoptInput("epic", "Epic", "ply", "ply", epicPath, "refs/heads/"+branch, oid)
 	if _, err := AdoptEpic(dependencies, adopt); err != nil {
 		t.Fatal(err)
 	}

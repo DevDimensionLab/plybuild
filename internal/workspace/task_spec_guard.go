@@ -605,12 +605,13 @@ func taskResultSpecRelevance(d Dependencies, root string, projects ProjectSnapsh
 }
 func validateStoredTaskSpecGuard(r WorkItemRegistry, p WorkspaceTaskIntegrationPlan) error {
 	if p.SchemaVersion == 1 {
-		if p.Kind != "WorkspaceTaskIntegrationPlan@1" || p.TaskSpecGuard != nil {
+		if p.Kind != "WorkspaceTaskIntegrationPlan@1" || p.TaskSpecGuard != nil || p.DeliveryAuthorization != nil {
 			return fmt.Errorf("invalid legacy integration plan")
 		}
 		return nil
 	}
-	if p.SchemaVersion != 2 || p.Kind != "WorkspaceTaskIntegrationPlan@2" || p.TaskSpecGuard == nil {
+	validVersion := p.SchemaVersion == 2 && p.Kind == "WorkspaceTaskIntegrationPlan@2" && p.DeliveryAuthorization == nil || p.SchemaVersion == 3 && p.Kind == "WorkspaceTaskIntegrationPlan@3" && p.DeliveryAuthorization != nil
+	if !validVersion || p.TaskSpecGuard == nil {
 		return fmt.Errorf("unsupported integration plan version")
 	}
 	g := p.TaskSpecGuard

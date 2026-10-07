@@ -354,6 +354,11 @@ func decodeTaskContent(raw []byte, operation string, published, internal bool) (
 			schema = taskExecutionSpecSchema(published)
 		}
 	}
+	if operation == "spec_record" {
+		if _, present := contentFields(v)["delivery"]; present {
+			schema["delivery"] = deliveryAgreementRule
+		}
+	}
 	if err = contentExact(schema)(v); err == nil {
 		if isTaskGoalSpec(v) {
 			err = validateTaskGoalSemantics(contentFields(v))

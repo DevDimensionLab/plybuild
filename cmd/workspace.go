@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
+	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -52,7 +52,6 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 }
 
 func init() {
-	dependencies := workspace.SystemDependencies()
-	dependencies.HandoffEvidence = workflowhandoff.NewTaskHandoffEvidenceReader(workflowhandoff.SystemDependencies())
+	dependencies := taskrun.SystemDependencies(workspace.SystemDependencies()).Workspace
 	RootCmd.AddCommand(newWorkspaceCommand(dependencies))
 }

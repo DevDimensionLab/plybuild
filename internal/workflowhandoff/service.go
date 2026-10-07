@@ -891,6 +891,14 @@ func validateSandboxContract(files FileSystem, snapshot Snapshot, sandbox canoni
 			break
 		}
 	}
+	if agreement, err := deliveryAgreement(snapshot.Handoff.Value); err != nil {
+		return err
+	} else if agreement != nil {
+		writes = append(writes, snapshot.Handoff.Target.GitCommonDir, filepath.Join(snapshot.Handoff.Workspace.Root, ".ply"))
+		if agreement.Mode != workspace.DeliveryPullRequest {
+			writes = append(writes, agreement.TargetWorktree)
+		}
+	}
 	sort.Strings(writes)
 	writes = uniqueStrings(writes)
 	if taskSpecVersion(snapshot.Handoff.Value) == 3 {

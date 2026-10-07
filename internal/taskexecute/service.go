@@ -265,7 +265,7 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	}
 	preparation := *prepared.Preparation.Preparation
 	key := "execute/" + strings.TrimPrefix(intent.Goal.Confirmation, "sha256:")
-	draft, err := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, intent.Human.ActorClaim, intent.Runtime.Runtime.Provider+" delivery owner", key, plan.AcceptancePath, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: true})
+	draft, err := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, intent.Human.ActorClaim, intent.Runtime.Runtime.Provider+" delivery owner", key, plan.AcceptancePath, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: true, Agreement: prepared.Delivery})
 	if err != nil {
 		return out, err
 	}
@@ -284,12 +284,16 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		return out, err
 	}
 	r := intent.Runtime
+	boundary := "after_human_pass"
+	if prepared.Delivery != nil && prepared.Delivery.Mode == workspace.DeliveryPullRequest {
+		boundary = "none"
+	}
 	request, err := taskrun.BuildDeliveryWorkflowRequest(taskrun.DeliveryRequestInput{
 		RequestKey: key, WorkspaceRoot: plan.Workspace, PreparationID: preparation.ID, PreparationSHA256: digestBytes(pbytes), HandoffDraft: draft, Runtime: r.Runtime,
 		HumanAuthority:  taskrun.HumanAuthority{ActorClaim: intent.Human.ActorClaim, StartSurface: "human_authorized_herdr", Authorized: true},
 		HerdrExecutable: r.Herdr, HerdrWorkspaceID: r.HerdrWorkspace, TabLabel: tabLabel(plan.Goal.Title),
 		ClaudeProjectTrust: intent.ClaudeProjectTrust,
-		Delivery:           taskrun.DeliveryContract{OwnerClaim: r.Runtime.Provider + " delivery owner", Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: true, AllowLocalInstall: true, LocalIntegration: "after_human_pass", NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort},
+		Delivery:           taskrun.DeliveryContract{OwnerClaim: r.Runtime.Provider + " delivery owner", Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: true, AllowLocalInstall: true, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
 	})
 	if err != nil {
 		return out, err

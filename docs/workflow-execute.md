@@ -53,6 +53,7 @@ snapshot fields. Its product fields are:
 | `requirements` | Sorted unique `{id, acceptance}` entries describing observable results |
 | `constraints` | Sorted unique outcome and effect boundaries |
 | `executor` | Explicit nullable `provider`, `model`, `effort` choices |
+| `delivery` (optional) | Versioned PR, local Epic, or explicit local branch agreement; see [Delivery](workflow-delivery.md) |
 | `change_reason` | Why this goal revision was published |
 
 A goal has at least one design reference and requirement. It has no
@@ -80,6 +81,12 @@ readiness assessment means the start contract is complete; it does not claim
 that implementation, tests or product QA have already happened. The implementor
 writes meaningful tests and the preserved `acceptance.sh` script. A missing script
 cannot pass verification.
+
+New structured delivery agreements travel through the goal, queue, preview and
+frozen execution inputs. They bind the actual Task source, target and permitted
+effects. `ply workflow delivery` registers and performs the resulting qualified
+candidate after its exact human pass. Historical goals without this field keep
+their original local return contract.
 
 ## Runtime and permissions
 

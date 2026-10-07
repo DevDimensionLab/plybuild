@@ -772,6 +772,10 @@ func validateHandoffAuthority(value canonicaljson.Value, procedureIDs, verifierI
 			if _, err := exactObject(scope, "Task worktree scope", "kind"); err != nil {
 				return nil, err
 			}
+		} else if delivery && objectString(scope, "kind") == "delivery" {
+			if err := validateDeliveryEffectScope(typeName, scope); err != nil {
+				return nil, err
+			}
 		} else if err := validateEffectScope(typeName, ef["scope"], procedureIDs, verifierIDs); err != nil {
 			return nil, err
 		}

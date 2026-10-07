@@ -39,7 +39,12 @@ func (s *TaskSpecSession) ValidateDeliveryCandidateTarget(locator, ref, common s
 	if e != nil {
 		return out, e
 	}
-	if contentString(contentFields(out.Spec), "contract_kind") != "execution" || !contentTypedEqual(out.Basis, basis) || out.SelectionFreshness != "current" || out.ContentIntegrity != "valid" || out.TargetFreshness != "fresh" {
+	agreement, e := DeliveryAgreementFromSpec(out.Spec)
+	if e != nil {
+		return out, e
+	}
+	pr := agreement != nil && agreement.Mode == DeliveryPullRequest
+	if contentString(contentFields(out.Spec), "contract_kind") != "execution" || !contentTypedEqual(out.Basis, basis) || out.SelectionFreshness != "current" || out.ContentIntegrity != "valid" || (!pr && out.TargetFreshness != "fresh") {
 		return out, contentError("task_spec_selection_stale", "candidate requires the current unchanged delivery contract", nil)
 	}
 	bm := contentFields(contentFields(out.Spec)["implementation_basis"])
@@ -48,16 +53,23 @@ func (s *TaskSpecSession) ValidateDeliveryCandidateTarget(locator, ref, common s
 	}
 	epic, binding := queueTargetBinding(s.Registry, QueueTarget{EpicID: task.ParentEpicID, RepoID: task.RepoID})
 	base := currentEpicBase(s.Registry, epic, binding)
-	if base.OID != contentString(bm, "parent_oid") || base.Tree != contentString(bm, "parent_tree") || pendingBaseUpdate(s.Registry, task.ParentEpicID, task.RepoID) {
+	if !pr && (base.OID != contentString(bm, "parent_oid") || base.Tree != contentString(bm, "parent_tree") || pendingBaseUpdate(s.Registry, task.ParentEpicID, task.RepoID)) {
 		return out, contentError("epic_base_changed", "delivery parent changed before candidate control", nil)
 	}
 	target := QueueTarget{ProjectID: task.ProjectID, RepoID: task.RepoID, EpicID: task.ParentEpicID, GitCommonDir: common, ParentWorktreeID: binding.Worktree.ID, ParentLocator: binding.Worktree.Locator, ParentRef: binding.Worktree.Ref}
-	parent, e := queueParentObservation(s.Dependencies, target)
-	if e != nil {
-		return out, e
+	if agreement != nil {
+		if _, e = BindDeliveryAgreement(*agreement, target, ref); e != nil {
+			return out, e
+		}
 	}
-	if parent.OID != base.OID || parent.Tree != base.Tree {
-		return out, contentError("task_spec_basis_stale", "live parent differs from the frozen execution parent", nil)
+	if !pr {
+		parent, e := queueParentObservation(s.Dependencies, target)
+		if e != nil {
+			return out, e
+		}
+		if parent.OID != base.OID || parent.Tree != base.Tree {
+			return out, contentError("task_spec_basis_stale", "live parent differs from the frozen execution parent", nil)
+		}
 	}
 	candidate, e := s.Dependencies.WorkGit.ObserveWorktree(locator)
 	if e != nil {

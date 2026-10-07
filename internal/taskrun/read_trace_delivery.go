@@ -65,6 +65,26 @@ func (r *traceReader) delivery(s workflowState) {
 			r.deliveryQA(s, e, raw, candidates)
 		case "integration":
 			r.deliveryIntegration(s, e, raw, candidates)
+		case "pull_request":
+			var value struct {
+				Candidate     string                         `json:"candidate"`
+				Receipt       FileBinding                    `json:"receipt"`
+				Observed      PullRequestDeliveryObservation `json:"observed"`
+				RecordedAtUTC string                         `json:"recorded_at_utc"`
+			}
+			if err := json.Unmarshal(raw, &value); err != nil {
+				r.problem("trace_pr_unbound", e.ID+": invalid PR observation")
+				continue
+			}
+			c, found := candidates[value.Candidate]
+			if !found || c.PullRequest == nil || c.PullRequest.SHA256 != e.Source.SHA256 || value.Observed.HeadOID != c.OID {
+				r.problem("trace_pr_unbound", e.ID+": PR observation does not bind the qualified candidate")
+				continue
+			}
+			e.Kind, e.Role, e.ActorClaim, e.EvidenceClass = "delivery_pull_request", "ply", "ply PR delivery", "remote_effect_observation"
+			e.Candidate, e.Outcome, e.Data = traceCandidate(c), ptr("delivered"), traceJSON(value)
+			e.RegisteredAtUTC = r.time(value.RecordedAtUTC, e.ID)
+			r.run.Entries = append(r.run.Entries, e)
 		}
 	}
 	if !equal(previous, s.Result.Delivery.LastEventSHA256) {
