@@ -13,7 +13,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
-const workflowStandin = `import json, sys, time, subprocess
+const workflowStandin = `import json, sys, time, subprocess, os
 from pathlib import Path
 root = Path(__file__).parent
 path = root / "herdr-model.json"
@@ -93,7 +93,11 @@ elif cmd == ["tab", "rename"]:
     result = {"ok": True}
 else:
     raise SystemExit("Unexpected stand-in command: " + repr(args))
-path.write_text(json.dumps(model))
+# Polling deadlines may stop this process during publication. Keep the
+# previous complete model until its replacement has been fully written.
+pending = path.with_name(path.name + "." + str(os.getpid()) + ".tmp")
+pending.write_text(json.dumps(model))
+pending.replace(path)
 if bootstrap_mode == "lost_reply" and cmd == ["agent", "prompt"] and args[3] == model["bootstrap_expected_prompt"]:
     raise SystemExit(7)
 failure = model.get("failure", {})
