@@ -306,3 +306,27 @@ func (s *Service) ReleaseExited(cwd, id string) (taskrun.WorkflowRun, error) {
 	}
 	return taskrun.ReleaseExitedDeliveryOwnership(d, root, r.Manifest.WorkflowRunID, r.Manifest.TaskResult.ID)
 }
+
+func (s *Service) PreviewOwnerRecovery(cwd, id string) (taskrun.HumanOwnerRecoveryPreview, error) {
+	d, root, err := s.context(cwd)
+	if err != nil {
+		return taskrun.HumanOwnerRecoveryPreview{}, err
+	}
+	r, _, err := delivery.NewService(d, delivery.Options{}).ValidateForIntegration(cwd, id)
+	if err != nil {
+		return taskrun.HumanOwnerRecoveryPreview{}, err
+	}
+	return taskrun.PreviewHumanOwnerRecovery(d, root, r.Manifest.WorkflowRunID, r.Manifest.TaskResult.ID)
+}
+
+func (s *Service) RecoverOwner(cwd, id string, in taskrun.HumanOwnerRecoveryAnswer) (taskrun.WorkflowRun, error) {
+	d, root, err := s.context(cwd)
+	if err != nil {
+		return taskrun.WorkflowRun{}, err
+	}
+	r, _, err := delivery.NewService(d, delivery.Options{}).ValidateForIntegration(cwd, id)
+	if err != nil {
+		return taskrun.WorkflowRun{}, err
+	}
+	return taskrun.RecoverHumanDeliveryOwnership(d, root, r.Manifest.WorkflowRunID, r.Manifest.TaskResult.ID, in)
+}

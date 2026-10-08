@@ -84,6 +84,9 @@ func (r *traceReader) delivery(s workflowState) {
 			if release.Origin == "observed_provider_exit" {
 				e.Role, e.ActorClaim = "ply", "ply native provider observation"
 			}
+			if release.Origin == "human_absent_owner_recovery" && release.HumanRecovery != nil {
+				e.Role, e.ActorClaim = "human", release.HumanRecovery.Answer.Actor
+			}
 			e.Candidate, e.Data, e.RegisteredAtUTC = traceCandidate(*candidate), traceJSON(release), r.time(release.RecordedAtUTC, e.ID)
 			r.run.Entries = append(r.run.Entries, e)
 		case "human_integration":

@@ -134,7 +134,7 @@ func deliveryEvidenceAuthorization(d Dependencies, request workspace.TaskHandoff
 	// delivery authority after correction, fail or a replacement candidate.
 	current := false
 	if ds := s.Result.Delivery; ds != nil {
-		if len(ds.Candidates) > 0 && (ds.Phase == "awaiting_human_qa" || ds.Phase == "human_qa_passed" || ds.Phase == "integrating" || ds.Phase == "completed") {
+		if deliveryCandidateQualified(ds) {
 			c := ds.Candidates[len(ds.Candidates)-1]
 			current = c.Handoff.Locator == request.HandoffLocator && c.Handoff.SHA256 == request.HandoffSHA256 && c.OID == h.Target.OID && c.Tree == h.Target.Tree
 		}
@@ -177,7 +177,7 @@ func ValidateDeliveryAuthority(d Dependencies, root, id string, result workspace
 	if !equal(c.TaskResult, result) || c.OID != result.ResultOID || c.Tree != result.ResultTree || c.TaskResult.SourceRef != agreement.SourceRef || s.Observed.Target.Ref != agreement.SourceRef {
 		return out, workflowError(4, "delivery does not name the exact current qualified TaskResult and source")
 	}
-	if s.Result.Delivery.Phase != "awaiting_human_qa" && s.Result.Delivery.Phase != "human_qa_passed" && s.Result.Delivery.Phase != "integrating" && s.Result.Delivery.Phase != "completed" {
+	if !deliveryCandidateQualified(s.Result.Delivery) {
 		return out, workflowError(4, "delivery candidate has not reached technical qualification")
 	}
 	if _, err = workflowBound(c.Verification, 4<<20); err != nil {
@@ -225,6 +225,65 @@ func ValidateDeliveryAuthority(d Dependencies, root, id string, result workspace
 	}
 	out = DeliveryAuthority{RunID: id, RequestSHA256: s.Result.RequestSHA256, MandateSHA256: s.Result.Handoff.SHA256, PreparationID: s.Request.PreparationID, OwnerClaim: s.Request.Delivery.OwnerClaim, SourceRef: agreement.SourceRef, ExpectedParentOID: s.Observed.Epic.OID, Agreement: agreement, Authorization: a, Candidate: c}
 	return out, nil
+}
+
+// A needs_input report changes conversational progress, not technical evidence.
+// Read old controllers' preserved reports as well as new ones; never rewrite
+// frozen state to recover qualification. A correction, failed verification or
+// other intervening transition still requires qualification again.
+func deliveryCandidateQualified(ds *DeliveryState) bool {
+	if ds == nil || len(ds.Candidates) == 0 {
+		return false
+	}
+	switch ds.Phase {
+	case "awaiting_human_qa", "human_qa_passed", "integrating", "completed":
+		return true
+	case "needs_input":
+		c := ds.Candidates[len(ds.Candidates)-1]
+		if a := ds.Attempt; a != nil && a.State == "attempted" && (a.Kind != "human_integration" || a.CandidateOID != c.OID || a.CandidateTree != c.Tree) {
+			return false
+		}
+		seenQA := false
+		for i := len(ds.Events) - 1; i >= 0; i-- {
+			event := ds.Events[i]
+			switch event.Kind {
+			case "report":
+				raw, err := workflowBound(event.Binding, 1<<20)
+				if err != nil {
+					return false
+				}
+				var report DeliveryReport
+				if decode(raw, 1<<20, &report) != nil || validateDeliveryReport(report) != nil || report.Phase != "needs_input" {
+					return false
+				}
+				for _, result := range report.VerifierResults {
+					if result.Outcome == "failed" || result.Outcome == "unknown" {
+						return false
+					}
+				}
+			case "ownership_release":
+				// Release revokes an owner; it does not qualify a candidate.
+			case "human_qa":
+				raw, err := workflowBound(event.Binding, 1<<20)
+				var qa struct {
+					Candidate string                      `json:"candidate"`
+					Record    workspace.TaskHumanQARecord `json:"record"`
+				}
+				if err != nil || json.Unmarshal(raw, &qa) != nil || qa.Candidate != c.Key || qa.Record.TaskResultID != c.TaskResult.ID || qa.Record.ResultOID != c.OID || qa.Record.ResultTree != c.Tree {
+					return false
+				}
+				if !seenQA && qa.Record.Outcome != "pass" && qa.Record.Outcome != "blocked" {
+					return false
+				}
+				seenQA = true
+			case "verification":
+				return event.ID == c.Key && event.Binding.SHA256 == c.Verification.SHA256
+			default:
+				return false
+			}
+		}
+	}
+	return false
 }
 
 func validateDeliveryTechnicalEvidence(result workspace.TaskResultRecord, evidence workspace.TaskHandoffEvidence, authority *workspace.DeliveryAuthorization) error {

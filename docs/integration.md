@@ -44,6 +44,32 @@ the owner's private context can use `ply integration release --delivery dlv_<id>
 only when Ply positively observes that exact native provider has ended. An idle
 session or unknown process state does not release ownership.
 
+If the bound Herdr pane was closed, use an explicit human recovery from the
+return checkout. First stop any resumed agent and other writers and leave the
+Task worktree in all remaining terminals:
+
+```shell
+ply integration release --delivery dlv_<id> --recover --check
+ply integration release --delivery dlv_<id> --recover --actor 'Your name'
+```
+
+Recovery verifies that the original pane and terminal are absent and checks
+complete Herdr pane and agent inventories for the bound session and Task source.
+It refuses known writers, including idle agents, and incomplete observations.
+At the prompt, type `released` to attest that all writers are stopped and revoke
+the old owner's authority. This is a recorded human decision, not proof that an
+unobservable process exited. The candidate and native history are rechecked after
+input. Recovery preserves the old binding and history, blocks further owner
+callbacks, and records neither product QA nor integration. Then use ordinary
+`ply integration --delivery dlv_<id> --check` and its human confirmation flow.
+Repeated recovery of the same already released candidate creates no new event.
+
+A preserved QA question (`needs_input`) does not erase an exact candidate's
+technical qualification. Its original verification and subsequent reports are
+checked without rewriting the old controller's state. A correction, failed or
+unknown verifier result, changed source, or replacement verification still
+prevents reuse of that qualification.
+
 When handing over from an older immutable controller, finish its verification,
 report and required QA callbacks first. New release revokes that controller. A
 later `fail` or `blocked` before integration keeps immutable answer/QA history and
