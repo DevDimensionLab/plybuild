@@ -450,7 +450,8 @@ func workflowInventoryReturn(d Dependencies, s workflowState, row *InventoryRun)
 			return integrity("delivery completion is unbound")
 		}
 		candidate := s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
-		if a := s.Request.Delivery.Agreement; a != nil && a.Mode == workspace.DeliveryPullRequest {
+		if contract := s.Request.Delivery; contract != nil && contract.Agreement != nil && contract.Agreement.Mode == workspace.DeliveryPullRequest {
+			a := contract.Agreement
 			if candidate.PullRequest == nil || candidate.PullRequest.SHA256 != *row.Return.ReportSHA256 || candidate.Integration != nil {
 				return integrity("delivery PR completion differs from its candidate")
 			}

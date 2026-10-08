@@ -3,6 +3,7 @@ package taskrun
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -195,20 +196,74 @@ func TestInventoryDeliveryCompletionRequiresBoundSuccessfulIntegration(t *testin
 		p := writeAny(t, root, "integration.json", map[string]any{"kind": "PlyDeliveryIntegration@1", "run_id": id, "request_sha256": request, "candidate": "candidate", "result": map[string]any{"Completed": completed}})
 		return FileBinding{p, hashFileTest(t, p)}
 	}
-	check := func(completed bool) error {
+	check := func(contract *DeliveryContract, completed bool) error {
 		binding := makeBinding(completed)
-		s := workflowState{Result: WorkflowRun{RunID: id, RequestSHA256: request, Delivery: &DeliveryState{Phase: "completed", Candidates: []DeliveryCandidate{{Key: "candidate", Integration: &binding}}, Events: []DeliveryEventRecord{{Kind: "integration", Binding: binding}}}}}
+		s := workflowState{Request: WorkflowRequest{Delivery: contract}, Result: WorkflowRun{RunID: id, RequestSHA256: request, Delivery: &DeliveryState{Phase: "completed", Candidates: []DeliveryCandidate{{Key: "candidate", Integration: &binding}}, Events: []DeliveryEventRecord{{Kind: "integration", Binding: binding}}}}}
 		row := InventoryRun{RunID: id, State: "completed", Return: &InventoryReturn{ReportSHA256: &binding.SHA256}}
 		return workflowInventoryReturn(Dependencies{}, s, &row)
 	}
-	if err := check(true); err != nil {
-		t.Fatal(err)
-	}
-	if err := check(false); err == nil {
-		t.Fatal("unsuccessful integration became completed")
+	for _, tc := range []struct {
+		name     string
+		contract *DeliveryContract
+	}{
+		{"missing_contract", nil},
+		{"missing_agreement", &DeliveryContract{}},
+		{"explicit_local_agreement", &DeliveryContract{Agreement: &workspace.DeliveryAgreement{SchemaVersion: 1, Mode: workspace.DeliveryLocalBranch}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := check(tc.contract, true); err != nil {
+				t.Fatal(err)
+			}
+			if err := check(tc.contract, false); err == nil {
+				t.Fatal("unsuccessful integration became completed")
+			}
+		})
 	}
 	row := InventoryRun{State: "completed"}
 	if err := workflowInventoryReturn(Dependencies{}, workflowState{}, &row); err == nil {
 		t.Fatal("phase alone became completed")
+	}
+}
+
+func TestInventoryPullRequestCompletionRequiresFrozenContractAndExactPublication(t *testing.T) {
+	for _, scenario := range []string{"valid", "missing_contract", "missing_agreement", "changed_head", "changed_base", "metadata_incomplete", "unbound_event", "changed_receipt"} {
+		t.Run(scenario, func(t *testing.T) {
+			root, err := filepath.EvalSymlinks(t.TempDir())
+			if err != nil {
+				t.Fatal(err)
+			}
+			id, request, oid := "wfr_fixture", hash([]byte("request")), strings.Repeat("a", 40)
+			contract := &DeliveryContract{Agreement: &workspace.DeliveryAgreement{SchemaVersion: 1, Mode: workspace.DeliveryPullRequest, SourceRef: "refs/heads/task", TargetRef: "refs/heads/main", GitHubRepository: "fixture/product", Remote: "origin"}}
+			observed := PullRequestDeliveryObservation{Repository: "fixture/product", HeadRef: "refs/heads/task", HeadOID: oid, BaseRef: "refs/heads/main", URL: "https://example.invalid/fixture/pull/1", Number: 1, MetadataApplied: true}
+			receiptPath := writeAny(t, root, "receipt.json", observed)
+			receipt := FileBinding{receiptPath, hashFileTest(t, receiptPath)}
+			switch scenario {
+			case "missing_contract":
+				contract = nil
+			case "missing_agreement":
+				contract.Agreement = nil
+			case "changed_head":
+				observed.HeadOID = strings.Repeat("b", 40)
+			case "changed_base":
+				observed.BaseRef = "refs/heads/other"
+			case "metadata_incomplete":
+				observed.MetadataApplied = false
+			case "changed_receipt":
+				if err := os.WriteFile(receiptPath, []byte("changed evidence"), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			path := writeAny(t, root, "publication.json", map[string]any{"kind": "PlyDeliveryPullRequest@1", "run_id": id, "request_sha256": request, "candidate": "candidate", "receipt": receipt, "observed": observed})
+			binding := FileBinding{path, hashFileTest(t, path)}
+			s := workflowState{Request: WorkflowRequest{Delivery: contract}, Result: WorkflowRun{RunID: id, RequestSHA256: request, Delivery: &DeliveryState{Phase: "completed", Candidates: []DeliveryCandidate{{Key: "candidate", OID: oid, PullRequest: &binding}}, Events: []DeliveryEventRecord{{Kind: "pull_request", Binding: binding}}}}}
+			if scenario == "unbound_event" {
+				s.Result.Delivery.Events = nil
+			}
+			row := InventoryRun{RunID: id, State: "completed", Return: &InventoryReturn{ReportSHA256: &binding.SHA256}}
+			err = workflowInventoryReturn(Dependencies{}, s, &row)
+			if (err == nil) != (scenario == "valid") {
+				t.Fatalf("PR completion %s: %v", scenario, err)
+			}
+		})
 	}
 }
