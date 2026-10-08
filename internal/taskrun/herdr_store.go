@@ -1,6 +1,7 @@
 package taskrun
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -159,15 +160,48 @@ func workflowFresh(d Dependencies, s workflowState, target bool) error {
 	return workflowFreshRuntime(d, s, target, runtime)
 }
 func workflowFreshRuntime(d Dependencies, s workflowState, target bool, runtime Runtime) error {
+	continued, err := workflowContinuationRecord(s)
+	if err != nil {
+		return err
+	}
+	return workflowFreshRuntimeOperation(d, s, target, runtime, continued != nil && continued.RuntimeObservation != nil)
+}
+
+func workflowFreshRuntimeOperation(d Dependencies, s workflowState, target bool, runtime Runtime, historicalLauncher bool) error {
 	if e := workflowTrustFresh(s); e != nil {
 		return e
 	}
-	if _, e := runtimeBindings(runtime); e != nil {
+	if historicalLauncher {
+		if e := deliveryAcceptedAuthority(s); e != nil {
+			return e
+		}
+		if _, e := runtimeOperationBindings(runtime, []Executable{runtime.PlyExecutable}); e != nil {
+			return deliveryContinuityError("runtime_dependency", "accepted delivery control or launch-contract evidence: "+e.Error())
+		}
+	} else if _, e := runtimeBindings(runtime); e != nil {
+		if !deliveryRun(s.Request) {
+			return e
+		}
+		if providerErr := verifyExecutable(runtime.Executable); providerErr != nil {
+			if deliveryRun(s.Request) && s.StartSHA256 != nil && s.Result.Delivery != nil && s.Result.Delivery.PermissionState == "recipient_confirmed_contract" {
+				return deliveryContinuityError("runtime_observation_required", "accepted delivery's historical provider launcher is missing or changed at "+runtime.Executable.Path+"; use installed workflow execute continue with the original owner's current --runtime-evidence; the new installed provider is not authority")
+			}
+			return deliveryContinuityError("launch_dependency", "unaccepted runtime requires its original provider launcher: "+providerErr.Error())
+		}
 		return e
 	}
 	if e := verifyExecutable(s.Request.Herdr.Executable); e != nil {
-		return e
+		if !deliveryRun(s.Request) {
+			return e
+		}
+		return deliveryContinuityError("session_dependency", "live-session observation requires the bound Herdr executable: "+e.Error())
 	}
+	return workflowFreshArtifacts(d, s, target, true)
+}
+
+// Report-only validation keeps frozen inputs and receipts intact without
+// claiming that unavailable runtime policy currently authorizes effects.
+func workflowFreshArtifacts(d Dependencies, s workflowState, target, policy bool) error {
 	if s.Result.Handoff.ID == "" {
 		return workflowError(4, "reservation has no completed handoff binding; no automatic restart")
 	}
@@ -271,7 +305,7 @@ func workflowFreshRuntime(d Dependencies, s workflowState, target bool, runtime 
 		}
 	}
 	if deliveryRun(s.Request) {
-		return workflowDeliveryFresh(d, s, target)
+		return workflowDeliveryFreshArtifacts(d, s, target, policy)
 	}
 	return nil
 }
@@ -358,6 +392,15 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 			o.FinalReturn.State = "blocked"
 		}
 		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved binding drift; do not restart or delete run state."}
+		var dependency *Error
+		if errors.As(e, &dependency) && dependency.Code == "delivery_runtime_observation_required" {
+			o.NextAction = WorkflowAction{"recipient", "Use the installed Ply's workflow execute continue with this run, its unchanged --context and the original owner's actual current --runtime-evidence. Keep the same session and original controls."}
+		}
+		if action, ok := deliveryIncompleteReadback(s); ok {
+			// The report was durably recorded even when runtime authority is
+			// unavailable. Keep its actual question distinct from eligibility.
+			o.Round.State, o.NextAction = s.Result.Delivery.Phase, action
+		}
 	} else if status := o.DeliveryStatus; status != nil && status.Verification != nil && status.Verification.Current && status.Verification.Outcome == "passed" && status.Verification.Qualification != "qualified" && o.NextAction.Actor == "recipient" && (o.Delivery.Phase == "working" || o.Delivery.Phase == "verifying") {
 		// Older controls preserved successful checks but advised rerunning them
 		// after qualification failed. Explain the supported continuation without

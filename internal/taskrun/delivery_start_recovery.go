@@ -198,6 +198,10 @@ func deliveryRecoveryStateEligible(s workflowState) bool {
 // The immutable request remains the original mandate. Only this resolver may
 // select executable replacements; callers must never persist an effective copy.
 func workflowEffectiveRuntime(s workflowState) (Runtime, error) {
+	return workflowEffectiveRuntimeMode(s, true)
+}
+
+func workflowEffectiveRuntimeMode(s workflowState, policy bool) (Runtime, error) {
 	r := s.Request.Runtime
 	recovery, err := workflowRecoveryRecord(s)
 	if err != nil {
@@ -206,7 +210,7 @@ func workflowEffectiveRuntime(s workflowState) (Runtime, error) {
 	if recovery != nil {
 		r.Executable, r.PlyExecutable = recovery.ProviderExecutable, recovery.ControlExecutable
 	}
-	continuation, err := workflowContinuationRecord(s)
+	continuation, err := workflowContinuationRecordMode(s, policy)
 	if err != nil {
 		return r, err
 	}

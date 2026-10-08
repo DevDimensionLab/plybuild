@@ -67,6 +67,78 @@ the supported command. A real authority change remains a separate explicit
 bounded decision. Neither a directory, installed version nor preserved requested
 launch profile establishes effective runtime authority.
 
+## Provider upgrades and current runtime observations
+
+The provider executable in the request is **historical launch evidence** once
+the session has accepted its mandate. Removing, relocating or replacing that
+file does not identify the current process, change its accepted provider, or
+authorize launching a different executable. The preview shows its original
+binding and whether that file is present, missing or changed/unavailable.
+It does not search for a replacement and never executes either launcher.
+
+Herdr's supported observation supplies the exact registered provider, native
+session, workspace/tab/pane/terminal, foreground Task cwd and known status
+(`working`, `idle`, `done` or `blocked`), with no pending launch. It supplies no
+effective-policy claim. Therefore, when the historical launcher is unavailable
+or changed, the owner must also preserve a private current runtime observation
+and pass `--runtime-evidence FILE` to `workflow execute continue`. The owner
+reads its actual current runtime/session/policy; copying requested policy or
+looking up an installed binary cannot produce that observation. Unknown or
+changed permissions stop continuation. This is the same recipient-observation
+trust boundary as initial acceptance, not OS attestation or renewed permission.
+
+The strict JSON contract is `ply.workflow.delivery-runtime-observation@1`:
+
+| Field | Required observation or binding |
+| --- | --- |
+| `kind`, `schema_version` | `ply.workflow.delivery-runtime-observation`, `1` |
+| `run_id`, `request_sha256`, `session_id` | The original native run, immutable request and Ply session |
+| `context`, `acceptance` | `{locator, sha256}` for the exact preserved context and acceptance |
+| `runtime_claim` | Actual `runtime_id`, `model_id` (null if unknown), `profile_id` (nullable), `native_session_id`, `effective_policy_sha256` |
+| `delivery_permission` | Actual `permission_confirmed`, bound `launch_contract_sha256`, `actual_policy_evidence`, and original `delivery_agreement_sha256`/`allowed_effects` where present |
+| `observed_at_utc` | Actual RFC3339 UTC observation time, within ten minutes of a new transition, with at most thirty seconds of clock skew |
+
+The current effective-policy digest, evidence bindings, session, original
+agreement and effects must match accepted authority. Evidence uses the existing
+locator-sorted `{locator, sha256, role}` contract. Preserve submitted files and
+their evidence unchanged. New observations use new private files. A different
+actual profile label alone is not a permission change. No automatic collector
+pretends that Herdr can observe policy; the owning agent must make the claim
+from its current runtime context. A later authority change must be reported and
+stops dependent effects under that same recipient contract.
+
+The continuation preserves this observation in its immutable proof. Subsequent
+callbacks validate that proof, accepted policy and fresh live owner, allowing
+the old launcher to remain absent. Every new launch and initial acceptance still
+checks its applicable bound executable. Older continuation proofs remain
+readable; they require this explicit transition before omitting launcher checks.
+
+| Operation | Required runtime dependencies |
+| --- | --- |
+| Start, initial acceptance | Bound provider launcher, control, Herdr, launch contract and applicable acceptance checks |
+| Upgrade continuation | Positive accepted authority, fresh owner policy observation, live Herdr owner, original/current controls, required frozen artifacts |
+| Working report, verify/reuse, QA, authorized delivery after continuation | Preserved continuation/current-policy proof, accepted evidence, live owner, bound control and required artifacts; no historical launcher |
+| Installed `report --incomplete` | Exact run/context/Task, frozen acceptance and controls/history, report evidence and live Herdr owner; no launcher, requested/current policy-file or trust-config dependency |
+
+`report --incomplete` accepts only `stopped` or `needs_input`, including before
+acceptance. It cannot qualify a candidate, record QA, switch controls or authorize
+work. It preserves unresolved attempts and the existing publication predecessor.
+Missing ownership observation or altered immutable identity artifacts still
+reject reporting. A durable report retains its exact human question or stop
+reason in readback; runtime drift remains a separate diagnostic and invalidates
+technical eligibility. A local file or rejected command is not a recorded report.
+After an uncertain reply, inspect the same event ID and bytes before retrying.
+
+Continuation recovery first observes a preserved transition proof. A proof
+published while its observation was fresh can be adopted after a lost reply,
+without expiring that already-performed transition or overwriting its before
+state. Current immutable evidence and live ownership are still rechecked, and
+intervening reports remain in the current state. Concurrent/repeated calls bind
+one generation and one control. An equivalent current observation reaffirms the
+existing proof for the same control; it does not create another generation.
+Requalification retains its original attempt
+key, receipt and exact candidate conditions.
+
 ## Verification and distinct outcomes
 
 Preserve command completion independently from qualification. A known completed
@@ -139,14 +211,15 @@ Human QA and integration still use their original separate callback gates.
 
 | Requirement | Executable evidence |
 | --- | --- |
-| ac-01, ac-08 | `TestContinuityNativeOldReaderCorrection` uses the pinned historical CLI and real newer publication bytes; `TestTaskScopedContentPreservesUnrelatedNewerPublications` covers future unrelated semantics. |
-| ac-02 | Scoped required-artifact tests, continuation authority/session/control rejection, and `TestDeliveryReceiptReuseRejectsChangedInputsWithoutRunningAcceptance` preserve the blocking boundaries. |
-| ac-03 | Native historical continuation and `TestDeliveryContinuationPreservesAcceptedSessionAndFrozenInputs` retain the original owner and frozen artifacts. |
-| ac-04 | Receipt requalification and status tests preserve actual command completion independently of changed inputs or failed qualification. |
-| ac-05 | Concurrent native continuation/publication, interrupted proof publication and concurrent requalification tests assert one effect and retained sibling records. |
-| ac-06 | Native Task diagnostics and continuation diagnostics distinguish unsupported schemas, missing/tampered artifacts, stale sessions and unknown effects. |
-| ac-07 | `TestDeliveryStatusSeparatesCorrectionFromEarlierCandidate` and existing exact-candidate QA/integration tests keep technical, human and final outcomes separate. |
-| ac-09 | `scripts/continuity-journey`, its native driver regression and [the installed acceptance journey](../continuity-acceptance.md) exercise the same commands without manual state edits. |
+| ac-01 | `TestDeliveryProviderUpgradePreservesAcceptedContinuation` covers removed/relocated/changed launchers for both providers; `TestDeliveryProviderUpgradePreservesNativeLegacyContinuation` extends a real legacy proof. |
+| ac-02 | Current-runtime observation, authority/live-owner and initial acceptance/new-launch rejection tests keep current authority separate from launcher history. |
+| ac-03 | `TestContinuityNativeOldReaderCorrection` exercises working reports, receipt reuse, synthetic exact-candidate QA and local integration after launcher removal. |
+| ac-04 | Incomplete-report tests cover pre/post-acceptance missing runtime evidence, exact questions, immutable identity guards, interrupted publication and retained unknown verifier attempts. |
+| ac-05 | `TestDeliveryReceiptReuseRejectsChangedInputsWithoutRunningAcceptance`, correction status tests and native upgrade scenarios retain distinct verification, qualification and human judgment. |
+| ac-06 | Missing-current-observation, changed policy, missing/wrong live session and required-artifact guards produce distinct native diagnostic codes and causes. |
+| ac-07 | Concurrent continuation/report/requalification tests and recovery after expired evidence, intervening reports and partial proof publication preserve one transition and unrelated records. |
+| ac-08 | `TestContinuityNativeProviderUpgradePreservesAcceptedOwner` preserves actual failures from pinned historical binaries, then verifies the new native commands with removed/replaced/relocated provider fixtures. |
+| ac-09 | `scripts/continuity-journey`, its native driver/retry regressions and [the installed acceptance journey](../continuity-acceptance.md) exercise short commands without manual state edits. |
 
 Automated fixture verdicts are labeled synthetic. This implementation's actual
 human pass remains an external, exact-candidate gate after technical qualification.

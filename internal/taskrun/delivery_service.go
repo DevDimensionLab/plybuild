@@ -130,6 +130,10 @@ func deliveryInstructions(s workflowState) string {
 }
 
 func workflowDeliveryFresh(d Dependencies, s workflowState, target bool) error {
+	return workflowDeliveryFreshArtifacts(d, s, target, true)
+}
+
+func workflowDeliveryFreshArtifacts(d Dependencies, s workflowState, target, policy bool) error {
 	if s.Result.Delivery == nil {
 		return workflowError(4, "delivery state is missing")
 	}
@@ -141,8 +145,10 @@ func workflowDeliveryFresh(d Dependencies, s workflowState, target bool) error {
 			return e
 		}
 	}
-	if e := deliveryEvidence(s.Result.Delivery.ActualPolicyEvidence); e != nil {
-		return e
+	if policy {
+		if e := deliveryEvidence(s.Result.Delivery.ActualPolicyEvidence); e != nil {
+			return e
+		}
 	}
 	for _, event := range s.Result.Delivery.Events {
 		if _, e := workflowBound(event.Binding, 4<<20); e != nil {

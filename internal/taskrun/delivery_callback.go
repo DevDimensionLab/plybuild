@@ -87,8 +87,7 @@ func deliveryCallback(d Dependencies, s workflowState, contextPath string, start
 	if started && (s.StartSHA256 == nil || s.Result.Delivery.PermissionState != "recipient_confirmed_contract") {
 		return workflowError(4, "delivery requires actual positive runtime acceptance before effects")
 	}
-	_, e := workflowAgentGet(d, s, false)
-	return e
+	return deliveryLiveOwner(d, s)
 }
 
 func deliveryTarget(d Dependencies, s workflowState) (workspace.IntegrationWorktreeObservation, error) {
@@ -180,6 +179,16 @@ func validateDeliveryReportContent(r DeliveryReport) error {
 }
 
 func WorkflowDeliveryReport(d Dependencies, root, id, contextPath, file string) (WorkflowRun, error) {
+	return workflowDeliveryReport(d, root, id, contextPath, file, false)
+}
+
+// WorkflowDeliveryIncompleteReport allows the live owner to preserve a problem
+// from the installed reader without switching controls or granting any effects.
+func WorkflowDeliveryIncompleteReport(d Dependencies, root, id, contextPath, file string) (WorkflowRun, error) {
+	return workflowDeliveryReport(d, root, id, contextPath, file, true)
+}
+
+func workflowDeliveryReport(d Dependencies, root, id, contextPath, file string, incomplete bool) (WorkflowRun, error) {
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}
@@ -194,12 +203,20 @@ func WorkflowDeliveryReport(d Dependencies, root, id, contextPath, file string) 
 	if e = validateDeliveryReport(report); e != nil {
 		return WorkflowRun{}, e
 	}
+	if incomplete && report.Phase != "stopped" && report.Phase != "needs_input" {
+		return WorkflowRun{}, workflowError(2, "--incomplete permits only stopped or needs_input reports; it cannot grant working or delivery authority")
+	}
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
 		if !deliveryRun(s.Request) || s.Result.Delivery == nil {
 			return workflowError(4, "run is not a delivery owner")
 		}
 		if e := workflowClaim(*s, report.RunID, report.RequestSHA256, report.SessionID); e != nil {
 			return e
+		}
+		if incomplete {
+			if e := deliveryIncompleteReportCallback(d, *s, contextPath); e != nil {
+				return e
+			}
 		}
 		canonical, _ := Canonical(report)
 		for _, old := range s.Result.Delivery.Events {
@@ -212,10 +229,12 @@ func WorkflowDeliveryReport(d Dependencies, root, id, contextPath, file string) 
 		}
 		// An owner must be able to report unresolved runtime authority without
 		// first claiming that authority. Incomplete reports grant no Task effects.
-		if e := deliveryCallback(d, *s, contextPath, report.Phase == "working"); e != nil {
-			return e
+		if !incomplete {
+			if e := deliveryCallback(d, *s, contextPath, report.Phase == "working"); e != nil {
+				return e
+			}
 		}
-		if s.Result.Delivery.Attempt != nil && s.Result.Delivery.Attempt.State == "attempted" {
+		if !incomplete && s.Result.Delivery.Attempt != nil && s.Result.Delivery.Attempt.State == "attempted" {
 			return workflowError(4, "a reserved effect is unresolved; inspect that attempt before another transition")
 		}
 		if !equal(report.PreviousEventSHA256, s.Result.Delivery.LastEventSHA256) {
@@ -223,6 +242,11 @@ func WorkflowDeliveryReport(d Dependencies, root, id, contextPath, file string) 
 		}
 		if _, e := deliveryAppendEvent(d, s, report.EventID, "report", report); e != nil {
 			return e
+		}
+		if incomplete {
+			if e := d.fault("delivery_after_incomplete_report_event"); e != nil {
+				return e
+			}
 		}
 		s.Result.Delivery.Phase = report.Phase
 		s.Result.Round.State = report.Phase

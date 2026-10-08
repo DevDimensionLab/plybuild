@@ -23,7 +23,12 @@ const continuityOldSource = "f2de0c638f1d2b1c38417aff70b79ca7bb4be31a"
 
 func continuityOldBinary(t *testing.T) string {
 	t.Helper()
-	if path := os.Getenv("PLY_CONTINUITY_OLD_BINARY"); path != "" {
+	return continuitySourceBinary(t, continuityOldSource, "PLY_CONTINUITY_OLD_BINARY")
+}
+
+func continuitySourceBinary(t *testing.T, revision, override string) string {
+	t.Helper()
+	if path := os.Getenv(override); path != "" {
 		physical, err := filepath.EvalSymlinks(path)
 		if err != nil || !filepath.IsAbs(physical) {
 			t.Fatalf("invalid historical CLI path: %s: %v", path, err)
@@ -34,11 +39,11 @@ func continuityOldBinary(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	archive := exec.Command("git", "archive", "--format=tar", continuityOldSource)
+	archive := exec.Command("git", "archive", "--format=tar", revision)
 	archive.Dir = repo
 	raw, err := archive.Output()
 	if err != nil {
-		t.Fatalf("historical source %s must be available locally: %v", continuityOldSource, err)
+		t.Fatalf("historical source %s must be available locally: %v", revision, err)
 	}
 	root := t.TempDir()
 	r := tar.NewReader(bytes.NewReader(raw))
@@ -117,6 +122,7 @@ type continuityFixture struct {
 	Old, Current, CWD, Review, Counter, FirstOID, CorrectionOID string
 	Run                                                         WorkflowRun
 	Unrelated                                                   map[string]string
+	Upgrade                                                     *continuityProviderUpgrade
 }
 
 func continuityCounter(t *testing.T, path string) int {
@@ -239,7 +245,11 @@ func newContinuityFixture(t *testing.T, current, old, root string) continuityFix
 
 func continuityContinue(t *testing.T, f continuityFixture) string {
 	t.Helper()
-	raw := continuityCLIOK(t, f.Current, f.CWD, "workflow", "execute", "continue", f.Run.RunID, "--context", f.Run.Paths.Context)
+	args := []string{"workflow", "execute", "continue", f.Run.RunID, "--context", f.Run.Paths.Context}
+	if f.Upgrade != nil {
+		args = append(args, "--runtime-evidence", f.Upgrade.RuntimeObservation.Locator)
+	}
+	raw := continuityCLIOK(t, f.Current, f.CWD, args...)
 	return continuityControl(t, raw)
 }
 
@@ -259,7 +269,9 @@ func continuityControl(t *testing.T, raw []byte) string {
 
 func TestContinuityNativeOldReaderCorrection(t *testing.T) {
 	current, old := deliveryCLIBinary(t), continuityOldBinary(t)
+	before := continuitySourceBinary(t, continuityBeforeUpgradeSource, "PLY_CONTINUITY_BEFORE_UPGRADE_BINARY")
 	f := newContinuityFixture(t, current, old, "")
+	continuityUpgradeProvider(t, &f, before, "removed")
 	protected := map[string]string{f.Old: hashFileTest(t, f.Old), f.Run.Paths.Context: hashFileTest(t, f.Run.Paths.Context), f.Run.Handoff.Locator: f.Run.Handoff.SHA256, filepath.Join(f.Run.Delivery.Attempt.Path, "verification.json"): hashFileTest(t, filepath.Join(f.Run.Delivery.Attempt.Path, "verification.json"))}
 	shown := continuityRun(t, continuityCLIOK(t, current, f.CWD, "workflow", "execute", "show", f.Run.RunID))
 	status := shown.DeliveryStatus
@@ -267,7 +279,7 @@ func TestContinuityNativeOldReaderCorrection(t *testing.T) {
 		t.Fatalf("native status mixed successful correction verification with the older candidate: %+v", status)
 	}
 	workflowTestModel(t, f.workflowFixture, map[string]any{"agent_session_id": "different-live-session"})
-	blocked, err := continuityCLI(current, f.CWD, "workflow", "execute", "continue", f.Run.RunID, "--context", f.Run.Paths.Context, "--check")
+	blocked, err := continuityCLI(current, f.CWD, "workflow", "execute", "continue", f.Run.RunID, "--context", f.Run.Paths.Context, "--runtime-evidence", f.Upgrade.RuntimeObservation.Locator, "--check")
 	var diagnosis struct {
 		State      string `json:"state"`
 		Diagnostic struct {
@@ -397,6 +409,8 @@ func continuityJourneyManifest(t *testing.T, f continuityFixture) map[string]any
 		"first_candidate": f.FirstOID, "corrected_candidate": f.CorrectionOID,
 		"attempt": f.Run.Delivery.Attempt.ID, "review": f.Review,
 		"counter": f.Counter, "provider_calls": f.Calls,
+		"native_session_id":      f.Run.Transport.AgentSessionID,
+		"provider_upgrade":       f.Upgrade,
 		"unrelated_publications": f.Unrelated,
 		"fixture_notice":         "Disposable product exercise. The provider, authority and earlier QA are synthetic fixtures. This journey does not approve the implementation candidate in the real delivery.",
 	}
@@ -408,16 +422,23 @@ func TestContinuityJourneyPreservesExplicitOutcomeAndExactFeedback(t *testing.T)
 		t.Fatal(err)
 	}
 	current, old := deliveryCLIBinary(t), continuityOldBinary(t)
+	before := continuitySourceBinary(t, continuityBeforeUpgradeSource, "PLY_CONTINUITY_BEFORE_UPGRADE_BINARY")
 	f := newContinuityFixture(t, current, old, "")
-	continued := continuityCLIOK(t, current, f.CWD, "workflow", "execute", "continue", f.Run.RunID, "--context", f.Run.Paths.Context)
-	control := continuityControl(t, continued)
-	if err := os.WriteFile(filepath.Join(f.R.WorkspaceRoot, "continued.json"), continued, 0600); err != nil {
-		t.Fatal(err)
-	}
-	continuityCLIOK(t, control, f.CWD, "workflow", "execute", "verify", f.Run.RunID, "--context", f.Run.Paths.Context, "--review", f.Review, "--reuse", f.Run.Delivery.Attempt.ID)
+	continuityUpgradeProvider(t, &f, before, "removed")
 	manifest := continuityJourneyManifest(t, f)
 	manifest["qa_actor_claim"] = "Synthetic automated journey regression, not actual human QA"
 	path := writeAny(t, f.R.WorkspaceRoot, "human-journey.json", manifest)
+	for _, action := range []string{"inspect", "report-incomplete", "report-incomplete", "continue", "continue", "verify", "verify", "inspect"} {
+		command := exec.Command("python3", driver, "--fixture", path, action)
+		command.Dir = f.CWD
+		if output, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("upgraded installed journey %s failed: %v\n%s", action, err, output)
+		}
+	}
+	qualified := continuityRun(t, continuityCLIOK(t, current, f.CWD, "workflow", "execute", "show", f.Run.RunID))
+	if len(qualified.Delivery.Candidates) != 2 || qualified.Delivery.Candidates[1].HumanQA != nil || continuityCounter(t, f.Counter) != 2 || workflowTestCalls(t, f.workflowFixture, "agent start") != 1 || workflowTestCalls(t, f.workflowFixture, "tab create") != 1 {
+		t.Fatalf("short journey commands duplicated effects or supplied human QA: %+v", qualified.Delivery)
+	}
 	feedback := "Synthetic regression only: the preserved correction is ready. Ikke ekte menneskelig QA."
 	for i := 0; i < 2; i++ {
 		command := exec.Command("python3", driver, "--fixture", path, "qa", "pass", "--answer", feedback)
@@ -456,7 +477,9 @@ func TestContinuityCLIExportHumanJourney(t *testing.T) {
 		t.Fatal("journey root must be absolute")
 	}
 	current, old := deliveryCLIBinary(t), continuityOldBinary(t)
+	before := continuitySourceBinary(t, continuityBeforeUpgradeSource, "PLY_CONTINUITY_BEFORE_UPGRADE_BINARY")
 	f := newContinuityFixture(t, current, old, root)
+	continuityUpgradeProvider(t, &f, before, "removed")
 	path := writeAny(t, f.R.WorkspaceRoot, "human-journey.json", continuityJourneyManifest(t, f))
 	t.Log("Prepared installed continuity journey: " + path)
 }

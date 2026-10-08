@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 func continuationTestInput(t *testing.T, f deliveryFixture, o WorkflowRun) (Dependencies, DeliveryContinuationInput, DeliveryContinuationPreview) {
@@ -18,7 +19,7 @@ func continuationTestInput(t *testing.T, f deliveryFixture, o WorkflowRun) (Depe
 	}
 	d := f.D
 	d.Executable = func() (string, error) { return source, nil }
-	in := DeliveryContinuationInput{RunID: o.RunID, ContextPath: o.Paths.Context, ControlExecutable: Executable{source, hashFileTest(t, source)}}
+	in := DeliveryContinuationInput{RunID: o.RunID, ContextPath: o.Paths.Context, ControlExecutable: Executable{source, hashFileTest(t, source)}, RuntimeEvidencePath: deliveryTestRuntimeObservation(t, f, o)}
 	p, err := WorkflowPreviewDeliveryContinuation(d, f.R.WorkspaceRoot, in)
 	if err != nil {
 		t.Fatal(err)
@@ -81,6 +82,34 @@ func TestDeliveryContinuationPreservesAcceptedSessionAndFrozenInputs(t *testing.
 	}
 }
 
+func TestDeliveryContinuationEquivalentObservationKeepsOneControl(t *testing.T) {
+	f := newDeliveryFixture(t, "codex")
+	o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
+	d, in, p := continuationTestInput(t, f, o)
+	if err := os.Remove(f.R.Runtime.Executable.Path); err != nil {
+		t.Fatal(err)
+	}
+	first, err := WorkflowContinueDelivery(d, f.R.WorkspaceRoot, in, p.Confirmation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var observation DeliveryRuntimeObservation
+	if err = readValue(in.RuntimeEvidencePath, 1<<20, &observation); err != nil {
+		t.Fatal(err)
+	}
+	observation.ObservedAtUTC = d.Now().Add(time.Second).UTC().Format(time.RFC3339Nano)
+	in.RuntimeEvidencePath = writeAny(t, f.R.WorkspaceRoot, "fresh-equivalent-runtime.json", observation)
+	again, err := WorkflowPreviewDeliveryContinuation(d, f.R.WorkspaceRoot, in)
+	if err != nil || again.State != "existing" || again.Generation != 1 || again.ControlExecutable != first.ControlExecutable || !equal(again.Proof, first.Proof) || !equal(again.RuntimeObservation, first.RuntimeObservation) {
+		t.Fatalf("equivalent current observation duplicated its control or changed readback: %+v %v", again, err)
+	}
+	observation.DeliveryPermission.PermissionConfirmed = false
+	in.RuntimeEvidencePath = writeAny(t, f.R.WorkspaceRoot, "unconfirmed-runtime.json", observation)
+	if _, err = WorkflowPreviewDeliveryContinuation(d, f.R.WorkspaceRoot, in); err == nil {
+		t.Fatal("existing proof bypassed an actual unconfirmed current authority observation")
+	}
+}
+
 func TestDeliveryContinuationConcurrentAndInterruptedPublication(t *testing.T) {
 	f := newDeliveryFixture(t, "codex")
 	o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
@@ -122,6 +151,110 @@ func TestDeliveryContinuationConcurrentAndInterruptedPublication(t *testing.T) {
 	entries, err := os.ReadDir(filepath.Dir(p.Directory))
 	if err != nil || len(entries) != 1 {
 		t.Fatalf("duplicate continuation slots: %v %v", entries, err)
+	}
+}
+
+func TestDeliveryContinuationRecoversPublishedProofAfterObservationExpires(t *testing.T) {
+	f := newDeliveryFixture(t, "codex")
+	o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
+	d, in, p := continuationTestInput(t, f, o)
+	if err := os.Remove(f.R.Runtime.Executable.Path); err != nil {
+		t.Fatal(err)
+	}
+	fault := d
+	fault.Fault = func(point string) error {
+		if point == "delivery_after_continuation_proof" {
+			return errors.New("simulated interrupted proof publication")
+		}
+		return nil
+	}
+	if _, err := WorkflowContinueDelivery(fault, f.R.WorkspaceRoot, in, p.Confirmation); err == nil {
+		t.Fatal("publication fault did not interrupt the transition")
+	}
+	proof := filepath.Join(p.Directory, "continuation.json")
+	before, err := os.ReadFile(proof)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := d.Now()
+	d.Now = func() time.Time { return now.Add(11 * time.Minute) }
+	recovered, err := WorkflowContinueDelivery(d, f.R.WorkspaceRoot, in, p.Confirmation)
+	if err != nil || recovered.State != "continued" || recovered.Generation != 1 {
+		t.Fatalf("durably published transition was stranded by expired observation: %+v %v", recovered, err)
+	}
+	after, err := os.ReadFile(proof)
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatalf("recovery changed the original transition proof: %v", err)
+	}
+	if n := workflowTestCalls(t, f.workflowFixture, "agent start"); n != 1 {
+		t.Fatalf("proof recovery restarted provider: %d", n)
+	}
+}
+
+func TestDeliveryContinuationRecoversPublishedProofAfterIncompleteReport(t *testing.T) {
+	testDeliveryContinuationRecoveryAfterReport(t, false)
+}
+
+type continuationRejectProof struct{ systemFileSystem }
+
+func (continuationRejectProof) WriteOnce(path string, raw []byte) error {
+	if filepath.Base(path) == "continuation.json" {
+		return errors.New("simulated publication failure before proof")
+	}
+	return (systemFileSystem{}).WriteOnce(path, raw)
+}
+
+func TestDeliveryContinuationRecoversBeforeStateAfterIncompleteReport(t *testing.T) {
+	testDeliveryContinuationRecoveryAfterReport(t, true)
+}
+
+func testDeliveryContinuationRecoveryAfterReport(t *testing.T, beforeProof bool) {
+	t.Helper()
+	f := newDeliveryFixture(t, "codex")
+	o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
+	d, in, p := continuationTestInput(t, f, o)
+	if err := os.Remove(f.R.Runtime.Executable.Path); err != nil {
+		t.Fatal(err)
+	}
+	fault := d
+	if beforeProof {
+		fault.Files = continuationRejectProof{}
+	}
+	fault.Fault = func(point string) error {
+		if point == "delivery_after_continuation_proof" {
+			return errors.New("simulated interrupted proof publication")
+		}
+		return nil
+	}
+	if _, err := WorkflowContinueDelivery(fault, f.R.WorkspaceRoot, in, p.Confirmation); err == nil {
+		t.Fatal("publication fault did not interrupt the transition")
+	}
+	proofPath := filepath.Join(p.Directory, "continuation.json")
+	if beforeProof {
+		proofPath = filepath.Join(p.Directory, "before-state.json")
+	}
+	before, err := os.ReadFile(proofPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := providerUpgradeIncomplete(t, f, o, "stopped")
+	if _, err = WorkflowDeliveryIncompleteReport(d, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, writeAny(t, f.R.WorkspaceRoot, "interrupted-continuation-report.json", report)); err != nil {
+		t.Fatal(err)
+	}
+	p, err = WorkflowPreviewDeliveryContinuation(d, f.R.WorkspaceRoot, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = WorkflowContinueDelivery(d, f.R.WorkspaceRoot, in, p.Confirmation); err != nil {
+		t.Fatalf("report stranded a durably published transition: %v", err)
+	}
+	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil || len(s.Result.Delivery.Events) != 1 || s.Result.Delivery.Events[0].ID != report.EventID {
+		t.Fatalf("recovery lost the intervening report: %+v %v", s.Result.Delivery, err)
+	}
+	after, err := os.ReadFile(proofPath)
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatalf("recovery rewrote the original proof: %v", err)
 	}
 }
 

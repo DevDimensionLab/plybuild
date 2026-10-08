@@ -41,6 +41,7 @@ func newWorkflowExecuteContinueCommand(d taskrun.Dependencies) *cobra.Command {
 		},
 	}
 	c.Flags().StringVar(&input.ContextPath, "context", "", "exact original private execution context (required)")
+	c.Flags().StringVar(&input.RuntimeEvidencePath, "runtime-evidence", "", "private current owner runtime observation; required when the historical provider launcher is missing or changed")
 	c.Flags().BoolVar(&input.Check, "check", false, "inspect compatibility and the same live session without publication")
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	c.SetFlagErrorFunc(func(c *cobra.Command, err error) error { return workspace.WorkInvalidArguments(err.Error()) })

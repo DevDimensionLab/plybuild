@@ -174,6 +174,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 		ownerCallback := verb != "show" && verb != "follow" && verb != "resume"
 		var format, contextPath, file, review, evidence, reuse string
 		var timeout int
+		var incomplete bool
 		use := verb + " RUN_ID"
 		if verb == "qa" {
 			use += " pass|fail|blocked"
@@ -183,7 +184,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 			"resume":    "Continue an existing delivery startup after the human resolves native onboarding in its preserved tab. Verify the same provider and terminal, bind readiness, and send the first Task prompt only when it was never attempted. Never create another tab, start another agent, grant permissions or replay uncertain input.",
 			"show":      "Read-only. Cached provider state is not a fresh observation or product approval.",
 			"follow":    "The observation timeout does not stop the provider. Reuse the existing tab when startup or return is unknown.",
-			"report":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --file is a delivery-report@2; failed, not_run and unknown facts remain readable and do not qualify a candidate.",
+			"report":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --file is a delivery-report@2; failed, not_run and unknown facts remain readable and do not qualify a candidate. If a runtime dependency blocks callbacks, the installed CLI's --incomplete path accepts only stopped/needs_input from the same live owner. It preserves the original context, artifacts and unresolved attempts without granting runtime authority or switching controls.",
 			"verify":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --review supplies an actual candidate-bound DeliveryCandidateReview@1 record. Execute the declared acceptance script and preserve real evidence. Missing or failed tests cannot produce a technical pass. Human product judgment remains separate.",
 			"qa":        "Owner callback: use the frozen control executable, exact Task cwd and --context. --evidence preserves the actual user's answer and candidate binding. The answer is a local human attestation, not cryptographic identity proof. Never infer pass from tests, silence or a provider's claim.",
 			"integrate": "Owner callback: use the frozen control executable, exact Task cwd and --context. Requires the exact qualified candidate and recorded human pass, unchanged clean parent, and the original local delivery authority. Preserves integration evidence, advances this preparation and updates the registered base. Local main/master return requires an explicit local_branch_integration contract and matching runtime authority. PR mode cannot integrate locally. Does not push or delete worktrees.",
@@ -248,7 +249,11 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 				case "resume":
 					r, err = taskrun.WorkflowResumeDeliveryStart(d, root, args[0], time.Duration(timeout)*time.Second)
 				case "report":
-					r, err = taskrun.WorkflowDeliveryReport(d, root, args[0], contextPath, file)
+					if incomplete {
+						r, err = taskrun.WorkflowDeliveryIncompleteReport(d, root, args[0], contextPath, file)
+					} else {
+						r, err = taskrun.WorkflowDeliveryReport(d, root, args[0], contextPath, file)
+					}
 				case "verify":
 					if reuse != "" {
 						r, err = taskrun.WorkflowDeliveryRequalify(d, root, args[0], contextPath, review, reuse)
@@ -275,6 +280,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 		}
 		if verb == "report" {
 			child.Flags().StringVar(&file, "file", "", "absolute immutable delivery report file (required)")
+			child.Flags().BoolVar(&incomplete, "incomplete", false, "record only stopped/needs_input through the installed reader; no runtime authority or control transition")
 		}
 		if verb == "verify" {
 			child.Flags().StringVar(&review, "review", "", "absolute candidate-bound review evidence (required)")

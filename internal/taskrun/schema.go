@@ -285,8 +285,15 @@ func parseRequestForSurface(b []byte, herdr bool) (Request, error) {
 	return r, nil
 }
 func runtimeBindings(r Runtime) ([]FileBinding, error) {
+	return runtimeOperationBindings(r, []Executable{r.Executable, r.PlyExecutable})
+}
+
+// Launching a provider requires its executable. An accepted owner callback
+// instead validates its control and policy; the launch identity stays in the
+// frozen request, even when a package upgrade removes or replaces that file.
+func runtimeOperationBindings(r Runtime, executables []Executable) ([]FileBinding, error) {
 	out := []FileBinding{}
-	for _, x := range []Executable{r.Executable, r.PlyExecutable} {
+	for _, x := range executables {
 		if e := verifyExecutable(x); e != nil {
 			return nil, e
 		}

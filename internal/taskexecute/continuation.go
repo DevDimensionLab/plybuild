@@ -3,15 +3,17 @@ package taskexecute
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 type ContinuationInput struct {
-	RunID       string
-	ContextPath string
-	Check       bool
+	RunID               string
+	ContextPath         string
+	Check               bool
+	RuntimeEvidencePath string
 }
 
 type ContinuationResult struct {
@@ -50,6 +52,12 @@ func continuationDiagnostic(err error) *ContinuationDiagnostic {
 	var native *taskrun.Error
 	if errors.As(err, &native) {
 		d.Code = native.Code
+	} else {
+		var path *os.PathError
+		if errors.As(err, &path) {
+			d.Code, d.Artifact = "delivery_required_artifact_unavailable", path.Path
+			d.NextAction = "Inspect the required artifact identified in the cause against preserved history; keep frozen inputs intact. Use the bounded incomplete-report path if its identity dependencies remain available."
+		}
 	}
 	switch d.Code {
 	case "delivery_continuation_unsupported":
@@ -58,6 +66,14 @@ func continuationDiagnostic(err error) *ContinuationDiagnostic {
 		d.NextAction = "Resolve the exact missing or changed runtime authority with the original owner; this continuation cannot grant it."
 	case "delivery_continuation_session":
 		d.NextAction = "Observe the original live provider/session from its exact Task worktree; do not restart or resend input."
+	case "delivery_runtime_observation_required", "delivery_runtime_observation":
+		d.NextAction = "The original owner must preserve a current runtime observation and pass --runtime-evidence; observe actual policy, do not copy requested policy or infer authority from an installed provider."
+	case "delivery_launch_dependency":
+		d.NextAction = "The historical provider launcher is required for this uncontinued operation. An accepted live owner can use continue with current --runtime-evidence; an unaccepted or future launch needs its own supported checks."
+	case "delivery_session_dependency":
+		d.NextAction = "Restore supported live-session observation through the bound Herdr contract; do not restart or substitute a provider. The provider launcher itself is not a session observation."
+	case "delivery_runtime_dependency":
+		d.NextAction = "Inspect the required control or launch-contract evidence identified in the cause; preserve its bound bytes. Use report --incomplete for a truthful owner report when runtime dependencies prevent continuation."
 	case "delivery_effect_unknown":
 		d.NextAction = "Inspect the reserved native effect and its receipt before any retry; no command or input may be replayed while its result is unknown."
 	case "delivery_continuation_stale":
@@ -93,7 +109,7 @@ func ContinueDelivery(d taskrun.Dependencies, input ContinuationInput) (out Cont
 	if err != nil {
 		return out, err
 	}
-	in := taskrun.DeliveryContinuationInput{RunID: input.RunID, ContextPath: input.ContextPath, ControlExecutable: control}
+	in := taskrun.DeliveryContinuationInput{RunID: input.RunID, ContextPath: input.ContextPath, ControlExecutable: control, RuntimeEvidencePath: input.RuntimeEvidencePath}
 	p, err := taskrun.WorkflowPreviewDeliveryContinuation(d, ws.Observation.Root, in)
 	out.Preview = &p
 	if err != nil {
