@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	DeliveryPullRequest = "pull_request"
-	DeliveryLocalEpic   = "local_epic_integration"
-	DeliveryLocalBranch = "local_branch_integration"
+	DeliveryPullRequest   = "pull_request"
+	DeliveryLocalEpic     = "local_epic_integration"
+	DeliveryLocalBranch   = "local_branch_integration"
+	IntegrationOwnerHuman = "human"
 )
 
 // DeliveryAgreement v1 describes one Task in one repository. Every mode requires
@@ -29,28 +30,48 @@ type DeliveryAgreement struct {
 	TargetWorktree   string    `yaml:"target_worktree,omitempty" json:"target_worktree,omitempty"`
 	GitHubRepository string    `yaml:"github_repository,omitempty" json:"github_repository,omitempty"`
 	Remote           string    `yaml:"remote,omitempty" json:"remote,omitempty"`
+	IntegrationOwner string    `yaml:"integration_owner,omitempty" json:"integration_owner,omitempty"`
 }
 
 // DeliveryAuthorization is supplied by the validated native run evidence. An
 // input copy alone is insufficient: integration re-reads that evidence and the
 // immutable result-bound Spec before allowing any new effect.
 type DeliveryAuthorization struct {
-	Agreement           DeliveryAgreement `yaml:"agreement" json:"agreement"`
-	AgreementSHA256     string            `yaml:"agreement_sha256" json:"agreement_sha256"`
-	RunID               string            `yaml:"run_id" json:"run_id"`
-	CandidateRunID      string            `yaml:"candidate_run_id" json:"candidate_run_id"`
-	RequestSHA256       string            `yaml:"request_sha256" json:"request_sha256"`
-	MandateSHA256       string            `yaml:"mandate_sha256" json:"mandate_sha256"`
-	AllowedEffects      []string          `yaml:"allowed_effects" json:"allowed_effects"`
-	PermissionConfirmed bool              `yaml:"permission_confirmed" json:"permission_confirmed"`
+	Agreement                DeliveryAgreement              `yaml:"agreement" json:"agreement"`
+	AgreementSHA256          string                         `yaml:"agreement_sha256" json:"agreement_sha256"`
+	RunID                    string                         `yaml:"run_id" json:"run_id"`
+	CandidateRunID           string                         `yaml:"candidate_run_id" json:"candidate_run_id"`
+	RequestSHA256            string                         `yaml:"request_sha256" json:"request_sha256"`
+	MandateSHA256            string                         `yaml:"mandate_sha256" json:"mandate_sha256"`
+	AllowedEffects           []string                       `yaml:"allowed_effects" json:"allowed_effects"`
+	PermissionConfirmed      bool                           `yaml:"permission_confirmed" json:"permission_confirmed"`
+	HumanIntegration         *HumanIntegrationAuthorization `yaml:"human_integration,omitempty" json:"human_integration,omitempty"`
+	HumanIntegrationRequired bool                           `yaml:"human_integration_required,omitempty" json:"human_integration_required,omitempty"`
+}
+
+// HumanIntegrationAuthorization is separate from the frozen developer mandate.
+// Native run evidence revalidates these preserved human decision and release bytes.
+type HumanIntegrationAuthorization struct {
+	SchemaVersion   int             `yaml:"schema_version" json:"schema_version"`
+	PlanID          string          `yaml:"plan_id" json:"plan_id"`
+	PlanSHA256      string          `yaml:"plan_sha256" json:"plan_sha256"`
+	DecisionLocator string          `yaml:"decision_locator" json:"decision_locator"`
+	DecisionSHA256  string          `yaml:"decision_sha256" json:"decision_sha256"`
+	ReleaseLocator  string          `yaml:"release_locator" json:"release_locator"`
+	ReleaseSHA256   string          `yaml:"release_sha256" json:"release_sha256"`
+	HumanQARecordID HumanQARecordID `yaml:"human_qa_record_id" json:"human_qa_record_id"`
+	TaskResultID    TaskResultID    `yaml:"task_result_id" json:"task_result_id"`
 }
 
 var deliveryRepositoryPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$`)
 var deliveryRemotePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`)
 
 func ValidateDeliveryAgreement(a DeliveryAgreement) error {
-	if a.SchemaVersion != 1 || contentSlug(string(a.ProjectID)) != nil || contentSlug(string(a.RepoID)) != nil || contentSlug(string(a.EpicID)) != nil {
-		return fmt.Errorf("delivery agreement requires schema_version 1 and exact project, repository and Epic")
+	if a.SchemaVersion != 1 && a.SchemaVersion != 2 || contentSlug(string(a.ProjectID)) != nil || contentSlug(string(a.RepoID)) != nil || contentSlug(string(a.EpicID)) != nil {
+		return fmt.Errorf("delivery agreement requires schema_version 1 or 2 and exact project, repository and Epic")
+	}
+	if a.SchemaVersion == 1 && a.IntegrationOwner != "" || a.SchemaVersion == 2 && a.IntegrationOwner != IntegrationOwnerHuman {
+		return fmt.Errorf("delivery agreement v2 requires integration_owner human; v1 retains its historical owner")
 	}
 	if !validFullBranchRef(a.TargetRef) || a.SourceRef != "" && (!validFullBranchRef(a.SourceRef) || a.SourceRef == a.TargetRef) {
 		return fmt.Errorf("delivery requires distinct full source and target branch refs")
@@ -106,12 +127,22 @@ func (a DeliveryAgreement) AllowedEffects() []string {
 	if a.Mode == DeliveryPullRequest {
 		return []string{"push", "pull_request"}
 	}
+	if a.HumanOwnedIntegration() {
+		return nil
+	}
 	return []string{a.Mode}
+}
+
+func (a DeliveryAgreement) HumanOwnedIntegration() bool {
+	return a.SchemaVersion == 2 && a.IntegrationOwner == IntegrationOwnerHuman
 }
 
 func (a DeliveryAgreement) StopAfter() string {
 	if a.Mode == DeliveryPullRequest {
 		return "verified_pull_request_before_merge"
+	}
+	if a.HumanOwnedIntegration() {
+		return "qualified_candidate_before_human_integration"
 	}
 	return "observed_local_integration_and_native_closure"
 }
@@ -160,6 +191,11 @@ func ValidateDeliveryAuthorization(a DeliveryAuthorization) error {
 			return fmt.Errorf("delivery authorization lacks %s", effect)
 		}
 	}
+	if h := a.HumanIntegration; h != nil {
+		if h.SchemaVersion != 1 || !validTaskText(h.PlanID, 1, 256) || !digestPattern.MatchString(h.PlanSHA256) || contentPath(h.DecisionLocator) != nil || !digestPattern.MatchString(h.DecisionSHA256) || contentPath(h.ReleaseLocator) != nil || !digestPattern.MatchString(h.ReleaseSHA256) || !lifecycleIDPatterns["human QA"].MatchString(string(h.HumanQARecordID)) || !lifecycleIDPatterns["task result"].MatchString(string(h.TaskResultID)) {
+			return fmt.Errorf("human integration authority lacks its exact plan, decision, release and candidate QA")
+		}
+	}
 	return nil
 }
 
@@ -188,6 +224,12 @@ func validateIntegrationDelivery(d Dependencies, root string, r WorkItemRegistry
 	}
 	if agreement.Mode == DeliveryPullRequest {
 		return workError(ErrorTaskIntegrationBlocked, "pull_request authorizes no local integration", nil)
+	}
+	if (agreement.HumanOwnedIntegration() || auth.HumanIntegrationRequired) && auth.HumanIntegration == nil {
+		return workError(ErrorTaskIntegrationBlocked, "human_integration_required: the developer mandate stops before integration; use ply integration", nil)
+	}
+	if h := auth.HumanIntegration; h != nil && (h.TaskResultID != result.ID || h.HumanQARecordID != qaID) {
+		return workError(ErrorTaskIntegrationBlocked, "human integration decision differs from the exact candidate and QA", nil)
 	}
 	latestQA, e := LatestTaskHumanQA(r.HumanQARecords, result.ID, result.ResultOID, result.ResultTree)
 	if e != nil || latestQA == nil || latestQA.Outcome != "pass" || latestQA.ID != qaID {

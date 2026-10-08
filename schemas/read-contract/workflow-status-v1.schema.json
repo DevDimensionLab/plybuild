@@ -337,7 +337,9 @@
             "integrated",
             "attention",
             "in_progress",
-            "nothing"
+            "nothing",
+            "completed",
+            "cleanup_pending"
           ]
         },
         "has_progress": {
@@ -352,7 +354,8 @@
             "blocked",
             "conflict",
             "partial",
-            "unknown"
+            "unknown",
+            "pr_merged"
           ]
         },
         "technical_gate": {
@@ -480,7 +483,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "base": {
@@ -928,6 +932,53 @@
         },
         "startup_recovery": {
           "$ref": "#/$defs/startup_recovery"
+        },
+        "closeout": {
+          "type": "object",
+          "required": [
+            "kind",
+            "schema_version",
+            "operation_id",
+            "plan_sha256",
+            "state",
+            "resource_state",
+            "lifecycle_completed"
+          ],
+          "properties": {
+            "kind": {
+              "const": "WorkspaceTaskCloseoutReceipt@1"
+            },
+            "schema_version": {
+              "const": 1
+            },
+            "operation_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "plan_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "state": {
+              "enum": [
+                "cleanup_pending",
+                "complete"
+              ]
+            },
+            "resource_state": {
+              "enum": [
+                "retained",
+                "removed",
+                "retired",
+                "kept"
+              ]
+            },
+            "lifecycle_completed": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true,
+          "description": "Optional exact candidate-bound Task closeout receipt. A complete retired resource remains historical after physical source removal."
         }
       },
       "additionalProperties": true,
@@ -1696,7 +1747,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "epic_lifecycle": {
@@ -1705,7 +1757,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "category": {

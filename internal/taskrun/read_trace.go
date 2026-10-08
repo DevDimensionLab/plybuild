@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -222,6 +223,11 @@ func (r *traceReader) read(path string, max int) ([]byte, error) {
 
 func (r *traceReader) bound(b FileBinding, max int) ([]byte, error) {
 	raw, err := r.read(b.Locator, max)
+	if os.IsNotExist(err) {
+		if retained, e := workspace.ResolveTaskRetainedEvidence(r.basis.Workspace.Root, r.basis.Task.ID, b.Locator, b.SHA256); e == nil {
+			raw, err = r.read(retained, max)
+		}
+	}
 	if err == nil && hash(raw) != b.SHA256 {
 		err = integrity("bound source digest differs: " + b.Locator)
 	}

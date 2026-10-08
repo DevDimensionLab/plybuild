@@ -63,7 +63,7 @@ func BuildAttention(s *Snapshot, filters workspace.TaskListFilters, process map[
 func attentionFromTasks(tasks TaskList) AttentionList {
 	out := AttentionList{AttentionKind, 1, tasks.Workspace, tasks.Scope, []AttentionItem{}, tasks.Freshness, "registered", tasks.Reasons}
 	for _, task := range tasks.Tasks {
-		if task.Lifecycle != workspace.LifecycleActive || task.EpicLifecycle != workspace.LifecycleActive || !task.Progress.HasProgress {
+		if (task.Lifecycle != workspace.LifecycleActive || task.EpicLifecycle != workspace.LifecycleActive) && task.Progress.State != "cleanup_pending" || !task.Progress.HasProgress {
 			continue
 		}
 		for _, action := range task.Progress.NextActions {

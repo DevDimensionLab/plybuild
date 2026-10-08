@@ -220,6 +220,8 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		goal := deliveryObject(map[string]any{"title": string(plan.TaskID), "recipient_role": "Responsible feature implementor", "objective": "Deliver the selected goal and its exact execution Spec within the authorized local Task and Epic.", "done_when": "The actual human has passed the exact verified candidate and its authorized local integration is observed."})
 		if agreement != nil && agreement.Mode == workspace.DeliveryPullRequest {
 			goal = replaceObjectMember(goal, "done_when", "The exact verified candidate has actual human pass and a verified PR to the agreed repository/base; stop before merge.")
+		} else if agreement != nil && agreement.HumanOwnedIntegration() {
+			goal = replaceObjectMember(goal, "done_when", "Qualify the exact candidate, register Delivery and explicitly release source ownership to the human-started integration command. Stop before integration.")
 		}
 		procedure := []canonicaljson.Value{deliveryObject(map[string]any{"id": "implement", "instruction": "Own design, tests, permitted delegation, review and local delivery. Preserve actual results and report task-requirements for each verified candidate. Human QA and integration are separate facts; never fabricate them.", "required_before": []string{}})}
 		if agreement != nil {
@@ -247,7 +249,7 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 			if agreement.Mode == workspace.DeliveryPullRequest {
 				add("delivery-push", "push", scope, 1)
 				add("delivery-pr", "pull_request", scope, 1)
-			} else {
+			} else if !agreement.HumanOwnedIntegration() {
 				add("delivery-integration", "integration", scope, 1)
 			}
 		}
@@ -258,8 +260,8 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 			}
 			forbidden = append(forbidden, deliveryObject(map[string]any{"type": kind, "reason": "Outside the selected local delivery contract."}))
 		}
-		if agreement != nil && agreement.Mode == workspace.DeliveryPullRequest {
-			forbidden = append(forbidden, deliveryObject(map[string]any{"type": "integration", "reason": "PR delivery grants no local target integration."}))
+		if agreement != nil && (agreement.Mode == workspace.DeliveryPullRequest || agreement.HumanOwnedIntegration()) {
+			forbidden = append(forbidden, deliveryObject(map[string]any{"type": "integration", "reason": "This developer delivery stops before human-started integration."}))
 		}
 		if !allowInstall {
 			forbidden = append(forbidden, deliveryObject(map[string]any{"type": "install", "reason": "Local installation was not selected."}))

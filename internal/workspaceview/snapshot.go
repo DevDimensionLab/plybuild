@@ -21,6 +21,7 @@ type Snapshot struct {
 	Projects      workspace.ProjectSnapshot
 	Registry      workspace.WorkItemRegistry
 	Titles        map[workspace.TaskID]workspace.TaskListTitle
+	Closeouts     map[workspace.TaskID]workspace.TaskCloseoutReceipt
 	Lifecycle     workspace.WorkItemLifecycleSnapshot
 	Freshness     string
 	Reasons       []string
@@ -72,6 +73,14 @@ func LoadSnapshot(d workspace.Dependencies) (*Snapshot, error) {
 		now = d.WorkClock.Now()
 	}
 	s := &Snapshot{Workspace: basis.Workspace, Projects: basis.Projects, Registry: basis.Registry, Titles: basis.Titles, Lifecycle: lifecycle, Freshness: "fresh", Reasons: []string{}, ObservedAtUTC: now.UTC().Format(time.RFC3339Nano), basis: basis}
+	s.Closeouts = map[workspace.TaskID]workspace.TaskCloseoutReceipt{}
+	closeouts, err := workspace.ReadTaskCloseoutsAt(basis.Workspace.Root)
+	if err != nil {
+		return nil, err
+	}
+	for _, receipt := range closeouts {
+		s.Closeouts[receipt.Plan.TaskID] = receipt
+	}
 	s.RefreshFreshness(d)
 	return s, nil
 }

@@ -117,6 +117,15 @@ func workflowReservations(d Dependencies, root string, target workspace.PlanWork
 			if s.Result.Delivery == nil || s.Result.Delivery.Phase != "completed" {
 				return workflowError(4, "A delivery owner still owns this target through human QA and local integration")
 			}
+			if h := s.Result.Delivery.HumanIntegration; h != nil && h.Accepted {
+				closed, err := workflowCompletedCloseout(root, s)
+				if err != nil {
+					return err
+				}
+				if closed == nil {
+					return workflowError(4, "The accepted human integration retains this Task source until its exact closeout completes. Unrelated Task sources remain available.")
+				}
+			}
 			// Completion ends this mandate, not the provider session. A later
 			// start still needs the native qualified result below.
 			if len(s.Result.Delivery.Candidates) > 0 {
@@ -317,6 +326,22 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		// Correct the readback without rewriting those historical artifacts.
 		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved startup and any native onboarding in the same tab; no native session is bound. Do not restart or resend input."}
 	}
+	if closeout, closeoutErr := workflowTaskCloseout(root, s); closeoutErr != nil {
+		o.Reasons = append(o.Reasons, Reason{"task_closeout_unavailable", closeoutErr.Error()})
+	} else if closeout != nil {
+		o.Closeout = closeout
+		if closeout.State == "complete" {
+			o.Round.State, o.FinalReturn.State = "completed", "completed"
+			o.NextAction = WorkflowAction{"user", "The exact Task delivery is closed; its source resource is " + closeout.ResourceState + " and retained evidence remains available."}
+			return o, nil
+		}
+		reason, _, detail := workspace.TaskCloseoutPendingAction(*closeout)
+		o.Reasons = append(o.Reasons, Reason{reason, detail})
+		o.NextAction = WorkflowAction{"user", detail}
+		if closeout.WorktreeRemoved || workspace.TaskCloseoutSourceRemovalPending(*closeout) {
+			return o, nil
+		}
+	}
 	if e = workflowFresh(d, s, true); e != nil {
 		o.Reasons = append(o.Reasons, Reason{"workflow_run_drift", e.Error()})
 		o.Round.State = "unknown"
@@ -346,6 +371,8 @@ func deliveryCurrentCandidateQualified(s workflowState) bool {
 	case "verification":
 		return d.Attempt.ID == c.Key
 	case "human_qa":
+		return c.HumanQA != nil && c.HumanQA.TaskResultID == c.TaskResult.ID
+	case "human_integration":
 		return c.HumanQA != nil && c.HumanQA.TaskResultID == c.TaskResult.ID
 	case "integration":
 		return c.Integration != nil && d.Phase == "completed"

@@ -174,6 +174,24 @@ unknown start, verifier or integration and never replace the control executable.
 			guide = strings.ReplaceAll(guide, "## Actual human QA and local integration", "## Actual human QA and PR delivery")
 			guide = strings.ReplaceAll(guide, control+" workflow execute integrate "+id+" --context "+context, "Use the delivery CLI to register, check and execute the exact pull_request agreement after actual candidate-bound human pass.")
 			guide = strings.ReplaceAll(guide, "Integration requires actual pass on the exact candidate and unchanged parent.", "PR delivery requires actual pass on the exact candidate and the agreed remote repository, source and base. It stops before merge and leaves the local parent and Epic base unchanged.")
+		} else if a.HumanOwnedIntegration() {
+			start, end := strings.Index(guide, "## Actual human QA and local integration"), strings.Index(guide, "\n## Frozen delivery agreement")
+			if start >= 0 && end > start {
+				guide = guide[:start] + fmt.Sprintf(`## Candidate handoff to human integration
+
+Register the exact technically qualified Delivery with the delivery CLI. Stop
+writing the source, then explicitly release this candidate:
+
+%s workflow execute release %s --context %s --reason 'Exact candidate qualified; source writing is released to human integration.'
+
+The human starts ply integration from an existing return checkout, reviews the
+visible plan, and supplies the actual pass/fail/blocked answer. The native command
+preserves the answer and authorizes only that exact plan. The developer stops
+before integration; execute integrate and delivery execute cannot bypass this
+boundary. A negative human decision returns correction ownership: correct,
+qualify and release the candidate again before a new human integration decision.
+`, control, id, context) + guide[end:]
+			}
 		}
 	}
 	return d.writeOnce(filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), []byte(guide))

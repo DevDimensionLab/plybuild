@@ -171,6 +171,11 @@ func inventoryOwners(s *Snapshot, project workspace.ProjectID, repo workspace.Re
 		if task.ProjectID != project || task.RepoID != repo.ID {
 			continue
 		}
+		if task.WorktreeState == workspace.WorkItemRetired || s.Closeouts[task.ID].WorktreeRemoved {
+			// A retired receipt is historical ownership, not permission to claim
+			// a later checkout that happens to reuse the old physical locator.
+			continue
+		}
 		if task.Worktree != nil {
 			w := task.Worktree
 			owners[w.Locator] = inventoryOwner{"task", string(task.ID), w.Ref, w.GitCommonDir, bases[task.ParentEpicID], s.Freshness}

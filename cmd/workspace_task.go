@@ -414,6 +414,11 @@ func renderTaskShow(command *cobra.Command, result workspace.TaskReadbackResult)
 	} else if err := renderTaskWorktreeBlock(command, result.Task, result.Operation, result.ReadyForHandoff, result.Reasons); err != nil {
 		return err
 	}
+	if result.Closeout != nil {
+		if _, err := fmt.Fprintf(command.OutOrStdout(), "Closeout: %s; phase %s; worktree %s\nIntegration operation: %s\n", result.Closeout.State, result.Closeout.Phase, result.Closeout.ResourceState, result.Closeout.OperationID); err != nil {
+			return err
+		}
+	}
 	if result.Integration != nil {
 		_, err := fmt.Fprint(command.OutOrStdout(), workspace.RenderTaskIntegrationText(*result.Integration))
 		return err

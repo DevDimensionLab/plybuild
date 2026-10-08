@@ -471,14 +471,14 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 		return validateQueueYAMLMap(node)
 	case reflect.Struct:
 		fields := yamlStructShapeFields(expected)
-		if expected == reflect.TypeOf(DeliveryAgreement{}) {
+		if expected == reflect.TypeOf(DeliveryAgreement{}) || expected == reflect.TypeOf(DeliveryAuthorization{}) {
 			present := map[string]bool{}
 			for i := 0; i+1 < len(node.Content); i += 2 {
 				present[node.Content[i].Value] = true
 			}
 			filtered := []yamlShapeField{}
 			for _, field := range fields {
-				optional := field.name == "source_ref" || field.name == "target_worktree" || field.name == "github_repository" || field.name == "remote"
+				optional := field.name == "source_ref" || field.name == "target_worktree" || field.name == "github_repository" || field.name == "remote" || field.name == "integration_owner" || field.name == "human_integration" || field.name == "human_integration_required"
 				if !optional || present[field.name] {
 					filtered = append(filtered, field)
 				}
@@ -717,7 +717,7 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 			if task.Worktree != nil || !hasOperation || operation.State != "reconciliation_required" {
 				return fmt.Errorf("Task %s has incomplete operation state", task.ID)
 			}
-		case WorkItemReady:
+		case WorkItemReady, WorkItemRetired:
 			if task.Worktree == nil || !hasOperation || operation.State != "ready" {
 				return fmt.Errorf("ready Task %s has invalid binding", task.ID)
 			}
@@ -805,7 +805,7 @@ func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
 	authorities := map[IntegrationAuthorityID]IntegrationAuthority{}
 	planDigests := map[string]bool{}
 	for _, a := range registry.IntegrationAuthorities {
-		validMode := a.Mode == "human_cli_start" && a.DeliveryOwner == nil || a.Mode == "delivery_owner_after_human_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner)
+		validMode := a.Mode == "human_cli_start" && a.DeliveryOwner == nil || a.Mode == "delivery_owner_after_human_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner) || a.Mode == "human_integration_plan" && validDeliveryIntegrationOwner(a.DeliveryOwner) && a.Plan.DeliveryAuthorization != nil && a.Plan.DeliveryAuthorization.HumanIntegration != nil
 		if a.Plan.DeliveryAuthorization != nil && a.DeliveryOwner != nil && (a.DeliveryOwner.RunID != a.Plan.DeliveryAuthorization.RunID || a.DeliveryOwner.RequestSHA256 != a.Plan.DeliveryAuthorization.RequestSHA256) {
 			validMode = false
 		}
@@ -1029,6 +1029,9 @@ func validateStoredIntegrationPlan(p WorkspaceTaskIntegrationPlan, registry Work
 		bound, err := BindDeliveryAgreement(auth.Agreement, target, p.Task.SourceRef)
 		if err != nil || ValidateDeliveryAuthorization(*auth) != nil || auth.CandidateRunID != result.RunID || auth.Agreement.Mode == DeliveryPullRequest || !contentTypedEqual(bound, auth.Agreement) {
 			return errors.New("integration plan delivery authority differs from exact result and target")
+		}
+		if (auth.Agreement.HumanOwnedIntegration() || auth.HumanIntegrationRequired) && auth.HumanIntegration == nil || auth.HumanIntegration != nil && (auth.HumanIntegration.TaskResultID != result.ID || auth.HumanIntegration.HumanQARecordID != qa.ID) {
+			return errors.New("integration plan requires its exact preserved human decision")
 		}
 	}
 	if validatePlanObservation(p.ObservedSource) != nil || validatePlanObservation(p.ObservedParent) != nil || validateInventory(p.ObservedInventory) != nil || validateReflog(p.ObservedReflog) != nil || !setString("ready", "already_integrated", "blocked", "conflict", "unknown")[p.Readiness] || !sortedReasonTokens(p.Reasons) {

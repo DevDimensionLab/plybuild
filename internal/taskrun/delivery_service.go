@@ -47,7 +47,7 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 	}
 	c := r.Delivery
 	boundary := "after_human_pass"
-	if c.Agreement != nil && c.Agreement.Mode == workspace.DeliveryPullRequest {
+	if c.Agreement != nil && (c.Agreement.Mode == workspace.DeliveryPullRequest || c.Agreement.HumanOwnedIntegration()) {
 		boundary = "none"
 	}
 	if !plain(c.OwnerClaim, 1, 256) || c.LocalIntegration != boundary || !filepath.IsAbs(c.AcceptancePath) || filepath.Clean(c.AcceptancePath) != c.AcceptancePath || c.ReasoningEffort != "" && !plain(c.ReasoningEffort, 1, 64) {
@@ -118,6 +118,12 @@ func deliveryInstructions(s workflowState) string {
 		if c.Agreement.Mode == workspace.DeliveryPullRequest {
 			instructions = strings.ReplaceAll(instructions, "only an exact candidate pass permits execute integrate.", "only an exact candidate pass permits the agreed PR publication through the delivery CLI; execute integrate is forbidden for this mode.")
 			instructions = strings.ReplaceAll(instructions, "Continue local integration and base update when the actual pass and original authority cover them.", "Continue the agreed PR delivery and truthful queue closure after actual pass. Stop before merge; preserve the local target and Epic base.")
+			if c.Agreement.HumanOwnedIntegration() {
+				instructions += " After verified PR delivery, explicitly release source ownership with workflow execute release; the human starts ply integration for a separate merge plan."
+			}
+		} else if c.Agreement.HumanOwnedIntegration() {
+			instructions = strings.ReplaceAll(instructions, "After candidate qualification, prepare the actual installed human journey. Preserve the human's exact answer through execute qa; only an exact candidate pass permits execute integrate.", "After candidate qualification, register the exact Delivery and explicitly release source writing with workflow execute release. Stop before integration; the human starts ply integration from an existing checkout, reviews the visible plan, and supplies the actual pass/fail/blocked answer.")
+			instructions = strings.ReplaceAll(instructions, "Continue local integration and base update when the actual pass and original authority cover them.", "Human QA alone grants the developer no integration authority. Corrections require an explicit negative human decision returning source ownership; qualify and release a new candidate after correction.")
 		}
 	}
 	return instructions

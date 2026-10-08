@@ -63,6 +63,61 @@ func (r *traceReader) delivery(s workflowState) {
 			r.verification(s, e, raw, candidates)
 		case "human_qa":
 			r.deliveryQA(s, e, raw, candidates)
+		case "ownership_release":
+			var release deliveryOwnershipRelease
+			if err := decode(raw, 1<<20, &release); err != nil {
+				r.problem("trace_owner_release_unbound", err.Error())
+				continue
+			}
+			var candidate *DeliveryCandidate
+			for _, c := range candidates {
+				if c.TaskResult.ID == release.TaskResultID && c.OID == release.ResultOID && c.Tree == release.ResultTree && c.TaskResult.SourceLocator == release.SourceLocator && c.TaskResult.SourceRef == release.SourceRef {
+					copy := c
+					candidate = &copy
+				}
+			}
+			if candidate == nil || release.OwnerClaim != s.Request.Delivery.OwnerClaim || release.SessionID != s.Result.SessionID {
+				r.problem("trace_owner_release_unbound", "Owner release does not bind a qualified source: "+e.ID)
+				continue
+			}
+			e.Kind, e.Role, e.ActorClaim, e.EvidenceClass = "source_ownership_release", "agent", release.OwnerClaim, "controlled"
+			if release.Origin == "observed_provider_exit" {
+				e.Role, e.ActorClaim = "ply", "ply native provider observation"
+			}
+			e.Candidate, e.Data, e.RegisteredAtUTC = traceCandidate(*candidate), traceJSON(release), r.time(release.RecordedAtUTC, e.ID)
+			r.run.Entries = append(r.run.Entries, e)
+		case "human_integration":
+			var decision HumanIntegrationAcceptance
+			if err := decode(raw, 1<<20, &decision); err != nil {
+				r.problem("trace_human_integration_unbound", err.Error())
+				continue
+			}
+			var candidate *DeliveryCandidate
+			for _, c := range candidates {
+				if c.TaskResult.ID == decision.HumanQA.TaskResultID && c.OID == decision.HumanQA.ResultOID && c.Tree == decision.HumanQA.ResultTree {
+					copy := c
+					candidate = &copy
+				}
+			}
+			registered := false
+			for _, qa := range r.basis.Registry.HumanQARecords {
+				if equal(qa, decision.HumanQA) {
+					registered = true
+				}
+			}
+			if candidate == nil || !registered || decision.Accepted != (decision.HumanQA.Outcome == "pass") {
+				r.problem("trace_human_integration_unbound", "Human decision differs from native candidate QA: "+e.ID)
+				continue
+			}
+			if _, err := r.bound(decision.Decision, 1<<20); err != nil {
+				r.problem("trace_human_integration_unbound", err.Error())
+				continue
+			}
+			e.Kind, e.Role, e.ActorClaim, e.EvidenceClass = "human_integration_decision", "human", decision.HumanQA.Actor.ActorClaim, "human_attestation"
+			e.Candidate, e.Outcome, e.Data = traceCandidate(*candidate), ptr(decision.HumanQA.Outcome), traceJSON(decision)
+			e.ReportedAtUTC = r.time(decision.HumanQA.Actor.CompletedAtUTC, e.ID)
+			traceNative(&e, "human_qa", string(decision.HumanQA.ID), decision.HumanQA)
+			r.run.Entries = append(r.run.Entries, e)
 		case "integration":
 			r.deliveryIntegration(s, e, raw, candidates)
 		case "pull_request":

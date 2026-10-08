@@ -152,6 +152,28 @@ func BuildTaskList(s *Snapshot, filters workspace.TaskListFilters, process map[w
 			title = workspace.TaskListTitle{Title: &registeredTitle, Source: "registration", Status: "available"}
 		}
 		p := buildProgress(task, facts[task.ID], process[task.ID], s.Freshness, s.Reasons)
+		if closeout, ok := s.Closeouts[task.ID]; ok {
+			p.HasProgress = true
+			p.TaskResultID = stringValue(string(closeout.Plan.TaskResultID))
+			p.LastActivityUTC = latestTime(p.LastActivityUTC, stringValue(closeout.UpdatedAtUTC))
+			if closeout.ObservedPR != nil {
+				p.IntegrationClassification = "pr_merged"
+			}
+			if closeout.WorktreeRemoved {
+				task.WorktreeState = workspace.WorkItemRetired
+			}
+			if closeout.State == "complete" {
+				p.State = "completed"
+				p.NextActions = []Action{}
+				p.Reasons = append(p.Reasons, "task_worktree_"+closeout.ResourceState)
+			} else {
+				p.State = "cleanup_pending"
+				reason, kind, detail := workspace.TaskCloseoutPendingAction(closeout)
+				p.Reasons = append(p.Reasons, reason)
+				p.NextActions = []Action{{Source: "integration", Kind: kind, Actor: "human", Reason: detail, Severity: "attention", SinceUTC: stringValue(closeout.UpdatedAtUTC), EvidenceIDs: []string{closeout.OperationID}}}
+			}
+			p.Reasons = sortedUnique(p.Reasons)
+		}
 		for _, event := range s.Lifecycle.Events {
 			if event.SubjectKind == "task" && event.SubjectID == string(task.ID) {
 				p.LastActivityUTC = latestTime(p.LastActivityUTC, &event.RecordedAtUTC)

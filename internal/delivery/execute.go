@@ -35,6 +35,9 @@ func (s *Service) Execute(cwd, id string) (Receipt, error) {
 		if r.State == "delivered" {
 			return nil
 		}
+		if e = taskrun.CheckAgentDeliveryExecution(d, root, r.Manifest.WorkflowRunID); e != nil {
+			return s.stop(root, &r, "blocked", e.Error(), "Continue the explicit human integration plan; the developer has no execution ownership.")
+		}
 		r.Attempts++
 		r.AttemptID = fmt.Sprintf("%s/attempt/%06d", r.ID, r.Attempts)
 		s.event(&r, "delivery.attempt_started", r.AttemptID, "Explicit delivery attempt started; no background worker.", "")

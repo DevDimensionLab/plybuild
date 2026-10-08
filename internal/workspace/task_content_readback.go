@@ -462,6 +462,15 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 	resource := result
 	resource.Content = nil
 	resource.Integration = nil
+	resource.Closeout = nil
+	if result.Closeout != nil {
+		if result.Closeout.State == "complete" {
+			action = TaskNextAction{"none", "The Task is completed; retained evidence remains available in its closeout receipt.", []string{}}
+		} else {
+			_, kind, detail := TaskCloseoutPendingAction(*result.Closeout)
+			action = TaskNextAction{kind, detail, []string{"ply", "integration", "resume", result.Closeout.OperationID}}
+		}
+	}
 	b, _ := MarshalTaskReadback(resource)
 	rv, _ := canonicaljson.DecodeStrict(b)
 	var integration canonicaljson.Value
@@ -476,6 +485,9 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 		mode = "spec_required"
 	}
 	m := map[string]canonicaljson.Value{"workspace": root, "registry_sha256": nullableDigest(r.RawSHA256), "observed_at_utc": d.WorkClock.Now().UTC().Format(time.RFC3339Nano), "mode": mode, "resource": rv, "integration": integration, "problem": contentObject(problem), "solution": contentObject(map[string]canonicaljson.Value{"spec_id": specID, "head": contentRefValue(state.SpecHead), "selected_revision": contentRefValue(selected), "newer_draft_available": newer}), "selection": sel, "results": results, "ready_for_spec_handoff": ready, "freshness": contentObject(map[string]canonicaljson.Value{"registry": fresh, "content": eval.ContentIntegrity, "selection": sfresh, "target": eval.TargetFreshness}), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(action), "next_transition_authorized": false}
+	if result.Closeout != nil {
+		m["closeout"] = structCanonical(*result.Closeout)
+	}
 	o := contentFields(contentEnvelope("WorkspaceTaskReadback@3", m))
 	o["schema_version"] = int64(3)
 	return contentObject(o)
@@ -511,6 +523,9 @@ func TaskContentText(o canonicaljson.Object) string {
 			write("Newer draft: %s; the current choice has not changed\n", revision(s["head"]))
 		}
 		write("Selection: %s\n", contentString(sel, "freshness"))
+		if closeout := contentFields(m["closeout"]); len(closeout) > 0 {
+			write("Closeout: %s; phase %s; worktree %s\nIntegration operation: %s\n", contentString(closeout, "state"), contentString(closeout, "phase"), contentString(closeout, "resource_state"), contentString(closeout, "operation_id"))
+		}
 		if m["ready_for_spec_handoff"] == true {
 			write("Readiness: Ready for handoff preparation; no agent start authorized\n")
 		} else {

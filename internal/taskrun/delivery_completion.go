@@ -105,6 +105,9 @@ func WorkflowDeliveryQA(d Dependencies, root, id, contextPath, outcome, evidence
 				} else if agreement.Mode == "local_branch_integration" {
 					s.Result.NextAction = WorkflowAction{"recipient", "Complete the authorized local integration into " + agreement.TargetRef + " at " + agreement.TargetWorktree + ", then observe the registered base and Task queue closure."}
 				}
+				if agreement.HumanOwnedIntegration() && agreement.Mode != "pull_request" {
+					s.Result.NextAction = WorkflowAction{"user", "Start ply integration for this exact candidate after the developer explicitly releases source ownership. This QA pass does not authorize the developer to integrate."}
+				}
 			}
 		} else if outcome == "blocked" {
 			s.Result.Delivery.Phase = "awaiting_human_qa"
@@ -123,6 +126,9 @@ func WorkflowDeliveryIntegrate(d Dependencies, root, id, contextPath string) (Wo
 	initial, initialErr := workflowRead(root, id)
 	if initialErr != nil {
 		return WorkflowRun{}, initialErr
+	}
+	if e := CheckAgentDeliveryExecution(d, root, id); e != nil {
+		return WorkflowRun{}, e
 	}
 	if deliveryRun(initial.Request) && initial.Request.Delivery.Agreement != nil {
 		if initial.Request.Delivery.Agreement.Mode == "pull_request" {

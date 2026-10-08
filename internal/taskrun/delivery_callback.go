@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -35,7 +36,7 @@ func positiveDeliveryClaim(a Acceptance, permission DeliveryPermissionAcceptance
 	}
 	if r.Delivery != nil && r.Delivery.Agreement != nil {
 		agreement := *r.Delivery.Agreement
-		if permission.DeliveryAgreementSHA256 != workspace.DeliveryAgreementDigest(agreement) || !equal(permission.AllowedEffects, workflowhandoff.DeliveryAllowedEffects(agreement)) {
+		if permission.DeliveryAgreementSHA256 != workspace.DeliveryAgreementDigest(agreement) || !slices.Equal(permission.AllowedEffects, workflowhandoff.DeliveryAllowedEffects(agreement)) {
 			return workflowError(4, "actual permission acceptance does not cover the exact frozen delivery mode, target and effects")
 		}
 	} else if permission.DeliveryAgreementSHA256 != "" || len(permission.AllowedEffects) != 0 {
@@ -73,6 +74,9 @@ func deliveryModelMatches(provider, requested, actual string) bool {
 func deliveryCallback(d Dependencies, s workflowState, contextPath string, started bool) error {
 	if !deliveryRun(s.Request) || s.Result.Delivery == nil {
 		return workflowError(4, "run is not a delivery-owner v2 execution")
+	}
+	if s.Result.Delivery.OwnershipRelease != nil {
+		return workflowError(4, "owner_released: developer callbacks are closed; continue human integration or return correction ownership through a negative human decision")
 	}
 	if e := workflowCallback(d, s, contextPath); e != nil {
 		return e
@@ -409,6 +413,9 @@ func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath st
 			current.Result.Delivery.Phase = "awaiting_human_qa"
 			current.Result.TaskResultState = "candidate_qualified"
 			current.Result.NextAction = WorkflowAction{"recipient", "Prepare the exact installed candidate journey and request the human's actual product judgment; retain ownership of the same session."}
+			if a := current.Request.Delivery.Agreement; a != nil && a.HumanOwnedIntegration() && a.Mode != workspace.DeliveryPullRequest {
+				current.Result.NextAction = WorkflowAction{"recipient", "Register the exact Delivery and explicitly release source ownership with ply workflow execute release. The human starts ply integration; stop before integration."}
+			}
 		}
 		current.Result.Round.State = current.Result.Delivery.Phase
 		return nil

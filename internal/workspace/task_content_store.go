@@ -151,6 +151,9 @@ func (s *TaskContentStorage) Read(root, kind, digest string) ([]byte, error) {
 	if kind == "objects" {
 		limit = taskDocumentLimit
 	}
+	if kind == "closeout" {
+		limit = closeoutEvidenceLimit
+	}
 	if kind == "backups" {
 		limit = int(^uint(0)>>1) - 1
 	}

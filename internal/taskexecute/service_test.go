@@ -105,7 +105,10 @@ func launcherFixtureForProvider(t *testing.T, provider string, delivery ...works
 	}
 	if len(delivery) != 0 {
 		a := delivery[0]
-		a.SchemaVersion, a.ProjectID, a.RepoID, a.EpicID = 1, "fixture", "fixture", "epic"
+		if a.SchemaVersion == 0 {
+			a.SchemaVersion = 1
+		}
+		a.ProjectID, a.RepoID, a.EpicID = "fixture", "fixture", "epic"
 		if a.TargetRef == "" {
 			a.TargetRef = "refs/heads/epic"
 		}

@@ -250,6 +250,11 @@ func (out *WorkflowStatus) addQueues(rows map[workspace.TaskID]*WorkflowStatusIt
 
 func workflowClassify(row *WorkflowStatusItem) {
 	switch {
+	case row.Progress.State == "cleanup_pending":
+		row.Category = "follow_up"
+		return
+	case row.TaskLifecycle == workspace.LifecycleCompleted && row.Progress.State == "completed":
+		row.Category = "completed"
 	case row.TaskLifecycle != workspace.LifecycleActive || row.EpicLifecycle != workspace.LifecycleActive:
 		row.Category = "inactive"
 	case row.Progress.State == "integrated":

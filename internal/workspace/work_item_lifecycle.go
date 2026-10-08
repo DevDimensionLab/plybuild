@@ -15,6 +15,7 @@ const (
 	LifecycleParked               LifecycleState = "parked"
 	LifecycleFrozen               LifecycleState = "frozen"
 	LifecycleArchived             LifecycleState = "archived"
+	LifecycleCompleted            LifecycleState = "completed"
 	WorkItemLifecycleFile                        = "work-item-lifecycle.json"
 	WorkItemLifecycleReadbackKind                = "WorkspaceWorkItemLifecycleReadback@1"
 	WorkItemLifecycleMutationKind                = "WorkspaceWorkItemLifecycleMutation@1"
@@ -22,10 +23,10 @@ const (
 
 func (state LifecycleState) Validate() error {
 	switch state {
-	case LifecycleActive, LifecycleParked, LifecycleFrozen, LifecycleArchived:
+	case LifecycleActive, LifecycleParked, LifecycleFrozen, LifecycleArchived, LifecycleCompleted:
 		return nil
 	default:
-		return WorkInvalidArguments("lifecycle must be active, parked, frozen, or archived")
+		return WorkInvalidArguments("lifecycle must be active, parked, frozen, archived, or completed")
 	}
 }
 
@@ -176,6 +177,9 @@ func setWorkItemLifecycle(d Dependencies, input WorkItemLifecycleInput, publishe
 	var result WorkItemLifecycleMutation
 	if err := input.Validate(); err != nil {
 		return result, err
+	}
+	if input.State == LifecycleCompleted {
+		return result, WorkInvalidArguments("completed is recorded only by native integration closeout")
 	}
 	if d.WorkItems == nil || d.WorkClock == nil {
 		return result, workError(ErrorWorkIO, "work-item store and clock dependencies are required", nil)

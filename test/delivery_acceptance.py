@@ -22,6 +22,7 @@ def main():
     for name in (
         "PLY_WORKFLOW_FIXTURE_ROOT", "PLY_CLAUDE_ENV_FIXTURE",
         "PLY_JOURNAL_FIXTURE_ROOT", "PLY_DELIVERY_JOURNEY_ROOT",
+        "PLY_INTEGRATION_JOURNEY_ROOT",
         "PLY_SYNTHETIC_PROCESS", "PLY_SYNTHETIC_RESERVATION_CHILD",
     ):
         if os.environ.get(name):

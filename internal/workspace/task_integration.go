@@ -460,6 +460,9 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 			authority := IntegrationAuthority{ID: authorityID, Mode: "human_cli_start", CreatedAtUTC: now, PlanSHA256: digest, Plan: plan, RetryAfterResultID: input.RetryAfterResultID, TaskID: input.TaskID, TaskResultID: input.TaskResultID, HumanQARecordID: input.HumanQARecordID, AllowedEffect: IntegrationAllowedEffect{Kind: "local_ff_only", ParentRef: plan.Epic.ParentRef, ExpectedParentOID: plan.Epic.ExpectedParentOID, ResultOID: plan.Task.ResultOID, MaxOccurrences: 1}}
 			if input.DeliveryOwner != nil {
 				authority.Mode = "delivery_owner_after_human_pass"
+				if input.DeliveryAuthorization != nil && input.DeliveryAuthorization.HumanIntegration != nil {
+					authority.Mode = "human_integration_plan"
+				}
 				copy := *input.DeliveryOwner
 				authority.DeliveryOwner = &copy
 			}
@@ -730,7 +733,7 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	if input.DeliveryAuthorization != nil {
 		plan.Kind, plan.SchemaVersion = "WorkspaceTaskIntegrationPlan@3", 3
 		copy := *input.DeliveryAuthorization
-		copy.AllowedEffects = append([]string(nil), copy.AllowedEffects...)
+		copy.AllowedEffects = append([]string{}, copy.AllowedEffects...)
 		plan.DeliveryAuthorization = &copy
 	}
 	digest := integrationPlanDigest(plan)

@@ -3,6 +3,7 @@ package taskrun
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -88,7 +89,11 @@ func deliveryAuthorityState(d Dependencies, s workflowState) (*workspace.Deliver
 	if facts.Start == nil || facts.Start.SHA256 != *s.StartSHA256 {
 		return nil, workflowError(4, "delivery native start evidence changed")
 	}
-	return &workspace.DeliveryAuthorization{Agreement: *s.Request.Delivery.Agreement, AgreementSHA256: workspace.DeliveryAgreementDigest(*s.Request.Delivery.Agreement), RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, MandateSHA256: s.Result.Handoff.SHA256, AllowedEffects: append([]string(nil), acceptance.DeliveryPermission.AllowedEffects...), PermissionConfirmed: true}, nil
+	human, err := preservedHumanIntegration(s)
+	if err != nil {
+		return nil, err
+	}
+	return &workspace.DeliveryAuthorization{Agreement: *s.Request.Delivery.Agreement, AgreementSHA256: workspace.DeliveryAgreementDigest(*s.Request.Delivery.Agreement), RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, MandateSHA256: s.Result.Handoff.SHA256, AllowedEffects: append([]string{}, acceptance.DeliveryPermission.AllowedEffects...), PermissionConfirmed: true, HumanIntegration: human, HumanIntegrationRequired: s.Request.Delivery.Agreement.HumanOwnedIntegration() && s.Request.Delivery.Agreement.Mode != workspace.DeliveryPullRequest || s.Result.Delivery.OwnershipRelease != nil}, nil
 }
 
 func deliveryEvidenceAuthorization(d Dependencies, request workspace.TaskHandoffEvidenceRequest) (*workspace.DeliveryAuthorization, error) {
@@ -286,9 +291,15 @@ type PullRequestDeliveryObservation struct {
 // CompletePullRequestDelivery closes only this Task's queue and records the
 // observed PR receipt. It never writes a target ref, integration or Epic base.
 func CompletePullRequestDelivery(d Dependencies, root, id string, resultID workspace.TaskResultID, receipt FileBinding, observed PullRequestDeliveryObservation) (WorkflowRun, error) {
+	if e := CheckAgentDeliveryExecution(d, root, id); e != nil {
+		return WorkflowRun{}, e
+	}
 	a, err := nativeDeliveryCandidate(d, root, id, resultID)
 	if err != nil {
 		return WorkflowRun{}, err
+	}
+	if a.Authorization.HumanIntegrationRequired || a.Authorization.HumanIntegration != nil {
+		return WorkflowRun{}, workflowError(4, "human_integration_required: source ownership changed before PR completion")
 	}
 	if err = requireDeliveryPass(a); err != nil {
 		return WorkflowRun{}, err
@@ -366,10 +377,25 @@ func CompletePullRequestDelivery(d Dependencies, root, id string, resultID works
 // then preserves truthful queue/base/runtime completion independently of the
 // original interactive owner process.
 func CompleteLocalDelivery(d Dependencies, root, id string, resultID workspace.TaskResultID, qaID workspace.HumanQARecordID) (workflowhandoff.DeliveryIntegrationResult, error) {
+	return completeLocalDelivery(d, root, id, resultID, qaID, false)
+}
+
+func completeLocalDelivery(d Dependencies, root, id string, resultID workspace.TaskResultID, qaID workspace.HumanQARecordID, human bool) (workflowhandoff.DeliveryIntegrationResult, error) {
 	var out workflowhandoff.DeliveryIntegrationResult
+	if !human {
+		if e := CheckAgentDeliveryExecution(d, root, id); e != nil {
+			return out, e
+		}
+		if e := d.fault("local_delivery_after_agent_gate"); e != nil {
+			return out, e
+		}
+	}
 	a, err := nativeDeliveryCandidate(d, root, id, resultID)
 	if err != nil {
 		return out, err
+	}
+	if !human && (a.Authorization.HumanIntegrationRequired || a.Authorization.HumanIntegration != nil) {
+		return out, workflowError(4, "human_integration_required: source ownership changed before local delivery execution")
 	}
 	if err = requireDeliveryPass(a); err != nil {
 		return out, err
@@ -377,10 +403,44 @@ func CompleteLocalDelivery(d Dependencies, root, id string, resultID workspace.T
 	if a.Agreement.Mode == workspace.DeliveryPullRequest || a.Candidate.HumanQA.ID != qaID {
 		return out, workflowError(4, "local delivery mode or candidate human QA differs")
 	}
-	out, err = workflowhandoff.IntegrateDeliveryCandidate(d.Workflow, string(a.Candidate.TaskResult.TaskID), resultID, qaID, a.ExpectedParentOID, a.Candidate.OID, workflowhandoff.DeliveryOwnerAuthority{RunID: id, RequestSHA256: a.RequestSHA256, ActorClaim: a.OwnerClaim, PreparationID: a.PreparationID, Authorization: a.Authorization})
-	if err != nil || !out.Completed {
+	// The reservation spans merge, queue and base effects. A released owner or
+	// later human answer may not race the workspace's final authority check.
+	inputSHA := digest([]any{resultID, qaID, a.Candidate.OID, a.ExpectedParentOID, a.Authorization, human})
+	attemptID := "local-integration-" + inputSHA[7:]
+	completed := false
+	err = workflowUpdate(d, root, id, func(s *workflowState) error {
+		current, e := nativeDeliveryCandidate(d, root, id, resultID)
+		if e != nil {
+			return e
+		}
+		if !equal(current.Authorization, a.Authorization) || current.Candidate.HumanQA == nil || current.Candidate.HumanQA.ID != qaID {
+			return workflowError(4, "delivery authority changed before effect reservation")
+		}
+		if s.Result.Delivery.Phase == "completed" && s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1].Integration != nil {
+			completed = true
+			return nil
+		}
+		if prior := s.Result.Delivery.Attempt; prior != nil && prior.State == "attempted" && (prior.Kind != "integration" || prior.InputSHA256 != inputSHA) {
+			return workflowError(4, "another delivery effect is unresolved")
+		}
+		path := filepath.Join(s.Result.Paths.RunRoot, "delivery", "attempts", attemptID)
+		if _, e = workflowKeep(d, filepath.Join(path, "attempt.json"), map[string]any{"kind": "PlyDeliveryIntegrationRequest@1", "run_id": id, "request_sha256": a.RequestSHA256, "candidate": resultID, "human_qa": qaID, "expected_parent_oid": a.ExpectedParentOID, "result_oid": a.Candidate.OID, "authorization": a.Authorization, "human_integration": human}); e != nil {
+			return e
+		}
+		s.Result.Delivery.Attempt = &DeliveryAttempt{ID: attemptID, Kind: "integration", State: "attempted", Path: path, CandidateOID: a.Candidate.OID, CandidateTree: a.Candidate.Tree, InputSHA256: inputSHA}
+		s.Result.Delivery.Phase = "integrating"
+		return nil
+	})
+	if err != nil {
 		return out, err
 	}
+	if !completed {
+		if err = d.fault("delivery_after_integration_reservation"); err != nil {
+			return out, err
+		}
+	}
+	var integrationErr error
+	out, integrationErr = workflowhandoff.IntegrateDeliveryCandidate(d.Workflow, string(a.Candidate.TaskResult.TaskID), resultID, qaID, a.ExpectedParentOID, a.Candidate.OID, workflowhandoff.DeliveryOwnerAuthority{RunID: id, RequestSHA256: a.RequestSHA256, ActorClaim: a.OwnerClaim, PreparationID: a.PreparationID, Authorization: a.Authorization})
 	err = workflowUpdate(d, root, id, func(s *workflowState) error {
 		c := &s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
 		if c.TaskResult.ID != resultID {
@@ -389,15 +449,33 @@ func CompleteLocalDelivery(d Dependencies, root, id string, resultID workspace.T
 		if s.Result.Delivery.Phase == "completed" && c.Integration != nil {
 			return nil
 		}
-		binding, e := deliveryAppendEvent(d, s, "local-delivery-"+c.Key, "integration", map[string]any{"kind": "PlyDeliveryIntegration@1", "run_id": id, "request_sha256": a.RequestSHA256, "candidate": c.Key, "result": out})
+		if s.Result.Delivery.Attempt == nil || s.Result.Delivery.Attempt.InputSHA256 != inputSHA {
+			return workflowError(4, "local integration reservation changed")
+		}
+		observation := map[string]any{"kind": "PlyDeliveryIntegration@1", "run_id": id, "request_sha256": a.RequestSHA256, "candidate": c.Key, "result": out}
+		if integrationErr != nil {
+			observation["error"] = integrationErr.Error()
+		}
+		binding, e := deliveryAppendEvent(d, s, fmt.Sprintf("%s-observation-%08d", attemptID, len(s.Result.Delivery.Events)+1), "integration", observation)
 		if e != nil {
 			return e
 		}
+		if integrationErr != nil || !out.Completed {
+			s.Result.NextAction = WorkflowAction{"recipient", "Inspect the preserved native integration, queue and base state. Resume only this exact reserved operation; ownership cannot be released while its effects are unresolved."}
+			return nil
+		}
 		c.Integration, c.HumanQA = &binding, a.Candidate.HumanQA
+		s.Result.Delivery.Attempt.State = "recorded"
 		s.Result.Delivery.Phase, s.Result.Round.State, s.Result.FinalReturn.State = "completed", "completed", "completed"
 		s.Result.FinalReturn.ReportSHA256 = &binding.SHA256
 		s.Result.NextAction = WorkflowAction{"user", fmt.Sprintf("The exact passed candidate is integrated locally in %s and the registered base is current.", a.Agreement.TargetRef)}
 		return nil
 	})
+	if err == nil {
+		err = integrationErr
+	}
+	if err == nil && !out.Completed {
+		err = workflowError(5, "local delivery is not yet complete; preserved native state determines the next action")
+	}
 	return out, err
 }

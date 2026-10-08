@@ -285,7 +285,7 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	}
 	r := intent.Runtime
 	boundary := "after_human_pass"
-	if prepared.Delivery != nil && prepared.Delivery.Mode == workspace.DeliveryPullRequest {
+	if prepared.Delivery != nil && (prepared.Delivery.Mode == workspace.DeliveryPullRequest || prepared.Delivery.HumanOwnedIntegration()) {
 		boundary = "none"
 	}
 	request, err := taskrun.BuildDeliveryWorkflowRequest(taskrun.DeliveryRequestInput{

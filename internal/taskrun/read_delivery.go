@@ -83,6 +83,13 @@ func inventoryDeliveryUnknownAction(s workflowState, reason string) InventoryDel
 func inventoryDeliveryAction(s workflowState) InventoryDeliveryAction {
 	a := s.Result.NextAction
 	out := InventoryDeliveryAction{Actor: inventoryDeliveryActor(a.Actor), RecordedActor: a.Actor, Kind: "continue_delivery", Reason: a.Message, EvidenceIDs: []string{s.Result.RunID}}
+	if s.Result.Delivery.OwnershipRelease != nil {
+		out.Actor, out.Kind = "human", "start_human_integration"
+		if s.Result.Delivery.HumanIntegration != nil && s.Result.Delivery.HumanIntegration.Accepted {
+			out.Kind = "continue_human_integration"
+		}
+		return out
+	}
 	switch s.Result.Delivery.Phase {
 	case "awaiting_acceptance":
 		out.Kind = "delivery_startup"
@@ -135,6 +142,12 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 	sources := []capturedSource{}
 	readSource := func(binding FileBinding) ([]byte, error) {
 		raw, err := workflowBound(binding, 8<<20)
+		if os.IsNotExist(err) && basis != nil {
+			if retained, e := workspace.ResolveTaskRetainedEvidence(s.Request.WorkspaceRoot, basis.TaskID, binding.Locator, binding.SHA256); e == nil {
+				binding.Locator = retained
+				raw, err = workflowBound(binding, 8<<20)
+			}
+		}
 		if err == nil {
 			sources = append(sources, capturedSource{binding, raw})
 		}
@@ -319,7 +332,7 @@ func inventoryDeliveryEventIdentity(raw []byte, s workflowState, kind string) er
 	if err := json.Unmarshal(raw, &event); err != nil {
 		return err
 	}
-	expected := map[string]string{"verification": "PlyDeliveryVerification@1", "human_qa": "PlyDeliveryHumanQA@1", "integration": "PlyDeliveryIntegration@1", "pull_request": "PlyDeliveryPullRequest@1"}[kind]
+	expected := map[string]string{"verification": "PlyDeliveryVerification@1", "human_qa": "PlyDeliveryHumanQA@1", "integration": "PlyDeliveryIntegration@1", "pull_request": "PlyDeliveryPullRequest@1", "ownership_release": "PlyDeliveryOwnerRelease@1", "human_integration": "PlyHumanIntegrationDecision@1"}[kind]
 	if expected == "" || event.Kind != expected || event.RunID != s.Result.RunID || event.RequestSHA256 != s.Result.RequestSHA256 {
 		return integrity("event kind, run or request binding differs")
 	}

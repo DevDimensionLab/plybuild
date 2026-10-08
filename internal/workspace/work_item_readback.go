@@ -65,6 +65,7 @@ type TaskReadbackResult struct {
 	WorktreeReady, ReadyForHandoff bool
 	Reasons                        []string
 	Integration                    *WorkspaceTaskIntegrationReadback
+	Closeout                       *TaskCloseoutReceipt
 }
 
 func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) {
@@ -233,6 +234,41 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 			result.Reasons = append(result.Reasons, "project_binding_stale")
 		}
 	}
+	closeout, closeoutErr := ReadTaskCloseoutAt(root, id)
+	if closeoutErr != nil {
+		return TaskReadbackResult{}, closeoutErr
+	}
+	result.Closeout = closeout
+	removalPending := closeout != nil && TaskCloseoutSourceRemovalPending(*closeout)
+	if closeout != nil && (closeout.WorktreeRemoved || closeout.State == "complete" || removalPending) {
+		resourceKind := "retired"
+		if closeout.WorktreeRemoved {
+			result.Task.WorktreeState = WorkItemRetired
+		} else if removalPending {
+			resourceKind = "removal_pending"
+		} else {
+			resourceKind = "kept"
+		}
+		result.WorktreeReady = false
+		result.ReadyForHandoff = false
+		result.Target = TaskObservedTarget{Kind: resourceKind, Locator: stringPointer(closeout.Plan.Source.Locator), Ref: stringPointer(closeout.Plan.Source.Ref), OID: stringPointer(closeout.Plan.ResultOID), Tree: stringPointer(closeout.Plan.ResultTree), GitCommonDir: stringPointer(closeout.Plan.Source.GitCommonDir)}
+		result.TargetFreshness = TaskFreshnessTarget{Kind: "fresh", Locator: "fresh", Ref: "fresh", OID: "fresh", Tree: "fresh", GitCommonDir: "fresh", Clean: "unknown", InventoryMatch: "unknown"}
+		if removalPending {
+			result.TargetFreshness = TaskFreshnessTarget{Kind: "unknown", Locator: "unknown", Ref: "unknown", OID: "unknown", Tree: "unknown", GitCommonDir: "unknown", Clean: "unknown", InventoryMatch: "unknown"}
+		}
+		result.Reasons = append(result.Reasons, "task_worktree_"+resourceKind)
+		if closeout.State != "complete" {
+			reason, _, _ := TaskCloseoutPendingAction(*closeout)
+			result.Reasons = append(result.Reasons, reason)
+		}
+		integration := buildTaskShowIntegrationReadback(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repositories}, registry, result.Task, *epic, *binding)
+		applyCloseoutIntegrationReadback(&integration, *closeout)
+		result.Integration = &integration
+		if registry.FormatVersion >= 3 {
+			result.Content = buildTaskContentReadback(dependencies, registry, ProjectSnapshot{Projects: projects, Repos: repositories}, result)
+		}
+		return result, nil
+	}
 	if dependencies.WorkGit == nil {
 		result.Reasons = append(result.Reasons, "parent_observation_unknown")
 	} else if parent, parentErr := dependencies.WorkGit.ObserveWorktree(binding.Worktree.Locator); parentErr != nil {
@@ -308,10 +344,17 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 	} else {
 		result.Reasons = append(result.Reasons, "target_observation_unknown")
 	}
+	if closeout != nil {
+		reason, _, _ := TaskCloseoutPendingAction(*closeout)
+		result.Reasons = append(result.Reasons, reason)
+	}
 	result.Reasons = sortedReasons(result.Reasons)
 	result.ReadyForHandoff = result.WorktreeReady && len(result.Reasons) == 0 && result.ProjectFreshness == "fresh"
 	if registry.FormatVersion >= 2 {
 		integration := buildTaskShowIntegrationReadback(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repositories}, registry, *task, *epic, *binding)
+		if closeout != nil {
+			applyCloseoutIntegrationReadback(&integration, *closeout)
+		}
 		result.Integration = &integration
 	}
 	if registry.FormatVersion >= 3 {
@@ -342,16 +385,29 @@ func MarshalEpicReadback(result EpicReadbackResult) ([]byte, error) {
 }
 
 func MarshalTaskReadback(result TaskReadbackResult) ([]byte, error) {
+	withCloseout := func(value canonicaljson.Object) canonicaljson.Object {
+		value = readbackWithLifecycle(value, result.Lifecycle)
+		if result.Closeout != nil {
+			for i := range value {
+				if value[i].Name == "closeout" {
+					value[i].Value = structCanonical(*result.Closeout)
+					return value
+				}
+			}
+			value = append(value, canonicaljson.Member{Name: "closeout", Value: structCanonical(*result.Closeout)})
+		}
+		return value
+	}
 	if result.Content != nil {
-		return canonicaljson.Marshal(readbackWithLifecycle(result.Content, result.Lifecycle))
+		return canonicaljson.Marshal(withCloseout(result.Content))
 	}
 	if result.Integration != nil {
-		return canonicaljson.Marshal(readbackWithLifecycle(result.Integration.Value, result.Lifecycle))
+		return canonicaljson.Marshal(withCloseout(result.Integration.Value))
 	}
 	persisted := canonicaljson.Object{{Name: "task_id", Value: string(result.Task.ID)}, {Name: "title", Value: result.Task.Title}, {Name: "description", Value: result.Task.Description}, {Name: "parent_epic_id", Value: string(result.Task.ParentEpicID)}, {Name: "project_id", Value: string(result.Task.ProjectID)}, {Name: "repo_id", Value: string(result.Task.RepoID)}, {Name: "git_common_dir", Value: result.Task.GitCommonDir}, {Name: "worktree_state", Value: string(result.Task.WorktreeState)}, {Name: "worktree", Value: taskWorktreeCanonical(result.Task.Worktree)}, {Name: "operation", Value: operationCanonical(result.Operation)}}
 	observed := canonicaljson.Object{{Name: "project_git_common_dir", Value: pointerValue(result.ProjectGitCommonDir)}, {Name: "parent", Value: observedWorktreeCanonical(result.Parent)}, {Name: "source", Value: observedSourceCanonical(result.Source)}, {Name: "target", Value: observedTargetCanonical(result.Target)}}
 	fresh := canonicaljson.Object{{Name: "project_git_common_dir", Value: result.ProjectFreshness}, {Name: "parent", Value: freshWorktreeCanonical(result.ParentFreshness)}, {Name: "source", Value: freshSourceCanonical(result.SourceFreshness)}, {Name: "target", Value: freshTargetCanonical(result.TargetFreshness)}}
-	return canonicaljson.Marshal(readbackWithLifecycle(canonicaljson.Object{{Name: "kind", Value: "WorkspaceTaskReadback@1"}, {Name: "workspace", Value: result.Workspace}, {Name: "persisted", Value: persisted}, {Name: "observed", Value: observed}, {Name: "freshness", Value: fresh}, {Name: "worktree_ready", Value: result.WorktreeReady}, {Name: "ready_for_handoff", Value: result.ReadyForHandoff}, {Name: "reasons", Value: stringValues(result.Reasons)}, {Name: "agent_started_by_this_command", Value: false}}, result.Lifecycle))
+	return canonicaljson.Marshal(withCloseout(canonicaljson.Object{{Name: "kind", Value: "WorkspaceTaskReadback@1"}, {Name: "workspace", Value: result.Workspace}, {Name: "persisted", Value: persisted}, {Name: "observed", Value: observed}, {Name: "freshness", Value: fresh}, {Name: "worktree_ready", Value: result.WorktreeReady}, {Name: "ready_for_handoff", Value: result.ReadyForHandoff}, {Name: "reasons", Value: stringValues(result.Reasons)}, {Name: "agent_started_by_this_command", Value: false}}))
 }
 
 func readbackWithLifecycle(value canonicaljson.Object, lifecycle LifecycleState) canonicaljson.Object {

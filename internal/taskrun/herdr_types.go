@@ -101,6 +101,7 @@ type WorkflowRun struct {
 	Delivery        *DeliveryState                 `json:"delivery,omitempty"`
 	ClaudeTrust     *ClaudeTrustEffect             `json:"claude_project_trust,omitempty"`
 	StartupRecovery *DeliveryStartRecoveryReadback `json:"startup_recovery,omitempty"`
+	Closeout        *workspace.TaskCloseoutReceipt `json:"closeout,omitempty"`
 }
 type WorkflowPreview struct {
 	Envelope

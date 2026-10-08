@@ -129,7 +129,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         }
       },

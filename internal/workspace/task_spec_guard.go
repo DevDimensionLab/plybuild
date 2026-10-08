@@ -26,6 +26,9 @@ func observeTaskContentGit(d Dependencies, provenance canonicaljson.Value, b []b
 	return g.ObserveContentDocument(provenance, b)
 }
 func validateSpecImplementationBasis(d Dependencies, projects ProjectSnapshot, r WorkItemRegistry, t TaskRecord, value canonicaljson.Value, fresh bool) error {
+	if fresh && t.WorktreeState == WorkItemRetired {
+		return contentError("task_spec_binding_conflict", "retired Task worktree is historical and cannot start new work", nil)
+	}
 	m := contentFields(value)
 	_, repo, e := projectAndRepo(projects, t.ProjectID, t.RepoID)
 	if e != nil {
@@ -115,7 +118,7 @@ func taskDeliveryDigest(t TaskRecord) (string, error) {
 }
 func validateTaskSpecBasisRegistry(r WorkItemRegistry, b TaskSpecBasis) error {
 	t, _ := findTask(r, b.TaskID)
-	if t == nil || t.Worktree == nil || t.Worktree.ID != b.TaskWorktreeID || t.WorktreeState != WorkItemReady || b.Dependencies == nil || len(b.Dependencies) != 0 {
+	if t == nil || t.Worktree == nil || t.Worktree.ID != b.TaskWorktreeID || (t.WorktreeState != WorkItemReady && t.WorktreeState != WorkItemRetired) || b.Dependencies == nil || len(b.Dependencies) != 0 {
 		return contentError("task_spec_binding_conflict", "basis Task worktree binding is missing or differs", nil)
 	}
 	d, e := taskDeliveryDigest(*t)
@@ -412,13 +415,16 @@ func WithTaskSpecSnapshot(d Dependencies, root string, operation func(*TaskSpecS
 	return operation(&TaskSpecSession{d, root, registry, ProjectSnapshot{Projects: projects, Repos: repos}})
 }
 func (s *TaskSpecSession) ValidateTarget(locator, ref, common string, basis *TaskSpecBasis) (TaskSpecEvaluation, error) {
+	if err := validateCloseoutTargetAvailable(s.Root, locator, ref, common); err != nil {
+		return TaskSpecEvaluation{}, err
+	}
 	physical, e := filepath.EvalSymlinks(locator)
 	if e != nil {
 		return TaskSpecEvaluation{}, e
 	}
 	var owner *TaskRecord
 	for _, t := range s.Registry.Tasks {
-		if t.Worktree == nil {
+		if t.Worktree == nil || t.WorktreeState == WorkItemRetired {
 			continue
 		}
 		p, e := filepath.EvalSymlinks(t.Worktree.Locator)

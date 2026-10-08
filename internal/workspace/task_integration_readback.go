@@ -445,6 +445,9 @@ func canonicalReflectValue(v reflect.Value) canonicaljson.Value {
 			if t == reflect.TypeOf(DeliveryAgreement{}) && strings.Contains(field.Tag.Get("json"), ",omitempty") && v.Field(i).IsZero() {
 				continue
 			}
+			if t == reflect.TypeOf(DeliveryAuthorization{}) && strings.Contains(field.Tag.Get("json"), ",omitempty") && v.Field(i).IsZero() {
+				continue
+			}
 			if t == reflect.TypeOf(IntegrationAuthority{}) && field.Name == "DeliveryOwner" && v.Field(i).IsNil() {
 				continue
 			}

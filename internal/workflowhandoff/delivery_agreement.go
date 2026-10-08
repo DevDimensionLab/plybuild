@@ -14,7 +14,10 @@ func DeliveryAllowedEffects(a workspace.DeliveryAgreement) []string {
 	if a.Mode == workspace.DeliveryPullRequest {
 		return []string{"pull_request", "push"}
 	}
-	return []string{a.Mode}
+	if a.HumanOwnedIntegration() {
+		return []string{}
+	}
+	return a.AllowedEffects()
 }
 
 func deliveryAgreement(o canonicaljson.Object) (*workspace.DeliveryAgreement, error) {
@@ -95,6 +98,10 @@ func validateDeliveryAgreementEffects(o canonicaljson.Object, a *workspace.Deliv
 		if seen["push"] != 1 || seen["pull_request"] != 1 || seen["integration"] != 0 {
 			return fmt.Errorf("PR mandate requires only its exact push and pull_request effects")
 		}
+	} else if a.HumanOwnedIntegration() {
+		if seen["integration"] != 0 || seen["push"] != 0 || seen["pull_request"] != 0 {
+			return fmt.Errorf("human-owned local integration is outside the developer mandate")
+		}
 	} else if seen["integration"] != 1 || seen["push"] != 0 || seen["pull_request"] != 0 {
 		return fmt.Errorf("local mandate requires only its exact integration effect")
 	}
@@ -113,7 +120,7 @@ func validateDeliveryEffectScope(kind string, v canonicaljson.Value) error {
 	if err != nil {
 		return err
 	}
-	if a == nil || a.SourceRef == "" || (kind == "integration") == (a.Mode == workspace.DeliveryPullRequest) {
+	if a == nil || a.SourceRef == "" || (kind == "integration") == (a.Mode == workspace.DeliveryPullRequest) || kind == "integration" && a.HumanOwnedIntegration() {
 		return fmt.Errorf("effect is outside the selected delivery mode")
 	}
 	return nil

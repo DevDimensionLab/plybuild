@@ -70,7 +70,10 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	}
 	if option.Agreement != nil {
 		a := *option.Agreement
-		a.SchemaVersion, a.ProjectID, a.RepoID, a.EpicID = 1, "ply", "ply", "epic"
+		if a.SchemaVersion == 0 {
+			a.SchemaVersion = 1
+		}
+		a.ProjectID, a.RepoID, a.EpicID = "ply", "ply", "epic"
 		if a.TargetRef == "" {
 			a.TargetRef = "refs/heads/" + parent
 		}
@@ -135,7 +138,7 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	}
 	runtime := Runtime{Provider: provider, Mode: "interactive", Model: "fixture-model", Executable: Executable{providerPath, hashFileTest(t, providerPath)}, PlyExecutable: Executable{ply, hashFileTest(t, ply)}, PermissionBinding: Permission{AuthorityKind: "launch_contract_pending_runtime_acceptance", ProfileID: profile, EffectivePolicySHA256: hashFileTest(t, policy), Evidence: []Evidence{{Locator: policy, SHA256: hashFileTest(t, policy), Role: "runtime_contract"}}}}
 	boundary := "after_human_pass"
-	if p.Delivery != nil && p.Delivery.Mode == workspace.DeliveryPullRequest {
+	if p.Delivery != nil && (p.Delivery.Mode == workspace.DeliveryPullRequest || p.Delivery.HumanOwnedIntegration()) {
 		boundary = "none"
 	}
 	req, e := BuildDeliveryWorkflowRequest(DeliveryRequestInput{RequestKey: "fixture/delivery", WorkspaceRoot: root, PreparationID: preparation.ID, PreparationSHA256: digest(preparation), HandoffDraft: draft, Runtime: runtime, HumanAuthority: HumanAuthority{"synthetic human", "human_authorized_herdr", true}, HerdrExecutable: Executable{herdr, hashFileTest(t, herdr)}, HerdrWorkspaceID: "w-fixture", TabLabel: "Delivery fixture", Delivery: DeliveryContract{OwnerClaim: "fixture owner", Goal: FileBinding{doc, hashFileTest(t, doc)}, AcceptancePath: acceptance, AllowSubagents: true, AllowLocalInstall: true, LocalIntegration: boundary, ReasoningEffort: "medium", Agreement: p.Delivery}})

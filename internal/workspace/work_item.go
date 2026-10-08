@@ -33,6 +33,7 @@ const (
 	WorkItemUnbound                WorkItemState = "unbound"
 	WorkItemCreating               WorkItemState = "creating"
 	WorkItemReady                  WorkItemState = "worktree_ready"
+	WorkItemRetired                WorkItemState = "retired"
 	WorkItemReconciliationRequired WorkItemState = "reconciliation_required"
 )
 

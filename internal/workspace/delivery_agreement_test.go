@@ -17,11 +17,52 @@ func fixtureAgreement(mode, target string) DeliveryAgreement {
 	return a
 }
 
+func TestDeliveryAgreementHumanOwnershipIsExplicitAndVersioned(t *testing.T) {
+	a := fixtureAgreement(DeliveryLocalEpic, "refs/heads/epic")
+	a.TargetWorktree = "/workspace/epic"
+	before := DeliveryAgreementDigest(a)
+	value := contentRefValue(a)
+	if _, present := contentFields(value)["integration_owner"]; present {
+		t.Fatal("historical v1 serialization acquired a new owner field")
+	}
+	decoded, e := DeliveryAgreementFromSpec(canonicaljson.Object{{Name: "delivery", Value: value}})
+	if e != nil || decoded == nil || DeliveryAgreementDigest(*decoded) != before || decoded.HumanOwnedIntegration() {
+		t.Fatalf("historical meaning/hash changed: %+v %v", decoded, e)
+	}
+	a.IntegrationOwner = IntegrationOwnerHuman
+	if ValidateDeliveryAgreement(a) == nil {
+		t.Fatal("v1 silently acquired human-owned semantics")
+	}
+	a.SchemaVersion = 2
+	if e = ValidateDeliveryAgreement(a); e != nil || !a.HumanOwnedIntegration() || len(a.AllowedEffects()) != 0 {
+		t.Fatalf("v2 human boundary: %+v %v", a, e)
+	}
+	for _, owner := range []string{"", "agent", "human ", "unknown"} {
+		bad := a
+		bad.IntegrationOwner = owner
+		if ValidateDeliveryAgreement(bad) == nil {
+			t.Fatalf("unsupported v2 owner %q accepted", owner)
+		}
+	}
+}
+
 func TestDeliveryAgreementSurvivesPublicationQueueAndFrozenExecution(t *testing.T) {
-	for _, mode := range []string{DeliveryPullRequest, DeliveryLocalEpic, DeliveryLocalBranch} {
-		t.Run(mode, func(t *testing.T) {
+	for _, tc := range []struct {
+		mode  string
+		human bool
+	}{{DeliveryPullRequest, false}, {DeliveryLocalEpic, false}, {DeliveryLocalBranch, false}, {DeliveryLocalEpic, true}, {DeliveryLocalBranch, true}, {DeliveryPullRequest, true}} {
+		mode := tc.mode
+		name := mode
+		if tc.human {
+			name += "/human"
+		}
+		t.Run(name, func(t *testing.T) {
 			f := newWorkItemJourneyFixture(t)
 			a := fixtureAgreement(mode, "refs/heads/epic")
+			if tc.human {
+				a.SchemaVersion = 2
+				a.IntegrationOwner = IntegrationOwnerHuman
+			}
 			if mode != DeliveryPullRequest {
 				a.TargetWorktree = filepath.Join(f.wrapper, "epic")
 			}

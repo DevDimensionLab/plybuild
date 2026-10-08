@@ -103,9 +103,9 @@ func epicsFromTasks(s *Snapshot, filters EpicFilters, tasks TaskList) EpicList {
 		for _, task := range tasksByEpic[epic.ID] {
 			row.TaskCount++
 			switch task.Progress.State {
-			case "integrated":
+			case "integrated", "completed":
 				row.ProgressCounts.Integrated++
-			case "attention":
+			case "attention", "cleanup_pending":
 				row.ProgressCounts.Attention++
 			case "in_progress":
 				row.ProgressCounts.InProgress++

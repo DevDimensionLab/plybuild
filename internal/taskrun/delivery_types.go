@@ -104,15 +104,17 @@ type DeliveryAttempt struct {
 }
 
 type DeliveryState struct {
-	Phase                string                `json:"phase"`
-	OwnerClaim           string                `json:"owner_claim"`
-	PermissionState      string                `json:"permission_state"`
-	ActualPolicySHA256   *string               `json:"actual_policy_sha256"`
-	ActualPolicyEvidence []Evidence            `json:"actual_policy_evidence"`
-	Events               []DeliveryEventRecord `json:"events"`
-	Candidates           []DeliveryCandidate   `json:"candidates"`
-	Attempt              *DeliveryAttempt      `json:"attempt"`
-	LastEventSHA256      *string               `json:"last_event_sha256"`
+	Phase                string                      `json:"phase"`
+	OwnerClaim           string                      `json:"owner_claim"`
+	PermissionState      string                      `json:"permission_state"`
+	ActualPolicySHA256   *string                     `json:"actual_policy_sha256"`
+	ActualPolicyEvidence []Evidence                  `json:"actual_policy_evidence"`
+	Events               []DeliveryEventRecord       `json:"events"`
+	Candidates           []DeliveryCandidate         `json:"candidates"`
+	Attempt              *DeliveryAttempt            `json:"attempt"`
+	LastEventSHA256      *string                     `json:"last_event_sha256"`
+	OwnershipRelease     *FileBinding                `json:"ownership_release,omitempty"`
+	HumanIntegration     *HumanIntegrationAcceptance `json:"human_integration,omitempty"`
 }
 
 func deliveryEnv(kind string) Envelope   { return Envelope{"ply.workflow." + kind, 2} }

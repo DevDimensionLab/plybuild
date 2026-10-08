@@ -34,24 +34,25 @@ type InventoryReturn struct {
 }
 
 type InventoryRun struct {
-	RunID            string                    `json:"run_id"`
-	TaskID           *string                   `json:"task_id"`
-	Provider         *string                   `json:"provider"`
-	Transport        *string                   `json:"transport"`
-	LogicalSessionID *string                   `json:"logical_session_id"`
-	Herdr            *InventoryHerdr           `json:"herdr"`
-	State            string                    `json:"state"`
-	StateFreshness   string                    `json:"state_freshness"`
-	HistoricalState  *string                   `json:"historical_state"`
-	Unresolved       bool                      `json:"unresolved"`
-	StartedAtUTC     *string                   `json:"started_at_utc"`
-	LastSeenUTC      *string                   `json:"last_seen_utc"`
-	Return           *InventoryReturn          `json:"return"`
-	Freshness        string                    `json:"freshness"`
-	Sources          []FileBinding             `json:"sources"`
-	Reasons          []Reason                  `json:"reasons"`
-	Delivery         *InventoryDelivery        `json:"delivery,omitempty"`
-	StartupRecovery  *InventoryStartupRecovery `json:"startup_recovery,omitempty"`
+	RunID            string                         `json:"run_id"`
+	TaskID           *string                        `json:"task_id"`
+	Provider         *string                        `json:"provider"`
+	Transport        *string                        `json:"transport"`
+	LogicalSessionID *string                        `json:"logical_session_id"`
+	Herdr            *InventoryHerdr                `json:"herdr"`
+	State            string                         `json:"state"`
+	StateFreshness   string                         `json:"state_freshness"`
+	HistoricalState  *string                        `json:"historical_state"`
+	Unresolved       bool                           `json:"unresolved"`
+	StartedAtUTC     *string                        `json:"started_at_utc"`
+	LastSeenUTC      *string                        `json:"last_seen_utc"`
+	Return           *InventoryReturn               `json:"return"`
+	Freshness        string                         `json:"freshness"`
+	Sources          []FileBinding                  `json:"sources"`
+	Reasons          []Reason                       `json:"reasons"`
+	Delivery         *InventoryDelivery             `json:"delivery,omitempty"`
+	StartupRecovery  *InventoryStartupRecovery      `json:"startup_recovery,omitempty"`
+	Closeout         *workspace.TaskCloseoutReceipt `json:"closeout,omitempty"`
 }
 
 type Inventory struct {
@@ -412,6 +413,23 @@ func readHerdrInventoryRun(d Dependencies, root, id string) (row InventoryRun) {
 			row.Delivery.NextAction = inventoryDeliveryUnknownAction(s, "Preserved delivery state could not be read or bound; inspect the recorded source.")
 		}
 	}
+	if closeout, e := workflowTaskCloseout(root, s); e != nil {
+		inventoryProblem(&row, e)
+	} else if closeout != nil {
+		row.Closeout = closeout
+		if row.Freshness == "fresh" && closeout.State == "complete" {
+			row.State, row.StateFreshness, row.Unresolved = "completed", "fresh", false
+		}
+		if row.Delivery != nil && row.Freshness == "fresh" {
+			if closeout.State == "complete" {
+				row.Delivery.NextAction = InventoryDeliveryAction{Actor: "human", RecordedActor: "user", Kind: "task_closed", Reason: "The Task is closed with its source resource " + closeout.ResourceState + "; inspect retained history.", EvidenceIDs: []string{closeout.OperationID}}
+			} else {
+				reason, kind, detail := workspace.TaskCloseoutPendingAction(*closeout)
+				row.Reasons = append(row.Reasons, Reason{reason, detail})
+				row.Delivery.NextAction = InventoryDeliveryAction{Actor: "human", RecordedActor: "user", Kind: kind, Reason: detail, EvidenceIDs: []string{closeout.OperationID}}
+			}
+		}
+	}
 	return row
 }
 
@@ -432,6 +450,37 @@ func workflowInventoryReturn(d Dependencies, s workflowState, row *InventoryRun)
 			return integrity("delivery completion is unbound")
 		}
 		candidate := s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
+		if a := s.Request.Delivery.Agreement; a != nil && a.Mode == workspace.DeliveryPullRequest {
+			if candidate.PullRequest == nil || candidate.PullRequest.SHA256 != *row.Return.ReportSHA256 || candidate.Integration != nil {
+				return integrity("delivery PR completion differs from its candidate")
+			}
+			bound := false
+			for _, event := range s.Result.Delivery.Events {
+				if event.Kind == "pull_request" && event.Binding == *candidate.PullRequest {
+					bound = true
+				}
+			}
+			if !bound {
+				return integrity("delivery PR completion has no native publication event")
+			}
+			raw, err := workflowBound(*candidate.PullRequest, 8<<20)
+			if err != nil {
+				return err
+			}
+			var publication struct {
+				Kind          string                         `json:"kind"`
+				RunID         string                         `json:"run_id"`
+				RequestSHA256 string                         `json:"request_sha256"`
+				Candidate     string                         `json:"candidate"`
+				Receipt       FileBinding                    `json:"receipt"`
+				Observed      PullRequestDeliveryObservation `json:"observed"`
+			}
+			if json.Unmarshal(raw, &publication) != nil || publication.Kind != "PlyDeliveryPullRequest@1" || publication.RunID != row.RunID || publication.RequestSHA256 != s.Result.RequestSHA256 || publication.Candidate != candidate.Key || !strings.EqualFold(publication.Observed.Repository, a.GitHubRepository) || publication.Observed.HeadRef != a.SourceRef || publication.Observed.HeadOID != candidate.OID || publication.Observed.BaseRef != a.TargetRef || publication.Observed.URL == "" || publication.Observed.Number < 1 || !publication.Observed.MetadataApplied {
+				return integrity("delivery PR completion does not bind the exact published candidate")
+			}
+			_, err = workflowBound(publication.Receipt, 8<<20)
+			return err
+		}
 		if candidate.Integration == nil || candidate.Integration.SHA256 != *row.Return.ReportSHA256 {
 			return integrity("delivery completion differs from its candidate")
 		}

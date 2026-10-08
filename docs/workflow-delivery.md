@@ -5,6 +5,12 @@ frozen agreement. The package refers to the native TaskResult, exact Spec,
 candidate commit/tree, verification, review and run authority. Human QA remains
 a separate record bound to that candidate.
 
+For explicit human ownership, schema 2 agreements add
+`"integration_owner": "human"`. The developer stops after qualification and
+handover (or exact PR publication). The separate [human integration workflow](integration.md)
+confirms integration, optional installation and safe Task closeout. Schema 1
+agreements retain the behavior described below.
+
 | Mode | Exact target | Completion |
 | --- | --- | --- |
 | `pull_request` | GitHub repository and base ref | Source branch and PR observed with the exact candidate; metadata applied; current Task closed before merge |

@@ -670,7 +670,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "revision": {
@@ -732,7 +733,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "revision": {
@@ -1103,7 +1105,9 @@
             "integrated",
             "attention",
             "in_progress",
-            "nothing"
+            "nothing",
+            "completed",
+            "cleanup_pending"
           ]
         },
         "has_progress": {
@@ -1118,7 +1122,8 @@
             "blocked",
             "conflict",
             "partial",
-            "unknown"
+            "unknown",
+            "pr_merged"
           ]
         },
         "technical_gate": {
@@ -1253,7 +1258,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "epic_lifecycle": {
@@ -1262,7 +1268,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "title": {
@@ -1324,7 +1331,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "base": {
@@ -2425,7 +2433,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "to": {
@@ -2434,7 +2443,8 @@
             "active",
             "parked",
             "frozen",
-            "archived"
+            "archived",
+            "completed"
           ]
         },
         "actor_claim": {
