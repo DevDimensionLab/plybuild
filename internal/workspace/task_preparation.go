@@ -254,12 +254,16 @@ func (s *TaskSpecSession) TaskRunPreparation(id string) (TaskPreparationReadback
 	if e := queuePrefixedID("pre_")(id); e != nil {
 		return TaskPreparationReadback{}, e
 	}
-	if e := validateQueueClosure(s.Dependencies, s.Root, s.Registry); e != nil {
-		return TaskPreparationReadback{}, e
-	}
 	p := findPreparation(s.Registry, id)
 	if p == nil {
 		return TaskPreparationReadback{}, queueError("task_preparation_not_found", "preparation is not recorded")
 	}
-	return preparationReadback(s.Dependencies, s.Root, s.Registry, *p), nil
+	d := WithTaskContentScope(s.Dependencies, p.Plan.TaskID)
+	if e := validateTaskContentClosure(d.TaskContent, s.Root, s.Registry, false); e != nil {
+		return TaskPreparationReadback{}, e
+	}
+	if e := validateQueueClosure(d, s.Root, s.Registry); e != nil {
+		return TaskPreparationReadback{}, e
+	}
+	return preparationReadback(d, s.Root, s.Registry, *p), nil
 }

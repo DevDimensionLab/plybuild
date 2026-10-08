@@ -152,13 +152,16 @@ func (s cryptoTaskContentIDs) NewAssessmentID() (string, error) { return s.next(
 func (s cryptoTaskContentIDs) NewSelectionID() (string, error)  { return s.next("sel_") }
 
 type TaskContentError struct {
-	Code, Detail string
-	Err          error
+	Code, Detail                                              string
+	Operation, Artifact, Schema, ReaderCapability, NextAction string
+	Err                                                       error
 }
 
-func (e *TaskContentError) Error() string               { return e.Code + ": " + e.Detail }
-func (e *TaskContentError) Unwrap() error               { return e.Err }
-func contentError(code, detail string, err error) error { return &TaskContentError{code, detail, err} }
+func (e *TaskContentError) Error() string { return e.Code + ": " + e.Detail }
+func (e *TaskContentError) Unwrap() error { return e.Err }
+func contentError(code, detail string, err error) error {
+	return &TaskContentError{Code: code, Detail: detail, Err: err}
+}
 
 func contentValue(value any) (canonicaljson.Value, error) {
 	b, err := json.Marshal(value)
@@ -291,6 +294,7 @@ func contentConflict(code string, expected, actual any) error {
 }
 
 func mutateTaskContent(d Dependencies, in TaskContentInput, operation string) (TaskContentMutationResult, error) {
+	d = WithTaskContentScope(d, in.TaskID)
 	if _, e := ParseTaskID(string(in.TaskID)); e != nil {
 		return TaskContentMutationResult{}, e
 	}

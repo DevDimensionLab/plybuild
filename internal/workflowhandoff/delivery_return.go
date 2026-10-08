@@ -68,7 +68,7 @@ func RecordDeliveryHumanQA(d Dependencies, taskID string, result workspace.TaskR
 	if e = deliveryWriteOnce(d.Files, draftPath, draftRaw); e != nil {
 		return empty, e
 	}
-	wd := *d.TaskWorkspace
+	wd := workspace.WithTaskContentScope(*d.TaskWorkspace, workspace.TaskID(taskID))
 	wd.HandoffEvidence = NewTaskHandoffEvidenceReader(d)
 	recorded, e := workspace.RecordTaskHumanQA(wd, workspace.TaskHumanQARecordInput{TaskID: result.TaskID, File: draftPath})
 	return recorded.Record, e
@@ -122,7 +122,7 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 	if d.TaskWorkspace == nil {
 		return out, fmt.Errorf("Task workspace dependency missing")
 	}
-	wd := *d.TaskWorkspace
+	wd := workspace.WithTaskContentScope(*d.TaskWorkspace, workspace.TaskID(taskID))
 	wd.HandoffEvidence = NewTaskHandoffEvidenceReader(d)
 	in, e := workspace.ParseTaskIntegrationInput(taskID, string(resultID), string(qaID), resultOID, expectedParentOID, "", false, "")
 	if e != nil {
@@ -208,6 +208,7 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 // prior native advance proves closure even if an unrelated Task is now current.
 // An empty queue alone is never evidence that this Task was delivered.
 func CloseDeliveryTaskQueue(d workspace.Dependencies, target workspace.QueueTargetInput, taskID workspace.TaskID, preparationID, reason string) (workspace.WorkspaceTaskQueueReadback, error) {
+	d = workspace.WithTaskContentScope(d, taskID)
 	out, err := workspace.ListTaskQueue(d, target, false)
 	if err != nil {
 		return out, err

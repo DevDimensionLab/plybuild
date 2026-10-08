@@ -35,7 +35,10 @@ type workItemStoreFaults struct {
 	shortWrite bool
 }
 
-type systemWorkItemStore struct{ faults *workItemStoreFaults }
+type systemWorkItemStore struct {
+	faults *workItemStoreFaults
+	scope  *taskContentScope
+}
 type systemWorkItemStoreSession struct {
 	store *systemWorkItemStore
 	root  string
@@ -235,7 +238,7 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("invalid work-item registry %s: %v", path, err), err)
 	}
 	if requireClosure && registry.FormatVersion == 4 {
-		storage := &TaskContentStorage{}
+		storage := &TaskContentStorage{scope: store.scope}
 		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
 			return WorkItemRegistry{}, err
 		}
@@ -255,11 +258,15 @@ func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry
 	if err := validateQueueTransition(old, registry); err != nil {
 		return workError(ErrorWorkStoreConflict, err.Error(), err)
 	}
-	if err := validateQueueClosure(Dependencies{TaskContent: &TaskContentStorage{}}, root, registry); err != nil {
+	if err := validateTaskScopeTransition(old, registry, store.scope); err != nil {
+		return err
+	}
+	storage := &TaskContentStorage{scope: store.scope}
+	if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
 		return err
 	}
 
-	if err := validateTaskContentClosure(&TaskContentStorage{}, root, registry, false); err != nil {
+	if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
 		return err
 	}
 	contents, err := encodeWorkItemRegistry(registry)

@@ -99,6 +99,7 @@ type WorkflowRun struct {
 	Reasons         []Reason                       `json:"reasons"`
 	NextAction      WorkflowAction                 `json:"next_action"`
 	Delivery        *DeliveryState                 `json:"delivery,omitempty"`
+	DeliveryStatus  *DeliveryStatus                `json:"delivery_status,omitempty"`
 	ClaudeTrust     *ClaudeTrustEffect             `json:"claude_project_trust,omitempty"`
 	StartupRecovery *DeliveryStartRecoveryReadback `json:"startup_recovery,omitempty"`
 	Closeout        *workspace.TaskCloseoutReceipt `json:"closeout,omitempty"`
@@ -173,6 +174,7 @@ type workflowState struct {
 	ClaudeTrust       *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
 	Recovery          *FileBinding        `json:"startup_recovery,omitempty"`
 	RecoveryTransport *FileBinding        `json:"startup_recovery_transport,omitempty"`
+	Continuation      *FileBinding        `json:"delivery_continuation,omitempty"`
 }
 
 func workflowEnv(kind string) Envelope { return Envelope{"ply.workflow." + kind, 1} }

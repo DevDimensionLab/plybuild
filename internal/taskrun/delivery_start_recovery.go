@@ -206,6 +206,13 @@ func workflowEffectiveRuntime(s workflowState) (Runtime, error) {
 	if recovery != nil {
 		r.Executable, r.PlyExecutable = recovery.ProviderExecutable, recovery.ControlExecutable
 	}
+	continuation, err := workflowContinuationRecord(s)
+	if err != nil {
+		return r, err
+	}
+	if continuation != nil {
+		r.PlyExecutable = continuation.ControlExecutable
+	}
 	return r, nil
 }
 

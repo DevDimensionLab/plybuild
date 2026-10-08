@@ -285,6 +285,7 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		return WorkflowRun{}, e
 	}
 	o := s.Result
+	o.DeliveryStatus = deliveryStatus(d, s)
 	// Project the choice from the bound request, including historical state
 	// written before the optional readback field existed. No state rewrite.
 	o.Provider = s.Request.Runtime.Provider
@@ -344,11 +345,24 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 	}
 	if e = workflowFresh(d, s, true); e != nil {
 		o.Reasons = append(o.Reasons, Reason{"workflow_run_drift", e.Error()})
+		if status := o.DeliveryStatus; status != nil {
+			if status.QualifiedCandidate != nil {
+				status.QualifiedCandidate.Current = false
+			}
+			if status.Verification != nil {
+				status.Verification.InputsMatch = false
+			}
+		}
 		o.Round.State = "unknown"
 		if o.FinalReturn.State == "accepted" {
 			o.FinalReturn.State = "blocked"
 		}
 		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved binding drift; do not restart or delete run state."}
+	} else if status := o.DeliveryStatus; status != nil && status.Verification != nil && status.Verification.Current && status.Verification.Outcome == "passed" && status.Verification.Qualification != "qualified" && o.NextAction.Actor == "recipient" && (o.Delivery.Phase == "working" || o.Delivery.Phase == "verifying") {
+		// Older controls preserved successful checks but advised rerunning them
+		// after qualification failed. Explain the supported continuation without
+		// replacing a human question or recommending replay of an unknown check.
+		o.NextAction = WorkflowAction{"recipient", "Acceptance succeeded; inspect the separate qualification failure. For a control compatibility update use the installed Ply's workflow execute continue with this run and its original context. Reuse unchanged successful evidence with verify --reuse " + status.Verification.AttemptID + "; changed source, review, script or authority requires new verification."}
 	}
 	return o, nil
 }

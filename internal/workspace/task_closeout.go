@@ -179,6 +179,7 @@ func ReadTaskCloseoutsAt(root string) ([]TaskCloseoutReceipt, error) {
 }
 
 func PreviewTaskCloseout(d Dependencies, in TaskCloseoutInput) (TaskCloseoutPreview, error) {
+	d = WithTaskContentScope(d, in.TaskID)
 	root, err := containingWorkItemWorkspace(d)
 	if err != nil {
 		return TaskCloseoutPreview{}, err
@@ -352,6 +353,7 @@ func applyTaskCloseout(d Dependencies, in TaskCloseoutInput, expected string, fa
 }
 
 func applyTaskCloseoutGuarded(d Dependencies, in TaskCloseoutInput, expected string, ownershipGuard func() error, fault func(string) error) (out TaskCloseoutReceipt, err error) {
+	d = WithTaskContentScope(d, in.TaskID)
 	root, err := containingWorkItemWorkspace(d)
 	if err != nil {
 		return out, err

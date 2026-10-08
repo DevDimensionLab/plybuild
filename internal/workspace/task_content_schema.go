@@ -18,16 +18,38 @@ const taskDocumentLimit = 4 << 20
 
 type contentRule func(canonicaljson.Value) error
 
+type contentUnknownFields struct {
+	names  []string
+	detail string
+}
+
+func (e *contentUnknownFields) Error() string { return e.detail }
+
 func contentExact(fields map[string]contentRule) contentRule {
 	return func(v canonicaljson.Value) error {
 		o, ok := v.(canonicaljson.Object)
-		if !ok || len(o) != len(fields) {
+		if !ok {
+			return fmt.Errorf("object has missing or unknown fields")
+		}
+		unknown := []string{}
+		for _, m := range o {
+			if _, known := fields[m.Name]; !known {
+				unknown = append(unknown, m.Name)
+			}
+		}
+		if len(o) != len(fields) {
+			if len(unknown) > 0 {
+				return &contentUnknownFields{unknown, "object has missing or unknown fields"}
+			}
 			return fmt.Errorf("object has missing or unknown fields")
 		}
 		seen := map[string]bool{}
 		for _, m := range o {
 			rule, ok := fields[m.Name]
 			if !ok || seen[m.Name] {
+				if !ok {
+					return &contentUnknownFields{[]string{m.Name}, fmt.Sprintf("unknown or duplicate field %s", m.Name)}
+				}
 				return fmt.Errorf("unknown or duplicate field %s", m.Name)
 			}
 			seen[m.Name] = true

@@ -350,7 +350,7 @@ func withTaskSpecWorkspace(d Dependencies, root string, fn func(Dependencies) er
 	if d.TaskWorkspace == nil {
 		return classified(ErrorTaskSpec, "workspace Task guard dependency is unavailable", nil)
 	}
-	return workspace.WithTaskSpecSnapshot(*d.TaskWorkspace, root, func(s *workspace.TaskSpecSession) error { d.taskSpecSession = s; return fn(d) })
+	return workspace.WithTaskSpecRegistrationSnapshot(*d.TaskWorkspace, root, func(s *workspace.TaskSpecSession) error { d.taskSpecSession = s; return fn(d) })
 }
 func validateTaskSpecStart(d Dependencies, snapshot Snapshot, draft startDraft) (canonicaljson.Value, error) {
 	if taskSpecVersion(snapshot.Handoff.Value) != taskSpecVersion(draft.Value) {

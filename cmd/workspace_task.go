@@ -127,7 +127,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 		}
 		result, err := services.show(id)
 		if err != nil {
-			return err
+			return taskContentCommandError(cmd, format, err)
 		}
 		if format == "json" {
 			bytes, err := workspace.MarshalTaskReadback(result)
@@ -214,7 +214,7 @@ func newWorkspaceTaskResultCommand(services workspaceTaskServices) *cobra.Comman
 		id, _ := workspace.ParseTaskID(args[0])
 		result, err := services.recordResult(workspace.TaskResultRecordInput{TaskID: id, File: file})
 		if err != nil {
-			return err
+			return taskContentCommandError(cmd, format, err)
 		}
 		if format == "json" {
 			b, err := workspace.MarshalTaskResultReadback(result)
@@ -259,7 +259,7 @@ func newWorkspaceTaskQACommand(services workspaceTaskServices) *cobra.Command {
 		id, _ := workspace.ParseTaskID(args[0])
 		result, err := services.recordQA(workspace.TaskHumanQARecordInput{TaskID: id, File: file})
 		if err != nil {
-			return err
+			return taskContentCommandError(cmd, format, err)
 		}
 		if format == "json" {
 			b, err := workspace.MarshalTaskHumanQAReadback(result)
@@ -313,7 +313,7 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 		}
 		out, err := services.integrate(input)
 		if err != nil && out.Readback.Value == nil {
-			return err
+			return taskContentCommandError(cmd, format, err)
 		}
 		if format == "json" {
 			b, marshalErr := workspace.MarshalTaskIntegrationReadback(out.Readback)

@@ -31,6 +31,10 @@ func contentIntegrity(err error) string {
 	if errors.Is(err, fs.ErrNotExist) {
 		return "missing"
 	}
+	var contentErr *TaskContentError
+	if errors.As(err, &contentErr) && contentErr.Code == "task_content_reader_incompatible" {
+		return "incompatible"
+	}
 	if strings.Contains(err.Error(), "conflict") || strings.Contains(err.Error(), "invalid") {
 		return "conflict"
 	}
@@ -43,11 +47,14 @@ func contentIntegrityReason(integrity string) string {
 		return "task_content_missing"
 	case "conflict":
 		return "task_content_integrity_conflict"
+	case "incompatible":
+		return "task_content_reader_incompatible"
 	default:
 		return "task_content_observation_unknown"
 	}
 }
 func readContentStart(d Dependencies, q TaskContentQuery, missingTask bool) (string, WorkItemRegistry, *TaskRecord, error) {
+	d = WithTaskContentScope(d, q.TaskID)
 	if _, e := ParseTaskID(string(q.TaskID)); e != nil {
 		return "", WorkItemRegistry{}, nil, e
 	}
@@ -88,6 +95,7 @@ func contentTaskAction(id TaskID) canonicaljson.Value {
 	return contentActionValue(TaskNextAction{"inspect_task", "Inspect the Task and its current basis.", []string{"ply", "workspace", "task", "show", string(id)}})
 }
 func ShowTaskProblem(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult, error) {
+	d = WithTaskContentScope(d, q.TaskID)
 	if q.Revision < 0 || q.Revision > 2147483647 {
 		return TaskContentReadbackResult{}, contentError("task_content_invalid_input", "revision must be a positive integer", nil)
 	}
@@ -174,6 +182,7 @@ func selectionReadback(d Dependencies, root string, r WorkItemRegistry, id TaskI
 	return contentObject(m), fresh
 }
 func ListTaskSpecs(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult, error) {
+	d = WithTaskContentScope(d, q.TaskID)
 	root, r, _, e := readContentStart(d, q, false)
 	if e != nil {
 		return TaskContentReadbackResult{}, e
@@ -208,6 +217,7 @@ func ListTaskSpecs(d Dependencies, q TaskContentQuery) (TaskContentReadbackResul
 	return contentReadEnvelope("WorkspaceTaskSpecListReadback@1", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "spec_id": specID, "revisions": revisions, "selection": selected, "freshness": contentReadFreshness(d, root, r), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentTaskAction(q.TaskID)}), nil
 }
 func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult, error) {
+	d = WithTaskContentScope(d, q.TaskID)
 	if contentSlug(q.SpecID) != nil || q.Revision < 1 || q.Revision > 2147483647 {
 		return TaskContentReadbackResult{}, contentError("task_content_invalid_input", "--spec and --revision (1..2147483647) are required", nil)
 	}
@@ -306,6 +316,7 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 	return contentReadEnvelope("WorkspaceTaskSpecReadback@1", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": revision, "assessments": assessments, "selection_history": selections, "integrity": integrity, "selection_freshness": selectionFresh, "target_freshness": targetFresh, "required_inputs": contentRefValue(inputs), "task_spec_binding": contentRefValue(basis), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentTaskAction(q.TaskID)}), nil
 }
 func ShowTaskPublication(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult, error) {
+	d = WithTaskContentScope(d, q.TaskID)
 	if e := contentKey(q.PublicationKey); e != nil {
 		return TaskContentReadbackResult{}, e
 	}

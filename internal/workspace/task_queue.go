@@ -358,6 +358,9 @@ func validateQueueClosure(d Dependencies, root string, r WorkItemRegistry) error
 		draft := decodeQueueDraft(queueRequestValue(ev.Request))
 		t := QueueTarget{ProjectID: draft.ProjectID, RepoID: draft.RepoID, EpicID: draft.EpicID}
 		for _, entry := range draft.Entries {
+			if !d.TaskContent.includesTask(entry.TaskID) {
+				continue
+			}
 			if entry.Goal != nil {
 				if _, e := loadTaskGoal(d, root, r, entry.TaskID, *entry.Goal); e != nil {
 					return e
@@ -376,13 +379,16 @@ func validateQueueClosure(d Dependencies, root string, r WorkItemRegistry) error
 		if ev.QueueID != queueID(root, t) {
 			return queueError("task_queue_integrity_conflict", "queue identity differs from workspace")
 		}
-		if draft.RegistryUpgrade != nil {
+		if draft.RegistryUpgrade != nil && d.TaskContent.includesTarget(r, draft.EpicID, draft.RepoID) {
 			if _, e := d.TaskContent.Read(root, "backups", draft.RegistryUpgrade.RegistrySHA256); e != nil {
 				return e
 			}
 		}
 	}
 	for _, p := range r.TaskPreparations {
+		if !d.TaskContent.includesTask(p.Plan.TaskID) {
+			continue
+		}
 		if p.Plan.Workspace.Root != root {
 			return queueError("task_queue_integrity_conflict", "preparation workspace changed")
 		}
@@ -405,6 +411,9 @@ func validateQueueClosure(d Dependencies, root string, r WorkItemRegistry) error
 		}
 	}
 	for _, u := range r.EpicBaseUpdates {
+		if !d.TaskContent.includesTarget(r, u.Plan.Target.EpicID, u.Plan.Target.RepoID) {
+			continue
+		}
 		if u.Plan.Workspace.Root != root {
 			return queueError("epic_base_integrity_conflict", "base workspace changed")
 		}

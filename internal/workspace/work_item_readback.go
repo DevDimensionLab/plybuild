@@ -173,6 +173,7 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 }
 
 func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) {
+	dependencies = WithTaskContentScope(dependencies, id)
 	if _, err := ParseTaskID(string(id)); err != nil {
 		return TaskReadbackResult{}, err
 	}

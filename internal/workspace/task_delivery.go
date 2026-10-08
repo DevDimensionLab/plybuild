@@ -308,6 +308,7 @@ func ParseHumanQARecordID(value string) (HumanQARecordID, error) {
 }
 
 func RecordTaskResult(dependencies Dependencies, input TaskResultRecordInput) (TaskResultMutationResult, error) {
+	dependencies = WithTaskContentScope(dependencies, input.TaskID)
 	if _, err := ParseTaskID(string(input.TaskID)); err != nil {
 		return TaskResultMutationResult{}, err
 	}
@@ -406,6 +407,7 @@ func RecordTaskResult(dependencies Dependencies, input TaskResultRecordInput) (T
 }
 
 func RecordTaskHumanQA(dependencies Dependencies, input TaskHumanQARecordInput) (TaskHumanQAMutationResult, error) {
+	dependencies = WithTaskContentScope(dependencies, input.TaskID)
 	if _, err := ParseTaskID(string(input.TaskID)); err != nil {
 		return TaskHumanQAMutationResult{}, err
 	}

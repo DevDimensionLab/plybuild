@@ -380,6 +380,17 @@ func (s *TaskSpecSession) TaskSpecReadPaths(b *TaskSpecBasis) ([]string, error) 
 }
 
 func WithTaskSpecSnapshot(d Dependencies, root string, operation func(*TaskSpecSession) error) (err error) {
+	return withTaskSpecSnapshot(d, root, false, operation)
+}
+
+// WithTaskSpecRegistrationSnapshot keeps the same locks and full structural
+// registry checks. ValidateTarget validates the resolved Task's content before
+// any handoff effect; historical reads independently validate their exact basis.
+func WithTaskSpecRegistrationSnapshot(d Dependencies, root string, operation func(*TaskSpecSession) error) error {
+	return withTaskSpecSnapshot(d, root, true, operation)
+}
+
+func withTaskSpecSnapshot(d Dependencies, root string, registrations bool, operation func(*TaskSpecSession) error) (err error) {
 	project, e := acquireExistingContentLock(filepath.Join(root, MarkerDirectory, "projects.lock"))
 	if e != nil {
 		return e
@@ -408,7 +419,12 @@ func WithTaskSpecSnapshot(d Dependencies, root string, operation func(*TaskSpecS
 	if e != nil {
 		return e
 	}
-	registry, e := d.WorkItems.Snapshot(root)
+	var registry WorkItemRegistry
+	if registrations {
+		registry, e = d.WorkItems.SnapshotRegistrations(root)
+	} else {
+		registry, e = d.WorkItems.Snapshot(root)
+	}
 	if e != nil {
 		return e
 	}
@@ -454,7 +470,14 @@ func (s *TaskSpecSession) ValidateTarget(locator, ref, common string, basis *Tas
 	if owner.ID != basis.TaskID || owner.Worktree.Locator != physical || owner.Worktree.Ref != ref || owner.GitCommonDir != common {
 		return TaskSpecEvaluation{}, contentError("task_spec_binding_conflict", "target differs from the registered delivery binding", nil)
 	}
-	out, e := currentTaskSpec(s.Dependencies, s.Root, s.Registry, s.Projects, *owner, true)
+	d := WithTaskContentScope(s.Dependencies, owner.ID)
+	if e := validateTaskContentClosure(d.TaskContent, s.Root, s.Registry, false); e != nil {
+		return TaskSpecEvaluation{}, e
+	}
+	if e := validateQueueClosure(d, s.Root, s.Registry); e != nil {
+		return TaskSpecEvaluation{}, e
+	}
+	out, e := currentTaskSpec(d, s.Root, s.Registry, s.Projects, *owner, true)
 	if e != nil {
 		return out, e
 	}
@@ -479,6 +502,7 @@ func (s *TaskSpecSession) ValidateTarget(locator, ref, common string, basis *Tas
 	return out, nil
 }
 func ReadHistoricalTaskSpec(d Dependencies, root string, b TaskSpecBasis) (TaskSpecEvaluation, error) {
+	d = WithTaskContentScope(d, b.TaskID)
 	r, e := d.WorkItems.Snapshot(root)
 	if e != nil {
 		return TaskSpecEvaluation{}, e

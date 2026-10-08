@@ -336,6 +336,7 @@ func ParseTaskIntegrationInput(taskID, resultID, qaID, resultOID, parentOID, ret
 }
 
 func CheckTaskIntegration(dependencies Dependencies, input TaskIntegrationInput) (TaskIntegrationResult, error) {
+	dependencies = WithTaskContentScope(dependencies, input.TaskID)
 	input.Apply = false
 	if err := validateIntegrationInput(input); err != nil {
 		return TaskIntegrationResult{}, err
@@ -385,6 +386,7 @@ func CheckTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 }
 
 func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput) (TaskIntegrationResult, error) {
+	dependencies = WithTaskContentScope(dependencies, input.TaskID)
 	input.Apply = true
 	if err := validateIntegrationInput(input); err != nil {
 		return TaskIntegrationResult{}, err

@@ -265,6 +265,10 @@ func deliveryReadBinding(path string, max int) (FileBinding, []byte, error) {
 }
 
 func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath string) (WorkflowRun, error) {
+	return workflowDeliveryVerify(d, root, id, contextPath, reviewPath, "")
+}
+
+func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, reuseAttempt string) (WorkflowRun, error) {
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}
@@ -272,11 +276,15 @@ func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath st
 	var receipt deliveryVerificationReceipt
 	var verifierID string
 	recoverReceipt := false
+	alreadyQualified := false
 	e := workflowUpdate(d, root, id, func(current *workflowState) error {
 		if e := deliveryCallback(d, *current, contextPath, true); e != nil {
 			return e
 		}
-		if attempt := current.Result.Delivery.Attempt; attempt != nil && attempt.State == "attempted" {
+		if reuseAttempt != "" && (current.Result.Delivery.Attempt == nil || current.Result.Delivery.Attempt.ID != reuseAttempt || current.Result.Delivery.Attempt.Kind != "verification") {
+			return deliveryContinuityError("receipt_mismatch", "--reuse must name the latest verification attempt; inspect its exact receipt and use ordinary verify only when a new command execution is intended")
+		}
+		if attempt := current.Result.Delivery.Attempt; attempt != nil && (attempt.State == "attempted" || reuseAttempt != "") {
 			if attempt.Kind != "verification" {
 				return workflowError(4, "previous delivery effect is unresolved; it will not be replayed")
 			}
@@ -284,6 +292,27 @@ func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath st
 			receipt, e = deliveryRecoverVerification(*current, reviewPath)
 			if e != nil {
 				return e
+			}
+			if reuseAttempt != "" {
+				if e = deliveryReusableVerification(d, *current, receipt); e != nil {
+					return e
+				}
+				for _, candidate := range current.Result.Delivery.Candidates {
+					if candidate.Key == reuseAttempt {
+						if candidate.OID != receipt.CandidateOID || candidate.Tree != receipt.CandidateTree || candidate.Verification.SHA256 != digest(receipt) {
+							return deliveryContinuityError("receipt_mismatch", "qualified candidate differs from the preserved verification attempt")
+						}
+						alreadyQualified = true
+						return nil
+					}
+				}
+				if current.Result.Delivery.Phase == "human_qa_passed" || current.Result.Delivery.Phase == "integrating" {
+					return workflowError(4, "withdraw the current candidate explicitly before requalifying another attempt")
+				}
+				// Retain the original key and input digest while reserving its
+				// bookkeeping continuation. No command is sent again.
+				current.Result.Delivery.Attempt.State = "attempted"
+				current.Result.Delivery.Phase = "verifying"
 			}
 			verifierID, e = deliveryVerifier(d, *current, receipt.CWD, receipt.Acceptance.Locator)
 			if e != nil {
@@ -330,6 +359,9 @@ func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath st
 	if e != nil {
 		o, _ := WorkflowShow(d, root, id)
 		return o, e
+	}
+	if alreadyQualified {
+		return deliveryReadback(d, root, id, nil)
 	}
 	if !recoverReceipt {
 		if e = d.fault("delivery_after_verification_reservation"); e != nil {
@@ -382,11 +414,26 @@ func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath st
 			}
 		}
 		if e == nil {
-			value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})
-			e = err
-			if err == nil {
-				candidate = &value
-			}
+			// Candidate publication follows the existing TaskRun -> workspace
+			// lock order. Concurrent receipt observers may recover the same
+			// native publication, but cannot race its staging/start/terminal.
+			e = withStore(root, func() error {
+				current, err := workflowRead(root, id)
+				if err != nil {
+					return err
+				}
+				if current.Result.Delivery.Attempt == nil || current.Result.Delivery.Attempt.ID != receipt.AttemptID || current.Result.Delivery.Attempt.InputSHA256 != s.Result.Delivery.Attempt.InputSHA256 {
+					return workflowError(4, "verification reservation changed before qualification")
+				}
+				if err = deliveryCallback(d, current, contextPath, true); err != nil {
+					return err
+				}
+				value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})
+				if err == nil {
+					candidate = &value
+				}
+				return err
+			})
 		}
 	}
 	qualificationErr := e
@@ -397,6 +444,14 @@ func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath st
 	e = workflowUpdate(d, root, id, func(current *workflowState) error {
 		if current.Result.Delivery.Attempt == nil || current.Result.Delivery.Attempt.ID != receipt.AttemptID {
 			return workflowError(4, "verification reservation changed")
+		}
+		for _, old := range current.Result.Delivery.Candidates {
+			if old.Key == receipt.AttemptID {
+				if candidate == nil || old.OID != receipt.CandidateOID || old.Tree != receipt.CandidateTree || old.Verification != verification || old.TaskResult.ID != candidate.TaskResult.ID {
+					return workflowError(4, "candidate publication differs from the completed verification reservation")
+				}
+				return nil
+			}
 		}
 		if _, err := deliveryAppendEvent(d, current, receipt.AttemptID, "verification", receipt); err != nil {
 			return err
@@ -465,7 +520,7 @@ func deliveryRecoverVerification(s workflowState, reviewPath string) (deliveryVe
 	}
 	raw, e = readFile(filepath.Join(a.Path, "verification.json"), 256<<10, true)
 	if e != nil {
-		return receipt, workflowError(4, "verification outcome is unknown; inspect the reserved attempt and running process without replaying it")
+		return receipt, deliveryContinuityError("effect_unknown", "verification outcome is unknown; inspect the reserved attempt and running process without replaying it")
 	}
 	if e = decode(raw, 256<<10, &receipt); e != nil {
 		return receipt, e
@@ -474,8 +529,13 @@ func deliveryRecoverVerification(s workflowState, reviewPath string) (deliveryVe
 	copy.Exit, copy.Stdout, copy.Stderr, copy.FinishedAt, copy.Error = nil, FileBinding{}, FileBinding{}, "", ""
 	started, startErr := time.Parse(time.RFC3339Nano, receipt.StartedAt)
 	finished, finishErr := time.Parse(time.RFC3339Nano, receipt.FinishedAt)
-	if !equal(initial, copy) || receipt.AttemptID != a.ID || receipt.RunID != s.Result.RunID || receipt.RequestSHA256 != s.Result.RequestSHA256 || receipt.Review.Locator != reviewPath || startErr != nil || finishErr != nil || finished.Before(started) {
-		return receipt, workflowError(4, "completed verification receipt differs from its reserved attempt")
+	if !equal(initial, copy) || receipt.Kind != "PlyDeliveryVerification@1" || receipt.SchemaVersion != 1 || a.Path != filepath.Join(s.Result.Paths.RunRoot, "delivery", "attempts", a.ID) || receipt.AttemptID != a.ID || receipt.CandidateOID != a.CandidateOID || receipt.CandidateTree != a.CandidateTree || receipt.RunID != s.Result.RunID || receipt.RequestSHA256 != s.Result.RequestSHA256 || receipt.Review.Locator != reviewPath || startErr != nil || finishErr != nil || finished.Before(started) {
+		return receipt, deliveryContinuityError("receipt_mismatch", "completed verification receipt differs from its reserved attempt, candidate or original review; preserve it and reverify changed inputs explicitly")
+	}
+	for _, event := range s.Result.Delivery.Events {
+		if event.ID == a.ID && (event.Kind != "verification" || event.Binding.SHA256 != hash(raw)) {
+			return receipt, deliveryContinuityError("receipt_mismatch", "completed verification receipt differs from its immutable recorded event")
+		}
 	}
 	for _, b := range []FileBinding{receipt.AcceptanceSnapshot, receipt.Stdout, receipt.Stderr} {
 		if _, e = workflowBound(b, 4<<20); e != nil {

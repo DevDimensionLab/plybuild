@@ -37,6 +37,27 @@ type deliveryCandidateArtifact struct {
 	raw       []byte
 }
 
+// ValidateDeliveryOwnerContinuity proves that this reader understands the
+// accepted owner's required historical Task Spec and frozen input semantics.
+// Reading unrelated publication payloads is outside this dependency boundary.
+func ValidateDeliveryOwnerContinuity(d Dependencies, locator string) error {
+	snapshot, err := d.Store.ReadByLocator(locator)
+	if err != nil {
+		return err
+	}
+	if taskSpecVersion(snapshot.Handoff.Value) != 3 || deliveryMode(snapshot.Handoff.Value) != "owner" || snapshot.Start == nil || snapshot.Start.Outcome != "started" || snapshot.Terminal != nil || snapshot.HeadState != "ready" {
+		return fmt.Errorf("continuation requires a supported active accepted delivery-owner handoff")
+	}
+	basis, _, err := historicalHandoffTaskSpec(d, snapshot)
+	if err != nil {
+		return err
+	}
+	if basis == nil {
+		return fmt.Errorf("continuation requires the bound execution Task Spec")
+	}
+	return nil
+}
+
 // DeliveryCandidateReviewTemplate is a schema-shaped starting point, not review
 // evidence. The explicit unobserved decision and empty reviewer keep it invalid
 // until the reviewer records an actual candidate-bound assessment.

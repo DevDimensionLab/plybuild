@@ -58,6 +58,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	addExecuteOwnerCommands(c, d)
 	c.AddCommand(newWorkflowExecuteReleaseCommand(d))
 	c.AddCommand(newWorkflowExecuteRecoverStartCommand(d))
+	c.AddCommand(newWorkflowExecuteContinueCommand(d))
 	return c
 }
 
@@ -144,6 +145,7 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 		if v.Delivery != nil {
 			fmt.Fprintf(c.OutOrStdout(), "Delivery: %s\nRuntime permission: %s\n", v.Delivery.Phase, v.Delivery.PermissionState)
 		}
+		writeDeliveryStatus(c.OutOrStdout(), v.DeliveryStatus)
 		writeWorkflowClaudeTrust(c.OutOrStdout(), v.ClaudeTrust)
 		for _, r := range v.Reasons {
 			fmt.Fprintln(c.OutOrStdout(), "Needs attention: "+r.Detail)
@@ -170,7 +172,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 	for _, verb := range []string{"show", "follow", "resume", "report", "verify", "qa", "integrate"} {
 		verb := verb
 		ownerCallback := verb != "show" && verb != "follow" && verb != "resume"
-		var format, contextPath, file, review, evidence string
+		var format, contextPath, file, review, evidence, reuse string
 		var timeout int
 		use := verb + " RUN_ID"
 		if verb == "qa" {
@@ -248,7 +250,11 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 				case "report":
 					r, err = taskrun.WorkflowDeliveryReport(d, root, args[0], contextPath, file)
 				case "verify":
-					r, err = taskrun.WorkflowDeliveryVerify(d, root, args[0], contextPath, review)
+					if reuse != "" {
+						r, err = taskrun.WorkflowDeliveryRequalify(d, root, args[0], contextPath, review, reuse)
+					} else {
+						r, err = taskrun.WorkflowDeliveryVerify(d, root, args[0], contextPath, review)
+					}
 				case "qa":
 					r, err = taskrun.WorkflowDeliveryQA(d, root, args[0], contextPath, args[1], evidence)
 				case "integrate":
@@ -272,6 +278,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 		}
 		if verb == "verify" {
 			child.Flags().StringVar(&review, "review", "", "absolute candidate-bound review evidence (required)")
+			child.Flags().StringVar(&reuse, "reuse", "", "requalify this exact preserved verification attempt without executing acceptance again")
 		}
 		if verb == "qa" {
 			child.Flags().StringVar(&evidence, "evidence", "", "absolute evidence of the actual human answer (required)")

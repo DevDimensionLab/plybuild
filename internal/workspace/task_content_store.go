@@ -15,6 +15,7 @@ import (
 // TaskContentStorage owns bounded, physical reads and publish-once content. Its
 // fault boundary is injected per dependency instance, never through environment.
 type TaskContentStorage struct {
+	scope        *taskContentScope
 	fault        func(string) error
 	readCaptured func(root, kind, digest string) ([]byte, error)
 }
@@ -134,7 +135,12 @@ func (s *TaskContentStorage) directories(root, kind string, create bool) error {
 	}
 	return nil
 }
-func (s *TaskContentStorage) Read(root, kind, digest string) ([]byte, error) {
+func (s *TaskContentStorage) Read(root, kind, digest string) (out []byte, err error) {
+	defer func() {
+		if err != nil {
+			err = contentArtifactError(root, kind, digest, "read content", err)
+		}
+	}()
 	if s != nil && s.readCaptured != nil {
 		return s.readCaptured(root, kind, digest)
 	}
@@ -279,14 +285,19 @@ func contentManifestOperation(kind string) string {
 	}
 	return ""
 }
-func readContentManifest(s *TaskContentStorage, root, digest string) (canonicaljson.Object, error) {
+func readContentManifest(s *TaskContentStorage, root, digest string) (out canonicaljson.Object, err error) {
+	defer func() {
+		if err != nil {
+			err = contentArtifactError(root, "manifests", digest, "read publication", err)
+		}
+	}()
 	b, e := s.Read(root, "manifests", digest)
 	if e != nil {
 		return nil, e
 	}
 	v, e := canonicaljson.DecodeStrict(b)
 	if e != nil {
-		return nil, e
+		return nil, contentError("task_content_invalid_input", "malformed publication: "+e.Error(), e)
 	}
 	m := contentFields(v)
 	op := contentManifestOperation(contentString(m, "kind"))
@@ -294,9 +305,9 @@ func readContentManifest(s *TaskContentStorage, root, digest string) (canonicalj
 		op = "spec_withdraw"
 	}
 	if op == "" {
-		return nil, contentError("task_content_integrity_conflict", "unknown manifest kind", nil)
+		return nil, contentError("task_content_reader_incompatible", "unsupported manifest kind for reader "+taskContentReaderCapability, nil)
 	}
-	o, e := decodeTaskContent(b, op, true, true)
+	o, e := decodeStoredTaskContent(b, op, true, true)
 	if e != nil {
 		return nil, e
 	}
@@ -392,6 +403,9 @@ func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRe
 	// Spec bytes. A plausible authority object cannot retrofit a delivery choice
 	// onto a historical contract, even if its plan digest was recomputed.
 	for _, authority := range r.IntegrationAuthorities {
+		if !s.includesTask(authority.TaskID) {
+			continue
+		}
 		auth := authority.Plan.DeliveryAuthorization
 		link := taskResultSpecLink(r, authority.TaskResultID)
 		if link == nil {
@@ -416,6 +430,9 @@ func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRe
 		}
 	}
 	for _, pub := range r.TaskContentPublications {
+		if !s.includesTask(pub.TaskID) {
+			continue
+		}
 		manifest, e := readContentManifest(s, root, pub.OutcomeRef.ManifestSHA256)
 		if e != nil {
 			return e
@@ -432,7 +449,11 @@ func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRe
 			return e
 		}
 		if e = validateContentPublicationChain(s, root, r, pub, m, request); e != nil {
-			return contentError("task_content_integrity_conflict", "preserved publication chain differs", e)
+			var classified *TaskContentError
+			if errors.As(e, &classified) {
+				return contentArtifactError(root, "requests", pub.RequestSHA256, pub.Operation, e)
+			}
+			return contentArtifactError(root, "requests", pub.RequestSHA256, pub.Operation, contentError("task_content_integrity_conflict", "preserved publication chain differs: "+e.Error(), e))
 		}
 		if pub.BackupSHA256 != nil {
 			if _, e = s.Read(root, "backups", *pub.BackupSHA256); e != nil {
@@ -479,7 +500,7 @@ func validateContentPublicationChain(s *TaskContentStorage, root string, r WorkI
 	if op == "task_create" {
 		op = "problem_record"
 	}
-	draft, err := decodeTaskContent(request, op, false, pub.Operation == "task_create")
+	draft, err := decodeStoredTaskContent(request, op, false, pub.Operation == "task_create")
 	if err != nil {
 		return err
 	}
@@ -694,7 +715,11 @@ func readRegisteredTaskManifest(s *TaskContentStorage, root string, r WorkItemRe
 				return nil, err
 			}
 			if err = validateContentPublicationChain(s, root, r, p, contentFields(m), request); err != nil {
-				return nil, contentError("task_content_integrity_conflict", "manifest publication chain differs", err)
+				var classified *TaskContentError
+				if errors.As(err, &classified) {
+					return nil, contentArtifactError(root, "requests", p.RequestSHA256, p.Operation, err)
+				}
+				return nil, contentArtifactError(root, "requests", p.RequestSHA256, p.Operation, contentError("task_content_integrity_conflict", "manifest publication chain differs: "+err.Error(), err))
 			}
 			return m, nil
 		}

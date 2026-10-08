@@ -121,6 +121,12 @@ func newWorkflowRunCommand(d taskrun.Dependencies) *cobra.Command {
 			} else {
 				switch v := result.(type) {
 				case taskrun.WorkflowRun:
+					if v.Delivery != nil {
+						if err := writeExecuteResult(c, "text", v); err != nil {
+							return err
+						}
+						break
+					}
 					fmt.Fprintf(c.OutOrStdout(), "Run: %s\nAgent: %s\nTransport: %s (%s); round %d: %s\nReport review: %s\nTaskResult: not published. Provider inactivity: not attested. Human QA and integration: separate pending gates.\nNext: %s — %s\n", v.RunID, v.Provider, v.Transport.State, v.Transport.Observation, v.Round.Number, v.Round.State, v.FinalReturn.State, v.NextAction.Actor, v.NextAction.Message)
 					writeWorkflowClaudeTrust(c.OutOrStdout(), v.ClaudeTrust)
 					for _, r := range v.Reasons {

@@ -79,7 +79,7 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 			}
 			r, e := entry.run(d, workspace.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision, PublicationKey: key})
 			if e != nil {
-				return e
+				return taskContentCommandError(cmd, format, e)
 			}
 			if format == "json" {
 				b, e := workspace.MarshalTaskContentReadback(r)
