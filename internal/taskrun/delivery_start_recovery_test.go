@@ -14,6 +14,9 @@ import (
 // Recovery needs positive process evidence, not a screenshot or the absence of
 // an agent get response. Extend the ordinary Herdr stand-in only for this suite.
 const deliveryRecoveryInspectStandin = `
+if cmd == ["agent", "get"] and model.get("bootstrap_started") and not model.get("recovery_armed"):
+    print(json.dumps({"id":"fixture", "error":{"code":"agent_not_found", "message":"original provider stopped after its readiness prompt"}}), file=sys.stderr)
+    raise SystemExit(1)
 if cmd == ["pane", "get"]:
     pane = {"workspace_id":"w-fixture", "tab_id":"tab-fixture", "pane_id":"w-fixture:p1",
             "terminal_id":"terminal-fixture",
@@ -58,7 +61,9 @@ func deliveryRecoveryNewFixture(t *testing.T) deliveryFixture {
 		}
 		return []StartupProcess{{PID: 4242, ParentPID: 1, ProcessGroupID: 4242}}, nil
 	}
-	f.D.HerdrTimeout = 500 * time.Millisecond
+	// End initial readiness at an explicit stand-in boundary after its one
+	// bootstrap prompt. Keep normal subprocess deadlines so scheduler load
+	// cannot make setup stop before the recovery scenario exists.
 	workflowTestModel(t, f.workflowFixture, map[string]any{
 		"bootstrap_mode": "no_session", "interactive_ready": true,
 		"bootstrap_expected_prompt": workflowExpectedBootstrapPrompt,
@@ -69,10 +74,17 @@ func deliveryRecoveryNewFixture(t *testing.T) deliveryFixture {
 
 func deliveryRecoveryFixture(t *testing.T) (deliveryFixture, WorkflowRun, DeliveryStartRecoveryInput) {
 	t.Helper()
-	f := deliveryRecoveryNewFixture(t)
+	return deliveryRecoveryStartFixture(t, deliveryRecoveryNewFixture(t))
+}
+
+func deliveryRecoveryStartFixture(t *testing.T, f deliveryFixture) (deliveryFixture, WorkflowRun, DeliveryStartRecoveryInput) {
+	t.Helper()
 	o, err := workflowReadinessStart(t, f.workflowFixture)
 	if err == nil || o.RunID == "" || o.Transport.AgentSessionID != "" {
 		t.Fatalf("fixture did not retain a pre-Task startup: %+v %v", o, err)
+	}
+	if !strings.Contains(err.Error(), "Herdr agent get failed: class=nonzero_exit exit=1 provider_code=agent_not_found") {
+		t.Fatalf("fixture did not reach its explicit post-bootstrap stop: %v", err)
 	}
 	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
 	if err != nil || s.Phase != "bootstrap_attempted" || s.Acceptance != nil || s.StartDraft != nil || s.StartSHA256 != nil {
@@ -84,6 +96,17 @@ func deliveryRecoveryFixture(t *testing.T) (deliveryFixture, WorkflowRun, Delive
 	in := deliveryRecoveryReplaceProvider(t, f, o)
 	f.D.HerdrTimeout = 3 * time.Second
 	return f, o, in
+}
+
+func TestDeliveryStartRecoveryFixtureReachesBootstrapAfterSlowTabCreation(t *testing.T) {
+	f := deliveryRecoveryNewFixture(t)
+	// This exceeds the old 500 ms setup limit without delaying readiness or
+	// recovery. The stand-in must still reach the exact pre-Task boundary.
+	workflowTestModel(t, f.workflowFixture, map[string]any{"delay_command": "tab create", "delay_millis": 750})
+	f, _, _ = deliveryRecoveryStartFixture(t, f)
+	if workflowTestCalls(t, f.workflowFixture, "tab create") != 1 || workflowTestCalls(t, f.workflowFixture, "agent start") != 1 || workflowTestCalls(t, f.workflowFixture, "agent prompt") != 1 {
+		t.Fatal("slow fixture setup did not preserve exactly one tab, start and readiness prompt")
+	}
 }
 
 func deliveryRecoveryReplaceProvider(t *testing.T, f deliveryFixture, o WorkflowRun) DeliveryStartRecoveryInput {
