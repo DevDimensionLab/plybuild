@@ -8,6 +8,20 @@
       "path": "ply"
     },
     {
+      "after": "\n           __      __          _ __    __\n    ____  / /_  __/ /_  __  __(_) /___/ /\n   / __ \\/ / / / / __ \\/ / / / / / __  / \n  / /_/ / / /_/ / /_/ / /_/ / / / /_/ /  \n / .___/_/\\__, /_.___/\\__,_/_/_/\\__,_/   \n/_/      /____/                          \n\n== version: dev ==\n",
+      "before": "\n           __      __          _ __    __\n    ____  / /_  __/ /_  __  __(_) /___/ /\n   / __ \\/ / / / / __ \\/ / / / / / __  / \n  / /_/ / / /_/ / /_/ / /_/ / / / /_/ /  \n / .___/_/\\__, /_.___/\\__,_/_/_/\\__,_/   \n/_/      /____/                          \n\n== version: v1.0.1 ==\n",
+      "field": "long",
+      "kind": "command_changed",
+      "path": "ply"
+    },
+    {
+      "after": "\n           __      __          _ __    __\n    ____  / /_  __/ /_  __  __(_) /___/ /\n   / __ \\/ / / / / __ \\/ / / / / / __  / \n  / /_/ / / /_/ / /_/ / /_/ / / / /_/ /  \n / .___/_/\\__, /_.___/\\__,_/_/_/\\__,_/   \n/_/      /____/                          \n\n== version: dev ==\n\n## About plybuild - https://devdimensionlab.github.io/\n- Plybuild is a command line tool that supports developers using Spring Boot and Maven\n- ply upgrade all | 2party | 3party  -> upgrades maven version of maven dependencies to latest \n- ply build ply.json -> generates a new application ready for business logic\n- Authors:\n  - Alexander Skjolden, Runwith AS\n  - Per Otto Christensen, Codify Consulting AS\n",
+      "before": "\n           __      __          _ __    __\n    ____  / /_  __/ /_  __  __(_) /___/ /\n   / __ \\/ / / / / __ \\/ / / / / / __  / \n  / /_/ / / /_/ / /_/ / /_/ / / / /_/ /  \n / .___/_/\\__, /_.___/\\__,_/_/_/\\__,_/   \n/_/      /____/                          \n\n== version: v1.0.1 ==\n\n## About plybuild - https://devdimensionlab.github.io/\n- Plybuild is a command line tool that supports developers using Spring Boot and Maven\n- ply upgrade all | 2party | 3party  -> upgrades maven version of maven dependencies to latest \n- ply build ply.json -> generates a new application ready for business logic\n- Authors:\n  - Alexander Skjolden, Runwith AS\n  - Per Otto Christensen, Codify Consulting AS\n",
+      "field": "long",
+      "kind": "command_changed",
+      "path": "ply about"
+    },
+    {
       "after": "turn on json output logging; workflow status and trace select JSON result data",
       "before": "turn on json output logging",
       "field": "usage",
@@ -9571,6 +9585,50 @@
             "shorthand": "h",
             "shorthand_deprecated": "",
             "type": "bool",
+            "usage": "help for registry"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workspace registry",
+        "runnable": false,
+        "short": "Inspect and explicitly upgrade the shared work-item format",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "registry"
+      },
+      "kind": "command_added",
+      "path": "ply workspace registry"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
             "usage": "help for run"
           }
         ],
@@ -10059,6 +10117,136 @@
             "default": "false",
             "deprecated": "",
             "hidden": false,
+            "name": "apply",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "publish the confirmed format transition"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "read-only preview (default)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "confirm",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact fresh preview confirmation"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for upgrade"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "package",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute delivered release directory"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "sha256",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "expected sha256: manifest digest"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preview a format-4 to format-5 transition without writes. Apply requires the exact fresh confirmation and a verified prebuilt release, rechecked under the write lock. Preserve all records and a byte-for-byte backup. Compatible ordinary writes keep their format. Retry the same package and confirmation after interruption; an observed transition is recovered without another write. Upgrade only after all workspace consumers have a compatible delivered reader.",
+        "path": "ply workspace registry upgrade",
+        "runnable": true,
+        "short": "Confirm a format boundary against the exact registry and delivered reader",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "upgrade"
+      },
+      "kind": "command_added",
+      "path": "ply workspace registry upgrade"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
             "name": "check",
             "no_opt_default": "true",
             "scope": "local",
@@ -10446,6 +10634,63 @@
       },
       "kind": "command_added",
       "path": "ply integration show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for version"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": true,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply version",
+        "runnable": true,
+        "short": "Identify this executable without reading a workspace",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "version"
+      },
+      "kind": "command_added",
+      "path": "ply version"
     }
   ],
   "base_ref": "v1.0.1",
