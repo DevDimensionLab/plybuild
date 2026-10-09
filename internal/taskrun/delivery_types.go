@@ -31,6 +31,7 @@ type DeliveryRequestInput struct {
 	ClaudeProjectTrust                                          *ClaudeProjectTrust
 	Delivery                                                    DeliveryContract
 	Worker                                                      *WorkerContract
+	GoalStartEnvironment                                        *GoalStartEnvironment
 }
 
 type DeliveryPermissionAcceptance struct {

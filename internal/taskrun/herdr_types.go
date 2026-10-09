@@ -31,9 +31,16 @@ type WorkflowRequest struct {
 		ActorClaim        string `json:"actor_claim"`
 		MayRequestChanges bool   `json:"may_request_changes"`
 	} `json:"coordinator"`
-	ReturnMode string            `json:"return_mode"`
-	Delivery   *DeliveryContract `json:"delivery,omitempty"`
-	Worker     *WorkerContract   `json:"worker,omitempty"`
+	ReturnMode           string                `json:"return_mode"`
+	Delivery             *DeliveryContract     `json:"delivery,omitempty"`
+	Worker               *WorkerContract       `json:"worker,omitempty"`
+	GoalStartEnvironment *GoalStartEnvironment `json:"goal_start_environment,omitempty"`
+}
+
+type GoalStartEnvironment struct {
+	Home      string `json:"home"`
+	CodexHome string `json:"codex_home"`
+	Path      string `json:"path"`
 }
 type WorkflowPaths struct {
 	RunRoot string `json:"run_root"`

@@ -191,6 +191,11 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	if e := d.fault("workflow_before_tab_send"); e != nil {
 		return e
 	}
+	if d.ApprovedGoalStart != nil {
+		if e := d.ApprovedGoalStart(); e != nil {
+			return e
+		}
+	}
 	s, e := workflowRead(root, id)
 	if e != nil {
 		return e
@@ -228,6 +233,11 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	}
 	if e = d.fault("workflow_before_agent_send"); e != nil {
 		return e
+	}
+	if d.ApprovedGoalStart != nil {
+		if e := d.ApprovedGoalStart(); e != nil {
+			return e
+		}
 	}
 	if e = workflowTrustFresh(s); e != nil {
 		return e
@@ -274,6 +284,9 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 func workflowTabCreateArgv(s workflowState, workspaceID string) []string {
 	r := s.Request
 	tabArgs := []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + os.Getenv("PATH"), "--no-focus"}
+	if env := r.GoalStartEnvironment; env != nil {
+		tabArgs = []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + env.Path, "--env", "HOME=" + env.Home, "--env", "CODEX_HOME=" + env.CodexHome, "--no-focus"}
+	}
 	if s.CodexTrust != nil {
 		// Use the exact existing user/config locations observed by preview.
 		// No alternate home or persistent configuration is created.

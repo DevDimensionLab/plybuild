@@ -57,6 +57,9 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if r.SchemaVersion == 2 {
 		return r, validateDeliveryWorkflowRequest(r)
 	}
+	if r.GoalStartEnvironment != nil {
+		return r, workflowError(2, "legacy workflow requests cannot acquire a bound Goal launch environment")
+	}
 	if r.Delivery != nil || r.Worker != nil {
 		return r, workflowError(2, "legacy workflow requests cannot acquire delivery-owner authority")
 	}
@@ -202,7 +205,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 	if p.Confirmation == nil || confirm != *p.Confirmation {
 		return WorkflowRun{}, workflowError(4, "confirmation differs from current preview")
 	}
-	if !headlessRun(r) && os.Getenv("HERDR_ENV") != "1" {
+	if !headlessRun(r) && os.Getenv("HERDR_ENV") != "1" && d.ApprovedGoalStart == nil {
 		return WorkflowRun{}, workflowError(4, "apply requires the local Herdr context (HERDR_ENV=1)")
 	}
 	resolved, e := exec.LookPath(r.Runtime.Provider)
@@ -213,6 +216,9 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 		return WorkflowRun{}, workflowError(4, "local "+r.Runtime.Provider+" executable is missing or differs from the bound runtime")
 	}
 	owned := false
+	if e = d.fault("workflow_before_reservation"); e != nil {
+		return WorkflowRun{}, e
+	}
 	e = withStore(r.WorkspaceRoot, func() error {
 		if o, e := workflowExisting(r); o != nil || e != nil {
 			return e

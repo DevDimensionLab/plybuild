@@ -428,6 +428,11 @@ func withTaskSpecSnapshot(d Dependencies, root string, registrations bool, opera
 	if e != nil {
 		return e
 	}
+	if guarded, ok := d.WorkItems.(guardedTaskStartStore); ok {
+		if e := guarded.guard.Check(root, registry); e != nil {
+			return e
+		}
+	}
 	return operation(&TaskSpecSession{d, root, registry, ProjectSnapshot{Projects: projects, Repos: repos}})
 }
 func (s *TaskSpecSession) ValidateTarget(locator, ref, common string, basis *TaskSpecBasis) (TaskSpecEvaluation, error) {
