@@ -381,12 +381,16 @@ func TestClaudeTrustShellEnvironmentClearsInheritedOverrides(t *testing.T) {
 
 func TestWorkflowClaudeTrustUnknownEnvironmentDoesNotStartOrReplay(t *testing.T) {
 	f, p, path := workflowClaudeTrustFixture(t)
-	f.D.HerdrTimeout = 400 * time.Millisecond
-	workflowTestModel(t, f, map[string]any{"claude_environment_no_ack": true})
+	f.D.HerdrTimeout = 5 * time.Second
+	workflowTestModel(t, f, map[string]any{"claude_environment_no_ack": true, "before_call_delay_command": "tab create", "before_call_delay_millis": 750})
 	before := workflowTrustSnapshot(t, filepath.Dir(path))
 	o, err := WorkflowStart(f.D, f.File, *p.Confirmation)
 	if err == nil || o.ClaudeTrust != nil {
 		t.Fatalf("unconfirmed shell setup accepted: %+v %v", o, err)
+	}
+	state, readErr := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if readErr != nil || state.Phase != "claude_environment_attempted" || !strings.Contains(err.Error(), "Claude shell environment setup is unconfirmed") {
+		t.Fatalf("fixture stopped before its unacknowledged environment attempt: phase=%s, %v", state.Phase, readErr)
 	}
 	if workflowTestCalls(t, f, "pane run") != 1 || workflowTestCalls(t, f, "agent start") != 0 || !reflect.DeepEqual(before, workflowTrustSnapshot(t, filepath.Dir(path))) {
 		t.Fatal("unknown setup caused dependent effects")

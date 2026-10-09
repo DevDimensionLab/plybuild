@@ -2,6 +2,7 @@ package taskrun
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,18 +25,30 @@ func workflowReadinessStart(t *testing.T, f workflowFixture) (WorkflowRun, error
 
 func workflowAssertNoReplay(t *testing.T, f workflowFixture, o WorkflowRun) {
 	t.Helper()
-	before, err := os.ReadFile(f.Calls)
+	readCalls := func() ([]byte, bool) {
+		data, err := os.ReadFile(f.Calls)
+		if os.IsNotExist(err) {
+			return nil, false
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		return data, true
+	}
+	before, existed := readCalls()
+	repeated, err := WorkflowStart(f.D, f.File, "already reserved")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = WorkflowStart(f.D, f.File, "already reserved"); err != nil {
+	shown, err := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID); err != nil {
-		t.Fatal(err)
+	if repeated.RunID != o.RunID || shown.RunID != o.RunID || repeated.RequestSHA256 != o.RequestSHA256 || shown.RequestSHA256 != o.RequestSHA256 {
+		t.Fatal("replay or show changed the reserved run identity")
 	}
-	after, _ := os.ReadFile(f.Calls)
-	if string(before) != string(after) {
+	after, exists := readCalls()
+	if existed != exists || string(before) != string(after) {
 		t.Fatal("replay or show contacted the transport")
 	}
 }
@@ -207,11 +220,40 @@ func TestWorkflowReadinessRejectsIncompleteOrChangedIdentity(t *testing.T) {
 	for name, observation := range cases {
 		t.Run(name, func(t *testing.T) {
 			f := workflowTestFixture(t)
-			f.D.HerdrTimeout = 700 * time.Millisecond
-			workflowTestModel(t, f, map[string]any{"observations": []any{observation}})
+			f.D.HerdrTimeout = 5 * time.Second
+			model := map[string]any{"observations": []any{observation}}
+			if name == "tab" {
+				model["before_call_delay_command"] = "tab create"
+				model["before_call_delay_millis"] = 750
+			}
+			workflowTestModel(t, f, model)
 			o, err := workflowReadinessStart(t, f)
+			if workflowTestCalls(t, f, "agent get") == 0 {
+				t.Fatal("fixture stopped before observing the selected identity")
+			}
+			data, readErr := os.ReadFile(f.Model)
+			var observed struct {
+				Index int `json:"observation_index"`
+			}
+			if readErr != nil || json.Unmarshal(data, &observed) != nil || observed.Index == 0 {
+				t.Fatal("fixture never consumed the selected identity observation")
+			}
 			if err == nil || workflowTestCalls(t, f, "agent prompt") != 0 {
 				t.Fatal("invalid identity permitted prompt")
+			}
+			switch name {
+			case "pending_with_session", "missing_agent_session", "missing_agent_status":
+				if !strings.Contains(err.Error(), "deadline") && !strings.Contains(err.Error(), "class=timeout") {
+					t.Fatalf("incomplete readiness did not retain its deadline stop: %v", err)
+				}
+			default:
+				if !strings.Contains(err.Error(), "differs from the reserved attempt") && !strings.Contains(err.Error(), "differs from the bound run") {
+					t.Fatalf("identity observation did not cause the rejection: %v", err)
+				}
+			}
+			state, readErr := workflowRead(f.R.WorkspaceRoot, o.RunID)
+			if readErr != nil || state.Phase != "agent_start_attempted" || o.Transport.AgentSessionID != "" || workflowTestCalls(t, f, "tab create") != 1 || workflowTestCalls(t, f, "agent start") != 1 {
+				t.Fatalf("identity fixture did not preserve its unbound startup: phase=%s, %v", state.Phase, readErr)
 			}
 			if o.NextAction.Actor != "coordinator" {
 				t.Error("stop did not name coordinator")
@@ -226,43 +268,38 @@ func TestWorkflowReadinessRejectsIncompleteOrChangedIdentity(t *testing.T) {
 		if err == nil || workflowTestCalls(t, f, "agent prompt") != 0 {
 			t.Fatal("replacement session permitted prompt")
 		}
+		if workflowTestCalls(t, f, "agent get") != 2 || !strings.Contains(err.Error(), "differs from the bound run") {
+			t.Fatalf("fixture did not reject its second changed-session observation: %v", err)
+		}
 		workflowAssertNoReplay(t, f, o)
 	})
 }
 
 func TestWorkflowReadinessUsesOneDeadline(t *testing.T) {
 	f := workflowTestFixture(t)
-	f.D.HerdrTimeout = 700 * time.Millisecond
-	workflowTestModel(t, f, map[string]any{"observations": []any{workflowPendingObservation()}, "delay_command": "agent get", "delay_millis": 200})
+	const window = 3 * time.Second
+	f.D.HerdrTimeout = window
+	workflowTestModel(t, f, map[string]any{"observations": []any{workflowPendingObservation()}, "delay_command": "agent get", "delay_millis": 200, "before_call_delay_command": "agent start", "before_call_delay_millis": 1250})
 	p, err := WorkflowPreviewStart(f.D, f.File)
 	if err != nil {
 		t.Fatal(err)
 	}
-	o, err := WorkflowStart(f.D, f.File, *p.(WorkflowPreview).Confirmation)
-	// Measure the actual startup window, excluding native preparation validation.
-	// The stand-in timestamps real subprocess invocations, not cached state.
-	calls, readErr := os.ReadFile(f.Calls)
-	if readErr != nil {
-		t.Fatal(readErr)
-	}
 	var started time.Time
-	for _, line := range strings.Split(strings.TrimSpace(string(calls)), "\n") {
-		var call struct {
-			Argv []string
-			AtNS int64 `json:"at_ns"`
+	// Mark the Go send boundary, before the child can be scheduled. For this
+	// fixture no trust/environment work intervenes before the shared deadline.
+	// The delayed start consumes that same window as subsequent observations.
+	f.D.Fault = func(point string) error {
+		if point == "workflow_before_agent_send" {
+			started = time.Now()
 		}
-		if err := json.Unmarshal([]byte(line), &call); err != nil {
-			t.Fatal(err)
-		}
-		if strings.Join(call.Argv[:2], " ") == "agent start" {
-			started = time.Unix(0, call.AtNS)
-		}
+		return nil
 	}
+	o, err := WorkflowStart(f.D, f.File, *p.(WorkflowPreview).Confirmation)
 	if started.IsZero() {
-		t.Fatal("no subprocess startup timestamp")
+		t.Fatal("fixture never reached the Go startup boundary")
 	}
 	elapsed := time.Since(started)
-	if err == nil || elapsed > 1600*time.Millisecond || elapsed < 650*time.Millisecond {
+	if err == nil || elapsed > window+900*time.Millisecond || elapsed < window-50*time.Millisecond {
 		t.Fatalf("startup deadline not shared: %v, %v", elapsed, err)
 	}
 	if workflowTestCalls(t, f, "agent get") < 2 || workflowTestCalls(t, f, "agent prompt") != 0 {
@@ -282,14 +319,25 @@ func TestWorkflowTransportDiagnosticsAreBoundedAndSafe(t *testing.T) {
 		{"mixed_invalid", map[string]any{"exit": 7, "stderr": secret, "stdout": `{"error":{"code":"agent_not_found"}}`}, []string{"agent get", "exit=7", "provider_code=unknown"}},
 		{"timeout", map[string]any{"delay_seconds": 2, "stderr": secret}, []string{"agent get", "timeout"}},
 		{"invalid", map[string]any{"stdout": secret}, []string{"agent get", "invalid_response"}},
-		{"large", map[string]any{"exit": 7, "stderr": strings.Repeat(secret, 40000)}, []string{"agent get", "exit=7", "truncated"}},
+		{"large", map[string]any{"exit": 7, "stderr": strings.Repeat(secret, 40000)}, []string{"agent get", "exit=7", "truncated=true", fmt.Sprintf("stderr_bytes=%d", len(secret)*40000)}},
 		{"unknown_code", map[string]any{"exit": 7, "stdout": `{"error":{"code":"` + secret + `"}}`}, []string{"agent get", "unknown"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			f := workflowTestFixture(t)
-			f.D.HerdrTimeout = 500 * time.Millisecond
+			// Only the timeout case should depend on a short deadline. Other
+			// cases must reach their actual subprocess exit/output condition.
+			f.D.HerdrTimeout = 5 * time.Second
+			if tc.name == "timeout" {
+				f.D.HerdrTimeout = 500 * time.Millisecond
+			}
 			tc.failure["command"] = "agent get"
-			workflowTestModel(t, f, map[string]any{"failure": tc.failure})
+			model := map[string]any{"failure": tc.failure}
+			if tc.name == "large" {
+				// Reproduce a process scheduled after the old 500 ms budget.
+				model["before_call_delay_command"] = "agent get"
+				model["before_call_delay_millis"] = 750
+			}
+			workflowTestModel(t, f, model)
 			_, err := workflowCall(f.D, f.R, "agent", "get", "w-fixture:p1")
 			if err == nil {
 				t.Fatal("failure was accepted")

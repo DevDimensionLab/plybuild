@@ -10,12 +10,21 @@ import (
 func deliveryPausedStartup(t *testing.T) (deliveryFixture, WorkflowRun) {
 	t.Helper()
 	f := newDeliveryFixture(t, "codex")
-	f.D.HerdrTimeout = 500 * time.Millisecond
-	workflowTestModel(t, f.workflowFixture, map[string]any{"observations": []any{workflowPendingObservation()}})
+	// Stop at an explicit failed observation after the tab and agent exist.
+	// Scheduler delay must not turn this into an earlier tab-creation timeout.
+	workflowTestModel(t, f.workflowFixture, map[string]any{"observations": []any{workflowPendingObservation()}, "before_call_delay_command": "tab create", "before_call_delay_millis": 750, "failure": map[string]any{"command": "agent get", "exit": 7}})
 	o, err := workflowReadinessStart(t, f.workflowFixture)
 	if err == nil || o.RunID == "" || o.Transport.AgentSessionID != "" || workflowTestCalls(t, f.workflowFixture, "agent prompt") != 0 {
 		t.Fatalf("fixture must stop before initial Task prompt: %+v %v", o, err)
 	}
+	if !strings.Contains(err.Error(), "Herdr agent get failed: class=nonzero_exit exit=7") {
+		t.Fatalf("fixture did not reach its explicit paused observation: %v", err)
+	}
+	state, readErr := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if readErr != nil || state.Phase != "agent_start_attempted" || state.Acceptance != nil || state.StartDraft != nil || state.StartSHA256 != nil || workflowTestCalls(t, f.workflowFixture, "tab create") != 1 || workflowTestCalls(t, f.workflowFixture, "agent start") != 1 {
+		t.Fatalf("fixture did not establish its pre-Task tab/start: phase=%s, %v", state.Phase, readErr)
+	}
+	workflowTestModel(t, f.workflowFixture, map[string]any{"failure": map[string]any{}})
 	return f, o
 }
 

@@ -19,6 +19,8 @@ root = Path(__file__).parent
 path = root / "herdr-model.json"
 model = json.loads(path.read_text())
 args = sys.argv[1:]
+if model.get("before_call_delay_command") == " ".join(args[:2]):
+    time.sleep(model["before_call_delay_millis"] / 1000)
 call = {"argv": args, "at_ns": time.time_ns()}
 if model.get("claude_trust_config") and args[:2] == ["agent", "start"]:
     cfg = json.loads(Path(model["claude_trust_config"]).read_text())

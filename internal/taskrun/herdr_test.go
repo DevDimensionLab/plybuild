@@ -216,12 +216,31 @@ func TestWorkflowConcurrentReviewsReserveAndSendOnce(t *testing.T) {
 	}
 }
 func TestWorkflowSubprocessTimeoutAndLostStartDoNotReplay(t *testing.T) {
-	for _, command := range []string{"tab create", "agent start", "agent prompt"} {
-		t.Run(command, func(t *testing.T) {
+	commands := []string{"tab create", "agent start", "agent prompt"}
+	for _, tc := range []struct {
+		name, command, phase string
+		timeout              time.Duration
+		calls                [3]int
+	}{
+		{"tab create", "tab create", "tab_create_attempted", 5 * time.Second, [3]int{1, 0, 0}},
+		{"agent start", "agent start", "agent_start_attempted", 5 * time.Second, [3]int{1, 1, 0}},
+		{"agent prompt", "agent prompt", "prompt_unknown", 5 * time.Second, [3]int{1, 1, 1}},
+		// An expired context can stop the child before its first instruction.
+		// That unknown reserved attempt must also remain unreplayed.
+		{"before subprocess", "tab create", "tab_create_attempted", time.Nanosecond, [3]int{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
 			f := workflowTestFixture(t)
-			workflowTestModel(t, f, map[string]any{"delay_command": command, "delay_seconds": 2})
+			model := map[string]any{"delay_command": tc.command, "delay_seconds": 10}
+			if tc.name == "tab create" {
+				// Reach a real observed call despite startup taking longer than
+				// the old 500 ms fixture limit, then time out after that effect.
+				model["before_call_delay_command"] = tc.command
+				model["before_call_delay_millis"] = 750
+			}
+			workflowTestModel(t, f, model)
 			d := f.D
-			d.HerdrTimeout = 500 * time.Millisecond
+			d.HerdrTimeout = tc.timeout
 			p, e := WorkflowPreviewStart(d, f.File)
 			if e != nil {
 				t.Fatal(e)
@@ -230,11 +249,30 @@ func TestWorkflowSubprocessTimeoutAndLostStartDoNotReplay(t *testing.T) {
 			if e == nil || o.RunID == "" {
 				t.Fatal("timeout lost its run binding")
 			}
-			if _, e = WorkflowStart(d, f.File, *p.(WorkflowPreview).Confirmation); e != nil {
+			state, e := workflowRead(f.R.WorkspaceRoot, o.RunID)
+			if e != nil || state.Phase != tc.phase {
+				t.Fatalf("timeout did not reach its intended reserved phase %s: got %s, %v", tc.phase, state.Phase, e)
+			}
+			reasons, e := json.Marshal(o.Reasons)
+			if e != nil || !strings.Contains(string(reasons), "Herdr "+tc.command+" failed: class=timeout") {
+				t.Fatalf("reserved stage lost its subprocess timeout: %s, %v", reasons, e)
+			}
+			for i, command := range commands {
+				if n := workflowTestCalls(t, f, command); n != tc.calls[i] {
+					t.Fatalf("%s before replay: got %d, want %d", command, n, tc.calls[i])
+				}
+			}
+			statePath := filepath.Join(o.Paths.RunRoot, "state.json")
+			before, e := os.ReadFile(statePath)
+			if e != nil {
 				t.Fatal(e)
 			}
-			if n := workflowTestCalls(t, f, command); n != 1 {
-				t.Fatalf("replayed %s: %d", command, n)
+			// Replay uses normal timeouts, so an accidental second send cannot
+			// be hidden by the deliberately expired first-attempt deadline.
+			workflowAssertNoReplay(t, f, o)
+			after, e := os.ReadFile(statePath)
+			if e != nil || !bytes.Equal(before, after) {
+				t.Fatalf("replay changed its reserved startup state: %v", e)
 			}
 		})
 	}
