@@ -14,6 +14,7 @@ func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, err
 	r := WorkflowRequest{Envelope: deliveryEnv("herdr-run-request"), RequestKey: in.RequestKey, WorkspaceRoot: in.WorkspaceRoot, PreparationID: in.PreparationID, PreparationSHA256: in.PreparationSHA256, HandoffDraft: in.HandoffDraft, Runtime: in.Runtime, HumanAuthority: in.HumanAuthority, CodexProjectTrust: in.CodexProjectTrust, ReturnMode: "delivery_owner", Delivery: &in.Delivery}
 	r.Herdr.Executable, r.Herdr.WorkspaceID, r.Herdr.TabLabel = in.HerdrExecutable, in.HerdrWorkspaceID, in.TabLabel
 	r.ClaudeProjectTrust = in.ClaudeProjectTrust
+	r.GoalStartEnvironment = in.GoalStartEnvironment
 	if in.Worker != nil {
 		r.Envelope = deliveryEnv("headless-run-request")
 		r.Worker = in.Worker
@@ -22,6 +23,11 @@ func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, err
 }
 
 func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
+	if env := r.GoalStartEnvironment; env != nil {
+		if r.Worker != nil || r.Runtime.Provider != "codex" || !filepath.IsAbs(env.Home) || !filepath.IsAbs(env.CodexHome) || filepath.Clean(env.Home) != env.Home || filepath.Clean(env.CodexHome) != env.CodexHome || env.Path == "" || strings.ContainsAny(env.Path, "\x00\r\n") {
+			return workflowError(2, "bound start requires the exact Codex HOME, CODEX_HOME and PATH")
+		}
+	}
 	if headlessRun(r) {
 		return validateWorkerRequest(r)
 	}

@@ -26,6 +26,9 @@ type Input struct {
 	Runtime             RuntimeOptions
 	NotificationContext string
 	Worker              *taskrun.WorkerContract
+	boundEnvironment    *taskrun.GoalStartEnvironment
+	expectedRuntime     *RuntimePreview
+	boundRequestKey     string
 }
 
 type Result struct {
@@ -50,6 +53,7 @@ type launchIntent struct {
 	Notification       *taskrun.FileBinding             `json:"notification"`
 	ClaudeProjectTrust *taskrun.ClaudeProjectTrust      `json:"claude_project_trust,omitempty"`
 	Worker             *taskrun.WorkerContract          `json:"worker,omitempty"`
+	RequestKey         string                           `json:"request_key,omitempty"`
 }
 
 func checkOrigin(d taskrun.Dependencies, target workspace.QueueTarget) error {
@@ -128,6 +132,9 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	}
 	out.RequestPath = filepath.Join(directory, "workflow-request.json")
 	if _, err = os.Lstat(out.RequestPath); err == nil {
+		if input.expectedRuntime != nil {
+			return out, boundError("bound_start_existing_attempt", "an earlier workflow request owns this initial start; inspect its existing identity")
+		}
 		// Existing start state is authoritative even after the installed binary,
 		// queue or provider configuration changes. No new provider is launched.
 		var request taskrun.WorkflowRequest
@@ -195,6 +202,12 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	var intent launchIntent
 	old, err := readPreservedJSON(intentPath, &intent)
 	if err == nil {
+		if input.expectedRuntime != nil {
+			return out, boundError("bound_start_existing_attempt", "an earlier launcher intent owns this initial start; inspect its existing identity")
+		}
+		if intent.RequestKey != "" {
+			return out, boundError("bound_start_existing_attempt", "the externally approved intent keeps its original request identity; inspect bound-start status instead of resuming through ordinary execute")
+		}
 		if !bytes.Equal(mustWorkerJSON(intent.Worker), mustWorkerJSON(input.Worker)) {
 			return out, fmt.Errorf("preserved worker choice or limits differ; resume the same Run")
 		}
@@ -234,12 +247,16 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 			return out, err
 		}
 		intent = launchIntent{Kind: "ply.workflow.execute-intent", SchemaVersion: 1, Goal: plan, Runtime: runtime, Notification: notice,
-			Worker: input.Worker,
-			Human:  workspace.QueueHumanDecision{ActorClaim: "Local execute caller", DecidedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Source: "explicit_human_instruction", Statement: "The local caller requested this exact goal from its registered return worktree through ply workflow execute; caller identity is a local attestation."},
+			Worker:     input.Worker,
+			RequestKey: input.boundRequestKey,
+			Human:      workspace.QueueHumanDecision{ActorClaim: "Local execute caller", DecidedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Source: "explicit_human_instruction", Statement: "The local caller requested this exact goal from its registered return worktree through ply workflow execute; caller identity is a local attestation."},
 		}
 		if runtime.Runtime.Provider == "claude" {
 			intent.ClaudeProjectTrust = &taskrun.ClaudeProjectTrust{Mode: "configuration", WorktreeRoot: plan.WorktreePath}
 		}
+	}
+	if input.expectedRuntime != nil && boundHash(intent.Runtime) != boundHash(*input.expectedRuntime) {
+		return out, boundError("bound_start_stale", "the actual launcher intent has different runtime or policy from the approved preview")
 	}
 	out.Runtime = &intent.Runtime
 	if grant := intent.ClaudeProjectTrust; grant != nil {
@@ -261,7 +278,7 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		}
 		return out, nil
 	}
-	if input.Worker == nil && os.Getenv("HERDR_ENV") != "1" {
+	if input.Worker == nil && os.Getenv("HERDR_ENV") != "1" && d.ApprovedGoalStart == nil {
 		return out, fmt.Errorf("execute start requires a local Herdr terminal (HERDR_ENV=1)")
 	}
 	if old == nil {
@@ -292,6 +309,9 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	}
 	preparation := *prepared.Preparation.Preparation
 	key := "execute/" + strings.TrimPrefix(intent.Goal.Confirmation, "sha256:")
+	if intent.RequestKey != "" {
+		key = intent.RequestKey
+	}
 	ownerClaim, startSurface, localInstall := intent.Runtime.Runtime.Provider+" delivery owner", "human_authorized_herdr", true
 	if input.Worker != nil {
 		ownerClaim, startSurface, localInstall = "Ply worker", "human_authorized_worker", false
@@ -320,9 +340,10 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		RequestKey: key, WorkspaceRoot: plan.Workspace, PreparationID: preparation.ID, PreparationSHA256: digestBytes(pbytes), HandoffDraft: draft, Runtime: r.Runtime,
 		HumanAuthority:  taskrun.HumanAuthority{ActorClaim: intent.Human.ActorClaim, StartSurface: startSurface, Authorized: true},
 		HerdrExecutable: r.Herdr, HerdrWorkspaceID: r.HerdrWorkspace, TabLabel: workerTabLabel(input.Worker, plan.Goal.Title),
-		ClaudeProjectTrust: intent.ClaudeProjectTrust,
-		Delivery:           taskrun.DeliveryContract{OwnerClaim: ownerClaim, Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: input.Worker == nil, AllowLocalInstall: localInstall, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
-		Worker:             input.Worker,
+		ClaudeProjectTrust:   intent.ClaudeProjectTrust,
+		Delivery:             taskrun.DeliveryContract{OwnerClaim: ownerClaim, Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: input.Worker == nil, AllowLocalInstall: localInstall, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
+		Worker:               input.Worker,
+		GoalStartEnvironment: input.boundEnvironment,
 	})
 	if err != nil {
 		return out, err

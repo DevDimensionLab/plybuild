@@ -371,6 +371,9 @@ type Dependencies struct {
 	// WorkerOwner is an in-process capability held with the native worker lock.
 	// It is never accepted from an agent callback or a serialized CLI argument.
 	WorkerOwner *workerOwner
+	// ApprovedGoalStart exists only in the in-process bound-start composition.
+	// It checks the approved environment before each first transport effect.
+	ApprovedGoalStart func() error
 }
 
 func (d Dependencies) fault(point string) error {
