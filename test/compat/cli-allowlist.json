@@ -21,6 +21,89 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  /absolute/compatible/ply-control workflow execute acceptance wfr_<digest> --context /absolute/context.json --file /absolute/acceptance-choice.json --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact original private execution context (required)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute private DeliveryAcceptanceChoice@1 JSON file (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for acceptance"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read a private DeliveryAcceptanceChoice@1 JSON file recording who requested automatic acceptance, their exact policy-choice answer, the previous agreement and the current candidate. Preserve the original frozen agreement and prior attempts while selecting automatic acceptance for this existing local Epic run. The same accepted owner and original context are required. The choice supplies no test result, human QA or runtime permission and changes no source, return target or delivery effect. Verify the candidate under the selected policy before integration. If the immutable control predates this command, first use workflow execute continue with the private or installed CLI and then use its returned compatible control.",
+        "path": "ply workflow execute acceptance",
+        "runnable": true,
+        "short": "Record an explicit automatic acceptance choice for the same local Epic run",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "acceptance RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute acceptance"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  /absolute/preserved/ply-control workflow execute integrate wfr_<digest> --context /absolute/context.json",
         "flags": [
           {
@@ -73,10 +156,10 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Complete the authorized local return after a matching human pass. Owner callback: use the frozen control executable, exact Task cwd and --context. Requires the exact qualified candidate and recorded human pass, unchanged clean parent, and the original local delivery authority. Preserves integration evidence, advances this preparation and updates the Epic base. Does not push, merge master or delete worktrees.",
+        "long": "Complete the authorized local return after matching acceptance. Owner callback: use the frozen control executable, exact Task cwd and --context. Requires the exact qualified candidate, its frozen automatic or human acceptance gate, unchanged clean parent, and the original local delivery authority. Preserves integration evidence, advances this preparation and updates the registered base. Local main/master return requires an explicit local_branch_integration contract and matching runtime authority. PR mode cannot integrate locally. Does not push or delete worktrees.",
         "path": "ply workflow execute integrate",
         "runnable": true,
-        "short": "Complete the authorized local return after a matching human pass",
+        "short": "Complete the authorized local return after matching acceptance",
         "suggest_for": null,
         "traverse_children": false,
         "use": "integrate RUN_ID"
@@ -231,6 +314,19 @@
             "shorthand_deprecated": "",
             "type": "bool",
             "usage": "help for report"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "incomplete",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "record only stopped/needs_input through the installed reader; no runtime authority or control transition"
           }
         ],
         "has_args_validator": true,
@@ -239,7 +335,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Preserve truthful progress, questions or incomplete results. Owner callback: use the frozen control executable, exact Task cwd and --context. --file is a delivery-report@2; failed, not_run and unknown facts remain readable and do not qualify a candidate.",
+        "long": "Preserve truthful progress, questions or incomplete results. Owner callback: use the frozen control executable, exact Task cwd and --context. --file is a delivery-report@2; failed, not_run and unknown facts remain readable and do not qualify a candidate. If a runtime dependency blocks callbacks, the installed CLI's --incomplete path accepts only stopped/needs_input from the same live owner. It preserves the original context, artifacts and unresolved attempts without granting runtime authority or switching controls.",
         "path": "ply workflow execute report",
         "runnable": true,
         "short": "Preserve truthful progress, questions or incomplete results",
@@ -259,6 +355,19 @@
         "disable_flags_in_use_line": false,
         "example": "  /absolute/preserved/ply-control workflow execute verify wfr_<digest> --context /absolute/context.json --review /absolute/review.json",
         "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "candidate-binary",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute built candidate executable; required by explicit automatic acceptance"
+          },
           {
             "annotations": {},
             "default": "",
@@ -307,6 +416,19 @@
             "default": "",
             "deprecated": "",
             "hidden": false,
+            "name": "reuse",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "requalify this exact preserved verification attempt without executing acceptance again"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
             "name": "review",
             "no_opt_default": "",
             "scope": "local",
@@ -322,7 +444,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Run the owner's acceptance entrypoint and qualify this candidate. Owner callback: use the frozen control executable, exact Task cwd and --context. --review supplies an actual candidate-bound DeliveryCandidateReview@1 record. Execute the declared acceptance script and preserve real evidence. Missing or failed tests cannot produce a technical pass. Human product judgment remains separate.",
+        "long": "Run the owner's acceptance entrypoint and qualify this candidate. Owner callback: use the frozen control executable, exact Task cwd and --context. --review supplies an actual candidate-bound DeliveryCandidateReview@1 record. Execute the declared acceptance script and preserve real evidence. An explicit automatic agreement requires --candidate-binary and freezes the executable, test environment and policy timeout into the attempt. A successful test plus review supplies machine acceptance; required human QA and later negative human judgments remain separate gates. Missing, failed or unknown tests cannot produce a pass. Repeating the same reserved invocation recovers its completed receipt without starting another test; unknown execution is blocked.",
         "path": "ply workflow execute verify",
         "runnable": true,
         "short": "Run the owner's acceptance entrypoint and qualify this candidate",
@@ -389,6 +511,644 @@
       },
       "kind": "command_added",
       "path": "ply capabilities"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply integration list --project example\n  ply integration --delivery dlv_<digest> --check\n  ply integration --delivery dlv_<digest> --keep\n  ply integration --delivery dlv_<digest> --method squash\n  ply integration resume int_<digest>\n  ply integration --task legacy-task --reconcile --check",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "Local integration caller",
+            "deprecated": "",
+            "hidden": false,
+            "name": "actor",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "actor claim preserved with the actual answer; not identity authentication"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "show the exact plan and blockers without recording a decision or performing effects"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "delivery",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact registered Delivery ID; required when several exist"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for integration"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "install-profile",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute path to an explicit candidate-bound installation profile; default none"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "keep",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "complete the Task while preserving its source worktree and local branch"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "method",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "explicit PR merge method: merge or squash"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "notification-route",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute path to an explicit local notification route; default off"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "observation",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "human observation to preserve with the answer"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "reconcile",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "close an already integrated legacy Task using existing native evidence; never merge again"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "task",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "one exact legacy Task ID, only with --reconcile"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": true,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Start a human-owned integration from an existing checkout. Inspect the exact candidate, target, merge method, optional installation and cleanup plan. An actual pass confirms this plan; fail, blocked or EOF starts none of those effects. Local return uses the registered target, never the current branch. PR merge requires an already published Delivery and an explicit merge or squash method. Read commands and --check do not mutate files, refs or external services.",
+        "path": "ply integration",
+        "runnable": true,
+        "short": "Review and integrate one exact Delivery, then safely close its Task",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "integration"
+      },
+      "kind": "command_added",
+      "path": "ply integration"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow delivery check dlv_<digest> --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for check"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Check the current candidate, authority and acceptance gate without effects. Read-only. Recheck the frozen candidate and evidence, actual runtime authority, exact target, and candidate-bound automatic acceptance or required human QA. The receipt explains the next action. This command neither records human judgment nor publishes a branch or integrates code.",
+        "path": "ply workflow delivery check",
+        "runnable": true,
+        "short": "Check the current candidate, authority and acceptance gate without effects",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "check DELIVERY_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow delivery check"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow delivery execute dlv_<digest> --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for execute"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "preferences-file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "explicit local PR preference file for the first attempt (default: ~/.agents/local/pr-preferences.yaml); preserved choices win on retry"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Perform or resume the frozen delivery after its exact acceptance gate. Recheck all gates and perform only the frozen mode and target. Pull requests publish only the source branch and stop before merge. Local modes update the exact registered local return and preserve queue/base evidence. After an interrupted effect, use this same ID to observe and resume it. Unknown outcomes stop blind repetition. PR merge, auto-merge, force-push, and target-branch push are excluded.",
+        "path": "ply workflow delivery execute",
+        "runnable": true,
+        "short": "Perform or resume the frozen delivery after its exact acceptance gate",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "execute DELIVERY_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow delivery execute"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow delivery list --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "epic",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by exact registered Epic ID"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for list"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "task",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by exact registered Task ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Find Deliveries by Task or Epic. Read-only. Filter by the registered Task or Epic, or show all Deliveries in the containing workspace. Filters combine as exact matches. Reading never starts or resumes a Delivery.",
+        "path": "ply workflow delivery list",
+        "runnable": true,
+        "short": "Find Deliveries by Task or Epic",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "list"
+      },
+      "kind": "command_added",
+      "path": "ply workflow delivery list"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow delivery metadata dlv_<digest> --file /absolute/metadata.json --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute path to a private JSON input file (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for metadata"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preserve an explicit revision of PR people metadata. Read an explicit metadata revision from a private JSON object with optional assignees, reviewers, remove_assignees and remove_reviewers string arrays. For example, {\"assignees\":[],\"reviewers\":[]} clears the desired additions and preserves existing PR people. Preserve the revised choices in history; execute the same Delivery to apply them. Only explicit remove arrays remove people. A metadata revision does not change the candidate, mode, target or human QA.",
+        "path": "ply workflow delivery metadata",
+        "runnable": true,
+        "short": "Preserve an explicit revision of PR people metadata",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "metadata DELIVERY_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow delivery metadata"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow delivery register --file /absolute/delivery.json --format json\n  ply workflow delivery check dlv_<digest>\n  ply workflow delivery execute dlv_<digest>\n  ply workflow delivery show dlv_<digest> --format json",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for delivery"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preserve a durable Delivery for the Task's frozen agreement: a pull request, local Epic integration, or explicitly selected local branch integration. Registration preserves references without Git or PR effects. Execution rechecks native authority, evidence and the frozen automatic or human acceptance gate for the exact candidate. A pending Delivery requires another explicit invocation; no background worker is started.",
+        "path": "ply workflow delivery",
+        "runnable": true,
+        "short": "Register and deliver an exact verified Task candidate",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "delivery"
+      },
+      "kind": "command_added",
+      "path": "ply workflow delivery"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow delivery register --file /absolute/register.json --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute path to a private JSON input file (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for register"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Register an exact technical candidate without delivery effects. Read a private ply.delivery.registration@1 JSON file. The native TaskResult and frozen workflow supply the candidate, Spec, agreement and authority. Reusing a publication key with identical content returns the same Delivery; changed content is a conflict. Registration is not completed delivery or human approval.",
+        "path": "ply workflow delivery register",
+        "runnable": true,
+        "short": "Register an exact technical candidate without delivery effects",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "register"
+      },
+      "kind": "command_added",
+      "path": "ply workflow delivery register"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow delivery show dlv_<digest> --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read a Delivery receipt and its preserved history. Read-only. Show the durable manifest, events, actual effect receipts, blockers and next action. A completed receipt preserves delivery-time observations; it does not assert the current state of a remote PR.",
+        "path": "ply workflow delivery show",
+        "runnable": true,
+        "short": "Read a Delivery receipt and its preserved history",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show DELIVERY_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow delivery show"
     },
     {
       "after": {
@@ -745,7 +1505,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, then completes local integration after an actual candidate-bound human pass. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
+        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; an existing schema 1 local Epic run can record an explicit human policy choice with execute acceptance. Historical agreements retain their human gate without that supported choice. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
         "path": "ply workflow execute",
         "runnable": true,
         "short": "Deliver the next goal from this Epic with its assigned agent",
@@ -825,6 +1585,128 @@
       },
       "kind": "command_added",
       "path": "ply workflow execute follow"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute recover-qa wfr_<digest> --attempt 'qa-<64-hex-attempt-digest>' --context /absolute/context.json --runtime-evidence /absolute/current-runtime.json --check\n  ply workflow execute recover-qa wfr_<digest> --attempt 'qa-<64-hex-attempt-digest>' --context /absolute/context.json --runtime-evidence /absolute/current-runtime.json --confirm sha256:<preview-digest>",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "attempt",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact original QA reservation ID; recovery never selects a newer attempt (required)"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "inspect the known timestamp rejection and publication absence without writes"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "confirm",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact sha256 digest from the read-only preview (required to apply)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact original private execution context (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for recover-qa"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "runtime-evidence",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "private current observation of the same owner, session and runtime authority (required)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Recover only the exact original QA attempt whose +00:00 timestamp was rejected by the known parser before any human QA publication. Requires the same live owner, original context, preserved evidence and a current runtime observation. --check inspects without writes; applying requires its exact --confirm digest and --attempt. Recovery preserves the rejected bytes and callback control. It records no human verdict, restarts no provider and grants no integration authority. After recovery, submit the actual human answer with a supported timestamp through the original bound control's ordinary qa callback.",
+        "path": "ply workflow execute recover-qa",
+        "runnable": true,
+        "short": "Recover one human QA reservation rejected before publication",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "recover-qa RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute recover-qa"
     },
     {
       "after": {
@@ -8752,6 +9634,818 @@
       },
       "kind": "command_added",
       "path": "ply workspace worktree"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact private execution context"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for release"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "reason",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "actual reason for handing this candidate to human integration"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Owner-only revocation: preserve the exact context, native session, candidate and reason, then prevent agent integration callbacks from competing with human integration. A newer installed Ply can record this release without replacing the frozen control executable. This command grants no Git, PR merge, installation or cleanup effect.",
+        "path": "ply workflow execute release",
+        "runnable": true,
+        "short": "Relinquish writing ownership of the exact qualified candidate",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "release RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute release"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "Local integration caller",
+            "deprecated": "",
+            "hidden": false,
+            "name": "actor",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "actor claim preserved with the actual later answer"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "inspect exact no-effect eligibility without writes or a human decision"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for reconsider"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "observation",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "required human reason for rejecting or blocking this plan"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preserve a later human negative answer only when this plan has positively produced no integration effect. Keep the original decision and effect reservation, record native revocation, and return correction ownership. Unknown, pending, merged, installed or closed operations cannot be cancelled.",
+        "path": "ply integration reconsider",
+        "runnable": true,
+        "short": "Revoke an unexecuted plan with an actual later fail or blocked answer",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "reconsider INTEGRATION_ID"
+      },
+      "kind": "command_added",
+      "path": "ply integration reconsider"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "Local integration caller",
+            "deprecated": "",
+            "hidden": false,
+            "name": "actor",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "actual caller's actor claim"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "inspect release readiness without writes"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "delivery",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Delivery whose exact provider exit can be observed"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for release"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "observation",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "human observation preserved with --recover"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "recover",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "explicit human release after a closed Herdr pane, with fresh known-writer checks"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "task",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "one already integrated legacy Task"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "For an existing Delivery, positively observe its native provider exit before releasing the exact candidate. If its Herdr pane was closed, --recover checks known writers and asks the human to confirm all writers are stopped and revoke the absent owner's authority. An idle agent or missing pane alone is not release. For one integrated legacy Task, check known owners and preserve the caller's explicit ownership release. Release records neither QA nor integration.",
+        "path": "ply integration release",
+        "runnable": true,
+        "short": "Release an exact candidate for human integration",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "release"
+      },
+      "kind": "command_added",
+      "path": "ply integration release"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "apply",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "perform only the explicitly confirmed notification retry"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "read-only inspection; also the default without --apply"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "confirm",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact current retry digest returned by the read-only preview"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for retry-notification"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply integration retry-notification",
+        "runnable": true,
+        "short": "Inspect or explicitly retry one proven undelivered integration notification",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "retry-notification INTEGRATION_ID"
+      },
+      "kind": "command_added",
+      "path": "ply integration retry-notification"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "inspect compatibility and the same live session without publication"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "context",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact original private execution context (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for continue"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "runtime-evidence",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "private current owner runtime observation; required when the historical provider launcher is missing or changed"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preserve a compatible control for the same live owner, Task worktree, frozen context and accepted authority. The installed CLI validates the old control and required contracts, preserves a durable compatibility proof, and returns the new exact callback executable. It never restarts an agent, sends input, replaces frozen bytes, grants authority or replays uncertain effects. Use --check to inspect without publication; the ordinary path requires no renewed human permission.",
+        "path": "ply workflow execute continue",
+        "runnable": true,
+        "short": "Continue the same accepted delivery across a compatible Ply update",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "continue RUN_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute continue"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "read the preserved operation without writes or retries"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for resume"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "retry-install",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "explicitly retry only a known failed installation; unknown effects are observation only"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "retry-merge",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "explicitly retry the unchanged PR plan only after exact proven rejection, fresh preflight and current human pass"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply integration resume",
+        "runnable": true,
+        "short": "Observe the same operation and complete only its remaining steps",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "resume INTEGRATION_ID"
+      },
+      "kind": "command_added",
+      "path": "ply integration resume"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for list"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by exact registered project ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "task",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by exact registered Task ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply integration list",
+        "runnable": true,
+        "short": "List registered Deliveries and preserved integrations",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "list"
+      },
+      "kind": "command_added",
+      "path": "ply integration list"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for scan"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "filter by exact registered project ID"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply integration scan",
+        "runnable": true,
+        "short": "Inspect active, integrated, retained, retired and unknown Task resources without writes",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "scan"
+      },
+      "kind": "command_added",
+      "path": "ply integration scan"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply integration show",
+        "runnable": true,
+        "short": "Read one integration's plan, decision, receipts and history",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show INTEGRATION_ID"
+      },
+      "kind": "command_added",
+      "path": "ply integration show"
     }
   ],
   "base_ref": "v1.0.1",
