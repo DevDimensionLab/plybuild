@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export LC_ALL=C LANG=C
+package_test_repo=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
+python3 - "$package_test_repo" <<'PY'
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+
+# This controls the publisher's decisions with a fake compiler. Actual release
+# bytes are qualified separately by test/cb01a_acceptance.sh.
+source = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="ply-package-controls-", dir="/tmp") as td:
+    root = Path(td).resolve()
+    repo = root / "repo"
+    (repo / "scripts").mkdir(parents=True)
+    (repo / "docs").mkdir()
+    shutil.copyfile(source / "scripts/package-cli", repo / "scripts/package-cli")
+    (repo / "docs/cli-installation.md").write_text("Fixture installation guide.\n")
+    def git(*args):
+        return subprocess.check_output(["git", *args], cwd=repo, text=True).strip()
+    git("init", "-b", "main")
+    git("add", ".")
+    git("-c", "user.name=Package fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "Fixture publisher")
+    commit = git("rev-parse", "HEAD")
+    (root / "bin").mkdir()
+    compiler = root / "bin/go"
+    compiler.write_text("#!" + sys.executable + "\n" + '''
+import os, sys
+from pathlib import Path
+out = Path(sys.argv[sys.argv.index('-o')+1])
+out.write_bytes(('fixture executable '+out.name).encode())
+out.chmod(0o755)
+if os.environ.get('PACKAGE_TEST_DRIFT') == '1':
+    Path('docs/cli-installation.md').write_text('Source changed during build.\\n')
+''')
+    compiler.chmod(0o755)
+    env = dict(os.environ, PATH=str(root / "bin") + os.pathsep + os.environ["PATH"])
+    def build(output, success, extra=None):
+        result = subprocess.run([sys.executable, str(repo / "scripts/package-cli"), "v1.2.3-test.1", str(output)], cwd=root, env=dict(env, **(extra or {})), capture_output=True, text=True)
+        assert (result.returncode == 0) == success, result.stdout + result.stderr
+        return result
+    (repo / "dirty").write_text("uncommitted")
+    build(root / "dirty-output", False)
+    assert not (root / "dirty-output").exists()
+    (repo / "dirty").unlink()
+    build(repo / "output", False)
+    result = build(root / "release", True)
+    receipt = json.loads(result.stdout)
+    package = Path(receipt["package"])
+    manifest = json.loads((package / "manifest.json").read_text())
+    digest = lambda p: "sha256:" + hashlib.sha256(p.read_bytes()).hexdigest()
+    assert manifest["source_commit"] == commit
+    assert manifest["version"] == "v1.2.3-test.1"
+    assert (manifest["os"], manifest["arch"]) == ("darwin", "arm64")
+    assert manifest["sha256"] == digest(package / "ply")
+    assert manifest["installer_sha256"] == digest(package / "ply-install")
+    assert receipt["manifest_sha256"] == digest(package / "manifest.json")
+    before = (package / "manifest.json").read_bytes()
+    build(root / "release", False)
+    assert (package / "manifest.json").read_bytes() == before
+    build(root / "drift-output", False, {"PACKAGE_TEST_DRIFT": "1"})
+    assert not (root / "drift-output").exists()
+    assert not list(root.glob(".ply-package-*"))
+print("test-package-cli: PASS (publisher identity, immutable output, source drift and cleanup)")
+PY
