@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -222,5 +223,114 @@ func TestWeekServiceWaitsForTerminalOwnerWithPendingResume(t *testing.T) {
 	}
 	if f.s.SeenControl != ctrl.ID {
 		t.Fatal("launchd supervision exited before the pending resume was consumed", f.s)
+	}
+}
+
+func TestWeekRunningServiceControlNeedsNoKickstart(t *testing.T) {
+	f := newFixture(t)
+	owner, err := lock(filepath.Join(f.dir, "owner.lock"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer owner.Close()
+	f.b.Environment = map[string]string{"HOME": f.c.Workspace}
+	if err := publishBytes(servicePath(f.b), Plist(f.b), 0600, false); err != nil {
+		t.Fatal(err)
+	}
+	kicks := 0
+	err = wakeServiceUsing(f.b, func(args ...string) (string, error) {
+		if args[0] == "print" {
+			return "state = running\n pid = 731\n", nil
+		}
+		kicks++
+		return "", errors.New("control must not depend on restarting a live controller")
+	})
+	if err != nil || kicks != 0 {
+		t.Fatal("live service control invoked unnecessary kickstart", kicks, err)
+	}
+}
+func TestWeekServiceWakeWaitsForReleasedOwnerToExit(t *testing.T) {
+	f := newFixture(t)
+	f.b.Environment = map[string]string{"HOME": f.c.Workspace}
+	if err := publishBytes(servicePath(f.b), Plist(f.b), 0600, false); err != nil {
+		t.Fatal(err)
+	}
+	prints, kicks := 0, 0
+	err := wakeServiceUsing(f.b, func(args ...string) (string, error) {
+		switch args[0] {
+		case "print":
+			prints++
+			if prints == 1 {
+				// The process has released owner.lock after its final control read,
+				// but launchd still reports its PID while it finishes exiting.
+				return "state = running\n pid = 731\n", nil
+			}
+			return "state = not running\n last exit code = 0\n", nil
+		case "kickstart":
+			if prints < 2 {
+				t.Fatal("wake was sent to a process already committed to exit")
+			}
+			kicks++
+			return "", nil
+		default:
+			return "", fmt.Errorf("unexpected effect %s", args[0])
+		}
+	})
+	if err != nil || kicks != 1 || prints < 2 {
+		t.Fatal("released owner swallowed pending control", prints, kicks, err)
+	}
+}
+func TestWeekCompletedServiceStopUnloadsWithoutRestart(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("launchd adapter")
+	}
+	f := newFixture(t, selection("first"))
+	f.tick(t)
+	f.tick(t)
+	f.n.complete("first")
+	f.tick(t)
+	f.tick(t)
+	if f.s.Phase != "completed" || f.s.Entries[0].State != "completed" {
+		t.Fatal("fixture has not completed its selected Run", f.s)
+	}
+	completed := f.s.Entries[0]
+	f.b.Environment = map[string]string{"HOME": f.c.Workspace}
+	if err := publish(filepath.Join(f.dir, "binding.json"), f.b, true); err != nil {
+		t.Fatal(err)
+	}
+	if err := publishBytes(servicePath(f.b), Plist(f.b), 0600, false); err != nil {
+		t.Fatal(err)
+	}
+	loaded := true
+	wakes := 0
+	f.m.Launch = func(Binding) error {
+		wakes++
+		return errors.New("actual terminal kickstart waits 15 seconds; stop must not restart it")
+	}
+	f.m.Launchctl = func(args ...string) (string, error) {
+		switch args[0] {
+		case "print":
+			if loaded {
+				return "state = not running\nlast exit code = 0\n", nil
+			}
+			return "", errors.New("not loaded")
+		case "bootout":
+			loaded = false
+			return "", nil
+		default:
+			return "", fmt.Errorf("unexpected effect %s", args[0])
+		}
+	}
+	st, err := f.m.Service(f.c.Workspace, f.s.ID, "stop")
+	if err != nil || loaded || wakes != 0 || st.State != "installed" {
+		t.Fatal("completed service stop restarted or did not unload", st, err, wakes)
+	}
+	f.reload(t)
+	if f.s.DesiredAction != "stop" || f.s.ActiveTaskID != "" || f.s.Phase != "completed" || !reflect.DeepEqual(f.s.Entries[0], completed) {
+		t.Fatal("terminal stop was not preserved", f.s)
+	}
+	st, err = f.m.Service(f.c.Workspace, f.s.ID, "uninstall")
+	if err != nil || st.State != "absent" || wakes != 0 {
+		t.Fatal("uninstall restarted terminal work", st, err, wakes)
 	}
 }

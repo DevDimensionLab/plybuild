@@ -722,3 +722,18 @@ func TestWeekExpiredResumeWakesStopForSurvivingNativeRun(t *testing.T) {
 		t.Fatal("expired recovery changed selection or deadline", shown)
 	}
 }
+
+func TestWeekControlReleasesPublicationLockBeforeWake(t *testing.T) {
+	f := newFixture(t)
+	f.m.Launch = func(Binding) error {
+		acquired, err := lock(filepath.Join(f.dir, "control.lock"))
+		if err != nil {
+			return fmt.Errorf("controller cannot consume/finish control while caller waits for wake: %w", err)
+		}
+		acquired.Close()
+		return nil
+	}
+	if _, err := f.m.Control(f.c.Workspace, f.s.ID, "stop"); err != nil {
+		t.Fatal(err)
+	}
+}

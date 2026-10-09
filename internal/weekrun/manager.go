@@ -288,10 +288,16 @@ func (m Manager) Control(root, id, action string) (State, error) {
 	if err != nil {
 		return State{}, err
 	}
-	defer guard.Close()
 	now := stamp(m.now())
 	ctrl := Control{ID: hash(canonical([]string{action, now})), Action: action, RequestedAt: now}
 	if err = publish(filepath.Join(dir, "control.json"), ctrl, true); err != nil {
+		guard.Close()
+		return State{}, err
+	}
+	// The old owner must see this durable request before release, or the later
+	// wake observes its released lock. Do not hold publication ownership while
+	// waiting for launchd: the new controller also needs it to finish/exit.
+	if err = guard.Close(); err != nil {
 		return State{}, err
 	}
 	if m.Launch != nil {

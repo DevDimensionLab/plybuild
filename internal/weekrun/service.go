@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -31,7 +32,11 @@ type ServiceStatus struct {
 type Launchctl func(...string) (string, error)
 
 func runLaunchctl(args ...string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	timeout := 15 * time.Second
+	if len(args) > 0 && args[0] == "kickstart" {
+		timeout = 30 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	b, err := exec.CommandContext(ctx, "/bin/launchctl", args...).CombinedOutput()
 	if err != nil {
@@ -56,6 +61,34 @@ func wakeServiceUsing(b Binding, ctl Launchctl) error {
 	}
 	if st.State == "absent" {
 		return fmt.Errorf("managed service is not installed")
+	}
+	// launchd can still report a PID after the old controller's final control
+	// read and owner-lock release. Only a held lock proves that it will consume
+	// the already-published request; otherwise wait for acquisition or real exit.
+	dir, err := runDir(b.Contract.Workspace, b.ID)
+	if err != nil {
+		return err
+	}
+	until := time.Now().Add(15 * time.Second)
+	for st.State == "running" {
+		switch ownerState(dir) {
+		case "lock_held":
+			return nil
+		case "unowned":
+		default:
+			return fmt.Errorf("service owner is unknown; pending control is preserved")
+		}
+		if time.Now().After(until) {
+			return fmt.Errorf("service process has not acquired ownership or exited; pending control is preserved")
+		}
+		time.Sleep(25 * time.Millisecond)
+		st, err = ServiceReadback(b, ctl)
+		if err != nil {
+			return err
+		}
+		if st.State == "absent" {
+			return fmt.Errorf("managed service is not installed")
+		}
 	}
 	target := serviceDomain() + "/" + serviceLabel(b)
 	if st.State == "installed" {
@@ -185,8 +218,14 @@ func (m Manager) Service(root, id, action string) (ServiceStatus, error) {
 		}
 		// Publication of the worker's stop request must precede unloading launchd.
 		// Its native supervisor independently waits for the current attempt boundary.
-		_, err = m.Control(root, id, "stop")
-		if err == nil {
+		parked, parkErr := m.stopIdleTerminal(b, dir)
+		if parkErr != nil {
+			return st, parkErr
+		}
+		if !parked {
+			_, err = m.Control(root, id, "stop")
+		}
+		if err == nil && !parked {
 			until := time.Now().Add(25 * time.Second)
 			for {
 				var s State
@@ -227,4 +266,47 @@ func (m Manager) Service(root, id, action string) (ServiceStatus, error) {
 		return out, err
 	}
 	return out, readErr
+}
+
+// A terminal scheduler without an active native Run needs no launchd restart
+// merely to stop its service. Hold its actual owner lock while publishing stop;
+// preserve completed entry/result truth and never guess from a cached PID.
+func (m Manager) stopIdleTerminal(b Binding, dir string) (bool, error) {
+	owner, err := lock(filepath.Join(dir, "owner.lock"))
+	if errors.Is(err, errOwned) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	defer owner.Close()
+	s, err := readState(b, dir)
+	if err != nil {
+		return false, err
+	}
+	if s.ActiveTaskID != "" || !terminal(s) {
+		return false, nil
+	}
+	guard, err := lock(filepath.Join(dir, "control.lock"))
+	if err != nil {
+		return false, err
+	}
+	defer guard.Close()
+	now := stamp(m.now())
+	ctrl := Control{ID: hash(canonical([]string{"stop", now})), Action: "stop", RequestedAt: now}
+	if err = publish(filepath.Join(dir, "control.json"), ctrl, true); err != nil {
+		return false, err
+	}
+	s.SeenControl = ctrl.ID
+	s.DesiredAction = "stop"
+	s.ResumeRequested = false
+	// Completed native work remains completed when only its service is removed.
+	if s.Phase != "completed" && s.Phase != "completed_with_blocks" && s.Phase != "expired" {
+		s.Phase = "stopped"
+	}
+	s.NextAction = "Service stop preserved; no active Run, completed work and original deadline retained"
+	if err = m.save(b, dir, &s); err != nil {
+		return false, err
+	}
+	return true, nil
 }
