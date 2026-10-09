@@ -43,7 +43,6 @@ func RecordDeliveryHumanQA(d Dependencies, taskID string, result workspace.TaskR
 	if e != nil {
 		return empty, e
 	}
-	actor := workspace.TaskHumanActorRecord{ActorClaim: attestation.ActorClaim, StartSurface: attestation.StartSurface, StartedAtUTC: attestation.StartedAtUTC, CompletedAtUTC: attestation.CompletedAtUTC}
 	s, e := d.Store.ReadByLocator(result.HandoffLocator)
 	if e != nil {
 		return empty, e
@@ -59,8 +58,7 @@ func RecordDeliveryHumanQA(d Dependencies, taskID string, result workspace.TaskR
 	if e = deliveryWriteOnce(d.Files, path, raw); e != nil {
 		return empty, e
 	}
-	draft := deliveryObject(map[string]any{"kind": "WorkspaceTaskHumanQARecordDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": "delivery-qa/" + string(result.ID) + "/" + digestBytes(raw)[7:], "task_id": result.TaskID, "task_result_id": result.ID, "result_oid": result.ResultOID, "result_tree": result.ResultTree, "outcome": outcome, "actor": actor, "evidence": []workspace.TaskHumanQAEvidenceRecord{{ID: "human-attestation", Role: "report", Locator: path, SHA256: digestBytes(raw), SizeBytes: int64(len(raw))}}, "observation": attestation.Observation, "accepted_residual_risks": []workspace.TaskResidualRiskRecord{}})
-	draftRaw, e := canonicaljson.Marshal(draft)
+	draftRaw, e := deliveryHumanQADraft(result, attestation, path, raw)
 	if e != nil {
 		return empty, e
 	}
@@ -72,6 +70,12 @@ func RecordDeliveryHumanQA(d Dependencies, taskID string, result workspace.TaskR
 	wd.HandoffEvidence = NewTaskHandoffEvidenceReader(d)
 	recorded, e := workspace.RecordTaskHumanQA(wd, workspace.TaskHumanQARecordInput{TaskID: result.TaskID, File: draftPath})
 	return recorded.Record, e
+}
+
+func deliveryHumanQADraft(result workspace.TaskResultRecord, attestation DeliveryHumanAttestation, evidencePath string, evidence []byte) ([]byte, error) {
+	actor := workspace.TaskHumanActorRecord{ActorClaim: attestation.ActorClaim, StartSurface: attestation.StartSurface, StartedAtUTC: attestation.StartedAtUTC, CompletedAtUTC: attestation.CompletedAtUTC}
+	draft := deliveryObject(map[string]any{"kind": "WorkspaceTaskHumanQARecordDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": "delivery-qa/" + string(result.ID) + "/" + digestBytes(evidence)[7:], "task_id": result.TaskID, "task_result_id": result.ID, "result_oid": result.ResultOID, "result_tree": result.ResultTree, "outcome": attestation.Outcome, "actor": actor, "evidence": []workspace.TaskHumanQAEvidenceRecord{{ID: "human-attestation", Role: "report", Locator: evidencePath, SHA256: digestBytes(evidence), SizeBytes: int64(len(evidence))}}, "observation": attestation.Observation, "accepted_residual_risks": []workspace.TaskResidualRiskRecord{}})
+	return canonicaljson.Marshal(draft)
 }
 
 // ValidateDeliveryHumanAttestation is read-only so a callback can reject an
@@ -97,6 +101,9 @@ func ValidateDeliveryHumanAttestation(raw []byte, taskID string, result workspac
 	attestation := DeliveryHumanAttestation{Kind: objectMapString(m, "kind"), SchemaVersion: 1, TaskID: taskID, TaskResultID: string(result.ID), ResultOID: result.ResultOID, ResultTree: result.ResultTree, Outcome: outcome, ActorClaim: objectMapString(m, "actor_claim"), StartSurface: objectMapString(m, "start_surface"), StartedAtUTC: objectMapString(m, "started_at_utc"), CompletedAtUTC: objectMapString(m, "completed_at_utc"), Answer: outcome, Observation: objectMapString(m, "observation")}
 	started, se := time.Parse(time.RFC3339Nano, attestation.StartedAtUTC)
 	completed, ce := time.Parse(time.RFC3339Nano, attestation.CompletedAtUTC)
+	if !validateUTC(attestation.StartedAtUTC) || !validateUTC(attestation.CompletedAtUTC) {
+		return empty, fmt.Errorf("human attestation timestamps must be RFC3339 UTC values ending in Z")
+	}
 	if se != nil || ce != nil || completed.Before(started) || validatePlainText("actor", attestation.ActorClaim, 1, 256) != nil || validatePlainText("surface", attestation.StartSurface, 1, 256) != nil || validatePlainText("observation", attestation.Observation, 1, 2000) != nil {
 		return empty, fmt.Errorf("human attestation provenance is incomplete")
 	}

@@ -714,6 +714,28 @@ func readTaskHumanQADraft(files FileSystem, input string) (taskHumanQADraft, err
 	if err != nil {
 		return taskHumanQADraft{}, err
 	}
+	return parseTaskHumanQADraft(bytes, value)
+}
+
+// ValidateTaskHumanQADraftBytes checks the exact native draft schema without
+// reading evidence, acquiring publication locks, or recording a human answer.
+func ValidateTaskHumanQADraftBytes(raw []byte) error {
+	if len(raw) > 256<<10 {
+		return qaSchemaError(errors.New("human QA draft exceeds 256 KiB"))
+	}
+	value, err := canonicaljson.DecodeStrict(raw)
+	if err != nil {
+		return qaSchemaError(err)
+	}
+	canonical, err := canonicaljson.Marshal(value)
+	if err != nil {
+		return qaSchemaError(err)
+	}
+	_, err = parseTaskHumanQADraft(canonical, value)
+	return err
+}
+
+func parseTaskHumanQADraft(bytes []byte, value canonicaljson.Value) (taskHumanQADraft, error) {
 	f, err := exactTaskObject(value, "human QA draft", "kind", "schema_version", "format", "format_version", "canonicalization", "publication_key", "task_id", "task_result_id", "result_oid", "result_tree", "outcome", "actor", "evidence", "observation", "accepted_residual_risks")
 	if err != nil {
 		return taskHumanQADraft{}, qaSchemaError(err)
