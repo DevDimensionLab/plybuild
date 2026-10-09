@@ -143,7 +143,7 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 	if out.NextAction.Kind == "inspect_delivery" {
 		inventoryDeliveryProblem(row, "delivery_phase_unknown", "Unrecognized preserved delivery phase: "+out.Phase)
 	}
-	bindingValid := s.Request.Envelope == deliveryEnv("herdr-run-request") && s.Result.Envelope == deliveryEnv("run") && s.Request.ReturnMode == "delivery_owner"
+	bindingValid := (s.Request.Envelope == deliveryEnv("herdr-run-request") && s.Request.Worker == nil && s.Result.Worker == nil || headlessRun(s.Request) && workerValidateIdentity(s) == nil) && s.Result.Envelope == deliveryEnv("run") && s.Request.ReturnMode == "delivery_owner"
 	if !bindingValid {
 		inventoryDeliveryProblem(row, "delivery_binding_invalid", "Delivery request and state envelopes differ from the delivery-owner contract")
 	}

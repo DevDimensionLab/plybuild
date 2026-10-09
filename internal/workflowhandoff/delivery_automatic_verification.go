@@ -21,6 +21,7 @@ type AutomaticVerificationInstructions struct {
 	CandidateBinary         AutomaticBinaryBinding             `json:"candidate_binary"`
 	CandidateBinarySnapshot AutomaticBinaryBinding             `json:"candidate_binary_snapshot"`
 	ExecutedArgv            []string                           `json:"executed_argv"`
+	SandboxPolicy           *AutomaticBinaryBinding            `json:"sandbox_policy,omitempty"`
 	Environment             []string                           `json:"environment"`
 	ExecutorClaim           string                             `json:"executor_claim"`
 	ExecutorSessionID       string                             `json:"executor_session_id"`
@@ -53,7 +54,15 @@ func ValidateAutomaticInstructions(v AutomaticVerificationInstructions, agreemen
 	if !filepath.IsAbs(v.CandidateBinary.Locator) || filepath.Clean(v.CandidateBinary.Locator) != v.CandidateBinary.Locator || !validateDigest(v.CandidateBinary.SHA256) || validatePlainText("executor_claim", v.ExecutorClaim, 1, 256) != nil || validatePlainText("executor_session_id", v.ExecutorSessionID, 1, 256) != nil {
 		return fmt.Errorf("automatic invocation lacks an exact candidate binary or actual executor identity")
 	}
-	if !filepath.IsAbs(v.CandidateBinarySnapshot.Locator) || filepath.Clean(v.CandidateBinarySnapshot.Locator) != v.CandidateBinarySnapshot.Locator || v.CandidateBinarySnapshot.SHA256 != v.CandidateBinary.SHA256 || len(v.ExecutedArgv) != 2 || v.ExecutedArgv[0] != "/bin/sh" || !filepath.IsAbs(v.ExecutedArgv[1]) {
+	executed := v.ExecutedArgv
+	if v.SandboxPolicy != nil {
+		p := v.SandboxPolicy
+		if !filepath.IsAbs(p.Locator) || !validateDigest(p.SHA256) || len(executed) != 5 || executed[0] != "/usr/bin/sandbox-exec" || executed[1] != "-f" || executed[2] != p.Locator {
+			return fmt.Errorf("automatic sandbox differs from its preserved policy")
+		}
+		executed = executed[3:]
+	}
+	if !filepath.IsAbs(v.CandidateBinarySnapshot.Locator) || filepath.Clean(v.CandidateBinarySnapshot.Locator) != v.CandidateBinarySnapshot.Locator || v.CandidateBinarySnapshot.SHA256 != v.CandidateBinary.SHA256 || len(executed) != 2 || executed[0] != "/bin/sh" || !filepath.IsAbs(executed[1]) {
 		return fmt.Errorf("automatic execution requires the preserved script and candidate binary snapshots")
 	}
 	if len(v.Environment) == 0 || !slices.IsSorted(v.Environment) {

@@ -21,6 +21,16 @@ func (r *traceReader) workflow(root, id string) {
 		return
 	}
 	delivery := deliveryRun(reserved.Request)
+	if headlessRun(reserved.Request) {
+		if err = workerValidateIdentity(reserved); err != nil {
+			r.problem("trace_run_unbound", err.Error())
+			return
+		}
+		r.contractField("worker", reserved.Request.Worker)
+	} else if reserved.Request.Worker != nil || reserved.Result.Worker != nil {
+		r.problem("trace_run_unbound", "interactive reservation cannot acquire a worker")
+		return
+	}
 	r.run.Family = "workflow_run_v1"
 	if delivery {
 		r.run.Family = "goal_execute_v2"
@@ -69,6 +79,12 @@ func (r *traceReader) workflow(root, id string) {
 		r.problem("trace_state_unavailable", statePath+": "+err.Error())
 	}
 	r.nativeHandoff(s.Result.Handoff, s.Request.HandoffDraft)
+	if headlessRun(s.Request) {
+		if err = workerValidateIdentity(s); err != nil {
+			r.problem("trace_state_unavailable", err.Error())
+			return
+		}
+	}
 	if s.Acceptance != nil {
 		r.workflowAcceptance(s)
 	}
@@ -111,6 +127,10 @@ func (r *traceReader) workflowAcceptance(s workflowState) {
 	e.Role, e.ActorClaim, e.EvidenceClass = "agent", "recipient", "agent_report"
 	e.Outcome = nonempty(a.Acceptance)
 	e.Data = traceJSON(map[string]any{"acceptance": a.Acceptance, "runtime_claim": a.RuntimeClaim, "meaning": "Recipient runtime and permission claims are preserved; provider identity is not human authentication."})
+	if headlessRun(s.Request) {
+		e.Role, e.ActorClaim, e.EvidenceClass = "runtime", "Ply worker", "native_observation"
+		e.Data = traceJSON(map[string]any{"acceptance": a.Acceptance, "runtime_claim": a.RuntimeClaim, "meaning": "Native controller acceptance after an actual delegate sandbox probe; selected model is not an observed model identity."})
+	}
 	r.run.Entries = append(r.run.Entries, e)
 }
 

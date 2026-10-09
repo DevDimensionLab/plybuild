@@ -65,13 +65,24 @@ func automaticCloseoutSnapshots(r WorkItemRegistry, tr TaskResultRecord) (map[st
 				CandidateBinary         closeoutSnapshotBinding  `json:"candidate_binary"`
 				CandidateBinarySnapshot closeoutSnapshotBinding  `json:"candidate_binary_snapshot"`
 				ExecutedArgv            []string                 `json:"executed_argv"`
+				SandboxPolicy           *closeoutSnapshotBinding `json:"sandbox_policy,omitempty"`
 			} `json:"automatic"`
 		}
 		if err := json.Unmarshal(raw, &receipt); err != nil || receipt.Kind != "PlyDeliveryVerification@2" || receipt.SchemaVersion != 2 || receipt.Automatic == nil || receipt.RunID != auth.RunID || receipt.RequestSHA256 != auth.RequestSHA256 || receipt.CandidateOID != tr.ResultOID || receipt.CandidateTree != tr.ResultTree || receipt.CWD != tr.SourceLocator || receipt.Outcome != "pass" || receipt.Exit == nil || *receipt.Exit != 0 || receipt.Error != "" || !contentTypedEqual(receipt.Automatic.Policy, *auth.Agreement.Acceptance) {
 			return nil, fmt.Errorf("automatic retention receipt differs from the integrated candidate")
 		}
 		automatic := receipt.Automatic
-		if len(automatic.ExecutedArgv) != 2 || automatic.ExecutedArgv[0] != "/bin/sh" || automatic.ExecutedArgv[1] != receipt.AcceptanceSnapshot.Locator || automatic.CandidateBinarySnapshot.Locator != filepath.Join(filepath.Dir(receipt.AcceptanceSnapshot.Locator), "candidate-executable") {
+		executed := automatic.ExecutedArgv
+		if policy := automatic.SandboxPolicy; policy != nil {
+			if len(executed) != 5 || executed[0] != "/usr/bin/sandbox-exec" || executed[1] != "-f" || executed[2] != policy.Locator {
+				return nil, fmt.Errorf("automatic retention sandbox invocation differs")
+			}
+			if _, err := readCloseoutEvidence(policy.Locator, policy.SHA256); err != nil {
+				return nil, err
+			}
+			executed = executed[3:]
+		}
+		if len(executed) != 2 || executed[0] != "/bin/sh" || executed[1] != receipt.AcceptanceSnapshot.Locator || automatic.CandidateBinarySnapshot.Locator != filepath.Join(filepath.Dir(receipt.AcceptanceSnapshot.Locator), "candidate-executable") {
 			return nil, fmt.Errorf("automatic retention snapshots differ from the executed invocation")
 		}
 		var review *TaskArtifactRecord

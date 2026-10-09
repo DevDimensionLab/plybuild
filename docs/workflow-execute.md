@@ -1,5 +1,9 @@
 # Deliver a queued goal
 
+For one explicitly automatic local Epic Goal on macOS, use the
+[durable headless worker](workflow-worker.md) with `--headless`. It has its own
+process ownership and control commands. The interactive workflow follows below.
+
 `ply workflow execute` gives one interactive implementor responsibility for a
 feature from its goal through its frozen acceptance policy and local return.
 The planner records the desired result and design; the implementor chooses the

@@ -365,6 +365,17 @@ func readHerdrInventoryRun(d Dependencies, root, id string) (row InventoryRun) {
 	t := s.Result.Transport
 	row.Herdr = &InventoryHerdr{nonempty(t.WorkspaceID), nonempty(t.TabID), nonempty(t.PaneID), nonempty(t.TerminalID), nonempty(t.AgentSessionID)}
 	row.HistoricalState, row.LastSeenUTC = nonempty(t.State), nonempty(t.ObservedAt)
+	if headlessRun(s.Request) {
+		if err = workerValidateIdentity(s); err != nil {
+			inventoryProblem(&row, err)
+			return row
+		}
+		row.Transport, row.Herdr = ptr("headless"), nil
+		row.HistoricalState, row.LastSeenUTC = nonempty(s.Result.Worker.Phase), nonempty(s.Result.Worker.UpdatedAt)
+	} else if s.Request.Worker != nil || s.Result.Worker != nil {
+		inventoryProblem(&row, integrity("interactive history cannot acquire a worker"))
+		return row
+	}
 	if row.LastSeenUTC != nil {
 		if _, err := parseInventoryTime(*row.LastSeenUTC); err != nil {
 			row.LastSeenUTC = nil

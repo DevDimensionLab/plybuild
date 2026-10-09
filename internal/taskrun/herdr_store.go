@@ -29,6 +29,13 @@ func workflowRead(root, id string) (workflowState, error) {
 		return s, workflowError(4, "reservation binding changed")
 	}
 	var saved workflowState
+	if headlessRun(s.Request) {
+		if e = workerValidateIdentity(s); e != nil {
+			return s, e
+		}
+	} else if s.Request.Worker != nil || s.Result.Worker != nil {
+		return s, workflowError(4, "interactive reservation cannot acquire a worker")
+	}
 	e = readValue(filepath.Join(s.Result.Paths.RunRoot, "state.json"), 8<<20, &saved)
 	if os.IsNotExist(e) {
 		s.Result.Round.State = "unknown"
@@ -45,6 +52,13 @@ func workflowRead(root, id string) (workflowState, error) {
 	}
 	if e = workflowLoadAcceptanceSelection(&saved); e != nil {
 		return saved, e
+	}
+	if headlessRun(saved.Request) {
+		if e = workerValidateIdentity(saved); e != nil {
+			return saved, e
+		}
+	} else if saved.Result.Worker != nil {
+		return saved, workflowError(4, "interactive state cannot acquire a worker")
 	}
 	return saved, nil
 }
@@ -192,6 +206,9 @@ func workflowFreshRuntimeOperation(d Dependencies, s workflowState, target bool,
 			return deliveryContinuityError("launch_dependency", "unaccepted runtime requires its original provider launcher: "+providerErr.Error())
 		}
 		return e
+	}
+	if headlessRun(s.Request) {
+		return workflowFreshArtifacts(d, s, target, true)
 	}
 	if e := verifyExecutable(s.Request.Herdr.Executable); e != nil {
 		if !deliveryRun(s.Request) {
@@ -359,7 +376,7 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		// older control binary, without rewriting their frozen startup history.
 		o.NextAction = deliveryStartupAction(s)
 	}
-	if o.Transport.AgentSessionID == "" && o.NextAction.Actor == "recipient" {
+	if !headlessRun(s.Request) && o.Transport.AgentSessionID == "" && o.NextAction.Actor == "recipient" {
 		// Older saved attempts may still advise acceptance before session binding.
 		// Correct the readback without rewriting those historical artifacts.
 		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved startup and any native onboarding in the same tab; no native session is bound. Do not restart or resend input."}

@@ -30,6 +30,7 @@ type DeliveryRequestInput struct {
 	CodexProjectTrust                                           *CodexProjectTrust
 	ClaudeProjectTrust                                          *ClaudeProjectTrust
 	Delivery                                                    DeliveryContract
+	Worker                                                      *WorkerContract
 }
 
 type DeliveryPermissionAcceptance struct {

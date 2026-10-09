@@ -14,11 +14,15 @@ import (
 
 func positiveDeliveryClaim(a Acceptance, permission DeliveryPermissionAcceptance, r WorkflowRequest) error {
 	c := a.RuntimeClaim
+	runtimeID := r.Runtime.Provider
+	if headlessRun(r) {
+		runtimeID = "ply-worker"
+	}
 	// The request's profile is a launch selector. The actual runtime may expose
 	// another label (or none), particularly after native permission onboarding.
 	// Authority comes from confirmed, bound actual policy and validated scope,
 	// never from equating the requested selector with an observed profile name.
-	if permission.LaunchContractSHA256 != r.Runtime.PermissionBinding.EffectivePolicySHA256 || !permission.PermissionConfirmed || c.RuntimeID == nil || *c.RuntimeID != r.Runtime.Provider || c.EffectivePolicySHA256 == nil || c.ModelID != nil && !deliveryModelMatches(r.Runtime.Provider, r.Runtime.Model, *c.ModelID) || len(permission.ActualPolicyEvidence) == 0 {
+	if permission.LaunchContractSHA256 != r.Runtime.PermissionBinding.EffectivePolicySHA256 || !permission.PermissionConfirmed || c.RuntimeID == nil || *c.RuntimeID != runtimeID || c.EffectivePolicySHA256 == nil || c.ModelID != nil && !deliveryModelMatches(r.Runtime.Provider, r.Runtime.Model, *c.ModelID) || len(permission.ActualPolicyEvidence) == 0 {
 		return workflowError(4, "delivery runtime and actual permissions are not confirmed against the launch contract")
 	}
 	if e := deliveryEvidence(permission.ActualPolicyEvidence); e != nil {
@@ -454,6 +458,9 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 			}
 		}
 		if e == nil {
+			e = workerValidateReview(s, receipt.Review, receipt.CandidateOID, receipt.CandidateTree)
+		}
+		if e == nil {
 			// Candidate publication follows the existing TaskRun -> workspace
 			// lock order. Concurrent receipt observers may recover the same
 			// native publication, but cannot race its staging/start/terminal.
@@ -468,7 +475,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 				if err = deliveryCallback(d, current, contextPath, true); err != nil {
 					return err
 				}
-				value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{AcceptanceAmendment: s.EffectiveAcceptanceAmendment, ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})
+				value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{RequireIndependentReview: headlessRun(s.Request), AcceptanceAmendment: s.EffectiveAcceptanceAmendment, ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})
 				if err == nil {
 					candidate = &value
 				}

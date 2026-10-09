@@ -33,6 +33,7 @@ type WorkflowRequest struct {
 	} `json:"coordinator"`
 	ReturnMode string            `json:"return_mode"`
 	Delivery   *DeliveryContract `json:"delivery,omitempty"`
+	Worker     *WorkerContract   `json:"worker,omitempty"`
 }
 type WorkflowPaths struct {
 	RunRoot string `json:"run_root"`
@@ -103,6 +104,7 @@ type WorkflowRun struct {
 	ClaudeTrust     *ClaudeTrustEffect             `json:"claude_project_trust,omitempty"`
 	StartupRecovery *DeliveryStartRecoveryReadback `json:"startup_recovery,omitempty"`
 	Closeout        *workspace.TaskCloseoutReceipt `json:"closeout,omitempty"`
+	Worker          *WorkerStatus                  `json:"worker,omitempty"`
 }
 type WorkflowPreview struct {
 	Envelope

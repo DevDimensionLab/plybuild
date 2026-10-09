@@ -15,12 +15,19 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	var in taskexecute.Input
 	var format string
 	var target queueTargetFlags
+	var headless bool
+	var workerAttempts, workerTimeout int
 	c := &cobra.Command{
 		Use: "execute", Short: "Deliver the next goal from this Epic with its assigned agent",
-		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; an existing schema 1 local Epic run can record an explicit human policy choice with execute acceptance. Historical agreements retain their human gate without that supported choice. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
+		Long:    "From the registered return worktree, use --headless for a durable one-Spec Codex worker on macOS. It requires an explicitly automatic local Epic agreement, uses the assigned model and effort with existing account login, and performs developer, sandboxed tests, independent read-only review, bounded corrections and native local delivery. It has no terminal dependency and performs no remote push. Control it with workflow worker show/pause/stop/resume. Pause and stop finish the active attempt before preserving a boundary. Unknown attempts remain blocked. Without --headless, from a Herdr terminal, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; an existing schema 1 local Epic run can record an explicit human policy choice with execute acceptance. Historical agreements retain their human gate without that supported choice. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
 		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check",
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
+			if headless {
+				in.Worker = &taskrun.WorkerContract{SchemaVersion: 1, MaxAttempts: workerAttempts, AgentTimeoutSeconds: workerTimeout}
+			} else if c.Flags().Changed("worker-attempts") || c.Flags().Changed("worker-timeout") {
+				return workspace.WorkInvalidArguments("worker limits require --headless")
+			}
 			if err := executeFormat(format); err != nil {
 				return err
 			}
@@ -49,6 +56,9 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().StringVar(&in.SpecID, "spec", "", "exact pending goal Spec ID in this Epic; ambiguous IDs are rejected")
 	c.Flags().BoolVar(&in.Check, "check", false, "preview goal, base, worktree, runtime and Claude folder trust effect without writes or startup")
 	c.Flags().BoolVar(&in.Restart, "restart", false, "recover this --spec's interrupted Codex startup before Task input, preserving its worktree and history")
+	c.Flags().BoolVar(&headless, "headless", false, "start one durable Codex worker for an automatic local Epic goal without a terminal")
+	c.Flags().IntVar(&workerAttempts, "worker-attempts", 3, "maximum development attempts for --headless (1-20)")
+	c.Flags().IntVar(&workerTimeout, "worker-timeout", 1800, "seconds per headless provider attempt (10-86400)")
 	target.bind(c)
 	c.Flags().StringVar(&in.Runtime.HerdrWorkspace, "herdr-workspace", "", "Herdr workspace ID (default: current Herdr workspace)")
 	c.Flags().StringVar(&in.Runtime.PermissionProfile, "permission-profile", "", "existing Codex permission profile; Claude uses native auto mode")
@@ -156,7 +166,17 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 			fmt.Fprintln(c.OutOrStdout(), "Next: "+v.NextAction)
 		}
 	case taskrun.WorkflowRun:
-		fmt.Fprintf(c.OutOrStdout(), "Run: %s\nAgent: %s\nHerdr: %s / %s / %s\nTransport: %s (%s)\n", v.RunID, v.Provider, v.Transport.WorkspaceID, v.Transport.TabID, v.Transport.PaneID, v.Transport.State, v.Transport.Observation)
+		if v.Worker != nil {
+			fmt.Fprintf(c.OutOrStdout(), "Run: %s\nWorker: %s; stage %s; attempt %d; generation %d; owner %s\n", v.RunID, v.Worker.Phase, v.Worker.Stage, v.Worker.Iteration, v.Worker.Generation, v.Worker.OwnerState)
+			if v.Worker.ControlAction != "" {
+				fmt.Fprintf(c.OutOrStdout(), "Control: %s requested at %s\n", v.Worker.ControlAction, v.Worker.ControlRequestedAt)
+			}
+			if v.Worker.Reason != "" {
+				fmt.Fprintln(c.OutOrStdout(), v.Worker.Reason)
+			}
+		} else {
+			fmt.Fprintf(c.OutOrStdout(), "Run: %s\nAgent: %s\nHerdr: %s / %s / %s\nTransport: %s (%s)\n", v.RunID, v.Provider, v.Transport.WorkspaceID, v.Transport.TabID, v.Transport.PaneID, v.Transport.State, v.Transport.Observation)
+		}
 		if v.Delivery != nil {
 			fmt.Fprintf(c.OutOrStdout(), "Delivery: %s\nRuntime permission: %s\n", v.Delivery.Phase, v.Delivery.PermissionState)
 		}

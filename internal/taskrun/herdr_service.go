@@ -57,7 +57,7 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if r.SchemaVersion == 2 {
 		return r, validateDeliveryWorkflowRequest(r)
 	}
-	if r.Delivery != nil {
+	if r.Delivery != nil || r.Worker != nil {
 		return r, workflowError(2, "legacy workflow requests cannot acquire delivery-owner authority")
 	}
 	if r.Envelope != workflowEnv("herdr-run-request") || r.ReturnMode != "reviewed_report_only" || r.HumanAuthority.StartSurface != "human_authorized_herdr" || !r.Coordinator.MayRequestChanges || !plain(r.Coordinator.ActorClaim, 1, 256) || !plain(r.Herdr.TabLabel, 1, 80) || !plain(r.Herdr.WorkspaceID, 1, 128) {
@@ -87,6 +87,10 @@ func workflowInitial(r WorkflowRequest, observed Observed) workflowState {
 		o.Envelope = deliveryEnv("run")
 		o.Delivery = &DeliveryState{Phase: "awaiting_acceptance", OwnerClaim: r.Delivery.OwnerClaim, PermissionState: "pending_runtime_acceptance", ActualPolicyEvidence: []Evidence{}, Events: []DeliveryEventRecord{}, Candidates: []DeliveryCandidate{}}
 		o.NextAction = WorkflowAction{"recipient", "Confirm the actual runtime and permissions in this same interactive session before Task writes."}
+	}
+	if headlessRun(r) {
+		o.Worker = &WorkerStatus{SessionID: "ply-worker:" + id, Phase: "pending", DeveloperSessions: []string{}}
+		o.NextAction = WorkflowAction{"worker", "Start the reserved worker; no provider session has been started."}
 	}
 	return workflowState{Request: r, Observed: observed, Result: o, Phase: "reserved", Records: []workflowRecord{}}
 }
@@ -125,7 +129,10 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 		n, e = previewLocked(d, workflowNativeRequest(r), file)
 	}
 	p.Observed = n.Observed
-	if e == nil {
+	if headlessRun(r) {
+		p.Effects = []string{"Reserve exactly one selected Goal, Task and native Run", "Start a detached supervisor and one bounded Codex developer at a time", "Enforce Task-file writes and a separate read-only reviewer session; preserve actual test and review evidence", "Qualify automatic acceptance and integrate only into the frozen local Epic", "Retain Task resources on completion; pause, stop and resume preserve this same Run"}
+	}
+	if e == nil && !headlessRun(r) {
 		e = verifyExecutable(r.Herdr.Executable)
 	}
 	if e == nil && r.CodexProjectTrust != nil {
@@ -195,7 +202,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 	if p.Confirmation == nil || confirm != *p.Confirmation {
 		return WorkflowRun{}, workflowError(4, "confirmation differs from current preview")
 	}
-	if os.Getenv("HERDR_ENV") != "1" {
+	if !headlessRun(r) && os.Getenv("HERDR_ENV") != "1" {
 		return WorkflowRun{}, workflowError(4, "apply requires the local Herdr context (HERDR_ENV=1)")
 	}
 	resolved, e := exec.LookPath(r.Runtime.Provider)
@@ -256,6 +263,9 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 				return e
 			}
 			s.Phase = "tab_create_attempted"
+			if headlessRun(r) {
+				s.Phase = "worker_reserved"
+			}
 			if e = workflowSave(d, s); e != nil {
 				return e
 			}
@@ -264,6 +274,9 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 		})
 	})
 	if e == nil && owned {
+		if headlessRun(r) {
+			return StartWorker(d, r.WorkspaceRoot, workflowID(r), false)
+		}
 		e = workflowLaunch(d, r)
 		if e != nil {
 			launchErr := e

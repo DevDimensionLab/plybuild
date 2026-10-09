@@ -20,6 +20,7 @@ type RuntimeOptions struct {
 	PermissionProfile  string
 	CodexHome          string
 	HerdrWorkspace     string
+	Headless           bool
 }
 
 type LaunchPolicy struct {
@@ -63,6 +64,9 @@ func lookupExecutable(choice, fallback string) (taskrun.Executable, error) {
 // explicitly a requested launch contract. Recipient acceptance must supply the
 // actual runtime policy; a config digest is not evidence of an OS write grant.
 func PreviewRuntime(assignment workspace.TaskExecutorAssignment, control string, opts RuntimeOptions) (RuntimePreview, error) {
+	if opts.Headless {
+		return previewWorkerRuntime(assignment, control, opts)
+	}
 	var out RuntimePreview
 	provider := stringChoice(assignment.Provider, "codex")
 	if provider != "codex" && provider != "claude" {

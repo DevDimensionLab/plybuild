@@ -69,11 +69,15 @@ func copyProviderStream(dst *os.File, src *os.File, done chan<- streamCopy) {
 	done <- result
 }
 func (execRunner) Run(s LaunchSpec, started func(Process) error) (Process, error) {
+	return runOwnedExec(s, started, 240*time.Second)
+}
+
+func runOwnedExec(s LaunchSpec, started func(Process) error, maximum time.Duration) (Process, error) {
 	p := Process{State: "not_started", Quiescence: ptr(true)}
 	if e := verifyExecutable(s.Executable); e != nil {
 		return p, e
 	}
-	if s.Timeout <= 0 || s.Timeout > 240*time.Second || s.Completion == nil {
+	if s.Timeout <= 0 || s.Timeout > maximum || s.Completion == nil {
 		return p, invalid("exec timeout or evidence destination missing")
 	}
 	if e := privateDir(s.StreamsRoot); e != nil {
@@ -111,9 +115,14 @@ func (execRunner) Run(s LaunchSpec, started func(Process) error) (Process, error
 		}
 	}
 	c.Env = append(c.Env, "PLY_TASK_RUN_CONTEXT="+s.ContextPath)
+	if s.Environment != nil {
+		c.Env = append([]string{}, s.Environment...)
+	}
 	c.Stdout = wout
 	c.Stderr = werr
-	c.Stdin = nil
+	if s.Stdin != nil {
+		c.Stdin = s.Stdin
+	}
 	c.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	if e = c.Start(); e != nil {
 		stdout.Close()
@@ -201,7 +210,7 @@ func (execRunner) Run(s LaunchSpec, started func(Process) error) (Process, error
 		if status.Exited() {
 			p.ExitCode = ptr(status.ExitStatus())
 			if status.ExitStatus() != 0 {
-				waitErr = fmt.Errorf("provider exit %d", status.ExitStatus())
+				waitErr = processExitError(status.ExitStatus())
 			}
 		}
 		if status.Signaled() {
